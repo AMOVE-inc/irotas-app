@@ -80,7 +80,14 @@ function handleMessage(event: MessageEvent<unknown>): void {
 
   if (payload.type === "setSafeAreaInsets" && isValidInsets(payload.payload) && safeAreaCallback) {
     const insets = payload.payload;
-    const frame = { x: 0, y: 0, width: window.innerWidth, height: window.innerHeight };
+    const rootEl = document.getElementById("root");
+    const rootRect = rootEl?.getBoundingClientRect();
+    const frame = {
+      x: 0,
+      y: 0,
+      width: rootRect?.width ?? window.innerWidth,
+      height: rootRect?.height ?? window.innerHeight,
+    };
     safeAreaCallback({ insets, frame });
     log(
       `Received safe area insets from parent: top=${insets.top}, bottom=${insets.bottom}, left=${insets.left}, right=${insets.right}`,

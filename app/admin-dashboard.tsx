@@ -1,0 +1,1617 @@
+import { ScreenContainer } from "@/components/screen-container";
+import { IconSymbol } from "@/components/ui/icon-symbol";
+import { MEMBERS, EVENTS, CLUBS, CURRENT_USER, RANK_LABELS, RANK_COLORS, isAdmin, getRankFromPoints, type Announcement } from "@/constants/mock-data";
+import { useColors } from "@/hooks/use-colors";
+import { trpc } from "@/lib/trpc";
+import { getIrotasPointsBalances,
+  getIrotasPointsHistory,
+  adjustIrotasPoints,
+  getFeeExemptionMembers,
+  setFeeExemption,
+  type IrotasPointsHistory,
+} from "@/lib/irotas-points-store";
+import {
+  getAllPayments,
+  updatePaymentStatus,
+  clearPaymentCache,
+  type PaymentRecord,
+  type PaymentStatus,
+} from "@/lib/payment-store";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useRouter } from "expo-router";
+import { useEffect, useMemo, useState } from "react";
+import {
+  Alert,
+  Pressable,
+  ScrollView,
+  Text,
+  TextInput,
+  View,
+  ActivityIndicator,
+  Modal,
+} from "react-native";
+
+type PointsHistoryEntry = {
+  id: string;
+  name: string;
+  from: number;
+  to: number;
+  rank: string;
+  at: string;
+};
+
+export default function AdminDashboardScreen() {
+  const colors = useColors();
+  const router = useRouter();
+
+  if (!isAdmin(CURRENT_USER)) {
+    return (
+      <ScreenContainer className="p-6">
+        <Text style={{ fontSize: 16, color: colors.muted, textAlign: "center", marginTop: 40 }}>
+          管理者のみアクセスできます
+        </Text>
+      </ScreenContainer>
+    );
+  }
+
+  const stats = useMemo(() => {
+    const rankCounts = { regular: 0, silver: 0, gold: 0, platinum: 0 };
+    for (const m of MEMBERS) {
+      rankCounts[m.rank] = (rankCounts[m.rank] ?? 0) + 1;
+    }
+    const openEvents = EVENTS.filter((e) => e.status === "open").length;
+    const fullEvents = EVENTS.filter((e) => e.status === "full").length;
+    const totalParticipants = EVENTS.reduce((sum, e) => sum + e.attendees, 0);
+    const activeClubs = CLUBS.length;
+    return { rankCounts, openEvents, fullEvents, totalParticipants, activeClubs };
+  }, []);
+
+  const [activeTab, setActiveTab] = useState<"overview" | "members" | "events" | "payments" | "emails" | "announcements" | "analytics">("overview");
+
+  // 支払い状況管理
+  const [paymentRecords, setPaymentRecords] = useState<PaymentRecord[]>([]);
+  const [selectedPaymentEventId, setSelectedPaymentEventId] = useState<string | null>(null);
+
+  // 管理者権限管理（AsyncStorageで永続化）
+  const [adminIds, setAdminIds] = useState<Set<string>>(new Set(
+    MEMBERS.filter((m) => m.role === "admin").map((m) => m.id)
+  ));
+
+  // 期生上書き管理（AsyncStorageで永続化）
+  const [generationOverrides, setGenerationOverrides] = useState<Record<string, number>>({});
+
+  // ポイント上書き管理（AsyncStorageで永続化）
+  const [pointsOverrides, setPointsOverrides] = useState<Record<string, number>>({});
+
+  // ランク上書き管理（AsyncStorageで永続化）
+  const [rankOverrides, setRankOverrides] = useState<Record<string, string>>({});
+
+  // ポイント変更履歴
+  const [pointsHistory, setPointsHistory] = useState<PointsHistoryEntry[]>([]);
+
+  // イロタスポイント残高
+  const [irotasBalances, setIrotasBalances] = useState<Record<string, number>>({});
+  // イロタスポイント変更履歴
+  const [irotasHistory, setIrotasHistory] = useState<IrotasPointsHistory[]>([]);
+  // 会費免除メンバー
+  const [feeExemptIds, setFeeExemptIds] = useState<Set<string>>(new Set());
+
+  // お知らせ管理
+  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  const [showAnnouncementModal, setShowAnnouncementModal] = useState(false);
+
+  useEffect(() => {
+    AsyncStorage.getItem("generation_overrides").then((val) => {
+      if (val) setGenerationOverrides(JSON.parse(val));
+    });
+    AsyncStorage.getItem("points_overrides").then((val) => {
+      if (val) setPointsOverrides(JSON.parse(val));
+    });
+    AsyncStorage.getItem("rank_overrides").then((val) => {
+      if (val) setRankOverrides(JSON.parse(val));
+    });
+    AsyncStorage.getItem("points_history").then((val) => {
+      if (val) setPointsHistory(JSON.parse(val));
+    });
+    AsyncStorage.getItem("custom_announcements").then((val) => {
+      if (val) setAnnouncements(JSON.parse(val));
+    });
+    // イロタスポイント・会費免除を読み込む
+    getIrotasPointsBalances().then(setIrotasBalances);
+    getIrotasPointsHistory().then(setIrotasHistory);
+    getFeeExemptionMembers().then(setFeeExemptIds);
+    // 支払い状況を読み込む
+    getAllPayments().then(setPaymentRecords);
+  }, []);
+
+  const handleEditPoints = (memberId: string, memberName: string, currentPoints: number) => {
+    Alert.prompt(
+      "ポイントを調整",
+      `${memberName}のポイントを入力してください`,
+      [
+        { text: "キャンセル", style: "cancel" },
+        {
+          text: "保存",
+          onPress: async (value: string | undefined) => {
+            const num = parseInt(value ?? "", 10);
+            if (isNaN(num) || num < 0) {
+              Alert.alert("エラー", "0以上の数字を入力してください");
+              return;
+            }
+            const newRank = getRankFromPoints(num);
+            const updatedPoints = { ...pointsOverrides, [memberId]: num };
+            const updatedRanks = { ...rankOverrides, [memberId]: newRank };
+            setPointsOverrides(updatedPoints);
+            setRankOverrides(updatedRanks);
+            await AsyncStorage.setItem("points_overrides", JSON.stringify(updatedPoints));
+            await AsyncStorage.setItem("rank_overrides", JSON.stringify(updatedRanks));
+            // ポイント履歴を追加
+            const historyEntry: PointsHistoryEntry = {
+              id: memberId,
+              name: memberName,
+              from: currentPoints,
+              to: num,
+              rank: RANK_LABELS[newRank as keyof typeof RANK_LABELS] ?? newRank,
+              at: new Date().toLocaleString("ja-JP"),
+            };
+            const updatedHistory = [historyEntry, ...pointsHistory].slice(0, 100);
+            setPointsHistory(updatedHistory);
+            await AsyncStorage.setItem("points_history", JSON.stringify(updatedHistory));
+            // ランク昇格メッセージ
+            const prevRank = getRankFromPoints(currentPoints);
+            const rankMsg = prevRank !== newRank
+              ? `\nランクが${RANK_LABELS[prevRank as keyof typeof RANK_LABELS]}→${RANK_LABELS[newRank as keyof typeof RANK_LABELS]}に変わりました`
+              : "";
+            Alert.alert("変更完了", `${memberName}のポイントを${num}ptに変更しました${rankMsg}`);
+          },
+        },
+      ],
+      "plain-text",
+      String(pointsOverrides[memberId] ?? currentPoints),
+      "number-pad"
+    );
+  };
+
+  const handleEditGeneration = (memberId: string, memberName: string, currentGen: number) => {
+    Alert.prompt(
+      "期生を変更",
+      `${memberName}の期生を入力してください`,
+      [
+        { text: "キャンセル", style: "cancel" },
+        {
+          text: "保存",
+          onPress: async (value: string | undefined) => {
+            const num = parseInt(value ?? "", 10);
+            if (isNaN(num) || num < 1) {
+              Alert.alert("エラー", "1以上の数字を入力してください");
+              return;
+            }
+            const updated = { ...generationOverrides, [memberId]: num };
+            setGenerationOverrides(updated);
+            await AsyncStorage.setItem("generation_overrides", JSON.stringify(updated));
+            Alert.alert("変更完了", `${memberName}を${num}期生に変更しました`);
+          },
+        },
+      ],
+      "plain-text",
+      String(generationOverrides[memberId] ?? currentGen),
+      "number-pad"
+    );
+  };
+
+  const toggleAdminRole = async (memberId: string, memberName: string) => {
+    const isCurrentlyAdmin = adminIds.has(memberId);
+    // 自分自身の権限は変更不可
+    if (memberId === CURRENT_USER.id) {
+      Alert.alert("変更不可", "自分自身の権限は変更できません。");
+      return;
+    }
+    const action = isCurrentlyAdmin ? "管理者権限を削除" : "管理者に任命";
+    Alert.alert(
+      `${memberName}を${action}しますか？`,
+      isCurrentlyAdmin
+        ? `${memberName}の管理者権限を削除し、一般会員に変更します。`
+        : `${memberName}に管理者権限を付与します。`,
+      [
+        { text: "キャンセル", style: "cancel" },
+        {
+          text: action,
+          style: isCurrentlyAdmin ? "destructive" : "default",
+          onPress: async () => {
+            const newAdminIds = new Set(adminIds);
+            if (isCurrentlyAdmin) {
+              newAdminIds.delete(memberId);
+            } else {
+              newAdminIds.add(memberId);
+            }
+            setAdminIds(newAdminIds);
+            await AsyncStorage.setItem("admin_member_ids", JSON.stringify([...newAdminIds]));
+            Alert.alert("変更完了", `${memberName}を${action}しました。`);
+          },
+        },
+      ]
+    );
+  };
+
+  // イロタスポイントを付与する
+  const handleGrantIrotasPoints = (memberId: string, memberName: string) => {
+    const current = irotasBalances[memberId] ?? 0;
+    Alert.prompt(
+      "イロタスポイントを付与",
+      `${memberName}に付与するイロタスポイント数を入力（現在: ${current}pt）`,
+      [
+        { text: "キャンセル", style: "cancel" },
+        {
+          text: "付与",
+          onPress: async (value: string | undefined) => {
+            const num = parseInt(value ?? "", 10);
+            if (isNaN(num) || num <= 0) {
+              Alert.alert("エラー", "1以上の整数を入力してください");
+              return;
+            }
+            const newBalance = await adjustIrotasPoints(memberId, memberName, num, "管理者からの付与");
+            setIrotasBalances((prev) => ({ ...prev, [memberId]: newBalance }));
+            const updated = await getIrotasPointsHistory();
+            setIrotasHistory(updated);
+            Alert.alert("付与完了", `${memberName}に${num}ptを付与しました。\n残高: ${newBalance}pt`);
+          },
+        },
+      ],
+      "plain-text",
+      "",
+      "number-pad"
+    );
+  };
+
+  // 会費免除を切り替える
+  const toggleFeeExemption = (memberId: string, memberName: string) => {
+    const isCurrentlyExempt = feeExemptIds.has(memberId);
+    const action = isCurrentlyExempt ? "会費免除を解除" : "会費免除を付与";
+    Alert.alert(
+      `${memberName}の会費免除`,
+      isCurrentlyExempt
+        ? `${memberName}の会費免除を解除しますか？`
+        : `${memberName}に会費免除を付与しますか？`,
+      [
+        { text: "キャンセル", style: "cancel" },
+        {
+          text: action,
+          style: isCurrentlyExempt ? "destructive" : "default",
+          onPress: async () => {
+            await setFeeExemption(memberId, !isCurrentlyExempt);
+            const updated = await getFeeExemptionMembers();
+            setFeeExemptIds(new Set(updated));
+            Alert.alert("変更完了", `${memberName}の会費免除を${action}しました。`);
+          },
+        },
+      ]
+    );
+  };
+
+  // お知らせ追加
+  const handleAddAnnouncement = async (title: string, content: string, type: string) => {
+    const newAnnouncement: Announcement = {
+      id: `ann_${Date.now()}`,
+      title,
+      content,
+      createdAt: new Date().toISOString().split("T")[0],
+    };
+    const updated = [newAnnouncement, ...announcements];
+    setAnnouncements(updated);
+    await AsyncStorage.setItem("custom_announcements", JSON.stringify(updated));
+  };
+
+  // お知らせ削除
+  const handleDeleteAnnouncement = (id: string) => {
+    Alert.alert("削除確認", "このお知らせを削除しますか？", [
+      { text: "キャンセル", style: "cancel" },
+      {
+        text: "削除",
+        style: "destructive",
+        onPress: async () => {
+          const updated = announcements.filter((a) => a.id !== id);
+          setAnnouncements(updated);
+          await AsyncStorage.setItem("custom_announcements", JSON.stringify(updated));
+        },
+      },
+    ]);
+  };
+
+  // 承認メール管理
+  const [newEmail, setNewEmail] = useState("");
+  const [newNote, setNewNote] = useState("");
+  const { data: allowedEmails, refetch: refetchEmails, isLoading: emailsLoading } = trpc.allowedEmails.list.useQuery(
+    undefined,
+    { enabled: activeTab === "emails" }
+  );
+  const addEmailMutation = trpc.allowedEmails.add.useMutation({
+    onSuccess: () => {
+      setNewEmail("");
+      setNewNote("");
+      refetchEmails();
+      Alert.alert("登録完了", `${newEmail} を承認メンバーに追加しました`);
+    },
+    onError: (e) => Alert.alert("エラー", e.message),
+  });
+  const removeEmailMutation = trpc.allowedEmails.remove.useMutation({
+    onSuccess: () => refetchEmails(),
+    onError: (e) => Alert.alert("エラー", e.message),
+  });
+
+  const handleAddEmail = () => {
+    const trimmed = newEmail.trim();
+    if (!trimmed || !trimmed.includes("@")) {
+      Alert.alert("入力エラー", "有効なメールアドレスを入力してください");
+      return;
+    }
+    addEmailMutation.mutate({ email: trimmed, note: newNote.trim() || undefined });
+  };
+
+  const handleRemoveEmail = (id: number, email: string) => {
+    Alert.alert(
+      "削除確認",
+      `${email} を承認リストから削除しますか？`,
+      [
+        { text: "キャンセル", style: "cancel" },
+        { text: "削除", style: "destructive", onPress: () => removeEmailMutation.mutate({ id }) },
+      ]
+    );
+  };
+
+  return (
+    <ScreenContainer edges={["top", "left", "right"]}>
+      {/* Header */}
+      <View
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          paddingHorizontal: 16,
+          paddingVertical: 12,
+          borderBottomWidth: 0.5,
+          borderBottomColor: colors.border,
+        }}
+      >
+        <Pressable onPress={() => router.back()}>
+          <IconSymbol name="arrow.left" size={22} color={colors.foreground} />
+        </Pressable>
+        <Text style={{ fontSize: 20, fontWeight: "800", color: colors.foreground, marginLeft: 12 }}>
+          管理者ダッシュボード
+        </Text>
+        <View
+          style={{
+            marginLeft: 10,
+            backgroundColor: "#E8A0BF20",
+            borderRadius: 8,
+            paddingHorizontal: 8,
+            paddingVertical: 3,
+          }}
+        >
+          <Text style={{ fontSize: 11, fontWeight: "700", color: "#E8A0BF" }}>ADMIN</Text>
+        </View>
+      </View>
+
+      {/* Tabs */}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={{
+          flexDirection: "row",
+          paddingHorizontal: 16,
+          paddingVertical: 10,
+          gap: 8,
+        }}
+        style={{ borderBottomWidth: 0.5, borderBottomColor: colors.border, flexGrow: 0 }}
+      >
+        {(["overview", "members", "events", "payments", "emails", "announcements", "analytics"] as const).map((tab) => {
+          const labels = { overview: "概要", members: "会員", events: "イベント", payments: "支払管理", emails: "承認メール", announcements: "お知らせ", analytics: "分析" };
+          return (
+            <Pressable
+              key={tab}
+              onPress={() => setActiveTab(tab)}
+              style={{
+                paddingHorizontal: 16,
+                paddingVertical: 7,
+                borderRadius: 20,
+                backgroundColor: activeTab === tab ? "#E8A0BF" : colors.surface,
+              }}
+            >
+              <Text
+                style={{
+                  fontSize: 13,
+                  fontWeight: "600",
+                  color: activeTab === tab ? "#FFF" : colors.foreground,
+                }}
+              >
+                {labels[tab]}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </ScrollView>
+
+      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
+        {activeTab === "overview" && (
+          <>
+            {/* KPIカード */}
+            <Text style={{ fontSize: 16, fontWeight: "700", color: colors.foreground, marginBottom: 12 }}>
+              主要指標
+            </Text>
+            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10, marginBottom: 20 }}>
+              {[
+                { label: "総会員数", value: MEMBERS.length, icon: "person.2.fill", color: "#E8A0BF" },
+                { label: "開催中イベント", value: stats.openEvents, icon: "calendar", color: "#A7C7E7" },
+                { label: "満席イベント", value: stats.fullEvents, icon: "person.fill.checkmark", color: "#FF9500" },
+                { label: "延べ参加者", value: stats.totalParticipants, icon: "chart.bar.fill", color: "#34C759" },
+                { label: "部活動数", value: stats.activeClubs, icon: "person.3.fill", color: "#AF52DE" },
+              ].map((kpi) => (
+                <View
+                  key={kpi.label}
+                  style={{
+                    flex: 1,
+                    minWidth: "45%",
+                    backgroundColor: colors.surface,
+                    borderRadius: 14,
+                    padding: 14,
+                  }}
+                >
+                  <View
+                    style={{
+                      width: 36,
+                      height: 36,
+                      borderRadius: 10,
+                      backgroundColor: kpi.color + "20",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      marginBottom: 8,
+                    }}
+                  >
+                    <IconSymbol name={kpi.icon as any} size={20} color={kpi.color} />
+                  </View>
+                  <Text style={{ fontSize: 24, fontWeight: "800", color: colors.foreground }}>{kpi.value}</Text>
+                  <Text style={{ fontSize: 12, color: colors.muted, marginTop: 2 }}>{kpi.label}</Text>
+                </View>
+              ))}
+            </View>
+
+            {/* ランク分布 */}
+            <Text style={{ fontSize: 16, fontWeight: "700", color: colors.foreground, marginBottom: 12 }}>
+              ランク分布
+            </Text>
+            <View style={{ backgroundColor: colors.surface, borderRadius: 14, padding: 16, marginBottom: 20 }}>
+              {(["platinum", "gold", "silver", "regular"] as const).map((rank) => {
+                const count = stats.rankCounts[rank] ?? 0;
+                const pct = MEMBERS.length > 0 ? count / MEMBERS.length : 0;
+                return (
+                  <View key={rank} style={{ marginBottom: 10 }}>
+                    <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 4 }}>
+                      <Text style={{ fontSize: 13, fontWeight: "600", color: RANK_COLORS[rank] }}>
+                        {RANK_LABELS[rank]}
+                      </Text>
+                      <Text style={{ fontSize: 13, color: colors.muted }}>{count}名</Text>
+                    </View>
+                    <View style={{ height: 6, backgroundColor: colors.border, borderRadius: 3 }}>
+                      <View
+                        style={{
+                          height: 6,
+                          width: `${pct * 100}%`,
+                          backgroundColor: RANK_COLORS[rank],
+                          borderRadius: 3,
+                        }}
+                      />
+                    </View>
+                  </View>
+                );
+              })}
+            </View>
+
+            {/* ポイント変更履歴（直近10件） */}
+            {pointsHistory.length > 0 && (
+              <>
+                <Text style={{ fontSize: 16, fontWeight: "700", color: colors.foreground, marginBottom: 12 }}>
+                  ポイント変更履歴（直近）
+                </Text>
+                <View style={{ backgroundColor: colors.surface, borderRadius: 14, padding: 12, marginBottom: 20 }}>
+                  {pointsHistory.slice(0, 10).map((entry, i) => (
+                    <View
+                      key={i}
+                      style={{
+                        paddingVertical: 8,
+                        borderBottomWidth: i < Math.min(pointsHistory.length, 10) - 1 ? 0.5 : 0,
+                        borderBottomColor: colors.border,
+                      }}
+                    >
+                      <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+                        <Text style={{ fontSize: 14, fontWeight: "600", color: colors.foreground }}>
+                          {entry.name}
+                        </Text>
+                        <Text style={{ fontSize: 13, color: entry.to > entry.from ? "#34C759" : "#FF3B30", fontWeight: "700" }}>
+                          {entry.from}pt → {entry.to}pt
+                        </Text>
+                      </View>
+                      <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 2 }}>
+                        <Text style={{ fontSize: 11, color: colors.muted }}>{entry.rank}</Text>
+                        <Text style={{ fontSize: 11, color: colors.muted }}>{entry.at}</Text>
+                      </View>
+                    </View>
+                  ))}
+                </View>
+              </>
+            )}
+          </>
+        )}
+
+        {activeTab === "members" && (
+          <>
+            <Text style={{ fontSize: 16, fontWeight: "700", color: colors.foreground, marginBottom: 12 }}>
+              会員一覧 ({MEMBERS.length}名)
+            </Text>
+            {MEMBERS.map((member) => {
+              const isMemberAdmin = adminIds.has(member.id);
+              const isSelf = member.id === CURRENT_USER.id;
+              const currentPts = pointsOverrides[member.id] ?? member.points;
+              const currentRank = (rankOverrides[member.id] ?? member.rank) as keyof typeof RANK_LABELS;
+              return (
+                <View
+                  key={member.id}
+                  style={{
+                    backgroundColor: colors.surface,
+                    borderRadius: 12,
+                    padding: 12,
+                    marginBottom: 8,
+                  }}
+                >
+                  <Pressable
+                    onPress={() => router.push({ pathname: "/member-profile", params: { id: member.id } })}
+                    style={({ pressed }) => ({
+                      flexDirection: "row",
+                      alignItems: "center",
+                      opacity: pressed ? 0.7 : 1,
+                    })}
+                  >
+                    <View
+                      style={{
+                        width: 40,
+                        height: 40,
+                        borderRadius: 20,
+                        backgroundColor: RANK_COLORS[currentRank] + "20",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        marginRight: 12,
+                        overflow: "hidden",
+                      }}
+                    >
+                      <Text style={{ fontSize: 18 }}>{member.name.charAt(0)}</Text>
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <View style={{ flexDirection: "row", alignItems: "center" }}>
+                        <Text style={{ fontSize: 15, fontWeight: "600", color: colors.foreground }}>
+                          {member.name}
+                        </Text>
+                        {isMemberAdmin && (
+                          <View
+                            style={{
+                              backgroundColor: "#E8A0BF20",
+                              borderRadius: 6,
+                              paddingHorizontal: 6,
+                              paddingVertical: 1,
+                              marginLeft: 6,
+                            }}
+                          >
+                            <Text style={{ fontSize: 10, fontWeight: "700", color: "#E8A0BF" }}>管理者</Text>
+                          </View>
+                        )}
+                        {isSelf && (
+                          <Text style={{ fontSize: 10, color: colors.muted, marginLeft: 6 }}>（自分）</Text>
+                        )}
+                      </View>
+                      <Text style={{ fontSize: 12, color: colors.muted, marginTop: 2 }}>
+                        {member.branch} / {generationOverrides[member.id] ?? member.generation}期生 / {currentPts}pt
+                      </Text>
+                    </View>
+                    <View
+                      style={{
+                        backgroundColor: RANK_COLORS[currentRank] + "20",
+                        borderRadius: 8,
+                        paddingHorizontal: 8,
+                        paddingVertical: 3,
+                      }}
+                    >
+                      <Text style={{ fontSize: 11, fontWeight: "700", color: RANK_COLORS[currentRank] }}>
+                        {RANK_LABELS[currentRank]}
+                      </Text>
+                    </View>
+                  </Pressable>
+
+                  {/* ポイント調整ボタン */}
+                  <Pressable
+                    onPress={() => handleEditPoints(member.id, member.name, currentPts)}
+                    style={({ pressed }) => ({
+                      marginTop: 8,
+                      paddingVertical: 7,
+                      borderRadius: 8,
+                      alignItems: "center",
+                      backgroundColor: "#34C75910",
+                      borderWidth: 1,
+                      borderColor: "#34C759",
+                      opacity: pressed ? 0.7 : 1,
+                    })}
+                  >
+                    <Text style={{ fontSize: 13, fontWeight: "600", color: "#34C759" }}>
+                      {currentPts}pt を調整
+                    </Text>
+                  </Pressable>
+
+                  {/* 期生変更ボタン */}
+                  <Pressable
+                    onPress={() => handleEditGeneration(member.id, member.name, generationOverrides[member.id] ?? member.generation)}
+                    style={({ pressed }) => ({
+                      marginTop: 8,
+                      paddingVertical: 7,
+                      borderRadius: 8,
+                      alignItems: "center",
+                      backgroundColor: "#A7C7E710",
+                      borderWidth: 1,
+                      borderColor: "#A7C7E7",
+                      opacity: pressed ? 0.7 : 1,
+                    })}
+                  >
+                    <Text style={{ fontSize: 13, fontWeight: "600", color: "#5B9BD5" }}>
+                      {generationOverrides[member.id] ?? member.generation}期生を変更
+                    </Text>
+                  </Pressable>
+
+                  {/* イロタスポイント付与ボタン */}
+                  <Pressable
+                    onPress={() => handleGrantIrotasPoints(member.id, member.name)}
+                    style={({ pressed }) => ({
+                      marginTop: 8,
+                      paddingVertical: 7,
+                      borderRadius: 8,
+                      alignItems: "center",
+                      backgroundColor: "#FF950010",
+                      borderWidth: 1,
+                      borderColor: "#FF9500",
+                      opacity: pressed ? 0.7 : 1,
+                    })}
+                  >
+                    <Text style={{ fontSize: 13, fontWeight: "600", color: "#FF9500" }}>
+                      ★ イロタスPT付与 ({irotasBalances[member.id] ?? 0}pt保有)
+                    </Text>
+                  </Pressable>
+
+                  {/* 会費免除ボタン */}
+                  <Pressable
+                    onPress={() => toggleFeeExemption(member.id, member.name)}
+                    style={({ pressed }) => ({
+                      marginTop: 8,
+                      paddingVertical: 7,
+                      borderRadius: 8,
+                      alignItems: "center",
+                      backgroundColor: feeExemptIds.has(member.id) ? "#34C75910" : "#8E8E9310",
+                      borderWidth: 1,
+                      borderColor: feeExemptIds.has(member.id) ? "#34C759" : "#8E8E93",
+                      opacity: pressed ? 0.7 : 1,
+                    })}
+                  >
+                    <Text style={{ fontSize: 13, fontWeight: "600", color: feeExemptIds.has(member.id) ? "#34C759" : "#8E8E93" }}>
+                      {feeExemptIds.has(member.id) ? "✓ 会費免除中（タップで解除）" : "会費免除を付与"}
+                    </Text>
+                  </Pressable>
+
+                  {/* 権限切り替えボタン */}
+                  {!isSelf && (
+                    <Pressable
+                      onPress={() => toggleAdminRole(member.id, member.name)}
+                      style={({ pressed }) => ({
+                        marginTop: 10,
+                        paddingVertical: 7,
+                        borderRadius: 8,
+                        alignItems: "center",
+                        backgroundColor: isMemberAdmin ? "#FF3B3010" : "#E8A0BF10",
+                        borderWidth: 1,
+                        borderColor: isMemberAdmin ? "#FF3B30" : "#E8A0BF",
+                        opacity: pressed ? 0.7 : 1,
+                      })}
+                    >
+                      <Text
+                        style={{
+                          fontSize: 13,
+                          fontWeight: "600",
+                          color: isMemberAdmin ? "#FF3B30" : "#E8A0BF",
+                        }}
+                      >
+                        {isMemberAdmin ? "管理者権限を削除" : "管理者に任命"}
+                      </Text>
+                    </Pressable>
+                  )}
+                </View>
+              );
+            })}
+
+            {/* ポイント変更履歴（全件） */}
+            {pointsHistory.length > 0 && (
+              <>
+                <Text style={{ fontSize: 16, fontWeight: "700", color: colors.foreground, marginTop: 20, marginBottom: 12 }}>
+                  ポイント変更履歴（全{pointsHistory.length}件）
+                </Text>
+                <View style={{ backgroundColor: colors.surface, borderRadius: 14, padding: 12 }}>
+                  {pointsHistory.map((entry, i) => (
+                    <View
+                      key={i}
+                      style={{
+                        paddingVertical: 8,
+                        borderBottomWidth: i < pointsHistory.length - 1 ? 0.5 : 0,
+                        borderBottomColor: colors.border,
+                      }}
+                    >
+                      <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+                        <Text style={{ fontSize: 14, fontWeight: "600", color: colors.foreground }}>
+                          {entry.name}
+                        </Text>
+                        <Text style={{ fontSize: 13, color: entry.to > entry.from ? "#34C759" : "#FF3B30", fontWeight: "700" }}>
+                          {entry.from}pt → {entry.to}pt
+                        </Text>
+                      </View>
+                      <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 2 }}>
+                        <Text style={{ fontSize: 11, color: colors.muted }}>{entry.rank}</Text>
+                        <Text style={{ fontSize: 11, color: colors.muted }}>{entry.at}</Text>
+                      </View>
+                    </View>
+                  ))}
+                </View>
+              </>
+            )}
+          </>
+        )}
+
+        {activeTab === "announcements" && (
+          <>
+            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+              <Text style={{ fontSize: 16, fontWeight: "700", color: colors.foreground }}>
+                お知らせ管理 ({announcements.length}件)
+              </Text>
+              <Pressable
+                onPress={() => setShowAnnouncementModal(true)}
+                style={({ pressed }) => ({
+                  backgroundColor: pressed ? "#d4849e" : "#E8A0BF",
+                  borderRadius: 10,
+                  paddingHorizontal: 14,
+                  paddingVertical: 8,
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 6,
+                })}
+              >
+                <IconSymbol name="plus" size={14} color="#FFF" />
+                <Text style={{ color: "#FFF", fontWeight: "700", fontSize: 13 }}>新規作成</Text>
+              </Pressable>
+            </View>
+
+            {announcements.length === 0 ? (
+              <View style={{ alignItems: "center", marginTop: 40 }}>
+                <IconSymbol name="megaphone.fill" size={40} color={colors.muted} />
+                <Text style={{ fontSize: 15, color: colors.muted, marginTop: 12, textAlign: "center" }}>
+                  まだお知らせがありません。{"\n"}「新規作成」からお知らせを投稿しましょう。
+                </Text>
+              </View>
+            ) : (
+              announcements.map((ann) => (
+                <View
+                  key={ann.id}
+                  style={{
+                    backgroundColor: colors.surface,
+                    borderRadius: 12,
+                    padding: 14,
+                    marginBottom: 10,
+                    borderWidth: 0.5,
+                    borderColor: colors.border,
+                  }}
+                >
+                  <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" }}>
+                    <Text style={{ fontSize: 15, fontWeight: "700", color: colors.foreground, flex: 1, marginRight: 8 }}>
+                      {ann.title}
+                    </Text>
+                    <Pressable
+                      onPress={() => handleDeleteAnnouncement(ann.id)}
+                      style={({ pressed }) => ({ opacity: pressed ? 0.5 : 1, padding: 4 })}
+                    >
+                      <IconSymbol name="trash.fill" size={16} color="#FF3B30" />
+                    </Pressable>
+                  </View>
+                  <Text style={{ fontSize: 13, color: colors.muted, marginTop: 6, lineHeight: 18 }}>
+                    {ann.content}
+                  </Text>
+                  <Text style={{ fontSize: 11, color: colors.muted, marginTop: 8 }}>
+                    {ann.createdAt}
+                  </Text>
+                </View>
+              ))
+            )}
+          </>
+        )}
+
+        {activeTab === "emails" && (
+          <>
+            <Text style={{ fontSize: 16, fontWeight: "700", color: colors.foreground, marginBottom: 4 }}>
+              承認メールアドレス管理
+            </Text>
+            <Text style={{ fontSize: 13, color: colors.muted, marginBottom: 16, lineHeight: 18 }}>
+              ここに登録したメールアドレスのみ新規登録が可能です。招待したいメンバーのメールアドレスを事前に追加してください。
+            </Text>
+
+            {/* 新規追加フォーム */}
+            <View
+              style={{
+                backgroundColor: colors.surface,
+                borderRadius: 12,
+                padding: 14,
+                marginBottom: 16,
+                borderWidth: 0.5,
+                borderColor: colors.border,
+              }}
+            >
+              <Text style={{ fontSize: 14, fontWeight: "700", color: colors.foreground, marginBottom: 10 }}>
+                メールアドレスを追加
+              </Text>
+              <TextInput
+                value={newEmail}
+                onChangeText={setNewEmail}
+                placeholder="メールアドレス"
+                placeholderTextColor={colors.muted}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                style={{
+                  backgroundColor: colors.background,
+                  borderRadius: 8,
+                  padding: 10,
+                  fontSize: 14,
+                  color: colors.foreground,
+                  borderWidth: 0.5,
+                  borderColor: colors.border,
+                  marginBottom: 8,
+                }}
+              />
+              <TextInput
+                value={newNote}
+                onChangeText={setNewNote}
+                placeholder="メモ（任意）例：山田太郎さんの紹介"
+                placeholderTextColor={colors.muted}
+                style={{
+                  backgroundColor: colors.background,
+                  borderRadius: 8,
+                  padding: 10,
+                  fontSize: 14,
+                  color: colors.foreground,
+                  borderWidth: 0.5,
+                  borderColor: colors.border,
+                  marginBottom: 12,
+                }}
+              />
+              <Pressable
+                onPress={handleAddEmail}
+                style={({ pressed }) => ({
+                  backgroundColor: pressed ? "#d4849e" : "#E8A0BF",
+                  borderRadius: 10,
+                  padding: 12,
+                  alignItems: "center",
+                })}
+              >
+                {addEmailMutation.isPending ? (
+                  <ActivityIndicator color="#FFF" size="small" />
+                ) : (
+                  <Text style={{ color: "#FFF", fontWeight: "700", fontSize: 14 }}>追加する</Text>
+                )}
+              </Pressable>
+            </View>
+
+            {/* 承認済みメール一覧 */}
+            <Text style={{ fontSize: 14, fontWeight: "700", color: colors.foreground, marginBottom: 10 }}>
+              承認済み一覧 ({allowedEmails?.length ?? 0}件)
+            </Text>
+            {emailsLoading ? (
+              <ActivityIndicator color={colors.primary} style={{ marginTop: 20 }} />
+            ) : allowedEmails?.length === 0 ? (
+              <Text style={{ fontSize: 14, color: colors.muted, textAlign: "center", marginTop: 20 }}>
+                まだ承認メールアドレスが登録されていません
+              </Text>
+            ) : (
+              allowedEmails?.map((item) => (
+                <View
+                  key={item.id}
+                  style={{
+                    backgroundColor: colors.surface,
+                    borderRadius: 12,
+                    padding: 14,
+                    marginBottom: 8,
+                    flexDirection: "row",
+                    alignItems: "center",
+                    borderWidth: 0.5,
+                    borderColor: item.isRegistered ? "#34C75940" : colors.border,
+                  }}
+                >
+                  <View style={{ flex: 1 }}>
+                    <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                      <Text style={{ fontSize: 14, fontWeight: "600", color: colors.foreground }}>
+                        {item.email}
+                      </Text>
+                      {item.isRegistered === 1 && (
+                        <View style={{ backgroundColor: "#34C75920", borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2 }}>
+                          <Text style={{ fontSize: 10, fontWeight: "700", color: "#34C759" }}>登録済</Text>
+                        </View>
+                      )}
+                    </View>
+                    {item.note ? (
+                      <Text style={{ fontSize: 12, color: colors.muted, marginTop: 2 }}>{item.note}</Text>
+                    ) : null}
+                    <Text style={{ fontSize: 11, color: colors.muted, marginTop: 2 }}>
+                      {new Date(item.createdAt).toLocaleDateString("ja-JP")}追加
+                    </Text>
+                  </View>
+                  <Pressable
+                    onPress={() => handleRemoveEmail(item.id, item.email)}
+                    style={({ pressed }) => ({
+                      padding: 8,
+                      opacity: pressed ? 0.5 : 1,
+                    })}
+                  >
+                    <IconSymbol name="trash.fill" size={18} color="#FF3B30" />
+                  </Pressable>
+                </View>
+              ))
+            )}
+          </>
+        )}
+
+        {activeTab === "payments" && (
+          <>
+            <Text style={{ fontSize: 16, fontWeight: "700", color: colors.foreground, marginBottom: 12 }}>
+              参加費支払管理
+            </Text>
+
+            {/* イベント選択 */}
+            {(() => {
+              // 支払レコードがあるイベントの一覧
+              const eventIds = [...new Set(paymentRecords.map((r) => r.eventId))];
+              if (eventIds.length === 0) {
+                return (
+                  <View style={{ alignItems: "center", paddingVertical: 40 }}>
+                    <Text style={{ fontSize: 14, color: colors.muted, textAlign: "center" }}>
+                      まだ支払データがありません。{"\n"}イベントに参加すると自動登録されます。
+                    </Text>
+                  </View>
+                );
+              }
+              return (
+                <>
+                  {/* イベント選択ピル */}
+                  <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={{ flexDirection: "row", gap: 8, marginBottom: 16 }}
+                  >
+                    {eventIds.map((eid) => {
+                      const ev = EVENTS.find((e) => e.id === eid);
+                      const label = ev?.title ?? eid;
+                      const records = paymentRecords.filter((r) => r.eventId === eid);
+                      const paidCount = records.filter((r) => r.status === "paid").length;
+                      return (
+                        <Pressable
+                          key={eid}
+                          onPress={() => setSelectedPaymentEventId(eid === selectedPaymentEventId ? null : eid)}
+                          style={{
+                            paddingHorizontal: 14,
+                            paddingVertical: 8,
+                            borderRadius: 20,
+                            backgroundColor: selectedPaymentEventId === eid ? "#E8A0BF" : colors.surface,
+                          }}
+                        >
+                          <Text style={{ fontSize: 12, fontWeight: "600", color: selectedPaymentEventId === eid ? "#FFF" : colors.foreground }} numberOfLines={1}>
+                            {label}
+                          </Text>
+                          <Text style={{ fontSize: 11, color: selectedPaymentEventId === eid ? "#FFF" : colors.muted, textAlign: "center", marginTop: 2 }}>
+                            {paidCount}/{records.length}人済
+                          </Text>
+                        </Pressable>
+                      );
+                    })}
+                  </ScrollView>
+
+                  {/* 選択中イベントの参加者一覧 */}
+                  {selectedPaymentEventId && (() => {
+                    const ev = EVENTS.find((e) => e.id === selectedPaymentEventId);
+                    const records = paymentRecords.filter((r) => r.eventId === selectedPaymentEventId);
+                    const totalAmount = records.reduce((s, r) => s + r.amount, 0);
+                    const paidAmount = records.filter((r) => r.status === "paid").reduce((s, r) => s + r.amount, 0);
+                    return (
+                      <>
+                        {/* サマリーカード */}
+                        <View style={{ backgroundColor: colors.surface, borderRadius: 12, padding: 14, marginBottom: 14 }}>
+                          <Text style={{ fontSize: 14, fontWeight: "700", color: colors.foreground, marginBottom: 8 }}>
+                            {ev?.title ?? selectedPaymentEventId}
+                          </Text>
+                          <View style={{ flexDirection: "row", gap: 16 }}>
+                            <View style={{ flex: 1, alignItems: "center" }}>
+                              <Text style={{ fontSize: 11, color: colors.muted }}>参加者</Text>
+                              <Text style={{ fontSize: 20, fontWeight: "700", color: colors.foreground }}>{records.length}人</Text>
+                            </View>
+                            <View style={{ flex: 1, alignItems: "center" }}>
+                              <Text style={{ fontSize: 11, color: colors.muted }}>支払済み</Text>
+                              <Text style={{ fontSize: 20, fontWeight: "700", color: "#34C759" }}>
+                                {records.filter((r) => r.status === "paid").length}人
+                              </Text>
+                            </View>
+                            <View style={{ flex: 1, alignItems: "center" }}>
+                              <Text style={{ fontSize: 11, color: colors.muted }}>未払い</Text>
+                              <Text style={{ fontSize: 20, fontWeight: "700", color: "#FF3B30" }}>
+                                {records.filter((r) => r.status === "unpaid").length}人
+                              </Text>
+                            </View>
+                            <View style={{ flex: 1, alignItems: "center" }}>
+                              <Text style={{ fontSize: 11, color: colors.muted }}>入金額</Text>
+                              <Text style={{ fontSize: 16, fontWeight: "700", color: "#E8A0BF" }}>
+                                ¥{paidAmount.toLocaleString()}
+                              </Text>
+                            </View>
+                          </View>
+                        </View>
+
+                        {/* 参加者別支払状況 */}
+                        {records.length === 0 ? (
+                          <Text style={{ fontSize: 13, color: colors.muted, textAlign: "center", paddingVertical: 20 }}>
+                            まだ参加者がいません
+                          </Text>
+                        ) : (
+                          records.map((rec) => {
+                            const statusColor = rec.status === "paid" ? "#34C759" : rec.status === "exempted" ? "#AF52DE" : "#FF3B30";
+                            const statusLabel = rec.status === "paid" ? "支払済" : rec.status === "exempted" ? "免除" : "未払い";
+                            return (
+                              <View
+                                key={rec.id}
+                                style={{
+                                  backgroundColor: colors.surface,
+                                  borderRadius: 12,
+                                  padding: 14,
+                                  marginBottom: 8,
+                                  flexDirection: "row",
+                                  alignItems: "center",
+                                }}
+                              >
+                                <View style={{ flex: 1 }}>
+                                  <Text style={{ fontSize: 14, fontWeight: "600", color: colors.foreground }}>{rec.userName}</Text>
+                                  <Text style={{ fontSize: 12, color: colors.muted, marginTop: 2 }}>
+                                    {RANK_LABELS[rec.userRank as keyof typeof RANK_LABELS] ?? rec.userRank} ・ ¥{rec.amount.toLocaleString()}
+                                  </Text>
+                                  {rec.paidAt && (
+                                    <Text style={{ fontSize: 11, color: colors.muted, marginTop: 1 }}>
+                                      支払日: {new Date(rec.paidAt).toLocaleDateString("ja-JP")}
+                                    </Text>
+                                  )}
+                                </View>
+                                {/* 状態トグルボタン */}
+                                <View style={{ flexDirection: "row", gap: 6 }}>
+                                  {(["unpaid", "paid", "exempted"] as PaymentStatus[]).map((s) => (
+                                    <Pressable
+                                      key={s}
+                                      onPress={async () => {
+                                        await updatePaymentStatus(rec.id, s);
+                                        clearPaymentCache();
+                                        const updated = await getAllPayments();
+                                        setPaymentRecords(updated);
+                                      }}
+                                      style={{
+                                        paddingHorizontal: 10,
+                                        paddingVertical: 5,
+                                        borderRadius: 8,
+                                        backgroundColor: rec.status === s ? statusColor + "30" : colors.background,
+                                        borderWidth: 1,
+                                        borderColor: rec.status === s ? statusColor : colors.border,
+                                      }}
+                                    >
+                                      <Text style={{ fontSize: 11, fontWeight: "600", color: rec.status === s ? statusColor : colors.muted }}>
+                                        {s === "paid" ? "済" : s === "exempted" ? "免除" : "未"}
+                                      </Text>
+                                    </Pressable>
+                                  ))}
+                                </View>
+                              </View>
+                            );
+                          })
+                        )}
+                      </>
+                    );
+                  })()}
+                </>
+              );
+            })()}
+          </>
+        )}
+
+        {activeTab === "events" && (
+          <>
+            <Text style={{ fontSize: 16, fontWeight: "700", color: colors.foreground, marginBottom: 12 }}>
+              イベント管理 ({EVENTS.length}件)
+            </Text>
+            {EVENTS.map((event) => (
+              <Pressable
+                key={event.id}
+                onPress={() => router.push({ pathname: "/event-detail", params: { id: event.id } })}
+                style={({ pressed }) => ({
+                  backgroundColor: colors.surface,
+                  borderRadius: 12,
+                  padding: 14,
+                  marginBottom: 10,
+                  opacity: pressed ? 0.7 : 1,
+                })}
+              >
+                <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 6 }}>
+                  <Text style={{ fontSize: 15, fontWeight: "700", color: colors.foreground, flex: 1 }} numberOfLines={1}>
+                    {event.title}
+                  </Text>
+                  <View
+                    style={{
+                      backgroundColor:
+                        event.status === "open" ? "#34C75920" : event.status === "full" ? "#FF950020" : "#8E8E9320",
+                      borderRadius: 8,
+                      paddingHorizontal: 8,
+                      paddingVertical: 2,
+                      marginLeft: 8,
+                    }}
+                  >
+                    <Text
+                      style={{
+                        fontSize: 11,
+                        fontWeight: "700",
+                        color: event.status === "open" ? "#34C759" : event.status === "full" ? "#FF9500" : "#8E8E93",
+                      }}
+                    >
+                      {event.status === "open" ? "受付中" : event.status === "full" ? "満席" : "終了"}
+                    </Text>
+                  </View>
+                </View>
+                <Text style={{ fontSize: 13, color: colors.muted }}>
+                  {event.date} {event.time}〜 / {event.location}
+                </Text>
+                <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 8 }}>
+                  <Text style={{ fontSize: 13, color: colors.foreground }}>
+                    参加: {event.attendees}/{event.capacity}名
+                  </Text>
+                  <Text style={{ fontSize: 13, color: "#E8A0BF", fontWeight: "600" }}>
+                    {event.price}
+                  </Text>
+                </View>
+              </Pressable>
+            ))}
+           </>
+        )}
+        {activeTab === "analytics" && (
+          <AnalyticsTab />
+        )}
+      </ScrollView>
+
+      {/* お知らせ作成モーダル */}
+      <AnnouncementCreateModal
+        visible={showAnnouncementModal}
+        onClose={() => setShowAnnouncementModal(false)}
+        onSave={handleAddAnnouncement}
+      />
+    </ScreenContainer>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
+// 分析タブ
+// ─────────────────────────────────────────────────────────────
+function AnalyticsTab() {
+  const colors = useColors();
+
+  // 男女比
+  const genderCounts = useMemo(() => {
+    const counts = { male: 0, female: 0, other: 0, unset: 0 };
+    for (const m of MEMBERS) {
+      const g = m.gender ?? "unset";
+      counts[g] = (counts[g] ?? 0) + 1;
+    }
+    return counts;
+  }, []);
+  const totalWithGender = genderCounts.male + genderCounts.female + genderCounts.other;
+  const maleRatio = totalWithGender > 0 ? Math.round((genderCounts.male / MEMBERS.length) * 100) : 0;
+  const femaleRatio = totalWithGender > 0 ? Math.round((genderCounts.female / MEMBERS.length) * 100) : 0;
+  const otherRatio = totalWithGender > 0 ? Math.round((genderCounts.other / MEMBERS.length) * 100) : 0;
+
+  // ランク分布
+  const rankCounts = useMemo(() => {
+    const counts: Record<string, number> = { regular: 0, silver: 0, gold: 0, platinum: 0 };
+    for (const m of MEMBERS) counts[m.rank] = (counts[m.rank] ?? 0) + 1;
+    return counts;
+  }, []);
+
+  // 支部別会員数
+  const branchCounts = useMemo(() => {
+    const counts: Record<string, number> = { kanto: 0, kansai: 0 };
+    for (const m of MEMBERS) counts[m.branch] = (counts[m.branch] ?? 0) + 1;
+    return counts;
+  }, []);
+
+  // 月別入会者数（直近6ヶ月）
+  const monthlyJoins = useMemo(() => {
+    const now = new Date();
+    const months: { label: string; count: number }[] = [];
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      const label = `${d.getMonth() + 1}月`;
+      const count = MEMBERS.filter((m) => m.joinedAt?.startsWith(key)).length;
+      months.push({ label, count });
+    }
+    return months;
+  }, []);
+  const maxMonthlyJoins = Math.max(...monthlyJoins.map((m) => m.count), 1);
+
+  // イベント月別開催数（直近6ヶ月）
+  const monthlyEvents = useMemo(() => {
+    const now = new Date();
+    const months: { label: string; count: number; avgFill: number }[] = [];
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      const label = `${d.getMonth() + 1}月`;
+      const eventsInMonth = EVENTS.filter((e) => e.date?.startsWith(key));
+      const avgFill = eventsInMonth.length > 0
+        ? Math.round(eventsInMonth.reduce((s, e) => s + (e.attendees / Math.max(e.capacity, 1)), 0) / eventsInMonth.length * 100)
+        : 0;
+      months.push({ label, count: eventsInMonth.length, avgFill });
+    }
+    return months;
+  }, []);
+  const maxMonthlyEvents = Math.max(...monthlyEvents.map((m) => m.count), 1);
+
+  // イベント全体の平均充足率
+  const avgFillRate = EVENTS.length > 0
+    ? Math.round(EVENTS.reduce((s, e) => s + (e.attendees / Math.max(e.capacity, 1)), 0) / EVENTS.length * 100)
+    : 0;
+
+  // 支部別イベント数
+  const eventByCategory = useMemo(() => ({
+    all: EVENTS.filter((e) => e.category === "all").length,
+    kanto: EVENTS.filter((e) => e.category === "kanto").length,
+    kansai: EVENTS.filter((e) => e.category === "kansai").length,
+  }), []);
+
+  const BAR_COLOR_MALE = "#A7C7E7";
+  const BAR_COLOR_FEMALE = "#E8A0BF";
+  const BAR_COLOR_EVENT = "#A7C7E7";
+
+  return (
+    <View>
+      {/* KPIカード */}
+      <Text style={{ fontSize: 16, fontWeight: "700", color: colors.foreground, marginBottom: 12 }}>
+        主要指標
+      </Text>
+      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10, marginBottom: 20 }}>
+        {[
+          { label: "総会員数", value: `${MEMBERS.length}名`, color: "#E8A0BF" },
+          { label: "男女比（男）", value: `${maleRatio}%`, color: BAR_COLOR_MALE },
+          { label: "男女比（女）", value: `${femaleRatio}%`, color: BAR_COLOR_FEMALE },
+          { label: "総イベント数", value: `${EVENTS.length}件`, color: "#34C759" },
+          { label: "平均充足率", value: `${avgFillRate}%`, color: "#FF9500" },
+        ].map((kpi) => (
+          <View
+            key={kpi.label}
+            style={{
+              flex: 1,
+              minWidth: "28%",
+              backgroundColor: colors.surface,
+              borderRadius: 12,
+              padding: 12,
+              alignItems: "center",
+            }}
+          >
+            <Text style={{ fontSize: 22, fontWeight: "900", color: kpi.color }}>{kpi.value}</Text>
+            <Text style={{ fontSize: 11, color: colors.muted, marginTop: 2, textAlign: "center" }}>{kpi.label}</Text>
+          </View>
+        ))}
+      </View>
+
+      {/* 男女比バー */}
+      <View style={{ backgroundColor: colors.surface, borderRadius: 16, padding: 16, marginBottom: 16 }}>
+        <Text style={{ fontSize: 14, fontWeight: "700", color: colors.foreground, marginBottom: 12 }}>
+          性別分布
+        </Text>
+        <View style={{ flexDirection: "row", height: 20, borderRadius: 10, overflow: "hidden", marginBottom: 10 }}>
+          <View style={{ flex: maleRatio, backgroundColor: BAR_COLOR_MALE }} />
+          <View style={{ flex: femaleRatio, backgroundColor: BAR_COLOR_FEMALE }} />
+          <View style={{ flex: otherRatio, backgroundColor: "#AF52DE" }} />
+          <View style={{ flex: Math.max(100 - maleRatio - femaleRatio - otherRatio, 0), backgroundColor: colors.border }} />
+        </View>
+        <View style={{ flexDirection: "row", gap: 16 }}>
+          {[
+            { label: "男性", count: genderCounts.male, color: BAR_COLOR_MALE },
+            { label: "女性", count: genderCounts.female, color: BAR_COLOR_FEMALE },
+            { label: "その他", count: genderCounts.other, color: "#AF52DE" },
+            { label: "未設定", count: genderCounts.unset, color: colors.border },
+          ].map((g) => (
+            <View key={g.label} style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+              <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: g.color }} />
+              <Text style={{ fontSize: 12, color: colors.muted }}>{g.label}: {g.count}名</Text>
+            </View>
+          ))}
+        </View>
+      </View>
+
+      {/* ランク分布 */}
+      <View style={{ backgroundColor: colors.surface, borderRadius: 16, padding: 16, marginBottom: 16 }}>
+        <Text style={{ fontSize: 14, fontWeight: "700", color: colors.foreground, marginBottom: 12 }}>
+          ランク分布
+        </Text>
+        {(["platinum", "gold", "silver", "regular"] as const).map((rank) => {
+          const count = rankCounts[rank] ?? 0;
+          const pct = MEMBERS.length > 0 ? count / MEMBERS.length : 0;
+          return (
+            <View key={rank} style={{ marginBottom: 10 }}>
+              <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 4 }}>
+                <Text style={{ fontSize: 13, fontWeight: "600", color: RANK_COLORS[rank] }}>{RANK_LABELS[rank]}</Text>
+                <Text style={{ fontSize: 13, color: colors.muted }}>{count}名 ({Math.round(pct * 100)}%)</Text>
+              </View>
+              <View style={{ height: 8, backgroundColor: colors.border, borderRadius: 4, overflow: "hidden" }}>
+                <View style={{ height: "100%", width: `${pct * 100}%`, backgroundColor: RANK_COLORS[rank], borderRadius: 4 }} />
+              </View>
+            </View>
+          );
+        })}
+      </View>
+
+      {/* 支部別会員数 */}
+      <View style={{ backgroundColor: colors.surface, borderRadius: 16, padding: 16, marginBottom: 16 }}>
+        <Text style={{ fontSize: 14, fontWeight: "700", color: colors.foreground, marginBottom: 12 }}>
+          支部別会員数
+        </Text>
+        <View style={{ flexDirection: "row", gap: 12 }}>
+          {[
+            { label: "関東支部", count: branchCounts.kanto, color: "#A7C7E7" },
+            { label: "関西支部", count: branchCounts.kansai, color: "#E8A0BF" },
+          ].map((b) => (
+            <View key={b.label} style={{ flex: 1, backgroundColor: b.color + "20", borderRadius: 12, padding: 14, alignItems: "center" }}>
+              <Text style={{ fontSize: 28, fontWeight: "900", color: b.color }}>{b.count}</Text>
+              <Text style={{ fontSize: 12, color: colors.muted, marginTop: 2 }}>{b.label}</Text>
+            </View>
+          ))}
+        </View>
+      </View>
+
+      {/* 月別入会者数グラフ */}
+      <View style={{ backgroundColor: colors.surface, borderRadius: 16, padding: 16, marginBottom: 16 }}>
+        <Text style={{ fontSize: 14, fontWeight: "700", color: colors.foreground, marginBottom: 12 }}>
+          月別入会者数（直近6ヶ月）
+        </Text>
+        <View style={{ flexDirection: "row", alignItems: "flex-end", gap: 6, height: 80 }}>
+          {monthlyJoins.map((m) => (
+            <View key={m.label} style={{ flex: 1, alignItems: "center" }}>
+              <Text style={{ fontSize: 10, color: colors.muted, marginBottom: 2 }}>{m.count}</Text>
+              <View
+                style={{
+                  width: "100%",
+                  height: maxMonthlyJoins > 0 ? Math.max((m.count / maxMonthlyJoins) * 60, m.count > 0 ? 4 : 0) : 0,
+                  backgroundColor: BAR_COLOR_FEMALE,
+                  borderRadius: 4,
+                }}
+              />
+              <Text style={{ fontSize: 10, color: colors.muted, marginTop: 4 }}>{m.label}</Text>
+            </View>
+          ))}
+        </View>
+      </View>
+
+      {/* 月別イベント開催数グラフ */}
+      <View style={{ backgroundColor: colors.surface, borderRadius: 16, padding: 16, marginBottom: 16 }}>
+        <Text style={{ fontSize: 14, fontWeight: "700", color: colors.foreground, marginBottom: 12 }}>
+          月別イベント開催数（直近6ヶ月）
+        </Text>
+        <View style={{ flexDirection: "row", alignItems: "flex-end", gap: 6, height: 80 }}>
+          {monthlyEvents.map((m) => (
+            <View key={m.label} style={{ flex: 1, alignItems: "center" }}>
+              <Text style={{ fontSize: 10, color: colors.muted, marginBottom: 2 }}>{m.count}</Text>
+              <View
+                style={{
+                  width: "100%",
+                  height: maxMonthlyEvents > 0 ? Math.max((m.count / maxMonthlyEvents) * 60, m.count > 0 ? 4 : 0) : 0,
+                  backgroundColor: BAR_COLOR_EVENT,
+                  borderRadius: 4,
+                }}
+              />
+              <Text style={{ fontSize: 10, color: colors.muted, marginTop: 4 }}>{m.label}</Text>
+            </View>
+          ))}
+        </View>
+        <View style={{ flexDirection: "row", gap: 12, marginTop: 12 }}>
+          {monthlyEvents.map((m) => (
+            <View key={m.label} style={{ flex: 1, alignItems: "center" }}>
+              <Text style={{ fontSize: 10, color: colors.muted }}>充{m.avgFill}%</Text>
+            </View>
+          ))}
+        </View>
+        <Text style={{ fontSize: 11, color: colors.muted, marginTop: 4 }}>小数値は平均充足率</Text>
+      </View>
+
+      {/* イベント支部別開催数 */}
+      <View style={{ backgroundColor: colors.surface, borderRadius: 16, padding: 16, marginBottom: 16 }}>
+        <Text style={{ fontSize: 14, fontWeight: "700", color: colors.foreground, marginBottom: 12 }}>
+          支部別イベント開催数
+        </Text>
+        {[
+          { label: "全国共通", count: eventByCategory.all, color: "#34C759" },
+          { label: "関東限定", count: eventByCategory.kanto, color: "#A7C7E7" },
+          { label: "関西限定", count: eventByCategory.kansai, color: "#E8A0BF" },
+        ].map((cat) => {
+          const pct = EVENTS.length > 0 ? cat.count / EVENTS.length : 0;
+          return (
+            <View key={cat.label} style={{ marginBottom: 10 }}>
+              <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 4 }}>
+                <Text style={{ fontSize: 13, color: colors.foreground }}>{cat.label}</Text>
+                <Text style={{ fontSize: 13, color: colors.muted }}>{cat.count}件</Text>
+              </View>
+              <View style={{ height: 8, backgroundColor: colors.border, borderRadius: 4, overflow: "hidden" }}>
+                <View style={{ height: "100%", width: `${pct * 100}%`, backgroundColor: cat.color, borderRadius: 4 }} />
+              </View>
+            </View>
+          );
+        })}
+      </View>
+    </View>
+  );
+}
+
+function AnnouncementCreateModal({
+  visible,
+  onClose,
+  onSave,
+}: {
+  visible: boolean;
+  onClose: () => void;
+  onSave: (title: string, content: string, type: string) => Promise<void>;
+}) {
+  const colors = useColors();
+  const [title, setTitle] = useState("");
+  const [content, setContent] = useState("");
+  const [type, setType] = useState<"important" | "event" | "general">("general");
+  const [saving, setSaving] = useState(false);
+
+  const typeOptions: { key: "important" | "event" | "general"; label: string; color: string }[] = [
+    { key: "important", label: "重要", color: "#FF3B30" },
+    { key: "event", label: "イベント", color: "#FF9500" },
+    { key: "general", label: "一般", color: "#A7C7E7" },
+  ];
+
+  const handleSave = async () => {
+    if (!title.trim() || !content.trim()) return;
+    setSaving(true);
+    await onSave(title.trim(), content.trim(), type);
+    setSaving(false);
+    setTitle("");
+    setContent("");
+    setType("general");
+    onClose();
+  };
+
+  return (
+    <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
+      <View style={{ flex: 1, backgroundColor: colors.background }}>
+        {/* ヘッダー */}
+        <View
+          style={{
+            flexDirection: "row",
+            justifyContent: "space-between",
+            alignItems: "center",
+            paddingHorizontal: 16,
+            paddingTop: 16,
+            paddingBottom: 12,
+            borderBottomWidth: 0.5,
+            borderBottomColor: colors.border,
+          }}
+        >
+          <Pressable onPress={onClose}>
+            <Text style={{ fontSize: 16, color: colors.muted }}>キャンセル</Text>
+          </Pressable>
+          <Text style={{ fontSize: 17, fontWeight: "700", color: colors.foreground }}>
+            お知らせを作成
+          </Text>
+          <Pressable onPress={handleSave} disabled={saving || !title.trim() || !content.trim()}>
+            {saving ? (
+              <ActivityIndicator size="small" color="#E8A0BF" />
+            ) : (
+              <Text
+                style={{
+                  fontSize: 16,
+                  fontWeight: "700",
+                  color: title.trim() && content.trim() ? "#E8A0BF" : colors.muted,
+                }}
+              >
+                投稿
+              </Text>
+            )}
+          </Pressable>
+        </View>
+
+        <ScrollView contentContainerStyle={{ padding: 16 }}>
+          {/* 種別選択 */}
+          <Text style={{ fontSize: 13, fontWeight: "600", color: colors.muted, marginBottom: 8 }}>
+            種別
+          </Text>
+          <View style={{ flexDirection: "row", gap: 8, marginBottom: 20 }}>
+            {typeOptions.map((opt) => (
+              <Pressable
+                key={opt.key}
+                onPress={() => setType(opt.key)}
+                style={{
+                  flex: 1,
+                  paddingVertical: 8,
+                  borderRadius: 10,
+                  alignItems: "center",
+                  backgroundColor: type === opt.key ? opt.color + "20" : colors.surface,
+                  borderWidth: 1.5,
+                  borderColor: type === opt.key ? opt.color : colors.border,
+                }}
+              >
+                <Text
+                  style={{
+                    fontSize: 13,
+                    fontWeight: "700",
+                    color: type === opt.key ? opt.color : colors.muted,
+                  }}
+                >
+                  {opt.label}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+
+          {/* タイトル */}
+          <Text style={{ fontSize: 13, fontWeight: "600", color: colors.muted, marginBottom: 6 }}>
+            タイトル
+          </Text>
+          <TextInput
+            value={title}
+            onChangeText={setTitle}
+            placeholder="お知らせのタイトル"
+            placeholderTextColor={colors.muted}
+            style={{
+              backgroundColor: colors.surface,
+              borderRadius: 12,
+              paddingHorizontal: 14,
+              paddingVertical: 12,
+              fontSize: 15,
+              color: colors.foreground,
+              marginBottom: 16,
+            }}
+          />
+
+          {/* 内容 */}
+          <Text style={{ fontSize: 13, fontWeight: "600", color: colors.muted, marginBottom: 6 }}>
+            内容
+          </Text>
+          <TextInput
+            value={content}
+            onChangeText={setContent}
+            placeholder="お知らせの内容を入力..."
+            placeholderTextColor={colors.muted}
+            multiline
+            textAlignVertical="top"
+            style={{
+              backgroundColor: colors.surface,
+              borderRadius: 12,
+              paddingHorizontal: 14,
+              paddingVertical: 12,
+              fontSize: 15,
+              color: colors.foreground,
+              minHeight: 160,
+              marginBottom: 16,
+            }}
+          />
+
+          <Text style={{ fontSize: 12, color: colors.muted, lineHeight: 18 }}>
+            ※ 投稿したお知らせはホーム画面のお知らせ一覧に表示されます。
+          </Text>
+        </ScrollView>
+      </View>
+    </Modal>
+  );
+}

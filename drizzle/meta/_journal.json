@@ -8,6 +8,27 @@
       "when": 1763372440610,
       "tag": "0000_elite_eternals",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1774278048690,
+      "tag": "0001_gray_titania",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1775004041062,
+      "tag": "0002_absurd_prism",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "5",
+      "when": 1779523980266,
+      "tag": "0003_condemned_true_believers",
+      "breakpoints": true
     }
   ]
 }

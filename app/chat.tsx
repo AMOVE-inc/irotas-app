@@ -1,0 +1,945 @@
+import { ScreenContainer } from "@/components/screen-container";
+import { IconSymbol } from "@/components/ui/icon-symbol";
+import {
+  CHAT_MESSAGES,
+  CURRENT_USER,
+  MEMBERS,
+  getMemberById,
+  isAdmin,
+  type ChatMessage,
+  type Member,
+} from "@/constants/mock-data";
+import { getRoomById, getMessages, addMessage as storeAddMessage, saveMessagesToStorage, loadMessagesFromStorage, loadDynamicRooms, renameRoom, addMemberToRoom, removeMemberFromRoom } from "@/lib/chat-store";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useColors } from "@/hooks/use-colors";
+import { Image } from "expo-image";
+import * as ImagePicker from "expo-image-picker";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
+import {
+  Alert,
+  FlatList,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import {
+  requestNotificationPermissions,
+  checkAndSendMentionNotifications,
+  sendMentionNotification,
+} from "@/lib/notifications";
+
+// メンション部分をパースしてハイライト表示するコンポーネント
+// グループメンションのラベル一覧
+const GROUP_MENTION_LABELS = ["全体", "支部全員", "チャット内の人全員"];
+
+function MentionText({
+  content,
+  isMe,
+  colors,
+}: {
+  content: string;
+  isMe: boolean;
+  colors: ReturnType<typeof useColors>;
+}) {
+  // @名前 のパターンを検出
+  const parts = content.split(/(@\S+)/g);
+  return (
+    <Text style={{ fontSize: 14, lineHeight: 20, color: isMe ? "#FFF" : colors.foreground }}>
+      {parts.map((part, i) => {
+        if (part.startsWith("@")) {
+          const label = part.slice(1);
+          const isGroup = GROUP_MENTION_LABELS.includes(label);
+          return (
+            <Text
+              key={i}
+              style={{
+                color: isGroup
+                  ? isMe ? "#FFFACD" : "#FF9800"
+                  : isMe ? "#FFE0F0" : "#E8A0BF",
+                fontWeight: "700",
+                backgroundColor: isGroup
+                  ? isMe ? "rgba(255,200,0,0.25)" : "rgba(255,152,0,0.15)"
+                  : "transparent",
+              }}
+            >
+              {part}
+            </Text>
+          );
+        }
+        return <Text key={i}>{part}</Text>;
+      })}
+    </Text>
+  );
+}
+
+function MessageBubble({ message, isMe, myAvatarUri }: { message: ChatMessage; isMe: boolean; myAvatarUri?: string | null }) {
+  const colors = useColors();
+  const sender = getMemberById(message.senderId);
+
+  const formatTime = (dateStr: string) => {
+    const d = new Date(dateStr);
+    return `${d.getHours()}:${String(d.getMinutes()).padStart(2, "0")}`;
+  };
+
+  // アバター画像の決定: 自分はプロフィール画像、他者はモックデータのアバター
+  const avatarSource = isMe
+    ? (myAvatarUri ? { uri: myAvatarUri } : (sender?.avatar ? { uri: sender.avatar } : null))
+    : (sender?.avatar ? { uri: sender.avatar } : null);
+
+  return (
+    <View
+      style={{
+        flexDirection: isMe ? "row-reverse" : "row",
+        alignItems: "flex-end",
+        marginBottom: 10,
+        paddingHorizontal: 16,
+      }}
+    >
+      {/* 自分のアバターも表示 */}
+      {avatarSource && (
+        <Image
+          source={avatarSource}
+          style={[
+            { width: 28, height: 28, borderRadius: 14 },
+            isMe ? { marginLeft: 8 } : { marginRight: 8 },
+          ]}
+          contentFit="cover"
+        />
+      )}
+      <View style={{ maxWidth: "70%" }}>
+        {!isMe && (
+          <Text style={{ fontSize: 11, color: colors.muted, marginBottom: 2, marginLeft: 2 }}>
+            {sender?.name}
+          </Text>
+        )}
+        <View
+          style={{
+            backgroundColor: isMe ? "#E8A0BF" : colors.surface,
+            borderRadius: 16,
+            borderBottomRightRadius: isMe ? 4 : 16,
+            borderBottomLeftRadius: isMe ? 16 : 4,
+            overflow: "hidden",
+          }}
+        >
+          {message.imageUri ? (
+            <Image
+              source={{ uri: message.imageUri }}
+              style={{ width: 220, height: 180 }}
+              contentFit="cover"
+            />
+          ) : null}
+          {message.content ? (
+            <View style={{ paddingHorizontal: 14, paddingVertical: 10 }}>
+              <MentionText content={message.content} isMe={isMe} colors={colors} />
+            </View>
+          ) : null}
+        </View>
+        <Text
+          style={{
+            fontSize: 10,
+            color: colors.muted,
+            marginTop: 2,
+            textAlign: isMe ? "right" : "left",
+            marginHorizontal: 4,
+          }}
+        >
+          {formatTime(message.createdAt)}
+        </Text>
+      </View>
+    </View>
+  );
+}
+
+// メンション候補リスト
+// グループメンション定義
+const GROUP_MENTIONS = [
+  { id: "@all",    label: "全体",           desc: "アプリ全会員に通知" },
+  { id: "@branch", label: "支部全員",        desc: "同じ支部のメンバー全員に通知" },
+  { id: "@here",   label: "チャット内の人全員", desc: "このチャットの参加者全員に通知" },
+] as const;
+type GroupMentionId = typeof GROUP_MENTIONS[number]["id"];
+
+function MentionSuggestions({
+  query,
+  participants,
+  onSelect,
+  onSelectGroup,
+  colors,
+}: {
+  query: string;
+  participants: string[];
+  onSelect: (member: Member) => void;
+  onSelectGroup: (id: GroupMentionId, label: string) => void;
+  colors: ReturnType<typeof useColors>;
+}) {
+  // グループメンション候補（クエリが空またはラベルに一致）
+  const filteredGroups = GROUP_MENTIONS.filter(
+    (g) => query === "" || g.label.includes(query) || g.id.includes(query.toLowerCase()),
+  );
+
+  // 個人メンション候補
+  const filteredMembers = MEMBERS.filter(
+    (m) =>
+      m.id !== CURRENT_USER.id &&
+      participants.includes(m.id) &&
+      m.name.toLowerCase().includes(query.toLowerCase()),
+  ).slice(0, 5);
+
+  if (filteredGroups.length === 0 && filteredMembers.length === 0) return null;
+
+  return (
+    <View
+      style={{
+        backgroundColor: colors.background,
+        borderTopWidth: 0.5,
+        borderTopColor: colors.border,
+        maxHeight: 240,
+      }}
+    >
+      {/* グループメンション */}
+      {filteredGroups.map((group) => (
+        <Pressable
+          key={group.id}
+          onPress={() => onSelectGroup(group.id, group.label)}
+          style={({ pressed }) => ({
+            flexDirection: "row",
+            alignItems: "center",
+            paddingHorizontal: 16,
+            paddingVertical: 10,
+            borderBottomWidth: 0.5,
+            borderBottomColor: colors.border,
+            backgroundColor: pressed ? colors.surface : "transparent",
+          })}
+        >
+          <View
+            style={{
+              width: 32,
+              height: 32,
+              borderRadius: 16,
+              backgroundColor: "#E8A0BF",
+              alignItems: "center",
+              justifyContent: "center",
+              marginRight: 10,
+            }}
+          >
+            <Text style={{ fontSize: 14 }}>
+              {group.id === "@all" ? "🌐" : group.id === "@branch" ? "🏢" : "💬"}
+            </Text>
+          </View>
+          <View>
+            <Text style={{ fontSize: 14, fontWeight: "700", color: "#E8A0BF" }}>
+              @{group.label}
+            </Text>
+            <Text style={{ fontSize: 11, color: colors.muted }}>{group.desc}</Text>
+          </View>
+        </Pressable>
+      ))}
+      {/* 個人メンション */}
+      {filteredMembers.map((member) => (
+        <Pressable
+          key={member.id}
+          onPress={() => onSelect(member)}
+          style={({ pressed }) => ({
+            flexDirection: "row",
+            alignItems: "center",
+            paddingHorizontal: 16,
+            paddingVertical: 10,
+            borderBottomWidth: 0.5,
+            borderBottomColor: colors.border,
+            backgroundColor: pressed ? colors.surface : "transparent",
+          })}
+        >
+          <Image
+            source={member.avatar}
+            style={{ width: 32, height: 32, borderRadius: 16, marginRight: 10 }}
+            contentFit="cover"
+          />
+          <View>
+            <Text style={{ fontSize: 14, fontWeight: "600", color: colors.foreground }}>
+              {member.name}
+            </Text>
+            <Text style={{ fontSize: 11, color: colors.muted }}>
+              {member.generation}期生 · {member.branch === "kanto" ? "関東" : "関西"}支部
+            </Text>
+          </View>
+          <Text style={{ marginLeft: "auto", fontSize: 12, color: "#E8A0BF" }}>@{member.name}</Text>
+        </Pressable>
+      ))}
+    </View>
+  );
+}
+
+export default function ChatScreen() {
+  const colors = useColors();
+  const router = useRouter();
+  const { id } = useLocalSearchParams<{ id: string }>();
+  const [messageText, setMessageText] = useState("");
+  const [mentionQuery, setMentionQuery] = useState<string | null>(null);
+  const flatListRef = useRef<FlatList>(null);
+  const inputRef = useRef<TextInput>(null);
+
+  // 参加者モーダル
+  const [showParticipants, setShowParticipants] = useState(false);
+  // 管理者機能用 state
+  const [editingTitle, setEditingTitle] = useState(false);
+  const [newTitle, setNewTitle] = useState("");
+  const [showAddMember, setShowAddMember] = useState(false);
+  // キーボード表示状態
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
+
+  useEffect(() => {
+    const { Keyboard } = require("react-native");
+    const show = Keyboard.addListener("keyboardWillShow", () => setKeyboardVisible(true));
+    const hide = Keyboard.addListener("keyboardWillHide", () => setKeyboardVisible(false));
+    return () => { show.remove(); hide.remove(); };
+  }, []);
+
+  const [room, setRoom] = useState(() => getRoomById(id ?? ""));
+  const [roomParticipants, setRoomParticipants] = useState<string[]>(
+    () => getRoomById(id ?? "")?.participants ?? []
+  );
+  const [messages, setMessages] = useState<ChatMessage[]>(() =>
+    id ? getMessages(id) : [],
+  );
+  // 自分のプロフィール画像（AsyncStorageから読み込み）
+  const [myAvatarUri, setMyAvatarUri] = useState<string | null>(null);
+
+  // 初回起動時: プロフィール画像と永続化メッセージを読み込む
+  useEffect(() => {
+    if (!id) return;
+    // プロフィール画像読み込み
+    AsyncStorage.getItem("profile_avatar_uri").then((uri) => {
+      if (uri) setMyAvatarUri(uri);
+    });
+    // 動的ルームを復元してから永続化メッセージを読み込む
+    loadDynamicRooms().then(() => {
+      const r = getRoomById(id);
+      if (r) {
+        setRoom(r);
+        setRoomParticipants([...r.participants]);
+      }
+      loadMessagesFromStorage(id).then((stored) => {
+        if (stored.length > 0) {
+          setMessages((prev) => {
+            const existingIds = new Set(prev.map((m) => m.id));
+            const merged = [...prev, ...stored.filter((m) => !existingIds.has(m.id))];
+            return merged.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+          });
+        }
+      });
+    });
+  }, [id]);
+
+  // @入力を検出してメンション候補を表示
+  const handleTextChange = useCallback((text: string) => {
+    setMessageText(text);
+    // カーソル位置の直前の@以降を取得
+    const atIndex = text.lastIndexOf("@");
+    if (atIndex !== -1) {
+      const afterAt = text.slice(atIndex + 1);
+      // スペースが入ったらメンション終了
+      if (!afterAt.includes(" ")) {
+        setMentionQuery(afterAt);
+        return;
+      }
+    }
+    setMentionQuery(null);
+  }, []);
+
+  // メンション候補を選択したときにテキストを置換
+  const handleSelectMention = useCallback(
+    (member: Member) => {
+      const atIndex = messageText.lastIndexOf("@");
+      if (atIndex !== -1) {
+        const before = messageText.slice(0, atIndex);
+        const newText = `${before}@${member.name} `;
+        setMessageText(newText);
+      }
+      setMentionQuery(null);
+      inputRef.current?.focus();
+    },
+    [messageText],
+  );
+
+  // グループメンション候補を選択したときにテキストを置換
+  const handleSelectGroupMention = useCallback(
+    (_id: GroupMentionId, label: string) => {
+      const atIndex = messageText.lastIndexOf("@");
+      if (atIndex !== -1) {
+        const before = messageText.slice(0, atIndex);
+        const newText = `${before}@${label} `;
+        setMessageText(newText);
+      }
+      setMentionQuery(null);
+      inputRef.current?.focus();
+    },
+    [messageText],
+  );
+
+  // 通知権限を初回に要求
+  useEffect(() => {
+    requestNotificationPermissions();
+  }, []);
+
+  const insets = useSafeAreaInsets();
+  const [pendingImage, setPendingImage] = useState<string | null>(null);
+
+  const handlePickPhoto = useCallback(async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== "granted") {
+      Alert.alert("権限が必要です", "写真を送るには写真ライブラリへのアクセスを許可してください。");
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: false,
+      quality: 0.8,
+    });
+    if (!result.canceled && result.assets.length > 0) {
+      setPendingImage(result.assets[0].uri);
+    }
+  }, []);
+
+  const handleSend = useCallback(() => {
+    if (!messageText.trim() && !pendingImage) return;
+    const content = messageText.trim();
+    const newMessage: ChatMessage = {
+      id: `m_new_${Date.now()}`,
+      chatId: id || "",
+      senderId: CURRENT_USER.id,
+      content,
+      imageUri: pendingImage ?? undefined,
+      createdAt: new Date().toISOString(),
+    };
+    setMessages((prev) => [...prev, newMessage]);
+    setMessageText("");
+    setPendingImage(null);
+    setMentionQuery(null);
+
+    // AsyncStorageに永続化
+    if (id) {
+      saveMessagesToStorage(id, [newMessage]);
+    }
+
+    // メンション通知を送信
+    if (room && content.includes("@")) {
+      // グループメンション検出
+      const hasAll = content.includes("@全体");
+      const hasBranch = content.includes("@支部全員");
+      const hasHere = content.includes("@チャット内の人全員");
+
+      if (hasAll || hasBranch || hasHere) {
+        // グループメンション: 対象ユーザーを特定して通知
+        const targets = room.participants.filter((pid) => pid !== CURRENT_USER.id);
+        const preview = content.length > 50 ? content.slice(0, 50) + "..." : content;
+        for (const pid of targets) {
+          const m = getMemberById(pid);
+          if (!m) continue;
+          // @支部全員 の場合は同じ支部のメンバーのみ
+          if (hasBranch) {
+            const currentMember = MEMBERS.find((mem) => mem.id === CURRENT_USER.id);
+            const targetMember = MEMBERS.find((mem) => mem.id === pid);
+            if (currentMember && targetMember && currentMember.branch !== targetMember.branch) continue;
+          }
+          sendMentionNotification(m.name, CURRENT_USER.name, room.name, preview);
+        }
+      } else {
+        // 個人メンション
+        checkAndSendMentionNotifications(
+          content,
+          CURRENT_USER.name,
+          room.name,
+          room.participants,
+          getMemberById,
+        );
+      }
+    }
+  }, [messageText, pendingImage, id, room]);
+
+  useEffect(() => {
+    if (messages.length > 0) {
+      setTimeout(() => {
+        flatListRef.current?.scrollToEnd({ animated: true });
+      }, 100);
+    }
+  }, [messages.length]);
+
+  if (!room) {
+    return (
+      <ScreenContainer edges={["top", "left", "right"]}>
+        <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+          <Text style={{ fontSize: 16, color: colors.muted }}>チャットが見つかりません</Text>
+        </View>
+      </ScreenContainer>
+    );
+  }
+
+  const typeLabel = room.type === "event" ? "イベント" : room.type === "board" ? "掲示板" : "部活動";
+  const typeColor = room.type === "event" ? "#E8A0BF" : room.type === "board" ? "#A7C7E7" : "#34C759";
+
+  return (
+    <ScreenContainer edges={["top", "left", "right"]}>
+      {/* Header */}
+      <View
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          paddingHorizontal: 16,
+          paddingVertical: 10,
+          borderBottomWidth: 0.5,
+          borderBottomColor: colors.border,
+        }}
+      >
+        <Pressable onPress={() => router.back()}>
+          <IconSymbol name="arrow.left" size={22} color={colors.foreground} />
+        </Pressable>
+        <View style={{ flex: 1, marginLeft: 12 }}>
+          <Text style={{ fontSize: 16, fontWeight: "700", color: colors.foreground }} numberOfLines={1}>
+            {room.name}
+          </Text>
+          <View style={{ flexDirection: "row", alignItems: "center", marginTop: 2 }}>
+            <View
+              style={{
+                backgroundColor: typeColor + "20",
+                borderRadius: 6,
+                paddingHorizontal: 6,
+                paddingVertical: 1,
+              }}
+            >
+              <Text style={{ fontSize: 10, fontWeight: "600", color: typeColor }}>
+                {typeLabel}
+              </Text>
+            </View>
+            <Text style={{ fontSize: 11, color: colors.muted, marginLeft: 6 }}>
+              {roomParticipants.length}人参加中
+            </Text>
+          </View>
+        </View>
+        <Pressable
+          onPress={() => setShowParticipants(true)}
+        >
+          <IconSymbol name="person.2.fill" size={20} color={colors.muted} />
+        </Pressable>
+      </View>
+
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={Platform.OS === "ios" ? insets.top + 52 : 0}
+      >
+        {/* Messages */}
+        <FlatList
+          ref={flatListRef}
+          data={messages}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }) => (
+            <MessageBubble
+              message={item}
+              isMe={item.senderId === CURRENT_USER.id}
+              myAvatarUri={myAvatarUri}
+            />
+          )}
+          contentContainerStyle={{ paddingVertical: 16 }}
+          showsVerticalScrollIndicator={false}
+          ListEmptyComponent={
+            <View style={{ alignItems: "center", paddingVertical: 40 }}>
+              <IconSymbol name="message.fill" size={36} color={colors.border} />
+              <Text style={{ fontSize: 14, color: colors.muted, marginTop: 8 }}>
+                まだメッセージはありません
+              </Text>
+              <Text style={{ fontSize: 12, color: colors.muted, marginTop: 4 }}>
+                最初のメッセージを送りましょう
+              </Text>
+            </View>
+          }
+        />
+
+        {/* メンション候補リスト */}
+        {mentionQuery !== null && (
+          <MentionSuggestions
+            query={mentionQuery}
+            participants={room.participants}
+            onSelect={handleSelectMention}
+            onSelectGroup={handleSelectGroupMention}
+            colors={colors}
+          />
+        )}
+
+        {/* Input */}
+        <View
+          style={{
+            borderTopWidth: 0.5,
+            borderTopColor: colors.border,
+            backgroundColor: colors.background,
+          }}
+        >
+          {/* @メンションのヒント */}
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              paddingHorizontal: 16,
+              paddingTop: 6,
+              paddingBottom: 2,
+            }}
+          >
+            <Text style={{ fontSize: 11, color: colors.muted }}>
+              @を入力してメンション
+            </Text>
+          </View>
+          {/* 画像プレビュー */}
+          {pendingImage && (
+            <View style={{ paddingHorizontal: 16, paddingBottom: 6 }}>
+              <View style={{ position: "relative", alignSelf: "flex-start" }}>
+                <Image
+                  source={{ uri: pendingImage }}
+                  style={{ width: 80, height: 80, borderRadius: 10 }}
+                  contentFit="cover"
+                />
+                <TouchableOpacity
+                  onPress={() => setPendingImage(null)}
+                  style={{
+                    position: "absolute",
+                    top: -6,
+                    right: -6,
+                    backgroundColor: "#666",
+                    borderRadius: 10,
+                    width: 20,
+                    height: 20,
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <IconSymbol name="xmark" size={12} color="#FFF" />
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              paddingHorizontal: 16,
+              paddingTop: 10,
+              paddingBottom: keyboardVisible ? 10 : (Platform.OS === "ios" ? Math.max(insets.bottom, 10) : 10),
+            }}
+          >
+            {/* 画像選択ボタン */}
+            <TouchableOpacity
+              onPress={handlePickPhoto}
+              style={{ marginRight: 10 }}
+            >
+              <IconSymbol
+                name="photo.fill"
+                size={26}
+                color={colors.muted}
+              />
+            </TouchableOpacity>
+            <TextInput
+              ref={inputRef}
+              value={messageText}
+              onChangeText={handleTextChange}
+              placeholder="メッセージを入力..."
+              placeholderTextColor={colors.muted}
+              returnKeyType="done"
+              onSubmitEditing={handleSend}
+              style={{
+                flex: 1,
+                backgroundColor: colors.surface,
+                borderRadius: 20,
+                paddingHorizontal: 16,
+                paddingVertical: 10,
+                fontSize: 14,
+                color: colors.foreground,
+              }}
+            />
+            <Pressable
+              onPress={handleSend}
+              style={{ marginLeft: 10 }}
+            >
+              <IconSymbol
+                name="paperplane.fill"
+                size={24}
+                color={(messageText.trim() || pendingImage) ? "#E8A0BF" : colors.muted}
+              />
+            </Pressable>
+          </View>
+        </View>
+      </KeyboardAvoidingView>
+
+      {/* ===== 参加者一覧モーダル ===== */}
+      <Modal
+        visible={showParticipants}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setShowParticipants(false)}
+      >
+        <View style={{ flex: 1, backgroundColor: colors.background }}>
+          {/* モーダルヘッダー */}
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+              paddingHorizontal: 16,
+              paddingTop: 20,
+              paddingBottom: 12,
+              borderBottomWidth: 0.5,
+              borderBottomColor: colors.border,
+            }}
+          >
+            <Text style={{ fontSize: 18, fontWeight: "700", color: colors.foreground }}>
+              参加者 ({roomParticipants.length})
+            </Text>
+            <Pressable onPress={() => setShowParticipants(false)}>
+              <IconSymbol name="xmark" size={22} color={colors.muted} />
+            </Pressable>
+          </View>
+
+          {/* 管理者機能（アプリ管理者またはチャット作成者のみ表示） */}
+          {(isAdmin(CURRENT_USER) || room.createdBy === CURRENT_USER.id) && (
+            <View
+              style={{
+                margin: 16,
+                padding: 12,
+                backgroundColor: colors.surface,
+                borderRadius: 12,
+                borderWidth: 0.5,
+                borderColor: colors.border,
+              }}
+            >
+              <Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground, marginBottom: 10 }}>
+                チャット管理
+              </Text>
+              {/* タイトル変更 */}
+              {editingTitle ? (
+                <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 8 }}>
+                  <TextInput
+                    value={newTitle}
+                    onChangeText={setNewTitle}
+                    placeholder="新しいチャット名"
+                    placeholderTextColor={colors.muted}
+                    style={{
+                      flex: 1,
+                      backgroundColor: colors.background,
+                      borderRadius: 8,
+                      paddingHorizontal: 12,
+                      paddingVertical: 8,
+                      fontSize: 14,
+                      color: colors.foreground,
+                      borderWidth: 0.5,
+                      borderColor: colors.border,
+                      marginRight: 8,
+                    }}
+                  />
+                  <TouchableOpacity
+                    onPress={async () => {
+                      if (!newTitle.trim() || !id) return;
+                      const ok = await renameRoom(id, newTitle.trim());
+                      if (ok) {
+                        const r = getRoomById(id);
+                        if (r) setRoom(r);
+                        Alert.alert("変更完了", `チャット名を「${newTitle.trim()}」に変更しました`);
+                      } else {
+                        Alert.alert("エラー", "変更できませんでした（デフォルトチャットは変更不可）");
+                      }
+                      setEditingTitle(false);
+                      setNewTitle("");
+                    }}
+                    style={{
+                      backgroundColor: "#E8A0BF",
+                      borderRadius: 8,
+                      paddingHorizontal: 12,
+                      paddingVertical: 8,
+                    }}
+                  >
+                    <Text style={{ color: "#fff", fontSize: 13, fontWeight: "600" }}>保存</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={() => { setEditingTitle(false); setNewTitle(""); }}
+                    style={{ marginLeft: 6 }}
+                  >
+                    <Text style={{ color: colors.muted, fontSize: 13 }}>キャンセル</Text>
+                  </TouchableOpacity>
+                </View>
+              ) : (
+                <TouchableOpacity
+                  onPress={() => { setEditingTitle(true); setNewTitle(room.name); }}
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    paddingVertical: 6,
+                    marginBottom: 4,
+                  }}
+                >
+                  <IconSymbol name="pencil" size={16} color="#E8A0BF" />
+                  <Text style={{ fontSize: 13, color: "#E8A0BF", marginLeft: 6 }}>チャット名を変更</Text>
+                </TouchableOpacity>
+              )}
+              {/* メンバー追加 */}
+              <TouchableOpacity
+                onPress={() => setShowAddMember(true)}
+                style={{ flexDirection: "row", alignItems: "center", paddingVertical: 6 }}
+              >
+                <IconSymbol name="person.badge.plus" size={16} color="#34C759" />
+                <Text style={{ fontSize: 13, color: "#34C759", marginLeft: 6 }}>メンバーを追加</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+
+          {/* 参加者リスト */}
+          <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 32 }}>
+            {roomParticipants.map((pid) => {
+              const member = getMemberById(pid);
+              if (!member) return null;
+              const isCurrentUser = pid === CURRENT_USER.id;
+              const canRemove = (isAdmin(CURRENT_USER) || room.createdBy === CURRENT_USER.id) && !isCurrentUser;
+              return (
+                <View
+                  key={pid}
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    paddingVertical: 12,
+                    borderBottomWidth: 0.5,
+                    borderBottomColor: colors.border,
+                  }}
+                >
+                  <TouchableOpacity
+                    onPress={() => {
+                      setShowParticipants(false);
+                      router.push({ pathname: "/member-profile", params: { id: pid } });
+                    }}
+                    style={{ flexDirection: "row", alignItems: "center", flex: 1 }}
+                  >
+                    <Image
+                      source={{ uri: `https://api.dicebear.com/7.x/adventurer/svg?seed=${member.id}` }}
+                      style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: colors.surface }}
+                      contentFit="cover"
+                    />
+                    <View style={{ marginLeft: 12, flex: 1 }}>
+                      <Text style={{ fontSize: 15, fontWeight: "600", color: colors.foreground }}>
+                        {member.name}{isCurrentUser ? " (あなた)" : ""}
+                      </Text>
+                      <Text style={{ fontSize: 12, color: colors.muted, marginTop: 1 }}>
+                        {member.branch} ・ {member.rank}
+                      </Text>
+                    </View>
+                    <IconSymbol name="chevron.right" size={16} color={colors.muted} />
+                  </TouchableOpacity>
+                  {canRemove && (
+                    <TouchableOpacity
+                      onPress={() => {
+                        Alert.alert(
+                          "メンバーを削除",
+                          `${member.name}をこのチャットから削除しますか？`,
+                          [
+                            { text: "キャンセル", style: "cancel" },
+                            {
+                              text: "削除",
+                              style: "destructive",
+                              onPress: async () => {
+                                if (!id) return;
+                                await removeMemberFromRoom(id, pid);
+                                setRoomParticipants((prev) => prev.filter((p) => p !== pid));
+                              },
+                            },
+                          ]
+                        );
+                      }}
+                      style={{ marginLeft: 8, padding: 6 }}
+                    >
+                      <IconSymbol name="trash" size={18} color={colors.error} />
+                    </TouchableOpacity>
+                  )}
+                </View>
+              );
+            })}
+          </ScrollView>
+        </View>
+      </Modal>
+
+      {/* ===== メンバー追加モーダル ===== */}
+      <Modal
+        visible={showAddMember}
+        animationType="slide"
+        presentationStyle="formSheet"
+        onRequestClose={() => setShowAddMember(false)}
+      >
+        <View style={{ flex: 1, backgroundColor: colors.background }}>
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+              paddingHorizontal: 16,
+              paddingTop: 20,
+              paddingBottom: 12,
+              borderBottomWidth: 0.5,
+              borderBottomColor: colors.border,
+            }}
+          >
+            <Text style={{ fontSize: 18, fontWeight: "700", color: colors.foreground }}>メンバーを追加</Text>
+            <Pressable onPress={() => setShowAddMember(false)}>
+              <IconSymbol name="xmark" size={22} color={colors.muted} />
+            </Pressable>
+          </View>
+          <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 32 }}>
+            {MEMBERS.filter((m) => !roomParticipants.includes(m.id)).map((member) => (
+              <TouchableOpacity
+                key={member.id}
+                onPress={async () => {
+                  if (!id) return;
+                  await addMemberToRoom(id, member.id);
+                  setRoomParticipants((prev) => [...prev, member.id]);
+                  Alert.alert("追加完了", `${member.name}をチャットに追加しました`);
+                }}
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  paddingVertical: 12,
+                  borderBottomWidth: 0.5,
+                  borderBottomColor: colors.border,
+                }}
+              >
+                <Image
+                  source={{ uri: `https://api.dicebear.com/7.x/adventurer/svg?seed=${member.id}` }}
+                  style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: colors.surface }}
+                  contentFit="cover"
+                />
+                <View style={{ marginLeft: 12, flex: 1 }}>
+                  <Text style={{ fontSize: 15, fontWeight: "600", color: colors.foreground }}>{member.name}</Text>
+                  <Text style={{ fontSize: 12, color: colors.muted, marginTop: 1 }}>{member.branch} ・ {member.rank}</Text>
+                </View>
+                <View
+                  style={{
+                    backgroundColor: "#34C759" + "20",
+                    borderRadius: 8,
+                    paddingHorizontal: 10,
+                    paddingVertical: 4,
+                  }}
+                >
+                  <Text style={{ fontSize: 12, color: "#34C759", fontWeight: "600" }}>追加</Text>
+                </View>
+              </TouchableOpacity>
+            ))}
+            {MEMBERS.filter((m) => !roomParticipants.includes(m.id)).length === 0 && (
+              <View style={{ alignItems: "center", paddingVertical: 40 }}>
+                <Text style={{ fontSize: 14, color: colors.muted }}>追加できるメンバーはいません</Text>
+              </View>
+            )}
+          </ScrollView>
+        </View>
+      </Modal>
+    </ScreenContainer>
+  );
+}

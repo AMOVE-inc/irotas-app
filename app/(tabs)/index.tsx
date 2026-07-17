@@ -1,48 +1,568 @@
-import { ScrollView, Text, View, TouchableOpacity } from "react-native";
-
 import { ScreenContainer } from "@/components/screen-container";
+import { IconSymbol } from "@/components/ui/icon-symbol";
+import {
+  ANNOUNCEMENTS,
+  TIMELINE_POSTS,
+  RANK_COLORS,
+  RANK_LABELS,
+  RANK_ICONS,
+  getTodayEvents,
+  CURRENT_USER,
+  type TimelinePost,
+  type Announcement,
+  type Event,
+  type BoardThread,
+} from "@/constants/mock-data";
+import { useColors } from "@/hooks/use-colors";
+import { Image } from "expo-image";
+import { useRouter } from "expo-router";
+import { useRef, useState, useCallback, useMemo } from "react";
+import {
+  Dimensions,
+  FlatList,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  Share,
+  Text,
+  TextInput,
+  View,
+  RefreshControl,
+} from "react-native";
 
-/**
- * Home Screen - NativeWind Example
- *
- * This template uses NativeWind (Tailwind CSS for React Native).
- * You can use familiar Tailwind classes directly in className props.
- *
- * Key patterns:
- * - Use `className` instead of `style` for most styling
- * - Theme colors: use tokens directly (bg-background, text-foreground, bg-primary, etc.); no dark: prefix needed
- * - Responsive: standard Tailwind breakpoints work on web
- * - Custom colors defined in tailwind.config.js
- */
-export default function HomeScreen() {
+// タイムラインコメント型
+interface TimelineComment {
+  id: string;
+  postId: string;
+  authorName: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  authorAvatar: any;
+  text: string;
+  createdAt: string;
+}
+
+// コメントストア（メモリ内）
+const timelineComments: TimelineComment[] = [];
+
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
+
+function AnnouncementBanner({ announcements }: { announcements: Announcement[] }) {
+  const colors = useColors();
+  const [activeIndex, setActiveIndex] = useState(0);
+  const scrollRef = useRef<ScrollView>(null);
+
   return (
-    <ScreenContainer className="p-6">
-      <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
-        <View className="flex-1 gap-8">
-          {/* Hero Section */}
-          <View className="items-center gap-2">
-            <Text className="text-4xl font-bold text-foreground">Welcome</Text>
-            <Text className="text-base text-muted text-center">
-              Edit app/(tabs)/index.tsx to get started
-            </Text>
-          </View>
-
-          {/* Example Card */}
-          <View className="w-full max-w-sm self-center bg-surface rounded-2xl p-6 shadow-sm border border-border">
-            <Text className="text-lg font-semibold text-foreground mb-2">NativeWind Ready</Text>
-            <Text className="text-sm text-muted leading-relaxed">
-              Use Tailwind CSS classes directly in your React Native components.
-            </Text>
-          </View>
-
-          {/* Example Button */}
-          <View className="items-center">
-            <TouchableOpacity className="bg-primary px-6 py-3 rounded-full active:opacity-80">
-              <Text className="text-background font-semibold">Get Started</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
+    <View style={{ marginHorizontal: 16, marginTop: 12, marginBottom: 8 }}>
+      <ScrollView
+        ref={scrollRef}
+        horizontal
+        pagingEnabled
+        showsHorizontalScrollIndicator={false}
+        onMomentumScrollEnd={(e) => {
+          const index = Math.round(e.nativeEvent.contentOffset.x / (SCREEN_WIDTH - 32));
+          setActiveIndex(index);
+        }}
+      >
+        {announcements.map((item) => (
+          <Pressable
+            key={item.id}
+            style={{ width: SCREEN_WIDTH - 32, borderRadius: 12, overflow: "hidden" }}
+          >
+            <View style={{ backgroundColor: "#FDF2F7", borderRadius: 12, padding: 14 }}>
+              <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 6 }}>
+                <IconSymbol name="megaphone.fill" size={14} color="#E8A0BF" />
+                <Text style={{ fontSize: 11, color: "#E8A0BF", fontWeight: "600", marginLeft: 6 }}>
+                  お知らせ
+                </Text>
+              </View>
+              <Text
+                style={{ fontSize: 14, fontWeight: "700", color: colors.foreground, marginBottom: 3 }}
+                numberOfLines={1}
+              >
+                {item.title}
+              </Text>
+              <Text style={{ fontSize: 12, color: colors.muted }} numberOfLines={2}>
+                {item.content}
+              </Text>
+            </View>
+          </Pressable>
+        ))}
       </ScrollView>
+      <View style={{ flexDirection: "row", justifyContent: "center", marginTop: 6 }}>
+        {announcements.map((_, i) => (
+          <View
+            key={i}
+            style={{
+              width: i === activeIndex ? 14 : 5,
+              height: 5,
+              borderRadius: 3,
+              backgroundColor: i === activeIndex ? "#E8A0BF" : colors.border,
+              marginHorizontal: 2,
+            }}
+          />
+        ))}
+      </View>
+    </View>
+  );
+}
+
+function TodayEventsSection({
+  events,
+  boardEvents,
+}: {
+  events: Event[];
+  boardEvents: BoardThread[];
+}) {
+  const colors = useColors();
+  const router = useRouter();
+  const hasEvents = events.length > 0 || boardEvents.length > 0;
+
+  if (!hasEvents) return null;
+
+  return (
+    <View style={{ marginHorizontal: 16, marginBottom: 12 }}>
+      <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 10 }}>
+        <IconSymbol name="calendar" size={18} color="#E8A0BF" />
+        <Text style={{ fontSize: 16, fontWeight: "700", color: colors.foreground, marginLeft: 6 }}>
+          今日のイベント
+        </Text>
+      </View>
+
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 10 }}>
+        {events.map((event) => (
+          <Pressable
+            key={event.id}
+            onPress={() => router.push({ pathname: "/event-detail", params: { id: event.id } })}
+            style={{
+              width: 220,
+              backgroundColor: colors.surface,
+              borderRadius: 14,
+              overflow: "hidden",
+            }}
+          >
+            <Image
+              source={event.image}
+              style={{ width: 220, height: 100 }}
+              contentFit="cover"
+              transition={200}
+            />
+            <View style={{ padding: 10 }}>
+              <Text
+                style={{ fontSize: 13, fontWeight: "700", color: colors.foreground, marginBottom: 4 }}
+                numberOfLines={1}
+              >
+                {event.title}
+              </Text>
+              <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 3 }}>
+                <IconSymbol name="clock.fill" size={12} color="#E8A0BF" />
+                <Text style={{ fontSize: 11, color: colors.muted, marginLeft: 4 }}>
+                  {event.time}〜
+                </Text>
+              </View>
+              <View style={{ flexDirection: "row", alignItems: "center" }}>
+                <IconSymbol name="mappin.and.ellipse" size={12} color="#E8A0BF" />
+                <Text style={{ fontSize: 11, color: colors.muted, marginLeft: 4 }} numberOfLines={1}>
+                  {event.location}
+                </Text>
+              </View>
+              <View style={{ flexDirection: "row", alignItems: "center", marginTop: 6 }}>
+                <View
+                  style={{
+                    backgroundColor: event.status === "full" ? colors.error + "20" : "#E8A0BF20",
+                    borderRadius: 6,
+                    paddingHorizontal: 6,
+                    paddingVertical: 2,
+                  }}
+                >
+                  <Text
+                    style={{
+                      fontSize: 10,
+                      fontWeight: "600",
+                      color: event.status === "full" ? colors.error : "#E8A0BF",
+                    }}
+                  >
+                    {event.status === "full" ? "満席" : `${event.attendees}/${event.capacity}名`}
+                  </Text>
+                </View>
+              </View>
+            </View>
+          </Pressable>
+        ))}
+
+        {boardEvents.map((thread) => (
+          <Pressable
+            key={thread.id}
+            style={{
+              width: 220,
+              backgroundColor: colors.surface,
+              borderRadius: 14,
+              overflow: "hidden",
+            }}
+          >
+            <View style={{ backgroundColor: "#A7C7E720", height: 100, justifyContent: "center", alignItems: "center" }}>
+              <IconSymbol name="person.2.fill" size={36} color="#A7C7E7" />
+              <Text style={{ fontSize: 11, color: "#A7C7E7", fontWeight: "600", marginTop: 4 }}>
+                掲示板イベント
+              </Text>
+            </View>
+            <View style={{ padding: 10 }}>
+              <Text
+                style={{ fontSize: 13, fontWeight: "700", color: colors.foreground, marginBottom: 4 }}
+                numberOfLines={1}
+              >
+                {thread.title}
+              </Text>
+              <View style={{ flexDirection: "row", alignItems: "center" }}>
+                <IconSymbol name="person.badge.plus" size={12} color="#A7C7E7" />
+                <Text style={{ fontSize: 11, color: colors.muted, marginLeft: 4 }}>
+                  {thread.recruitAttendees}/{thread.recruitCapacity}名参加中
+                </Text>
+              </View>
+            </View>
+          </Pressable>
+        ))}
+      </ScrollView>
+    </View>
+  );
+}
+
+function RankBadge({ rank }: { rank: string }) {
+  const color = RANK_COLORS[rank as keyof typeof RANK_COLORS] || "#C0C0C0";
+  const label = RANK_LABELS[rank as keyof typeof RANK_LABELS] || rank;
+  return (
+    <View
+      style={{
+        backgroundColor: color + "20",
+        borderColor: color,
+        borderWidth: 1,
+        borderRadius: 10,
+        paddingHorizontal: 7,
+        paddingVertical: 1,
+        marginLeft: 6,
+      }}
+    >
+      <Text style={{ fontSize: 10, fontWeight: "700", color }}>{label}</Text>
+    </View>
+  );
+}
+
+function TimelinePostCard({ post }: { post: TimelinePost }) {
+  const colors = useColors();
+  const router = useRouter();
+  const [liked, setLiked] = useState(post.liked);
+  const [likeCount, setLikeCount] = useState(post.likes);
+  const [showComments, setShowComments] = useState(false);
+  const [comments, setComments] = useState<TimelineComment[]>(
+    timelineComments.filter((c) => c.postId === post.id),
+  );
+  const [commentText, setCommentText] = useState("");
+  const [commentCount, setCommentCount] = useState(post.comments);
+
+  const timeAgo = useCallback((dateStr: string) => {
+    const diff = Date.now() - new Date(dateStr).getTime();
+    const hours = Math.floor(diff / 3600000);
+    if (hours < 1) return "たった今";
+    if (hours < 24) return `${hours}時間前`;
+    const days = Math.floor(hours / 24);
+    return `${days}日前`;
+  }, []);
+
+  const handleSendComment = useCallback(() => {
+    if (!commentText.trim()) return;
+    const newComment: TimelineComment = {
+      id: `tc_${Date.now()}`,
+      postId: post.id,
+      authorName: CURRENT_USER.name,
+      authorAvatar: CURRENT_USER.avatar,
+      text: commentText.trim(),
+      createdAt: new Date().toISOString(),
+    };
+    timelineComments.push(newComment);
+    setComments((prev) => [...prev, newComment]);
+    setCommentCount((prev) => prev + 1);
+    setCommentText("");
+  }, [commentText, post.id]);
+
+  return (
+    <View
+      style={{
+        backgroundColor: colors.background,
+        borderBottomWidth: 0.5,
+        borderBottomColor: colors.border,
+        paddingHorizontal: 16,
+        paddingVertical: 14,
+      }}
+    >
+      {/* Author row */}
+      <Pressable
+        onPress={() => router.push({ pathname: "/member-profile", params: { id: post.author.id } })}
+        style={{ flexDirection: "row", alignItems: "center", marginBottom: 10 }}
+      >
+        <Image
+          source={post.author.avatar}
+          style={{ width: 40, height: 40, borderRadius: 20 }}
+          contentFit="cover"
+        />
+        <View style={{ marginLeft: 10, flex: 1 }}>
+          <View style={{ flexDirection: "row", alignItems: "center" }}>
+            <Text style={{ fontSize: 15, fontWeight: "700", color: colors.foreground }}>
+              {post.author.name}
+            </Text>
+            <RankBadge rank={post.author.rank} />
+          </View>
+          <Text style={{ fontSize: 12, color: colors.muted, marginTop: 1 }}>
+            {post.author.generation}期生 · {timeAgo(post.createdAt)}
+          </Text>
+        </View>
+      </Pressable>
+
+      {/* Content */}
+      <Text style={{ fontSize: 15, lineHeight: 22, color: colors.foreground, marginBottom: 10 }}>
+        {post.content}
+      </Text>
+
+      {/* Image */}
+      {post.images.length > 0 && (
+        <View style={{ borderRadius: 12, overflow: "hidden", marginBottom: 10 }}>
+          <Image
+            source={post.images[0]}
+            style={{ width: "100%", height: 200 }}
+            contentFit="cover"
+            transition={300}
+          />
+        </View>
+      )}
+
+      {/* Actions */}
+      <View style={{ flexDirection: "row", alignItems: "center" }}>
+        <Pressable
+          onPress={() => {
+            setLiked(!liked);
+            setLikeCount(liked ? likeCount - 1 : likeCount + 1);
+          }}
+          style={{ flexDirection: "row", alignItems: "center", marginRight: 20 }}
+        >
+          <IconSymbol
+            name={liked ? "heart.fill" : "heart"}
+            size={20}
+            color={liked ? "#E8A0BF" : colors.muted}
+          />
+          <Text style={{ fontSize: 13, color: colors.muted, marginLeft: 5 }}>{likeCount}</Text>
+        </Pressable>
+        <Pressable
+          onPress={() => setShowComments(!showComments)}
+          style={{ flexDirection: "row", alignItems: "center", marginRight: 20 }}
+        >
+          <IconSymbol name="bubble.left.fill" size={20} color={showComments ? "#E8A0BF" : colors.muted} />
+          <Text style={{ fontSize: 13, color: showComments ? "#E8A0BF" : colors.muted, marginLeft: 5 }}>
+            {commentCount}
+          </Text>
+        </Pressable>
+        <Pressable
+          onPress={() => {
+            Share.share({
+              message: `IRO＋ | ${post.author.name}さんの投稿\n\n${post.content}`,
+              title: "IRO＋の投稿をシェア",
+            });
+          }}
+          style={{ flexDirection: "row", alignItems: "center" }}
+        >
+          <IconSymbol name="square.and.arrow.up" size={20} color={colors.muted} />
+        </Pressable>
+      </View>
+
+      {/* コメントセクション */}
+      {showComments && (
+        <View style={{ marginTop: 12 }}>
+          {/* 既存コメント一覧 */}
+          {comments.length > 0 && (
+            <View style={{ marginBottom: 10 }}>
+              {comments.map((c) => (
+                <View key={c.id} style={{ flexDirection: "row", marginBottom: 8 }}>
+                  <Image
+                    source={c.authorAvatar}
+                    style={{ width: 28, height: 28, borderRadius: 14, marginRight: 8, marginTop: 2 }}
+                    contentFit="cover"
+                  />
+                  <View
+                    style={{
+                      flex: 1,
+                      backgroundColor: colors.surface,
+                      borderRadius: 12,
+                      paddingHorizontal: 12,
+                      paddingVertical: 8,
+                    }}
+                  >
+                    <Text style={{ fontSize: 12, fontWeight: "700", color: colors.foreground, marginBottom: 2 }}>
+                      {c.authorName}
+                    </Text>
+                    <Text style={{ fontSize: 13, lineHeight: 18, color: colors.foreground }}>
+                      {c.text}
+                    </Text>
+                    <Text style={{ fontSize: 10, color: colors.muted, marginTop: 3 }}>
+                      {timeAgo(c.createdAt)}
+                    </Text>
+                  </View>
+                </View>
+              ))}
+            </View>
+          )}
+          {comments.length === 0 && (
+            <Text style={{ fontSize: 13, color: colors.muted, marginBottom: 10, textAlign: "center" }}>
+              まだコメントはありません
+            </Text>
+          )}
+          {/* コメント入力欄 */}
+          <KeyboardAvoidingView
+            behavior={Platform.OS === "ios" ? "padding" : "height"}
+            keyboardVerticalOffset={Platform.OS === "ios" ? 80 : 0}
+          >
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                backgroundColor: colors.surface,
+                borderRadius: 24,
+                paddingHorizontal: 14,
+                paddingVertical: 8,
+              }}
+            >
+              <Image
+                source={CURRENT_USER.avatar}
+                style={{ width: 28, height: 28, borderRadius: 14, marginRight: 8 }}
+                contentFit="cover"
+              />
+              <TextInput
+                value={commentText}
+                onChangeText={setCommentText}
+                placeholder="コメントを入力..."
+                placeholderTextColor={colors.muted}
+                style={{ flex: 1, fontSize: 14, color: colors.foreground, paddingVertical: 0 }}
+                returnKeyType="send"
+                onSubmitEditing={handleSendComment}
+                multiline={false}
+              />
+              <Pressable
+                onPress={handleSendComment}
+                style={{ marginLeft: 8 }}
+              >
+                <IconSymbol
+                  name="paperplane.fill"
+                  size={20}
+                  color={commentText.trim() ? "#E8A0BF" : colors.muted}
+                />
+              </Pressable>
+            </View>
+          </KeyboardAvoidingView>
+        </View>
+      )}
+    </View>
+  );
+}
+
+export default function HomeScreen() {
+  const colors = useColors();
+  const router = useRouter();
+  const [refreshing, setRefreshing] = useState(false);
+
+  const { events: todayEvents, boardEvents: todayBoardEvents } = useMemo(
+    () => getTodayEvents(),
+    [],
+  );
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    setTimeout(() => setRefreshing(false), 1000);
+  }, []);
+
+  const renderItem = useCallback(
+    ({ item }: { item: TimelinePost }) => <TimelinePostCard post={item} />,
+    [],
+  );
+
+  const ListHeader = useMemo(
+    () => (
+      <>
+        <AnnouncementBanner announcements={ANNOUNCEMENTS} />
+        <TodayEventsSection events={todayEvents} boardEvents={todayBoardEvents} />
+        <View style={{ paddingHorizontal: 16, paddingVertical: 8, borderBottomWidth: 0.5, borderBottomColor: colors.border }}>
+          <Text style={{ fontSize: 16, fontWeight: "700", color: colors.foreground }}>
+            タイムライン
+          </Text>
+        </View>
+      </>
+    ),
+    [todayEvents, todayBoardEvents, colors],
+  );
+
+  return (
+    <ScreenContainer>
+      {/* Header */}
+      <View
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "space-between",
+          paddingHorizontal: 16,
+          paddingVertical: 10,
+          borderBottomWidth: 0.5,
+          borderBottomColor: colors.border,
+        }}
+      >
+        <View style={{ flexDirection: "row", alignItems: "center" }}>
+          <Text style={{ fontSize: 24, fontWeight: "800", color: colors.foreground }}>
+            IRO
+          </Text>
+          <Text style={{ fontSize: 24, fontWeight: "800", color: "#E8A0BF" }}>＋</Text>
+        </View>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+          <Pressable onPress={() => router.push("/chat-list")}>
+            <IconSymbol name="message.fill" size={22} color={colors.foreground} />
+          </Pressable>
+          <Pressable onPress={() => router.push("/notifications")}>
+            <IconSymbol name="bell.fill" size={22} color={colors.foreground} />
+          </Pressable>
+        </View>
+      </View>
+
+      <FlatList
+        data={TIMELINE_POSTS}
+        keyExtractor={(item) => item.id}
+        renderItem={renderItem}
+        ListHeaderComponent={ListHeader}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor="#E8A0BF"
+          />
+        }
+        showsVerticalScrollIndicator={false}
+      />
+
+      {/* FAB */}
+      <Pressable
+        onPress={() => router.push("/create-post")}
+        style={{
+          position: "absolute",
+          bottom: 20,
+          right: 20,
+          width: 56,
+          height: 56,
+          borderRadius: 28,
+          backgroundColor: "#E8A0BF",
+          alignItems: "center",
+          justifyContent: "center",
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.2,
+          shadowRadius: 4,
+          elevation: 5,
+        }}
+      >
+        <IconSymbol name="plus.circle.fill" size={28} color="#FFFFFF" />
+      </Pressable>
     </ScreenContainer>
   );
 }
