@@ -44,16 +44,24 @@ export default function AdminDashboardScreen() {
   const colors = useColors();
   const router = useRouter();
 
-  if (!isAdmin(CURRENT_USER)) {
-    return (
-      <ScreenContainer className="p-6">
-        <Text style={{ fontSize: 16, color: colors.muted, textAlign: "center", marginTop: 40 }}>
-          管理者のみアクセスできます
-        </Text>
-      </ScreenContainer>
-    );
-  }
+  // すべての state を条件分岐の外で定義
+  const [activeTab, setActiveTab] = useState<"overview" | "members" | "events" | "payments" | "emails" | "announcements" | "analytics">("overview");
+  const [paymentRecords, setPaymentRecords] = useState<PaymentRecord[]>([]);
+  const [selectedPaymentEventId, setSelectedPaymentEventId] = useState<string | null>(null);
+  const [adminIds, setAdminIds] = useState<Set<string>>(new Set(
+    MEMBERS.filter((m) => m.role === "admin").map((m) => m.id)
+  ));
+  const [generationOverrides, setGenerationOverrides] = useState<Record<string, number>>({});
+  const [pointsOverrides, setPointsOverrides] = useState<Record<string, number>>({});
+  const [rankOverrides, setRankOverrides] = useState<Record<string, string>>({});
+  const [pointsHistory, setPointsHistory] = useState<PointsHistoryEntry[]>([]);
+  const [irotasBalances, setIrotasBalances] = useState<Record<string, number>>({});
+  const [irotasHistory, setIrotasHistory] = useState<IrotasPointsHistory[]>([]);
+  const [feeExemptIds, setFeeExemptIds] = useState<Set<string>>(new Set());
+  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  const [showAnnouncementModal, setShowAnnouncementModal] = useState(false);
 
+  // useMemo も条件分岐の外で定義
   const stats = useMemo(() => {
     const rankCounts = { regular: 0, silver: 0, gold: 0, platinum: 0 };
     for (const m of MEMBERS) {
@@ -66,39 +74,16 @@ export default function AdminDashboardScreen() {
     return { rankCounts, openEvents, fullEvents, totalParticipants, activeClubs };
   }, []);
 
-  const [activeTab, setActiveTab] = useState<"overview" | "members" | "events" | "payments" | "emails" | "announcements" | "analytics">("overview");
-
-  // 支払い状況管理
-  const [paymentRecords, setPaymentRecords] = useState<PaymentRecord[]>([]);
-  const [selectedPaymentEventId, setSelectedPaymentEventId] = useState<string | null>(null);
-
-  // 管理者権限管理（AsyncStorageで永続化）
-  const [adminIds, setAdminIds] = useState<Set<string>>(new Set(
-    MEMBERS.filter((m) => m.role === "admin").map((m) => m.id)
-  ));
-
-  // 期生上書き管理（AsyncStorageで永続化）
-  const [generationOverrides, setGenerationOverrides] = useState<Record<string, number>>({});
-
-  // ポイント上書き管理（AsyncStorageで永続化）
-  const [pointsOverrides, setPointsOverrides] = useState<Record<string, number>>({});
-
-  // ランク上書き管理（AsyncStorageで永続化）
-  const [rankOverrides, setRankOverrides] = useState<Record<string, string>>({});
-
-  // ポイント変更履歴
-  const [pointsHistory, setPointsHistory] = useState<PointsHistoryEntry[]>([]);
-
-  // イロタスポイント残高
-  const [irotasBalances, setIrotasBalances] = useState<Record<string, number>>({});
-  // イロタスポイント変更履歴
-  const [irotasHistory, setIrotasHistory] = useState<IrotasPointsHistory[]>([]);
-  // 会費免除メンバー
-  const [feeExemptIds, setFeeExemptIds] = useState<Set<string>>(new Set());
-
-  // お知らせ管理
-  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
-  const [showAnnouncementModal, setShowAnnouncementModal] = useState(false);
+  // 管理者権限チェックはレンダリング後に行う
+  if (!isAdmin(CURRENT_USER)) {
+    return (
+      <ScreenContainer className="p-6">
+        <Text style={{ fontSize: 16, color: colors.muted, textAlign: "center", marginTop: 40 }}>
+          管理者のみアクセスできます
+        </Text>
+      </ScreenContainer>
+    );
+  }
 
   useEffect(() => {
     AsyncStorage.getItem("generation_overrides").then((val) => {
