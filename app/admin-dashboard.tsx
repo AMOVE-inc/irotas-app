@@ -19,7 +19,7 @@ import {
   type PaymentStatus,
 } from "@/lib/payment-store";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import {
   Alert,
@@ -31,6 +31,7 @@ import {
   ActivityIndicator,
   Modal,
 } from "react-native";
+import { updateCouponUsageType, useCoupons } from "@/lib/coupon-store";
 
 type PointsHistoryEntry = {
   id: string;
@@ -44,11 +45,13 @@ type PointsHistoryEntry = {
 export default function AdminDashboardScreen() {
   const colors = useColors();
   const router = useRouter();
+  const { tab } = useLocalSearchParams<{ tab?: string }>();
   const { user: authUser } = useAuthContext();
   const userIsAdmin = authUser?.role === "admin";
+  const coupons = useCoupons();
 
   // すべての state を条件分岐の外で定義
-  const [activeTab, setActiveTab] = useState<"overview" | "members" | "events" | "payments" | "emails" | "announcements" | "analytics">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "members" | "events" | "payments" | "emails" | "announcements" | "coupons" | "analytics">(tab === "coupons" ? "coupons" : "overview");
   const [paymentRecords, setPaymentRecords] = useState<PaymentRecord[]>([]);
   const [selectedPaymentEventId, setSelectedPaymentEventId] = useState<string | null>(null);
   const [adminIds, setAdminIds] = useState<Set<string>>(new Set(
@@ -63,6 +66,25 @@ export default function AdminDashboardScreen() {
   const [feeExemptIds, setFeeExemptIds] = useState<Set<string>>(new Set());
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [showAnnouncementModal, setShowAnnouncementModal] = useState(false);
+  const [newEmail, setNewEmail] = useState("");
+  const [newNote, setNewNote] = useState("");
+  const { data: allowedEmails, refetch: refetchEmails, isLoading: emailsLoading } = trpc.allowedEmails.list.useQuery(
+    undefined,
+    { enabled: userIsAdmin && activeTab === "emails" },
+  );
+  const addEmailMutation = trpc.allowedEmails.add.useMutation({
+    onSuccess: () => {
+      setNewEmail("");
+      setNewNote("");
+      refetchEmails();
+      Alert.alert("登録完了", `${newEmail} を承認メンバーに追加しました`);
+    },
+    onError: (e) => Alert.alert("エラー", e.message),
+  });
+  const removeEmailMutation = trpc.allowedEmails.remove.useMutation({
+    onSuccess: () => refetchEmails(),
+    onError: (e) => Alert.alert("エラー", e.message),
+  });
 
   // useMemo も条件分岐の外で定義
   const stats = useMemo(() => {
@@ -305,27 +327,6 @@ export default function AdminDashboardScreen() {
     ]);
   };
 
-  // 承認メール管理
-  const [newEmail, setNewEmail] = useState("");
-  const [newNote, setNewNote] = useState("");
-  const { data: allowedEmails, refetch: refetchEmails, isLoading: emailsLoading } = trpc.allowedEmails.list.useQuery(
-    undefined,
-    { enabled: activeTab === "emails" }
-  );
-  const addEmailMutation = trpc.allowedEmails.add.useMutation({
-    onSuccess: () => {
-      setNewEmail("");
-      setNewNote("");
-      refetchEmails();
-      Alert.alert("登録完了", `${newEmail} を承認メンバーに追加しました`);
-    },
-    onError: (e) => Alert.alert("エラー", e.message),
-  });
-  const removeEmailMutation = trpc.allowedEmails.remove.useMutation({
-    onSuccess: () => refetchEmails(),
-    onError: (e) => Alert.alert("エラー", e.message),
-  });
-
   const handleAddEmail = () => {
     const trimmed = newEmail.trim();
     if (!trimmed || !trimmed.includes("@")) {
@@ -390,8 +391,8 @@ export default function AdminDashboardScreen() {
         }}
         style={{ borderBottomWidth: 0.5, borderBottomColor: colors.border, flexGrow: 0 }}
       >
-        {(["overview", "members", "events", "payments", "emails", "announcements", "analytics"] as const).map((tab) => {
-          const labels = { overview: "概要", members: "会員", events: "イベント", payments: "支払管理", emails: "承認メール", announcements: "お知らせ", analytics: "分析" };
+        {(["overview", "members", "events", "payments", "emails", "announcements", "coupons", "analytics"] as const).map((tab) => {
+          const labels = { overview: "概要", members: "会員", events: "イベント", payments: "支払管理", emails: "承認メール", announcements: "お知らせ", coupons: "クーポン", analytics: "分析" };
           return (
             <Pressable
               key={tab}
@@ -815,6 +816,39 @@ export default function AdminDashboardScreen() {
                 </View>
               ))
             )}
+          </>
+        )}
+
+        {activeTab === "coupons" && (
+          <>
+            <Text style={{ fontSize: 16, fontWeight: "700", color: colors.foreground, marginBottom: 4 }}>
+              クーポン利用設定
+            </Text>
+            <Text style={{ fontSize: 13, color: colors.muted, lineHeight: 19, marginBottom: 16 }}>
+              クーポンごとに「1回限定」または「期間中何度でも」を設定できます。1回限定は会員が利用を確定すると使用済みになります。
+            </Text>
+            {coupons.map((coupon) => (
+              <View key={coupon.id} style={{ backgroundColor: colors.surface, borderRadius: 14, padding: 14, marginBottom: 10, borderWidth: 0.5, borderColor: colors.border }}>
+                <Text style={{ fontSize: 15, fontWeight: "800", color: colors.foreground }}>{coupon.title}</Text>
+                <Text style={{ fontSize: 12, color: colors.muted, marginTop: 4 }}>有効期限 {coupon.expiresAt} ／ コード {coupon.code}</Text>
+                <View style={{ flexDirection: "row", marginTop: 12, borderRadius: 10, overflow: "hidden", borderWidth: 1, borderColor: colors.border }}>
+                  {(["single", "multiple"] as const).map((usageType) => {
+                    const selected = coupon.usageType === usageType;
+                    return (
+                      <Pressable
+                        key={usageType}
+                        onPress={() => { void updateCouponUsageType(coupon.id, usageType); }}
+                        style={{ flex: 1, paddingVertical: 10, alignItems: "center", backgroundColor: selected ? "#E8A0BF" : colors.background }}
+                      >
+                        <Text style={{ fontSize: 13, fontWeight: "800", color: selected ? "#FFF" : colors.foreground }}>
+                          {usageType === "single" ? "1回限定" : "期間中何度でも"}
+                        </Text>
+                      </Pressable>
+                    );
+                  })}
+                </View>
+              </View>
+            ))}
           </>
         )}
 

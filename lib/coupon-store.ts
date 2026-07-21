@@ -1,0 +1,93 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useEffect, useSyncExternalStore } from "react";
+import { COUPONS, type Coupon } from "@/constants/mock-data";
+import type { CouponUsage } from "@/lib/coupon-rules";
+
+const CONFIG_KEY = "coupon_usage_types_v1";
+const USAGE_KEY = "coupon_member_usage_v1";
+
+type UsageByMember = Record<string, Record<string, CouponUsage>>;
+const EMPTY_USAGES: Record<string, CouponUsage> = {};
+
+let coupons: Coupon[] = COUPONS.map((coupon) => ({ ...coupon }));
+let usages: UsageByMember = {};
+let hydrated = false;
+let hydrationPromise: Promise<void> | null = null;
+const listeners = new Set<() => void>();
+
+function emitChange() {
+  listeners.forEach((listener) => listener());
+}
+
+function subscribe(listener: () => void) {
+  listeners.add(listener);
+  return () => listeners.delete(listener);
+}
+
+function getCouponsSnapshot() {
+  return coupons;
+}
+
+function ensureHydrated() {
+  if (hydrated) return Promise.resolve();
+  if (hydrationPromise) return hydrationPromise;
+  hydrationPromise = Promise.all([AsyncStorage.getItem(CONFIG_KEY), AsyncStorage.getItem(USAGE_KEY)])
+    .then(([savedConfig, savedUsage]) => {
+      if (savedConfig) {
+        const config = JSON.parse(savedConfig) as Record<string, Coupon["usageType"]>;
+        coupons = coupons.map((coupon) => ({ ...coupon, usageType: config[coupon.id] ?? coupon.usageType }));
+      }
+      if (savedUsage) usages = JSON.parse(savedUsage) as UsageByMember;
+      hydrated = true;
+      emitChange();
+    })
+    .catch(() => {
+      hydrated = true;
+    });
+  return hydrationPromise;
+}
+
+export function useCoupons(): Coupon[] {
+  useEffect(() => { void ensureHydrated(); }, []);
+  return useSyncExternalStore(subscribe, getCouponsSnapshot, getCouponsSnapshot);
+}
+
+export function useCouponUsages(memberId: string): Record<string, CouponUsage> {
+  useEffect(() => { void ensureHydrated(); }, []);
+  return useSyncExternalStore(
+    subscribe,
+    () => usages[memberId] ?? EMPTY_USAGES,
+    () => usages[memberId] ?? EMPTY_USAGES,
+  );
+}
+
+export async function updateCouponUsageType(couponId: string, usageType: Coupon["usageType"]) {
+  coupons = coupons.map((coupon) => (coupon.id === couponId ? { ...coupon, usageType } : coupon));
+  emitChange();
+  await AsyncStorage.setItem(CONFIG_KEY, JSON.stringify(Object.fromEntries(coupons.map((coupon) => [coupon.id, coupon.usageType]))));
+}
+
+async function saveMemberUsage(memberId: string, couponId: string, usage: CouponUsage) {
+  usages = {
+    ...usages,
+    [memberId]: { ...(usages[memberId] ?? {}), [couponId]: usage },
+  };
+  emitChange();
+  await AsyncStorage.setItem(USAGE_KEY, JSON.stringify(usages));
+}
+
+export async function recordCouponPresentation(memberId: string, couponId: string) {
+  const current = usages[memberId]?.[couponId] ?? { useCount: 0 };
+  await saveMemberUsage(memberId, couponId, { ...current, lastPresentedAt: new Date().toISOString() });
+}
+
+export async function redeemCoupon(memberId: string, coupon: Coupon) {
+  const current = usages[memberId]?.[coupon.id] ?? { useCount: 0 };
+  const now = new Date().toISOString();
+  await saveMemberUsage(memberId, coupon.id, {
+    ...current,
+    useCount: current.useCount + 1,
+    lastPresentedAt: now,
+    usedAt: coupon.usageType === "single" ? now : current.usedAt,
+  });
+}

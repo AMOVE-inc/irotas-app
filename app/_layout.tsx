@@ -200,7 +200,6 @@ export default function RootLayout() {
                 <Stack.Screen name="create-event" options={{ presentation: "modal" }} />
                 <Stack.Screen name="members" options={{ presentation: "card" }} />
                 <Stack.Screen name="admin-dashboard" options={{ presentation: "card" }} />
-                <Stack.Screen name="radio" options={{ presentation: "card" }} />
                 <Stack.Screen name="gift-campaign" options={{ presentation: "card" }} />
                 <Stack.Screen name="gourmet-map" options={{ presentation: "card" }} />
                 <Stack.Screen name="campaign-manager" options={{ presentation: "card" }} />

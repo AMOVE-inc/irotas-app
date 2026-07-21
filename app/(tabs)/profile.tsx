@@ -29,7 +29,7 @@ import {
 import { useAuthContext } from "@/lib/auth-context";
 import * as ImagePicker from "expo-image-picker";
 import * as Clipboard from "expo-clipboard";
-import { OFFICIAL_LINE_URL } from "@/constants/external-links";
+import { OFFICIAL_INSTAGRAM_URL, OFFICIAL_LINE_URL } from "@/constants/external-links";
 
 function PointsProgressCard({ points, rank }: { points: number; rank: MemberRank }) {
   const colors = useColors();
@@ -952,7 +952,7 @@ export default function ProfileScreen() {
                 color: "#FF9500",
                 onPress: () => router.push("/admin-dashboard" as any),
               },
-              { icon: "ticket.fill", label: "クーポン管理", color: "#FF9500", onPress: () => router.push("/coupons") },
+              { icon: "ticket.fill", label: "クーポン管理", color: "#FF9500", onPress: () => router.push({ pathname: "/admin-dashboard", params: { tab: "coupons" } }) },
               {
                 icon: "megaphone.fill",
                 label: "キャンペーン管理",
@@ -1003,11 +1003,6 @@ export default function ProfileScreen() {
               onPress: () => router.push("/gourmet-map" as any),
             },
             { icon: "sparkles", label: "グルメコンシェルジュ", color: "#A7C7E7", onPress: () => router.push("/concierge") },
-            {
-              icon: "music.note",
-              label: "ラジオ",
-              onPress: () => router.push("/radio" as any),
-            },
           ]}
         />
 
@@ -1062,6 +1057,18 @@ export default function ProfileScreen() {
                   await Linking.openURL(OFFICIAL_LINE_URL);
                 } catch {
                   Alert.alert("リンクを開けませんでした", OFFICIAL_LINE_URL);
+                }
+              },
+            },
+            {
+              icon: "camera.fill",
+              label: "公式Instagram",
+              color: "#E1306C",
+              onPress: async () => {
+                try {
+                  await Linking.openURL(OFFICIAL_INSTAGRAM_URL);
+                } catch {
+                  Alert.alert("リンクを開けませんでした", OFFICIAL_INSTAGRAM_URL);
                 }
               },
             },

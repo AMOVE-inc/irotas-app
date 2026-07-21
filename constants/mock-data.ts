@@ -179,6 +179,7 @@ export interface Coupon {
   expiresAt: string;
   code: string;
   requiredRank: MemberRank;
+  usageType: "single" | "multiple";
 }
 
 export interface Announcement {
@@ -640,22 +641,22 @@ export const COUPONS: Coupon[] = [
   {
     id: "c1", title: "焼肉 罪と罰 10%OFF",
     description: "IRO＋会員限定！お会計から10%割引",
-    discount: "10%OFF", expiresAt: "2026-06-30", code: "IROPLUS2026", requiredRank: "regular",
+    discount: "10%OFF", expiresAt: "2026-06-30", code: "IROPLUS2026", requiredRank: "regular", usageType: "single",
   },
   {
     id: "c2", title: "鮨 静龍苑 ドリンク1杯無料",
     description: "シルバー会員以上限定。お好きなドリンク1杯サービス",
-    discount: "ドリンク1杯無料", expiresAt: "2026-05-31", code: "IROSILVER2026", requiredRank: "silver",
+    discount: "ドリンク1杯無料", expiresAt: "2026-05-31", code: "IROSILVER2026", requiredRank: "silver", usageType: "multiple",
   },
   {
     id: "c3", title: "ゴールド限定 コース10%OFF",
     description: "ゴールド会員以上限定の特別割引",
-    discount: "コース10%OFF", expiresAt: "2026-08-31", code: "IROGOLD2026", requiredRank: "gold",
+    discount: "コース10%OFF", expiresAt: "2026-08-31", code: "IROGOLD2026", requiredRank: "gold", usageType: "single",
   },
   {
     id: "c4", title: "プラチナ限定 特別コース招待",
     description: "プラチナ会員限定の特別コースにご招待",
-    discount: "特別コース", expiresAt: "2026-12-31", code: "IROPLAT2026", requiredRank: "platinum",
+    discount: "特別コース", expiresAt: "2026-12-31", code: "IROPLAT2026", requiredRank: "platinum", usageType: "multiple",
   },
 ];
 

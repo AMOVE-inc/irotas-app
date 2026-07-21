@@ -1,4 +1,5 @@
 export const OFFICIAL_LINE_URL = "https://lin.ee/Rr00sCb";
+export const OFFICIAL_INSTAGRAM_URL = "https://www.instagram.com/irotas_community_official";
 
 /** Google Maps の共有済み保存リストURL。公開ビルド時に環境変数から設定する。 */
 export const GOOGLE_GOURMET_MAP_URL =
