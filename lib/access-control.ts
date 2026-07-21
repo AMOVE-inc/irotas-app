@@ -1,4 +1,5 @@
 export type UserRole = "user" | "admin";
+export type BranchRole = "kanto" | "kansai";
 
 const ADMIN_ROUTE_NAMES = new Set([
   "admin-dashboard",
@@ -10,6 +11,10 @@ const ADMIN_ROUTE_NAMES = new Set([
 /** Unknown or missing role values must always fail closed. */
 export function normalizeUserRole(role: unknown): UserRole {
   return role === "admin" ? "admin" : "user";
+}
+
+export function normalizeBranchRole(branch: unknown): BranchRole | null {
+  return branch === "kanto" || branch === "kansai" ? branch : null;
 }
 
 export function isAdminRole(role: unknown): boolean {

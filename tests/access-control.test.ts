@@ -5,6 +5,7 @@ import {
   canCreateClub,
   isAdminRole,
   isAdminRoute,
+  normalizeBranchRole,
   normalizeUserRole,
 } from "../lib/access-control";
 
@@ -20,6 +21,13 @@ describe("access control", () => {
     expect(normalizeUserRole("admin")).toBe("admin");
     expect(normalizeUserRole("member")).toBe("user");
     expect(normalizeUserRole(null)).toBe("user");
+  });
+
+  it("accepts only supported branch roles", () => {
+    expect(normalizeBranchRole("kanto")).toBe("kanto");
+    expect(normalizeBranchRole("kansai")).toBe("kansai");
+    expect(normalizeBranchRole("admin")).toBeNull();
+    expect(normalizeBranchRole(undefined)).toBeNull();
   });
 
   it.each(["admin-dashboard", "campaign-manager", "csv-import", "create-event"])(

@@ -59,6 +59,10 @@ export async function upsertUser(user: InsertUser): Promise<void> {
       values.role = "admin";
       updateSet.role = "admin";
     }
+    if (user.branch !== undefined) {
+      values.branch = user.branch;
+      updateSet.branch = user.branch;
+    }
     if (user.gender !== undefined) {
       values.gender = user.gender;
       updateSet.gender = user.gender;
@@ -138,6 +142,15 @@ export async function createEmailUser(data: {
   });
 
   return getUserByOpenId(openId);
+}
+
+export async function updateUserBranch(userId: number, branch: "kanto" | "kansai") {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db.update(users).set({ branch }).where(eq(users.id, userId));
+  const result = await db.select().from(users).where(eq(users.id, userId)).limit(1);
+  return result[0];
 }
 
 // ===== 審査制メールアドレス管理 =====

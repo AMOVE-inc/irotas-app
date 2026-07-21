@@ -4,7 +4,7 @@ import { invokeLLM } from "./_core/llm";
 import { COOKIE_NAME, ONE_YEAR_MS } from "../shared/const.js";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
-import { adminProcedure, publicProcedure, router } from "./_core/trpc";
+import { adminProcedure, protectedProcedure, publicProcedure, router } from "./_core/trpc";
 import { sdk } from "./_core/sdk";
 import * as db from "./db";
 
@@ -109,6 +109,19 @@ export const appRouter = router({
   allowedEmails: allowedEmailsRouter,
   auth: router({
     me: publicProcedure.query((opts) => opts.ctx.user),
+    selectBranch: protectedProcedure
+      .input(z.object({ branch: z.enum(["kanto", "kansai"]) }))
+      .mutation(async ({ ctx, input }) => {
+        if (ctx.user.branch) {
+          if (ctx.user.branch !== input.branch) {
+            throw new Error("所属支部の変更は運営へお問い合わせください");
+          }
+          return { success: true, branch: ctx.user.branch };
+        }
+        const user = await db.updateUserBranch(ctx.user.id, input.branch);
+        if (!user) throw new Error("所属支部の保存に失敗しました");
+        return { success: true, branch: user.branch };
+      }),
     logout: publicProcedure.mutation(({ ctx }) => {
       const cookieOptions = getSessionCookieOptions(ctx.req);
       ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
@@ -182,6 +195,7 @@ export const appRouter = router({
             loginMethod: user.loginMethod,
             lastSignedIn: (user.lastSignedIn ?? new Date()).toISOString(),
             role: user.role ?? "user",
+            branch: user.branch ?? null,
           },
         };
       }),
@@ -237,6 +251,7 @@ export const appRouter = router({
             loginMethod: user.loginMethod,
             lastSignedIn: (user.lastSignedIn ?? new Date()).toISOString(),
             role: user.role ?? "user",
+            branch: user.branch ?? null,
           },
         };
       }),

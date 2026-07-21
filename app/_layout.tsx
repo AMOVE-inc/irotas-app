@@ -61,17 +61,20 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
 
     const inAuthGroup = segments[0] === "login" || segments[0] === "register";
     const inOAuthCallback = segments[0] === "oauth";
+    const inBranchSelection = String(segments[0]) === "select-branch";
 
     if (!isAuthenticated && !inAuthGroup && !inOAuthCallback) {
       // Redirect to login
       router.replace("/login");
-    } else if (isAuthenticated && inAuthGroup) {
+    } else if (isAuthenticated && !user?.branch && !inBranchSelection && !inOAuthCallback) {
+      router.replace("/select-branch" as any);
+    } else if (isAuthenticated && user?.branch && (inAuthGroup || inBranchSelection)) {
       // Redirect to home if already logged in
       router.replace("/(tabs)");
     } else if (isForbidden) {
       router.replace("/(tabs)/profile");
     }
-  }, [isAuthenticated, isForbidden, loading, segments, router]);
+  }, [isAuthenticated, isForbidden, loading, segments, router, user?.branch]);
 
   if (loading) {
     return (
@@ -182,6 +185,7 @@ export default function RootLayout() {
               <Stack screenOptions={{ headerShown: false }}>
                 <Stack.Screen name="login" options={{ presentation: "fullScreenModal" }} />
                 <Stack.Screen name="register" options={{ presentation: "fullScreenModal" }} />
+                <Stack.Screen name="select-branch" options={{ presentation: "fullScreenModal" }} />
                 <Stack.Screen name="(tabs)" />
                 <Stack.Screen name="event-detail" options={{ presentation: "card" }} />
                 <Stack.Screen name="concierge" options={{ presentation: "card" }} />
@@ -202,6 +206,9 @@ export default function RootLayout() {
                 <Stack.Screen name="csv-import" options={{ presentation: "card" }} />
                 <Stack.Screen name="app-settings" options={{ presentation: "card" }} />
                 <Stack.Screen name="notification-settings" options={{ presentation: "card" }} />
+                <Stack.Screen name="faq" options={{ presentation: "card" }} />
+                <Stack.Screen name="community-rules" options={{ presentation: "card" }} />
+                <Stack.Screen name="manual" options={{ presentation: "card" }} />
                 <Stack.Screen name="oauth/callback" />
               </Stack>
             </AuthGuard>

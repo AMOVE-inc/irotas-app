@@ -76,16 +76,20 @@ describe("Mock Data Integrity", () => {
     const labels = BOARD_CATEGORIES.map((category) => category.label);
 
     expect(labels).toEqual([
-      "全体アナウンス",
-      "関東支部",
-      "関西支部",
-      "自己紹介",
-      "部活動・ラーメン部",
-      "部活動・ワイン部",
-      "部活動・スイーツ部",
-      "部活動・料理部",
+      "運営アナウンス",
       "今日のごちそうさま報告",
       "教えてグルメ相談室",
+      "フリーチャット",
+      "関東",
+      "関西",
+      "全体活動報告",
+      "ラーメン部",
+      "ワイン部",
+      "スイーツ部",
+      "料理部",
+    ]);
+    expect(BOARD_CATEGORIES.map((category) => category.group)).toEqual([
+      "all", "all", "all", "all", "area", "area", "club", "club", "club", "club", "club",
     ]);
     expect(labels).not.toContain("関東グルメ");
     expect(labels).not.toContain("関西グルメ");

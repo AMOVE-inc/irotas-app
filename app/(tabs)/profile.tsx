@@ -29,6 +29,7 @@ import {
 import { useAuthContext } from "@/lib/auth-context";
 import * as ImagePicker from "expo-image-picker";
 import * as Clipboard from "expo-clipboard";
+import { OFFICIAL_LINE_URL } from "@/constants/external-links";
 
 function PointsProgressCard({ points, rank }: { points: number; rank: MemberRank }) {
   const colors = useColors();
@@ -714,7 +715,7 @@ export default function ProfileScreen() {
               </Text>
             </View>
             <Text style={{ fontSize: 14, color: colors.muted, marginLeft: 8 }}>
-              {user.branch === "kanto" ? "関東支部" : "関西支部"}
+              {(authUser?.branch ?? user.branch) === "kanto" ? "関東支部" : "関西支部"}
             </Text>
           </View>
 
@@ -1018,6 +1019,39 @@ export default function ProfileScreen() {
               label: "アプリ設定",
               color: colors.muted,
               onPress: () => router.push("/app-settings" as any),
+            },
+          ]}
+        />
+
+        <MenuSection
+          title="サポート"
+          items={[
+            {
+              icon: "info.circle.fill",
+              label: "FAQ",
+              onPress: () => router.push("/faq" as any),
+            },
+            {
+              icon: "shield.fill",
+              label: "ルール",
+              onPress: () => router.push("/community-rules" as any),
+            },
+            {
+              icon: "doc.text.fill",
+              label: "マニュアル",
+              onPress: () => router.push("/manual" as any),
+            },
+            {
+              icon: "message.fill",
+              label: "お問い合わせ（公式LINE）",
+              color: "#06C755",
+              onPress: async () => {
+                try {
+                  await Linking.openURL(OFFICIAL_LINE_URL);
+                } catch {
+                  Alert.alert("リンクを開けませんでした", OFFICIAL_LINE_URL);
+                }
+              },
             },
           ]}
         />

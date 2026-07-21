@@ -74,6 +74,7 @@ export default function RegisterScreen() {
             loginMethod: result.user.loginMethod,
             lastSignedIn: new Date(result.user.lastSignedIn),
             role: Auth.normalizeUserRole(result.user.role),
+            branch: Auth.normalizeBranchRole(result.user.branch),
           });
         }
         // Update auth context and navigate
@@ -86,6 +87,7 @@ export default function RegisterScreen() {
             loginMethod: result.user.loginMethod,
             lastSignedIn: new Date(result.user.lastSignedIn),
             role: Auth.normalizeUserRole(result.user.role),
+            branch: Auth.normalizeBranchRole(result.user.branch),
           });
         } else {
           await refresh();

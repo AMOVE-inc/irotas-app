@@ -2,9 +2,19 @@ import * as SecureStore from "expo-secure-store";
 import { Platform } from "react-native";
 import { SESSION_TOKEN_KEY, USER_INFO_KEY } from "@/constants/oauth";
 import { logger } from "@/lib/_core/logger";
-import { normalizeUserRole, type UserRole } from "@/lib/access-control";
+import {
+  normalizeBranchRole,
+  normalizeUserRole,
+  type BranchRole,
+  type UserRole,
+} from "@/lib/access-control";
 
-export { normalizeUserRole, type UserRole } from "@/lib/access-control";
+export {
+  normalizeBranchRole,
+  normalizeUserRole,
+  type BranchRole,
+  type UserRole,
+} from "@/lib/access-control";
 
 export type User = {
   id: number;
@@ -14,6 +24,7 @@ export type User = {
   loginMethod: string | null;
   lastSignedIn: Date;
   role: UserRole;
+  branch: BranchRole | null;
 };
 
 function deserializeUser(value: string): User | null {
@@ -34,6 +45,7 @@ function deserializeUser(value: string): User | null {
     loginMethod: typeof candidate.loginMethod === "string" ? candidate.loginMethod : null,
     lastSignedIn,
     role: normalizeUserRole(candidate.role),
+    branch: normalizeBranchRole(candidate.branch),
   };
 }
 

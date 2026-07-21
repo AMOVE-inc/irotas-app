@@ -32,6 +32,7 @@ export function useAuth(options?: UseAuthOptions) {
             loginMethod: apiUser.loginMethod,
             lastSignedIn: new Date(apiUser.lastSignedIn),
             role: Auth.normalizeUserRole(apiUser.role),
+            branch: Auth.normalizeBranchRole(apiUser.branch),
           };
           setUser(userInfo);
           // Cache user info in localStorage for faster subsequent loads

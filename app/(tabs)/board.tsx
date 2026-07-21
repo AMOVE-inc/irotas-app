@@ -35,6 +35,12 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+const BOARD_GROUPS: { key: BoardCategory["group"]; label: string }[] = [
+  { key: "all", label: "全体" },
+  { key: "area", label: "エリア別" },
+  { key: "club", label: "部活" },
+];
+
 function ThreadCard({ thread, onPress, onEdit }: { thread: BoardThread; onPress: () => void; onEdit?: () => void }) {
   const colors = useColors();
   const router = useRouter();
@@ -1196,6 +1202,7 @@ export default function BoardScreen() {
   const { user: authUser } = useAuthContext();
   const userIsAdmin = canManageBoardCategories(authUser?.role);
   const [categories, setCategories] = useState<BoardCategory[]>(BOARD_CATEGORIES);
+  const [activeGroup, setActiveGroup] = useState<BoardCategory["group"]>("all");
   const [activeCategory, setActiveCategory] = useState<string>(BOARD_CATEGORIES[0].key);
   const [refreshing, setRefreshing] = useState(false);
   const [selectedThread, setSelectedThread] = useState<BoardThread | null>(null);
@@ -1207,6 +1214,7 @@ export default function BoardScreen() {
   const [editingThread, setEditingThread] = useState<BoardThread | null>(null);
   const allThreads = [...dynamicThreads, ...BOARD_THREADS].map((t) => editedThreads[t.id] ?? t);
   const filteredThreads = allThreads.filter((t) => t.category === activeCategory);
+  const visibleCategories = categories.filter((category) => category.group === activeGroup);
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
@@ -1220,8 +1228,14 @@ export default function BoardScreen() {
       return;
     }
     const key = label.replace(/\s+/g, "-").toLowerCase() + "-" + Date.now();
-    setCategories([...categories, { key, label, createdByAdmin: true }]);
+    setCategories([...categories, { key, label, group: activeGroup, createdByAdmin: true }]);
     setActiveCategory(key);
+  };
+
+  const handleSelectGroup = (group: BoardCategory["group"]) => {
+    setActiveGroup(group);
+    const firstCategory = categories.find((category) => category.group === group);
+    if (firstCategory) setActiveCategory(firstCategory.key);
   };
 
   return (
@@ -1279,14 +1293,36 @@ export default function BoardScreen() {
         </View>
       </View>
 
-      {/* Category tabs + 管理者のみカテゴリ追加ボタン */}
+      {/* 大分類 + スレッド分類 */}
       <View style={{ borderBottomWidth: 0.5, borderBottomColor: colors.border, backgroundColor: "#FBFDFF" }}>
+        <View style={{ flexDirection: "row", paddingHorizontal: 16, paddingTop: 12, gap: 8 }}>
+          {BOARD_GROUPS.map((group) => {
+            const active = activeGroup === group.key;
+            return (
+              <Pressable
+                key={group.key}
+                onPress={() => handleSelectGroup(group.key)}
+                style={{
+                  flex: 1,
+                  alignItems: "center",
+                  paddingVertical: 10,
+                  borderRadius: 12,
+                  backgroundColor: active ? "#5B5A73" : "#ECECF1",
+                }}
+              >
+                <Text style={{ fontSize: 14, fontWeight: "800", color: active ? "#FFFFFF" : "#303044" }}>
+                  {group.label}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 10, gap: 8 }}
         >
-          {categories.map((cat) => (
+          {visibleCategories.map((cat) => (
             <Pressable
               key={cat.key}
               onPress={() => setActiveCategory(cat.key)}

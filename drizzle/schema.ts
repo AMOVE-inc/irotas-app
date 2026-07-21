@@ -19,6 +19,8 @@ export const users = mysqlTable("users", {
   passwordHash: varchar("passwordHash", { length: 255 }),
   loginMethod: varchar("loginMethod", { length: 64 }),
   role: mysqlEnum("role", ["user", "admin"]).default("user").notNull(),
+  /** 所属支部。初回ログイン時に選択する */
+  branch: mysqlEnum("branch", ["kanto", "kansai"]),
   /** 性別（分析用） */
   gender: mysqlEnum("gender", ["male", "female", "other", "unset"]).default("unset").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),

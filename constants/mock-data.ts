@@ -208,6 +208,7 @@ export interface Club {
 export interface BoardCategory {
   key: string;
   label: string;
+  group: "all" | "area" | "club";
   createdByAdmin: boolean;
 }
 
@@ -490,9 +491,16 @@ export const BOARD_THREADS: BoardThread[] = [
   },
   {
     id: "t8", title: "はじめまして！かずまです",
-    author: MEMBERS[0], category: "introductions", commentCount: 7,
+    author: MEMBERS[0], category: "free-chat", commentCount: 7,
     lastUpdated: "2026-03-24T08:30:00",
     preview: "美味しいものを囲んで、みなさんと楽しく交流できたらうれしいです！",
+    isRecruiting: false,
+  },
+  {
+    id: "t9", title: "今月の部活動レポート",
+    author: MEMBERS[0], category: "club-all", commentCount: 9,
+    lastUpdated: "2026-03-24T07:30:00",
+    preview: "ラーメン部とワイン部の活動写真をまとめました。次回の参加もお待ちしています！",
     isRecruiting: false,
   },
 ];
@@ -672,17 +680,19 @@ export const RANK_THRESHOLDS = [
 ];
 
 export const BOARD_CATEGORIES: BoardCategory[] = [
-  { key: "announcement", label: "全体アナウンス", createdByAdmin: true },
-  { key: "kanto-branch", label: "関東支部", createdByAdmin: true },
-  { key: "kansai-branch", label: "関西支部", createdByAdmin: true },
-  { key: "introductions", label: "自己紹介", createdByAdmin: true },
+  { key: "announcement", label: "運営アナウンス", group: "all", createdByAdmin: true },
+  { key: "meal-report", label: "今日のごちそうさま報告", group: "all", createdByAdmin: true },
+  { key: "gourmet-advice", label: "教えてグルメ相談室", group: "all", createdByAdmin: true },
+  { key: "free-chat", label: "フリーチャット", group: "all", createdByAdmin: true },
+  { key: "kanto-branch", label: "関東", group: "area", createdByAdmin: true },
+  { key: "kansai-branch", label: "関西", group: "area", createdByAdmin: true },
+  { key: "club-all", label: "全体活動報告", group: "club", createdByAdmin: true },
   ...CLUBS.map((club) => ({
     key: `club-${club.id}`,
-    label: `部活動・${club.name}`,
+    label: club.name,
+    group: "club" as const,
     createdByAdmin: true,
   })),
-  { key: "meal-report", label: "今日のごちそうさま報告", createdByAdmin: true },
-  { key: "gourmet-advice", label: "教えてグルメ相談室", createdByAdmin: true },
 ];
 
 export const GENRES = [
