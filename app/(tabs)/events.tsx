@@ -1,6 +1,7 @@
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
-import { EVENTS, CURRENT_USER, isAdmin, type Event } from "@/constants/mock-data";
+import { EVENTS, CURRENT_USER, type Event } from "@/constants/mock-data";
+import { useAuthContext } from "@/lib/auth-context";
 import { getAllEvents } from "@/lib/event-store";
 import { useColors } from "@/hooks/use-colors";
 import { Image } from "expo-image";
@@ -15,7 +16,7 @@ import {
 } from "react-native";
 
 const TABS = [
-  { key: "all", label: "すべて" },
+  { key: "all", label: "全国" },
   { key: "kanto", label: "関東" },
   { key: "kansai", label: "関西" },
 ] as const;
@@ -60,8 +61,15 @@ function EventCard({ event, onPress }: { event: Event; onPress: () => void }) {
         marginHorizontal: 16,
         marginBottom: 14,
         backgroundColor: colors.surface,
-        borderRadius: 16,
+        borderRadius: 20,
         overflow: "hidden",
+        borderWidth: 1,
+        borderColor: colors.border,
+        shadowColor: "#80606F",
+        shadowOffset: { width: 0, height: 7 },
+        shadowOpacity: 0.08,
+        shadowRadius: 16,
+        elevation: 3,
       }}
     >
       <Image
@@ -146,7 +154,8 @@ export default function EventsScreen() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<string>("all");
   const [refreshing, setRefreshing] = useState(false);
-  const userIsAdmin = isAdmin(CURRENT_USER);
+  const { user: authUser } = useAuthContext();
+  const userIsAdmin = authUser?.role === "admin";
 
   const allEvents = getAllEvents(EVENTS);
   const filteredEvents = allEvents.filter(
@@ -168,11 +177,10 @@ export default function EventsScreen() {
           alignItems: "center",
           paddingHorizontal: 16,
           paddingVertical: 10,
-          borderBottomWidth: 0.5,
-          borderBottomColor: colors.border,
+          backgroundColor: colors.background,
         }}
       >
-        <Text style={{ fontSize: 28, fontWeight: "800", color: colors.foreground }}>
+        <Text style={{ fontSize: 26, fontWeight: "800", color: colors.foreground, letterSpacing: -0.5 }}>
           イベント
         </Text>
         {userIsAdmin && (
@@ -181,7 +189,7 @@ export default function EventsScreen() {
             style={{
               flexDirection: "row",
               alignItems: "center",
-              backgroundColor: "#E8A0BF",
+              backgroundColor: "#18171A",
               borderRadius: 20,
               paddingHorizontal: 14,
               paddingVertical: 8,
@@ -201,9 +209,11 @@ export default function EventsScreen() {
           flexDirection: "row",
           marginHorizontal: 16,
           marginVertical: 12,
-          backgroundColor: colors.surface,
-          borderRadius: 10,
-          padding: 3,
+          backgroundColor: "#F1F6F9",
+          borderRadius: 16,
+          padding: 4,
+          borderWidth: 1,
+          borderColor: "#DCEAF2",
         }}
       >
         {TABS.map((tab) => (
@@ -213,15 +223,15 @@ export default function EventsScreen() {
             style={{
               flex: 1,
               paddingVertical: 8,
-              borderRadius: 8,
-              backgroundColor: activeTab === tab.key ? colors.background : "transparent",
+              borderRadius: 12,
+              backgroundColor: activeTab === tab.key ? colors.primary : "transparent",
               alignItems: "center",
               ...(activeTab === tab.key
                 ? {
-                    shadowColor: "#000",
+                    shadowColor: "#B75E87",
                     shadowOffset: { width: 0, height: 1 },
-                    shadowOpacity: 0.1,
-                    shadowRadius: 2,
+                    shadowOpacity: 0.22,
+                    shadowRadius: 5,
                     elevation: 2,
                   }
                 : {}),
@@ -231,7 +241,7 @@ export default function EventsScreen() {
               style={{
                 fontSize: 14,
                 fontWeight: activeTab === tab.key ? "700" : "500",
-                color: activeTab === tab.key ? colors.foreground : colors.muted,
+                color: activeTab === tab.key ? "#FFFFFF" : "#5F6C75",
               }}
             >
               {tab.label}

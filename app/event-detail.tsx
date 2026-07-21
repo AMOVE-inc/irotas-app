@@ -1,6 +1,6 @@
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
-import { EVENTS, CURRENT_USER, type Event } from "@/constants/mock-data";
+import { EVENTS, CURRENT_USER, DEFAULT_AVATAR, getMemberById, type Event } from "@/constants/mock-data";
 import { joinEventChat } from "@/lib/chat-store";
 import { getAllEvents } from "@/lib/event-store";
 import { getIrotasPoints, adjustIrotasPoints, isFeeExempt } from "@/lib/irotas-points-store";
@@ -515,7 +515,7 @@ export default function EventDetailScreen() {
                   }}
                 >
                   <Image
-                    source={`https://api.dicebear.com/7.x/avataaars/png?seed=${uid}`}
+                    source={getMemberById(uid)?.avatar ?? DEFAULT_AVATAR}
                     style={{ width: 40, height: 40 }}
                     contentFit="cover"
                   />

@@ -4,7 +4,7 @@ import { invokeLLM } from "./_core/llm";
 import { COOKIE_NAME, ONE_YEAR_MS } from "../shared/const.js";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
-import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
+import { adminProcedure, publicProcedure, router } from "./_core/trpc";
 import { sdk } from "./_core/sdk";
 import * as db from "./db";
 
@@ -66,15 +66,12 @@ ${input.restaurantContext ? `参考データ：\n${input.restaurantContext}` : "
 // 承認メールアドレス管理ルーター（管理者専用）
 const allowedEmailsRouter = router({
   /** 承認済みメールアドレス一覧を取得 */
-  list: protectedProcedure.query(async ({ ctx }) => {
-    if (ctx.user.role !== "admin") {
-      throw new Error("管理者権限が必要です");
-    }
+  list: adminProcedure.query(async () => {
     return db.getAllowedEmails();
   }),
 
   /** 承認済みメールアドレスを追加 */
-  add: protectedProcedure
+  add: adminProcedure
     .input(
       z.object({
         email: z.string().email("有効なメールアドレスを入力してください"),
@@ -82,9 +79,6 @@ const allowedEmailsRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      if (ctx.user.role !== "admin") {
-        throw new Error("管理者権限が必要です");
-      }
       return db.addAllowedEmail({
         email: input.email,
         note: input.note,
@@ -93,12 +87,9 @@ const allowedEmailsRouter = router({
     }),
 
   /** 承認済みメールアドレスを削除 */
-  remove: protectedProcedure
+  remove: adminProcedure
     .input(z.object({ id: z.number() }))
-    .mutation(async ({ ctx, input }) => {
-      if (ctx.user.role !== "admin") {
-        throw new Error("管理者権限が必要です");
-      }
+    .mutation(async ({ input }) => {
       await db.removeAllowedEmail(input.id);
       return { success: true };
     }),
@@ -133,7 +124,7 @@ export const appRouter = router({
           email: z.string().email("有効なメールアドレスを入力してください"),
           password: z
             .string()
-            .min(6, "パスワードは6文字以上で入力してください"),
+            .min(8, "パスワードは8文字以上で入力してください"),
           name: z.string().min(1, "名前を入力してください"),
         }),
       )

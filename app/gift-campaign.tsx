@@ -215,8 +215,19 @@ export default function GiftCampaignScreen() {
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 12, gap: 8, alignItems: "center" }}
-        style={{ borderBottomWidth: 0.5, borderBottomColor: colors.border }}
+        contentContainerStyle={{
+          paddingHorizontal: 16,
+          gap: 8,
+          height: 60,
+          alignItems: "center",
+        }}
+        style={{
+          flexGrow: 0,
+          height: 60,
+          maxHeight: 60,
+          borderBottomWidth: 0.5,
+          borderBottomColor: colors.border,
+        }}
       >
         {/* 「すべて」ボタン */}
         <Pressable
@@ -265,7 +276,7 @@ export default function GiftCampaignScreen() {
         ))}
       </ScrollView>
 
-      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
         {filteredGifts.map((gift) => {
           const eligible = canApply(gift);
           const applied = appliedIds.includes(gift.id);

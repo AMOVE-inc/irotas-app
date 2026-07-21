@@ -1,7 +1,7 @@
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
-import { CURRENT_USER, isAdmin } from "@/constants/mock-data";
 import { useColors } from "@/hooks/use-colors";
+import { useAuthContext } from "@/lib/auth-context";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
@@ -71,6 +71,7 @@ const RANK_LABELS_MAP = { all: "全会員", silver: "シルバー以上", gold: 
 export default function CampaignManagerScreen() {
   const colors = useColors();
   const router = useRouter();
+  const { user: authUser } = useAuthContext();
   const [campaigns, setCampaigns] = useState<Campaign[]>(INITIAL_CAMPAIGNS);
   const [showCreate, setShowCreate] = useState(false);
   const [newTitle, setNewTitle] = useState("");
@@ -78,7 +79,7 @@ export default function CampaignManagerScreen() {
   const [newType, setNewType] = useState<Campaign["type"]>("points");
   const [newRank, setNewRank] = useState<Campaign["targetRank"]>("all");
 
-  if (!isAdmin(CURRENT_USER)) {
+  if (authUser?.role !== "admin") {
     return (
       <ScreenContainer className="p-6">
         <Text style={{ fontSize: 16, color: colors.muted, textAlign: "center", marginTop: 40 }}>

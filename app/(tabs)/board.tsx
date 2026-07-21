@@ -8,13 +8,14 @@ import {
   RANK_COLORS,
   RANK_LABELS,
   CURRENT_USER,
-  isAdmin,
   type BoardThread,
   type BoardComment,
   type BoardCategory,
 } from "@/constants/mock-data";
+import { useAuthContext } from "@/lib/auth-context";
 import { useColors } from "@/hooks/use-colors";
 import { createBoardChat } from "@/lib/chat-store";
+import { canManageBoardCategories } from "@/lib/access-control";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
@@ -33,8 +34,6 @@ import {
   RefreshControl,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-
-const userIsAdmin = isAdmin(CURRENT_USER);
 
 function ThreadCard({ thread, onPress, onEdit }: { thread: BoardThread; onPress: () => void; onEdit?: () => void }) {
   const colors = useColors();
@@ -404,8 +403,7 @@ function ThreadDetailModal({
           paddingHorizontal: 16,
           paddingTop: 16,
           paddingBottom: 12,
-          borderBottomWidth: 0.5,
-          borderBottomColor: colors.border,
+          backgroundColor: colors.background,
         }}
       >
         <Pressable onPress={onClose}>
@@ -1195,6 +1193,8 @@ function CreateThreadModal({
 export default function BoardScreen() {
   const colors = useColors();
   const router = useRouter();
+  const { user: authUser } = useAuthContext();
+  const userIsAdmin = canManageBoardCategories(authUser?.role);
   const [categories, setCategories] = useState<BoardCategory[]>(BOARD_CATEGORIES);
   const [activeCategory, setActiveCategory] = useState<string>(BOARD_CATEGORIES[0].key);
   const [refreshing, setRefreshing] = useState(false);
@@ -1214,6 +1214,11 @@ export default function BoardScreen() {
   }, []);
 
   const handleAddCategory = (label: string) => {
+    if (!userIsAdmin) {
+      setShowAddCategory(false);
+      Alert.alert("権限がありません", "掲示板の種別を追加できるのは管理者のみです。");
+      return;
+    }
     const key = label.replace(/\s+/g, "-").toLowerCase() + "-" + Date.now();
     setCategories([...categories, { key, label, createdByAdmin: true }]);
     setActiveCategory(key);
@@ -1233,7 +1238,7 @@ export default function BoardScreen() {
           borderBottomColor: colors.border,
         }}
       >
-        <Text style={{ fontSize: 28, fontWeight: "800", color: colors.foreground }}>
+        <Text style={{ fontSize: 26, fontWeight: "800", color: colors.foreground, letterSpacing: -0.5 }}>
           掲示板
         </Text>
         <View style={{ flexDirection: "row", gap: 8 }}>
@@ -1242,7 +1247,9 @@ export default function BoardScreen() {
             style={{
               flexDirection: "row",
               alignItems: "center",
-              backgroundColor: "#A7C7E720",
+              backgroundColor: "#EEF7FC",
+              borderWidth: 1,
+              borderColor: "#D9EBF6",
               borderRadius: 20,
               paddingHorizontal: 12,
               paddingVertical: 8,
@@ -1258,7 +1265,7 @@ export default function BoardScreen() {
             style={{
               flexDirection: "row",
               alignItems: "center",
-              backgroundColor: "#E8A0BF",
+              backgroundColor: "#18171A",
               borderRadius: 20,
               paddingHorizontal: 12,
               paddingVertical: 8,
@@ -1273,7 +1280,7 @@ export default function BoardScreen() {
       </View>
 
       {/* Category tabs + 管理者のみカテゴリ追加ボタン */}
-      <View style={{ borderBottomWidth: 0.5, borderBottomColor: colors.border }}>
+      <View style={{ borderBottomWidth: 0.5, borderBottomColor: colors.border, backgroundColor: "#FBFDFF" }}>
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -1287,14 +1294,25 @@ export default function BoardScreen() {
                 paddingHorizontal: 16,
                 paddingVertical: 8,
                 borderRadius: 20,
-                backgroundColor: activeCategory === cat.key ? "#E8A0BF" : colors.surface,
+                backgroundColor: activeCategory === cat.key ? colors.primary : "#F1F6F9",
+                borderWidth: 1,
+                borderColor: activeCategory === cat.key ? colors.primary : "#DCEAF2",
+                ...(activeCategory === cat.key
+                  ? {
+                      shadowColor: "#B75E87",
+                      shadowOffset: { width: 0, height: 2 },
+                      shadowOpacity: 0.2,
+                      shadowRadius: 5,
+                      elevation: 2,
+                    }
+                  : {}),
               }}
             >
               <Text
                 style={{
                   fontSize: 14,
                   fontWeight: "600",
-                  color: activeCategory === cat.key ? "#FFF" : colors.foreground,
+                  color: activeCategory === cat.key ? "#FFF" : "#5F6C75",
                 }}
               >
                 {cat.label}
@@ -1386,11 +1404,13 @@ export default function BoardScreen() {
       )}
 
       {/* Add Category Modal - 管理者限定 */}
-      <AddCategoryModal
-        visible={showAddCategory}
-        onClose={() => setShowAddCategory(false)}
-        onAdd={handleAddCategory}
-      />
+      {userIsAdmin && (
+        <AddCategoryModal
+          visible={showAddCategory}
+          onClose={() => setShowAddCategory(false)}
+          onAdd={handleAddCategory}
+        />
+      )}
     </ScreenContainer>
   );
 }

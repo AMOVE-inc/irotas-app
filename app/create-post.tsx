@@ -3,6 +3,7 @@ import { IconSymbol } from "@/components/ui/icon-symbol";
 import { CURRENT_USER, type TimelinePost } from "@/constants/mock-data";
 import { useColors } from "@/hooks/use-colors";
 import { useRouter } from "expo-router";
+import * as ImagePicker from "expo-image-picker";
 import { useState } from "react";
 import {
   Alert,
@@ -15,7 +16,6 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 // グローバルな投稿ストア（シンプルなモジュールレベルの状態）
 export const pendingPosts: TimelinePost[] = [];
@@ -23,7 +23,6 @@ export const pendingPosts: TimelinePost[] = [];
 export default function CreatePostScreen() {
   const colors = useColors();
   const router = useRouter();
-  const insets = useSafeAreaInsets();
   const [content, setContent] = useState("");
   const [selectedImages, setSelectedImages] = useState<string[]>([]);
   const [location, setLocation] = useState<string | null>(null);
@@ -54,12 +53,62 @@ export default function CreatePostScreen() {
     ]);
   };
 
-  const handlePickImage = () => {
-    Alert.alert("写真を追加", "写真ライブラリから選択する機能は近日公開予定です。");
+  const handlePickImage = async () => {
+    if (selectedImages.length >= 4) {
+      Alert.alert("上限に達しました", "写真は4枚まで追加できます。");
+      return;
+    }
+
+    if (Platform.OS !== "web") {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== "granted") {
+        Alert.alert("権限が必要です", "写真ライブラリへのアクセスを許可してください。");
+        return;
+      }
+    }
+
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ["images"],
+        allowsMultipleSelection: true,
+        selectionLimit: 4 - selectedImages.length,
+        quality: 0.8,
+      });
+
+      if (!result.canceled) {
+        const uris = result.assets.map((asset) => asset.uri);
+        setSelectedImages((current) => [...current, ...uris].slice(0, 4));
+      }
+    } catch {
+      Alert.alert("写真を選択できませんでした", "ブラウザを更新して、もう一度お試しください。");
+    }
   };
 
-  const handleCamera = () => {
-    Alert.alert("カメラ", "カメラ撮影機能は近日公開予定です。");
+  const handleCamera = async () => {
+    if (selectedImages.length >= 4) {
+      Alert.alert("上限に達しました", "写真は4枚まで追加できます。");
+      return;
+    }
+
+    if (Platform.OS !== "web") {
+      const { status } = await ImagePicker.requestCameraPermissionsAsync();
+      if (status !== "granted") {
+        Alert.alert("権限が必要です", "カメラへのアクセスを許可してください。");
+        return;
+      }
+    }
+
+    try {
+      const result = await ImagePicker.launchCameraAsync({
+        mediaTypes: ["images"],
+        quality: 0.8,
+      });
+      if (!result.canceled && result.assets[0]) {
+        setSelectedImages((current) => [...current, result.assets[0].uri].slice(0, 4));
+      }
+    } catch {
+      Alert.alert("カメラを起動できませんでした", "端末のカメラ権限をご確認ください。");
+    }
   };
 
   const handleLocation = () => {
@@ -116,7 +165,7 @@ export default function CreatePostScreen() {
         {/* Author row */}
         <View style={{ flexDirection: "row", alignItems: "center", padding: 16 }}>
           <Image
-            source={{ uri: CURRENT_USER.avatar }}
+            source={CURRENT_USER.avatar}
             style={{ width: 40, height: 40, borderRadius: 20 }}
           />
           <View style={{ marginLeft: 10 }}>
@@ -130,6 +179,69 @@ export default function CreatePostScreen() {
               </View>
             )}
           </View>
+        </View>
+
+        {/* Media toolbar: kept above the editor so mobile keyboards cannot hide it */}
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            paddingHorizontal: 16,
+            paddingBottom: 10,
+            gap: 8,
+          }}
+        >
+          <Pressable
+            onPress={handlePickImage}
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              backgroundColor: "#F8EFF3",
+              borderRadius: 16,
+              paddingHorizontal: 12,
+              paddingVertical: 8,
+            }}
+          >
+            <IconSymbol name="photo.fill" size={18} color="#D97FA8" />
+            <Text style={{ fontSize: 13, fontWeight: "700", color: "#D97FA8", marginLeft: 5 }}>
+              写真
+            </Text>
+          </Pressable>
+          <Pressable
+            onPress={handleCamera}
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              backgroundColor: "#EEF6FB",
+              borderRadius: 16,
+              paddingHorizontal: 12,
+              paddingVertical: 8,
+            }}
+          >
+            <IconSymbol name="camera.fill" size={18} color="#72ACD1" />
+            <Text style={{ fontSize: 13, fontWeight: "700", color: "#5C98BE", marginLeft: 5 }}>
+              撮影
+            </Text>
+          </Pressable>
+          <Pressable
+            onPress={handleLocation}
+            style={{
+              width: 36,
+              height: 36,
+              borderRadius: 18,
+              backgroundColor: location ? "#F8EFF3" : colors.surface,
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <IconSymbol
+              name="mappin.and.ellipse"
+              size={19}
+              color={location ? "#D97FA8" : colors.muted}
+            />
+          </Pressable>
+          <View style={{ flex: 1 }} />
+          <Text style={{ fontSize: 12, color: colors.muted }}>{selectedImages.length}/4枚</Text>
         </View>
 
         {/* Content input */}
@@ -183,33 +295,8 @@ export default function CreatePostScreen() {
         )}
       </ScrollView>
 
-      {/* Bottom toolbar */}
-      <View
-        style={{
-          flexDirection: "row",
-          alignItems: "center",
-          paddingHorizontal: 16,
-          paddingVertical: 12,
-          paddingBottom: Platform.OS === "web" ? 16 : Math.max(insets.bottom, 12),
-          borderTopWidth: 0.5,
-          borderTopColor: colors.border,
-        }}
-      >
-        <Pressable onPress={handlePickImage} style={{ marginRight: 20 }}>
-          <IconSymbol name="photo.fill" size={24} color="#E8A0BF" />
-        </Pressable>
-        <Pressable onPress={handleCamera} style={{ marginRight: 20 }}>
-          <IconSymbol name="camera.fill" size={24} color="#E8A0BF" />
-        </Pressable>
-        <Pressable onPress={handleLocation}>
-          <IconSymbol
-            name="mappin.and.ellipse"
-            size={24}
-            color={location ? "#E8A0BF" : colors.muted}
-          />
-        </Pressable>
-        <View style={{ flex: 1 }} />
-        <Text style={{ fontSize: 13, color: content.length > 450 ? colors.error : colors.muted }}>
+      <View style={{ paddingHorizontal: 16, paddingVertical: 8 }}>
+        <Text style={{ fontSize: 12, color: content.length > 450 ? colors.error : colors.muted, textAlign: "right" }}>
           {content.length}/500
         </Text>
       </View>

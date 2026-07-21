@@ -8,7 +8,6 @@ import {
   POINT_ACTIONS,
   RANK_THRESHOLDS_POINTS,
   getNextRankInfo,
-  isAdmin,
   type MemberRank,
 } from "@/constants/mock-data";
 import { useColors } from "@/hooks/use-colors";
@@ -546,8 +545,15 @@ function MenuSection({ title, items }: { title: string; items: MenuItem[] }) {
         style={{
           marginHorizontal: 16,
           backgroundColor: colors.surface,
-          borderRadius: 14,
+          borderRadius: 20,
           overflow: "hidden",
+          borderWidth: 1,
+          borderColor: colors.border,
+          shadowColor: "#80606F",
+          shadowOffset: { width: 0, height: 7 },
+          shadowOpacity: 0.07,
+          shadowRadius: 16,
+          elevation: 2,
         }}
       >
         {items.map((item, index) => (

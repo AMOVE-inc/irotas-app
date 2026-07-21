@@ -4,11 +4,12 @@ import {
   CLUBS,
   CURRENT_USER,
   getMemberById,
-  isAdmin,
   type Club,
 } from "@/constants/mock-data";
+import { useAuthContext } from "@/lib/auth-context";
 import { useColors } from "@/hooks/use-colors";
 import { createBoardChat } from "@/lib/chat-store";
+import { canCreateClub } from "@/lib/access-control";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { useState } from "react";
@@ -30,8 +31,6 @@ import {
   sendLeaderAppointmentNotification,
   sendClubApplicationNotification,
 } from "@/lib/notifications";
-
-const userIsAdmin = isAdmin(CURRENT_USER);
 
 // 部活動掲示板の投稿型
 interface ClubPost {
@@ -219,6 +218,8 @@ function ClubPostDetailModal({
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const { user: authUser } = useAuthContext();
+  const userIsAdmin = authUser?.role === "admin";
   const [commentText, setCommentText] = useState("");
   const [comments, setComments] = useState<ClubPostComment[]>([]);
   const [chatId, setChatId] = useState<string | null>(post.chatId ?? null);
@@ -601,6 +602,8 @@ function ClubDetailModal({
 }) {
   const colors = useColors();
   const router = useRouter();
+  const { user: authUser } = useAuthContext();
+  const userIsAdmin = authUser?.role === "admin";
   const leader = getMemberById(club.leaderId);
   const [memberIds, setMemberIds] = useState(club.memberIds);
   const [applicantIds, setApplicantIds] = useState(club.applicantIds);
@@ -1456,6 +1459,8 @@ function AddClubModal({
 // ============================================================
 export default function ClubsScreen() {
   const colors = useColors();
+  const { user: authUser } = useAuthContext();
+  const userIsAdmin = canCreateClub(authUser?.role);
   const [clubs, setClubs] = useState<Club[]>(CLUBS);
   const [selectedClub, setSelectedClub] = useState<Club | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
@@ -1475,6 +1480,15 @@ export default function ClubsScreen() {
   const handleUpdateClub = (updated: Club) => {
     setClubs(clubs.map((c) => c.id === updated.id ? updated : c));
     if (selectedClub?.id === updated.id) setSelectedClub(updated);
+  };
+
+  const handleAddClub = (club: Club) => {
+    if (!userIsAdmin) {
+      setShowAddModal(false);
+      Alert.alert("権限がありません", "部活動を追加できるのは管理者のみです。");
+      return;
+    }
+    setClubs((current) => [...current, club]);
   };
 
   return (
@@ -1545,11 +1559,13 @@ export default function ClubsScreen() {
       )}
 
       {/* 新規部活動作成モーダル（管理者限定） */}
-      <AddClubModal
-        visible={showAddModal}
-        onClose={() => setShowAddModal(false)}
-        onAdd={(club) => setClubs([...clubs, club])}
-      />
+      {userIsAdmin && (
+        <AddClubModal
+          visible={showAddModal}
+          onClose={() => setShowAddModal(false)}
+          onAdd={handleAddClub}
+        />
+      )}
     </ScreenContainer>
   );
 }

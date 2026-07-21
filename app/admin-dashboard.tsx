@@ -1,6 +1,7 @@
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
-import { MEMBERS, EVENTS, CLUBS, CURRENT_USER, RANK_LABELS, RANK_COLORS, isAdmin, getRankFromPoints, type Announcement } from "@/constants/mock-data";
+import { MEMBERS, EVENTS, CLUBS, CURRENT_USER, RANK_LABELS, RANK_COLORS, getRankFromPoints, type Announcement } from "@/constants/mock-data";
+import { useAuthContext } from "@/lib/auth-context";
 import { useColors } from "@/hooks/use-colors";
 import { trpc } from "@/lib/trpc";
 import { getIrotasPointsBalances,
@@ -43,6 +44,8 @@ type PointsHistoryEntry = {
 export default function AdminDashboardScreen() {
   const colors = useColors();
   const router = useRouter();
+  const { user: authUser } = useAuthContext();
+  const userIsAdmin = authUser?.role === "admin";
 
   // すべての state を条件分岐の外で定義
   const [activeTab, setActiveTab] = useState<"overview" | "members" | "events" | "payments" | "emails" | "announcements" | "analytics">("overview");
@@ -74,18 +77,8 @@ export default function AdminDashboardScreen() {
     return { rankCounts, openEvents, fullEvents, totalParticipants, activeClubs };
   }, []);
 
-  // 管理者権限チェックはレンダリング後に行う
-  if (!isAdmin(CURRENT_USER)) {
-    return (
-      <ScreenContainer className="p-6">
-        <Text style={{ fontSize: 16, color: colors.muted, textAlign: "center", marginTop: 40 }}>
-          管理者のみアクセスできます
-        </Text>
-      </ScreenContainer>
-    );
-  }
-
   useEffect(() => {
+    if (!userIsAdmin) return;
     AsyncStorage.getItem("generation_overrides").then((val) => {
       if (val) setGenerationOverrides(JSON.parse(val));
     });
@@ -107,7 +100,17 @@ export default function AdminDashboardScreen() {
     getFeeExemptionMembers().then(setFeeExemptIds);
     // 支払い状況を読み込む
     getAllPayments().then(setPaymentRecords);
-  }, []);
+  }, [userIsAdmin]);
+
+  if (!userIsAdmin) {
+    return (
+      <ScreenContainer className="p-6">
+        <Text style={{ fontSize: 16, color: colors.muted, textAlign: "center", marginTop: 40 }}>
+          管理者のみアクセスできます
+        </Text>
+      </ScreenContainer>
+    );
+  }
 
   const handleEditPoints = (memberId: string, memberName: string, currentPoints: number) => {
     Alert.prompt(

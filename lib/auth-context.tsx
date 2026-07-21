@@ -2,6 +2,7 @@ import React, { createContext, useContext, useCallback, useEffect, useState } fr
 import { Platform } from "react-native";
 import * as Auth from "@/lib/_core/auth";
 import * as Api from "@/lib/_core/api";
+import { logger } from "@/lib/_core/logger";
 
 type AuthContextType = {
   user: Auth.User | null;
@@ -39,7 +40,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             email: apiUser.email,
             loginMethod: apiUser.loginMethod,
             lastSignedIn: new Date(apiUser.lastSignedIn),
-            role: (apiUser as any).role ?? "user",
+            role: Auth.normalizeUserRole(apiUser.role),
           };
           setUser(userInfo);
           await Auth.setUserInfo(userInfo);
@@ -62,7 +63,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       }
     } catch (err) {
-      console.error("[AuthProvider] fetchUser error:", err);
+      logger.error("Failed to refresh authenticated user", err);
       setUser(null);
     } finally {
       setLoading(false);
@@ -73,7 +74,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       await Api.logout();
     } catch (err) {
-      console.error("[AuthProvider] Logout API call failed:", err);
+      logger.warn("Server logout failed; clearing the local session", err);
     } finally {
       await Auth.removeSessionToken();
       await Auth.clearUserInfo();

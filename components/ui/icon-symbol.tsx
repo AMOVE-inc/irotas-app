@@ -78,6 +78,7 @@ const MAPPING = {
   "calendar.badge.plus": "event-available",
   "person.badge.plus": "person-add",
   "checkmark.circle.fill": "check-circle",
+  "checkmark": "check",
   "exclamationmark.circle.fill": "error",
   // App settings & notifications
   "at": "alternate-email",
@@ -97,6 +98,7 @@ const MAPPING = {
   "radio.fill": "radio",
   "play.fill": "play-arrow",
   "pause.fill": "pause",
+  "stop.fill": "stop",
   "forward.fill": "fast-forward",
   "backward.fill": "fast-rewind",
   "speaker.slash.fill": "volume-off",

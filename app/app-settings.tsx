@@ -1,7 +1,6 @@
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { useColors } from "@/hooks/use-colors";
-import { useColorScheme } from "@/hooks/use-color-scheme";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
@@ -16,7 +15,6 @@ import {
 export default function AppSettingsScreen() {
   const colors = useColors();
   const router = useRouter();
-  const colorScheme = useColorScheme();
 
   const [settings, setSettings] = useState({
     pushNotifications: true,
@@ -286,9 +284,9 @@ export default function AppSettingsScreen() {
           icon="moon.fill"
           iconColor="#AF52DE"
           label="テーマ"
-          rightLabel={colorScheme === "dark" ? "ダーク" : "ライト"}
+          rightLabel="ライト"
           onPress={() =>
-            Alert.alert("テーマ設定", "テーマはシステム設定に従います。\niOSの設定 > 画面表示と明るさ から変更できます。")
+            Alert.alert("テーマ設定", "IROTASは白を基調としたライトテーマを使用します。")
           }
         />
 

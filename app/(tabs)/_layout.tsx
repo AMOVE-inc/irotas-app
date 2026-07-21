@@ -3,15 +3,17 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { HapticTab } from "@/components/haptic-tab";
 import { IconSymbol } from "@/components/ui/icon-symbol";
-import { Platform } from "react-native";
+import { Platform, useWindowDimensions } from "react-native";
 import { useColors } from "@/hooks/use-colors";
 
 export default function TabLayout() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const bottomPadding = Platform.OS === "web" ? 12 : Math.max(insets.bottom, 8);
-  // アイコン(26px) + ラベル(10px) + paddingTop(8px) + paddingBottom + 余白 = 最低72px必要
-  const tabBarHeight = 72 + bottomPadding;
+  const { width } = useWindowDimensions();
+  const isMobileWeb = Platform.OS === "web" && width <= 768;
+  const bottomPadding = Platform.OS === "web" ? 10 : Math.max(insets.bottom, 8);
+  const tabBarHeight = isMobileWeb ? 78 : 62 + bottomPadding;
+  const tabBarBottomMargin = isMobileWeb ? 34 : Platform.OS === "web" ? 10 : 6;
 
   return (
     <Tabs
@@ -21,17 +23,32 @@ export default function TabLayout() {
         headerShown: false,
         tabBarButton: HapticTab,
         tabBarStyle: {
-          paddingTop: 6,
+          marginHorizontal: 12,
+          marginBottom: tabBarBottomMargin,
+          paddingTop: isMobileWeb ? 7 : 8,
           paddingBottom: bottomPadding,
           height: tabBarHeight,
-          backgroundColor: colors.background,
-          borderTopColor: colors.border,
-          borderTopWidth: 0.5,
+          backgroundColor: colors.surface,
+          borderColor: colors.border,
+          borderWidth: 1,
+          borderTopWidth: 1,
+          borderRadius: 24,
+          shadowColor: "#6E5260",
+          shadowOffset: { width: 0, height: 8 },
+          shadowOpacity: 0.13,
+          shadowRadius: 18,
+          elevation: 10,
         },
         tabBarLabelStyle: {
-          fontSize: 10,
-          fontWeight: "600",
-          marginTop: 2,
+          fontSize: isMobileWeb ? 10 : 9,
+          fontWeight: "700",
+          lineHeight: 13,
+          marginTop: 3,
+          marginBottom: isMobileWeb ? 3 : 0,
+        },
+        tabBarShowLabel: true,
+        tabBarItemStyle: {
+          borderRadius: 18,
         },
       }}
     >

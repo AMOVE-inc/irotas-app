@@ -1,4 +1,5 @@
 import { ScreenContainer } from "@/components/screen-container";
+import { BrandLogo } from "@/components/brand-logo";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import {
   ANNOUNCEMENTS,
@@ -16,9 +17,8 @@ import {
 import { useColors } from "@/hooks/use-colors";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
-import { useRef, useState, useCallback, useMemo } from "react";
+import { useRef, useState, useCallback, useEffect, useMemo } from "react";
 import {
-  Dimensions,
   FlatList,
   KeyboardAvoidingView,
   Platform,
@@ -29,6 +29,7 @@ import {
   TextInput,
   View,
   RefreshControl,
+  useWindowDimensions,
 } from "react-native";
 
 // タイムラインコメント型
@@ -45,31 +46,50 @@ interface TimelineComment {
 // コメントストア（メモリ内）
 const timelineComments: TimelineComment[] = [];
 
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
-
 function AnnouncementBanner({ announcements }: { announcements: Announcement[] }) {
   const colors = useColors();
+  const { width: screenWidth } = useWindowDimensions();
+  const slideWidth = screenWidth - 32;
   const [activeIndex, setActiveIndex] = useState(0);
+  const [isInteracting, setIsInteracting] = useState(false);
   const scrollRef = useRef<ScrollView>(null);
 
+  useEffect(() => {
+    if (announcements.length <= 1 || isInteracting) return;
+
+    const timer = setTimeout(() => {
+      const nextIndex = (activeIndex + 1) % announcements.length;
+      scrollRef.current?.scrollTo({ x: nextIndex * slideWidth, animated: true });
+      setActiveIndex(nextIndex);
+    }, 4500);
+
+    return () => clearTimeout(timer);
+  }, [activeIndex, announcements.length, isInteracting, slideWidth]);
+
   return (
-    <View style={{ marginHorizontal: 16, marginTop: 12, marginBottom: 8 }}>
+    <View style={{ marginHorizontal: 16, marginTop: 14, marginBottom: 10 }}>
       <ScrollView
         ref={scrollRef}
         horizontal
         pagingEnabled
+        snapToInterval={slideWidth}
+        decelerationRate="fast"
+        scrollEnabled={announcements.length > 1}
         showsHorizontalScrollIndicator={false}
+        onScrollBeginDrag={() => setIsInteracting(true)}
+        onScrollEndDrag={() => setIsInteracting(false)}
         onMomentumScrollEnd={(e) => {
-          const index = Math.round(e.nativeEvent.contentOffset.x / (SCREEN_WIDTH - 32));
+          const index = Math.round(e.nativeEvent.contentOffset.x / slideWidth);
           setActiveIndex(index);
+          setIsInteracting(false);
         }}
       >
         {announcements.map((item) => (
           <Pressable
             key={item.id}
-            style={{ width: SCREEN_WIDTH - 32, borderRadius: 12, overflow: "hidden" }}
+            style={{ width: slideWidth, borderRadius: 18, overflow: "hidden" }}
           >
-            <View style={{ backgroundColor: "#FDF2F7", borderRadius: 12, padding: 14 }}>
+            <View style={{ backgroundColor: colors.surface, borderRadius: 18, padding: 16, borderWidth: 1, borderColor: "#F3DCE7" }}>
               <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 6 }}>
                 <IconSymbol name="megaphone.fill" size={14} color="#E8A0BF" />
                 <Text style={{ fontSize: 11, color: "#E8A0BF", fontWeight: "600", marginLeft: 6 }}>
@@ -506,21 +526,15 @@ export default function HomeScreen() {
           justifyContent: "space-between",
           paddingHorizontal: 16,
           paddingVertical: 10,
-          borderBottomWidth: 0.5,
-          borderBottomColor: colors.border,
+          backgroundColor: colors.background,
         }}
       >
-        <View style={{ flexDirection: "row", alignItems: "center" }}>
-          <Text style={{ fontSize: 24, fontWeight: "800", color: colors.foreground }}>
-            IRO
-          </Text>
-          <Text style={{ fontSize: 24, fontWeight: "800", color: "#E8A0BF" }}>＋</Text>
-        </View>
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
-          <Pressable onPress={() => router.push("/chat-list")}>
+        <BrandLogo width={126} compact />
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+          <Pressable onPress={() => router.push("/chat-list")} style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: "#F8EFF3", alignItems: "center", justifyContent: "center" }}>
             <IconSymbol name="message.fill" size={22} color={colors.foreground} />
           </Pressable>
-          <Pressable onPress={() => router.push("/notifications")}>
+          <Pressable onPress={() => router.push("/notifications")} style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: "#EEF6FB", alignItems: "center", justifyContent: "center" }}>
             <IconSymbol name="bell.fill" size={22} color={colors.foreground} />
           </Pressable>
         </View>
@@ -551,10 +565,10 @@ export default function HomeScreen() {
           width: 56,
           height: 56,
           borderRadius: 28,
-          backgroundColor: "#E8A0BF",
+          backgroundColor: "#18171A",
           alignItems: "center",
           justifyContent: "center",
-          shadowColor: "#000",
+          shadowColor: "#8A5D72",
           shadowOffset: { width: 0, height: 2 },
           shadowOpacity: 0.2,
           shadowRadius: 4,

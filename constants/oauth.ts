@@ -3,9 +3,10 @@ import * as ReactNative from "react-native";
 
 // Extract scheme from bundle ID (last segment timestamp, prefixed with "manus")
 // e.g., "space.manus.my.app.t20240115103045" -> "manus20240115103045"
-const bundleId = "space.manus.irotas.app.t20260323084952";
+const bundleId =
+  process.env.EXPO_PUBLIC_BUNDLE_IDENTIFIER ?? "space.manus.irotas.app.t20260323084952";
 const timestamp = bundleId.split(".").pop()?.replace(/^t/, "") ?? "";
-const schemeFromBundleId = `manus${timestamp}`;
+const schemeFromBundleId = process.env.EXPO_PUBLIC_APP_SCHEME ?? `manus${timestamp}`;
 
 const env = {
   portal: process.env.EXPO_PUBLIC_OAUTH_PORTAL_URL ?? "",

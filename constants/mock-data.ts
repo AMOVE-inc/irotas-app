@@ -6,7 +6,7 @@ export type UserRole = "member" | "admin";
 export interface Member {
   id: string;
   name: string;
-  avatar: string;
+  avatar: number;
   rank: MemberRank;
   points: number; // 累計ポイント
   level: number; // 後方互換用（pointsから自動計算）
@@ -217,10 +217,14 @@ export interface RankBenefit {
 
 // --- Mock Data ---
 
+/** Shared avatar shown until a member uploads their own profile image. */
+export const DEFAULT_AVATAR =
+  process.env.NODE_ENV === "test" ? 1 : require("../assets/images/icon.png");
+
 export const CURRENT_USER: Member = {
   id: "u1",
   name: "かずま",
-  avatar: "https://api.dicebear.com/7.x/avataaars/png?seed=kazuma",
+  avatar: DEFAULT_AVATAR,
   rank: "gold",
   points: 620,
   level: 12,
@@ -237,7 +241,7 @@ export const MEMBERS: Member[] = [
   CURRENT_USER,
   {
     id: "u2", name: "さくら",
-    avatar: "https://api.dicebear.com/7.x/avataaars/png?seed=sakura",
+    avatar: DEFAULT_AVATAR,
     rank: "platinum", points: 1050, level: 18, branch: "kanto", generation: 1,
     bio: "小べ歩きが趣味です。特にフレンチとイタリアンが好き。IRO＋のイベントには毎回参加しています！",
     interests: ["フレンチ", "イタリアン", "ワイン"],
@@ -245,7 +249,7 @@ export const MEMBERS: Member[] = [
   },
   {
     id: "u3", name: "たくみ",
-    avatar: "https://api.dicebear.com/7.x/avataaars/png?seed=takumi",
+    avatar: DEFAULT_AVATAR,
     rank: "silver", points: 180, level: 7, branch: "kansai", generation: 2,
     bio: "大阪在住のラーメン好き。関西の美味しいお店を開拓中です。",
     interests: ["ラーメン", "たこ焼き", "お好み焼き"],
@@ -253,7 +257,7 @@ export const MEMBERS: Member[] = [
   },
   {
     id: "u4", name: "ゆうき",
-    avatar: "https://api.dicebear.com/7.x/avataaars/png?seed=yuuki",
+    avatar: DEFAULT_AVATAR,
     rank: "gold", points: 530, level: 11, branch: "kanto", generation: 1,
     bio: "銀座のお寿司屋さん巡りが週末の楽しみ。ワインも好きです。",
     interests: ["寿司", "ワイン", "フレンチ"],
@@ -261,7 +265,7 @@ export const MEMBERS: Member[] = [
   },
   {
     id: "u5", name: "あおい",
-    avatar: "https://api.dicebear.com/7.x/avataaars/png?seed=aoi",
+    avatar: DEFAULT_AVATAR,
     rank: "regular", points: 45, level: 3, branch: "kansai", generation: 3,
     bio: "京都のカフェ巡りが好きです。最近IRO＋に入会しました！",
     interests: ["カフェ", "和食", "スイーツ"],
@@ -269,7 +273,7 @@ export const MEMBERS: Member[] = [
   },
   {
     id: "u6", name: "りょう",
-    avatar: "https://api.dicebear.com/7.x/avataaars/png?seed=ryou",
+    avatar: DEFAULT_AVATAR,
     rank: "gold", points: 510, level: 10, branch: "kanto", generation: 1,
     bio: "居酒屋とバーが好き。IRO＋のイベント企画もよくやっています。",
     interests: ["居酒屋", "バー", "クラフトビール"],
@@ -277,7 +281,7 @@ export const MEMBERS: Member[] = [
   },
   {
     id: "u7", name: "みさき",
-    avatar: "https://api.dicebear.com/7.x/avataaars/png?seed=misaki",
+    avatar: DEFAULT_AVATAR,
     rank: "silver", points: 150, level: 6, branch: "kansai", generation: 2,
     bio: "大阪で料理教室に通っています。手作り料理の写真もよく投稿します。",
     interests: ["和食", "イタリアン", "パン"],
@@ -285,7 +289,7 @@ export const MEMBERS: Member[] = [
   },
   {
     id: "u8", name: "けんた",
-    avatar: "https://api.dicebear.com/7.x/avataaars/png?seed=kenta",
+    avatar: DEFAULT_AVATAR,
     rank: "regular", points: 20, level: 2, branch: "kanto", generation: 4,
     bio: "新メンバーです。よろしくお願いします！",
     interests: [],

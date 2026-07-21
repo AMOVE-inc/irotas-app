@@ -4,9 +4,9 @@ import {
   RESTAURANTS,
   GENRES,
   CURRENT_USER,
-  isAdmin,
   type Restaurant,
 } from "@/constants/mock-data";
+import { useAuthContext } from "@/lib/auth-context";
 import { useColors } from "@/hooks/use-colors";
 import { Image } from "expo-image";
 import { useState, useCallback } from "react";
@@ -293,7 +293,8 @@ export default function MapScreen() {
   const [selectedGenre, setSelectedGenre] = useState<string | null>(null);
   const [selectedRestaurant, setSelectedRestaurant] = useState<Restaurant | null>(null);
   const [showCSVImport, setShowCSVImport] = useState(false);
-  const userIsAdmin = isAdmin(CURRENT_USER);
+  const { user: authUser } = useAuthContext();
+  const userIsAdmin = authUser?.role === "admin";
 
   const filteredRestaurants = RESTAURANTS.filter((r) => {
     const matchSearch =

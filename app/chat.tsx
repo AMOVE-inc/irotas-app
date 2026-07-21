@@ -3,12 +3,13 @@ import { IconSymbol } from "@/components/ui/icon-symbol";
 import {
   CHAT_MESSAGES,
   CURRENT_USER,
+  DEFAULT_AVATAR,
   MEMBERS,
   getMemberById,
-  isAdmin,
   type ChatMessage,
   type Member,
 } from "@/constants/mock-data";
+import { useAuthContext } from "@/lib/auth-context";
 import { getRoomById, getMessages, addMessage as storeAddMessage, saveMessagesToStorage, loadMessagesFromStorage, loadDynamicRooms, renameRoom, addMemberToRoom, removeMemberFromRoom } from "@/lib/chat-store";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useColors } from "@/hooks/use-colors";
@@ -92,8 +93,8 @@ function MessageBubble({ message, isMe, myAvatarUri }: { message: ChatMessage; i
 
   // アバター画像の決定: 自分はプロフィール画像、他者はモックデータのアバター
   const avatarSource = isMe
-    ? (myAvatarUri ? { uri: myAvatarUri } : (sender?.avatar ? { uri: sender.avatar } : null))
-    : (sender?.avatar ? { uri: sender.avatar } : null);
+    ? (myAvatarUri ? { uri: myAvatarUri } : (sender?.avatar ?? DEFAULT_AVATAR))
+    : (sender?.avatar ?? DEFAULT_AVATAR);
 
   return (
     <View
@@ -281,6 +282,8 @@ function MentionSuggestions({
 export default function ChatScreen() {
   const colors = useColors();
   const router = useRouter();
+  const { user: authUser } = useAuthContext();
+  const userIsAdmin = authUser?.role === "admin";
   const { id } = useLocalSearchParams<{ id: string }>();
   const [messageText, setMessageText] = useState("");
   const [mentionQuery, setMentionQuery] = useState<string | null>(null);
@@ -706,7 +709,7 @@ export default function ChatScreen() {
           </View>
 
           {/* 管理者機能（アプリ管理者またはチャット作成者のみ表示） */}
-          {(isAdmin(CURRENT_USER) || room.createdBy === CURRENT_USER.id) && (
+          {(userIsAdmin || room.createdBy === CURRENT_USER.id) && (
             <View
               style={{
                 margin: 16,
@@ -802,7 +805,7 @@ export default function ChatScreen() {
               const member = getMemberById(pid);
               if (!member) return null;
               const isCurrentUser = pid === CURRENT_USER.id;
-              const canRemove = (isAdmin(CURRENT_USER) || room.createdBy === CURRENT_USER.id) && !isCurrentUser;
+              const canRemove = (userIsAdmin || room.createdBy === CURRENT_USER.id) && !isCurrentUser;
               return (
                 <View
                   key={pid}
@@ -822,7 +825,7 @@ export default function ChatScreen() {
                     style={{ flexDirection: "row", alignItems: "center", flex: 1 }}
                   >
                     <Image
-                      source={{ uri: `https://api.dicebear.com/7.x/adventurer/svg?seed=${member.id}` }}
+                      source={member.avatar}
                       style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: colors.surface }}
                       contentFit="cover"
                     />
@@ -912,7 +915,7 @@ export default function ChatScreen() {
                 }}
               >
                 <Image
-                  source={{ uri: `https://api.dicebear.com/7.x/adventurer/svg?seed=${member.id}` }}
+                  source={member.avatar}
                   style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: colors.surface }}
                   contentFit="cover"
                 />

@@ -2,6 +2,8 @@ import "@/global.css";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Stack, useRouter, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
+import { useFonts } from "expo-font";
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
@@ -20,9 +22,13 @@ import type { EdgeInsets, Metrics, Rect } from "react-native-safe-area-context";
 import { trpc, createTRPCClient } from "@/lib/trpc";
 import { initManusRuntime, subscribeSafeAreaInsets } from "@/lib/_core/manus-runtime";
 import { AuthProvider, useAuthContext } from "@/lib/auth-context";
+import { AppErrorBoundary } from "@/components/app-error-boundary";
+import { isAdminRole, isAdminRoute } from "@/lib/access-control";
 
-// Webプレビューではステータスバー分のスペースを確保する（iPhoneのステータスバー高さは44px程度）
-const DEFAULT_WEB_INSETS: EdgeInsets = { top: 44, right: 0, bottom: 0, left: 0 };
+// Mobile browsers already exclude the status bar from their visual viewport.
+// Keep only a small breathing space instead of adding a native-sized 44px inset.
+const WEB_TOP_INSET = 8;
+const DEFAULT_WEB_INSETS: EdgeInsets = { top: WEB_TOP_INSET, right: 0, bottom: 0, left: 0 };
 const getRootFrame = (): Rect => {
   if (typeof document !== "undefined") {
     const el = document.getElementById("root");
@@ -43,9 +49,12 @@ export const unstable_settings = {
 
 /** Auth guard: redirect to login if not authenticated */
 function AuthGuard({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, loading } = useAuthContext();
+  const { isAuthenticated, loading, user } = useAuthContext();
   const segments = useSegments();
   const router = useRouter();
+  const currentRoute = segments[0];
+  const isRestrictedRoute = isAdminRoute(currentRoute);
+  const isForbidden = isAuthenticated && isRestrictedRoute && !isAdminRole(user?.role);
 
   useEffect(() => {
     if (loading) return;
@@ -59,10 +68,20 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
     } else if (isAuthenticated && inAuthGroup) {
       // Redirect to home if already logged in
       router.replace("/(tabs)");
+    } else if (isForbidden) {
+      router.replace("/(tabs)/profile");
     }
-  }, [isAuthenticated, loading, segments, router]);
+  }, [isAuthenticated, isForbidden, loading, segments, router]);
 
   if (loading) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#FFF8F0" }}>
+        <ActivityIndicator size="large" color="#E8A0BF" />
+      </View>
+    );
+  }
+
+  if (isForbidden) {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#FFF8F0" }}>
         <ActivityIndicator size="large" color="#E8A0BF" />
@@ -74,6 +93,7 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
 }
 
 export default function RootLayout() {
+  const [iconsLoaded] = useFonts(MaterialIcons.font);
   const initialInsets = initialWindowMetrics?.insets ?? DEFAULT_WEB_INSETS;
   const initialFrame = initialWindowMetrics?.frame ?? getRootFrame();
 
@@ -106,10 +126,9 @@ export default function RootLayout() {
   }, []);
 
   const handleSafeAreaUpdate = useCallback((metrics: Metrics) => {
-    // 最低限top=44を保証してヘッダーが切れないようにする
     setInsets({
       ...metrics.insets,
-      top: Math.max(metrics.insets.top, 44),
+      top: WEB_TOP_INSET,
     });
     setFrame(metrics.frame);
   }, []);
@@ -138,10 +157,9 @@ export default function RootLayout() {
   const providerInitialMetrics = useMemo(() => {
     const metrics = initialWindowMetrics ?? { insets: initialInsets, frame: initialFrame };
     if (Platform.OS === "web") {
-      // Webプレビューでもステータスバー分のスペースを確保する（iPhoneのステータスバー高さは44px程度）
       return {
         ...metrics,
-        insets: { top: 44, right: 0, bottom: 0, left: 0 },
+        insets: { top: WEB_TOP_INSET, right: 0, bottom: 0, left: 0 },
         frame: initialFrame,
       };
     }
@@ -194,25 +212,37 @@ export default function RootLayout() {
     </GestureHandlerRootView>
   );
 
+  if (!iconsLoaded) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#FFFFFF" }}>
+        <ActivityIndicator size="large" color="#D97FA8" />
+      </View>
+    );
+  }
+
   const shouldOverrideSafeArea = Platform.OS === "web";
 
   if (shouldOverrideSafeArea) {
     return (
-      <ThemeProvider>
-        <SafeAreaProvider initialMetrics={providerInitialMetrics}>
-          <SafeAreaFrameContext.Provider value={frame}>
-            <SafeAreaInsetsContext.Provider value={insets}>
-              {content}
-            </SafeAreaInsetsContext.Provider>
-          </SafeAreaFrameContext.Provider>
-        </SafeAreaProvider>
-      </ThemeProvider>
+      <AppErrorBoundary>
+        <ThemeProvider>
+          <SafeAreaProvider initialMetrics={providerInitialMetrics}>
+            <SafeAreaFrameContext.Provider value={frame}>
+              <SafeAreaInsetsContext.Provider value={insets}>
+                {content}
+              </SafeAreaInsetsContext.Provider>
+            </SafeAreaFrameContext.Provider>
+          </SafeAreaProvider>
+        </ThemeProvider>
+      </AppErrorBoundary>
     );
   }
 
   return (
-    <ThemeProvider>
-      <SafeAreaProvider initialMetrics={providerInitialMetrics}>{content}</SafeAreaProvider>
-    </ThemeProvider>
+    <AppErrorBoundary>
+      <ThemeProvider>
+        <SafeAreaProvider initialMetrics={providerInitialMetrics}>{content}</SafeAreaProvider>
+      </ThemeProvider>
+    </AppErrorBoundary>
   );
 }

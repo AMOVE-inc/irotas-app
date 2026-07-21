@@ -47,3 +47,99 @@ export const allowedEmails = mysqlTable("allowed_emails", {
 
 export type AllowedEmail = typeof allowedEmails.$inferSelect;
 export type InsertAllowedEmail = typeof allowedEmails.$inferInsert;
+
+/**
+ * タイムライン投稿テーブル
+ */
+export const timelinePosts = mysqlTable("timeline_posts", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  content: text("content").notNull(),
+  imageUrl: varchar("imageUrl", { length: 512 }),
+  likes: int("likes").default(0).notNull(),
+  comments: int("comments").default(0).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type TimelinePost = typeof timelinePosts.$inferSelect;
+export type InsertTimelinePost = typeof timelinePosts.$inferInsert;
+
+/**
+ * イベントテーブル
+ */
+export const events = mysqlTable("events", {
+  id: int("id").autoincrement().primaryKey(),
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description"),
+  startDate: timestamp("startDate").notNull(),
+  endDate: timestamp("endDate").notNull(),
+  location: varchar("location", { length: 255 }),
+  capacity: int("capacity").notNull(),
+  attendees: int("attendees").default(0).notNull(),
+  status: mysqlEnum("status", ["open", "full", "closed"]).default("open").notNull(),
+  createdBy: int("createdBy").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Event = typeof events.$inferSelect;
+export type InsertEvent = typeof events.$inferInsert;
+
+/**
+ * チャットルームテーブル
+ */
+export const chatRooms = mysqlTable("chat_rooms", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  type: mysqlEnum("type", ["direct", "group", "rank"]).notNull(),
+  createdBy: int("createdBy").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type ChatRoom = typeof chatRooms.$inferSelect;
+export type InsertChatRoom = typeof chatRooms.$inferInsert;
+
+/**
+ * チャットメッセージテーブル
+ */
+export const chatMessages = mysqlTable("chat_messages", {
+  id: int("id").autoincrement().primaryKey(),
+  roomId: int("roomId").notNull(),
+  userId: int("userId").notNull(),
+  content: text("content").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type ChatMessage = typeof chatMessages.$inferSelect;
+export type InsertChatMessage = typeof chatMessages.$inferInsert;
+
+/**
+ * ユーザーポイントテーブル
+ */
+export const userPoints = mysqlTable("user_points", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull().unique(),
+  points: int("points").default(0).notNull(),
+  rank: varchar("rank", { length: 64 }).default("regular").notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type UserPoints = typeof userPoints.$inferSelect;
+export type InsertUserPoints = typeof userPoints.$inferInsert;
+
+/**
+ * ポイント変更履歴テーブル
+ */
+export const pointsHistory = mysqlTable("points_history", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  fromPoints: int("fromPoints").notNull(),
+  toPoints: int("toPoints").notNull(),
+  reason: varchar("reason", { length: 255 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type PointsHistory = typeof pointsHistory.$inferSelect;
+export type InsertPointsHistory = typeof pointsHistory.$inferInsert;

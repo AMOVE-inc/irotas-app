@@ -2,9 +2,9 @@ import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import {
   CURRENT_USER,
-  isAdmin,
   type ChatRoom,
 } from "@/constants/mock-data";
+import { useAuthContext } from "@/lib/auth-context";
 import { getMyRooms, getRankRoomsForUser, getAllRooms } from "@/lib/chat-store";
 import { useColors } from "@/hooks/use-colors";
 import { Image } from "expo-image";
@@ -16,8 +16,6 @@ import {
   Text,
   View,
 } from "react-native";
-
-const userIsAdmin = isAdmin(CURRENT_USER);
 
 function ChatRoomCard({ room }: { room: ChatRoom }) {
   const colors = useColors();
@@ -107,6 +105,8 @@ function ChatRoomCard({ room }: { room: ChatRoom }) {
 export default function ChatListScreen() {
   const colors = useColors();
   const router = useRouter();
+  const { user: authUser } = useAuthContext();
+  const userIsAdmin = authUser?.role === "admin";
   const [myRooms, setMyRooms] = useState<ChatRoom[]>(() =>
     userIsAdmin
       ? getAllRooms().filter((r) => r.type !== "rank")
@@ -125,7 +125,7 @@ export default function ChatListScreen() {
           : getMyRooms(CURRENT_USER.id).filter((r) => r.type !== "rank")
       );
       setRankRooms(getRankRoomsForUser(CURRENT_USER.rank));
-    }, []),
+    }, [userIsAdmin]),
   );
 
   return (

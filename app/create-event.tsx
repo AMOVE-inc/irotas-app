@@ -1,7 +1,8 @@
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
-import { CURRENT_USER, isAdmin, type Event } from "@/constants/mock-data";
+import { CURRENT_USER, type Event } from "@/constants/mock-data";
 import { pendingEvents } from "@/lib/event-store";
+import { useAuthContext } from "@/lib/auth-context";
 import { useColors } from "@/hooks/use-colors";
 import { useRouter } from "expo-router";
 import { useState } from "react";
@@ -17,6 +18,7 @@ import {
 export default function CreateEventScreen() {
   const colors = useColors();
   const router = useRouter();
+  const { user: authUser } = useAuthContext();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [date, setDate] = useState("");
@@ -31,7 +33,7 @@ export default function CreateEventScreen() {
   const [pricePlatinum, setPricePlatinum] = useState("");
   const [category, setCategory] = useState<"kanto" | "kansai">("kanto");
 
-  if (!isAdmin(CURRENT_USER)) {
+  if (authUser?.role !== "admin") {
     return (
       <ScreenContainer edges={["top", "left", "right"]}>
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>

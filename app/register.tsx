@@ -15,8 +15,8 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { Image } from "expo-image";
 import { useAuthContext } from "@/lib/auth-context";
+import { BrandLogo } from "@/components/brand-logo";
 
 export default function RegisterScreen() {
   const colors = useColors();
@@ -40,8 +40,8 @@ export default function RegisterScreen() {
       setError("メールアドレスを入力してください");
       return;
     }
-    if (password.length < 6) {
-      setError("パスワードは6文字以上で入力してください");
+    if (password.length < 8) {
+      setError("パスワードは8文字以上で入力してください");
       return;
     }
     if (password !== confirmPassword) {
@@ -73,6 +73,7 @@ export default function RegisterScreen() {
             email: result.user.email,
             loginMethod: result.user.loginMethod,
             lastSignedIn: new Date(result.user.lastSignedIn),
+            role: Auth.normalizeUserRole(result.user.role),
           });
         }
         // Update auth context and navigate
@@ -84,6 +85,7 @@ export default function RegisterScreen() {
             email: result.user.email,
             loginMethod: result.user.loginMethod,
             lastSignedIn: new Date(result.user.lastSignedIn),
+            role: Auth.normalizeUserRole(result.user.role),
           });
         } else {
           await refresh();
@@ -109,14 +111,10 @@ export default function RegisterScreen() {
           contentContainerStyle={{ flexGrow: 1, justifyContent: "center" }}
           keyboardShouldPersistTaps="handled"
         >
-          <View style={{ paddingHorizontal: 24, gap: 20 }}>
+          <View style={{ width: "100%", maxWidth: 440, alignSelf: "center", paddingHorizontal: 22, paddingVertical: 20, gap: 16 }}>
             {/* Logo & Title */}
             <View style={{ alignItems: "center", marginBottom: 8 }}>
-              <Image
-                source={require("@/assets/images/icon.png")}
-                style={{ width: 64, height: 64, borderRadius: 16, marginBottom: 12 }}
-                contentFit="cover"
-              />
+              <BrandLogo width={210} compact style={{ marginBottom: 6 }} />
               <Text
                 style={{
                   fontSize: 24,
@@ -167,8 +165,8 @@ export default function RegisterScreen() {
                 autoCapitalize="words"
                 returnKeyType="next"
                 style={{
-                  backgroundColor: colors.surface,
-                  borderRadius: 12,
+                  backgroundColor: colors.background,
+                  borderRadius: 14,
                   padding: 14,
                   fontSize: 16,
                   color: colors.foreground,
@@ -193,8 +191,8 @@ export default function RegisterScreen() {
                 autoCorrect={false}
                 returnKeyType="next"
                 style={{
-                  backgroundColor: colors.surface,
-                  borderRadius: 12,
+                  backgroundColor: colors.background,
+                  borderRadius: 14,
                   padding: 14,
                   fontSize: 16,
                   color: colors.foreground,
@@ -212,13 +210,13 @@ export default function RegisterScreen() {
               <TextInput
                 value={password}
                 onChangeText={setPassword}
-                placeholder="6文字以上"
+                placeholder="8文字以上"
                 placeholderTextColor={colors.muted}
                 secureTextEntry
                 returnKeyType="next"
                 style={{
-                  backgroundColor: colors.surface,
-                  borderRadius: 12,
+                  backgroundColor: colors.background,
+                  borderRadius: 14,
                   padding: 14,
                   fontSize: 16,
                   color: colors.foreground,
@@ -242,8 +240,8 @@ export default function RegisterScreen() {
                 returnKeyType="done"
                 onSubmitEditing={handleRegister}
                 style={{
-                  backgroundColor: colors.surface,
-                  borderRadius: 12,
+                  backgroundColor: colors.background,
+                  borderRadius: 14,
                   padding: 14,
                   fontSize: 16,
                   color: colors.foreground,
@@ -258,8 +256,8 @@ export default function RegisterScreen() {
               onPress={handleRegister}
               disabled={loading}
               style={({ pressed }) => ({
-                backgroundColor: "#E8A0BF",
-                borderRadius: 14,
+                backgroundColor: "#18171A",
+                borderRadius: 16,
                 padding: 16,
                 alignItems: "center",
                 opacity: loading ? 0.6 : pressed ? 0.8 : 1,
@@ -286,7 +284,7 @@ export default function RegisterScreen() {
               >
                 <Text style={{ fontSize: 14, color: colors.muted }}>
                   既にアカウントをお持ちの方は{" "}
-                  <Text style={{ color: "#E8A0BF", fontWeight: "600" }}>ログイン</Text>
+                  <Text style={{ color: "#D97FA8", fontWeight: "700" }}>ログイン</Text>
                 </Text>
               </Pressable>
             </View>

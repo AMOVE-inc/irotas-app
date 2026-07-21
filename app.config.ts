@@ -6,7 +6,8 @@ import type { ExpoConfig } from "expo/config";
 // e.g., "my-app" created at 2024-01-15 10:30:45 -> "space.manus.my.app.t20240115103045"
 // Bundle ID can only contain letters, numbers, and dots
 // Android requires each dot-separated segment to start with a letter
-const rawBundleId = "space.manus.irotas.app.t20260323084952";
+const rawBundleId =
+  process.env.EXPO_PUBLIC_BUNDLE_IDENTIFIER ?? "space.manus.irotas.app.t20260323084952";
 const bundleId =
   rawBundleId
     .replace(/[-_]/g, ".") // Replace hyphens/underscores with dots
@@ -24,7 +25,7 @@ const bundleId =
 // Extract timestamp from bundle ID and prefix with "manus" for deep link scheme
 // e.g., "space.manus.my.app.t20240115103045" -> "manus20240115103045"
 const timestamp = bundleId.split(".").pop()?.replace(/^t/, "") ?? "";
-const schemeFromBundleId = `manus${timestamp}`;
+const schemeFromBundleId = process.env.EXPO_PUBLIC_APP_SCHEME ?? `manus${timestamp}`;
 
 const env = {
   // App branding - update these values directly (do not use env vars)
@@ -45,14 +46,15 @@ const config: ExpoConfig = {
   orientation: "portrait",
   icon: "./assets/images/icon.png",
   scheme: env.scheme,
-  userInterfaceStyle: "automatic",
+  userInterfaceStyle: "light",
   newArchEnabled: true,
   ios: {
     supportsTablet: true,
     bundleIdentifier: env.iosBundleId,
-    "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
-      }
+    buildNumber: "1",
+    infoPlist: {
+      ITSAppUsesNonExemptEncryption: false,
+    },
   },
   android: {
     adaptiveIcon: {
@@ -64,7 +66,9 @@ const config: ExpoConfig = {
     edgeToEdgeEnabled: true,
     predictiveBackGestureEnabled: false,
     package: env.androidPackage,
+    versionCode: 1,
     permissions: ["POST_NOTIFICATIONS"],
+    blockedPermissions: ["android.permission.RECORD_AUDIO"],
     intentFilters: [
       {
         action: "VIEW",
@@ -87,9 +91,24 @@ const config: ExpoConfig = {
   plugins: [
     "expo-router",
     [
+      "expo-image-picker",
+      {
+        photosPermission: "プロフィールや投稿に写真を追加するため、写真ライブラリへのアクセスを許可してください。",
+        cameraPermission: "投稿用の写真を撮影するため、カメラへのアクセスを許可してください。",
+        microphonePermission: false,
+      },
+    ],
+    [
+      "expo-notifications",
+      {
+        icon: "./assets/images/android-icon-monochrome.png",
+        color: "#E8A0BF",
+      },
+    ],
+    [
       "expo-audio",
       {
-        microphonePermission: "Allow $(PRODUCT_NAME) to access your microphone.",
+        microphonePermission: false,
       },
     ],
     [
