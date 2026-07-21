@@ -60,6 +60,7 @@ function buildUserResponse(
     lastSignedIn: (user?.lastSignedIn ?? new Date()).toISOString(),
     role: (user as any)?.role ?? "user",
     branch: (user as any)?.branch ?? null,
+    branches: (user as any)?.branches ?? null,
   };
 }
 

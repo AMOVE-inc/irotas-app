@@ -116,6 +116,7 @@ export async function getMe(): Promise<{
   lastSignedIn: string;
   role: Auth.UserRole;
   branch: Auth.BranchRole | null;
+  branches: Auth.BranchRole[] | null;
 } | null> {
   try {
     const result = await apiCall<{ user: any }>("/api/auth/me");

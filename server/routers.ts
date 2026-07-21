@@ -109,18 +109,20 @@ export const appRouter = router({
   allowedEmails: allowedEmailsRouter,
   auth: router({
     me: publicProcedure.query((opts) => opts.ctx.user),
-    selectBranch: protectedProcedure
-      .input(z.object({ branch: z.enum(["kanto", "kansai"]) }))
+    selectBranches: protectedProcedure
+      .input(
+        z.object({
+          branches: z
+            .array(z.enum(["kanto", "kansai"]))
+            .min(1, "所属支部を1つ以上選択してください")
+            .max(2)
+            .refine((branches) => new Set(branches).size === branches.length),
+        }),
+      )
       .mutation(async ({ ctx, input }) => {
-        if (ctx.user.branch) {
-          if (ctx.user.branch !== input.branch) {
-            throw new Error("所属支部の変更は運営へお問い合わせください");
-          }
-          return { success: true, branch: ctx.user.branch };
-        }
-        const user = await db.updateUserBranch(ctx.user.id, input.branch);
+        const user = await db.updateUserBranches(ctx.user.id, input.branches);
         if (!user) throw new Error("所属支部の保存に失敗しました");
-        return { success: true, branch: user.branch };
+        return { success: true, branch: user.branch, branches: user.branches };
       }),
     logout: publicProcedure.mutation(({ ctx }) => {
       const cookieOptions = getSessionCookieOptions(ctx.req);
@@ -196,6 +198,7 @@ export const appRouter = router({
             lastSignedIn: (user.lastSignedIn ?? new Date()).toISOString(),
             role: user.role ?? "user",
             branch: user.branch ?? null,
+            branches: user.branches ?? null,
           },
         };
       }),
@@ -252,6 +255,7 @@ export const appRouter = router({
             lastSignedIn: (user.lastSignedIn ?? new Date()).toISOString(),
             role: user.role ?? "user",
             branch: user.branch ?? null,
+            branches: user.branches ?? null,
           },
         };
       }),

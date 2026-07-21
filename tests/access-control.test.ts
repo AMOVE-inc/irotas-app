@@ -6,6 +6,7 @@ import {
   isAdminRole,
   isAdminRoute,
   normalizeBranchRole,
+  normalizeBranchRoles,
   normalizeUserRole,
 } from "../lib/access-control";
 
@@ -28,6 +29,12 @@ describe("access control", () => {
     expect(normalizeBranchRole("kansai")).toBe("kansai");
     expect(normalizeBranchRole("admin")).toBeNull();
     expect(normalizeBranchRole(undefined)).toBeNull();
+  });
+
+  it("normalizes multiple branch roles and keeps a legacy fallback", () => {
+    expect(normalizeBranchRoles(["kanto", "kansai", "unknown"])).toEqual(["kanto", "kansai"]);
+    expect(normalizeBranchRoles(null, "kansai")).toEqual(["kansai"]);
+    expect(normalizeBranchRoles(["kanto", "kanto"])).toEqual(["kanto"]);
   });
 
   it.each(["admin-dashboard", "campaign-manager", "csv-import", "create-event"])(

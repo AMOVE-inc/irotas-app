@@ -613,6 +613,12 @@ export default function ProfileScreen() {
   const router = useRouter();
   const { logout, user: authUser } = useAuthContext();
   const user = CURRENT_USER;
+  const selectedBranches = authUser?.branches?.length
+    ? authUser.branches
+    : [authUser?.branch ?? user.branch];
+  const branchLabel = selectedBranches
+    .map((branch) => (branch === "kanto" ? "関東支部" : "関西支部"))
+    .join("・");
   const [showEditProfile, setShowEditProfile] = useState(false);
   // DBから取得したroleで管理者判定（モックデータのCURRENT_USERではなく実際のログインユーザーを使用）
   const userIsAdmin = authUser?.role === "admin";
@@ -715,7 +721,7 @@ export default function ProfileScreen() {
               </Text>
             </View>
             <Text style={{ fontSize: 14, color: colors.muted, marginLeft: 8 }}>
-              {(authUser?.branch ?? user.branch) === "kanto" ? "関東支部" : "関西支部"}
+              {branchLabel}
             </Text>
           </View>
 
@@ -1008,6 +1014,12 @@ export default function ProfileScreen() {
         <MenuSection
           title="設定"
           items={[
+            {
+              icon: "person.2.fill",
+              label: "所属支部の変更",
+              color: colors.primary,
+              onPress: () => router.push("/select-branch" as any),
+            },
             {
               icon: "bell.fill",
               label: "通知設定",

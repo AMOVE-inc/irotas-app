@@ -1,5 +1,6 @@
 import { BrandLogo } from "@/components/brand-logo";
 import { ScreenContainer } from "@/components/screen-container";
+import { IconSymbol } from "@/components/ui/icon-symbol";
 import { useColors } from "@/hooks/use-colors";
 import { useAuthContext } from "@/lib/auth-context";
 import * as Auth from "@/lib/_core/auth";
@@ -23,22 +24,36 @@ export default function SelectBranchScreen() {
   const colors = useColors();
   const router = useRouter();
   const { user, setUser } = useAuthContext();
-  const [selected, setSelected] = useState<Auth.BranchRole | null>(null);
+  const currentBranches = Auth.normalizeBranchRoles(user?.branches, user?.branch);
+  const isEditing = currentBranches.length > 0;
+  const [selected, setSelected] = useState<Auth.BranchRole[]>(currentBranches);
   const [error, setError] = useState("");
-  const mutation = trpc.auth.selectBranch.useMutation();
+  const mutation = trpc.auth.selectBranches.useMutation();
+
+  const toggleBranch = (branch: Auth.BranchRole) => {
+    setSelected((current) =>
+      current.includes(branch)
+        ? current.filter((item) => item !== branch)
+        : [...current, branch],
+    );
+  };
 
   const handleConfirm = async () => {
-    if (!selected || !user) return;
+    if (selected.length === 0 || !user) return;
     setError("");
 
     try {
       if (!previewLoginEnabled) {
-        await mutation.mutateAsync({ branch: selected });
+        await mutation.mutateAsync({ branches: selected });
       }
-      const updatedUser: Auth.User = { ...user, branch: selected };
+      const updatedUser: Auth.User = {
+        ...user,
+        branch: selected[0],
+        branches: selected,
+      };
       await Auth.setUserInfo(updatedUser);
       setUser(updatedUser);
-      router.replace("/(tabs)");
+      router.replace(isEditing ? "/(tabs)/profile" : "/(tabs)");
     } catch {
       setError("所属支部を保存できませんでした。通信状況を確認してもう一度お試しください。");
     }
@@ -46,29 +61,38 @@ export default function SelectBranchScreen() {
 
   return (
     <ScreenContainer edges={["top", "bottom", "left", "right"]}>
+      {isEditing ? (
+        <Pressable
+          onPress={() => router.back()}
+          style={{ position: "absolute", top: 18, left: 18, zIndex: 2, padding: 8 }}
+        >
+          <IconSymbol name="arrow.left" size={22} color={colors.foreground} />
+        </Pressable>
+      ) : null}
+
       <View style={{ flex: 1, justifyContent: "center", paddingHorizontal: 22 }}>
         <View style={{ width: "100%", maxWidth: 440, alignSelf: "center" }}>
           <View style={{ alignItems: "center", marginBottom: 24 }}>
             <BrandLogo width={220} />
             <Text style={{ fontSize: 25, fontWeight: "800", color: colors.foreground }}>
-              所属する支部を選択
+              {isEditing ? "所属支部を変更" : "所属する支部を選択"}
             </Text>
             <Text
               style={{ fontSize: 14, lineHeight: 21, color: colors.muted, textAlign: "center", marginTop: 8 }}
             >
-              エリア別の掲示板やイベント表示に使用します。{`\n`}支部の変更は運営へお問い合わせください。
+              関東・関西の両方を選択できます。{`\n`}所属支部はマイページからいつでも変更できます。
             </Text>
           </View>
 
           <View style={{ gap: 12 }}>
             {BRANCHES.map((branch) => {
-              const active = selected === branch.key;
+              const active = selected.includes(branch.key);
               return (
                 <Pressable
                   key={branch.key}
-                  accessibilityRole="radio"
+                  accessibilityRole="checkbox"
                   accessibilityState={{ checked: active }}
-                  onPress={() => setSelected(branch.key)}
+                  onPress={() => toggleBranch(branch.key)}
                   style={({ pressed }) => ({
                     borderRadius: 20,
                     padding: 20,
@@ -89,16 +113,17 @@ export default function SelectBranchScreen() {
                     </View>
                     <View
                       style={{
-                        width: 24,
-                        height: 24,
-                        borderRadius: 12,
+                        width: 26,
+                        height: 26,
+                        borderRadius: 7,
                         borderWidth: 2,
                         borderColor: active ? colors.primary : colors.border,
+                        backgroundColor: active ? colors.primary : "transparent",
                         alignItems: "center",
                         justifyContent: "center",
                       }}
                     >
-                      {active ? <View style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: colors.primary }} /> : null}
+                      {active ? <IconSymbol name="checkmark" size={17} color="#FFFFFF" /> : null}
                     </View>
                   </View>
                 </Pressable>
@@ -106,10 +131,15 @@ export default function SelectBranchScreen() {
             })}
           </View>
 
+          {selected.length === 0 ? (
+            <Text style={{ color: colors.muted, textAlign: "center", marginTop: 12 }}>
+              支部を1つ以上選択してください
+            </Text>
+          ) : null}
           {error ? <Text style={{ color: colors.error, textAlign: "center", marginTop: 14 }}>{error}</Text> : null}
 
           <Pressable
-            disabled={!selected || mutation.isPending}
+            disabled={selected.length === 0 || mutation.isPending}
             onPress={handleConfirm}
             style={({ pressed }) => ({
               marginTop: 22,
@@ -117,14 +147,16 @@ export default function SelectBranchScreen() {
               borderRadius: 18,
               alignItems: "center",
               justifyContent: "center",
-              backgroundColor: selected ? colors.primary : colors.border,
+              backgroundColor: selected.length > 0 ? colors.primary : colors.border,
               opacity: pressed ? 0.82 : 1,
             })}
           >
             {mutation.isPending ? (
               <ActivityIndicator color="#FFFFFF" />
             ) : (
-              <Text style={{ color: "#FFFFFF", fontSize: 16, fontWeight: "800" }}>この支部で始める</Text>
+              <Text style={{ color: "#FFFFFF", fontSize: 16, fontWeight: "800" }}>
+                {isEditing ? "所属支部を保存" : "選択した支部で始める"}
+              </Text>
             )}
           </Pressable>
         </View>

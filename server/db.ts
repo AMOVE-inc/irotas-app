@@ -63,6 +63,10 @@ export async function upsertUser(user: InsertUser): Promise<void> {
       values.branch = user.branch;
       updateSet.branch = user.branch;
     }
+    if (user.branches !== undefined) {
+      values.branches = user.branches;
+      updateSet.branches = user.branches;
+    }
     if (user.gender !== undefined) {
       values.gender = user.gender;
       updateSet.gender = user.gender;
@@ -144,11 +148,11 @@ export async function createEmailUser(data: {
   return getUserByOpenId(openId);
 }
 
-export async function updateUserBranch(userId: number, branch: "kanto" | "kansai") {
+export async function updateUserBranches(userId: number, branches: ("kanto" | "kansai")[]) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
 
-  await db.update(users).set({ branch }).where(eq(users.id, userId));
+  await db.update(users).set({ branches, branch: branches[0] }).where(eq(users.id, userId));
   const result = await db.select().from(users).where(eq(users.id, userId)).limit(1);
   return result[0];
 }

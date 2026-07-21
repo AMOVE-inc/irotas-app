@@ -55,6 +55,7 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
   const currentRoute = segments[0];
   const isRestrictedRoute = isAdminRoute(currentRoute);
   const isForbidden = isAuthenticated && isRestrictedRoute && !isAdminRole(user?.role);
+  const hasSelectedBranch = Boolean(user && (user.branches.length > 0 || user.branch));
 
   useEffect(() => {
     if (loading) return;
@@ -66,15 +67,15 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
     if (!isAuthenticated && !inAuthGroup && !inOAuthCallback) {
       // Redirect to login
       router.replace("/login");
-    } else if (isAuthenticated && !user?.branch && !inBranchSelection && !inOAuthCallback) {
+    } else if (isAuthenticated && !hasSelectedBranch && !inBranchSelection && !inOAuthCallback) {
       router.replace("/select-branch" as any);
-    } else if (isAuthenticated && user?.branch && (inAuthGroup || inBranchSelection)) {
+    } else if (isAuthenticated && hasSelectedBranch && inAuthGroup) {
       // Redirect to home if already logged in
       router.replace("/(tabs)");
     } else if (isForbidden) {
       router.replace("/(tabs)/profile");
     }
-  }, [isAuthenticated, isForbidden, loading, segments, router, user?.branch]);
+  }, [hasSelectedBranch, isAuthenticated, isForbidden, loading, segments, router]);
 
   if (loading) {
     return (

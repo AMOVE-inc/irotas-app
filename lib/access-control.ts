@@ -17,6 +17,16 @@ export function normalizeBranchRole(branch: unknown): BranchRole | null {
   return branch === "kanto" || branch === "kansai" ? branch : null;
 }
 
+export function normalizeBranchRoles(branches: unknown, fallback?: unknown): BranchRole[] {
+  const values = Array.isArray(branches) ? branches : [];
+  const normalized = values
+    .map(normalizeBranchRole)
+    .filter((branch): branch is BranchRole => branch !== null);
+  const fallbackBranch = normalizeBranchRole(fallback);
+  if (fallbackBranch) normalized.push(fallbackBranch);
+  return [...new Set(normalized)];
+}
+
 export function isAdminRole(role: unknown): boolean {
   return normalizeUserRole(role) === "admin";
 }

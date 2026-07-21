@@ -1,4 +1,4 @@
-import { int, mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
+import { int, json, mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
 
 /**
  * Core user table backing auth flow.
@@ -21,6 +21,8 @@ export const users = mysqlTable("users", {
   role: mysqlEnum("role", ["user", "admin"]).default("user").notNull(),
   /** 所属支部。初回ログイン時に選択する */
   branch: mysqlEnum("branch", ["kanto", "kansai"]),
+  /** 複数所属に対応した支部一覧。branchは後方互換用に維持する */
+  branches: json("branches").$type<("kanto" | "kansai")[]>(),
   /** 性別（分析用） */
   gender: mysqlEnum("gender", ["male", "female", "other", "unset"]).default("unset").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),

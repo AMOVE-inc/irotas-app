@@ -42,6 +42,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             lastSignedIn: new Date(apiUser.lastSignedIn),
             role: Auth.normalizeUserRole(apiUser.role),
             branch: Auth.normalizeBranchRole(apiUser.branch),
+            branches: Auth.normalizeBranchRoles(apiUser.branches, apiUser.branch),
           };
           setUser(userInfo);
           await Auth.setUserInfo(userInfo);

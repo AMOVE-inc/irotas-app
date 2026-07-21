@@ -131,6 +131,15 @@ export interface BoardThread {
   chatId?: string; // private chat id
   eventDate?: string; // 開催日（今日のイベント表示用）
   images?: string[]; // 投稿添付画像 URLs
+  mealReport?: {
+    restaurantName: string;
+    prefecture: string;
+    budget?: string;
+    recommendedMenu?: string;
+    rating: number;
+    comment?: string;
+    googleMapUrl: string;
+  };
 }
 
 export interface BoardComment {
@@ -456,6 +465,15 @@ export const BOARD_THREADS: BoardThread[] = [
     lastUpdated: "2026-03-23T21:00:00",
     preview: "銀座の新しいフレンチレストランに行ってきました。コース料理が素晴らしかった...",
     isRecruiting: false,
+    mealReport: {
+      restaurantName: "銀座の新しいフレンチレストラン",
+      prefecture: "東京都",
+      budget: "10,000〜20,000円",
+      recommendedMenu: "シェフのおまかせコース",
+      rating: 5,
+      comment: "コース料理が素晴らしく、特別な日におすすめです。",
+      googleMapUrl: "https://www.google.com/maps/search/?api=1&query=銀座+フレンチ",
+    },
   },
   {
     id: "t4", title: "東飲みしたい人集まれ！🍻",

@@ -4,6 +4,7 @@ import { SESSION_TOKEN_KEY, USER_INFO_KEY } from "@/constants/oauth";
 import { logger } from "@/lib/_core/logger";
 import {
   normalizeBranchRole,
+  normalizeBranchRoles,
   normalizeUserRole,
   type BranchRole,
   type UserRole,
@@ -11,6 +12,7 @@ import {
 
 export {
   normalizeBranchRole,
+  normalizeBranchRoles,
   normalizeUserRole,
   type BranchRole,
   type UserRole,
@@ -25,6 +27,7 @@ export type User = {
   lastSignedIn: Date;
   role: UserRole;
   branch: BranchRole | null;
+  branches: BranchRole[];
 };
 
 function deserializeUser(value: string): User | null {
@@ -46,6 +49,7 @@ function deserializeUser(value: string): User | null {
     lastSignedIn,
     role: normalizeUserRole(candidate.role),
     branch: normalizeBranchRole(candidate.branch),
+    branches: normalizeBranchRoles(candidate.branches, candidate.branch),
   };
 }
 

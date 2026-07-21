@@ -45,6 +45,7 @@ export default function OAuthCallback() {
                 lastSignedIn: new Date(userData.lastSignedIn || Date.now()),
                 role: Auth.normalizeUserRole(userData.role),
                 branch: Auth.normalizeBranchRole(userData.branch),
+                branches: Auth.normalizeBranchRoles(userData.branches, userData.branch),
               };
               await Auth.setUserInfo(userInfo);
             } catch (err) {
@@ -157,6 +158,7 @@ export default function OAuthCallback() {
               lastSignedIn: new Date(result.user.lastSignedIn || Date.now()),
               role: Auth.normalizeUserRole(result.user.role),
               branch: Auth.normalizeBranchRole(result.user.branch),
+              branches: Auth.normalizeBranchRoles(result.user.branches, result.user.branch),
             };
             await Auth.setUserInfo(userInfo);
           }

@@ -16,6 +16,7 @@ import { useAuthContext } from "@/lib/auth-context";
 import { useColors } from "@/hooks/use-colors";
 import { createBoardChat } from "@/lib/chat-store";
 import { canManageBoardCategories } from "@/lib/access-control";
+import { isGoogleMapsUrl, MEAL_BUDGETS, PREFECTURES } from "@/lib/meal-report";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
@@ -24,6 +25,7 @@ import {
   Alert,
   FlatList,
   KeyboardAvoidingView,
+  Linking,
   Modal,
   Platform,
   Pressable,
@@ -40,6 +42,66 @@ const BOARD_GROUPS: { key: BoardCategory["group"]; label: string }[] = [
   { key: "area", label: "エリア別" },
   { key: "club", label: "部活" },
 ];
+
+function MealReportContent({ thread, compact = false }: { thread: BoardThread; compact?: boolean }) {
+  const colors = useColors();
+  const report = thread.mealReport;
+  if (!report) return null;
+
+  return (
+    <View
+      style={{
+        backgroundColor: "#FFF8F0",
+        borderRadius: 12,
+        padding: compact ? 10 : 14,
+        marginBottom: compact ? 8 : 16,
+        borderWidth: 1,
+        borderColor: "#F3E2D2",
+      }}
+    >
+      <View style={{ flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 8 }}>
+        <Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground }}>📍 {report.prefecture}</Text>
+        {report.budget ? <Text style={{ fontSize: 13, color: colors.muted }}>予算 {report.budget}</Text> : null}
+      </View>
+      <Text style={{ fontSize: 17, color: "#F5A623", letterSpacing: 2, marginTop: 6 }}>
+        {"★".repeat(report.rating)}{"☆".repeat(5 - report.rating)}
+      </Text>
+      {!compact && report.recommendedMenu ? (
+        <Text style={{ fontSize: 14, color: colors.foreground, marginTop: 9 }}>
+          <Text style={{ fontWeight: "800" }}>おすすめメニュー　</Text>{report.recommendedMenu}
+        </Text>
+      ) : null}
+      {!compact && report.comment ? (
+        <Text style={{ fontSize: 14, lineHeight: 21, color: colors.foreground, marginTop: 8 }}>
+          <Text style={{ fontWeight: "800" }}>一言　</Text>{report.comment}
+        </Text>
+      ) : null}
+      {!compact ? (
+        <Pressable
+          onPress={async (event) => {
+            event.stopPropagation?.();
+            await Linking.openURL(report.googleMapUrl);
+          }}
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            alignSelf: "flex-start",
+            backgroundColor: "#EAF2FF",
+            borderRadius: 10,
+            paddingHorizontal: 12,
+            paddingVertical: 8,
+            marginTop: 12,
+          }}
+        >
+          <IconSymbol name="map.fill" size={16} color="#4285F4" />
+          <Text style={{ fontSize: 13, fontWeight: "700", color: "#4285F4", marginLeft: 6 }}>
+            Google Mapで見る
+          </Text>
+        </Pressable>
+      ) : null}
+    </View>
+  );
+}
 
 function ThreadCard({ thread, onPress, onEdit }: { thread: BoardThread; onPress: () => void; onEdit?: () => void }) {
   const colors = useColors();
@@ -119,9 +181,13 @@ function ThreadCard({ thread, onPress, onEdit }: { thread: BoardThread; onPress:
       </Text>
 
       {/* Preview */}
-      <Text style={{ fontSize: 13, color: colors.muted, marginBottom: 8 }} numberOfLines={2}>
-        {thread.preview}
-      </Text>
+      {thread.mealReport ? (
+        <MealReportContent thread={thread} compact />
+      ) : (
+        <Text style={{ fontSize: 13, color: colors.muted, marginBottom: 8 }} numberOfLines={2}>
+          {thread.preview}
+        </Text>
+      )}
 
       {/* Images */}
       {thread.images && thread.images.length > 0 && (
@@ -482,9 +548,13 @@ function ThreadDetailModal({
             </View>
           </View>
 
-          <Text style={{ fontSize: 15, lineHeight: 22, color: colors.foreground, marginBottom: 16 }}>
-            {thread.preview}
-          </Text>
+          {thread.mealReport ? (
+            <MealReportContent thread={thread} />
+          ) : (
+            <Text style={{ fontSize: 15, lineHeight: 22, color: colors.foreground, marginBottom: 16 }}>
+              {thread.preview}
+            </Text>
+          )}
 
           {/* 画像 */}
           {thread.images && thread.images.length > 0 && (
@@ -914,6 +984,73 @@ function EditThreadModal({
   );
 }
 
+function ReportOptionModal({
+  visible,
+  title,
+  options,
+  value,
+  allowEmpty = false,
+  onSelect,
+  onClose,
+}: {
+  visible: boolean;
+  title: string;
+  options: readonly string[];
+  value: string;
+  allowEmpty?: boolean;
+  onSelect: (value: string) => void;
+  onClose: () => void;
+}) {
+  const colors = useColors();
+  const displayedOptions = allowEmpty ? ["未選択", ...options] : options;
+
+  return (
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+      <Pressable
+        onPress={onClose}
+        style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.35)", justifyContent: "center", padding: 24 }}
+      >
+        <Pressable
+          onPress={(event) => event.stopPropagation?.()}
+          style={{ backgroundColor: colors.background, borderRadius: 20, maxHeight: "72%", overflow: "hidden" }}
+        >
+          <View style={{ padding: 16, borderBottomWidth: 0.5, borderBottomColor: colors.border }}>
+            <Text style={{ fontSize: 17, fontWeight: "800", color: colors.foreground, textAlign: "center" }}>
+              {title}
+            </Text>
+          </View>
+          <ScrollView>
+            {displayedOptions.map((option) => {
+              const optionValue = option === "未選択" ? "" : option;
+              const active = value === optionValue;
+              return (
+                <Pressable
+                  key={option}
+                  onPress={() => {
+                    onSelect(optionValue);
+                    onClose();
+                  }}
+                  style={{
+                    paddingHorizontal: 18,
+                    paddingVertical: 13,
+                    borderBottomWidth: 0.5,
+                    borderBottomColor: colors.border,
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <Text style={{ fontSize: 15, color: colors.foreground }}>{option}</Text>
+                  {active ? <IconSymbol name="checkmark" size={18} color={colors.primary} /> : null}
+                </Pressable>
+              );
+            })}
+          </ScrollView>
+        </Pressable>
+      </Pressable>
+    </Modal>
+  );
+}
+
 // 新規投稿モーダル
 function CreateThreadModal({
   visible,
@@ -935,6 +1072,22 @@ function CreateThreadModal({
   const [isRecruiting, setIsRecruiting] = useState(false);
   const [capacity, setCapacity] = useState("");
   const [images, setImages] = useState<string[]>([]);
+  const [restaurantName, setRestaurantName] = useState("");
+  const [prefecture, setPrefecture] = useState("");
+  const [budget, setBudget] = useState("");
+  const [recommendedMenu, setRecommendedMenu] = useState("");
+  const [rating, setRating] = useState(0);
+  const [mealComment, setMealComment] = useState("");
+  const [googleMapUrl, setGoogleMapUrl] = useState("");
+  const [formError, setFormError] = useState("");
+  const [optionModal, setOptionModal] = useState<"prefecture" | "budget" | null>(null);
+  const isMealReport = category === "meal-report";
+  const mealReportValid =
+    restaurantName.trim().length > 0 &&
+    prefecture.length > 0 &&
+    rating > 0 &&
+    isGoogleMapsUrl(googleMapUrl);
+  const canSubmit = isMealReport ? mealReportValid : title.trim().length > 0 && content.trim().length > 0;
 
   const handlePickImage = async () => {
     if (Platform.OS !== "web") {
@@ -957,21 +1110,44 @@ function CreateThreadModal({
   };
 
   const handleCreate = () => {
-    if (!title.trim() || !content.trim()) return;
+    if (isMealReport && !mealReportValid) {
+      setFormError(
+        !googleMapUrl.trim() || !isGoogleMapsUrl(googleMapUrl)
+          ? "店名・場所・評価を入力し、有効なGoogle Mapリンクを貼り付けてください。"
+          : "必須項目を入力してください。",
+      );
+      return;
+    }
+    if (!isMealReport && (!title.trim() || !content.trim())) return;
+    const normalizedComment = mealComment.trim();
+    const normalizedMenu = recommendedMenu.trim();
     const newThread: BoardThread = {
       id: `t_new_${Date.now()}`,
-      title: title.trim(),
+      title: isMealReport ? restaurantName.trim() : title.trim(),
       author: CURRENT_USER,
       category: category as BoardThread["category"],
       commentCount: 0,
       lastUpdated: new Date().toISOString(),
-      preview: content.trim(),
-      isRecruiting,
-      recruitCapacity: isRecruiting ? parseInt(capacity || "10", 10) : undefined,
+      preview: isMealReport
+        ? normalizedComment || normalizedMenu || `${prefecture}でいただきました。`
+        : content.trim(),
+      isRecruiting: isMealReport ? false : isRecruiting,
+      recruitCapacity: !isMealReport && isRecruiting ? parseInt(capacity || "10", 10) : undefined,
       recruitAttendees: 0,
       recruitParticipants: [],
       recruitApplicants: [],
       images: images.length > 0 ? images : undefined,
+      mealReport: isMealReport
+        ? {
+            restaurantName: restaurantName.trim(),
+            prefecture,
+            budget: budget || undefined,
+            recommendedMenu: normalizedMenu || undefined,
+            rating,
+            comment: normalizedComment || undefined,
+            googleMapUrl: googleMapUrl.trim(),
+          }
+        : undefined,
     };
     onAdd(newThread);
     onClose();
@@ -980,6 +1156,14 @@ function CreateThreadModal({
     setIsRecruiting(false);
     setCapacity("");
     setImages([]);
+    setRestaurantName("");
+    setPrefecture("");
+    setBudget("");
+    setRecommendedMenu("");
+    setRating(0);
+    setMealComment("");
+    setGoogleMapUrl("");
+    setFormError("");
   };
 
   return (
@@ -1008,7 +1192,7 @@ function CreateThreadModal({
               style={{
                 fontSize: 16,
                 fontWeight: "700",
-                color: title.trim() && content.trim() ? "#E8A0BF" : colors.muted,
+                color: canSubmit ? "#E8A0BF" : colors.muted,
               }}
             >
               投稿
@@ -1033,46 +1217,145 @@ function CreateThreadModal({
             </Text>
           </View>
 
-          <Text style={{ fontSize: 13, fontWeight: "600", color: colors.muted, marginBottom: 6 }}>
-            タイトル
-          </Text>
-          <TextInput
-            value={title}
-            onChangeText={setTitle}
-            placeholder="投稿のタイトル"
-            placeholderTextColor={colors.muted}
-            style={{
-              backgroundColor: colors.surface,
-              borderRadius: 12,
-              paddingHorizontal: 14,
-              paddingVertical: 12,
-              fontSize: 15,
-              color: colors.foreground,
-              marginBottom: 16,
-            }}
-          />
+          {isMealReport ? (
+            <View style={{ gap: 16, marginBottom: 16 }}>
+              <View>
+                <Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground, marginBottom: 6 }}>
+                  店名 <Text style={{ color: colors.error }}>必須</Text>
+                </Text>
+                <TextInput
+                  value={restaurantName}
+                  onChangeText={setRestaurantName}
+                  placeholder="例：鮨 IRO"
+                  placeholderTextColor={colors.muted}
+                  style={{ backgroundColor: colors.surface, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: colors.foreground }}
+                />
+              </View>
 
-          <Text style={{ fontSize: 13, fontWeight: "600", color: colors.muted, marginBottom: 6 }}>
-            内容
-          </Text>
-          <TextInput
-            value={content}
-            onChangeText={setContent}
-            placeholder="投稿の内容を入力..."
-            placeholderTextColor={colors.muted}
-            multiline
-            textAlignVertical="top"
-            style={{
-              backgroundColor: colors.surface,
-              borderRadius: 12,
-              paddingHorizontal: 14,
-              paddingVertical: 12,
-              fontSize: 15,
-              color: colors.foreground,
-              minHeight: 150,
-              marginBottom: 16,
-            }}
-          />
+              <View>
+                <Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground, marginBottom: 6 }}>
+                  場所 <Text style={{ color: colors.error }}>必須</Text>
+                </Text>
+                <Pressable
+                  onPress={() => setOptionModal("prefecture")}
+                  style={{ backgroundColor: colors.surface, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 13, flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}
+                >
+                  <Text style={{ fontSize: 15, color: prefecture ? colors.foreground : colors.muted }}>
+                    {prefecture || "都道府県を選択"}
+                  </Text>
+                  <IconSymbol name="chevron.down" size={18} color={colors.muted} />
+                </Pressable>
+              </View>
+
+              <View>
+                <Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground, marginBottom: 6 }}>予算（任意）</Text>
+                <Pressable
+                  onPress={() => setOptionModal("budget")}
+                  style={{ backgroundColor: colors.surface, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 13, flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}
+                >
+                  <Text style={{ fontSize: 15, color: budget ? colors.foreground : colors.muted }}>
+                    {budget || "予算を選択"}
+                  </Text>
+                  <IconSymbol name="chevron.down" size={18} color={colors.muted} />
+                </Pressable>
+              </View>
+
+              <View>
+                <Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground, marginBottom: 6 }}>おすすめメニュー（任意）</Text>
+                <TextInput
+                  value={recommendedMenu}
+                  onChangeText={setRecommendedMenu}
+                  placeholder="例：季節のおまかせコース"
+                  placeholderTextColor={colors.muted}
+                  style={{ backgroundColor: colors.surface, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: colors.foreground }}
+                />
+              </View>
+
+              <View>
+                <Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground, marginBottom: 8 }}>
+                  評価 <Text style={{ color: colors.error }}>必須</Text>
+                </Text>
+                <View style={{ flexDirection: "row", gap: 10 }}>
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <Pressable
+                      key={star}
+                      accessibilityRole="button"
+                      accessibilityLabel={`${star}つ星`}
+                      onPress={() => setRating(star)}
+                      style={{ padding: 2 }}
+                    >
+                      <IconSymbol name="star.fill" size={34} color={star <= rating ? "#F5A623" : colors.border} />
+                    </Pressable>
+                  ))}
+                </View>
+              </View>
+
+              <View>
+                <Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground, marginBottom: 6 }}>一言（任意）</Text>
+                <TextInput
+                  value={mealComment}
+                  onChangeText={setMealComment}
+                  placeholder="お店の感想を一言"
+                  placeholderTextColor={colors.muted}
+                  multiline
+                  textAlignVertical="top"
+                  style={{ backgroundColor: colors.surface, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: colors.foreground, minHeight: 90 }}
+                />
+              </View>
+
+              <View>
+                <Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground, marginBottom: 6 }}>
+                  Google Mapのリンク <Text style={{ color: colors.error }}>必須</Text>
+                </Text>
+                <TextInput
+                  value={googleMapUrl}
+                  onChangeText={setGoogleMapUrl}
+                  placeholder="https://maps.app.goo.gl/..."
+                  placeholderTextColor={colors.muted}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  keyboardType="url"
+                  style={{
+                    backgroundColor: colors.surface,
+                    borderRadius: 12,
+                    paddingHorizontal: 14,
+                    paddingVertical: 12,
+                    fontSize: 15,
+                    color: colors.foreground,
+                    borderWidth: googleMapUrl.length > 0 && !isGoogleMapsUrl(googleMapUrl) ? 1 : 0,
+                    borderColor: colors.error,
+                  }}
+                />
+                {googleMapUrl.length > 0 && !isGoogleMapsUrl(googleMapUrl) ? (
+                  <Text style={{ fontSize: 12, color: colors.error, marginTop: 5 }}>Google Mapsの共有リンクを入力してください</Text>
+                ) : null}
+              </View>
+
+              {formError ? <Text style={{ fontSize: 13, color: colors.error }}>{formError}</Text> : null}
+            </View>
+          ) : (
+            <>
+              <Text style={{ fontSize: 13, fontWeight: "600", color: colors.muted, marginBottom: 6 }}>タイトル</Text>
+              <TextInput
+                value={title}
+                onChangeText={setTitle}
+                placeholder="投稿のタイトル"
+                placeholderTextColor={colors.muted}
+                style={{ backgroundColor: colors.surface, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: colors.foreground, marginBottom: 16 }}
+              />
+
+              <Text style={{ fontSize: 13, fontWeight: "600", color: colors.muted, marginBottom: 6 }}>内容</Text>
+              <TextInput
+                value={content}
+                onChangeText={setContent}
+                placeholder="投稿の内容を入力..."
+                placeholderTextColor={colors.muted}
+                multiline
+                textAlignVertical="top"
+                style={{ backgroundColor: colors.surface, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: colors.foreground, minHeight: 150, marginBottom: 16 }}
+              />
+            </>
+          )}
 
           {/* Photo Attachment */}
           <View style={{ marginBottom: 16 }}>
@@ -1127,70 +1410,92 @@ function CreateThreadModal({
             </View>
           </View>
 
-          {/* Recruiting toggle */}
-          <Pressable
-            onPress={() => setIsRecruiting(!isRecruiting)}
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              backgroundColor: colors.surface,
-              borderRadius: 12,
-              padding: 14,
-              marginBottom: 12,
-            }}
-          >
-            <IconSymbol name="person.badge.plus" size={20} color="#A7C7E7" />
-            <Text style={{ flex: 1, fontSize: 15, color: colors.foreground, marginLeft: 10 }}>
-              参加者を募集する
-            </Text>
-            <View
-              style={{
-                width: 48,
-                height: 28,
-                borderRadius: 14,
-                backgroundColor: isRecruiting ? "#A7C7E7" : colors.border,
-                justifyContent: "center",
-                paddingHorizontal: 2,
-              }}
-            >
-              <View
+          {!isMealReport ? (
+            <>
+              {/* Recruiting toggle */}
+              <Pressable
+                onPress={() => setIsRecruiting(!isRecruiting)}
                 style={{
-                  width: 24,
-                  height: 24,
-                  borderRadius: 12,
-                  backgroundColor: "#FFF",
-                  alignSelf: isRecruiting ? "flex-end" : "flex-start",
-                }}
-              />
-            </View>
-          </Pressable>
-
-          {isRecruiting && (
-            <View style={{ marginBottom: 16 }}>
-              <Text style={{ fontSize: 13, fontWeight: "600", color: colors.muted, marginBottom: 6 }}>
-                募集人数
-              </Text>
-              <TextInput
-                value={capacity}
-                onChangeText={setCapacity}
-                placeholder="例: 10"
-                placeholderTextColor={colors.muted}
-                keyboardType="number-pad"
-                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
                   backgroundColor: colors.surface,
                   borderRadius: 12,
-                  paddingHorizontal: 14,
-                  paddingVertical: 12,
-                  fontSize: 15,
-                  color: colors.foreground,
+                  padding: 14,
+                  marginBottom: 12,
                 }}
-              />
-              <Text style={{ fontSize: 12, color: colors.muted, marginTop: 6 }}>
-                ※ コメントで参加希望を募り、投稿者がメンバーを選んでプライベートチャットを作成できます
-              </Text>
-            </View>
-          )}
+              >
+                <IconSymbol name="person.badge.plus" size={20} color="#A7C7E7" />
+                <Text style={{ flex: 1, fontSize: 15, color: colors.foreground, marginLeft: 10 }}>
+                  参加者を募集する
+                </Text>
+                <View
+                  style={{
+                    width: 48,
+                    height: 28,
+                    borderRadius: 14,
+                    backgroundColor: isRecruiting ? "#A7C7E7" : colors.border,
+                    justifyContent: "center",
+                    paddingHorizontal: 2,
+                  }}
+                >
+                  <View
+                    style={{
+                      width: 24,
+                      height: 24,
+                      borderRadius: 12,
+                      backgroundColor: "#FFF",
+                      alignSelf: isRecruiting ? "flex-end" : "flex-start",
+                    }}
+                  />
+                </View>
+              </Pressable>
+
+              {isRecruiting ? (
+                <View style={{ marginBottom: 16 }}>
+                  <Text style={{ fontSize: 13, fontWeight: "600", color: colors.muted, marginBottom: 6 }}>
+                    募集人数
+                  </Text>
+                  <TextInput
+                    value={capacity}
+                    onChangeText={setCapacity}
+                    placeholder="例: 10"
+                    placeholderTextColor={colors.muted}
+                    keyboardType="number-pad"
+                    style={{
+                      backgroundColor: colors.surface,
+                      borderRadius: 12,
+                      paddingHorizontal: 14,
+                      paddingVertical: 12,
+                      fontSize: 15,
+                      color: colors.foreground,
+                    }}
+                  />
+                  <Text style={{ fontSize: 12, color: colors.muted, marginTop: 6 }}>
+                    ※ コメントで参加希望を募り、投稿者がメンバーを選んでプライベートチャットを作成できます
+                  </Text>
+                </View>
+              ) : null}
+            </>
+          ) : null}
         </ScrollView>
+
+        <ReportOptionModal
+          visible={optionModal === "prefecture"}
+          title="都道府県を選択"
+          options={PREFECTURES}
+          value={prefecture}
+          onSelect={setPrefecture}
+          onClose={() => setOptionModal(null)}
+        />
+        <ReportOptionModal
+          visible={optionModal === "budget"}
+          title="予算を選択"
+          options={MEAL_BUDGETS}
+          value={budget}
+          allowEmpty
+          onSelect={setBudget}
+          onClose={() => setOptionModal(null)}
+        />
       </View>
     </Modal>
   );
@@ -1385,7 +1690,7 @@ export default function BoardScreen() {
           <ThreadCard
             thread={item}
             onPress={() => setSelectedThread(item)}
-            onEdit={item.author.id === CURRENT_USER.id ? () => setEditingThread(item) : undefined}
+            onEdit={item.author.id === CURRENT_USER.id && !item.mealReport ? () => setEditingThread(item) : undefined}
           />
         )}
         refreshControl={
