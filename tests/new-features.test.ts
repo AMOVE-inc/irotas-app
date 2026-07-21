@@ -67,6 +67,7 @@ describe("イベントストア（create-event連携）", () => {
       participants: [],
       price: "無料",
       category: "kanto" as const,
+      eventType: "official" as const,
       status: "open" as const,
       createdBy: CURRENT_USER.id,
     };

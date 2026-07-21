@@ -5,6 +5,7 @@ import {
   EVENTS,
   RESTAURANTS,
   BOARD_THREADS,
+  BOARD_CATEGORIES,
   COUPONS,
   CURRENT_USER,
   RANK_LABELS,
@@ -40,6 +41,7 @@ describe("Mock Data Integrity", () => {
       expect(e.title).toBeDefined();
       expect(e.date).toBeDefined();
       expect(e.location).toBeDefined();
+      expect(["official", "gourmet"]).toContain(e.eventType);
       expect(["open", "full", "closed"]).toContain(e.status);
       expect(e.capacity).toBeGreaterThan(0);
       expect(e.attendees).toBeLessThanOrEqual(e.capacity);
@@ -68,6 +70,25 @@ describe("Mock Data Integrity", () => {
       expect(t.category).toBeDefined();
       expect(t.commentCount).toBeGreaterThanOrEqual(0);
     }
+  });
+
+  it("should expose the requested board categories and split clubs", () => {
+    const labels = BOARD_CATEGORIES.map((category) => category.label);
+
+    expect(labels).toEqual([
+      "全体アナウンス",
+      "関東支部",
+      "関西支部",
+      "自己紹介",
+      "部活動・ラーメン部",
+      "部活動・ワイン部",
+      "部活動・スイーツ部",
+      "部活動・料理部",
+      "今日のごちそうさま報告",
+      "教えてグルメ相談室",
+    ]);
+    expect(labels).not.toContain("関東グルメ");
+    expect(labels).not.toContain("関西グルメ");
   });
 
   it("should have coupons with required fields", () => {

@@ -32,6 +32,7 @@ export default function CreateEventScreen() {
   const [priceGold, setPriceGold] = useState("");
   const [pricePlatinum, setPricePlatinum] = useState("");
   const [category, setCategory] = useState<"kanto" | "kansai">("kanto");
+  const [eventType, setEventType] = useState<Event["eventType"]>("official");
 
   if (authUser?.role !== "admin") {
     return (
@@ -78,6 +79,7 @@ export default function CreateEventScreen() {
       price: price.trim() || "無料",
       ...(rankPricesData ? { rankPrices: rankPricesData } : {}),
       category,
+      eventType,
       status: "open",
       createdBy: CURRENT_USER.id,
     };
@@ -90,6 +92,10 @@ export default function CreateEventScreen() {
   const categories = [
     { key: "kanto" as const, label: "関東" },
     { key: "kansai" as const, label: "関西" },
+  ];
+  const eventTypes = [
+    { key: "official" as const, label: "公式イベント" },
+    { key: "gourmet" as const, label: "グルメ会" },
   ];
 
   return (
@@ -339,6 +345,36 @@ export default function CreateEventScreen() {
             ))}
           </View>
         )}
+
+        {/* Event type */}
+        <Text style={{ fontSize: 13, fontWeight: "600", color: colors.muted, marginBottom: 6 }}>
+          イベント種別
+        </Text>
+        <View style={{ flexDirection: "row", gap: 10, marginBottom: 16 }}>
+          {eventTypes.map((type) => (
+            <Pressable
+              key={type.key}
+              onPress={() => setEventType(type.key)}
+              style={{
+                flex: 1,
+                paddingVertical: 12,
+                borderRadius: 12,
+                backgroundColor: eventType === type.key ? "#A7C7E7" : colors.surface,
+                alignItems: "center",
+              }}
+            >
+              <Text
+                style={{
+                  fontSize: 15,
+                  fontWeight: "600",
+                  color: eventType === type.key ? "#FFF" : colors.foreground,
+                }}
+              >
+                {type.label}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
 
         {/* Category */}
         <Text style={{ fontSize: 13, fontWeight: "600", color: colors.muted, marginBottom: 6 }}>

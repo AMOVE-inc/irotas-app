@@ -94,6 +94,7 @@ export interface Event {
     platinum?: string;
   };
   category: "all" | "kanto" | "kansai";
+  eventType: "official" | "gourmet";
   status: "open" | "full" | "ended";
   createdBy: string; // admin member id
   chatId?: string; // private chat id
@@ -118,7 +119,7 @@ export interface BoardThread {
   id: string;
   title: string;
   author: Member;
-  category: "kanto-gourmet" | "kansai-gourmet" | "anything" | "championship";
+  category: string;
   commentCount: number;
   lastUpdated: string;
   preview: string;
@@ -346,7 +347,7 @@ export const EVENTS: Event[] = [
     capacity: 20, attendees: 14, participants: ["u1", "u2", "u4", "u6"],
     price: "¥5,000",
     rankPrices: { regular: "¥5,000", silver: "¥4,500", gold: "¥4,000", platinum: "¥3,500" },
-    category: "kanto", status: "open",
+    category: "kanto", eventType: "official", status: "open",
     createdBy: "u1", chatId: "chat1",
   },
   {
@@ -357,7 +358,7 @@ export const EVENTS: Event[] = [
     capacity: 80, attendees: 52, participants: ["u1", "u2", "u3", "u4", "u5", "u6"],
     price: "¥8,000",
     rankPrices: { regular: "¥8,000", silver: "¥7,000", gold: "¥6,000", platinum: "¥5,000" },
-    category: "all", status: "open",
+    category: "all", eventType: "official", status: "open",
     createdBy: "u1", chatId: "chat2",
   },
   {
@@ -368,7 +369,7 @@ export const EVENTS: Event[] = [
     capacity: 15, attendees: 15, participants: ["u3", "u5", "u7"],
     price: "¥3,000",
     rankPrices: { regular: "¥3,000", silver: "¥2,500", gold: "¥2,000", platinum: "¥1,500" },
-    category: "kansai", status: "full",
+    category: "kansai", eventType: "gourmet", status: "full",
     createdBy: "u1",
   },
   {
@@ -377,7 +378,7 @@ export const EVENTS: Event[] = [
     date: "2026-05-10", time: "14:00", location: "オンライン",
     image: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400",
     capacity: 100, attendees: 28, participants: ["u1", "u2", "u3"],
-    price: "無料", category: "all", status: "open",
+    price: "無料", category: "all", eventType: "official", status: "open",
     createdBy: "u1",
   },
 ];
@@ -436,28 +437,28 @@ export const RESTAURANTS: Restaurant[] = [
 export const BOARD_THREADS: BoardThread[] = [
   {
     id: "t1", title: "渋谷でおすすめの焼肉屋さん教えてください！",
-    author: MEMBERS[3], category: "kanto-gourmet", commentCount: 15,
+    author: MEMBERS[3], category: "gourmet-advice", commentCount: 15,
     lastUpdated: "2026-03-23T14:00:00",
     preview: "今度渋谷で食事会をするのですが、おすすめの焼肉屋さんがあれば教えてください...",
     isRecruiting: false,
   },
   {
     id: "t2", title: "大阪の隠れ家イタリアンを発見！",
-    author: MEMBERS[2], category: "kansai-gourmet", commentCount: 8,
+    author: MEMBERS[2], category: "kansai-branch", commentCount: 8,
     lastUpdated: "2026-03-22T20:30:00",
     preview: "心斎橋の路地裏にあるイタリアンが最高でした。パスタが本場の味...",
     isRecruiting: false,
   },
   {
     id: "t3", title: "今日のごちそうさま🍽️ 銀座のフレンチ",
-    author: MEMBERS[1], category: "championship", commentCount: 22,
+    author: MEMBERS[1], category: "meal-report", commentCount: 22,
     lastUpdated: "2026-03-23T21:00:00",
     preview: "銀座の新しいフレンチレストランに行ってきました。コース料理が素晴らしかった...",
     isRecruiting: false,
   },
   {
     id: "t4", title: "東飲みしたい人集まれ！🍻",
-    author: MEMBERS[5], category: "anything", commentCount: 30,
+    author: MEMBERS[5], category: "kanto-branch", commentCount: 30,
     lastUpdated: "2026-03-23T19:00:00",
     preview: "来週末に東京で飲み会を企画しています。参加したい方はコメントください！",
     isRecruiting: true, recruitCapacity: 12, recruitAttendees: 8,
@@ -466,19 +467,33 @@ export const BOARD_THREADS: BoardThread[] = [
   },
   {
     id: "t5", title: "おしえてグルメ相談室：記念日ディナー",
-    author: MEMBERS[4], category: "anything", commentCount: 12,
+    author: MEMBERS[4], category: "gourmet-advice", commentCount: 12,
     lastUpdated: "2026-03-21T16:00:00",
     preview: "来月の記念日に特別なディナーを予約したいのですが、おすすめはありますか？",
     isRecruiting: false,
   },
   {
     id: "t6", title: "関西グルメ同好会 次回集まり🍜",
-    author: MEMBERS[6], category: "kansai-gourmet", commentCount: 5,
+    author: MEMBERS[6], category: "club-club1", commentCount: 5,
     lastUpdated: "2026-03-23T10:00:00",
     preview: "次回の関西グルメ同好会の集まりを企画中です！参加希望の方はぜひ。",
     isRecruiting: true, recruitCapacity: 10, recruitAttendees: 4,
     recruitParticipants: ["u7", "u3", "u5"],
     eventDate: "2026-03-30", chatId: "chat4",
+  },
+  {
+    id: "t7", title: "IRO＋コミュニティからのお知らせ",
+    author: MEMBERS[0], category: "announcement", commentCount: 3,
+    lastUpdated: "2026-03-24T09:00:00",
+    preview: "今月のコミュニティ運営とイベントについてお知らせします。",
+    isRecruiting: false,
+  },
+  {
+    id: "t8", title: "はじめまして！かずまです",
+    author: MEMBERS[0], category: "introductions", commentCount: 7,
+    lastUpdated: "2026-03-24T08:30:00",
+    preview: "美味しいものを囲んで、みなさんと楽しく交流できたらうれしいです！",
+    isRecruiting: false,
   },
 ];
 
@@ -657,10 +672,17 @@ export const RANK_THRESHOLDS = [
 ];
 
 export const BOARD_CATEGORIES: BoardCategory[] = [
-  { key: "kanto-gourmet", label: "関東グルメ", createdByAdmin: true },
-  { key: "kansai-gourmet", label: "関西グルメ", createdByAdmin: true },
-  { key: "anything", label: "なんでも", createdByAdmin: true },
-  { key: "championship", label: "グルメ選手権", createdByAdmin: true },
+  { key: "announcement", label: "全体アナウンス", createdByAdmin: true },
+  { key: "kanto-branch", label: "関東支部", createdByAdmin: true },
+  { key: "kansai-branch", label: "関西支部", createdByAdmin: true },
+  { key: "introductions", label: "自己紹介", createdByAdmin: true },
+  ...CLUBS.map((club) => ({
+    key: `club-${club.id}`,
+    label: `部活動・${club.name}`,
+    createdByAdmin: true,
+  })),
+  { key: "meal-report", label: "今日のごちそうさま報告", createdByAdmin: true },
+  { key: "gourmet-advice", label: "教えてグルメ相談室", createdByAdmin: true },
 ];
 
 export const GENRES = [
