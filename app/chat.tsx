@@ -1,7 +1,6 @@
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import {
-  CHAT_MESSAGES,
   CURRENT_USER,
   DEFAULT_AVATAR,
   MEMBERS,
@@ -10,22 +9,22 @@ import {
   type Member,
 } from "@/constants/mock-data";
 import { useAuthContext } from "@/lib/auth-context";
-import { getRoomById, getMessages, addMessage as storeAddMessage, saveMessagesToStorage, loadMessagesFromStorage, loadDynamicRooms, renameRoom, addMemberToRoom, removeMemberFromRoom } from "@/lib/chat-store";
+import { getRoomById, getMessages, saveMessagesToStorage, loadMessagesFromStorage, loadDynamicRooms, renameRoom, addMemberToRoom, removeMemberFromRoom } from "@/lib/chat-store";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useColors } from "@/hooks/use-colors";
 import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useState, useRef, useEffect, useCallback, useMemo } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import {
   Alert,
   FlatList,
   KeyboardAvoidingView,
+  Keyboard,
   Modal,
   Platform,
   Pressable,
   ScrollView,
-  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
@@ -37,6 +36,8 @@ import {
   checkAndSendMentionNotifications,
   sendMentionNotification,
 } from "@/lib/notifications";
+import { canAccessChatRoom } from "@/lib/chat-access";
+import { getFriends } from "@/lib/friendship";
 
 // メンション部分をパースしてハイライト表示するコンポーネント
 // グループメンションのラベル一覧
@@ -300,7 +301,6 @@ export default function ChatScreen() {
   const [keyboardVisible, setKeyboardVisible] = useState(false);
 
   useEffect(() => {
-    const { Keyboard } = require("react-native");
     const show = Keyboard.addListener("keyboardWillShow", () => setKeyboardVisible(true));
     const hide = Keyboard.addListener("keyboardWillHide", () => setKeyboardVisible(false));
     return () => { show.remove(); hide.remove(); };
@@ -486,8 +486,22 @@ export default function ChatScreen() {
     );
   }
 
-  const typeLabel = room.type === "event" ? "イベント" : room.type === "board" ? "掲示板" : "部活動";
-  const typeColor = room.type === "event" ? "#E8A0BF" : room.type === "board" ? "#A7C7E7" : "#34C759";
+  if (!canAccessChatRoom(room, CURRENT_USER.id, CURRENT_USER.rank, userIsAdmin)) {
+    return (
+      <ScreenContainer edges={["top", "left", "right"]}>
+        <View style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: 24 }}>
+          <IconSymbol name="lock.fill" size={40} color={colors.muted} />
+          <Text style={{ fontSize: 17, fontWeight: "700", color: colors.foreground, marginTop: 14 }}>このチャットは閲覧できません</Text>
+          <Text style={{ fontSize: 13, lineHeight: 20, color: colors.muted, textAlign: "center", marginTop: 6 }}>
+            ランク専用チャットは同じランクの会員、その他のチャットは参加者だけが閲覧できます。
+          </Text>
+        </View>
+      </ScreenContainer>
+    );
+  }
+
+  const typeLabel = room.type === "event" ? "イベント" : room.type === "board" ? "掲示板" : room.type === "rank" ? "ランク専用" : room.type === "group" ? "友達グループ" : room.type === "dm" ? "DM" : "部活動";
+  const typeColor = room.type === "event" ? "#E8A0BF" : room.type === "board" ? "#A7C7E7" : room.type === "rank" ? "#F59E0B" : room.type === "group" ? "#5B9BD5" : room.type === "dm" ? "#FF9500" : "#34C759";
 
   return (
     <ScreenContainer edges={["top", "left", "right"]}>
@@ -709,7 +723,7 @@ export default function ChatScreen() {
           </View>
 
           {/* 管理者機能（アプリ管理者またはチャット作成者のみ表示） */}
-          {(userIsAdmin || room.createdBy === CURRENT_USER.id) && (
+          {(userIsAdmin || room.createdBy === CURRENT_USER.id) && room.type !== "rank" && (
             <View
               style={{
                 margin: 16,
@@ -789,13 +803,15 @@ export default function ChatScreen() {
                 </TouchableOpacity>
               )}
               {/* メンバー追加 */}
-              <TouchableOpacity
-                onPress={() => setShowAddMember(true)}
-                style={{ flexDirection: "row", alignItems: "center", paddingVertical: 6 }}
-              >
-                <IconSymbol name="person.badge.plus" size={16} color="#34C759" />
-                <Text style={{ fontSize: 13, color: "#34C759", marginLeft: 6 }}>メンバーを追加</Text>
-              </TouchableOpacity>
+              {room.type === "group" && room.createdBy === CURRENT_USER.id ? (
+                <TouchableOpacity
+                  onPress={() => setShowAddMember(true)}
+                  style={{ flexDirection: "row", alignItems: "center", paddingVertical: 6 }}
+                >
+                  <IconSymbol name="person.badge.plus" size={16} color="#34C759" />
+                  <Text style={{ fontSize: 13, color: "#34C759", marginLeft: 6 }}>友達を追加</Text>
+                </TouchableOpacity>
+              ) : null}
             </View>
           )}
 
@@ -897,12 +913,16 @@ export default function ChatScreen() {
             </Pressable>
           </View>
           <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 32 }}>
-            {MEMBERS.filter((m) => !roomParticipants.includes(m.id)).map((member) => (
+            {getFriends(CURRENT_USER.id).filter((member) => !roomParticipants.includes(member.id)).map((member) => (
               <TouchableOpacity
                 key={member.id}
                 onPress={async () => {
                   if (!id) return;
-                  await addMemberToRoom(id, member.id);
+                  const added = await addMemberToRoom(id, member.id);
+                  if (!added) {
+                    Alert.alert("追加できません", "相互に友達のメンバーだけを追加できます。");
+                    return;
+                  }
                   setRoomParticipants((prev) => [...prev, member.id]);
                   Alert.alert("追加完了", `${member.name}をチャットに追加しました`);
                 }}
@@ -935,7 +955,7 @@ export default function ChatScreen() {
                 </View>
               </TouchableOpacity>
             ))}
-            {MEMBERS.filter((m) => !roomParticipants.includes(m.id)).length === 0 && (
+            {getFriends(CURRENT_USER.id).filter((member) => !roomParticipants.includes(member.id)).length === 0 && (
               <View style={{ alignItems: "center", paddingVertical: 40 }}>
                 <Text style={{ fontSize: 14, color: colors.muted }}>追加できるメンバーはいません</Text>
               </View>

@@ -153,13 +153,13 @@ export interface BoardComment {
 export interface ChatRoom {
   id: string;
   name: string;
-  type: "event" | "board" | "club" | "rank";
+  type: "event" | "board" | "club" | "rank" | "dm" | "group";
   sourceId: string; // event id or thread id or club id
   participants: string[]; // member ids
   createdBy: string;
   lastMessage?: string;
   lastMessageAt?: string;
-  requiredRank?: MemberRank; // ランクチャット: このランク以上のメンバーが参加可能
+  requiredRank?: MemberRank; // ランクチャット: このランクのメンバーのみ参加可能
 }
 
 export interface ChatMessage {
@@ -316,6 +316,19 @@ export const MEMBERS: Member[] = [
     interests: [],
     role: "member", joinedAt: "2026-02-01", gender: "male",
   },
+];
+
+/** 相互承認済みの友達関係。ペアの向きに関係なく友達として扱う。 */
+export const FRIENDSHIPS: readonly (readonly [string, string])[] = [
+  ["u1", "u2"],
+  ["u1", "u3"],
+  ["u1", "u4"],
+  ["u1", "u6"],
+  ["u2", "u4"],
+  ["u2", "u6"],
+  ["u3", "u5"],
+  ["u3", "u7"],
+  ["u5", "u7"],
 ];
 
 export const ANNOUNCEMENTS: Announcement[] = [
@@ -562,30 +575,22 @@ export const CHAT_ROOMS: ChatRoom[] = [
     participants: ["u7", "u3", "u5"], createdBy: "u7",
     lastMessage: "心斎橋集合でいいですか？", lastMessageAt: "2026-03-23T11:00:00",
   },
-  // ランク別チャットルーム
+  // ランク別チャットルーム（同じランクの会員だけが参加）
   {
-    id: "rank-regular", name: "レギュラーメンバールーム",
-    type: "rank", sourceId: "rank-regular",
-    participants: ["u1", "u2", "u3", "u4", "u5", "u6", "u7", "u8"],
-    createdBy: "system",
-    requiredRank: "regular",
-    lastMessage: "IRO＋全会員が参加できるルームです。", lastMessageAt: "2026-03-20T10:00:00",
-  },
-  {
-    id: "rank-silver", name: "シルバー以上ルーム",
+    id: "rank-silver", name: "シルバーメンバールーム",
     type: "rank", sourceId: "rank-silver",
-    participants: ["u1", "u2", "u3", "u4", "u6", "u7"],
+    participants: ["u3", "u7"],
     createdBy: "system",
     requiredRank: "silver",
-    lastMessage: "シルバー以上の会員さんのルームです。", lastMessageAt: "2026-03-21T10:00:00",
+    lastMessage: "シルバー会員専用のルームです。", lastMessageAt: "2026-03-21T10:00:00",
   },
   {
-    id: "rank-gold", name: "ゴールド以上ルーム",
+    id: "rank-gold", name: "ゴールドメンバールーム",
     type: "rank", sourceId: "rank-gold",
-    participants: ["u1", "u2", "u4", "u6"],
+    participants: ["u1", "u4", "u6"],
     createdBy: "system",
     requiredRank: "gold",
-    lastMessage: "ゴールド以上の会員さんのルームです。", lastMessageAt: "2026-03-22T10:00:00",
+    lastMessage: "ゴールド会員専用のルームです。", lastMessageAt: "2026-03-22T10:00:00",
   },
   {
     id: "rank-platinum", name: "プラチナルーム",
@@ -593,7 +598,7 @@ export const CHAT_ROOMS: ChatRoom[] = [
     participants: ["u2"],
     createdBy: "system",
     requiredRank: "platinum",
-    lastMessage: "プラチナ会員さんのルームです。", lastMessageAt: "2026-03-23T10:00:00",
+    lastMessage: "プラチナ会員専用のルームです。", lastMessageAt: "2026-03-23T10:00:00",
   },
 ];
 

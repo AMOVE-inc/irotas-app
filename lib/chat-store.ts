@@ -7,6 +7,7 @@
  */
 import { CHAT_ROOMS, CHAT_MESSAGES, type ChatRoom, type ChatMessage } from "@/constants/mock-data";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { areFriends } from "@/lib/friendship";
 
 // 動的に追加されたチャットルーム（セッション中のみ保持）
 export const dynamicRooms: ChatRoom[] = [];
@@ -48,19 +49,53 @@ export function getMyRooms(userId: string): ChatRoom[] {
   return getAllRooms().filter((r) => r.participants.includes(userId));
 }
 
-/** ランク順序 */
-const RANK_ORDER: Record<string, number> = { regular: 0, silver: 1, gold: 2, platinum: 3 };
-
 /**
  * ユーザーのランクに応じて参加できるランク別チャットルームを取得
- * ルール: 自分のランク以下のルームに全て参加できる
+ * ルール: 自分と同じランクのルームだけに参加できる
  */
 export function getRankRoomsForUser(userRank: string): ChatRoom[] {
-  const userRankOrder = RANK_ORDER[userRank] ?? 0;
   return getAllRooms().filter(
-    (r) => r.type === "rank" && r.requiredRank !== undefined &&
-    RANK_ORDER[r.requiredRank] <= userRankOrder
+    (r) => r.type === "rank" && r.requiredRank === userRank,
   );
+}
+
+/** 相互に友達のメンバーを招待して通常のグループチャットを作成する。 */
+export function createFriendGroupChat(
+  name: string,
+  friendIds: string[],
+  createdBy: string,
+): ChatRoom {
+  const uniqueFriendIds = [...new Set(friendIds)].filter((id) => id !== createdBy);
+  if (!name.trim()) throw new Error("チャット名を入力してください");
+  if (uniqueFriendIds.length < 2) throw new Error("友達を2人以上選択してください");
+  if (uniqueFriendIds.some((id) => !areFriends(createdBy, id))) {
+    throw new Error("相互に友達ではないメンバーは招待できません");
+  }
+
+  const roomId = `group_${createdBy}_${Date.now()}`;
+  const newRoom: ChatRoom = {
+    id: roomId,
+    name: name.trim(),
+    type: "group",
+    sourceId: roomId,
+    participants: [createdBy, ...uniqueFriendIds],
+    createdBy,
+    lastMessage: "グループチャットが作成されました",
+    lastMessageAt: new Date().toISOString(),
+  };
+  dynamicRooms.push(newRoom);
+
+  const welcomeMsg: ChatMessage = {
+    id: `msg_welcome_${roomId}`,
+    chatId: roomId,
+    senderId: "system",
+    content: `「${newRoom.name}」へようこそ！`,
+    createdAt: new Date().toISOString(),
+  };
+  dynamicMessages.push(welcomeMsg);
+  void saveDynamicRooms();
+  void saveMessagesToStorage(roomId, [welcomeMsg]);
+  return newRoom;
 }
 
 /** イベント参加時: チャットルームに参加者を追加（なければ新規作成） */
@@ -277,6 +312,7 @@ export async function addMemberToRoom(roomId: string, memberId: string): Promise
     room = CHAT_ROOMS.find((r) => r.id === roomId);
   }
   if (!room) return false;
+  if (room.type === "group" && !areFriends(room.createdBy, memberId)) return false;
   if (!room.participants.includes(memberId)) {
     room.participants.push(memberId);
     await saveDynamicRooms();
