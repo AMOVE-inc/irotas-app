@@ -44,3 +44,8 @@ export function canManageBoardCategories(role: unknown): boolean {
 export function canCreateClub(role: unknown): boolean {
   return isAdminRole(role);
 }
+
+/** Club threads are private to approved members, with administrator access for moderation. */
+export function canViewClubThread(role: unknown, memberId: string, approvedMemberIds: string[]): boolean {
+  return isAdminRole(role) || approvedMemberIds.includes(memberId);
+}

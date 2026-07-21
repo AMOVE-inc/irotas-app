@@ -1,5 +1,6 @@
 import * as Notifications from "expo-notifications";
 import { Platform } from "react-native";
+import { addInAppNotification } from "@/lib/in-app-notifications-store";
 
 // 通知ハンドラーの設定（フォアグラウンドでも通知を表示）
 Notifications.setNotificationHandler({
@@ -65,7 +66,16 @@ export async function sendMentionNotification(
 export async function sendClubApprovalNotification(
   clubName: string,
   leaderName: string,
+  applicantId: string,
+  clubId: string,
 ): Promise<void> {
+  addInAppNotification({
+    targetMemberId: applicantId,
+    type: "club_approval",
+    title: `${clubName}への入部が承認されました`,
+    body: `${leaderName}さんが入部申請を承認しました。部員限定スレッドを閲覧できます。`,
+    clubId,
+  });
   if (Platform.OS === "web") return;
 
   try {
@@ -109,7 +119,16 @@ export async function sendLeaderAppointmentNotification(
 export async function sendClubApplicationNotification(
   clubName: string,
   applicantName: string,
+  leaderId: string,
+  clubId: string,
 ): Promise<void> {
+  addInAppNotification({
+    targetMemberId: leaderId,
+    type: "club_application",
+    title: `${clubName}に入部申請が届きました`,
+    body: `${applicantName}さんから入部申請が届いています。申請内容と参加履歴を確認してください。`,
+    clubId,
+  });
   if (Platform.OS === "web") return;
 
   try {

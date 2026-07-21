@@ -6,6 +6,7 @@ import {
   RESTAURANTS,
   BOARD_THREADS,
   BOARD_CATEGORIES,
+  CLUBS,
   COUPONS,
   CURRENT_USER,
   RANK_LABELS,
@@ -110,6 +111,16 @@ describe("Mock Data Integrity", () => {
     expect(CURRENT_USER.name).toBeDefined();
     expect(["silver", "gold", "platinum"]).toContain(CURRENT_USER.rank);
     expect(CURRENT_USER.branch).toBeDefined();
+  });
+
+  it("should keep structured club applications for leader review", () => {
+    const applications = CLUBS.flatMap((club) => club.applications);
+    expect(applications.length).toBeGreaterThan(0);
+    for (const application of applications) {
+      expect(application.wantsToDo.trim().length).toBeGreaterThan(0);
+      expect(application.messageToLeader.trim().length).toBeGreaterThan(0);
+      expect(["pending", "on_hold"]).toContain(application.status);
+    }
   });
 
   it("should have rank labels for all ranks", () => {

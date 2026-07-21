@@ -4,7 +4,6 @@ import {
   BOARD_THREADS,
   BOARD_CATEGORIES,
   BOARD_COMMENTS,
-  MEMBERS,
   RANK_COLORS,
   RANK_LABELS,
   CURRENT_USER,
@@ -15,8 +14,9 @@ import {
 import { useAuthContext } from "@/lib/auth-context";
 import { useColors } from "@/hooks/use-colors";
 import { createBoardChat } from "@/lib/chat-store";
-import { canManageBoardCategories } from "@/lib/access-control";
+import { canManageBoardCategories, canViewClubThread } from "@/lib/access-control";
 import { isGoogleMapsUrl, MEAL_BUDGETS, PREFECTURES } from "@/lib/meal-report";
+import { useClubs } from "@/lib/club-store";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
@@ -1066,7 +1066,6 @@ function CreateThreadModal({
   onAdd: (thread: BoardThread) => void;
 }) {
   const colors = useColors();
-  const insets = useSafeAreaInsets();
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [isRecruiting, setIsRecruiting] = useState(false);
@@ -1506,6 +1505,7 @@ export default function BoardScreen() {
   const router = useRouter();
   const { user: authUser } = useAuthContext();
   const userIsAdmin = canManageBoardCategories(authUser?.role);
+  const clubs = useClubs();
   const [categories, setCategories] = useState<BoardCategory[]>(BOARD_CATEGORIES);
   const [activeGroup, setActiveGroup] = useState<BoardCategory["group"]>("all");
   const [activeCategory, setActiveCategory] = useState<string>(BOARD_CATEGORIES[0].key);
@@ -1519,7 +1519,17 @@ export default function BoardScreen() {
   const [editingThread, setEditingThread] = useState<BoardThread | null>(null);
   const allThreads = [...dynamicThreads, ...BOARD_THREADS].map((t) => editedThreads[t.id] ?? t);
   const filteredThreads = allThreads.filter((t) => t.category === activeCategory);
-  const visibleCategories = categories.filter((category) => category.group === activeGroup);
+  const canAccessCategory = (category: BoardCategory) => {
+    if (category.group !== "club" || userIsAdmin) return true;
+    if (category.key === "club-all") {
+      return clubs.some((club) => canViewClubThread(authUser?.role, CURRENT_USER.id, club.memberIds));
+    }
+    const club = clubs.find((item) => `club-${item.id}` === category.key);
+    return Boolean(club && canViewClubThread(authUser?.role, CURRENT_USER.id, club.memberIds));
+  };
+  const visibleCategories = categories.filter(
+    (category) => category.group === activeGroup && canAccessCategory(category),
+  );
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
@@ -1539,8 +1549,8 @@ export default function BoardScreen() {
 
   const handleSelectGroup = (group: BoardCategory["group"]) => {
     setActiveGroup(group);
-    const firstCategory = categories.find((category) => category.group === group);
-    if (firstCategory) setActiveCategory(firstCategory.key);
+    const firstCategory = categories.find((category) => category.group === group && canAccessCategory(category));
+    setActiveCategory(firstCategory?.key ?? "");
   };
 
   return (

@@ -208,10 +208,19 @@ export interface Club {
   leaderId: string; // 部長（運営が任命）
   memberIds: string[];
   applicantIds: string[]; // 入部申請中のメンバーID
+  applications: ClubApplication[];
   chatId?: string;
   icon: string;
   createdByAdmin: boolean; // 管理者のみ作成可能
   events: ClubEvent[]; // 部活動イベント（部員が企画可能）
+}
+
+export interface ClubApplication {
+  memberId: string;
+  wantsToDo: string;
+  messageToLeader: string;
+  status: "pending" | "on_hold";
+  appliedAt: string;
 }
 
 export interface BoardCategory {
@@ -601,7 +610,7 @@ export const CHAT_MESSAGES: ChatMessage[] = [
 export const CLUBS: Club[] = [
   {
     id: "club1", name: "ラーメン部", description: "全国のラーメンを食べ歩く部活。月回の活動あり。",
-    leaderId: "u3", memberIds: ["u3", "u1", "u4", "u8"], applicantIds: [], icon: "🍜", createdByAdmin: true,
+    leaderId: "u1", memberIds: ["u3", "u1", "u4", "u8"], applicantIds: ["u6"], applications: [{ memberId: "u6", wantsToDo: "話題の新店を巡る月例ラーメン会を企画したいです。", messageToLeader: "ラーメン好きの皆さんと情報交換しながら活動を盛り上げたいです。", status: "pending", appliedAt: "2026-03-25T10:00:00" }], icon: "🍜", createdByAdmin: true,
     events: [
       {
         id: "ce1", title: "渋谷ラーメン巡り", description: "渋谷エリアの名店を巡ります。",
@@ -612,17 +621,17 @@ export const CLUBS: Club[] = [
   },
   {
     id: "club2", name: "ワイン部", description: "ワインの知識を深めながら楽しむ部活。テイスティング会も開催。",
-    leaderId: "u2", memberIds: ["u2", "u4", "u6"], applicantIds: ["u8"], icon: "🍷", createdByAdmin: true,
+    leaderId: "u2", memberIds: ["u2", "u4", "u6"], applicantIds: ["u8"], applications: [{ memberId: "u8", wantsToDo: "初心者向けのワイン会を企画したいです。", messageToLeader: "ワインを楽しく学びながら交流したいです。よろしくお願いします。", status: "pending", appliedAt: "2026-03-24T11:00:00" }], icon: "🍷", createdByAdmin: true,
     events: [],
   },
   {
     id: "club3", name: "スイーツ部", description: "話題のスイーツやカフェを巡る部活。",
-    leaderId: "u5", memberIds: ["u5", "u7", "u1"], applicantIds: [], icon: "🍰", createdByAdmin: true,
+    leaderId: "u5", memberIds: ["u5", "u7", "u1"], applicantIds: [], applications: [], icon: "🍰", createdByAdmin: true,
     events: [],
   },
   {
     id: "club4", name: "料理部", description: "みんなで料理を作って楽しむ部活。月２回の料理会を開催。",
-    leaderId: "u7", memberIds: ["u7", "u2", "u5"], applicantIds: [], icon: "👨‍🍳", createdByAdmin: true,
+    leaderId: "u7", memberIds: ["u7", "u2", "u5"], applicantIds: [], applications: [], icon: "👨‍🍳", createdByAdmin: true,
     events: [],
   },
 ];

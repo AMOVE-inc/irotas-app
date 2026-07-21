@@ -1,10 +1,12 @@
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import {
-  CLUBS,
   CURRENT_USER,
+  EVENTS,
+  RANK_LABELS,
   getMemberById,
   type Club,
+  type ClubApplication,
 } from "@/constants/mock-data";
 import { useAuthContext } from "@/lib/auth-context";
 import { useColors } from "@/hooks/use-colors";
@@ -31,6 +33,7 @@ import {
   sendLeaderAppointmentNotification,
   sendClubApplicationNotification,
 } from "@/lib/notifications";
+import { addClub as addClubToStore, updateClub as updateClubInStore, useClubs } from "@/lib/club-store";
 
 // 部活動掲示板の投稿型
 interface ClubPost {
@@ -138,7 +141,6 @@ function ClubPostCard({
 }) {
   const colors = useColors();
   const author = getMemberById(post.authorId);
-  const isAuthor = post.authorId === CURRENT_USER.id;
 
   const timeAgo = (dateStr: string) => {
     const diff = Date.now() - new Date(dateStr).getTime();
@@ -584,6 +586,58 @@ function SelectMembersForChatModal({
   );
 }
 
+function ApplicationReviewDetails({ memberId, application }: { memberId: string; application?: ClubApplication }) {
+  const colors = useColors();
+  const member = getMemberById(memberId);
+  if (!member) return null;
+  const eventHistory = EVENTS.filter((event) => event.participants.includes(memberId))
+    .sort((a, b) => b.date.localeCompare(a.date))
+    .slice(0, 3);
+
+  return (
+    <View style={{ backgroundColor: colors.background, borderRadius: 12, padding: 12, marginBottom: 10, gap: 10 }}>
+      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6 }}>
+        {[`${member.generation}期生`, member.branch === "kanto" ? "関東支部" : "関西支部", RANK_LABELS[member.rank], `入会 ${new Date(member.joinedAt).getFullYear()}年`].map((label) => (
+          <View key={label} style={{ backgroundColor: colors.surface, borderRadius: 8, paddingHorizontal: 8, paddingVertical: 4 }}>
+            <Text style={{ fontSize: 11, fontWeight: "600", color: colors.foreground }}>{label}</Text>
+          </View>
+        ))}
+      </View>
+
+      {member.interests.length > 0 ? (
+        <Text style={{ fontSize: 12, color: colors.muted }}>好きなグルメ：{member.interests.join("・")}</Text>
+      ) : null}
+
+      <View>
+        <Text style={{ fontSize: 12, fontWeight: "800", color: colors.foreground, marginBottom: 3 }}>部活でやってみたいこと</Text>
+        <Text style={{ fontSize: 13, lineHeight: 19, color: colors.foreground }}>
+          {application?.wantsToDo ?? "申請内容の詳細はありません"}
+        </Text>
+      </View>
+      <View>
+        <Text style={{ fontSize: 12, fontWeight: "800", color: colors.foreground, marginBottom: 3 }}>部長へのメッセージ</Text>
+        <Text style={{ fontSize: 13, lineHeight: 19, color: colors.foreground }}>
+          {application?.messageToLeader ?? "メッセージはありません"}
+        </Text>
+      </View>
+
+      <View>
+        <Text style={{ fontSize: 12, fontWeight: "800", color: colors.foreground, marginBottom: 5 }}>
+          過去のイベント参加履歴（{eventHistory.length}件）
+        </Text>
+        {eventHistory.length > 0 ? eventHistory.map((event) => (
+          <View key={event.id} style={{ flexDirection: "row", justifyContent: "space-between", paddingVertical: 3 }}>
+            <Text style={{ flex: 1, fontSize: 12, color: colors.foreground }} numberOfLines={1}>{event.title}</Text>
+            <Text style={{ fontSize: 11, color: colors.muted, marginLeft: 8 }}>{event.date}</Text>
+          </View>
+        )) : (
+          <Text style={{ fontSize: 12, color: colors.muted }}>参加履歴はまだありません</Text>
+        )}
+      </View>
+    </View>
+  );
+}
+
 // ============================================================
 // ClubDetailModal - 部活動詳細（部員限定コンテンツ）
 // ============================================================
@@ -596,7 +650,7 @@ function ClubDetailModal({
 }: {
   club: Club;
   onClose: () => void;
-  onApply: (clubId: string) => void;
+  onApply: (clubId: string, application: ClubApplication) => void;
   onLeave: (clubId: string) => void;
   onUpdateClub: (updated: Club) => void;
 }) {
@@ -607,11 +661,17 @@ function ClubDetailModal({
   const leader = getMemberById(club.leaderId);
   const [memberIds, setMemberIds] = useState(club.memberIds);
   const [applicantIds, setApplicantIds] = useState(club.applicantIds);
-  const [pendingIds, setPendingIds] = useState<string[]>([]); // 保留中
+  const [applications, setApplications] = useState<ClubApplication[]>(club.applications);
+  const [pendingIds, setPendingIds] = useState<string[]>(
+    club.applications.filter((application) => application.status === "on_hold").map((application) => application.memberId),
+  );
   const [currentLeaderId, setCurrentLeaderId] = useState(club.leaderId);
   const [posts, setPosts] = useState<ClubPost[]>([]);
   const [selectedPost, setSelectedPost] = useState<ClubPost | null>(null);
   const [showCreatePost, setShowCreatePost] = useState(false);
+  const [wantsToDo, setWantsToDo] = useState("");
+  const [messageToLeader, setMessageToLeader] = useState("");
+  const [applicationError, setApplicationError] = useState("");
 
   const isMember = memberIds.includes(CURRENT_USER.id);
   const hasApplied = applicantIds.includes(CURRENT_USER.id);
@@ -621,9 +681,21 @@ function ClubDetailModal({
 
   const handleApply = () => {
     if (hasApplied || isMember) return;
-    onApply(club.id);
+    if (!wantsToDo.trim() || !messageToLeader.trim()) {
+      setApplicationError("どちらの項目も入力してください。");
+      return;
+    }
+    const application: ClubApplication = {
+      memberId: CURRENT_USER.id,
+      wantsToDo: wantsToDo.trim(),
+      messageToLeader: messageToLeader.trim(),
+      status: "pending",
+      appliedAt: new Date().toISOString(),
+    };
+    onApply(club.id, application);
     setApplicantIds([...applicantIds, CURRENT_USER.id]);
-    sendClubApplicationNotification(club.name, CURRENT_USER.name);
+    setApplications([...applications, application]);
+    sendClubApplicationNotification(club.name, CURRENT_USER.name, currentLeaderId, club.id);
     Alert.alert("申請完了", `${club.name}への入部申請を送りました。部長の審査をお待ちください。`);
   };
 
@@ -654,8 +726,10 @@ function ClubDetailModal({
           setMemberIds(newMembers);
           setApplicantIds(applicantIds.filter((id) => id !== memberId));
           setPendingIds(pendingIds.filter((id) => id !== memberId));
-          onUpdateClub({ ...club, memberIds: newMembers, applicantIds: applicantIds.filter((id) => id !== memberId) });
-          sendClubApprovalNotification(club.name, CURRENT_USER.name);
+          const remainingApplications = applications.filter((application) => application.memberId !== memberId);
+          setApplications(remainingApplications);
+          onUpdateClub({ ...club, memberIds: newMembers, applicantIds: applicantIds.filter((id) => id !== memberId), applications: remainingApplications });
+          sendClubApprovalNotification(club.name, CURRENT_USER.name, memberId, club.id);
           Alert.alert("承認完了", `${member?.name ?? ""}さんの入部を承認しました。`);
         },
       },
@@ -675,6 +749,11 @@ function ClubDetailModal({
           onPress: () => {
             setPendingIds([...pendingIds, memberId]);
             setApplicantIds(applicantIds.filter((id) => id !== memberId));
+            const updatedApplications = applications.map((application) =>
+              application.memberId === memberId ? { ...application, status: "on_hold" as const } : application,
+            );
+            setApplications(updatedApplications);
+            onUpdateClub({ ...club, applicantIds: applicantIds.filter((id) => id !== memberId), applications: updatedApplications });
             Alert.alert("保留完了", `${member?.name ?? ""}さんの申請を保留にしました。`);
           },
         },
@@ -693,6 +772,9 @@ function ClubDetailModal({
         onPress: () => {
           setApplicantIds(applicantIds.filter((id) => id !== memberId));
           setPendingIds(pendingIds.filter((id) => id !== memberId));
+          const remainingApplications = applications.filter((application) => application.memberId !== memberId);
+          setApplications(remainingApplications);
+          onUpdateClub({ ...club, applicantIds: applicantIds.filter((id) => id !== memberId), applications: remainingApplications });
         },
       },
     ]);
@@ -759,7 +841,10 @@ function ClubDetailModal({
             {club.name}
           </Text>
         </View>
-        <View style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: 32 }}>
+        <ScrollView
+          contentContainerStyle={{ alignItems: "center", padding: 24, paddingBottom: 48 }}
+          keyboardShouldPersistTaps="handled"
+        >
           <Text style={{ fontSize: 48, marginBottom: 16 }}>{club.icon}</Text>
           <Text style={{ fontSize: 22, fontWeight: "800", color: colors.foreground, marginBottom: 8 }}>
             {club.name}
@@ -784,19 +869,51 @@ function ClubDetailModal({
             </Text>
           </View>
           {!hasApplied && !isPending ? (
-            <Pressable
-              onPress={handleApply}
-              style={{
-                backgroundColor: "#E8A0BF",
-                borderRadius: 14,
-                paddingVertical: 14,
-                paddingHorizontal: 32,
-                alignItems: "center",
-                width: "100%",
-              }}
-            >
-              <Text style={{ fontSize: 16, fontWeight: "700", color: "#FFF" }}>入部を申請する</Text>
-            </Pressable>
+            <View style={{ width: "100%", gap: 14 }}>
+              <View>
+                <Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground, marginBottom: 6 }}>
+                  部活でやってみたいこと <Text style={{ color: colors.error }}>必須</Text>
+                </Text>
+                <TextInput
+                  value={wantsToDo}
+                  onChangeText={(value) => { setWantsToDo(value); setApplicationError(""); }}
+                  placeholder="企画したい活動や挑戦したいことを入力"
+                  placeholderTextColor={colors.muted}
+                  multiline
+                  textAlignVertical="top"
+                  style={{ backgroundColor: colors.surface, borderRadius: 12, padding: 14, minHeight: 96, fontSize: 14, color: colors.foreground, borderWidth: 1, borderColor: colors.border }}
+                />
+              </View>
+              <View>
+                <Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground, marginBottom: 6 }}>
+                  部長へのメッセージ <Text style={{ color: colors.error }}>必須</Text>
+                </Text>
+                <TextInput
+                  value={messageToLeader}
+                  onChangeText={(value) => { setMessageToLeader(value); setApplicationError(""); }}
+                  placeholder="入部への思いや自己紹介を入力"
+                  placeholderTextColor={colors.muted}
+                  multiline
+                  textAlignVertical="top"
+                  style={{ backgroundColor: colors.surface, borderRadius: 12, padding: 14, minHeight: 96, fontSize: 14, color: colors.foreground, borderWidth: 1, borderColor: colors.border }}
+                />
+              </View>
+              {applicationError ? <Text style={{ fontSize: 13, color: colors.error }}>{applicationError}</Text> : null}
+              <Pressable
+                onPress={handleApply}
+                disabled={!wantsToDo.trim() || !messageToLeader.trim()}
+                style={{
+                  backgroundColor: wantsToDo.trim() && messageToLeader.trim() ? "#E8A0BF" : colors.border,
+                  borderRadius: 14,
+                  paddingVertical: 14,
+                  paddingHorizontal: 32,
+                  alignItems: "center",
+                  width: "100%",
+                }}
+              >
+                <Text style={{ fontSize: 16, fontWeight: "700", color: "#FFF" }}>入部申請を送る</Text>
+              </Pressable>
+            </View>
           ) : (
             <View
               style={{
@@ -814,7 +931,7 @@ function ClubDetailModal({
               </Text>
             </View>
           )}
-        </View>
+        </ScrollView>
       </View>
     );
   }
@@ -935,6 +1052,10 @@ function ClubDetailModal({
                           <Text style={{ fontSize: 12, color: colors.muted }}>{member.generation}期生 · {member.branch}支部</Text>
                         </View>
                       </Pressable>
+                      <ApplicationReviewDetails
+                        memberId={memberId}
+                        application={applications.find((application) => application.memberId === memberId)}
+                      />
                       <View style={{ flexDirection: "row", gap: 8 }}>
                         <Pressable
                           onPress={() => handleApprove(memberId)}
@@ -998,6 +1119,10 @@ function ClubDetailModal({
                           <Text style={{ fontSize: 10, fontWeight: "700", color: "#A7C7E7" }}>保留中</Text>
                         </View>
                       </Pressable>
+                      <ApplicationReviewDetails
+                        memberId={memberId}
+                        application={applications.find((application) => application.memberId === memberId)}
+                      />
                       <View style={{ flexDirection: "row", gap: 8 }}>
                         <Pressable
                           onPress={() => handleApprove(memberId)}
@@ -1357,6 +1482,7 @@ function AddClubModal({
       leaderId: CURRENT_USER.id,
       memberIds: [CURRENT_USER.id],
       applicantIds: [],
+      applications: [],
       icon,
       createdByAdmin: true,
       events: [],
@@ -1461,24 +1587,30 @@ export default function ClubsScreen() {
   const colors = useColors();
   const { user: authUser } = useAuthContext();
   const userIsAdmin = canCreateClub(authUser?.role);
-  const [clubs, setClubs] = useState<Club[]>(CLUBS);
+  const clubs = useClubs();
   const [selectedClub, setSelectedClub] = useState<Club | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
 
-  const handleApply = (clubId: string) => {
-    setClubs(clubs.map((c) =>
-      c.id === clubId ? { ...c, applicantIds: [...c.applicantIds, CURRENT_USER.id] } : c
-    ));
+  const handleApply = (clubId: string, application: ClubApplication) => {
+    const club = clubs.find((item) => item.id === clubId);
+    if (!club) return;
+    const updated = {
+      ...club,
+      applicantIds: [...club.applicantIds, CURRENT_USER.id],
+      applications: [...club.applications, application],
+    };
+    updateClubInStore(updated);
+    setSelectedClub(updated);
   };
 
   const handleLeave = (clubId: string) => {
-    setClubs(clubs.map((c) =>
-      c.id === clubId ? { ...c, memberIds: c.memberIds.filter((id) => id !== CURRENT_USER.id) } : c
-    ));
+    const club = clubs.find((item) => item.id === clubId);
+    if (!club) return;
+    updateClubInStore({ ...club, memberIds: club.memberIds.filter((id) => id !== CURRENT_USER.id) });
   };
 
   const handleUpdateClub = (updated: Club) => {
-    setClubs(clubs.map((c) => c.id === updated.id ? updated : c));
+    updateClubInStore(updated);
     if (selectedClub?.id === updated.id) setSelectedClub(updated);
   };
 
@@ -1488,7 +1620,7 @@ export default function ClubsScreen() {
       Alert.alert("権限がありません", "部活動を追加できるのは管理者のみです。");
       return;
     }
-    setClubs((current) => [...current, club]);
+    addClubToStore(club);
   };
 
   return (

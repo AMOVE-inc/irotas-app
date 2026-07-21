@@ -1,12 +1,13 @@
-import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { useColors } from "@/hooks/use-colors";
 import { useRouter } from "expo-router";
 import { FlatList, Platform, Pressable, Text, View } from "react-native";
+import { CURRENT_USER } from "@/constants/mock-data";
+import { useInAppNotifications } from "@/lib/in-app-notifications-store";
 
 interface Notification {
   id: string;
-  type: "event" | "announcement" | "like" | "comment" | "coupon";
+  type: "event" | "announcement" | "like" | "comment" | "coupon" | "club_application" | "club_approval";
   title: string;
   body: string;
   time: string;
@@ -14,6 +15,14 @@ interface Notification {
 }
 
 const NOTIFICATIONS: Notification[] = [
+  {
+    id: "club-application-sample",
+    type: "club_application",
+    title: "ラーメン部に入部申請が届きました",
+    body: "りょうさんの申請内容とイベント参加履歴を確認してください",
+    time: "30分前",
+    read: false,
+  },
   {
     id: "n1",
     type: "announcement",
@@ -62,14 +71,22 @@ const ICON_MAP: Record<string, { icon: string; color: string }> = {
   like: { icon: "heart.fill", color: "#FF3B30" },
   comment: { icon: "bubble.left.fill", color: "#34C759" },
   coupon: { icon: "ticket.fill", color: "#FF9500" },
+  club_application: { icon: "person.badge.plus", color: "#FF9900" },
+  club_approval: { icon: "checkmark.circle.fill", color: "#34C759" },
 };
 
 function NotificationItem({ notification }: { notification: Notification }) {
   const colors = useColors();
+  const router = useRouter();
   const iconConfig = ICON_MAP[notification.type];
 
   return (
     <Pressable
+      onPress={() => {
+        if (notification.type === "club_application" || notification.type === "club_approval") {
+          router.push("/clubs");
+        }
+      }}
       style={{
         flexDirection: "row",
         paddingHorizontal: 16,
@@ -129,6 +146,17 @@ function NotificationItem({ notification }: { notification: Notification }) {
 export default function NotificationsScreen() {
   const colors = useColors();
   const router = useRouter();
+  const inAppNotifications = useInAppNotifications()
+    .filter((notification) => notification.targetMemberId === CURRENT_USER.id)
+    .map<Notification>((notification) => ({
+      id: notification.id,
+      type: notification.type,
+      title: notification.title,
+      body: notification.body,
+      time: "たった今",
+      read: notification.read,
+    }));
+  const notifications = [...inAppNotifications, ...NOTIFICATIONS];
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
@@ -152,7 +180,7 @@ export default function NotificationsScreen() {
       </View>
 
       <FlatList
-        data={NOTIFICATIONS}
+        data={notifications}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => <NotificationItem notification={item} />}
         showsVerticalScrollIndicator={false}

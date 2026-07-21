@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   canManageBoardCategories,
   canCreateClub,
+  canViewClubThread,
   isAdminRole,
   isAdminRoute,
   normalizeBranchRole,
@@ -62,5 +63,11 @@ describe("access control", () => {
     expect(canCreateClub("user")).toBe(false);
     expect(canCreateClub("member")).toBe(false);
     expect(canCreateClub(undefined)).toBe(false);
+  });
+
+  it("keeps club threads private to approved members", () => {
+    expect(canViewClubThread("user", "u1", ["u1", "u2"])).toBe(true);
+    expect(canViewClubThread("user", "u3", ["u1", "u2"])).toBe(false);
+    expect(canViewClubThread("admin", "u3", ["u1", "u2"])).toBe(true);
   });
 });

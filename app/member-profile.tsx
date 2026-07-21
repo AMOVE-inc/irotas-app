@@ -1,17 +1,15 @@
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import {
-  MEMBERS,
   RANK_COLORS,
   RANK_LABELS,
-  CLUBS,
   CURRENT_USER,
   getMemberById,
   getNextRankInfo,
-  type Member,
 } from "@/constants/mock-data";
 import { useColors } from "@/hooks/use-colors";
 import { getOrCreateDMChat } from "@/lib/chat-store";
+import { useClubs } from "@/lib/club-store";
 import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import {
@@ -25,6 +23,7 @@ export default function MemberProfileScreen() {
   const colors = useColors();
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
+  const clubs = useClubs();
 
   const member = getMemberById(id || "");
 
@@ -38,7 +37,7 @@ export default function MemberProfileScreen() {
     );
   }
 
-  const memberClubs = CLUBS.filter((c) => c.memberIds.includes(member.id));
+  const memberClubs = clubs.filter((club) => club.memberIds.includes(member.id));
   const rankColor = RANK_COLORS[member.rank];
   const isSelf = member.id === CURRENT_USER.id;
 
