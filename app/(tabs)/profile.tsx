@@ -30,7 +30,7 @@ import {
 import { useAuthContext } from "@/lib/auth-context";
 import * as ImagePicker from "expo-image-picker";
 import * as Clipboard from "expo-clipboard";
-import { COMMUNITY_TERMS_URL, EVENT_TERMS_URL, OFFICIAL_INSTAGRAM_URL, OFFICIAL_LINE_URL } from "@/constants/external-links";
+import { COMMUNITY_TERMS_URL, EVENT_TERMS_URL, OFFICIAL_INSTAGRAM_URL } from "@/constants/external-links";
 import { GOURMET_GENRES } from "@/constants/event-options";
 import { BIRTH_YEARS, DAYS, DRINKING_LEVELS, MONTHS, PREFECTURES, PROFILE_DETAILS_STORAGE_KEY, type ProfileDetails } from "@/constants/profile-options";
 
@@ -1185,15 +1185,9 @@ export default function ProfileScreen() {
             },
             {
               icon: "message.fill",
-              label: "お問い合わせ（公式LINE）",
-              color: "#06C755",
-              onPress: async () => {
-                try {
-                  await Linking.openURL(OFFICIAL_LINE_URL);
-                } catch {
-                  Alert.alert("リンクを開けませんでした", OFFICIAL_LINE_URL);
-                }
-              },
+              label: "お問い合わせ",
+              color: "#5B5A73",
+              onPress: () => router.push("/contact" as any),
             },
             {
               icon: "camera.fill",

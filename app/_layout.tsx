@@ -208,6 +208,7 @@ export default function RootLayout() {
                 <Stack.Screen name="notification-settings" options={{ presentation: "card" }} />
                 <Stack.Screen name="faq" options={{ presentation: "card" }} />
                 <Stack.Screen name="community-rules" options={{ presentation: "card" }} />
+                <Stack.Screen name="contact" options={{ presentation: "card" }} />
                 <Stack.Screen name="manual" options={{ presentation: "card" }} />
                 <Stack.Screen name="oauth/callback" />
               </Stack>

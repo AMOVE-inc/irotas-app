@@ -1,4 +1,5 @@
 export const OFFICIAL_LINE_URL = "https://lin.ee/Rr00sCb";
+export const REPORT_FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSfpVLP9W38hWY-C-2p8_YLXUffxKkxrKsiopqK7Rw3qcXBLfg/viewform?usp=dialog";
 export const OFFICIAL_INSTAGRAM_URL = "https://www.instagram.com/irotas_community_official";
 export const COMMUNITY_TERMS_URL = "https://irotas-community.com/terms";
 export const EVENT_TERMS_URL = "https://irotas-community.com/event-terms";
