@@ -1,13 +1,14 @@
 import { ScreenContainer } from "@/components/screen-container";
 import { NewMemberMark } from "@/components/new-member-mark";
+import { MentionSuggestions, MentionText } from "@/components/mention-ui";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import {
   CURRENT_USER,
   DEFAULT_AVATAR,
   MEMBERS,
+  CLUBS,
   getMemberById,
   type ChatMessage,
-  type Member,
 } from "@/constants/mock-data";
 import { useAuthContext } from "@/lib/auth-context";
 import { getRoomById, getMessages, saveMessagesToStorage, loadMessagesFromStorage, loadDynamicRooms, renameRoom, addMemberToRoom, removeMemberFromRoom, toggleMessageReaction } from "@/lib/chat-store";
@@ -16,7 +17,7 @@ import { useColors } from "@/hooks/use-colors";
 import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import {
   Alert,
   FlatList,
@@ -34,59 +35,15 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
   requestNotificationPermissions,
-  checkAndSendMentionNotifications,
   sendMentionNotification,
 } from "@/lib/notifications";
 import { canAccessChatRoom } from "@/lib/chat-access";
 import { getFriends } from "@/lib/friendship";
-
-// メンション部分をパースしてハイライト表示するコンポーネント
-// グループメンションのラベル一覧
-const GROUP_MENTION_LABELS = ["全体", "支部全員", "チャット内の人全員"];
-
-function MentionText({
-  content,
-  isMe,
-  colors,
-}: {
-  content: string;
-  isMe: boolean;
-  colors: ReturnType<typeof useColors>;
-}) {
-  // @名前 のパターンを検出
-  const parts = content.split(/(@\S+)/g);
-  return (
-    <Text style={{ fontSize: 14, lineHeight: 20, color: isMe ? "#FFF" : colors.foreground }}>
-      {parts.map((part, i) => {
-        if (part.startsWith("@")) {
-          const label = part.slice(1);
-          const isGroup = GROUP_MENTION_LABELS.includes(label);
-          return (
-            <Text
-              key={i}
-              style={{
-                color: isGroup
-                  ? isMe ? "#FFFACD" : "#FF9800"
-                  : isMe ? "#FFE0F0" : "#E8A0BF",
-                fontWeight: "700",
-                backgroundColor: isGroup
-                  ? isMe ? "rgba(255,200,0,0.25)" : "rgba(255,152,0,0.15)"
-                  : "transparent",
-              }}
-            >
-              {part}
-            </Text>
-          );
-        }
-        return <Text key={i}>{part}</Text>;
-      })}
-    </Text>
-  );
-}
+import { getMentionGroups, getMentionQuery, getMentionedMemberIds, insertMention } from "@/lib/mentions";
 
 const REACTION_EMOJIS = ["👍", "❤️", "😂", "🎉", "😋", "🙏"] as const;
 
-function MessageBubble({ message, isMe, myAvatarUri, onReact }: { message: ChatMessage; isMe: boolean; myAvatarUri?: string | null; onReact: (emoji: string) => void }) {
+function MessageBubble({ message, isMe, myAvatarUri, onReact, mentionGroups }: { message: ChatMessage; isMe: boolean; myAvatarUri?: string | null; onReact: (emoji: string) => void; mentionGroups: ReturnType<typeof getMentionGroups> }) {
   const colors = useColors();
   const sender = getMemberById(message.senderId);
   const [showReactionPicker, setShowReactionPicker] = useState(false);
@@ -148,7 +105,7 @@ function MessageBubble({ message, isMe, myAvatarUri, onReact }: { message: ChatM
           ) : null}
           {message.content ? (
             <View style={{ paddingHorizontal: 14, paddingVertical: 10 }}>
-              <MentionText content={message.content} isMe={isMe} colors={colors} />
+              <MentionText content={message.content} outgoing={isMe} groups={mentionGroups} />
             </View>
           ) : null}
         </View>
@@ -188,125 +145,6 @@ function MessageBubble({ message, isMe, myAvatarUri, onReact }: { message: ChatM
   );
 }
 
-// メンション候補リスト
-// グループメンション定義
-const GROUP_MENTIONS = [
-  { id: "@all",    label: "全体",           desc: "アプリ全会員に通知" },
-  { id: "@branch", label: "支部全員",        desc: "同じ支部のメンバー全員に通知" },
-  { id: "@here",   label: "チャット内の人全員", desc: "このチャットの参加者全員に通知" },
-] as const;
-type GroupMentionId = typeof GROUP_MENTIONS[number]["id"];
-
-function MentionSuggestions({
-  query,
-  participants,
-  onSelect,
-  onSelectGroup,
-  colors,
-}: {
-  query: string;
-  participants: string[];
-  onSelect: (member: Member) => void;
-  onSelectGroup: (id: GroupMentionId, label: string) => void;
-  colors: ReturnType<typeof useColors>;
-}) {
-  // グループメンション候補（クエリが空またはラベルに一致）
-  const filteredGroups = GROUP_MENTIONS.filter(
-    (g) => query === "" || g.label.includes(query) || g.id.includes(query.toLowerCase()),
-  );
-
-  // 個人メンション候補
-  const filteredMembers = MEMBERS.filter(
-    (m) =>
-      m.id !== CURRENT_USER.id &&
-      participants.includes(m.id) &&
-      m.name.toLowerCase().includes(query.toLowerCase()),
-  ).slice(0, 5);
-
-  if (filteredGroups.length === 0 && filteredMembers.length === 0) return null;
-
-  return (
-    <View
-      style={{
-        backgroundColor: colors.background,
-        borderTopWidth: 0.5,
-        borderTopColor: colors.border,
-        maxHeight: 240,
-      }}
-    >
-      {/* グループメンション */}
-      {filteredGroups.map((group) => (
-        <Pressable
-          key={group.id}
-          onPress={() => onSelectGroup(group.id, group.label)}
-          style={({ pressed }) => ({
-            flexDirection: "row",
-            alignItems: "center",
-            paddingHorizontal: 16,
-            paddingVertical: 10,
-            borderBottomWidth: 0.5,
-            borderBottomColor: colors.border,
-            backgroundColor: pressed ? colors.surface : "transparent",
-          })}
-        >
-          <View
-            style={{
-              width: 32,
-              height: 32,
-              borderRadius: 16,
-              backgroundColor: "#E8A0BF",
-              alignItems: "center",
-              justifyContent: "center",
-              marginRight: 10,
-            }}
-          >
-            <Text style={{ fontSize: 14 }}>
-              {group.id === "@all" ? "🌐" : group.id === "@branch" ? "🏢" : "💬"}
-            </Text>
-          </View>
-          <View>
-            <Text style={{ fontSize: 14, fontWeight: "700", color: "#E8A0BF" }}>
-              @{group.label}
-            </Text>
-            <Text style={{ fontSize: 11, color: colors.muted }}>{group.desc}</Text>
-          </View>
-        </Pressable>
-      ))}
-      {/* 個人メンション */}
-      {filteredMembers.map((member) => (
-        <Pressable
-          key={member.id}
-          onPress={() => onSelect(member)}
-          style={({ pressed }) => ({
-            flexDirection: "row",
-            alignItems: "center",
-            paddingHorizontal: 16,
-            paddingVertical: 10,
-            borderBottomWidth: 0.5,
-            borderBottomColor: colors.border,
-            backgroundColor: pressed ? colors.surface : "transparent",
-          })}
-        >
-          <Image
-            source={member.avatar}
-            style={{ width: 32, height: 32, borderRadius: 16, marginRight: 10 }}
-            contentFit="cover"
-          />
-          <View>
-            <Text style={{ fontSize: 14, fontWeight: "600", color: colors.foreground }}>
-              {member.name}
-            </Text>
-            <Text style={{ fontSize: 11, color: colors.muted }}>
-              {member.generation}期生 · {member.branch === "kanto" ? "関東" : "関西"}支部
-            </Text>
-          </View>
-          <Text style={{ marginLeft: "auto", fontSize: 12, color: "#E8A0BF" }}>@{member.name}</Text>
-        </Pressable>
-      ))}
-    </View>
-  );
-}
-
 export default function ChatScreen() {
   const colors = useColors();
   const router = useRouter();
@@ -315,6 +153,7 @@ export default function ChatScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const [messageText, setMessageText] = useState("");
   const [mentionQuery, setMentionQuery] = useState<string | null>(null);
+  const mentionGroups = useMemo(() => getMentionGroups(MEMBERS, CLUBS), []);
   const flatListRef = useRef<FlatList>(null);
   const inputRef = useRef<TextInput>(null);
 
@@ -373,48 +212,14 @@ export default function ChatScreen() {
   // @入力を検出してメンション候補を表示
   const handleTextChange = useCallback((text: string) => {
     setMessageText(text);
-    // カーソル位置の直前の@以降を取得
-    const atIndex = text.lastIndexOf("@");
-    if (atIndex !== -1) {
-      const afterAt = text.slice(atIndex + 1);
-      // スペースが入ったらメンション終了
-      if (!afterAt.includes(" ")) {
-        setMentionQuery(afterAt);
-        return;
-      }
-    }
-    setMentionQuery(null);
+    setMentionQuery(getMentionQuery(text));
   }, []);
 
-  // メンション候補を選択したときにテキストを置換
-  const handleSelectMention = useCallback(
-    (member: Member) => {
-      const atIndex = messageText.lastIndexOf("@");
-      if (atIndex !== -1) {
-        const before = messageText.slice(0, atIndex);
-        const newText = `${before}@${member.name} `;
-        setMessageText(newText);
-      }
+  const handleSelectMention = useCallback((label: string) => {
+      setMessageText((current) => insertMention(current, label));
       setMentionQuery(null);
       inputRef.current?.focus();
-    },
-    [messageText],
-  );
-
-  // グループメンション候補を選択したときにテキストを置換
-  const handleSelectGroupMention = useCallback(
-    (_id: GroupMentionId, label: string) => {
-      const atIndex = messageText.lastIndexOf("@");
-      if (atIndex !== -1) {
-        const before = messageText.slice(0, atIndex);
-        const newText = `${before}@${label} `;
-        setMessageText(newText);
-      }
-      setMentionQuery(null);
-      inputRef.current?.focus();
-    },
-    [messageText],
-  );
+  }, []);
 
   // 通知権限を初回に要求
   useEffect(() => {
@@ -463,38 +268,14 @@ export default function ChatScreen() {
 
     // メンション通知を送信
     if (room && content.includes("@")) {
-      // グループメンション検出
-      const hasAll = content.includes("@全体");
-      const hasBranch = content.includes("@支部全員");
-      const hasHere = content.includes("@チャット内の人全員");
-
-      if (hasAll || hasBranch || hasHere) {
-        // グループメンション: 対象ユーザーを特定して通知
-        const targets = room.participants.filter((pid) => pid !== CURRENT_USER.id);
-        const preview = content.length > 50 ? content.slice(0, 50) + "..." : content;
-        for (const pid of targets) {
-          const m = getMemberById(pid);
-          if (!m) continue;
-          // @支部全員 の場合は同じ支部のメンバーのみ
-          if (hasBranch) {
-            const currentMember = MEMBERS.find((mem) => mem.id === CURRENT_USER.id);
-            const targetMember = MEMBERS.find((mem) => mem.id === pid);
-            if (currentMember && targetMember && currentMember.branch !== targetMember.branch) continue;
-          }
-          sendMentionNotification(m.name, CURRENT_USER.name, room.name, preview);
-        }
-      } else {
-        // 個人メンション
-        checkAndSendMentionNotifications(
-          content,
-          CURRENT_USER.name,
-          room.name,
-          room.participants,
-          getMemberById,
-        );
+      const preview = content.length > 50 ? `${content.slice(0, 50)}...` : content;
+      const targets = getMentionedMemberIds(content, MEMBERS, mentionGroups, room.participants).filter((memberId) => memberId !== CURRENT_USER.id);
+      for (const memberId of targets) {
+        const member = getMemberById(memberId);
+        if (member) void sendMentionNotification(member.name, CURRENT_USER.name, room.name, preview);
       }
     }
-  }, [messageText, pendingImage, id, room]);
+  }, [messageText, pendingImage, id, room, mentionGroups]);
 
   const handleReaction = useCallback(async (messageId: string, emoji: string) => {
     if (!id) return;
@@ -602,6 +383,7 @@ export default function ChatScreen() {
               isMe={item.senderId === CURRENT_USER.id}
               myAvatarUri={myAvatarUri}
               onReact={(emoji) => handleReaction(item.id, emoji)}
+              mentionGroups={mentionGroups}
             />
           )}
           contentContainerStyle={{ paddingVertical: 16 }}
@@ -623,10 +405,9 @@ export default function ChatScreen() {
         {mentionQuery !== null && (
           <MentionSuggestions
             query={mentionQuery}
-            participants={room.participants}
+            groups={mentionGroups}
+            members={MEMBERS.filter((member) => member.id !== CURRENT_USER.id && room.participants.includes(member.id))}
             onSelect={handleSelectMention}
-            onSelectGroup={handleSelectGroupMention}
-            colors={colors}
           />
         )}
 

@@ -1,5 +1,6 @@
 import { ScreenContainer } from "@/components/screen-container";
 import { NewMemberMark } from "@/components/new-member-mark";
+import { MentionSuggestions, MentionText } from "@/components/mention-ui";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import {
   BOARD_THREADS,
@@ -8,6 +9,8 @@ import {
   RANK_COLORS,
   RANK_LABELS,
   CURRENT_USER,
+  MEMBERS,
+  CLUBS,
   type BoardThread,
   type BoardComment,
   type BoardCategory,
@@ -18,10 +21,12 @@ import { createBoardChat } from "@/lib/chat-store";
 import { canManageBoardCategories, canViewClubThread } from "@/lib/access-control";
 import { GOURMET_ADVICE_BUDGETS, isGoogleMapsUrl, MEAL_BUDGETS, PREFECTURES } from "@/lib/meal-report";
 import { useClubs } from "@/lib/club-store";
+import { getMentionGroups, getMentionQuery, getMentionedMemberIds, insertMention } from "@/lib/mentions";
+import { sendMentionNotification } from "@/lib/notifications";
 import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import {
   Alert,
   FlatList,
@@ -43,6 +48,8 @@ const BOARD_GROUPS: { key: BoardCategory["group"]; label: string }[] = [
   { key: "area", label: "エリア別" },
   { key: "club", label: "部活" },
 ];
+
+const BOARD_MENTION_GROUPS = getMentionGroups(MEMBERS, CLUBS);
 
 const BOARD_EVENT_RULES = [
   {
@@ -277,9 +284,7 @@ function ThreadCard({ thread, onPress, onEdit }: { thread: BoardThread; onPress:
       ) : thread.gourmetAdvice ? (
         <GourmetAdviceContent thread={thread} compact />
       ) : (
-        <Text style={{ fontSize: 13, color: colors.muted, marginBottom: 8 }} numberOfLines={2}>
-          {thread.preview}
-        </Text>
+        <Text style={{ marginBottom: 8 }} numberOfLines={2}><MentionText content={thread.preview} groups={BOARD_MENTION_GROUPS} /></Text>
       )}
 
       {/* Images */}
@@ -520,6 +525,9 @@ function ThreadDetailModal({
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const [commentText, setCommentText] = useState("");
+  const [mentionQuery, setMentionQuery] = useState<string | null>(null);
+  const commentInputRef = useRef<TextInput>(null);
+  const mentionGroups = useMemo(() => BOARD_MENTION_GROUPS, []);
   const [comments, setComments] = useState<BoardComment[]>(
     BOARD_COMMENTS.filter((c) => c.threadId === thread.id),
   );
@@ -535,15 +543,33 @@ function ThreadDetailModal({
 
   const handleComment = () => {
     if (!commentText.trim()) return;
+    const content = commentText.trim();
     const newComment: BoardComment = {
       id: `bc_new_${Date.now()}`,
       threadId: thread.id,
       author: CURRENT_USER,
-      content: commentText.trim(),
+      content,
       createdAt: new Date().toISOString(),
     };
     setComments([...comments, newComment]);
     setCommentText("");
+    setMentionQuery(null);
+    const preview = content.length > 50 ? `${content.slice(0, 50)}...` : content;
+    for (const memberId of getMentionedMemberIds(content, MEMBERS, mentionGroups).filter((id) => id !== CURRENT_USER.id)) {
+      const member = MEMBERS.find((item) => item.id === memberId);
+      if (member) void sendMentionNotification(member.name, CURRENT_USER.name, thread.title, preview);
+    }
+  };
+
+  const handleCommentTextChange = (text: string) => {
+    setCommentText(text);
+    setMentionQuery(getMentionQuery(text));
+  };
+
+  const handleCommentMention = (label: string) => {
+    setCommentText((current) => insertMention(current, label));
+    setMentionQuery(null);
+    commentInputRef.current?.focus();
   };
 
   const handleCreateChat = (selectedIds: string[], newChatId: string) => {
@@ -650,9 +676,7 @@ function ThreadDetailModal({
           ) : thread.gourmetAdvice ? (
             <GourmetAdviceContent thread={thread} />
           ) : (
-            <Text style={{ fontSize: 15, lineHeight: 22, color: colors.foreground, marginBottom: 16 }}>
-              {thread.preview}
-            </Text>
+            <View style={{ marginBottom: 16 }}><MentionText content={thread.preview} groups={mentionGroups} /></View>
           )}
 
           {/* 画像 */}
@@ -776,30 +800,29 @@ function ThreadDetailModal({
                     {timeAgo(comment.createdAt)}
                   </Text>
                 </View>
-                <Text style={{ fontSize: 14, lineHeight: 20, color: colors.foreground, marginLeft: 32 }}>
-                  {comment.content}
-                </Text>
+                <View style={{ marginLeft: 32 }}><MentionText content={comment.content} groups={mentionGroups} /></View>
               </View>
             ))}
           </View>
         </ScrollView>
 
         {/* Comment input */}
-        <View
+        <View style={{ backgroundColor: colors.background, borderTopWidth: 0.5, borderTopColor: colors.border }}>
+          {mentionQuery !== null ? <MentionSuggestions query={mentionQuery} groups={mentionGroups} members={MEMBERS.filter((member) => member.id !== CURRENT_USER.id)} onSelect={handleCommentMention} /> : null}
+          <Text style={{ fontSize: 11, color: colors.muted, paddingHorizontal: 16, paddingTop: 6 }}>@を入力して個人・グループをメンション</Text>
+          <View
           style={{
             flexDirection: "row",
             alignItems: "center",
             paddingHorizontal: 16,
             paddingTop: 10,
             paddingBottom: Platform.OS === "ios" ? Math.max(insets.bottom, 10) : 10,
-            borderTopWidth: 0.5,
-            borderTopColor: colors.border,
-            backgroundColor: colors.background,
           }}
         >
           <TextInput
+            ref={commentInputRef}
             value={commentText}
-            onChangeText={setCommentText}
+            onChangeText={handleCommentTextChange}
             placeholder="コメントを入力..."
             placeholderTextColor={colors.muted}
             returnKeyType="done"
@@ -817,6 +840,7 @@ function ThreadDetailModal({
           <Pressable onPress={handleComment} style={{ marginLeft: 10 }}>
             <IconSymbol name="paperplane.fill" size={24} color={commentText.trim() ? "#E8A0BF" : colors.muted} />
           </Pressable>
+          </View>
         </View>
       </KeyboardAvoidingView>
 
@@ -1167,6 +1191,8 @@ function CreateThreadModal({
   const colors = useColors();
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
+  const [mentionQuery, setMentionQuery] = useState<string | null>(null);
+  const contentInputRef = useRef<TextInput>(null);
   const [isRecruiting, setIsRecruiting] = useState(false);
   const [capacity, setCapacity] = useState("");
   const [images, setImages] = useState<string[]>([]);
@@ -1259,9 +1285,18 @@ function CreateThreadModal({
       gourmetAdvice: isGourmetAdvice ? { theme: adviceTheme.trim(), area: adviceArea.trim(), scene: adviceScene.trim(), budget: adviceBudget, comment: adviceComment.trim() } : undefined,
     };
     onAdd(newThread);
+    if (!isMealReport && !isGourmetAdvice) {
+      const preview = content.length > 50 ? `${content.slice(0, 50)}...` : content;
+      const boardName = categories.find((item) => item.key === category)?.label ?? "掲示板";
+      for (const memberId of getMentionedMemberIds(content, MEMBERS, BOARD_MENTION_GROUPS).filter((id) => id !== CURRENT_USER.id)) {
+        const member = MEMBERS.find((item) => item.id === memberId);
+        if (member) void sendMentionNotification(member.name, CURRENT_USER.name, boardName, preview);
+      }
+    }
     onClose();
     setTitle("");
     setContent("");
+    setMentionQuery(null);
     setIsRecruiting(false);
     setCapacity("");
     setImages([]);
@@ -1481,14 +1516,17 @@ function CreateThreadModal({
 
               <Text style={{ fontSize: 13, fontWeight: "600", color: colors.muted, marginBottom: 6 }}>内容</Text>
               <TextInput
+                ref={contentInputRef}
                 value={content}
-                onChangeText={setContent}
+                onChangeText={(text) => { setContent(text); setMentionQuery(getMentionQuery(text)); }}
                 placeholder="投稿の内容を入力..."
                 placeholderTextColor={colors.muted}
                 multiline
                 textAlignVertical="top"
                 style={{ backgroundColor: colors.surface, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: colors.foreground, minHeight: 150, marginBottom: 16 }}
               />
+              {mentionQuery !== null ? <MentionSuggestions query={mentionQuery} groups={BOARD_MENTION_GROUPS} members={MEMBERS.filter((member) => member.id !== CURRENT_USER.id)} onSelect={(label) => { setContent((current) => insertMention(current, label)); setMentionQuery(null); contentInputRef.current?.focus(); }} /> : null}
+              <Text style={{ fontSize: 11, color: colors.muted, marginTop: mentionQuery === null ? -10 : 6, marginBottom: 16 }}>@を入力して個人・グループをメンション</Text>
             </>
           )}
 
