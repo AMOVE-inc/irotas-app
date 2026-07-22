@@ -33,6 +33,7 @@ export default function EventDetailScreen() {
     // 既に参加済かチェック
     return event?.participants.includes(CURRENT_USER.id) ?? false;
   });
+  const [hasApplied, setHasApplied] = useState(() => event?.applicantIds?.includes(CURRENT_USER.id) ?? false);
   const [chatRoomId, setChatRoomId] = useState<string | null>(() => {
     return event?.chatId ?? null;
   });
@@ -83,12 +84,16 @@ export default function EventDetailScreen() {
 
   // 参加費の数値を取得（「3,000円」→ 3000）
   const parsePriceNumber = (priceStr: string): number => {
-    const num = parseInt(priceStr.replace(/[^0-9]/g, ""), 10);
+    const match = priceStr.replace(/,/g, "").match(/\d+/);
+    const num = match ? parseInt(match[0], 10) : 0;
     return isNaN(num) ? 0 : num;
   };
   const priceNum = parsePriceNumber(effectivePrice);
   const pointsToUse = usePoints ? Math.min(irotasPoints, priceNum) : 0;
   const finalPrice = Math.max(0, priceNum - pointsToUse);
+  const confirmedIds = [...new Set([...(event.participants ?? []), ...(event.companionIds ?? [])])];
+  const applicantCount = event.applicantIds?.length ?? event.attendees;
+  const organizer = getMemberById(event.createdBy);
 
   const handleJoin = () => {
     if (event.status === "full") {
@@ -104,17 +109,28 @@ export default function EventDetailScreen() {
         ? `${finalPrice.toLocaleString()}円（${pointsToUse}pt割引適用）`
         : effectivePrice;
     Alert.alert(
-      "参加確認",
-      `「${event.title}」に参加しますか？\n参加費: ${priceLabel}`,
+      "参加申込の確認",
+      `「${event.title}」に申し込みますか？\n${event.selectionMethod === "lottery" ? "抽選イベントです。申込後、参加確定をお待ちください。" : `参加費: ${priceLabel}`}`,
       [
         { text: "キャンセル", style: "cancel" },
         {
-          text: "参加する",
+          text: "申し込む",
           onPress: async () => {
             // 連打防止ロック
             if (joiningRef.current) return;
             joiningRef.current = true;
             try {
+              const applicants = event.applicantIds ?? [...(event.participants ?? [])];
+              if (!applicants.includes(CURRENT_USER.id)) applicants.push(CURRENT_USER.id);
+              event.applicantIds = applicants;
+              event.attendees = applicants.length;
+              setHasApplied(true);
+
+              if (event.selectionMethod === "lottery") {
+                Alert.alert("申込完了", "抽選への申込を受け付けました。参加確定の連絡をお待ちください。");
+                return;
+              }
+
               // イロタスポイントを使用する場合は消費
               if (usePoints && pointsToUse > 0) {
                 const newBalance = await adjustIrotasPoints(
@@ -130,7 +146,6 @@ export default function EventDetailScreen() {
               if (!participants.includes(CURRENT_USER.id)) {
                 participants.push(CURRENT_USER.id);
                 event.participants = participants;
-                event.attendees = participants.length;
               }
               setIsJoined(true);
 
@@ -252,6 +267,11 @@ export default function EventDetailScreen() {
         <Text style={{ fontSize: 26, fontWeight: "800", color: colors.foreground, marginBottom: 12 }}>
           {event.title}
         </Text>
+        {event.restaurantName && event.restaurantName !== event.title ? (
+          <Text style={{ fontSize: 15, fontWeight: "700", color: colors.muted, marginTop: -5, marginBottom: 12 }}>
+            {event.restaurantName}
+          </Text>
+        ) : null}
 
         {/* 参加済みチャットバナー */}
         {isJoined && chatRoomId && (
@@ -355,13 +375,27 @@ export default function EventDetailScreen() {
             </View>
             <View style={{ marginLeft: 12 }}>
               <Text style={{ fontSize: 15, fontWeight: "600", color: colors.foreground }}>
-                {event.attendees}/{event.capacity}人参加
+                予約人数 {event.reservationCapacity ?? event.capacity + 1}人
               </Text>
               <Text style={{ fontSize: 13, color: colors.muted }}>
-                残り{Math.max(0, event.capacity - event.attendees)}席
+                募集人数（幹事除く） {event.capacity}人
               </Text>
             </View>
           </View>
+        </View>
+
+        <View style={{ flexDirection: "row", gap: 8, marginBottom: 16 }}>
+          {[{ label: "現在の参加申込", value: applicantCount, color: "#5B9BD5" }, { label: "募集定員", value: event.capacity, color: "#E8A0BF" }, { label: "参加確定", value: confirmedIds.length, color: "#34C759" }].map((item) => (
+            <View key={item.label} style={{ flex: 1, backgroundColor: colors.surface, borderRadius: 12, paddingVertical: 12, alignItems: "center", borderTopWidth: 3, borderTopColor: item.color }}>
+              <Text style={{ fontSize: 10, color: colors.muted, textAlign: "center" }}>{item.label}</Text>
+              <Text style={{ fontSize: 22, fontWeight: "900", color: item.color, marginTop: 3 }}>{item.value}<Text style={{ fontSize: 11 }}>人</Text></Text>
+            </View>
+          ))}
+        </View>
+
+        <View style={{ flexDirection: "row", alignItems: "center", backgroundColor: colors.surface, borderRadius: 14, padding: 14, marginBottom: 16 }}>
+          <Image source={event.eventType === "official" ? DEFAULT_AVATAR : (organizer?.avatar ?? DEFAULT_AVATAR)} style={{ width: 42, height: 42, borderRadius: 21 }} contentFit="cover" />
+          <View style={{ marginLeft: 11 }}><Text style={{ fontSize: 11, color: colors.muted }}>幹事</Text><Text style={{ fontSize: 15, fontWeight: "800", color: colors.foreground }}>{event.eventType === "official" ? "IRO＋運営" : (organizer?.name ?? "メンバー")}</Text></View>
         </View>
 
         {/* Price + イロタスポイント割引 */}
@@ -492,7 +526,7 @@ export default function EventDetailScreen() {
 
         {event.applicationDeadline ? (
           <View style={{ backgroundColor: colors.surface, borderRadius: 14, padding: 16, marginBottom: 16 }}>
-            <Text style={{ fontSize: 14, fontWeight: "800", color: colors.foreground }}>募集期日</Text>
+            <Text style={{ fontSize: 14, fontWeight: "800", color: colors.foreground }}>参加者決定の予定期日</Text>
             <Text style={{ fontSize: 15, color: colors.foreground, marginTop: 6 }}>{event.applicationDeadline}</Text>
           </View>
         ) : null}
@@ -504,51 +538,38 @@ export default function EventDetailScreen() {
           </View>
         ) : null}
 
-        {/* 参加者一覧（参加済みの場合） */}
-        {isJoined && event.participants.length > 0 && (
+        {event.externalUrl ? (
+          <Pressable onPress={() => Linking.openURL(event.externalUrl!)} style={{ flexDirection: "row", alignItems: "center", backgroundColor: "#EAF5FA", borderRadius: 14, padding: 14, marginBottom: 16 }}>
+            <IconSymbol name="link" size={18} color="#5B9BD5" /><Text style={{ flex: 1, fontSize: 14, fontWeight: "700", color: "#5B9BD5", marginLeft: 8 }} numberOfLines={1}>店舗・イベントURLを開く</Text><IconSymbol name="chevron.right" size={16} color="#5B9BD5" />
+          </Pressable>
+        ) : null}
+
+        {/* 参加確定者一覧 */}
+        {confirmedIds.length > 0 && (
           <View style={{ marginBottom: 16 }}>
             <Text style={{ fontSize: 15, fontWeight: "700", color: colors.foreground, marginBottom: 10 }}>
-              参加者 ({event.participants.length}人)
+              参加確定者 ({confirmedIds.length}人)
             </Text>
-            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
-              {event.participants.slice(0, 8).map((uid) => (
-                <View
-                  key={uid}
-                  style={{
-                    width: 40,
-                    height: 40,
-                    borderRadius: 20,
-                    backgroundColor: colors.surface,
-                    alignItems: "center",
-                    justifyContent: "center",
-                    borderWidth: uid === CURRENT_USER.id ? 2 : 0,
-                    borderColor: "#E8A0BF",
-                    overflow: "hidden",
-                  }}
-                >
-                  <Image
-                    source={getMemberById(uid)?.avatar ?? DEFAULT_AVATAR}
-                    style={{ width: 40, height: 40 }}
-                    contentFit="cover"
-                  />
-                </View>
-              ))}
-              {event.participants.length > 8 && (
-                <View
-                  style={{
-                    width: 40,
-                    height: 40,
-                    borderRadius: 20,
-                    backgroundColor: colors.surface,
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  <Text style={{ fontSize: 11, fontWeight: "700", color: colors.muted }}>
-                    +{event.participants.length - 8}
-                  </Text>
-                </View>
-              )}
+            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 12 }}>
+              {confirmedIds.map((uid) => {
+                const member = getMemberById(uid);
+                return (
+                  <View
+                    key={uid}
+                    style={{
+                      alignItems: "center",
+                      width: 62,
+                    }}
+                  >
+                    <Image
+                      source={member?.avatar ?? DEFAULT_AVATAR}
+                      style={{ width: 44, height: 44, borderRadius: 22, borderWidth: uid === CURRENT_USER.id ? 2 : 0, borderColor: "#E8A0BF" }}
+                      contentFit="cover"
+                    />
+                    <Text style={{ fontSize: 11, color: colors.foreground, marginTop: 5, textAlign: "center" }} numberOfLines={1}>{member?.name ?? "メンバー"}</Text>
+                  </View>
+                );
+              })}
             </View>
           </View>
         )}
@@ -595,21 +616,23 @@ export default function EventDetailScreen() {
 
         {/* 参加ボタン */}
         <Pressable
-          onPress={isJoined ? undefined : handleJoin}
+          onPress={isJoined || hasApplied ? undefined : handleJoin}
           style={({ pressed }) => ({
             backgroundColor: isJoined
               ? "#34C759"
+              : hasApplied
+              ? "#5B9BD5"
               : event.status === "full"
               ? colors.muted
               : "#E8A0BF",
             borderRadius: 14,
             paddingVertical: 16,
             alignItems: "center",
-            opacity: pressed && !isJoined ? 0.8 : 1,
+            opacity: pressed && !isJoined && !hasApplied ? 0.8 : 1,
           })}
         >
           <Text style={{ fontSize: 17, fontWeight: "700", color: "#FFF" }}>
-            {isJoined ? "✓ 参加済み" : event.status === "full" ? "満席" : "参加する"}
+            {isJoined ? "✓ 参加確定" : hasApplied ? "✓ 申込済み（確定待ち）" : event.status === "full" ? "満席" : event.selectionMethod === "lottery" ? "抽選に申し込む" : "参加を申し込む"}
           </Text>
         </Pressable>
       </View>

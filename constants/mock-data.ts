@@ -78,6 +78,7 @@ export interface TimelinePost {
 export interface Event {
   id: string;
   title: string;
+  restaurantName?: string;
   description: string;
   date: string;
   time: string;
@@ -100,6 +101,13 @@ export interface Event {
   chatId?: string; // private chat id
   applicationDeadline?: string; // 募集期日
   cancellationPolicy?: string; // イベント個別のキャンセルポリシー
+  selectionMethod?: "first_come" | "lottery";
+  applicantIds?: string[];
+  reservationCapacity?: number;
+  companionIds?: string[];
+  externalUrl?: string;
+  publicNotes?: string;
+  privateMemo?: string;
 }
 
 export interface Restaurant {

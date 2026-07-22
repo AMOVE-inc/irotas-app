@@ -1,6 +1,6 @@
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
-import { EVENTS, CURRENT_USER, type Event } from "@/constants/mock-data";
+import { EVENTS, CURRENT_USER, DEFAULT_AVATAR, getMemberById, type Event } from "@/constants/mock-data";
 import { useAuthContext } from "@/lib/auth-context";
 import { getAllEvents } from "@/lib/event-store";
 import { filterAndSortEvents, type EventTypeFilter } from "@/lib/event-filters";
@@ -234,8 +234,9 @@ function StatusBadge({ status }: { status: Event["status"] }) {
 
 function EventCard({ event, onPress }: { event: Event; onPress: () => void }) {
   const colors = useColors();
-  const router = useRouter();
-  const isParticipant = (event.participants ?? []).includes(CURRENT_USER.id);
+  const organizer = getMemberById(event.createdBy);
+  const applicantCount = event.applicantIds?.length ?? event.attendees;
+  const confirmedCount = new Set([...(event.participants ?? []), ...(event.companionIds ?? [])]).size;
 
   const formatDate = (dateStr: string) => {
     const d = new Date(dateStr);
@@ -249,105 +250,41 @@ function EventCard({ event, onPress }: { event: Event; onPress: () => void }) {
       onPress={onPress}
       style={{
         marginHorizontal: 16,
-        marginBottom: 14,
+        marginBottom: 12,
         backgroundColor: colors.surface,
-        borderRadius: 20,
+        borderRadius: 16,
         overflow: "hidden",
         borderWidth: 1,
         borderColor: colors.border,
-        shadowColor: "#80606F",
-        shadowOffset: { width: 0, height: 7 },
-        shadowOpacity: 0.08,
-        shadowRadius: 16,
-        elevation: 3,
+        flexDirection: "row",
+        minHeight: 178,
       }}
     >
       <Image
         source={event.image}
-        style={{ width: "100%", height: 160 }}
+        style={{ width: 126, alignSelf: "stretch" }}
         contentFit="cover"
         transition={300}
       />
-      <View style={{ padding: 14 }}>
-        <Text
-          style={{
-            alignSelf: "flex-start",
-            color: event.eventType === "official" ? "#B75E87" : "#4A86A8",
-            backgroundColor: event.eventType === "official" ? "#FCEAF2" : "#EAF5FA",
-            borderRadius: 8,
-            paddingHorizontal: 8,
-            paddingVertical: 3,
-            fontSize: 10,
-            fontWeight: "700",
-            marginBottom: 7,
-          }}
-        >
-          {event.eventType === "official" ? "公式イベント" : "グルメ会"}
-        </Text>
-        <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
-          <Text
-            style={{ fontSize: 17, fontWeight: "700", color: colors.foreground, flex: 1, marginRight: 8 }}
-            numberOfLines={1}
-          >
-            {event.title}
-          </Text>
+      <View style={{ flex: 1, padding: 12 }}>
+        <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 5 }}>
+          <Text style={{ color: event.eventType === "official" ? "#B75E87" : "#4A86A8", backgroundColor: event.eventType === "official" ? "#FCEAF2" : "#EAF5FA", borderRadius: 7, paddingHorizontal: 7, paddingVertical: 2, fontSize: 9, fontWeight: "800" }}>{event.eventType === "official" ? "公式" : "グルメ会"}</Text>
+          {event.selectionMethod ? <Text style={{ fontSize: 9, fontWeight: "700", color: colors.muted, marginLeft: 5 }}>{event.selectionMethod === "lottery" ? "抽選" : "先着順"}</Text> : null}
+          <View style={{ flex: 1 }} />
           <StatusBadge status={event.status} />
         </View>
+        <Text style={{ fontSize: 16, lineHeight: 21, fontWeight: "800", color: colors.foreground }} numberOfLines={2}>{event.title}</Text>
+        {event.restaurantName && event.restaurantName !== event.title ? <Text style={{ fontSize: 11, color: colors.muted, marginTop: 2 }} numberOfLines={1}>{event.restaurantName}</Text> : null}
+        <Text style={{ fontSize: 12, fontWeight: "700", color: colors.foreground, marginTop: 6 }}>{formatDate(event.date)} {event.time}</Text>
+        <Text style={{ fontSize: 11, color: colors.muted, marginTop: 2 }} numberOfLines={1}>{event.location}</Text>
 
-        <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 4 }}>
-          <IconSymbol name="clock.fill" size={14} color={colors.muted} />
-          <Text style={{ fontSize: 13, color: colors.muted, marginLeft: 5 }}>
-            {formatDate(event.date)} {event.time}
-          </Text>
+        <View style={{ flexDirection: "row", gap: 4, marginTop: 8 }}>
+          {[{ label: "申込", value: applicantCount }, { label: "定員", value: event.capacity }, { label: "確定", value: confirmedCount }].map((item) => <View key={item.label} style={{ flex: 1, backgroundColor: colors.background, borderRadius: 7, paddingVertical: 4, alignItems: "center" }}><Text style={{ fontSize: 9, color: colors.muted }}>{item.label}</Text><Text style={{ fontSize: 13, fontWeight: "900", color: colors.foreground }}>{item.value}<Text style={{ fontSize: 9 }}>人</Text></Text></View>)}
         </View>
-
-        <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 4 }}>
-          <IconSymbol name="mappin.and.ellipse" size={14} color={colors.muted} />
-          <Text style={{ fontSize: 13, color: colors.muted, marginLeft: 5 }} numberOfLines={1}>
-            {event.location}
-          </Text>
-        </View>
-
-        <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 8 }}>
-          <View style={{ flexDirection: "row", alignItems: "center" }}>
-            <IconSymbol name="person.2.fill" size={14} color={colors.muted} />
-            <Text style={{ fontSize: 13, color: colors.muted, marginLeft: 5 }}>
-              {event.attendees}/{event.capacity}人
-            </Text>
-          </View>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-            {isParticipant && event.chatId && (
-              <Pressable
-                onPress={(e) => {
-                  e.stopPropagation?.();
-                  router.push({ pathname: "/chat", params: { id: event.chatId } });
-                }}
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  backgroundColor: "#A7C7E720",
-                  borderRadius: 8,
-                  paddingHorizontal: 10,
-                  paddingVertical: 5,
-                }}
-              >
-                <IconSymbol name="message.fill" size={14} color="#A7C7E7" />
-                <Text style={{ fontSize: 12, fontWeight: "600", color: "#A7C7E7", marginLeft: 4 }}>
-                  チャット
-                </Text>
-              </Pressable>
-            )}
-            <View style={{ alignItems: "flex-end" }}>
-              <Text style={{ fontSize: 15, fontWeight: "700", color: "#E8A0BF" }}>
-                {event.rankPrices
-                  ? (event.rankPrices[CURRENT_USER.rank as "regular" | "silver" | "gold" | "platinum"] ?? event.price)
-                  : event.price}
-              </Text>
-              {event.rankPrices && (
-                <Text style={{ fontSize: 10, color: "#E8A0BF", opacity: 0.7 }}>ランク別</Text>
-              )}
-            </View>
-          </View>
+        <View style={{ flexDirection: "row", alignItems: "center", marginTop: 8 }}>
+          <Image source={event.eventType === "official" ? DEFAULT_AVATAR : (organizer?.avatar ?? DEFAULT_AVATAR)} style={{ width: 22, height: 22, borderRadius: 11 }} contentFit="cover" />
+          <Text style={{ flex: 1, marginLeft: 6, fontSize: 10, fontWeight: "700", color: colors.muted }} numberOfLines={1}>幹事：{event.eventType === "official" ? "IRO＋運営" : (organizer?.name ?? "メンバー")}</Text>
+          <Text style={{ fontSize: 12, fontWeight: "800", color: "#E8A0BF" }}>{event.rankPrices?.[CURRENT_USER.rank] ?? event.price}</Text>
         </View>
       </View>
     </Pressable>

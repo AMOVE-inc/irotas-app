@@ -110,6 +110,7 @@ const MAPPING = {
   "doc.badge.plus": "note-add",
   "person.crop.circle.badge.checkmark": "verified-user",
   "hand.raised.fill": "back-hand",
+  "link": "link",
 } as IconMapping;
 
 /**
