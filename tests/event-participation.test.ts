@@ -1,0 +1,14 @@
+import { describe, expect, it } from "vitest";
+import type { Event } from "../constants/mock-data";
+import { getEventParticipationStatus } from "../lib/event-participation";
+
+const event: Event = { id: "e", title: "会", description: "", date: "2026-08-01", time: "18:00", location: "東京", image: "", capacity: 5, attendees: 3, participants: ["confirmed"], applicantIds: ["confirmed", "applied"], companionIds: ["companion"], price: "5,000円", category: "kanto", eventType: "gourmet", status: "open", createdBy: "host" };
+
+describe("event participation labels", () => {
+  it("distinguishes pending applications and confirmed attendance", () => {
+    expect(getEventParticipationStatus(event, "applied")).toBe("applied");
+    expect(getEventParticipationStatus(event, "confirmed")).toBe("confirmed");
+    expect(getEventParticipationStatus(event, "companion")).toBe("confirmed");
+    expect(getEventParticipationStatus(event, "other")).toBeNull();
+  });
+});

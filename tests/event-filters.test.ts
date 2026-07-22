@@ -87,6 +87,15 @@ describe("event list filtering and sorting", () => {
     expect(filterAndSortEvents(gourmetEvents, { area: "all", eventType: "gourmet", openOnly: false, participatingMemberId: "u1" }, referenceDate).map((event) => event.id)).toEqual(["join"]);
   });
 
+  it("filters hosted events across official and gourmet lists", () => {
+    const hostedEvents = [
+      makeEvent({ id: "official-host", eventType: "official", createdBy: "u1" }),
+      makeEvent({ id: "gourmet-host", eventType: "gourmet", createdBy: "u1" }),
+      makeEvent({ id: "other", eventType: "official", createdBy: "u2" }),
+    ];
+    expect(filterAndSortEvents(hostedEvents, { area: "all", eventType: "all", openOnly: false, hostedByMemberId: "u1" }, referenceDate).map((event) => event.id)).toEqual(["official-host", "gourmet-host"]);
+  });
+
   it("filters by any selected genre and overlapping budget", () => {
     const gourmetEvents = [
       makeEvent({ id: "sushi", genres: ["寿司"], priceMin: 8000, priceMax: 12000 }),

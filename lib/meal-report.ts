@@ -16,6 +16,17 @@ export const MEAL_BUDGETS = [
   "20,000円〜",
 ] as const;
 
+export const GOURMET_ADVICE_BUDGETS = [
+  "〜3,000円",
+  "3,000〜5,000円",
+  "5,000〜6,000円",
+  "6,000〜8,000円",
+  "8,000〜10,000円",
+  "10,000〜15,000円",
+  "15,000〜20,000円",
+  "20,000円〜",
+] as const;
+
 export function isGoogleMapsUrl(value: string): boolean {
   try {
     const url = new URL(value.trim());

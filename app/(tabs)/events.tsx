@@ -6,6 +6,7 @@ import { EVENT_AREA_GROUPS } from "@/constants/event-areas";
 import { useAuthContext } from "@/lib/auth-context";
 import { getAllEvents } from "@/lib/event-store";
 import { filterAndSortEvents, type EventSortOrder, type EventTypeFilter } from "@/lib/event-filters";
+import { getEventParticipationStatus } from "@/lib/event-participation";
 import { useColors } from "@/hooks/use-colors";
 import { Image } from "expo-image";
 import { useFocusEffect, useRouter } from "expo-router";
@@ -233,8 +234,10 @@ function StatusBadge({ status }: { status: Event["status"] }) {
 function EventCard({ event, onPress }: { event: Event; onPress: () => void }) {
   const colors = useColors();
   const organizer = getMemberById(event.createdBy);
-  const applicantCount = event.applicantIds?.length ?? event.attendees;
   const confirmedCount = new Set([...(event.participants ?? []), ...(event.companionIds ?? [])]).size;
+  const participationStatus = getEventParticipationStatus(event, CURRENT_USER.id);
+  const isConfirmed = participationStatus === "confirmed";
+  const isApplied = participationStatus === "applied";
 
   const formatDate = (dateStr: string) => {
     const d = new Date(dateStr);
@@ -255,29 +258,32 @@ function EventCard({ event, onPress }: { event: Event; onPress: () => void }) {
         borderWidth: 1,
         borderColor: colors.border,
         flexDirection: "row",
-        height: 120,
+        minHeight: 142,
       }}
     >
       <Image
         source={event.image}
-        style={{ width: 120, height: 120 }}
+        style={{ width: 142, height: 142, alignSelf: "flex-start" }}
         contentFit="cover"
         transition={300}
       />
-      <View style={{ flex: 1, paddingHorizontal: 10, paddingVertical: 8 }}>
-        <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 3 }}>
-          <Text style={{ color: event.eventType === "official" ? "#B75E87" : "#4A86A8", backgroundColor: event.eventType === "official" ? "#FCEAF2" : "#EAF5FA", borderRadius: 7, paddingHorizontal: 7, paddingVertical: 2, fontSize: 9, fontWeight: "800" }}>{event.eventType === "official" ? "公式" : "グルメ会"}</Text>
-          {event.selectionMethod ? <Text style={{ fontSize: 9, fontWeight: "700", color: colors.muted, marginLeft: 5 }}>{event.selectionMethod === "lottery" ? "抽選" : "先着順"}</Text> : null}
-          <View style={{ flex: 1 }} />
+      <View style={{ flex: 1, paddingHorizontal: 11, paddingVertical: 9 }}>
+        <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 5 }}>
+          <Text style={{ flex: 1, fontSize: 13, fontWeight: "900", color: colors.foreground }}>{formatDate(event.date)} {event.time}</Text>
           <StatusBadge status={event.status} />
         </View>
-        <Text style={{ fontSize: 14, lineHeight: 18, fontWeight: "800", color: colors.foreground }} numberOfLines={1}>{event.title}</Text>
-        <Text style={{ fontSize: 11, fontWeight: "700", color: colors.foreground, marginTop: 3 }}>{formatDate(event.date)} {event.time}</Text>
-        <Text style={{ fontSize: 10, color: colors.muted, marginTop: 1 }} numberOfLines={1}>{event.location}</Text>
+        <Text style={{ fontSize: 14, lineHeight: 19, fontWeight: "900", color: colors.foreground }}>{event.title}</Text>
+        {event.restaurantName && event.restaurantName !== event.title ? <Text style={{ fontSize: 11, lineHeight: 16, fontWeight: "700", color: colors.foreground, marginTop: 3 }}>店名：{event.restaurantName}</Text> : null}
+        <Text style={{ fontSize: 10, lineHeight: 15, color: colors.muted, marginTop: 2 }}>場所：{event.location}</Text>
         <View style={{ flexDirection: "row", alignItems: "center", marginTop: 5 }}>
-          <Text style={{ fontSize: 10, color: colors.muted }}>申込 <Text style={{ fontWeight: "900", color: colors.foreground }}>{applicantCount}</Text></Text>
-          <Text style={{ fontSize: 10, color: colors.muted, marginLeft: 7 }}>定員 <Text style={{ fontWeight: "900", color: colors.foreground }}>{event.capacity}</Text></Text>
-          <Text style={{ fontSize: 10, color: colors.muted, marginLeft: 7 }}>確定 <Text style={{ fontWeight: "900", color: "#34C759" }}>{confirmedCount}</Text></Text>
+          <Text style={{ fontSize: 11, fontWeight: "900", color: "#34A853" }}>{confirmedCount}/{event.capacity}人</Text>
+          <Text style={{ fontSize: 10, color: colors.muted, marginLeft: 5 }}>参加確定／募集人数</Text>
+        </View>
+        <View style={{ flexDirection: "row", alignItems: "center", flexWrap: "wrap", gap: 5, marginTop: 5 }}>
+          <Text style={{ color: event.eventType === "official" ? "#B75E87" : "#4A86A8", backgroundColor: event.eventType === "official" ? "#FCEAF2" : "#EAF5FA", borderRadius: 7, paddingHorizontal: 7, paddingVertical: 2, fontSize: 9, fontWeight: "800" }}>{event.eventType === "official" ? "公式" : "グルメ会"}</Text>
+          {event.selectionMethod ? <Text style={{ fontSize: 9, fontWeight: "700", color: colors.muted }}>{event.selectionMethod === "lottery" ? "抽選" : "先着順"}</Text> : null}
+          {isApplied ? <Text style={{ fontSize: 9, fontWeight: "900", color: "#3E78A1", backgroundColor: "#E8F2FA", borderRadius: 7, paddingHorizontal: 7, paddingVertical: 2 }}>申込中</Text> : null}
+          {isConfirmed ? <Text style={{ fontSize: 9, fontWeight: "900", color: "#237A3B", backgroundColor: "#E6F6EA", borderRadius: 7, paddingHorizontal: 7, paddingVertical: 2 }}>参加確定</Text> : null}
         </View>
         <View style={{ flexDirection: "row", alignItems: "center", marginTop: 5 }}>
           <Image source={event.eventType === "official" ? DEFAULT_AVATAR : (organizer?.avatar ?? DEFAULT_AVATAR)} style={{ width: 18, height: 18, borderRadius: 9 }} contentFit="cover" />
@@ -321,7 +327,7 @@ export default function EventsScreen() {
       startDate,
       endDate,
       sortOrder,
-      hostedByMemberId: eventType === "gourmet" && hostedByMe ? CURRENT_USER.id : undefined,
+      hostedByMemberId: hostedByMe ? CURRENT_USER.id : undefined,
       participatingMemberId: participating ? CURRENT_USER.id : undefined,
       genres: selectedGenres,
       budgetRanges: budgetRanges.map((key) => EVENT_BUDGET_RANGES.find((range) => range.key === key)).filter((range) => range && range.key !== "all").map((range) => ({ min: range && "min" in range ? range.min : undefined, max: range && "max" in range ? range.max : undefined })),
@@ -470,10 +476,8 @@ export default function EventsScreen() {
             <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 14, marginBottom: 14 }}>
               {[
                 { label: "空席あり", value: openOnly, toggle: () => setOpenOnly((current) => !current) },
-                ...(eventType === "gourmet" ? [
-                  { label: "幹事", value: hostedByMe, toggle: () => setHostedByMe((current) => !current) },
-                ] : []),
-                ...(eventType !== "all" ? [{ label: "参加予定", value: participating, toggle: () => setParticipating((current) => !current) }] : []),
+                { label: "幹事", value: hostedByMe, toggle: () => setHostedByMe((current) => !current) },
+                { label: "参加予定", value: participating, toggle: () => setParticipating((current) => !current) },
               ].map((filter) => (
                 <Pressable key={filter.label} onPress={filter.toggle} accessibilityRole="checkbox" accessibilityState={{ checked: filter.value }} style={{ flexDirection: "row", alignItems: "center" }}>
                   <View style={{ width: 23, height: 23, borderRadius: 5, alignItems: "center", justifyContent: "center", backgroundColor: filter.value ? "#5D5C74" : "#E4E4E7", marginRight: 7 }}>{filter.value && <IconSymbol name="checkmark" size={16} color="#FFF" />}</View>

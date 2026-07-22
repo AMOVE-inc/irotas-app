@@ -172,6 +172,13 @@ export interface BoardThread {
     googleMapUrl?: string;
     tabelogUrl?: string;
   };
+  gourmetAdvice?: {
+    theme: string;
+    area: string;
+    scene: string;
+    budget: string;
+    comment: string;
+  };
 }
 
 export interface BoardComment {
@@ -533,6 +540,7 @@ export const BOARD_THREADS: BoardThread[] = [
     lastUpdated: "2026-03-23T14:00:00",
     preview: "今度渋谷で食事会をするのですが、おすすめの焼肉屋さんがあれば教えてください...",
     isRecruiting: false,
+    gourmetAdvice: { theme: "渋谷でおすすめの焼肉屋さん", area: "渋谷", scene: "友人との食事会", budget: "8,000〜10,000円", comment: "今度渋谷で食事会をするので、おすすめの焼肉屋さんを教えてください！" },
   },
   {
     id: "t2", title: "大阪の隠れ家イタリアンを発見！",
@@ -572,6 +580,7 @@ export const BOARD_THREADS: BoardThread[] = [
     lastUpdated: "2026-03-21T16:00:00",
     preview: "来月の記念日に特別なディナーを予約したいのですが、おすすめはありますか？",
     isRecruiting: false,
+    gourmetAdvice: { theme: "誕生日プレートが可愛いお店", area: "都内", scene: "お誕生日ディナー", budget: "6,000〜8,000円", comment: "友人のお誕生日をサプライズでお祝いしたく、おすすめのお店をご存知の方は教えてください！" },
   },
   {
     id: "t6", title: "関西グルメ同好会 次回集まり🍜",
