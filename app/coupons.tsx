@@ -16,7 +16,7 @@ const STATUS_COPY = {
 
 function CouponCard({ coupon, usage, onPresent }: { coupon: Coupon; usage?: CouponUsage; onPresent: () => void }) {
   const colors = useColors();
-  const availability = getCouponAvailability(coupon, CURRENT_USER.rank, usage);
+  const availability = getCouponAvailability(coupon, CURRENT_USER.rank, usage, new Date(), CURRENT_USER.id);
   const canPresent = availability === "available";
 
   return (
@@ -98,7 +98,7 @@ export default function CouponsScreen() {
   const [presentingCoupon, setPresentingCoupon] = useState<Coupon | null>(null);
 
   const handlePresent = async (coupon: Coupon) => {
-    if (getCouponAvailability(coupon, CURRENT_USER.rank, usages[coupon.id]) !== "available") return;
+    if (getCouponAvailability(coupon, CURRENT_USER.rank, usages[coupon.id], new Date(), CURRENT_USER.id) !== "available") return;
     await recordCouponPresentation(CURRENT_USER.id, coupon.id);
     setPresentingCoupon(coupon);
   };
@@ -121,9 +121,9 @@ export default function CouponsScreen() {
     ]);
   };
 
-  const sortedCoupons = [...coupons].sort((a, b) => {
-    const aAvailable = getCouponAvailability(a, CURRENT_USER.rank, usages[a.id]) === "available";
-    const bAvailable = getCouponAvailability(b, CURRENT_USER.rank, usages[b.id]) === "available";
+  const sortedCoupons = coupons.filter((coupon) => !coupon.recipientIds || coupon.recipientIds.includes(CURRENT_USER.id)).sort((a, b) => {
+    const aAvailable = getCouponAvailability(a, CURRENT_USER.rank, usages[a.id], new Date(), CURRENT_USER.id) === "available";
+    const bAvailable = getCouponAvailability(b, CURRENT_USER.rank, usages[b.id], new Date(), CURRENT_USER.id) === "available";
     if (aAvailable !== bAvailable) return aAvailable ? -1 : 1;
     return b.expiresAt.localeCompare(a.expiresAt);
   });

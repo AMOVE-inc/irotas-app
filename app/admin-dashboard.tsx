@@ -32,6 +32,7 @@ import {
   Modal,
 } from "react-native";
 import { updateCouponUsageType, useCoupons } from "@/lib/coupon-store";
+import { sendRankUpgradeWelcome } from "@/lib/chat-store";
 
 type PointsHistoryEntry = {
   id: string;
@@ -169,6 +170,10 @@ export default function AdminDashboardScreen() {
             await AsyncStorage.setItem("points_history", JSON.stringify(updatedHistory));
             // ランク昇格メッセージ
             const prevRank = getRankFromPoints(currentPoints);
+            const rankOrder = ["regular", "silver", "gold", "platinum"];
+            if (rankOrder.indexOf(newRank) > rankOrder.indexOf(prevRank)) {
+              await sendRankUpgradeWelcome(memberId, memberName, newRank);
+            }
             const rankMsg = prevRank !== newRank
               ? `\nランクが${RANK_LABELS[prevRank as keyof typeof RANK_LABELS]}→${RANK_LABELS[newRank as keyof typeof RANK_LABELS]}に変わりました`
               : "";

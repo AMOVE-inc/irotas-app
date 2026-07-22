@@ -5,7 +5,7 @@
  * - CHAT_ROOMS / CHAT_MESSAGES のモックデータと統合
  * - AsyncStorageでメッセージを永続化
  */
-import { CHAT_ROOMS, CHAT_MESSAGES, type ChatRoom, type ChatMessage } from "@/constants/mock-data";
+import { CHAT_ROOMS, CHAT_MESSAGES, RANK_LABELS, type ChatRoom, type ChatMessage, type MemberRank } from "@/constants/mock-data";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { areFriends } from "@/lib/friendship";
 import { sortRoomsByRecent } from "@/lib/chat-order";
@@ -90,6 +90,20 @@ export function getRankRoomsForUser(userRank: string): ChatRoom[] {
   return getAllRooms().filter(
     (r) => r.type === "rank" && r.requiredRank === userRank,
   );
+}
+
+/** ランク昇格時に対象の限定チャットへ参加させ、歓迎通知を自動投稿する。 */
+export async function sendRankUpgradeWelcome(memberId: string, memberName: string, newRank: MemberRank): Promise<ChatMessage | undefined> {
+  if (newRank === "regular") return undefined;
+  const room = getAllRooms().find((item) => item.type === "rank" && item.requiredRank === newRank);
+  if (!room) return undefined;
+  if (!room.participants.includes(memberId)) room.participants.push(memberId);
+  const content = `@${memberName}さん\nようこそ、${RANK_LABELS[newRank]}会員限定チャットへ！みんなで歓迎しましょう！🎉`;
+  const message = addMessage(room.id, "system", content);
+  room.unreadCount = (room.unreadCount ?? 0) + 1;
+  await Promise.all([saveDynamicRooms(), saveMessagesToStorage(room.id, [message])]);
+  unreadListeners.forEach((listener) => listener());
+  return message;
 }
 
 /** 相互に友達のメンバーを招待して通常のグループチャットを作成する。 */

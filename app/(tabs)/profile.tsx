@@ -3,7 +3,6 @@ import { NewMemberMark } from "@/components/new-member-mark";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import {
   CURRENT_USER,
-  COUPONS,
   RANK_COLORS,
   RANK_LABELS,
   POINT_ACTIONS,
@@ -28,9 +27,10 @@ import {
   View,
 } from "react-native";
 import { useAuthContext } from "@/lib/auth-context";
+import { useCoupons } from "@/lib/coupon-store";
 import * as ImagePicker from "expo-image-picker";
 import * as Clipboard from "expo-clipboard";
-import { COMMUNITY_TERMS_URL, EVENT_TERMS_URL, OFFICIAL_INSTAGRAM_URL } from "@/constants/external-links";
+import { OFFICIAL_INSTAGRAM_URL } from "@/constants/external-links";
 import { GOURMET_GENRES } from "@/constants/event-options";
 import { BIRTH_YEARS, DAYS, DRINKING_LEVELS, MONTHS, PREFECTURES, PROFILE_DETAILS_STORAGE_KEY, type ProfileDetails } from "@/constants/profile-options";
 
@@ -679,6 +679,7 @@ function MenuSection({ title, items }: { title: string; items: MenuItem[] }) {
 }
 
 export default function ProfileScreen() {
+  const coupons = useCoupons();
   const colors = useColors();
   const router = useRouter();
   const { logout, user: authUser } = useAuthContext();
@@ -1086,7 +1087,7 @@ export default function ProfileScreen() {
         <MenuSection
           title="会員限定特典"
           items={[
-            { icon: "ticket.fill", label: "会員限定クーポン", badge: `${COUPONS.length}枚`, onPress: () => router.push("/coupons") },
+            { icon: "ticket.fill", label: "会員限定クーポン", badge: `${coupons.filter((coupon) => !coupon.recipientIds || coupon.recipientIds.includes(user.id)).length}枚`, onPress: () => router.push("/coupons") },
             {
               icon: "gift.fill",
               label: "プレゼント企画",
@@ -1152,33 +1153,6 @@ export default function ProfileScreen() {
               onPress: () => router.push("/faq" as any),
             },
             {
-              icon: "shield.fill",
-              label: "ルール",
-              onPress: () => router.push("/community-rules" as any),
-            },
-            {
-              icon: "doc.text.fill",
-              label: "コミュニティ利用規約",
-              onPress: async () => {
-                try {
-                  await Linking.openURL(COMMUNITY_TERMS_URL);
-                } catch {
-                  Alert.alert("リンクを開けませんでした", COMMUNITY_TERMS_URL);
-                }
-              },
-            },
-            {
-              icon: "doc.text.fill",
-              label: "イベント参加規約",
-              onPress: async () => {
-                try {
-                  await Linking.openURL(EVENT_TERMS_URL);
-                } catch {
-                  Alert.alert("リンクを開けませんでした", EVENT_TERMS_URL);
-                }
-              },
-            },
-            {
               icon: "doc.text.fill",
               label: "マニュアル",
               onPress: () => router.push("/manual" as any),
@@ -1200,6 +1174,11 @@ export default function ProfileScreen() {
                   Alert.alert("リンクを開けませんでした", OFFICIAL_INSTAGRAM_URL);
                 }
               },
+            },
+            {
+              icon: "shield.fill",
+              label: "規約",
+              onPress: () => router.push("/community-rules" as any),
             },
           ]}
         />

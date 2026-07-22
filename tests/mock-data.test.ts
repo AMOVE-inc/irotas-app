@@ -79,6 +79,7 @@ describe("Mock Data Integrity", () => {
     expect(labels).toEqual([
       "自己紹介",
       "今日のごちそうさま報告",
+      "グルメ選手権",
       "教えてグルメ相談室",
       "なんでも掲示板",
       "関東",
@@ -90,7 +91,7 @@ describe("Mock Data Integrity", () => {
       "料理部",
     ]);
     expect(BOARD_CATEGORIES.map((category) => category.group)).toEqual([
-      "all", "all", "all", "all", "area", "area", "club", "club", "club", "club", "club",
+      "all", "all", "all", "all", "all", "area", "area", "club", "club", "club", "club", "club",
     ]);
     expect(labels).not.toContain("関東グルメ");
     expect(labels).not.toContain("関西グルメ");

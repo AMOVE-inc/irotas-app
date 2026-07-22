@@ -5,6 +5,7 @@ import type { CouponUsage } from "@/lib/coupon-rules";
 
 const CONFIG_KEY = "coupon_usage_types_v1";
 const USAGE_KEY = "coupon_member_usage_v1";
+const AWARDED_KEY = "coupon_awarded_v1";
 
 type UsageByMember = Record<string, Record<string, CouponUsage>>;
 const EMPTY_USAGES: Record<string, CouponUsage> = {};
@@ -31,13 +32,18 @@ function getCouponsSnapshot() {
 function ensureHydrated() {
   if (hydrated) return Promise.resolve();
   if (hydrationPromise) return hydrationPromise;
-  hydrationPromise = Promise.all([AsyncStorage.getItem(CONFIG_KEY), AsyncStorage.getItem(USAGE_KEY)])
-    .then(([savedConfig, savedUsage]) => {
+  hydrationPromise = Promise.all([AsyncStorage.getItem(CONFIG_KEY), AsyncStorage.getItem(USAGE_KEY), AsyncStorage.getItem(AWARDED_KEY)])
+    .then(([savedConfig, savedUsage, savedAwarded]) => {
       if (savedConfig) {
         const config = JSON.parse(savedConfig) as Record<string, Coupon["usageType"]>;
         coupons = coupons.map((coupon) => ({ ...coupon, usageType: config[coupon.id] ?? coupon.usageType }));
       }
       if (savedUsage) usages = JSON.parse(savedUsage) as UsageByMember;
+      if (savedAwarded) {
+        const awarded = JSON.parse(savedAwarded) as Coupon[];
+        const ids = new Set(coupons.map((coupon) => coupon.id));
+        coupons = [...coupons, ...awarded.filter((coupon) => !ids.has(coupon.id))];
+      }
       hydrated = true;
       emitChange();
     })
@@ -45,6 +51,15 @@ function ensureHydrated() {
       hydrated = true;
     });
   return hydrationPromise;
+}
+
+export async function awardCoupon(coupon: Coupon): Promise<boolean> {
+  await ensureHydrated();
+  if (coupons.some((item) => item.id === coupon.id)) return false;
+  coupons = [...coupons, coupon];
+  emitChange();
+  await AsyncStorage.setItem(AWARDED_KEY, JSON.stringify(coupons.filter((item) => item.sourceContestId)));
+  return true;
 }
 
 export function useCoupons(): Coupon[] {

@@ -25,6 +25,10 @@ import { useClubs } from "@/lib/club-store";
 import { getMentionGroups, getMentionQuery, getMentionedMemberIds, insertMention } from "@/lib/mentions";
 import { sendMentionNotification } from "@/lib/notifications";
 import { applyTextFormat, type TextFormat, type TextSelection } from "@/lib/text-formatting";
+import { toggleReactionMember } from "@/lib/chat-reactions";
+import { awardCoupon } from "@/lib/coupon-store";
+import { createContestPrizeCoupon, getContestWinner, isContestCommentingOpen } from "@/lib/gourmet-contest";
+import { loadCommentReactions, loadThreadReactions, saveCommentReactions, saveThreadReactions } from "@/lib/board-reactions";
 import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
@@ -52,6 +56,7 @@ const BOARD_GROUPS: { key: BoardCategory["group"]; label: string }[] = [
 ];
 
 const BOARD_MENTION_GROUPS = getMentionGroups(MEMBERS, CLUBS);
+const THREAD_REACTION_EMOJIS = ["👏", "😊", "❤️", "🎉", "😋"] as const;
 
 const BOARD_EVENT_RULES = [
   {
@@ -286,12 +291,12 @@ function ThreadCard({ thread, onPress, onEdit }: { thread: BoardThread; onPress:
       </Pressable>
 
       {/* Title */}
-      <Text
+      {!thread.selfIntroduction ? <Text
         style={{ fontSize: 16, fontWeight: "700", color: colors.foreground, marginBottom: 4 }}
         numberOfLines={2}
       >
         {thread.title}
-      </Text>
+      </Text> : null}
 
       {/* Preview */}
       {thread.mealReport ? (
@@ -549,6 +554,9 @@ function ThreadDetailModal({
   const [comments, setComments] = useState<BoardComment[]>(
     BOARD_COMMENTS.filter((c) => c.threadId === thread.id),
   );
+  const [threadReactions, setThreadReactions] = useState(thread.reactions ?? {});
+  const [contestWinnerName, setContestWinnerName] = useState<string | null>(null);
+  const [reactionsHydrated, setReactionsHydrated] = useState(false);
   const [chatRoomId, setChatRoomId] = useState<string | null>(thread.chatId ?? null);
   const [showSelectMembers, setShowSelectMembers] = useState(false);
   const [recruitCapacity, setRecruitCapacity] = useState<number | undefined>(thread.recruitCapacity);
@@ -558,9 +566,33 @@ function ThreadDetailModal({
   const isAuthor = thread.author.id === CURRENT_USER.id;
   const isParticipant = (thread.recruitParticipants ?? []).includes(CURRENT_USER.id);
   const isPlatinum = thread.author.rank === "platinum";
+  const isContest = Boolean(thread.gourmetContest);
+  const contestCommentingOpen = isContest ? isContestCommentingOpen(thread) : true;
+
+  useEffect(() => {
+    void Promise.all([
+      loadThreadReactions(thread.id, thread.reactions),
+      loadCommentReactions(comments),
+    ]).then(([savedThreadReactions, savedComments]) => {
+      setThreadReactions(savedThreadReactions);
+      setComments(savedComments);
+      setReactionsHydrated(true);
+    });
+  // Initial hydration only; subsequent changes are saved directly.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [thread.id]);
+
+  useEffect(() => {
+    if (!reactionsHydrated || !thread.gourmetContest || contestCommentingOpen) return;
+    const winner = getContestWinner(comments);
+    if (!winner) return;
+    setContestWinnerName(winner.author.name);
+    const coupon = createContestPrizeCoupon(thread, winner.author.id);
+    if (coupon) void awardCoupon(coupon);
+  }, [comments, contestCommentingOpen, reactionsHydrated, thread]);
 
   const handleComment = () => {
-    if (!commentText.trim()) return;
+    if (!commentText.trim() || !contestCommentingOpen) return;
     const content = commentText.trim();
     const newComment: BoardComment = {
       id: `bc_new_${Date.now()}`,
@@ -576,8 +608,25 @@ function ThreadDetailModal({
     const preview = content.length > 50 ? `${content.slice(0, 50)}...` : content;
     for (const memberId of getMentionedMemberIds(content, MEMBERS, mentionGroups).filter((id) => id !== CURRENT_USER.id)) {
       const member = MEMBERS.find((item) => item.id === memberId);
-      if (member) void sendMentionNotification(member.name, CURRENT_USER.name, thread.title, preview);
+      if (member) void sendMentionNotification(member.name, CURRENT_USER.name, thread.title || "自己紹介", preview);
     }
+  };
+
+  const handleThreadReaction = (emoji: string) => {
+    setThreadReactions((current) => {
+      const next = toggleReactionMember(current, emoji, CURRENT_USER.id);
+      void saveThreadReactions(thread.id, next);
+      return next;
+    });
+  };
+
+  const handleCommentHeart = (commentId: string) => {
+    setComments((current) => current.map((comment) => {
+      if (comment.id !== commentId) return comment;
+      const reactions = toggleReactionMember(comment.reactions, "❤️", CURRENT_USER.id);
+      void saveCommentReactions(comment.id, reactions);
+      return { ...comment, reactions };
+    }));
   };
 
   const handleCommentTextChange = (text: string) => {
@@ -635,7 +684,7 @@ function ThreadDetailModal({
           style={{ flex: 1, fontSize: 17, fontWeight: "700", color: colors.foreground, marginLeft: 12 }}
           numberOfLines={1}
         >
-          {thread.title}
+          {thread.selfIntroduction ? "自己紹介" : thread.title}
         </Text>
         {(isParticipant || isAuthor) && chatRoomId && (
           <Pressable
@@ -710,6 +759,25 @@ function ThreadDetailModal({
           ) : (
             <View style={{ marginBottom: 16 }}><MentionText content={thread.preview} groups={mentionGroups} /></View>
           )}
+
+          {thread.gourmetContest ? (
+            <View style={{ backgroundColor: "#FFF6E6", borderRadius: 12, borderWidth: 1, borderColor: "#F0D39A", padding: 14, marginBottom: 16 }}>
+              <Text style={{ fontSize: 14, fontWeight: "900", color: "#8A5A00" }}>コメント募集期間</Text>
+              <Text style={{ fontSize: 14, color: colors.foreground, marginTop: 4 }}>{thread.gourmetContest.commentDeadline} 23:59まで</Text>
+              <Text style={{ fontSize: 12, lineHeight: 18, color: colors.muted, marginTop: 7 }}>コメントのハートが最も多い方が優勝です。締切後に自動集計し、優勝者へイベントクーポンを配布します。</Text>
+              {contestWinnerName ? <Text style={{ fontSize: 13, fontWeight: "900", color: "#C97813", marginTop: 9 }}>優勝：{contestWinnerName}さん（クーポン配布済み）</Text> : null}
+            </View>
+          ) : null}
+
+          {thread.selfIntroduction ? (
+            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 7, marginBottom: 16 }}>
+              {THREAD_REACTION_EMOJIS.map((emoji) => {
+                const memberIds = threadReactions[emoji] ?? [];
+                const selected = memberIds.includes(CURRENT_USER.id);
+                return <Pressable key={emoji} onPress={() => handleThreadReaction(emoji)} accessibilityLabel={`${emoji}スタンプ`} style={{ flexDirection: "row", alignItems: "center", backgroundColor: selected ? "#F0E7F7" : colors.surface, borderWidth: 1, borderColor: selected ? "#7D6A92" : colors.border, borderRadius: 16, paddingHorizontal: 10, paddingVertical: 5 }}><Text style={{ fontSize: 17 }}>{emoji}</Text>{memberIds.length > 0 ? <Text style={{ fontSize: 11, fontWeight: "800", color: colors.muted, marginLeft: 4 }}>{memberIds.length}</Text> : null}</Pressable>;
+              })}
+            </View>
+          ) : null}
 
           {/* 画像 */}
           {thread.images && thread.images.length > 0 && (
@@ -833,13 +901,14 @@ function ThreadDetailModal({
                   </Text>
                 </View>
                 <View style={{ marginLeft: 32 }}><MentionText content={comment.content} groups={mentionGroups} /></View>
+                {isContest ? <Pressable onPress={() => handleCommentHeart(comment.id)} disabled={!contestCommentingOpen} style={{ marginLeft: 32, marginTop: 7, flexDirection: "row", alignItems: "center", alignSelf: "flex-start", borderRadius: 14, paddingHorizontal: 9, paddingVertical: 4, backgroundColor: (comment.reactions?.["❤️"] ?? []).includes(CURRENT_USER.id) ? "#FFE4EA" : colors.surface, borderWidth: 1, borderColor: colors.border }}><Text style={{ fontSize: 15 }}>❤️</Text><Text style={{ fontSize: 11, fontWeight: "800", color: colors.muted, marginLeft: 4 }}>{comment.reactions?.["❤️"]?.length ?? 0}</Text></Pressable> : null}
               </View>
             ))}
           </View>
         </ScrollView>
 
         {/* Comment input */}
-        <View style={{ backgroundColor: colors.background, borderTopWidth: 0.5, borderTopColor: colors.border }}>
+        {contestCommentingOpen ? <View style={{ backgroundColor: colors.background, borderTopWidth: 0.5, borderTopColor: colors.border }}>
           {mentionQuery !== null ? <MentionSuggestions query={mentionQuery} groups={mentionGroups} members={MEMBERS.filter((member) => member.id !== CURRENT_USER.id)} onSelect={handleCommentMention} /> : null}
           <Text style={{ fontSize: 11, color: colors.muted, paddingHorizontal: 16, paddingTop: 6 }}>@を入力して個人・グループをメンション</Text>
           <View style={{ paddingHorizontal: 16 }}><TextFormattingToolbar onFormat={handleCommentFormat} /></View>
@@ -876,7 +945,7 @@ function ThreadDetailModal({
             <IconSymbol name="paperplane.fill" size={24} color={commentText.trim() ? "#E8A0BF" : colors.muted} />
           </Pressable>
           </View>
-        </View>
+        </View> : <View style={{ padding: 14, backgroundColor: colors.surface, borderTopWidth: 1, borderTopColor: colors.border }}><Text style={{ textAlign: "center", fontSize: 13, fontWeight: "700", color: colors.muted }}>コメント募集は終了しました</Text></View>}
       </KeyboardAvoidingView>
 
       {/* メンバー選択モーダル */}
@@ -1222,12 +1291,14 @@ function CreateThreadModal({
   category,
   categories,
   onAdd,
+  canManage,
 }: {
   visible: boolean;
   onClose: () => void;
   category: string;
   categories: BoardCategory[];
   onAdd: (thread: BoardThread) => void;
+  canManage: boolean;
 }) {
   const colors = useColors();
   const [title, setTitle] = useState("");
@@ -1257,11 +1328,16 @@ function CreateThreadModal({
   const [adviceScene, setAdviceScene] = useState("");
   const [adviceBudget, setAdviceBudget] = useState("");
   const [adviceComment, setAdviceComment] = useState("");
+  const [contestDeadline, setContestDeadline] = useState("");
+  const [contestPrizeTitle, setContestPrizeTitle] = useState("グルメ選手権 優勝クーポン");
+  const [contestPrizeDescription, setContestPrizeDescription] = useState("次回のIRO+公式イベントで利用できる優勝特典です。");
+  const [contestPrizeExpiresAt, setContestPrizeExpiresAt] = useState("");
   const [formError, setFormError] = useState("");
   const [optionModal, setOptionModal] = useState<"prefecture" | "budget" | "advice-budget" | null>(null);
   const isMealReport = category === "meal-report";
   const isGourmetAdvice = category === "gourmet-advice";
   const isIntroduction = category === "introduction";
+  const isGourmetContest = category === "gourmet-contest";
   const mealReportValid =
     restaurantName.trim().length > 0 &&
     prefecture.length > 0 &&
@@ -1269,7 +1345,8 @@ function CreateThreadModal({
     (!googleMapUrl.trim() || isGoogleMapsUrl(googleMapUrl)) &&
     (!tabelogUrl.trim() || /^https?:\/\/(?:www\.)?tabelog\.com\//i.test(tabelogUrl.trim()));
   const adviceValid = adviceTheme.trim().length > 0 && adviceArea.trim().length > 0 && adviceScene.trim().length > 0 && adviceBudget.length > 0 && adviceComment.trim().length > 0;
-  const canSubmit = isMealReport ? mealReportValid : isGourmetAdvice ? adviceValid : isIntroduction ? introductionText.trim().length > 0 : title.trim().length > 0 && content.trim().length > 0;
+  const contestValid = title.trim().length > 0 && content.trim().length > 0 && /^\d{4}-\d{2}-\d{2}$/.test(contestDeadline) && contestPrizeTitle.trim().length > 0 && contestPrizeDescription.trim().length > 0 && /^\d{4}-\d{2}-\d{2}$/.test(contestPrizeExpiresAt);
+  const canSubmit = isMealReport ? mealReportValid : isGourmetAdvice ? adviceValid : isIntroduction ? introductionText.trim().length > 0 : isGourmetContest ? contestValid : title.trim().length > 0 && content.trim().length > 0;
 
   const handlePickImage = async () => {
     if (Platform.OS !== "web") {
@@ -1304,12 +1381,20 @@ function CreateThreadModal({
       setFormError("自己紹介文を入力してください。");
       return;
     }
-    if (!isMealReport && !isGourmetAdvice && !isIntroduction && (!title.trim() || !content.trim())) return;
+    if (isGourmetContest && !canManage) {
+      setFormError("グルメ選手権を投稿できるのは運営メンバーのみです。");
+      return;
+    }
+    if (isGourmetContest && !contestValid) {
+      setFormError("タイトル・内容・コメント締切・クーポン情報をすべて入力してください。日付はYYYY-MM-DD形式です。");
+      return;
+    }
+    if (!isMealReport && !isGourmetAdvice && !isIntroduction && !isGourmetContest && (!title.trim() || !content.trim())) return;
     const normalizedComment = mealComment.trim();
     const normalizedMenu = recommendedMenu.trim();
     const newThread: BoardThread = {
       id: `t_new_${Date.now()}`,
-      title: isMealReport ? restaurantName.trim() : isGourmetAdvice ? adviceTheme.trim() : isIntroduction ? `${CURRENT_USER.name}さんの自己紹介` : title.trim(),
+      title: isMealReport ? restaurantName.trim() : isGourmetAdvice ? adviceTheme.trim() : isIntroduction ? "自己紹介" : title.trim(),
       author: CURRENT_USER,
       category: category as BoardThread["category"],
       commentCount: 0,
@@ -1317,8 +1402,8 @@ function CreateThreadModal({
       preview: isMealReport
         ? normalizedComment || normalizedMenu || `${prefecture}でいただきました。`
         : isGourmetAdvice ? adviceComment.trim() : isIntroduction ? introductionText.trim() : content.trim(),
-      isRecruiting: isMealReport || isGourmetAdvice || isIntroduction ? false : isRecruiting,
-      recruitCapacity: !isMealReport && !isGourmetAdvice && !isIntroduction && isRecruiting ? parseInt(capacity || "10", 10) : undefined,
+      isRecruiting: isMealReport || isGourmetAdvice || isIntroduction || isGourmetContest ? false : isRecruiting,
+      recruitCapacity: !isMealReport && !isGourmetAdvice && !isIntroduction && !isGourmetContest && isRecruiting ? parseInt(capacity || "10", 10) : undefined,
       recruitAttendees: 0,
       recruitParticipants: [],
       recruitApplicants: [],
@@ -1337,6 +1422,7 @@ function CreateThreadModal({
         : undefined,
       gourmetAdvice: isGourmetAdvice ? { theme: adviceTheme.trim(), area: adviceArea.trim(), scene: adviceScene.trim(), budget: adviceBudget, comment: adviceComment.trim() } : undefined,
       selfIntroduction: isIntroduction ? { introduction: introductionText.trim(), wantToTry: wantToTry.trim() || undefined } : undefined,
+      gourmetContest: isGourmetContest ? { commentDeadline: contestDeadline, prizeTitle: contestPrizeTitle.trim(), prizeDescription: contestPrizeDescription.trim(), prizeExpiresAt: contestPrizeExpiresAt } : undefined,
     };
     onAdd(newThread);
     if (!isMealReport && !isGourmetAdvice) {
@@ -1367,6 +1453,7 @@ function CreateThreadModal({
     setGoogleMapUrl("");
     setTabelogUrl("");
     setAdviceTheme(""); setAdviceArea(""); setAdviceScene(""); setAdviceBudget(""); setAdviceComment("");
+    setContestDeadline(""); setContestPrizeTitle("グルメ選手権 優勝クーポン"); setContestPrizeDescription("次回のIRO+公式イベントで利用できる優勝特典です。"); setContestPrizeExpiresAt("");
     setFormError("");
   };
 
@@ -1602,6 +1689,14 @@ function CreateThreadModal({
               <TextFormattingToolbar onFormat={(format) => { const result = applyTextFormat(content, contentSelection, format); setContent(result.text); setContentSelection(result.selection); contentInputRef.current?.focus(); }} />
               {mentionQuery !== null ? <MentionSuggestions query={mentionQuery} groups={BOARD_MENTION_GROUPS} members={MEMBERS.filter((member) => member.id !== CURRENT_USER.id)} onSelect={(label) => { setContent((current) => { const next = insertMention(current, label); setContentSelection({ start: next.length, end: next.length }); return next; }); setMentionQuery(null); contentInputRef.current?.focus(); }} /> : null}
               <Text style={{ fontSize: 11, color: colors.muted, marginTop: mentionQuery === null ? -10 : 6, marginBottom: 16 }}>@を入力して個人・グループをメンション</Text>
+              {isGourmetContest ? <View style={{ gap: 14, marginBottom: 16 }}>
+                <Text style={{ fontSize: 12, lineHeight: 18, color: colors.muted }}>運営メンバーだけが選手権スレを作成できます。会員はコメントとハート投票のみ行えます。</Text>
+                <View><Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground, marginBottom: 6 }}>コメント募集締切 <Text style={{ color: colors.error }}>必須</Text></Text><TextInput value={contestDeadline} onChangeText={setContestDeadline} placeholder="YYYY-MM-DD" placeholderTextColor={colors.muted} style={{ backgroundColor: colors.surface, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: colors.foreground }} /></View>
+                <View><Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground, marginBottom: 6 }}>優勝クーポン名 <Text style={{ color: colors.error }}>必須</Text></Text><TextInput value={contestPrizeTitle} onChangeText={setContestPrizeTitle} placeholder="グルメ選手権 優勝クーポン" placeholderTextColor={colors.muted} style={{ backgroundColor: colors.surface, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: colors.foreground }} /></View>
+                <View><Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground, marginBottom: 6 }}>クーポン内容 <Text style={{ color: colors.error }}>必須</Text></Text><TextInput value={contestPrizeDescription} onChangeText={setContestPrizeDescription} multiline placeholder="利用できるイベントや特典内容" placeholderTextColor={colors.muted} style={{ backgroundColor: colors.surface, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, minHeight: 80, fontSize: 15, color: colors.foreground }} /></View>
+                <View><Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground, marginBottom: 6 }}>クーポン有効期限 <Text style={{ color: colors.error }}>必須</Text></Text><TextInput value={contestPrizeExpiresAt} onChangeText={setContestPrizeExpiresAt} placeholder="YYYY-MM-DD" placeholderTextColor={colors.muted} style={{ backgroundColor: colors.surface, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: colors.foreground }} /></View>
+                {formError ? <Text style={{ fontSize: 13, color: colors.error }}>{formError}</Text> : null}
+              </View> : null}
             </>
           )}
 
@@ -1658,7 +1753,7 @@ function CreateThreadModal({
             </View>
           </View>
 
-          {!isMealReport && !isGourmetAdvice ? (
+          {!isMealReport && !isGourmetAdvice && !isIntroduction && !isGourmetContest ? (
             <>
               {/* Recruiting toggle */}
               <Pressable
@@ -1809,6 +1904,7 @@ export default function BoardScreen() {
     const presentations: Record<string, { icon: string; description: string; accent: string }> = {
       introduction: { icon: "👋", description: "メンバー同士で自己紹介", accent: "#7D6A92" },
       "meal-report": { icon: "🍽️", description: "今日食べたお店をみんなに共有", accent: "#D0784A" },
+      "gourmet-contest": { icon: "🏆", description: "コメントとハート投票で今月のグルメ王を決定", accent: "#C08A25" },
       "gourmet-advice": { icon: "💡", description: "お店選びやグルメの相談", accent: "#C08A25" },
       "free-chat": { icon: "💬", description: "気軽に投稿できる自由な掲示板", accent: "#4A86A8" },
       "club-all": { icon: "📅", description: "各部活の今月の活動をまとめて確認", accent: "#6A5B87" },
@@ -1973,7 +2069,7 @@ export default function BoardScreen() {
         }
       /> : <View style={{ flex: 1 }} />}
 
-      {isThreadView ? (
+      {isThreadView && (activeCategory !== "gourmet-contest" || userIsAdmin) ? (
         <Pressable
           accessibilityLabel={`${categories.find((category) => category.key === activeCategory)?.label ?? "掲示板"}に投稿`}
           onPress={() => setShowCreateThread(true)}
@@ -2004,6 +2100,7 @@ export default function BoardScreen() {
         onClose={() => setShowCreateThread(false)}
         category={activeCategory}
         categories={categories}
+        canManage={userIsAdmin}
         onAdd={(thread) => setDynamicThreads((prev) => [thread, ...prev])}
       />
 

@@ -183,6 +183,13 @@ export interface BoardThread {
     introduction: string;
     wantToTry?: string;
   };
+  reactions?: Record<string, string[]>;
+  gourmetContest?: {
+    commentDeadline: string;
+    prizeTitle: string;
+    prizeDescription: string;
+    prizeExpiresAt: string;
+  };
 }
 
 export interface BoardComment {
@@ -191,6 +198,7 @@ export interface BoardComment {
   author: Member;
   content: string;
   createdAt: string;
+  reactions?: Record<string, string[]>;
 }
 
 export interface ChatRoom {
@@ -225,6 +233,8 @@ export interface Coupon {
   code: string;
   requiredRank: MemberRank;
   usageType: "single" | "multiple";
+  recipientIds?: string[];
+  sourceContestId?: string;
 }
 
 export interface Announcement {
@@ -539,12 +549,13 @@ export const RESTAURANTS: Restaurant[] = [
 
 export const BOARD_THREADS: BoardThread[] = [
   {
-    id: "t10", title: "けんたさんの自己紹介",
+    id: "t10", title: "自己紹介",
     author: MEMBERS[7], category: "introduction", commentCount: 2,
     lastUpdated: "2026-07-20T12:00:00",
     preview: "東京を中心に食べ歩きを始めたばかりです。皆さんよろしくお願いします。",
     isRecruiting: false,
     selfIntroduction: { introduction: "東京を中心に食べ歩きを始めたばかりです。皆さんよろしくお願いします。", wantToTry: "気になるお店を一緒に開拓するグルメ会を企画してみたいです。" },
+    reactions: { "👏": ["u1", "u2"], "😊": ["u4"] },
   },
   {
     id: "t1", title: "渋谷でおすすめの焼肉屋さん教えてください！",
@@ -575,6 +586,19 @@ export const BOARD_THREADS: BoardThread[] = [
       rating: 5,
       comment: "コース料理が素晴らしく、特別な日におすすめです。",
       googleMapUrl: "https://www.google.com/maps/search/?api=1&query=銀座+フレンチ",
+    },
+  },
+  {
+    id: "t11", title: "夏のひんやりグルメ選手権",
+    author: MEMBERS[0], category: "gourmet-contest", commentCount: 3,
+    lastUpdated: "2026-07-21T10:00:00+09:00",
+    preview: "この夏におすすめしたい、ひんやりグルメをコメントで教えてください。写真やお店の情報も歓迎です。",
+    isRecruiting: false,
+    gourmetContest: {
+      commentDeadline: "2026-07-31",
+      prizeTitle: "グルメ選手権 優勝クーポン",
+      prizeDescription: "次回のIRO+公式イベントで利用できる優勝特典です。",
+      prizeExpiresAt: "2026-10-31",
     },
   },
   {
@@ -625,6 +649,9 @@ export const BOARD_COMMENTS: BoardComment[] = [
   { id: "bc3", threadId: "t1", author: MEMBERS[5], content: "最近できた「焼肉キング」も良かったです！", createdAt: "2026-03-23T16:00:00" },
   { id: "bc4", threadId: "t4", author: MEMBERS[0], content: "参加します！楽しみにしてます🍻", createdAt: "2026-03-23T19:30:00" },
   { id: "bc5", threadId: "t4", author: MEMBERS[1], content: "私も行きたいです！", createdAt: "2026-03-23T20:00:00" },
+  { id: "bc6", threadId: "t11", author: MEMBERS[1], content: "銀座の桃パフェを推薦します。果肉がたっぷりで夏にぴったりです！", createdAt: "2026-07-21T12:00:00+09:00", reactions: { "❤️": ["u1", "u3", "u4"] } },
+  { id: "bc7", threadId: "t11", author: MEMBERS[3], content: "中目黒の冷製トマト麺がおすすめです。さっぱりしていて暑い日に最高です。", createdAt: "2026-07-21T13:00:00+09:00", reactions: { "❤️": ["u2", "u5"] } },
+  { id: "bc8", threadId: "t11", author: MEMBERS[5], content: "京都の抹茶かき氷。濃厚な抹茶とふわふわの氷が忘れられません。", createdAt: "2026-07-21T14:00:00+09:00", reactions: { "❤️": ["u7"] } },
 ];
 
 export const CHAT_ROOMS: ChatRoom[] = [
@@ -794,6 +821,7 @@ export const RANK_THRESHOLDS = [
 export const BOARD_CATEGORIES: BoardCategory[] = [
   { key: "introduction", label: "自己紹介", group: "all", createdByAdmin: true },
   { key: "meal-report", label: "今日のごちそうさま報告", group: "all", createdByAdmin: true },
+  { key: "gourmet-contest", label: "グルメ選手権", group: "all", createdByAdmin: true },
   { key: "gourmet-advice", label: "教えてグルメ相談室", group: "all", createdByAdmin: true },
   { key: "free-chat", label: "なんでも掲示板", group: "all", createdByAdmin: true },
   { key: "kanto-branch", label: "関東", group: "area", createdByAdmin: true },

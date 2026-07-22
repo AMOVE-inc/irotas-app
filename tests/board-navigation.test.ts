@@ -2,10 +2,11 @@ import { describe, expect, it } from "vitest";
 import { BOARD_CATEGORIES, CHAT_ROOMS, CLUBS, CURRENT_USER } from "../constants/mock-data";
 
 describe("board category ordering", () => {
-  it("orders the four general categories from top to bottom", () => {
+  it("orders the general categories from top to bottom", () => {
     expect(BOARD_CATEGORIES.filter((category) => category.group === "all").map((category) => category.label)).toEqual([
       "自己紹介",
       "今日のごちそうさま報告",
+      "グルメ選手権",
       "教えてグルメ相談室",
       "なんでも掲示板",
     ]);
