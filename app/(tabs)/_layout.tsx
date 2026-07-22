@@ -5,6 +5,9 @@ import { HapticTab } from "@/components/haptic-tab";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { Platform, useWindowDimensions } from "react-native";
 import { useColors } from "@/hooks/use-colors";
+import { CURRENT_USER } from "@/constants/mock-data";
+import { getUnreadTotalForUser, subscribeUnreadChanges } from "@/lib/chat-store";
+import { useEffect, useState } from "react";
 
 export default function TabLayout() {
   const colors = useColors();
@@ -14,6 +17,13 @@ export default function TabLayout() {
   const bottomPadding = Platform.OS === "web" ? 10 : Math.max(insets.bottom, 8);
   const tabBarHeight = isMobileWeb ? 78 : 62 + bottomPadding;
   const tabBarBottomMargin = isMobileWeb ? 34 : Platform.OS === "web" ? 10 : 6;
+  const [unreadTotal, setUnreadTotal] = useState(0);
+
+  useEffect(() => {
+    const refresh = () => { void getUnreadTotalForUser(CURRENT_USER.id, CURRENT_USER.rank).then(setUnreadTotal); };
+    refresh();
+    return subscribeUnreadChanges(refresh);
+  }, []);
 
   return (
     <Tabs
@@ -84,6 +94,8 @@ export default function TabLayout() {
         options={{
           title: "チャット",
           tabBarIcon: ({ color }) => <IconSymbol size={26} name="bubble.left.and.bubble.right.fill" color={color} />,
+          tabBarBadge: unreadTotal > 0 ? Math.min(unreadTotal, 99) : undefined,
+          tabBarBadgeStyle: { backgroundColor: "#FF3B30", color: "#FFF", fontSize: 10, fontWeight: "800" },
         }}
       />
       <Tabs.Screen

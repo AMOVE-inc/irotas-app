@@ -2,7 +2,7 @@ import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { CURRENT_USER, type ChatRoom } from "@/constants/mock-data";
 import { useAuthContext } from "@/lib/auth-context";
-import { createFriendGroupChat, getAllRooms, getMyRooms, getRankRoomsForUser, loadDynamicRooms } from "@/lib/chat-store";
+import { applyReadRoomState, createFriendGroupChat, getAllRooms, getMyRooms, getRankRoomsForUser, loadDynamicRooms, markRoomRead } from "@/lib/chat-store";
 import { getFriends } from "@/lib/friendship";
 import { useColors } from "@/hooks/use-colors";
 import { Image } from "expo-image";
@@ -32,7 +32,7 @@ function ChatRoomCard({ room }: { room: ChatRoom }) {
 
   return (
     <Pressable
-      onPress={() => router.push({ pathname: "/chat", params: { id: room.id } })}
+      onPress={() => { void markRoomRead(room.id); router.push({ pathname: "/chat", params: { id: room.id } }); }}
       style={({ pressed }) => ({ flexDirection: "row", alignItems: "center", paddingHorizontal: 16, paddingVertical: 14, borderBottomWidth: 0.5, borderBottomColor: colors.border, opacity: pressed ? 0.7 : 1 })}
     >
       <View style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: typeColor + "20", alignItems: "center", justifyContent: "center" }}>
@@ -46,6 +46,7 @@ function ChatRoomCard({ room }: { room: ChatRoom }) {
         <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 3 }}>
           <Text style={{ fontSize: 15, fontWeight: "700", color: colors.foreground, flex: 1 }} numberOfLines={1}>{room.name}</Text>
           <Text style={{ fontSize: 11, color: colors.muted }}>{timeAgo(room.lastMessageAt)}</Text>
+          {(room.unreadCount ?? 0) > 0 ? <View style={{ minWidth: 20, height: 20, borderRadius: 10, backgroundColor: "#FF3B30", alignItems: "center", justifyContent: "center", paddingHorizontal: 6, marginLeft: 7 }}><Text style={{ fontSize: 11, fontWeight: "900", color: "#FFF" }}>{Math.min(room.unreadCount ?? 0, 99)}</Text></View> : null}
         </View>
         <View style={{ flexDirection: "row", alignItems: "center" }}>
           <View style={{ backgroundColor: typeColor + "20", borderRadius: 6, paddingHorizontal: 6, paddingVertical: 1, marginRight: 6 }}>
@@ -138,14 +139,16 @@ export default function ChatListScreen() {
   const [myRooms, setMyRooms] = useState<ChatRoom[]>([]);
   const [rankRooms, setRankRooms] = useState<ChatRoom[]>([]);
 
-  const refreshRooms = useCallback(() => {
-    setMyRooms(userIsAdmin ? getAllRooms().filter((room) => room.type !== "rank") : getMyRooms(CURRENT_USER.id).filter((room) => room.type !== "rank"));
-    setRankRooms(getRankRoomsForUser(CURRENT_USER.rank));
+  const refreshRooms = useCallback(async () => {
+    const joinedRooms = userIsAdmin ? getAllRooms().filter((room) => room.type !== "rank") : getMyRooms(CURRENT_USER.id).filter((room) => room.type !== "rank");
+    const [sortedJoined, sortedRank] = await Promise.all([applyReadRoomState(joinedRooms), applyReadRoomState(getRankRoomsForUser(CURRENT_USER.rank))]);
+    setMyRooms(sortedJoined);
+    setRankRooms(sortedRank);
   }, [userIsAdmin]);
 
   useFocusEffect(useCallback(() => {
     let active = true;
-    void loadDynamicRooms().then(() => { if (active) refreshRooms(); });
+    void loadDynamicRooms().then(() => { if (active) void refreshRooms(); });
     return () => { active = false; };
   }, [refreshRooms]));
 
@@ -175,7 +178,7 @@ export default function ChatListScreen() {
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={<View style={{ alignItems: "center", paddingVertical: 60, paddingHorizontal: 24 }}><IconSymbol name="message.fill" size={48} color={colors.border} /><Text style={{ fontSize: 16, fontWeight: "700", color: colors.foreground, marginTop: 16 }}>参加中のチャットはありません</Text><Text style={{ fontSize: 13, color: colors.muted, marginTop: 6, textAlign: "center", lineHeight: 20 }}>イベントや部活動に参加するか、友達を招待してグループを作成できます</Text></View>}
       />
-      <CreateFriendGroupModal visible={showCreateGroup} onClose={() => setShowCreateGroup(false)} onCreated={(room) => { refreshRooms(); router.push({ pathname: "/chat", params: { id: room.id } }); }} />
+      <CreateFriendGroupModal visible={showCreateGroup} onClose={() => setShowCreateGroup(false)} onCreated={(room) => { void refreshRooms(); router.push({ pathname: "/chat", params: { id: room.id } }); }} />
     </ScreenContainer>
   );
 }

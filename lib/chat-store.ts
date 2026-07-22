@@ -8,6 +8,8 @@
 import { CHAT_ROOMS, CHAT_MESSAGES, type ChatRoom, type ChatMessage } from "@/constants/mock-data";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { areFriends } from "@/lib/friendship";
+import { sortRoomsByRecent } from "@/lib/chat-order";
+export { sortRoomsByRecent } from "@/lib/chat-order";
 
 // 動的に追加されたチャットルーム（セッション中のみ保持）
 export const dynamicRooms: ChatRoom[] = [];
@@ -18,9 +20,11 @@ export const dynamicMessages: ChatMessage[] = [];
 // AsyncStorageキープレフィックス
 const MESSAGES_KEY_PREFIX = "chat_messages_";
 const ROOMS_KEY = "chat_dynamic_rooms";
+const READ_ROOMS_KEY = "chat_read_rooms";
 
 // チャットIDごとの書き込みチェーン（同時書き込み競合防止）
 const messageWriteChains: Record<string, Promise<void>> = {};
+const unreadListeners = new Set<() => void>();
 
 function enqueueMessageWrite(chatId: string, fn: () => Promise<void>): Promise<void> {
   const prev = messageWriteChains[chatId] ?? Promise.resolve();
@@ -47,6 +51,33 @@ export function getRoomById(id: string): ChatRoom | undefined {
 /** 自分が参加しているチャットルームを取得 */
 export function getMyRooms(userId: string): ChatRoom[] {
   return getAllRooms().filter((r) => r.participants.includes(userId));
+}
+
+export async function applyReadRoomState(rooms: ChatRoom[]): Promise<ChatRoom[]> {
+  const raw = await AsyncStorage.getItem(READ_ROOMS_KEY);
+  const readIds = new Set<string>(raw ? JSON.parse(raw) : []);
+  return sortRoomsByRecent(rooms).map((room) => readIds.has(room.id) ? { ...room, unreadCount: 0 } : room);
+}
+
+export async function markRoomRead(roomId: string): Promise<void> {
+  const raw = await AsyncStorage.getItem(READ_ROOMS_KEY);
+  const readIds = new Set<string>(raw ? JSON.parse(raw) : []);
+  readIds.add(roomId);
+  await AsyncStorage.setItem(READ_ROOMS_KEY, JSON.stringify([...readIds]));
+  const room = getRoomById(roomId);
+  if (room) room.unreadCount = 0;
+  unreadListeners.forEach((listener) => listener());
+}
+
+export function subscribeUnreadChanges(listener: () => void): () => void {
+  unreadListeners.add(listener);
+  return () => unreadListeners.delete(listener);
+}
+
+export async function getUnreadTotalForUser(userId: string, rank: string): Promise<number> {
+  const rooms = [...getMyRooms(userId).filter((room) => room.type !== "rank"), ...getRankRoomsForUser(rank)];
+  const withReadState = await applyReadRoomState(rooms);
+  return withReadState.reduce((total, room) => total + (room.unreadCount ?? 0), 0);
 }
 
 /**

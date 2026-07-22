@@ -12,7 +12,11 @@ import { getOrCreateDMChat } from "@/lib/chat-store";
 import { useClubs } from "@/lib/club-store";
 import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { PROFILE_DETAILS_STORAGE_KEY, type ProfileDetails } from "@/constants/profile-options";
+import { useEffect, useState } from "react";
 import {
+  Linking,
   Pressable,
   ScrollView,
   Text,
@@ -26,6 +30,17 @@ export default function MemberProfileScreen() {
   const clubs = useClubs();
 
   const member = getMemberById(id || "");
+  const [selfDetails, setSelfDetails] = useState<Partial<ProfileDetails> | null>(null);
+  const [selfBio, setSelfBio] = useState<string | null>(null);
+  const [selfName, setSelfName] = useState<string | null>(null);
+  const [selfAvatar, setSelfAvatar] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (member?.id !== CURRENT_USER.id) { setSelfDetails(null); setSelfBio(null); setSelfName(null); setSelfAvatar(null); return; }
+    void Promise.all([AsyncStorage.getItem(PROFILE_DETAILS_STORAGE_KEY), AsyncStorage.getItem("profile_bio"), AsyncStorage.getItem("profile_name"), AsyncStorage.getItem("profile_avatar_uri")]).then(([raw, bio, name, avatar]) => {
+      setSelfDetails(raw ? JSON.parse(raw) as ProfileDetails : null); setSelfBio(bio); setSelfName(name); setSelfAvatar(avatar);
+    });
+  }, [member?.id]);
 
   if (!member) {
     return (
@@ -40,6 +55,20 @@ export default function MemberProfileScreen() {
   const memberClubs = clubs.filter((club) => club.memberIds.includes(member.id));
   const rankColor = RANK_COLORS[member.rank];
   const isSelf = member.id === CURRENT_USER.id;
+  const details: Partial<ProfileDetails> = selfDetails ?? {
+    birthDate: member.birthDate, showAge: member.showAge, hometown: member.hometown, residence: member.residence,
+    occupation: member.occupation, hobbies: member.hobbies, favoriteCuisines: member.favoriteCuisines ?? member.interests,
+    favoriteAlcohol: member.favoriteAlcohol, dislikedFoods: member.dislikedFoods, allergies: member.allergies,
+    drinkingLevel: member.drinkingLevel, instagramUrl: member.instagramUrl,
+  };
+  const publishedAge = (() => {
+    if (!details.showAge || !details.birthDate) return null;
+    const birth = new Date(`${details.birthDate}T00:00:00`);
+    const now = new Date();
+    let age = now.getFullYear() - birth.getFullYear();
+    if (now.getMonth() < birth.getMonth() || (now.getMonth() === birth.getMonth() && now.getDate() < birth.getDate())) age -= 1;
+    return age;
+  })();
 
   const handleStartDM = () => {
     const roomId = getOrCreateDMChat(CURRENT_USER.id, member.id, member.name);
@@ -72,7 +101,7 @@ export default function MemberProfileScreen() {
         <View style={{ alignItems: "center", paddingVertical: 24 }}>
           <View style={{ position: "relative" }}>
             <Image
-              source={member.avatar}
+              source={selfAvatar ? { uri: selfAvatar } : member.avatar}
               style={{ width: 90, height: 90, borderRadius: 45 }}
               contentFit="cover"
             />
@@ -96,7 +125,7 @@ export default function MemberProfileScreen() {
           </View>
 
           <Text style={{ fontSize: 24, fontWeight: "800", color: colors.foreground, marginTop: 12 }}>
-            {member.name}
+            {selfName ?? member.name}
           </Text>
 
           <View style={{ flexDirection: "row", alignItems: "center", marginTop: 6, gap: 8 }}>
@@ -157,28 +186,37 @@ export default function MemberProfileScreen() {
           )}
         </View>
 
+        <View style={{ marginHorizontal: 16, marginBottom: 18, flexDirection: "row", backgroundColor: colors.surface, borderRadius: 15, paddingVertical: 14 }}>
+          {[
+            { label: "参加回数", value: member.participationCount ?? Math.round(member.points / 35) },
+            { label: "幹事回数", value: member.organizerCount ?? (member.role === "admin" ? 4 : 1) },
+            { label: "フォロワー", value: member.followerCount ?? 20 + member.generation * 7 },
+            { label: "フォロー", value: member.followingCount ?? 18 + member.generation * 5 },
+          ].map((stat, index) => <View key={stat.label} style={{ flex: 1, alignItems: "center", borderLeftWidth: index ? 0.5 : 0, borderLeftColor: colors.border }}><Text style={{ fontSize: 18, fontWeight: "900", color: colors.foreground }}>{stat.value}</Text><Text style={{ fontSize: 10, color: colors.muted, marginTop: 3 }}>{stat.label}</Text></View>)}
+        </View>
+
         {/* Bio */}
-        {member.bio && (
+        {(selfBio ?? member.bio) && (
           <View style={{ marginHorizontal: 16, marginBottom: 16 }}>
             <Text style={{ fontSize: 14, fontWeight: "700", color: colors.foreground, marginBottom: 8 }}>
               自己紹介
             </Text>
             <View style={{ backgroundColor: colors.surface, borderRadius: 14, padding: 16 }}>
               <Text style={{ fontSize: 15, lineHeight: 22, color: colors.foreground }}>
-                {member.bio}
+                {selfBio ?? member.bio}
               </Text>
             </View>
           </View>
         )}
 
         {/* Interests */}
-        {member.interests && member.interests.length > 0 && (
+        {details.favoriteCuisines && details.favoriteCuisines.length > 0 && (
           <View style={{ marginHorizontal: 16, marginBottom: 16 }}>
             <Text style={{ fontSize: 14, fontWeight: "700", color: colors.foreground, marginBottom: 8 }}>
               好きなグルメ
             </Text>
             <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
-              {member.interests.map((interest: string, i: number) => (
+              {details.favoriteCuisines.map((interest: string, i: number) => (
                 <View
                   key={i}
                   style={{
@@ -196,6 +234,22 @@ export default function MemberProfileScreen() {
             </View>
           </View>
         )}
+
+        <View style={{ marginHorizontal: 16, marginBottom: 16 }}>
+          <Text style={{ fontSize: 14, fontWeight: "700", color: colors.foreground, marginBottom: 8 }}>プロフィール情報</Text>
+          <View style={{ backgroundColor: colors.surface, borderRadius: 14, padding: 16 }}>
+            <View style={{ flexDirection: "row", flexWrap: "wrap", rowGap: 13 }}>
+              {[
+                ...(publishedAge !== null ? [{ label: "年齢", value: `${publishedAge}歳` }] : []),
+                { label: "出身地", value: details.hometown }, { label: "居住地", value: details.residence },
+                { label: "職業", value: details.occupation }, { label: "趣味", value: details.hobbies },
+                { label: "飲酒量", value: details.drinkingLevel }, { label: "好きなお酒", value: details.favoriteAlcohol },
+                { label: "苦手な食材", value: details.dislikedFoods }, { label: "アレルギー", value: details.allergies },
+              ].filter((item) => item.value).map((item) => <View key={item.label} style={{ width: "50%", paddingRight: 8 }}><Text style={{ fontSize: 10, color: colors.muted }}>{item.label}</Text><Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground, marginTop: 2 }}>{item.value}</Text></View>)}
+            </View>
+            {details.instagramUrl ? <Pressable onPress={() => Linking.openURL(details.instagramUrl!)} style={{ flexDirection: "row", alignItems: "center", marginTop: 14, paddingTop: 12, borderTopWidth: 0.5, borderTopColor: colors.border }}><IconSymbol name="camera.fill" size={17} color="#C13584" /><Text style={{ flex: 1, marginLeft: 7, fontSize: 13, fontWeight: "700", color: "#C13584" }}>Instagramを見る</Text><IconSymbol name="chevron.right" size={15} color="#C13584" /></Pressable> : null}
+          </View>
+        </View>
 
         {/* Clubs */}
         {memberClubs.length > 0 && (

@@ -30,6 +30,14 @@ import { useAuthContext } from "@/lib/auth-context";
 import * as ImagePicker from "expo-image-picker";
 import * as Clipboard from "expo-clipboard";
 import { COMMUNITY_TERMS_URL, EVENT_TERMS_URL, OFFICIAL_INSTAGRAM_URL, OFFICIAL_LINE_URL } from "@/constants/external-links";
+import { GOURMET_GENRES } from "@/constants/event-options";
+import { BIRTH_YEARS, DAYS, DRINKING_LEVELS, MONTHS, PREFECTURES, PROFILE_DETAILS_STORAGE_KEY, type ProfileDetails } from "@/constants/profile-options";
+
+function ProfileSelectField({ label, value, options, onChange }: { label: string; value: string; options: readonly string[]; onChange: (value: string) => void }) {
+  const colors = useColors();
+  const [visible, setVisible] = useState(false);
+  return <><Pressable onPress={() => setVisible(true)} style={{ minHeight: 46, borderRadius: 12, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, paddingHorizontal: 13, flexDirection: "row", alignItems: "center" }}><Text style={{ flex: 1, fontSize: 14, color: value ? colors.foreground : colors.muted }}>{value || label}</Text><IconSymbol name="chevron.down" size={16} color={colors.muted} /></Pressable><Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setVisible(false)}><View style={{ flex: 1, backgroundColor: colors.background }}><View style={{ flexDirection: "row", alignItems: "center", padding: 16, borderBottomWidth: 0.5, borderBottomColor: colors.border }}><Text style={{ flex: 1, fontSize: 18, fontWeight: "800", color: colors.foreground }}>{label}</Text><Pressable onPress={() => setVisible(false)}><Text style={{ color: "#E8A0BF", fontWeight: "800" }}>閉じる</Text></Pressable></View><ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 30 }}>{options.map((option) => <Pressable key={option} onPress={() => { onChange(option); setVisible(false); }} style={{ flexDirection: "row", alignItems: "center", paddingVertical: 14, borderBottomWidth: 0.5, borderBottomColor: colors.border }}><Text style={{ flex: 1, fontSize: 15, color: colors.foreground }}>{option}</Text>{value === option ? <IconSymbol name="checkmark" size={18} color="#E8A0BF" /> : null}</Pressable>)}</ScrollView></View></Modal></>;
+}
 
 function PointsProgressCard({ points, rank }: { points: number; rank: MemberRank }) {
   const colors = useColors();
@@ -297,6 +305,7 @@ function EditProfileModal({
   onBioChange,
   onInterestsChange,
   onNameChange,
+  onDetailsChange,
 }: {
   visible: boolean;
   onClose: () => void;
@@ -304,13 +313,27 @@ function EditProfileModal({
   onBioChange?: (bio: string) => void;
   onInterestsChange?: (interests: string[]) => void;
   onNameChange?: (name: string) => void;
+  onDetailsChange?: (details: ProfileDetails) => void;
 }) {
   const colors = useColors();
   const [name, setName] = useState("");
   const [bio, setBio] = useState("");
-  const [interests, setInterests] = useState("");
+  const [interests, setInterests] = useState<string[]>([]);
   const [avatarUri, setAvatarUri] = useState<string | null>(null);
   const [gender, setGender] = useState<"male" | "female" | "other" | "unset">("unset");
+  const [birthYear, setBirthYear] = useState("");
+  const [birthMonth, setBirthMonth] = useState("");
+  const [birthDay, setBirthDay] = useState("");
+  const [showAge, setShowAge] = useState(false);
+  const [hometown, setHometown] = useState("");
+  const [residence, setResidence] = useState("");
+  const [occupation, setOccupation] = useState("");
+  const [hobbies, setHobbies] = useState("");
+  const [favoriteAlcohol, setFavoriteAlcohol] = useState("");
+  const [dislikedFoods, setDislikedFoods] = useState("");
+  const [allergies, setAllergies] = useState("");
+  const [drinkingLevel, setDrinkingLevel] = useState("");
+  const [instagramUrl, setInstagramUrl] = useState("");
 
   // モーダルが開いたときにAsyncStorageから保存済みデータを読み込む
   useEffect(() => {
@@ -322,12 +345,28 @@ function EditProfileModal({
         AsyncStorage.getItem("profile_interests"),
         AsyncStorage.getItem("profile_avatar_uri"),
         AsyncStorage.getItem("profile_gender"),
-      ]).then(([savedName, savedBio, savedInterests, savedAvatar, savedGender]) => {
+        AsyncStorage.getItem(PROFILE_DETAILS_STORAGE_KEY),
+      ]).then(([savedName, savedBio, savedInterests, savedAvatar, savedGender, savedDetails]) => {
         setName(savedName ?? CURRENT_USER.name ?? "");
         setBio(savedBio ?? CURRENT_USER.bio ?? "");
-        setInterests(savedInterests ?? CURRENT_USER.interests?.join(", ") ?? "");
+        const storedInterests = savedInterests?.split(",").map((item) => item.trim()).filter(Boolean);
+        setInterests(storedInterests?.length ? storedInterests : (CURRENT_USER.favoriteCuisines ?? CURRENT_USER.interests ?? []));
         if (savedAvatar) setAvatarUri(savedAvatar);
         if (savedGender) setGender(savedGender as "male" | "female" | "other" | "unset");
+        const details = savedDetails ? JSON.parse(savedDetails) as Partial<ProfileDetails> : {};
+        const birthDate = details.birthDate ?? CURRENT_USER.birthDate ?? "";
+        const [year = "", month = "", day = ""] = birthDate.split("-");
+        setBirthYear(year); setBirthMonth(month); setBirthDay(day);
+        setShowAge(details.showAge ?? CURRENT_USER.showAge ?? false);
+        setHometown(details.hometown ?? CURRENT_USER.hometown ?? "");
+        setResidence(details.residence ?? CURRENT_USER.residence ?? "");
+        setOccupation(details.occupation ?? CURRENT_USER.occupation ?? "");
+        setHobbies(details.hobbies ?? CURRENT_USER.hobbies ?? "");
+        setFavoriteAlcohol(details.favoriteAlcohol ?? CURRENT_USER.favoriteAlcohol ?? "");
+        setDislikedFoods(details.dislikedFoods ?? CURRENT_USER.dislikedFoods ?? "");
+        setAllergies(details.allergies ?? CURRENT_USER.allergies ?? "");
+        setDrinkingLevel(details.drinkingLevel ?? CURRENT_USER.drinkingLevel ?? "");
+        setInstagramUrl(details.instagramUrl ?? CURRENT_USER.instagramUrl ?? "");
       });
     });
   }, [visible]);
@@ -355,13 +394,35 @@ function EditProfileModal({
       Alert.alert("エラー", "名前を入力してください。");
       return;
     }
+    if (showAge && (!birthYear || !birthMonth || !birthDay)) {
+      Alert.alert("生年月日を確認してください", "年齢を公開する場合は、生年月日をすべて選択してください。");
+      return;
+    }
+    if (birthYear && birthMonth && birthDay) {
+      const birthDate = new Date(`${birthYear}-${birthMonth}-${birthDay}T00:00:00`);
+      if (Number.isNaN(birthDate.getTime()) || birthDate.getFullYear() !== Number(birthYear) || birthDate.getMonth() + 1 !== Number(birthMonth) || birthDate.getDate() !== Number(birthDay)) {
+        Alert.alert("生年月日を確認してください", "存在する日付を選択してください。");
+        return;
+      }
+    }
+    if (instagramUrl.trim() && !/^https?:\/\//i.test(instagramUrl.trim())) {
+      Alert.alert("Instagram URLを確認してください", "URLは http:// または https:// から入力してください。");
+      return;
+    }
     const AsyncStorage = (await import("@react-native-async-storage/async-storage")).default;
     // nameシbio・interests・avatar・genderをAsyncStorageに保存
     await AsyncStorage.setItem("profile_name", name.trim());
     await AsyncStorage.setItem("profile_bio", bio);
-    const interestList = interests.split(",").map((s) => s.trim()).filter(Boolean);
-    await AsyncStorage.setItem("profile_interests", interests);
+    const interestList = interests;
+    await AsyncStorage.setItem("profile_interests", interests.join(","));
     await AsyncStorage.setItem("profile_gender", gender);
+    const details: ProfileDetails = {
+      birthDate: birthYear && birthMonth && birthDay ? `${birthYear}-${birthMonth}-${birthDay}` : "",
+      showAge, hometown, residence, occupation: occupation.trim(), hobbies: hobbies.trim(), favoriteCuisines: interests,
+      favoriteAlcohol: favoriteAlcohol.trim(), dislikedFoods: dislikedFoods.trim(), allergies: allergies.trim(), drinkingLevel,
+      instagramUrl: instagramUrl.trim(),
+    };
+    await AsyncStorage.setItem(PROFILE_DETAILS_STORAGE_KEY, JSON.stringify(details));
     if (avatarUri) {
       await AsyncStorage.setItem("profile_avatar_uri", avatarUri);
       onAvatarChange?.(avatarUri);
@@ -369,6 +430,7 @@ function EditProfileModal({
     onNameChange?.(name.trim());
     onBioChange?.(bio);
     onInterestsChange?.(interestList);
+    onDetailsChange?.(details);
     Alert.alert("保存完了", "プロフィールを更新しました");
     onClose();
   };
@@ -399,7 +461,7 @@ function EditProfileModal({
           </Pressable>
         </View>
 
-        <ScrollView contentContainerStyle={{ padding: 16 }}>
+        <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 48 }}>
           {/* Avatar */}
           <View style={{ alignItems: "center", marginBottom: 24 }}>
             <Image
@@ -438,6 +500,18 @@ function EditProfileModal({
             }}
           />
 
+          <Text style={{ fontSize: 13, fontWeight: "600", color: colors.muted, marginBottom: 6 }}>生年月日</Text>
+          <View style={{ flexDirection: "row", gap: 7, marginBottom: 10 }}><View style={{ flex: 1.35 }}><ProfileSelectField label="年" value={birthYear} options={BIRTH_YEARS} onChange={setBirthYear} /></View><View style={{ flex: 1 }}><ProfileSelectField label="月" value={birthMonth} options={MONTHS} onChange={setBirthMonth} /></View><View style={{ flex: 1 }}><ProfileSelectField label="日" value={birthDay} options={DAYS} onChange={setBirthDay} /></View></View>
+          <Pressable onPress={() => setShowAge((value) => !value)} style={{ flexDirection: "row", alignItems: "center", marginBottom: 18 }}><View style={{ width: 22, height: 22, borderRadius: 6, backgroundColor: showAge ? "#E8A0BF" : colors.surface, borderWidth: 1, borderColor: showAge ? "#E8A0BF" : colors.border, alignItems: "center", justifyContent: "center" }}>{showAge ? <IconSymbol name="checkmark" size={14} color="#FFF" /> : null}</View><View style={{ marginLeft: 8 }}><Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground }}>年齢を公開する</Text><Text style={{ fontSize: 11, color: colors.muted, marginTop: 2 }}>生年月日は表示せず「X歳」のみ公開されます</Text></View></Pressable>
+
+          <Text style={{ fontSize: 13, fontWeight: "600", color: colors.muted, marginBottom: 6 }}>出身地</Text><View style={{ marginBottom: 16 }}><ProfileSelectField label="出身地を選択" value={hometown} options={PREFECTURES} onChange={setHometown} /></View>
+          <Text style={{ fontSize: 13, fontWeight: "600", color: colors.muted, marginBottom: 6 }}>居住地</Text><View style={{ marginBottom: 16 }}><ProfileSelectField label="居住地を選択" value={residence} options={PREFECTURES} onChange={setResidence} /></View>
+
+          {[
+            { label: "職業", value: occupation, setter: setOccupation, placeholder: "職業を入力" },
+            { label: "趣味", value: hobbies, setter: setHobbies, placeholder: "趣味を入力" },
+          ].map((field) => <View key={field.label}><Text style={{ fontSize: 13, fontWeight: "600", color: colors.muted, marginBottom: 6 }}>{field.label}</Text><TextInput value={field.value} onChangeText={field.setter} placeholder={field.placeholder} placeholderTextColor={colors.muted} style={{ backgroundColor: colors.surface, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: colors.foreground, marginBottom: 16 }} /></View>)}
+
           {/* Bio */}
           <Text style={{ fontSize: 13, fontWeight: "600", color: colors.muted, marginBottom: 6 }}>
             自己紹介
@@ -463,23 +537,18 @@ function EditProfileModal({
 
           {/* Interests */}
           <Text style={{ fontSize: 13, fontWeight: "600", color: colors.muted, marginBottom: 6 }}>
-            好きなグルメジャンル（カンマ区切り）
+            好きな料理ジャンル（複数選択）
           </Text>
-          <TextInput
-            value={interests}
-            onChangeText={setInterests}
-            placeholder="例: 焼肉, 寿司, イタリアン"
-            placeholderTextColor={colors.muted}
-            style={{
-              backgroundColor: colors.surface,
-              borderRadius: 12,
-              paddingHorizontal: 14,
-              paddingVertical: 12,
-              fontSize: 15,
-              color: colors.foreground,
-              marginBottom: 16,
-            }}
-          />
+          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 7, marginBottom: 18 }}>{GOURMET_GENRES.map((genre) => { const selected = interests.includes(genre); return <Pressable key={genre} onPress={() => setInterests((current) => selected ? current.filter((item) => item !== genre) : [...current, genre])} style={{ borderRadius: 17, paddingHorizontal: 10, paddingVertical: 7, backgroundColor: selected ? "#5D5C74" : colors.surface, borderWidth: 1, borderColor: selected ? "#5D5C74" : colors.border }}><Text style={{ fontSize: 12, fontWeight: "700", color: selected ? "#FFF" : colors.foreground }}>{genre}</Text></Pressable>; })}</View>
+
+          {[
+            { label: "好きなお酒", value: favoriteAlcohol, setter: setFavoriteAlcohol, placeholder: "例：ワイン、日本酒" },
+            { label: "苦手な食材", value: dislikedFoods, setter: setDislikedFoods, placeholder: "苦手な食材を入力" },
+            { label: "アレルギー", value: allergies, setter: setAllergies, placeholder: "アレルギーを入力" },
+          ].map((field) => <View key={field.label}><Text style={{ fontSize: 13, fontWeight: "600", color: colors.muted, marginBottom: 6 }}>{field.label}</Text><TextInput value={field.value} onChangeText={field.setter} placeholder={field.placeholder} placeholderTextColor={colors.muted} style={{ backgroundColor: colors.surface, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: colors.foreground, marginBottom: 16 }} /></View>)}
+
+          <Text style={{ fontSize: 13, fontWeight: "600", color: colors.muted, marginBottom: 6 }}>飲酒量</Text><View style={{ marginBottom: 16 }}><ProfileSelectField label="飲酒量を選択" value={drinkingLevel} options={DRINKING_LEVELS} onChange={setDrinkingLevel} /></View>
+          <Text style={{ fontSize: 13, fontWeight: "600", color: colors.muted, marginBottom: 6 }}>Instagram URL</Text><TextInput value={instagramUrl} onChangeText={setInstagramUrl} placeholder="https://www.instagram.com/..." placeholderTextColor={colors.muted} autoCapitalize="none" keyboardType="url" style={{ backgroundColor: colors.surface, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: colors.foreground, marginBottom: 18 }} />
 
           {/* Gender */}
           <Text style={{ fontSize: 13, fontWeight: "600", color: colors.muted, marginBottom: 8 }}>
@@ -626,7 +695,14 @@ export default function ProfileScreen() {
   const [avatarUri, setAvatarUri] = useState<string | null>(null);
   const [profileName, setProfileName] = useState<string>(CURRENT_USER.name ?? "");
   const [profileBio, setProfileBio] = useState<string>(CURRENT_USER.bio ?? "");
-  const [profileInterests, setProfileInterests] = useState<string[]>(CURRENT_USER.interests ?? []);
+  const [profileInterests, setProfileInterests] = useState<string[]>(CURRENT_USER.favoriteCuisines ?? CURRENT_USER.interests ?? []);
+  const [profileDetails, setProfileDetails] = useState<ProfileDetails>({
+    birthDate: CURRENT_USER.birthDate ?? "", showAge: CURRENT_USER.showAge ?? false,
+    hometown: CURRENT_USER.hometown ?? "", residence: CURRENT_USER.residence ?? "", occupation: CURRENT_USER.occupation ?? "",
+    hobbies: CURRENT_USER.hobbies ?? "", favoriteCuisines: CURRENT_USER.favoriteCuisines ?? CURRENT_USER.interests ?? [],
+    favoriteAlcohol: CURRENT_USER.favoriteAlcohol ?? "", dislikedFoods: CURRENT_USER.dislikedFoods ?? "", allergies: CURRENT_USER.allergies ?? "",
+    drinkingLevel: CURRENT_USER.drinkingLevel ?? "", instagramUrl: CURRENT_USER.instagramUrl ?? "",
+  });
   const [memberId, setMemberId] = useState<string>("");
   // イロタスポイント
   const [irotasPoints, setIrotasPoints] = useState(0);
@@ -643,7 +719,8 @@ export default function ProfileScreen() {
           AsyncStorage.getItem("profile_bio"),
           AsyncStorage.getItem("profile_interests"),
           AsyncStorage.getItem("member_id"),
-        ]).then(([uri, savedName, savedBio, savedInterests, savedMemberId]) => {
+          AsyncStorage.getItem(PROFILE_DETAILS_STORAGE_KEY),
+        ]).then(([uri, savedName, savedBio, savedInterests, savedMemberId, savedDetails]) => {
           if (uri) setAvatarUri(uri);
           if (savedName !== null) setProfileName(savedName);
           if (savedBio !== null) setProfileBio(savedBio);
@@ -659,6 +736,7 @@ export default function ProfileScreen() {
             AsyncStorage.setItem("member_id", newId);
             setMemberId(newId);
           }
+          if (savedDetails) setProfileDetails(JSON.parse(savedDetails) as ProfileDetails);
         });
       });
       // イロタスポイント・会費免除を読み込む
@@ -666,6 +744,16 @@ export default function ProfileScreen() {
       isFeeExempt(user.id).then(setFeeExempt);
     }, [user.id])
   );
+
+  const publishedAge = (() => {
+    if (!profileDetails.showAge || !profileDetails.birthDate) return null;
+    const birth = new Date(`${profileDetails.birthDate}T00:00:00`);
+    if (Number.isNaN(birth.getTime())) return null;
+    const now = new Date();
+    let age = now.getFullYear() - birth.getFullYear();
+    if (now.getMonth() < birth.getMonth() || (now.getMonth() === birth.getMonth() && now.getDate() < birth.getDate())) age -= 1;
+    return age;
+  })();
 
   return (
     <ScreenContainer>
@@ -822,6 +910,29 @@ export default function ProfileScreen() {
               プロフィール編集
             </Text>
           </Pressable>
+        </View>
+
+        <View style={{ marginHorizontal: 16, marginBottom: 16, flexDirection: "row", backgroundColor: colors.surface, borderRadius: 16, paddingVertical: 14 }}>
+          {[
+            { label: "参加回数", value: user.participationCount ?? 0 },
+            { label: "幹事回数", value: user.organizerCount ?? 0 },
+            { label: "フォロワー", value: user.followerCount ?? 0 },
+            { label: "フォロー", value: user.followingCount ?? 0 },
+          ].map((stat, index) => <View key={stat.label} style={{ flex: 1, alignItems: "center", borderLeftWidth: index ? 0.5 : 0, borderLeftColor: colors.border }}><Text style={{ fontSize: 19, fontWeight: "900", color: colors.foreground }}>{stat.value}</Text><Text style={{ fontSize: 10, color: colors.muted, marginTop: 3 }}>{stat.label}</Text></View>)}
+        </View>
+
+        <View style={{ marginHorizontal: 16, marginBottom: 16, backgroundColor: colors.surface, borderRadius: 16, padding: 16 }}>
+          <Text style={{ fontSize: 14, fontWeight: "800", color: colors.foreground, marginBottom: 12 }}>プロフィール情報</Text>
+          <View style={{ flexDirection: "row", flexWrap: "wrap", rowGap: 12 }}>
+            {[
+              ...(publishedAge !== null ? [{ label: "年齢", value: `${publishedAge}歳` }] : []),
+              { label: "出身地", value: profileDetails.hometown }, { label: "居住地", value: profileDetails.residence },
+              { label: "職業", value: profileDetails.occupation }, { label: "趣味", value: profileDetails.hobbies },
+              { label: "飲酒量", value: profileDetails.drinkingLevel }, { label: "好きなお酒", value: profileDetails.favoriteAlcohol },
+              { label: "苦手な食材", value: profileDetails.dislikedFoods }, { label: "アレルギー", value: profileDetails.allergies },
+            ].filter((item) => item.value).map((item) => <View key={item.label} style={{ width: "50%", paddingRight: 8 }}><Text style={{ fontSize: 10, color: colors.muted }}>{item.label}</Text><Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground, marginTop: 2 }}>{item.value}</Text></View>)}
+          </View>
+          {profileDetails.instagramUrl ? <Pressable onPress={() => Linking.openURL(profileDetails.instagramUrl)} style={{ flexDirection: "row", alignItems: "center", marginTop: 14, paddingTop: 12, borderTopWidth: 0.5, borderTopColor: colors.border }}><IconSymbol name="camera.fill" size={17} color="#C13584" /><Text style={{ flex: 1, marginLeft: 7, fontSize: 13, fontWeight: "700", color: "#C13584" }}>Instagramを見る</Text><IconSymbol name="chevron.right" size={15} color="#C13584" /></Pressable> : null}
         </View>
 
         {/* Chat Shortcut Card */}
@@ -1144,6 +1255,7 @@ export default function ProfileScreen() {
         onNameChange={(n) => setProfileName(n)}
         onBioChange={(bio) => setProfileBio(bio)}
         onInterestsChange={(list) => setProfileInterests(list)}
+        onDetailsChange={(details) => setProfileDetails(details)}
       />
     </ScreenContainer>
   );

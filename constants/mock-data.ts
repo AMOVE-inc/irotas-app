@@ -17,6 +17,22 @@ export interface Member {
   role: UserRole;
   joinedAt: string;
   gender?: "male" | "female" | "other" | "unset"; // 性別（分析用）
+  birthDate?: string;
+  showAge?: boolean;
+  hometown?: string;
+  residence?: string;
+  occupation?: string;
+  hobbies?: string;
+  favoriteCuisines?: string[];
+  favoriteAlcohol?: string;
+  dislikedFoods?: string;
+  allergies?: string;
+  drinkingLevel?: string;
+  instagramUrl?: string;
+  participationCount?: number;
+  organizerCount?: number;
+  followerCount?: number;
+  followingCount?: number;
 }
 
 // --- ポイント制ランクシステム ---
@@ -174,6 +190,7 @@ export interface ChatRoom {
   lastMessage?: string;
   lastMessageAt?: string;
   requiredRank?: MemberRank; // ランクチャット: このランクのメンバーのみ参加可能
+  unreadCount?: number;
 }
 
 export interface ChatMessage {
@@ -270,6 +287,12 @@ export const CURRENT_USER: Member = {
   role: "admin",
   joinedAt: "2024-04-01",
   gender: "male",
+  birthDate: "1992-05-18", showAge: true, hometown: "東京都", residence: "東京都",
+  occupation: "コミュニティ運営", hobbies: "食べ歩き、旅行、サウナ",
+  favoriteCuisines: ["焼肉", "ラーメン", "居酒屋"], favoriteAlcohol: "ワイン、日本酒",
+  dislikedFoods: "パクチー", allergies: "なし", drinkingLevel: "飲める",
+  instagramUrl: "https://www.instagram.com/irotas_community_official",
+  participationCount: 28, organizerCount: 12, followerCount: 86, followingCount: 74,
 };
 
 export const MEMBERS: Member[] = [
@@ -281,6 +304,7 @@ export const MEMBERS: Member[] = [
     bio: "小べ歩きが趣味です。特にフレンチとイタリアンが好き。IRO＋のイベントには毎回参加しています！",
     interests: ["フレンチ", "イタリアン", "ワイン"],
     role: "member", joinedAt: "2024-04-15", gender: "female",
+    showAge: true, birthDate: "1994-08-12", hometown: "神奈川県", residence: "東京都", occupation: "広報", hobbies: "美術館巡り、旅行", favoriteCuisines: ["フレンチ", "イタリアン"], favoriteAlcohol: "ワイン", drinkingLevel: "少しだけ飲める", participationCount: 35, organizerCount: 3, followerCount: 104, followingCount: 82,
   },
   {
     id: "u3", name: "たくみ",
@@ -289,6 +313,7 @@ export const MEMBERS: Member[] = [
     bio: "大阪在住のラーメン好き。関西の美味しいお店を開拓中です。",
     interests: ["ラーメン", "たこ焼き", "お好み焼き"],
     role: "member", joinedAt: "2024-07-01", gender: "male",
+    showAge: true, birthDate: "1990-11-03", hometown: "大阪府", residence: "大阪府", occupation: "営業", hobbies: "サッカー観戦", favoriteCuisines: ["ラーメン", "お好み焼き・たこ焼き"], favoriteAlcohol: "ビール", drinkingLevel: "飲める", participationCount: 14, organizerCount: 2, followerCount: 53, followingCount: 61,
   },
   {
     id: "u4", name: "ゆうき",
@@ -297,6 +322,7 @@ export const MEMBERS: Member[] = [
     bio: "銀座のお寿司屋さん巡りが週末の楽しみ。ワインも好きです。",
     interests: ["寿司", "ワイン", "フレンチ"],
     role: "member", joinedAt: "2024-05-01", gender: "male",
+    hometown: "千葉県", residence: "東京都", occupation: "ITエンジニア", hobbies: "映画、カメラ", favoriteCuisines: ["寿司", "フレンチ"], favoriteAlcohol: "ワイン", drinkingLevel: "日による", participationCount: 24, organizerCount: 5, followerCount: 78, followingCount: 69,
   },
   {
     id: "u5", name: "あおい",
@@ -305,6 +331,7 @@ export const MEMBERS: Member[] = [
     bio: "京都のカフェ巡りが好きです。最近IRO＋に入会しました！",
     interests: ["カフェ", "和食", "スイーツ"],
     role: "member", joinedAt: "2025-01-15", gender: "female",
+    hometown: "京都府", residence: "京都府", occupation: "デザイナー", hobbies: "カフェ巡り、読書", favoriteCuisines: ["日本料理", "カフェ・喫茶店", "スイーツ"], drinkingLevel: "全く飲めない", participationCount: 6, organizerCount: 0, followerCount: 37, followingCount: 42,
   },
   {
     id: "u6", name: "りょう",
@@ -313,6 +340,7 @@ export const MEMBERS: Member[] = [
     bio: "居酒屋とバーが好き。IRO＋のイベント企画もよくやっています。",
     interests: ["居酒屋", "バー", "クラフトビール"],
     role: "member", joinedAt: "2024-04-20", gender: "male",
+    hometown: "埼玉県", residence: "東京都", occupation: "企画", hobbies: "音楽、キャンプ", favoriteCuisines: ["居酒屋", "バー"], favoriteAlcohol: "クラフトビール", drinkingLevel: "たくさん飲める", participationCount: 26, organizerCount: 9, followerCount: 91, followingCount: 77,
   },
   {
     id: "u7", name: "みさき",
@@ -321,6 +349,7 @@ export const MEMBERS: Member[] = [
     bio: "大阪で料理教室に通っています。手作り料理の写真もよく投稿します。",
     interests: ["和食", "イタリアン", "パン"],
     role: "member", joinedAt: "2024-08-01", gender: "female",
+    hometown: "兵庫県", residence: "大阪府", occupation: "料理講師", hobbies: "パン作り、ヨガ", favoriteCuisines: ["日本料理", "イタリアン"], favoriteAlcohol: "スパークリングワイン", drinkingLevel: "少しだけ飲める", participationCount: 17, organizerCount: 4, followerCount: 66, followingCount: 58,
   },
   {
     id: "u8", name: "けんた",
@@ -572,22 +601,22 @@ export const CHAT_ROOMS: ChatRoom[] = [
   {
     id: "chat1", name: "第3回 関東支部交流会", type: "event", sourceId: "e1",
     participants: ["u1", "u2", "u4", "u6"], createdBy: "u1",
-    lastMessage: "楽しみにしてます！", lastMessageAt: "2026-03-23T10:00:00",
+    lastMessage: "楽しみにしてます！", lastMessageAt: "2026-03-23T10:00:00", unreadCount: 2,
   },
   {
     id: "chat2", name: "IRO＋ 2周年記念パーティー", type: "event", sourceId: "e2",
     participants: ["u1", "u2", "u3", "u4", "u5", "u6"], createdBy: "u1",
-    lastMessage: "ドレスコードはありますか？", lastMessageAt: "2026-03-22T18:00:00",
+    lastMessage: "ドレスコードはありますか？", lastMessageAt: "2026-03-22T18:00:00", unreadCount: 0,
   },
   {
     id: "chat3", name: "東飲みしたい人集まれ！", type: "board", sourceId: "t4",
     participants: ["u6", "u1", "u2", "u4"], createdBy: "u6",
-    lastMessage: "場所は新宿でどうですか？", lastMessageAt: "2026-03-23T20:30:00",
+    lastMessage: "場所は新宿でどうですか？", lastMessageAt: "2026-03-23T20:30:00", unreadCount: 4,
   },
   {
     id: "chat4", name: "関西グルメ同好会 次回集まり", type: "board", sourceId: "t6",
     participants: ["u7", "u3", "u5"], createdBy: "u7",
-    lastMessage: "心斎橋集合でいいですか？", lastMessageAt: "2026-03-23T11:00:00",
+    lastMessage: "心斎橋集合でいいですか？", lastMessageAt: "2026-03-23T11:00:00", unreadCount: 1,
   },
   // ランク別チャットルーム（同じランクの会員だけが参加）
   {
@@ -596,7 +625,7 @@ export const CHAT_ROOMS: ChatRoom[] = [
     participants: ["u3", "u7"],
     createdBy: "system",
     requiredRank: "silver",
-    lastMessage: "シルバー会員専用のルームです。", lastMessageAt: "2026-03-21T10:00:00",
+    lastMessage: "シルバー会員専用のルームです。", lastMessageAt: "2026-03-21T10:00:00", unreadCount: 0,
   },
   {
     id: "rank-gold", name: "ゴールドメンバールーム",
@@ -604,7 +633,7 @@ export const CHAT_ROOMS: ChatRoom[] = [
     participants: ["u1", "u4", "u6"],
     createdBy: "system",
     requiredRank: "gold",
-    lastMessage: "ゴールド会員専用のルームです。", lastMessageAt: "2026-03-22T10:00:00",
+    lastMessage: "ゴールド会員専用のルームです。", lastMessageAt: "2026-03-22T10:00:00", unreadCount: 3,
   },
   {
     id: "rank-platinum", name: "プラチナルーム",
@@ -612,7 +641,7 @@ export const CHAT_ROOMS: ChatRoom[] = [
     participants: ["u2"],
     createdBy: "system",
     requiredRank: "platinum",
-    lastMessage: "プラチナ会員専用のルームです。", lastMessageAt: "2026-03-23T10:00:00",
+    lastMessage: "プラチナ会員専用のルームです。", lastMessageAt: "2026-03-23T10:00:00", unreadCount: 0,
   },
 ];
 
