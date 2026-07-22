@@ -296,12 +296,13 @@ function TodayEventsSection({
 
 function RankBadge({ rank }: { rank: string }) {
   const color = RANK_COLORS[rank as keyof typeof RANK_COLORS] || "#C0C0C0";
+  const isPlatinum = rank === "platinum";
   const label = RANK_LABELS[rank as keyof typeof RANK_LABELS] || rank;
   return (
     <View
       style={{
-        backgroundColor: color + "20",
-        borderColor: color,
+        backgroundColor: isPlatinum ? "#171717" : color + "20",
+        borderColor: isPlatinum ? "#D4AF37" : color,
         borderWidth: 1,
         borderRadius: 10,
         paddingHorizontal: 7,
@@ -309,7 +310,7 @@ function RankBadge({ rank }: { rank: string }) {
         marginLeft: 6,
       }}
     >
-      <Text style={{ fontSize: 10, fontWeight: "700", color }}>{label}</Text>
+      <Text style={{ fontSize: 10, fontWeight: "700", color: isPlatinum ? "#D4AF37" : color }}>{label}</Text>
     </View>
   );
 }
@@ -389,15 +390,18 @@ function TimelinePostCard({ post }: { post: TimelinePost }) {
         {post.content}
       </Text>
 
-      {/* Image */}
+      {/* Images */}
       {post.images.length > 0 && (
-        <View style={{ borderRadius: 12, overflow: "hidden", marginBottom: 10 }}>
-          <Image
-            source={post.images[0]}
-            style={{ width: "100%", height: 200 }}
-            contentFit="cover"
-            transition={300}
-          />
+        <View style={{ borderRadius: 12, overflow: "hidden", marginBottom: 10, flexDirection: "row", flexWrap: "wrap", gap: 3 }}>
+          {post.images.slice(0, 4).map((image, index) => (
+            <Image
+              key={`${image}-${index}`}
+              source={image}
+              style={{ width: post.images.length === 1 ? "100%" : "49.5%", height: post.images.length === 1 ? 200 : 130 }}
+              contentFit="cover"
+              transition={300}
+            />
+          ))}
         </View>
       )}
 
@@ -605,7 +609,7 @@ export default function HomeScreen() {
 
       {/* FAB */}
       <Pressable
-        onPress={() => router.push("/create-post")}
+        onPress={() => router.push({ pathname: "/board", params: { compose: "meal-report" } })}
         style={{
           position: "absolute",
           bottom: 20,

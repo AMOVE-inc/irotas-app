@@ -18,9 +18,9 @@ import { canManageBoardCategories, canViewClubThread } from "@/lib/access-contro
 import { isGoogleMapsUrl, MEAL_BUDGETS, PREFECTURES } from "@/lib/meal-report";
 import { useClubs } from "@/lib/club-store";
 import { Image } from "expo-image";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import {
   Alert,
   FlatList,
@@ -137,11 +137,12 @@ function MealReportContent({ thread, compact = false }: { thread: BoardThread; c
           <Text style={{ fontWeight: "800" }}>一言　</Text>{report.comment}
         </Text>
       ) : null}
-      {!compact ? (
-        <Pressable
+      {!compact && (report.googleMapUrl || report.tabelogUrl) ? (
+        <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 12 }}>
+        {report.googleMapUrl ? <Pressable
           onPress={async (event) => {
             event.stopPropagation?.();
-            await Linking.openURL(report.googleMapUrl);
+            await Linking.openURL(report.googleMapUrl!);
           }}
           style={{
             flexDirection: "row",
@@ -151,14 +152,24 @@ function MealReportContent({ thread, compact = false }: { thread: BoardThread; c
             borderRadius: 10,
             paddingHorizontal: 12,
             paddingVertical: 8,
-            marginTop: 12,
           }}
         >
           <IconSymbol name="map.fill" size={16} color="#4285F4" />
           <Text style={{ fontSize: 13, fontWeight: "700", color: "#4285F4", marginLeft: 6 }}>
             Google Mapで見る
           </Text>
-        </Pressable>
+        </Pressable> : null}
+        {report.tabelogUrl ? <Pressable
+          onPress={async (event) => {
+            event.stopPropagation?.();
+            await Linking.openURL(report.tabelogUrl!);
+          }}
+          style={{ flexDirection: "row", alignItems: "center", alignSelf: "flex-start", backgroundColor: "#FFF0E6", borderRadius: 10, paddingHorizontal: 12, paddingVertical: 8 }}
+        >
+          <IconSymbol name="link" size={16} color="#E36D25" />
+          <Text style={{ fontSize: 13, fontWeight: "700", color: "#E36D25", marginLeft: 6 }}>食べログで見る</Text>
+        </Pressable> : null}
+        </View>
       ) : null}
     </View>
   );
@@ -169,6 +180,7 @@ function ThreadCard({ thread, onPress, onEdit }: { thread: BoardThread; onPress:
   const router = useRouter();
   const isParticipant = thread.recruitParticipants?.includes(CURRENT_USER.id);
   const isAuthorCard = thread.author.id === CURRENT_USER.id;
+  const isPlatinum = thread.author.rank === "platinum";
 
   const timeAgo = useCallback((dateStr: string) => {
     const diff = Date.now() - new Date(dateStr).getTime();
@@ -207,14 +219,16 @@ function ThreadCard({ thread, onPress, onEdit }: { thread: BoardThread; onPress:
             </Text>
             <View
               style={{
-                backgroundColor: RANK_COLORS[thread.author.rank] + "20",
+                backgroundColor: isPlatinum ? "#171717" : RANK_COLORS[thread.author.rank] + "20",
+                borderWidth: isPlatinum ? 1 : 0,
+                borderColor: "#D4AF37",
                 borderRadius: 8,
                 paddingHorizontal: 6,
                 paddingVertical: 1,
                 marginLeft: 6,
               }}
             >
-              <Text style={{ fontSize: 9, fontWeight: "700", color: RANK_COLORS[thread.author.rank] }}>
+              <Text style={{ fontSize: 9, fontWeight: "700", color: isPlatinum ? "#D4AF37" : RANK_COLORS[thread.author.rank] }}>
                 {RANK_LABELS[thread.author.rank]}
               </Text>
             </View>
@@ -499,6 +513,7 @@ function ThreadDetailModal({
 
   const isAuthor = thread.author.id === CURRENT_USER.id;
   const isParticipant = (thread.recruitParticipants ?? []).includes(CURRENT_USER.id);
+  const isPlatinum = thread.author.rank === "platinum";
 
   const handleComment = () => {
     if (!commentText.trim()) return;
@@ -591,14 +606,16 @@ function ThreadDetailModal({
                 </Text>
                 <View
                   style={{
-                    backgroundColor: RANK_COLORS[thread.author.rank] + "20",
+                    backgroundColor: isPlatinum ? "#171717" : RANK_COLORS[thread.author.rank] + "20",
+                    borderWidth: isPlatinum ? 1 : 0,
+                    borderColor: "#D4AF37",
                     borderRadius: 8,
                     paddingHorizontal: 6,
                     paddingVertical: 1,
                     marginLeft: 6,
                   }}
                 >
-                  <Text style={{ fontSize: 9, fontWeight: "700", color: RANK_COLORS[thread.author.rank] }}>
+                  <Text style={{ fontSize: 9, fontWeight: "700", color: isPlatinum ? "#D4AF37" : RANK_COLORS[thread.author.rank] }}>
                     {RANK_LABELS[thread.author.rank]}
                   </Text>
                 </View>
@@ -1139,6 +1156,7 @@ function CreateThreadModal({
   const [rating, setRating] = useState(0);
   const [mealComment, setMealComment] = useState("");
   const [googleMapUrl, setGoogleMapUrl] = useState("");
+  const [tabelogUrl, setTabelogUrl] = useState("");
   const [formError, setFormError] = useState("");
   const [optionModal, setOptionModal] = useState<"prefecture" | "budget" | null>(null);
   const isMealReport = category === "meal-report";
@@ -1146,7 +1164,8 @@ function CreateThreadModal({
     restaurantName.trim().length > 0 &&
     prefecture.length > 0 &&
     rating > 0 &&
-    isGoogleMapsUrl(googleMapUrl);
+    (!googleMapUrl.trim() || isGoogleMapsUrl(googleMapUrl)) &&
+    (!tabelogUrl.trim() || /^https?:\/\/(?:www\.)?tabelog\.com\//i.test(tabelogUrl.trim()));
   const canSubmit = isMealReport ? mealReportValid : title.trim().length > 0 && content.trim().length > 0;
 
   const handlePickImage = async () => {
@@ -1171,11 +1190,7 @@ function CreateThreadModal({
 
   const handleCreate = () => {
     if (isMealReport && !mealReportValid) {
-      setFormError(
-        !googleMapUrl.trim() || !isGoogleMapsUrl(googleMapUrl)
-          ? "店名・場所・評価を入力し、有効なGoogle Mapリンクを貼り付けてください。"
-          : "必須項目を入力してください。",
-      );
+      setFormError("店名・場所・評価を入力し、リンクを入力する場合は有効なURLを指定してください。");
       return;
     }
     if (!isMealReport && (!title.trim() || !content.trim())) return;
@@ -1205,7 +1220,8 @@ function CreateThreadModal({
             recommendedMenu: normalizedMenu || undefined,
             rating,
             comment: normalizedComment || undefined,
-            googleMapUrl: googleMapUrl.trim(),
+            googleMapUrl: googleMapUrl.trim() || undefined,
+            tabelogUrl: tabelogUrl.trim() || undefined,
           }
         : undefined,
     };
@@ -1223,6 +1239,7 @@ function CreateThreadModal({
     setRating(0);
     setMealComment("");
     setGoogleMapUrl("");
+    setTabelogUrl("");
     setFormError("");
   };
 
@@ -1365,7 +1382,7 @@ function CreateThreadModal({
 
               <View>
                 <Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground, marginBottom: 6 }}>
-                  Google Mapのリンク <Text style={{ color: colors.error }}>必須</Text>
+                  Google Mapのリンク（任意）
                 </Text>
                 <TextInput
                   value={googleMapUrl}
@@ -1389,6 +1406,21 @@ function CreateThreadModal({
                 {googleMapUrl.length > 0 && !isGoogleMapsUrl(googleMapUrl) ? (
                   <Text style={{ fontSize: 12, color: colors.error, marginTop: 5 }}>Google Mapsの共有リンクを入力してください</Text>
                 ) : null}
+              </View>
+
+              <View>
+                <Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground, marginBottom: 6 }}>食べログのリンク（任意）</Text>
+                <TextInput
+                  value={tabelogUrl}
+                  onChangeText={setTabelogUrl}
+                  placeholder="https://tabelog.com/..."
+                  placeholderTextColor={colors.muted}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  keyboardType="url"
+                  style={{ backgroundColor: colors.surface, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: colors.foreground, borderWidth: tabelogUrl.length > 0 && !/^https?:\/\/(?:www\.)?tabelog\.com\//i.test(tabelogUrl.trim()) ? 1 : 0, borderColor: colors.error }}
+                />
+                {tabelogUrl.length > 0 && !/^https?:\/\/(?:www\.)?tabelog\.com\//i.test(tabelogUrl.trim()) ? <Text style={{ fontSize: 12, color: colors.error, marginTop: 5 }}>食べログのURLを入力してください</Text> : null}
               </View>
 
               {formError ? <Text style={{ fontSize: 13, color: colors.error }}>{formError}</Text> : null}
@@ -1564,6 +1596,7 @@ function CreateThreadModal({
 export default function BoardScreen() {
   const colors = useColors();
   const router = useRouter();
+  const { compose } = useLocalSearchParams<{ compose?: string }>();
   const { user: authUser } = useAuthContext();
   const userIsAdmin = canManageBoardCategories(authUser?.role);
   const clubs = useClubs();
@@ -1578,6 +1611,14 @@ export default function BoardScreen() {
   const [dynamicThreads, setDynamicThreads] = useState<BoardThread[]>([]);
   const [editedThreads, setEditedThreads] = useState<Record<string, BoardThread>>({});
   const [editingThread, setEditingThread] = useState<BoardThread | null>(null);
+
+  useEffect(() => {
+    if (compose !== "meal-report") return;
+    setActiveGroup("all");
+    setActiveCategory("meal-report");
+    setShowCreateThread(true);
+    router.setParams({ compose: "" });
+  }, [compose, router]);
   const allThreads = [...dynamicThreads, ...BOARD_THREADS].map((t) => editedThreads[t.id] ?? t);
   const filteredThreads = allThreads.filter((t) => t.category === activeCategory);
   const canAccessCategory = (category: BoardCategory) => {

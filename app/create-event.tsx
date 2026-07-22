@@ -3,6 +3,7 @@ import { IconSymbol } from "@/components/ui/icon-symbol";
 import { CURRENT_USER, MEMBERS, type Event } from "@/constants/mock-data";
 import { EVENT_TERMS_URL } from "@/constants/external-links";
 import { GOURMET_GENRES } from "@/constants/event-options";
+import { PREFECTURES } from "@/constants/profile-options";
 import { useAuthContext } from "@/lib/auth-context";
 import { pendingEvents } from "@/lib/event-store";
 import { useColors } from "@/hooks/use-colors";
@@ -175,7 +176,7 @@ export default function CreateEventScreen() {
       : undefined;
     const newEvent: Event = {
       id: `event_${Date.now()}`, createdAt: new Date().toISOString(), title, restaurantName: restaurantName.trim(), description: publicNotes.trim() || (finalType === "official" ? "IRO＋公式イベントです。" : "メンバー主催のグルメ会です。"), date, time,
-      location: address.trim(), image: imageUri, capacity: Number(recruitCapacity), reservationCapacity: Number(reservationCapacity), attendees: 0, applicantIds: [], participants: [], companionIds,
+      location: address.trim(), prefecture: PREFECTURES.find((prefecture) => address.includes(prefecture)), image: imageUri, capacity: Number(recruitCapacity), reservationCapacity: Number(reservationCapacity), attendees: 0, applicantIds: [], participants: [], companionIds,
       price, priceMin: numericAmount(budgetMin), priceMax: fixedAmount ? numericAmount(budgetMin) : numericAmount(budgetMax), genres, ...(configuredRankPrices && Object.keys(configuredRankPrices).length ? { rankPrices: configuredRankPrices } : {}), category, eventType: finalType, status: "open", createdBy: CURRENT_USER.id,
       applicationDeadline: decisionDate, cancellationPolicy: cancellationPolicy.trim() || DEFAULT_CANCELLATION_POLICY, selectionMethod: finalType === "official" ? selectionMethod : "first_come", externalUrl: externalUrl.trim() || undefined, publicNotes: publicNotes.trim() || undefined, privateMemo: privateMemo.trim() || undefined,
     };

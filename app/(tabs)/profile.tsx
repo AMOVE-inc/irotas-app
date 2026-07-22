@@ -824,7 +824,7 @@ export default function ProfileScreen() {
             <View style={{ flexDirection: "row", alignItems: "center" }}>
               <IconSymbol name="calendar" size={14} color={colors.muted} />
               <Text style={{ fontSize: 13, color: colors.muted, marginLeft: 4 }}>
-                {user.joinedAt ? new Date(user.joinedAt).getFullYear() + "年入会" : ""}
+                {user.joinedAt ? `${new Date(user.joinedAt).getFullYear()}年${new Date(user.joinedAt).getMonth() + 1}月入会` : ""}
               </Text>
             </View>
           </View>

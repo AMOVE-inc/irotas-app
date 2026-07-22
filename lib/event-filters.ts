@@ -1,4 +1,5 @@
-import type { Event } from "@/constants/mock-data";
+import type { Event } from "../constants/mock-data";
+import { PREFECTURE_TO_REGION } from "../constants/event-areas";
 
 export type EventAreaFilter = "all" | "kanto" | "kansai";
 export type EventTypeFilter = "all" | Event["eventType"];
@@ -16,6 +17,9 @@ export interface EventFilters {
   genres?: string[];
   budgetMin?: number;
   budgetMax?: number;
+  budgetRanges?: Array<{ min?: number; max?: number }>;
+  areas?: string[];
+  keyword?: string;
 }
 
 function eventStart(event: Event): number {
@@ -71,10 +75,35 @@ export function filterAndSortEvents(
     })
     .filter((event) => !filters.genres?.length || filters.genres.some((genre) => event.genres?.includes(genre)))
     .filter((event) => {
+      if (!filters.areas?.length) return true;
+      const prefecture = event.prefecture ?? "";
+      return filters.areas.some((area) => {
+        if (area.startsWith("pref:")) return prefecture === area.slice(5) || event.location.includes(area.slice(5));
+        if (area.startsWith("region:")) {
+          if (PREFECTURE_TO_REGION[prefecture] === area) return true;
+          return (area === "region:kanto" && event.category === "kanto") || (area === "region:kansai" && event.category === "kansai");
+        }
+        return false;
+      });
+    })
+    .filter((event) => {
+      const keyword = filters.keyword?.trim().toLowerCase();
+      if (!keyword) return true;
+      return [event.title, event.restaurantName, event.description, event.location, event.prefecture, ...(event.genres ?? [])]
+        .filter(Boolean).some((value) => String(value).toLowerCase().includes(keyword));
+    })
+    .filter((event) => {
       if (filters.budgetMin === undefined && filters.budgetMax === undefined) return true;
       const bounds = priceBounds(event);
       return (filters.budgetMin === undefined || bounds.max >= filters.budgetMin) &&
         (filters.budgetMax === undefined || bounds.min <= filters.budgetMax);
+    })
+    .filter((event) => {
+      if (!filters.budgetRanges?.length) return true;
+      const bounds = priceBounds(event);
+      return filters.budgetRanges.some((range) =>
+        (range.min === undefined || bounds.max >= range.min) && (range.max === undefined || bounds.min <= range.max),
+      );
     })
     .sort((a, b) => {
       if (filters.sortOrder === "newest") return eventCreatedAt(b) - eventCreatedAt(a);

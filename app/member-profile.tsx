@@ -158,7 +158,7 @@ export default function MemberProfileScreen() {
             <View style={{ flexDirection: "row", alignItems: "center" }}>
               <IconSymbol name="calendar" size={14} color={colors.muted} />
               <Text style={{ fontSize: 13, color: colors.muted, marginLeft: 4 }}>
-                {new Date(member.joinedAt).getFullYear()}年入会
+                {new Date(member.joinedAt).getFullYear()}年{new Date(member.joinedAt).getMonth() + 1}月入会
               </Text>
             </View>
           </View>

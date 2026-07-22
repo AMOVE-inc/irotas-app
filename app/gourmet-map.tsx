@@ -22,7 +22,7 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { GOOGLE_GOURMET_MAP_URL } from "@/constants/external-links";
+import { GOOGLE_GOURMET_MAP_LISTS } from "@/constants/external-links";
 
 function RestaurantCard({
   restaurant,
@@ -355,43 +355,42 @@ export default function GourmetMapScreen() {
         )}
       </View>
 
-      <Pressable
-        onPress={async () => {
-          if (!GOOGLE_GOURMET_MAP_URL) {
-            Alert.alert(
-              "Googleグルメマップ",
-              "共有リストURLは現在準備中です。設定後、このボタンからカテゴリ別の保存リストを開けます。",
-            );
-            return;
-          }
-          try {
-            await Linking.openURL(GOOGLE_GOURMET_MAP_URL);
-          } catch {
-            Alert.alert("リンクを開けませんでした", "運営へお問い合わせください。");
-          }
-        }}
-        style={({ pressed }) => ({
-          marginHorizontal: 16,
-          marginTop: 12,
-          borderRadius: 15,
-          padding: 14,
-          backgroundColor: "#EEF7F0",
-          borderWidth: 1,
-          borderColor: "#D6E9DA",
-          flexDirection: "row",
-          alignItems: "center",
-          opacity: pressed ? 0.8 : 1,
-        })}
-      >
-        <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: "#FFFFFF", alignItems: "center", justifyContent: "center" }}>
-          <IconSymbol name="map.fill" size={21} color="#4285F4" />
+      <View style={{ marginTop: 12 }}>
+        <View style={{ paddingHorizontal: 16, marginBottom: 8 }}>
+          <Text style={{ fontSize: 16, fontWeight: "800", color: colors.foreground }}>Google保存リスト</Text>
+          <Text style={{ fontSize: 12, lineHeight: 18, color: colors.muted, marginTop: 3 }}>
+            ジャンルを選ぶと、Google Maps側で更新された最新の保存リストを開きます
+          </Text>
         </View>
-        <View style={{ flex: 1, marginLeft: 11 }}>
-          <Text style={{ fontSize: 15, fontWeight: "800", color: colors.foreground }}>Googleグルメマップを開く</Text>
-          <Text style={{ fontSize: 12, color: colors.muted, marginTop: 3 }}>カテゴリ別の保存リストをGoogle Mapsで表示</Text>
-        </View>
-        <IconSymbol name="chevron.right" size={19} color={colors.muted} />
-      </Pressable>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, gap: 8 }} style={{ flexGrow: 0 }}>
+          {GOOGLE_GOURMET_MAP_LISTS.map(([label, url]) => (
+            <Pressable
+              key={label}
+              onPress={async () => {
+                try {
+                  await Linking.openURL(url);
+                } catch {
+                  Alert.alert("リンクを開けませんでした", "運営へお問い合わせください。");
+                }
+              }}
+              style={({ pressed }) => ({
+                width: 150,
+                minHeight: 72,
+                borderRadius: 14,
+                padding: 12,
+                backgroundColor: "#EEF7F0",
+                borderWidth: 1,
+                borderColor: "#D6E9DA",
+                justifyContent: "space-between",
+                opacity: pressed ? 0.78 : 1,
+              })}
+            >
+              <IconSymbol name="map.fill" size={18} color="#4285F4" />
+              <Text numberOfLines={2} style={{ fontSize: 13, lineHeight: 18, fontWeight: "800", color: colors.foreground, marginTop: 7 }}>{label}</Text>
+            </Pressable>
+          ))}
+        </ScrollView>
+      </View>
 
       {/* Search bar */}
       <View style={{ paddingHorizontal: 16, paddingTop: 8 }}>

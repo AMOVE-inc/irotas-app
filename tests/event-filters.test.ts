@@ -95,4 +95,42 @@ describe("event list filtering and sorting", () => {
     const result = filterAndSortEvents(gourmetEvents, { area: "all", eventType: "all", openOnly: false, genres: ["寿司", "焼肉"], budgetMin: 5000, budgetMax: 10000 }, referenceDate);
     expect(result.map((event) => event.id)).toEqual(["sushi"]);
   });
+
+  it("matches any of multiple selected budget ranges", () => {
+    const pricedEvents = [
+      makeEvent({ id: "casual", priceMin: 2000, priceMax: 3000 }),
+      makeEvent({ id: "middle", priceMin: 7000, priceMax: 9000 }),
+      makeEvent({ id: "premium", priceMin: 25000, priceMax: 30000 }),
+    ];
+    const result = filterAndSortEvents(pricedEvents, {
+      area: "all",
+      eventType: "all",
+      openOnly: false,
+      budgetRanges: [{ max: 3000 }, { min: 20000 }],
+    }, referenceDate);
+    expect(result.map((event) => event.id)).toEqual(["casual", "premium"]);
+  });
+
+  it("filters by region or prefecture and supports keyword search", () => {
+    const localEvents = [
+      makeEvent({ id: "tokyo", title: "銀座の寿司会", prefecture: "東京都", location: "東京都中央区", genres: ["寿司"] }),
+      makeEvent({ id: "osaka", title: "大阪の焼肉会", prefecture: "大阪府", location: "大阪府大阪市", genres: ["焼肉"] }),
+    ];
+    const areaResult = filterAndSortEvents(localEvents, {
+      area: "all",
+      eventType: "all",
+      openOnly: false,
+      areas: ["region:kanto"],
+    }, referenceDate);
+    expect(areaResult.map((event) => event.id)).toEqual(["tokyo"]);
+
+    const keywordResult = filterAndSortEvents(localEvents, {
+      area: "all",
+      eventType: "all",
+      openOnly: false,
+      areas: ["pref:大阪府"],
+      keyword: "焼肉",
+    }, referenceDate);
+    expect(keywordResult.map((event) => event.id)).toEqual(["osaka"]);
+  });
 });

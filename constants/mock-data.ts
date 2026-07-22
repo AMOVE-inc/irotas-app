@@ -126,6 +126,7 @@ export interface Event {
   publicNotes?: string;
   privateMemo?: string;
   genres?: string[];
+  prefecture?: string;
   priceMin?: number;
   priceMax?: number;
 }
@@ -168,7 +169,8 @@ export interface BoardThread {
     recommendedMenu?: string;
     rating: number;
     comment?: string;
-    googleMapUrl: string;
+    googleMapUrl?: string;
+    tabelogUrl?: string;
   };
 }
 
@@ -384,7 +386,11 @@ export const TIMELINE_POSTS: TimelinePost[] = [
   {
     id: "p1", author: MEMBERS[1],
     content: "昨日行った渋谷の焼肉屋さんが最高でした！A5ランクの和牛が口の中でとろけました🥩✨",
-    images: ["https://images.unsplash.com/photo-1544025162-d76694265947?w=400"],
+    images: [
+      "https://images.unsplash.com/photo-1544025162-d76694265947?w=400",
+      "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=400",
+      "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400",
+    ],
     likes: 24, comments: 8, liked: false, createdAt: "2026-03-23T18:30:00",
   },
   {
@@ -418,7 +424,7 @@ export const EVENTS: Event[] = [
   {
     id: "e1", createdAt: "2026-03-20T10:00:00+09:00", title: "第3回 関東支部交流会",
     description: "関東支部メンバーの交流を深める食事会です。今回は恵比寿の隠れ家イタリアンで開催！",
-    date: today, time: "18:30", location: "恵比寿 リストランテ・ベッラ",
+    date: today, time: "18:30", location: "恵比寿 リストランテ・ベッラ", prefecture: "東京都",
     image: "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=400",
     capacity: 20, attendees: 14, participants: ["u1", "u2", "u4", "u6"],
     price: "¥5,000", priceMin: 5000, priceMax: 5000, genres: ["イタリアン"],
@@ -429,7 +435,7 @@ export const EVENTS: Event[] = [
   {
     id: "e2", createdAt: "2026-03-18T12:00:00+09:00", title: "IRO＋ 2周年記念パーティー",
     description: "IRO＋設立2周年を記念した特別パーティー！全国のメンバーが集結します。",
-    date: "2026-04-26", time: "17:00", location: "六本木 グランドホール",
+    date: "2026-04-26", time: "17:00", location: "六本木 グランドホール", prefecture: "東京都",
     image: "https://images.unsplash.com/photo-1530103862676-de8c9debad1d?w=400",
     capacity: 80, attendees: 52, participants: ["u1", "u2", "u3", "u4", "u5", "u6"],
     price: "¥8,000", priceMin: 8000, priceMax: 8000, genres: ["洋食", "フレンチ"],
@@ -440,7 +446,7 @@ export const EVENTS: Event[] = [
   {
     id: "e3", createdAt: "2026-03-22T09:00:00+09:00", title: "関西グルメツアー in 道頓堀",
     description: "大阪の名店を巡るグルメツアー。食い倒れの街を一緒に楽しみましょう！",
-    date: "2026-04-19", time: "11:00", location: "道頓堀周辺",
+    date: "2026-04-19", time: "11:00", location: "道頓堀周辺", prefecture: "大阪府",
     image: "https://images.unsplash.com/photo-1590559899731-a382839e5549?w=400",
     capacity: 15, attendees: 15, participants: ["u3", "u5", "u7"],
     price: "¥3,000", priceMin: 3000, priceMax: 3000, genres: ["お好み焼き・たこ焼き", "居酒屋"],
@@ -731,7 +737,7 @@ export const RANK_COLORS: Record<MemberRank, string> = {
   regular: "#8B8B8B",
   silver: "#C0C0C0",
   gold: "#FFD700",
-  platinum: "#E5E4E2",
+  platinum: "#171717",
 };
 
 export const RANK_LABELS: Record<MemberRank, string> = {
