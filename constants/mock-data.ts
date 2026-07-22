@@ -201,6 +201,7 @@ export interface ChatMessage {
   senderId: string;
   content: string;
   imageUri?: string;
+  reactions?: Record<string, string[]>; // emoji -> member ids（通知なしリアクション）
   createdAt: string;
 }
 
@@ -448,7 +449,7 @@ export const EVENTS: Event[] = [
     description: "大阪の名店を巡るグルメツアー。食い倒れの街を一緒に楽しみましょう！",
     date: "2026-04-19", time: "11:00", location: "道頓堀周辺", prefecture: "大阪府",
     image: "https://images.unsplash.com/photo-1590559899731-a382839e5549?w=400",
-    capacity: 15, attendees: 15, participants: ["u3", "u5", "u7"],
+    capacity: 6, attendees: 6, participants: ["u3", "u5", "u7"], applicantIds: ["u3", "u5", "u7", "u2", "u4", "u6"],
     price: "¥3,000", priceMin: 3000, priceMax: 3000, genres: ["お好み焼き・たこ焼き", "居酒屋"],
     rankPrices: { regular: "¥3,000", silver: "¥2,500", gold: "¥2,000", platinum: "¥1,500" },
     category: "kansai", eventType: "gourmet", status: "full",
@@ -462,6 +463,15 @@ export const EVENTS: Event[] = [
     capacity: 100, attendees: 28, participants: ["u1", "u2", "u3"],
     price: "無料", priceMin: 0, priceMax: 0, genres: ["日本料理", "洋食", "中華料理"], category: "all", eventType: "official", status: "open",
     createdBy: "u1",
+  },
+  {
+    id: "e5", createdAt: "2026-07-21T10:00:00+09:00", title: "恵比寿で楽しむ夏のビストロ会",
+    restaurantName: "BISTRO IRO", description: "気軽なビストロ料理を囲む少人数のグルメ会です。参加申込は幹事の承認後に確定します。",
+    date: "2026-08-15", time: "18:30", location: "東京都渋谷区恵比寿", prefecture: "東京都",
+    image: "https://images.unsplash.com/photo-1550966871-3ed3cdb5ed0c?w=400", capacity: 8, attendees: 2,
+    participants: ["u6", "u4"], applicantIds: ["u6", "u4"], price: "¥6,000", priceMin: 6000, priceMax: 6000,
+    genres: ["フレンチ", "洋食"], category: "kanto", eventType: "gourmet", status: "open", createdBy: "u6",
+    cancellationPolicy: "参加者自身でのキャンセル操作はできません。必ず幹事へ連絡してください。",
   },
 ];
 

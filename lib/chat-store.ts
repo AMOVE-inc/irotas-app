@@ -9,6 +9,7 @@ import { CHAT_ROOMS, CHAT_MESSAGES, type ChatRoom, type ChatMessage } from "@/co
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { areFriends } from "@/lib/friendship";
 import { sortRoomsByRecent } from "@/lib/chat-order";
+import { toggleReactionMember } from "@/lib/chat-reactions";
 export { sortRoomsByRecent } from "@/lib/chat-order";
 
 // 動的に追加されたチャットルーム（セッション中のみ保持）
@@ -20,6 +21,7 @@ export const dynamicMessages: ChatMessage[] = [];
 // AsyncStorageキープレフィックス
 const MESSAGES_KEY_PREFIX = "chat_messages_";
 const ROOMS_KEY = "chat_dynamic_rooms";
+const ROOM_PARTICIPANTS_KEY = "chat_room_participants";
 const READ_ROOMS_KEY = "chat_read_rooms";
 
 // チャットIDごとの書き込みチェーン（同時書き込み競合防止）
@@ -288,6 +290,29 @@ export function getMessages(chatId: string): ChatMessage[] {
     .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
 }
 
+/** メッセージへの絵文字リアクションを切り替える。リアクションでは通知を送らない。 */
+export async function toggleMessageReaction(
+  chatId: string,
+  messageId: string,
+  emoji: string,
+  memberId: string,
+): Promise<ChatMessage | undefined> {
+  const message = getAllMessages().find((item) => item.chatId === chatId && item.id === messageId);
+  if (!message) return undefined;
+  const reactions = toggleReactionMember(message.reactions, emoji, memberId);
+  message.reactions = reactions;
+
+  await enqueueMessageWrite(chatId, async () => {
+    const key = `${MESSAGES_KEY_PREFIX}${chatId}`;
+    const stored = await loadMessagesFromStorage(chatId);
+    const index = stored.findIndex((item) => item.id === messageId);
+    if (index >= 0) stored[index] = { ...message };
+    else stored.push({ ...message });
+    await AsyncStorage.setItem(key, JSON.stringify(stored.slice(-500)));
+  });
+  return { ...message, reactions: { ...reactions } };
+}
+
 // ─── AsyncStorage 永続化ヘルパー ───────────────────────────────────────────
 
 /** 特定チャットのメッセージをAsyncStorageに保存（チャットIDごとにシリアライズ） */
@@ -325,6 +350,17 @@ async function saveDynamicRooms(): Promise<void> {
   }
 }
 
+async function saveRoomParticipants(room: ChatRoom): Promise<void> {
+  try {
+    const raw = await AsyncStorage.getItem(ROOM_PARTICIPANTS_KEY);
+    const state = raw ? JSON.parse(raw) as Record<string, string[]> : {};
+    state[room.id] = [...room.participants];
+    await AsyncStorage.setItem(ROOM_PARTICIPANTS_KEY, JSON.stringify(state));
+  } catch {
+    // 無視
+  }
+}
+
 /** ルームの名前を変更（動的ルームのみ対応） */
 export async function renameRoom(roomId: string, newName: string): Promise<boolean> {
   const room = dynamicRooms.find((r) => r.id === roomId);
@@ -347,6 +383,7 @@ export async function addMemberToRoom(roomId: string, memberId: string): Promise
   if (!room.participants.includes(memberId)) {
     room.participants.push(memberId);
     await saveDynamicRooms();
+    await saveRoomParticipants(room);
   }
   return true;
 }
@@ -362,6 +399,7 @@ export async function removeMemberFromRoom(roomId: string, memberId: string): Pr
   if (idx !== -1) {
     room.participants.splice(idx, 1);
     await saveDynamicRooms();
+    await saveRoomParticipants(room);
   }
   return true;
 }
@@ -370,14 +408,18 @@ export async function removeMemberFromRoom(roomId: string, memberId: string): Pr
 export async function loadDynamicRooms(): Promise<void> {
   try {
     const raw = await AsyncStorage.getItem(ROOMS_KEY);
-    if (!raw) return;
-    const rooms = JSON.parse(raw) as ChatRoom[];
+    const rooms = raw ? JSON.parse(raw) as ChatRoom[] : [];
     // 既に存在するIDは追加しない
     const existingIds = new Set(dynamicRooms.map((r) => r.id));
     for (const room of rooms) {
       if (!existingIds.has(room.id)) {
         dynamicRooms.push(room);
       }
+    }
+    const participantRaw = await AsyncStorage.getItem(ROOM_PARTICIPANTS_KEY);
+    const participantState = participantRaw ? JSON.parse(participantRaw) as Record<string, string[]> : {};
+    for (const room of getAllRooms()) {
+      if (participantState[room.id]) room.participants = [...participantState[room.id]];
     }
   } catch {
     // 無視

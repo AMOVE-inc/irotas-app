@@ -1,8 +1,10 @@
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { EVENTS, CURRENT_USER, DEFAULT_AVATAR, getMemberById, type Event } from "@/constants/mock-data";
-import { joinEventChat } from "@/lib/chat-store";
+import { EVENT_TERMS_URL } from "@/constants/external-links";
+import { joinEventChat, removeMemberFromRoom } from "@/lib/chat-store";
 import { getAllEvents } from "@/lib/event-store";
+import { approveGourmetApplication, cancelGourmetParticipation, getPendingGourmetApplicants, reopenGourmetRecruitment, submitGourmetApplication } from "@/lib/gourmet-event";
 import { getIrotasPoints, adjustIrotasPoints } from "@/lib/irotas-points-store";
 import { createPaymentRecord } from "@/lib/payment-store";
 import { useColors } from "@/hooks/use-colors";
@@ -40,6 +42,8 @@ export default function EventDetailScreen() {
   // イロタスポイント
   const [irotasPoints, setIrotasPoints] = useState(0);
   const [usePoints, setUsePoints] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [, setEventRevision] = useState(0);
   // ボタン連打防止フラグ
   const joiningRef = useRef(false);
 
@@ -94,6 +98,8 @@ export default function EventDetailScreen() {
   const confirmedIds = [...new Set([...(event.participants ?? []), ...(event.companionIds ?? [])])];
   const applicantCount = event.applicantIds?.length ?? event.attendees;
   const organizer = getMemberById(event.createdBy);
+  const isGourmetOrganizer = event.eventType === "gourmet" && event.createdBy === CURRENT_USER.id;
+  const pendingApplicantIds = getPendingGourmetApplicants(event);
 
   const handleJoin = () => {
     if (event.status === "full") {
@@ -102,6 +108,10 @@ export default function EventDetailScreen() {
     }
     // 連打防止: 既に処理中の場合はスキップ
     if (joiningRef.current) return;
+    if (event.eventType === "gourmet" && !termsAccepted) {
+      Alert.alert("規約への同意が必要です", "イベント参加規約を確認し、同意にチェックしてください。");
+      return;
+    }
 
     const priceLabel = priceNum === 0
       ? "無料"
@@ -110,7 +120,7 @@ export default function EventDetailScreen() {
         : effectivePrice;
     Alert.alert(
       "参加申込の確認",
-      `「${event.title}」に申し込みますか？\n${event.selectionMethod === "lottery" ? "抽選イベントです。申込後、参加確定をお待ちください。" : `参加費: ${priceLabel}`}`,
+      `「${event.title}」に申し込みますか？\n${event.eventType === "gourmet" ? "幹事の承認後に参加確定となり、参加者チャットへ入れます。" : event.selectionMethod === "lottery" ? "抽選イベントです。申込後、参加確定をお待ちください。" : `参加費: ${priceLabel}`}`,
       [
         { text: "キャンセル", style: "cancel" },
         {
@@ -121,10 +131,18 @@ export default function EventDetailScreen() {
             joiningRef.current = true;
             try {
               const applicants = event.applicantIds ?? [...(event.participants ?? [])];
-              if (!applicants.includes(CURRENT_USER.id)) applicants.push(CURRENT_USER.id);
-              event.applicantIds = applicants;
-              event.attendees = applicants.length;
+              if (event.eventType === "gourmet") submitGourmetApplication(event, CURRENT_USER.id);
+              else {
+                if (!applicants.includes(CURRENT_USER.id)) applicants.push(CURRENT_USER.id);
+                event.applicantIds = applicants;
+                event.attendees = applicants.length;
+              }
               setHasApplied(true);
+
+              if (event.eventType === "gourmet") {
+                Alert.alert("申込完了", "幹事へ参加申込を送りました。承認後、参加者チャットへ入れるようになります。");
+                return;
+              }
 
               if (event.selectionMethod === "lottery") {
                 Alert.alert("申込完了", "抽選への申込を受け付けました。参加確定の連絡をお待ちください。");
@@ -191,6 +209,43 @@ export default function EventDetailScreen() {
         },
       ],
     );
+  };
+
+  const approveGourmetApplicant = (memberId: string) => {
+    const member = getMemberById(memberId);
+    Alert.alert("参加申込を承認", `${member?.name ?? "メンバー"}さんの参加を確定しますか？`, [
+      { text: "キャンセル", style: "cancel" },
+      { text: "承認する", onPress: () => {
+        approveGourmetApplication(event, memberId);
+        const room = joinEventChat(event.id, event.title, event.chatId, event.createdBy);
+        joinEventChat(event.id, event.title, room.id, memberId);
+        event.chatId = room.id;
+        setEventRevision((value) => value + 1);
+        Alert.alert("承認完了", `${member?.name ?? "メンバー"}さんの参加を確定し、参加者チャットへ追加しました。`);
+      } },
+    ]);
+  };
+
+  const cancelGourmetParticipant = (memberId: string) => {
+    const member = getMemberById(memberId);
+    Alert.alert("参加をキャンセル", `${member?.name ?? "メンバー"}さんの参加を幹事側でキャンセルしますか？`, [
+      { text: "戻る", style: "cancel" },
+      { text: "キャンセルする", style: "destructive", onPress: async () => {
+        cancelGourmetParticipation(event, memberId);
+        if (event.chatId) await removeMemberFromRoom(event.chatId, memberId);
+        setEventRevision((value) => value + 1);
+        Alert.alert("キャンセル完了", "必要に応じて「追加募集を開始」から募集を再開できます。");
+      } },
+    ]);
+  };
+
+  const handleReopenGourmetRecruitment = () => {
+    if (!reopenGourmetRecruitment(event)) {
+      Alert.alert("追加募集できません", "現在、募集定員に達しています。");
+      return;
+    }
+    setEventRevision((value) => value + 1);
+    Alert.alert("追加募集を開始しました", "イベント一覧に「空席あり」として表示されます。");
   };
 
   const handleOpenChat = () => {
@@ -398,6 +453,25 @@ export default function EventDetailScreen() {
           <View style={{ marginLeft: 11 }}><Text style={{ fontSize: 11, color: colors.muted }}>幹事</Text><Text style={{ fontSize: 15, fontWeight: "800", color: colors.foreground }}>{event.eventType === "official" ? "IRO＋運営" : (organizer?.name ?? "メンバー")}</Text></View>
         </View>
 
+        {isGourmetOrganizer ? (
+          <View style={{ backgroundColor: "#F5F8FC", borderRadius: 14, padding: 14, marginBottom: 16, borderWidth: 1, borderColor: "#DCE7F2" }}>
+            <Text style={{ fontSize: 16, fontWeight: "900", color: colors.foreground }}>幹事メニュー</Text>
+            <Text style={{ fontSize: 12, lineHeight: 18, color: colors.muted, marginTop: 4 }}>申込を承認すると参加が確定し、自動で参加者チャットに追加されます。</Text>
+            <Text style={{ fontSize: 13, fontWeight: "800", color: colors.foreground, marginTop: 14, marginBottom: 7 }}>承認待ち（{pendingApplicantIds.length}人）</Text>
+            {pendingApplicantIds.length ? pendingApplicantIds.map((memberId) => {
+              const member = getMemberById(memberId);
+              return <View key={memberId} style={{ flexDirection: "row", alignItems: "center", paddingVertical: 8, borderTopWidth: 0.5, borderTopColor: colors.border }}><Image source={member?.avatar ?? DEFAULT_AVATAR} style={{ width: 34, height: 34, borderRadius: 17 }} contentFit="cover" /><Text style={{ flex: 1, marginLeft: 9, fontSize: 14, fontWeight: "700", color: colors.foreground }}>{member?.name ?? "メンバー"}</Text><Pressable onPress={() => approveGourmetApplicant(memberId)} style={{ borderRadius: 9, backgroundColor: "#34C759", paddingHorizontal: 12, paddingVertical: 7 }}><Text style={{ color: "#FFF", fontSize: 12, fontWeight: "800" }}>承認</Text></Pressable></View>;
+            }) : <Text style={{ fontSize: 13, color: colors.muted, paddingVertical: 8 }}>現在、承認待ちの申込はありません。</Text>}
+
+            <Text style={{ fontSize: 13, fontWeight: "800", color: colors.foreground, marginTop: 14, marginBottom: 7 }}>参加確定者</Text>
+            {(event.participants ?? []).map((memberId) => {
+              const member = getMemberById(memberId);
+              return <View key={memberId} style={{ flexDirection: "row", alignItems: "center", paddingVertical: 8, borderTopWidth: 0.5, borderTopColor: colors.border }}><Image source={member?.avatar ?? DEFAULT_AVATAR} style={{ width: 34, height: 34, borderRadius: 17 }} contentFit="cover" /><Text style={{ flex: 1, marginLeft: 9, fontSize: 14, fontWeight: "700", color: colors.foreground }}>{member?.name ?? "メンバー"}</Text>{memberId !== event.createdBy ? <Pressable onPress={() => cancelGourmetParticipant(memberId)} style={{ borderRadius: 9, borderWidth: 1, borderColor: colors.error, paddingHorizontal: 10, paddingVertical: 6 }}><Text style={{ color: colors.error, fontSize: 11, fontWeight: "800" }}>幹事キャンセル</Text></Pressable> : null}</View>;
+            })}
+            {event.status !== "open" && (event.participants ?? []).length < event.capacity ? <Pressable onPress={handleReopenGourmetRecruitment} style={{ marginTop: 12, borderRadius: 11, backgroundColor: "#E8A0BF", paddingVertical: 11, alignItems: "center" }}><Text style={{ fontSize: 14, fontWeight: "900", color: "#FFF" }}>追加募集を開始</Text></Pressable> : null}
+          </View>
+        ) : null}
+
         {event.genres?.length ? (
           <View style={{ marginBottom: 16 }}>
             <Text style={{ fontSize: 13, fontWeight: "800", color: colors.foreground, marginBottom: 8 }}>グルメジャンル</Text>
@@ -545,6 +619,23 @@ export default function EventDetailScreen() {
           </View>
         ) : null}
 
+        {event.eventType === "gourmet" && isJoined ? (
+          <View style={{ backgroundColor: "#FFF4F2", borderRadius: 14, padding: 14, marginBottom: 16, borderWidth: 1, borderColor: "#F3D0CA" }}>
+            <Text style={{ fontSize: 14, fontWeight: "900", color: colors.error }}>キャンセルは幹事へ連絡してください</Text>
+            <Text style={{ fontSize: 13, lineHeight: 20, color: colors.foreground, marginTop: 5 }}>参加者自身ではキャンセルできません。参加者チャットから幹事へ連絡し、幹事側でキャンセル処理を行います。</Text>
+          </View>
+        ) : null}
+
+        {event.eventType === "gourmet" && !isJoined && !hasApplied && !isGourmetOrganizer ? (
+          <View style={{ backgroundColor: "#FFF8F0", borderRadius: 14, padding: 14, marginBottom: 16, borderWidth: 1, borderColor: "#EED9BF" }}>
+            <Pressable onPress={() => setTermsAccepted((value) => !value)} style={{ flexDirection: "row", alignItems: "center" }}>
+              <View style={{ width: 24, height: 24, borderRadius: 6, backgroundColor: termsAccepted ? "#E8A0BF" : colors.surface, borderWidth: 1, borderColor: termsAccepted ? "#E8A0BF" : colors.border, alignItems: "center", justifyContent: "center" }}>{termsAccepted ? <IconSymbol name="checkmark" size={15} color="#FFF" /> : null}</View>
+              <Text style={{ flex: 1, marginLeft: 9, fontSize: 14, fontWeight: "800", color: colors.foreground }}>イベント参加規約に同意する</Text>
+            </Pressable>
+            <Pressable onPress={() => Linking.openURL(EVENT_TERMS_URL)} style={{ marginLeft: 33, marginTop: 7 }}><Text style={{ fontSize: 13, color: "#5B9BD5", textDecorationLine: "underline" }}>イベント参加規約を確認する</Text></Pressable>
+          </View>
+        ) : null}
+
         {event.externalUrl ? (
           <Pressable onPress={() => Linking.openURL(event.externalUrl!)} style={{ flexDirection: "row", alignItems: "center", backgroundColor: "#EAF5FA", borderRadius: 14, padding: 14, marginBottom: 16 }}>
             <IconSymbol name="link" size={18} color="#5B9BD5" /><Text style={{ flex: 1, fontSize: 14, fontWeight: "700", color: "#5B9BD5", marginLeft: 8 }} numberOfLines={1}>店舗・イベントURLを開く</Text><IconSymbol name="chevron.right" size={16} color="#5B9BD5" />
@@ -623,7 +714,7 @@ export default function EventDetailScreen() {
 
         {/* 参加ボタン */}
         <Pressable
-          onPress={isJoined || hasApplied ? undefined : handleJoin}
+          onPress={isJoined || hasApplied || isGourmetOrganizer || (event.eventType === "gourmet" && !termsAccepted) ? undefined : handleJoin}
           style={({ pressed }) => ({
             backgroundColor: isJoined
               ? "#34C759"
@@ -635,11 +726,11 @@ export default function EventDetailScreen() {
             borderRadius: 14,
             paddingVertical: 16,
             alignItems: "center",
-            opacity: pressed && !isJoined && !hasApplied ? 0.8 : 1,
+            opacity: event.eventType === "gourmet" && !termsAccepted && !hasApplied && !isJoined && !isGourmetOrganizer ? 0.45 : pressed && !isJoined && !hasApplied ? 0.8 : 1,
           })}
         >
           <Text style={{ fontSize: 17, fontWeight: "700", color: "#FFF" }}>
-            {isJoined ? "✓ 参加確定" : hasApplied ? "✓ 申込済み（確定待ち）" : event.status === "full" ? "満席" : event.selectionMethod === "lottery" ? "抽選に申し込む" : "参加を申し込む"}
+            {isGourmetOrganizer ? "幹事メニューで申込を管理" : isJoined ? "✓ 参加確定" : hasApplied ? "✓ 申込済み（幹事の承認待ち）" : event.status === "full" ? "満席" : event.eventType === "gourmet" && !termsAccepted ? "規約に同意して申し込む" : event.selectionMethod === "lottery" ? "抽選に申し込む" : "参加を申し込む"}
           </Text>
         </Pressable>
       </View>

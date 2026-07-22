@@ -9,7 +9,7 @@ import {
   type Member,
 } from "@/constants/mock-data";
 import { useAuthContext } from "@/lib/auth-context";
-import { getRoomById, getMessages, saveMessagesToStorage, loadMessagesFromStorage, loadDynamicRooms, renameRoom, addMemberToRoom, removeMemberFromRoom } from "@/lib/chat-store";
+import { getRoomById, getMessages, saveMessagesToStorage, loadMessagesFromStorage, loadDynamicRooms, renameRoom, addMemberToRoom, removeMemberFromRoom, toggleMessageReaction } from "@/lib/chat-store";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useColors } from "@/hooks/use-colors";
 import { Image } from "expo-image";
@@ -83,9 +83,12 @@ function MentionText({
   );
 }
 
-function MessageBubble({ message, isMe, myAvatarUri }: { message: ChatMessage; isMe: boolean; myAvatarUri?: string | null }) {
+const REACTION_EMOJIS = ["👍", "❤️", "😂", "🎉", "😋", "🙏"] as const;
+
+function MessageBubble({ message, isMe, myAvatarUri, onReact }: { message: ChatMessage; isMe: boolean; myAvatarUri?: string | null; onReact: (emoji: string) => void }) {
   const colors = useColors();
   const sender = getMemberById(message.senderId);
+  const [showReactionPicker, setShowReactionPicker] = useState(false);
 
   const formatTime = (dateStr: string) => {
     const d = new Date(dateStr);
@@ -156,6 +159,26 @@ function MessageBubble({ message, isMe, myAvatarUri }: { message: ChatMessage; i
         >
           {formatTime(message.createdAt)}
         </Text>
+        <View style={{ flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 4, marginTop: 3, justifyContent: isMe ? "flex-end" : "flex-start" }}>
+          {Object.entries(message.reactions ?? {}).map(([emoji, memberIds]) => (
+            <Pressable
+              key={emoji}
+              onPress={() => onReact(emoji)}
+              style={{ flexDirection: "row", alignItems: "center", borderRadius: 11, paddingHorizontal: 7, paddingVertical: 2, backgroundColor: memberIds.includes(CURRENT_USER.id) ? "#F8DCE9" : colors.surface, borderWidth: 1, borderColor: memberIds.includes(CURRENT_USER.id) ? "#E8A0BF" : colors.border }}
+            >
+              <Text style={{ fontSize: 13 }}>{emoji}</Text>
+              <Text style={{ fontSize: 10, fontWeight: "700", color: colors.muted, marginLeft: 3 }}>{memberIds.length}</Text>
+            </Pressable>
+          ))}
+          <Pressable onPress={() => setShowReactionPicker((value) => !value)} accessibilityLabel="リアクションを追加" style={{ paddingHorizontal: 5, paddingVertical: 2 }}>
+            <Text style={{ fontSize: 15, color: colors.muted }}>☺︎＋</Text>
+          </Pressable>
+        </View>
+        {showReactionPicker ? (
+          <View style={{ flexDirection: "row", borderRadius: 18, paddingHorizontal: 6, paddingVertical: 5, marginTop: 4, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, alignSelf: isMe ? "flex-end" : "flex-start" }}>
+            {REACTION_EMOJIS.map((emoji) => <Pressable key={emoji} onPress={() => { onReact(emoji); setShowReactionPicker(false); }} style={{ paddingHorizontal: 5, paddingVertical: 2 }}><Text style={{ fontSize: 19 }}>{emoji}</Text></Pressable>)}
+          </View>
+        ) : null}
       </View>
     </View>
   );
@@ -333,8 +356,9 @@ export default function ChatScreen() {
       loadMessagesFromStorage(id).then((stored) => {
         if (stored.length > 0) {
           setMessages((prev) => {
-            const existingIds = new Set(prev.map((m) => m.id));
-            const merged = [...prev, ...stored.filter((m) => !existingIds.has(m.id))];
+            const storedById = new Map(stored.map((message) => [message.id, message]));
+            const existingIds = new Set(prev.map((message) => message.id));
+            const merged = [...prev.map((message) => storedById.get(message.id) ?? message), ...stored.filter((message) => !existingIds.has(message.id))];
             return merged.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
           });
         }
@@ -468,6 +492,12 @@ export default function ChatScreen() {
     }
   }, [messageText, pendingImage, id, room]);
 
+  const handleReaction = useCallback(async (messageId: string, emoji: string) => {
+    if (!id) return;
+    const updated = await toggleMessageReaction(id, messageId, emoji, CURRENT_USER.id);
+    if (updated) setMessages((current) => current.map((message) => message.id === updated.id ? updated : message));
+  }, [id]);
+
   useEffect(() => {
     if (messages.length > 0) {
       setTimeout(() => {
@@ -502,6 +532,10 @@ export default function ChatScreen() {
 
   const typeLabel = room.type === "event" ? "イベント" : room.type === "board" ? "掲示板" : room.type === "rank" ? "ランク専用" : room.type === "group" ? "友達グループ" : room.type === "dm" ? "DM" : "部活動";
   const typeColor = room.type === "event" ? "#E8A0BF" : room.type === "board" ? "#A7C7E7" : room.type === "rank" ? "#F59E0B" : room.type === "group" ? "#5B9BD5" : room.type === "dm" ? "#FF9500" : "#34C759";
+  const canManageRoom = userIsAdmin || room.createdBy === CURRENT_USER.id;
+  const canInviteMembers = canManageRoom && room.type !== "rank" && room.type !== "event" && room.type !== "dm";
+  const inviteCandidates = (room.type === "group" ? getFriends(CURRENT_USER.id) : MEMBERS.filter((member) => member.id !== CURRENT_USER.id))
+    .filter((member) => !roomParticipants.includes(member.id));
 
   return (
     <ScreenContainer edges={["top", "left", "right"]}>
@@ -563,6 +597,7 @@ export default function ChatScreen() {
               message={item}
               isMe={item.senderId === CURRENT_USER.id}
               myAvatarUri={myAvatarUri}
+              onReact={(emoji) => handleReaction(item.id, emoji)}
             />
           )}
           contentContainerStyle={{ paddingVertical: 16 }}
@@ -723,7 +758,7 @@ export default function ChatScreen() {
           </View>
 
           {/* 管理者機能（アプリ管理者またはチャット作成者のみ表示） */}
-          {(userIsAdmin || room.createdBy === CURRENT_USER.id) && room.type !== "rank" && (
+          {canManageRoom && room.type !== "rank" && (
             <View
               style={{
                 margin: 16,
@@ -803,13 +838,13 @@ export default function ChatScreen() {
                 </TouchableOpacity>
               )}
               {/* メンバー追加 */}
-              {room.type === "group" && room.createdBy === CURRENT_USER.id ? (
+              {canInviteMembers ? (
                 <TouchableOpacity
                   onPress={() => setShowAddMember(true)}
                   style={{ flexDirection: "row", alignItems: "center", paddingVertical: 6 }}
                 >
                   <IconSymbol name="person.badge.plus" size={16} color="#34C759" />
-                  <Text style={{ fontSize: 13, color: "#34C759", marginLeft: 6 }}>友達を追加</Text>
+                  <Text style={{ fontSize: 13, color: "#34C759", marginLeft: 6 }}>メンバーを招待</Text>
                 </TouchableOpacity>
               ) : null}
             </View>
@@ -821,7 +856,7 @@ export default function ChatScreen() {
               const member = getMemberById(pid);
               if (!member) return null;
               const isCurrentUser = pid === CURRENT_USER.id;
-              const canRemove = (userIsAdmin || room.createdBy === CURRENT_USER.id) && !isCurrentUser;
+              const canRemove = canManageRoom && room.type !== "event" && !isCurrentUser;
               return (
                 <View
                   key={pid}
@@ -883,6 +918,22 @@ export default function ChatScreen() {
                 </View>
               );
             })}
+            {room.type !== "rank" ? (
+              <Pressable
+                onPress={() => Alert.alert("チャットから退出", "このチャットから退出しますか？退出後は、再度招待されるまで閲覧できません。", [
+                  { text: "キャンセル", style: "cancel" },
+                  { text: "退出する", style: "destructive", onPress: async () => {
+                    if (!id) return;
+                    await removeMemberFromRoom(id, CURRENT_USER.id);
+                    setShowParticipants(false);
+                    router.replace("/chat-list");
+                  } },
+                ])}
+                style={{ marginTop: 20, borderRadius: 12, borderWidth: 1, borderColor: colors.error, paddingVertical: 13, alignItems: "center" }}
+              >
+                <Text style={{ fontSize: 14, fontWeight: "800", color: colors.error }}>チャットから退出</Text>
+              </Pressable>
+            ) : null}
           </ScrollView>
         </View>
       </Modal>
@@ -913,7 +964,7 @@ export default function ChatScreen() {
             </Pressable>
           </View>
           <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 32 }}>
-            {getFriends(CURRENT_USER.id).filter((member) => !roomParticipants.includes(member.id)).map((member) => (
+            {inviteCandidates.map((member) => (
               <TouchableOpacity
                 key={member.id}
                 onPress={async () => {
@@ -955,7 +1006,7 @@ export default function ChatScreen() {
                 </View>
               </TouchableOpacity>
             ))}
-            {getFriends(CURRENT_USER.id).filter((member) => !roomParticipants.includes(member.id)).length === 0 && (
+            {inviteCandidates.length === 0 && (
               <View style={{ alignItems: "center", paddingVertical: 40 }}>
                 <Text style={{ fontSize: 14, color: colors.muted }}>追加できるメンバーはいません</Text>
               </View>
