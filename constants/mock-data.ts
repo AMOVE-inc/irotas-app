@@ -98,6 +98,8 @@ export interface Event {
   status: "open" | "full" | "ended";
   createdBy: string; // admin member id
   chatId?: string; // private chat id
+  applicationDeadline?: string; // 募集期日
+  cancellationPolicy?: string; // イベント個別のキャンセルポリシー
 }
 
 export interface Restaurant {

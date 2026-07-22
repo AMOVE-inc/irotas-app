@@ -43,6 +43,67 @@ const BOARD_GROUPS: { key: BoardCategory["group"]; label: string }[] = [
   { key: "club", label: "部活" },
 ];
 
+const BOARD_EVENT_RULES = [
+  {
+    title: "✅ 1. 募集および参加確定について",
+    items: [
+      "メンバーの調整：原則IRO+内で募集するイベントは、参加者をIRO+メンバー限定としてください。やむをえず人数調整で外部の方も参加される場合は、事前に運営までご連絡ください。",
+      "募集期間の調整：募集人数を大幅に超えた場合は、運営の判断により募集期日を早めるよう調整を促すことがあります。",
+      "迅速な確定連絡：募集期日を過ぎた後、幹事様は速やかに（原則2日以内）参加者を確定し、プライベートチャットで参加確定連絡をお願いします。",
+      "リアクションの徹底：確定連絡に対し、1週間以上リアクション（スタンプ可）がない場合はキャンセル扱いとなります。",
+    ],
+  },
+  {
+    title: "✅ 2. キャンセルポリシーについて",
+    intro: "⚠️ 原則キャンセルはお控えください。誰もが安心して楽しくイベントを企画し、美味しい時間を共有し続けられる場所であるための規定です。",
+    items: [
+      "開催日の1週間前（7日前）〜当日のキャンセルは、原則としてキャンセル料100%が発生します。",
+      "代理の参加者が見つかり、枠を譲渡できた場合はキャンセル料はかかりません。",
+      "代理参加者を探す・決定する際は、必ず事前にイベント主催者（幹事または運営）へプライベートチャットで連絡し、承諾を得てください。個別DMは幹事が気づかず、運営でも検知できないためNGです。",
+    ],
+  },
+  {
+    title: "✅ 3. ドタキャンに対するペナルティについて",
+    items: [
+      "前日および当日のキャンセル（ドタキャン）に限り、キャンセル料とは別に1ペナルティポイントが付与されます。",
+      "ポイントの有効期限は付与日から3ヶ月間です。",
+      "累積3ポイントに達した場合、該当月から1ヶ月間、全イベントへの参加および新規申込ができません。",
+      "イベントを無断欠席した場合、またはキャンセル料の支払いを拒否した場合は即退会処分となります。",
+    ],
+  },
+] as const;
+
+function BoardRulesPanel() {
+  const colors = useColors();
+  const [expanded, setExpanded] = useState(false);
+  return (
+    <View style={{ marginHorizontal: 16, marginTop: 12, marginBottom: 2, borderRadius: 14, backgroundColor: "#FFF8F0", borderWidth: 1, borderColor: "#EED9BF", overflow: "hidden" }}>
+      <Pressable onPress={() => setExpanded((value) => !value)} style={{ flexDirection: "row", alignItems: "center", padding: 14 }}>
+        <View style={{ width: 34, height: 34, borderRadius: 17, backgroundColor: "#FF950018", alignItems: "center", justifyContent: "center" }}><IconSymbol name="shield.fill" size={18} color="#C97813" /></View>
+        <View style={{ flex: 1, marginLeft: 10 }}><Text style={{ fontSize: 15, fontWeight: "900", color: colors.foreground }}>掲示板・イベント募集のルール</Text><Text style={{ fontSize: 12, color: colors.muted, marginTop: 2 }}>投稿・参加前に必ず確認してください</Text></View>
+        <IconSymbol name={expanded ? "chevron.up" : "chevron.down"} size={18} color={colors.muted} />
+      </Pressable>
+      {expanded ? (
+        <View style={{ paddingHorizontal: 14, paddingBottom: 16, borderTopWidth: 0.5, borderTopColor: "#EED9BF" }}>
+          {BOARD_EVENT_RULES.map((section) => (
+            <View key={section.title} style={{ marginTop: 16 }}>
+              <Text style={{ fontSize: 15, fontWeight: "900", color: colors.foreground, lineHeight: 22 }}>{section.title}</Text>
+              {"intro" in section ? <Text style={{ fontSize: 13, lineHeight: 20, color: colors.foreground, marginTop: 7 }}>{section.intro}</Text> : null}
+              {section.items.map((item) => <View key={item} style={{ flexDirection: "row", marginTop: 8 }}><Text style={{ fontSize: 13, lineHeight: 20, color: colors.foreground, marginRight: 7 }}>•</Text><Text style={{ flex: 1, fontSize: 13, lineHeight: 20, color: colors.foreground }}>{item}</Text></View>)}
+            </View>
+          ))}
+          <View style={{ marginTop: 18, backgroundColor: colors.surface, borderRadius: 12, padding: 12 }}>
+            <Text style={{ fontSize: 14, fontWeight: "900", color: colors.foreground }}>💡 最後に、メンバーの皆様へ</Text>
+            <Text style={{ fontSize: 13, lineHeight: 20, color: colors.foreground, marginTop: 7 }}>急な仕事や体調不良などで、1週間を切ってキャンセルせざるを得ない場合は、まずイベント主催者・幹事へすぐに一報を入れ、コミュニティ内で代理参加者をお探しください。</Text>
+            <Text style={{ fontSize: 13, lineHeight: 20, fontWeight: "800", color: colors.foreground, marginTop: 8 }}>イベントは幹事の皆様の善意と、お店側の協力で成り立っています。全員が気持ちよく活動できるよう、ルール遵守とスケジュール管理をお願いします🙏🏻</Text>
+            <Text style={{ fontSize: 13, lineHeight: 20, color: colors.foreground, marginTop: 8 }}>今後もみんなで最高に美味しい体験をたくさん作っていきましょう😊</Text>
+          </View>
+        </View>
+      ) : null}
+    </View>
+  );
+}
+
 function MealReportContent({ thread, compact = false }: { thread: BoardThread; compact?: boolean }) {
   const colors = useColors();
   const report = thread.mealReport;
@@ -1607,6 +1668,8 @@ export default function BoardScreen() {
           </Pressable>
         </View>
       </View>
+
+      <BoardRulesPanel />
 
       {/* 大分類 + スレッド分類 */}
       <View style={{ borderBottomWidth: 0.5, borderBottomColor: colors.border, backgroundColor: "#FBFDFF" }}>

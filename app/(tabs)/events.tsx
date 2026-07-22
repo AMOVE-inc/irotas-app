@@ -6,7 +6,7 @@ import { getAllEvents } from "@/lib/event-store";
 import { filterAndSortEvents, type EventTypeFilter } from "@/lib/event-filters";
 import { useColors } from "@/hooks/use-colors";
 import { Image } from "expo-image";
-import { useRouter } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 import { useState, useCallback, useMemo } from "react";
 import {
   FlatList,
@@ -363,10 +363,13 @@ export default function EventsScreen() {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [refreshing, setRefreshing] = useState(false);
+  const [allEvents, setAllEvents] = useState<Event[]>(() => getAllEvents(EVENTS));
   const { user: authUser } = useAuthContext();
-  const userIsAdmin = authUser?.role === "admin";
+  const canCreateEvent = Boolean(authUser);
 
-  const allEvents = getAllEvents(EVENTS);
+  useFocusEffect(useCallback(() => {
+    setAllEvents([...getAllEvents(EVENTS)]);
+  }, []));
   const filteredEvents = useMemo(
     () => filterAndSortEvents(allEvents, {
       area: activeTab as "all" | "kanto" | "kansai",
@@ -407,7 +410,7 @@ export default function EventsScreen() {
         <Text style={{ fontSize: 26, fontWeight: "800", color: colors.foreground, letterSpacing: -0.5 }}>
           イベント
         </Text>
-        {userIsAdmin && (
+        {canCreateEvent && (
           <Pressable
             onPress={() => router.push("/create-event")}
             style={{

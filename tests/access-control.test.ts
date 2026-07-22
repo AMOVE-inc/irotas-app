@@ -38,7 +38,7 @@ describe("access control", () => {
     expect(normalizeBranchRoles(["kanto", "kanto"])).toEqual(["kanto"]);
   });
 
-  it.each(["admin-dashboard", "campaign-manager", "csv-import", "create-event"])(
+  it.each(["admin-dashboard", "campaign-manager", "csv-import"])(
     "marks %s as an admin-only route",
     (route) => {
       expect(isAdminRoute(route)).toBe(true);
@@ -48,6 +48,7 @@ describe("access control", () => {
   it("keeps member routes outside the admin-only set", () => {
     expect(isAdminRoute("profile")).toBe(false);
     expect(isAdminRoute("events")).toBe(false);
+    expect(isAdminRoute("create-event")).toBe(false);
     expect(isAdminRoute(undefined)).toBe(false);
   });
 

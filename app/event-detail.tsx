@@ -3,12 +3,12 @@ import { IconSymbol } from "@/components/ui/icon-symbol";
 import { EVENTS, CURRENT_USER, DEFAULT_AVATAR, getMemberById, type Event } from "@/constants/mock-data";
 import { joinEventChat } from "@/lib/chat-store";
 import { getAllEvents } from "@/lib/event-store";
-import { getIrotasPoints, adjustIrotasPoints, isFeeExempt } from "@/lib/irotas-points-store";
+import { getIrotasPoints, adjustIrotasPoints } from "@/lib/irotas-points-store";
 import { createPaymentRecord } from "@/lib/payment-store";
 import { useColors } from "@/hooks/use-colors";
 import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Alert,
   Linking,
@@ -39,13 +39,11 @@ export default function EventDetailScreen() {
   // イロタスポイント
   const [irotasPoints, setIrotasPoints] = useState(0);
   const [usePoints, setUsePoints] = useState(false);
-  const [feeExempt, setFeeExempt] = useState(false);
   // ボタン連打防止フラグ
   const joiningRef = useRef(false);
 
   useEffect(() => {
     getIrotasPoints(CURRENT_USER.id).then(setIrotasPoints);
-    isFeeExempt(CURRENT_USER.id).then(setFeeExempt);
   }, []);
 
   if (!event) {
@@ -92,7 +90,7 @@ export default function EventDetailScreen() {
   const pointsToUse = usePoints ? Math.min(irotasPoints, priceNum) : 0;
   const finalPrice = Math.max(0, priceNum - pointsToUse);
 
-  const handleJoin = useCallback(() => {
+  const handleJoin = () => {
     if (event.status === "full") {
       Alert.alert("満席", "このイベントは満席です");
       return;
@@ -178,7 +176,7 @@ export default function EventDetailScreen() {
         },
       ],
     );
-  }, [event, priceNum, usePoints, pointsToUse, finalPrice, effectivePrice, router]);
+  };
 
   const handleOpenChat = () => {
     if (chatRoomId) {
@@ -491,6 +489,20 @@ export default function EventDetailScreen() {
             {event.description}
           </Text>
         </View>
+
+        {event.applicationDeadline ? (
+          <View style={{ backgroundColor: colors.surface, borderRadius: 14, padding: 16, marginBottom: 16 }}>
+            <Text style={{ fontSize: 14, fontWeight: "800", color: colors.foreground }}>募集期日</Text>
+            <Text style={{ fontSize: 15, color: colors.foreground, marginTop: 6 }}>{event.applicationDeadline}</Text>
+          </View>
+        ) : null}
+
+        {event.cancellationPolicy ? (
+          <View style={{ backgroundColor: "#FFF8F0", borderRadius: 14, padding: 16, marginBottom: 16, borderWidth: 1, borderColor: "#F1DFC9" }}>
+            <Text style={{ fontSize: 14, fontWeight: "800", color: colors.foreground }}>キャンセルポリシー</Text>
+            <Text style={{ fontSize: 14, lineHeight: 21, color: colors.foreground, marginTop: 7 }}>{event.cancellationPolicy}</Text>
+          </View>
+        ) : null}
 
         {/* 参加者一覧（参加済みの場合） */}
         {isJoined && event.participants.length > 0 && (

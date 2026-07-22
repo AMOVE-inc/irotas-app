@@ -29,7 +29,7 @@ import {
 import { useAuthContext } from "@/lib/auth-context";
 import * as ImagePicker from "expo-image-picker";
 import * as Clipboard from "expo-clipboard";
-import { OFFICIAL_INSTAGRAM_URL, OFFICIAL_LINE_URL } from "@/constants/external-links";
+import { COMMUNITY_TERMS_URL, EVENT_TERMS_URL, OFFICIAL_INSTAGRAM_URL, OFFICIAL_LINE_URL } from "@/constants/external-links";
 
 function PointsProgressCard({ points, rank }: { points: number; rank: MemberRank }) {
   const colors = useColors();
@@ -1042,6 +1042,28 @@ export default function ProfileScreen() {
               icon: "shield.fill",
               label: "ルール",
               onPress: () => router.push("/community-rules" as any),
+            },
+            {
+              icon: "doc.text.fill",
+              label: "コミュニティ利用規約",
+              onPress: async () => {
+                try {
+                  await Linking.openURL(COMMUNITY_TERMS_URL);
+                } catch {
+                  Alert.alert("リンクを開けませんでした", COMMUNITY_TERMS_URL);
+                }
+              },
+            },
+            {
+              icon: "doc.text.fill",
+              label: "イベント参加規約",
+              onPress: async () => {
+                try {
+                  await Linking.openURL(EVENT_TERMS_URL);
+                } catch {
+                  Alert.alert("リンクを開けませんでした", EVENT_TERMS_URL);
+                }
+              },
             },
             {
               icon: "doc.text.fill",

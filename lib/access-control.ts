@@ -5,7 +5,6 @@ const ADMIN_ROUTE_NAMES = new Set([
   "admin-dashboard",
   "campaign-manager",
   "csv-import",
-  "create-event",
 ]);
 
 /** Unknown or missing role values must always fail closed. */
