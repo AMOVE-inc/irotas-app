@@ -1,4 +1,5 @@
 import { ScreenContainer } from "@/components/screen-container";
+import { NewMemberMark } from "@/components/new-member-mark";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { EVENTS, CURRENT_USER, DEFAULT_AVATAR, getMemberById, type Event } from "@/constants/mock-data";
 import { EVENT_BUDGET_RANGES, GOURMET_GENRES, type EventBudgetRangeKey } from "@/constants/event-options";
@@ -287,7 +288,9 @@ function EventCard({ event, onPress }: { event: Event; onPress: () => void }) {
         </View>
         <View style={{ flexDirection: "row", alignItems: "center", marginTop: 5 }}>
           <Image source={event.eventType === "official" ? DEFAULT_AVATAR : (organizer?.avatar ?? DEFAULT_AVATAR)} style={{ width: 18, height: 18, borderRadius: 9 }} contentFit="cover" />
-          <Text style={{ flex: 1, marginLeft: 5, fontSize: 10, fontWeight: "700", color: colors.muted }} numberOfLines={1}>{event.eventType === "official" ? "IRO＋運営" : (organizer?.name ?? "メンバー")}</Text>
+          <Text style={{ marginLeft: 5, fontSize: 10, fontWeight: "700", color: colors.muted }} numberOfLines={1}>{event.eventType === "official" ? "IRO＋運営" : (organizer?.name ?? "メンバー")}</Text>
+          {event.eventType !== "official" && organizer ? <NewMemberMark member={organizer} size={11} /> : null}
+          <View style={{ flex: 1 }} />
           <Text style={{ fontSize: 11, fontWeight: "800", color: "#E8A0BF" }}>{event.rankPrices?.[CURRENT_USER.rank] ?? event.price}</Text>
         </View>
       </View>

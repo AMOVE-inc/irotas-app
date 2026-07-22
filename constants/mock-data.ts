@@ -367,7 +367,7 @@ export const MEMBERS: Member[] = [
     rank: "regular", points: 20, level: 2, branch: "kanto", generation: 4,
     bio: "新メンバーです。よろしくお願いします！",
     interests: [],
-    role: "member", joinedAt: "2026-02-01", gender: "male",
+    role: "member", joinedAt: "2026-07-10", gender: "male",
   },
 ];
 
@@ -592,13 +592,6 @@ export const BOARD_THREADS: BoardThread[] = [
     eventDate: "2026-03-30", chatId: "chat4",
   },
   {
-    id: "t7", title: "IRO＋コミュニティからのお知らせ",
-    author: MEMBERS[0], category: "announcement", commentCount: 3,
-    lastUpdated: "2026-03-24T09:00:00",
-    preview: "今月のコミュニティ運営とイベントについてお知らせします。",
-    isRecruiting: false,
-  },
-  {
     id: "t8", title: "はじめまして！かずまです",
     author: MEMBERS[0], category: "free-chat", commentCount: 7,
     lastUpdated: "2026-03-24T08:30:00",
@@ -787,7 +780,6 @@ export const RANK_THRESHOLDS = [
 ];
 
 export const BOARD_CATEGORIES: BoardCategory[] = [
-  { key: "announcement", label: "運営アナウンス", group: "all", createdByAdmin: true },
   { key: "meal-report", label: "今日のごちそうさま報告", group: "all", createdByAdmin: true },
   { key: "gourmet-advice", label: "教えてグルメ相談室", group: "all", createdByAdmin: true },
   { key: "free-chat", label: "なんでも掲示板", group: "all", createdByAdmin: true },

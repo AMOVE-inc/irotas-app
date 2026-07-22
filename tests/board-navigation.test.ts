@@ -4,7 +4,6 @@ import { BOARD_CATEGORIES, CHAT_ROOMS, CLUBS, CURRENT_USER } from "../constants/
 describe("board category ordering", () => {
   it("orders the four general categories from top to bottom", () => {
     expect(BOARD_CATEGORIES.filter((category) => category.group === "all").map((category) => category.label)).toEqual([
-      "運営アナウンス",
       "今日のごちそうさま報告",
       "教えてグルメ相談室",
       "なんでも掲示板",
@@ -19,8 +18,9 @@ describe("board category ordering", () => {
     expect(visibleLabels).toEqual(joinedClubNames);
   });
 
-  it("keeps announcements in chat and the general board out of chat", () => {
+  it("keeps announcements only in chat and the general board out of chat", () => {
     expect(CHAT_ROOMS.find((room) => room.id === "board-announcement")?.sourceId).toBe("announcement");
+    expect(BOARD_CATEGORIES.some((category) => category.key === "announcement")).toBe(false);
     expect(CHAT_ROOMS.some((room) => room.id === "board-free-chat")).toBe(false);
   });
 });

@@ -1,4 +1,5 @@
 import { ScreenContainer } from "@/components/screen-container";
+import { NewMemberMark } from "@/components/new-member-mark";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import {
   RANK_COLORS,
@@ -124,9 +125,10 @@ export default function MemberProfileScreen() {
             </View>
           </View>
 
-          <Text style={{ fontSize: 24, fontWeight: "800", color: colors.foreground, marginTop: 12 }}>
-            {selfName ?? member.name}
-          </Text>
+          <View style={{ flexDirection: "row", alignItems: "center", marginTop: 12 }}>
+            <Text style={{ fontSize: 24, fontWeight: "800", color: colors.foreground }}>{selfName ?? member.name}</Text>
+            <NewMemberMark member={member} size={18} />
+          </View>
 
           <View style={{ flexDirection: "row", alignItems: "center", marginTop: 6, gap: 8 }}>
             <View

@@ -1,4 +1,5 @@
 import { ScreenContainer } from "@/components/screen-container";
+import { NewMemberMark } from "@/components/new-member-mark";
 import { BrandLogo } from "@/components/brand-logo";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import {
@@ -377,6 +378,7 @@ function TimelinePostCard({ post }: { post: TimelinePost }) {
             <Text style={{ fontSize: 15, fontWeight: "700", color: colors.foreground }}>
               {post.author.name}
             </Text>
+            <NewMemberMark member={post.author} />
             <RankBadge rank={post.author.rank} />
           </View>
           <Text style={{ fontSize: 12, color: colors.muted, marginTop: 1 }}>

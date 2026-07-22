@@ -1,4 +1,5 @@
 import { ScreenContainer } from "@/components/screen-container";
+import { NewMemberMark } from "@/components/new-member-mark";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { MEMBERS, CURRENT_USER, RANK_COLORS, RANK_LABELS } from "@/constants/mock-data";
 import { useColors } from "@/hooks/use-colors";
@@ -112,6 +113,7 @@ export default function MembersScreen() {
                   <Text style={{ fontSize: 15, fontWeight: "700", color: colors.foreground }}>
                     {item.name}
                   </Text>
+                  <NewMemberMark member={item} />
                   {isMe && (
                     <View
                       style={{

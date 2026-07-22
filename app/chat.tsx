@@ -1,4 +1,5 @@
 import { ScreenContainer } from "@/components/screen-container";
+import { NewMemberMark } from "@/components/new-member-mark";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import {
   CURRENT_USER,
@@ -121,11 +122,12 @@ function MessageBubble({ message, isMe, myAvatarUri, onReact }: { message: ChatM
         />
       )}
       <View style={{ maxWidth: "70%" }}>
-        {!isMe && (
-          <Text style={{ fontSize: 11, color: colors.muted, marginBottom: 2, marginLeft: 2 }}>
-            {sender?.name}
-          </Text>
-        )}
+        {!isMe && sender ? (
+          <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 2, marginLeft: 2 }}>
+            <Text style={{ fontSize: 11, color: colors.muted }}>{sender.name}</Text>
+            <NewMemberMark member={sender} size={11} />
+          </View>
+        ) : null}
         <View
           style={{
             backgroundColor: isMe ? "#E8A0BF" : "#ECECEF",

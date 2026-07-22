@@ -1,4 +1,5 @@
 import { ScreenContainer } from "@/components/screen-container";
+import { NewMemberMark } from "@/components/new-member-mark";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import {
   CURRENT_USER,
@@ -784,9 +785,10 @@ export default function ProfileScreen() {
               <IconSymbol name="crown.fill" size={12} color="#FFF" />
             </View>
           </View>
-          <Text style={{ fontSize: 22, fontWeight: "800", color: colors.foreground, marginTop: 12 }}>
-            {profileName}
-          </Text>
+          <View style={{ flexDirection: "row", alignItems: "center", marginTop: 12 }}>
+            <Text style={{ fontSize: 22, fontWeight: "800", color: colors.foreground }}>{profileName}</Text>
+            <NewMemberMark member={user} size={17} />
+          </View>
           <View style={{ flexDirection: "row", alignItems: "center", marginTop: 4 }}>
             <View
               style={{

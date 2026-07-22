@@ -1,4 +1,5 @@
 import { ScreenContainer } from "@/components/screen-container";
+import { NewMemberMark } from "@/components/new-member-mark";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import {
   BOARD_THREADS,
@@ -231,6 +232,7 @@ function ThreadCard({ thread, onPress, onEdit }: { thread: BoardThread; onPress:
             <Text style={{ fontSize: 13, fontWeight: "600", color: colors.foreground }}>
               {thread.author.name}
             </Text>
+            <NewMemberMark member={thread.author} size={13} />
             <View
               style={{
                 backgroundColor: isPlatinum ? "#171717" : RANK_COLORS[thread.author.rank] + "20",
@@ -620,6 +622,7 @@ function ThreadDetailModal({
                 <Text style={{ fontSize: 14, fontWeight: "700", color: colors.foreground }}>
                   {thread.author.name}
                 </Text>
+                <NewMemberMark member={thread.author} size={13} />
                 <View
                   style={{
                     backgroundColor: isPlatinum ? "#171717" : RANK_COLORS[thread.author.rank] + "20",
@@ -1691,7 +1694,6 @@ export default function BoardScreen() {
     const club = clubs.find((item) => `club-${item.id}` === category.key);
     if (club) return { icon: club.icon, description: `${club.memberIds.length}人で活動中`, accent: "#7D6A92" };
     const presentations: Record<string, { icon: string; description: string; accent: string }> = {
-      announcement: { icon: "📣", description: "運営からの大切なお知らせ", accent: "#B75E87" },
       "meal-report": { icon: "🍽️", description: "今日食べたお店をみんなに共有", accent: "#D0784A" },
       "gourmet-advice": { icon: "💡", description: "お店選びやグルメの相談", accent: "#C08A25" },
       "free-chat": { icon: "💬", description: "気軽に投稿できる自由な掲示板", accent: "#4A86A8" },
@@ -1723,10 +1725,6 @@ export default function BoardScreen() {
   };
 
   const handleOpenCategory = (category: BoardCategory) => {
-    if (category.key === "announcement") {
-      router.push({ pathname: "/chat", params: { id: "board-announcement" } });
-      return;
-    }
     router.push({ pathname: "/board", params: { category: category.key, view: "threads" } });
   };
 
@@ -1861,7 +1859,7 @@ export default function BoardScreen() {
         }
       /> : <View style={{ flex: 1 }} />}
 
-      {isThreadView && (activeCategory !== "announcement" || userIsAdmin) ? (
+      {isThreadView ? (
         <Pressable
           accessibilityLabel={`${categories.find((category) => category.key === activeCategory)?.label ?? "掲示板"}に投稿`}
           onPress={() => setShowCreateThread(true)}
