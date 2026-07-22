@@ -179,6 +179,10 @@ export interface BoardThread {
     budget: string;
     comment: string;
   };
+  selfIntroduction?: {
+    introduction: string;
+    wantToTry?: string;
+  };
 }
 
 export interface BoardComment {
@@ -535,6 +539,14 @@ export const RESTAURANTS: Restaurant[] = [
 
 export const BOARD_THREADS: BoardThread[] = [
   {
+    id: "t10", title: "けんたさんの自己紹介",
+    author: MEMBERS[7], category: "introduction", commentCount: 2,
+    lastUpdated: "2026-07-20T12:00:00",
+    preview: "東京を中心に食べ歩きを始めたばかりです。皆さんよろしくお願いします。",
+    isRecruiting: false,
+    selfIntroduction: { introduction: "東京を中心に食べ歩きを始めたばかりです。皆さんよろしくお願いします。", wantToTry: "気になるお店を一緒に開拓するグルメ会を企画してみたいです。" },
+  },
+  {
     id: "t1", title: "渋谷でおすすめの焼肉屋さん教えてください！",
     author: MEMBERS[3], category: "gourmet-advice", commentCount: 15,
     lastUpdated: "2026-03-23T14:00:00",
@@ -780,6 +792,7 @@ export const RANK_THRESHOLDS = [
 ];
 
 export const BOARD_CATEGORIES: BoardCategory[] = [
+  { key: "introduction", label: "自己紹介", group: "all", createdByAdmin: true },
   { key: "meal-report", label: "今日のごちそうさま報告", group: "all", createdByAdmin: true },
   { key: "gourmet-advice", label: "教えてグルメ相談室", group: "all", createdByAdmin: true },
   { key: "free-chat", label: "なんでも掲示板", group: "all", createdByAdmin: true },

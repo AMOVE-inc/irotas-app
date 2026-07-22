@@ -1,6 +1,7 @@
 import { ScreenContainer } from "@/components/screen-container";
 import { NewMemberMark } from "@/components/new-member-mark";
 import { MentionSuggestions, MentionText } from "@/components/mention-ui";
+import { TextFormattingToolbar } from "@/components/text-formatting-toolbar";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import {
   CURRENT_USER,
@@ -40,6 +41,7 @@ import {
 import { canAccessChatRoom } from "@/lib/chat-access";
 import { getFriends } from "@/lib/friendship";
 import { getMentionGroups, getMentionQuery, getMentionedMemberIds, insertMention } from "@/lib/mentions";
+import { applyTextFormat, type TextFormat, type TextSelection } from "@/lib/text-formatting";
 
 const REACTION_EMOJIS = ["👍", "❤️", "😂", "🎉", "😋", "🙏"] as const;
 
@@ -153,6 +155,7 @@ export default function ChatScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const [messageText, setMessageText] = useState("");
   const [mentionQuery, setMentionQuery] = useState<string | null>(null);
+  const [messageSelection, setMessageSelection] = useState<TextSelection>({ start: 0, end: 0 });
   const mentionGroups = useMemo(() => getMentionGroups(MEMBERS, CLUBS), []);
   const flatListRef = useRef<FlatList>(null);
   const inputRef = useRef<TextInput>(null);
@@ -216,10 +219,21 @@ export default function ChatScreen() {
   }, []);
 
   const handleSelectMention = useCallback((label: string) => {
-      setMessageText((current) => insertMention(current, label));
+      setMessageText((current) => {
+        const next = insertMention(current, label);
+        setMessageSelection({ start: next.length, end: next.length });
+        return next;
+      });
       setMentionQuery(null);
       inputRef.current?.focus();
   }, []);
+
+  const handleMessageFormat = useCallback((format: TextFormat) => {
+    const result = applyTextFormat(messageText, messageSelection, format);
+    setMessageText(result.text);
+    setMessageSelection(result.selection);
+    inputRef.current?.focus();
+  }, [messageSelection, messageText]);
 
   // 通知権限を初回に要求
   useEffect(() => {
@@ -258,6 +272,7 @@ export default function ChatScreen() {
     };
     setMessages((prev) => [...prev, newMessage]);
     setMessageText("");
+    setMessageSelection({ start: 0, end: 0 });
     setPendingImage(null);
     setMentionQuery(null);
 
@@ -433,6 +448,7 @@ export default function ChatScreen() {
               @を入力してメンション
             </Text>
           </View>
+          <View style={{ paddingHorizontal: 16 }}><TextFormattingToolbar onFormat={handleMessageFormat} /></View>
           {/* 画像プレビュー */}
           {pendingImage && (
             <View style={{ paddingHorizontal: 16, paddingBottom: 6 }}>
@@ -484,6 +500,8 @@ export default function ChatScreen() {
             <TextInput
               ref={inputRef}
               value={messageText}
+              selection={messageSelection}
+              onSelectionChange={(event) => setMessageSelection(event.nativeEvent.selection)}
               onChangeText={handleTextChange}
               placeholder="メッセージを入力..."
               placeholderTextColor={colors.muted}

@@ -4,10 +4,16 @@ import { BOARD_CATEGORIES, CHAT_ROOMS, CLUBS, CURRENT_USER } from "../constants/
 describe("board category ordering", () => {
   it("orders the four general categories from top to bottom", () => {
     expect(BOARD_CATEGORIES.filter((category) => category.group === "all").map((category) => category.label)).toEqual([
+      "自己紹介",
       "今日のごちそうさま報告",
       "教えてグルメ相談室",
       "なんでも掲示板",
     ]);
+  });
+
+  it("provides a structured self-introduction thread template", () => {
+    const introduction = BOARD_CATEGORIES.find((category) => category.key === "introduction");
+    expect(introduction?.label).toBe("自己紹介");
   });
 
   it("puts the monthly report before clubs the member has joined", () => {

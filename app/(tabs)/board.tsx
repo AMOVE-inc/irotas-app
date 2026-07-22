@@ -1,6 +1,7 @@
 import { ScreenContainer } from "@/components/screen-container";
 import { NewMemberMark } from "@/components/new-member-mark";
 import { MentionSuggestions, MentionText } from "@/components/mention-ui";
+import { TextFormattingToolbar } from "@/components/text-formatting-toolbar";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import {
   BOARD_THREADS,
@@ -23,6 +24,7 @@ import { GOURMET_ADVICE_BUDGETS, isGoogleMapsUrl, MEAL_BUDGETS, PREFECTURES } fr
 import { useClubs } from "@/lib/club-store";
 import { getMentionGroups, getMentionQuery, getMentionedMemberIds, insertMention } from "@/lib/mentions";
 import { sendMentionNotification } from "@/lib/notifications";
+import { applyTextFormat, type TextFormat, type TextSelection } from "@/lib/text-formatting";
 import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
@@ -197,6 +199,19 @@ function GourmetAdviceContent({ thread, compact = false }: { thread: BoardThread
   );
 }
 
+function SelfIntroductionContent({ thread, compact = false }: { thread: BoardThread; compact?: boolean }) {
+  const colors = useColors();
+  const introduction = thread.selfIntroduction;
+  if (!introduction) return null;
+  return (
+    <View style={{ backgroundColor: "#F5F2F8", borderRadius: 12, padding: compact ? 10 : 14, marginBottom: compact ? 8 : 16, borderWidth: 1, borderColor: "#DED6E7" }}>
+      <Text style={{ fontSize: 12, fontWeight: "900", color: "#6A5B87", marginBottom: 5 }}>自己紹介</Text>
+      <MentionText content={introduction.introduction} groups={BOARD_MENTION_GROUPS} />
+      {!compact && introduction.wantToTry ? <View style={{ marginTop: 12, paddingTop: 10, borderTopWidth: 1, borderTopColor: colors.border }}><Text style={{ fontSize: 12, fontWeight: "900", color: "#6A5B87", marginBottom: 5 }}>IRO+でやってみたいこと</Text><MentionText content={introduction.wantToTry} groups={BOARD_MENTION_GROUPS} /></View> : null}
+    </View>
+  );
+}
+
 function ThreadCard({ thread, onPress, onEdit }: { thread: BoardThread; onPress: () => void; onEdit?: () => void }) {
   const colors = useColors();
   const router = useRouter();
@@ -283,6 +298,8 @@ function ThreadCard({ thread, onPress, onEdit }: { thread: BoardThread; onPress:
         <MealReportContent thread={thread} compact />
       ) : thread.gourmetAdvice ? (
         <GourmetAdviceContent thread={thread} compact />
+      ) : thread.selfIntroduction ? (
+        <SelfIntroductionContent thread={thread} compact />
       ) : (
         <Text style={{ marginBottom: 8 }} numberOfLines={2}><MentionText content={thread.preview} groups={BOARD_MENTION_GROUPS} /></Text>
       )}
@@ -526,6 +543,7 @@ function ThreadDetailModal({
   const router = useRouter();
   const [commentText, setCommentText] = useState("");
   const [mentionQuery, setMentionQuery] = useState<string | null>(null);
+  const [commentSelection, setCommentSelection] = useState<TextSelection>({ start: 0, end: 0 });
   const commentInputRef = useRef<TextInput>(null);
   const mentionGroups = useMemo(() => BOARD_MENTION_GROUPS, []);
   const [comments, setComments] = useState<BoardComment[]>(
@@ -553,6 +571,7 @@ function ThreadDetailModal({
     };
     setComments([...comments, newComment]);
     setCommentText("");
+    setCommentSelection({ start: 0, end: 0 });
     setMentionQuery(null);
     const preview = content.length > 50 ? `${content.slice(0, 50)}...` : content;
     for (const memberId of getMentionedMemberIds(content, MEMBERS, mentionGroups).filter((id) => id !== CURRENT_USER.id)) {
@@ -567,8 +586,19 @@ function ThreadDetailModal({
   };
 
   const handleCommentMention = (label: string) => {
-    setCommentText((current) => insertMention(current, label));
+    setCommentText((current) => {
+      const next = insertMention(current, label);
+      setCommentSelection({ start: next.length, end: next.length });
+      return next;
+    });
     setMentionQuery(null);
+    commentInputRef.current?.focus();
+  };
+
+  const handleCommentFormat = (format: TextFormat) => {
+    const result = applyTextFormat(commentText, commentSelection, format);
+    setCommentText(result.text);
+    setCommentSelection(result.selection);
     commentInputRef.current?.focus();
   };
 
@@ -675,6 +705,8 @@ function ThreadDetailModal({
             <MealReportContent thread={thread} />
           ) : thread.gourmetAdvice ? (
             <GourmetAdviceContent thread={thread} />
+          ) : thread.selfIntroduction ? (
+            <SelfIntroductionContent thread={thread} />
           ) : (
             <View style={{ marginBottom: 16 }}><MentionText content={thread.preview} groups={mentionGroups} /></View>
           )}
@@ -810,6 +842,7 @@ function ThreadDetailModal({
         <View style={{ backgroundColor: colors.background, borderTopWidth: 0.5, borderTopColor: colors.border }}>
           {mentionQuery !== null ? <MentionSuggestions query={mentionQuery} groups={mentionGroups} members={MEMBERS.filter((member) => member.id !== CURRENT_USER.id)} onSelect={handleCommentMention} /> : null}
           <Text style={{ fontSize: 11, color: colors.muted, paddingHorizontal: 16, paddingTop: 6 }}>@を入力して個人・グループをメンション</Text>
+          <View style={{ paddingHorizontal: 16 }}><TextFormattingToolbar onFormat={handleCommentFormat} /></View>
           <View
           style={{
             flexDirection: "row",
@@ -822,6 +855,8 @@ function ThreadDetailModal({
           <TextInput
             ref={commentInputRef}
             value={commentText}
+            selection={commentSelection}
+            onSelectionChange={(event) => setCommentSelection(event.nativeEvent.selection)}
             onChangeText={handleCommentTextChange}
             placeholder="コメントを入力..."
             placeholderTextColor={colors.muted}
@@ -933,6 +968,8 @@ function EditThreadModal({
   const insets = useSafeAreaInsets();
   const [title, setTitle] = useState(thread.title);
   const [content, setContent] = useState(thread.preview);
+  const [contentSelection, setContentSelection] = useState<TextSelection>({ start: 0, end: 0 });
+  const contentInputRef = useRef<TextInput>(null);
   const [images, setImages] = useState<string[]>(thread.images ?? []);
 
   const handlePickImage = async () => {
@@ -1029,7 +1066,10 @@ function EditThreadModal({
             <View>
               <Text style={{ fontSize: 13, fontWeight: "600", color: colors.muted, marginBottom: 6 }}>本文</Text>
               <TextInput
+                ref={contentInputRef}
                 value={content}
+                selection={contentSelection}
+                onSelectionChange={(event) => setContentSelection(event.nativeEvent.selection)}
                 onChangeText={setContent}
                 placeholder="内容を入力"
                 placeholderTextColor={colors.muted}
@@ -1046,6 +1086,7 @@ function EditThreadModal({
                   minHeight: 120,
                 }}
               />
+              <TextFormattingToolbar onFormat={(format) => { const result = applyTextFormat(content, contentSelection, format); setContent(result.text); setContentSelection(result.selection); contentInputRef.current?.focus(); }} />
             </View>
 
             {/* 写真 */}
@@ -1193,6 +1234,13 @@ function CreateThreadModal({
   const [content, setContent] = useState("");
   const [mentionQuery, setMentionQuery] = useState<string | null>(null);
   const contentInputRef = useRef<TextInput>(null);
+  const [contentSelection, setContentSelection] = useState<TextSelection>({ start: 0, end: 0 });
+  const [introductionText, setIntroductionText] = useState("");
+  const [wantToTry, setWantToTry] = useState("");
+  const [introductionSelection, setIntroductionSelection] = useState<TextSelection>({ start: 0, end: 0 });
+  const [wantToTrySelection, setWantToTrySelection] = useState<TextSelection>({ start: 0, end: 0 });
+  const introductionInputRef = useRef<TextInput>(null);
+  const wantToTryInputRef = useRef<TextInput>(null);
   const [isRecruiting, setIsRecruiting] = useState(false);
   const [capacity, setCapacity] = useState("");
   const [images, setImages] = useState<string[]>([]);
@@ -1213,6 +1261,7 @@ function CreateThreadModal({
   const [optionModal, setOptionModal] = useState<"prefecture" | "budget" | "advice-budget" | null>(null);
   const isMealReport = category === "meal-report";
   const isGourmetAdvice = category === "gourmet-advice";
+  const isIntroduction = category === "introduction";
   const mealReportValid =
     restaurantName.trim().length > 0 &&
     prefecture.length > 0 &&
@@ -1220,7 +1269,7 @@ function CreateThreadModal({
     (!googleMapUrl.trim() || isGoogleMapsUrl(googleMapUrl)) &&
     (!tabelogUrl.trim() || /^https?:\/\/(?:www\.)?tabelog\.com\//i.test(tabelogUrl.trim()));
   const adviceValid = adviceTheme.trim().length > 0 && adviceArea.trim().length > 0 && adviceScene.trim().length > 0 && adviceBudget.length > 0 && adviceComment.trim().length > 0;
-  const canSubmit = isMealReport ? mealReportValid : isGourmetAdvice ? adviceValid : title.trim().length > 0 && content.trim().length > 0;
+  const canSubmit = isMealReport ? mealReportValid : isGourmetAdvice ? adviceValid : isIntroduction ? introductionText.trim().length > 0 : title.trim().length > 0 && content.trim().length > 0;
 
   const handlePickImage = async () => {
     if (Platform.OS !== "web") {
@@ -1251,21 +1300,25 @@ function CreateThreadModal({
       setFormError("テーマ・エリア・利用シーン・予算・一言をすべて入力してください。");
       return;
     }
-    if (!isMealReport && !isGourmetAdvice && (!title.trim() || !content.trim())) return;
+    if (isIntroduction && !introductionText.trim()) {
+      setFormError("自己紹介文を入力してください。");
+      return;
+    }
+    if (!isMealReport && !isGourmetAdvice && !isIntroduction && (!title.trim() || !content.trim())) return;
     const normalizedComment = mealComment.trim();
     const normalizedMenu = recommendedMenu.trim();
     const newThread: BoardThread = {
       id: `t_new_${Date.now()}`,
-      title: isMealReport ? restaurantName.trim() : isGourmetAdvice ? adviceTheme.trim() : title.trim(),
+      title: isMealReport ? restaurantName.trim() : isGourmetAdvice ? adviceTheme.trim() : isIntroduction ? `${CURRENT_USER.name}さんの自己紹介` : title.trim(),
       author: CURRENT_USER,
       category: category as BoardThread["category"],
       commentCount: 0,
       lastUpdated: new Date().toISOString(),
       preview: isMealReport
         ? normalizedComment || normalizedMenu || `${prefecture}でいただきました。`
-        : isGourmetAdvice ? adviceComment.trim() : content.trim(),
-      isRecruiting: isMealReport || isGourmetAdvice ? false : isRecruiting,
-      recruitCapacity: !isMealReport && !isGourmetAdvice && isRecruiting ? parseInt(capacity || "10", 10) : undefined,
+        : isGourmetAdvice ? adviceComment.trim() : isIntroduction ? introductionText.trim() : content.trim(),
+      isRecruiting: isMealReport || isGourmetAdvice || isIntroduction ? false : isRecruiting,
+      recruitCapacity: !isMealReport && !isGourmetAdvice && !isIntroduction && isRecruiting ? parseInt(capacity || "10", 10) : undefined,
       recruitAttendees: 0,
       recruitParticipants: [],
       recruitApplicants: [],
@@ -1283,12 +1336,14 @@ function CreateThreadModal({
           }
         : undefined,
       gourmetAdvice: isGourmetAdvice ? { theme: adviceTheme.trim(), area: adviceArea.trim(), scene: adviceScene.trim(), budget: adviceBudget, comment: adviceComment.trim() } : undefined,
+      selfIntroduction: isIntroduction ? { introduction: introductionText.trim(), wantToTry: wantToTry.trim() || undefined } : undefined,
     };
     onAdd(newThread);
     if (!isMealReport && !isGourmetAdvice) {
-      const preview = content.length > 50 ? `${content.slice(0, 50)}...` : content;
+      const mentionContent = isIntroduction ? `${introductionText} ${wantToTry}` : content;
+      const preview = mentionContent.length > 50 ? `${mentionContent.slice(0, 50)}...` : mentionContent;
       const boardName = categories.find((item) => item.key === category)?.label ?? "掲示板";
-      for (const memberId of getMentionedMemberIds(content, MEMBERS, BOARD_MENTION_GROUPS).filter((id) => id !== CURRENT_USER.id)) {
+      for (const memberId of getMentionedMemberIds(mentionContent, MEMBERS, BOARD_MENTION_GROUPS).filter((id) => id !== CURRENT_USER.id)) {
         const member = MEMBERS.find((item) => item.id === memberId);
         if (member) void sendMentionNotification(member.name, CURRENT_USER.name, boardName, preview);
       }
@@ -1297,6 +1352,9 @@ function CreateThreadModal({
     setTitle("");
     setContent("");
     setMentionQuery(null);
+    setContentSelection({ start: 0, end: 0 });
+    setIntroductionText(""); setWantToTry("");
+    setIntroductionSelection({ start: 0, end: 0 }); setWantToTrySelection({ start: 0, end: 0 });
     setIsRecruiting(false);
     setCapacity("");
     setImages([]);
@@ -1363,7 +1421,21 @@ function CreateThreadModal({
             </Text>
           </View>
 
-          {isMealReport ? (
+          {isIntroduction ? (
+            <View style={{ gap: 18, marginBottom: 16 }}>
+              <View>
+                <Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground, marginBottom: 6 }}>自己紹介文 <Text style={{ color: colors.error }}>必須</Text></Text>
+                <TextInput ref={introductionInputRef} value={introductionText} selection={introductionSelection} onSelectionChange={(event) => setIntroductionSelection(event.nativeEvent.selection)} onChangeText={(text) => { setIntroductionText(text); setFormError(""); }} placeholder="プロフィールや好きな食べ物など、自由に自己紹介してください" placeholderTextColor={colors.muted} multiline textAlignVertical="top" style={{ backgroundColor: colors.surface, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: colors.foreground, minHeight: 130 }} />
+                <TextFormattingToolbar onFormat={(format) => { const result = applyTextFormat(introductionText, introductionSelection, format); setIntroductionText(result.text); setIntroductionSelection(result.selection); introductionInputRef.current?.focus(); }} />
+              </View>
+              <View>
+                <Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground, marginBottom: 6 }}>IRO+でやってみたいこと（任意）</Text>
+                <TextInput ref={wantToTryInputRef} value={wantToTry} selection={wantToTrySelection} onSelectionChange={(event) => setWantToTrySelection(event.nativeEvent.selection)} onChangeText={setWantToTry} placeholder="例：気になるお店を巡るグルメ会を企画したい" placeholderTextColor={colors.muted} multiline textAlignVertical="top" style={{ backgroundColor: colors.surface, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: colors.foreground, minHeight: 100 }} />
+                <TextFormattingToolbar onFormat={(format) => { const result = applyTextFormat(wantToTry, wantToTrySelection, format); setWantToTry(result.text); setWantToTrySelection(result.selection); wantToTryInputRef.current?.focus(); }} />
+              </View>
+              {formError ? <Text style={{ fontSize: 13, color: colors.error }}>{formError}</Text> : null}
+            </View>
+          ) : isMealReport ? (
             <View style={{ gap: 16, marginBottom: 16 }}>
               <View>
                 <Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground, marginBottom: 6 }}>
@@ -1518,6 +1590,8 @@ function CreateThreadModal({
               <TextInput
                 ref={contentInputRef}
                 value={content}
+                selection={contentSelection}
+                onSelectionChange={(event) => setContentSelection(event.nativeEvent.selection)}
                 onChangeText={(text) => { setContent(text); setMentionQuery(getMentionQuery(text)); }}
                 placeholder="投稿の内容を入力..."
                 placeholderTextColor={colors.muted}
@@ -1525,7 +1599,8 @@ function CreateThreadModal({
                 textAlignVertical="top"
                 style={{ backgroundColor: colors.surface, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: colors.foreground, minHeight: 150, marginBottom: 16 }}
               />
-              {mentionQuery !== null ? <MentionSuggestions query={mentionQuery} groups={BOARD_MENTION_GROUPS} members={MEMBERS.filter((member) => member.id !== CURRENT_USER.id)} onSelect={(label) => { setContent((current) => insertMention(current, label)); setMentionQuery(null); contentInputRef.current?.focus(); }} /> : null}
+              <TextFormattingToolbar onFormat={(format) => { const result = applyTextFormat(content, contentSelection, format); setContent(result.text); setContentSelection(result.selection); contentInputRef.current?.focus(); }} />
+              {mentionQuery !== null ? <MentionSuggestions query={mentionQuery} groups={BOARD_MENTION_GROUPS} members={MEMBERS.filter((member) => member.id !== CURRENT_USER.id)} onSelect={(label) => { setContent((current) => { const next = insertMention(current, label); setContentSelection({ start: next.length, end: next.length }); return next; }); setMentionQuery(null); contentInputRef.current?.focus(); }} /> : null}
               <Text style={{ fontSize: 11, color: colors.muted, marginTop: mentionQuery === null ? -10 : 6, marginBottom: 16 }}>@を入力して個人・グループをメンション</Text>
             </>
           )}
@@ -1732,6 +1807,7 @@ export default function BoardScreen() {
     const club = clubs.find((item) => `club-${item.id}` === category.key);
     if (club) return { icon: club.icon, description: `${club.memberIds.length}人で活動中`, accent: "#7D6A92" };
     const presentations: Record<string, { icon: string; description: string; accent: string }> = {
+      introduction: { icon: "👋", description: "メンバー同士で自己紹介", accent: "#7D6A92" },
       "meal-report": { icon: "🍽️", description: "今日食べたお店をみんなに共有", accent: "#D0784A" },
       "gourmet-advice": { icon: "💡", description: "お店選びやグルメの相談", accent: "#C08A25" },
       "free-chat": { icon: "💬", description: "気軽に投稿できる自由な掲示板", accent: "#4A86A8" },

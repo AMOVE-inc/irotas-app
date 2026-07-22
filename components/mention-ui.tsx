@@ -1,5 +1,5 @@
 import { Image } from "expo-image";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import { Pressable, ScrollView, Text, View, type TextStyle } from "react-native";
 import type { Member } from "@/constants/mock-data";
 import type { MentionGroup } from "@/lib/mentions";
 import { extractMentionLabels, isGroupMention } from "@/lib/mentions";
@@ -7,15 +7,31 @@ import { useColors } from "@/hooks/use-colors";
 
 export function MentionText({ content, outgoing = false, groups }: { content: string; outgoing?: boolean; groups: MentionGroup[] }) {
   const colors = useColors();
-  const parts = content.split(/(@[^\s@]+)/g);
+  const renderPlain = (value: string, keyPrefix: string) => value.split(/(@[^\s@]+)/g).map((part, index) => {
+    if (!part.startsWith("@")) return <Text key={`${keyPrefix}-${index}`}>{part}</Text>;
+    const [label] = extractMentionLabels(part);
+    const grouped = Boolean(label && isGroupMention(label, groups));
+    return <Text key={`${keyPrefix}-${index}`} style={{ fontWeight: "800", color: grouped ? (outgoing ? "#FFF3B0" : "#9A6A12") : (outgoing ? "#FFE0F0" : "#C05B88"), backgroundColor: grouped ? (outgoing ? "rgba(255,210,70,0.22)" : "#FFF2C7") : "transparent" }}>{part}</Text>;
+  });
+
+  const renderRich = (value: string, keyPrefix: string): React.ReactNode => {
+    const pattern = /(\*\*([\s\S]+?)\*\*|__([\s\S]+?)__|~~([\s\S]+?)~~|\[small\]([\s\S]+?)\[\/small\]|\[large\]([\s\S]+?)\[\/large\])/;
+    const match = pattern.exec(value);
+    if (!match || match.index === undefined) return renderPlain(value, keyPrefix);
+    const before = value.slice(0, match.index);
+    const after = value.slice(match.index + match[0].length);
+    let inner = "";
+    let style: TextStyle = {};
+    if (match[2] !== undefined) { inner = match[2]; style = { fontWeight: "900" }; }
+    else if (match[3] !== undefined) { inner = match[3]; style = { textDecorationLine: "underline" }; }
+    else if (match[4] !== undefined) { inner = match[4]; style = { textDecorationLine: "line-through" }; }
+    else if (match[5] !== undefined) { inner = match[5]; style = { fontSize: 12, lineHeight: 18 }; }
+    else { inner = match[6]; style = { fontSize: 18, lineHeight: 25 }; }
+    return <>{renderRich(before, `${keyPrefix}-before`)}<Text key={`${keyPrefix}-formatted`} style={style}>{renderRich(inner, `${keyPrefix}-inner`)}</Text>{renderRich(after, `${keyPrefix}-after`)}</>;
+  };
   return (
     <Text style={{ fontSize: 14, lineHeight: 20, color: outgoing ? "#FFF" : colors.foreground }}>
-      {parts.map((part, index) => {
-        if (!part.startsWith("@")) return <Text key={index}>{part}</Text>;
-        const [label] = extractMentionLabels(part);
-        const grouped = Boolean(label && isGroupMention(label, groups));
-        return <Text key={index} style={{ fontWeight: "800", color: grouped ? (outgoing ? "#FFF3B0" : "#9A6A12") : (outgoing ? "#FFE0F0" : "#C05B88"), backgroundColor: grouped ? (outgoing ? "rgba(255,210,70,0.22)" : "#FFF2C7") : "transparent" }}>{part}</Text>;
-      })}
+      {renderRich(content, "root")}
     </Text>
   );
 }
