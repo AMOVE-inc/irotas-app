@@ -1632,6 +1632,18 @@ export default function BoardScreen() {
   const visibleCategories = categories.filter(
     (category) => category.group === activeGroup && canAccessCategory(category),
   );
+  const categoryPresentation = (category: BoardCategory) => {
+    const club = clubs.find((item) => `club-${item.id}` === category.key);
+    if (club) return { icon: club.icon, description: `${club.memberIds.length}人で活動中`, accent: "#7D6A92" };
+    const presentations: Record<string, { icon: string; description: string; accent: string }> = {
+      announcement: { icon: "📣", description: "運営からの大切なお知らせ", accent: "#B75E87" },
+      "meal-report": { icon: "🍽️", description: "今日食べたお店をみんなに共有", accent: "#D0784A" },
+      "gourmet-advice": { icon: "💡", description: "お店選びやグルメの相談", accent: "#C08A25" },
+      "free-chat": { icon: "💬", description: "メンバー同士の自由な交流", accent: "#4A86A8" },
+      "club-all": { icon: "📅", description: "各部活の今月の活動をまとめて確認", accent: "#6A5B87" },
+    };
+    return presentations[category.key] ?? { icon: "#", description: "掲示板カテゴリ", accent: "#5B5A73" };
+  };
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
@@ -1736,65 +1748,35 @@ export default function BoardScreen() {
             );
           })}
         </View>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 10, gap: 8 }}
-        >
-          {visibleCategories.map((cat) => (
-            <Pressable
-              key={cat.key}
-              onPress={() => setActiveCategory(cat.key)}
-              style={{
-                paddingHorizontal: 16,
-                paddingVertical: 8,
-                borderRadius: 20,
-                backgroundColor: activeCategory === cat.key ? colors.primary : "#F1F6F9",
-                borderWidth: 1,
-                borderColor: activeCategory === cat.key ? colors.primary : "#DCEAF2",
-                ...(activeCategory === cat.key
-                  ? {
-                      shadowColor: "#B75E87",
-                      shadowOffset: { width: 0, height: 2 },
-                      shadowOpacity: 0.2,
-                      shadowRadius: 5,
-                      elevation: 2,
-                    }
-                  : {}),
-              }}
-            >
-              <Text
-                style={{
-                  fontSize: 14,
-                  fontWeight: "600",
-                  color: activeCategory === cat.key ? "#FFF" : "#5F6C75",
-                }}
-              >
-                {cat.label}
-              </Text>
-            </Pressable>
-          ))}
-          {/* 管理者のみカテゴリ追加 */}
-          {userIsAdmin && (
-            <Pressable
-              onPress={() => setShowAddCategory(true)}
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                paddingHorizontal: 12,
-                paddingVertical: 8,
-                borderRadius: 20,
-                backgroundColor: colors.surface,
-                borderWidth: 1,
-                borderColor: colors.border,
-                borderStyle: "dashed",
-              }}
-            >
-              <IconSymbol name="plus" size={14} color={colors.muted} />
-              <Text style={{ fontSize: 13, color: colors.muted, marginLeft: 4 }}>追加</Text>
-            </Pressable>
-          )}
-        </ScrollView>
+        {activeGroup === "area" ? (
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 10, gap: 8 }}>
+            {visibleCategories.map((cat) => (
+              <Pressable key={cat.key} onPress={() => setActiveCategory(cat.key)} style={{ paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20, backgroundColor: activeCategory === cat.key ? colors.primary : "#F1F6F9", borderWidth: 1, borderColor: activeCategory === cat.key ? colors.primary : "#DCEAF2" }}>
+                <Text style={{ fontSize: 14, fontWeight: "600", color: activeCategory === cat.key ? "#FFF" : "#5F6C75" }}>{cat.label}</Text>
+              </Pressable>
+            ))}
+          </ScrollView>
+        ) : (
+          <View style={{ paddingHorizontal: 16, paddingVertical: 10, gap: 8 }}>
+            {activeGroup === "club" ? <Text style={{ fontSize: 12, fontWeight: "700", color: colors.muted, marginBottom: 1 }}>活動レポートと入部中の部活</Text> : null}
+            {visibleCategories.map((cat) => {
+              const presentation = categoryPresentation(cat);
+              const selected = activeCategory === cat.key;
+              return (
+                <Pressable
+                  key={cat.key}
+                  onPress={() => setActiveCategory(cat.key)}
+                  style={{ flexDirection: "row", alignItems: "center", minHeight: 62, borderRadius: 14, paddingHorizontal: 13, paddingVertical: 9, backgroundColor: selected ? `${presentation.accent}14` : colors.surface, borderWidth: selected ? 1.5 : 1, borderColor: selected ? presentation.accent : colors.border }}
+                >
+                  <View style={{ width: 40, height: 40, borderRadius: 12, backgroundColor: `${presentation.accent}18`, alignItems: "center", justifyContent: "center" }}><Text style={{ fontSize: 21 }}>{presentation.icon}</Text></View>
+                  <View style={{ flex: 1, marginLeft: 11 }}><Text style={{ fontSize: 15, fontWeight: "900", color: colors.foreground }}>{cat.label}</Text><Text style={{ fontSize: 11, color: colors.muted, marginTop: 3 }}>{presentation.description}</Text></View>
+                  <IconSymbol name="chevron.right" size={17} color={selected ? presentation.accent : colors.muted} />
+                </Pressable>
+              );
+            })}
+          </View>
+        )}
+        {userIsAdmin ? <Pressable onPress={() => setShowAddCategory(true)} style={{ flexDirection: "row", alignItems: "center", alignSelf: "flex-end", marginHorizontal: 16, marginBottom: 10, paddingVertical: 5 }}><IconSymbol name="plus" size={13} color={colors.muted} /><Text style={{ fontSize: 12, color: colors.muted, marginLeft: 4 }}>カテゴリを追加</Text></Pressable> : null}
       </View>
 
       <FlatList

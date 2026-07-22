@@ -778,7 +778,7 @@ export const BOARD_CATEGORIES: BoardCategory[] = [
   { key: "free-chat", label: "フリーチャット", group: "all", createdByAdmin: true },
   { key: "kanto-branch", label: "関東", group: "area", createdByAdmin: true },
   { key: "kansai-branch", label: "関西", group: "area", createdByAdmin: true },
-  { key: "club-all", label: "全体活動報告", group: "club", createdByAdmin: true },
+  { key: "club-all", label: "今月の部活動レポート", group: "club", createdByAdmin: true },
   ...CLUBS.map((club) => ({
     key: `club-${club.id}`,
     label: club.name,
