@@ -629,11 +629,6 @@ export const CHAT_ROOMS: ChatRoom[] = [
     lastMessage: "IRO+運営からのお知らせをお届けします。", lastMessageAt: "2026-03-24T09:00:00", unreadCount: 1,
   },
   {
-    id: "board-free-chat", name: "フリーチャット", type: "board", sourceId: "free-chat",
-    participants: MEMBERS.map((member) => member.id), createdBy: "u1",
-    lastMessage: "最近行ってよかったお店を教えてください！", lastMessageAt: "2026-03-24T10:30:00", unreadCount: 3,
-  },
-  {
     id: "chat1", name: "第3回 関東支部交流会", type: "event", sourceId: "e1",
     participants: ["u1", "u2", "u4", "u6"], createdBy: "u1",
     lastMessage: "楽しみにしてます！", lastMessageAt: "2026-03-23T10:00:00", unreadCount: 2,
@@ -682,8 +677,6 @@ export const CHAT_ROOMS: ChatRoom[] = [
 
 export const CHAT_MESSAGES: ChatMessage[] = [
   { id: "ba1", chatId: "board-announcement", senderId: "u1", content: "IRO+運営からのお知らせをお届けします。最新情報はこちらでご確認ください。", createdAt: "2026-03-24T09:00:00" },
-  { id: "bf1", chatId: "board-free-chat", senderId: "u2", content: "最近行ってよかったお店はありますか？", createdAt: "2026-03-24T10:00:00" },
-  { id: "bf2", chatId: "board-free-chat", senderId: "u4", content: "恵比寿の新しいイタリアンがよかったです！", createdAt: "2026-03-24T10:30:00" },
   { id: "m1", chatId: "chat1", senderId: "u1", content: "皆さん、今日の交流会の詳細です。18:30に恵比寿駅西口集合でお願いします！", createdAt: "2026-03-23T08:00:00" },
   { id: "m2", chatId: "chat1", senderId: "u2", content: "了解です！楽しみにしてます✨", createdAt: "2026-03-23T08:30:00" },
   { id: "m3", chatId: "chat1", senderId: "u4", content: "遅れそうな場合は連絡しますね。", createdAt: "2026-03-23T09:00:00" },
@@ -797,7 +790,7 @@ export const BOARD_CATEGORIES: BoardCategory[] = [
   { key: "announcement", label: "運営アナウンス", group: "all", createdByAdmin: true },
   { key: "meal-report", label: "今日のごちそうさま報告", group: "all", createdByAdmin: true },
   { key: "gourmet-advice", label: "教えてグルメ相談室", group: "all", createdByAdmin: true },
-  { key: "free-chat", label: "フリーチャット", group: "all", createdByAdmin: true },
+  { key: "free-chat", label: "なんでも掲示板", group: "all", createdByAdmin: true },
   { key: "kanto-branch", label: "関東", group: "area", createdByAdmin: true },
   { key: "kansai-branch", label: "関西", group: "area", createdByAdmin: true },
   { key: "club-all", label: "今月の部活動レポート", group: "club", createdByAdmin: true },

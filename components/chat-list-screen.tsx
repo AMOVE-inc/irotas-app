@@ -152,6 +152,9 @@ export default function ChatListScreen() {
     return () => { active = false; };
   }, [refreshRooms]));
 
+  const announcementRoom = myRooms.find((room) => room.id === "board-announcement");
+  const joinedChatRooms = myRooms.filter((room) => room.id !== "board-announcement");
+
   return (
     <ScreenContainer edges={["top", "left", "right"]}>
       <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 16, paddingVertical: 10, borderBottomWidth: 0.5, borderBottomColor: colors.border }}>
@@ -164,15 +167,16 @@ export default function ChatListScreen() {
         </Pressable>
       </View>
 
+      {announcementRoom ? <ChatRoomCard room={announcementRoom} /> : null}
       {rankRooms.length > 0 ? (
         <View>
           <View style={{ paddingHorizontal: 16, paddingVertical: 8, backgroundColor: colors.surface }}><Text style={{ fontSize: 12, fontWeight: "700", color: colors.muted, letterSpacing: 0.5 }}>あなたのランク専用チャット</Text></View>
           {rankRooms.map((room) => <ChatRoomCard key={room.id} room={room} />)}
         </View>
       ) : null}
-      {myRooms.length > 0 ? <View style={{ paddingHorizontal: 16, paddingVertical: 8, backgroundColor: colors.surface }}><Text style={{ fontSize: 12, fontWeight: "700", color: colors.muted, letterSpacing: 0.5 }}>参加中のチャット</Text></View> : null}
+      {joinedChatRooms.length > 0 ? <View style={{ paddingHorizontal: 16, paddingVertical: 8, backgroundColor: colors.surface }}><Text style={{ fontSize: 12, fontWeight: "700", color: colors.muted, letterSpacing: 0.5 }}>参加中のチャット</Text></View> : null}
       <FlatList
-        data={myRooms}
+        data={joinedChatRooms}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => <ChatRoomCard room={item} />}
         showsVerticalScrollIndicator={false}

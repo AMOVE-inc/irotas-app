@@ -7,7 +7,7 @@ describe("board category ordering", () => {
       "運営アナウンス",
       "今日のごちそうさま報告",
       "教えてグルメ相談室",
-      "フリーチャット",
+      "なんでも掲示板",
     ]);
   });
 
@@ -19,8 +19,8 @@ describe("board category ordering", () => {
     expect(visibleLabels).toEqual(joinedClubNames);
   });
 
-  it("provides chat rooms for the announcement and free chat categories", () => {
+  it("keeps announcements in chat and the general board out of chat", () => {
     expect(CHAT_ROOMS.find((room) => room.id === "board-announcement")?.sourceId).toBe("announcement");
-    expect(CHAT_ROOMS.find((room) => room.id === "board-free-chat")?.sourceId).toBe("free-chat");
+    expect(CHAT_ROOMS.some((room) => room.id === "board-free-chat")).toBe(false);
   });
 });

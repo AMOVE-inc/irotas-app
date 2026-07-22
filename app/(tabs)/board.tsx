@@ -1694,7 +1694,7 @@ export default function BoardScreen() {
       announcement: { icon: "📣", description: "運営からの大切なお知らせ", accent: "#B75E87" },
       "meal-report": { icon: "🍽️", description: "今日食べたお店をみんなに共有", accent: "#D0784A" },
       "gourmet-advice": { icon: "💡", description: "お店選びやグルメの相談", accent: "#C08A25" },
-      "free-chat": { icon: "💬", description: "メンバー同士の自由な交流", accent: "#4A86A8" },
+      "free-chat": { icon: "💬", description: "気軽に投稿できる自由な掲示板", accent: "#4A86A8" },
       "club-all": { icon: "📅", description: "各部活の今月の活動をまとめて確認", accent: "#6A5B87" },
     };
     return presentations[category.key] ?? { icon: "#", description: "掲示板カテゴリ", accent: "#5B5A73" };
@@ -1727,10 +1727,6 @@ export default function BoardScreen() {
       router.push({ pathname: "/chat", params: { id: "board-announcement" } });
       return;
     }
-    if (category.key === "free-chat") {
-      router.push({ pathname: "/chat", params: { id: "board-free-chat" } });
-      return;
-    }
     router.push({ pathname: "/board", params: { category: category.key, view: "threads" } });
   };
 
@@ -1751,7 +1747,7 @@ export default function BoardScreen() {
         }}
       >
         {isThreadView ? (
-          <Pressable onPress={() => router.back()} style={{ flexDirection: "row", alignItems: "center", flex: 1, paddingVertical: 4 }}>
+          <Pressable accessibilityLabel="掲示板トップへ戻る" onPress={() => router.replace("/board")} style={{ flexDirection: "row", alignItems: "center", flex: 1, paddingVertical: 4 }}>
             <IconSymbol name="chevron.left" size={20} color={colors.foreground} />
             <Text numberOfLines={1} style={{ flex: 1, marginLeft: 8, fontSize: 20, fontWeight: "800", color: colors.foreground }}>
               {activeCategoryLabel}
