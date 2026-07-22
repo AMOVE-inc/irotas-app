@@ -68,4 +68,31 @@ describe("event list filtering and sorting", () => {
     );
     expect(result.map((event) => event.id)).toEqual(["early", "gourmet", "full"]);
   });
+
+  it("can sort by newest registration date", () => {
+    const result = filterAndSortEvents([
+      makeEvent({ id: "old", createdAt: "2026-07-01T10:00:00+09:00" }),
+      makeEvent({ id: "new", createdAt: "2026-07-20T10:00:00+09:00" }),
+    ], { area: "all", eventType: "all", openOnly: false, sortOrder: "newest" }, referenceDate);
+    expect(result.map((event) => event.id)).toEqual(["new", "old"]);
+  });
+
+  it("filters gourmet events where the member is organizer or participant", () => {
+    const gourmetEvents = [
+      makeEvent({ id: "host", eventType: "gourmet", createdBy: "u1" }),
+      makeEvent({ id: "join", eventType: "gourmet", createdBy: "u2", applicantIds: ["u1"] }),
+      makeEvent({ id: "other", eventType: "gourmet", createdBy: "u2" }),
+    ];
+    expect(filterAndSortEvents(gourmetEvents, { area: "all", eventType: "gourmet", openOnly: false, hostedByMemberId: "u1" }, referenceDate).map((event) => event.id)).toEqual(["host"]);
+    expect(filterAndSortEvents(gourmetEvents, { area: "all", eventType: "gourmet", openOnly: false, participatingMemberId: "u1" }, referenceDate).map((event) => event.id)).toEqual(["join"]);
+  });
+
+  it("filters by any selected genre and overlapping budget", () => {
+    const gourmetEvents = [
+      makeEvent({ id: "sushi", genres: ["寿司"], priceMin: 8000, priceMax: 12000 }),
+      makeEvent({ id: "italian", genres: ["イタリアン"], priceMin: 3000, priceMax: 5000 }),
+    ];
+    const result = filterAndSortEvents(gourmetEvents, { area: "all", eventType: "all", openOnly: false, genres: ["寿司", "焼肉"], budgetMin: 5000, budgetMax: 10000 }, referenceDate);
+    expect(result.map((event) => event.id)).toEqual(["sushi"]);
+  });
 });

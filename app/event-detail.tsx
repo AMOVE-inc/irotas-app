@@ -398,6 +398,13 @@ export default function EventDetailScreen() {
           <View style={{ marginLeft: 11 }}><Text style={{ fontSize: 11, color: colors.muted }}>幹事</Text><Text style={{ fontSize: 15, fontWeight: "800", color: colors.foreground }}>{event.eventType === "official" ? "IRO＋運営" : (organizer?.name ?? "メンバー")}</Text></View>
         </View>
 
+        {event.genres?.length ? (
+          <View style={{ marginBottom: 16 }}>
+            <Text style={{ fontSize: 13, fontWeight: "800", color: colors.foreground, marginBottom: 8 }}>グルメジャンル</Text>
+            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 7 }}>{event.genres.map((genre) => <View key={genre} style={{ borderRadius: 15, backgroundColor: "#F0E7EC", paddingHorizontal: 10, paddingVertical: 6 }}><Text style={{ fontSize: 12, fontWeight: "700", color: "#9C4F73" }}>{genre}</Text></View>)}</View>
+          </View>
+        ) : null}
+
         {/* Price + イロタスポイント割引 */}
         <View
           style={{

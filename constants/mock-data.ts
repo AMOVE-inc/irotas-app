@@ -77,6 +77,7 @@ export interface TimelinePost {
 
 export interface Event {
   id: string;
+  createdAt?: string;
   title: string;
   restaurantName?: string;
   description: string;
@@ -108,6 +109,9 @@ export interface Event {
   externalUrl?: string;
   publicNotes?: string;
   privateMemo?: string;
+  genres?: string[];
+  priceMin?: number;
+  priceMax?: number;
 }
 
 export interface Restaurant {
@@ -383,45 +387,45 @@ const today = new Date().toISOString().split("T")[0]; // 今日の日付
 
 export const EVENTS: Event[] = [
   {
-    id: "e1", title: "第3回 関東支部交流会",
+    id: "e1", createdAt: "2026-03-20T10:00:00+09:00", title: "第3回 関東支部交流会",
     description: "関東支部メンバーの交流を深める食事会です。今回は恵比寿の隠れ家イタリアンで開催！",
     date: today, time: "18:30", location: "恵比寿 リストランテ・ベッラ",
     image: "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=400",
     capacity: 20, attendees: 14, participants: ["u1", "u2", "u4", "u6"],
-    price: "¥5,000",
+    price: "¥5,000", priceMin: 5000, priceMax: 5000, genres: ["イタリアン"],
     rankPrices: { regular: "¥5,000", silver: "¥4,500", gold: "¥4,000", platinum: "¥3,500" },
     category: "kanto", eventType: "official", status: "open",
     createdBy: "u1", chatId: "chat1",
   },
   {
-    id: "e2", title: "IRO＋ 2周年記念パーティー",
+    id: "e2", createdAt: "2026-03-18T12:00:00+09:00", title: "IRO＋ 2周年記念パーティー",
     description: "IRO＋設立2周年を記念した特別パーティー！全国のメンバーが集結します。",
     date: "2026-04-26", time: "17:00", location: "六本木 グランドホール",
     image: "https://images.unsplash.com/photo-1530103862676-de8c9debad1d?w=400",
     capacity: 80, attendees: 52, participants: ["u1", "u2", "u3", "u4", "u5", "u6"],
-    price: "¥8,000",
+    price: "¥8,000", priceMin: 8000, priceMax: 8000, genres: ["洋食", "フレンチ"],
     rankPrices: { regular: "¥8,000", silver: "¥7,000", gold: "¥6,000", platinum: "¥5,000" },
     category: "all", eventType: "official", status: "open",
     createdBy: "u1", chatId: "chat2",
   },
   {
-    id: "e3", title: "関西グルメツアー in 道頓堀",
+    id: "e3", createdAt: "2026-03-22T09:00:00+09:00", title: "関西グルメツアー in 道頓堀",
     description: "大阪の名店を巡るグルメツアー。食い倒れの街を一緒に楽しみましょう！",
     date: "2026-04-19", time: "11:00", location: "道頓堀周辺",
     image: "https://images.unsplash.com/photo-1590559899731-a382839e5549?w=400",
     capacity: 15, attendees: 15, participants: ["u3", "u5", "u7"],
-    price: "¥3,000",
+    price: "¥3,000", priceMin: 3000, priceMax: 3000, genres: ["お好み焼き・たこ焼き", "居酒屋"],
     rankPrices: { regular: "¥3,000", silver: "¥2,500", gold: "¥2,000", platinum: "¥1,500" },
     category: "kansai", eventType: "gourmet", status: "full",
     createdBy: "u1",
   },
   {
-    id: "e4", title: "グルメ選手権 2026春",
+    id: "e4", createdAt: "2026-03-16T14:00:00+09:00", title: "グルメ選手権 2026春",
     description: "メンバーが推薦する最高の一品を決める投票イベント！",
     date: "2026-05-10", time: "14:00", location: "オンライン",
     image: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400",
     capacity: 100, attendees: 28, participants: ["u1", "u2", "u3"],
-    price: "無料", category: "all", eventType: "official", status: "open",
+    price: "無料", priceMin: 0, priceMax: 0, genres: ["日本料理", "洋食", "中華料理"], category: "all", eventType: "official", status: "open",
     createdBy: "u1",
   },
 ];

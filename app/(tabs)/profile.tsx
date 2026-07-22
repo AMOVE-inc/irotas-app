@@ -992,7 +992,7 @@ export default function ProfileScreen() {
           items={[
             {
               icon: "person.2.fill",
-              label: "支部メンバー",
+              label: "メンバー検索",
               onPress: () => router.push("/members"),
             },
             { icon: "bookmark.fill", label: "部活動", onPress: () => router.push("/clubs") },

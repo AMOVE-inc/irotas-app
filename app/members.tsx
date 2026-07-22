@@ -11,25 +11,12 @@ export default function MembersScreen() {
   const colors = useColors();
   const router = useRouter();
   const [searchText, setSearchText] = useState("");
-  const [selectedBranch, setSelectedBranch] = useState<"all" | "kanto" | "kansai">("all");
 
   const filteredMembers = useMemo(() => {
-    return MEMBERS.filter((m) => {
-      const matchesBranch = selectedBranch === "all" || m.branch === selectedBranch;
-      const matchesSearch =
-        !searchText ||
-        m.name.includes(searchText) ||
-        m.bio?.includes(searchText) ||
-        m.interests?.some((i) => i.includes(searchText));
-      return matchesBranch && matchesSearch;
-    });
-  }, [searchText, selectedBranch]);
-
-  const tabs: { key: "all" | "kanto" | "kansai"; label: string }[] = [
-    { key: "all", label: "全員" },
-    { key: "kanto", label: "関東支部" },
-    { key: "kansai", label: "関西支部" },
-  ];
+    const query = searchText.trim().toLowerCase();
+    if (!query) return MEMBERS;
+    return MEMBERS.filter((member) => member.name.toLowerCase().includes(query) || member.id.toLowerCase().includes(query));
+  }, [searchText]);
 
   return (
     <ScreenContainer>
@@ -49,9 +36,8 @@ export default function MembersScreen() {
           <IconSymbol name="arrow.left" size={22} color={colors.foreground} />
         </Pressable>
         <Text style={{ flex: 1, fontSize: 20, fontWeight: "800", color: colors.foreground }}>
-          支部メンバー
+          メンバー検索
         </Text>
-        <Text style={{ fontSize: 13, color: colors.muted }}>{filteredMembers.length}人</Text>
       </View>
 
       {/* Search */}
@@ -70,44 +56,11 @@ export default function MembersScreen() {
           <TextInput
             value={searchText}
             onChangeText={setSearchText}
-            placeholder="名前・趣味で検索..."
+            placeholder="名前または会員IDで検索"
             placeholderTextColor={colors.muted}
             style={{ flex: 1, marginLeft: 8, fontSize: 14, color: colors.foreground }}
           />
         </View>
-      </View>
-
-      {/* Branch tabs */}
-      <View
-        style={{
-          flexDirection: "row",
-          paddingHorizontal: 16,
-          paddingBottom: 10,
-          gap: 8,
-        }}
-      >
-        {tabs.map((tab) => (
-          <Pressable
-            key={tab.key}
-            onPress={() => setSelectedBranch(tab.key)}
-            style={{
-              paddingHorizontal: 14,
-              paddingVertical: 6,
-              borderRadius: 20,
-              backgroundColor: selectedBranch === tab.key ? "#E8A0BF" : colors.surface,
-            }}
-          >
-            <Text
-              style={{
-                fontSize: 13,
-                fontWeight: "600",
-                color: selectedBranch === tab.key ? "#FFF" : colors.muted,
-              }}
-            >
-              {tab.label}
-            </Text>
-          </Pressable>
-        ))}
       </View>
 
       {/* Member list */}
@@ -185,7 +138,7 @@ export default function MembersScreen() {
                   </View>
                 </View>
                 <Text style={{ fontSize: 12, color: colors.muted, marginTop: 2 }}>
-                  {item.generation}期生 · {item.branch === "kanto" ? "関東" : "関西"}支部
+                  ID: {item.id} · {item.generation}期生
                 </Text>
                 {item.bio && (
                   <Text

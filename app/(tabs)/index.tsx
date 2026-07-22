@@ -46,6 +46,27 @@ interface TimelineComment {
 // コメントストア（メモリ内）
 const timelineComments: TimelineComment[] = [];
 
+const HOME_CAMPAIGNS = [
+  {
+    id: "summer-points",
+    label: "期間限定",
+    title: "夏のイベント参加キャンペーン",
+    description: "対象イベントへの参加でイロタスポイントが2倍",
+    period: "7/1〜8/31",
+    color: "#E8A0BF",
+    route: "/events" as const,
+  },
+  {
+    id: "member-coupons",
+    label: "会員限定",
+    title: "今月のグルメクーポン",
+    description: "提携店で使える最新クーポンをチェック",
+    period: "7月分公開中",
+    color: "#5B9BD5",
+    route: "/coupons" as const,
+  },
+];
+
 function AnnouncementBanner({ announcements }: { announcements: Announcement[] }) {
   const colors = useColors();
   const { width: screenWidth } = useWindowDimensions();
@@ -123,6 +144,32 @@ function AnnouncementBanner({ announcements }: { announcements: Announcement[] }
           />
         ))}
       </View>
+    </View>
+  );
+}
+
+function CampaignSection() {
+  const colors = useColors();
+  const router = useRouter();
+  return (
+    <View style={{ marginBottom: 16 }}>
+      <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 16, marginBottom: 10 }}>
+        <IconSymbol name="gift.fill" size={18} color="#E8A0BF" />
+        <Text style={{ fontSize: 16, fontWeight: "800", color: colors.foreground, marginLeft: 7 }}>キャンペーン情報</Text>
+      </View>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, gap: 10 }}>
+        {HOME_CAMPAIGNS.map((campaign) => (
+          <Pressable key={campaign.id} onPress={() => router.push(campaign.route)} style={{ width: 270, borderRadius: 16, padding: 16, backgroundColor: `${campaign.color}16`, borderWidth: 1, borderColor: `${campaign.color}45` }}>
+            <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 8 }}>
+              <Text style={{ fontSize: 10, fontWeight: "800", color: campaign.color, backgroundColor: colors.background, borderRadius: 8, paddingHorizontal: 8, paddingVertical: 3 }}>{campaign.label}</Text>
+              <Text style={{ marginLeft: "auto", fontSize: 11, fontWeight: "700", color: colors.muted }}>{campaign.period}</Text>
+            </View>
+            <Text style={{ fontSize: 15, fontWeight: "900", color: colors.foreground }}>{campaign.title}</Text>
+            <Text style={{ fontSize: 12, lineHeight: 18, color: colors.muted, marginTop: 5 }}>{campaign.description}</Text>
+            <Text style={{ fontSize: 12, fontWeight: "800", color: campaign.color, marginTop: 10 }}>詳しく見る →</Text>
+          </Pressable>
+        ))}
+      </ScrollView>
     </View>
   );
 }
@@ -505,6 +552,7 @@ export default function HomeScreen() {
     () => (
       <>
         <AnnouncementBanner announcements={ANNOUNCEMENTS} />
+        <CampaignSection />
         <TodayEventsSection events={todayEvents} boardEvents={todayBoardEvents} />
         <View style={{ paddingHorizontal: 16, paddingVertical: 8, borderBottomWidth: 0.5, borderBottomColor: colors.border }}>
           <Text style={{ fontSize: 16, fontWeight: "700", color: colors.foreground }}>

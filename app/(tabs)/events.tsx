@@ -1,9 +1,10 @@
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { EVENTS, CURRENT_USER, DEFAULT_AVATAR, getMemberById, type Event } from "@/constants/mock-data";
+import { EVENT_BUDGET_RANGES, GOURMET_GENRES, type EventBudgetRangeKey } from "@/constants/event-options";
 import { useAuthContext } from "@/lib/auth-context";
 import { getAllEvents } from "@/lib/event-store";
-import { filterAndSortEvents, type EventTypeFilter } from "@/lib/event-filters";
+import { filterAndSortEvents, type EventSortOrder, type EventTypeFilter } from "@/lib/event-filters";
 import { useColors } from "@/hooks/use-colors";
 import { Image } from "expo-image";
 import { useFocusEffect, useRouter } from "expo-router";
@@ -15,6 +16,7 @@ import {
   View,
   RefreshControl,
   Modal,
+  ScrollView,
 } from "react-native";
 
 const TABS = [
@@ -277,6 +279,7 @@ function EventCard({ event, onPress }: { event: Event; onPress: () => void }) {
         {event.restaurantName && event.restaurantName !== event.title ? <Text style={{ fontSize: 11, color: colors.muted, marginTop: 2 }} numberOfLines={1}>{event.restaurantName}</Text> : null}
         <Text style={{ fontSize: 12, fontWeight: "700", color: colors.foreground, marginTop: 6 }}>{formatDate(event.date)} {event.time}</Text>
         <Text style={{ fontSize: 11, color: colors.muted, marginTop: 2 }} numberOfLines={1}>{event.location}</Text>
+        {event.genres?.length ? <Text style={{ fontSize: 10, color: "#9C4F73", marginTop: 3 }} numberOfLines={1}>{event.genres.join("・")}</Text> : null}
 
         <View style={{ flexDirection: "row", gap: 4, marginTop: 8 }}>
           {[{ label: "申込", value: applicantCount }, { label: "定員", value: event.capacity }, { label: "確定", value: confirmedCount }].map((item) => <View key={item.label} style={{ flex: 1, backgroundColor: colors.background, borderRadius: 7, paddingVertical: 4, alignItems: "center" }}><Text style={{ fontSize: 9, color: colors.muted }}>{item.label}</Text><Text style={{ fontSize: 13, fontWeight: "900", color: colors.foreground }}>{item.value}<Text style={{ fontSize: 9 }}>人</Text></Text></View>)}
@@ -297,12 +300,20 @@ export default function EventsScreen() {
   const [activeTab, setActiveTab] = useState<string>("all");
   const [eventType, setEventType] = useState<EventTypeFilter>("all");
   const [openOnly, setOpenOnly] = useState(false);
+  const [hostedByMe, setHostedByMe] = useState(false);
+  const [participating, setParticipating] = useState(false);
+  const [sortOrder, setSortOrder] = useState<EventSortOrder>("date");
+  const [sortMenuVisible, setSortMenuVisible] = useState(false);
+  const [detailSearchVisible, setDetailSearchVisible] = useState(false);
+  const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
+  const [budgetRange, setBudgetRange] = useState<EventBudgetRangeKey>("all");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [refreshing, setRefreshing] = useState(false);
   const [allEvents, setAllEvents] = useState<Event[]>(() => getAllEvents(EVENTS));
   const { user: authUser } = useAuthContext();
   const canCreateEvent = Boolean(authUser);
+  const selectedBudget = EVENT_BUDGET_RANGES.find((range) => range.key === budgetRange);
 
   useFocusEffect(useCallback(() => {
     setAllEvents([...getAllEvents(EVENTS)]);
@@ -314,8 +325,14 @@ export default function EventsScreen() {
       openOnly,
       startDate,
       endDate,
+      sortOrder,
+      hostedByMemberId: eventType === "gourmet" && hostedByMe ? CURRENT_USER.id : undefined,
+      participatingMemberId: eventType === "gourmet" && participating ? CURRENT_USER.id : undefined,
+      genres: selectedGenres,
+      budgetMin: selectedBudget && "min" in selectedBudget ? selectedBudget.min : undefined,
+      budgetMax: selectedBudget && "max" in selectedBudget ? selectedBudget.max : undefined,
     }),
-    [allEvents, activeTab, eventType, openOnly, startDate, endDate],
+    [allEvents, activeTab, eventType, openOnly, startDate, endDate, sortOrder, hostedByMe, participating, selectedGenres, selectedBudget],
   );
 
   const eventTypeLabel = eventType === "official"
@@ -325,6 +342,7 @@ export default function EventsScreen() {
       : "すべてのイベント";
   const areaLabel = activeTab === "kanto" ? "関東" : activeTab === "kansai" ? "関西" : "全国";
   const hasPeriod = Boolean(startDate || endDate);
+  const detailFilterCount = selectedGenres.length + (budgetRange === "all" ? 0 : 1);
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
@@ -419,8 +437,9 @@ export default function EventsScreen() {
                   );
                 })}
               </View>
-              <View
-                accessibilityLabel="開催日順"
+              <Pressable
+                onPress={() => setSortMenuVisible(true)}
+                accessibilityLabel="並び順を変更"
                 style={{
                   width: 96,
                   minHeight: 48,
@@ -433,9 +452,9 @@ export default function EventsScreen() {
                   borderColor: "#D2D2D6",
                 }}
               >
-                <Text style={{ fontSize: 14, color: "#333", marginRight: 5 }}>開催日順</Text>
+                <Text style={{ fontSize: 14, color: "#333", marginRight: 5 }}>{sortOrder === "date" ? "開催日順" : "新着順"}</Text>
                 <IconSymbol name="chevron.down" size={17} color="#666" />
-              </View>
+              </Pressable>
             </View>
 
             <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 9 }}>
@@ -499,26 +518,24 @@ export default function EventsScreen() {
               </View>
             </View>
 
-            <Pressable
-              onPress={() => setOpenOnly((current) => !current)}
-              accessibilityRole="checkbox"
-              accessibilityState={{ checked: openOnly }}
-              style={{ flexDirection: "row", alignItems: "center", alignSelf: "flex-start", marginBottom: 18 }}
-            >
-              <View
-                style={{
-                  width: 23,
-                  height: 23,
-                  borderRadius: 5,
-                  alignItems: "center",
-                  justifyContent: "center",
-                  backgroundColor: openOnly ? "#5D5C74" : "#E4E4E7",
-                  marginRight: 9,
-                }}
-              >
-                {openOnly && <IconSymbol name="checkmark" size={16} color="#FFF" />}
-              </View>
-              <Text style={{ fontSize: 15, fontWeight: "600", color: colors.foreground }}>空席あり</Text>
+            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 14, marginBottom: 14 }}>
+              {[
+                { label: "空席あり", value: openOnly, toggle: () => setOpenOnly((current) => !current) },
+                ...(eventType === "gourmet" ? [
+                  { label: "幹事", value: hostedByMe, toggle: () => setHostedByMe((current) => !current) },
+                  { label: "参加予定", value: participating, toggle: () => setParticipating((current) => !current) },
+                ] : []),
+              ].map((filter) => (
+                <Pressable key={filter.label} onPress={filter.toggle} accessibilityRole="checkbox" accessibilityState={{ checked: filter.value }} style={{ flexDirection: "row", alignItems: "center" }}>
+                  <View style={{ width: 23, height: 23, borderRadius: 5, alignItems: "center", justifyContent: "center", backgroundColor: filter.value ? "#5D5C74" : "#E4E4E7", marginRight: 7 }}>{filter.value && <IconSymbol name="checkmark" size={16} color="#FFF" />}</View>
+                  <Text style={{ fontSize: 14, fontWeight: "600", color: colors.foreground }}>{filter.label}</Text>
+                </Pressable>
+              ))}
+            </View>
+
+            <Pressable onPress={() => setDetailSearchVisible(true)} style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", borderRadius: 11, borderWidth: 1, borderColor: "#D2D2D6", backgroundColor: "#FAFAFB", paddingVertical: 11, marginBottom: 16 }}>
+              <IconSymbol name="line.3.horizontal.decrease.circle" size={18} color="#5D5C74" />
+              <Text style={{ fontSize: 14, fontWeight: "800", color: "#5D5C74", marginLeft: 7 }}>詳細検索{detailFilterCount ? `（${detailFilterCount}件指定）` : ""}</Text>
             </Pressable>
 
             <View
@@ -532,7 +549,7 @@ export default function EventsScreen() {
               }}
             >
               <Text style={{ flex: 1, fontSize: 13, color: colors.muted }} numberOfLines={1}>
-                表示内容: <Text style={{ fontWeight: "800", color: colors.foreground }}>{eventTypeLabel}・{areaLabel} 開催日順</Text>
+                表示内容: <Text style={{ fontWeight: "800", color: colors.foreground }}>{eventTypeLabel}・{areaLabel} {sortOrder === "date" ? "開催日順" : "新着順"}</Text>
               </Text>
               <Text style={{ fontSize: 15, fontWeight: "800", color: colors.foreground, marginLeft: 10 }}>
                 全{filteredEvents.length}件
@@ -549,6 +566,27 @@ export default function EventsScreen() {
           </View>
         }
       />
+
+      <Modal visible={sortMenuVisible} transparent animationType="fade" onRequestClose={() => setSortMenuVisible(false)}>
+        <Pressable onPress={() => setSortMenuVisible(false)} style={{ flex: 1, backgroundColor: "#0005", justifyContent: "center", alignItems: "center", padding: 24 }}>
+          <View style={{ width: "100%", maxWidth: 330, backgroundColor: colors.surface, borderRadius: 18, padding: 10 }}>
+            {(["date", "newest"] as const).map((value) => <Pressable key={value} onPress={() => { setSortOrder(value); setSortMenuVisible(false); }} style={{ flexDirection: "row", alignItems: "center", padding: 15, borderRadius: 12, backgroundColor: sortOrder === value ? "#F0E7EC" : "transparent" }}><Text style={{ flex: 1, fontSize: 16, fontWeight: "700", color: colors.foreground }}>{value === "date" ? "開催日順" : "新着順"}</Text>{sortOrder === value ? <IconSymbol name="checkmark" size={18} color="#9C4F73" /> : null}</Pressable>)}
+          </View>
+        </Pressable>
+      </Modal>
+
+      <Modal visible={detailSearchVisible} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setDetailSearchVisible(false)}>
+        <View style={{ flex: 1, backgroundColor: colors.background }}>
+          <View style={{ flexDirection: "row", alignItems: "center", padding: 16, borderBottomWidth: 0.5, borderBottomColor: colors.border }}><Text style={{ flex: 1, fontSize: 19, fontWeight: "900", color: colors.foreground }}>イベント詳細検索</Text><Pressable onPress={() => setDetailSearchVisible(false)}><Text style={{ color: "#9C4F73", fontWeight: "800" }}>結果を表示</Text></Pressable></View>
+          <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
+            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}><Text style={{ fontSize: 16, fontWeight: "800", color: colors.foreground }}>グルメジャンル</Text><Pressable disabled={!selectedGenres.length} onPress={() => setSelectedGenres([])}><Text style={{ fontSize: 12, color: selectedGenres.length ? "#9C4F73" : colors.border }}>選択解除</Text></Pressable></View>
+            <Text style={{ fontSize: 12, color: colors.muted, marginBottom: 12 }}>複数選択できます</Text>
+            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>{GOURMET_GENRES.map((genre) => { const selected = selectedGenres.includes(genre); return <Pressable key={genre} onPress={() => setSelectedGenres((current) => selected ? current.filter((item) => item !== genre) : [...current, genre])} style={{ paddingHorizontal: 12, paddingVertical: 8, borderRadius: 18, backgroundColor: selected ? "#5D5C74" : colors.surface, borderWidth: 1, borderColor: selected ? "#5D5C74" : colors.border }}><Text style={{ fontSize: 12, fontWeight: "700", color: selected ? "#FFF" : colors.foreground }}>{genre}</Text></Pressable>; })}</View>
+            <Text style={{ fontSize: 16, fontWeight: "800", color: colors.foreground, marginTop: 26, marginBottom: 12 }}>予算</Text>
+            <View style={{ gap: 8 }}>{EVENT_BUDGET_RANGES.map((range) => { const selected = budgetRange === range.key; return <Pressable key={range.key} onPress={() => setBudgetRange(range.key)} style={{ flexDirection: "row", alignItems: "center", padding: 14, borderRadius: 12, backgroundColor: selected ? "#F0E7EC" : colors.surface, borderWidth: 1, borderColor: selected ? "#9C4F73" : colors.border }}><Text style={{ flex: 1, fontSize: 14, fontWeight: "700", color: colors.foreground }}>{range.label}</Text>{selected ? <IconSymbol name="checkmark.circle.fill" size={20} color="#9C4F73" /> : null}</Pressable>; })}</View>
+          </ScrollView>
+        </View>
+      </Modal>
     </ScreenContainer>
   );
 }

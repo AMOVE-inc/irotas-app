@@ -2,6 +2,7 @@ import type { Event } from "@/constants/mock-data";
 
 export type EventAreaFilter = "all" | "kanto" | "kansai";
 export type EventTypeFilter = "all" | Event["eventType"];
+export type EventSortOrder = "date" | "newest";
 
 export interface EventFilters {
   area: EventAreaFilter;
@@ -9,6 +10,12 @@ export interface EventFilters {
   openOnly: boolean;
   startDate?: string;
   endDate?: string;
+  sortOrder?: EventSortOrder;
+  hostedByMemberId?: string;
+  participatingMemberId?: string;
+  genres?: string[];
+  budgetMin?: number;
+  budgetMax?: number;
 }
 
 function eventStart(event: Event): number {
@@ -20,6 +27,20 @@ function dateBoundary(date: string | undefined, endOfDay = false): number | null
   if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) return null;
   const parsed = Date.parse(`${date}T${endOfDay ? "23:59:59" : "00:00:00"}`);
   return Number.isNaN(parsed) ? null : parsed;
+}
+
+function eventCreatedAt(event: Event): number {
+  const parsed = event.createdAt ? Date.parse(event.createdAt) : Number.NaN;
+  return Number.isNaN(parsed) ? 0 : parsed;
+}
+
+function priceBounds(event: Event): { min: number; max: number } {
+  if (typeof event.priceMin === "number" || typeof event.priceMax === "number") {
+    return { min: event.priceMin ?? event.priceMax ?? 0, max: event.priceMax ?? event.priceMin ?? 0 };
+  }
+  const values = event.price.replace(/,/g, "").match(/\d+/g)?.map(Number) ?? [];
+  if (values.length === 0) return { min: 0, max: 0 };
+  return { min: values[0], max: values[1] ?? values[0] };
 }
 
 /** Show upcoming events first (nearest date first), followed by past events (newest first). */
@@ -42,7 +63,21 @@ export function filterAndSortEvents(
     .filter((event) => !filters.openOnly || (event.status === "open" && event.attendees < event.capacity))
     .filter((event) => startBoundary === null || eventStart(event) >= startBoundary)
     .filter((event) => endBoundary === null || eventStart(event) <= endBoundary)
+    .filter((event) => !filters.hostedByMemberId || event.createdBy === filters.hostedByMemberId)
+    .filter((event) => {
+      if (!filters.participatingMemberId) return true;
+      const memberId = filters.participatingMemberId;
+      return event.participants.includes(memberId) || event.applicantIds?.includes(memberId) || event.companionIds?.includes(memberId);
+    })
+    .filter((event) => !filters.genres?.length || filters.genres.some((genre) => event.genres?.includes(genre)))
+    .filter((event) => {
+      if (filters.budgetMin === undefined && filters.budgetMax === undefined) return true;
+      const bounds = priceBounds(event);
+      return (filters.budgetMin === undefined || bounds.max >= filters.budgetMin) &&
+        (filters.budgetMax === undefined || bounds.min <= filters.budgetMax);
+    })
     .sort((a, b) => {
+      if (filters.sortOrder === "newest") return eventCreatedAt(b) - eventCreatedAt(a);
       const aStart = eventStart(a);
       const bStart = eventStart(b);
       if (!Number.isFinite(aStart)) return Number.isFinite(bStart) ? 1 : 0;

@@ -2,6 +2,7 @@ import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { CURRENT_USER, MEMBERS, type Event } from "@/constants/mock-data";
 import { EVENT_TERMS_URL } from "@/constants/external-links";
+import { GOURMET_GENRES } from "@/constants/event-options";
 import { useAuthContext } from "@/lib/auth-context";
 import { pendingEvents } from "@/lib/event-store";
 import { useColors } from "@/hooks/use-colors";
@@ -139,6 +140,7 @@ export default function CreateEventScreen() {
   const [useRankPrices, setUseRankPrices] = useState(false);
   const [rankPrices, setRankPrices] = useState<Record<"regular" | "silver" | "gold" | "platinum", string>>({ regular: "", silver: "", gold: "", platinum: "" });
   const [termsAccepted, setTermsAccepted] = useState(false);
+  const [genres, setGenres] = useState<string[]>([]);
 
   if (!authUser) return <ScreenContainer edges={["top", "left", "right"]}><View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}><IconSymbol name="lock.fill" size={44} color={colors.border} /><Text style={{ marginTop: 12, color: colors.muted }}>メンバーのみ作成できます</Text></View></ScreenContainer>;
 
@@ -155,7 +157,7 @@ export default function CreateEventScreen() {
   };
   const numericAmount = (value: string) => Number(value.replace(/[^0-9]/g, ""));
   const handleCreate = () => {
-    if (!restaurantName.trim() || !date || !time || !address.trim() || !reservationCapacity || !recruitCapacity || !budgetMin || (!fixedAmount && !budgetMax) || !decisionDate || !imageUri || !termsAccepted) {
+    if (!restaurantName.trim() || !date || !time || !address.trim() || !reservationCapacity || !recruitCapacity || !budgetMin || (!fixedAmount && !budgetMax) || !decisionDate || !imageUri || !termsAccepted || genres.length === 0) {
       Alert.alert("入力エラー", "必須項目・写真・規約同意を確認してください"); return;
     }
     if (decisionDate > date) { Alert.alert("期日を確認してください", "参加者決定予定日は開催日以前を選択してください"); return; }
@@ -172,9 +174,9 @@ export default function CreateEventScreen() {
       ? Object.fromEntries(Object.entries(rankPrices).filter(([, value]) => value)) as Event["rankPrices"]
       : undefined;
     const newEvent: Event = {
-      id: `event_${Date.now()}`, title, restaurantName: restaurantName.trim(), description: publicNotes.trim() || (finalType === "official" ? "IRO＋公式イベントです。" : "メンバー主催のグルメ会です。"), date, time,
+      id: `event_${Date.now()}`, createdAt: new Date().toISOString(), title, restaurantName: restaurantName.trim(), description: publicNotes.trim() || (finalType === "official" ? "IRO＋公式イベントです。" : "メンバー主催のグルメ会です。"), date, time,
       location: address.trim(), image: imageUri, capacity: Number(recruitCapacity), reservationCapacity: Number(reservationCapacity), attendees: 0, applicantIds: [], participants: [], companionIds,
-      price, ...(configuredRankPrices && Object.keys(configuredRankPrices).length ? { rankPrices: configuredRankPrices } : {}), category, eventType: finalType, status: "open", createdBy: CURRENT_USER.id,
+      price, priceMin: numericAmount(budgetMin), priceMax: fixedAmount ? numericAmount(budgetMin) : numericAmount(budgetMax), genres, ...(configuredRankPrices && Object.keys(configuredRankPrices).length ? { rankPrices: configuredRankPrices } : {}), category, eventType: finalType, status: "open", createdBy: CURRENT_USER.id,
       applicationDeadline: decisionDate, cancellationPolicy: cancellationPolicy.trim() || DEFAULT_CANCELLATION_POLICY, selectionMethod: finalType === "official" ? selectionMethod : "first_come", externalUrl: externalUrl.trim() || undefined, publicNotes: publicNotes.trim() || undefined, privateMemo: privateMemo.trim() || undefined,
     };
     pendingEvents.unshift(newEvent);
@@ -195,6 +197,8 @@ export default function CreateEventScreen() {
         <FieldLabel>イベント名（任意）</FieldLabel><TextInput value={eventName} onChangeText={setEventName} placeholder="未入力の場合は店名を表示" placeholderTextColor={colors.muted} style={inputStyle} />
         <FieldLabel>日時 *</FieldLabel><View style={{ gap: 9 }}><CalendarField label="開催日" value={date} onChange={setDate} /><SelectField label="開始時間（5分単位）" value={time} options={TIME_OPTIONS} onChange={setTime} /></View>
         <FieldLabel>住所 *</FieldLabel><TextInput value={address} onChangeText={setAddress} placeholder="店舗住所" placeholderTextColor={colors.muted} style={inputStyle} />
+        <FieldLabel>グルメジャンル *（複数選択可）</FieldLabel>
+        <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 7 }}>{GOURMET_GENRES.map((genre) => { const selected = genres.includes(genre); return <Pressable key={genre} onPress={() => setGenres((current) => selected ? current.filter((item) => item !== genre) : [...current, genre])} style={{ borderRadius: 18, paddingHorizontal: 11, paddingVertical: 7, backgroundColor: selected ? "#5D5C74" : colors.surface, borderWidth: 1, borderColor: selected ? "#5D5C74" : colors.border }}><Text style={{ fontSize: 12, fontWeight: "700", color: selected ? "#FFF" : colors.foreground }}>{genre}</Text></Pressable>; })}</View>
         <FieldLabel>予約人数 *</FieldLabel><SelectField label="予約人数" value={reservationCapacity} options={CAPACITY_OPTIONS} onChange={setReservationCapacity} />
         <FieldLabel>募集人数（自分以外） *</FieldLabel><SelectField label="募集人数" value={recruitCapacity} options={CAPACITY_OPTIONS} onChange={setRecruitCapacity} />
 
