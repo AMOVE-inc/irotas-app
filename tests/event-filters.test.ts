@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Event } from "../constants/mock-data";
-import { filterAndSortEvents } from "../lib/event-filters";
+import { DEFAULT_EVENT_SORT_ORDER, filterAndSortEvents } from "../lib/event-filters";
 
 const makeEvent = (overrides: Partial<Event>): Event => ({
   id: "event",
@@ -30,6 +30,10 @@ describe("event list filtering and sorting", () => {
     makeEvent({ id: "past", date: "2026-07-10", eventType: "official" }),
   ];
   const referenceDate = new Date(2026, 6, 21, 12, 0, 0);
+
+  it("uses event date as the default sort order", () => {
+    expect(DEFAULT_EVENT_SORT_ORDER).toBe("date");
+  });
 
   it("sorts nearest dates first without mutating the source", () => {
     const result = filterAndSortEvents(
@@ -99,10 +103,11 @@ describe("event list filtering and sorting", () => {
   it("filters by any selected genre and overlapping budget", () => {
     const gourmetEvents = [
       makeEvent({ id: "sushi", genres: ["寿司"], priceMin: 8000, priceMax: 12000 }),
+      makeEvent({ id: "yakiniku", genres: ["焼肉"], priceMin: 7000, priceMax: 9000 }),
       makeEvent({ id: "italian", genres: ["イタリアン"], priceMin: 3000, priceMax: 5000 }),
     ];
     const result = filterAndSortEvents(gourmetEvents, { area: "all", eventType: "all", openOnly: false, genres: ["寿司", "焼肉"], budgetMin: 5000, budgetMax: 10000 }, referenceDate);
-    expect(result.map((event) => event.id)).toEqual(["sushi"]);
+    expect(result.map((event) => event.id)).toEqual(["sushi", "yakiniku"]);
   });
 
   it("matches any of multiple selected budget ranges", () => {
@@ -124,6 +129,7 @@ describe("event list filtering and sorting", () => {
     const localEvents = [
       makeEvent({ id: "tokyo", title: "銀座の寿司会", prefecture: "東京都", location: "東京都中央区", genres: ["寿司"] }),
       makeEvent({ id: "osaka", title: "大阪の焼肉会", prefecture: "大阪府", location: "大阪府大阪市", genres: ["焼肉"] }),
+      makeEvent({ id: "aichi", title: "名古屋のひつまぶし会", prefecture: "愛知県", location: "愛知県名古屋市", genres: ["和食"] }),
     ];
     const areaResult = filterAndSortEvents(localEvents, {
       area: "all",
@@ -141,5 +147,13 @@ describe("event list filtering and sorting", () => {
       keyword: "焼肉",
     }, referenceDate);
     expect(keywordResult.map((event) => event.id)).toEqual(["osaka"]);
+
+    const otherRegionResult = filterAndSortEvents(localEvents, {
+      area: "all",
+      eventType: "all",
+      openOnly: false,
+      areas: ["region:other"],
+    }, referenceDate);
+    expect(otherRegionResult.map((event) => event.id)).toEqual(["aichi"]);
   });
 });

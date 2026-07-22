@@ -5,7 +5,7 @@ import { EVENT_BUDGET_RANGES, GOURMET_GENRES, type EventBudgetRangeKey } from "@
 import { EVENT_AREA_GROUPS } from "@/constants/event-areas";
 import { useAuthContext } from "@/lib/auth-context";
 import { getAllEvents } from "@/lib/event-store";
-import { filterAndSortEvents, type EventSortOrder, type EventTypeFilter } from "@/lib/event-filters";
+import { DEFAULT_EVENT_SORT_ORDER, filterAndSortEvents, type EventSortOrder, type EventTypeFilter } from "@/lib/event-filters";
 import { getEventParticipationStatus } from "@/lib/event-participation";
 import { useColors } from "@/hooks/use-colors";
 import { Image } from "expo-image";
@@ -302,7 +302,7 @@ export default function EventsScreen() {
   const [openOnly, setOpenOnly] = useState(false);
   const [hostedByMe, setHostedByMe] = useState(false);
   const [participating, setParticipating] = useState(false);
-  const [sortOrder, setSortOrder] = useState<EventSortOrder>("date");
+  const [sortOrder, setSortOrder] = useState<EventSortOrder>(DEFAULT_EVENT_SORT_ORDER);
   const [sortMenuVisible, setSortMenuVisible] = useState(false);
   const [detailSearchVisible, setDetailSearchVisible] = useState(false);
   const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
@@ -345,7 +345,7 @@ export default function EventsScreen() {
   const detailFilterCount = selectedGenres.length + budgetRanges.length + selectedAreas.length + (keyword.trim() ? 1 : 0);
 
   const resetSearchConditions = useCallback(() => {
-    setEventType("all"); setOpenOnly(false); setHostedByMe(false); setParticipating(false); setSortOrder("date");
+    setEventType("all"); setOpenOnly(false); setHostedByMe(false); setParticipating(false); setSortOrder(DEFAULT_EVENT_SORT_ORDER);
     setSelectedGenres([]); setBudgetRanges([]); setSelectedAreas([]); setKeyword(""); setStartDate(""); setEndDate("");
   }, []);
 
@@ -539,7 +539,7 @@ export default function EventsScreen() {
 
             <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}><Text style={{ fontSize: 16, fontWeight: "800", color: colors.foreground }}>エリア</Text><Pressable disabled={!selectedAreas.length} onPress={() => setSelectedAreas([])}><Text style={{ fontSize: 12, color: selectedAreas.length ? "#9C4F73" : colors.border }}>選択解除</Text></Pressable></View>
             <Text style={{ fontSize: 12, color: colors.muted, marginBottom: 12 }}>地域・都道府県を複数選択できます</Text>
-            {EVENT_AREA_GROUPS.map((group) => <View key={group.value} style={{ marginBottom: 15 }}><Pressable onPress={() => setSelectedAreas((current) => current.includes(group.value) ? current.filter((item) => item !== group.value) : [...current, group.value])} style={{ flexDirection: "row", alignItems: "center", marginBottom: 7 }}><View style={{ width: 21, height: 21, borderRadius: 6, backgroundColor: selectedAreas.includes(group.value) ? "#5D5C74" : colors.surface, borderWidth: 1, borderColor: selectedAreas.includes(group.value) ? "#5D5C74" : colors.border, alignItems: "center", justifyContent: "center" }}>{selectedAreas.includes(group.value) ? <IconSymbol name="checkmark" size={13} color="#FFF" /> : null}</View><Text style={{ marginLeft: 8, fontSize: 14, fontWeight: "900", color: colors.foreground }}>{group.region}（全体）</Text></Pressable><View style={{ flexDirection: "row", flexWrap: "wrap", gap: 7 }}>{group.prefectures.map((prefecture) => { const value = `pref:${prefecture}`; const selected = selectedAreas.includes(value); return <Pressable key={prefecture} onPress={() => setSelectedAreas((current) => selected ? current.filter((item) => item !== value) : [...current, value])} style={{ paddingHorizontal: 10, paddingVertical: 6, borderRadius: 15, backgroundColor: selected ? "#E9D4DE" : colors.surface, borderWidth: 1, borderColor: selected ? "#9C4F73" : colors.border }}><Text style={{ fontSize: 11, fontWeight: "700", color: selected ? "#9C4F73" : colors.foreground }}>{group.region} ＞ {prefecture.replace(/[都府県]$/, "")}</Text></Pressable>; })}</View></View>)}
+            {EVENT_AREA_GROUPS.map((group) => <View key={group.value} style={{ marginBottom: 15 }}><Pressable onPress={() => setSelectedAreas((current) => current.includes(group.value) ? current.filter((item) => item !== group.value) : [...current, group.value])} style={{ flexDirection: "row", alignItems: "center", marginBottom: 7 }}><View style={{ width: 21, height: 21, borderRadius: 6, backgroundColor: selectedAreas.includes(group.value) ? "#5D5C74" : colors.surface, borderWidth: 1, borderColor: selectedAreas.includes(group.value) ? "#5D5C74" : colors.border, alignItems: "center", justifyContent: "center" }}>{selectedAreas.includes(group.value) ? <IconSymbol name="checkmark" size={13} color="#FFF" /> : null}</View><Text style={{ marginLeft: 8, fontSize: 14, fontWeight: "900", color: colors.foreground }}>{group.region}</Text></Pressable><View style={{ flexDirection: "row", flexWrap: "wrap", gap: 7 }}>{group.prefectures.map((prefecture) => { const value = `pref:${prefecture}`; const selected = selectedAreas.includes(value); return <Pressable key={prefecture} onPress={() => setSelectedAreas((current) => selected ? current.filter((item) => item !== value) : [...current, value])} style={{ paddingHorizontal: 10, paddingVertical: 6, borderRadius: 15, backgroundColor: selected ? "#E9D4DE" : colors.surface, borderWidth: 1, borderColor: selected ? "#9C4F73" : colors.border }}><Text style={{ fontSize: 11, fontWeight: "700", color: selected ? "#9C4F73" : colors.foreground }}>{prefecture.replace(/[都府県]$/, "")}</Text></Pressable>; })}</View></View>)}
 
             <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}><Text style={{ fontSize: 16, fontWeight: "800", color: colors.foreground }}>グルメジャンル</Text><Pressable disabled={!selectedGenres.length} onPress={() => setSelectedGenres([])}><Text style={{ fontSize: 12, color: selectedGenres.length ? "#9C4F73" : colors.border }}>選択解除</Text></Pressable></View>
             <Text style={{ fontSize: 12, color: colors.muted, marginBottom: 12 }}>複数選択できます</Text>

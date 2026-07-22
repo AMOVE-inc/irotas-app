@@ -1637,7 +1637,7 @@ function CreateThreadModal({
 export default function BoardScreen() {
   const colors = useColors();
   const router = useRouter();
-  const { compose } = useLocalSearchParams<{ compose?: string }>();
+  const { compose, category: categoryParam, view } = useLocalSearchParams<{ compose?: string; category?: string; view?: string }>();
   const { user: authUser } = useAuthContext();
   const userIsAdmin = canManageBoardCategories(authUser?.role);
   const clubs = useClubs();
@@ -1652,6 +1652,7 @@ export default function BoardScreen() {
   const [dynamicThreads, setDynamicThreads] = useState<BoardThread[]>([]);
   const [editedThreads, setEditedThreads] = useState<Record<string, BoardThread>>({});
   const [editingThread, setEditingThread] = useState<BoardThread | null>(null);
+  const isThreadView = view === "threads" && Boolean(categoryParam);
 
   useEffect(() => {
     if (compose !== "meal-report") return;
@@ -1660,6 +1661,19 @@ export default function BoardScreen() {
     setShowCreateThread(true);
     router.setParams({ compose: "" });
   }, [compose, router]);
+
+  useEffect(() => {
+    if (!isThreadView || !categoryParam) return;
+    const selectedCategory = categories.find((category) => category.key === categoryParam);
+    if (!selectedCategory || !canAccessCategory(selectedCategory)) {
+      router.replace("/board");
+      return;
+    }
+    setActiveGroup(selectedCategory.group);
+    setActiveCategory(selectedCategory.key);
+  // `canAccessCategory` reads the current role/club membership on each route change.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [categoryParam, isThreadView, router]);
   const allThreads = [...dynamicThreads, ...BOARD_THREADS].map((t) => editedThreads[t.id] ?? t);
   const filteredThreads = allThreads.filter((t) => t.category === activeCategory);
   const canAccessCategory = (category: BoardCategory) => {
@@ -1708,6 +1722,20 @@ export default function BoardScreen() {
     setActiveCategory(firstCategory?.key ?? "");
   };
 
+  const handleOpenCategory = (category: BoardCategory) => {
+    if (category.key === "announcement") {
+      router.push({ pathname: "/chat", params: { id: "board-announcement" } });
+      return;
+    }
+    if (category.key === "free-chat") {
+      router.push({ pathname: "/chat", params: { id: "board-free-chat" } });
+      return;
+    }
+    router.push({ pathname: "/board", params: { category: category.key, view: "threads" } });
+  };
+
+  const activeCategoryLabel = categories.find((category) => category.key === activeCategory)?.label ?? "掲示板";
+
   return (
     <ScreenContainer>
       {/* Header */}
@@ -1722,10 +1750,19 @@ export default function BoardScreen() {
           borderBottomColor: colors.border,
         }}
       >
-        <Text style={{ fontSize: 26, fontWeight: "800", color: colors.foreground, letterSpacing: -0.5 }}>
-          掲示板
-        </Text>
-        <View style={{ flexDirection: "row", gap: 8 }}>
+        {isThreadView ? (
+          <Pressable onPress={() => router.back()} style={{ flexDirection: "row", alignItems: "center", flex: 1, paddingVertical: 4 }}>
+            <IconSymbol name="chevron.left" size={20} color={colors.foreground} />
+            <Text numberOfLines={1} style={{ flex: 1, marginLeft: 8, fontSize: 20, fontWeight: "800", color: colors.foreground }}>
+              {activeCategoryLabel}
+            </Text>
+          </Pressable>
+        ) : (
+          <Text style={{ fontSize: 26, fontWeight: "800", color: colors.foreground, letterSpacing: -0.5 }}>
+            掲示板
+          </Text>
+        )}
+        {!isThreadView ? <View style={{ flexDirection: "row", gap: 8 }}>
           <Pressable
             onPress={() => router.push("/concierge" as any)}
             style={{
@@ -1744,13 +1781,13 @@ export default function BoardScreen() {
               AI相談
             </Text>
           </Pressable>
-        </View>
+        </View> : null}
       </View>
 
-      <BoardRulesPanel />
+      {!isThreadView ? <BoardRulesPanel /> : null}
 
       {/* 大分類 + スレッド分類 */}
-      <View style={{ borderBottomWidth: 0.5, borderBottomColor: colors.border, backgroundColor: "#FBFDFF" }}>
+      {!isThreadView ? <View style={{ borderBottomWidth: 0.5, borderBottomColor: colors.border, backgroundColor: "#FBFDFF" }}>
         <View style={{ flexDirection: "row", paddingHorizontal: 16, paddingTop: 12, gap: 8 }}>
           {BOARD_GROUPS.map((group) => {
             const active = activeGroup === group.key;
@@ -1776,8 +1813,8 @@ export default function BoardScreen() {
         {activeGroup === "area" ? (
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 10, gap: 8 }}>
             {visibleCategories.map((cat) => (
-              <Pressable key={cat.key} onPress={() => setActiveCategory(cat.key)} style={{ paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20, backgroundColor: activeCategory === cat.key ? colors.primary : "#F1F6F9", borderWidth: 1, borderColor: activeCategory === cat.key ? colors.primary : "#DCEAF2" }}>
-                <Text style={{ fontSize: 14, fontWeight: "600", color: activeCategory === cat.key ? "#FFF" : "#5F6C75" }}>{cat.label}</Text>
+              <Pressable key={cat.key} onPress={() => handleOpenCategory(cat)} style={{ paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20, backgroundColor: "#F1F6F9", borderWidth: 1, borderColor: "#DCEAF2" }}>
+                <Text style={{ fontSize: 14, fontWeight: "600", color: "#5F6C75" }}>{cat.label}</Text>
               </Pressable>
             ))}
           </ScrollView>
@@ -1786,25 +1823,24 @@ export default function BoardScreen() {
             {activeGroup === "club" ? <Text style={{ fontSize: 12, fontWeight: "700", color: colors.muted, marginBottom: 1 }}>活動レポートと入部中の部活</Text> : null}
             {visibleCategories.map((cat) => {
               const presentation = categoryPresentation(cat);
-              const selected = activeCategory === cat.key;
               return (
                 <Pressable
                   key={cat.key}
-                  onPress={() => setActiveCategory(cat.key)}
-                  style={{ flexDirection: "row", alignItems: "center", minHeight: 62, borderRadius: 14, paddingHorizontal: 13, paddingVertical: 9, backgroundColor: selected ? `${presentation.accent}14` : colors.surface, borderWidth: selected ? 1.5 : 1, borderColor: selected ? presentation.accent : colors.border }}
+                  onPress={() => handleOpenCategory(cat)}
+                  style={{ flexDirection: "row", alignItems: "center", minHeight: 62, borderRadius: 14, paddingHorizontal: 13, paddingVertical: 9, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border }}
                 >
                   <View style={{ width: 40, height: 40, borderRadius: 12, backgroundColor: `${presentation.accent}18`, alignItems: "center", justifyContent: "center" }}><Text style={{ fontSize: 21 }}>{presentation.icon}</Text></View>
                   <View style={{ flex: 1, marginLeft: 11 }}><Text style={{ fontSize: 15, fontWeight: "900", color: colors.foreground }}>{cat.label}</Text><Text style={{ fontSize: 11, color: colors.muted, marginTop: 3 }}>{presentation.description}</Text></View>
-                  <IconSymbol name="chevron.right" size={17} color={selected ? presentation.accent : colors.muted} />
+                  <IconSymbol name="chevron.right" size={17} color={colors.muted} />
                 </Pressable>
               );
             })}
           </View>
         )}
         {userIsAdmin ? <Pressable onPress={() => setShowAddCategory(true)} style={{ flexDirection: "row", alignItems: "center", alignSelf: "flex-end", marginHorizontal: 16, marginBottom: 10, paddingVertical: 5 }}><IconSymbol name="plus" size={13} color={colors.muted} /><Text style={{ fontSize: 12, color: colors.muted, marginLeft: 4 }}>カテゴリを追加</Text></Pressable> : null}
-      </View>
+      </View> : null}
 
-      <FlatList
+      {isThreadView ? <FlatList
         data={filteredThreads}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
@@ -1827,9 +1863,9 @@ export default function BoardScreen() {
             </Text>
           </View>
         }
-      />
+      /> : <View style={{ flex: 1 }} />}
 
-      {(activeCategory !== "announcement" || userIsAdmin) ? (
+      {isThreadView && (activeCategory !== "announcement" || userIsAdmin) ? (
         <Pressable
           accessibilityLabel={`${categories.find((category) => category.key === activeCategory)?.label ?? "掲示板"}に投稿`}
           onPress={() => setShowCreateThread(true)}

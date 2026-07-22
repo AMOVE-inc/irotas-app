@@ -128,7 +128,9 @@ function MessageBubble({ message, isMe, myAvatarUri, onReact }: { message: ChatM
         )}
         <View
           style={{
-            backgroundColor: isMe ? "#E8A0BF" : colors.surface,
+            backgroundColor: isMe ? "#E8A0BF" : "#ECECEF",
+            borderWidth: isMe ? 0 : 1,
+            borderColor: isMe ? "transparent" : "#D4D4D8",
             borderRadius: 16,
             borderBottomRightRadius: isMe ? 4 : 16,
             borderBottomLeftRadius: isMe ? 16 : 4,

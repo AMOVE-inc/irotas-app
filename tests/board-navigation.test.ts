@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { BOARD_CATEGORIES, CLUBS, CURRENT_USER } from "../constants/mock-data";
+import { BOARD_CATEGORIES, CHAT_ROOMS, CLUBS, CURRENT_USER } from "../constants/mock-data";
 
 describe("board category ordering", () => {
   it("orders the four general categories from top to bottom", () => {
@@ -17,5 +17,10 @@ describe("board category ordering", () => {
     const joinedClubNames = CLUBS.filter((club) => club.memberIds.includes(CURRENT_USER.id)).map((club) => club.name);
     const visibleLabels = clubCategories.slice(1).filter((category) => joinedClubNames.includes(category.label)).map((category) => category.label);
     expect(visibleLabels).toEqual(joinedClubNames);
+  });
+
+  it("provides chat rooms for the announcement and free chat categories", () => {
+    expect(CHAT_ROOMS.find((room) => room.id === "board-announcement")?.sourceId).toBe("announcement");
+    expect(CHAT_ROOMS.find((room) => room.id === "board-free-chat")?.sourceId).toBe("free-chat");
   });
 });

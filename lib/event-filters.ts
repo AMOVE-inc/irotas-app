@@ -4,6 +4,7 @@ import { PREFECTURE_TO_REGION } from "../constants/event-areas";
 export type EventAreaFilter = "all" | "kanto" | "kansai";
 export type EventTypeFilter = "all" | Event["eventType"];
 export type EventSortOrder = "date" | "newest";
+export const DEFAULT_EVENT_SORT_ORDER: EventSortOrder = "date";
 
 export interface EventFilters {
   area: EventAreaFilter;
