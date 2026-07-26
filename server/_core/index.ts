@@ -6,6 +6,7 @@ import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import { registerOAuthRoutes } from "./oauth";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
+import { handleSquareWebhook } from "../square-webhook";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise((resolve) => {
@@ -49,6 +50,13 @@ async function startServer() {
       return;
     }
     next();
+  });
+
+  app.post("/api/webhooks/square", express.text({ type: "application/json", limit: "2mb" }), (req, res) => {
+    void handleSquareWebhook(req, res).catch((error) => {
+      console.error("[Square webhook]", error);
+      if (!res.headersSent) res.status(500).json({ error: "webhook processing failed" });
+    });
   });
 
   app.use(express.json({ limit: "50mb" }));

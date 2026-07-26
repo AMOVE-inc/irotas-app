@@ -24,12 +24,15 @@ export default function RegisterScreen() {
   const { setUser, refresh } = useAuthContext();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [verificationCode, setVerificationCode] = useState("");
+  const [codeSent, setCodeSent] = useState(false);
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   const registerMutation = trpc.auth.register.useMutation();
+  const setupCodeMutation = trpc.auth.requestSetupCode.useMutation();
 
   const handleRegister = async () => {
     if (!name.trim()) {
@@ -38,6 +41,10 @@ export default function RegisterScreen() {
     }
     if (!email.trim()) {
       setError("メールアドレスを入力してください");
+      return;
+    }
+    if (!/^\d{6}$/.test(verificationCode)) {
+      setError("メールに届いた6桁の認証コードを入力してください");
       return;
     }
     if (password.length < 8) {
@@ -57,6 +64,7 @@ export default function RegisterScreen() {
         email: email.trim(),
         password,
         name: name.trim(),
+        verificationCode,
       });
 
       if (result.success && result.sessionToken) {
@@ -126,7 +134,7 @@ export default function RegisterScreen() {
                   color: colors.foreground,
                 }}
               >
-                新規登録
+                初回パスワード設定
               </Text>
               <Text
                 style={{
@@ -137,7 +145,7 @@ export default function RegisterScreen() {
                   lineHeight: 20,
                 }}
               >
-                運営から事前に承認されたメールアドレスのみ登録できます
+                Square決済時のメールアドレスを入力してください。有効な会員資格を確認して登録します。
               </Text>
             </View>
 
@@ -204,6 +212,26 @@ export default function RegisterScreen() {
                   borderColor: colors.border,
                 }}
               />
+            </View>
+
+            <View style={{ gap: 8 }}>
+              <Pressable
+                disabled={!email.trim() || setupCodeMutation.isPending}
+                onPress={async () => {
+                  setError("");
+                  try {
+                    await setupCodeMutation.mutateAsync({ email: email.trim() });
+                    setCodeSent(true);
+                  } catch (error) {
+                    setError(error instanceof Error ? error.message : "認証コードを送信できませんでした");
+                  }
+                }}
+                style={{ borderRadius: 12, borderWidth: 1, borderColor: "#D97FA8", paddingVertical: 11, alignItems: "center", opacity: !email.trim() ? 0.45 : 1 }}
+              >
+                <Text style={{ fontSize: 14, fontWeight: "800", color: "#D97FA8" }}>{codeSent ? "認証コードを再送する" : "認証コードを送信"}</Text>
+              </Pressable>
+              <TextInput value={verificationCode} onChangeText={setVerificationCode} placeholder="6桁の認証コード" placeholderTextColor={colors.muted} keyboardType="number-pad" maxLength={6} style={{ backgroundColor: colors.background, borderRadius: 14, padding: 14, fontSize: 18, letterSpacing: 5, color: colors.foreground, borderWidth: 1, borderColor: colors.border, textAlign: "center" }} />
+              {codeSent ? <Text style={{ fontSize: 12, color: colors.muted, textAlign: "center" }}>決済メールへ送信しました。有効期限は10分です。</Text> : null}
             </View>
 
             {/* Password Input */}
@@ -273,7 +301,7 @@ export default function RegisterScreen() {
                 <ActivityIndicator color="#FFF" />
               ) : (
                 <Text style={{ fontSize: 17, fontWeight: "700", color: "#FFF" }}>
-                  登録する
+                  パスワードを設定する
                 </Text>
               )}
             </Pressable>

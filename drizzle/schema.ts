@@ -1,4 +1,4 @@
-import { int, json, mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
+import { date, int, json, mysqlEnum, mysqlTable, text, timestamp, uniqueIndex, varchar } from "drizzle-orm/mysql-core";
 
 /**
  * Core user table backing auth flow.
@@ -49,6 +49,37 @@ export const allowedEmails = mysqlTable("allowed_emails", {
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 
+/** 決済会員資格。メールは初回照合、Square IDは継続同期の主キーとして使う。 */
+export const memberSubscriptions = mysqlTable("member_subscriptions", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId"),
+  billingEmail: varchar("billingEmail", { length: 320 }).notNull(),
+  discordUserId: varchar("discordUserId", { length: 32 }),
+  discordName: varchar("discordName", { length: 255 }),
+  discordRoles: json("discordRoles").$type<string[]>(),
+  discordJoinedAt: date("discordJoinedAt"),
+  displayName: varchar("displayName", { length: 255 }),
+  memberTerm: varchar("memberTerm", { length: 64 }),
+  memberRank: varchar("memberRank", { length: 64 }),
+  squareCustomerId: varchar("squareCustomerId", { length: 255 }),
+  squareSubscriptionId: varchar("squareSubscriptionId", { length: 255 }),
+  squareStatus: mysqlEnum("squareStatus", ["PENDING", "ACTIVE", "CANCELED", "DEACTIVATED", "PAUSED", "COMPLETED", "UNKNOWN"]).default("UNKNOWN").notNull(),
+  accessStatus: mysqlEnum("accessStatus", ["pending", "active", "grace", "suspended"]).default("pending").notNull(),
+  paidUntilDate: date("paidUntilDate"),
+  graceUntilDate: date("graceUntilDate"),
+  lastSquareSyncedAt: timestamp("lastSquareSyncedAt"),
+  suspendedAt: timestamp("suspendedAt"),
+  importedAt: timestamp("importedAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+}, (table) => [
+  uniqueIndex("member_subscriptions_billing_email_unique").on(table.billingEmail),
+  uniqueIndex("member_subscriptions_discord_user_id_unique").on(table.discordUserId),
+  uniqueIndex("member_subscriptions_square_subscription_id_unique").on(table.squareSubscriptionId),
+]);
+
+export type MemberSubscription = typeof memberSubscriptions.$inferSelect;
+export type InsertMemberSubscription = typeof memberSubscriptions.$inferInsert;
+
 export type AllowedEmail = typeof allowedEmails.$inferSelect;
 export type InsertAllowedEmail = typeof allowedEmails.$inferInsert;
 
@@ -83,8 +114,65 @@ export const events = mysqlTable("events", {
   attendees: int("attendees").default(0).notNull(),
   status: mysqlEnum("status", ["open", "full", "closed"]).default("open").notNull(),
   createdBy: int("createdBy").notNull(),
+  externalEventId: varchar("externalEventId", { length: 255 }),
+  source: mysqlEnum("source", ["app", "discord", "csv"]).default("app").notNull(),
+  eventType: mysqlEnum("eventType", ["official", "gourmet"]).default("gourmet").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+}, (table) => [uniqueIndex("events_external_event_id_unique").on(table.externalEventId)]);
+
+/** イベント申込・確定・出席・キャンセルを明細で保存する。 */
+export const eventParticipations = mysqlTable("event_participations", {
+  id: int("id").autoincrement().primaryKey(),
+  eventId: int("eventId").notNull(),
+  userId: int("userId"),
+  discordUserId: varchar("discordUserId", { length: 32 }),
+  status: mysqlEnum("status", ["applied", "confirmed", "attended", "canceled", "no_show"]).notNull(),
+  source: mysqlEnum("source", ["app", "discord", "csv", "manual"]).default("csv").notNull(),
+  sourceReference: varchar("sourceReference", { length: 512 }),
+  needsReview: int("needsReview").default(0).notNull(),
+  occurredAt: timestamp("occurredAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, (table) => [uniqueIndex("event_participations_event_discord_unique").on(table.eventId, table.discordUserId)]);
+
+/** 主幹事・副幹事の履歴。 */
+export const eventOrganizers = mysqlTable("event_organizers", {
+  id: int("id").autoincrement().primaryKey(),
+  eventId: int("eventId").notNull(),
+  userId: int("userId"),
+  discordUserId: varchar("discordUserId", { length: 32 }),
+  organizerRole: mysqlEnum("organizerRole", ["primary", "assistant"]).default("primary").notNull(),
+  source: mysqlEnum("source", ["app", "discord", "csv", "manual"]).default("csv").notNull(),
+  needsReview: int("needsReview").default(0).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, (table) => [uniqueIndex("event_organizers_event_discord_unique").on(table.eventId, table.discordUserId)]);
+
+export const migrationImports = mysqlTable("migration_imports", {
+  id: int("id").autoincrement().primaryKey(),
+  filename: varchar("filename", { length: 255 }).notNull(),
+  importType: mysqlEnum("importType", ["members", "events", "participations", "organizers"]).notNull(),
+  status: mysqlEnum("status", ["success", "partial", "failed"]).notNull(),
+  importedCount: int("importedCount").default(0).notNull(),
+  reviewCount: int("reviewCount").default(0).notNull(),
+  errorSummary: text("errorSummary"),
+  importedBy: int("importedBy").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export const squareWebhookEvents = mysqlTable("square_webhook_events", {
+  id: int("id").autoincrement().primaryKey(),
+  eventId: varchar("eventId", { length: 255 }).notNull().unique(),
+  eventType: varchar("eventType", { length: 128 }).notNull(),
+  processedAt: timestamp("processedAt").defaultNow().notNull(),
+});
+
+export const emailVerificationCodes = mysqlTable("email_verification_codes", {
+  id: int("id").autoincrement().primaryKey(),
+  email: varchar("email", { length: 320 }).notNull(),
+  codeHash: varchar("codeHash", { length: 255 }).notNull(),
+  expiresAt: timestamp("expiresAt").notNull(),
+  consumedAt: timestamp("consumedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 
 export type Event = typeof events.$inferSelect;

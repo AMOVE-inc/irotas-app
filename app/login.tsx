@@ -292,8 +292,8 @@ export default function LoginScreen() {
                 })}
               >
                 <Text style={{ fontSize: 14, color: colors.muted }}>
-                  アカウントをお持ちでない方は{" "}
-                  <Text style={{ color: "#D97FA8", fontWeight: "700" }}>新規登録</Text>
+                  初めて利用する決済済み会員の方は{" "}
+                  <Text style={{ color: "#D97FA8", fontWeight: "700" }}>パスワード設定</Text>
                 </Text>
               </Pressable>
             </View>

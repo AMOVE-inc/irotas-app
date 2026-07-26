@@ -1,5 +1,6 @@
 import { z } from "zod";
 import bcrypt from "bcryptjs";
+import { randomInt } from "node:crypto";
 import { invokeLLM } from "./_core/llm";
 import { COOKIE_NAME, ONE_YEAR_MS } from "../shared/const.js";
 import { getSessionCookieOptions } from "./_core/cookies";
@@ -7,6 +8,8 @@ import { systemRouter } from "./_core/systemRouter";
 import { adminProcedure, protectedProcedure, publicProcedure, router } from "./_core/trpc";
 import { sdk } from "./_core/sdk";
 import * as db from "./db";
+import { canAccessMemberApp } from "../lib/membership-access";
+import { findMembershipByBillingEmail } from "./square-client";
 
 // Gourmet concierge AI router
 const conciergeRouter = router({
@@ -103,12 +106,49 @@ const allowedEmailsRouter = router({
     }),
 });
 
+const migrationRouter = router({
+  importCsv: adminProcedure
+    .input(z.object({
+      type: z.enum(["members", "events", "participations", "organizers"]),
+      filename: z.string().min(1).max(255),
+      csvText: z.string().min(1).max(10_000_000),
+    }))
+    .mutation(async ({ ctx, input }) => db.importMigrationCsv(input.type, input.csvText, input.filename, ctx.user.id)),
+});
+
+async function deliverVerificationCode(email: string, code: string) {
+  const endpoint = process.env.EMAIL_DELIVERY_WEBHOOK_URL;
+  if (!endpoint) throw new Error("メール送信設定が完了していません。運営へお問い合わせください。");
+  const response = await fetch(endpoint, {
+    method: "POST",
+    headers: { "content-type": "application/json", ...(process.env.EMAIL_DELIVERY_WEBHOOK_TOKEN ? { authorization: `Bearer ${process.env.EMAIL_DELIVERY_WEBHOOK_TOKEN}` } : {}) },
+    body: JSON.stringify({ to: email, subject: "IRO+ 初回認証コード", text: `認証コードは ${code} です。有効期限は10分です。` }),
+  });
+  if (!response.ok) throw new Error("認証メールを送信できませんでした。しばらくしてから再度お試しください。");
+}
+
+async function refreshMembershipFromSquare(email: string) {
+  const match = await findMembershipByBillingEmail(email);
+  if (!match) return db.suspendUnverifiedMembership(email);
+  return db.updateMembershipFromSquare({
+    billingEmail: email,
+    customerId: match.customerId,
+    subscriptionId: match.subscriptionId,
+    status: match.status,
+    paidUntilDate: match.paidUntilDate,
+  });
+}
+
 export const appRouter = router({
   system: systemRouter,
   concierge: conciergeRouter,
   allowedEmails: allowedEmailsRouter,
+  migration: migrationRouter,
   auth: router({
-    me: publicProcedure.query((opts) => opts.ctx.user),
+    me: publicProcedure.query(async (opts) => {
+      if (!opts.ctx.user || opts.ctx.user.role === "admin") return opts.ctx.user;
+      return (await db.memberHasAppAccess(opts.ctx.user.id)) ? opts.ctx.user : null;
+    }),
     selectBranches: protectedProcedure
       .input(
         z.object({
@@ -132,6 +172,21 @@ export const appRouter = router({
       } as const;
     }),
 
+    requestSetupCode: publicProcedure
+      .input(z.object({ email: z.string().email("有効なメールアドレスを入力してください") }))
+      .mutation(async ({ input }) => {
+        const email = input.email.toLowerCase().trim();
+        let membership = await db.getMembershipByBillingEmail(email);
+        if (membership) membership = await refreshMembershipFromSquare(email);
+        if (!canAccessMemberApp(membership)) return { success: true };
+        const latestCode = await db.getLatestEmailVerificationCode(email);
+        if (latestCode && Date.now() - latestCode.createdAt.getTime() < 60_000) return { success: true };
+        const code = String(randomInt(100000, 1000000));
+        await db.createEmailVerificationCode(email, await bcrypt.hash(code, 10), new Date(Date.now() + 10 * 60 * 1000));
+        await deliverVerificationCode(email, code);
+        return { success: true };
+      }),
+
     /** Register a new user with email and password */
     register: publicProcedure
       .input(
@@ -141,6 +196,7 @@ export const appRouter = router({
             .string()
             .min(8, "パスワードは8文字以上で入力してください"),
           name: z.string().min(1, "名前を入力してください"),
+          verificationCode: z.string().regex(/^\d{6}$/, "6桁の認証コードを入力してください"),
         }),
       )
       .mutation(async ({ ctx, input }) => {
@@ -148,6 +204,15 @@ export const appRouter = router({
         const allowed = await db.isEmailAllowed(input.email);
         if (!allowed) {
           throw new Error("このメールアドレスは登録が許可されていません。運営にお問い合わせください。");
+        }
+        let membership = await db.getMembershipByBillingEmail(input.email);
+        if (membership) membership = await refreshMembershipFromSquare(input.email);
+        if (!canAccessMemberApp(membership)) {
+          throw new Error("有効なSquare会員資格を確認できません。決済状況をご確認ください。");
+        }
+        const verification = await db.getLatestEmailVerificationCode(input.email);
+        if (!verification || verification.consumedAt || verification.expiresAt.getTime() < Date.now() || !(await bcrypt.compare(input.verificationCode, verification.codeHash))) {
+          throw new Error("認証コードが正しくないか、有効期限が切れています。");
         }
 
         // Check if email already exists
@@ -185,6 +250,7 @@ export const appRouter = router({
 
         // 登録完了後に承認メールテーブルのフラグを更新
         await db.markEmailAsRegistered(input.email);
+        await db.consumeEmailVerificationCode(verification.id);
 
         return {
           success: true,
@@ -222,6 +288,12 @@ export const appRouter = router({
         const isValid = await bcrypt.compare(input.password, user.passwordHash);
         if (!isValid) {
           throw new Error("メールアドレスまたはパスワードが正しくありません");
+        }
+        if (user.role !== "admin") {
+          const membership = await refreshMembershipFromSquare(input.email);
+          if (!canAccessMemberApp(membership)) {
+            throw new Error("会員資格を確認できないためログインできません。決済状況をご確認ください。");
+          }
         }
 
         // Update last signed in

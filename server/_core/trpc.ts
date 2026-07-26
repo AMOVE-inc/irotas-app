@@ -2,6 +2,7 @@ import { NOT_ADMIN_ERR_MSG, UNAUTHED_ERR_MSG } from "../../shared/const.js";
 import { initTRPC, TRPCError } from "@trpc/server";
 import superjson from "superjson";
 import type { TrpcContext } from "./context";
+import * as db from "../db";
 
 const t = initTRPC.context<TrpcContext>().create({
   transformer: superjson,
@@ -15,6 +16,9 @@ const requireUser = t.middleware(async (opts) => {
 
   if (!ctx.user) {
     throw new TRPCError({ code: "UNAUTHORIZED", message: UNAUTHED_ERR_MSG });
+  }
+  if (ctx.user.role !== "admin" && !(await db.memberHasAppAccess(ctx.user.id))) {
+    throw new TRPCError({ code: "FORBIDDEN", message: "会員資格を確認できないため、現在アプリをご利用いただけません。" });
   }
 
   return next({

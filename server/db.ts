@@ -1,6 +1,8 @@
-import { eq } from "drizzle-orm";
+import { desc, eq, or } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, allowedEmails, InsertAllowedEmail } from "../drizzle/schema";
+import { InsertUser, users, allowedEmails, InsertAllowedEmail, memberSubscriptions, squareWebhookEvents, emailVerificationCodes, events, eventParticipations, eventOrganizers, migrationImports, type InsertMemberSubscription } from "../drizzle/schema";
+import { accessStatusForSquareStatus, canAccessMemberApp, type SquareSubscriptionStatus } from "../lib/membership-access";
+import { validateMigrationCsv, type MigrationImportType } from "../lib/migration-csv";
 import { ENV } from "./_core/env";
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -109,7 +111,7 @@ export async function getUserByEmail(email: string) {
     return undefined;
   }
 
-  const result = await db.select().from(users).where(eq(users.email, email)).limit(1);
+  const result = await db.select().from(users).where(eq(users.email, email.toLowerCase().trim())).limit(1);
   return result.length > 0 ? result[0] : undefined;
 }
 
@@ -123,21 +125,18 @@ export async function createEmailUser(data: {
   if (!db) throw new Error("Database not available");
 
   // Use email as openId for email/password users (prefixed to avoid collision with OAuth openIds)
-  const openId = `email:${data.email}`;
+  const normalizedEmail = data.email.toLowerCase().trim();
+  const openId = `email:${normalizedEmail}`;
   const now = new Date();
 
-  // オーナーメールアドレスの場合は管理者権限を付与
+  // 管理者権限は明示的に設定されたオーナーだけに付与する。
   const ownerEmail = process.env.OWNER_EMAIL ?? "";
   const isOwner = ownerEmail && data.email.toLowerCase() === ownerEmail.toLowerCase();
-  // 既存ユーザーが0人（最初の登録者）の場合も管理者にする
-  // LIMIT 1で全件取得を避けパフォーマンス改善
-  const firstUserCheck = await db.select({ id: users.id }).from(users).limit(1);
-  const isFirstUser = firstUserCheck.length === 0;
-  const role = (isOwner || isFirstUser) ? "admin" : "user";
+  const role = isOwner ? "admin" : "user";
 
   await db.insert(users).values({
     openId,
-    email: data.email,
+    email: normalizedEmail,
     name: data.name,
     passwordHash: data.passwordHash,
     loginMethod: "email",
@@ -145,7 +144,215 @@ export async function createEmailUser(data: {
     lastSignedIn: now,
   });
 
-  return getUserByOpenId(openId);
+  const user = await getUserByOpenId(openId);
+  if (user) {
+    const importedMembership = await getMembershipByBillingEmail(normalizedEmail);
+    await db.update(memberSubscriptions).set({ userId: user.id }).where(eq(memberSubscriptions.billingEmail, normalizedEmail));
+    if (importedMembership?.discordUserId) {
+      await db.update(eventParticipations).set({ userId: user.id, needsReview: 0 }).where(eq(eventParticipations.discordUserId, importedMembership.discordUserId));
+      await db.update(eventOrganizers).set({ userId: user.id, needsReview: 0 }).where(eq(eventOrganizers.discordUserId, importedMembership.discordUserId));
+    }
+  }
+  return user;
+}
+
+export async function getMembershipByBillingEmail(email: string) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const normalized = email.toLowerCase().trim();
+  const result = await db.select().from(memberSubscriptions).where(eq(memberSubscriptions.billingEmail, normalized)).limit(1);
+  return result[0];
+}
+
+export async function getMembershipByUserId(userId: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(memberSubscriptions).where(eq(memberSubscriptions.userId, userId)).limit(1);
+  return result[0];
+}
+
+export async function memberHasAppAccess(userId: number): Promise<boolean> {
+  const membership = await getMembershipByUserId(userId);
+  return canAccessMemberApp(membership);
+}
+
+export async function upsertImportedMembership(data: InsertMemberSubscription) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const billingEmail = data.billingEmail.toLowerCase().trim();
+  const existingUser = await db.select({ id: users.id }).from(users).where(eq(users.email, billingEmail)).limit(1);
+  const userId = data.userId ?? existingUser[0]?.id ?? null;
+  await db.insert(memberSubscriptions).values({ ...data, billingEmail, userId }).onDuplicateKeyUpdate({ set: {
+    userId,
+    discordUserId: data.discordUserId,
+    discordName: data.discordName,
+    discordRoles: data.discordRoles,
+    discordJoinedAt: data.discordJoinedAt,
+    displayName: data.displayName,
+    memberTerm: data.memberTerm,
+    memberRank: data.memberRank,
+    squareCustomerId: data.squareCustomerId,
+    squareSubscriptionId: data.squareSubscriptionId,
+    squareStatus: data.squareStatus,
+    accessStatus: data.accessStatus,
+    paidUntilDate: data.paidUntilDate,
+    graceUntilDate: data.graceUntilDate,
+    lastSquareSyncedAt: data.lastSquareSyncedAt,
+  } });
+  if (userId && data.discordUserId) {
+    await db.update(eventParticipations).set({ userId, needsReview: 0 }).where(eq(eventParticipations.discordUserId, data.discordUserId));
+    await db.update(eventOrganizers).set({ userId, needsReview: 0 }).where(eq(eventOrganizers.discordUserId, data.discordUserId));
+  }
+  const allowed = await db.select().from(allowedEmails).where(eq(allowedEmails.email, billingEmail)).limit(1);
+  if (allowed.length === 0) await db.insert(allowedEmails).values({ email: billingEmail, note: "決済会員CSVから登録", isRegistered: 0 });
+}
+
+export async function syncSquareSubscription(subscriptionId: string, status: SquareSubscriptionStatus, paidUntilDate?: string | null, customerId?: string | null) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(memberSubscriptions).set({
+    squareStatus: status,
+    accessStatus: accessStatusForSquareStatus(status),
+    paidUntilDate: paidUntilDate ? new Date(`${paidUntilDate.slice(0, 10)}T00:00:00+09:00`) : undefined,
+    suspendedAt: status === "ACTIVE" ? null : new Date(),
+    lastSquareSyncedAt: new Date(),
+  }).where(customerId
+    ? or(eq(memberSubscriptions.squareSubscriptionId, subscriptionId), eq(memberSubscriptions.squareCustomerId, customerId))
+    : eq(memberSubscriptions.squareSubscriptionId, subscriptionId));
+}
+
+export async function updateMembershipFromSquare(data: {
+  billingEmail: string;
+  customerId: string;
+  subscriptionId: string;
+  status: SquareSubscriptionStatus;
+  paidUntilDate?: string | null;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(memberSubscriptions).set({
+    squareCustomerId: data.customerId,
+    squareSubscriptionId: data.subscriptionId,
+    squareStatus: data.status,
+    accessStatus: accessStatusForSquareStatus(data.status),
+    paidUntilDate: data.paidUntilDate ? new Date(`${data.paidUntilDate.slice(0, 10)}T00:00:00+09:00`) : null,
+    suspendedAt: data.status === "ACTIVE" ? null : new Date(),
+    lastSquareSyncedAt: new Date(),
+  }).where(eq(memberSubscriptions.billingEmail, data.billingEmail.toLowerCase().trim()));
+  return getMembershipByBillingEmail(data.billingEmail);
+}
+
+export async function suspendUnverifiedMembership(billingEmail: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(memberSubscriptions).set({
+    squareStatus: "UNKNOWN",
+    accessStatus: "suspended",
+    suspendedAt: new Date(),
+    lastSquareSyncedAt: new Date(),
+  }).where(eq(memberSubscriptions.billingEmail, billingEmail.toLowerCase().trim()));
+  return getMembershipByBillingEmail(billingEmail);
+}
+
+export async function claimSquareWebhookEvent(eventId: string, eventType: string): Promise<boolean> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const existing = await db.select().from(squareWebhookEvents).where(eq(squareWebhookEvents.eventId, eventId)).limit(1);
+  if (existing.length > 0) return false;
+  await db.insert(squareWebhookEvents).values({ eventId, eventType });
+  return true;
+}
+
+export async function releaseSquareWebhookEvent(eventId: string) {
+  const db = await getDb();
+  if (!db) return;
+  await db.delete(squareWebhookEvents).where(eq(squareWebhookEvents.eventId, eventId));
+}
+
+export async function createEmailVerificationCode(email: string, codeHash: string, expiresAt: Date) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.insert(emailVerificationCodes).values({ email: email.toLowerCase().trim(), codeHash, expiresAt });
+}
+
+export async function getLatestEmailVerificationCode(email: string) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(emailVerificationCodes).where(eq(emailVerificationCodes.email, email.toLowerCase().trim())).orderBy(desc(emailVerificationCodes.createdAt)).limit(1);
+  return result[0];
+}
+
+export async function consumeEmailVerificationCode(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(emailVerificationCodes).set({ consumedAt: new Date() }).where(eq(emailVerificationCodes.id, id));
+}
+
+function asDateTime(dateValue: string, timeValue = "00:00") {
+  const parsed = new Date(`${dateValue}T${timeValue || "00:00"}:00+09:00`);
+  if (Number.isNaN(parsed.getTime())) throw new Error(`日付を解析できません: ${dateValue} ${timeValue}`);
+  return parsed;
+}
+
+export async function importMigrationCsv(type: MigrationImportType, csvText: string, filename: string, importedBy: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const { rows, missing } = validateMigrationCsv(type, csvText);
+  if (missing.length > 0) throw new Error(`必須列がありません: ${missing.join(", ")}`);
+  let importedCount = 0;
+  let reviewCount = 0;
+  for (const row of rows) {
+    if (type === "members") {
+      const status = (["PENDING", "ACTIVE", "CANCELED", "DEACTIVATED", "PAUSED", "COMPLETED"] as const).includes(row.subscription_status as any) ? row.subscription_status as SquareSubscriptionStatus : "UNKNOWN";
+      await upsertImportedMembership({
+        billingEmail: row.billing_email,
+        discordUserId: row.discord_user_id,
+        discordName: row.discord_name || null,
+        discordRoles: row.discord_roles ? row.discord_roles.split(/[|;]/).map((role) => role.trim()).filter(Boolean) : null,
+        discordJoinedAt: row.discord_joined_at ? new Date(`${row.discord_joined_at.slice(0, 10)}T00:00:00+09:00`) : null,
+        displayName: row.display_name || row.discord_name,
+        memberTerm: row.member_term || null,
+        memberRank: row.member_rank || null,
+        squareCustomerId: row.square_customer_id || null,
+        squareSubscriptionId: row.square_subscription_id || null,
+        squareStatus: status,
+        accessStatus: accessStatusForSquareStatus(status),
+        paidUntilDate: row.paid_until_date ? new Date(`${row.paid_until_date.slice(0, 10)}T00:00:00+09:00`) : null,
+        lastSquareSyncedAt: status === "UNKNOWN" ? null : new Date(),
+      });
+    } else if (type === "events") {
+      const startDate = asDateTime(row.event_date, row.event_time || "00:00");
+      await db.insert(events).values({
+        title: row.event_name,
+        description: row.description || null,
+        startDate,
+        endDate: startDate,
+        location: row.location || null,
+        capacity: Number.parseInt(row.capacity || "0", 10) || 0,
+        createdBy: importedBy,
+        externalEventId: row.event_id,
+        source: "discord",
+        eventType: row.event_type === "official" ? "official" : "gourmet",
+      }).onDuplicateKeyUpdate({ set: { title: row.event_name, startDate, location: row.location || null } });
+    } else {
+      const event = await db.select().from(events).where(eq(events.externalEventId, row.event_id)).limit(1);
+      if (!event[0]) { reviewCount += 1; continue; }
+      const membership = await db.select().from(memberSubscriptions).where(eq(memberSubscriptions.discordUserId, row.discord_user_id)).limit(1);
+      const needsReview = membership[0] ? 0 : 1;
+      reviewCount += needsReview;
+      if (type === "participations") {
+        const allowedStatuses = ["applied", "confirmed", "attended", "canceled", "no_show"] as const;
+        const status = allowedStatuses.includes(row.status as any) ? row.status as typeof allowedStatuses[number] : "applied";
+        await db.insert(eventParticipations).values({ eventId: event[0].id, userId: membership[0]?.userId, discordUserId: row.discord_user_id, status, source: "discord", sourceReference: row.source_reference || null, needsReview, occurredAt: row.occurred_at ? new Date(row.occurred_at) : null }).onDuplicateKeyUpdate({ set: { status, userId: membership[0]?.userId, needsReview } });
+      } else {
+        const organizerRole = row.organizer_role === "assistant" ? "assistant" : "primary";
+        await db.insert(eventOrganizers).values({ eventId: event[0].id, userId: membership[0]?.userId, discordUserId: row.discord_user_id, organizerRole, source: "discord", needsReview }).onDuplicateKeyUpdate({ set: { organizerRole, userId: membership[0]?.userId, needsReview } });
+      }
+    }
+    importedCount += 1;
+  }
+  await db.insert(migrationImports).values({ filename, importType: type, status: reviewCount > 0 ? "partial" : "success", importedCount, reviewCount, importedBy });
+  return { importedCount, reviewCount };
 }
 
 export async function updateUserBranches(userId: number, branches: ("kanto" | "kansai")[]) {

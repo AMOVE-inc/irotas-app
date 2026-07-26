@@ -2,6 +2,7 @@ import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { useColors } from "@/hooks/use-colors";
 import { useAuthContext } from "@/lib/auth-context";
+import { trpc } from "@/lib/trpc";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
@@ -18,59 +19,39 @@ interface ImportRecord {
   importedAt: string;
   recordCount: number;
   status: "success" | "error" | "processing";
-  type: "members" | "events" | "points";
+  type: "members" | "events" | "participations" | "organizers";
   errorMessage?: string;
 }
 
-const IMPORT_HISTORY: ImportRecord[] = [
-  {
-    id: "imp1",
-    filename: "members_2026_03.csv",
-    importedAt: "2026-03-28 14:30",
-    recordCount: 45,
-    status: "success",
-    type: "members",
-  },
-  {
-    id: "imp2",
-    filename: "points_march.csv",
-    importedAt: "2026-03-25 10:15",
-    recordCount: 120,
-    status: "success",
-    type: "points",
-  },
-  {
-    id: "imp3",
-    filename: "events_q1.csv",
-    importedAt: "2026-03-20 16:45",
-    recordCount: 0,
-    status: "error",
-    type: "events",
-    errorMessage: "列名が一致しません: 'event_date' が見つかりません",
-  },
-];
+const IMPORT_HISTORY: ImportRecord[] = [];
 
-const TYPE_LABELS = { members: "会員データ", events: "イベント", points: "ポイント" };
-const TYPE_COLORS = { members: "#E8A0BF", events: "#A7C7E7", points: "#FF9500" };
+const TYPE_LABELS = { members: "決済会員・Discord", events: "イベント履歴", participations: "参加履歴", organizers: "幹事履歴" };
+const TYPE_COLORS = { members: "#E8A0BF", events: "#A7C7E7", participations: "#FF9500", organizers: "#7D6A92" };
 
 const CSV_TEMPLATES = [
   {
     type: "members" as const,
     label: "会員データCSVテンプレート",
-    columns: ["id", "name", "email", "branch", "generation", "rank", "points", "joined_at"],
-    example: "m001,山田花子,hanako@example.com,東京,5,silver,1200,2024-01-15",
+    columns: ["discord_user_id", "discord_name", "billing_email", "display_name", "discord_roles", "discord_joined_at", "member_term", "member_rank", "square_customer_id", "square_subscription_id", "subscription_status", "paid_until_date"],
+    example: "123456789,kazuma,kazuma@example.com,かずま,関東支部|ワイン部,2024-04-01,第1期,ゴールド,,,,",
   },
   {
     type: "events" as const,
     label: "イベントCSVテンプレート",
-    columns: ["id", "title", "date", "time", "location", "capacity", "price", "status"],
-    example: "e001,春のランチ会,2026-04-15,12:00,銀座レストラン,20,5000,open",
+    columns: ["event_id", "event_name", "event_date", "event_time", "location", "event_type", "capacity"],
+    example: "e001,春のランチ会,2026-04-15,12:00,銀座レストラン,gourmet,20",
   },
   {
-    type: "points" as const,
-    label: "ポイントCSVテンプレート",
-    columns: ["member_id", "points", "reason", "date"],
-    example: "m001,500,イベント参加,2026-03-28",
+    type: "participations" as const,
+    label: "イベント参加履歴CSVテンプレート",
+    columns: ["event_id", "discord_user_id", "status", "occurred_at", "source_reference"],
+    example: "e001,123456789,attended,2026-04-15T12:00:00+09:00,Discord投稿URL",
+  },
+  {
+    type: "organizers" as const,
+    label: "幹事履歴CSVテンプレート",
+    columns: ["event_id", "discord_user_id", "organizer_role"],
+    example: "e001,123456789,primary",
   },
 ];
 
@@ -80,6 +61,7 @@ export default function CsvImportScreen() {
   const { user: authUser } = useAuthContext();
   const [history, setHistory] = useState<ImportRecord[]>(IMPORT_HISTORY);
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
+  const importMutation = trpc.migration.importCsv.useMutation();
 
   if (authUser?.role !== "admin") {
     return (
@@ -92,29 +74,29 @@ export default function CsvImportScreen() {
   }
 
   const handleImport = (type: ImportRecord["type"]) => {
-    Alert.alert(
-      "CSVファイルを選択",
-      `${TYPE_LABELS[type]}のCSVファイルをインポートします。\n\n（実機ではファイルピッカーが開きます）`,
-      [
-        { text: "キャンセル", style: "cancel" },
-        {
-          text: "インポート",
-          onPress: () => {
-            // シミュレート: 処理中 → 成功
-            const newRecord: ImportRecord = {
-              id: `imp_${Date.now()}`,
-              filename: `${type}_${new Date().toISOString().split("T")[0]}.csv`,
-              importedAt: new Date().toLocaleString("ja-JP"),
-              recordCount: Math.floor(Math.random() * 50) + 10,
-              status: "success",
-              type,
-            };
-            setHistory([newRecord, ...history]);
-            Alert.alert("インポート完了", `${newRecord.recordCount}件のデータを取り込みました。`);
-          },
-        },
-      ],
-    );
+    if (typeof document === "undefined") {
+      Alert.alert("PC版で操作してください", "個人情報を含むCSVの一括移行は、管理者用Web画面から行ってください。");
+      return;
+    }
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = ".csv,text/csv";
+    input.onchange = async () => {
+      const file = input.files?.[0];
+      if (!file) return;
+      const pending: ImportRecord = { id: `imp_${Date.now()}`, filename: file.name, importedAt: new Date().toLocaleString("ja-JP"), recordCount: 0, status: "processing", type };
+      setHistory((current) => [pending, ...current]);
+      try {
+        const result = await importMutation.mutateAsync({ type, filename: file.name, csvText: await file.text() });
+        setHistory((current) => current.map((item) => item.id === pending.id ? { ...item, status: "success", recordCount: result.importedCount, errorMessage: result.reviewCount ? `${result.reviewCount}件は要確認です` : undefined } : item));
+        Alert.alert("インポート完了", `${result.importedCount}件を取り込みました。${result.reviewCount ? ` ${result.reviewCount}件は管理者確認が必要です。` : ""}`);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "CSVを取り込めませんでした";
+        setHistory((current) => current.map((item) => item.id === pending.id ? { ...item, status: "error", errorMessage: message } : item));
+        Alert.alert("インポートエラー", message);
+      }
+    };
+    input.click();
   };
 
   const handleDownloadTemplate = (template: typeof CSV_TEMPLATES[0]) => {
@@ -142,7 +124,7 @@ export default function CsvImportScreen() {
             CSV取り込み
           </Text>
           <Text style={{ fontSize: 12, color: colors.muted }}>
-            会員・イベント・ポイントデータのインポート
+            決済会員・Discord・イベント履歴のインポート
           </Text>
         </View>
       </View>
@@ -153,7 +135,7 @@ export default function CsvImportScreen() {
           データをインポート
         </Text>
         <View style={{ gap: 10, marginBottom: 24 }}>
-          {(["members", "events", "points"] as const).map((type) => (
+          {(["members", "events", "participations", "organizers"] as const).map((type) => (
             <Pressable
               key={type}
               onPress={() => handleImport(type)}
@@ -178,7 +160,7 @@ export default function CsvImportScreen() {
                 }}
               >
                 <IconSymbol
-                  name={type === "members" ? "person.2.fill" : type === "events" ? "calendar" : "star.fill"}
+                  name={type === "members" ? "person.2.fill" : type === "events" ? "calendar" : type === "participations" ? "checkmark.circle.fill" : "person.badge.plus"}
                   size={20}
                   color={TYPE_COLORS[type]}
                 />
@@ -278,6 +260,11 @@ export default function CsvImportScreen() {
         <Text style={{ fontSize: 16, fontWeight: "700", color: colors.foreground, marginBottom: 12 }}>
           取り込み履歴
         </Text>
+        {history.length === 0 && (
+          <Text style={{ fontSize: 13, color: colors.muted, textAlign: "center", paddingVertical: 20 }}>
+            この画面で取り込んだ履歴はまだありません
+          </Text>
+        )}
         {history.map((record) => (
           <View
             key={record.id}
