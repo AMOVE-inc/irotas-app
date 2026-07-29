@@ -698,7 +698,7 @@ export default function ProfileScreen() {
   // DBから取得したroleで管理者判定（モックデータのCURRENT_USERではなく実際のログインユーザーを使用）
   const userIsAdmin = authUser?.role === "admin";
   const [myRooms, setMyRooms] = useState(() => getMyRooms(user.id));
-  const [confirmedEvents, setConfirmedEvents] = useState<Event[]>([]);
+  const [participatingEvents, setParticipatingEvents] = useState<Event[]>([]);
   const [avatarUri, setAvatarUri] = useState<string | null>(null);
   const [profileName, setProfileName] = useState<string>(CURRENT_USER.name ?? "");
   const [profileBio, setProfileBio] = useState<string>(CURRENT_USER.bio ?? "");
@@ -718,8 +718,8 @@ export default function ProfileScreen() {
   useFocusEffect(
     useCallback(() => {
       setMyRooms(getMyRooms(user.id));
-      setConfirmedEvents(getAllEvents(EVENTS)
-        .filter((event) => getEventParticipationStatus(event, user.id) === "confirmed")
+      setParticipatingEvents(getAllEvents(EVENTS)
+        .filter((event) => getEventParticipationStatus(event, user.id) !== null)
         .sort((a, b) => Date.parse(`${a.date}T${a.time}:00`) - Date.parse(`${b.date}T${b.time}:00`)));
       // AsyncStorageから保存済みデータを読み込む
       import("@react-native-async-storage/async-storage").then(({ default: AsyncStorage }) => {
@@ -933,15 +933,17 @@ export default function ProfileScreen() {
         </View>
 
         <View style={{ marginHorizontal: 16, marginBottom: 16 }}>
-          <Text style={{ fontSize: 14, fontWeight: "800", color: colors.foreground, marginBottom: 9 }}>参加確定しているイベント</Text>
+          <Text style={{ fontSize: 14, fontWeight: "800", color: colors.foreground, marginBottom: 9 }}>参加申込中／参加確定済みのイベント</Text>
           <View style={{ backgroundColor: colors.surface, borderRadius: 16, overflow: "hidden" }}>
-            {confirmedEvents.length ? confirmedEvents.map((event, index) => (
-              <Pressable key={event.id} onPress={() => router.push({ pathname: "/event-detail", params: { id: event.id } })} style={{ flexDirection: "row", alignItems: "center", padding: 12, borderTopWidth: index ? 0.5 : 0, borderTopColor: colors.border }}>
+            {participatingEvents.length ? participatingEvents.map((event, index) => {
+              const status = getEventParticipationStatus(event, user.id);
+              const confirmed = status === "confirmed";
+              return <Pressable key={event.id} onPress={() => router.push({ pathname: "/event-detail", params: { id: event.id } })} style={{ flexDirection: "row", alignItems: "center", padding: 12, borderTopWidth: index ? 0.5 : 0, borderTopColor: colors.border }}>
                 <Image source={event.image} style={{ width: 52, height: 52, borderRadius: 10 }} contentFit="cover" />
                 <View style={{ flex: 1, marginLeft: 11 }}><Text style={{ fontSize: 13, fontWeight: "800", color: colors.foreground }} numberOfLines={2}>{event.title}</Text><Text style={{ fontSize: 11, color: colors.muted, marginTop: 3 }}>{event.date} {event.time}</Text></View>
-                <View style={{ borderRadius: 8, backgroundColor: "#E6F6EA", paddingHorizontal: 7, paddingVertical: 4 }}><Text style={{ fontSize: 10, fontWeight: "800", color: "#237A3B" }}>参加確定</Text></View>
-              </Pressable>
-            )) : <Text style={{ padding: 16, fontSize: 13, color: colors.muted }}>参加確定しているイベントはありません。</Text>}
+                <View style={{ borderRadius: 8, backgroundColor: confirmed ? "#E6F6EA" : "#E8F2FA", paddingHorizontal: 7, paddingVertical: 4 }}><Text style={{ fontSize: 10, fontWeight: "800", color: confirmed ? "#237A3B" : "#3E78A1" }}>{confirmed ? "参加確定済み" : "参加申込中"}</Text></View>
+              </Pressable>;
+            }) : <Text style={{ padding: 16, fontSize: 13, color: colors.muted }}>参加申込中・参加確定済みのイベントはありません。</Text>}
           </View>
         </View>
 

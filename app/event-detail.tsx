@@ -263,6 +263,10 @@ export default function EventDetailScreen() {
     }
   };
 
+  const openMemberProfile = (memberId: string) => {
+    router.push({ pathname: "/member-profile", params: { id: memberId } });
+  };
+
   const handleOpenMap = () => {
     const query = encodeURIComponent(event.location);
     const url = Platform.OS === "ios"
@@ -464,10 +468,11 @@ export default function EventDetailScreen() {
           ))}
         </View>
 
-        <View style={{ flexDirection: "row", alignItems: "center", backgroundColor: colors.surface, borderRadius: 14, padding: 14, marginBottom: 16 }}>
+        <Pressable onPress={() => openMemberProfile(event.createdBy)} accessibilityLabel="幹事のプロフィールを表示" style={{ flexDirection: "row", alignItems: "center", backgroundColor: colors.surface, borderRadius: 14, padding: 14, marginBottom: 16 }}>
           <Image source={event.eventType === "official" ? DEFAULT_AVATAR : (organizer?.avatar ?? DEFAULT_AVATAR)} style={{ width: 42, height: 42, borderRadius: 21 }} contentFit="cover" />
-          <View style={{ marginLeft: 11 }}><Text style={{ fontSize: 11, color: colors.muted }}>幹事</Text><Text style={{ fontSize: 15, fontWeight: "800", color: colors.foreground }}>{event.eventType === "official" ? "IRO＋運営" : (organizer?.name ?? "メンバー")}</Text></View>
-        </View>
+          <View style={{ flex: 1, marginLeft: 11 }}><Text style={{ fontSize: 11, color: colors.muted }}>幹事</Text><Text style={{ fontSize: 15, fontWeight: "800", color: colors.foreground }}>{event.eventType === "official" ? "IRO＋運営" : (organizer?.name ?? "メンバー")}</Text></View>
+          <IconSymbol name="chevron.right" size={17} color={colors.muted} />
+        </Pressable>
 
         {isGourmetOrganizer ? (
           <View style={{ backgroundColor: "#F5F8FC", borderRadius: 14, padding: 14, marginBottom: 16, borderWidth: 1, borderColor: "#DCE7F2" }}>
@@ -476,13 +481,13 @@ export default function EventDetailScreen() {
             <Text style={{ fontSize: 13, fontWeight: "800", color: colors.foreground, marginTop: 14, marginBottom: 7 }}>承認待ち（{pendingApplicantIds.length}人）</Text>
             {pendingApplicantIds.length ? pendingApplicantIds.map((memberId) => {
               const member = getMemberById(memberId);
-              return <View key={memberId} style={{ flexDirection: "row", alignItems: "center", paddingVertical: 8, borderTopWidth: 0.5, borderTopColor: colors.border }}><Image source={member?.avatar ?? DEFAULT_AVATAR} style={{ width: 34, height: 34, borderRadius: 17 }} contentFit="cover" /><Text style={{ flex: 1, marginLeft: 9, fontSize: 14, fontWeight: "700", color: colors.foreground }}>{member?.name ?? "メンバー"}</Text><Pressable onPress={() => approveGourmetApplicant(memberId)} style={{ borderRadius: 9, backgroundColor: "#34C759", paddingHorizontal: 12, paddingVertical: 7 }}><Text style={{ color: "#FFF", fontSize: 12, fontWeight: "800" }}>承認</Text></Pressable></View>;
+              return <View key={memberId} style={{ flexDirection: "row", alignItems: "center", paddingVertical: 8, borderTopWidth: 0.5, borderTopColor: colors.border }}><Pressable onPress={() => openMemberProfile(memberId)} style={{ flex: 1, flexDirection: "row", alignItems: "center" }}><Image source={member?.avatar ?? DEFAULT_AVATAR} style={{ width: 34, height: 34, borderRadius: 17 }} contentFit="cover" /><Text style={{ flex: 1, marginLeft: 9, fontSize: 14, fontWeight: "700", color: colors.foreground }}>{member?.name ?? "メンバー"}</Text></Pressable><Pressable onPress={() => approveGourmetApplicant(memberId)} style={{ borderRadius: 9, backgroundColor: "#34C759", paddingHorizontal: 12, paddingVertical: 7 }}><Text style={{ color: "#FFF", fontSize: 12, fontWeight: "800" }}>承認</Text></Pressable></View>;
             }) : <Text style={{ fontSize: 13, color: colors.muted, paddingVertical: 8 }}>現在、承認待ちの申込はありません。</Text>}
 
             <Text style={{ fontSize: 13, fontWeight: "800", color: colors.foreground, marginTop: 14, marginBottom: 7 }}>参加確定者</Text>
             {(event.participants ?? []).map((memberId) => {
               const member = getMemberById(memberId);
-              return <View key={memberId} style={{ flexDirection: "row", alignItems: "center", paddingVertical: 8, borderTopWidth: 0.5, borderTopColor: colors.border }}><Image source={member?.avatar ?? DEFAULT_AVATAR} style={{ width: 34, height: 34, borderRadius: 17 }} contentFit="cover" /><Text style={{ flex: 1, marginLeft: 9, fontSize: 14, fontWeight: "700", color: colors.foreground }}>{member?.name ?? "メンバー"}</Text>{memberId !== event.createdBy ? <Pressable onPress={() => cancelGourmetParticipant(memberId)} style={{ borderRadius: 9, borderWidth: 1, borderColor: colors.error, paddingHorizontal: 10, paddingVertical: 6 }}><Text style={{ color: colors.error, fontSize: 11, fontWeight: "800" }}>幹事キャンセル</Text></Pressable> : null}</View>;
+              return <View key={memberId} style={{ flexDirection: "row", alignItems: "center", paddingVertical: 8, borderTopWidth: 0.5, borderTopColor: colors.border }}><Pressable onPress={() => openMemberProfile(memberId)} style={{ flex: 1, flexDirection: "row", alignItems: "center" }}><Image source={member?.avatar ?? DEFAULT_AVATAR} style={{ width: 34, height: 34, borderRadius: 17 }} contentFit="cover" /><Text style={{ flex: 1, marginLeft: 9, fontSize: 14, fontWeight: "700", color: colors.foreground }}>{member?.name ?? "メンバー"}</Text></Pressable>{memberId !== event.createdBy ? <Pressable onPress={() => cancelGourmetParticipant(memberId)} style={{ borderRadius: 9, borderWidth: 1, borderColor: colors.error, paddingHorizontal: 10, paddingVertical: 6 }}><Text style={{ color: colors.error, fontSize: 11, fontWeight: "800" }}>幹事キャンセル</Text></Pressable> : null}</View>;
             })}
             {event.status !== "open" && (event.participants ?? []).length < event.capacity ? <Pressable onPress={handleReopenGourmetRecruitment} style={{ marginTop: 12, borderRadius: 11, backgroundColor: "#E8A0BF", paddingVertical: 11, alignItems: "center" }}><Text style={{ fontSize: 14, fontWeight: "900", color: "#FFF" }}>追加募集を開始</Text></Pressable> : null}
           </View>
@@ -668,8 +673,10 @@ export default function EventDetailScreen() {
               {confirmedIds.map((uid) => {
                 const member = getMemberById(uid);
                 return (
-                  <View
+                  <Pressable
                     key={uid}
+                    onPress={() => openMemberProfile(uid)}
+                    accessibilityLabel={`${member?.name ?? "メンバー"}のプロフィールを表示`}
                     style={{
                       alignItems: "center",
                       width: 62,
@@ -681,7 +688,7 @@ export default function EventDetailScreen() {
                       contentFit="cover"
                     />
                     <Text style={{ fontSize: 11, color: colors.foreground, marginTop: 5, textAlign: "center" }} numberOfLines={1}>{member?.name ?? "メンバー"}</Text>
-                  </View>
+                  </Pressable>
                 );
               })}
             </View>
