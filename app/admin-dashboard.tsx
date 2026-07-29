@@ -69,6 +69,7 @@ export default function AdminDashboardScreen() {
   const [showAnnouncementModal, setShowAnnouncementModal] = useState(false);
   const [newEmail, setNewEmail] = useState("");
   const [newNote, setNewNote] = useState("");
+  const [newAccessRole, setNewAccessRole] = useState<"member" | "operator" | "club_leader">("member");
   const { data: allowedEmails, refetch: refetchEmails, isLoading: emailsLoading } = trpc.allowedEmails.list.useQuery(
     undefined,
     { enabled: userIsAdmin && activeTab === "emails" },
@@ -77,12 +78,17 @@ export default function AdminDashboardScreen() {
     onSuccess: () => {
       setNewEmail("");
       setNewNote("");
+      setNewAccessRole("member");
       refetchEmails();
       Alert.alert("登録完了", `${newEmail} を承認メンバーに追加しました`);
     },
     onError: (e) => Alert.alert("エラー", e.message),
   });
   const removeEmailMutation = trpc.allowedEmails.remove.useMutation({
+    onSuccess: () => refetchEmails(),
+    onError: (e) => Alert.alert("エラー", e.message),
+  });
+  const setAccessRoleMutation = trpc.allowedEmails.setAccessRole.useMutation({
     onSuccess: () => refetchEmails(),
     onError: (e) => Alert.alert("エラー", e.message),
   });
@@ -338,7 +344,7 @@ export default function AdminDashboardScreen() {
       Alert.alert("入力エラー", "有効なメールアドレスを入力してください");
       return;
     }
-    addEmailMutation.mutate({ email: trimmed, note: newNote.trim() || undefined });
+    addEmailMutation.mutate({ email: trimmed, note: newNote.trim() || undefined, accessRole: newAccessRole });
   };
 
   const handleRemoveEmail = (id: number, email: string) => {
@@ -914,6 +920,15 @@ export default function AdminDashboardScreen() {
                   marginBottom: 12,
                 }}
               />
+              <Text style={{ fontSize: 12, fontWeight: "700", color: colors.foreground, marginBottom: 7 }}>ログイン権限</Text>
+              <View style={{ flexDirection: "row", gap: 7, marginBottom: 12 }}>
+                {([
+                  { key: "member", label: "一般会員" },
+                  { key: "operator", label: "運営メンバー" },
+                  { key: "club_leader", label: "部長" },
+                ] as const).map((option) => <Pressable key={option.key} onPress={() => setNewAccessRole(option.key)} style={{ flex: 1, paddingVertical: 9, borderRadius: 9, alignItems: "center", backgroundColor: newAccessRole === option.key ? "#5D5C74" : colors.background, borderWidth: 1, borderColor: newAccessRole === option.key ? "#5D5C74" : colors.border }}><Text style={{ fontSize: 11, fontWeight: "800", color: newAccessRole === option.key ? "#FFF" : colors.foreground }}>{option.label}</Text></Pressable>)}
+              </View>
+              {newAccessRole !== "member" ? <Text style={{ fontSize: 11, lineHeight: 16, color: "#B06C21", marginBottom: 10 }}>運営メンバー・部長は、役職が有効な間はSquareサブスクなしでログインできます。</Text> : null}
               <Pressable
                 onPress={handleAddEmail}
                 style={({ pressed }) => ({
@@ -973,6 +988,13 @@ export default function AdminDashboardScreen() {
                     <Text style={{ fontSize: 11, color: colors.muted, marginTop: 2 }}>
                       {new Date(item.createdAt).toLocaleDateString("ja-JP")}追加
                     </Text>
+                    <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 5, marginTop: 8 }}>
+                      {([
+                        { key: "member", label: "一般会員" },
+                        { key: "operator", label: "運営メンバー" },
+                        { key: "club_leader", label: "部長" },
+                      ] as const).map((option) => <Pressable key={option.key} disabled={setAccessRoleMutation.isPending} onPress={() => setAccessRoleMutation.mutate({ id: item.id, accessRole: option.key })} style={{ paddingHorizontal: 8, paddingVertical: 5, borderRadius: 8, backgroundColor: item.accessRole === option.key ? (option.key === "member" ? "#E8F2FA" : "#FFF0D8") : colors.background, borderWidth: 1, borderColor: item.accessRole === option.key ? (option.key === "member" ? "#5B9BD5" : "#D9942F") : colors.border }}><Text style={{ fontSize: 10, fontWeight: "800", color: item.accessRole === option.key ? (option.key === "member" ? "#3E78A1" : "#9A6115") : colors.muted }}>{option.label}</Text></Pressable>)}
+                    </View>
                   </View>
                   <Pressable
                     onPress={() => handleRemoveEmail(item.id, item.email)}

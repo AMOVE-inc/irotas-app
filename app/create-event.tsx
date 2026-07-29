@@ -5,6 +5,7 @@ import { EVENT_TERMS_URL } from "@/constants/external-links";
 import { GOURMET_GENRES } from "@/constants/event-options";
 import { PREFECTURES } from "@/constants/profile-options";
 import { useAuthContext } from "@/lib/auth-context";
+import { isOperatorRole } from "@/lib/access-control";
 import { pendingEvents } from "@/lib/event-store";
 import { scheduleOrganizerDeadlineNotification } from "@/lib/notifications";
 import { useColors } from "@/hooks/use-colors";
@@ -118,7 +119,7 @@ export default function CreateEventScreen() {
   const colors = useColors();
   const router = useRouter();
   const { user: authUser } = useAuthContext();
-  const userIsOperator = authUser?.role === "admin";
+  const userIsOperator = isOperatorRole(authUser?.role);
   const [eventType, setEventType] = useState<Event["eventType"]>(userIsOperator ? "official" : "gourmet");
   const [restaurantName, setRestaurantName] = useState("");
   const [eventName, setEventName] = useState("");

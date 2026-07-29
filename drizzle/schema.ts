@@ -18,7 +18,7 @@ export const users = mysqlTable("users", {
   /** Hashed password for email/password authentication (null for OAuth-only users) */
   passwordHash: varchar("passwordHash", { length: 255 }),
   loginMethod: varchar("loginMethod", { length: 64 }),
-  role: mysqlEnum("role", ["user", "admin"]).default("user").notNull(),
+  role: mysqlEnum("role", ["user", "operator", "admin"]).default("user").notNull(),
   /** 所属支部。初回ログイン時に選択する */
   branch: mysqlEnum("branch", ["kanto", "kansai"]),
   /** 複数所属に対応した支部一覧。branchは後方互換用に維持する */
@@ -46,6 +46,8 @@ export const allowedEmails = mysqlTable("allowed_emails", {
   addedBy: int("addedBy"),
   /** 実際に登録済みかどうか（登録完了後にtrueになる） */
   isRegistered: int("isRegistered").default(0).notNull(),
+  /** memberはSquare必須。operator/club_leaderは役職中のみサブスク免除。 */
+  accessRole: mysqlEnum("accessRole", ["member", "operator", "club_leader"]).default("member").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 

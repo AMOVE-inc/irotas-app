@@ -1,7 +1,7 @@
 // Mock data for IRO＋ app development
 
 export type MemberRank = "regular" | "silver" | "gold" | "platinum";
-export type UserRole = "member" | "admin";
+export type UserRole = "member" | "operator" | "admin";
 
 export interface Member {
   id: string;

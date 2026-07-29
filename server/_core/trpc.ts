@@ -17,7 +17,7 @@ const requireUser = t.middleware(async (opts) => {
   if (!ctx.user) {
     throw new TRPCError({ code: "UNAUTHORIZED", message: UNAUTHED_ERR_MSG });
   }
-  if (ctx.user.role !== "admin" && !(await db.memberHasAppAccess(ctx.user.id))) {
+  if (!(await db.memberHasAppAccess(ctx.user.id))) {
     throw new TRPCError({ code: "FORBIDDEN", message: "会員資格を確認できないため、現在アプリをご利用いただけません。" });
   }
 

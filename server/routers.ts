@@ -79,6 +79,7 @@ const allowedEmailsRouter = router({
       z.object({
         email: z.string().email("有効なメールアドレスを入力してください"),
         note: z.string().optional(),
+        accessRole: z.enum(["member", "operator", "club_leader"]).default("member"),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -86,6 +87,7 @@ const allowedEmailsRouter = router({
         email: input.email,
         note: input.note,
         addedBy: ctx.user.id,
+        accessRole: input.accessRole,
       });
     }),
 
@@ -96,6 +98,9 @@ const allowedEmailsRouter = router({
       await db.removeAllowedEmail(input.id);
       return { success: true };
     }),
+  setAccessRole: adminProcedure
+    .input(z.object({ id: z.number().int().positive(), accessRole: z.enum(["member", "operator", "club_leader"]) }))
+    .mutation(({ input }) => db.updateAllowedEmailAccessRole(input.id, input.accessRole)),
 
   /** メールアドレスが承認済みかチェック（登録前確認用） */
   check: publicProcedure
@@ -153,7 +158,7 @@ export const appRouter = router({
   }),
   auth: router({
     me: publicProcedure.query(async (opts) => {
-      if (!opts.ctx.user || opts.ctx.user.role === "admin") return opts.ctx.user;
+      if (!opts.ctx.user) return null;
       return (await db.memberHasAppAccess(opts.ctx.user.id)) ? opts.ctx.user : null;
     }),
     selectBranches: protectedProcedure
@@ -185,7 +190,7 @@ export const appRouter = router({
         const email = input.email.toLowerCase().trim();
         let membership = await db.getMembershipByBillingEmail(email);
         if (membership) membership = await refreshMembershipFromSquare(email);
-        if (!canAccessMemberApp(membership)) return { success: true };
+        if (!canAccessMemberApp(membership) && !(await db.emailHasSubscriptionExemption(email))) return { success: true };
         const latestCode = await db.getLatestEmailVerificationCode(email);
         if (latestCode && Date.now() - latestCode.createdAt.getTime() < 60_000) return { success: true };
         const code = String(randomInt(100000, 1000000));
@@ -214,7 +219,7 @@ export const appRouter = router({
         }
         let membership = await db.getMembershipByBillingEmail(input.email);
         if (membership) membership = await refreshMembershipFromSquare(input.email);
-        if (!canAccessMemberApp(membership)) {
+        if (!canAccessMemberApp(membership) && !(await db.emailHasSubscriptionExemption(input.email))) {
           throw new Error("有効なSquare会員資格を確認できません。決済状況をご確認ください。");
         }
         const verification = await db.getLatestEmailVerificationCode(input.email);
@@ -296,7 +301,7 @@ export const appRouter = router({
         if (!isValid) {
           throw new Error("メールアドレスまたはパスワードが正しくありません");
         }
-        if (user.role !== "admin") {
+        if (!(await db.userHasSubscriptionExemption(user.id))) {
           const membership = await refreshMembershipFromSquare(input.email);
           if (!canAccessMemberApp(membership)) {
             throw new Error("会員資格を確認できないためログインできません。決済状況をご確認ください。");

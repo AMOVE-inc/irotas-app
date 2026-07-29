@@ -8,6 +8,12 @@ export type MembershipAccessRecord = {
   graceUntilDate?: string | Date | null;
 };
 
+export type SubscriptionExemptRole = "member" | "operator" | "club_leader" | null | undefined;
+
+export function canBypassSubscription(userRole: unknown, accessRole: SubscriptionExemptRole): boolean {
+  return userRole === "admin" || userRole === "operator" || accessRole === "operator" || accessRole === "club_leader";
+}
+
 function endOfDate(value: string | Date): number {
   const key = value instanceof Date ? value.toISOString().slice(0, 10) : String(value).slice(0, 10);
   return new Date(`${key}T23:59:59+09:00`).getTime();

@@ -6,6 +6,7 @@ import {
   canViewClubThread,
   isAdminRole,
   isAdminRoute,
+  isOperatorRole,
   normalizeBranchRole,
   normalizeBranchRoles,
   normalizeUserRole,
@@ -21,8 +22,15 @@ describe("access control", () => {
 
   it("normalizes unknown role values to a regular user", () => {
     expect(normalizeUserRole("admin")).toBe("admin");
+    expect(normalizeUserRole("operator")).toBe("operator");
     expect(normalizeUserRole("member")).toBe("user");
     expect(normalizeUserRole(null)).toBe("user");
+  });
+
+  it("allows administrators and operators to perform operating tasks", () => {
+    expect(isOperatorRole("admin")).toBe(true);
+    expect(isOperatorRole("operator")).toBe(true);
+    expect(isOperatorRole("user")).toBe(false);
   });
 
   it("accepts only supported branch roles", () => {

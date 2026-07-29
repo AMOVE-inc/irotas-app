@@ -15,7 +15,7 @@ export function getMentionGroups(members: Member[], clubs: Club[]): MentionGroup
     { id: "everyone", label: "everyone", description: "全メンバー", memberIds: members.map((member) => member.id), category: "everyone" },
     { id: "branch-kanto", label: "関東支部", description: "関東支部のメンバー", memberIds: members.filter((member) => member.branch === "kanto").map((member) => member.id), category: "branch" },
     { id: "branch-kansai", label: "関西支部", description: "関西支部のメンバー", memberIds: members.filter((member) => member.branch === "kansai").map((member) => member.id), category: "branch" },
-    { id: "admins", label: "運営", description: "運営メンバー", memberIds: members.filter((member) => member.role === "admin").map((member) => member.id), category: "admin" },
+    { id: "admins", label: "運営", description: "運営メンバー", memberIds: members.filter((member) => member.role === "admin" || member.role === "operator").map((member) => member.id), category: "admin" },
   ];
 
   const generations = [...new Set(members.map((member) => member.generation))].sort((a, b) => a - b);

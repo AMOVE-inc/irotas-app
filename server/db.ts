@@ -1,7 +1,7 @@
 import { and, desc, eq, or } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import { InsertUser, users, allowedEmails, InsertAllowedEmail, memberSubscriptions, squareWebhookEvents, emailVerificationCodes, events, eventParticipations, eventOrganizers, migrationImports, eventFavorites, privateMemberNotes, appRoles, externalRoleMappings, type InsertMemberSubscription } from "../drizzle/schema";
-import { accessStatusForSquareStatus, canAccessMemberApp, type SquareSubscriptionStatus } from "../lib/membership-access";
+import { accessStatusForSquareStatus, canAccessMemberApp, canBypassSubscription, type SquareSubscriptionStatus, type SubscriptionExemptRole } from "../lib/membership-access";
 import { validateMigrationCsv, type MigrationImportType } from "../lib/migration-csv";
 import { roleKey, type AppRoleCategory } from "../lib/role-migration";
 import { ENV } from "./_core/env";
@@ -133,7 +133,8 @@ export async function createEmailUser(data: {
   // 管理者権限は明示的に設定されたオーナーだけに付与する。
   const ownerEmail = process.env.OWNER_EMAIL ?? "";
   const isOwner = ownerEmail && data.email.toLowerCase() === ownerEmail.toLowerCase();
-  const role = isOwner ? "admin" : "user";
+  const invitation = await getAllowedEmailByEmail(normalizedEmail);
+  const role = isOwner ? "admin" : invitation?.accessRole === "operator" ? "operator" : "user";
 
   await db.insert(users).values({
     openId,
@@ -173,8 +174,20 @@ export async function getMembershipByUserId(userId: number) {
 }
 
 export async function memberHasAppAccess(userId: number): Promise<boolean> {
+  if (await userHasSubscriptionExemption(userId)) return true;
   const membership = await getMembershipByUserId(userId);
   return canAccessMemberApp(membership);
+}
+
+export async function userHasSubscriptionExemption(userId: number): Promise<boolean> {
+  const db = await getDb();
+  if (!db) return false;
+  const result = await db.select({ role: users.role, accessRole: allowedEmails.accessRole })
+    .from(users)
+    .leftJoin(allowedEmails, eq(allowedEmails.email, users.email))
+    .where(eq(users.id, userId))
+    .limit(1);
+  return canBypassSubscription(result[0]?.role, result[0]?.accessRole as SubscriptionExemptRole);
 }
 
 export async function upsertImportedMembership(data: InsertMemberSubscription) {
@@ -414,6 +427,18 @@ export async function isEmailAllowed(email: string): Promise<boolean> {
   return result.length > 0;
 }
 
+export async function getAllowedEmailByEmail(email: string) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(allowedEmails).where(eq(allowedEmails.email, email.toLowerCase().trim())).limit(1);
+  return result[0];
+}
+
+export async function emailHasSubscriptionExemption(email: string): Promise<boolean> {
+  const invitation = await getAllowedEmailByEmail(email);
+  return canBypassSubscription(undefined, invitation?.accessRole as SubscriptionExemptRole);
+}
+
 /** 承認済みメールアドレス一覧を取得 */
 export async function getAllowedEmails() {
   const db = await getDb();
@@ -422,7 +447,7 @@ export async function getAllowedEmails() {
 }
 
 /** 承認済みメールアドレスを追加 */
-export async function addAllowedEmail(data: { email: string; note?: string; addedBy?: number }) {
+export async function addAllowedEmail(data: { email: string; note?: string; addedBy?: number; accessRole?: "member" | "operator" | "club_leader" }) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   const email = data.email.toLowerCase().trim();
@@ -436,16 +461,36 @@ export async function addAllowedEmail(data: { email: string; note?: string; adde
     note: data.note ?? null,
     addedBy: data.addedBy ?? null,
     isRegistered: 0,
+    accessRole: data.accessRole ?? "member",
   });
   const result = await db.select().from(allowedEmails).where(eq(allowedEmails.email, email)).limit(1);
   return result[0];
+}
+
+export async function updateAllowedEmailAccessRole(id: number, accessRole: "member" | "operator" | "club_leader") {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const invitation = await db.select().from(allowedEmails).where(eq(allowedEmails.id, id)).limit(1);
+  if (!invitation[0]) throw new Error("対象のメールアドレスが見つかりません");
+  await db.update(allowedEmails).set({ accessRole }).where(eq(allowedEmails.id, id));
+  const existingUser = await db.select({ id: users.id, role: users.role }).from(users).where(eq(users.email, invitation[0].email)).limit(1);
+  if (existingUser[0] && existingUser[0].role !== "admin") {
+    const role = accessRole === "operator" ? "operator" : "user";
+    await db.update(users).set({ role }).where(eq(users.id, existingUser[0].id));
+  }
+  return getAllowedEmailByEmail(invitation[0].email);
 }
 
 /** 承認済みメールアドレスを削除 */
 export async function removeAllowedEmail(id: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
+  const invitation = await db.select().from(allowedEmails).where(eq(allowedEmails.id, id)).limit(1);
   await db.delete(allowedEmails).where(eq(allowedEmails.id, id));
+  if (invitation[0]?.accessRole === "operator") {
+    const existingUser = await db.select({ id: users.id, role: users.role }).from(users).where(eq(users.email, invitation[0].email)).limit(1);
+    if (existingUser[0]?.role === "operator") await db.update(users).set({ role: "user" }).where(eq(users.id, existingUser[0].id));
+  }
 }
 
 /** 登録完了時にフラグを更新 */

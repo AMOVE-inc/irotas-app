@@ -1,4 +1,4 @@
-export type UserRole = "user" | "admin";
+export type UserRole = "user" | "operator" | "admin";
 export type BranchRole = "kanto" | "kansai";
 
 const ADMIN_ROUTE_NAMES = new Set([
@@ -9,7 +9,7 @@ const ADMIN_ROUTE_NAMES = new Set([
 
 /** Unknown or missing role values must always fail closed. */
 export function normalizeUserRole(role: unknown): UserRole {
-  return role === "admin" ? "admin" : "user";
+  return role === "admin" || role === "operator" ? role : "user";
 }
 
 export function normalizeBranchRole(branch: unknown): BranchRole | null {
@@ -28,6 +28,12 @@ export function normalizeBranchRoles(branches: unknown, fallback?: unknown): Bra
 
 export function isAdminRole(role: unknown): boolean {
   return normalizeUserRole(role) === "admin";
+}
+
+/** 運営作業は管理者と運営メンバーが実行できる。管理画面は引き続き管理者専用。 */
+export function isOperatorRole(role: unknown): boolean {
+  const normalized = normalizeUserRole(role);
+  return normalized === "admin" || normalized === "operator";
 }
 
 export function isAdminRoute(route: unknown): boolean {
