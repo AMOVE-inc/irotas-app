@@ -8,6 +8,7 @@ import { useAuthContext } from "@/lib/auth-context";
 import { getAllEvents } from "@/lib/event-store";
 import { DEFAULT_EVENT_SORT_ORDER, filterAndSortEvents, type EventSortOrder, type EventTypeFilter } from "@/lib/event-filters";
 import { getEventParticipationStatus } from "@/lib/event-participation";
+import { toggleEventFavorite, useEventFavorites } from "@/lib/event-favorites-store";
 import { useColors } from "@/hooks/use-colors";
 import { Image } from "expo-image";
 import { useFocusEffect, useRouter } from "expo-router";
@@ -232,7 +233,7 @@ function StatusBadge({ status }: { status: Event["status"] }) {
   );
 }
 
-function EventCard({ event, onPress }: { event: Event; onPress: () => void }) {
+function EventCard({ event, onPress, isFavorite, onToggleFavorite }: { event: Event; onPress: () => void; isFavorite: boolean; onToggleFavorite: () => void }) {
   const colors = useColors();
   const organizer = getMemberById(event.createdBy);
   const confirmedCount = new Set([...(event.participants ?? []), ...(event.companionIds ?? [])]).size;
@@ -271,6 +272,9 @@ function EventCard({ event, onPress }: { event: Event; onPress: () => void }) {
       <View style={{ flex: 1, paddingHorizontal: 11, paddingVertical: 9 }}>
         <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 5 }}>
           <Text style={{ flex: 1, fontSize: 13, fontWeight: "900", color: colors.foreground }}>{formatDate(event.date)} {event.time}</Text>
+          <Pressable onPress={(pressEvent) => { pressEvent.stopPropagation?.(); onToggleFavorite(); }} accessibilityLabel={isFavorite ? "お気に入りから削除" : "お気に入りに追加"} hitSlop={8} style={{ padding: 3, marginRight: 3 }}>
+            <IconSymbol name={isFavorite ? "heart.fill" : "heart"} size={18} color={isFavorite ? "#D85B86" : colors.muted} />
+          </Pressable>
           <StatusBadge status={event.status} />
         </View>
         <Text style={{ fontSize: 14, lineHeight: 19, fontWeight: "900", color: colors.foreground }}>{event.title}</Text>
@@ -304,7 +308,9 @@ export default function EventsScreen() {
   const [eventType, setEventType] = useState<EventTypeFilter>("all");
   const [openOnly, setOpenOnly] = useState(false);
   const [hostedByMe, setHostedByMe] = useState(false);
-  const [participating, setParticipating] = useState(false);
+  const [appliedOnly, setAppliedOnly] = useState(false);
+  const [confirmedOnly, setConfirmedOnly] = useState(false);
+  const [favoriteOnly, setFavoriteOnly] = useState(false);
   const [sortOrder, setSortOrder] = useState<EventSortOrder>(DEFAULT_EVENT_SORT_ORDER);
   const [sortMenuVisible, setSortMenuVisible] = useState(false);
   const [detailSearchVisible, setDetailSearchVisible] = useState(false);
@@ -316,6 +322,7 @@ export default function EventsScreen() {
   const [endDate, setEndDate] = useState("");
   const [refreshing, setRefreshing] = useState(false);
   const [allEvents, setAllEvents] = useState<Event[]>(() => getAllEvents(EVENTS));
+  const favoriteEventIds = useEventFavorites();
   const { user: authUser } = useAuthContext();
   const canCreateEvent = Boolean(authUser);
 
@@ -331,13 +338,16 @@ export default function EventsScreen() {
       endDate,
       sortOrder,
       hostedByMemberId: hostedByMe ? CURRENT_USER.id : undefined,
-      participatingMemberId: participating ? CURRENT_USER.id : undefined,
+      participatingMemberId: appliedOnly || confirmedOnly ? CURRENT_USER.id : undefined,
+      participationStatuses: [appliedOnly ? "applied" as const : null, confirmedOnly ? "confirmed" as const : null].filter((value): value is "applied" | "confirmed" => value !== null),
+      favoriteOnly,
+      favoriteEventIds,
       genres: selectedGenres,
       budgetRanges: budgetRanges.map((key) => EVENT_BUDGET_RANGES.find((range) => range.key === key)).filter((range) => range && range.key !== "all").map((range) => ({ min: range && "min" in range ? range.min : undefined, max: range && "max" in range ? range.max : undefined })),
       areas: selectedAreas,
       keyword,
     }),
-    [allEvents, eventType, openOnly, startDate, endDate, sortOrder, hostedByMe, participating, selectedGenres, budgetRanges, selectedAreas, keyword],
+    [allEvents, eventType, openOnly, startDate, endDate, sortOrder, hostedByMe, appliedOnly, confirmedOnly, favoriteOnly, favoriteEventIds, selectedGenres, budgetRanges, selectedAreas, keyword],
   );
 
   const eventTypeLabel = eventType === "official"
@@ -345,10 +355,10 @@ export default function EventsScreen() {
     : eventType === "gourmet"
       ? "グルメ会"
       : "すべてのイベント";
-  const detailFilterCount = selectedGenres.length + budgetRanges.length + selectedAreas.length + (keyword.trim() ? 1 : 0);
+  const detailFilterCount = selectedGenres.length + budgetRanges.length + selectedAreas.length + (keyword.trim() ? 1 : 0) + (favoriteOnly ? 1 : 0);
 
   const resetSearchConditions = useCallback(() => {
-    setEventType("all"); setOpenOnly(false); setHostedByMe(false); setParticipating(false); setSortOrder(DEFAULT_EVENT_SORT_ORDER);
+    setEventType("all"); setOpenOnly(false); setHostedByMe(false); setAppliedOnly(false); setConfirmedOnly(false); setFavoriteOnly(false); setSortOrder(DEFAULT_EVENT_SORT_ORDER);
     setSelectedGenres([]); setBudgetRanges([]); setSelectedAreas([]); setKeyword(""); setStartDate(""); setEndDate("");
   }, []);
 
@@ -379,7 +389,7 @@ export default function EventsScreen() {
         data={filteredEvents}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
-          <EventCard event={item} onPress={() => router.push({ pathname: "/event-detail", params: { id: item.id } })} />
+          <EventCard event={item} isFavorite={favoriteEventIds.includes(item.id)} onToggleFavorite={() => toggleEventFavorite(item.id)} onPress={() => router.push({ pathname: "/event-detail", params: { id: item.id } })} />
         )}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#E8A0BF" />
@@ -480,7 +490,8 @@ export default function EventsScreen() {
               {[
                 { label: "空席あり", value: openOnly, toggle: () => setOpenOnly((current) => !current) },
                 { label: "幹事", value: hostedByMe, toggle: () => setHostedByMe((current) => !current) },
-                { label: "参加予定", value: participating, toggle: () => setParticipating((current) => !current) },
+                { label: "参加申込中", value: appliedOnly, toggle: () => setAppliedOnly((current) => !current) },
+                { label: "参加確定済み", value: confirmedOnly, toggle: () => setConfirmedOnly((current) => !current) },
               ].map((filter) => (
                 <Pressable key={filter.label} onPress={filter.toggle} accessibilityRole="checkbox" accessibilityState={{ checked: filter.value }} style={{ flexDirection: "row", alignItems: "center" }}>
                   <View style={{ width: 23, height: 23, borderRadius: 5, alignItems: "center", justifyContent: "center", backgroundColor: filter.value ? "#5D5C74" : "#E4E4E7", marginRight: 7 }}>{filter.value && <IconSymbol name="checkmark" size={16} color="#FFF" />}</View>
@@ -537,6 +548,11 @@ export default function EventsScreen() {
         <View style={{ flex: 1, backgroundColor: colors.background }}>
           <View style={{ flexDirection: "row", alignItems: "center", padding: 16, borderBottomWidth: 0.5, borderBottomColor: colors.border }}><Text style={{ flex: 1, fontSize: 19, fontWeight: "900", color: colors.foreground }}>イベント詳細検索</Text><Pressable onPress={resetSearchConditions} style={{ marginRight: 15 }}><Text style={{ color: colors.muted, fontWeight: "700" }}>リセット</Text></Pressable><Pressable onPress={() => setDetailSearchVisible(false)}><Text style={{ color: "#9C4F73", fontWeight: "800" }}>結果を表示</Text></Pressable></View>
           <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
+            <Pressable onPress={() => setFavoriteOnly((current) => !current)} accessibilityRole="checkbox" accessibilityState={{ checked: favoriteOnly }} style={{ flexDirection: "row", alignItems: "center", padding: 14, marginBottom: 20, borderRadius: 12, backgroundColor: favoriteOnly ? "#FCEAF2" : colors.surface, borderWidth: 1, borderColor: favoriteOnly ? "#D85B86" : colors.border }}>
+              <IconSymbol name={favoriteOnly ? "heart.fill" : "heart"} size={20} color={favoriteOnly ? "#D85B86" : colors.muted} />
+              <Text style={{ flex: 1, marginLeft: 9, fontSize: 14, fontWeight: "800", color: colors.foreground }}>お気に入りだけ表示</Text>
+              {favoriteOnly ? <IconSymbol name="checkmark" size={17} color="#D85B86" /> : null}
+            </Pressable>
             <Text style={{ fontSize: 16, fontWeight: "800", color: colors.foreground, marginBottom: 10 }}>自由ワード</Text>
             <View style={{ flexDirection: "row", alignItems: "center", backgroundColor: colors.surface, borderRadius: 12, borderWidth: 1, borderColor: colors.border, paddingHorizontal: 12, marginBottom: 24 }}><IconSymbol name="magnifyingglass" size={18} color={colors.muted} /><TextInput value={keyword} onChangeText={setKeyword} placeholder="店名・イベント名・住所・ジャンル" placeholderTextColor={colors.muted} style={{ flex: 1, fontSize: 14, color: colors.foreground, paddingVertical: 12, marginLeft: 7 }} />{keyword ? <Pressable onPress={() => setKeyword("")}><IconSymbol name="xmark" size={16} color={colors.muted} /></Pressable> : null}</View>
 

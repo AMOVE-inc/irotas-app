@@ -15,6 +15,9 @@ export interface EventFilters {
   sortOrder?: EventSortOrder;
   hostedByMemberId?: string;
   participatingMemberId?: string;
+  participationStatuses?: Array<"applied" | "confirmed">;
+  favoriteOnly?: boolean;
+  favoriteEventIds?: string[];
   genres?: string[];
   budgetMin?: number;
   budgetMax?: number;
@@ -70,10 +73,18 @@ export function filterAndSortEvents(
     .filter((event) => endBoundary === null || eventStart(event) <= endBoundary)
     .filter((event) => !filters.hostedByMemberId || event.createdBy === filters.hostedByMemberId)
     .filter((event) => {
+      if (filters.participationStatuses?.length) {
+        if (!filters.participatingMemberId) return false;
+        const memberId = filters.participatingMemberId;
+        const confirmed = event.participants.includes(memberId) || Boolean(event.companionIds?.includes(memberId));
+        const applied = Boolean(event.applicantIds?.includes(memberId)) && !confirmed;
+        return filters.participationStatuses.some((status) => status === "confirmed" ? confirmed : applied);
+      }
       if (!filters.participatingMemberId) return true;
       const memberId = filters.participatingMemberId;
       return event.participants.includes(memberId) || event.applicantIds?.includes(memberId) || event.companionIds?.includes(memberId);
     })
+    .filter((event) => !filters.favoriteOnly || Boolean(filters.favoriteEventIds?.includes(event.id)))
     .filter((event) => !filters.genres?.length || filters.genres.some((genre) => event.genres?.includes(genre)))
     .filter((event) => {
       if (!filters.areas?.length) return true;

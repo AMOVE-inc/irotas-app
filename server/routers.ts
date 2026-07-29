@@ -109,7 +109,7 @@ const allowedEmailsRouter = router({
 const migrationRouter = router({
   importCsv: adminProcedure
     .input(z.object({
-      type: z.enum(["members", "events", "participations", "organizers"]),
+      type: z.enum(["members", "events", "participations", "organizers", "role_mappings"]),
       filename: z.string().min(1).max(255),
       csvText: z.string().min(1).max(10_000_000),
     }))
@@ -134,6 +134,7 @@ async function refreshMembershipFromSquare(email: string) {
     billingEmail: email,
     customerId: match.customerId,
     subscriptionId: match.subscriptionId,
+    planVariationId: match.planVariationId,
     status: match.status,
     paidUntilDate: match.paidUntilDate,
   });
@@ -144,6 +145,12 @@ export const appRouter = router({
   concierge: conciergeRouter,
   allowedEmails: allowedEmailsRouter,
   migration: migrationRouter,
+  memberData: router({
+    favoriteEventIds: protectedProcedure.query(({ ctx }) => db.listEventFavoriteIds(ctx.user.id)),
+    setEventFavorite: protectedProcedure.input(z.object({ eventId: z.number().int().positive(), favorite: z.boolean() })).mutation(async ({ ctx, input }) => { await db.setEventFavorite(ctx.user.id, input.eventId, input.favorite); return { success: true }; }),
+    privateNote: protectedProcedure.input(z.object({ targetUserId: z.number().int().positive() })).query(({ ctx, input }) => db.getPrivateMemberNote(ctx.user.id, input.targetUserId)),
+    setPrivateNote: protectedProcedure.input(z.object({ targetUserId: z.number().int().positive(), note: z.string().max(5000) })).mutation(async ({ ctx, input }) => { await db.setPrivateMemberNote(ctx.user.id, input.targetUserId, input.note); return { success: true }; }),
+  }),
   auth: router({
     me: publicProcedure.query(async (opts) => {
       if (!opts.ctx.user || opts.ctx.user.role === "admin") return opts.ctx.user;

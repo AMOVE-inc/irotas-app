@@ -63,6 +63,7 @@ export const memberSubscriptions = mysqlTable("member_subscriptions", {
   memberRank: varchar("memberRank", { length: 64 }),
   squareCustomerId: varchar("squareCustomerId", { length: 255 }),
   squareSubscriptionId: varchar("squareSubscriptionId", { length: 255 }),
+  squarePlanVariationId: varchar("squarePlanVariationId", { length: 255 }),
   squareStatus: mysqlEnum("squareStatus", ["PENDING", "ACTIVE", "CANCELED", "DEACTIVATED", "PAUSED", "COMPLETED", "UNKNOWN"]).default("UNKNOWN").notNull(),
   accessStatus: mysqlEnum("accessStatus", ["pending", "active", "grace", "suspended"]).default("pending").notNull(),
   paidUntilDate: date("paidUntilDate"),
@@ -79,6 +80,42 @@ export const memberSubscriptions = mysqlTable("member_subscriptions", {
 
 export type MemberSubscription = typeof memberSubscriptions.$inferSelect;
 export type InsertMemberSubscription = typeof memberSubscriptions.$inferInsert;
+
+/** アプリ内で利用する正規化済みロール。 */
+export const appRoles = mysqlTable("app_roles", {
+  id: int("id").autoincrement().primaryKey(),
+  roleKey: varchar("roleKey", { length: 128 }).notNull().unique(),
+  displayName: varchar("displayName", { length: 255 }).notNull(),
+  category: mysqlEnum("category", ["operator", "branch", "generation", "club", "rank", "other"]).notNull(),
+  metadata: json("metadata").$type<Record<string, unknown>>(),
+  isActive: int("isActive").default(1).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+/** DiscordロールID・SquareプランIDとアプリ内ロールの対応。 */
+export const externalRoleMappings = mysqlTable("external_role_mappings", {
+  id: int("id").autoincrement().primaryKey(),
+  source: mysqlEnum("source", ["discord_role", "square_plan"]).notNull(),
+  externalId: varchar("externalId", { length: 255 }).notNull(),
+  appRoleId: int("appRoleId").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+}, (table) => [uniqueIndex("external_role_mappings_source_external_unique").on(table.source, table.externalId)]);
+
+/** 会員に付与されたロール。外部同期分と手動付与分を区別して保持する。 */
+export const memberRoleAssignments = mysqlTable("member_role_assignments", {
+  id: int("id").autoincrement().primaryKey(),
+  memberSubscriptionId: int("memberSubscriptionId").notNull(),
+  userId: int("userId"),
+  appRoleId: int("appRoleId").notNull(),
+  source: mysqlEnum("source", ["discord", "square", "manual"]).notNull(),
+  externalId: varchar("externalId", { length: 255 }),
+  isActive: int("isActive").default(1).notNull(),
+  assignedAt: timestamp("assignedAt").defaultNow().notNull(),
+  endedAt: timestamp("endedAt"),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+}, (table) => [uniqueIndex("member_role_assignments_member_role_source_unique").on(table.memberSubscriptionId, table.appRoleId, table.source)]);
 
 export type AllowedEmail = typeof allowedEmails.$inferSelect;
 export type InsertAllowedEmail = typeof allowedEmails.$inferInsert;
@@ -117,6 +154,7 @@ export const events = mysqlTable("events", {
   externalEventId: varchar("externalEventId", { length: 255 }),
   source: mysqlEnum("source", ["app", "discord", "csv"]).default("app").notNull(),
   eventType: mysqlEnum("eventType", ["official", "gourmet"]).default("gourmet").notNull(),
+  applicationDeadline: timestamp("applicationDeadline"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 }, (table) => [uniqueIndex("events_external_event_id_unique").on(table.externalEventId)]);
@@ -150,7 +188,7 @@ export const eventOrganizers = mysqlTable("event_organizers", {
 export const migrationImports = mysqlTable("migration_imports", {
   id: int("id").autoincrement().primaryKey(),
   filename: varchar("filename", { length: 255 }).notNull(),
-  importType: mysqlEnum("importType", ["members", "events", "participations", "organizers"]).notNull(),
+  importType: mysqlEnum("importType", ["members", "events", "participations", "organizers", "role_mappings"]).notNull(),
   status: mysqlEnum("status", ["success", "partial", "failed"]).notNull(),
   importedCount: int("importedCount").default(0).notNull(),
   reviewCount: int("reviewCount").default(0).notNull(),
@@ -158,6 +196,24 @@ export const migrationImports = mysqlTable("migration_imports", {
   importedBy: int("importedBy").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
+
+/** ユーザーごとのイベントお気に入り。 */
+export const eventFavorites = mysqlTable("event_favorites", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  eventId: int("eventId").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, (table) => [uniqueIndex("event_favorites_user_event_unique").on(table.userId, table.eventId)]);
+
+/** 他会員について本人だけが閲覧できるメモ。 */
+export const privateMemberNotes = mysqlTable("private_member_notes", {
+  id: int("id").autoincrement().primaryKey(),
+  ownerUserId: int("ownerUserId").notNull(),
+  targetUserId: int("targetUserId").notNull(),
+  note: text("note").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+}, (table) => [uniqueIndex("private_member_notes_owner_target_unique").on(table.ownerUserId, table.targetUserId)]);
 
 export const squareWebhookEvents = mysqlTable("square_webhook_events", {
   id: int("id").autoincrement().primaryKey(),
@@ -184,10 +240,44 @@ export type InsertEvent = typeof events.$inferInsert;
 export const chatRooms = mysqlTable("chat_rooms", {
   id: int("id").autoincrement().primaryKey(),
   name: varchar("name", { length: 255 }).notNull(),
-  type: mysqlEnum("type", ["direct", "group", "rank"]).notNull(),
+  type: mysqlEnum("type", ["direct", "group", "rank", "event", "board"]).notNull(),
+  sourceId: varchar("sourceId", { length: 255 }),
   createdBy: int("createdBy").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export const chatRoomMembers = mysqlTable("chat_room_members", {
+  id: int("id").autoincrement().primaryKey(),
+  roomId: int("roomId").notNull(),
+  userId: int("userId").notNull(),
+  joinedAt: timestamp("joinedAt").defaultNow().notNull(),
+  leftAt: timestamp("leftAt"),
+}, (table) => [uniqueIndex("chat_room_members_room_user_unique").on(table.roomId, table.userId)]);
+
+/** 募集期限・開催前リマインドをワーカーが重複なく配信するためのキュー。 */
+export const scheduledEventActions = mysqlTable("scheduled_event_actions", {
+  id: int("id").autoincrement().primaryKey(),
+  eventId: int("eventId").notNull(),
+  targetUserId: int("targetUserId"),
+  chatRoomId: int("chatRoomId"),
+  action: mysqlEnum("action", ["organizer_deadline", "chat_seven_days", "chat_two_days"]).notNull(),
+  scheduledFor: timestamp("scheduledFor").notNull(),
+  status: mysqlEnum("status", ["pending", "sent", "canceled", "failed"]).default("pending").notNull(),
+  sentAt: timestamp("sentAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, (table) => [uniqueIndex("scheduled_event_actions_dedupe_unique").on(table.eventId, table.targetUserId, table.action)]);
+
+export const appNotifications = mysqlTable("app_notifications", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  type: varchar("type", { length: 64 }).notNull(),
+  title: varchar("title", { length: 255 }).notNull(),
+  body: text("body").notNull(),
+  eventId: int("eventId"),
+  chatRoomId: int("chatRoomId"),
+  readAt: timestamp("readAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 
 export type ChatRoom = typeof chatRooms.$inferSelect;

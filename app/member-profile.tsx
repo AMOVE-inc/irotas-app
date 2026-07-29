@@ -15,12 +15,15 @@ import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { PROFILE_DETAILS_STORAGE_KEY, type ProfileDetails } from "@/constants/profile-options";
+import { getPrivateMemberNote, savePrivateMemberNote } from "@/lib/profile-notes-store";
 import { useEffect, useState } from "react";
 import {
+  Alert,
   Linking,
   Pressable,
   ScrollView,
   Text,
+  TextInput,
   View,
 } from "react-native";
 
@@ -35,6 +38,7 @@ export default function MemberProfileScreen() {
   const [selfBio, setSelfBio] = useState<string | null>(null);
   const [selfName, setSelfName] = useState<string | null>(null);
   const [selfAvatar, setSelfAvatar] = useState<string | null>(null);
+  const [privateNote, setPrivateNote] = useState("");
 
   useEffect(() => {
     if (member?.id !== CURRENT_USER.id) { setSelfDetails(null); setSelfBio(null); setSelfName(null); setSelfAvatar(null); return; }
@@ -42,6 +46,11 @@ export default function MemberProfileScreen() {
       setSelfDetails(raw ? JSON.parse(raw) as ProfileDetails : null); setSelfBio(bio); setSelfName(name); setSelfAvatar(avatar);
     });
   }, [member?.id]);
+
+  useEffect(() => {
+    if (!id || id === CURRENT_USER.id) return;
+    void getPrivateMemberNote(CURRENT_USER.id, id).then(setPrivateNote);
+  }, [id]);
 
   if (!member) {
     return (
@@ -196,6 +205,17 @@ export default function MemberProfileScreen() {
             { label: "フォロー", value: member.followingCount ?? 18 + member.generation * 5 },
           ].map((stat, index) => <View key={stat.label} style={{ flex: 1, alignItems: "center", borderLeftWidth: index ? 0.5 : 0, borderLeftColor: colors.border }}><Text style={{ fontSize: 18, fontWeight: "900", color: colors.foreground }}>{stat.value}</Text><Text style={{ fontSize: 10, color: colors.muted, marginTop: 3 }}>{stat.label}</Text></View>)}
         </View>
+
+        {!isSelf ? (
+          <View style={{ marginHorizontal: 16, marginBottom: 16 }}>
+            <Text style={{ fontSize: 14, fontWeight: "700", color: colors.foreground, marginBottom: 8 }}>自分だけのメモ</Text>
+            <View style={{ backgroundColor: colors.surface, borderRadius: 14, padding: 14 }}>
+              <Text style={{ fontSize: 11, color: colors.muted, marginBottom: 8 }}>この内容は相手や他のメンバーには表示されません。</Text>
+              <TextInput value={privateNote} onChangeText={setPrivateNote} multiline placeholder="会話した内容や次回話したいことなど" placeholderTextColor={colors.muted} style={{ minHeight: 88, borderRadius: 10, borderWidth: 1, borderColor: colors.border, padding: 11, color: colors.foreground, textAlignVertical: "top" }} />
+              <Pressable onPress={async () => { await savePrivateMemberNote(CURRENT_USER.id, member.id, privateNote); Alert.alert("保存しました", "このメモは自分だけが確認できます。"); }} style={{ alignSelf: "flex-end", marginTop: 9, borderRadius: 10, backgroundColor: "#5D5C74", paddingHorizontal: 18, paddingVertical: 9 }}><Text style={{ color: "#FFF", fontSize: 13, fontWeight: "800" }}>メモを保存</Text></Pressable>
+            </View>
+          </View>
+        ) : null}
 
         {/* Bio */}
         {(selfBio ?? member.bio) && (

@@ -6,6 +6,7 @@ import { GOURMET_GENRES } from "@/constants/event-options";
 import { PREFECTURES } from "@/constants/profile-options";
 import { useAuthContext } from "@/lib/auth-context";
 import { pendingEvents } from "@/lib/event-store";
+import { scheduleOrganizerDeadlineNotification } from "@/lib/notifications";
 import { useColors } from "@/hooks/use-colors";
 import { useRouter } from "expo-router";
 import { useMemo, useState } from "react";
@@ -181,6 +182,7 @@ export default function CreateEventScreen() {
       applicationDeadline: decisionDate, cancellationPolicy: cancellationPolicy.trim() || DEFAULT_CANCELLATION_POLICY, selectionMethod: finalType === "official" ? selectionMethod : "first_come", externalUrl: externalUrl.trim() || undefined, publicNotes: publicNotes.trim() || undefined, privateMemo: privateMemo.trim() || undefined,
     };
     pendingEvents.unshift(newEvent);
+    void scheduleOrganizerDeadlineNotification(newEvent);
     Alert.alert("作成完了", `「${title}」を作成しました。`, [{ text: "OK", onPress: () => router.back() }]);
   };
 

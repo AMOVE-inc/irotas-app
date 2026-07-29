@@ -1,8 +1,9 @@
-import { desc, eq, or } from "drizzle-orm";
+import { and, desc, eq, or } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, allowedEmails, InsertAllowedEmail, memberSubscriptions, squareWebhookEvents, emailVerificationCodes, events, eventParticipations, eventOrganizers, migrationImports, type InsertMemberSubscription } from "../drizzle/schema";
+import { InsertUser, users, allowedEmails, InsertAllowedEmail, memberSubscriptions, squareWebhookEvents, emailVerificationCodes, events, eventParticipations, eventOrganizers, migrationImports, eventFavorites, privateMemberNotes, appRoles, externalRoleMappings, type InsertMemberSubscription } from "../drizzle/schema";
 import { accessStatusForSquareStatus, canAccessMemberApp, type SquareSubscriptionStatus } from "../lib/membership-access";
 import { validateMigrationCsv, type MigrationImportType } from "../lib/migration-csv";
+import { roleKey, type AppRoleCategory } from "../lib/role-migration";
 import { ENV } from "./_core/env";
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -225,6 +226,7 @@ export async function updateMembershipFromSquare(data: {
   billingEmail: string;
   customerId: string;
   subscriptionId: string;
+  planVariationId?: string | null;
   status: SquareSubscriptionStatus;
   paidUntilDate?: string | null;
 }) {
@@ -233,6 +235,7 @@ export async function updateMembershipFromSquare(data: {
   await db.update(memberSubscriptions).set({
     squareCustomerId: data.customerId,
     squareSubscriptionId: data.subscriptionId,
+    squarePlanVariationId: data.planVariationId ?? null,
     squareStatus: data.status,
     accessStatus: accessStatusForSquareStatus(data.status),
     paidUntilDate: data.paidUntilDate ? new Date(`${data.paidUntilDate.slice(0, 10)}T00:00:00+09:00`) : null,
@@ -302,7 +305,15 @@ export async function importMigrationCsv(type: MigrationImportType, csvText: str
   let importedCount = 0;
   let reviewCount = 0;
   for (const row of rows) {
-    if (type === "members") {
+    if (type === "role_mappings") {
+      const source = row.source === "square_plan" ? "square_plan" : "discord_role";
+      const allowedCategories: AppRoleCategory[] = ["operator", "branch", "generation", "club", "rank", "other"];
+      const category = allowedCategories.includes(row.category as AppRoleCategory) ? row.category as AppRoleCategory : "other";
+      const normalizedKey = row.role_key || roleKey(category, row.external_id, row.role_name);
+      await db.insert(appRoles).values({ roleKey: normalizedKey, displayName: row.role_name, category }).onDuplicateKeyUpdate({ set: { displayName: row.role_name, category } });
+      const appRole = await db.select().from(appRoles).where(eq(appRoles.roleKey, normalizedKey)).limit(1);
+      await db.insert(externalRoleMappings).values({ source, externalId: row.external_id, appRoleId: appRole[0].id }).onDuplicateKeyUpdate({ set: { appRoleId: appRole[0].id } });
+    } else if (type === "members") {
       const status = (["PENDING", "ACTIVE", "CANCELED", "DEACTIVATED", "PAUSED", "COMPLETED"] as const).includes(row.subscription_status as any) ? row.subscription_status as SquareSubscriptionStatus : "UNKNOWN";
       await upsertImportedMembership({
         billingEmail: row.billing_email,
@@ -353,6 +364,32 @@ export async function importMigrationCsv(type: MigrationImportType, csvText: str
   }
   await db.insert(migrationImports).values({ filename, importType: type, status: reviewCount > 0 ? "partial" : "success", importedCount, reviewCount, importedBy });
   return { importedCount, reviewCount };
+}
+
+export async function listEventFavoriteIds(userId: number): Promise<number[]> {
+  const db = await getDb();
+  if (!db) return [];
+  return (await db.select({ eventId: eventFavorites.eventId }).from(eventFavorites).where(eq(eventFavorites.userId, userId))).map((row) => row.eventId);
+}
+
+export async function setEventFavorite(userId: number, eventId: number, favorite: boolean): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  if (favorite) await db.insert(eventFavorites).values({ userId, eventId }).onDuplicateKeyUpdate({ set: { eventId } });
+  else await db.delete(eventFavorites).where(and(eq(eventFavorites.userId, userId), eq(eventFavorites.eventId, eventId)));
+}
+
+export async function getPrivateMemberNote(ownerUserId: number, targetUserId: number): Promise<string> {
+  const db = await getDb();
+  if (!db) return "";
+  const result = await db.select({ note: privateMemberNotes.note }).from(privateMemberNotes).where(and(eq(privateMemberNotes.ownerUserId, ownerUserId), eq(privateMemberNotes.targetUserId, targetUserId))).limit(1);
+  return result[0]?.note ?? "";
+}
+
+export async function setPrivateMemberNote(ownerUserId: number, targetUserId: number, note: string): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.insert(privateMemberNotes).values({ ownerUserId, targetUserId, note }).onDuplicateKeyUpdate({ set: { note } });
 }
 
 export async function updateUserBranches(userId: number, branches: ("kanto" | "kansai")[]) {

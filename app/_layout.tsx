@@ -24,6 +24,7 @@ import { initManusRuntime, subscribeSafeAreaInsets } from "@/lib/_core/manus-run
 import { AuthProvider, useAuthContext } from "@/lib/auth-context";
 import { AppErrorBoundary } from "@/components/app-error-boundary";
 import { isAdminRole, isAdminRoute } from "@/lib/access-control";
+import { dispatchDueEventActions } from "@/lib/event-automation-store";
 
 // Mobile browsers already exclude the status bar from their visual viewport.
 // Keep only a small breathing space instead of adding a native-sized 44px inset.
@@ -127,6 +128,12 @@ export default function RootLayout() {
   // Initialize Manus runtime for cookie injection from parent container
   useEffect(() => {
     initManusRuntime();
+  }, []);
+
+  useEffect(() => {
+    void dispatchDueEventActions();
+    const timer = setInterval(() => { void dispatchDueEventActions(); }, 60_000);
+    return () => clearInterval(timer);
   }, []);
 
   const handleSafeAreaUpdate = useCallback((metrics: Metrics) => {

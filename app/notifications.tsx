@@ -7,7 +7,7 @@ import { useInAppNotifications } from "@/lib/in-app-notifications-store";
 
 interface Notification {
   id: string;
-  type: "event" | "announcement" | "like" | "comment" | "coupon" | "club_application" | "club_approval";
+  type: "event" | "announcement" | "like" | "comment" | "coupon" | "club_application" | "club_approval" | "event_confirmed" | "event_deadline" | "event_reminder";
   title: string;
   body: string;
   time: string;
@@ -73,6 +73,9 @@ const ICON_MAP: Record<string, { icon: string; color: string }> = {
   coupon: { icon: "ticket.fill", color: "#FF9500" },
   club_application: { icon: "person.badge.plus", color: "#FF9900" },
   club_approval: { icon: "checkmark.circle.fill", color: "#34C759" },
+  event_confirmed: { icon: "checkmark.circle.fill", color: "#34C759" },
+  event_deadline: { icon: "clock.fill", color: "#FF9500" },
+  event_reminder: { icon: "calendar", color: "#5B9BD5" },
 };
 
 function NotificationItem({ notification }: { notification: Notification }) {
@@ -85,6 +88,8 @@ function NotificationItem({ notification }: { notification: Notification }) {
       onPress={() => {
         if (notification.type === "club_application" || notification.type === "club_approval") {
           router.push("/clubs");
+        } else if (notification.type === "event" || notification.type.startsWith("event_")) {
+          router.push("/events");
         }
       }}
       style={{

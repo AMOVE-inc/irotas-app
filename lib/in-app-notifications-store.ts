@@ -3,10 +3,12 @@ import { useSyncExternalStore } from "react";
 export type InAppNotification = {
   id: string;
   targetMemberId: string;
-  type: "club_application" | "club_approval";
+  type: "club_application" | "club_approval" | "event_confirmed" | "event_deadline" | "event_reminder";
   title: string;
   body: string;
-  clubId: string;
+  clubId?: string;
+  eventId?: string;
+  chatRoomId?: string;
   createdAt: string;
   read: boolean;
 };

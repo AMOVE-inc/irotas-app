@@ -100,6 +100,17 @@ describe("event list filtering and sorting", () => {
     expect(filterAndSortEvents(hostedEvents, { area: "all", eventType: "all", openOnly: false, hostedByMemberId: "u1" }, referenceDate).map((event) => event.id)).toEqual(["official-host", "gourmet-host"]);
   });
 
+  it("separates applied and confirmed participation and supports favorites", () => {
+    const memberEvents = [
+      makeEvent({ id: "applied", applicantIds: ["u1"] }),
+      makeEvent({ id: "confirmed", participants: ["u1"], applicantIds: ["u1"] }),
+      makeEvent({ id: "other" }),
+    ];
+    expect(filterAndSortEvents(memberEvents, { area: "all", eventType: "all", openOnly: false, participatingMemberId: "u1", participationStatuses: ["applied"] }, referenceDate).map((event) => event.id)).toEqual(["applied"]);
+    expect(filterAndSortEvents(memberEvents, { area: "all", eventType: "all", openOnly: false, participatingMemberId: "u1", participationStatuses: ["confirmed"] }, referenceDate).map((event) => event.id)).toEqual(["confirmed"]);
+    expect(filterAndSortEvents(memberEvents, { area: "all", eventType: "all", openOnly: false, favoriteOnly: true, favoriteEventIds: ["other"] }, referenceDate).map((event) => event.id)).toEqual(["other"]);
+  });
+
   it("filters by any selected genre and overlapping budget", () => {
     const gourmetEvents = [
       makeEvent({ id: "sushi", genres: ["寿司"], priceMin: 8000, priceMax: 12000 }),

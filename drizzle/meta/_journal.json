@@ -64,6 +64,13 @@
       "when": 1785060079486,
       "tag": "0008_rare_vindicator",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "5",
+      "when": 1785321346785,
+      "tag": "0009_lowly_toxin",
+      "breakpoints": true
     }
   ]
 }

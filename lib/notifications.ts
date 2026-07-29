@@ -1,6 +1,9 @@
 import * as Notifications from "expo-notifications";
 import { Platform } from "react-native";
 import { addInAppNotification } from "@/lib/in-app-notifications-store";
+import type { Event } from "@/constants/mock-data";
+import { buildEventReminderPlans, parseApplicationDeadline } from "@/lib/event-reminders";
+import { persistOrganizerDeadlinePlan, persistParticipantReminderPlans } from "@/lib/event-automation-store";
 
 // 通知ハンドラーの設定（フォアグラウンドでも通知を表示）
 Notifications.setNotificationHandler({
@@ -35,6 +38,30 @@ export async function requestNotificationPermissions(): Promise<boolean> {
   }
 
   return finalStatus === "granted";
+}
+
+export async function notifyEventConfirmation(event: Event, memberId: string, chatRoomId: string): Promise<void> {
+  addInAppNotification({ targetMemberId: memberId, type: "event_confirmed", title: "イベント参加が確定しました", body: `「${event.title}」の参加者チャットを作成しました。`, eventId: event.id, chatRoomId });
+  if (Platform.OS === "web") return;
+  await Notifications.scheduleNotificationAsync({ content: { title: "イベント参加が確定しました", body: `「${event.title}」の参加者チャットを確認してください。`, data: { type: "event_confirmed", eventId: event.id, chatRoomId }, sound: true }, trigger: null });
+}
+
+/** 端末通知を予約する。サーバー側でも同じ計画を保存し、チャットへシステム投稿する。 */
+export async function scheduleEventReminders(event: Event, memberId: string, chatRoomId: string): Promise<void> {
+  await persistParticipantReminderPlans(event, memberId, chatRoomId);
+  const now = Date.now();
+  for (const plan of buildEventReminderPlans(event)) {
+    if (plan.scheduledAt.getTime() <= now || Platform.OS === "web") continue;
+    const label = plan.kind === "seven_days" ? "1週間前" : "2日前";
+    await Notifications.scheduleNotificationAsync({ content: { title: `${event.title}は${label}です`, body: "参加者チャットで集合時間や連絡事項をご確認ください。", data: { type: "event_reminder", eventId: event.id, chatRoomId }, sound: true }, trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: plan.scheduledAt } });
+  }
+}
+
+export async function scheduleOrganizerDeadlineNotification(event: Event): Promise<void> {
+  await persistOrganizerDeadlinePlan(event);
+  const deadline = parseApplicationDeadline(event.applicationDeadline);
+  if (!deadline || deadline.getTime() <= Date.now() || Platform.OS === "web") return;
+  await Notifications.scheduleNotificationAsync({ content: { title: "参加者を確定してください", body: `「${event.title}」の募集期限になりました。申込者を確認してください。`, data: { type: "event_deadline", eventId: event.id }, sound: true }, trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: deadline } });
 }
 
 // メンション通知を送信する

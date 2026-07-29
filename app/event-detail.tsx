@@ -7,6 +7,9 @@ import { getAllEvents } from "@/lib/event-store";
 import { approveGourmetApplication, cancelGourmetParticipation, getPendingGourmetApplicants, reopenGourmetRecruitment, submitGourmetApplication } from "@/lib/gourmet-event";
 import { getIrotasPoints, adjustIrotasPoints } from "@/lib/irotas-points-store";
 import { createPaymentRecord } from "@/lib/payment-store";
+import { getGoogleCalendarUrl, getOutlookCalendarUrl } from "@/lib/calendar-links";
+import { toggleEventFavorite, useEventFavorites } from "@/lib/event-favorites-store";
+import { notifyEventConfirmation, scheduleEventReminders } from "@/lib/notifications";
 import { useColors } from "@/hooks/use-colors";
 import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -46,6 +49,7 @@ export default function EventDetailScreen() {
   const [, setEventRevision] = useState(0);
   // ボタン連打防止フラグ
   const joiningRef = useRef(false);
+  const favoriteEventIds = useEventFavorites();
 
   useEffect(() => {
     getIrotasPoints(CURRENT_USER.id).then(setIrotasPoints);
@@ -183,7 +187,10 @@ export default function EventDetailScreen() {
                 event.chatId,
                 CURRENT_USER.id,
               );
+              event.chatId = room.id;
               setChatRoomId(room.id);
+              await notifyEventConfirmation(event, CURRENT_USER.id, room.id);
+              await scheduleEventReminders(event, CURRENT_USER.id, room.id);
 
               // チャットへ誘導
               Alert.alert(
@@ -215,11 +222,13 @@ export default function EventDetailScreen() {
     const member = getMemberById(memberId);
     Alert.alert("参加申込を承認", `${member?.name ?? "メンバー"}さんの参加を確定しますか？`, [
       { text: "キャンセル", style: "cancel" },
-      { text: "承認する", onPress: () => {
+      { text: "承認する", onPress: async () => {
         approveGourmetApplication(event, memberId);
         const room = joinEventChat(event.id, event.title, event.chatId, event.createdBy);
         joinEventChat(event.id, event.title, room.id, memberId);
         event.chatId = room.id;
+        await notifyEventConfirmation(event, memberId, room.id);
+        await scheduleEventReminders(event, memberId, room.id);
         setEventRevision((value) => value + 1);
         Alert.alert("承認完了", `${member?.name ?? "メンバー"}さんの参加を確定し、参加者チャットへ追加しました。`);
       } },
@@ -315,6 +324,9 @@ export default function EventDetailScreen() {
             </Text>
           </View>
         </View>
+        <Pressable onPress={() => toggleEventFavorite(event.id)} accessibilityLabel={favoriteEventIds.includes(event.id) ? "お気に入りから削除" : "お気に入りに追加"} style={{ position: "absolute", top: 92, right: 16, width: 38, height: 38, borderRadius: 19, backgroundColor: "rgba(0,0,0,0.5)", alignItems: "center", justifyContent: "center" }}>
+          <IconSymbol name={favoriteEventIds.includes(event.id) ? "heart.fill" : "heart"} size={20} color={favoriteEventIds.includes(event.id) ? "#F59AB9" : "#FFF"} />
+        </Pressable>
       </View>
 
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16, paddingBottom: 120 }}>
@@ -436,6 +448,10 @@ export default function EventDetailScreen() {
                 募集人数（幹事除く） {event.capacity}人
               </Text>
             </View>
+          </View>
+          <View style={{ flexDirection: "row", gap: 8, marginTop: 16, paddingTop: 14, borderTopWidth: 0.5, borderTopColor: colors.border }}>
+            <Pressable onPress={() => Linking.openURL(getGoogleCalendarUrl(event))} style={{ flex: 1, minHeight: 42, borderRadius: 10, backgroundColor: "#F4F6F8", alignItems: "center", justifyContent: "center", flexDirection: "row" }}><IconSymbol name="calendar" size={16} color="#4285F4" /><Text style={{ marginLeft: 6, fontSize: 12, fontWeight: "800", color: colors.foreground }}>Googleカレンダー</Text></Pressable>
+            <Pressable onPress={() => Linking.openURL(getOutlookCalendarUrl(event))} style={{ flex: 1, minHeight: 42, borderRadius: 10, backgroundColor: "#F4F6F8", alignItems: "center", justifyContent: "center", flexDirection: "row" }}><IconSymbol name="calendar" size={16} color="#0078D4" /><Text style={{ marginLeft: 6, fontSize: 12, fontWeight: "800", color: colors.foreground }}>Outlook</Text></Pressable>
           </View>
         </View>
 
