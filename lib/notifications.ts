@@ -48,6 +48,12 @@ export async function notifyEventConfirmation(event: Event, memberId: string, ch
   await Notifications.scheduleNotificationAsync({ content: { title: "イベント参加が確定しました", body: `「${event.title}」の参加者チャットを確認してください。`, data: { type: "event_confirmed", eventId: event.id, chatRoomId }, sound: true }, trigger: null });
 }
 
+export async function notifyEventCancellationRequest(event: Event, memberId: string): Promise<void> {
+  addInAppNotification({ targetMemberId: event.createdBy, type: "event_cancellation", title: "キャンセル申請が届きました", body: `「${event.title}」の参加者からキャンセル申請が届きました。申請内容を確認し、再募集を判断してください。`, eventId: event.id });
+  if (Platform.OS === "web") return;
+  await Notifications.scheduleNotificationAsync({ content: { title: "キャンセル申請が届きました", body: `「${event.title}」のキャンセル申請を確認してください。`, data: { type: "event_cancellation", eventId: event.id, memberId }, sound: true }, trigger: null });
+}
+
 /** 端末通知を予約する。サーバー側でも同じ計画を保存し、チャットへシステム投稿する。 */
 export async function scheduleEventReminders(event: Event, memberId: string, chatRoomId: string): Promise<void> {
   await persistParticipantReminderPlans(event, memberId, chatRoomId);

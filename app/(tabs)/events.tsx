@@ -279,16 +279,13 @@ function EventCard({ event, onPress, isFavorite, onToggleFavorite }: { event: Ev
       <View style={{ flex: 1, paddingHorizontal: 11, paddingVertical: 9 }}>
         <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 5 }}>
           <Text style={{ flex: 1, fontSize: 13, fontWeight: "900", color: colors.foreground }}>{formatDate(event.date)} {event.time}</Text>
-          <Pressable onPress={(pressEvent) => { pressEvent.stopPropagation?.(); onToggleFavorite(); }} accessibilityLabel={isFavorite ? "お気に入りから削除" : "お気に入りに追加"} hitSlop={8} style={{ padding: 3, marginRight: 3 }}>
-            <IconSymbol name={isFavorite ? "heart.fill" : "heart"} size={18} color={isFavorite ? "#D85B86" : colors.muted} />
-          </Pressable>
-          <View style={{ flexDirection: "row", gap: 4 }}><StatusBadge status={event.status} />{isConfirmed ? <Text style={{ fontSize: 9, fontWeight: "900", color: "#237A3B", backgroundColor: "#E6F6EA", borderRadius: 7, paddingHorizontal: 7, paddingVertical: 4 }}>参加確定</Text> : null}</View>
+          <View style={{ flexDirection: "row", gap: 4 }}><StatusBadge status={event.status} />{isConfirmed ? <Text style={{ fontSize: 9, fontWeight: "900", color: "#FFF", backgroundColor: "#D94C55", borderRadius: 7, paddingHorizontal: 7, paddingVertical: 4 }}>参加確定</Text> : null}</View>
         </View>
         <Text style={{ fontSize: 14, lineHeight: 19, fontWeight: "900", color: colors.foreground }}>{event.title}</Text>
         {event.restaurantName && event.restaurantName !== event.title ? <Text style={{ fontSize: 11, lineHeight: 16, fontWeight: "700", color: colors.foreground, marginTop: 3 }}>店名：{event.restaurantName}</Text> : null}
         <Text style={{ fontSize: 10, lineHeight: 15, color: colors.muted, marginTop: 2 }}>場所：{locationLabel}</Text>
         <View style={{ flexDirection: "row", alignItems: "center", marginTop: 5 }}>
-          <Text style={{ fontSize: 10, fontWeight: "900", color: "#34A853" }}>{remainingCapacity}名(残り枠)/{reservationCapacity}名(予約人数) {event.status === "open" ? "募集中" : ""}</Text>
+          <Text style={{ fontSize: 10, fontWeight: "900", color: "#34A853" }}>{remainingCapacity}名/{reservationCapacity}名 {event.status === "open" ? "募集中" : ""}</Text>
         </View>
         <View style={{ flexDirection: "row", alignItems: "center", flexWrap: "wrap", gap: 5, marginTop: 5 }}>
           {event.selectionMethod ? <Text style={{ fontSize: 9, fontWeight: "700", color: colors.muted }}>{event.selectionMethod === "lottery" ? "抽選" : "先着順"}</Text> : null}
@@ -299,7 +296,7 @@ function EventCard({ event, onPress, isFavorite, onToggleFavorite }: { event: Ev
           <Text style={{ marginLeft: 5, fontSize: 10, fontWeight: "700", color: colors.muted }} numberOfLines={1}>{event.eventType === "official" ? "IRO＋運営" : (organizer?.name ?? "メンバー")}</Text>
           {event.eventType !== "official" && organizer ? <NewMemberMark member={organizer} size={11} /> : null}
           <View style={{ flex: 1 }} />
-          <Text style={{ fontSize: 11, fontWeight: "800", color: "#E8A0BF" }}>{event.rankPrices?.[CURRENT_USER.rank] ?? event.price}</Text>
+          <Pressable onPress={(pressEvent) => { pressEvent.stopPropagation?.(); onToggleFavorite(); }} accessibilityLabel={isFavorite ? "お気に入りから削除" : "お気に入りに追加"} hitSlop={8} style={{ paddingHorizontal: 4, paddingVertical: 2 }}><IconSymbol name={isFavorite ? "heart.fill" : "heart"} size={20} color={isFavorite ? "#D85B86" : colors.muted} /></Pressable>
         </View>
       </View>
     </Pressable>

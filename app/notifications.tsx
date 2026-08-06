@@ -7,7 +7,7 @@ import { useInAppNotifications } from "@/lib/in-app-notifications-store";
 
 interface Notification {
   id: string;
-  type: "event" | "announcement" | "like" | "comment" | "coupon" | "club_application" | "club_approval" | "event_confirmed" | "event_deadline" | "event_reminder";
+  type: "event" | "announcement" | "like" | "comment" | "coupon" | "club_application" | "club_approval" | "event_confirmed" | "event_deadline" | "event_reminder" | "event_cancellation";
   title: string;
   body: string;
   time: string;
@@ -76,6 +76,7 @@ const ICON_MAP: Record<string, { icon: string; color: string }> = {
   event_confirmed: { icon: "checkmark.circle.fill", color: "#34C759" },
   event_deadline: { icon: "clock.fill", color: "#FF9500" },
   event_reminder: { icon: "calendar", color: "#5B9BD5" },
+  event_cancellation: { icon: "exclamationmark.triangle.fill", color: "#D94C55" },
 };
 
 function NotificationItem({ notification }: { notification: Notification }) {

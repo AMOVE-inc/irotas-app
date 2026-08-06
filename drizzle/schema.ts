@@ -1,4 +1,4 @@
-import { date, int, json, mysqlEnum, mysqlTable, text, timestamp, uniqueIndex, varchar } from "drizzle-orm/mysql-core";
+import { date, index, int, json, mysqlEnum, mysqlTable, text, timestamp, uniqueIndex, varchar } from "drizzle-orm/mysql-core";
 
 /**
  * Core user table backing auth flow.
@@ -179,6 +179,19 @@ export const eventParticipations = mysqlTable("event_participations", {
   occurredAt: timestamp("occurredAt"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 }, (table) => [uniqueIndex("event_participations_event_discord_unique").on(table.eventId, table.discordUserId)]);
+
+/** 参加者から幹事へのキャンセル申請と再募集処理を記録する。 */
+export const eventCancellationRequests = mysqlTable("event_cancellation_requests", {
+  id: int("id").autoincrement().primaryKey(),
+  eventId: int("eventId").notNull(),
+  userId: int("userId").notNull(),
+  contactedOrganizer: int("contactedOrganizer").default(1).notNull(),
+  policyConfirmed: int("policyConfirmed").default(1).notNull(),
+  status: mysqlEnum("status", ["pending", "approved", "rejected"]).default("pending").notNull(),
+  requestedAt: timestamp("requestedAt").defaultNow().notNull(),
+  resolvedAt: timestamp("resolvedAt"),
+  resolvedBy: int("resolvedBy"),
+}, (table) => [index("event_cancellation_requests_lookup_idx").on(table.eventId, table.userId, table.status)]);
 
 /** 主幹事・副幹事の履歴。 */
 export const eventOrganizers = mysqlTable("event_organizers", {

@@ -9,12 +9,28 @@ export const PREFECTURES = [
 ] as const;
 
 export const MEAL_BUDGETS = [
-  "〜3,000円",
-  "3,000〜5,000円",
-  "5,000〜10,000円",
-  "10,000〜20,000円",
-  "20,000円〜",
-] as const;
+  "〜¥999",
+  ...Array.from({ length: 29 }, (_, index) => `¥${((index + 1) * 1000).toLocaleString()}〜¥${((index + 2) * 1000).toLocaleString()}`),
+  "¥30,000〜",
+];
+
+export const MEAL_REPORT_AREAS = [
+  "関東 東京",
+  "関東 東京以外",
+  "関西",
+  "その他",
+  "東京 六本木・麻布・西麻布",
+  "東京 恵比寿・代官山・中目黒",
+  "東京 銀座・有楽町・日比谷",
+  "東京 表参道・青山",
+  "東京 赤坂・溜池山王",
+  "東京 渋谷・神泉",
+  "東京 新宿・代々木",
+  "東京 神楽坂・飯田橋",
+  "東京 新橋・虎ノ門",
+  "東京 上野・浅草・東東京",
+  "東京 その他",
+];
 
 export const GOURMET_ADVICE_BUDGETS = [
   "〜3,000円",

@@ -80,6 +80,7 @@ const MAPPING = {
   "checkmark.circle.fill": "check-circle",
   "checkmark": "check",
   "exclamationmark.circle.fill": "error",
+  "exclamationmark.triangle.fill": "warning",
   // App settings & notifications
   "at": "alternate-email",
   "calendar.badge.clock": "event-note",

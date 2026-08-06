@@ -20,7 +20,7 @@ import { useAuthContext } from "@/lib/auth-context";
 import { useColors } from "@/hooks/use-colors";
 import { createBoardChat } from "@/lib/chat-store";
 import { canManageBoardCategories, canViewClubThread } from "@/lib/access-control";
-import { GOURMET_ADVICE_BUDGETS, isGoogleMapsUrl, MEAL_BUDGETS, PREFECTURES } from "@/lib/meal-report";
+import { GOURMET_ADVICE_BUDGETS, isGoogleMapsUrl, MEAL_BUDGETS, MEAL_REPORT_AREAS } from "@/lib/meal-report";
 import { useClubs } from "@/lib/club-store";
 import { getMentionGroups, getMentionQuery, getMentionedMemberIds, insertMention } from "@/lib/mentions";
 import { sendMentionNotification } from "@/lib/notifications";
@@ -58,66 +58,6 @@ const BOARD_GROUPS: { key: BoardCategory["group"]; label: string }[] = [
 const BOARD_MENTION_GROUPS = getMentionGroups(MEMBERS, CLUBS);
 const THREAD_REACTION_EMOJIS = ["👏", "😊", "❤️", "🎉", "😋"] as const;
 
-const BOARD_EVENT_RULES = [
-  {
-    title: "✅ 1. 募集および参加確定について",
-    items: [
-      "メンバーの調整：原則IRO+内で募集するイベントは、参加者をIRO+メンバー限定としてください。やむをえず人数調整で外部の方も参加される場合は、事前に運営までご連絡ください。",
-      "募集期間の調整：募集人数を大幅に超えた場合は、運営の判断により募集期日を早めるよう調整を促すことがあります。",
-      "迅速な確定連絡：募集期日を過ぎた後、幹事様は速やかに（原則2日以内）参加者を確定し、プライベートチャットで参加確定連絡をお願いします。",
-      "リアクションの徹底：確定連絡に対し、1週間以上リアクション（スタンプ可）がない場合はキャンセル扱いとなります。",
-    ],
-  },
-  {
-    title: "✅ 2. キャンセルポリシーについて",
-    intro: "⚠️ 原則キャンセルはお控えください。誰もが安心して楽しくイベントを企画し、美味しい時間を共有し続けられる場所であるための規定です。",
-    items: [
-      "開催日の1週間前（7日前）〜当日のキャンセルは、原則としてキャンセル料100%が発生します。",
-      "代理の参加者が見つかり、枠を譲渡できた場合はキャンセル料はかかりません。",
-      "代理参加者を探す・決定する際は、必ず事前にイベント主催者（幹事または運営）へプライベートチャットで連絡し、承諾を得てください。個別DMは幹事が気づかず、運営でも検知できないためNGです。",
-    ],
-  },
-  {
-    title: "✅ 3. ドタキャンに対するペナルティについて",
-    items: [
-      "前日および当日のキャンセル（ドタキャン）に限り、キャンセル料とは別に1ペナルティポイントが付与されます。",
-      "ポイントの有効期限は付与日から3ヶ月間です。",
-      "累積3ポイントに達した場合、該当月から1ヶ月間、全イベントへの参加および新規申込ができません。",
-      "イベントを無断欠席した場合、またはキャンセル料の支払いを拒否した場合は即退会処分となります。",
-    ],
-  },
-] as const;
-
-function BoardRulesPanel() {
-  const colors = useColors();
-  const [expanded, setExpanded] = useState(false);
-  return (
-    <View style={{ marginHorizontal: 16, marginTop: 12, marginBottom: 2, borderRadius: 14, backgroundColor: "#FFF8F0", borderWidth: 1, borderColor: "#EED9BF", overflow: "hidden" }}>
-      <Pressable onPress={() => setExpanded((value) => !value)} style={{ flexDirection: "row", alignItems: "center", padding: 14 }}>
-        <View style={{ width: 34, height: 34, borderRadius: 17, backgroundColor: "#FF950018", alignItems: "center", justifyContent: "center" }}><IconSymbol name="shield.fill" size={18} color="#C97813" /></View>
-        <View style={{ flex: 1, marginLeft: 10 }}><Text style={{ fontSize: 15, fontWeight: "900", color: colors.foreground }}>掲示板・イベント募集のルール</Text><Text style={{ fontSize: 12, color: colors.muted, marginTop: 2 }}>投稿・参加前に必ず確認してください</Text></View>
-        <IconSymbol name={expanded ? "chevron.up" : "chevron.down"} size={18} color={colors.muted} />
-      </Pressable>
-      {expanded ? (
-        <View style={{ paddingHorizontal: 14, paddingBottom: 16, borderTopWidth: 0.5, borderTopColor: "#EED9BF" }}>
-          {BOARD_EVENT_RULES.map((section) => (
-            <View key={section.title} style={{ marginTop: 16 }}>
-              <Text style={{ fontSize: 15, fontWeight: "900", color: colors.foreground, lineHeight: 22 }}>{section.title}</Text>
-              {"intro" in section ? <Text style={{ fontSize: 13, lineHeight: 20, color: colors.foreground, marginTop: 7 }}>{section.intro}</Text> : null}
-              {section.items.map((item) => <View key={item} style={{ flexDirection: "row", marginTop: 8 }}><Text style={{ fontSize: 13, lineHeight: 20, color: colors.foreground, marginRight: 7 }}>•</Text><Text style={{ flex: 1, fontSize: 13, lineHeight: 20, color: colors.foreground }}>{item}</Text></View>)}
-            </View>
-          ))}
-          <View style={{ marginTop: 18, backgroundColor: colors.surface, borderRadius: 12, padding: 12 }}>
-            <Text style={{ fontSize: 14, fontWeight: "900", color: colors.foreground }}>💡 最後に、メンバーの皆様へ</Text>
-            <Text style={{ fontSize: 13, lineHeight: 20, color: colors.foreground, marginTop: 7 }}>急な仕事や体調不良などで、1週間を切ってキャンセルせざるを得ない場合は、まずイベント主催者・幹事へすぐに一報を入れ、コミュニティ内で代理参加者をお探しください。</Text>
-            <Text style={{ fontSize: 13, lineHeight: 20, fontWeight: "800", color: colors.foreground, marginTop: 8 }}>イベントは幹事の皆様の善意と、お店側の協力で成り立っています。全員が気持ちよく活動できるよう、ルール遵守とスケジュール管理をお願いします🙏🏻</Text>
-            <Text style={{ fontSize: 13, lineHeight: 20, color: colors.foreground, marginTop: 8 }}>今後もみんなで最高に美味しい体験をたくさん作っていきましょう😊</Text>
-          </View>
-        </View>
-      ) : null}
-    </View>
-  );
-}
 
 function MealReportContent({ thread, compact = false }: { thread: BoardThread; compact?: boolean }) {
   const colors = useColors();
@@ -213,6 +153,8 @@ function SelfIntroductionContent({ thread, compact = false }: { thread: BoardThr
       <Text style={{ fontSize: 12, fontWeight: "900", color: "#6A5B87", marginBottom: 5 }}>自己紹介</Text>
       <MentionText content={introduction.introduction} groups={BOARD_MENTION_GROUPS} />
       {!compact && introduction.wantToTry ? <View style={{ marginTop: 12, paddingTop: 10, borderTopWidth: 1, borderTopColor: colors.border }}><Text style={{ fontSize: 12, fontWeight: "900", color: "#6A5B87", marginBottom: 5 }}>IRO+でやってみたいこと</Text><MentionText content={introduction.wantToTry} groups={BOARD_MENTION_GROUPS} /></View> : null}
+      {!compact && introduction.favoriteRestaurants ? <View style={{ marginTop: 12, paddingTop: 10, borderTopWidth: 1, borderTopColor: colors.border }}><Text style={{ fontSize: 12, fontWeight: "900", color: "#6A5B87", marginBottom: 5 }}>お気に入りのお店</Text><Text style={{ fontSize: 14, lineHeight: 21, color: colors.foreground }}>{introduction.favoriteRestaurants}</Text></View> : null}
+      {!compact && introduction.desiredRestaurants ? <View style={{ marginTop: 12, paddingTop: 10, borderTopWidth: 1, borderTopColor: colors.border }}><Text style={{ fontSize: 12, fontWeight: "900", color: "#6A5B87", marginBottom: 5 }}>行ってみたいお店</Text><Text style={{ fontSize: 14, lineHeight: 21, color: colors.foreground }}>{introduction.desiredRestaurants}</Text></View> : null}
     </View>
   );
 }
@@ -911,7 +853,7 @@ function ThreadDetailModal({
         {contestCommentingOpen ? <View style={{ backgroundColor: colors.background, borderTopWidth: 0.5, borderTopColor: colors.border }}>
           {mentionQuery !== null ? <MentionSuggestions query={mentionQuery} groups={mentionGroups} members={MEMBERS.filter((member) => member.id !== CURRENT_USER.id)} onSelect={handleCommentMention} /> : null}
           <Text style={{ fontSize: 11, color: colors.muted, paddingHorizontal: 16, paddingTop: 6 }}>@を入力して個人・グループをメンション</Text>
-          <View style={{ paddingHorizontal: 16 }}><TextFormattingToolbar onFormat={handleCommentFormat} /></View>
+          {!thread.selfIntroduction ? <View style={{ paddingHorizontal: 16 }}><TextFormattingToolbar onFormat={handleCommentFormat} /></View> : null}
           <View
           style={{
             flexDirection: "row",
@@ -1053,11 +995,11 @@ function EditThreadModal({
       mediaTypes: ["images"],
       allowsMultipleSelection: true,
       quality: 0.8,
-      selectionLimit: 4,
+      selectionLimit: 10,
     });
     if (!result.canceled) {
       const uris = result.assets.map((a) => a.uri);
-      setImages((prev) => [...prev, ...uris].slice(0, 4));
+      setImages((prev) => [...prev, ...uris].slice(0, 10));
     }
   };
 
@@ -1161,7 +1103,7 @@ function EditThreadModal({
             {/* 写真 */}
             <View>
               <Text style={{ fontSize: 13, fontWeight: "600", color: colors.muted, marginBottom: 8 }}>
-                写真（最大4枚）
+                写真（最大10枚）
               </Text>
               <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
                 {images.map((uri, i) => (
@@ -1308,6 +1250,8 @@ function CreateThreadModal({
   const [contentSelection, setContentSelection] = useState<TextSelection>({ start: 0, end: 0 });
   const [introductionText, setIntroductionText] = useState("");
   const [wantToTry, setWantToTry] = useState("");
+  const [favoriteRestaurants, setFavoriteRestaurants] = useState("");
+  const [desiredRestaurants, setDesiredRestaurants] = useState("");
   const [introductionSelection, setIntroductionSelection] = useState<TextSelection>({ start: 0, end: 0 });
   const [wantToTrySelection, setWantToTrySelection] = useState<TextSelection>({ start: 0, end: 0 });
   const introductionInputRef = useRef<TextInput>(null);
@@ -1360,11 +1304,11 @@ function CreateThreadModal({
       mediaTypes: ["images"],
       allowsMultipleSelection: true,
       quality: 0.8,
-      selectionLimit: 4,
+      selectionLimit: 10,
     });
     if (!result.canceled) {
       const uris = result.assets.map((a) => a.uri);
-      setImages((prev) => [...prev, ...uris].slice(0, 4));
+      setImages((prev) => [...prev, ...uris].slice(0, 10));
     }
   };
 
@@ -1421,12 +1365,12 @@ function CreateThreadModal({
           }
         : undefined,
       gourmetAdvice: isGourmetAdvice ? { theme: adviceTheme.trim(), area: adviceArea.trim(), scene: adviceScene.trim(), budget: adviceBudget, comment: adviceComment.trim() } : undefined,
-      selfIntroduction: isIntroduction ? { introduction: introductionText.trim(), wantToTry: wantToTry.trim() || undefined } : undefined,
+      selfIntroduction: isIntroduction ? { introduction: introductionText.trim(), wantToTry: wantToTry.trim() || undefined, favoriteRestaurants: favoriteRestaurants.trim() || undefined, desiredRestaurants: desiredRestaurants.trim() || undefined } : undefined,
       gourmetContest: isGourmetContest ? { commentDeadline: contestDeadline, prizeTitle: contestPrizeTitle.trim(), prizeDescription: contestPrizeDescription.trim(), prizeExpiresAt: contestPrizeExpiresAt } : undefined,
     };
     onAdd(newThread);
     if (!isMealReport && !isGourmetAdvice) {
-      const mentionContent = isIntroduction ? `${introductionText} ${wantToTry}` : content;
+      const mentionContent = isIntroduction ? `${introductionText} ${wantToTry} ${favoriteRestaurants} ${desiredRestaurants}` : content;
       const preview = mentionContent.length > 50 ? `${mentionContent.slice(0, 50)}...` : mentionContent;
       const boardName = categories.find((item) => item.key === category)?.label ?? "掲示板";
       for (const memberId of getMentionedMemberIds(mentionContent, MEMBERS, BOARD_MENTION_GROUPS).filter((id) => id !== CURRENT_USER.id)) {
@@ -1439,7 +1383,7 @@ function CreateThreadModal({
     setContent("");
     setMentionQuery(null);
     setContentSelection({ start: 0, end: 0 });
-    setIntroductionText(""); setWantToTry("");
+    setIntroductionText(""); setWantToTry(""); setFavoriteRestaurants(""); setDesiredRestaurants("");
     setIntroductionSelection({ start: 0, end: 0 }); setWantToTrySelection({ start: 0, end: 0 });
     setIsRecruiting(false);
     setCapacity("");
@@ -1512,14 +1456,14 @@ function CreateThreadModal({
             <View style={{ gap: 18, marginBottom: 16 }}>
               <View>
                 <Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground, marginBottom: 6 }}>自己紹介文 <Text style={{ color: colors.error }}>必須</Text></Text>
-                <TextInput ref={introductionInputRef} value={introductionText} selection={introductionSelection} onSelectionChange={(event) => setIntroductionSelection(event.nativeEvent.selection)} onChangeText={(text) => { setIntroductionText(text); setFormError(""); }} placeholder="プロフィールや好きな食べ物など、自由に自己紹介してください" placeholderTextColor={colors.muted} multiline textAlignVertical="top" style={{ backgroundColor: colors.surface, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: colors.foreground, minHeight: 130 }} />
-                <TextFormattingToolbar onFormat={(format) => { const result = applyTextFormat(introductionText, introductionSelection, format); setIntroductionText(result.text); setIntroductionSelection(result.selection); introductionInputRef.current?.focus(); }} />
+                <TextInput ref={introductionInputRef} value={introductionText} selection={introductionSelection} onSelectionChange={(event) => setIntroductionSelection(event.nativeEvent.selection)} onChangeText={(text) => { setIntroductionText(text); setFormError(""); }} placeholder="プロフィール・趣味・職業などを自由に記載してください" placeholderTextColor={colors.muted} multiline textAlignVertical="top" style={{ backgroundColor: colors.surface, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: colors.foreground, minHeight: 130 }} />
               </View>
               <View>
                 <Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground, marginBottom: 6 }}>IRO+でやってみたいこと（任意）</Text>
                 <TextInput ref={wantToTryInputRef} value={wantToTry} selection={wantToTrySelection} onSelectionChange={(event) => setWantToTrySelection(event.nativeEvent.selection)} onChangeText={setWantToTry} placeholder="例：気になるお店を巡るグルメ会を企画したい" placeholderTextColor={colors.muted} multiline textAlignVertical="top" style={{ backgroundColor: colors.surface, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: colors.foreground, minHeight: 100 }} />
-                <TextFormattingToolbar onFormat={(format) => { const result = applyTextFormat(wantToTry, wantToTrySelection, format); setWantToTry(result.text); setWantToTrySelection(result.selection); wantToTryInputRef.current?.focus(); }} />
               </View>
+              <View><Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground, marginBottom: 6 }}>お気に入りのお店（任意）</Text><TextInput value={favoriteRestaurants} onChangeText={setFavoriteRestaurants} placeholder="例：店名やURLを自由に入力" placeholderTextColor={colors.muted} multiline textAlignVertical="top" style={{ backgroundColor: colors.surface, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: colors.foreground, minHeight: 80 }} /></View>
+              <View><Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground, marginBottom: 6 }}>行ってみたいお店（任意）</Text><TextInput value={desiredRestaurants} onChangeText={setDesiredRestaurants} placeholder="例：店名やURLを自由に入力" placeholderTextColor={colors.muted} multiline textAlignVertical="top" style={{ backgroundColor: colors.surface, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: colors.foreground, minHeight: 80 }} /></View>
               {formError ? <Text style={{ fontSize: 13, color: colors.error }}>{formError}</Text> : null}
             </View>
           ) : isMealReport ? (
@@ -1546,7 +1490,7 @@ function CreateThreadModal({
                   style={{ backgroundColor: colors.surface, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 13, flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}
                 >
                   <Text style={{ fontSize: 15, color: prefecture ? colors.foreground : colors.muted }}>
-                    {prefecture || "都道府県を選択"}
+                    {prefecture || "エリアを選択"}
                   </Text>
                   <IconSymbol name="chevron.down" size={18} color={colors.muted} />
                 </Pressable>
@@ -1703,7 +1647,7 @@ function CreateThreadModal({
           {/* Photo Attachment */}
           <View style={{ marginBottom: 16 }}>
             <Text style={{ fontSize: 13, fontWeight: "600", color: colors.muted, marginBottom: 8 }}>
-              写真（最大4枚）
+              写真（最大10枚）
             </Text>
             <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
               {images.map((uri, i) => (
@@ -1825,7 +1769,7 @@ function CreateThreadModal({
         <ReportOptionModal
           visible={optionModal === "prefecture"}
           title="都道府県を選択"
-          options={PREFECTURES}
+          options={MEAL_REPORT_AREAS}
           value={prefecture}
           onSelect={setPrefecture}
           onClose={() => setOptionModal(null)}
@@ -1987,8 +1931,6 @@ export default function BoardScreen() {
           </Pressable>
         </View> : null}
       </View>
-
-      {!isThreadView ? <BoardRulesPanel /> : null}
 
       {/* 大分類 + スレッド分類 */}
       {!isThreadView ? <View style={{ borderBottomWidth: 0.5, borderBottomColor: colors.border, backgroundColor: "#FBFDFF" }}>

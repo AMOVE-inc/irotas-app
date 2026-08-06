@@ -44,11 +44,13 @@ import { getMentionGroups, getMentionQuery, getMentionedMemberIds, insertMention
 import { applyTextFormat, type TextFormat, type TextSelection } from "@/lib/text-formatting";
 
 const REACTION_EMOJIS = ["👍", "❤️", "😂", "🎉", "😋", "🙏"] as const;
+const MORE_REACTION_EMOJIS = ["👏", "😊", "😍", "🥳", "😆", "😭", "😮", "🤔", "🙌", "✨", "🔥", "💯", "🍽️", "🍣", "🍷", "☕", "🍺", "🍰", "👌", "💪", "🙏🏻", "👀", "💡", "✅"] as const;
 
 function MessageBubble({ message, isMe, myAvatarUri, onReact, mentionGroups }: { message: ChatMessage; isMe: boolean; myAvatarUri?: string | null; onReact: (emoji: string) => void; mentionGroups: ReturnType<typeof getMentionGroups> }) {
   const colors = useColors();
   const sender = getMemberById(message.senderId);
   const [showReactionPicker, setShowReactionPicker] = useState(false);
+  const [showMoreReactions, setShowMoreReactions] = useState(false);
 
   const formatTime = (dateStr: string) => {
     const d = new Date(dateStr);
@@ -138,8 +140,10 @@ function MessageBubble({ message, isMe, myAvatarUri, onReact, mentionGroups }: {
           </Pressable>
         </View>
         {showReactionPicker ? (
-          <View style={{ flexDirection: "row", borderRadius: 18, paddingHorizontal: 6, paddingVertical: 5, marginTop: 4, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, alignSelf: isMe ? "flex-end" : "flex-start" }}>
+          <View style={{ maxWidth: 280, flexDirection: "row", flexWrap: "wrap", borderRadius: 18, paddingHorizontal: 6, paddingVertical: 5, marginTop: 4, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, alignSelf: isMe ? "flex-end" : "flex-start" }}>
             {REACTION_EMOJIS.map((emoji) => <Pressable key={emoji} onPress={() => { onReact(emoji); setShowReactionPicker(false); }} style={{ paddingHorizontal: 5, paddingVertical: 2 }}><Text style={{ fontSize: 19 }}>{emoji}</Text></Pressable>)}
+            <Pressable onPress={() => setShowMoreReactions((value) => !value)} style={{ paddingHorizontal: 7, paddingVertical: 4, borderRadius: 12, backgroundColor: colors.background }}><Text style={{ fontSize: 11, fontWeight: "800", color: colors.foreground }}>{showMoreReactions ? "閉じる" : "その他"}</Text></Pressable>
+            {showMoreReactions ? <View style={{ width: "100%", flexDirection: "row", flexWrap: "wrap", marginTop: 4 }}>{MORE_REACTION_EMOJIS.map((emoji) => <Pressable key={emoji} onPress={() => { onReact(emoji); setShowReactionPicker(false); setShowMoreReactions(false); }} style={{ width: 34, height: 32, alignItems: "center", justifyContent: "center" }}><Text style={{ fontSize: 19 }}>{emoji}</Text></Pressable>)}</View> : null}
           </View>
         ) : null}
       </View>

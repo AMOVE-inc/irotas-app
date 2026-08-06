@@ -131,6 +131,13 @@ export interface Event {
   tabelogUrl?: string;
   googleMapsUrl?: string;
   participantsFinalizedAt?: string;
+  cancellationRequests?: Array<{
+    memberId: string;
+    requestedAt: string;
+    contactedOrganizer: boolean;
+    policyConfirmed: boolean;
+    status: "pending" | "approved" | "rejected";
+  }>;
   priceMin?: number;
   priceMax?: number;
 }
@@ -186,6 +193,8 @@ export interface BoardThread {
   selfIntroduction?: {
     introduction: string;
     wantToTry?: string;
+    favoriteRestaurants?: string;
+    desiredRestaurants?: string;
   };
   reactions?: Record<string, string[]>;
   gourmetContest?: {
@@ -493,8 +502,8 @@ export const EVENTS: Event[] = [
     id: "e5", createdAt: "2026-07-21T10:00:00+09:00", title: "恵比寿で楽しむ夏のビストロ会",
     restaurantName: "BISTRO IRO", description: "気軽なビストロ料理を囲む少人数のグルメ会です。参加申込は幹事の承認後に確定します。",
     date: "2026-08-15", time: "18:30", location: "東京都渋谷区恵比寿", prefecture: "東京都",
-    image: "https://images.unsplash.com/photo-1550966871-3ed3cdb5ed0c?w=400", capacity: 8, attendees: 2,
-    participants: ["u6", "u4"], applicantIds: ["u6", "u4"], price: "¥6,000", priceMin: 6000, priceMax: 6000,
+    image: "https://images.unsplash.com/photo-1550966871-3ed3cdb5ed0c?w=400", capacity: 8, attendees: 3,
+    participants: ["u6", "u4", "u1"], applicantIds: ["u6", "u4", "u1"], price: "¥6,000", priceMin: 6000, priceMax: 6000,
     genres: ["フレンチ", "洋食"], category: "kanto", eventType: "gourmet", status: "open", createdBy: "u6",
     cancellationPolicy: "参加者自身でのキャンセル操作はできません。必ず幹事へ連絡してください。",
   },

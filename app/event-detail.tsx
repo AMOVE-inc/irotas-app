@@ -9,7 +9,8 @@ import { getIrotasPoints, adjustIrotasPoints } from "@/lib/irotas-points-store";
 import { createPaymentRecord } from "@/lib/payment-store";
 import { getGoogleCalendarUrl, getOutlookCalendarUrl } from "@/lib/calendar-links";
 import { toggleEventFavorite, useEventFavorites } from "@/lib/event-favorites-store";
-import { cancelOrganizerDeadlineNotifications, notifyEventConfirmation, scheduleEventReminders } from "@/lib/notifications";
+import { cancelOrganizerDeadlineNotifications, notifyEventCancellationRequest, notifyEventConfirmation, scheduleEventReminders } from "@/lib/notifications";
+import { approveEventCancellationRequest, getPendingCancellationRequests, submitEventCancellationRequest } from "@/lib/event-cancellation";
 import { useColors } from "@/hooks/use-colors";
 import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -46,6 +47,8 @@ export default function EventDetailScreen() {
   const [irotasPoints, setIrotasPoints] = useState(0);
   const [usePoints, setUsePoints] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
+  const [contactedOrganizer, setContactedOrganizer] = useState(false);
+  const [cancellationPolicyConfirmed, setCancellationPolicyConfirmed] = useState(false);
   const [, setEventRevision] = useState(0);
   // ボタン連打防止フラグ
   const joiningRef = useRef(false);
@@ -104,6 +107,8 @@ export default function EventDetailScreen() {
   const organizer = getMemberById(event.createdBy);
   const isOrganizer = event.createdBy === CURRENT_USER.id;
   const pendingApplicantIds = getPendingGourmetApplicants(event);
+  const pendingCancellationRequests = getPendingCancellationRequests(event);
+  const hasPendingCancellationRequest = pendingCancellationRequests.some((request) => request.memberId === CURRENT_USER.id);
 
   const handleJoin = () => {
     if (event.status === "full") {
@@ -281,6 +286,35 @@ export default function EventDetailScreen() {
     }
     setEventRevision((value) => value + 1);
     Alert.alert("追加募集を開始しました", "イベント一覧に「空席あり」として表示されます。");
+  };
+
+  const handleCancellationRequest = () => {
+    if (!contactedOrganizer || !cancellationPolicyConfirmed) {
+      Alert.alert("確認が必要です", "幹事への事前連絡とキャンセルポリシーの確認にチェックしてください。");
+      return;
+    }
+    Alert.alert("キャンセル申請", "幹事へキャンセル申請を送りますか？", [
+      { text: "戻る", style: "cancel" },
+      { text: "申請する", style: "destructive", onPress: async () => {
+        submitEventCancellationRequest(event, CURRENT_USER.id);
+        await notifyEventCancellationRequest(event, CURRENT_USER.id);
+        setEventRevision((value) => value + 1);
+        Alert.alert("申請しました", "幹事に通知しました。キャンセルの確定連絡をお待ちください。");
+      } },
+    ]);
+  };
+
+  const handleApproveCancellation = (memberId: string) => {
+    const member = getMemberById(memberId);
+    Alert.alert("キャンセルを承認", `${member?.name ?? "メンバー"}さんを参加者から外し、1枠を再募集しますか？`, [
+      { text: "戻る", style: "cancel" },
+      { text: "承認して再募集", onPress: async () => {
+        approveEventCancellationRequest(event, memberId);
+        if (event.chatId) await removeMemberFromRoom(event.chatId, memberId);
+        setEventRevision((value) => value + 1);
+        Alert.alert("再募集を開始しました", "キャンセル分の空席をイベント一覧へ反映しました。");
+      } },
+    ]);
   };
 
   const handleOpenChat = () => {
@@ -511,6 +545,9 @@ export default function EventDetailScreen() {
               return <View key={memberId} style={{ flexDirection: "row", alignItems: "center", paddingVertical: 8, borderTopWidth: 0.5, borderTopColor: colors.border }}><Pressable onPress={() => openMemberProfile(memberId)} style={{ flex: 1, flexDirection: "row", alignItems: "center" }}><Image source={member?.avatar ?? DEFAULT_AVATAR} style={{ width: 34, height: 34, borderRadius: 17 }} contentFit="cover" /><Text style={{ flex: 1, marginLeft: 9, fontSize: 14, fontWeight: "700", color: colors.foreground }}>{member?.name ?? "メンバー"}</Text></Pressable><Pressable onPress={() => approveApplicant(memberId)} style={{ borderRadius: 9, backgroundColor: "#34C759", paddingHorizontal: 12, paddingVertical: 7 }}><Text style={{ color: "#FFF", fontSize: 12, fontWeight: "800" }}>承認</Text></Pressable></View>;
             }) : <Text style={{ fontSize: 13, color: colors.muted, paddingVertical: 8 }}>現在、承認待ちの申込はありません。</Text>}
 
+            <Text style={{ fontSize: 13, fontWeight: "800", color: colors.foreground, marginTop: 14, marginBottom: 7 }}>キャンセル申請（{pendingCancellationRequests.length}件）</Text>
+            {pendingCancellationRequests.length ? pendingCancellationRequests.map((request) => { const member = getMemberById(request.memberId); return <View key={request.memberId} style={{ flexDirection: "row", alignItems: "center", paddingVertical: 8, borderTopWidth: 0.5, borderTopColor: colors.border }}><Pressable onPress={() => openMemberProfile(request.memberId)} style={{ flex: 1, flexDirection: "row", alignItems: "center" }}><Image source={member?.avatar ?? DEFAULT_AVATAR} style={{ width: 34, height: 34, borderRadius: 17 }} contentFit="cover" /><View style={{ flex: 1, marginLeft: 9 }}><Text style={{ fontSize: 14, fontWeight: "700", color: colors.foreground }}>{member?.name ?? "メンバー"}</Text><Text style={{ fontSize: 10, color: colors.muted }}>事前連絡・ポリシー確認済み</Text></View></Pressable><Pressable onPress={() => handleApproveCancellation(request.memberId)} style={{ borderRadius: 9, backgroundColor: "#D94C55", paddingHorizontal: 10, paddingVertical: 7 }}><Text style={{ color: "#FFF", fontSize: 11, fontWeight: "800" }}>承認・再募集</Text></Pressable></View>; }) : <Text style={{ fontSize: 13, color: colors.muted, paddingVertical: 8 }}>現在、キャンセル申請はありません。</Text>}
+
             <Text style={{ fontSize: 13, fontWeight: "800", color: colors.foreground, marginTop: 14, marginBottom: 7 }}>参加確定者</Text>
             {(event.participants ?? []).map((memberId) => {
               const member = getMemberById(memberId);
@@ -668,10 +705,12 @@ export default function EventDetailScreen() {
           </View>
         ) : null}
 
-        {event.eventType === "gourmet" && isJoined ? (
+        {isJoined && !isOrganizer ? (
           <View style={{ backgroundColor: "#FFF4F2", borderRadius: 14, padding: 14, marginBottom: 16, borderWidth: 1, borderColor: "#F3D0CA" }}>
-            <Text style={{ fontSize: 14, fontWeight: "900", color: colors.error }}>キャンセルは幹事へ連絡してください</Text>
-            <Text style={{ fontSize: 13, lineHeight: 20, color: colors.foreground, marginTop: 5 }}>参加者自身ではキャンセルできません。参加者チャットから幹事へ連絡し、幹事側でキャンセル処理を行います。</Text>
+            <Text style={{ fontSize: 14, fontWeight: "900", color: colors.error }}>イベントをキャンセルする場合</Text>
+            <Text style={{ fontSize: 12, lineHeight: 18, color: colors.foreground, marginTop: 5 }}>先に参加者チャットで幹事へ連絡してから申請してください。幹事の承認後、空席が再募集されます。</Text>
+            {[{ label: "事前に幹事へ連絡しました", value: contactedOrganizer, set: setContactedOrganizer }, { label: "キャンセルポリシーを確認しました", value: cancellationPolicyConfirmed, set: setCancellationPolicyConfirmed }].map((item) => <Pressable key={item.label} onPress={() => item.set(!item.value)} style={{ flexDirection: "row", alignItems: "center", marginTop: 10 }}><View style={{ width: 22, height: 22, borderRadius: 6, backgroundColor: item.value ? "#D94C55" : colors.surface, borderWidth: 1, borderColor: item.value ? "#D94C55" : colors.border, alignItems: "center", justifyContent: "center" }}>{item.value ? <IconSymbol name="checkmark" size={14} color="#FFF" /> : null}</View><Text style={{ marginLeft: 8, fontSize: 13, fontWeight: "700", color: colors.foreground }}>{item.label}</Text></Pressable>)}
+            <Pressable disabled={hasPendingCancellationRequest || !contactedOrganizer || !cancellationPolicyConfirmed} onPress={handleCancellationRequest} style={{ marginTop: 12, borderRadius: 11, paddingVertical: 11, alignItems: "center", backgroundColor: hasPendingCancellationRequest ? "#B8B8BD" : "#D94C55", opacity: !hasPendingCancellationRequest && (!contactedOrganizer || !cancellationPolicyConfirmed) ? 0.45 : 1 }}><Text style={{ color: "#FFF", fontSize: 14, fontWeight: "900" }}>{hasPendingCancellationRequest ? "キャンセル申請中" : "キャンセル申請する"}</Text></Pressable>
           </View>
         ) : null}
 
