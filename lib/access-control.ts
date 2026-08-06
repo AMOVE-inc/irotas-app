@@ -3,9 +3,9 @@ export type BranchRole = "kanto" | "kansai";
 
 const ADMIN_ROUTE_NAMES = new Set([
   "admin-dashboard",
-  "campaign-manager",
   "csv-import",
 ]);
+const OPERATOR_ROUTE_NAMES = new Set(["campaign-manager"]);
 
 /** Unknown or missing role values must always fail closed. */
 export function normalizeUserRole(role: unknown): UserRole {
@@ -38,6 +38,10 @@ export function isOperatorRole(role: unknown): boolean {
 
 export function isAdminRoute(route: unknown): boolean {
   return typeof route === "string" && ADMIN_ROUTE_NAMES.has(route);
+}
+
+export function isOperatorRoute(route: unknown): boolean {
+  return typeof route === "string" && OPERATOR_ROUTE_NAMES.has(route);
 }
 
 /** Board category creation is an application-wide management action. */

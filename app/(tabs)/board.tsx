@@ -1844,16 +1844,16 @@ export default function BoardScreen() {
   );
   const categoryPresentation = (category: BoardCategory) => {
     const club = clubs.find((item) => `club-${item.id}` === category.key);
-    if (club) return { icon: club.icon, description: `${club.memberIds.length}人で活動中`, accent: "#7D6A92" };
+    if (club) return { icon: "person.3.fill", description: `${club.memberIds.length}人で活動中`, accent: "#34C759" };
     const presentations: Record<string, { icon: string; description: string; accent: string }> = {
-      introduction: { icon: "👋", description: "メンバー同士で自己紹介", accent: "#7D6A92" },
-      "meal-report": { icon: "🍽️", description: "今日食べたお店をみんなに共有", accent: "#D0784A" },
-      "gourmet-contest": { icon: "🏆", description: "コメントとハート投票で今月のグルメ王を決定", accent: "#C08A25" },
-      "gourmet-advice": { icon: "💡", description: "お店選びやグルメの相談", accent: "#C08A25" },
-      "free-chat": { icon: "💬", description: "気軽に投稿できる自由な掲示板", accent: "#4A86A8" },
-      "club-all": { icon: "📅", description: "各部活の今月の活動をまとめて確認", accent: "#6A5B87" },
+      introduction: { icon: "bubble.left.and.bubble.right.fill", description: "メンバー同士で自己紹介", accent: "#A7C7E7" },
+      "meal-report": { icon: "bubble.left.and.bubble.right.fill", description: "今日食べたお店をみんなに共有", accent: "#A7C7E7" },
+      "gourmet-contest": { icon: "bubble.left.and.bubble.right.fill", description: "コメントとハート投票で今月のグルメ王を決定", accent: "#A7C7E7" },
+      "gourmet-advice": { icon: "bubble.left.and.bubble.right.fill", description: "お店選びやグルメの相談", accent: "#A7C7E7" },
+      "free-chat": { icon: "bubble.left.and.bubble.right.fill", description: "気軽に投稿できる自由な掲示板", accent: "#A7C7E7" },
+      "club-all": { icon: "person.3.fill", description: "各部活の今月の活動をまとめて確認", accent: "#34C759" },
     };
-    return presentations[category.key] ?? { icon: "#", description: "掲示板カテゴリ", accent: "#5B5A73" };
+    return presentations[category.key] ?? { icon: "bubble.left.and.bubble.right.fill", description: "掲示板カテゴリ", accent: "#A7C7E7" };
   };
 
   const onRefresh = useCallback(() => {
@@ -1957,13 +1957,13 @@ export default function BoardScreen() {
           })}
         </View>
         {activeGroup === "area" ? (
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 10, gap: 8 }}>
+          <View style={{ flexDirection: "row", paddingHorizontal: 16, paddingVertical: 10, gap: 8 }}>
             {visibleCategories.map((cat) => (
-              <Pressable key={cat.key} onPress={() => handleOpenCategory(cat)} style={{ paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20, backgroundColor: "#F1F6F9", borderWidth: 1, borderColor: "#DCEAF2" }}>
-                <Text style={{ fontSize: 14, fontWeight: "600", color: "#5F6C75" }}>{cat.label}</Text>
+              <Pressable key={cat.key} onPress={() => handleOpenCategory(cat)} style={{ flex: 1, alignItems: "center", paddingVertical: 11, borderRadius: 12, backgroundColor: cat.key === "kanto-branch" ? "#EAF4FA" : "#F3EEF8", borderWidth: 1, borderColor: cat.key === "kanto-branch" ? "#CFE3EF" : "#E0D5EA" }}>
+                <Text style={{ fontSize: 14, fontWeight: "800", color: colors.foreground }}>{cat.label}</Text>
               </Pressable>
             ))}
-          </ScrollView>
+          </View>
         ) : (
           <View style={{ paddingHorizontal: 16, paddingVertical: 10, gap: 8 }}>
             {activeGroup === "club" ? <Text style={{ fontSize: 12, fontWeight: "700", color: colors.muted, marginBottom: 1 }}>活動レポートと入部中の部活</Text> : null}
@@ -1975,7 +1975,7 @@ export default function BoardScreen() {
                   onPress={() => handleOpenCategory(cat)}
                   style={{ flexDirection: "row", alignItems: "center", minHeight: 62, borderRadius: 14, paddingHorizontal: 13, paddingVertical: 9, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border }}
                 >
-                  <View style={{ width: 40, height: 40, borderRadius: 12, backgroundColor: `${presentation.accent}18`, alignItems: "center", justifyContent: "center" }}><Text style={{ fontSize: 21 }}>{presentation.icon}</Text></View>
+                  <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: `${presentation.accent}20`, alignItems: "center", justifyContent: "center" }}><IconSymbol name={presentation.icon as any} size={21} color={presentation.accent} /></View>
                   <View style={{ flex: 1, marginLeft: 11 }}><Text style={{ fontSize: 15, fontWeight: "900", color: colors.foreground }}>{cat.label}</Text><Text style={{ fontSize: 11, color: colors.muted, marginTop: 3 }}>{presentation.description}</Text></View>
                   <IconSymbol name="chevron.right" size={17} color={colors.muted} />
                 </Pressable>

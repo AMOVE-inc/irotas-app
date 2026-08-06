@@ -585,9 +585,6 @@ export default function HomeScreen() {
       >
         <BrandLogo width={126} compact />
         <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-          <Pressable onPress={() => router.push("/chat-list")} style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: "#F8EFF3", alignItems: "center", justifyContent: "center" }}>
-            <IconSymbol name="message.fill" size={22} color={colors.foreground} />
-          </Pressable>
           <Pressable onPress={() => router.push("/notifications")} style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: "#EEF6FB", alignItems: "center", justifyContent: "center" }}>
             <IconSymbol name="bell.fill" size={22} color={colors.foreground} />
           </Pressable>
@@ -629,7 +626,7 @@ export default function HomeScreen() {
           elevation: 5,
         }}
       >
-        <IconSymbol name="plus.circle.fill" size={28} color="#FFFFFF" />
+        <IconSymbol name="plus" size={27} color="#FFFFFF" />
       </Pressable>
     </ScreenContainer>
   );

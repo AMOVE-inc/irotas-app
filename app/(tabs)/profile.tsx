@@ -37,6 +37,7 @@ import * as Clipboard from "expo-clipboard";
 import { OFFICIAL_INSTAGRAM_URL } from "@/constants/external-links";
 import { GOURMET_GENRES } from "@/constants/event-options";
 import { BIRTH_YEARS, DAYS, DRINKING_LEVELS, MONTHS, PREFECTURES, PROFILE_DETAILS_STORAGE_KEY, type ProfileDetails } from "@/constants/profile-options";
+import { isOperatorRole } from "@/lib/access-control";
 
 function ProfileSelectField({ label, value, options, onChange }: { label: string; value: string; options: readonly string[]; onChange: (value: string) => void }) {
   const colors = useColors();
@@ -697,6 +698,7 @@ export default function ProfileScreen() {
   const [showEditProfile, setShowEditProfile] = useState(false);
   // DBから取得したroleで管理者判定（モックデータのCURRENT_USERではなく実際のログインユーザーを使用）
   const userIsAdmin = authUser?.role === "admin";
+  const userIsOperator = isOperatorRole(authUser?.role);
   const [myRooms, setMyRooms] = useState(() => getMyRooms(user.id));
   const [participatingEvents, setParticipatingEvents] = useState<Event[]>([]);
   const [avatarUri, setAvatarUri] = useState<string | null>(null);
@@ -1106,6 +1108,18 @@ export default function ProfileScreen() {
           />
         )}
 
+        {userIsOperator && !userIsAdmin && (
+          <MenuSection
+            title="運営メニュー"
+            items={[{
+              icon: "megaphone.fill",
+              label: "キャンペーン管理",
+              color: "#FF9500",
+              onPress: () => router.push("/campaign-manager" as any),
+            }]}
+          />
+        )}
+
         {/* Menu Sections */}
         <MenuSection
           title="会員限定特典"
@@ -1117,9 +1131,9 @@ export default function ProfileScreen() {
               onPress: () => router.push("/gift-campaign" as any),
             },
             {
-              icon: "trophy.fill",
-              label: "特典・表彰制度",
-              onPress: () => Alert.alert("特典・表彰制度", "イベント幹事・投稿・店舗登録などでポイントを積み、ランクアップして特典を獲得できます。"),
+              icon: "megaphone.fill",
+              label: "キャンペーン",
+              onPress: () => router.push("/gift-campaign" as any),
             },
           ]}
         />

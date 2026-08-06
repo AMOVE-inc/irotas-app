@@ -2,8 +2,10 @@ import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { useColors } from "@/hooks/use-colors";
 import { useAuthContext } from "@/lib/auth-context";
+import { confirmGiftLottery, getGiftApplications, getGiftCampaigns, saveGiftCampaigns, type GiftApplication, type GiftCampaign } from "@/lib/gift-campaign-store";
+import { isOperatorRole } from "@/lib/access-control";
 import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Alert,
   Modal,
@@ -78,12 +80,21 @@ export default function CampaignManagerScreen() {
   const [newDesc, setNewDesc] = useState("");
   const [newType, setNewType] = useState<Campaign["type"]>("points");
   const [newRank, setNewRank] = useState<Campaign["targetRank"]>("all");
+  const [giftCampaigns, setGiftCampaigns] = useState<GiftCampaign[]>([]);
+  const [giftApplications, setGiftApplications] = useState<GiftApplication[]>([]);
 
-  if (authUser?.role !== "admin") {
+  useEffect(() => {
+    Promise.all([getGiftCampaigns(), getGiftApplications()]).then(([gifts, applications]) => {
+      setGiftCampaigns(gifts);
+      setGiftApplications(applications);
+    });
+  }, []);
+
+  if (!isOperatorRole(authUser?.role)) {
     return (
       <ScreenContainer className="p-6">
         <Text style={{ fontSize: 16, color: colors.muted, textAlign: "center", marginTop: 40 }}>
-          管理者のみアクセスできます
+          運営メンバーのみアクセスできます
         </Text>
       </ScreenContainer>
     );
@@ -114,6 +125,31 @@ export default function CampaignManagerScreen() {
     if (campaign.status === "ended") return;
     const next = campaign.status === "active" ? "ended" : "active";
     setCampaigns(campaigns.map((c) => (c.id === campaign.id ? { ...c, status: next } : c)));
+  };
+
+  const updateGiftMinimumRank = async (gift: GiftCampaign, minimumRank: GiftCampaign["minimumRank"]) => {
+    const next = giftCampaigns.map((item) => item.id === gift.id ? { ...item, minimumRank } : item);
+    setGiftCampaigns(next);
+    await saveGiftCampaigns(next);
+  };
+
+  const handleGiftLottery = (gift: GiftCampaign) => {
+    const applicants = giftApplications.filter((item) => item.campaignId === gift.id && item.result === "pending");
+    if (applicants.length === 0) {
+      Alert.alert("申込者がいません", "抽選を確定するには申込が必要です。");
+      return;
+    }
+    Alert.alert("抽選を確定", `${applicants.length}名から${Math.min(gift.winnerCount, applicants.length)}名を抽選し、募集を終了します。`, [
+      { text: "キャンセル", style: "cancel" },
+      { text: "抽選する", onPress: async () => {
+        const applications = await confirmGiftLottery(gift.id, gift.winnerCount);
+        const campaigns = await getGiftCampaigns();
+        setGiftApplications(applications);
+        setGiftCampaigns(campaigns);
+        const winners = applications.filter((item) => item.campaignId === gift.id && item.result === "winner");
+        Alert.alert("抽選確定", `当選者：${winners.map((item) => item.memberName).join("、")}`);
+      } },
+    ]);
   };
 
   return (
@@ -184,6 +220,24 @@ export default function CampaignManagerScreen() {
       </View>
 
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
+        <Text style={{ fontSize: 18, fontWeight: "800", color: colors.foreground, marginBottom: 10 }}>プレゼント抽選管理</Text>
+        {giftCampaigns.map((gift) => {
+          const applicants = giftApplications.filter((item) => item.campaignId === gift.id);
+          return <View key={gift.id} style={{ backgroundColor: colors.surface, borderRadius: 16, padding: 16, marginBottom: 12 }}>
+            <View style={{ flexDirection: "row", alignItems: "center" }}>
+              <Text style={{ flex: 1, fontSize: 15, fontWeight: "800", color: colors.foreground }}>{gift.title}</Text>
+              <Text style={{ fontSize: 11, fontWeight: "800", color: gift.status === "open" ? "#248A3D" : colors.muted }}>{gift.status === "open" ? "募集中" : "募集終了"}</Text>
+            </View>
+            <Text style={{ fontSize: 12, color: colors.muted, marginTop: 6 }}>申込 {applicants.length}名 ／ 当選 {gift.winnerCount}名</Text>
+            <Text style={{ fontSize: 12, fontWeight: "700", color: colors.foreground, marginTop: 12, marginBottom: 7 }}>申込可能ランク</Text>
+            <View style={{ flexDirection: "row", gap: 6, flexWrap: "wrap" }}>
+              {([['regular', '全会員'], ['silver', 'シルバー以上'], ['gold', 'ゴールド以上'], ['platinum', 'プラチナ']] as const).map(([rank, label]) => <Pressable key={rank} disabled={gift.status === "closed"} onPress={() => updateGiftMinimumRank(gift, rank)} style={{ borderRadius: 14, paddingHorizontal: 9, paddingVertical: 6, backgroundColor: gift.minimumRank === rank ? "#E8A0BF" : colors.background }}><Text style={{ fontSize: 11, fontWeight: "700", color: gift.minimumRank === rank ? "#FFF" : colors.foreground }}>{label}</Text></Pressable>)}
+            </View>
+            {gift.status === "open" && <Pressable onPress={() => handleGiftLottery(gift)} style={{ marginTop: 12, paddingVertical: 9, borderRadius: 10, alignItems: "center", backgroundColor: "#E8A0BF" }}><Text style={{ color: "#FFF", fontWeight: "800" }}>抽選を確定</Text></Pressable>}
+          </View>;
+        })}
+
+        <Text style={{ fontSize: 18, fontWeight: "800", color: colors.foreground, marginTop: 12, marginBottom: 10 }}>キャンペーン管理</Text>
         {campaigns.map((campaign) => (
           <View
             key={campaign.id}

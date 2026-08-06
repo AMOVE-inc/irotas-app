@@ -23,7 +23,7 @@ import { trpc, createTRPCClient } from "@/lib/trpc";
 import { initManusRuntime, subscribeSafeAreaInsets } from "@/lib/_core/manus-runtime";
 import { AuthProvider, useAuthContext } from "@/lib/auth-context";
 import { AppErrorBoundary } from "@/components/app-error-boundary";
-import { isAdminRole, isAdminRoute } from "@/lib/access-control";
+import { isAdminRole, isAdminRoute, isOperatorRole, isOperatorRoute } from "@/lib/access-control";
 import { dispatchDueEventActions } from "@/lib/event-automation-store";
 
 // Mobile browsers already exclude the status bar from their visual viewport.
@@ -54,8 +54,10 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
   const segments = useSegments();
   const router = useRouter();
   const currentRoute = segments[0];
-  const isRestrictedRoute = isAdminRoute(currentRoute);
-  const isForbidden = isAuthenticated && isRestrictedRoute && !isAdminRole(user?.role);
+  const isForbidden = isAuthenticated && (
+    (isAdminRoute(currentRoute) && !isAdminRole(user?.role)) ||
+    (isOperatorRoute(currentRoute) && !isOperatorRole(user?.role))
+  );
   const hasSelectedBranch = Boolean(user && (user.branches.length > 0 || user.branch));
 
   useEffect(() => {

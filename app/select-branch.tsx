@@ -14,10 +14,9 @@ const previewLoginEnabled = process.env.EXPO_PUBLIC_PREVIEW_LOGIN_ENABLED === "t
 const BRANCHES: {
   key: Auth.BranchRole;
   title: string;
-  description: string;
 }[] = [
-  { key: "kanto", title: "関東支部", description: "東京・神奈川・千葉・埼玉を中心に活動" },
-  { key: "kansai", title: "関西支部", description: "大阪・京都・兵庫・奈良を中心に活動" },
+  { key: "kanto", title: "関東支部" },
+  { key: "kansai", title: "関西支部" },
 ];
 
 export default function SelectBranchScreen() {
@@ -106,9 +105,6 @@ export default function SelectBranchScreen() {
                     <View style={{ flex: 1 }}>
                       <Text style={{ fontSize: 19, fontWeight: "800", color: colors.foreground }}>
                         {branch.title}
-                      </Text>
-                      <Text style={{ fontSize: 13, color: colors.muted, marginTop: 5 }}>
-                        {branch.description}
                       </Text>
                     </View>
                     <View

@@ -7,6 +7,7 @@ import {
   isAdminRole,
   isAdminRoute,
   isOperatorRole,
+  isOperatorRoute,
   normalizeBranchRole,
   normalizeBranchRoles,
   normalizeUserRole,
@@ -46,12 +47,18 @@ describe("access control", () => {
     expect(normalizeBranchRoles(["kanto", "kanto"])).toEqual(["kanto"]);
   });
 
-  it.each(["admin-dashboard", "campaign-manager", "csv-import"])(
+  it.each(["admin-dashboard", "csv-import"])(
     "marks %s as an admin-only route",
     (route) => {
       expect(isAdminRoute(route)).toBe(true);
     },
   );
+
+  it("allows campaign management through the operator route", () => {
+    expect(isOperatorRoute("campaign-manager")).toBe(true);
+    expect(isOperatorRoute("admin-dashboard")).toBe(false);
+    expect(isAdminRoute("campaign-manager")).toBe(false);
+  });
 
   it("keeps member routes outside the admin-only set", () => {
     expect(isAdminRoute("profile")).toBe(false);
