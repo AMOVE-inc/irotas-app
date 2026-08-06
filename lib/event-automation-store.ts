@@ -2,12 +2,15 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import type { Event } from "@/constants/mock-data";
 import { addMessage, saveMessagesToStorage } from "@/lib/chat-store";
 import { addInAppNotification } from "@/lib/in-app-notifications-store";
-import { buildEventReminderPlans, parseApplicationDeadline } from "@/lib/event-reminders";
+import { buildEventReminderPlans } from "@/lib/event-reminders";
+import { buildOrganizerReminderPlans } from "@/lib/event-reminders";
+import { EVENTS } from "@/constants/mock-data";
+import { getAllEvents } from "@/lib/event-store";
 
 const KEY = "irotas_scheduled_event_actions";
 type ScheduledAction = {
   id: string;
-  kind: "seven_days" | "two_days" | "organizer_deadline";
+  kind: "seven_days" | "two_days" | "organizer_three_days" | "organizer_two_days" | "organizer_one_day" | "organizer_same_day";
   eventId: string;
   eventTitle: string;
   targetMemberId: string;
@@ -31,9 +34,12 @@ export async function persistParticipantReminderPlans(event: Event, memberId: st
 }
 
 export async function persistOrganizerDeadlinePlan(event: Event): Promise<void> {
-  const deadline = parseApplicationDeadline(event.applicationDeadline);
-  if (!deadline) return;
-  await mergeActions([{ id: `${event.id}:${event.createdBy}:organizer_deadline`, kind: "organizer_deadline", eventId: event.id, eventTitle: event.title, targetMemberId: event.createdBy, scheduledAt: deadline.toISOString() }]);
+  await mergeActions(buildOrganizerReminderPlans(event).map((plan) => ({ id: `${event.id}:${event.createdBy}:${plan.kind}`, kind: plan.kind, eventId: event.id, eventTitle: event.title, targetMemberId: event.createdBy, scheduledAt: plan.scheduledAt.toISOString() })));
+}
+
+export async function cancelOrganizerDeadlinePlans(eventId: string): Promise<void> {
+  const actions = await readActions();
+  await AsyncStorage.setItem(KEY, JSON.stringify(actions.filter((action) => !(action.eventId === eventId && action.kind.startsWith("organizer_")))));
 }
 
 /** アプリ起動中に期限へ達した処理を配信。DB版では同じIDでバックグラウンドワーカーが実行する。 */
@@ -42,8 +48,12 @@ export async function dispatchDueEventActions(now = new Date()): Promise<number>
   const due = actions.filter((action) => Date.parse(action.scheduledAt) <= now.getTime());
   const remaining = actions.filter((action) => Date.parse(action.scheduledAt) > now.getTime());
   for (const action of due) {
-    if (action.kind === "organizer_deadline") {
-      addInAppNotification({ targetMemberId: action.targetMemberId, type: "event_deadline", title: "参加者を確定してください", body: `「${action.eventTitle}」の募集期限になりました。申込者を確認してください。`, eventId: action.eventId });
+    if (action.kind.startsWith("organizer_")) {
+      const currentEvent = getAllEvents(EVENTS).find((item) => item.id === action.eventId);
+      if (!currentEvent?.participantsFinalizedAt) {
+        const label = action.kind === "organizer_three_days" ? "3日前" : action.kind === "organizer_two_days" ? "2日前" : action.kind === "organizer_one_day" ? "前日" : "当日";
+        addInAppNotification({ targetMemberId: action.targetMemberId, type: "event_deadline", title: "参加者を確定してください", body: `「${action.eventTitle}」の参加者決定予定日の${label}です。申込者を確認してください。`, eventId: action.eventId });
+      }
     } else if (action.chatRoomId) {
       const label = action.kind === "seven_days" ? "1週間前" : "2日前";
       const message = addMessage(action.chatRoomId, "system", `【自動リマインド】「${action.eventTitle}」の開催${label}です。集合時間や連絡事項をご確認ください。`);

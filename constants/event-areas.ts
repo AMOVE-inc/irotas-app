@@ -7,3 +7,10 @@ export const EVENT_AREA_GROUPS = [
 export const PREFECTURE_TO_REGION = Object.fromEntries(
   EVENT_AREA_GROUPS.flatMap((group) => group.prefectures.map((prefecture) => [prefecture, group.value])),
 ) as Record<string, string>;
+
+export const EVENT_SEARCH_AREA_GROUPS = [
+  { label: "関東　東京", value: "region:kanto-tokyo" },
+  { label: "関東　東京以外", value: "region:kanto-other" },
+  { label: "関西", value: "region:kansai" },
+  { label: "その他", value: "region:other" },
+] as const;

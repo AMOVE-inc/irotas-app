@@ -1,5 +1,6 @@
 import type { Event } from "../constants/mock-data";
 import { PREFECTURE_TO_REGION } from "../constants/event-areas";
+import { extractEventLocation } from "./event-location";
 
 export type EventAreaFilter = "all" | "kanto" | "kansai";
 export type EventTypeFilter = "all" | Event["eventType"];
@@ -88,20 +89,22 @@ export function filterAndSortEvents(
     .filter((event) => !filters.genres?.length || filters.genres.some((genre) => event.genres?.includes(genre)))
     .filter((event) => {
       if (!filters.areas?.length) return true;
-      const prefecture = event.prefecture ?? "";
+      const derived = extractEventLocation(event.location);
+      const prefecture = event.prefecture ?? derived.prefecture ?? "";
+      const tokyoArea = event.tokyoArea ?? derived.tokyoArea;
       return filters.areas.some((area) => {
-        if (area.startsWith("pref:")) return prefecture === area.slice(5) || event.location.includes(area.slice(5));
-        if (area.startsWith("region:")) {
-          if (PREFECTURE_TO_REGION[prefecture] === area) return true;
-          return (area === "region:kanto" && event.category === "kanto") || (area === "region:kansai" && event.category === "kansai");
-        }
+        if (area.startsWith("tokyo:")) return prefecture === "東京都" && tokyoArea === area.slice(6);
+        if (area === "region:kanto-tokyo") return prefecture === "東京都";
+        if (area === "region:kanto-other") return prefecture !== "東京都" && PREFECTURE_TO_REGION[prefecture] === "region:kanto";
+        if (area === "region:kansai") return PREFECTURE_TO_REGION[prefecture] === "region:kansai" || (!prefecture && event.category === "kansai");
+        if (area === "region:other") return Boolean(prefecture) && !["region:kanto", "region:kansai"].includes(PREFECTURE_TO_REGION[prefecture]);
         return false;
       });
     })
     .filter((event) => {
       const keyword = filters.keyword?.trim().toLowerCase();
       if (!keyword) return true;
-      return [event.title, event.restaurantName, event.description, event.location, event.prefecture, ...(event.genres ?? [])]
+      return [event.title, event.restaurantName, event.description, event.location, event.prefecture, event.tokyoArea, ...(event.genres ?? [])]
         .filter(Boolean).some((value) => String(value).toLowerCase().includes(keyword));
     })
     .filter((event) => {

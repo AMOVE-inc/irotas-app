@@ -2,8 +2,10 @@ import * as Notifications from "expo-notifications";
 import { Platform } from "react-native";
 import { addInAppNotification } from "@/lib/in-app-notifications-store";
 import type { Event } from "@/constants/mock-data";
-import { buildEventReminderPlans, parseApplicationDeadline } from "@/lib/event-reminders";
-import { persistOrganizerDeadlinePlan, persistParticipantReminderPlans } from "@/lib/event-automation-store";
+import { buildEventReminderPlans, buildOrganizerReminderPlans } from "@/lib/event-reminders";
+import { cancelOrganizerDeadlinePlans, persistOrganizerDeadlinePlan, persistParticipantReminderPlans } from "@/lib/event-automation-store";
+
+const organizerNotificationIds = new Map<string, string[]>();
 
 // 通知ハンドラーの設定（フォアグラウンドでも通知を表示）
 Notifications.setNotificationHandler({
@@ -59,9 +61,20 @@ export async function scheduleEventReminders(event: Event, memberId: string, cha
 
 export async function scheduleOrganizerDeadlineNotification(event: Event): Promise<void> {
   await persistOrganizerDeadlinePlan(event);
-  const deadline = parseApplicationDeadline(event.applicationDeadline);
-  if (!deadline || deadline.getTime() <= Date.now() || Platform.OS === "web") return;
-  await Notifications.scheduleNotificationAsync({ content: { title: "参加者を確定してください", body: `「${event.title}」の募集期限になりました。申込者を確認してください。`, data: { type: "event_deadline", eventId: event.id }, sound: true }, trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: deadline } });
+  if (Platform.OS === "web") return;
+  const identifiers: string[] = [];
+  for (const plan of buildOrganizerReminderPlans(event)) {
+    if (plan.scheduledAt.getTime() <= Date.now()) continue;
+    identifiers.push(await Notifications.scheduleNotificationAsync({ content: { title: "参加者を確定してください", body: `「${event.title}」の参加者決定予定日の${plan.label}です。申込者を確認してください。`, data: { type: "event_deadline", eventId: event.id }, sound: true }, trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: plan.scheduledAt } }));
+  }
+  organizerNotificationIds.set(event.id, identifiers);
+}
+
+export async function cancelOrganizerDeadlineNotifications(eventId: string): Promise<void> {
+  await cancelOrganizerDeadlinePlans(eventId);
+  const identifiers = organizerNotificationIds.get(eventId) ?? [];
+  await Promise.all(identifiers.map((identifier) => Notifications.cancelScheduledNotificationAsync(identifier)));
+  organizerNotificationIds.delete(eventId);
 }
 
 // メンション通知を送信する

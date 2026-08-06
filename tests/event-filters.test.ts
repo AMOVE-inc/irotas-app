@@ -136,9 +136,9 @@ describe("event list filtering and sorting", () => {
     expect(result.map((event) => event.id)).toEqual(["casual", "premium"]);
   });
 
-  it("filters by region or prefecture and supports keyword search", () => {
+  it("filters by requested area groups and supports keyword search", () => {
     const localEvents = [
-      makeEvent({ id: "tokyo", title: "銀座の寿司会", prefecture: "東京都", location: "東京都中央区", genres: ["寿司"] }),
+      makeEvent({ id: "tokyo", title: "銀座の寿司会", prefecture: "東京都", tokyoArea: "ginza-yurakucho-hibiya", location: "東京都中央区銀座", genres: ["寿司"] }),
       makeEvent({ id: "osaka", title: "大阪の焼肉会", prefecture: "大阪府", location: "大阪府大阪市", genres: ["焼肉"] }),
       makeEvent({ id: "aichi", title: "名古屋のひつまぶし会", prefecture: "愛知県", location: "愛知県名古屋市", genres: ["和食"] }),
     ];
@@ -146,7 +146,7 @@ describe("event list filtering and sorting", () => {
       area: "all",
       eventType: "all",
       openOnly: false,
-      areas: ["region:kanto"],
+      areas: ["region:kanto-tokyo"],
     }, referenceDate);
     expect(areaResult.map((event) => event.id)).toEqual(["tokyo"]);
 
@@ -154,7 +154,7 @@ describe("event list filtering and sorting", () => {
       area: "all",
       eventType: "all",
       openOnly: false,
-      areas: ["pref:大阪府"],
+      areas: ["region:kansai"],
       keyword: "焼肉",
     }, referenceDate);
     expect(keywordResult.map((event) => event.id)).toEqual(["osaka"]);
@@ -166,5 +166,13 @@ describe("event list filtering and sorting", () => {
       areas: ["region:other"],
     }, referenceDate);
     expect(otherRegionResult.map((event) => event.id)).toEqual(["aichi"]);
+
+    const tokyoAreaResult = filterAndSortEvents(localEvents, {
+      area: "all",
+      eventType: "all",
+      openOnly: false,
+      areas: ["tokyo:ginza-yurakucho-hibiya", "tokyo:shibuya-shinsen"],
+    }, referenceDate);
+    expect(tokyoAreaResult.map((event) => event.id)).toEqual(["tokyo"]);
   });
 });

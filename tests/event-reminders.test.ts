@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildEventReminderPlans, parseApplicationDeadline } from "../lib/event-reminders";
+import { buildEventReminderPlans, buildOrganizerReminderPlans, parseApplicationDeadline } from "../lib/event-reminders";
 
 describe("event reminder plans", () => {
   it("creates seven-day and two-day reminders", () => {
@@ -11,5 +11,13 @@ describe("event reminder plans", () => {
 
   it("parses a date-only application deadline at 9am JST", () => {
     expect(parseApplicationDeadline("2026-08-01")?.toISOString()).toBe("2026-08-01T00:00:00.000Z");
+  });
+
+  it("creates organizer reminders for three days, two days, previous day and same day", () => {
+    const plans = buildOrganizerReminderPlans({ applicationDeadline: "2026-08-10" });
+    expect(plans.map((plan) => plan.kind)).toEqual(["organizer_three_days", "organizer_two_days", "organizer_one_day", "organizer_same_day"]);
+    expect(plans.map((plan) => plan.label)).toEqual(["3日前", "2日前", "前日", "当日"]);
+    expect(plans[0].scheduledAt.toISOString()).toBe("2026-08-07T00:00:00.000Z");
+    expect(plans[3].scheduledAt.toISOString()).toBe("2026-08-10T00:00:00.000Z");
   });
 });

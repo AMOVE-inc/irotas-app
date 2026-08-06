@@ -9,7 +9,7 @@ import { getIrotasPoints, adjustIrotasPoints } from "@/lib/irotas-points-store";
 import { createPaymentRecord } from "@/lib/payment-store";
 import { getGoogleCalendarUrl, getOutlookCalendarUrl } from "@/lib/calendar-links";
 import { toggleEventFavorite, useEventFavorites } from "@/lib/event-favorites-store";
-import { notifyEventConfirmation, scheduleEventReminders } from "@/lib/notifications";
+import { cancelOrganizerDeadlineNotifications, notifyEventConfirmation, scheduleEventReminders } from "@/lib/notifications";
 import { useColors } from "@/hooks/use-colors";
 import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -102,7 +102,7 @@ export default function EventDetailScreen() {
   const confirmedIds = [...new Set([...(event.participants ?? []), ...(event.companionIds ?? [])])];
   const applicantCount = event.applicantIds?.length ?? event.attendees;
   const organizer = getMemberById(event.createdBy);
-  const isGourmetOrganizer = event.eventType === "gourmet" && event.createdBy === CURRENT_USER.id;
+  const isOrganizer = event.createdBy === CURRENT_USER.id;
   const pendingApplicantIds = getPendingGourmetApplicants(event);
 
   const handleJoin = () => {
@@ -218,7 +218,7 @@ export default function EventDetailScreen() {
     );
   };
 
-  const approveGourmetApplicant = (memberId: string) => {
+  const approveApplicant = (memberId: string) => {
     const member = getMemberById(memberId);
     Alert.alert("参加申込を承認", `${member?.name ?? "メンバー"}さんの参加を確定しますか？`, [
       { text: "キャンセル", style: "cancel" },
@@ -231,6 +231,32 @@ export default function EventDetailScreen() {
         await scheduleEventReminders(event, memberId, room.id);
         setEventRevision((value) => value + 1);
         Alert.alert("承認完了", `${member?.name ?? "メンバー"}さんの参加を確定し、参加者チャットへ追加しました。`);
+      } },
+    ]);
+  };
+
+  const handleFinalizeParticipants = () => {
+    if (pendingApplicantIds.length > 0) {
+      Alert.alert("承認待ちがあります", "すべての申込を確認してから参加者確定を完了してください。");
+      return;
+    }
+    Alert.alert("参加者を確定", "現在の参加確定者で専用チャットを作成し、参加者へ通知しますか？", [
+      { text: "戻る", style: "cancel" },
+      { text: "確定する", onPress: async () => {
+        const room = joinEventChat(event.id, event.title, event.chatId, event.createdBy);
+        event.chatId = room.id;
+        for (const memberId of event.participants ?? []) {
+          const alreadyJoined = room.participants.includes(memberId);
+          joinEventChat(event.id, event.title, room.id, memberId);
+          if (!alreadyJoined) {
+            await notifyEventConfirmation(event, memberId, room.id);
+            await scheduleEventReminders(event, memberId, room.id);
+          }
+        }
+        event.participantsFinalizedAt = new Date().toISOString();
+        await cancelOrganizerDeadlineNotifications(event.id);
+        setEventRevision((value) => value + 1);
+        Alert.alert("参加者を確定しました", "確定した参加者を専用チャットへ追加し、通知しました。");
       } },
     ]);
   };
@@ -268,6 +294,7 @@ export default function EventDetailScreen() {
   };
 
   const handleOpenMap = () => {
+    if (event.googleMapsUrl) { void Linking.openURL(event.googleMapsUrl); return; }
     const query = encodeURIComponent(event.location);
     const url = Platform.OS === "ios"
       ? `maps:?q=${query}`
@@ -474,14 +501,14 @@ export default function EventDetailScreen() {
           <IconSymbol name="chevron.right" size={17} color={colors.muted} />
         </Pressable>
 
-        {isGourmetOrganizer ? (
+        {isOrganizer ? (
           <View style={{ backgroundColor: "#F5F8FC", borderRadius: 14, padding: 14, marginBottom: 16, borderWidth: 1, borderColor: "#DCE7F2" }}>
             <Text style={{ fontSize: 16, fontWeight: "900", color: colors.foreground }}>幹事メニュー</Text>
             <Text style={{ fontSize: 12, lineHeight: 18, color: colors.muted, marginTop: 4 }}>申込を承認すると参加が確定し、自動で参加者チャットに追加されます。</Text>
             <Text style={{ fontSize: 13, fontWeight: "800", color: colors.foreground, marginTop: 14, marginBottom: 7 }}>承認待ち（{pendingApplicantIds.length}人）</Text>
             {pendingApplicantIds.length ? pendingApplicantIds.map((memberId) => {
               const member = getMemberById(memberId);
-              return <View key={memberId} style={{ flexDirection: "row", alignItems: "center", paddingVertical: 8, borderTopWidth: 0.5, borderTopColor: colors.border }}><Pressable onPress={() => openMemberProfile(memberId)} style={{ flex: 1, flexDirection: "row", alignItems: "center" }}><Image source={member?.avatar ?? DEFAULT_AVATAR} style={{ width: 34, height: 34, borderRadius: 17 }} contentFit="cover" /><Text style={{ flex: 1, marginLeft: 9, fontSize: 14, fontWeight: "700", color: colors.foreground }}>{member?.name ?? "メンバー"}</Text></Pressable><Pressable onPress={() => approveGourmetApplicant(memberId)} style={{ borderRadius: 9, backgroundColor: "#34C759", paddingHorizontal: 12, paddingVertical: 7 }}><Text style={{ color: "#FFF", fontSize: 12, fontWeight: "800" }}>承認</Text></Pressable></View>;
+              return <View key={memberId} style={{ flexDirection: "row", alignItems: "center", paddingVertical: 8, borderTopWidth: 0.5, borderTopColor: colors.border }}><Pressable onPress={() => openMemberProfile(memberId)} style={{ flex: 1, flexDirection: "row", alignItems: "center" }}><Image source={member?.avatar ?? DEFAULT_AVATAR} style={{ width: 34, height: 34, borderRadius: 17 }} contentFit="cover" /><Text style={{ flex: 1, marginLeft: 9, fontSize: 14, fontWeight: "700", color: colors.foreground }}>{member?.name ?? "メンバー"}</Text></Pressable><Pressable onPress={() => approveApplicant(memberId)} style={{ borderRadius: 9, backgroundColor: "#34C759", paddingHorizontal: 12, paddingVertical: 7 }}><Text style={{ color: "#FFF", fontSize: 12, fontWeight: "800" }}>承認</Text></Pressable></View>;
             }) : <Text style={{ fontSize: 13, color: colors.muted, paddingVertical: 8 }}>現在、承認待ちの申込はありません。</Text>}
 
             <Text style={{ fontSize: 13, fontWeight: "800", color: colors.foreground, marginTop: 14, marginBottom: 7 }}>参加確定者</Text>
@@ -490,6 +517,7 @@ export default function EventDetailScreen() {
               return <View key={memberId} style={{ flexDirection: "row", alignItems: "center", paddingVertical: 8, borderTopWidth: 0.5, borderTopColor: colors.border }}><Pressable onPress={() => openMemberProfile(memberId)} style={{ flex: 1, flexDirection: "row", alignItems: "center" }}><Image source={member?.avatar ?? DEFAULT_AVATAR} style={{ width: 34, height: 34, borderRadius: 17 }} contentFit="cover" /><Text style={{ flex: 1, marginLeft: 9, fontSize: 14, fontWeight: "700", color: colors.foreground }}>{member?.name ?? "メンバー"}</Text></Pressable>{memberId !== event.createdBy ? <Pressable onPress={() => cancelGourmetParticipant(memberId)} style={{ borderRadius: 9, borderWidth: 1, borderColor: colors.error, paddingHorizontal: 10, paddingVertical: 6 }}><Text style={{ color: colors.error, fontSize: 11, fontWeight: "800" }}>幹事キャンセル</Text></Pressable> : null}</View>;
             })}
             {event.status !== "open" && (event.participants ?? []).length < event.capacity ? <Pressable onPress={handleReopenGourmetRecruitment} style={{ marginTop: 12, borderRadius: 11, backgroundColor: "#E8A0BF", paddingVertical: 11, alignItems: "center" }}><Text style={{ fontSize: 14, fontWeight: "900", color: "#FFF" }}>追加募集を開始</Text></Pressable> : null}
+            <Pressable disabled={Boolean(event.participantsFinalizedAt)} onPress={handleFinalizeParticipants} style={{ marginTop: 12, borderRadius: 11, backgroundColor: event.participantsFinalizedAt ? "#93C9A0" : "#34A853", paddingVertical: 11, alignItems: "center" }}><Text style={{ fontSize: 14, fontWeight: "900", color: "#FFF" }}>{event.participantsFinalizedAt ? "参加者確定済み" : "参加者確定を完了"}</Text></Pressable>
           </View>
         ) : null}
 
@@ -647,7 +675,7 @@ export default function EventDetailScreen() {
           </View>
         ) : null}
 
-        {event.eventType === "gourmet" && !isJoined && !hasApplied && !isGourmetOrganizer ? (
+        {event.eventType === "gourmet" && !isJoined && !hasApplied && !isOrganizer ? (
           <View style={{ backgroundColor: "#FFF8F0", borderRadius: 14, padding: 14, marginBottom: 16, borderWidth: 1, borderColor: "#EED9BF" }}>
             <Pressable onPress={() => setTermsAccepted((value) => !value)} style={{ flexDirection: "row", alignItems: "center" }}>
               <View style={{ width: 24, height: 24, borderRadius: 6, backgroundColor: termsAccepted ? "#E8A0BF" : colors.surface, borderWidth: 1, borderColor: termsAccepted ? "#E8A0BF" : colors.border, alignItems: "center", justifyContent: "center" }}>{termsAccepted ? <IconSymbol name="checkmark" size={15} color="#FFF" /> : null}</View>
@@ -657,11 +685,7 @@ export default function EventDetailScreen() {
           </View>
         ) : null}
 
-        {event.externalUrl ? (
-          <Pressable onPress={() => Linking.openURL(event.externalUrl!)} style={{ flexDirection: "row", alignItems: "center", backgroundColor: "#EAF5FA", borderRadius: 14, padding: 14, marginBottom: 16 }}>
-            <IconSymbol name="link" size={18} color="#5B9BD5" /><Text style={{ flex: 1, fontSize: 14, fontWeight: "700", color: "#5B9BD5", marginLeft: 8 }} numberOfLines={1}>店舗・イベントURLを開く</Text><IconSymbol name="chevron.right" size={16} color="#5B9BD5" />
-          </Pressable>
-        ) : null}
+        {[{ url: event.tabelogUrl, label: "食べログを開く" }, { url: event.googleMapsUrl, label: "Googleマップを開く" }, { url: !event.tabelogUrl && !event.googleMapsUrl ? event.externalUrl : undefined, label: "店舗・イベントURLを開く" }].map((link) => link.url ? <Pressable key={link.label} onPress={() => Linking.openURL(link.url!)} style={{ flexDirection: "row", alignItems: "center", backgroundColor: "#EAF5FA", borderRadius: 14, padding: 14, marginBottom: 10 }}><IconSymbol name="link" size={18} color="#5B9BD5" /><Text style={{ flex: 1, fontSize: 14, fontWeight: "700", color: "#5B9BD5", marginLeft: 8 }} numberOfLines={1}>{link.label}</Text><IconSymbol name="chevron.right" size={16} color="#5B9BD5" /></Pressable> : null)}
 
         {/* 参加確定者一覧 */}
         {confirmedIds.length > 0 && (
@@ -737,7 +761,7 @@ export default function EventDetailScreen() {
 
         {/* 参加ボタン */}
         <Pressable
-          onPress={isJoined || hasApplied || isGourmetOrganizer || (event.eventType === "gourmet" && !termsAccepted) ? undefined : handleJoin}
+          onPress={isJoined || hasApplied || isOrganizer || (event.eventType === "gourmet" && !termsAccepted) ? undefined : handleJoin}
           style={({ pressed }) => ({
             backgroundColor: isJoined
               ? "#34C759"
@@ -749,11 +773,11 @@ export default function EventDetailScreen() {
             borderRadius: 14,
             paddingVertical: 16,
             alignItems: "center",
-            opacity: event.eventType === "gourmet" && !termsAccepted && !hasApplied && !isJoined && !isGourmetOrganizer ? 0.45 : pressed && !isJoined && !hasApplied ? 0.8 : 1,
+            opacity: event.eventType === "gourmet" && !termsAccepted && !hasApplied && !isJoined && !isOrganizer ? 0.45 : pressed && !isJoined && !hasApplied ? 0.8 : 1,
           })}
         >
           <Text style={{ fontSize: 17, fontWeight: "700", color: "#FFF" }}>
-            {isGourmetOrganizer ? "幹事メニューで申込を管理" : isJoined ? "✓ 参加確定" : hasApplied ? "✓ 申込済み（幹事の承認待ち）" : event.status === "full" ? "満席" : event.eventType === "gourmet" && !termsAccepted ? "規約に同意して申し込む" : event.selectionMethod === "lottery" ? "抽選に申し込む" : "参加を申し込む"}
+            {isOrganizer ? "幹事メニューで申込を管理" : isJoined ? "✓ 参加確定" : hasApplied ? "✓ 申込済み（幹事の承認待ち）" : event.status === "full" ? "満席" : event.eventType === "gourmet" && !termsAccepted ? "規約に同意して申し込む" : event.selectionMethod === "lottery" ? "抽選に申し込む" : "参加を申し込む"}
           </Text>
         </Pressable>
       </View>

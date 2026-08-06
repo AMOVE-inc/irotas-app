@@ -127,6 +127,10 @@ export interface Event {
   privateMemo?: string;
   genres?: string[];
   prefecture?: string;
+  tokyoArea?: string;
+  tabelogUrl?: string;
+  googleMapsUrl?: string;
+  participantsFinalizedAt?: string;
   priceMin?: number;
   priceMax?: number;
 }

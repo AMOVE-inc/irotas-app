@@ -2,13 +2,14 @@ import { ScreenContainer } from "@/components/screen-container";
 import { NewMemberMark } from "@/components/new-member-mark";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { EVENTS, CURRENT_USER, DEFAULT_AVATAR, getMemberById, type Event } from "@/constants/mock-data";
-import { EVENT_BUDGET_RANGES, GOURMET_GENRES, type EventBudgetRangeKey } from "@/constants/event-options";
-import { EVENT_AREA_GROUPS } from "@/constants/event-areas";
+import { GOURMET_GENRES } from "@/constants/event-options";
+import { EVENT_SEARCH_AREA_GROUPS } from "@/constants/event-areas";
 import { useAuthContext } from "@/lib/auth-context";
 import { getAllEvents } from "@/lib/event-store";
 import { DEFAULT_EVENT_SORT_ORDER, filterAndSortEvents, type EventSortOrder, type EventTypeFilter } from "@/lib/event-filters";
 import { getEventParticipationStatus } from "@/lib/event-participation";
 import { toggleEventFavorite, useEventFavorites } from "@/lib/event-favorites-store";
+import { formatEventArea, TOKYO_EVENT_AREAS } from "@/lib/event-location";
 import { useColors } from "@/hooks/use-colors";
 import { Image } from "expo-image";
 import { useFocusEffect, useRouter } from "expo-router";
@@ -31,6 +32,14 @@ const TYPE_FILTERS = [
 ] as const;
 
 const WEEKDAYS = ["日", "月", "火", "水", "木", "金", "土"];
+const OFFICIAL_EVENT_MARK = require("@/assets/images/iro-plus-logo.png");
+const BUDGET_VALUES = Array.from({ length: 300 }, (_, index) => String((index + 1) * 1000));
+
+function BudgetSelect({ label, value, options, onChange }: { label: string; value: string; options: string[]; onChange: (value: string) => void }) {
+  const colors = useColors();
+  const [visible, setVisible] = useState(false);
+  return <><Pressable onPress={() => setVisible(true)} style={{ flex: 1, height: 46, borderRadius: 11, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface, paddingHorizontal: 12, flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}><Text style={{ fontSize: 13, color: colors.foreground }}>{value === "none" ? label : `${Number(value).toLocaleString()}円`}</Text><IconSymbol name="chevron.down" size={15} color={colors.muted} /></Pressable><Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setVisible(false)}><View style={{ flex: 1, backgroundColor: colors.background }}><View style={{ flexDirection: "row", alignItems: "center", padding: 16, borderBottomWidth: 0.5, borderBottomColor: colors.border }}><Text style={{ flex: 1, fontSize: 18, fontWeight: "900", color: colors.foreground }}>{label}</Text><Pressable onPress={() => setVisible(false)}><Text style={{ color: "#9C4F73", fontWeight: "800" }}>閉じる</Text></Pressable></View><ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 32 }}><Pressable onPress={() => { onChange("none"); setVisible(false); }} style={{ paddingVertical: 14, borderBottomWidth: 0.5, borderBottomColor: colors.border }}><Text style={{ fontSize: 15, color: colors.foreground }}>{label}</Text></Pressable>{options.map((option) => <Pressable key={option} onPress={() => { onChange(option); setVisible(false); }} style={{ paddingVertical: 13, borderBottomWidth: 0.5, borderBottomColor: colors.border }}><Text style={{ fontSize: 15, color: colors.foreground }}>{Number(option).toLocaleString()}円</Text></Pressable>)}</ScrollView></View></Modal></>;
+}
 
 function formatCalendarValue(date: Date): string {
   const year = date.getFullYear();
@@ -240,6 +249,9 @@ function EventCard({ event, onPress, isFavorite, onToggleFavorite }: { event: Ev
   const participationStatus = getEventParticipationStatus(event, CURRENT_USER.id);
   const isConfirmed = participationStatus === "confirmed";
   const isApplied = participationStatus === "applied";
+  const remainingCapacity = Math.max(event.capacity - confirmedCount, 0);
+  const reservationCapacity = event.reservationCapacity ?? event.capacity + 1;
+  const locationLabel = formatEventArea(event.prefecture, event.tokyoArea, event.location);
 
   const formatDate = (dateStr: string) => {
     const d = new Date(dateStr);
@@ -263,32 +275,24 @@ function EventCard({ event, onPress, isFavorite, onToggleFavorite }: { event: Ev
         minHeight: 142,
       }}
     >
-      <Image
-        source={event.image}
-        style={{ width: 142, height: 142, alignSelf: "flex-start" }}
-        contentFit="cover"
-        transition={300}
-      />
+      <View style={{ width: 142, height: 142 }}><Image source={event.image} style={{ width: 142, height: 142 }} contentFit="cover" transition={300} />{event.eventType === "official" ? <View style={{ position: "absolute", left: 7, top: 7, width: 31, height: 31, borderRadius: 16, backgroundColor: "#FFFFFFEE", alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: "#E8A0BF" }}><Image source={OFFICIAL_EVENT_MARK} style={{ width: 25, height: 25, borderRadius: 13 }} contentFit="contain" /></View> : null}</View>
       <View style={{ flex: 1, paddingHorizontal: 11, paddingVertical: 9 }}>
         <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 5 }}>
           <Text style={{ flex: 1, fontSize: 13, fontWeight: "900", color: colors.foreground }}>{formatDate(event.date)} {event.time}</Text>
           <Pressable onPress={(pressEvent) => { pressEvent.stopPropagation?.(); onToggleFavorite(); }} accessibilityLabel={isFavorite ? "お気に入りから削除" : "お気に入りに追加"} hitSlop={8} style={{ padding: 3, marginRight: 3 }}>
             <IconSymbol name={isFavorite ? "heart.fill" : "heart"} size={18} color={isFavorite ? "#D85B86" : colors.muted} />
           </Pressable>
-          <StatusBadge status={event.status} />
+          <View style={{ flexDirection: "row", gap: 4 }}><StatusBadge status={event.status} />{isConfirmed ? <Text style={{ fontSize: 9, fontWeight: "900", color: "#237A3B", backgroundColor: "#E6F6EA", borderRadius: 7, paddingHorizontal: 7, paddingVertical: 4 }}>参加確定</Text> : null}</View>
         </View>
         <Text style={{ fontSize: 14, lineHeight: 19, fontWeight: "900", color: colors.foreground }}>{event.title}</Text>
         {event.restaurantName && event.restaurantName !== event.title ? <Text style={{ fontSize: 11, lineHeight: 16, fontWeight: "700", color: colors.foreground, marginTop: 3 }}>店名：{event.restaurantName}</Text> : null}
-        <Text style={{ fontSize: 10, lineHeight: 15, color: colors.muted, marginTop: 2 }}>場所：{event.location}</Text>
+        <Text style={{ fontSize: 10, lineHeight: 15, color: colors.muted, marginTop: 2 }}>場所：{locationLabel}</Text>
         <View style={{ flexDirection: "row", alignItems: "center", marginTop: 5 }}>
-          <Text style={{ fontSize: 11, fontWeight: "900", color: "#34A853" }}>{confirmedCount}/{event.capacity}人</Text>
-          <Text style={{ fontSize: 10, color: colors.muted, marginLeft: 5 }}>参加確定／募集人数</Text>
+          <Text style={{ fontSize: 10, fontWeight: "900", color: "#34A853" }}>{remainingCapacity}名(残り枠)/{reservationCapacity}名(予約人数) {event.status === "open" ? "募集中" : ""}</Text>
         </View>
         <View style={{ flexDirection: "row", alignItems: "center", flexWrap: "wrap", gap: 5, marginTop: 5 }}>
-          <Text style={{ color: event.eventType === "official" ? "#B75E87" : "#4A86A8", backgroundColor: event.eventType === "official" ? "#FCEAF2" : "#EAF5FA", borderRadius: 7, paddingHorizontal: 7, paddingVertical: 2, fontSize: 9, fontWeight: "800" }}>{event.eventType === "official" ? "公式" : "グルメ会"}</Text>
           {event.selectionMethod ? <Text style={{ fontSize: 9, fontWeight: "700", color: colors.muted }}>{event.selectionMethod === "lottery" ? "抽選" : "先着順"}</Text> : null}
           {isApplied ? <Text style={{ fontSize: 9, fontWeight: "900", color: "#3E78A1", backgroundColor: "#E8F2FA", borderRadius: 7, paddingHorizontal: 7, paddingVertical: 2 }}>申込中</Text> : null}
-          {isConfirmed ? <Text style={{ fontSize: 9, fontWeight: "900", color: "#237A3B", backgroundColor: "#E6F6EA", borderRadius: 7, paddingHorizontal: 7, paddingVertical: 2 }}>参加確定</Text> : null}
         </View>
         <View style={{ flexDirection: "row", alignItems: "center", marginTop: 5 }}>
           <Image source={event.eventType === "official" ? DEFAULT_AVATAR : (organizer?.avatar ?? DEFAULT_AVATAR)} style={{ width: 18, height: 18, borderRadius: 9 }} contentFit="cover" />
@@ -315,7 +319,8 @@ export default function EventsScreen() {
   const [sortMenuVisible, setSortMenuVisible] = useState(false);
   const [detailSearchVisible, setDetailSearchVisible] = useState(false);
   const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
-  const [budgetRanges, setBudgetRanges] = useState<EventBudgetRangeKey[]>([]);
+  const [budgetMin, setBudgetMin] = useState("none");
+  const [budgetMax, setBudgetMax] = useState("none");
   const [selectedAreas, setSelectedAreas] = useState<string[]>([]);
   const [keyword, setKeyword] = useState("");
   const [startDate, setStartDate] = useState("");
@@ -343,11 +348,12 @@ export default function EventsScreen() {
       favoriteOnly,
       favoriteEventIds,
       genres: selectedGenres,
-      budgetRanges: budgetRanges.map((key) => EVENT_BUDGET_RANGES.find((range) => range.key === key)).filter((range) => range && range.key !== "all").map((range) => ({ min: range && "min" in range ? range.min : undefined, max: range && "max" in range ? range.max : undefined })),
+      budgetMin: budgetMin === "none" ? undefined : Number(budgetMin),
+      budgetMax: budgetMax === "none" ? undefined : Number(budgetMax),
       areas: selectedAreas,
       keyword,
     }),
-    [allEvents, eventType, openOnly, startDate, endDate, sortOrder, hostedByMe, appliedOnly, confirmedOnly, favoriteOnly, favoriteEventIds, selectedGenres, budgetRanges, selectedAreas, keyword],
+    [allEvents, eventType, openOnly, startDate, endDate, sortOrder, hostedByMe, appliedOnly, confirmedOnly, favoriteOnly, favoriteEventIds, selectedGenres, budgetMin, budgetMax, selectedAreas, keyword],
   );
 
   const eventTypeLabel = eventType === "official"
@@ -355,11 +361,11 @@ export default function EventsScreen() {
     : eventType === "gourmet"
       ? "グルメ会"
       : "すべてのイベント";
-  const detailFilterCount = selectedGenres.length + budgetRanges.length + selectedAreas.length + (keyword.trim() ? 1 : 0) + (favoriteOnly ? 1 : 0);
+  const detailFilterCount = selectedGenres.length + selectedAreas.length + (budgetMin !== "none" ? 1 : 0) + (budgetMax !== "none" ? 1 : 0) + (keyword.trim() ? 1 : 0) + (favoriteOnly ? 1 : 0);
 
   const resetSearchConditions = useCallback(() => {
     setEventType("all"); setOpenOnly(false); setHostedByMe(false); setAppliedOnly(false); setConfirmedOnly(false); setFavoriteOnly(false); setSortOrder(DEFAULT_EVENT_SORT_ORDER);
-    setSelectedGenres([]); setBudgetRanges([]); setSelectedAreas([]); setKeyword(""); setStartDate(""); setEndDate("");
+    setSelectedGenres([]); setBudgetMin("none"); setBudgetMax("none"); setSelectedAreas([]); setKeyword(""); setStartDate(""); setEndDate("");
   }, []);
 
   const onRefresh = useCallback(() => {
@@ -530,6 +536,7 @@ export default function EventsScreen() {
             <Text style={{ fontSize: 15, color: colors.muted, marginTop: 12 }}>
               イベントがありません
             </Text>
+            {hostedByMe ? <Text style={{ maxWidth: 300, textAlign: "center", fontSize: 13, lineHeight: 20, color: colors.muted, marginTop: 10 }}>新規でイベントを企画する場合は、右下の＋ボタンから募集ができます。</Text> : null}
           </View>
         }
       />
@@ -557,15 +564,17 @@ export default function EventsScreen() {
             <View style={{ flexDirection: "row", alignItems: "center", backgroundColor: colors.surface, borderRadius: 12, borderWidth: 1, borderColor: colors.border, paddingHorizontal: 12, marginBottom: 24 }}><IconSymbol name="magnifyingglass" size={18} color={colors.muted} /><TextInput value={keyword} onChangeText={setKeyword} placeholder="店名・イベント名・住所・ジャンル" placeholderTextColor={colors.muted} style={{ flex: 1, fontSize: 14, color: colors.foreground, paddingVertical: 12, marginLeft: 7 }} />{keyword ? <Pressable onPress={() => setKeyword("")}><IconSymbol name="xmark" size={16} color={colors.muted} /></Pressable> : null}</View>
 
             <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}><Text style={{ fontSize: 16, fontWeight: "800", color: colors.foreground }}>エリア</Text><Pressable disabled={!selectedAreas.length} onPress={() => setSelectedAreas([])}><Text style={{ fontSize: 12, color: selectedAreas.length ? "#9C4F73" : colors.border }}>選択解除</Text></Pressable></View>
-            <Text style={{ fontSize: 12, color: colors.muted, marginBottom: 12 }}>地域・都道府県を複数選択できます</Text>
-            {EVENT_AREA_GROUPS.map((group) => <View key={group.value} style={{ marginBottom: 15 }}><Pressable onPress={() => setSelectedAreas((current) => current.includes(group.value) ? current.filter((item) => item !== group.value) : [...current, group.value])} style={{ flexDirection: "row", alignItems: "center", marginBottom: 7 }}><View style={{ width: 21, height: 21, borderRadius: 6, backgroundColor: selectedAreas.includes(group.value) ? "#5D5C74" : colors.surface, borderWidth: 1, borderColor: selectedAreas.includes(group.value) ? "#5D5C74" : colors.border, alignItems: "center", justifyContent: "center" }}>{selectedAreas.includes(group.value) ? <IconSymbol name="checkmark" size={13} color="#FFF" /> : null}</View><Text style={{ marginLeft: 8, fontSize: 14, fontWeight: "900", color: colors.foreground }}>{group.region}</Text></Pressable><View style={{ flexDirection: "row", flexWrap: "wrap", gap: 7 }}>{group.prefectures.map((prefecture) => { const value = `pref:${prefecture}`; const selected = selectedAreas.includes(value); return <Pressable key={prefecture} onPress={() => setSelectedAreas((current) => selected ? current.filter((item) => item !== value) : [...current, value])} style={{ paddingHorizontal: 10, paddingVertical: 6, borderRadius: 15, backgroundColor: selected ? "#E9D4DE" : colors.surface, borderWidth: 1, borderColor: selected ? "#9C4F73" : colors.border }}><Text style={{ fontSize: 11, fontWeight: "700", color: selected ? "#9C4F73" : colors.foreground }}>{prefecture.replace(/[都府県]$/, "")}</Text></Pressable>; })}</View></View>)}
+            <Text style={{ fontSize: 12, color: colors.muted, marginBottom: 12 }}>複数選択できます。東京はエリアまで指定できます</Text>
+            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>{EVENT_SEARCH_AREA_GROUPS.map((group) => { const selected = selectedAreas.includes(group.value); return <Pressable key={group.value} onPress={() => setSelectedAreas((current) => selected ? current.filter((item) => item !== group.value) : [...current, group.value])} style={{ paddingHorizontal: 12, paddingVertical: 8, borderRadius: 18, backgroundColor: selected ? "#5D5C74" : colors.surface, borderWidth: 1, borderColor: selected ? "#5D5C74" : colors.border }}><Text style={{ fontSize: 12, fontWeight: "800", color: selected ? "#FFF" : colors.foreground }}>{group.label}</Text></Pressable>; })}</View>
+            <Text style={{ fontSize: 13, fontWeight: "800", color: colors.foreground, marginTop: 16, marginBottom: 8 }}>東京のエリア</Text>
+            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 7 }}>{TOKYO_EVENT_AREAS.map((area) => { const value = `tokyo:${area.key}`; const selected = selectedAreas.includes(value); return <Pressable key={area.key} onPress={() => setSelectedAreas((current) => selected ? current.filter((item) => item !== value) : [...current, value])} style={{ paddingHorizontal: 10, paddingVertical: 7, borderRadius: 15, backgroundColor: selected ? "#E9D4DE" : colors.surface, borderWidth: 1, borderColor: selected ? "#9C4F73" : colors.border }}><Text style={{ fontSize: 11, fontWeight: "700", color: selected ? "#9C4F73" : colors.foreground }}>{area.label}</Text></Pressable>; })}</View>
 
             <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}><Text style={{ fontSize: 16, fontWeight: "800", color: colors.foreground }}>グルメジャンル</Text><Pressable disabled={!selectedGenres.length} onPress={() => setSelectedGenres([])}><Text style={{ fontSize: 12, color: selectedGenres.length ? "#9C4F73" : colors.border }}>選択解除</Text></Pressable></View>
             <Text style={{ fontSize: 12, color: colors.muted, marginBottom: 12 }}>複数選択できます</Text>
             <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>{GOURMET_GENRES.map((genre) => { const selected = selectedGenres.includes(genre); return <Pressable key={genre} onPress={() => setSelectedGenres((current) => selected ? current.filter((item) => item !== genre) : [...current, genre])} style={{ paddingHorizontal: 12, paddingVertical: 8, borderRadius: 18, backgroundColor: selected ? "#5D5C74" : colors.surface, borderWidth: 1, borderColor: selected ? "#5D5C74" : colors.border }}><Text style={{ fontSize: 12, fontWeight: "700", color: selected ? "#FFF" : colors.foreground }}>{genre}</Text></Pressable>; })}</View>
-            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 26, marginBottom: 12 }}><Text style={{ fontSize: 16, fontWeight: "800", color: colors.foreground }}>予算</Text><Pressable disabled={!budgetRanges.length} onPress={() => setBudgetRanges([])}><Text style={{ fontSize: 12, color: budgetRanges.length ? "#9C4F73" : colors.border }}>選択解除</Text></Pressable></View>
-            <Text style={{ fontSize: 12, color: colors.muted, marginBottom: 10 }}>複数選択できます</Text>
-            <View style={{ gap: 8 }}>{EVENT_BUDGET_RANGES.filter((range) => range.key !== "all").map((range) => { const selected = budgetRanges.includes(range.key); return <Pressable key={range.key} onPress={() => setBudgetRanges((current) => selected ? current.filter((item) => item !== range.key) : [...current, range.key])} style={{ flexDirection: "row", alignItems: "center", padding: 14, borderRadius: 12, backgroundColor: selected ? "#F0E7EC" : colors.surface, borderWidth: 1, borderColor: selected ? "#9C4F73" : colors.border }}><Text style={{ flex: 1, fontSize: 14, fontWeight: "700", color: colors.foreground }}>{range.label}</Text>{selected ? <IconSymbol name="checkmark.circle.fill" size={20} color="#9C4F73" /> : null}</Pressable>; })}</View>
+            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 26, marginBottom: 12 }}><Text style={{ fontSize: 16, fontWeight: "800", color: colors.foreground }}>予算</Text><Pressable disabled={budgetMin === "none" && budgetMax === "none"} onPress={() => { setBudgetMin("none"); setBudgetMax("none"); }}><Text style={{ fontSize: 12, color: budgetMin !== "none" || budgetMax !== "none" ? "#9C4F73" : colors.border }}>選択解除</Text></Pressable></View>
+            <Text style={{ fontSize: 12, color: colors.muted, marginBottom: 10 }}>1,000円単位で下限・上限を指定できます</Text>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}><BudgetSelect label="下限なし" value={budgetMin} options={BUDGET_VALUES} onChange={setBudgetMin} /><Text style={{ color: colors.muted }}>〜</Text><BudgetSelect label="上限なし" value={budgetMax} options={BUDGET_VALUES} onChange={setBudgetMax} /></View>
           </ScrollView>
         </View>
       </Modal>
