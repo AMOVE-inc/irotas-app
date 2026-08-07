@@ -210,6 +210,7 @@ export default function RootLayout() {
                 <Stack.Screen name="members" options={{ presentation: "card" }} />
                 <Stack.Screen name="admin-dashboard" options={{ presentation: "card" }} />
                 <Stack.Screen name="gift-campaign" options={{ presentation: "card" }} />
+                <Stack.Screen name="campaigns" options={{ presentation: "card" }} />
                 <Stack.Screen name="gourmet-map" options={{ presentation: "card" }} />
                 <Stack.Screen name="campaign-manager" options={{ presentation: "card" }} />
                 <Stack.Screen name="csv-import" options={{ presentation: "card" }} />

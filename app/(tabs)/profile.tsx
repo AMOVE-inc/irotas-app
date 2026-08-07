@@ -1133,7 +1133,7 @@ export default function ProfileScreen() {
             {
               icon: "megaphone.fill",
               label: "キャンペーン",
-              onPress: () => router.push("/gift-campaign" as any),
+              onPress: () => router.push("/campaigns" as any),
             },
           ]}
         />

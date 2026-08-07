@@ -42,9 +42,13 @@ export const POINT_ACTIONS = {
   boardPost: { points: 5, label: "掲示板投稿" },
   comment: { points: 2, label: "コメント投稿" },
   clubActivity: { points: 3, label: "部活動参加" },
-  restaurantRegister: { points: 8, label: "店舗登録" },
-  eventOrganize: { points: 15, label: "イベント幹事" },
+  mealReportPost: { points: 8, label: "ごちそうさま報告投稿" },
+  eventOrganize: { points: 20, label: "イベント幹事（開催完了時）" },
 } as const;
+
+export function getOrganizerPointAdjustment(outcome: "completed" | "cancelled"): number {
+  return outcome === "completed" ? POINT_ACTIONS.eventOrganize.points : -POINT_ACTIONS.eventOrganize.points;
+}
 
 export const RANK_THRESHOLDS_POINTS = [
   { rank: "regular" as MemberRank, minPoints: 0, label: "レギュラー" },

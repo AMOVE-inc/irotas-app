@@ -16,6 +16,7 @@ import {
   RANK_THRESHOLDS_POINTS,
   getRankFromPoints,
   getNextRankInfo,
+  getOrganizerPointAdjustment,
   getMemberById,
   isAdmin,
   type MemberRank,
@@ -233,8 +234,10 @@ describe("Points-based Rank System", () => {
     expect(POINT_ACTIONS.boardPost.points).toBe(5);
     expect(POINT_ACTIONS.comment.points).toBe(2);
     expect(POINT_ACTIONS.clubActivity.points).toBe(3);
-    expect(POINT_ACTIONS.restaurantRegister.points).toBe(8);
-    expect(POINT_ACTIONS.eventOrganize.points).toBe(15);
+    expect(POINT_ACTIONS.mealReportPost.points).toBe(8);
+    expect(POINT_ACTIONS.eventOrganize.points).toBe(20);
+    expect(getOrganizerPointAdjustment("completed")).toBe(20);
+    expect(getOrganizerPointAdjustment("cancelled")).toBe(-20);
   });
 
   it("RANK_THRESHOLDS_POINTS should have correct thresholds", () => {
