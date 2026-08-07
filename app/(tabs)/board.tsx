@@ -1958,7 +1958,7 @@ export default function BoardScreen() {
         </View>
         {activeGroup === "area" ? (
           <View style={{ paddingHorizontal: 16, paddingVertical: 10 }}>
-            <View style={{ flexDirection: "row", gap: 8, marginBottom: 10 }}>
+            <View style={{ flexDirection: "row", gap: 8 }}>
               {visibleCategories.map((cat) => {
                 const active = activeCategory === cat.key;
                 return <Pressable key={cat.key} onPress={() => setActiveCategory(cat.key)} style={{ flex: 1, alignItems: "center", paddingVertical: 10, borderRadius: 12, backgroundColor: active ? "#5B5A73" : "#ECECF1" }}>
@@ -1966,14 +1966,6 @@ export default function BoardScreen() {
                 </Pressable>;
               })}
             </View>
-            {visibleCategories.filter((cat) => cat.key === activeCategory).map((cat) => {
-              const presentation = categoryPresentation(cat);
-              return <Pressable key={cat.key} onPress={() => handleOpenCategory(cat)} style={{ flexDirection: "row", alignItems: "center", minHeight: 62, borderRadius: 14, paddingHorizontal: 13, paddingVertical: 9, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border }}>
-                <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: `${presentation.accent}20`, alignItems: "center", justifyContent: "center" }}><IconSymbol name={presentation.icon as any} size={21} color={presentation.accent} /></View>
-                <View style={{ flex: 1, marginLeft: 11 }}><Text style={{ fontSize: 15, fontWeight: "900", color: colors.foreground }}>{cat.label}の掲示板</Text><Text style={{ fontSize: 11, color: colors.muted, marginTop: 3 }}>支部メンバーの投稿を見る</Text></View>
-                <IconSymbol name="chevron.right" size={17} color={colors.muted} />
-              </Pressable>;
-            })}
           </View>
         ) : (
           <View style={{ paddingHorizontal: 16, paddingVertical: 10, gap: 8 }}>
@@ -1997,7 +1989,7 @@ export default function BoardScreen() {
         {userIsAdmin ? <Pressable onPress={() => setShowAddCategory(true)} style={{ flexDirection: "row", alignItems: "center", alignSelf: "flex-end", marginHorizontal: 16, marginBottom: 10, paddingVertical: 5 }}><IconSymbol name="plus" size={13} color={colors.muted} /><Text style={{ fontSize: 12, color: colors.muted, marginLeft: 4 }}>カテゴリを追加</Text></Pressable> : null}
       </View> : null}
 
-      {isThreadView ? <FlatList
+      {(isThreadView || activeGroup === "area") ? <FlatList
         data={filteredThreads}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
@@ -2022,7 +2014,7 @@ export default function BoardScreen() {
         }
       /> : <View style={{ flex: 1 }} />}
 
-      {isThreadView && (activeCategory !== "gourmet-contest" || userIsAdmin) ? (
+      {(isThreadView || activeGroup === "area") && (activeCategory !== "gourmet-contest" || userIsAdmin) ? (
         <Pressable
           accessibilityLabel={`${categories.find((category) => category.key === activeCategory)?.label ?? "掲示板"}に投稿`}
           onPress={() => setShowCreateThread(true)}
