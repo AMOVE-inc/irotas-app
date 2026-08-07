@@ -165,6 +165,13 @@ function ThreadCard({ thread, onPress, onEdit }: { thread: BoardThread; onPress:
   const isParticipant = thread.recruitParticipants?.includes(CURRENT_USER.id);
   const isAuthorCard = thread.author.id === CURRENT_USER.id;
   const isPlatinum = thread.author.rank === "platinum";
+  const showsRightPreview =
+    thread.category === "gourmet-contest" ||
+    thread.category === "free-chat" ||
+    thread.category === "kanto-branch" ||
+    thread.category === "kansai-branch" ||
+    thread.category.startsWith("club-");
+  const rightPreviewImage = showsRightPreview ? thread.images?.[0] : undefined;
 
   const timeAgo = useCallback((dateStr: string) => {
     const diff = Date.now() - new Date(dateStr).getTime();
@@ -232,27 +239,38 @@ function ThreadCard({ thread, onPress, onEdit }: { thread: BoardThread; onPress:
         </View>
       </Pressable>
 
-      {/* Title */}
-      {!thread.selfIntroduction ? <Text
-        style={{ fontSize: 16, fontWeight: "700", color: colors.foreground, marginBottom: 4 }}
-        numberOfLines={2}
-      >
-        {thread.title}
-      </Text> : null}
+      <View style={{ flexDirection: "row", alignItems: "flex-start" }}>
+        <View style={{ flex: 1, minWidth: 0 }}>
+          {/* Title */}
+          {!thread.selfIntroduction ? <Text
+            style={{ fontSize: 16, fontWeight: "700", color: colors.foreground, marginBottom: 4 }}
+            numberOfLines={2}
+          >
+            {thread.title}
+          </Text> : null}
 
-      {/* Preview */}
-      {thread.mealReport ? (
-        <MealReportContent thread={thread} compact />
-      ) : thread.gourmetAdvice ? (
-        <GourmetAdviceContent thread={thread} compact />
-      ) : thread.selfIntroduction ? (
-        <SelfIntroductionContent thread={thread} compact />
-      ) : (
-        <Text style={{ marginBottom: 8 }} numberOfLines={2}><MentionText content={thread.preview} groups={BOARD_MENTION_GROUPS} /></Text>
-      )}
+          {/* Preview */}
+          {thread.mealReport ? (
+            <MealReportContent thread={thread} compact />
+          ) : thread.gourmetAdvice ? (
+            <GourmetAdviceContent thread={thread} compact />
+          ) : thread.selfIntroduction ? (
+            <SelfIntroductionContent thread={thread} compact />
+          ) : (
+            <Text style={{ marginBottom: 8 }} numberOfLines={2}><MentionText content={thread.preview} groups={BOARD_MENTION_GROUPS} /></Text>
+          )}
+        </View>
+        {rightPreviewImage ? (
+          <Image
+            source={{ uri: rightPreviewImage }}
+            style={{ width: 72, height: 72, borderRadius: 9, marginLeft: 10 }}
+            contentFit="cover"
+          />
+        ) : null}
+      </View>
 
       {/* Images */}
-      {thread.images && thread.images.length > 0 && (
+      {!rightPreviewImage && thread.images && thread.images.length > 0 && (
         <View style={{ flexDirection: "row", gap: 6, marginBottom: 8 }}>
           {thread.images.slice(0, 3).map((uri, i) => (
             <View key={i} style={{ position: "relative" }}>
@@ -1916,26 +1934,6 @@ export default function BoardScreen() {
             掲示板
           </Text>
         )}
-        {!isThreadView ? <View style={{ flexDirection: "row", gap: 8 }}>
-          <Pressable
-            onPress={() => router.push("/concierge" as any)}
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              backgroundColor: "#EEF7FC",
-              borderWidth: 1,
-              borderColor: "#D9EBF6",
-              borderRadius: 20,
-              paddingHorizontal: 12,
-              paddingVertical: 8,
-            }}
-          >
-            <IconSymbol name="sparkles" size={14} color="#A7C7E7" />
-            <Text style={{ fontSize: 12, fontWeight: "700", color: "#A7C7E7", marginLeft: 4 }}>
-              AI相談
-            </Text>
-          </Pressable>
-        </View> : null}
       </View>
 
       {/* 大分類 + スレッド分類 */}
