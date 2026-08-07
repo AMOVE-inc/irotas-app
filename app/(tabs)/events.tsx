@@ -32,7 +32,6 @@ const TYPE_FILTERS = [
 ] as const;
 
 const WEEKDAYS = ["日", "月", "火", "水", "木", "金", "土"];
-const OFFICIAL_EVENT_MARK = require("@/assets/images/iro-plus-logo.png");
 const BUDGET_VALUES = Array.from({ length: 300 }, (_, index) => String((index + 1) * 1000));
 
 function BudgetSelect({ label, value, options, onChange }: { label: string; value: string; options: string[]; onChange: (value: string) => void }) {
@@ -275,7 +274,7 @@ function EventCard({ event, onPress, isFavorite, onToggleFavorite }: { event: Ev
         minHeight: 142,
       }}
     >
-      <View style={{ width: 142, height: 142 }}><Image source={event.image} style={{ width: 142, height: 142 }} contentFit="cover" transition={300} />{event.eventType === "official" ? <View style={{ position: "absolute", left: 7, top: 7, width: 31, height: 31, borderRadius: 16, backgroundColor: "#FFFFFFEE", alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: "#E8A0BF" }}><Image source={OFFICIAL_EVENT_MARK} style={{ width: 25, height: 25, borderRadius: 13 }} contentFit="contain" /></View> : null}</View>
+      <View style={{ width: 142, height: 142 }}><Image source={event.image} style={{ width: 142, height: 142 }} contentFit="cover" transition={300} />{event.eventType === "official" ? <View style={{ position: "absolute", left: 7, top: 7, flexDirection: "row", alignItems: "center", minHeight: 30, borderRadius: 10, backgroundColor: "#FFFFFFF5", paddingHorizontal: 9, borderWidth: 2, borderColor: "#E8A0BF", shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.2, shadowRadius: 4, elevation: 4 }}><Text style={{ fontSize: 11, fontWeight: "900", color: "#171717", letterSpacing: 0.4 }}>IRO+</Text><Text style={{ marginLeft: 4, fontSize: 10, fontWeight: "900", color: "#C94F84" }}>公式</Text></View> : null}</View>
       <View style={{ flex: 1, paddingHorizontal: 11, paddingVertical: 9 }}>
         <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 5 }}>
           <Text style={{ flex: 1, fontSize: 13, fontWeight: "900", color: colors.foreground }}>{formatDate(event.date)} {event.time}</Text>

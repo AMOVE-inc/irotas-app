@@ -52,6 +52,10 @@ const MAPPING = {
   "megaphone.fill": "campaign",
   "music.note": "music-note",
   "trophy.fill": "emoji-events",
+  "fork.knife": "restaurant",
+  "wineglass.fill": "wine-bar",
+  "birthday.cake.fill": "cake",
+  "frying.pan.fill": "restaurant-menu",
   "bookmark.fill": "bookmark",
   "square.and.arrow.up": "share",
   // Chat & messaging

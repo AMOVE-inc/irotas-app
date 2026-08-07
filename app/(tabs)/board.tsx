@@ -1844,14 +1844,20 @@ export default function BoardScreen() {
   );
   const categoryPresentation = (category: BoardCategory) => {
     const club = clubs.find((item) => `club-${item.id}` === category.key);
-    if (club) return { icon: "person.3.fill", description: `${club.memberIds.length}人で活動中`, accent: "#34C759" };
+    if (club) {
+      if (club.name.includes("ラーメン")) return { icon: "fork.knife", description: `${club.memberIds.length}人で活動中`, accent: "#E16B43" };
+      if (club.name.includes("ワイン")) return { icon: "wineglass.fill", description: `${club.memberIds.length}人で活動中`, accent: "#8E5572" };
+      if (club.name.includes("スイーツ")) return { icon: "birthday.cake.fill", description: `${club.memberIds.length}人で活動中`, accent: "#D85B86" };
+      if (club.name.includes("料理")) return { icon: "frying.pan.fill", description: `${club.memberIds.length}人で活動中`, accent: "#D68C35" };
+      return { icon: "person.3.fill", description: `${club.memberIds.length}人で活動中`, accent: "#34C759" };
+    }
     const presentations: Record<string, { icon: string; description: string; accent: string }> = {
-      introduction: { icon: "bubble.left.and.bubble.right.fill", description: "メンバー同士で自己紹介", accent: "#A7C7E7" },
-      "meal-report": { icon: "bubble.left.and.bubble.right.fill", description: "今日食べたお店をみんなに共有", accent: "#A7C7E7" },
-      "gourmet-contest": { icon: "bubble.left.and.bubble.right.fill", description: "コメントとハート投票で今月のグルメ王を決定", accent: "#A7C7E7" },
-      "gourmet-advice": { icon: "bubble.left.and.bubble.right.fill", description: "お店選びやグルメの相談", accent: "#A7C7E7" },
-      "free-chat": { icon: "bubble.left.and.bubble.right.fill", description: "気軽に投稿できる自由な掲示板", accent: "#A7C7E7" },
-      "club-all": { icon: "person.3.fill", description: "各部活の今月の活動をまとめて確認", accent: "#34C759" },
+      introduction: { icon: "person.fill", description: "メンバー同士で自己紹介", accent: "#6A8FB3" },
+      "meal-report": { icon: "fork.knife", description: "今日食べたお店をみんなに共有", accent: "#E16B43" },
+      "gourmet-contest": { icon: "trophy.fill", description: "コメントとハート投票で今月のグルメ王を決定", accent: "#C6962C" },
+      "gourmet-advice": { icon: "sparkles", description: "お店選びやグルメの相談", accent: "#8C6DB0" },
+      "free-chat": { icon: "bubble.left.and.bubble.right.fill", description: "気軽に投稿できる自由な掲示板", accent: "#5F9E8C" },
+      "club-all": { icon: "calendar", description: "各部活の今月の活動をまとめて確認", accent: "#4E8F65" },
     };
     return presentations[category.key] ?? { icon: "bubble.left.and.bubble.right.fill", description: "掲示板カテゴリ", accent: "#A7C7E7" };
   };
