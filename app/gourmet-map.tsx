@@ -7,10 +7,11 @@ import {
 import { GOURMET_MAP_SEED } from "@/constants/gourmet-map-seed";
 import { useAuthContext } from "@/lib/auth-context";
 import { mergeGourmetMapRestaurants, previewGourmetMapCsv, type GourmetMapImportPreview } from "@/lib/gourmet-map-csv";
+import { fetchGourmetMapFeed, mergeGourmetMapFeed } from "@/lib/gourmet-map-feed";
 import { useColors } from "@/hooks/use-colors";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import {
   Alert,
   FlatList,
@@ -366,8 +367,29 @@ export default function GourmetMapScreen() {
   const [selectedRestaurant, setSelectedRestaurant] = useState<Restaurant | null>(null);
   const [showCSVImport, setShowCSVImport] = useState(false);
   const [restaurants, setRestaurants] = useState<Restaurant[]>(SEEDED_RESTAURANTS);
+  const [feedUpdatedAt, setFeedUpdatedAt] = useState<string | null>(null);
   const { user: authUser } = useAuthContext();
   const userIsAdmin = authUser?.role === "admin";
+
+  useEffect(() => {
+    if (Platform.OS !== "web") return;
+    let active = true;
+    fetchGourmetMapFeed()
+      .then((feed) => {
+        if (!active || !feed || feed.restaurants.length === 0) return;
+        setRestaurants((current) => mergeGourmetMapFeed(current, feed.restaurants, CURRENT_USER));
+        setFeedUpdatedAt(feed.updatedAt);
+      })
+      .catch(() => {
+        // 公開フィードが未設定・一時停止中でも、同梱済みの店舗データを表示する。
+      });
+    return () => { active = false; };
+  }, []);
+
+  const updateLabel = useMemo(() => {
+    const date = feedUpdatedAt ? new Date(feedUpdatedAt) : new Date("2026-08-01T00:00:00+09:00");
+    return `${date.getFullYear()}年${date.getMonth() + 1}月更新`;
+  }, [feedUpdatedAt]);
 
   const genres = useMemo(() => [...new Set(restaurants.map((restaurant) => restaurant.genre))].sort(), [restaurants]);
   const filteredRestaurants = restaurants.filter((r) => {
@@ -468,7 +490,7 @@ export default function GourmetMapScreen() {
         </ScrollView>
         <View style={{ marginHorizontal: 16, marginTop: 10, backgroundColor: "#FFF7E8", borderRadius: 12, padding: 11, flexDirection: "row", alignItems: "center" }}>
           <IconSymbol name="checkmark.circle.fill" size={17} color="#C58A24" />
-          <Text style={{ flex: 1, marginLeft: 8, fontSize: 12, lineHeight: 17, color: colors.foreground }}><Text style={{ fontWeight: "900" }}>2026年8月更新</Text>　居酒屋リスト {restaurants.filter((restaurant) => restaurant.sourceList === "居酒屋").length}件</Text>
+          <Text style={{ flex: 1, marginLeft: 8, fontSize: 12, lineHeight: 17, color: colors.foreground }}><Text style={{ fontWeight: "900" }}>{updateLabel}</Text>　居酒屋リスト {restaurants.filter((restaurant) => restaurant.sourceList === "居酒屋").length}件</Text>
         </View>
       </View>
 
