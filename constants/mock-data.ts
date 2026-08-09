@@ -159,6 +159,12 @@ export interface Restaurant {
   registeredBy: Member;
   phone?: string;
   description?: string;
+  placeId?: string;
+  googleMapsUrl?: string;
+  price?: string;
+  sourceList?: string;
+  sourceCategories?: string[];
+  importedAt?: string;
 }
 
 export interface BoardThread {

@@ -1,21 +1,22 @@
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import {
-  RESTAURANTS,
-  GENRES,
   CURRENT_USER,
   type Restaurant,
 } from "@/constants/mock-data";
+import { GOURMET_MAP_SEED } from "@/constants/gourmet-map-seed";
 import { useAuthContext } from "@/lib/auth-context";
+import { mergeGourmetMapRestaurants, previewGourmetMapCsv, type GourmetMapImportPreview } from "@/lib/gourmet-map-csv";
 import { useColors } from "@/hooks/use-colors";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import {
   Alert,
   FlatList,
   Linking,
   Modal,
+  Platform,
   Pressable,
   ScrollView,
   Text,
@@ -23,6 +24,12 @@ import {
   View,
 } from "react-native";
 import { GOOGLE_GOURMET_MAP_LISTS } from "@/constants/external-links";
+
+const SEEDED_RESTAURANTS: Restaurant[] = GOURMET_MAP_SEED.map((restaurant) => ({
+  ...restaurant,
+  sourceCategories: [...restaurant.sourceCategories],
+  registeredBy: CURRENT_USER,
+}));
 
 function RestaurantCard({
   restaurant,
@@ -172,6 +179,12 @@ function RestaurantDetail({
               </Text>
             </View>
           )}
+          {restaurant.price ? (
+            <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 12 }}>
+              <IconSymbol name="yensign.circle.fill" size={18} color="#E8A0BF" />
+              <Text style={{ fontSize: 14, color: colors.foreground, marginLeft: 10 }}>{restaurant.price}</Text>
+            </View>
+          ) : null}
           <View style={{ flexDirection: "row", alignItems: "center" }}>
             <IconSymbol name="person.fill" size={18} color="#E8A0BF" />
             <Text style={{ fontSize: 14, color: colors.foreground, marginLeft: 10 }}>
@@ -190,34 +203,80 @@ function RestaurantDetail({
             </Text>
           </View>
         )}
+        {restaurant.googleMapsUrl ? (
+          <Pressable
+            onPress={() => Linking.openURL(restaurant.googleMapsUrl!)}
+            style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", backgroundColor: "#4285F4", borderRadius: 14, paddingVertical: 14, marginBottom: 24 }}
+          >
+            <IconSymbol name="map.fill" size={18} color="#FFF" />
+            <Text style={{ color: "#FFF", fontSize: 15, fontWeight: "800", marginLeft: 8 }}>Googleマップで見る</Text>
+          </Pressable>
+        ) : null}
       </ScrollView>
     </View>
   );
 }
 
-function CSVImportModal({ visible, onClose }: { visible: boolean; onClose: () => void }) {
+function CSVImportModal({
+  visible,
+  restaurants,
+  onClose,
+  onImport,
+}: {
+  visible: boolean;
+  restaurants: Restaurant[];
+  onClose: () => void;
+  onImport: (restaurants: Restaurant[]) => void;
+}) {
   const colors = useColors();
   const [csvText, setCsvText] = useState("");
+  const [filename, setFilename] = useState("");
+  const [sourceList, setSourceList] = useState("居酒屋");
+  const [preview, setPreview] = useState<GourmetMapImportPreview | null>(null);
 
-  const handleImport = () => {
-    if (!csvText.trim()) {
+  const analyze = (text = csvText, list = sourceList) => {
+    if (!text.trim()) {
       Alert.alert("エラー", "CSVデータを入力してください");
       return;
     }
-    const lines = csvText.trim().split("\n");
-    if (lines.length < 2) {
-      Alert.alert("エラー", "ヘッダー行とデータ行が必要です");
-      return;
-    }
-    const count = lines.length - 1;
-    Alert.alert("取り込み完了", `${count}件の店舗データを取り込みました`, [
-      { text: "OK", onPress: onClose },
-    ]);
+    setPreview(previewGourmetMapCsv(text, list, CURRENT_USER, restaurants));
+  };
+
+  const selectFile = () => {
+    if (Platform.OS !== "web") return;
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = ".csv,text/csv";
+    input.onchange = async () => {
+      const file = input.files?.[0];
+      if (!file) return;
+      const text = await file.text();
+      const inferredList = file.name.replace(/\.csv$/i, "").replace(/^\d{6,8}[_-]?/, "") || "未分類";
+      setFilename(file.name);
+      setCsvText(text);
+      setSourceList(inferredList);
+      setPreview(previewGourmetMapCsv(text, inferredList, CURRENT_USER, restaurants));
+    };
+    input.click();
+  };
+
+  const resetAndClose = () => {
     setCsvText("");
+    setFilename("");
+    setSourceList("居酒屋");
+    setPreview(null);
+    onClose();
+  };
+
+  const handleImport = () => {
+    if (!preview || preview.valid.length === 0 || preview.missingHeaders.length > 0) return;
+    onImport(preview.valid);
+    Alert.alert("取り込み完了", `${preview.valid.length}件を追加しました。${preview.duplicateCount > 0 ? ` 重複${preview.duplicateCount}件は除外しました。` : ""}`);
+    resetAndClose();
   };
 
   return (
-    <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
+    <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={resetAndClose}>
       <View style={{ flex: 1, backgroundColor: colors.background }}>
         <View
           style={{
@@ -231,15 +290,13 @@ function CSVImportModal({ visible, onClose }: { visible: boolean; onClose: () =>
             borderBottomColor: colors.border,
           }}
         >
-          <Pressable onPress={onClose}>
+          <Pressable onPress={resetAndClose}>
             <Text style={{ fontSize: 16, color: colors.muted }}>キャンセル</Text>
           </Pressable>
           <Text style={{ fontSize: 17, fontWeight: "700", color: colors.foreground }}>
             CSV取り込み
           </Text>
-          <Pressable onPress={handleImport}>
-            <Text style={{ fontSize: 16, fontWeight: "700", color: "#E8A0BF" }}>取り込み</Text>
-          </Pressable>
+          <View style={{ width: 64 }} />
         </View>
         <ScrollView contentContainerStyle={{ padding: 16 }}>
           <View style={{ backgroundColor: "#A7C7E710", borderRadius: 12, padding: 14, marginBottom: 16 }}>
@@ -248,15 +305,21 @@ function CSVImportModal({ visible, onClose }: { visible: boolean; onClose: () =>
             </Text>
             <Text style={{ fontSize: 12, color: colors.muted, lineHeight: 18 }}>
               1行目: ヘッダー行{"\n"}
-              必須列: 店名, ジャンル, 住所{"\n"}
-              任意列: 電話番号, 評価, 説明{"\n\n"}
-              例:{"\n"}
-              店名,ジャンル,住所,電話番号,評価{"\n"}
-              焼肉太郎,焼肉,東京都渋谷区...,03-1234-5678,4.5
+              G Maps Extractorから出力したCSVに対応しています。{"\n"}
+              メモ内の改行を含むCSVも正しく解析し、Place ID・GoogleマップURL・店名＋住所の順で重複を除外します。
             </Text>
           </View>
+          {Platform.OS === "web" ? (
+            <Pressable onPress={selectFile} style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", backgroundColor: "#5B5A73", borderRadius: 14, paddingVertical: 14, marginBottom: 14 }}>
+              <IconSymbol name="doc.fill" size={17} color="#FFF" />
+              <Text style={{ color: "#FFF", fontSize: 15, fontWeight: "800", marginLeft: 8 }}>CSVファイルを選択</Text>
+            </Pressable>
+          ) : null}
+          {filename ? <Text style={{ fontSize: 13, color: colors.muted, marginBottom: 12 }}>選択中：{filename}</Text> : null}
+          <Text style={{ fontSize: 14, fontWeight: "700", color: colors.foreground, marginBottom: 8 }}>保存リスト名</Text>
+          <TextInput value={sourceList} onChangeText={(value) => { setSourceList(value); setPreview(null); }} placeholder="居酒屋" placeholderTextColor={colors.muted} style={{ backgroundColor: colors.surface, borderRadius: 12, padding: 13, fontSize: 14, color: colors.foreground, borderWidth: 1, borderColor: colors.border, marginBottom: 14 }} />
           <Text style={{ fontSize: 14, fontWeight: "600", color: colors.foreground, marginBottom: 8 }}>
-            CSVデータを貼り付け
+            CSVデータを貼り付けても確認できます
           </Text>
           <TextInput
             value={csvText}
@@ -271,14 +334,24 @@ function CSVImportModal({ visible, onClose }: { visible: boolean; onClose: () =>
               padding: 14,
               fontSize: 13,
               color: colors.foreground,
-              minHeight: 200,
+            minHeight: 120,
               borderWidth: 1,
               borderColor: colors.border,
             }}
           />
-          <Text style={{ fontSize: 12, color: colors.muted, marginTop: 12 }}>
-            ※ 定期的にCSVファイルを取り込むことでグルメマップを更新できます
-          </Text>
+          <Pressable onPress={() => analyze()} style={{ alignItems: "center", backgroundColor: "#EAF5FA", borderRadius: 12, paddingVertical: 12, marginTop: 12 }}><Text style={{ color: "#4E8FBE", fontSize: 14, fontWeight: "800" }}>取込内容を確認</Text></Pressable>
+          {preview ? (
+            <View style={{ marginTop: 16 }}>
+              <Text style={{ fontSize: 16, fontWeight: "900", color: colors.foreground, marginBottom: 10 }}>取込プレビュー</Text>
+              <View style={{ flexDirection: "row", gap: 8, marginBottom: 12 }}>
+                {[{ label: "取込可能", value: preview.valid.length, color: "#2E8B57" }, { label: "重複", value: preview.duplicateCount, color: "#C58A24" }, { label: "要確認", value: preview.errors.length, color: "#C94B55" }].map((item) => <View key={item.label} style={{ flex: 1, backgroundColor: `${item.color}12`, borderRadius: 12, padding: 10 }}><Text style={{ fontSize: 11, color: colors.muted }}>{item.label}</Text><Text style={{ fontSize: 22, fontWeight: "900", color: item.color }}>{item.value}</Text></View>)}
+              </View>
+              {preview.missingHeaders.length > 0 ? <View style={{ backgroundColor: "#FDECEE", borderRadius: 12, padding: 12, marginBottom: 10 }}><Text style={{ color: "#B53A45", fontWeight: "800" }}>不足している列</Text><Text style={{ color: "#B53A45", marginTop: 4 }}>{preview.missingHeaders.join("、")}</Text></View> : null}
+              {preview.errors.slice(0, 5).map((error) => <View key={`${error.row}-${error.name}`} style={{ borderBottomWidth: 1, borderBottomColor: colors.border, paddingVertical: 8 }}><Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground }}>{error.row}行目：{error.name}</Text><Text style={{ fontSize: 12, color: "#C94B55", marginTop: 2 }}>{error.reasons.join("、")}</Text></View>)}
+              {preview.valid.slice(0, 3).map((restaurant) => <View key={restaurant.id} style={{ flexDirection: "row", alignItems: "center", paddingVertical: 8 }}><Image source={{ uri: restaurant.image }} style={{ width: 44, height: 44, borderRadius: 8 }} contentFit="cover" /><View style={{ flex: 1, marginLeft: 10 }}><Text numberOfLines={1} style={{ fontSize: 13, fontWeight: "800", color: colors.foreground }}>{restaurant.name}</Text><Text numberOfLines={1} style={{ fontSize: 11, color: colors.muted }}>{restaurant.address}</Text></View></View>)}
+              <Pressable onPress={handleImport} disabled={preview.valid.length === 0 || preview.missingHeaders.length > 0} style={{ alignItems: "center", backgroundColor: preview.valid.length > 0 && preview.missingHeaders.length === 0 ? "#E8A0BF" : colors.border, borderRadius: 14, paddingVertical: 14, marginTop: 12 }}><Text style={{ color: "#FFF", fontSize: 15, fontWeight: "900" }}>{preview.valid.length}件を取り込む</Text></Pressable>
+            </View>
+          ) : null}
         </ScrollView>
       </View>
     </Modal>
@@ -292,15 +365,18 @@ export default function GourmetMapScreen() {
   const [selectedGenre, setSelectedGenre] = useState<string | null>(null);
   const [selectedRestaurant, setSelectedRestaurant] = useState<Restaurant | null>(null);
   const [showCSVImport, setShowCSVImport] = useState(false);
+  const [restaurants, setRestaurants] = useState<Restaurant[]>(SEEDED_RESTAURANTS);
   const { user: authUser } = useAuthContext();
   const userIsAdmin = authUser?.role === "admin";
 
-  const filteredRestaurants = RESTAURANTS.filter((r) => {
+  const genres = useMemo(() => [...new Set(restaurants.map((restaurant) => restaurant.genre))].sort(), [restaurants]);
+  const filteredRestaurants = restaurants.filter((r) => {
     const matchSearch =
       !searchQuery ||
       r.name.includes(searchQuery) ||
       r.address.includes(searchQuery) ||
-      r.genre.includes(searchQuery);
+      r.genre.includes(searchQuery) ||
+      r.sourceCategories?.some((category) => category.includes(searchQuery));
     const matchGenre = !selectedGenre || r.genre === selectedGenre;
     return matchSearch && matchGenre;
   });
@@ -390,6 +466,10 @@ export default function GourmetMapScreen() {
             </Pressable>
           ))}
         </ScrollView>
+        <View style={{ marginHorizontal: 16, marginTop: 10, backgroundColor: "#FFF7E8", borderRadius: 12, padding: 11, flexDirection: "row", alignItems: "center" }}>
+          <IconSymbol name="checkmark.circle.fill" size={17} color="#C58A24" />
+          <Text style={{ flex: 1, marginLeft: 8, fontSize: 12, lineHeight: 17, color: colors.foreground }}><Text style={{ fontWeight: "900" }}>2026年8月更新</Text>　居酒屋リスト {restaurants.filter((restaurant) => restaurant.sourceList === "居酒屋").length}件</Text>
+        </View>
       </View>
 
       {/* Search bar */}
@@ -438,7 +518,7 @@ export default function GourmetMapScreen() {
         }}
         style={{ flexGrow: 0 }}
       >
-        {[{ label: "すべて", value: null }, ...GENRES.map((g) => ({ label: g, value: g }))].map((item) => {
+        {[{ label: "すべて", value: null }, ...genres.map((g) => ({ label: g, value: g }))].map((item) => {
           const isActive = item.value === null ? !selectedGenre : selectedGenre === item.value;
           return (
             <Pressable
@@ -510,7 +590,9 @@ export default function GourmetMapScreen() {
       {/* CSV Import Modal */}
       <CSVImportModal
         visible={showCSVImport}
+        restaurants={restaurants}
         onClose={() => setShowCSVImport(false)}
+        onImport={(incoming) => setRestaurants((current) => mergeGourmetMapRestaurants(current, incoming))}
       />
     </ScreenContainer>
   );
