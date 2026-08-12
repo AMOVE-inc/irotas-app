@@ -37,3 +37,8 @@ export function addClub(club: Club) {
   clubs = [...clubs, club];
   emitChange();
 }
+
+export function removeClub(clubId: string) {
+  clubs = clubs.filter((club) => club.id !== clubId);
+  emitChange();
+}

@@ -1829,6 +1829,14 @@ export default function BoardScreen() {
   const isThreadView = view === "threads" && Boolean(categoryParam);
 
   useEffect(() => {
+    setCategories((current) => [
+      ...current.filter((category) => category.group !== "club"),
+      { key: "club-all", label: "今月の部活動レポート", group: "club", createdByAdmin: true },
+      ...clubs.map((club) => ({ key: `club-${club.id}`, label: club.name, group: "club" as const, createdByAdmin: true })),
+    ]);
+  }, [clubs]);
+
+  useEffect(() => {
     if (compose !== "meal-report") return;
     setActiveGroup("all");
     setActiveCategory("meal-report");
@@ -1858,9 +1866,18 @@ export default function BoardScreen() {
     const club = clubs.find((item) => `club-${item.id}` === category.key);
     return Boolean(club && canViewClubThread(authUser?.role, CURRENT_USER.id, club.memberIds));
   };
-  const visibleCategories = categories.filter(
-    (category) => category.group === activeGroup && canAccessCategory(category),
-  );
+  const visibleCategories = categories
+    .filter((category) => category.group === activeGroup && (activeGroup === "club" || canAccessCategory(category)))
+    .sort((a, b) => {
+      if (activeGroup !== "club") return 0;
+      if (a.key === "club-all") return -1;
+      if (b.key === "club-all") return 1;
+      const aClub = clubs.find((club) => `club-${club.id}` === a.key);
+      const bClub = clubs.find((club) => `club-${club.id}` === b.key);
+      const aJoined = Boolean(aClub?.memberIds.includes(CURRENT_USER.id));
+      const bJoined = Boolean(bClub?.memberIds.includes(CURRENT_USER.id));
+      return Number(bJoined) - Number(aJoined);
+    });
   const categoryPresentation = (category: BoardCategory) => {
     const club = clubs.find((item) => `club-${item.id}` === category.key);
     if (club) {
@@ -1904,6 +1921,10 @@ export default function BoardScreen() {
   };
 
   const handleOpenCategory = (category: BoardCategory) => {
+    if (category.group === "club" && category.key !== "club-all" && !canAccessCategory(category)) {
+      router.push("/clubs");
+      return;
+    }
     router.push({ pathname: "/board", params: { category: category.key, view: "threads" } });
   };
 
@@ -1977,14 +1998,15 @@ export default function BoardScreen() {
             {activeGroup === "club" ? <Text style={{ fontSize: 12, fontWeight: "700", color: colors.muted, marginBottom: 1 }}>活動レポートと入部中の部活</Text> : null}
             {visibleCategories.map((cat) => {
               const presentation = categoryPresentation(cat);
+              const isLockedClub = cat.group === "club" && cat.key !== "club-all" && !canAccessCategory(cat);
               return (
                 <Pressable
                   key={cat.key}
                   onPress={() => handleOpenCategory(cat)}
-                  style={{ flexDirection: "row", alignItems: "center", minHeight: 62, borderRadius: 14, paddingHorizontal: 13, paddingVertical: 9, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border }}
+                  style={{ flexDirection: "row", alignItems: "center", minHeight: 62, borderRadius: 14, paddingHorizontal: 13, paddingVertical: 9, backgroundColor: isLockedClub ? "#EFEFF2" : colors.surface, borderWidth: 1, borderColor: colors.border, opacity: isLockedClub ? 0.68 : 1 }}
                 >
                   <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: `${presentation.accent}20`, alignItems: "center", justifyContent: "center" }}><IconSymbol name={presentation.icon as any} size={21} color={presentation.accent} /></View>
-                  <View style={{ flex: 1, marginLeft: 11 }}><Text style={{ fontSize: 15, fontWeight: "900", color: colors.foreground }}>{cat.label}</Text><Text style={{ fontSize: 11, color: colors.muted, marginTop: 3 }}>{presentation.description}</Text></View>
+                  <View style={{ flex: 1, marginLeft: 11 }}><Text style={{ fontSize: 15, fontWeight: "900", color: isLockedClub ? colors.muted : colors.foreground }}>{cat.label}</Text><Text style={{ fontSize: 11, color: colors.muted, marginTop: 3 }}>{isLockedClub ? "未参加・タップして入部申請" : presentation.description}</Text></View>
                   <IconSymbol name="chevron.right" size={17} color={colors.muted} />
                 </Pressable>
               );

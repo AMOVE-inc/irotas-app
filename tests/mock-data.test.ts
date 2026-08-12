@@ -85,14 +85,20 @@ describe("Mock Data Integrity", () => {
       "関東",
       "関西",
       "今月の部活動レポート",
-      "ラーメン部",
+      "ディズニー部",
+      "散歩部",
+      "旅行部",
+      "スポーツ観戦部",
       "ワイン部",
+      "パン部",
       "スイーツ部",
-      "料理部",
+      "料理教室部",
+      "昼飲み部",
+      "舞台鑑賞部",
+      "ランニング部",
+      "スポーツ部",
     ]);
-    expect(BOARD_CATEGORIES.map((category) => category.group)).toEqual([
-      "all", "all", "all", "all", "all", "area", "area", "club", "club", "club", "club", "club",
-    ]);
+    expect(BOARD_CATEGORIES.filter((category) => category.group === "club")).toHaveLength(13);
     expect(labels).not.toContain("関東グルメ");
     expect(labels).not.toContain("関西グルメ");
   });

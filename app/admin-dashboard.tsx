@@ -1,6 +1,6 @@
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
-import { MEMBERS, EVENTS, CLUBS, CURRENT_USER, RANK_LABELS, RANK_COLORS, getRankFromPoints, type Announcement } from "@/constants/mock-data";
+import { MEMBERS, EVENTS, CURRENT_USER, RANK_LABELS, RANK_COLORS, getRankFromPoints, type Announcement, type Club } from "@/constants/mock-data";
 import { useAuthContext } from "@/lib/auth-context";
 import { useColors } from "@/hooks/use-colors";
 import { trpc } from "@/lib/trpc";
@@ -33,6 +33,8 @@ import {
 } from "react-native";
 import { updateCouponUsageType, useCoupons } from "@/lib/coupon-store";
 import { sendRankUpgradeWelcome } from "@/lib/chat-store";
+import { addClub, removeClub, updateClub, useClubs } from "@/lib/club-store";
+import { sendLeaderAppointmentNotification } from "@/lib/notifications";
 
 type PointsHistoryEntry = {
   id: string;
@@ -50,9 +52,11 @@ export default function AdminDashboardScreen() {
   const { user: authUser } = useAuthContext();
   const userIsAdmin = authUser?.role === "admin";
   const coupons = useCoupons();
+  const clubs = useClubs();
 
   // すべての state を条件分岐の外で定義
-  const [activeTab, setActiveTab] = useState<"overview" | "members" | "events" | "payments" | "emails" | "announcements" | "coupons" | "analytics">(tab === "coupons" ? "coupons" : "overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "members" | "events" | "clubs" | "payments" | "emails" | "announcements" | "coupons" | "analytics">(tab === "coupons" ? "coupons" : "overview");
+  const [editingClub, setEditingClub] = useState<Club | null>(null);
   const [paymentRecords, setPaymentRecords] = useState<PaymentRecord[]>([]);
   const [selectedPaymentEventId, setSelectedPaymentEventId] = useState<string | null>(null);
   const [adminIds, setAdminIds] = useState<Set<string>>(new Set(
@@ -102,9 +106,9 @@ export default function AdminDashboardScreen() {
     const openEvents = EVENTS.filter((e) => e.status === "open").length;
     const fullEvents = EVENTS.filter((e) => e.status === "full").length;
     const totalParticipants = EVENTS.reduce((sum, e) => sum + e.attendees, 0);
-    const activeClubs = CLUBS.length;
+    const activeClubs = clubs.length;
     return { rankCounts, openEvents, fullEvents, totalParticipants, activeClubs };
-  }, []);
+  }, [clubs.length]);
 
   useEffect(() => {
     if (!userIsAdmin) return;
@@ -402,8 +406,8 @@ export default function AdminDashboardScreen() {
         }}
         style={{ borderBottomWidth: 0.5, borderBottomColor: colors.border, flexGrow: 0 }}
       >
-        {(["overview", "members", "events", "payments", "emails", "announcements", "coupons", "analytics"] as const).map((tab) => {
-          const labels = { overview: "概要", members: "会員", events: "イベント", payments: "支払管理", emails: "承認メール", announcements: "お知らせ", coupons: "クーポン", analytics: "分析" };
+        {(["overview", "members", "events", "clubs", "payments", "emails", "announcements", "coupons", "analytics"] as const).map((tab) => {
+          const labels = { overview: "概要", members: "会員", events: "イベント", clubs: "部活", payments: "支払管理", emails: "承認メール", announcements: "お知らせ", coupons: "クーポン", analytics: "分析" };
           return (
             <Pressable
               key={tab}
@@ -761,6 +765,26 @@ export default function AdminDashboardScreen() {
                 </View>
               </>
             )}
+          </>
+        )}
+
+        {activeTab === "clubs" && (
+          <>
+            <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 12 }}>
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontSize: 16, fontWeight: "800", color: colors.foreground }}>部活一覧管理</Text>
+                <Text style={{ fontSize: 12, lineHeight: 18, color: colors.muted, marginTop: 3 }}>部長を設定すると、入部申請がその部長に通知されます。</Text>
+              </View>
+              <Pressable onPress={() => setEditingClub({ id: `club_${Date.now()}`, name: "", description: "", icon: "🏃", leaderId: CURRENT_USER.id, memberIds: [CURRENT_USER.id], applicantIds: [], applications: [], createdByAdmin: true, events: [] })} style={{ backgroundColor: "#E8A0BF", borderRadius: 10, paddingHorizontal: 12, paddingVertical: 8 }}><Text style={{ color: "#FFF", fontSize: 12, fontWeight: "800" }}>＋ 新規追加</Text></Pressable>
+            </View>
+            {clubs.map((club) => {
+              const leader = MEMBERS.find((member) => member.id === club.leaderId);
+              return <View key={club.id} style={{ flexDirection: "row", alignItems: "center", backgroundColor: colors.surface, borderRadius: 14, padding: 14, marginBottom: 9, borderWidth: 1, borderColor: colors.border }}>
+                <Text style={{ fontSize: 26, marginRight: 11 }}>{club.icon}</Text>
+                <View style={{ flex: 1 }}><Text style={{ fontSize: 15, fontWeight: "800", color: colors.foreground }}>{club.name}</Text><Text style={{ fontSize: 11, color: colors.muted, marginTop: 3 }}>部長：{leader?.name ?? "未設定"}　部員{club.memberIds.length}名　申請{club.applicantIds.length}件</Text></View>
+                <Pressable onPress={() => setEditingClub({ ...club, memberIds: [...club.memberIds], applicantIds: [...club.applicantIds], applications: [...club.applications], events: [...club.events] })} style={{ padding: 8 }}><Text style={{ fontSize: 12, fontWeight: "800", color: "#5B5A73" }}>編集</Text></Pressable>
+              </View>;
+            })}
           </>
         )}
 
@@ -1236,6 +1260,20 @@ export default function AdminDashboardScreen() {
           <AnalyticsTab />
         )}
       </ScrollView>
+
+      <Modal visible={!!editingClub} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setEditingClub(null)}>
+        {editingClub ? <View style={{ flex: 1, backgroundColor: colors.background }}>
+          <View style={{ flexDirection: "row", alignItems: "center", padding: 16, borderBottomWidth: 1, borderBottomColor: colors.border }}><Pressable onPress={() => setEditingClub(null)}><Text style={{ color: colors.muted }}>キャンセル</Text></Pressable><Text style={{ flex: 1, textAlign: "center", fontSize: 17, fontWeight: "800", color: colors.foreground }}>部活を編集</Text><Pressable onPress={() => { const existing = clubs.some((club) => club.id === editingClub.id); const normalized = { ...editingClub, name: editingClub.name.trim(), description: editingClub.description.trim(), memberIds: editingClub.memberIds.includes(editingClub.leaderId) ? editingClub.memberIds : [editingClub.leaderId, ...editingClub.memberIds] }; if (!normalized.name || !normalized.description) return; existing ? updateClub(normalized) : addClub(normalized); setEditingClub(null); }}><Text style={{ color: "#E8A0BF", fontWeight: "800" }}>保存</Text></Pressable></View>
+          <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
+            <Text style={{ fontSize: 12, fontWeight: "700", color: colors.muted, marginBottom: 6 }}>アイコン</Text><TextInput value={editingClub.icon} onChangeText={(icon) => setEditingClub({ ...editingClub, icon })} maxLength={4} style={{ backgroundColor: colors.surface, borderRadius: 10, padding: 12, fontSize: 22, marginBottom: 14, color: colors.foreground }} />
+            <Text style={{ fontSize: 12, fontWeight: "700", color: colors.muted, marginBottom: 6 }}>部活名</Text><TextInput value={editingClub.name} onChangeText={(name) => setEditingClub({ ...editingClub, name })} style={{ backgroundColor: colors.surface, borderRadius: 10, padding: 12, fontSize: 15, marginBottom: 14, color: colors.foreground }} />
+            <Text style={{ fontSize: 12, fontWeight: "700", color: colors.muted, marginBottom: 6 }}>説明</Text><TextInput value={editingClub.description} onChangeText={(description) => setEditingClub({ ...editingClub, description })} multiline style={{ backgroundColor: colors.surface, borderRadius: 10, padding: 12, fontSize: 15, minHeight: 90, marginBottom: 18, color: colors.foreground, textAlignVertical: "top" }} />
+            <Text style={{ fontSize: 13, fontWeight: "800", color: colors.foreground, marginBottom: 9 }}>部長を選択</Text>
+            {MEMBERS.map((member) => <Pressable key={member.id} onPress={() => { const changed = member.id !== editingClub.leaderId; setEditingClub({ ...editingClub, leaderId: member.id }); if (changed) sendLeaderAppointmentNotification(editingClub.name || "部活", CURRENT_USER.name); }} style={{ flexDirection: "row", alignItems: "center", padding: 12, borderRadius: 10, marginBottom: 6, backgroundColor: editingClub.leaderId === member.id ? "#FFF0F6" : colors.surface, borderWidth: 1, borderColor: editingClub.leaderId === member.id ? "#E8A0BF" : colors.border }}><Text style={{ flex: 1, fontSize: 14, fontWeight: "700", color: colors.foreground }}>{member.name}</Text>{editingClub.leaderId === member.id ? <Text style={{ color: "#E8A0BF", fontWeight: "900" }}>部長</Text> : null}</Pressable>)}
+            {clubs.some((club) => club.id === editingClub.id) ? <Pressable onPress={() => Alert.alert("部活を削除しますか？", `${editingClub.name}を一覧から削除します。`, [{ text: "キャンセル", style: "cancel" }, { text: "削除", style: "destructive", onPress: () => { removeClub(editingClub.id); setEditingClub(null); } }])} style={{ alignItems: "center", paddingVertical: 14, marginTop: 16 }}><Text style={{ color: "#C94B55", fontWeight: "800" }}>この部活を削除</Text></Pressable> : null}
+          </ScrollView>
+        </View> : null}
+      </Modal>
 
       {/* お知らせ作成モーダル */}
       <AnnouncementCreateModal

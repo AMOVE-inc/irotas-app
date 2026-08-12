@@ -748,31 +748,19 @@ export const CHAT_MESSAGES: ChatMessage[] = [
 
 export const CLUBS: Club[] = [
   {
-    id: "club1", name: "ラーメン部", description: "全国のラーメンを食べ歩く部活。月回の活動あり。",
-    leaderId: "u1", memberIds: ["u3", "u1", "u4", "u8"], applicantIds: ["u6"], applications: [{ memberId: "u6", wantsToDo: "話題の新店を巡る月例ラーメン会を企画したいです。", messageToLeader: "ラーメン好きの皆さんと情報交換しながら活動を盛り上げたいです。", status: "pending", appliedAt: "2026-03-25T10:00:00" }], icon: "🍜", createdByAdmin: true,
-    events: [
-      {
-        id: "ce1", title: "渋谷ラーメン巡り", description: "渋谷エリアの名店を巡ります。",
-        date: "2026-04-20", location: "渋谷区", organizerId: "u3",
-        applicantIds: ["u1"], approvedIds: [], maxParticipants: 6,
-      },
-    ],
+    id: "club-disney", name: "ディズニー部", description: "ディズニーが好きなメンバーでパークや作品を楽しむ部活。", leaderId: "u1", memberIds: ["u1", "u2"], applicantIds: [], applications: [], icon: "🐭", createdByAdmin: true, events: [],
   },
-  {
-    id: "club2", name: "ワイン部", description: "ワインの知識を深めながら楽しむ部活。テイスティング会も開催。",
-    leaderId: "u2", memberIds: ["u2", "u4", "u6"], applicantIds: ["u8"], applications: [{ memberId: "u8", wantsToDo: "初心者向けのワイン会を企画したいです。", messageToLeader: "ワインを楽しく学びながら交流したいです。よろしくお願いします。", status: "pending", appliedAt: "2026-03-24T11:00:00" }], icon: "🍷", createdByAdmin: true,
-    events: [],
-  },
-  {
-    id: "club3", name: "スイーツ部", description: "話題のスイーツやカフェを巡る部活。",
-    leaderId: "u5", memberIds: ["u5", "u7", "u1"], applicantIds: [], applications: [], icon: "🍰", createdByAdmin: true,
-    events: [],
-  },
-  {
-    id: "club4", name: "料理部", description: "みんなで料理を作って楽しむ部活。月２回の料理会を開催。",
-    leaderId: "u7", memberIds: ["u7", "u2", "u5"], applicantIds: [], applications: [], icon: "👨‍🍳", createdByAdmin: true,
-    events: [],
-  },
+  { id: "club-walk", name: "散歩部", description: "街歩きや季節の散策を楽しむ部活。", leaderId: "u1", memberIds: ["u1"], applicantIds: [], applications: [], icon: "🚶", createdByAdmin: true, events: [] },
+  { id: "club-travel", name: "旅行部", description: "国内外の旅行情報を交換し、一緒に旅を楽しむ部活。", leaderId: "u1", memberIds: ["u1", "u3"], applicantIds: [], applications: [], icon: "✈️", createdByAdmin: true, events: [] },
+  { id: "club-sports-watch", name: "スポーツ観戦部", description: "野球などのスポーツを一緒に観戦する部活。", leaderId: "u1", memberIds: ["u1"], applicantIds: [], applications: [], icon: "⚾️", createdByAdmin: true, events: [] },
+  { id: "club-wine", name: "ワイン部", description: "ワインの知識を深めながらテイスティングや食事を楽しむ部活。", leaderId: "u1", memberIds: ["u1", "u2", "u4", "u6"], applicantIds: ["u8"], applications: [{ memberId: "u8", wantsToDo: "初心者向けのワイン会を企画したいです。", messageToLeader: "ワインを楽しく学びながら交流したいです。よろしくお願いします。", status: "pending", appliedAt: "2026-03-24T11:00:00" }], icon: "🍷", createdByAdmin: true, events: [] },
+  { id: "club-bread", name: "パン部", description: "話題のベーカリー巡りやパン作りを楽しむ部活。", leaderId: "u1", memberIds: ["u1"], applicantIds: [], applications: [], icon: "🍞", createdByAdmin: true, events: [] },
+  { id: "club-sweets", name: "スイーツ部", description: "話題のスイーツやカフェを巡る部活。", leaderId: "u1", memberIds: ["u1", "u5", "u7"], applicantIds: [], applications: [], icon: "🍰", createdByAdmin: true, events: [] },
+  { id: "club-cooking-class", name: "料理教室部", description: "みんなで料理を学び、作って楽しむ部活。", leaderId: "u1", memberIds: ["u1", "u7"], applicantIds: [], applications: [], icon: "🍳", createdByAdmin: true, events: [] },
+  { id: "club-day-drinking", name: "昼飲み部", description: "休日の昼飲みや明るい時間の食事会を楽しむ部活。", leaderId: "u1", memberIds: ["u1", "u6"], applicantIds: [], applications: [], icon: "🍺", createdByAdmin: true, events: [] },
+  { id: "club-theater", name: "舞台鑑賞部", description: "演劇やミュージカルなどの舞台作品を一緒に鑑賞する部活。", leaderId: "u1", memberIds: ["u1"], applicantIds: [], applications: [], icon: "🎭", createdByAdmin: true, events: [] },
+  { id: "club-running", name: "ランニング部", description: "無理のないペースでランニングを楽しむ部活。", leaderId: "u1", memberIds: ["u1"], applicantIds: [], applications: [], icon: "🏃", createdByAdmin: true, events: [] },
+  { id: "club-sports", name: "スポーツ部", description: "さまざまなスポーツを実際にプレーして楽しむ部活。", leaderId: "u1", memberIds: ["u1"], applicantIds: [], applications: [], icon: "🏀", createdByAdmin: true, events: [] },
 ];
 
 export const COUPONS: Coupon[] = [

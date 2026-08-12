@@ -71,12 +71,12 @@ function ClubCard({ club, onPress }: { club: Club; onPress: () => void }) {
     <Pressable
       onPress={onPress}
       style={({ pressed }) => ({
-        backgroundColor: colors.surface,
+        backgroundColor: isMember ? colors.surface : "#EFEFF2",
         borderRadius: 16,
         marginHorizontal: 16,
         marginBottom: 12,
         padding: 16,
-        opacity: pressed ? 0.8 : 1,
+        opacity: pressed ? 0.72 : (isMember ? 1 : 0.7),
       })}
     >
       <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 10 }}>
@@ -1657,7 +1657,7 @@ export default function ClubsScreen() {
       </View>
 
       <FlatList
-        data={clubs}
+        data={[...clubs].sort((a, b) => Number(b.memberIds.includes(CURRENT_USER.id)) - Number(a.memberIds.includes(CURRENT_USER.id)))}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <ClubCard club={item} onPress={() => setSelectedClub(item)} />
@@ -1667,6 +1667,9 @@ export default function ClubsScreen() {
           <View style={{ paddingHorizontal: 16, marginBottom: 12 }}>
             <Text style={{ fontSize: 13, color: colors.muted }}>
               部活動は審査制です。入部申請を送ると部長が審査を行います。
+            </Text>
+            <Text style={{ fontSize: 12, fontWeight: "800", color: colors.foreground, marginTop: 12 }}>
+              参加中の部活を上に表示しています
             </Text>
           </View>
         }
