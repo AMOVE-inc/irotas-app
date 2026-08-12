@@ -165,6 +165,10 @@ export interface Restaurant {
   sourceList?: string;
   sourceCategories?: string[];
   importedAt?: string;
+  sourceType?: "csv" | "meal_report";
+  sourceThreadId?: string;
+  sourceThreadTitle?: string;
+  memberRating?: number;
 }
 
 export interface BoardThread {

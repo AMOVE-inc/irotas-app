@@ -8,6 +8,7 @@ import { GOURMET_MAP_SEED } from "@/constants/gourmet-map-seed";
 import { useAuthContext } from "@/lib/auth-context";
 import { mergeGourmetMapRestaurants, previewGourmetMapCsv, type GourmetMapImportPreview } from "@/lib/gourmet-map-csv";
 import { fetchGourmetMapFeed, mergeGourmetMapFeed } from "@/lib/gourmet-map-feed";
+import { setCommunityRestaurantPublished } from "@/lib/gourmet-map-community";
 import { useColors } from "@/hooks/use-colors";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
@@ -100,9 +101,15 @@ function RestaurantCard({
 function RestaurantDetail({
   restaurant,
   onClose,
+  onOpenSource,
+  canManage,
+  onUnpublish,
 }: {
   restaurant: Restaurant;
   onClose: () => void;
+  onOpenSource: () => void;
+  canManage: boolean;
+  onUnpublish: () => void;
 }) {
   const colors = useColors();
   return (
@@ -212,6 +219,18 @@ function RestaurantDetail({
             <IconSymbol name="map.fill" size={18} color="#FFF" />
             <Text style={{ color: "#FFF", fontSize: 15, fontWeight: "800", marginLeft: 8 }}>Googleマップで見る</Text>
           </Pressable>
+        ) : null}
+        {restaurant.sourceType === "meal_report" ? (
+          <View style={{ marginTop: -12, marginBottom: 24 }}>
+            <View style={{ alignSelf: "flex-start", backgroundColor: "#FFF2E8", borderRadius: 10, paddingHorizontal: 10, paddingVertical: 5, marginBottom: 10 }}>
+              <Text style={{ color: "#C56537", fontSize: 12, fontWeight: "800" }}>メンバー高評価店　★{restaurant.memberRating}</Text>
+            </View>
+            <Pressable onPress={onOpenSource} style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: 14, paddingVertical: 13 }}>
+              <IconSymbol name="bubble.left.and.bubble.right.fill" size={17} color="#5B5A73" />
+              <Text style={{ color: "#5B5A73", fontSize: 14, fontWeight: "800", marginLeft: 7 }}>元のごちそうさま報告を見る</Text>
+            </Pressable>
+            {canManage ? <Pressable onPress={onUnpublish} style={{ alignItems: "center", paddingVertical: 12, marginTop: 6 }}><Text style={{ color: "#C94B55", fontSize: 13, fontWeight: "700" }}>グルメマップへの掲載を解除</Text></Pressable> : null}
+          </View>
         ) : null}
       </ScrollView>
     </View>
@@ -605,6 +624,23 @@ export default function GourmetMapScreen() {
           <RestaurantDetail
             restaurant={selectedRestaurant}
             onClose={() => setSelectedRestaurant(null)}
+            canManage={userIsAdmin}
+            onOpenSource={() => {
+              setSelectedRestaurant(null);
+              router.push({ pathname: "/board", params: { category: "meal-report", view: "threads" } });
+            }}
+            onUnpublish={() => {
+              const restaurant = selectedRestaurant;
+              Alert.alert("掲載を解除しますか？", `${restaurant.name}をグルメマップから非表示にします。`, [
+                { text: "キャンセル", style: "cancel" },
+                { text: "解除する", style: "destructive", onPress: () => {
+                  void setCommunityRestaurantPublished(restaurant.id, false).then(() => {
+                    setRestaurants((current) => current.filter((item) => item.id !== restaurant.id));
+                    setSelectedRestaurant(null);
+                  }).catch(() => Alert.alert("エラー", "掲載状態を変更できませんでした。"));
+                } },
+              ]);
+            }}
           />
         )}
       </Modal>

@@ -21,6 +21,7 @@ import { useColors } from "@/hooks/use-colors";
 import { createBoardChat } from "@/lib/chat-store";
 import { canManageBoardCategories, canViewClubThread } from "@/lib/access-control";
 import { GOURMET_ADVICE_BUDGETS, isGoogleMapsUrl, MEAL_BUDGETS, MEAL_REPORT_AREAS } from "@/lib/meal-report";
+import { communityRestaurantFromMealReport, registerCommunityRestaurant } from "@/lib/gourmet-map-community";
 import { useClubs } from "@/lib/club-store";
 import { getMentionGroups, getMentionQuery, getMentionedMemberIds, insertMention } from "@/lib/mentions";
 import { sendMentionNotification } from "@/lib/notifications";
@@ -1304,7 +1305,7 @@ function CreateThreadModal({
     restaurantName.trim().length > 0 &&
     prefecture.length > 0 &&
     rating > 0 &&
-    (!googleMapUrl.trim() || isGoogleMapsUrl(googleMapUrl)) &&
+    isGoogleMapsUrl(googleMapUrl) &&
     (!tabelogUrl.trim() || /^https?:\/\/(?:www\.)?tabelog\.com\//i.test(tabelogUrl.trim()));
   const adviceValid = adviceTheme.trim().length > 0 && adviceArea.trim().length > 0 && adviceScene.trim().length > 0 && adviceBudget.length > 0 && adviceComment.trim().length > 0;
   const contestValid = title.trim().length > 0 && content.trim().length > 0 && /^\d{4}-\d{2}-\d{2}$/.test(contestDeadline) && contestPrizeTitle.trim().length > 0 && contestPrizeDescription.trim().length > 0 && /^\d{4}-\d{2}-\d{2}$/.test(contestPrizeExpiresAt);
@@ -1332,7 +1333,7 @@ function CreateThreadModal({
 
   const handleCreate = () => {
     if (isMealReport && !mealReportValid) {
-      setFormError("店名・場所・評価を入力し、リンクを入力する場合は有効なURLを指定してください。");
+      setFormError("店名・場所・評価・有効なGoogleマップURLを入力してください。");
       return;
     }
     if (isGourmetAdvice && !adviceValid) {
@@ -2050,7 +2051,15 @@ export default function BoardScreen() {
         category={activeCategory}
         categories={categories}
         canManage={userIsAdmin}
-        onAdd={(thread) => setDynamicThreads((prev) => [thread, ...prev])}
+        onAdd={(thread) => {
+          setDynamicThreads((prev) => [thread, ...prev]);
+          const submission = communityRestaurantFromMealReport(thread);
+          if (submission) {
+            void registerCommunityRestaurant(submission).catch(() => {
+              Alert.alert("投稿は完了しました", "グルメマップへの自動登録のみ失敗しました。運営が後ほど確認します。");
+            });
+          }
+        }}
       />
 
       {/* Edit Thread Modal - 投稿者本人のみ */}

@@ -10,6 +10,7 @@
 
 var GOURMET_MAP_FOLDER_ID = "1_OM9NWjmOF2bzVkBbv_kJJ_RrjeWijyG";
 var FEED_FILE_NAME = "_irotas_gourmet_map_feed.json";
+var COMMUNITY_FILE_NAME = "_irotas_community_restaurants.json";
 
 function categoryFromFilename(filename) {
   return filename
@@ -82,6 +83,65 @@ function saveFeed(folder, payload) {
   }
 }
 
+function readJsonFile(folder, filename, fallback) {
+  var files = folder.getFilesByName(filename);
+  if (!files.hasNext()) return fallback;
+  try {
+    return JSON.parse(files.next().getBlob().getDataAsString("UTF-8"));
+  } catch (error) {
+    return fallback;
+  }
+}
+
+function writeJsonFile(folder, filename, value) {
+  var files = folder.getFilesByName(filename);
+  var json = JSON.stringify(value);
+  if (files.hasNext()) files.next().setContent(json);
+  else folder.createFile(filename, json, MimeType.PLAIN_TEXT);
+}
+
+function communityRestaurant(record) {
+  var submission = record.submission;
+  var place = record.place || {};
+  var location = place.location || {};
+  var placeId = text(place.id);
+  var fallbackId = Utilities.base64EncodeWebSafe(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, submission.googleMapsUrl)).slice(0, 32);
+  return {
+    id: "community_" + (placeId || fallbackId),
+    placeId: placeId || undefined,
+    name: text(place.displayName && place.displayName.text) || submission.restaurantName,
+    genre: "メンバー高評価店",
+    sourceCategories: ["メンバー高評価店"],
+    address: text(place.formattedAddress) || submission.area,
+    latitude: numberValue(location.latitude),
+    longitude: numberValue(location.longitude),
+    rating: numberValue(place.rating) || submission.memberRating,
+    reviewCount: numberValue(place.userRatingCount),
+    image: submission.image || "https://images.unsplash.com/photo-1515003197210-e0cd71810b5f?w=800",
+    googleMapsUrl: text(place.googleMapsUri) || submission.googleMapsUrl,
+    price: submission.budget || undefined,
+    sourceList: "メンバー高評価店",
+    importedAt: record.updatedAt,
+    sourceType: "meal_report",
+    sourceThreadId: submission.reportId,
+    sourceThreadTitle: submission.reportTitle,
+    memberRating: submission.memberRating
+  };
+}
+
+function mergeCommunityRestaurants(folder, payload) {
+  var records = readJsonFile(folder, COMMUNITY_FILE_NAME, []);
+  records.filter(function (record) { return record.published !== false; }).forEach(function (record) {
+    var restaurant = communityRestaurant(record);
+    var existingIndex = payload.restaurants.findIndex(function (item) {
+      return (restaurant.placeId && item.placeId === restaurant.placeId) || item.googleMapsUrl === restaurant.googleMapsUrl;
+    });
+    if (existingIndex >= 0) payload.restaurants[existingIndex] = Object.assign({}, payload.restaurants[existingIndex], restaurant);
+    else payload.restaurants.push(restaurant);
+  });
+  return payload;
+}
+
 function rebuildGourmetMapFeed() {
   var folder = DriveApp.getFolderById(GOURMET_MAP_FOLDER_ID);
   var iterator = folder.getFiles();
@@ -133,6 +193,7 @@ function rebuildGourmetMapFeed() {
     restaurants: Object.keys(restaurantMap).map(function (key) { return restaurantMap[key]; }),
     errors: errors
   };
+  mergeCommunityRestaurants(folder, payload);
   saveFeed(folder, payload);
   PropertiesService.getScriptProperties().setProperty("LAST_SYNC_SUMMARY", JSON.stringify({
     updatedAt: payload.updatedAt,
@@ -154,6 +215,54 @@ function doGet() {
   return ContentService
     .createTextOutput(JSON.stringify(getSavedFeed()))
     .setMimeType(ContentService.MimeType.JSON);
+}
+
+function doPost(event) {
+  var folder = DriveApp.getFolderById(GOURMET_MAP_FOLDER_ID);
+  var request = JSON.parse(event.postData.contents || "{}");
+  var action = request.action;
+  var payload = request.payload || {};
+  var records = readJsonFile(folder, COMMUNITY_FILE_NAME, []);
+
+  if (action === "upsertMealReport") {
+    var submission = payload;
+    var place = payload.place || null;
+    delete submission.place;
+    var matchIndex = records.findIndex(function (record) {
+      return record.submission.reportId === submission.reportId ||
+        (place && place.id && record.place && record.place.id === place.id) ||
+        record.submission.googleMapsUrl === submission.googleMapsUrl;
+    });
+    var record = {
+      id: matchIndex >= 0 ? records[matchIndex].id : "meal_" + Utilities.getUuid(),
+      submission: submission,
+      place: place,
+      published: true,
+      updatedAt: new Date().toISOString()
+    };
+    if (matchIndex >= 0) records[matchIndex] = record;
+    else records.push(record);
+    writeJsonFile(folder, COMMUNITY_FILE_NAME, records);
+    rebuildGourmetMapFeed();
+    return ContentService.createTextOutput(JSON.stringify({ success: true, duplicate: matchIndex >= 0 })).setMimeType(ContentService.MimeType.JSON);
+  }
+
+  if (action === "setPublished") {
+    var changed = false;
+    records.forEach(function (record) {
+      if (communityRestaurant(record).id === payload.id) {
+        record.published = payload.published;
+        record.updatedAt = new Date().toISOString();
+        changed = true;
+      }
+    });
+    if (!changed) return ContentService.createTextOutput(JSON.stringify({ success: false })).setMimeType(ContentService.MimeType.JSON);
+    writeJsonFile(folder, COMMUNITY_FILE_NAME, records);
+    rebuildGourmetMapFeed();
+    return ContentService.createTextOutput(JSON.stringify({ success: true })).setMimeType(ContentService.MimeType.JSON);
+  }
+
+  return ContentService.createTextOutput(JSON.stringify({ success: false })).setMimeType(ContentService.MimeType.JSON);
 }
 
 function installHourlyTrigger() {
