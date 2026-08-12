@@ -151,6 +151,7 @@ export const appRouter = router({
   allowedEmails: allowedEmailsRouter,
   migration: migrationRouter,
   memberData: router({
+    achievementBadges: protectedProcedure.query(({ ctx }) => db.listAchievementBadges(ctx.user.id)),
     favoriteEventIds: protectedProcedure.query(({ ctx }) => db.listEventFavoriteIds(ctx.user.id)),
     setEventFavorite: protectedProcedure.input(z.object({ eventId: z.number().int().positive(), favorite: z.boolean() })).mutation(async ({ ctx, input }) => { await db.setEventFavorite(ctx.user.id, input.eventId, input.favorite); return { success: true }; }),
     privateNote: protectedProcedure.input(z.object({ targetUserId: z.number().int().positive() })).query(({ ctx, input }) => db.getPrivateMemberNote(ctx.user.id, input.targetUserId)),

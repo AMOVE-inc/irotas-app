@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { classifyRoleName, normalizedRank, parseDiscordRoles } from "../lib/role-migration";
+import { classifyRoleName, isAchievementRole, normalizedRank, parseDiscordRoles } from "../lib/role-migration";
 
 describe("role migration", () => {
   it("parses Discord role IDs while retaining name-only exports", () => {
@@ -23,5 +23,10 @@ describe("role migration", () => {
 
   it("normalizes the member rank", () => {
     expect(normalizedRank("プラチナ会員")).toBe("platinum");
+  });
+
+  it("keeps award roles as profile badges", () => {
+    expect(isAchievementRole("2025 イベント大賞")).toBe(true);
+    expect(isAchievementRole("ワイン部")).toBe(false);
   });
 });

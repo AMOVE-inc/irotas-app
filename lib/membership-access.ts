@@ -9,6 +9,7 @@ export type MembershipAccessRecord = {
 };
 
 export type SubscriptionExemptRole = "member" | "operator" | "club_leader" | null | undefined;
+export const PAYMENT_GRACE_DAYS = 7;
 
 export function canBypassSubscription(userRole: unknown, accessRole: SubscriptionExemptRole): boolean {
   return userRole === "admin" || userRole === "operator" || accessRole === "operator" || accessRole === "club_leader";
@@ -31,4 +32,27 @@ export function canAccessMemberApp(record: MembershipAccessRecord | null | undef
 
 export function accessStatusForSquareStatus(status: SquareSubscriptionStatus): MembershipAccessStatus {
   return status === "ACTIVE" ? "active" : status === "PENDING" ? "pending" : "suspended";
+}
+
+export function addGraceDays(value: string | Date, days = PAYMENT_GRACE_DAYS): Date {
+  const key = value instanceof Date
+    ? new Intl.DateTimeFormat("sv-SE", { timeZone: "Asia/Tokyo", year: "numeric", month: "2-digit", day: "2-digit" }).format(value)
+    : value.slice(0, 10);
+  const date = new Date(`${key}T00:00:00Z`);
+  date.setUTCDate(date.getUTCDate() + days);
+  return date;
+}
+
+export function accessStateForBilling(
+  status: SquareSubscriptionStatus,
+  billingStatus?: string | null,
+  overdueSince?: string | Date | null,
+): { accessStatus: MembershipAccessStatus; graceUntilDate: Date | null } {
+  if (status === "PAUSED") return { accessStatus: "suspended", graceUntilDate: null };
+  if (status !== "ACTIVE") return { accessStatus: accessStatusForSquareStatus(status), graceUntilDate: null };
+  const normalizedBillingStatus = billingStatus?.trim().toUpperCase();
+  if (normalizedBillingStatus === "期限超過" || normalizedBillingStatus === "OVERDUE") {
+    return { accessStatus: "grace", graceUntilDate: overdueSince ? addGraceDays(overdueSince) : addGraceDays(new Date()) };
+  }
+  return { accessStatus: "active", graceUntilDate: null };
 }

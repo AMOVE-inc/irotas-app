@@ -1,9 +1,9 @@
 import { and, desc, eq, or } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, allowedEmails, InsertAllowedEmail, memberSubscriptions, squareWebhookEvents, emailVerificationCodes, events, eventParticipations, eventOrganizers, migrationImports, eventFavorites, privateMemberNotes, appRoles, externalRoleMappings, type InsertMemberSubscription } from "../drizzle/schema";
-import { accessStatusForSquareStatus, canAccessMemberApp, canBypassSubscription, type SquareSubscriptionStatus, type SubscriptionExemptRole } from "../lib/membership-access";
+import { InsertUser, users, allowedEmails, InsertAllowedEmail, memberSubscriptions, squareWebhookEvents, emailVerificationCodes, events, eventParticipations, eventOrganizers, migrationImports, eventFavorites, privateMemberNotes, appRoles, externalRoleMappings, memberRoleAssignments, type InsertMemberSubscription } from "../drizzle/schema";
+import { accessStateForBilling, accessStatusForSquareStatus, canAccessMemberApp, canBypassSubscription, type SquareSubscriptionStatus, type SubscriptionExemptRole } from "../lib/membership-access";
 import { validateMigrationCsv, type MigrationImportType } from "../lib/migration-csv";
-import { roleKey, type AppRoleCategory } from "../lib/role-migration";
+import { classifyRoleName, isAchievementRole, parseDiscordRoles, roleKey, type AppRoleCategory } from "../lib/role-migration";
 import { ENV } from "./_core/env";
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -173,6 +173,11 @@ export async function getMembershipByUserId(userId: number) {
   return result[0];
 }
 
+export async function listAchievementBadges(userId: number): Promise<string[]> {
+  const membership = await getMembershipByUserId(userId);
+  return membership?.achievementBadges ?? [];
+}
+
 export async function memberHasAppAccess(userId: number): Promise<boolean> {
   if (await userHasSubscriptionExemption(userId)) return true;
   const membership = await getMembershipByUserId(userId);
@@ -201,6 +206,7 @@ export async function upsertImportedMembership(data: InsertMemberSubscription) {
     discordUserId: data.discordUserId,
     discordName: data.discordName,
     discordRoles: data.discordRoles,
+    achievementBadges: data.achievementBadges,
     discordJoinedAt: data.discordJoinedAt,
     displayName: data.displayName,
     memberTerm: data.memberTerm,
@@ -208,6 +214,8 @@ export async function upsertImportedMembership(data: InsertMemberSubscription) {
     squareCustomerId: data.squareCustomerId,
     squareSubscriptionId: data.squareSubscriptionId,
     squareStatus: data.squareStatus,
+    billingStatus: data.billingStatus,
+    overdueSince: data.overdueSince,
     accessStatus: data.accessStatus,
     paidUntilDate: data.paidUntilDate,
     graceUntilDate: data.graceUntilDate,
@@ -224,15 +232,19 @@ export async function upsertImportedMembership(data: InsertMemberSubscription) {
 export async function syncSquareSubscription(subscriptionId: string, status: SquareSubscriptionStatus, paidUntilDate?: string | null, customerId?: string | null) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
+  const where = customerId
+    ? or(eq(memberSubscriptions.squareSubscriptionId, subscriptionId), eq(memberSubscriptions.squareCustomerId, customerId))
+    : eq(memberSubscriptions.squareSubscriptionId, subscriptionId);
+  const existing = (await db.select().from(memberSubscriptions).where(where).limit(1))[0];
+  const state = accessStateForBilling(status, existing?.billingStatus, existing?.overdueSince);
   await db.update(memberSubscriptions).set({
     squareStatus: status,
-    accessStatus: accessStatusForSquareStatus(status),
+    accessStatus: state.accessStatus,
+    graceUntilDate: state.graceUntilDate,
     paidUntilDate: paidUntilDate ? new Date(`${paidUntilDate.slice(0, 10)}T00:00:00+09:00`) : undefined,
     suspendedAt: status === "ACTIVE" ? null : new Date(),
     lastSquareSyncedAt: new Date(),
-  }).where(customerId
-    ? or(eq(memberSubscriptions.squareSubscriptionId, subscriptionId), eq(memberSubscriptions.squareCustomerId, customerId))
-    : eq(memberSubscriptions.squareSubscriptionId, subscriptionId));
+  }).where(where);
 }
 
 export async function updateMembershipFromSquare(data: {
@@ -245,17 +257,51 @@ export async function updateMembershipFromSquare(data: {
 }) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
+  const existing = await getMembershipByBillingEmail(data.billingEmail);
+  const state = accessStateForBilling(data.status, existing?.billingStatus, existing?.overdueSince);
   await db.update(memberSubscriptions).set({
     squareCustomerId: data.customerId,
     squareSubscriptionId: data.subscriptionId,
     squarePlanVariationId: data.planVariationId ?? null,
     squareStatus: data.status,
-    accessStatus: accessStatusForSquareStatus(data.status),
+    accessStatus: state.accessStatus,
+    graceUntilDate: state.graceUntilDate,
     paidUntilDate: data.paidUntilDate ? new Date(`${data.paidUntilDate.slice(0, 10)}T00:00:00+09:00`) : null,
     suspendedAt: data.status === "ACTIVE" ? null : new Date(),
     lastSquareSyncedAt: new Date(),
   }).where(eq(memberSubscriptions.billingEmail, data.billingEmail.toLowerCase().trim()));
   return getMembershipByBillingEmail(data.billingEmail);
+}
+
+/** 支払失敗日から7日間だけログインを許可し、その後は自動的に失効する。 */
+export async function markMembershipInvoiceOverdue(customerId: string, failedAt = new Date()) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const state = accessStateForBilling("ACTIVE", "OVERDUE", failedAt);
+  await db.update(memberSubscriptions).set({
+    billingStatus: "OVERDUE",
+    overdueSince: failedAt,
+    accessStatus: state.accessStatus,
+    graceUntilDate: state.graceUntilDate,
+    lastSquareSyncedAt: new Date(),
+  }).where(eq(memberSubscriptions.squareCustomerId, customerId));
+}
+
+/** 入金確認後は期限超過状態を解除する。停止中契約は解除しない。 */
+export async function markMembershipInvoicePaid(customerId: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const membership = (await db.select().from(memberSubscriptions).where(eq(memberSubscriptions.squareCustomerId, customerId)).limit(1))[0];
+  if (!membership) return;
+  const state = accessStateForBilling(membership.squareStatus, "PAID", null);
+  await db.update(memberSubscriptions).set({
+    billingStatus: "PAID",
+    overdueSince: null,
+    accessStatus: state.accessStatus,
+    graceUntilDate: null,
+    suspendedAt: state.accessStatus === "suspended" ? new Date() : null,
+    lastSquareSyncedAt: new Date(),
+  }).where(eq(memberSubscriptions.id, membership.id));
 }
 
 export async function suspendUnverifiedMembership(billingEmail: string) {
@@ -328,11 +374,17 @@ export async function importMigrationCsv(type: MigrationImportType, csvText: str
       await db.insert(externalRoleMappings).values({ source, externalId: row.external_id, appRoleId: appRole[0].id }).onDuplicateKeyUpdate({ set: { appRoleId: appRole[0].id } });
     } else if (type === "members") {
       const status = (["PENDING", "ACTIVE", "CANCELED", "DEACTIVATED", "PAUSED", "COMPLETED"] as const).includes(row.subscription_status as any) ? row.subscription_status as SquareSubscriptionStatus : "UNKNOWN";
+      const parsedRoles = parseDiscordRoles(row.discord_roles || "");
+      const achievementBadges = row.achievement_badges
+        ? row.achievement_badges.split(/[|;]/).map((badge) => badge.trim()).filter(Boolean)
+        : parsedRoles.filter((role) => isAchievementRole(role.name)).map((role) => role.name);
+      const state = accessStateForBilling(status, row.billing_status, row.overdue_since || null);
       await upsertImportedMembership({
         billingEmail: row.billing_email,
         discordUserId: row.discord_user_id,
         discordName: row.discord_name || null,
-        discordRoles: row.discord_roles ? row.discord_roles.split(/[|;]/).map((role) => role.trim()).filter(Boolean) : null,
+        discordRoles: parsedRoles.map((role) => `${role.externalId}:${role.name}`),
+        achievementBadges,
         discordJoinedAt: row.discord_joined_at ? new Date(`${row.discord_joined_at.slice(0, 10)}T00:00:00+09:00`) : null,
         displayName: row.display_name || row.discord_name,
         memberTerm: row.member_term || null,
@@ -340,10 +392,22 @@ export async function importMigrationCsv(type: MigrationImportType, csvText: str
         squareCustomerId: row.square_customer_id || null,
         squareSubscriptionId: row.square_subscription_id || null,
         squareStatus: status,
-        accessStatus: accessStatusForSquareStatus(status),
+        billingStatus: row.billing_status || null,
+        overdueSince: row.overdue_since ? new Date(`${row.overdue_since.slice(0, 10)}T00:00:00+09:00`) : null,
+        accessStatus: state.accessStatus,
+        graceUntilDate: row.grace_until_date ? new Date(`${row.grace_until_date.slice(0, 10)}T00:00:00+09:00`) : state.graceUntilDate,
         paidUntilDate: row.paid_until_date ? new Date(`${row.paid_until_date.slice(0, 10)}T00:00:00+09:00`) : null,
         lastSquareSyncedAt: status === "UNKNOWN" ? null : new Date(),
       });
+      const membership = (await db.select().from(memberSubscriptions).where(eq(memberSubscriptions.billingEmail, row.billing_email.toLowerCase().trim())).limit(1))[0];
+      for (const role of parsedRoles) {
+        const category = classifyRoleName(role.name);
+        const normalizedKey = roleKey(category, role.externalId, role.name);
+        await db.insert(appRoles).values({ roleKey: normalizedKey, displayName: role.name, category, metadata: { badge: isAchievementRole(role.name) } }).onDuplicateKeyUpdate({ set: { displayName: role.name, category, metadata: { badge: isAchievementRole(role.name) } } });
+        const appRole = (await db.select().from(appRoles).where(eq(appRoles.roleKey, normalizedKey)).limit(1))[0];
+        await db.insert(externalRoleMappings).values({ source: "discord_role", externalId: role.externalId, appRoleId: appRole.id }).onDuplicateKeyUpdate({ set: { appRoleId: appRole.id } });
+        await db.insert(memberRoleAssignments).values({ memberSubscriptionId: membership.id, userId: membership.userId, appRoleId: appRole.id, source: "discord", externalId: role.externalId }).onDuplicateKeyUpdate({ set: { userId: membership.userId, externalId: role.externalId, isActive: 1, endedAt: null } });
+      }
     } else if (type === "events") {
       const startDate = asDateTime(row.event_date, row.event_time || "00:00");
       await db.insert(events).values({

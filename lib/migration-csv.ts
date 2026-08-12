@@ -1,7 +1,7 @@
 export type MigrationImportType = "members" | "events" | "participations" | "organizers" | "role_mappings";
 
 export const MIGRATION_COLUMNS: Record<MigrationImportType, string[]> = {
-  members: ["discord_user_id", "discord_name", "billing_email", "display_name", "discord_roles", "discord_joined_at", "member_term", "member_rank", "square_customer_id", "square_subscription_id", "subscription_status", "paid_until_date"],
+  members: ["discord_user_id", "discord_name", "billing_email", "display_name", "discord_roles", "achievement_badges", "discord_joined_at", "member_term", "member_rank", "square_customer_id", "square_subscription_id", "subscription_status", "billing_status", "overdue_since", "grace_until_date", "paid_until_date"],
   events: ["event_id", "event_name", "event_date", "event_time", "location", "event_type", "capacity"],
   participations: ["event_id", "discord_user_id", "status", "occurred_at", "source_reference"],
   organizers: ["event_id", "discord_user_id", "organizer_role"],

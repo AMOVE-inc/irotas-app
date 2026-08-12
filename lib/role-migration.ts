@@ -45,3 +45,8 @@ export function normalizedRank(name: string): "regular" | "silver" | "gold" | "p
   if (/regular|レギュラー/.test(value)) return "regular";
   return null;
 }
+
+/** Discord上の表彰・受賞ロールはプロフィール用バッジとして保持する。 */
+export function isAchievementRole(name: string): boolean {
+  return /大賞|表彰|受賞|award|winner|champion|優勝/i.test(name.normalize("NFKC"));
+}

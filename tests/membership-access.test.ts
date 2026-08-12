@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { accessStatusForSquareStatus, canAccessMemberApp, canBypassSubscription } from "../lib/membership-access";
+import { accessStateForBilling, accessStatusForSquareStatus, canAccessMemberApp, canBypassSubscription } from "../lib/membership-access";
 
 describe("membership access", () => {
   it("allows an active paid member", () => {
@@ -14,6 +14,15 @@ describe("membership access", () => {
   it("supports a bounded payment grace period", () => {
     expect(canAccessMemberApp({ squareStatus: "ACTIVE", accessStatus: "grace", graceUntilDate: "2026-07-28" }, new Date("2026-07-26T12:00:00+09:00"))).toBe(true);
     expect(accessStatusForSquareStatus("PAUSED")).toBe("suspended");
+  });
+
+  it("allows overdue members for exactly seven days and blocks paused members immediately", () => {
+    const overdue = accessStateForBilling("ACTIVE", "期限超過", "2026-08-01");
+    expect(overdue.accessStatus).toBe("grace");
+    expect(overdue.graceUntilDate?.toISOString().slice(0, 10)).toBe("2026-08-08");
+    expect(canAccessMemberApp({ squareStatus: "ACTIVE", ...overdue }, new Date("2026-08-08T23:59:59+09:00"))).toBe(true);
+    expect(canAccessMemberApp({ squareStatus: "ACTIVE", ...overdue }, new Date("2026-08-09T00:00:00+09:00"))).toBe(false);
+    expect(accessStateForBilling("PAUSED", "PAID")).toEqual({ accessStatus: "suspended", graceUntilDate: null });
   });
 
   it("exempts admins, operators and club leaders from subscription checks", () => {

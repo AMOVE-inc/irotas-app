@@ -38,6 +38,7 @@ import { OFFICIAL_INSTAGRAM_URL } from "@/constants/external-links";
 import { GOURMET_GENRES } from "@/constants/event-options";
 import { BIRTH_YEARS, DAYS, DRINKING_LEVELS, MONTHS, PREFECTURES, PROFILE_DETAILS_STORAGE_KEY, type ProfileDetails } from "@/constants/profile-options";
 import { isOperatorRole } from "@/lib/access-control";
+import { trpc } from "@/lib/trpc";
 
 function ProfileSelectField({ label, value, options, onChange }: { label: string; value: string; options: readonly string[]; onChange: (value: string) => void }) {
   const colors = useColors();
@@ -689,6 +690,7 @@ export default function ProfileScreen() {
   const router = useRouter();
   const { logout, user: authUser } = useAuthContext();
   const user = CURRENT_USER;
+  const { data: achievementBadges = [] } = trpc.memberData.achievementBadges.useQuery(undefined, { enabled: Boolean(authUser) });
   const selectedBranches = authUser?.branches?.length
     ? authUser.branches
     : [authUser?.branch ?? user.branch];
@@ -825,6 +827,17 @@ export default function ProfileScreen() {
               {branchLabel}
             </Text>
           </View>
+
+          {achievementBadges.length > 0 ? (
+            <View style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "center", gap: 6, marginTop: 9, paddingHorizontal: 24 }}>
+              {achievementBadges.map((badge) => (
+                <View key={badge} style={{ flexDirection: "row", alignItems: "center", borderRadius: 12, backgroundColor: "#FFF4D6", borderWidth: 1, borderColor: "#D8A928", paddingHorizontal: 9, paddingVertical: 4 }}>
+                  <IconSymbol name="trophy.fill" size={12} color="#A56F00" />
+                  <Text style={{ marginLeft: 4, fontSize: 11, fontWeight: "800", color: "#765000" }}>{badge}</Text>
+                </View>
+              ))}
+            </View>
+          ) : null}
 
           {/* Generation and join info */}
           <View style={{ flexDirection: "row", alignItems: "center", marginTop: 8, gap: 12 }}>

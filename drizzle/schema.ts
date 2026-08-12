@@ -59,6 +59,8 @@ export const memberSubscriptions = mysqlTable("member_subscriptions", {
   discordUserId: varchar("discordUserId", { length: 32 }),
   discordName: varchar("discordName", { length: 255 }),
   discordRoles: json("discordRoles").$type<string[]>(),
+  /** Discordの「イベント大賞」等をプロフィール表示用に保持する。 */
+  achievementBadges: json("achievementBadges").$type<string[]>(),
   discordJoinedAt: date("discordJoinedAt"),
   displayName: varchar("displayName", { length: 255 }),
   memberTerm: varchar("memberTerm", { length: 64 }),
@@ -67,6 +69,8 @@ export const memberSubscriptions = mysqlTable("member_subscriptions", {
   squareSubscriptionId: varchar("squareSubscriptionId", { length: 255 }),
   squarePlanVariationId: varchar("squarePlanVariationId", { length: 255 }),
   squareStatus: mysqlEnum("squareStatus", ["PENDING", "ACTIVE", "CANCELED", "DEACTIVATED", "PAUSED", "COMPLETED", "UNKNOWN"]).default("UNKNOWN").notNull(),
+  billingStatus: varchar("billingStatus", { length: 64 }),
+  overdueSince: date("overdueSince"),
   accessStatus: mysqlEnum("accessStatus", ["pending", "active", "grace", "suspended"]).default("pending").notNull(),
   paidUntilDate: date("paidUntilDate"),
   graceUntilDate: date("graceUntilDate"),
