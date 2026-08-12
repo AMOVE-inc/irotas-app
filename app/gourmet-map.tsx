@@ -514,7 +514,7 @@ export default function GourmetMapScreen() {
       </View>
 
       {/* Search bar */}
-      <View style={{ paddingHorizontal: 16, paddingTop: 8 }}>
+      <View style={{ paddingHorizontal: 16, paddingTop: 8, flexShrink: 0 }}>
         <View
           style={{
             flexDirection: "row",
@@ -557,7 +557,7 @@ export default function GourmetMapScreen() {
           flexDirection: "row",
           alignItems: "center",
         }}
-        style={{ flexGrow: 0 }}
+        style={{ flexGrow: 0, flexShrink: 0, height: 56 }}
       >
         {[{ label: "すべて", value: null }, ...genres.map((g) => ({ label: g, value: g }))].map((item) => {
           const isActive = item.value === null ? !selectedGenre : selectedGenre === item.value;
@@ -590,7 +590,7 @@ export default function GourmetMapScreen() {
       </ScrollView>
 
       {/* Restaurant count */}
-      <View style={{ paddingHorizontal: 16, paddingBottom: 8 }}>
+      <View style={{ paddingHorizontal: 16, paddingBottom: 8, flexShrink: 0 }}>
         <Text style={{ fontSize: 13, color: colors.muted }}>
           {filteredRestaurants.length}件の厳選グルメスポット
         </Text>

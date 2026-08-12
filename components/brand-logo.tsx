@@ -9,10 +9,10 @@ type BrandLogoProps = {
 
 /** Official IROTAS logo supplied by the project owner. */
 export function BrandLogo({ width = 210, style, compact = false }: BrandLogoProps) {
-  const height = compact ? width * 0.32 : width * 0.48;
+  const height = compact ? width * 0.44 : width * 0.48;
   // The supplied square artwork has generous whitespace around the centered logo.
-  // Keep a little padding around the artwork so letters never clip in narrow headers.
-  const artworkSize = width * 1.85;
+  // Compact headers need enough vertical room for both the wordmark and its subtitle.
+  const artworkSize = compact ? width * 1.75 : width * 1.85;
 
   return (
     <View style={[styles.frame, { width, height }, style]}>
@@ -22,8 +22,8 @@ export function BrandLogo({ width = 210, style, compact = false }: BrandLogoProp
           position: "absolute",
           width: artworkSize,
           height: artworkSize,
-          left: -width * 0.43,
-          top: -width * 0.72,
+          left: compact ? -width * 0.375 : -width * 0.43,
+          top: compact ? -width * 0.675 : -width * 0.72,
         }}
         contentFit="fill"
         accessibilityLabel="IRO+ Gourmet Community"

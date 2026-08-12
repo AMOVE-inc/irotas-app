@@ -583,7 +583,7 @@ export default function HomeScreen() {
           backgroundColor: colors.background,
         }}
       >
-        <BrandLogo width={126} compact />
+        <BrandLogo width={116} compact />
         <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
           <Pressable onPress={() => router.push("/notifications")} style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: "#EEF6FB", alignItems: "center", justifyContent: "center" }}>
             <IconSymbol name="bell.fill" size={22} color={colors.foreground} />
