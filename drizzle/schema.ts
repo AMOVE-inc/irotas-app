@@ -216,7 +216,7 @@ export const eventOrganizers = mysqlTable("event_organizers", {
 export const migrationImports = mysqlTable("migration_imports", {
   id: int("id").autoincrement().primaryKey(),
   filename: varchar("filename", { length: 255 }).notNull(),
-  importType: mysqlEnum("importType", ["members", "events", "participations", "organizers", "role_mappings"]).notNull(),
+  importType: mysqlEnum("importType", ["members", "events", "participations", "organizers", "role_mappings", "announcements"]).notNull(),
   status: mysqlEnum("status", ["success", "partial", "failed"]).notNull(),
   importedCount: int("importedCount").default(0).notNull(),
   reviewCount: int("reviewCount").default(0).notNull(),
@@ -319,8 +319,15 @@ export const chatMessages = mysqlTable("chat_messages", {
   roomId: int("roomId").notNull(),
   userId: int("userId").notNull(),
   content: text("content").notNull(),
+  /** Discordから移行した投稿を再取込しても重複させないための元メッセージID。 */
+  externalMessageId: varchar("externalMessageId", { length: 32 }),
+  externalChannelId: varchar("externalChannelId", { length: 32 }),
+  externalAuthorId: varchar("externalAuthorId", { length: 32 }),
+  externalAuthorName: varchar("externalAuthorName", { length: 255 }),
+  attachmentUrls: json("attachmentUrls").$type<string[]>(),
+  source: mysqlEnum("source", ["app", "discord"]).default("app").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-});
+}, (table) => [uniqueIndex("chat_messages_external_message_id_unique").on(table.externalMessageId)]);
 
 export type ChatMessage = typeof chatMessages.$inferSelect;
 export type InsertChatMessage = typeof chatMessages.$inferInsert;

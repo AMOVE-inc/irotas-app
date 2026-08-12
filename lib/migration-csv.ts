@@ -1,4 +1,4 @@
-export type MigrationImportType = "members" | "events" | "participations" | "organizers" | "role_mappings";
+export type MigrationImportType = "members" | "events" | "participations" | "organizers" | "role_mappings" | "announcements";
 
 export const MIGRATION_COLUMNS: Record<MigrationImportType, string[]> = {
   members: ["member_id", "subscription_created_at", "discord_user_id", "discord_name", "billing_email", "display_name", "discord_roles", "achievement_badges", "discord_joined_at", "member_term", "member_rank", "square_customer_id", "square_subscription_id", "subscription_status", "billing_status", "overdue_since", "grace_until_date", "paid_until_date"],
@@ -6,6 +6,7 @@ export const MIGRATION_COLUMNS: Record<MigrationImportType, string[]> = {
   participations: ["event_id", "discord_user_id", "status", "occurred_at", "source_reference"],
   organizers: ["event_id", "discord_user_id", "organizer_role"],
   role_mappings: ["source", "external_id", "role_key", "role_name", "category"],
+  announcements: ["message_id", "channel_id", "discord_user_id", "author_name", "content", "created_at", "attachment_urls"],
 };
 
 export function parseCsv(csv: string): Record<string, string>[] {
@@ -43,6 +44,8 @@ export function validateMigrationCsv(type: MigrationImportType, csv: string) {
       ? ["event_id", "event_name", "event_date"]
       : type === "role_mappings"
         ? ["source", "external_id", "role_name", "category"]
+        : type === "announcements"
+          ? ["message_id", "channel_id", "author_name", "content", "created_at"]
         : ["event_id", "discord_user_id"];
   const missing = required.filter((column) => !headers.includes(column));
   return { rows, missing };

@@ -1,6 +1,6 @@
 import { and, desc, eq, or } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, allowedEmails, InsertAllowedEmail, memberSubscriptions, squareWebhookEvents, emailVerificationCodes, events, eventParticipations, eventOrganizers, migrationImports, eventFavorites, privateMemberNotes, appRoles, externalRoleMappings, memberRoleAssignments, type InsertMemberSubscription } from "../drizzle/schema";
+import { InsertUser, users, allowedEmails, InsertAllowedEmail, memberSubscriptions, squareWebhookEvents, emailVerificationCodes, events, eventParticipations, eventOrganizers, migrationImports, eventFavorites, privateMemberNotes, appRoles, externalRoleMappings, memberRoleAssignments, chatRooms, chatMessages, type InsertMemberSubscription } from "../drizzle/schema";
 import { accessStateForBilling, accessStatusForSquareStatus, canAccessMemberApp, canBypassSubscription, type SquareSubscriptionStatus, type SubscriptionExemptRole } from "../lib/membership-access";
 import { validateMigrationCsv, type MigrationImportType } from "../lib/migration-csv";
 import { classifyRoleName, isAchievementRole, parseDiscordRoles, roleKey, type AppRoleCategory } from "../lib/role-migration";
@@ -448,6 +448,32 @@ export async function importMigrationCsv(type: MigrationImportType, csvText: str
         await db.insert(externalRoleMappings).values({ source: "discord_role", externalId: role.externalId, appRoleId: appRole.id }).onDuplicateKeyUpdate({ set: { appRoleId: appRole.id } });
         await db.insert(memberRoleAssignments).values({ memberSubscriptionId: membership.id, userId: membership.userId, appRoleId: appRole.id, source: "discord", externalId: role.externalId }).onDuplicateKeyUpdate({ set: { userId: membership.userId, externalId: role.externalId, isActive: 1, endedAt: null } });
       }
+    } else if (type === "announcements") {
+      let room = (await db.select().from(chatRooms).where(eq(chatRooms.sourceId, "announcement")).limit(1))[0];
+      if (!room) {
+        await db.insert(chatRooms).values({ name: "運営アナウンス", type: "board", sourceId: "announcement", createdBy: importedBy });
+        room = (await db.select().from(chatRooms).where(eq(chatRooms.sourceId, "announcement")).limit(1))[0];
+      }
+      const membership = row.discord_user_id
+        ? (await db.select().from(memberSubscriptions).where(eq(memberSubscriptions.discordUserId, row.discord_user_id)).limit(1))[0]
+        : undefined;
+      const attachmentUrls = (row.attachment_urls || "").split(/[|;]/).map((url) => url.trim()).filter(Boolean);
+      await db.insert(chatMessages).values({
+        roomId: room.id,
+        userId: membership?.userId ?? importedBy,
+        content: row.content,
+        externalMessageId: row.message_id,
+        externalChannelId: row.channel_id,
+        externalAuthorId: row.discord_user_id || null,
+        externalAuthorName: row.author_name,
+        attachmentUrls,
+        source: "discord",
+        createdAt: new Date(row.created_at),
+      }).onDuplicateKeyUpdate({ set: {
+        content: row.content,
+        externalAuthorName: row.author_name,
+        attachmentUrls,
+      } });
     } else if (type === "events") {
       const startDate = asDateTime(row.event_date, row.event_time || "00:00");
       await db.insert(events).values({

@@ -247,6 +247,9 @@ export interface ChatMessage {
   senderId: string;
   content: string;
   imageUri?: string;
+  attachmentUrls?: string[];
+  externalMessageId?: string;
+  externalAuthorName?: string;
   reactions?: Record<string, string[]>; // emoji -> member ids（通知なしリアクション）
   createdAt: string;
 }
@@ -736,6 +739,24 @@ export const CHAT_ROOMS: ChatRoom[] = [
 
 export const CHAT_MESSAGES: ChatMessage[] = [
   { id: "ba1", chatId: "board-announcement", senderId: "u1", content: "IRO+運営からのお知らせをお届けします。最新情報はこちらでご確認ください。", createdAt: "2026-03-24T09:00:00" },
+  {
+    id: "discord-announcement-1536285603661086823",
+    chatId: "board-announcement",
+    senderId: "u1",
+    externalMessageId: "1536285603661086823",
+    externalAuthorName: "IRO+運営",
+    content: "@everyone\n\n今週のIRO+ News\n\n① 8/29(土) 夏のプレミアムBBQ in 池袋\n先着40名様、残り枠わずかです。\n\n② 9/6(日) 関東支部ランチ交流会 in 麻布十番\n先着22名様を募集中です。\n\n③ 9/9(水) ビアガーデン in 六本木\n先着18名様を募集中です。\n\n＜後日募集予定のイベント＞\n・9/20(日) 関東支部ランチ交流会\n・9/26(土) マグロ解体ショー\n\n④ 第24回グルメ選手権\n今週のテーマは「麻辣湯」。優勝者にはイベント参加クーポンをプレゼントします。",
+    createdAt: "2026-08-10T17:10:00+09:00",
+  },
+  {
+    id: "discord-announcement-1534818206664101888",
+    chatId: "board-announcement",
+    senderId: "u1",
+    externalMessageId: "1534818206664101888",
+    externalAuthorName: "Non【IRO+代表】",
+    content: "@everyone\n\n部活投票の結果発表\n\n以前、部活アイデアを投稿してくれた皆様、投票にご参加いただいた皆様、ありがとうございました。\n\n1位：ゴルフ部\n2位：焼肉部\n3位：麺部\n\nまずはこの3つを正式に部活として立ち上げます。部長任命などの準備が整い次第、近日中に部員募集を開始します。",
+    createdAt: "2026-08-06T15:59:00+09:00",
+  },
   { id: "m1", chatId: "chat1", senderId: "u1", content: "皆さん、今日の交流会の詳細です。18:30に恵比寿駅西口集合でお願いします！", createdAt: "2026-03-23T08:00:00" },
   { id: "m2", chatId: "chat1", senderId: "u2", content: "了解です！楽しみにしてます✨", createdAt: "2026-03-23T08:30:00" },
   { id: "m3", chatId: "chat1", senderId: "u4", content: "遅れそうな場合は連絡しますね。", createdAt: "2026-03-23T09:00:00" },

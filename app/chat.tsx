@@ -83,10 +83,10 @@ function MessageBubble({ message, isMe, myAvatarUri, onReact, mentionGroups }: {
         />
       )}
       <View style={{ maxWidth: "70%" }}>
-        {!isMe && sender ? (
+        {!isMe && (sender || message.externalAuthorName) ? (
           <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 2, marginLeft: 2 }}>
-            <Text style={{ fontSize: 11, color: colors.muted }}>{sender.name}</Text>
-            <NewMemberMark member={sender} size={11} />
+            <Text style={{ fontSize: 11, color: colors.muted }}>{message.externalAuthorName ?? sender?.name}</Text>
+            {sender ? <NewMemberMark member={sender} size={11} /> : null}
           </View>
         ) : null}
         <View
@@ -106,6 +106,11 @@ function MessageBubble({ message, isMe, myAvatarUri, onReact, mentionGroups }: {
               style={{ width: 220, height: 180 }}
               contentFit="cover"
             />
+          ) : null}
+          {message.attachmentUrls?.length ? (
+            <View style={{ gap: 4 }}>
+              {message.attachmentUrls.map((uri) => <Image key={uri} source={{ uri }} style={{ width: 220, height: 180 }} contentFit="cover" />)}
+            </View>
           ) : null}
           {message.content ? (
             <View style={{ paddingHorizontal: 14, paddingVertical: 10 }}>

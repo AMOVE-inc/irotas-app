@@ -114,7 +114,7 @@ const allowedEmailsRouter = router({
 const migrationRouter = router({
   importCsv: adminProcedure
     .input(z.object({
-      type: z.enum(["members", "events", "participations", "organizers", "role_mappings"]),
+      type: z.enum(["members", "events", "participations", "organizers", "role_mappings", "announcements"]),
       filename: z.string().min(1).max(255),
       csvText: z.string().min(1).max(10_000_000),
     }))
