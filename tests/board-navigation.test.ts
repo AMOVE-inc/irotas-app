@@ -9,7 +9,13 @@ describe("board category ordering", () => {
       "グルメ選手権",
       "教えてグルメ相談室",
       "なんでも掲示板",
+      "グルメマップ",
     ]);
+  });
+
+  it("contains area conversations in the general board", () => {
+    expect(BOARD_CATEGORIES.some((category) => category.group === "area")).toBe(false);
+    expect(BOARD_CATEGORIES.find((category) => category.key === "gourmet-map")?.group).toBe("all");
   });
 
   it("provides a structured self-introduction thread template", () => {

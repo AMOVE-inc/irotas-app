@@ -55,6 +55,8 @@ export const allowedEmails = mysqlTable("allowed_emails", {
 export const memberSubscriptions = mysqlTable("member_subscriptions", {
   id: int("id").autoincrement().primaryKey(),
   userId: int("userId"),
+  /** 最古のSquareサブスク登録日時順で確定する公開用会員ID。 */
+  memberId: varchar("memberId", { length: 16 }),
   billingEmail: varchar("billingEmail", { length: 320 }).notNull(),
   discordUserId: varchar("discordUserId", { length: 32 }),
   discordName: varchar("discordName", { length: 255 }),
@@ -68,6 +70,7 @@ export const memberSubscriptions = mysqlTable("member_subscriptions", {
   squareCustomerId: varchar("squareCustomerId", { length: 255 }),
   squareSubscriptionId: varchar("squareSubscriptionId", { length: 255 }),
   squarePlanVariationId: varchar("squarePlanVariationId", { length: 255 }),
+  subscriptionRegisteredAt: timestamp("subscriptionRegisteredAt"),
   squareStatus: mysqlEnum("squareStatus", ["PENDING", "ACTIVE", "CANCELED", "DEACTIVATED", "PAUSED", "COMPLETED", "UNKNOWN"]).default("UNKNOWN").notNull(),
   billingStatus: varchar("billingStatus", { length: 64 }),
   overdueSince: date("overdueSince"),
@@ -80,6 +83,7 @@ export const memberSubscriptions = mysqlTable("member_subscriptions", {
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 }, (table) => [
   uniqueIndex("member_subscriptions_billing_email_unique").on(table.billingEmail),
+  uniqueIndex("member_subscriptions_member_id_unique").on(table.memberId),
   uniqueIndex("member_subscriptions_discord_user_id_unique").on(table.discordUserId),
   uniqueIndex("member_subscriptions_square_subscription_id_unique").on(table.squareSubscriptionId),
 ]);

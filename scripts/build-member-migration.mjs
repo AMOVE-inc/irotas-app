@@ -72,8 +72,11 @@ if (!subscriptionsPath || !membersPath || !customersPath || !outputPath) {
 
 const [subscriptions, members, customers] = await Promise.all([load(subscriptionsPath), load(membersPath), load(customersPath)]);
 const bestSubscription = new Map();
+const oldestSubscriptionDate = new Map();
 for (const row of subscriptions) {
   const email = emailKey(row["お客さまメールアドレス"]);
+  const createdAt = Date.parse(row["作成日"] || "");
+  if (email && Number.isFinite(createdAt) && createdAt < (oldestSubscriptionDate.get(email) ?? Infinity)) oldestSubscriptionDate.set(email, createdAt);
   if (!email || subscriptionPriority(row) <= subscriptionPriority(bestSubscription.get(email) ?? {})) continue;
   bestSubscription.set(email, row);
 }
@@ -84,9 +87,10 @@ for (const row of members) {
   if (email && !memberByEmail.has(email)) memberByEmail.set(email, row);
 }
 
-const headers = ["discord_user_id", "discord_name", "billing_email", "display_name", "discord_roles", "achievement_badges", "discord_joined_at", "member_term", "member_rank", "square_customer_id", "square_subscription_id", "subscription_status", "billing_status", "overdue_since", "grace_until_date", "paid_until_date"];
+const headers = ["member_id", "subscription_created_at", "discord_user_id", "discord_name", "billing_email", "display_name", "discord_roles", "achievement_badges", "discord_joined_at", "member_term", "member_rank", "square_customer_id", "square_subscription_id", "subscription_status", "billing_status", "overdue_since", "grace_until_date", "paid_until_date"];
 const outputRows = [];
-for (const [email, subscription] of [...bestSubscription].sort(([a], [b]) => a.localeCompare(b))) {
+const orderedSubscriptions = [...bestSubscription].sort(([emailA], [emailB]) => (oldestSubscriptionDate.get(emailA) ?? Infinity) - (oldestSubscriptionDate.get(emailB) ?? Infinity) || emailA.localeCompare(emailB));
+for (const [index, [email, subscription]] of orderedSubscriptions.entries()) {
   const member = memberByEmail.get(email) ?? {};
   const customer = customerByEmail.get(email) ?? {};
   const roleIds = splitList(member["全ロールID"]);
@@ -103,6 +107,8 @@ for (const [email, subscription] of [...bestSubscription].sort(([a], [b]) => a.l
     ? isoDate(subscription["キャンセル日"] || subscription["次の請求日"])
     : isoDate(subscription["次の請求日"] || subscription["最終請求日"]);
   outputRows.push({
+    member_id: `IRO-${String(index + 1).padStart(6, "0")}`,
+    subscription_created_at: new Date(oldestSubscriptionDate.get(email) ?? Date.parse(subscription["作成日"])).toISOString(),
     discord_user_id: member["ユーザーID"] ?? "", discord_name: member["ユーザー名"] ?? "", billing_email: email,
     display_name: nickname || member["ユーザー名"] || "", discord_roles: roles.join("|"), achievement_badges: badges.join("|"),
     discord_joined_at: isoDate(member["サーバー参加日"]), member_term: memberTerm(subscription["プラン名"]), member_rank: memberRank(roleNames),

@@ -178,6 +178,12 @@ export async function listAchievementBadges(userId: number): Promise<string[]> {
   return membership?.achievementBadges ?? [];
 }
 
+export async function getMemberIdentity(userId: number) {
+  const membership = await getMembershipByUserId(userId);
+  if (!membership) return null;
+  return { memberId: membership.memberId, displayName: membership.displayName, achievementBadges: membership.achievementBadges ?? [] };
+}
+
 export async function memberHasAppAccess(userId: number): Promise<boolean> {
   if (await userHasSubscriptionExemption(userId)) return true;
   const membership = await getMembershipByUserId(userId);
@@ -203,6 +209,7 @@ export async function upsertImportedMembership(data: InsertMemberSubscription) {
   const userId = data.userId ?? existingUser[0]?.id ?? null;
   await db.insert(memberSubscriptions).values({ ...data, billingEmail, userId }).onDuplicateKeyUpdate({ set: {
     userId,
+    memberId: data.memberId,
     discordUserId: data.discordUserId,
     discordName: data.discordName,
     discordRoles: data.discordRoles,
@@ -213,6 +220,7 @@ export async function upsertImportedMembership(data: InsertMemberSubscription) {
     memberRank: data.memberRank,
     squareCustomerId: data.squareCustomerId,
     squareSubscriptionId: data.squareSubscriptionId,
+    subscriptionRegisteredAt: data.subscriptionRegisteredAt,
     squareStatus: data.squareStatus,
     billingStatus: data.billingStatus,
     overdueSince: data.overdueSince,
@@ -380,6 +388,7 @@ export async function importMigrationCsv(type: MigrationImportType, csvText: str
         : parsedRoles.filter((role) => isAchievementRole(role.name)).map((role) => role.name);
       const state = accessStateForBilling(status, row.billing_status, row.overdue_since || null);
       await upsertImportedMembership({
+        memberId: row.member_id || null,
         billingEmail: row.billing_email,
         discordUserId: row.discord_user_id,
         discordName: row.discord_name || null,
@@ -391,6 +400,7 @@ export async function importMigrationCsv(type: MigrationImportType, csvText: str
         memberRank: row.member_rank || null,
         squareCustomerId: row.square_customer_id || null,
         squareSubscriptionId: row.square_subscription_id || null,
+        subscriptionRegisteredAt: row.subscription_created_at ? new Date(row.subscription_created_at) : null,
         squareStatus: status,
         billingStatus: row.billing_status || null,
         overdueSince: row.overdue_since ? new Date(`${row.overdue_since.slice(0, 10)}T00:00:00+09:00`) : null,

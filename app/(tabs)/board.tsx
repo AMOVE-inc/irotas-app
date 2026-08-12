@@ -52,7 +52,6 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const BOARD_GROUPS: { key: BoardCategory["group"]; label: string }[] = [
   { key: "all", label: "全体" },
-  { key: "area", label: "エリア別" },
   { key: "club", label: "部活" },
 ];
 
@@ -1893,6 +1892,7 @@ export default function BoardScreen() {
       "gourmet-contest": { icon: "trophy.fill", description: "コメントとハート投票で今月のグルメ王を決定", accent: "#C6962C" },
       "gourmet-advice": { icon: "sparkles", description: "お店選びやグルメの相談", accent: "#8C6DB0" },
       "free-chat": { icon: "bubble.left.and.bubble.right.fill", description: "気軽に投稿できる自由な掲示板", accent: "#5F9E8C" },
+      "gourmet-map": { icon: "map.fill", description: "みんなの厳選グルメを地図と一覧で探す", accent: "#D56791" },
       "club-all": { icon: "calendar", description: "各部活の今月の活動をまとめて確認", accent: "#4E8F65" },
     };
     return presentations[category.key] ?? { icon: "bubble.left.and.bubble.right.fill", description: "掲示板カテゴリ", accent: "#A7C7E7" };
@@ -1921,6 +1921,10 @@ export default function BoardScreen() {
   };
 
   const handleOpenCategory = (category: BoardCategory) => {
+    if (category.key === "gourmet-map") {
+      router.push("/gourmet-map" as any);
+      return;
+    }
     if (category.group === "club" && category.key !== "club-all" && !canAccessCategory(category)) {
       router.push("/clubs");
       return;
@@ -1982,19 +1986,7 @@ export default function BoardScreen() {
             );
           })}
         </View>
-        {activeGroup === "area" ? (
-          <View style={{ paddingHorizontal: 16, paddingVertical: 10 }}>
-            <View style={{ flexDirection: "row", gap: 8 }}>
-              {visibleCategories.map((cat) => {
-                const active = activeCategory === cat.key;
-                return <Pressable key={cat.key} onPress={() => setActiveCategory(cat.key)} style={{ flex: 1, alignItems: "center", paddingVertical: 10, borderRadius: 12, backgroundColor: active ? "#5B5A73" : "#ECECF1" }}>
-                  <Text style={{ fontSize: 14, fontWeight: "800", color: active ? "#FFF" : "#303044" }}>{cat.label}</Text>
-                </Pressable>;
-              })}
-            </View>
-          </View>
-        ) : (
-          <View style={{ paddingHorizontal: 16, paddingVertical: 10, gap: 8 }}>
+        <View style={{ paddingHorizontal: 16, paddingVertical: 10, gap: 8 }}>
             {activeGroup === "club" ? <Text style={{ fontSize: 12, fontWeight: "700", color: colors.muted, marginBottom: 1 }}>活動レポートと入部中の部活</Text> : null}
             {visibleCategories.map((cat) => {
               const presentation = categoryPresentation(cat);
@@ -2011,12 +2003,11 @@ export default function BoardScreen() {
                 </Pressable>
               );
             })}
-          </View>
-        )}
+        </View>
         {userIsAdmin ? <Pressable onPress={() => setShowAddCategory(true)} style={{ flexDirection: "row", alignItems: "center", alignSelf: "flex-end", marginHorizontal: 16, marginBottom: 10, paddingVertical: 5 }}><IconSymbol name="plus" size={13} color={colors.muted} /><Text style={{ fontSize: 12, color: colors.muted, marginLeft: 4 }}>カテゴリを追加</Text></Pressable> : null}
       </View> : null}
 
-      {(isThreadView || activeGroup === "area") ? <FlatList
+      {isThreadView ? <FlatList
         data={filteredThreads}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
@@ -2041,7 +2032,7 @@ export default function BoardScreen() {
         }
       /> : <View style={{ flex: 1 }} />}
 
-      {(isThreadView || activeGroup === "area") && (activeCategory !== "gourmet-contest" || userIsAdmin) ? (
+      {isThreadView && activeCategory !== "gourmet-map" && (activeCategory !== "gourmet-contest" || userIsAdmin) ? (
         <Pressable
           accessibilityLabel={`${categories.find((category) => category.key === activeCategory)?.label ?? "掲示板"}に投稿`}
           onPress={() => setShowCreateThread(true)}

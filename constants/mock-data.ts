@@ -594,7 +594,7 @@ export const BOARD_THREADS: BoardThread[] = [
   },
   {
     id: "t2", title: "大阪の隠れ家イタリアンを発見！",
-    author: MEMBERS[2], category: "kansai-branch", commentCount: 8,
+    author: MEMBERS[2], category: "free-chat", commentCount: 8,
     lastUpdated: "2026-03-22T20:30:00",
     preview: "心斎橋の路地裏にあるイタリアンが最高でした。パスタが本場の味...",
     isRecruiting: false,
@@ -630,7 +630,7 @@ export const BOARD_THREADS: BoardThread[] = [
   },
   {
     id: "t4", title: "東飲みしたい人集まれ！🍻",
-    author: MEMBERS[5], category: "kanto-branch", commentCount: 30,
+    author: MEMBERS[5], category: "free-chat", commentCount: 30,
     lastUpdated: "2026-03-23T19:00:00",
     preview: "来週末に東京で飲み会を企画しています。参加したい方はコメントください！",
     isRecruiting: true, recruitCapacity: 12, recruitAttendees: 8,
@@ -839,8 +839,7 @@ export const BOARD_CATEGORIES: BoardCategory[] = [
   { key: "gourmet-contest", label: "グルメ選手権", group: "all", createdByAdmin: true },
   { key: "gourmet-advice", label: "教えてグルメ相談室", group: "all", createdByAdmin: true },
   { key: "free-chat", label: "なんでも掲示板", group: "all", createdByAdmin: true },
-  { key: "kanto-branch", label: "関東", group: "area", createdByAdmin: true },
-  { key: "kansai-branch", label: "関西", group: "area", createdByAdmin: true },
+  { key: "gourmet-map", label: "グルメマップ", group: "all", createdByAdmin: true },
   { key: "club-all", label: "今月の部活動レポート", group: "club", createdByAdmin: true },
   ...CLUBS.map((club) => ({
     key: `club-${club.id}`,

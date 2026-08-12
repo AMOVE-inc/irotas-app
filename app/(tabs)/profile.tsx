@@ -691,6 +691,7 @@ export default function ProfileScreen() {
   const { logout, user: authUser } = useAuthContext();
   const user = CURRENT_USER;
   const { data: achievementBadges = [] } = trpc.memberData.achievementBadges.useQuery(undefined, { enabled: Boolean(authUser) });
+  const { data: memberIdentity } = trpc.memberData.identity.useQuery(undefined, { enabled: Boolean(authUser) });
   const selectedBranches = authUser?.branches?.length
     ? authUser.branches
     : [authUser?.branch ?? user.branch];
@@ -715,6 +716,10 @@ export default function ProfileScreen() {
     drinkingLevel: CURRENT_USER.drinkingLevel ?? "", instagramUrl: CURRENT_USER.instagramUrl ?? "",
   });
   const [memberId, setMemberId] = useState<string>("");
+  useEffect(() => {
+    if (memberIdentity?.memberId) setMemberId(memberIdentity.memberId);
+    if (memberIdentity?.displayName) setProfileName((current) => current || memberIdentity.displayName || "");
+  }, [memberIdentity]);
   // イロタスポイント
   const [irotasPoints, setIrotasPoints] = useState(0);
   const [feeExempt, setFeeExempt] = useState(false);
@@ -742,11 +747,13 @@ export default function ProfileScreen() {
             const list = savedInterests.split(",").map((s) => s.trim()).filter(Boolean);
             setProfileInterests(list);
           }
-          if (savedMemberId) {
+          if (memberIdentity?.memberId) {
+            setMemberId(memberIdentity.memberId);
+          } else if (savedMemberId) {
             setMemberId(savedMemberId);
           } else {
-            // 初回：ランダム6桁IDを生成して保存
-            const newId = "IRO-" + String(Math.floor(100000 + Math.random() * 900000));
+            // プレビュー用。実会員はサブスク登録日時順のDB採番を表示する。
+            const newId = "IRO-000001";
             AsyncStorage.setItem("member_id", newId);
             setMemberId(newId);
           }
@@ -756,7 +763,7 @@ export default function ProfileScreen() {
       // イロタスポイント・会費免除を読み込む
       getIrotasPoints(user.id).then(setIrotasPoints);
       isFeeExempt(user.id).then(setFeeExempt);
-    }, [user.id])
+    }, [memberIdentity?.memberId, user.id])
   );
 
   const publishedAge = (() => {
