@@ -26,6 +26,7 @@ import {
   View,
 } from "react-native";
 import { GOOGLE_GOURMET_MAP_LISTS } from "@/constants/external-links";
+import { matchesAllSearchWords } from "@/lib/multi-word-search";
 
 const SEEDED_RESTAURANTS: Restaurant[] = GOURMET_MAP_SEED.map((restaurant) => ({
   ...restaurant,
@@ -412,12 +413,7 @@ export default function GourmetMapScreen() {
 
   const genres = useMemo(() => [...new Set(restaurants.map((restaurant) => restaurant.genre))].sort(), [restaurants]);
   const filteredRestaurants = restaurants.filter((r) => {
-    const matchSearch =
-      !searchQuery ||
-      r.name.includes(searchQuery) ||
-      r.address.includes(searchQuery) ||
-      r.genre.includes(searchQuery) ||
-      r.sourceCategories?.some((category) => category.includes(searchQuery));
+    const matchSearch = matchesAllSearchWords(searchQuery, [r.name, r.address, r.genre, r.sourceList, ...(r.sourceCategories ?? [])]);
     const matchGenre = !selectedGenre || r.genre === selectedGenre;
     return matchSearch && matchGenre;
   });
@@ -509,7 +505,7 @@ export default function GourmetMapScreen() {
         </ScrollView>
         <View style={{ marginHorizontal: 16, marginTop: 10, backgroundColor: "#FFF7E8", borderRadius: 12, padding: 11, flexDirection: "row", alignItems: "center" }}>
           <IconSymbol name="checkmark.circle.fill" size={17} color="#C58A24" />
-          <Text style={{ flex: 1, marginLeft: 8, fontSize: 12, lineHeight: 17, color: colors.foreground }}><Text style={{ fontWeight: "900" }}>{updateLabel}</Text>　居酒屋リスト {restaurants.filter((restaurant) => restaurant.sourceList === "居酒屋").length}件</Text>
+          <Text style={{ flex: 1, marginLeft: 8, fontSize: 12, lineHeight: 17, color: colors.foreground }}><Text style={{ fontWeight: "900" }}>{updateLabel}</Text>　{genres.length}ジャンル {restaurants.length}件</Text>
         </View>
       </View>
 
@@ -527,7 +523,7 @@ export default function GourmetMapScreen() {
         >
           <IconSymbol name="magnifyingglass" size={18} color={colors.muted} />
           <TextInput
-            placeholder="店名・エリア・ジャンルで検索"
+            placeholder="店名・エリアを複数ワードで検索"
             placeholderTextColor={colors.muted}
             value={searchQuery}
             onChangeText={setSearchQuery}

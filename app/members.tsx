@@ -1,23 +1,45 @@
 import { ScreenContainer } from "@/components/screen-container";
 import { NewMemberMark } from "@/components/new-member-mark";
 import { IconSymbol } from "@/components/ui/icon-symbol";
-import { MEMBERS, CURRENT_USER, RANK_COLORS, RANK_LABELS } from "@/constants/mock-data";
+import { MEMBERS, CURRENT_USER, DEFAULT_AVATAR, RANK_COLORS, RANK_LABELS, type MemberRank } from "@/constants/mock-data";
 import { useColors } from "@/hooks/use-colors";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { useState, useMemo } from "react";
 import { FlatList, Pressable, Text, TextInput, View } from "react-native";
+import { trpc } from "@/lib/trpc";
+import { useAuthContext } from "@/lib/auth-context";
+import { matchesAllSearchWords } from "@/lib/multi-word-search";
+
+function normalizeRank(value?: string | null): MemberRank {
+  if (/プラチナ|platinum/i.test(value ?? "")) return "platinum";
+  if (/ゴールド|gold/i.test(value ?? "")) return "gold";
+  if (/シルバー|silver/i.test(value ?? "")) return "silver";
+  return "regular";
+}
 
 export default function MembersScreen() {
   const colors = useColors();
   const router = useRouter();
+  const { user: authUser } = useAuthContext();
+  const { data: directory } = trpc.memberData.directory.useQuery(undefined, { enabled: Boolean(authUser) });
   const [searchText, setSearchText] = useState("");
 
+  const searchableMembers = useMemo(() => directory?.length ? directory.map((member) => ({
+    id: member.memberId ?? `member-${member.userId ?? "unknown"}`,
+    name: member.displayName ?? "IRO+メンバー",
+    rank: normalizeRank(member.memberRank),
+    generation: Number(member.memberTerm?.match(/\d+/)?.[0] ?? 0),
+    avatar: DEFAULT_AVATAR,
+    bio: "",
+    joinedAt: "",
+    isCurrentUser: member.userId === authUser?.id,
+    isDatabaseMember: true,
+  })) : MEMBERS.map((member) => ({ ...member, isCurrentUser: member.id === CURRENT_USER.id, isDatabaseMember: false })), [authUser?.id, directory]);
+
   const filteredMembers = useMemo(() => {
-    const query = searchText.trim().toLowerCase();
-    if (!query) return MEMBERS;
-    return MEMBERS.filter((member) => member.name.toLowerCase().includes(query) || member.id.toLowerCase().includes(query));
-  }, [searchText]);
+    return searchableMembers.filter((member) => matchesAllSearchWords(searchText, [member.name, member.id]));
+  }, [searchText, searchableMembers]);
 
   return (
     <ScreenContainer>
@@ -70,10 +92,10 @@ export default function MembersScreen() {
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => {
           const rankColor = RANK_COLORS[item.rank];
-          const isMe = item.id === CURRENT_USER.id;
+          const isMe = item.isCurrentUser;
           return (
             <Pressable
-              onPress={() => router.push({ pathname: "/member-profile", params: { id: item.id } })}
+              onPress={() => { if (!item.isDatabaseMember) router.push({ pathname: "/member-profile", params: { id: item.id } }); }}
               style={({ pressed }) => ({
                 flexDirection: "row",
                 alignItems: "center",
@@ -151,7 +173,7 @@ export default function MembersScreen() {
                   </Text>
                 )}
               </View>
-              <IconSymbol name="chevron.right" size={16} color={colors.muted} />
+              {!item.isDatabaseMember ? <IconSymbol name="chevron.right" size={16} color={colors.muted} /> : null}
             </Pressable>
           );
         }}

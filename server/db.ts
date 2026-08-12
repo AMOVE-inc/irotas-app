@@ -184,6 +184,36 @@ export async function getMemberIdentity(userId: number) {
   return { memberId: membership.memberId, displayName: membership.displayName, achievementBadges: membership.achievementBadges ?? [] };
 }
 
+/** 退会・停止済みを除いた会員ディレクトリ。メール等の決済情報は返さない。 */
+export async function listActiveMemberDirectory() {
+  const db = await getDb();
+  if (!db) return [];
+  const rows = await db.select({
+    userId: memberSubscriptions.userId,
+    memberId: memberSubscriptions.memberId,
+    displayName: memberSubscriptions.displayName,
+    memberRank: memberSubscriptions.memberRank,
+    memberTerm: memberSubscriptions.memberTerm,
+    achievementBadges: memberSubscriptions.achievementBadges,
+    accessStatus: memberSubscriptions.accessStatus,
+    graceUntilDate: memberSubscriptions.graceUntilDate,
+    userRole: users.role,
+    accessRole: allowedEmails.accessRole,
+  }).from(memberSubscriptions)
+    .leftJoin(users, eq(users.id, memberSubscriptions.userId))
+    .leftJoin(allowedEmails, eq(allowedEmails.email, memberSubscriptions.billingEmail))
+    .where(or(
+      eq(memberSubscriptions.accessStatus, "active"),
+      eq(memberSubscriptions.accessStatus, "grace"),
+      eq(users.role, "admin"),
+      eq(users.role, "operator"),
+      eq(allowedEmails.accessRole, "operator"),
+      eq(allowedEmails.accessRole, "club_leader"),
+    ));
+  const now = new Date();
+  return rows.filter((row) => canBypassSubscription(row.userRole, row.accessRole as SubscriptionExemptRole) || row.accessStatus === "active" || Boolean(row.graceUntilDate && row.graceUntilDate.getTime() >= now.getTime())).map(({ accessStatus: _accessStatus, graceUntilDate: _graceUntilDate, userRole: _userRole, accessRole: _accessRole, ...row }) => row);
+}
+
 export async function memberHasAppAccess(userId: number): Promise<boolean> {
   if (await userHasSubscriptionExemption(userId)) return true;
   const membership = await getMembershipByUserId(userId);

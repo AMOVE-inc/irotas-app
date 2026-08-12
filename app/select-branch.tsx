@@ -79,7 +79,7 @@ export default function SelectBranchScreen() {
             <Text
               style={{ fontSize: 14, lineHeight: 21, color: colors.muted, textAlign: "center", marginTop: 8 }}
             >
-              関東・関西の両方を選択できます。{`\n`}所属支部はマイページからいつでも変更できます。
+              選択した支部からの通知が届きます。{`\n`}所属支部はマイページからいつでも変更できます。
             </Text>
           </View>
 

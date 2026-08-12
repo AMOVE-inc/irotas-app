@@ -152,6 +152,7 @@ export const appRouter = router({
   migration: migrationRouter,
   memberData: router({
     identity: protectedProcedure.query(({ ctx }) => db.getMemberIdentity(ctx.user.id)),
+    directory: protectedProcedure.query(() => db.listActiveMemberDirectory()),
     achievementBadges: protectedProcedure.query(({ ctx }) => db.listAchievementBadges(ctx.user.id)),
     favoriteEventIds: protectedProcedure.query(({ ctx }) => db.listEventFavoriteIds(ctx.user.id)),
     setEventFavorite: protectedProcedure.input(z.object({ eventId: z.number().int().positive(), favorite: z.boolean() })).mutation(async ({ ctx, input }) => { await db.setEventFavorite(ctx.user.id, input.eventId, input.favorite); return { success: true }; }),

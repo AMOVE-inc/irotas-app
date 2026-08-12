@@ -1,10 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { GOURMET_MAP_SEED } from "../constants/gourmet-map-seed";
 
-describe("202608 居酒屋 gourmet map seed", () => {
-  it("contains the 307 validated restaurants from the sample CSV", () => {
-    expect(GOURMET_MAP_SEED).toHaveLength(307);
-    expect(new Set(GOURMET_MAP_SEED.map((restaurant) => restaurant.placeId)).size).toBe(307);
+describe("202608 gourmet map seed", () => {
+  it("contains all uploaded genres without duplicate places", () => {
+    expect(GOURMET_MAP_SEED.length).toBeGreaterThan(307);
+    expect(new Set(GOURMET_MAP_SEED.map((restaurant) => restaurant.genre)).size).toBeGreaterThan(20);
+    expect(new Set(GOURMET_MAP_SEED.map((restaurant) => restaurant.placeId)).size).toBe(GOURMET_MAP_SEED.length);
   });
 
   it("keeps the fields required by the published gourmet map", () => {
