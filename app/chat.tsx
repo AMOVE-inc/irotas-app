@@ -8,11 +8,12 @@ import {
   DEFAULT_AVATAR,
   MEMBERS,
   CLUBS,
+  BOARD_THREADS,
   getMemberById,
   type ChatMessage,
 } from "@/constants/mock-data";
 import { useAuthContext } from "@/lib/auth-context";
-import { getRoomById, getMessages, saveMessagesToStorage, loadMessagesFromStorage, loadDynamicRooms, renameRoom, addMemberToRoom, removeMemberFromRoom, toggleMessageReaction } from "@/lib/chat-store";
+import { getAllRooms, getRoomById, getMessages, saveMessagesToStorage, loadMessagesFromStorage, loadDynamicRooms, renameRoom, addMemberToRoom, removeMemberFromRoom, toggleMessageReaction } from "@/lib/chat-store";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useColors } from "@/hooks/use-colors";
 import { Image } from "expo-image";
@@ -46,7 +47,7 @@ import { applyTextFormat, type TextFormat, type TextSelection } from "@/lib/text
 const REACTION_EMOJIS = ["👍", "❤️", "😂", "🎉", "😋", "🙏"] as const;
 const MORE_REACTION_EMOJIS = ["👏", "😊", "😍", "🥳", "😆", "😭", "😮", "🤔", "🙌", "✨", "🔥", "💯", "🍽️", "🍣", "🍷", "☕", "🍺", "🍰", "👌", "💪", "🙏🏻", "👀", "💡", "✅"] as const;
 
-function MessageBubble({ message, isMe, myAvatarUri, onReact, mentionGroups }: { message: ChatMessage; isMe: boolean; myAvatarUri?: string | null; onReact: (emoji: string) => void; mentionGroups: ReturnType<typeof getMentionGroups> }) {
+function MessageBubble({ message, isMe, myAvatarUri, onReact, mentionGroups, onOpenInternalLink }: { message: ChatMessage; isMe: boolean; myAvatarUri?: string | null; onReact: (emoji: string) => void; mentionGroups: ReturnType<typeof getMentionGroups>; onOpenInternalLink: (pathname: "/chat" | "/board", params: Record<string, string>) => void }) {
   const colors = useColors();
   const sender = getMemberById(message.senderId);
   const [showReactionPicker, setShowReactionPicker] = useState(false);
@@ -114,7 +115,7 @@ function MessageBubble({ message, isMe, myAvatarUri, onReact, mentionGroups }: {
           ) : null}
           {message.content ? (
             <View style={{ paddingHorizontal: 14, paddingVertical: 10 }}>
-              <MentionText content={message.content} outgoing={isMe} groups={mentionGroups} />
+              <MentionText content={message.content} outgoing={isMe} groups={mentionGroups} rooms={getAllRooms()} threads={BOARD_THREADS} onOpenInternalLink={onOpenInternalLink} />
             </View>
           ) : null}
         </View>
@@ -408,6 +409,7 @@ export default function ChatScreen() {
               myAvatarUri={myAvatarUri}
               onReact={(emoji) => handleReaction(item.id, emoji)}
               mentionGroups={mentionGroups}
+              onOpenInternalLink={(pathname, params) => router.push({ pathname, params } as any)}
             />
           )}
           contentContainerStyle={{ paddingVertical: 16 }}

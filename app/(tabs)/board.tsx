@@ -1814,7 +1814,7 @@ function CreateThreadModal({
 export default function BoardScreen() {
   const colors = useColors();
   const router = useRouter();
-  const { compose, category: categoryParam, view } = useLocalSearchParams<{ compose?: string; category?: string; view?: string }>();
+  const { compose, category: categoryParam, view, thread: threadParam } = useLocalSearchParams<{ compose?: string; category?: string; view?: string; thread?: string }>();
   const { user: authUser } = useAuthContext();
   const userIsAdmin = canManageBoardCategories(authUser?.role);
   const clubs = useClubs();
@@ -1859,8 +1859,13 @@ export default function BoardScreen() {
   // `canAccessCategory` reads the current role/club membership on each route change.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [categoryParam, isThreadView, router]);
-  const allThreads = [...dynamicThreads, ...BOARD_THREADS].map((t) => editedThreads[t.id] ?? t);
+  const allThreads = useMemo(() => [...dynamicThreads, ...BOARD_THREADS].map((t) => editedThreads[t.id] ?? t), [dynamicThreads, editedThreads]);
   const filteredThreads = allThreads.filter((t) => t.category === activeCategory);
+  useEffect(() => {
+    if (!threadParam) return;
+    const linkedThread = allThreads.find((item) => item.id === threadParam);
+    if (linkedThread) setSelectedThread(linkedThread);
+  }, [threadParam, allThreads]);
   const canAccessCategory = (category: BoardCategory) => {
     if (category.group !== "club" || userIsAdmin) return true;
     if (category.key === "club-all") {
@@ -2017,7 +2022,7 @@ export default function BoardScreen() {
         renderItem={({ item }) => (
           <ThreadCard
             thread={item}
-            onPress={() => setSelectedThread(item)}
+            onPress={() => { setSelectedThread(item); router.setParams({ thread: item.id }); }}
             onEdit={item.author.id === CURRENT_USER.id && !item.mealReport ? () => setEditingThread(item) : undefined}
           />
         )}
@@ -2051,12 +2056,12 @@ export default function BoardScreen() {
         visible={!!selectedThread}
         animationType="slide"
         presentationStyle="pageSheet"
-        onRequestClose={() => setSelectedThread(null)}
+        onRequestClose={() => { setSelectedThread(null); router.setParams({ thread: "" }); }}
       >
         {selectedThread && (
           <ThreadDetailModal
             thread={selectedThread}
-            onClose={() => setSelectedThread(null)}
+            onClose={() => { setSelectedThread(null); router.setParams({ thread: "" }); }}
           />
         )}
       </Modal>
