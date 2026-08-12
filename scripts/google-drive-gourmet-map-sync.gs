@@ -159,7 +159,8 @@ function rebuildGourmetMapFeed() {
   csvFiles.forEach(function (file) {
     var category = categoryFromFilename(file.getName());
     var importedAt = file.getLastUpdated().toISOString();
-    var values = Utilities.parseCsv(file.getBlob().getDataAsString("UTF-8"));
+    var csvText = file.getBlob().getDataAsString("UTF-8").replace(/^\uFEFF/, "");
+    var values = Utilities.parseCsv(csvText);
     if (!values.length) return;
     var headers = values[0].map(function (header) { return text(header).replace(/^\uFEFF/, ""); });
     var rowCount = 0;
