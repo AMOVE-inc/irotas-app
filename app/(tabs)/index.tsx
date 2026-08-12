@@ -32,6 +32,9 @@ import {
   RefreshControl,
   useWindowDimensions,
 } from "react-native";
+import { getHomeActivities, type HomeActivity, type HomeActivityKind } from "@/lib/home-activity-store";
+import { getGiftCampaigns, type GiftCampaign } from "@/lib/gift-campaign-store";
+import { useFocusEffect } from "expo-router";
 
 // タイムラインコメント型
 interface TimelineComment {
@@ -149,7 +152,7 @@ function AnnouncementBanner({ announcements }: { announcements: Announcement[] }
   );
 }
 
-function CampaignSection() {
+function CampaignSection({ gifts }: { gifts: GiftCampaign[] }) {
   const colors = useColors();
   const router = useRouter();
   return (
@@ -159,7 +162,7 @@ function CampaignSection() {
         <Text style={{ fontSize: 16, fontWeight: "800", color: colors.foreground, marginLeft: 7 }}>キャンペーン情報</Text>
       </View>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, gap: 10 }}>
-        {HOME_CAMPAIGNS.map((campaign) => (
+        {[...gifts.map((gift) => ({ id: `gift:${gift.id}`, label: "抽選受付中", title: gift.title, description: gift.description, period: `応募期限 ${gift.deadline}`, color: "#D1749B", route: "/gift-campaign" as const })), ...HOME_CAMPAIGNS].map((campaign) => (
           <Pressable key={campaign.id} onPress={() => router.push(campaign.route)} style={{ width: 270, borderRadius: 16, padding: 16, backgroundColor: `${campaign.color}16`, borderWidth: 1, borderColor: `${campaign.color}45` }}>
             <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 8 }}>
               <Text style={{ fontSize: 10, fontWeight: "800", color: campaign.color, backgroundColor: colors.background, borderRadius: 8, paddingHorizontal: 8, paddingVertical: 3 }}>{campaign.label}</Text>
@@ -173,6 +176,29 @@ function CampaignSection() {
       </ScrollView>
     </View>
   );
+}
+
+const ACTIVITY_PRESENTATION: Record<HomeActivityKind, { icon: string; label: string; color: string }> = {
+  announcement: { icon: "megaphone.fill", label: "運営アナウンス", color: "#D56591" },
+  event: { icon: "calendar", label: "新規イベント", color: "#4E88B5" },
+  contest_thread: { icon: "trophy.fill", label: "グルメ選手権", color: "#B78920" },
+  contest_comment: { icon: "bubble.left.fill", label: "グルメ選手権", color: "#B78920" },
+  introduction: { icon: "person.fill", label: "自己紹介", color: "#6A8FB3" },
+  gourmet_advice: { icon: "sparkles", label: "教えてグルメ相談室", color: "#8C6DB0" },
+  free_chat: { icon: "bubble.left.and.bubble.right.fill", label: "なんでも掲示板", color: "#5F9E8C" },
+};
+
+function ActivityCard({ activity }: { activity: HomeActivity }) {
+  const colors = useColors();
+  const router = useRouter();
+  const presentation = ACTIVITY_PRESENTATION[activity.kind];
+  const elapsed = Date.now() - Date.parse(activity.createdAt);
+  const timeLabel = elapsed < 3_600_000 ? "たった今" : elapsed < 86_400_000 ? `${Math.floor(elapsed / 3_600_000)}時間前` : `${Math.floor(elapsed / 86_400_000)}日前`;
+  return <Pressable onPress={() => router.push({ pathname: activity.route as any, params: activity.params } as any)} style={{ flexDirection: "row", paddingHorizontal: 16, paddingVertical: 13, borderBottomWidth: 0.5, borderBottomColor: colors.border }}>
+    <View style={{ width: 42, height: 42, borderRadius: 21, backgroundColor: `${presentation.color}18`, alignItems: "center", justifyContent: "center" }}><IconSymbol name={presentation.icon as any} size={20} color={presentation.color} /></View>
+    <View style={{ flex: 1, marginLeft: 11 }}><View style={{ flexDirection: "row", alignItems: "center" }}><Text style={{ flex: 1, fontSize: 11, fontWeight: "800", color: presentation.color }}>{presentation.label}</Text><Text style={{ fontSize: 10, color: colors.muted }}>{timeLabel}</Text></View><Text numberOfLines={2} style={{ fontSize: 14, fontWeight: "800", color: colors.foreground, marginTop: 3 }}>{activity.title}</Text><Text numberOfLines={2} style={{ fontSize: 12, lineHeight: 17, color: colors.muted, marginTop: 3 }}>{activity.description}</Text></View>
+    <IconSymbol name="chevron.right" size={15} color={colors.muted} style={{ alignSelf: "center", marginLeft: 5 }} />
+  </Pressable>;
 }
 
 function TodayEventsSection({
@@ -538,6 +564,18 @@ export default function HomeScreen() {
   const colors = useColors();
   const router = useRouter();
   const [refreshing, setRefreshing] = useState(false);
+  const [activities, setActivities] = useState<HomeActivity[]>([]);
+  const [giftCampaigns, setGiftCampaigns] = useState<GiftCampaign[]>([]);
+
+  const loadHomeContent = useCallback(() => {
+    void Promise.all([getHomeActivities(), getGiftCampaigns()]).then(([nextActivities, gifts]) => {
+      setActivities(nextActivities);
+      const today = new Date().toISOString().slice(0, 10);
+      setGiftCampaigns(gifts.filter((gift) => gift.status === "open" && gift.deadline >= today).sort((a, b) => a.deadline.localeCompare(b.deadline)));
+    });
+  }, []);
+
+  useFocusEffect(useCallback(() => { loadHomeContent(); }, [loadHomeContent]));
 
   const { events: todayEvents, boardEvents: todayBoardEvents } = useMemo(
     () => getTodayEvents(),
@@ -546,19 +584,20 @@ export default function HomeScreen() {
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
-    setTimeout(() => setRefreshing(false), 1000);
-  }, []);
+    loadHomeContent();
+    setTimeout(() => setRefreshing(false), 500);
+  }, [loadHomeContent]);
 
-  const renderItem = useCallback(
-    ({ item }: { item: TimelinePost }) => <TimelinePostCard post={item} />,
-    [],
-  );
+  const timelineItems = useMemo(() => [
+    ...activities.map((activity) => ({ type: "activity" as const, id: activity.id, createdAt: activity.createdAt, activity })),
+    ...TIMELINE_POSTS.map((post) => ({ type: "post" as const, id: post.id, createdAt: post.createdAt, post })),
+  ].sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt)), [activities]);
 
   const ListHeader = useMemo(
     () => (
       <>
         <AnnouncementBanner announcements={ANNOUNCEMENTS} />
-        <CampaignSection />
+        <CampaignSection gifts={giftCampaigns} />
         <TodayEventsSection events={todayEvents} boardEvents={todayBoardEvents} />
         <View style={{ paddingHorizontal: 16, paddingVertical: 8, borderBottomWidth: 0.5, borderBottomColor: colors.border }}>
           <Text style={{ fontSize: 16, fontWeight: "700", color: colors.foreground }}>
@@ -567,7 +606,7 @@ export default function HomeScreen() {
         </View>
       </>
     ),
-    [todayEvents, todayBoardEvents, colors],
+    [todayEvents, todayBoardEvents, giftCampaigns, colors],
   );
 
   return (
@@ -592,9 +631,9 @@ export default function HomeScreen() {
       </View>
 
       <FlatList
-        data={TIMELINE_POSTS}
+        data={timelineItems}
         keyExtractor={(item) => item.id}
-        renderItem={renderItem}
+        renderItem={({ item }) => item.type === "activity" ? <ActivityCard activity={item.activity} /> : <TimelinePostCard post={item.post} />}
         ListHeaderComponent={ListHeader}
         refreshControl={
           <RefreshControl

@@ -49,6 +49,7 @@ import {
   RefreshControl,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { boardActivityForThread, recordHomeActivity } from "@/lib/home-activity-store";
 
 const BOARD_GROUPS: { key: BoardCategory["group"]; label: string }[] = [
   { key: "all", label: "全体" },
@@ -562,6 +563,7 @@ function ThreadDetailModal({
       createdAt: new Date().toISOString(),
     };
     setComments([...comments, newComment]);
+    if (thread.category === "gourmet-contest") void recordHomeActivity({ id: `comment:${newComment.id}`, kind: "contest_comment", title: `${thread.title}にコメントが追加されました`, description: content, createdAt: newComment.createdAt, route: "/board", params: { category: "gourmet-contest", view: "threads" } });
     setCommentText("");
     setCommentSelection({ start: 0, end: 0 });
     setMentionQuery(null);
@@ -1387,6 +1389,8 @@ function CreateThreadModal({
       gourmetContest: isGourmetContest ? { commentDeadline: contestDeadline, prizeTitle: contestPrizeTitle.trim(), prizeDescription: contestPrizeDescription.trim(), prizeExpiresAt: contestPrizeExpiresAt } : undefined,
     };
     onAdd(newThread);
+    const homeActivity = boardActivityForThread(newThread);
+    if (homeActivity) void recordHomeActivity(homeActivity);
     if (!isMealReport && !isGourmetAdvice) {
       const mentionContent = isIntroduction ? `${introductionText} ${wantToTry} ${favoriteRestaurants} ${desiredRestaurants}` : content;
       const preview = mentionContent.length > 50 ? `${mentionContent.slice(0, 50)}...` : mentionContent;

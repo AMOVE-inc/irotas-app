@@ -10,6 +10,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { areFriends } from "@/lib/friendship";
 import { sortRoomsByRecent } from "@/lib/chat-order";
 import { toggleReactionMember } from "@/lib/chat-reactions";
+import { recordHomeActivity } from "@/lib/home-activity-store";
 export { sortRoomsByRecent } from "@/lib/chat-order";
 
 // 動的に追加されたチャットルーム（セッション中のみ保持）
@@ -292,6 +293,9 @@ export function addMessage(chatId: string, senderId: string, content: string): C
   if (room) {
     room.lastMessage = content;
     room.lastMessageAt = msg.createdAt;
+  }
+  if (chatId === "board-announcement") {
+    void recordHomeActivity({ id: `announcement:${msg.id}`, kind: "announcement", title: "運営アナウンスが更新されました", description: content, createdAt: msg.createdAt, route: "/chat", params: { id: chatId } });
   }
 
   return msg;
