@@ -380,16 +380,18 @@ export default function ChatScreen() {
                 {typeLabel}
               </Text>
             </View>
-            <Text style={{ fontSize: 11, color: colors.muted, marginLeft: 6 }}>
-              {roomParticipants.length}人参加中
-            </Text>
+            {room.id !== "board-announcement" ? (
+              <Text style={{ fontSize: 11, color: colors.muted, marginLeft: 6 }}>
+                {roomParticipants.length}人参加中
+              </Text>
+            ) : null}
           </View>
         </View>
-        <Pressable
-          onPress={() => setShowParticipants(true)}
-        >
-          <IconSymbol name="person.2.fill" size={20} color={colors.muted} />
-        </Pressable>
+        {room.id !== "board-announcement" ? (
+          <Pressable onPress={() => setShowParticipants(true)}>
+            <IconSymbol name="person.2.fill" size={20} color={colors.muted} />
+          </Pressable>
+        ) : null}
       </View>
 
       <KeyboardAvoidingView
@@ -544,7 +546,7 @@ export default function ChatScreen() {
 
       {/* ===== 参加者一覧モーダル ===== */}
       <Modal
-        visible={showParticipants}
+        visible={showParticipants && room.id !== "board-announcement"}
         animationType="slide"
         presentationStyle="pageSheet"
         onRequestClose={() => setShowParticipants(false)}

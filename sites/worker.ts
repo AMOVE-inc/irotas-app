@@ -49,6 +49,57 @@ async function enrichWithPlaces(input: CommunitySubmission, apiKey?: string) {
   }
 }
 
+function decodeHtml(value: string) {
+  return value.replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, "&").replace(/\\u([0-9a-f]{4})/gi, (_, code) => String.fromCharCode(parseInt(code, 16)));
+}
+
+async function locationHintFromUrl(rawUrl?: string) {
+  if (!rawUrl) return "";
+  try {
+    let current = new URL(rawUrl);
+    if (current.hostname === "maps.app.goo.gl") {
+      for (let index = 0; index < 5; index += 1) {
+        const response = await fetch(current.toString(), { redirect: "manual" });
+        const location = response.headers.get("location");
+        if (!location) break;
+        current = new URL(location, current);
+      }
+    }
+    if (current.hostname.includes("tabelog.com")) {
+      const response = await fetch(current.toString(), { headers: { "user-agent": "Mozilla/5.0", accept: "text/html" } });
+      if (response.ok) {
+        const html = await response.text();
+        const address = html.match(/"streetAddress"\s*:\s*"([^"]+)"/i)?.[1];
+        const title = html.match(/<meta[^>]+property=["']og:title["'][^>]+content=["']([^"']+)/i)?.[1];
+        return decodeHtml(`${title ?? ""} ${address ?? ""}`.trim()).slice(0, 500);
+      }
+    }
+    return decodeURIComponent(`${current.searchParams.get("query") ?? ""} ${current.pathname.replace(/\+/g, " ")}`).slice(0, 500);
+  } catch {
+    return "";
+  }
+}
+
+async function resolveRestaurantAddress(input: Record<string, unknown>, apiKey?: string) {
+  const restaurantName = typeof input.restaurantName === "string" ? input.restaurantName.trim().slice(0, 255) : "";
+  const googleMapsUrl = typeof input.googleMapsUrl === "string" ? input.googleMapsUrl.trim() : "";
+  const tabelogUrl = typeof input.tabelogUrl === "string" ? input.tabelogUrl.trim() : "";
+  if (!restaurantName || (!googleMapsUrl && !tabelogUrl) || !apiKey) return null;
+  const hint = await locationHintFromUrl(googleMapsUrl || tabelogUrl);
+  const response = await fetch("https://places.googleapis.com/v1/places:searchText", {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "x-goog-api-key": apiKey,
+      "x-goog-fieldmask": "places.displayName,places.formattedAddress,places.googleMapsUri",
+    },
+    body: JSON.stringify({ textQuery: `${restaurantName} ${hint}`.trim(), languageCode: "ja", regionCode: "JP", maxResultCount: 1 }),
+  });
+  if (!response.ok) return null;
+  const result = await response.json() as { places?: Array<{ formattedAddress?: string; displayName?: { text?: string }; googleMapsUri?: string }> };
+  return result.places?.[0] ?? null;
+}
+
 function assetRequest(request: Request, pathname: string) {
   const url = new URL(request.url);
   url.pathname = pathname;
@@ -76,6 +127,17 @@ export default {
         });
       } catch {
         return Response.json({ configured: true, restaurants: [] }, { status: 502 });
+      }
+    }
+
+    if (pathname === "/api/restaurant-location" && request.method === "POST") {
+      try {
+        const input = await request.json() as Record<string, unknown>;
+        const place = await resolveRestaurantAddress(input, env.GOOGLE_MAPS_API_KEY);
+        if (!place?.formattedAddress) return Response.json({ success: false }, { status: 404 });
+        return Response.json({ success: true, formattedAddress: place.formattedAddress, name: place.displayName?.text, googleMapsUrl: place.googleMapsUri }, { headers: { "cache-control": "no-store" } });
+      } catch {
+        return Response.json({ success: false }, { status: 400 });
       }
     }
 

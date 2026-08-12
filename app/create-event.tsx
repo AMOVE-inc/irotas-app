@@ -161,10 +161,10 @@ export default function CreateEventScreen() {
   };
   const numericAmount = (value: string) => Number(value.replace(/[^0-9]/g, ""));
   const handleCreate = () => {
-    if (!restaurantName.trim() || !date || !time || !address.trim() || !reservationCapacity || !recruitCapacity || !budgetMin || (!fixedAmount && !budgetMax) || !decisionDate || !imageUri || !termsAccepted || genres.length === 0) {
+    if (!restaurantName.trim() || !date || !time || !reservationCapacity || !recruitCapacity || !budgetMin || (!fixedAmount && !budgetMax) || !decisionDate || !imageUri || !termsAccepted || genres.length === 0) {
       Alert.alert("入力エラー", "必須項目・写真・規約同意を確認してください"); return;
     }
-    if (!extractedLocation.prefecture) { Alert.alert("住所を確認してください", "住所には都道府県名を含めてください"); return; }
+    if (address.trim() && !extractedLocation.prefecture) { Alert.alert("住所を確認してください", "住所を入力する場合は都道府県名を含めてください"); return; }
     if (decisionDate > date) { Alert.alert("期日を確認してください", "参加者決定予定日は開催日以前を選択してください"); return; }
     if (!fixedAmount && numericAmount(budgetMin) > numericAmount(budgetMax)) { Alert.alert("金額を確認してください", "下限金額は上限金額以下にしてください"); return; }
     if (1 + companionIds.length + Number(recruitCapacity) > Number(reservationCapacity)) { Alert.alert("人数を確認してください", "予約人数には、自分・同席者・募集人数の全員が収まるよう設定してください"); return; }
@@ -180,7 +180,7 @@ export default function CreateEventScreen() {
       : undefined;
     const newEvent: Event = {
       id: `event_${Date.now()}`, createdAt: new Date().toISOString(), title, restaurantName: restaurantName.trim(), description: publicNotes.trim() || (finalType === "official" ? "IRO＋公式イベントです。" : "メンバー主催のグルメ会です。"), date, time,
-      location: address.trim(), prefecture: extractedLocation.prefecture, tokyoArea: extractedLocation.tokyoArea, image: imageUri, capacity: Number(recruitCapacity), reservationCapacity: Number(reservationCapacity), attendees: 0, applicantIds: [], participants: [], companionIds,
+      location: address.trim() || "住所未設定", prefecture: extractedLocation.prefecture, tokyoArea: extractedLocation.tokyoArea, image: imageUri, capacity: Number(recruitCapacity), reservationCapacity: Number(reservationCapacity), attendees: 0, applicantIds: [], participants: [], companionIds,
       price, priceMin: numericAmount(budgetMin), priceMax: fixedAmount ? numericAmount(budgetMin) : numericAmount(budgetMax), genres, ...(configuredRankPrices && Object.keys(configuredRankPrices).length ? { rankPrices: configuredRankPrices } : {}), category: eventCategoryFromPrefecture(extractedLocation.prefecture), eventType: finalType, status: "open", createdBy: CURRENT_USER.id,
       applicationDeadline: decisionDate, cancellationPolicy: cancellationPolicy.trim() || DEFAULT_CANCELLATION_POLICY, selectionMethod: finalType === "official" ? selectionMethod : "first_come", tabelogUrl: tabelogUrl.trim() || undefined, googleMapsUrl: googleMapsUrl.trim() || undefined, publicNotes: publicNotes.trim() || undefined, privateMemo: privateMemo.trim() || undefined,
     };
@@ -202,8 +202,10 @@ export default function CreateEventScreen() {
         <FieldLabel>店名 *</FieldLabel><TextInput value={restaurantName} onChangeText={setRestaurantName} placeholder="店舗名" placeholderTextColor={colors.muted} style={inputStyle} />
         <FieldLabel>イベント名（任意）</FieldLabel><TextInput value={eventName} onChangeText={setEventName} placeholder="未入力の場合は店名を表示" placeholderTextColor={colors.muted} style={inputStyle} />
         <FieldLabel>日時 *</FieldLabel><View style={{ gap: 9 }}><CalendarField label="開催日" value={date} onChange={setDate} /><SelectField label="開始時間（15分単位）" value={time} options={TIME_OPTIONS} onChange={setTime} /></View>
-        <FieldLabel>住所 *</FieldLabel><TextInput value={address} onChangeText={setAddress} placeholder="店舗住所" placeholderTextColor={colors.muted} style={inputStyle} />
+        <FieldLabel>住所（任意）</FieldLabel><TextInput value={address} onChangeText={setAddress} placeholder="例：東京都渋谷区恵比寿1-1-1" placeholderTextColor={colors.muted} style={inputStyle} />
         {address.trim() ? <Text style={{ marginTop: 7, fontSize: 12, fontWeight: "700", color: extractedLocation.prefecture ? "#3E78A1" : colors.error }}>{extractedLocation.prefecture ? `抽出エリア：${formatEventArea(extractedLocation.prefecture, extractedLocation.tokyoArea, address)}` : "都道府県を住所に含めてください"}</Text> : null}
+        <FieldLabel>食べログURL（任意）</FieldLabel><TextInput value={tabelogUrl} onChangeText={setTabelogUrl} placeholder="https://tabelog.com/..." placeholderTextColor={colors.muted} autoCapitalize="none" keyboardType="url" style={inputStyle} />
+        <FieldLabel>GoogleマップURL（任意）</FieldLabel><TextInput value={googleMapsUrl} onChangeText={setGoogleMapsUrl} placeholder="https://maps.app.goo.gl/..." placeholderTextColor={colors.muted} autoCapitalize="none" keyboardType="url" style={inputStyle} />
         <FieldLabel>グルメジャンル *（複数選択可）</FieldLabel>
         <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 7 }}>{GOURMET_GENRES.map((genre) => { const selected = genres.includes(genre); return <Pressable key={genre} onPress={() => setGenres((current) => selected ? current.filter((item) => item !== genre) : [...current, genre])} style={{ borderRadius: 18, paddingHorizontal: 11, paddingVertical: 7, backgroundColor: selected ? "#5D5C74" : colors.surface, borderWidth: 1, borderColor: selected ? "#5D5C74" : colors.border }}><Text style={{ fontSize: 12, fontWeight: "700", color: selected ? "#FFF" : colors.foreground }}>{genre}</Text></Pressable>; })}</View>
         <FieldLabel>予約人数 *</FieldLabel><SelectField label="予約人数" value={reservationCapacity} options={CAPACITY_OPTIONS} onChange={setReservationCapacity} />
@@ -215,8 +217,6 @@ export default function CreateEventScreen() {
 
         {eventType === "official" ? <><FieldLabel>ランク別料金</FieldLabel><Pressable onPress={() => setUseRankPrices((value) => !value)} style={{ flexDirection: "row", alignItems: "center" }}><View style={{ width: 22, height: 22, borderRadius: 6, backgroundColor: useRankPrices ? "#E8A0BF" : colors.surface, borderWidth: 1, borderColor: useRankPrices ? "#E8A0BF" : colors.border, alignItems: "center", justifyContent: "center" }}>{useRankPrices ? <IconSymbol name="checkmark" size={14} color="#FFF" /> : null}</View><Text style={{ marginLeft: 8, color: colors.foreground, fontSize: 13 }}>ランク別料金を設定する</Text></Pressable>{useRankPrices ? <View style={{ gap: 8, marginTop: 10 }}>{(["regular", "silver", "gold", "platinum"] as const).map((rank) => <View key={rank} style={{ flexDirection: "row", alignItems: "center" }}><Text style={{ width: 82, fontSize: 12, fontWeight: "700", color: colors.foreground }}>{rank === "regular" ? "レギュラー" : rank === "silver" ? "シルバー" : rank === "gold" ? "ゴールド" : "プラチナ"}</Text><View style={{ flex: 1 }}><SelectField label={`${rank}料金`} value={rankPrices[rank]} options={AMOUNT_OPTIONS} onChange={(value) => setRankPrices((current) => ({ ...current, [rank]: value }))} /></View></View>)}</View> : null}</> : null}
 
-        <FieldLabel>食べログURL（任意）</FieldLabel><TextInput value={tabelogUrl} onChangeText={setTabelogUrl} placeholder="https://tabelog.com/..." placeholderTextColor={colors.muted} autoCapitalize="none" keyboardType="url" style={inputStyle} />
-        <FieldLabel>GoogleマップURL（任意）</FieldLabel><TextInput value={googleMapsUrl} onChangeText={setGoogleMapsUrl} placeholder="https://maps.app.goo.gl/..." placeholderTextColor={colors.muted} autoCapitalize="none" keyboardType="url" style={inputStyle} />
         <FieldLabel>同席者</FieldLabel><MemberPicker selectedIds={companionIds} onChange={setCompanionIds} />
         <FieldLabel>写真 *</FieldLabel><Pressable onPress={handlePickImage} style={{ height: 150, borderRadius: 14, overflow: "hidden", backgroundColor: colors.surface, borderWidth: 1, borderStyle: imageUri ? "solid" : "dashed", borderColor: colors.border, alignItems: "center", justifyContent: "center" }}>{imageUri ? <Image source={{ uri: imageUri }} style={{ width: "100%", height: "100%" }} contentFit="cover" /> : <><IconSymbol name="photo.fill" size={30} color={colors.muted} /><Text style={{ marginTop: 7, color: colors.muted, fontSize: 13 }}>写真を選択</Text></>}</Pressable>
         <FieldLabel>参加者決定の予定期日 *</FieldLabel><CalendarField label="参加者決定予定日" value={decisionDate} onChange={setDecisionDate} />

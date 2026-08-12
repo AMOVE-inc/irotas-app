@@ -22,6 +22,7 @@ import { createBoardChat } from "@/lib/chat-store";
 import { canManageBoardCategories, canViewClubThread } from "@/lib/access-control";
 import { GOURMET_ADVICE_BUDGETS, isGoogleMapsUrl, MEAL_BUDGETS, MEAL_REPORT_AREAS } from "@/lib/meal-report";
 import { communityRestaurantFromMealReport, registerCommunityRestaurant } from "@/lib/gourmet-map-community";
+import { resolveRestaurantLocation } from "@/lib/restaurant-location";
 import { useClubs } from "@/lib/club-store";
 import { getMentionGroups, getMentionQuery, getMentionedMemberIds, insertMention } from "@/lib/mentions";
 import { sendMentionNotification } from "@/lib/notifications";
@@ -1287,6 +1288,8 @@ function CreateThreadModal({
   const [mealComment, setMealComment] = useState("");
   const [googleMapUrl, setGoogleMapUrl] = useState("");
   const [tabelogUrl, setTabelogUrl] = useState("");
+  const [resolvingArea, setResolvingArea] = useState(false);
+  const [resolvedAddress, setResolvedAddress] = useState("");
   const [adviceTheme, setAdviceTheme] = useState("");
   const [adviceArea, setAdviceArea] = useState("");
   const [adviceScene, setAdviceScene] = useState("");
@@ -1302,12 +1305,14 @@ function CreateThreadModal({
   const isGourmetAdvice = category === "gourmet-advice";
   const isIntroduction = category === "introduction";
   const isGourmetContest = category === "gourmet-contest";
+  const googleMapUrlValid = !googleMapUrl.trim() || isGoogleMapsUrl(googleMapUrl);
+  const tabelogUrlValid = !tabelogUrl.trim() || /^https?:\/\/(?:www\.)?tabelog\.com\//i.test(tabelogUrl.trim());
   const mealReportValid =
     restaurantName.trim().length > 0 &&
-    prefecture.length > 0 &&
     rating > 0 &&
-    isGoogleMapsUrl(googleMapUrl) &&
-    (!tabelogUrl.trim() || /^https?:\/\/(?:www\.)?tabelog\.com\//i.test(tabelogUrl.trim()));
+    Boolean(googleMapUrl.trim() || tabelogUrl.trim()) &&
+    googleMapUrlValid &&
+    tabelogUrlValid;
   const adviceValid = adviceTheme.trim().length > 0 && adviceArea.trim().length > 0 && adviceScene.trim().length > 0 && adviceBudget.length > 0 && adviceComment.trim().length > 0;
   const contestValid = title.trim().length > 0 && content.trim().length > 0 && /^\d{4}-\d{2}-\d{2}$/.test(contestDeadline) && contestPrizeTitle.trim().length > 0 && contestPrizeDescription.trim().length > 0 && /^\d{4}-\d{2}-\d{2}$/.test(contestPrizeExpiresAt);
   const canSubmit = isMealReport ? mealReportValid : isGourmetAdvice ? adviceValid : isIntroduction ? introductionText.trim().length > 0 : isGourmetContest ? contestValid : title.trim().length > 0 && content.trim().length > 0;
@@ -1332,9 +1337,21 @@ function CreateThreadModal({
     }
   };
 
-  const handleCreate = () => {
+  const detectMealReportArea = async () => {
+    if (!isMealReport || !restaurantName.trim() || (!googleMapUrl.trim() && !tabelogUrl.trim())) return prefecture;
+    setResolvingArea(true);
+    const result = await resolveRestaurantLocation({ restaurantName: restaurantName.trim(), googleMapsUrl: googleMapUrl.trim(), tabelogUrl: tabelogUrl.trim() });
+    setResolvingArea(false);
+    if (!result) return prefecture;
+    setPrefecture(result.area);
+    setResolvedAddress(result.formattedAddress ?? "");
+    setFormError("");
+    return result.area;
+  };
+
+  const handleCreate = async () => {
     if (isMealReport && !mealReportValid) {
-      setFormError("店名・場所・評価・有効なGoogleマップURLを入力してください。");
+      setFormError("店名・評価と、Googleマップまたは食べログの有効なURLを入力してください。");
       return;
     }
     if (isGourmetAdvice && !adviceValid) {
@@ -1354,6 +1371,7 @@ function CreateThreadModal({
       return;
     }
     if (!isMealReport && !isGourmetAdvice && !isIntroduction && !isGourmetContest && (!title.trim() || !content.trim())) return;
+    const resolvedArea = isMealReport ? (prefecture || await detectMealReportArea() || "その他") : prefecture;
     const normalizedComment = mealComment.trim();
     const normalizedMenu = recommendedMenu.trim();
     const newThread: BoardThread = {
@@ -1364,7 +1382,7 @@ function CreateThreadModal({
       commentCount: 0,
       lastUpdated: new Date().toISOString(),
       preview: isMealReport
-        ? normalizedComment || normalizedMenu || `${prefecture}でいただきました。`
+        ? normalizedComment || normalizedMenu || `${resolvedArea}でいただきました。`
         : isGourmetAdvice ? adviceComment.trim() : isIntroduction ? introductionText.trim() : content.trim(),
       isRecruiting: isMealReport || isGourmetAdvice || isIntroduction || isGourmetContest ? false : isRecruiting,
       recruitCapacity: !isMealReport && !isGourmetAdvice && !isIntroduction && !isGourmetContest && isRecruiting ? parseInt(capacity || "10", 10) : undefined,
@@ -1375,7 +1393,7 @@ function CreateThreadModal({
       mealReport: isMealReport
         ? {
             restaurantName: restaurantName.trim(),
-            prefecture,
+            prefecture: resolvedArea,
             budget: budget || undefined,
             recommendedMenu: normalizedMenu || undefined,
             rating,
@@ -1418,6 +1436,7 @@ function CreateThreadModal({
     setMealComment("");
     setGoogleMapUrl("");
     setTabelogUrl("");
+    setResolvedAddress("");
     setAdviceTheme(""); setAdviceArea(""); setAdviceScene(""); setAdviceBudget(""); setAdviceComment("");
     setContestDeadline(""); setContestPrizeTitle("グルメ選手権 優勝クーポン"); setContestPrizeDescription("次回のIRO+公式イベントで利用できる優勝特典です。"); setContestPrizeExpiresAt("");
     setFormError("");
@@ -1505,17 +1524,21 @@ function CreateThreadModal({
 
               <View>
                 <Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground, marginBottom: 6 }}>
-                  場所 <Text style={{ color: colors.error }}>必須</Text>
+                  エリア（リンクから自動取得）
                 </Text>
                 <Pressable
                   onPress={() => setOptionModal("prefecture")}
                   style={{ backgroundColor: colors.surface, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 13, flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}
                 >
                   <Text style={{ fontSize: 15, color: prefecture ? colors.foreground : colors.muted }}>
-                    {prefecture || "エリアを選択"}
+                    {resolvingArea ? "取得中…" : prefecture || "自動取得／手動で修正"}
                   </Text>
                   <IconSymbol name="chevron.down" size={18} color={colors.muted} />
                 </Pressable>
+                <Text style={{ fontSize: 12, color: colors.muted, marginTop: 6 }}>
+                  Googleマップまたは食べログのリンクから自動取得します。必要な場合のみ手動で修正できます。
+                </Text>
+                {resolvedAddress ? <Text style={{ fontSize: 12, color: "#3E78A1", marginTop: 4 }}>取得住所：{resolvedAddress}</Text> : null}
               </View>
 
               <View>
@@ -1576,7 +1599,7 @@ function CreateThreadModal({
 
               <View>
                 <Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground, marginBottom: 6 }}>
-                  Google Mapのリンク（任意）
+                  Google Mapのリンク（食べログとどちらか必須）
                 </Text>
                 <TextInput
                   value={googleMapUrl}
@@ -1586,6 +1609,7 @@ function CreateThreadModal({
                   autoCapitalize="none"
                   autoCorrect={false}
                   keyboardType="url"
+                  onBlur={() => { void detectMealReportArea(); }}
                   style={{
                     backgroundColor: colors.surface,
                     borderRadius: 12,
@@ -1603,7 +1627,7 @@ function CreateThreadModal({
               </View>
 
               <View>
-                <Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground, marginBottom: 6 }}>食べログのリンク（任意）</Text>
+                <Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground, marginBottom: 6 }}>食べログのリンク（Google Mapとどちらか必須）</Text>
                 <TextInput
                   value={tabelogUrl}
                   onChangeText={setTabelogUrl}
@@ -1612,6 +1636,7 @@ function CreateThreadModal({
                   autoCapitalize="none"
                   autoCorrect={false}
                   keyboardType="url"
+                  onBlur={() => { void detectMealReportArea(); }}
                   style={{ backgroundColor: colors.surface, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: colors.foreground, borderWidth: tabelogUrl.length > 0 && !/^https?:\/\/(?:www\.)?tabelog\.com\//i.test(tabelogUrl.trim()) ? 1 : 0, borderColor: colors.error }}
                 />
                 {tabelogUrl.length > 0 && !/^https?:\/\/(?:www\.)?tabelog\.com\//i.test(tabelogUrl.trim()) ? <Text style={{ fontSize: 12, color: colors.error, marginTop: 5 }}>食べログのURLを入力してください</Text> : null}
