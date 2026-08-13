@@ -218,6 +218,9 @@ export interface BoardThread {
     prizeTitle: string;
     prizeDescription: string;
     prizeExpiresAt: string;
+    /** 過去データ移行済みの大会。自動集計・クーポン再配布の対象外。 */
+    archived?: boolean;
+    winnerName?: string;
   };
 }
 

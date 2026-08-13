@@ -16,7 +16,7 @@ export function getContestWinner(comments: BoardComment[]): BoardComment | undef
 
 export function createContestPrizeCoupon(thread: BoardThread, winnerId: string): Coupon | undefined {
   const contest = thread.gourmetContest;
-  if (!contest) return undefined;
+  if (!contest || contest.archived) return undefined;
   return {
     id: `contest-prize-${thread.id}`,
     title: contest.prizeTitle,

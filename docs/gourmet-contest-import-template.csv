@@ -1,0 +1,3 @@
+record_type,contest_id,title,content,author_member_id,author_name,created_at,comment_deadline,prize_title,prize_description,prize_expires_at,attachment_urls,comment_id,heart_count,winner_name
+contest,gp2025-01,第1回グルメ選手権,おすすめのお店を教えてください,m001,IRO+運営,2025-01-01T10:00:00+09:00,2025-01-31,優勝クーポン,過去大会の優勝賞品,2025-03-31,https://example.com/image.jpg,,,山田花子
+comment,gp2025-01,,銀座の〇〇がおすすめです,m002,山田花子,2025-01-10T12:00:00+09:00,,,,,,comment-001,12,

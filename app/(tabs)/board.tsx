@@ -34,6 +34,7 @@ import { applyTextFormat, type TextFormat, type TextSelection } from "@/lib/text
 import { toggleReactionMember } from "@/lib/chat-reactions";
 import { awardCoupon } from "@/lib/coupon-store";
 import { createContestPrizeCoupon, getContestWinner, isContestCommentingOpen } from "@/lib/gourmet-contest";
+import { loadImportedGourmetContests } from "@/lib/gourmet-contest-import";
 import { loadCommentReactions, loadThreadReactions, saveCommentReactions, saveThreadReactions } from "@/lib/board-reactions";
 import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -504,9 +505,11 @@ function SelectMembersModal({
 
 function ThreadDetailModal({
   thread,
+  initialComments = [],
   onClose,
 }: {
   thread: BoardThread;
+  initialComments?: BoardComment[];
   onClose: () => void;
 }) {
   const colors = useColors();
@@ -518,7 +521,7 @@ function ThreadDetailModal({
   const commentInputRef = useRef<TextInput>(null);
   const mentionGroups = useMemo(() => BOARD_MENTION_GROUPS, []);
   const [comments, setComments] = useState<BoardComment[]>(
-    BOARD_COMMENTS.filter((c) => c.threadId === thread.id),
+    [...BOARD_COMMENTS.filter((c) => c.threadId === thread.id), ...initialComments],
   );
   const [threadReactions, setThreadReactions] = useState(thread.reactions ?? {});
   const [contestWinnerName, setContestWinnerName] = useState<string | null>(null);
@@ -549,7 +552,7 @@ function ThreadDetailModal({
   }, [thread.id]);
 
   useEffect(() => {
-    if (!reactionsHydrated || !thread.gourmetContest || contestCommentingOpen) return;
+    if (!reactionsHydrated || !thread.gourmetContest || thread.gourmetContest.archived || contestCommentingOpen) return;
     const winner = getContestWinner(comments);
     if (!winner) return;
     setContestWinnerName(winner.author.name);
@@ -732,7 +735,8 @@ function ThreadDetailModal({
               <Text style={{ fontSize: 14, fontWeight: "900", color: "#8A5A00" }}>コメント募集期間</Text>
               <Text style={{ fontSize: 14, color: colors.foreground, marginTop: 4 }}>{thread.gourmetContest.commentDeadline} 23:59まで</Text>
               <Text style={{ fontSize: 12, lineHeight: 18, color: colors.muted, marginTop: 7 }}>コメントのハートが最も多い方が優勝です。締切後に自動集計し、優勝者へイベントクーポンを配布します。</Text>
-              {contestWinnerName ? <Text style={{ fontSize: 13, fontWeight: "900", color: "#C97813", marginTop: 9 }}>優勝：{contestWinnerName}さん（クーポン配布済み）</Text> : null}
+              {thread.gourmetContest.archived ? <Text style={{ fontSize: 12, color: colors.muted, marginTop: 7 }}>Discordから移行した終了済み大会です。</Text> : null}
+              {thread.gourmetContest.winnerName ? <Text style={{ fontSize: 13, fontWeight: "900", color: "#C97813", marginTop: 9 }}>優勝：{thread.gourmetContest.winnerName}さん</Text> : contestWinnerName ? <Text style={{ fontSize: 13, fontWeight: "900", color: "#C97813", marginTop: 9 }}>優勝：{contestWinnerName}さん（クーポン配布済み）</Text> : null}
             </View>
           ) : null}
 
@@ -1832,9 +1836,20 @@ export default function BoardScreen() {
   const [xpReward, setXpReward] = useState<XpReward | null>(null);
 
   const [dynamicThreads, setDynamicThreads] = useState<BoardThread[]>([]);
+  const [importedComments, setImportedComments] = useState<Record<string, BoardComment[]>>({});
   const [editedThreads, setEditedThreads] = useState<Record<string, BoardThread>>({});
   const [editingThread, setEditingThread] = useState<BoardThread | null>(null);
   const isThreadView = view === "threads" && Boolean(categoryParam);
+
+  useEffect(() => {
+    void loadImportedGourmetContests().then((items) => {
+      setDynamicThreads((current) => {
+        const withoutImports = current.filter((thread) => !thread.id.startsWith("imported-contest-"));
+        return [...items.map((item) => item.thread), ...withoutImports];
+      });
+      setImportedComments(Object.fromEntries(items.map((item) => [item.thread.id, item.comments])));
+    });
+  }, []);
 
   useEffect(() => {
     setCategories((current) => [
@@ -2066,6 +2081,7 @@ export default function BoardScreen() {
         {selectedThread && (
           <ThreadDetailModal
             thread={selectedThread}
+            initialComments={importedComments[selectedThread.id] ?? []}
             onClose={() => { setSelectedThread(null); router.setParams({ thread: "" }); }}
           />
         )}

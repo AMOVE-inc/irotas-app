@@ -3,6 +3,7 @@ import { IconSymbol } from "@/components/ui/icon-symbol";
 import { useColors } from "@/hooks/use-colors";
 import { useAuthContext } from "@/lib/auth-context";
 import { trpc } from "@/lib/trpc";
+import { GOURMET_CONTEST_IMPORT_COLUMNS, parseGourmetContestImport, saveImportedGourmetContests } from "@/lib/gourmet-contest-import";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
@@ -19,14 +20,14 @@ interface ImportRecord {
   importedAt: string;
   recordCount: number;
   status: "success" | "error" | "processing";
-  type: "members" | "events" | "participations" | "organizers";
+  type: "members" | "events" | "participations" | "organizers" | "gourmet_contests";
   errorMessage?: string;
 }
 
 const IMPORT_HISTORY: ImportRecord[] = [];
 
-const TYPE_LABELS = { members: "決済会員・Discord", events: "イベント履歴", participations: "参加履歴", organizers: "幹事履歴" };
-const TYPE_COLORS = { members: "#E8A0BF", events: "#A7C7E7", participations: "#FF9500", organizers: "#7D6A92" };
+const TYPE_LABELS = { members: "決済会員・Discord", events: "イベント履歴", participations: "参加履歴", organizers: "幹事履歴", gourmet_contests: "過去のグルメ選手権" };
+const TYPE_COLORS = { members: "#E8A0BF", events: "#A7C7E7", participations: "#FF9500", organizers: "#7D6A92", gourmet_contests: "#C97813" };
 
 const CSV_TEMPLATES = [
   {
@@ -52,6 +53,12 @@ const CSV_TEMPLATES = [
     label: "幹事履歴CSVテンプレート",
     columns: ["event_id", "discord_user_id", "organizer_role"],
     example: "e001,123456789,primary",
+  },
+  {
+    type: "gourmet_contests" as const,
+    label: "過去グルメ選手権CSVテンプレート",
+    columns: GOURMET_CONTEST_IMPORT_COLUMNS,
+    example: "contest,gp2025-01,第1回グルメ選手権,おすすめのお店を教えてください,m001,運営,2025-01-01T10:00:00+09:00,2025-01-31,優勝クーポン,過去大会の賞品,2025-03-31,https://example.com/image.jpg,,,山田太郎",
   },
 ];
 
@@ -87,7 +94,14 @@ export default function CsvImportScreen() {
       const pending: ImportRecord = { id: `imp_${Date.now()}`, filename: file.name, importedAt: new Date().toLocaleString("ja-JP"), recordCount: 0, status: "processing", type };
       setHistory((current) => [pending, ...current]);
       try {
-        const result = await importMutation.mutateAsync({ type, filename: file.name, csvText: await file.text() });
+        const csvText = await file.text();
+        const result = type === "gourmet_contests"
+          ? await (async () => {
+              const contests = parseGourmetContestImport(csvText);
+              await saveImportedGourmetContests(contests);
+              return { importedCount: contests.length + contests.reduce((sum, item) => sum + item.comments.length, 0), reviewCount: 0 };
+            })()
+          : await importMutation.mutateAsync({ type, filename: file.name, csvText });
         setHistory((current) => current.map((item) => item.id === pending.id ? { ...item, status: "success", recordCount: result.importedCount, errorMessage: result.reviewCount ? `${result.reviewCount}件は要確認です` : undefined } : item));
         Alert.alert("インポート完了", `${result.importedCount}件を取り込みました。${result.reviewCount ? ` ${result.reviewCount}件は管理者確認が必要です。` : ""}`);
       } catch (error) {
@@ -135,7 +149,7 @@ export default function CsvImportScreen() {
           データをインポート
         </Text>
         <View style={{ gap: 10, marginBottom: 24 }}>
-          {(["members", "events", "participations", "organizers"] as const).map((type) => (
+          {(["members", "events", "participations", "organizers", "gourmet_contests"] as const).map((type) => (
             <Pressable
               key={type}
               onPress={() => handleImport(type)}
@@ -160,7 +174,7 @@ export default function CsvImportScreen() {
                 }}
               >
                 <IconSymbol
-                  name={type === "members" ? "person.2.fill" : type === "events" ? "calendar" : type === "participations" ? "checkmark.circle.fill" : "person.badge.plus"}
+                  name={type === "members" ? "person.2.fill" : type === "events" ? "calendar" : type === "participations" ? "checkmark.circle.fill" : type === "gourmet_contests" ? "trophy.fill" : "person.badge.plus"}
                   size={20}
                   color={TYPE_COLORS[type]}
                 />
