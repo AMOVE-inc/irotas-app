@@ -791,22 +791,22 @@ export const CLUBS: Club[] = [
 export const COUPONS: Coupon[] = [
   {
     id: "c1", title: "焼肉 罪と罰 10%OFF",
-    description: "IRO＋会員限定！お会計から10%割引",
+    description: "IRO＋会員限定！お会計から10%割引", imageUrl: "https://images.unsplash.com/photo-1544025162-d76694265947?w=600&h=600&fit=crop",
     discount: "10%OFF", expiresAt: "2026-06-30", code: "IROPLUS2026", requiredRank: "regular", usageType: "single",
   },
   {
     id: "c2", title: "鮨 静龍苑 ドリンク1杯無料",
-    description: "シルバー会員以上限定。お好きなドリンク1杯サービス",
+    description: "シルバー会員以上限定。お好きなドリンク1杯サービス", imageUrl: "https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=600&h=600&fit=crop",
     discount: "ドリンク1杯無料", expiresAt: "2026-05-31", code: "IROSILVER2026", requiredRank: "silver", usageType: "multiple",
   },
   {
     id: "c3", title: "ゴールド限定 コース10%OFF",
-    description: "ゴールド会員以上限定の特別割引",
+    description: "ゴールド会員以上限定の特別割引", imageUrl: "https://images.unsplash.com/photo-1515003197210-e0cd71810b5f?w=600&h=600&fit=crop",
     discount: "コース10%OFF", expiresAt: "2026-08-31", code: "IROGOLD2026", requiredRank: "gold", usageType: "single",
   },
   {
     id: "c4", title: "プラチナ限定 特別コース招待",
-    description: "プラチナ会員限定の特別コースにご招待",
+    description: "プラチナ会員限定の特別コースにご招待", imageUrl: "https://images.unsplash.com/photo-1559339352-11d035aa65de?w=600&h=600&fit=crop",
     discount: "特別コース", expiresAt: "2026-12-31", code: "IROPLAT2026", requiredRank: "platinum", usageType: "multiple",
   },
 ];

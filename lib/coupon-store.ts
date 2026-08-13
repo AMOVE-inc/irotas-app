@@ -35,7 +35,10 @@ function ensureHydrated() {
   if (hydrationPromise) return hydrationPromise;
   hydrationPromise = Promise.all([AsyncStorage.getItem(CONFIG_KEY), AsyncStorage.getItem(USAGE_KEY), AsyncStorage.getItem(AWARDED_KEY), AsyncStorage.getItem(MANAGED_KEY)])
     .then(([savedConfig, savedUsage, savedAwarded, savedManaged]) => {
-      if (savedManaged) coupons = JSON.parse(savedManaged) as Coupon[];
+      if (savedManaged) {
+        const managed = JSON.parse(savedManaged) as Coupon[];
+        coupons = managed.map((item) => ({ ...item, imageUrl: item.imageUrl ?? COUPONS.find((seed) => seed.id === item.id)?.imageUrl }));
+      }
       if (savedConfig) {
         const config = JSON.parse(savedConfig) as Record<string, Coupon["usageType"]>;
         coupons = coupons.map((coupon) => ({ ...coupon, usageType: config[coupon.id] ?? coupon.usageType }));

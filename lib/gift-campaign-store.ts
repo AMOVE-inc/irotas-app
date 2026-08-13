@@ -30,15 +30,20 @@ const CAMPAIGNS_KEY = "gift_campaigns_v2";
 const APPLICATIONS_KEY = "gift_campaign_applications_v2";
 
 export const INITIAL_GIFT_CAMPAIGNS: GiftCampaign[] = [
-  { id: "g1", title: "高級レストラン ペアディナー券", description: "都内レストランのペアディナーへご招待します。", category: "gourmet", minimumRank: "gold", winnerCount: 3, deadline: "2026-08-31", status: "open", imageEmoji: "🍽️" },
-  { id: "g2", title: "ソムリエ厳選ワインセット", description: "厳選したワイン3本セットをプレゼントします。", category: "gourmet", minimumRank: "silver", winnerCount: 5, deadline: "2026-08-25", status: "open", imageEmoji: "🍷" },
-  { id: "g3", title: "IRO+ オリジナルグッズ", description: "トートバッグとタンブラーのセットです。", category: "non_gourmet", minimumRank: "regular", winnerCount: 10, deadline: "2026-08-20", status: "open", imageEmoji: "🎁" },
-  { id: "g4", title: "温泉旅行ペアチケット", description: "1泊2日の温泉旅行をプレゼントします。", category: "non_gourmet", minimumRank: "platinum", winnerCount: 1, deadline: "2026-07-31", status: "closed", imageEmoji: "♨️" },
+  { id: "g1", title: "高級レストラン ペアディナー券", description: "都内レストランのペアディナーへご招待します。", category: "gourmet", minimumRank: "gold", winnerCount: 3, deadline: "2026-08-31", status: "open", imageEmoji: "🍽️", imageUrl: "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=600&h=600&fit=crop" },
+  { id: "g2", title: "ソムリエ厳選ワインセット", description: "厳選したワイン3本セットをプレゼントします。", category: "gourmet", minimumRank: "silver", winnerCount: 5, deadline: "2026-08-25", status: "open", imageEmoji: "🍷", imageUrl: "https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?w=600&h=600&fit=crop" },
+  { id: "g3", title: "IRO+ オリジナルグッズ", description: "トートバッグとタンブラーのセットです。", category: "non_gourmet", minimumRank: "regular", winnerCount: 10, deadline: "2026-08-20", status: "open", imageEmoji: "🎁", imageUrl: "https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=600&h=600&fit=crop" },
+  { id: "g4", title: "温泉旅行ペアチケット", description: "1泊2日の温泉旅行をプレゼントします。", category: "non_gourmet", minimumRank: "platinum", winnerCount: 1, deadline: "2026-07-31", status: "closed", imageEmoji: "♨️", imageUrl: "https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=600&h=600&fit=crop" },
 ];
 
 export async function getGiftCampaigns(): Promise<GiftCampaign[]> {
   const raw = await AsyncStorage.getItem(CAMPAIGNS_KEY);
-  return raw ? (JSON.parse(raw) as GiftCampaign[]) : INITIAL_GIFT_CAMPAIGNS;
+  if (!raw) return INITIAL_GIFT_CAMPAIGNS;
+  const saved = JSON.parse(raw) as GiftCampaign[];
+  return saved.map((item) => ({
+    ...item,
+    imageUrl: item.imageUrl ?? INITIAL_GIFT_CAMPAIGNS.find((seed) => seed.id === item.id)?.imageUrl,
+  }));
 }
 
 export async function saveGiftCampaigns(campaigns: GiftCampaign[]): Promise<void> {
