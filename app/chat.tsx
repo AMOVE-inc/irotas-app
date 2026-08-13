@@ -1,7 +1,7 @@
 import { ScreenContainer } from "@/components/screen-container";
 import { NewMemberMark } from "@/components/new-member-mark";
 import { MentionSuggestions, MentionText } from "@/components/mention-ui";
-import { TextFormattingToolbar } from "@/components/text-formatting-toolbar";
+import { RichTextPreview, TextFormattingToolbar } from "@/components/text-formatting-toolbar";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import {
   CURRENT_USER,
@@ -462,6 +462,7 @@ export default function ChatScreen() {
             </Text>
           </View>
           <View style={{ paddingHorizontal: 16 }}><TextFormattingToolbar onFormat={handleMessageFormat} /></View>
+          <View style={{ paddingHorizontal: 16 }}><RichTextPreview content={messageText} groups={mentionGroups} /></View>
           {/* 画像プレビュー */}
           {pendingImage && (
             <View style={{ paddingHorizontal: 16, paddingBottom: 6 }}>

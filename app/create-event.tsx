@@ -14,6 +14,9 @@ import { Alert, Modal, Pressable, ScrollView, Text, TextInput, View } from "reac
 import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
 import { recordHomeActivity } from "@/lib/home-activity-store";
+import { XpRewardPopup } from "@/components/xp-reward-popup";
+import { awardXp, type XpReward } from "@/lib/xp-store";
+import { POINT_ACTIONS } from "@/constants/mock-data";
 
 const WEEKDAYS = ["日", "月", "火", "水", "木", "金", "土"];
 const TIME_OPTIONS = Array.from({ length: 96 }, (_, index) => `${String(Math.floor(index / 4)).padStart(2, "0")}:${String((index % 4) * 15).padStart(2, "0")}`);
@@ -144,6 +147,7 @@ export default function CreateEventScreen() {
   const [rankPrices, setRankPrices] = useState<Record<"regular" | "silver" | "gold" | "platinum", string>>({ regular: "", silver: "", gold: "", platinum: "" });
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [genres, setGenres] = useState<string[]>([]);
+  const [xpReward, setXpReward] = useState<XpReward | null>(null);
   const extractedLocation = useMemo(() => extractEventLocation(address), [address]);
 
   if (!authUser) return <ScreenContainer edges={["top", "left", "right"]}><View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}><IconSymbol name="lock.fill" size={44} color={colors.border} /><Text style={{ marginTop: 12, color: colors.muted }}>メンバーのみ作成できます</Text></View></ScreenContainer>;
@@ -187,7 +191,7 @@ export default function CreateEventScreen() {
     pendingEvents.unshift(newEvent);
     void recordHomeActivity({ id: `event:${newEvent.id}`, kind: "event", title: newEvent.title, description: finalType === "official" ? "新しい公式イベントが公開されました" : "新しいグルメ会が公開されました", createdAt: newEvent.createdAt!, route: "/event-detail", params: { id: newEvent.id } });
     void scheduleOrganizerDeadlineNotification(newEvent);
-    Alert.alert("作成完了", `「${title}」を作成しました。`, [{ text: "OK", onPress: () => router.back() }]);
+    void awardXp(CURRENT_USER.points, POINT_ACTIONS.eventCreate.points, POINT_ACTIONS.eventCreate.label).then(setXpReward);
   };
 
   const inputStyle = { backgroundColor: colors.surface, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: colors.foreground, borderWidth: 1, borderColor: colors.border } as const;
@@ -226,6 +230,7 @@ export default function CreateEventScreen() {
         <View style={{ marginTop: 26, padding: 14, borderRadius: 14, backgroundColor: "#FFF8F0", borderWidth: 1, borderColor: "#EED9BF" }}><Text style={{ fontSize: 15, fontWeight: "900", color: colors.foreground, marginBottom: 10 }}>イベント開催時のルール</Text>{["イベントの日時・人数・場所などに誤りがないことを確認してください", "原則、参加者はIRO+メンバー限定としてください（やむをえず外部の方も参加される場合は、その旨を自由記述欄に記載してください）", "募集期日までに参加者を確定し、専用チャットにて参加確定連絡をお願いします"].map((rule) => <Text key={rule} style={{ fontSize: 12, lineHeight: 19, color: colors.foreground, marginBottom: 5 }}>・{rule}</Text>)}<Pressable onPress={() => setTermsAccepted((value) => !value)} style={{ flexDirection: "row", alignItems: "center", marginTop: 8 }}><View style={{ width: 24, height: 24, borderRadius: 6, backgroundColor: termsAccepted ? "#E8A0BF" : colors.surface, borderWidth: 1, borderColor: termsAccepted ? "#E8A0BF" : colors.border, alignItems: "center", justifyContent: "center" }}>{termsAccepted ? <IconSymbol name="checkmark" size={15} color="#FFF" /> : null}</View><Text style={{ flex: 1, marginLeft: 9, fontSize: 14, fontWeight: "800", color: colors.foreground }}>上記のルールを確認し、同意する <Text style={{ color: colors.error }}>必須</Text></Text></Pressable></View>
         <Pressable disabled={!termsAccepted} onPress={handleCreate} style={{ marginTop: 22, minHeight: 56, borderRadius: 16, backgroundColor: termsAccepted ? "#18171A" : "#B8B8BD", alignItems: "center", justifyContent: "center", opacity: termsAccepted ? 1 : 0.65 }}><Text style={{ fontSize: 17, fontWeight: "900", color: "#FFF" }}>イベントを作成する</Text></Pressable>
       </ScrollView>
+      <XpRewardPopup reward={xpReward} onClose={() => { setXpReward(null); router.back(); }} />
     </ScreenContainer>
   );
 }

@@ -1,7 +1,7 @@
 import { ScreenContainer } from "@/components/screen-container";
 import { NewMemberMark } from "@/components/new-member-mark";
 import { MentionSuggestions, MentionText } from "@/components/mention-ui";
-import { TextFormattingToolbar } from "@/components/text-formatting-toolbar";
+import { RichTextPreview, TextFormattingToolbar } from "@/components/text-formatting-toolbar";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import {
   BOARD_THREADS,
@@ -20,9 +20,13 @@ import { useAuthContext } from "@/lib/auth-context";
 import { useColors } from "@/hooks/use-colors";
 import { createBoardChat } from "@/lib/chat-store";
 import { canManageBoardCategories, canViewClubThread } from "@/lib/access-control";
-import { GOURMET_ADVICE_BUDGETS, isGoogleMapsUrl, MEAL_BUDGETS, MEAL_REPORT_AREAS } from "@/lib/meal-report";
+import { GOURMET_ADVICE_BUDGETS, isGoogleMapsUrl, MEAL_BUDGETS } from "@/lib/meal-report";
 import { communityRestaurantFromMealReport, registerCommunityRestaurant } from "@/lib/gourmet-map-community";
 import { resolveRestaurantLocation } from "@/lib/restaurant-location";
+import { formatMealReportArea } from "@/lib/restaurant-location";
+import { XpRewardPopup } from "@/components/xp-reward-popup";
+import { awardXp, type XpReward } from "@/lib/xp-store";
+import { POINT_ACTIONS } from "@/constants/mock-data";
 import { useClubs } from "@/lib/club-store";
 import { getMentionGroups, getMentionQuery, getMentionedMemberIds, insertMention } from "@/lib/mentions";
 import { sendMentionNotification } from "@/lib/notifications";
@@ -78,7 +82,7 @@ function MealReportContent({ thread, compact = false }: { thread: BoardThread; c
       }}
     >
       <View style={{ flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 8 }}>
-        <Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground }}>📍 {report.prefecture}</Text>
+        <Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground }}>📍 {report.areaDisplay ?? formatMealReportArea(report.prefecture)}</Text>
         {report.budget ? <Text style={{ fontSize: 13, color: colors.muted }}>予算 {report.budget}</Text> : null}
       </View>
       <Text style={{ fontSize: 17, color: "#F5A623", letterSpacing: 2, marginTop: 6 }}>
@@ -875,6 +879,7 @@ function ThreadDetailModal({
           {mentionQuery !== null ? <MentionSuggestions query={mentionQuery} groups={mentionGroups} members={MEMBERS.filter((member) => member.id !== CURRENT_USER.id)} onSelect={handleCommentMention} /> : null}
           <Text style={{ fontSize: 11, color: colors.muted, paddingHorizontal: 16, paddingTop: 6 }}>@を入力して個人・グループをメンション</Text>
           {!thread.selfIntroduction ? <View style={{ paddingHorizontal: 16 }}><TextFormattingToolbar onFormat={handleCommentFormat} /></View> : null}
+          {!thread.selfIntroduction ? <View style={{ paddingHorizontal: 16 }}><RichTextPreview content={commentText} groups={mentionGroups} /></View> : null}
           <View
           style={{
             flexDirection: "row",
@@ -1119,6 +1124,7 @@ function EditThreadModal({
                 }}
               />
               <TextFormattingToolbar onFormat={(format) => { const result = applyTextFormat(content, contentSelection, format); setContent(result.text); setContentSelection(result.selection); contentInputRef.current?.focus(); }} />
+              <RichTextPreview content={content} groups={BOARD_MENTION_GROUPS} />
             </View>
 
             {/* 写真 */}
@@ -1288,8 +1294,7 @@ function CreateThreadModal({
   const [mealComment, setMealComment] = useState("");
   const [googleMapUrl, setGoogleMapUrl] = useState("");
   const [tabelogUrl, setTabelogUrl] = useState("");
-  const [resolvingArea, setResolvingArea] = useState(false);
-  const [resolvedAddress, setResolvedAddress] = useState("");
+  const [areaDisplay, setAreaDisplay] = useState("");
   const [adviceTheme, setAdviceTheme] = useState("");
   const [adviceArea, setAdviceArea] = useState("");
   const [adviceScene, setAdviceScene] = useState("");
@@ -1300,7 +1305,7 @@ function CreateThreadModal({
   const [contestPrizeDescription, setContestPrizeDescription] = useState("次回のIRO+公式イベントで利用できる優勝特典です。");
   const [contestPrizeExpiresAt, setContestPrizeExpiresAt] = useState("");
   const [formError, setFormError] = useState("");
-  const [optionModal, setOptionModal] = useState<"prefecture" | "budget" | "advice-budget" | null>(null);
+  const [optionModal, setOptionModal] = useState<"budget" | "advice-budget" | null>(null);
   const isMealReport = category === "meal-report";
   const isGourmetAdvice = category === "gourmet-advice";
   const isIntroduction = category === "introduction";
@@ -1338,15 +1343,13 @@ function CreateThreadModal({
   };
 
   const detectMealReportArea = async () => {
-    if (!isMealReport || !restaurantName.trim() || (!googleMapUrl.trim() && !tabelogUrl.trim())) return prefecture;
-    setResolvingArea(true);
+    if (!isMealReport || !restaurantName.trim() || (!googleMapUrl.trim() && !tabelogUrl.trim())) return prefecture ? { area: prefecture, areaDisplay } : null;
     const result = await resolveRestaurantLocation({ restaurantName: restaurantName.trim(), googleMapsUrl: googleMapUrl.trim(), tabelogUrl: tabelogUrl.trim() });
-    setResolvingArea(false);
-    if (!result) return prefecture;
+    if (!result) return prefecture ? { area: prefecture, areaDisplay } : null;
     setPrefecture(result.area);
-    setResolvedAddress(result.formattedAddress ?? "");
+    setAreaDisplay(result.areaDisplay);
     setFormError("");
-    return result.area;
+    return result;
   };
 
   const handleCreate = async () => {
@@ -1371,7 +1374,9 @@ function CreateThreadModal({
       return;
     }
     if (!isMealReport && !isGourmetAdvice && !isIntroduction && !isGourmetContest && (!title.trim() || !content.trim())) return;
-    const resolvedArea = isMealReport ? (prefecture || await detectMealReportArea() || "その他") : prefecture;
+    const detectedLocation = isMealReport ? await detectMealReportArea() : null;
+    const resolvedArea = isMealReport ? (detectedLocation?.area || prefecture || "その他") : prefecture;
+    const resolvedAreaDisplay = detectedLocation?.areaDisplay || areaDisplay;
     const normalizedComment = mealComment.trim();
     const normalizedMenu = recommendedMenu.trim();
     const newThread: BoardThread = {
@@ -1394,6 +1399,7 @@ function CreateThreadModal({
         ? {
             restaurantName: restaurantName.trim(),
             prefecture: resolvedArea,
+            areaDisplay: resolvedAreaDisplay || undefined,
             budget: budget || undefined,
             recommendedMenu: normalizedMenu || undefined,
             rating,
@@ -1436,7 +1442,7 @@ function CreateThreadModal({
     setMealComment("");
     setGoogleMapUrl("");
     setTabelogUrl("");
-    setResolvedAddress("");
+    setAreaDisplay("");
     setAdviceTheme(""); setAdviceArea(""); setAdviceScene(""); setAdviceBudget(""); setAdviceComment("");
     setContestDeadline(""); setContestPrizeTitle("グルメ選手権 優勝クーポン"); setContestPrizeDescription("次回のIRO+公式イベントで利用できる優勝特典です。"); setContestPrizeExpiresAt("");
     setFormError("");
@@ -1520,25 +1526,6 @@ function CreateThreadModal({
                   placeholderTextColor={colors.muted}
                   style={{ backgroundColor: colors.surface, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: colors.foreground }}
                 />
-              </View>
-
-              <View>
-                <Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground, marginBottom: 6 }}>
-                  エリア（リンクから自動取得）
-                </Text>
-                <Pressable
-                  onPress={() => setOptionModal("prefecture")}
-                  style={{ backgroundColor: colors.surface, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 13, flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}
-                >
-                  <Text style={{ fontSize: 15, color: prefecture ? colors.foreground : colors.muted }}>
-                    {resolvingArea ? "取得中…" : prefecture || "自動取得／手動で修正"}
-                  </Text>
-                  <IconSymbol name="chevron.down" size={18} color={colors.muted} />
-                </Pressable>
-                <Text style={{ fontSize: 12, color: colors.muted, marginTop: 6 }}>
-                  Googleマップまたは食べログのリンクから自動取得します。必要な場合のみ手動で修正できます。
-                </Text>
-                {resolvedAddress ? <Text style={{ fontSize: 12, color: "#3E78A1", marginTop: 4 }}>取得住所：{resolvedAddress}</Text> : null}
               </View>
 
               <View>
@@ -1813,14 +1800,6 @@ function CreateThreadModal({
           ) : null}
         </ScrollView>
 
-        <ReportOptionModal
-          visible={optionModal === "prefecture"}
-          title="都道府県を選択"
-          options={MEAL_REPORT_AREAS}
-          value={prefecture}
-          onSelect={setPrefecture}
-          onClose={() => setOptionModal(null)}
-        />
         <ReportOptionModal visible={optionModal === "advice-budget"} title="予算を選択" options={GOURMET_ADVICE_BUDGETS} value={adviceBudget} onSelect={setAdviceBudget} onClose={() => setOptionModal(null)} />
         <ReportOptionModal
           visible={optionModal === "budget"}
@@ -1850,6 +1829,7 @@ export default function BoardScreen() {
   const [selectedThread, setSelectedThread] = useState<BoardThread | null>(null);
   const [showCreateThread, setShowCreateThread] = useState(false);
   const [showAddCategory, setShowAddCategory] = useState(false);
+  const [xpReward, setXpReward] = useState<XpReward | null>(null);
 
   const [dynamicThreads, setDynamicThreads] = useState<BoardThread[]>([]);
   const [editedThreads, setEditedThreads] = useState<Record<string, BoardThread>>({});
@@ -2100,6 +2080,8 @@ export default function BoardScreen() {
         canManage={userIsAdmin}
         onAdd={(thread) => {
           setDynamicThreads((prev) => [thread, ...prev]);
+          const xpAction = thread.category === "meal-report" ? POINT_ACTIONS.mealReportPost : POINT_ACTIONS.boardPost;
+          void awardXp(CURRENT_USER.points, xpAction.points, xpAction.label).then(setXpReward);
           const submission = communityRestaurantFromMealReport(thread);
           if (submission) {
             void registerCommunityRestaurant(submission).catch(() => {
@@ -2129,6 +2111,7 @@ export default function BoardScreen() {
           onAdd={handleAddCategory}
         />
       )}
+      <XpRewardPopup reward={xpReward} onClose={() => setXpReward(null)} />
     </ScreenContainer>
   );
 }

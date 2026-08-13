@@ -65,12 +65,12 @@ function PointsProgressCard({ points, rank }: { points: number; rank: MemberRank
       {/* Points display */}
       <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
         <View>
-          <Text style={{ fontSize: 13, color: colors.muted, marginBottom: 2 }}>累計ポイント</Text>
+          <Text style={{ fontSize: 13, color: colors.muted, marginBottom: 2 }}>XP</Text>
           <View style={{ flexDirection: "row", alignItems: "baseline" }}>
             <Text style={{ fontSize: 32, fontWeight: "900", color: rankColor }}>
               {points.toLocaleString()}
             </Text>
-            <Text style={{ fontSize: 14, fontWeight: "600", color: rankColor, marginLeft: 4 }}>pt</Text>
+            <Text style={{ fontSize: 14, fontWeight: "600", color: rankColor, marginLeft: 4 }}>XP</Text>
           </View>
         </View>
         <View
@@ -97,7 +97,7 @@ function PointsProgressCard({ points, rank }: { points: number; rank: MemberRank
               次のランク: {RANK_LABELS[nextInfo.nextRank]}
             </Text>
             <Text style={{ fontSize: 12, fontWeight: "600", color: rankColor }}>
-              あと {nextInfo.pointsNeeded.toLocaleString()}pt
+              あと {nextInfo.pointsNeeded.toLocaleString()} XP
             </Text>
           </View>
           <View
@@ -153,7 +153,7 @@ function PointActionsCard() {
     >
       <View style={{ paddingHorizontal: 16, paddingTop: 14, paddingBottom: 8 }}>
         <Text style={{ fontSize: 14, fontWeight: "700", color: colors.foreground }}>
-          ポイント獲得方法
+          XP獲得方法
         </Text>
       </View>
       {actions.map((action, index) => (
@@ -171,7 +171,7 @@ function PointActionsCard() {
         >
           <Text style={{ fontSize: 14, color: colors.foreground }}>{action.label}</Text>
           <Text style={{ fontSize: 14, fontWeight: "700", color: "#E8A0BF" }}>
-            +{action.points}pt
+            +{action.points} XP
           </Text>
         </View>
       ))}
@@ -240,10 +240,10 @@ function RankTiersCard() {
   const colors = useColors();
 
   const tiers = [
-    { rank: "regular" as MemberRank, points: "0pt〜", benefits: "基本機能" },
-    { rank: "silver" as MemberRank, points: "100pt〜", benefits: "掲示板・部活動" },
-    { rank: "gold" as MemberRank, points: "500pt〜", benefits: "限定クーポン・コンシェルジュ" },
-    { rank: "platinum" as MemberRank, points: "1,000pt〜", benefits: "VIP特典・会費無料" },
+    { rank: "regular" as MemberRank, points: "0 XP〜", benefits: "基本機能" },
+    { rank: "silver" as MemberRank, points: "100 XP〜", benefits: "掲示板・部活動" },
+    { rank: "gold" as MemberRank, points: "500 XP〜", benefits: "限定クーポン・コンシェルジュ" },
+    { rank: "platinum" as MemberRank, points: "1,000 XP〜", benefits: "VIP特典・会費無料" },
   ];
 
   return (

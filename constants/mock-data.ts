@@ -8,7 +8,7 @@ export interface Member {
   name: string;
   avatar: number;
   rank: MemberRank;
-  points: number; // 累計ポイント
+  points: number; // XP（旧・累計ポイント）
   level: number; // 後方互換用（pointsから自動計算）
   branch: "kanto" | "kansai";
   generation: number; // 何期生
@@ -35,9 +35,10 @@ export interface Member {
   followingCount?: number;
 }
 
-// --- ポイント制ランクシステム ---
+// --- XP制ランクシステム ---
 
 export const POINT_ACTIONS = {
+  eventCreate: { points: 5, label: "イベントの新規作成" },
   eventJoin: { points: 10, label: "イベント参加" },
   boardPost: { points: 5, label: "掲示板投稿" },
   comment: { points: 2, label: "コメント投稿" },
@@ -190,6 +191,7 @@ export interface BoardThread {
   mealReport?: {
     restaurantName: string;
     prefecture: string;
+    areaDisplay?: string;
     budget?: string;
     recommendedMenu?: string;
     rating: number;

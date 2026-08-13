@@ -184,6 +184,7 @@ const ACTIVITY_PRESENTATION: Record<HomeActivityKind, { icon: string; label: str
   contest_thread: { icon: "trophy.fill", label: "グルメ選手権", color: "#B78920" },
   contest_comment: { icon: "bubble.left.fill", label: "グルメ選手権", color: "#B78920" },
   introduction: { icon: "person.fill", label: "自己紹介", color: "#6A8FB3" },
+  meal_report: { icon: "fork.knife", label: "今日のごちそうさま報告", color: "#D56591" },
   gourmet_advice: { icon: "sparkles", label: "教えてグルメ相談室", color: "#8C6DB0" },
   free_chat: { icon: "bubble.left.and.bubble.right.fill", label: "なんでも掲示板", color: "#5F9E8C" },
 };

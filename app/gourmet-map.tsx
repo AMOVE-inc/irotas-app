@@ -34,6 +34,15 @@ const SEEDED_RESTAURANTS: Restaurant[] = GOURMET_MAP_SEED.map((restaurant) => ({
   registeredBy: CURRENT_USER,
 }));
 
+const GENRE_ICONS: Record<string, string> = {
+  "居酒屋": "🍶", "イタリアン": "🍝", "フレンチ": "🍷", "焼鳥": "🐓", "韓国料理": "🇰🇷",
+  "中華料理": "🥟", "焼肉": "🥩", "寿司": "🍣", "バー": "🍸", "カフェ・喫茶": "☕️", "和食": "🍱",
+  "スペイン料理": "🥘", "アジア・エスニック": "🌶️", "うなぎ": "🐟", "天ぷら": "🍤", "とんかつ": "🐖",
+  "そば・うどん": "🍜", "ステーキ・鉄板焼き": "🥩", "ハンバーガー": "🍔", "ラーメン": "🍜", "カレー": "🍛",
+  "創作料理・イノベーティブ": "✨", "洋食": "🍽️", "欧州料理（イギリス、ドイツ、スイスなど）": "🇪🇺",
+  "中南米料理（メキシコ、ブラジル、ペルーなど）": "🌮", "シーフード・海鮮": "🦐",
+};
+
 function RestaurantCard({
   restaurant,
   onPress,
@@ -411,7 +420,8 @@ export default function GourmetMapScreen() {
     return `${date.getFullYear()}年${date.getMonth() + 1}月更新`;
   }, [feedUpdatedAt]);
 
-  const genres = useMemo(() => [...new Set(restaurants.map((restaurant) => restaurant.genre))].sort(), [restaurants]);
+  const genreCounts = useMemo(() => restaurants.reduce<Record<string, number>>((counts, restaurant) => ({ ...counts, [restaurant.genre]: (counts[restaurant.genre] ?? 0) + 1 }), {}), [restaurants]);
+  const genres = useMemo(() => [...new Set(restaurants.map((restaurant) => restaurant.genre))].sort((a, b) => (genreCounts[b] ?? 0) - (genreCounts[a] ?? 0) || a.localeCompare(b, "ja")), [restaurants, genreCounts]);
   const filteredRestaurants = restaurants.filter((r) => {
     const matchSearch = matchesAllSearchWords(searchQuery, [r.name, r.address, r.genre, r.sourceList, ...(r.sourceCategories ?? [])]);
     const matchGenre = !selectedGenre || r.genre === selectedGenre;
@@ -498,7 +508,7 @@ export default function GourmetMapScreen() {
                 opacity: pressed ? 0.78 : 1,
               })}
             >
-              <IconSymbol name="map.fill" size={18} color="#4285F4" />
+              <Text style={{ fontSize: 22 }}>{GENRE_ICONS[label] ?? "📍"}</Text>
               <Text numberOfLines={2} style={{ fontSize: 13, lineHeight: 18, fontWeight: "800", color: colors.foreground, marginTop: 7 }}>{label}</Text>
             </Pressable>
           ))}
@@ -578,7 +588,7 @@ export default function GourmetMapScreen() {
                   lineHeight: 18,
                 }}
               >
-                {item.label}
+                {item.value ? `${item.label} ${genreCounts[item.value] ?? 0}` : item.label}
               </Text>
             </Pressable>
           );

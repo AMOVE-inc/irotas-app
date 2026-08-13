@@ -1,6 +1,8 @@
-import { Pressable, ScrollView, Text } from "react-native";
+import { Pressable, ScrollView, Text, View } from "react-native";
 import { useColors } from "@/hooks/use-colors";
 import type { TextFormat } from "@/lib/text-formatting";
+import { MentionText } from "@/components/mention-ui";
+import type { MentionGroup } from "@/lib/mentions";
 
 const ACTIONS: { format: TextFormat; label: string; accessibilityLabel: string; style?: object }[] = [
   { format: "small", label: "小", accessibilityLabel: "文字を小さく" },
@@ -22,4 +24,13 @@ export function TextFormattingToolbar({ onFormat }: { onFormat: (format: TextFor
       ))}
     </ScrollView>
   );
+}
+
+export function RichTextPreview({ content, groups }: { content: string; groups: MentionGroup[] }) {
+  const colors = useColors();
+  if (!/(\*\*|__|~~|\[small\]|\[large\])/.test(content)) return null;
+  return <View style={{ marginTop: 2, marginBottom: 7, borderRadius: 10, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, paddingHorizontal: 12, paddingVertical: 9 }}>
+    <Text style={{ fontSize: 10, fontWeight: "800", color: colors.muted, marginBottom: 4 }}>装飾プレビュー</Text>
+    <MentionText content={content} groups={groups} />
+  </View>;
 }
