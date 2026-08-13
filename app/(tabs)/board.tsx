@@ -872,6 +872,11 @@ function ThreadDetailModal({
                   </Text>
                 </View>
                 <View style={{ marginLeft: 32 }}><MentionText content={comment.content} groups={mentionGroups} /></View>
+                {comment.images?.length ? (
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginLeft: 32, marginTop: 8 }} contentContainerStyle={{ gap: 7 }}>
+                    {comment.images.map((uri, index) => <Image key={`${comment.id}-image-${index}`} source={{ uri }} style={{ width: 104, height: 104, borderRadius: 10, backgroundColor: colors.surface }} contentFit="cover" />)}
+                  </ScrollView>
+                ) : null}
                 {isContest ? <Pressable onPress={() => handleCommentHeart(comment.id)} disabled={!contestCommentingOpen} style={{ marginLeft: 32, marginTop: 7, flexDirection: "row", alignItems: "center", alignSelf: "flex-start", borderRadius: 14, paddingHorizontal: 9, paddingVertical: 4, backgroundColor: (comment.reactions?.["❤️"] ?? []).includes(CURRENT_USER.id) ? "#FFE4EA" : colors.surface, borderWidth: 1, borderColor: colors.border }}><Text style={{ fontSize: 15 }}>❤️</Text><Text style={{ fontSize: 11, fontWeight: "800", color: colors.muted, marginLeft: 4 }}>{comment.reactions?.["❤️"]?.length ?? 0}</Text></Pressable> : null}
               </View>
             ))}

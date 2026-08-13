@@ -230,6 +230,7 @@ export interface BoardComment {
   author: Member;
   content: string;
   createdAt: string;
+  images?: string[];
   reactions?: Record<string, string[]>;
 }
 

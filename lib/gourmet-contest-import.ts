@@ -1,6 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { MEMBERS, type BoardComment, type BoardThread, type Member } from "../constants/mock-data";
 import { parseCsv } from "./migration-csv";
+import { SEEDED_GOURMET_CONTESTS } from "../constants/imported-gourmet-contests";
 
 const STORAGE_KEY = "irotas_imported_gourmet_contests_v1";
 
@@ -84,6 +85,7 @@ export function parseGourmetContestImport(csvText: string): ImportedGourmetConte
       author: authorFor(row.author_member_id, row.author_name),
       content: row.content,
       createdAt: row.created_at,
+      images: splitUrls(row.attachment_urls),
       reactions: heartCount ? { "❤️": Array.from({ length: heartCount }, (_, index) => `imported-heart-${index + 1}`) } : undefined,
     });
   }
@@ -106,8 +108,11 @@ export async function saveImportedGourmetContests(items: ImportedGourmetContest[
 
 export async function loadImportedGourmetContests(): Promise<ImportedGourmetContest[]> {
   try {
-    return JSON.parse((await AsyncStorage.getItem(STORAGE_KEY)) ?? "[]") as ImportedGourmetContest[];
+    const stored = JSON.parse((await AsyncStorage.getItem(STORAGE_KEY)) ?? "[]") as ImportedGourmetContest[];
+    const merged = new Map(SEEDED_GOURMET_CONTESTS.map((item) => [item.thread.id, item]));
+    stored.forEach((item) => merged.set(item.thread.id, item));
+    return [...merged.values()];
   } catch {
-    return [];
+    return SEEDED_GOURMET_CONTESTS;
   }
 }
