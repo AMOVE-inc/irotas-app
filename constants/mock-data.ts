@@ -187,7 +187,7 @@ export interface BoardThread {
   recruitApplicants?: string[]; // 参加申請中 member ids
   chatId?: string; // private chat id
   eventDate?: string; // 開催日（今日のイベント表示用）
-  images?: string[]; // 投稿添付画像 URLs
+  images?: Array<string | number>; // 投稿添付画像 URLs / bundled assets
   mealReport?: {
     restaurantName: string;
     prefecture: string;
@@ -230,7 +230,7 @@ export interface BoardComment {
   author: Member;
   content: string;
   createdAt: string;
-  images?: string[];
+  images?: Array<string | number>;
   reactions?: Record<string, string[]>;
 }
 

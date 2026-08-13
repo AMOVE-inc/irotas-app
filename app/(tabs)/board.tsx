@@ -64,6 +64,7 @@ const BOARD_GROUPS: { key: BoardCategory["group"]; label: string }[] = [
 
 const BOARD_MENTION_GROUPS = getMentionGroups(MEMBERS, CLUBS);
 const THREAD_REACTION_EMOJIS = ["👏", "😊", "❤️", "🎉", "😋"] as const;
+const boardImageSource = (image: string | number) => typeof image === "number" ? image : { uri: image };
 
 
 function MealReportContent({ thread, compact = false }: { thread: BoardThread; compact?: boolean }) {
@@ -269,7 +270,7 @@ function ThreadCard({ thread, onPress, onEdit }: { thread: BoardThread; onPress:
         </View>
         {rightPreviewImage ? (
           <Image
-            source={{ uri: rightPreviewImage }}
+            source={boardImageSource(rightPreviewImage)}
             style={{ width: 72, height: 72, borderRadius: 9, marginLeft: 10 }}
             contentFit="cover"
           />
@@ -282,7 +283,7 @@ function ThreadCard({ thread, onPress, onEdit }: { thread: BoardThread; onPress:
           {thread.images.slice(0, 3).map((uri, i) => (
             <View key={i} style={{ position: "relative" }}>
               <Image
-                source={{ uri }}
+              source={boardImageSource(uri)}
                 style={{ width: 72, height: 72, borderRadius: 8 }}
                 contentFit="cover"
               />
@@ -756,7 +757,7 @@ function ThreadDetailModal({
               {thread.images.map((uri, i) => (
                 <Image
                   key={i}
-                  source={{ uri }}
+                  source={boardImageSource(uri)}
                   style={{ width: 100, height: 100, borderRadius: 10 }}
                   contentFit="cover"
                 />
@@ -874,7 +875,7 @@ function ThreadDetailModal({
                 <View style={{ marginLeft: 32 }}><MentionText content={comment.content} groups={mentionGroups} /></View>
                 {comment.images?.length ? (
                   <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginLeft: 32, marginTop: 8 }} contentContainerStyle={{ gap: 7 }}>
-                    {comment.images.map((uri, index) => <Image key={`${comment.id}-image-${index}`} source={{ uri }} style={{ width: 104, height: 104, borderRadius: 10, backgroundColor: colors.surface }} contentFit="cover" />)}
+                    {comment.images.map((uri, index) => <Image key={`${comment.id}-image-${index}`} source={boardImageSource(uri)} style={{ width: 104, height: 104, borderRadius: 10, backgroundColor: colors.surface }} contentFit="cover" />)}
                   </ScrollView>
                 ) : null}
                 {isContest ? <Pressable onPress={() => handleCommentHeart(comment.id)} disabled={!contestCommentingOpen} style={{ marginLeft: 32, marginTop: 7, flexDirection: "row", alignItems: "center", alignSelf: "flex-start", borderRadius: 14, paddingHorizontal: 9, paddingVertical: 4, backgroundColor: (comment.reactions?.["❤️"] ?? []).includes(CURRENT_USER.id) ? "#FFE4EA" : colors.surface, borderWidth: 1, borderColor: colors.border }}><Text style={{ fontSize: 15 }}>❤️</Text><Text style={{ fontSize: 11, fontWeight: "800", color: colors.muted, marginLeft: 4 }}>{comment.reactions?.["❤️"]?.length ?? 0}</Text></Pressable> : null}
@@ -1016,7 +1017,9 @@ function EditThreadModal({
   const [content, setContent] = useState(thread.preview);
   const [contentSelection, setContentSelection] = useState<TextSelection>({ start: 0, end: 0 });
   const contentInputRef = useRef<TextInput>(null);
-  const [images, setImages] = useState<string[]>(thread.images ?? []);
+  const [images, setImages] = useState<string[]>(
+    thread.images?.filter((image): image is string => typeof image === "string") ?? [],
+  );
 
   const handlePickImage = async () => {
     if (Platform.OS !== "web") {

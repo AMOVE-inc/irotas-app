@@ -109,8 +109,11 @@ export async function saveImportedGourmetContests(items: ImportedGourmetContest[
 export async function loadImportedGourmetContests(): Promise<ImportedGourmetContest[]> {
   try {
     const stored = JSON.parse((await AsyncStorage.getItem(STORAGE_KEY)) ?? "[]") as ImportedGourmetContest[];
-    const merged = new Map(SEEDED_GOURMET_CONTESTS.map((item) => [item.thread.id, item]));
-    stored.forEach((item) => merged.set(item.thread.id, item));
+    const merged = new Map(stored.map((item) => [item.thread.id, item]));
+    // Bundled Discord archives are the immutable source of truth. This also
+    // replaces older browser-cached imports that may contain summarized text
+    // or expired Discord CDN URLs.
+    SEEDED_GOURMET_CONTESTS.forEach((item) => merged.set(item.thread.id, item));
     return [...merged.values()];
   } catch {
     return SEEDED_GOURMET_CONTESTS;

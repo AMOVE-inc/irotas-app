@@ -24,7 +24,7 @@ export function communityRestaurantFromMealReport(
     memberRating: report.rating,
     googleMapsUrl: report.googleMapUrl,
     budget: report.budget,
-    image: thread.images?.find((value) => /^https:\/\//.test(value)),
+    image: thread.images?.find((value): value is string => typeof value === "string" && /^https:\/\//.test(value)),
   };
 }
 

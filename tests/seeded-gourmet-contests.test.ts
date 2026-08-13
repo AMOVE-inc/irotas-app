@@ -7,7 +7,7 @@ describe("seeded Discord gourmet contests", () => {
       "第23回 立ち飲み屋",
       "第22回 No.1 オムライス選手権",
     ]);
-    expect(SEEDED_GOURMET_CONTESTS.reduce((sum, item) => sum + item.comments.length, 0)).toBe(10);
+    expect(SEEDED_GOURMET_CONTESTS.reduce((sum, item) => sum + item.comments.length, 0)).toBe(17);
     expect(SEEDED_GOURMET_CONTESTS.every((item) => item.thread.gourmetContest?.archived)).toBe(true);
   });
 
