@@ -6,6 +6,7 @@ import type { CouponUsage } from "@/lib/coupon-rules";
 const CONFIG_KEY = "coupon_usage_types_v1";
 const USAGE_KEY = "coupon_member_usage_v1";
 const AWARDED_KEY = "coupon_awarded_v1";
+const MANAGED_KEY = "coupon_managed_v2";
 
 type UsageByMember = Record<string, Record<string, CouponUsage>>;
 const EMPTY_USAGES: Record<string, CouponUsage> = {};
@@ -32,8 +33,9 @@ function getCouponsSnapshot() {
 function ensureHydrated() {
   if (hydrated) return Promise.resolve();
   if (hydrationPromise) return hydrationPromise;
-  hydrationPromise = Promise.all([AsyncStorage.getItem(CONFIG_KEY), AsyncStorage.getItem(USAGE_KEY), AsyncStorage.getItem(AWARDED_KEY)])
-    .then(([savedConfig, savedUsage, savedAwarded]) => {
+  hydrationPromise = Promise.all([AsyncStorage.getItem(CONFIG_KEY), AsyncStorage.getItem(USAGE_KEY), AsyncStorage.getItem(AWARDED_KEY), AsyncStorage.getItem(MANAGED_KEY)])
+    .then(([savedConfig, savedUsage, savedAwarded, savedManaged]) => {
+      if (savedManaged) coupons = JSON.parse(savedManaged) as Coupon[];
       if (savedConfig) {
         const config = JSON.parse(savedConfig) as Record<string, Coupon["usageType"]>;
         coupons = coupons.map((coupon) => ({ ...coupon, usageType: config[coupon.id] ?? coupon.usageType }));
@@ -80,6 +82,36 @@ export async function updateCouponUsageType(couponId: string, usageType: Coupon[
   coupons = coupons.map((coupon) => (coupon.id === couponId ? { ...coupon, usageType } : coupon));
   emitChange();
   await AsyncStorage.setItem(CONFIG_KEY, JSON.stringify(Object.fromEntries(coupons.map((coupon) => [coupon.id, coupon.usageType]))));
+}
+
+async function saveManagedCoupons() {
+  emitChange();
+  await AsyncStorage.setItem(MANAGED_KEY, JSON.stringify(coupons));
+}
+
+export async function createCoupon(coupon: Coupon) {
+  await ensureHydrated();
+  coupons = [coupon, ...coupons];
+  await saveManagedCoupons();
+}
+
+export async function updateCoupon(coupon: Coupon) {
+  await ensureHydrated();
+  coupons = coupons.map((item) => item.id === coupon.id ? coupon : item);
+  await saveManagedCoupons();
+}
+
+export async function setCouponStatus(couponId: string, status: "active" | "ended") {
+  await ensureHydrated();
+  coupons = coupons.map((item) => item.id === couponId ? { ...item, status } : item);
+  await saveManagedCoupons();
+}
+
+export async function deleteCoupon(couponId: string) {
+  await ensureHydrated();
+  coupons = coupons.filter((item) => item.id !== couponId);
+  await AsyncStorage.setItem(AWARDED_KEY, JSON.stringify(coupons.filter((item) => item.sourceContestId)));
+  await saveManagedCoupons();
 }
 
 async function saveMemberUsage(memberId: string, couponId: string, usage: CouponUsage) {

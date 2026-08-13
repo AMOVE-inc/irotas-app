@@ -130,11 +130,15 @@ export async function createEmailUser(data: {
   const openId = `email:${normalizedEmail}`;
   const now = new Date();
 
-  // 管理者権限は明示的に設定されたオーナーだけに付与する。
+  // 管理者権限はオーナー、または既存管理者が明示的に管理者として承認したメールだけに付与する。
   const ownerEmail = process.env.OWNER_EMAIL ?? "";
   const isOwner = ownerEmail && data.email.toLowerCase() === ownerEmail.toLowerCase();
   const invitation = await getAllowedEmailByEmail(normalizedEmail);
-  const role = isOwner ? "admin" : invitation?.accessRole === "operator" ? "operator" : "user";
+  const role = isOwner || invitation?.accessRole === "admin"
+    ? "admin"
+    : invitation?.accessRole === "operator"
+      ? "operator"
+      : "user";
 
   await db.insert(users).values({
     openId,
@@ -207,6 +211,7 @@ export async function listActiveMemberDirectory() {
       eq(memberSubscriptions.accessStatus, "grace"),
       eq(users.role, "admin"),
       eq(users.role, "operator"),
+      eq(allowedEmails.accessRole, "admin"),
       eq(allowedEmails.accessRole, "operator"),
       eq(allowedEmails.accessRole, "club_leader"),
     ));
@@ -577,7 +582,7 @@ export async function getAllowedEmails() {
 }
 
 /** 承認済みメールアドレスを追加 */
-export async function addAllowedEmail(data: { email: string; note?: string; addedBy?: number; accessRole?: "member" | "operator" | "club_leader" }) {
+export async function addAllowedEmail(data: { email: string; note?: string; addedBy?: number; accessRole?: "member" | "club_leader" | "operator" | "admin" }) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   const email = data.email.toLowerCase().trim();
@@ -597,15 +602,19 @@ export async function addAllowedEmail(data: { email: string; note?: string; adde
   return result[0];
 }
 
-export async function updateAllowedEmailAccessRole(id: number, accessRole: "member" | "operator" | "club_leader") {
+export async function updateAllowedEmailAccessRole(id: number, accessRole: "member" | "club_leader" | "operator" | "admin") {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   const invitation = await db.select().from(allowedEmails).where(eq(allowedEmails.id, id)).limit(1);
   if (!invitation[0]) throw new Error("対象のメールアドレスが見つかりません");
+  const ownerEmail = process.env.OWNER_EMAIL?.toLowerCase().trim();
+  if (ownerEmail && invitation[0].email === ownerEmail && accessRole !== "admin") {
+    throw new Error("オーナーの管理者権限は変更できません");
+  }
   await db.update(allowedEmails).set({ accessRole }).where(eq(allowedEmails.id, id));
   const existingUser = await db.select({ id: users.id, role: users.role }).from(users).where(eq(users.email, invitation[0].email)).limit(1);
-  if (existingUser[0] && existingUser[0].role !== "admin") {
-    const role = accessRole === "operator" ? "operator" : "user";
+  if (existingUser[0]) {
+    const role = accessRole === "admin" ? "admin" : accessRole === "operator" ? "operator" : "user";
     await db.update(users).set({ role }).where(eq(users.id, existingUser[0].id));
   }
   return getAllowedEmailByEmail(invitation[0].email);
@@ -616,10 +625,12 @@ export async function removeAllowedEmail(id: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   const invitation = await db.select().from(allowedEmails).where(eq(allowedEmails.id, id)).limit(1);
+  const ownerEmail = process.env.OWNER_EMAIL?.toLowerCase().trim();
+  if (ownerEmail && invitation[0]?.email === ownerEmail) throw new Error("オーナーの承認メールは削除できません");
   await db.delete(allowedEmails).where(eq(allowedEmails.id, id));
-  if (invitation[0]?.accessRole === "operator") {
+  if (invitation[0]?.accessRole === "operator" || invitation[0]?.accessRole === "admin") {
     const existingUser = await db.select({ id: users.id, role: users.role }).from(users).where(eq(users.email, invitation[0].email)).limit(1);
-    if (existingUser[0]?.role === "operator") await db.update(users).set({ role: "user" }).where(eq(users.id, existingUser[0].id));
+    if (existingUser[0]?.role === "operator" || existingUser[0]?.role === "admin") await db.update(users).set({ role: "user" }).where(eq(users.id, existingUser[0].id));
   }
 }
 

@@ -79,7 +79,7 @@ const allowedEmailsRouter = router({
       z.object({
         email: z.string().email("有効なメールアドレスを入力してください"),
         note: z.string().optional(),
-        accessRole: z.enum(["member", "operator", "club_leader"]).default("member"),
+        accessRole: z.enum(["member", "club_leader", "operator", "admin"]).default("member"),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -99,7 +99,7 @@ const allowedEmailsRouter = router({
       return { success: true };
     }),
   setAccessRole: adminProcedure
-    .input(z.object({ id: z.number().int().positive(), accessRole: z.enum(["member", "operator", "club_leader"]) }))
+    .input(z.object({ id: z.number().int().positive(), accessRole: z.enum(["member", "club_leader", "operator", "admin"]) }))
     .mutation(({ input }) => db.updateAllowedEmailAccessRole(input.id, input.accessRole)),
 
   /** メールアドレスが承認済みかチェック（登録前確認用） */

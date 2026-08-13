@@ -6,6 +6,7 @@ import { recordCouponPresentation, redeemCoupon, useCoupons, useCouponUsages } f
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import { Alert, Modal, Platform, Pressable, ScrollView, Text, View } from "react-native";
+import { Image } from "expo-image";
 
 const STATUS_COPY = {
   rank_locked: "対象ランク外",
@@ -24,6 +25,7 @@ function CouponCard({ coupon, usage, onPresent }: { coupon: Coupon; usage?: Coup
       <View style={{ flexDirection: "row", backgroundColor: colors.surface }}>
         <View style={{ width: 6, backgroundColor: canPresent ? RANK_COLORS[coupon.requiredRank] : colors.border }} />
         <View style={{ flex: 1, padding: 16 }}>
+          {coupon.imageUrl ? <Image source={{ uri: coupon.imageUrl }} style={{ width: 112, height: 112, borderRadius: 13, marginBottom: 12 }} contentFit="cover" /> : null}
           <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
             <Text style={{ fontSize: 17, fontWeight: "800", color: colors.foreground, flex: 1 }}>{coupon.title}</Text>
             <View style={{ backgroundColor: canPresent ? "#34C75918" : colors.background, borderRadius: 8, paddingHorizontal: 8, paddingVertical: 3 }}>
@@ -73,6 +75,7 @@ function PresentCouponModal({ coupon, onClose, onRedeem }: { coupon: Coupon | nu
             <Pressable onPress={onClose}><IconSymbol name="xmark" size={22} color={colors.foreground} /></Pressable>
           </View>
           <Text style={{ fontSize: 24, lineHeight: 32, fontWeight: "900", color: colors.foreground, marginTop: 22, textAlign: "center" }}>{coupon.title}</Text>
+          {coupon.imageUrl ? <Image source={{ uri: coupon.imageUrl }} style={{ width: 180, height: 180, borderRadius: 16, alignSelf: "center", marginTop: 16 }} contentFit="cover" /> : null}
           <Text style={{ fontSize: 34, fontWeight: "900", color: "#E8A0BF", textAlign: "center", marginTop: 12 }}>{coupon.discount}</Text>
           <View style={{ marginTop: 22, padding: 18, borderRadius: 16, backgroundColor: colors.background, alignItems: "center" }}>
             <Text style={{ fontSize: 12, color: colors.muted }}>店舗確認コード</Text>

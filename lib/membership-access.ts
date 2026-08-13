@@ -8,11 +8,11 @@ export type MembershipAccessRecord = {
   graceUntilDate?: string | Date | null;
 };
 
-export type SubscriptionExemptRole = "member" | "operator" | "club_leader" | null | undefined;
+export type SubscriptionExemptRole = "member" | "club_leader" | "operator" | "admin" | null | undefined;
 export const PAYMENT_GRACE_DAYS = 7;
 
 export function canBypassSubscription(userRole: unknown, accessRole: SubscriptionExemptRole): boolean {
-  return userRole === "admin" || userRole === "operator" || accessRole === "operator" || accessRole === "club_leader";
+  return userRole === "admin" || userRole === "operator" || accessRole === "admin" || accessRole === "operator" || accessRole === "club_leader";
 }
 
 function endOfDate(value: string | Date): number {

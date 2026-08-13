@@ -14,6 +14,7 @@ export interface GiftCampaign {
   deadline: string;
   status: GiftStatus;
   imageEmoji: string;
+  imageUrl?: string;
 }
 
 export interface GiftApplication {

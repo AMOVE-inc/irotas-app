@@ -27,6 +27,7 @@ describe("membership access", () => {
 
   it("exempts admins, operators and club leaders from subscription checks", () => {
     expect(canBypassSubscription("admin", "member")).toBe(true);
+    expect(canBypassSubscription("user", "admin")).toBe(true);
     expect(canBypassSubscription("operator", "member")).toBe(true);
     expect(canBypassSubscription("user", "club_leader")).toBe(true);
     expect(canBypassSubscription("user", "member")).toBe(false);

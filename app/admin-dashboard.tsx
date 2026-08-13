@@ -1,6 +1,6 @@
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
-import { MEMBERS, EVENTS, CURRENT_USER, RANK_LABELS, RANK_COLORS, getRankFromPoints, type Announcement, type Club } from "@/constants/mock-data";
+import { MEMBERS, EVENTS, CURRENT_USER, RANK_LABELS, RANK_COLORS, getRankFromPoints, type Announcement, type Club, type Coupon, type MemberRank } from "@/constants/mock-data";
 import { useAuthContext } from "@/lib/auth-context";
 import { useColors } from "@/hooks/use-colors";
 import { trpc } from "@/lib/trpc";
@@ -31,10 +31,12 @@ import {
   ActivityIndicator,
   Modal,
 } from "react-native";
-import { updateCouponUsageType, useCoupons } from "@/lib/coupon-store";
+import { createCoupon, deleteCoupon, setCouponStatus, updateCoupon, updateCouponUsageType, useCoupons } from "@/lib/coupon-store";
 import { sendRankUpgradeWelcome } from "@/lib/chat-store";
 import { addClub, removeClub, updateClub, useClubs } from "@/lib/club-store";
 import { sendLeaderAppointmentNotification } from "@/lib/notifications";
+import { Image } from "expo-image";
+import * as ImagePicker from "expo-image-picker";
 
 type PointsHistoryEntry = {
   id: string;
@@ -44,6 +46,8 @@ type PointsHistoryEntry = {
   rank: string;
   at: string;
 };
+
+const EMPTY_COUPON: Coupon = { id: "", title: "", description: "", discount: "", expiresAt: "", code: "", requiredRank: "regular", usageType: "single", status: "active" };
 
 export default function AdminDashboardScreen() {
   const colors = useColors();
@@ -71,9 +75,12 @@ export default function AdminDashboardScreen() {
   const [feeExemptIds, setFeeExemptIds] = useState<Set<string>>(new Set());
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [showAnnouncementModal, setShowAnnouncementModal] = useState(false);
+  const [showCouponModal, setShowCouponModal] = useState(false);
+  const [editingCouponId, setEditingCouponId] = useState<string | null>(null);
+  const [couponDraft, setCouponDraft] = useState<Coupon>(EMPTY_COUPON);
   const [newEmail, setNewEmail] = useState("");
   const [newNote, setNewNote] = useState("");
-  const [newAccessRole, setNewAccessRole] = useState<"member" | "operator" | "club_leader">("member");
+  const [newAccessRole, setNewAccessRole] = useState<"member" | "club_leader" | "operator" | "admin">("member");
   const { data: allowedEmails, refetch: refetchEmails, isLoading: emailsLoading } = trpc.allowedEmails.list.useQuery(
     undefined,
     { enabled: userIsAdmin && activeTab === "emails" },
@@ -96,6 +103,21 @@ export default function AdminDashboardScreen() {
     onSuccess: () => refetchEmails(),
     onError: (e) => Alert.alert("エラー", e.message),
   });
+
+  const openCouponCreate = () => { setEditingCouponId(null); setCouponDraft({ ...EMPTY_COUPON, id: `coupon_${Date.now()}` }); setShowCouponModal(true); };
+  const openCouponEdit = (coupon: Coupon) => { setEditingCouponId(coupon.id); setCouponDraft({ ...coupon, status: coupon.status ?? "active" }); setShowCouponModal(true); };
+  const saveCoupon = async () => {
+    if (!couponDraft.title.trim() || !couponDraft.discount.trim() || !couponDraft.expiresAt.trim() || !couponDraft.code.trim()) { Alert.alert("入力内容を確認", "タイトル・特典内容・有効期限・コードは必須です。"); return; }
+    editingCouponId ? await updateCoupon(couponDraft) : await createCoupon(couponDraft);
+    setShowCouponModal(false);
+    Alert.alert(editingCouponId ? "更新完了" : "作成完了", editingCouponId ? "クーポンを更新しました。" : "クーポンを作成しました。");
+  };
+  const pickCouponImage = async () => {
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permission.granted) { Alert.alert("権限が必要です", "画像を選ぶには写真ライブラリへのアクセスを許可してください。"); return; }
+    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images, allowsEditing: true, aspect: [1, 1], quality: 0.8 });
+    if (!result.canceled && result.assets[0]) setCouponDraft((current) => ({ ...current, imageUrl: result.assets[0].uri }));
+  };
 
   // useMemo も条件分岐の外で定義
   const stats = useMemo(() => {
@@ -856,15 +878,14 @@ export default function AdminDashboardScreen() {
 
         {activeTab === "coupons" && (
           <>
-            <Text style={{ fontSize: 16, fontWeight: "700", color: colors.foreground, marginBottom: 4 }}>
-              クーポン利用設定
-            </Text>
+            <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 4 }}><Text style={{ flex: 1, fontSize: 16, fontWeight: "700", color: colors.foreground }}>クーポン管理</Text><Pressable onPress={openCouponCreate} style={{ flexDirection: "row", alignItems: "center", backgroundColor: "#E8A0BF", borderRadius: 16, paddingHorizontal: 12, paddingVertical: 7 }}><IconSymbol name="plus" size={13} color="#FFF" /><Text style={{ color: "#FFF", fontSize: 12, fontWeight: "800", marginLeft: 4 }}>新規作成</Text></Pressable></View>
             <Text style={{ fontSize: 13, color: colors.muted, lineHeight: 19, marginBottom: 16 }}>
               クーポンごとに「1回限定」または「期間中何度でも」を設定できます。1回限定は会員が利用を確定すると使用済みになります。
             </Text>
             {coupons.map((coupon) => (
-              <View key={coupon.id} style={{ backgroundColor: colors.surface, borderRadius: 14, padding: 14, marginBottom: 10, borderWidth: 0.5, borderColor: colors.border }}>
-                <Text style={{ fontSize: 15, fontWeight: "800", color: colors.foreground }}>{coupon.title}</Text>
+              <View key={coupon.id} style={{ backgroundColor: colors.surface, borderRadius: 14, padding: 14, marginBottom: 10, borderWidth: 0.5, borderColor: colors.border, opacity: coupon.status === "ended" ? 0.6 : 1 }}>
+                {coupon.imageUrl ? <Image source={{ uri: coupon.imageUrl }} style={{ width: 92, height: 92, borderRadius: 12, marginBottom: 10 }} contentFit="cover" /> : null}
+                <View style={{ flexDirection: "row", alignItems: "center" }}><Text style={{ flex: 1, fontSize: 15, fontWeight: "800", color: colors.foreground }}>{coupon.title}</Text><Text style={{ fontSize: 10, fontWeight: "800", color: coupon.status === "ended" ? colors.muted : "#248A3D" }}>{coupon.status === "ended" ? "終了" : "利用可能"}</Text></View>
                 <Text style={{ fontSize: 12, color: colors.muted, marginTop: 4 }}>有効期限 {coupon.expiresAt} ／ コード {coupon.code}</Text>
                 <View style={{ flexDirection: "row", marginTop: 12, borderRadius: 10, overflow: "hidden", borderWidth: 1, borderColor: colors.border }}>
                   {(["single", "multiple"] as const).map((usageType) => {
@@ -882,6 +903,7 @@ export default function AdminDashboardScreen() {
                     );
                   })}
                 </View>
+                <View style={{ flexDirection: "row", gap: 7, marginTop: 10 }}><Pressable onPress={() => openCouponEdit(coupon)} style={{ flex: 1, alignItems: "center", paddingVertical: 8, borderRadius: 9, backgroundColor: "#5D5C7418" }}><Text style={{ color: "#5D5C74", fontSize: 12, fontWeight: "800" }}>編集</Text></Pressable><Pressable onPress={() => { void setCouponStatus(coupon.id, coupon.status === "ended" ? "active" : "ended"); }} style={{ flex: 1, alignItems: "center", paddingVertical: 8, borderRadius: 9, backgroundColor: coupon.status === "ended" ? "#34C75918" : "#FF950018" }}><Text style={{ color: coupon.status === "ended" ? "#248A3D" : "#B06C21", fontSize: 12, fontWeight: "800" }}>{coupon.status === "ended" ? "再開" : "終了"}</Text></Pressable><Pressable onPress={() => Alert.alert("クーポンを削除", `${coupon.title}を削除しますか？`, [{ text: "キャンセル", style: "cancel" }, { text: "削除", style: "destructive", onPress: () => { void deleteCoupon(coupon.id); } }])} style={{ flex: 1, alignItems: "center", paddingVertical: 8, borderRadius: 9, backgroundColor: "#FF3B3018" }}><Text style={{ color: "#FF3B30", fontSize: 12, fontWeight: "800" }}>削除</Text></Pressable></View>
               </View>
             ))}
           </>
@@ -895,6 +917,11 @@ export default function AdminDashboardScreen() {
             <Text style={{ fontSize: 13, color: colors.muted, marginBottom: 16, lineHeight: 18 }}>
               ここに登録したメールアドレスのみ新規登録が可能です。招待したいメンバーのメールアドレスを事前に追加してください。
             </Text>
+            <View style={{ backgroundColor: "#FFF8E8", borderRadius: 12, padding: 12, marginBottom: 14, borderWidth: 1, borderColor: "#E5C875" }}>
+              <Text style={{ fontSize: 12, fontWeight: "900", color: "#71520B" }}>権限の強さ</Text>
+              <Text style={{ fontSize: 13, fontWeight: "800", color: colors.foreground, marginTop: 5 }}>管理者 ＞ 運営メンバー ＞ 部長 ＞ 一般会員</Text>
+              <Text style={{ fontSize: 11, lineHeight: 17, color: colors.muted, marginTop: 5 }}>管理者は全機能、運営メンバーは運営業務、部長は担当部活の申請・部員管理のみ行えます。</Text>
+            </View>
 
             {/* 新規追加フォーム */}
             <View
@@ -947,12 +974,13 @@ export default function AdminDashboardScreen() {
               <Text style={{ fontSize: 12, fontWeight: "700", color: colors.foreground, marginBottom: 7 }}>ログイン権限</Text>
               <View style={{ flexDirection: "row", gap: 7, marginBottom: 12 }}>
                 {([
-                  { key: "member", label: "一般会員" },
+                  { key: "admin", label: "管理者" },
                   { key: "operator", label: "運営メンバー" },
                   { key: "club_leader", label: "部長" },
+                  { key: "member", label: "一般会員" },
                 ] as const).map((option) => <Pressable key={option.key} onPress={() => setNewAccessRole(option.key)} style={{ flex: 1, paddingVertical: 9, borderRadius: 9, alignItems: "center", backgroundColor: newAccessRole === option.key ? "#5D5C74" : colors.background, borderWidth: 1, borderColor: newAccessRole === option.key ? "#5D5C74" : colors.border }}><Text style={{ fontSize: 11, fontWeight: "800", color: newAccessRole === option.key ? "#FFF" : colors.foreground }}>{option.label}</Text></Pressable>)}
               </View>
-              {newAccessRole !== "member" ? <Text style={{ fontSize: 11, lineHeight: 16, color: "#B06C21", marginBottom: 10 }}>運営メンバー・部長は、役職が有効な間はSquareサブスクなしでログインできます。</Text> : null}
+              {newAccessRole !== "member" ? <Text style={{ fontSize: 11, lineHeight: 16, color: "#B06C21", marginBottom: 10 }}>管理者・運営メンバー・部長は、役職が有効な間はSquareサブスクなしでログインできます。</Text> : null}
               <Pressable
                 onPress={handleAddEmail}
                 style={({ pressed }) => ({
@@ -1014,9 +1042,10 @@ export default function AdminDashboardScreen() {
                     </Text>
                     <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 5, marginTop: 8 }}>
                       {([
-                        { key: "member", label: "一般会員" },
+                        { key: "admin", label: "管理者" },
                         { key: "operator", label: "運営メンバー" },
                         { key: "club_leader", label: "部長" },
+                        { key: "member", label: "一般会員" },
                       ] as const).map((option) => <Pressable key={option.key} disabled={setAccessRoleMutation.isPending} onPress={() => setAccessRoleMutation.mutate({ id: item.id, accessRole: option.key })} style={{ paddingHorizontal: 8, paddingVertical: 5, borderRadius: 8, backgroundColor: item.accessRole === option.key ? (option.key === "member" ? "#E8F2FA" : "#FFF0D8") : colors.background, borderWidth: 1, borderColor: item.accessRole === option.key ? (option.key === "member" ? "#5B9BD5" : "#D9942F") : colors.border }}><Text style={{ fontSize: 10, fontWeight: "800", color: item.accessRole === option.key ? (option.key === "member" ? "#3E78A1" : "#9A6115") : colors.muted }}>{option.label}</Text></Pressable>)}
                     </View>
                   </View>
@@ -1273,6 +1302,22 @@ export default function AdminDashboardScreen() {
             {clubs.some((club) => club.id === editingClub.id) ? <Pressable onPress={() => Alert.alert("部活を削除しますか？", `${editingClub.name}を一覧から削除します。`, [{ text: "キャンセル", style: "cancel" }, { text: "削除", style: "destructive", onPress: () => { removeClub(editingClub.id); setEditingClub(null); } }])} style={{ alignItems: "center", paddingVertical: 14, marginTop: 16 }}><Text style={{ color: "#C94B55", fontWeight: "800" }}>この部活を削除</Text></Pressable> : null}
           </ScrollView>
         </View> : null}
+      </Modal>
+
+      <Modal visible={showCouponModal} animationType="slide" presentationStyle="formSheet" onRequestClose={() => setShowCouponModal(false)}>
+        <View style={{ flex: 1, backgroundColor: colors.background }}>
+          <View style={{ flexDirection: "row", alignItems: "center", padding: 16, borderBottomWidth: 1, borderBottomColor: colors.border }}><Pressable onPress={() => setShowCouponModal(false)}><Text style={{ color: colors.muted }}>キャンセル</Text></Pressable><Text style={{ flex: 1, textAlign: "center", fontSize: 17, fontWeight: "800", color: colors.foreground }}>{editingCouponId ? "クーポン編集" : "クーポン作成"}</Text><Pressable onPress={() => { void saveCoupon(); }}><Text style={{ color: "#E8A0BF", fontWeight: "800" }}>保存</Text></Pressable></View>
+          <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
+            <Text style={{ fontSize: 12, fontWeight: "700", color: colors.muted, marginBottom: 6 }}>画像（正方形）</Text>
+            <Pressable onPress={() => { void pickCouponImage(); }} style={{ width: 180, height: 180, alignSelf: "center", borderRadius: 14, overflow: "hidden", backgroundColor: colors.surface, borderWidth: 1, borderStyle: couponDraft.imageUrl ? "solid" : "dashed", borderColor: colors.border, alignItems: "center", justifyContent: "center", marginBottom: 8 }}>{couponDraft.imageUrl ? <Image source={{ uri: couponDraft.imageUrl }} style={{ width: "100%", height: "100%" }} contentFit="cover" /> : <><IconSymbol name="photo.fill" size={30} color={colors.muted} /><Text style={{ marginTop: 7, color: colors.muted, fontSize: 12 }}>正方形の画像を選択</Text></>}</Pressable>
+            {couponDraft.imageUrl ? <Pressable onPress={() => setCouponDraft({ ...couponDraft, imageUrl: undefined })} style={{ alignSelf: "center", padding: 7, marginBottom: 10 }}><Text style={{ color: "#FF3B30", fontSize: 12, fontWeight: "700" }}>画像を削除</Text></Pressable> : <View style={{ height: 10 }} />}
+            {([['title', 'タイトル', '例：提携店10%OFF'], ['description', '説明', '利用条件や説明'], ['discount', '特典内容', '例：10%OFF'], ['expiresAt', '有効期限（YYYY-MM-DD）', '2026-12-31'], ['code', '提示コード', 'IROPLUS2026']] as const).map(([key, label, placeholder]) => <View key={key}><Text style={{ fontSize: 12, fontWeight: "700", color: colors.muted, marginBottom: 6 }}>{label}</Text><TextInput value={couponDraft[key]} onChangeText={(value) => setCouponDraft({ ...couponDraft, [key]: value })} placeholder={placeholder} placeholderTextColor={colors.muted} multiline={key === 'description'} style={{ backgroundColor: colors.surface, borderRadius: 10, padding: 12, fontSize: 15, marginBottom: 14, color: colors.foreground, minHeight: key === 'description' ? 80 : undefined, textAlignVertical: key === 'description' ? 'top' : 'auto' }} /></View>)}
+            <Text style={{ fontSize: 12, fontWeight: "700", color: colors.muted, marginBottom: 7 }}>対象ランク</Text>
+            <View style={{ flexDirection: "row", gap: 7, marginBottom: 16 }}>{([['regular', '全会員'], ['silver', 'シルバー以上'], ['gold', 'ゴールド以上'], ['platinum', 'プラチナ']] as const).map(([rank, label]) => <Pressable key={rank} onPress={() => setCouponDraft({ ...couponDraft, requiredRank: rank as MemberRank })} style={{ flex: 1, alignItems: "center", paddingVertical: 9, borderRadius: 9, backgroundColor: couponDraft.requiredRank === rank ? "#E8A0BF" : colors.surface }}><Text style={{ fontSize: 10, fontWeight: "800", color: couponDraft.requiredRank === rank ? "#FFF" : colors.foreground }}>{label}</Text></Pressable>)}</View>
+            <Text style={{ fontSize: 12, fontWeight: "700", color: colors.muted, marginBottom: 7 }}>利用回数</Text>
+            <View style={{ flexDirection: "row", gap: 8 }}>{([['single', '1回限定'], ['multiple', '期間中何度でも']] as const).map(([usageType, label]) => <Pressable key={usageType} onPress={() => setCouponDraft({ ...couponDraft, usageType })} style={{ flex: 1, alignItems: "center", paddingVertical: 11, borderRadius: 10, backgroundColor: couponDraft.usageType === usageType ? "#5D5C74" : colors.surface }}><Text style={{ fontSize: 12, fontWeight: "800", color: couponDraft.usageType === usageType ? "#FFF" : colors.foreground }}>{label}</Text></Pressable>)}</View>
+          </ScrollView>
+        </View>
       </Modal>
 
       {/* お知らせ作成モーダル */}

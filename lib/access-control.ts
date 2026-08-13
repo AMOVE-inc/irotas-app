@@ -5,7 +5,7 @@ const ADMIN_ROUTE_NAMES = new Set([
   "admin-dashboard",
   "csv-import",
 ]);
-const OPERATOR_ROUTE_NAMES = new Set(["campaign-manager"]);
+const OPERATOR_ROUTE_NAMES = new Set(["campaign-manager", "gift-campaign-manager"]);
 
 /** Unknown or missing role values must always fail closed. */
 export function normalizeUserRole(role: unknown): UserRole {

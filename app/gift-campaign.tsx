@@ -6,6 +6,7 @@ import { applyForGift, getGiftApplications, getGiftCampaigns, type GiftCampaign,
 import { useRouter } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import { Alert, Pressable, ScrollView, Text, View } from "react-native";
+import { Image } from "expo-image";
 
 const RANK_ORDER = { regular: 0, silver: 1, gold: 2, platinum: 3 };
 const CATEGORY_LABELS: Record<GiftCategory, string> = { gourmet: "グルメ", non_gourmet: "グルメ以外" };
@@ -58,7 +59,7 @@ export default function GiftCampaignScreen() {
             <View style={{ marginLeft: 6, backgroundColor: RANK_COLORS[campaign.minimumRank] + "25", borderRadius: 8, paddingHorizontal: 8, paddingVertical: 3 }}><Text style={{ color: RANK_COLORS[campaign.minimumRank], fontWeight: "700", fontSize: 11 }}>{RANK_LABELS[campaign.minimumRank]}以上</Text></View>
             <View style={{ marginLeft: "auto", backgroundColor: closed ? "#8E8E9325" : "#34C75920", borderRadius: 9, paddingHorizontal: 9, paddingVertical: 4 }}><Text style={{ color: closed ? "#6E6E73" : "#248A3D", fontWeight: "800", fontSize: 11 }}>{closed ? "募集終了" : "募集中"}</Text></View>
           </View>
-          <View style={{ flexDirection: "row", alignItems: "center" }}><Text style={{ fontSize: 34, marginRight: 12 }}>{campaign.imageEmoji}</Text><Text style={{ flex: 1, fontSize: 16, fontWeight: "800", color: colors.foreground }}>{campaign.title}</Text></View>
+          <View style={{ flexDirection: "row", alignItems: "center" }}>{campaign.imageUrl ? <Image source={{ uri: campaign.imageUrl }} style={{ width: 104, height: 104, borderRadius: 13, marginRight: 12 }} contentFit="cover" /> : <Text style={{ fontSize: 34, marginRight: 12 }}>{campaign.imageEmoji}</Text>}<Text style={{ flex: 1, fontSize: 16, fontWeight: "800", color: colors.foreground }}>{campaign.title}</Text></View>
           <Text style={{ color: colors.muted, lineHeight: 20, marginVertical: 10 }}>{campaign.description}</Text>
           <Text style={{ fontSize: 12, color: colors.muted, marginBottom: 10 }}>応募期限：{campaign.deadline}　当選 {campaign.winnerCount}名</Text>
           <Pressable disabled={closed || applied || !rankEligible} onPress={() => handleApply(campaign)} style={{ alignItems: "center", paddingVertical: 11, borderRadius: 12, backgroundColor: applied ? "#34C75920" : !closed && rankEligible ? "#E8A0BF" : colors.border }}><Text style={{ fontWeight: "800", color: applied ? "#248A3D" : !closed && rankEligible ? "#FFF" : colors.muted }}>{applied ? "申込済み" : closed ? "募集終了" : rankEligible ? "抽選に申し込む" : `${RANK_LABELS[campaign.minimumRank]}以上が対象`}</Text></Pressable>

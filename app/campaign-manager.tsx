@@ -2,8 +2,8 @@ import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { useColors } from "@/hooks/use-colors";
 import { useAuthContext } from "@/lib/auth-context";
-import { confirmGiftLottery, getGiftApplications, getGiftCampaigns, saveGiftCampaigns, type GiftApplication, type GiftCampaign } from "@/lib/gift-campaign-store";
 import { isOperatorRole } from "@/lib/access-control";
+import { createCampaign, deleteCampaign, setCampaignStatus, updateCampaign, useCampaigns, type Campaign } from "@/lib/campaign-store";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
@@ -16,43 +16,6 @@ import {
   View,
 } from "react-native";
 
-interface Campaign {
-  id: string;
-  title: string;
-  description: string;
-  targetRank: "all" | "silver" | "gold" | "platinum";
-  startDate: string;
-  endDate: string;
-  status: "active" | "scheduled" | "ended";
-  type: "points" | "event" | "gift" | "notification";
-  reachCount: number;
-}
-
-const INITIAL_CAMPAIGNS: Campaign[] = [
-  {
-    id: "c1",
-    title: "幹事応援キャンペーン",
-    description: "メンバー主催のグルメ会を応援します。開催完了した幹事には20ptを付与します。キャンセル時は付与対象外です。",
-    targetRank: "all",
-    startDate: "2026-08-01",
-    endDate: "2026-12-31",
-    status: "active",
-    type: "points",
-    reachCount: 500,
-  },
-  {
-    id: "c2",
-    title: "友人招待キャンペーン",
-    description: "IRO+を一緒に楽しみたい友人をご紹介ください。紹介された方の入会完了後、運営から特典をご案内します。",
-    targetRank: "all",
-    startDate: "2026-08-01",
-    endDate: "2026-12-31",
-    status: "active",
-    type: "notification",
-    reachCount: 500,
-  },
-];
-
 const STATUS_LABELS = { active: "実施中", scheduled: "予定", ended: "終了" };
 const STATUS_COLORS = { active: "#34C759", scheduled: "#A7C7E7", ended: "#8E8E93" };
 const TYPE_LABELS = { points: "ポイント", event: "イベント", gift: "プレゼント", notification: "通知" };
@@ -63,21 +26,15 @@ export default function CampaignManagerScreen() {
   const colors = useColors();
   const router = useRouter();
   const { user: authUser } = useAuthContext();
-  const [campaigns, setCampaigns] = useState<Campaign[]>(INITIAL_CAMPAIGNS);
+  const campaigns = useCampaigns();
   const [showCreate, setShowCreate] = useState(false);
+  const [editingCampaign, setEditingCampaign] = useState<Campaign | null>(null);
   const [newTitle, setNewTitle] = useState("");
   const [newDesc, setNewDesc] = useState("");
   const [newType, setNewType] = useState<Campaign["type"]>("points");
   const [newRank, setNewRank] = useState<Campaign["targetRank"]>("all");
-  const [giftCampaigns, setGiftCampaigns] = useState<GiftCampaign[]>([]);
-  const [giftApplications, setGiftApplications] = useState<GiftApplication[]>([]);
-
-  useEffect(() => {
-    Promise.all([getGiftCampaigns(), getGiftApplications()]).then(([gifts, applications]) => {
-      setGiftCampaigns(gifts);
-      setGiftApplications(applications);
-    });
-  }, []);
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
 
   if (!isOperatorRole(authUser?.role)) {
     return (
@@ -89,57 +46,40 @@ export default function CampaignManagerScreen() {
     );
   }
 
-  const handleCreate = () => {
+  const openCreate = () => {
+    const today = new Date().toISOString().split("T")[0];
+    setEditingCampaign(null); setNewTitle(""); setNewDesc(""); setNewType("points"); setNewRank("all"); setStartDate(today); setEndDate(today); setShowCreate(true);
+  };
+
+  const openEdit = (campaign: Campaign) => {
+    setEditingCampaign(campaign); setNewTitle(campaign.title); setNewDesc(campaign.description); setNewType(campaign.type); setNewRank(campaign.targetRank); setStartDate(campaign.startDate); setEndDate(campaign.endDate); setShowCreate(true);
+  };
+
+  const handleSave = async () => {
     if (!newTitle.trim()) return;
     const today = new Date().toISOString().split("T")[0];
-    const newCampaign: Campaign = {
-      id: `c_${Date.now()}`,
+    const savedCampaign: Campaign = {
+      id: editingCampaign?.id ?? `c_${Date.now()}`,
       title: newTitle.trim(),
       description: newDesc.trim(),
       targetRank: newRank,
-      startDate: today,
-      endDate: today,
-      status: "active",
+      startDate: startDate || today,
+      endDate: endDate || today,
+      status: editingCampaign?.status ?? "active",
       type: newType,
-      reachCount: 0,
+      reachCount: editingCampaign?.reachCount ?? 0,
     };
-    setCampaigns([newCampaign, ...campaigns]);
+    editingCampaign ? await updateCampaign(savedCampaign) : await createCampaign(savedCampaign);
     setShowCreate(false);
-    setNewTitle("");
-    setNewDesc("");
-    Alert.alert("作成完了", "キャンペーンを作成しました。");
+    Alert.alert(editingCampaign ? "更新完了" : "作成完了", editingCampaign ? "キャンペーンを更新しました。" : "キャンペーンを作成しました。");
   };
 
-  const handleToggleStatus = (campaign: Campaign) => {
-    if (campaign.status === "ended") return;
+  const handleToggleStatus = async (campaign: Campaign) => {
     const next = campaign.status === "active" ? "ended" : "active";
-    setCampaigns(campaigns.map((c) => (c.id === campaign.id ? { ...c, status: next } : c)));
+    await setCampaignStatus(campaign.id, next);
   };
 
-  const updateGiftMinimumRank = async (gift: GiftCampaign, minimumRank: GiftCampaign["minimumRank"]) => {
-    const next = giftCampaigns.map((item) => item.id === gift.id ? { ...item, minimumRank } : item);
-    setGiftCampaigns(next);
-    await saveGiftCampaigns(next);
-  };
-
-  const handleGiftLottery = (gift: GiftCampaign) => {
-    const applicants = giftApplications.filter((item) => item.campaignId === gift.id && item.result === "pending");
-    if (applicants.length === 0) {
-      Alert.alert("申込者がいません", "抽選を確定するには申込が必要です。");
-      return;
-    }
-    Alert.alert("抽選を確定", `${applicants.length}名から${Math.min(gift.winnerCount, applicants.length)}名を抽選し、募集を終了します。`, [
-      { text: "キャンセル", style: "cancel" },
-      { text: "抽選する", onPress: async () => {
-        const applications = await confirmGiftLottery(gift.id, gift.winnerCount);
-        const campaigns = await getGiftCampaigns();
-        setGiftApplications(applications);
-        setGiftCampaigns(campaigns);
-        const winners = applications.filter((item) => item.campaignId === gift.id && item.result === "winner");
-        Alert.alert("抽選確定", `当選者：${winners.map((item) => item.memberName).join("、")}`);
-      } },
-    ]);
-  };
+  const handleDelete = (campaign: Campaign) => Alert.alert("キャンペーンを削除", `${campaign.title}を削除しますか？`, [{ text: "キャンセル", style: "cancel" }, { text: "削除", style: "destructive", onPress: () => { void deleteCampaign(campaign.id); } }]);
 
   return (
     <ScreenContainer edges={["top", "left", "right"]}>
@@ -161,7 +101,7 @@ export default function CampaignManagerScreen() {
           キャンペーン管理
         </Text>
         <Pressable
-          onPress={() => setShowCreate(true)}
+          onPress={openCreate}
           style={{
             flexDirection: "row",
             alignItems: "center",
@@ -209,24 +149,7 @@ export default function CampaignManagerScreen() {
       </View>
 
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
-        <Text style={{ fontSize: 18, fontWeight: "800", color: colors.foreground, marginBottom: 10 }}>プレゼント抽選管理</Text>
-        {giftCampaigns.map((gift) => {
-          const applicants = giftApplications.filter((item) => item.campaignId === gift.id);
-          return <View key={gift.id} style={{ backgroundColor: colors.surface, borderRadius: 16, padding: 16, marginBottom: 12 }}>
-            <View style={{ flexDirection: "row", alignItems: "center" }}>
-              <Text style={{ flex: 1, fontSize: 15, fontWeight: "800", color: colors.foreground }}>{gift.title}</Text>
-              <Text style={{ fontSize: 11, fontWeight: "800", color: gift.status === "open" ? "#248A3D" : colors.muted }}>{gift.status === "open" ? "募集中" : "募集終了"}</Text>
-            </View>
-            <Text style={{ fontSize: 12, color: colors.muted, marginTop: 6 }}>申込 {applicants.length}名 ／ 当選 {gift.winnerCount}名</Text>
-            <Text style={{ fontSize: 12, fontWeight: "700", color: colors.foreground, marginTop: 12, marginBottom: 7 }}>申込可能ランク</Text>
-            <View style={{ flexDirection: "row", gap: 6, flexWrap: "wrap" }}>
-              {([['regular', '全会員'], ['silver', 'シルバー以上'], ['gold', 'ゴールド以上'], ['platinum', 'プラチナ']] as const).map(([rank, label]) => <Pressable key={rank} disabled={gift.status === "closed"} onPress={() => updateGiftMinimumRank(gift, rank)} style={{ borderRadius: 14, paddingHorizontal: 9, paddingVertical: 6, backgroundColor: gift.minimumRank === rank ? "#E8A0BF" : colors.background }}><Text style={{ fontSize: 11, fontWeight: "700", color: gift.minimumRank === rank ? "#FFF" : colors.foreground }}>{label}</Text></Pressable>)}
-            </View>
-            {gift.status === "open" && <Pressable onPress={() => handleGiftLottery(gift)} style={{ marginTop: 12, paddingVertical: 9, borderRadius: 10, alignItems: "center", backgroundColor: "#E8A0BF" }}><Text style={{ color: "#FFF", fontWeight: "800" }}>抽選を確定</Text></Pressable>}
-          </View>;
-        })}
-
-        <Text style={{ fontSize: 18, fontWeight: "800", color: colors.foreground, marginTop: 12, marginBottom: 10 }}>キャンペーン管理</Text>
+        <Text style={{ fontSize: 18, fontWeight: "800", color: colors.foreground, marginBottom: 10 }}>キャンペーン一覧</Text>
         {campaigns.map((campaign) => (
           <View
             key={campaign.id}
@@ -289,10 +212,13 @@ export default function CampaignManagerScreen() {
               </View>
             </View>
 
-            {/* アクションボタン */}
-            {campaign.status !== "ended" && (
+            <View style={{ flexDirection: "row", gap: 8, marginBottom: 8 }}>
+              <Pressable onPress={() => openEdit(campaign)} style={{ flex: 1, backgroundColor: "#5D5C7418", borderRadius: 10, paddingVertical: 8, alignItems: "center" }}><Text style={{ color: "#5D5C74", fontWeight: "800" }}>編集</Text></Pressable>
+              <Pressable onPress={() => handleDelete(campaign)} style={{ flex: 1, backgroundColor: "#FF3B3018", borderRadius: 10, paddingVertical: 8, alignItems: "center" }}><Text style={{ color: "#FF3B30", fontWeight: "800" }}>削除</Text></Pressable>
+            </View>
+            {/* 終了・再開 */}
               <Pressable
-                onPress={() => handleToggleStatus(campaign)}
+                onPress={() => { void handleToggleStatus(campaign); }}
                 style={({ pressed }) => ({
                   backgroundColor:
                     campaign.status === "active" ? "#FF3B3020" : "#34C75920",
@@ -309,10 +235,9 @@ export default function CampaignManagerScreen() {
                     color: campaign.status === "active" ? "#FF3B30" : "#34C759",
                   }}
                 >
-                  {campaign.status === "active" ? "キャンペーンを終了する" : "キャンペーンを開始する"}
+                  {campaign.status === "active" ? "キャンペーンを終了する" : "キャンペーンを再開する"}
                 </Text>
               </Pressable>
-            )}
           </View>
         ))}
       </ScrollView>
@@ -324,10 +249,10 @@ export default function CampaignManagerScreen() {
             <Pressable onPress={() => setShowCreate(false)}>
               <Text style={{ fontSize: 16, color: colors.muted }}>キャンセル</Text>
             </Pressable>
-            <Text style={{ fontSize: 17, fontWeight: "700", color: colors.foreground }}>キャンペーン作成</Text>
-            <Pressable onPress={handleCreate}>
+            <Text style={{ fontSize: 17, fontWeight: "700", color: colors.foreground }}>{editingCampaign ? "キャンペーン編集" : "キャンペーン作成"}</Text>
+            <Pressable onPress={() => { void handleSave(); }}>
               <Text style={{ fontSize: 16, fontWeight: "700", color: newTitle.trim() ? "#E8A0BF" : colors.muted }}>
-                作成
+                {editingCampaign ? "保存" : "作成"}
               </Text>
             </Pressable>
           </View>
@@ -349,6 +274,11 @@ export default function CampaignManagerScreen() {
                 marginBottom: 16,
               }}
             />
+
+            <Text style={{ fontSize: 13, fontWeight: "600", color: colors.muted, marginBottom: 6 }}>開始日（YYYY-MM-DD）</Text>
+            <TextInput value={startDate} onChangeText={setStartDate} placeholder="2026-08-01" placeholderTextColor={colors.muted} style={{ backgroundColor: colors.surface, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: colors.foreground, marginBottom: 16 }} />
+            <Text style={{ fontSize: 13, fontWeight: "600", color: colors.muted, marginBottom: 6 }}>終了日（YYYY-MM-DD）</Text>
+            <TextInput value={endDate} onChangeText={setEndDate} placeholder="2026-12-31" placeholderTextColor={colors.muted} style={{ backgroundColor: colors.surface, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: colors.foreground, marginBottom: 16 }} />
 
             <Text style={{ fontSize: 13, fontWeight: "600", color: colors.muted, marginBottom: 6 }}>説明</Text>
             <TextInput

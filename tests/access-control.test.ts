@@ -56,6 +56,7 @@ describe("access control", () => {
 
   it("allows campaign management through the operator route", () => {
     expect(isOperatorRoute("campaign-manager")).toBe(true);
+    expect(isOperatorRoute("gift-campaign-manager")).toBe(true);
     expect(isOperatorRoute("admin-dashboard")).toBe(false);
     expect(isAdminRoute("campaign-manager")).toBe(false);
   });

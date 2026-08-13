@@ -265,6 +265,8 @@ export interface Coupon {
   code: string;
   requiredRank: MemberRank;
   usageType: "single" | "multiple";
+  status?: "active" | "ended";
+  imageUrl?: string;
   recipientIds?: string[];
   sourceContestId?: string;
 }

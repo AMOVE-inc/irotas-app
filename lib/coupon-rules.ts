@@ -24,6 +24,7 @@ export function getCouponAvailability(
   now = new Date(),
   memberId?: string,
 ): CouponAvailability {
+  if (coupon.status === "ended") return "expired";
   if (coupon.recipientIds && (!memberId || !coupon.recipientIds.includes(memberId))) return "rank_locked";
   if (localDateKey(now) > coupon.expiresAt) return "expired";
   if (RANK_ORDER.indexOf(memberRank) < RANK_ORDER.indexOf(coupon.requiredRank)) return "rank_locked";

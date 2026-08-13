@@ -46,8 +46,8 @@ export const allowedEmails = mysqlTable("allowed_emails", {
   addedBy: int("addedBy"),
   /** 実際に登録済みかどうか（登録完了後にtrueになる） */
   isRegistered: int("isRegistered").default(0).notNull(),
-  /** memberはSquare必須。operator/club_leaderは役職中のみサブスク免除。 */
-  accessRole: mysqlEnum("accessRole", ["member", "operator", "club_leader"]).default("member").notNull(),
+  /** 権限序列: admin > operator > club_leader > member。member以外は役職中のみサブスク免除。 */
+  accessRole: mysqlEnum("accessRole", ["member", "club_leader", "operator", "admin"]).default("member").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 

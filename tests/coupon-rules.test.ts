@@ -22,6 +22,10 @@ describe("coupon availability", () => {
     expect(getCouponAvailability(coupon, "gold", undefined, new Date(2026, 8, 1))).toBe("expired");
   });
 
+  it("blocks a coupon ended by an administrator", () => {
+    expect(getCouponAvailability({ ...coupon, status: "ended" }, "gold", undefined, new Date(2026, 6, 22))).toBe("expired");
+  });
+
   it("blocks members below the required rank", () => {
     expect(getCouponAvailability(coupon, "regular", undefined, new Date(2026, 6, 22))).toBe("rank_locked");
   });
