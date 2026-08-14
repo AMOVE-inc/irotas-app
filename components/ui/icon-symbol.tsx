@@ -35,6 +35,7 @@ const MAPPING = {
   "mappin.and.ellipse": "place",
   "phone.fill": "phone",
   "arrow.left": "arrow-back",
+  "arrow.down": "arrow-downward",
   "xmark": "close",
   "ellipsis": "more-horiz",
   "photo.fill": "photo",

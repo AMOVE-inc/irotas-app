@@ -162,13 +162,15 @@ export default function ChatScreen() {
   const router = useRouter();
   const { user: authUser } = useAuthContext();
   const userIsAdmin = authUser?.role === "admin";
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, unreadCount: unreadCountParam } = useLocalSearchParams<{ id: string; unreadCount?: string }>();
   const [messageText, setMessageText] = useState("");
   const [mentionQuery, setMentionQuery] = useState<string | null>(null);
   const [messageSelection, setMessageSelection] = useState<TextSelection>({ start: 0, end: 0 });
   const mentionGroups = useMemo(() => getMentionGroups(MEMBERS, CLUBS), []);
   const flatListRef = useRef<FlatList>(null);
+  const didInitialScrollRef = useRef(false);
   const inputRef = useRef<TextInput>(null);
+  const [isNearLatest, setIsNearLatest] = useState(true);
 
   // 参加者モーダル
   const [showParticipants, setShowParticipants] = useState(false);
@@ -311,10 +313,25 @@ export default function ChatScreen() {
   useEffect(() => {
     if (messages.length > 0) {
       setTimeout(() => {
-        flatListRef.current?.scrollToEnd({ animated: true });
+        if (!didInitialScrollRef.current) {
+          const unreadCount = Math.max(0, Number(unreadCountParam ?? 0));
+          if (unreadCount > 0) {
+            const firstUnreadIndex = Math.max(0, messages.length - unreadCount);
+            flatListRef.current?.scrollToIndex({ index: firstUnreadIndex, animated: false, viewPosition: 0.08 });
+            setIsNearLatest(firstUnreadIndex >= messages.length - 2);
+          } else {
+            flatListRef.current?.scrollToEnd({ animated: false });
+            setIsNearLatest(true);
+          }
+          didInitialScrollRef.current = true;
+          return;
+        }
+        if (messages.at(-1)?.senderId === CURRENT_USER.id) {
+          flatListRef.current?.scrollToEnd({ animated: true });
+        }
       }, 100);
     }
-  }, [messages.length]);
+  }, [messages, unreadCountParam]);
 
   if (!room) {
     return (
@@ -416,6 +433,12 @@ export default function ChatScreen() {
           )}
           contentContainerStyle={{ paddingVertical: 16 }}
           showsVerticalScrollIndicator={false}
+          onScroll={(event) => {
+            const { contentOffset, contentSize, layoutMeasurement } = event.nativeEvent;
+            setIsNearLatest(contentOffset.y + layoutMeasurement.height >= contentSize.height - 80);
+          }}
+          scrollEventThrottle={80}
+          onScrollToIndexFailed={() => flatListRef.current?.scrollToEnd({ animated: false })}
           ListEmptyComponent={
             <View style={{ alignItems: "center", paddingVertical: 40 }}>
               <IconSymbol name="message.fill" size={36} color={colors.border} />
@@ -428,6 +451,17 @@ export default function ChatScreen() {
             </View>
           }
         />
+
+        {!isNearLatest && messages.length > 0 ? (
+          <Pressable
+            onPress={() => flatListRef.current?.scrollToEnd({ animated: true })}
+            accessibilityLabel="最新のメッセージへ移動"
+            style={{ position: "absolute", right: 16, bottom: keyboardVisible ? 106 : 118, zIndex: 20, flexDirection: "row", alignItems: "center", gap: 5, borderRadius: 18, paddingHorizontal: 12, paddingVertical: 8, backgroundColor: colors.foreground, shadowColor: "#000", shadowOpacity: 0.16, shadowRadius: 5, shadowOffset: { width: 0, height: 2 }, elevation: 4 }}
+          >
+            <Text style={{ fontSize: 12, fontWeight: "800", color: colors.background }}>最新へ</Text>
+            <IconSymbol name="arrow.down" size={14} color={colors.background} />
+          </Pressable>
+        ) : null}
 
         {/* メンション候補リスト */}
         {mentionQuery !== null && (

@@ -32,7 +32,11 @@ function ChatRoomCard({ room }: { room: ChatRoom }) {
 
   return (
     <Pressable
-      onPress={() => { void markRoomRead(room.id); router.push({ pathname: "/chat", params: { id: room.id } }); }}
+      onPress={() => {
+        const unreadCount = room.unreadCount ?? 0;
+        void markRoomRead(room.id);
+        router.push({ pathname: "/chat", params: { id: room.id, unreadCount: String(unreadCount) } });
+      }}
       style={({ pressed }) => ({ flexDirection: "row", alignItems: "center", paddingHorizontal: 16, paddingVertical: 14, borderBottomWidth: 0.5, borderBottomColor: colors.border, opacity: pressed ? 0.7 : 1 })}
     >
       <View style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: typeColor + "20", alignItems: "center", justifyContent: "center" }}>

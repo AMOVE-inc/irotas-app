@@ -92,35 +92,49 @@ function MealReportContent({ thread, compact = false }: { thread: BoardThread; c
   const report = thread.mealReport;
   if (!report) return null;
 
+  const area = (report.areaDisplay ?? formatMealReportArea(report.prefecture)).replace(/^📍\s*/, "").trim();
+  const rating = Math.max(0, Math.min(5, Math.round(report.rating)));
+  const hasSummary = Boolean(area || report.budget || rating);
+
+  if (compact) {
+    return hasSummary ? (
+      <View style={{ flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 6, marginBottom: 9 }}>
+        {area ? <View style={{ borderRadius: 10, paddingHorizontal: 8, paddingVertical: 4, backgroundColor: "#F4F1F3" }}><Text style={{ fontSize: 12, fontWeight: "700", color: colors.foreground }}>📍 {area}</Text></View> : null}
+        {report.budget ? <View style={{ borderRadius: 10, paddingHorizontal: 8, paddingVertical: 4, backgroundColor: "#F4F1F3" }}><Text style={{ fontSize: 12, color: colors.muted }}>予算 {report.budget}</Text></View> : null}
+        {rating ? <View style={{ borderRadius: 10, paddingHorizontal: 8, paddingVertical: 4, backgroundColor: "#FFF3DF" }}><Text style={{ fontSize: 12, fontWeight: "800", color: "#D88900" }}>★ {rating}</Text></View> : null}
+      </View>
+    ) : null;
+  }
+
   return (
     <View
       style={{
         backgroundColor: "#FFF8F0",
         borderRadius: 12,
-        padding: compact ? 10 : 14,
-        marginBottom: compact ? 8 : 16,
+        padding: 14,
+        marginBottom: 16,
         borderWidth: 1,
         borderColor: "#F3E2D2",
       }}
     >
       <View style={{ flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 8 }}>
-        <Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground }}>📍 {report.areaDisplay ?? formatMealReportArea(report.prefecture)}</Text>
+        {area ? <Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground }}>📍 {area}</Text> : null}
         {report.budget ? <Text style={{ fontSize: 13, color: colors.muted }}>予算 {report.budget}</Text> : null}
       </View>
-      <Text style={{ fontSize: 17, color: "#F5A623", letterSpacing: 2, marginTop: 6 }}>
-        {"★".repeat(report.rating)}{"☆".repeat(5 - report.rating)}
-      </Text>
-      {!compact && report.recommendedMenu ? (
+      {rating ? <Text style={{ fontSize: 17, color: "#F5A623", letterSpacing: 2, marginTop: 6 }}>
+        {"★".repeat(rating)}{"☆".repeat(5 - rating)}
+      </Text> : null}
+      {report.recommendedMenu ? (
         <Text style={{ fontSize: 14, color: colors.foreground, marginTop: 9 }}>
           <Text style={{ fontWeight: "800" }}>おすすめメニュー　</Text>{report.recommendedMenu}
         </Text>
       ) : null}
-      {!compact && report.comment ? (
+      {report.comment ? (
         <Text style={{ fontSize: 14, lineHeight: 21, color: colors.foreground, marginTop: 8 }}>
           <Text style={{ fontWeight: "800" }}>一言　</Text>{report.comment}
         </Text>
       ) : null}
-      {!compact && (report.googleMapUrl || report.tabelogUrl) ? (
+      {(report.googleMapUrl || report.tabelogUrl) ? (
         <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 12 }}>
         {report.googleMapUrl ? <Pressable
           onPress={async (event) => {

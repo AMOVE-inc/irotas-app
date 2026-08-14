@@ -23,6 +23,8 @@ TARGET_HINTS = (
     "ご馳走様",
     "グルメ相談",
     "相談室",
+    "なんでも",
+    "フリーチャット",
     "部",
 )
 
@@ -33,6 +35,7 @@ TEXT_CHANNELS = {
 
 FORUM_CHANNELS = {
     1472183879187042375: ("gourmet-advice", "教えてグルメ相談室"),
+    1228614719309352970: ("free-chat", "なんでも掲示板"),
     1485649608620113971: ("club-club-disney", "ディズニー部"),
     1485649683345969182: ("club-club-walk", "散歩部"),
     1485649758918807582: ("club-club-travel", "旅行部"),
@@ -81,10 +84,36 @@ def first_url(content: str, matcher) -> str | None:
     return None
 
 
+def clean_template_line(line: str) -> str:
+    """Remove Discord template decorations without changing the entered value."""
+    value = line.strip().strip("*`_")
+    value = re.sub(r"^[\s・■●◆#*\-📍📌👥💰💵💬🍴🍽️⭐🌟🥢]+", "", value)
+    return value.strip()
+
+
 def field(content: str, labels: tuple[str, ...]) -> str | None:
     label_pattern = "|".join(re.escape(label) for label in labels)
-    match = re.search(rf"(?:^|\n)\s*(?:[・■●◆*-]\s*)?(?:{label_pattern})\s*[：:]\s*(.+)", content)
-    return match.group(1).strip() if match else None
+    for raw_line in content.splitlines():
+        line = clean_template_line(raw_line)
+        match = re.match(rf"(?:{label_pattern})\s*[：:]\s*(.*)$", line)
+        if match and match.group(1).strip():
+            return match.group(1).strip().strip("*`_")
+    return None
+
+
+def multiline_field(content: str, labels: tuple[str, ...]) -> str | None:
+    label_pattern = "|".join(re.escape(label) for label in labels)
+    lines = content.splitlines()
+    for index, raw_line in enumerate(lines):
+        line = clean_template_line(raw_line)
+        match = re.match(rf"(?:{label_pattern})\s*[：:]\s*(.*)$", line)
+        if not match:
+            continue
+        values = [match.group(1).strip().strip("*`_")]
+        values.extend(item.rstrip() for item in lines[index + 1:])
+        value = "\n".join(values).strip()
+        return value or None
+    return None
 
 
 def introduction_fields(content: str) -> dict:
@@ -102,12 +131,12 @@ def introduction_fields(content: str) -> dict:
 def meal_fields(content: str) -> dict:
     restaurant = field(content, ("店名", "お店", "店舗名"))
     if not restaurant:
-        restaurant = next((line.strip(" #*・") for line in content.splitlines() if line.strip()), "過去のごちそうさま報告")
+        restaurant = next((clean_template_line(line) for line in content.splitlines() if clean_template_line(line)), "過去のごちそうさま報告")
     prefecture = next((value for value in PREFECTURES if value in content), "")
     rating_text = field(content, ("評価", "おすすめ度")) or ""
     rating_match = re.search(r"([1-5](?:\.\d)?)", rating_text)
     star_count = max(content.count("⭐"), content.count("★"))
-    rating = float(rating_match.group(1)) if rating_match else float(min(5, star_count or 5))
+    rating = float(rating_match.group(1)) if rating_match else float(min(5, star_count))
     return {
         "restaurantName": restaurant,
         "prefecture": prefecture,
@@ -127,8 +156,20 @@ def advice_fields(title: str, content: str) -> dict:
         "area": field(content, ("エリア", "場所")) or "未設定",
         "scene": field(content, ("利用シーン", "シーン")) or "未設定",
         "budget": field(content, ("予算",)) or "未設定",
-        "comment": field(content, ("一言", "相談内容")) or content.strip(),
+        "comment": multiline_field(content, ("一言メッセージ", "一言", "相談内容")) or "",
     }
+
+
+def normalize_discord_mentions(message: discord.Message) -> str:
+    content = message.content
+    for role in message.role_mentions:
+        content = content.replace(f"<@&{role.id}>", f"@{role.name}")
+    for member in message.mentions:
+        display_name = getattr(member, "display_name", member.name)
+        content = re.sub(rf"<@!?{member.id}>", f"@{display_name}", content)
+    for channel in message.channel_mentions:
+        content = content.replace(f"<#{channel.id}>", f"#{channel.name}")
+    return content
 
 
 async def save_attachment(attachment: discord.Attachment, asset_root: Path, relative_root: Path) -> tuple[str, bool] | None:
@@ -176,7 +217,7 @@ async def message_record(message: discord.Message, asset_root: Path, relative_ro
         "id": str(message.id),
         "authorId": str(message.author.id),
         "authorName": getattr(message.author, "display_name", message.author.name),
-        "content": message.content,
+        "content": normalize_discord_mentions(message),
         "createdAt": isoformat(message.created_at),
         "parentMessageId": str(message.reference.message_id) if message.reference and message.reference.message_id else None,
         "images": images,
