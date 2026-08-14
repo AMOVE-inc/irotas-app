@@ -4,6 +4,7 @@ import { CURRENT_USER, MEMBERS, type Event } from "@/constants/mock-data";
 import { GOURMET_GENRES } from "@/constants/event-options";
 import { useAuthContext } from "@/lib/auth-context";
 import { isOperatorRole } from "@/lib/access-control";
+import { useClubs } from "@/lib/club-store";
 import { pendingEvents } from "@/lib/event-store";
 import { scheduleOrganizerDeadlineNotification } from "@/lib/notifications";
 import { eventCategoryFromPrefecture, extractEventLocation, formatEventArea } from "@/lib/event-location";
@@ -123,7 +124,10 @@ export default function CreateEventScreen() {
   const router = useRouter();
   const { user: authUser } = useAuthContext();
   const userIsOperator = isOperatorRole(authUser?.role);
+  const clubs = useClubs();
+  const joinedClubs = clubs.filter((club) => club.memberIds.includes(CURRENT_USER.id));
   const [eventType, setEventType] = useState<Event["eventType"]>(userIsOperator ? "official" : "gourmet");
+  const [selectedClubId, setSelectedClubId] = useState("");
   const [restaurantName, setRestaurantName] = useState("");
   const [eventName, setEventName] = useState("");
   const [date, setDate] = useState("");
@@ -154,8 +158,10 @@ export default function CreateEventScreen() {
 
   const chooseEventType = (type: Event["eventType"]) => {
     if (type === "official" && !userIsOperator) return;
+    if (type === "club" && joinedClubs.length === 0) return;
     setEventType(type);
-    if (type === "gourmet") { setUseRankPrices(false); setSelectionMethod("first_come"); }
+    if (type !== "official") { setUseRankPrices(false); setSelectionMethod("first_come"); }
+    if (type === "club" && !selectedClubId) setSelectedClubId(joinedClubs[0]?.id ?? "");
   };
   const handlePickImage = async () => {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -165,15 +171,19 @@ export default function CreateEventScreen() {
   };
   const numericAmount = (value: string) => Number(value.replace(/[^0-9]/g, ""));
   const handleCreate = () => {
-    if (!restaurantName.trim() || !date || !time || !reservationCapacity || !recruitCapacity || !budgetMin || (!fixedAmount && !budgetMax) || !decisionDate || !imageUri || !termsAccepted || genres.length === 0) {
+    const clubEvent = eventType === "club";
+    if ((!clubEvent && !restaurantName.trim()) || (clubEvent && (!eventName.trim() || !selectedClubId)) || !date || !time || !reservationCapacity || !recruitCapacity || !budgetMin || (!fixedAmount && !budgetMax) || !decisionDate || !imageUri || !termsAccepted || (!clubEvent && genres.length === 0)) {
       Alert.alert("入力エラー", "必須項目・写真・規約同意を確認してください"); return;
+    }
+    if (clubEvent && !joinedClubs.some((club) => club.id === selectedClubId)) {
+      Alert.alert("部活を確認してください", "所属している部活のみイベントを作成できます。"); return;
     }
     if (address.trim() && !extractedLocation.prefecture) { Alert.alert("住所を確認してください", "住所を入力する場合は都道府県名を含めてください"); return; }
     if (decisionDate > date) { Alert.alert("期日を確認してください", "参加者決定予定日は開催日以前を選択してください"); return; }
     if (!fixedAmount && numericAmount(budgetMin) > numericAmount(budgetMax)) { Alert.alert("金額を確認してください", "下限金額は上限金額以下にしてください"); return; }
     if (1 + companionIds.length + Number(recruitCapacity) > Number(reservationCapacity)) { Alert.alert("人数を確認してください", "予約人数には、自分・同席者・募集人数の全員が収まるよう設定してください"); return; }
     if ([tabelogUrl, googleMapsUrl].some((url) => url && !/^https?:\/\//i.test(url))) { Alert.alert("URLを確認してください", "URLは http:// または https:// から入力してください"); return; }
-    const finalType: Event["eventType"] = userIsOperator ? eventType : "gourmet";
+    const finalType: Event["eventType"] = eventType === "official" && !userIsOperator ? "gourmet" : eventType;
     if (finalType === "official" && useRankPrices && Object.values(rankPrices).some((value) => !value)) {
       Alert.alert("ランク別料金を確認してください", "設定する場合は、すべてのランクの料金を選択してください"); return;
     }
@@ -183,13 +193,13 @@ export default function CreateEventScreen() {
       ? Object.fromEntries(Object.entries(rankPrices).filter(([, value]) => value)) as Event["rankPrices"]
       : undefined;
     const newEvent: Event = {
-      id: `event_${Date.now()}`, createdAt: new Date().toISOString(), title, restaurantName: restaurantName.trim(), description: publicNotes.trim() || (finalType === "official" ? "IRO＋公式イベントです。" : "メンバー主催のグルメ会です。"), date, time,
+      id: `event_${Date.now()}`, createdAt: new Date().toISOString(), title, restaurantName: restaurantName.trim() || undefined, description: publicNotes.trim() || (finalType === "official" ? "IRO＋公式イベントです。" : finalType === "club" ? `${joinedClubs.find((club) => club.id === selectedClubId)?.name ?? "部活"}の部員限定イベントです。` : "メンバー主催のグルメ会です。"), date, time,
       location: address.trim() || "住所未設定", prefecture: extractedLocation.prefecture, tokyoArea: extractedLocation.tokyoArea, image: imageUri, capacity: Number(recruitCapacity), reservationCapacity: Number(reservationCapacity), attendees: 0, applicantIds: [], participants: [], companionIds,
-      price, priceMin: numericAmount(budgetMin), priceMax: fixedAmount ? numericAmount(budgetMin) : numericAmount(budgetMax), genres, ...(configuredRankPrices && Object.keys(configuredRankPrices).length ? { rankPrices: configuredRankPrices } : {}), category: eventCategoryFromPrefecture(extractedLocation.prefecture), eventType: finalType, status: "open", createdBy: CURRENT_USER.id,
+      price, priceMin: numericAmount(budgetMin), priceMax: fixedAmount ? numericAmount(budgetMin) : numericAmount(budgetMax), genres, ...(configuredRankPrices && Object.keys(configuredRankPrices).length ? { rankPrices: configuredRankPrices } : {}), category: eventCategoryFromPrefecture(extractedLocation.prefecture), eventType: finalType, clubId: finalType === "club" ? selectedClubId : undefined, status: "open", createdBy: CURRENT_USER.id,
       applicationDeadline: decisionDate, cancellationPolicy: cancellationPolicy.trim() || DEFAULT_CANCELLATION_POLICY, selectionMethod: finalType === "official" ? selectionMethod : "first_come", tabelogUrl: tabelogUrl.trim() || undefined, googleMapsUrl: googleMapsUrl.trim() || undefined, publicNotes: publicNotes.trim() || undefined, privateMemo: privateMemo.trim() || undefined,
     };
     pendingEvents.unshift(newEvent);
-    void recordHomeActivity({ id: `event:${newEvent.id}`, kind: "event", title: newEvent.title, description: finalType === "official" ? "新しい公式イベントが公開されました" : "新しいグルメ会が公開されました", createdAt: newEvent.createdAt!, route: "/event-detail", params: { id: newEvent.id } });
+    void recordHomeActivity({ id: `event:${newEvent.id}`, kind: "event", title: newEvent.title, description: finalType === "official" ? "新しい公式イベントが公開されました" : finalType === "club" ? "新しい部活イベントが公開されました" : "新しいグルメ会が公開されました", createdAt: newEvent.createdAt!, route: "/event-detail", params: { id: newEvent.id } });
     void scheduleOrganizerDeadlineNotification(newEvent);
     void awardXp(CURRENT_USER.points, POINT_ACTIONS.eventCreate.points, POINT_ACTIONS.eventCreate.label).then(setXpReward);
   };
@@ -199,19 +209,20 @@ export default function CreateEventScreen() {
     <ScreenContainer edges={["top", "left", "right"]}>
       <View style={{ flexDirection: "row", alignItems: "center", padding: 16, borderBottomWidth: 0.5, borderBottomColor: colors.border }}><Pressable onPress={() => router.back()}><Text style={{ color: colors.muted }}>キャンセル</Text></Pressable><Text style={{ flex: 1, textAlign: "center", fontSize: 17, fontWeight: "800", color: colors.foreground }}>イベント作成</Text><View style={{ width: 54 }} /></View>
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 48 }} keyboardShouldPersistTaps="handled">
-        {userIsOperator ? <><FieldLabel>イベント種別 *</FieldLabel><View style={{ flexDirection: "row", gap: 10 }}>{(["official", "gourmet"] as const).map((type) => <Pressable key={type} onPress={() => chooseEventType(type)} style={{ flex: 1, paddingVertical: 12, alignItems: "center", borderRadius: 12, backgroundColor: eventType === type ? "#5B9BD5" : colors.surface }}><Text style={{ fontWeight: "800", color: eventType === type ? "#FFF" : colors.foreground }}>{type === "official" ? "公式イベント" : "グルメ会"}</Text></Pressable>)}</View></> : null}
+        {(userIsOperator || joinedClubs.length > 0) ? <><FieldLabel>イベント種別 *</FieldLabel><View style={{ flexDirection: "row", gap: 8 }}>{([...(userIsOperator ? ["official"] as const : []), "gourmet", ...(joinedClubs.length ? ["club"] as const : [])] as Event["eventType"][]).map((type) => <Pressable key={type} onPress={() => chooseEventType(type)} style={{ flex: 1, paddingVertical: 12, alignItems: "center", borderRadius: 12, backgroundColor: eventType === type ? "#5B9BD5" : colors.surface }}><Text style={{ fontSize: 12, fontWeight: "800", color: eventType === type ? "#FFF" : colors.foreground }}>{type === "official" ? "公式" : type === "club" ? "部活" : "グルメ会"}</Text></Pressable>)}</View></> : null}
+
+        {eventType === "club" ? <><FieldLabel>開催する部活 *</FieldLabel><View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>{joinedClubs.map((club) => { const selected = selectedClubId === club.id; return <Pressable key={club.id} onPress={() => setSelectedClubId(club.id)} style={{ borderRadius: 18, paddingHorizontal: 12, paddingVertical: 8, backgroundColor: selected ? "#4E6756" : colors.surface, borderWidth: 1, borderColor: selected ? "#4E6756" : colors.border }}><Text style={{ fontSize: 12, fontWeight: "800", color: selected ? "#FFF" : colors.foreground }}>{club.icon} {club.name}</Text></Pressable>; })}</View></> : null}
 
         {eventType === "official" ? <><FieldLabel>参加者の決め方 *</FieldLabel><View style={{ flexDirection: "row", gap: 10 }}>{(["first_come", "lottery"] as const).map((value) => <Pressable key={value} onPress={() => setSelectionMethod(value)} style={{ flex: 1, paddingVertical: 11, alignItems: "center", borderRadius: 12, backgroundColor: selectionMethod === value ? "#E8A0BF" : colors.surface }}><Text style={{ fontWeight: "800", color: selectionMethod === value ? "#FFF" : colors.foreground }}>{value === "first_come" ? "先着順" : "抽選"}</Text></Pressable>)}</View></> : null}
 
-        <FieldLabel>店名 *</FieldLabel><TextInput value={restaurantName} onChangeText={setRestaurantName} placeholder="店舗名" placeholderTextColor={colors.muted} style={inputStyle} />
-        <FieldLabel>イベント名（任意）</FieldLabel><TextInput value={eventName} onChangeText={setEventName} placeholder="未入力の場合は店名を表示" placeholderTextColor={colors.muted} style={inputStyle} />
+        <FieldLabel>{eventType === "club" ? "店名・会場名（任意）" : "店名 *"}</FieldLabel><TextInput value={restaurantName} onChangeText={setRestaurantName} placeholder={eventType === "club" ? "例：代々木公園、〇〇スタジアム" : "店舗名"} placeholderTextColor={colors.muted} style={inputStyle} />
+        <FieldLabel>{eventType === "club" ? "イベント名 *" : "イベント名（任意）"}</FieldLabel><TextInput value={eventName} onChangeText={setEventName} placeholder={eventType === "club" ? "例：朝の代々木公園ランニング" : "未入力の場合は店名を表示"} placeholderTextColor={colors.muted} style={inputStyle} />
         <FieldLabel>日時 *</FieldLabel><View style={{ gap: 9 }}><CalendarField label="開催日" value={date} onChange={setDate} /><SelectField label="開始時間（15分単位）" value={time} options={TIME_OPTIONS} onChange={setTime} /></View>
         <FieldLabel>住所（任意）</FieldLabel><TextInput value={address} onChangeText={setAddress} placeholder="例：東京都渋谷区恵比寿1-1-1" placeholderTextColor={colors.muted} style={inputStyle} />
         {address.trim() ? <Text style={{ marginTop: 7, fontSize: 12, fontWeight: "700", color: extractedLocation.prefecture ? "#3E78A1" : colors.error }}>{extractedLocation.prefecture ? `抽出エリア：${formatEventArea(extractedLocation.prefecture, extractedLocation.tokyoArea, address)}` : "都道府県を住所に含めてください"}</Text> : null}
         <FieldLabel>食べログURL（任意）</FieldLabel><TextInput value={tabelogUrl} onChangeText={setTabelogUrl} placeholder="https://tabelog.com/..." placeholderTextColor={colors.muted} autoCapitalize="none" keyboardType="url" style={inputStyle} />
         <FieldLabel>GoogleマップURL（任意）</FieldLabel><TextInput value={googleMapsUrl} onChangeText={setGoogleMapsUrl} placeholder="https://maps.app.goo.gl/..." placeholderTextColor={colors.muted} autoCapitalize="none" keyboardType="url" style={inputStyle} />
-        <FieldLabel>グルメジャンル *（複数選択可）</FieldLabel>
-        <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 7 }}>{GOURMET_GENRES.map((genre) => { const selected = genres.includes(genre); return <Pressable key={genre} onPress={() => setGenres((current) => selected ? current.filter((item) => item !== genre) : [...current, genre])} style={{ borderRadius: 18, paddingHorizontal: 11, paddingVertical: 7, backgroundColor: selected ? "#5D5C74" : colors.surface, borderWidth: 1, borderColor: selected ? "#5D5C74" : colors.border }}><Text style={{ fontSize: 12, fontWeight: "700", color: selected ? "#FFF" : colors.foreground }}>{genre}</Text></Pressable>; })}</View>
+        {eventType !== "club" ? <><FieldLabel>グルメジャンル *（複数選択可）</FieldLabel><View style={{ flexDirection: "row", flexWrap: "wrap", gap: 7 }}>{GOURMET_GENRES.map((genre) => { const selected = genres.includes(genre); return <Pressable key={genre} onPress={() => setGenres((current) => selected ? current.filter((item) => item !== genre) : [...current, genre])} style={{ borderRadius: 18, paddingHorizontal: 11, paddingVertical: 7, backgroundColor: selected ? "#5D5C74" : colors.surface, borderWidth: 1, borderColor: selected ? "#5D5C74" : colors.border }}><Text style={{ fontSize: 12, fontWeight: "700", color: selected ? "#FFF" : colors.foreground }}>{genre}</Text></Pressable>; })}</View></> : null}
         <FieldLabel>予約人数 *</FieldLabel><SelectField label="予約人数" value={reservationCapacity} options={CAPACITY_OPTIONS} onChange={setReservationCapacity} />
         <FieldLabel>募集人数（自分以外） *</FieldLabel><SelectField label="募集人数" value={recruitCapacity} options={CAPACITY_OPTIONS} onChange={setRecruitCapacity} />
 

@@ -63,3 +63,8 @@ export function canCreateClub(role: unknown): boolean {
 export function canViewClubThread(role: unknown, memberId: string, approvedMemberIds: string[]): boolean {
   return isAdminRole(role) || approvedMemberIds.includes(memberId);
 }
+
+/** 部活イベントの詳細は所属部員のみ。管理者は安全管理のため閲覧できる。 */
+export function canViewClubEvent(role: unknown, memberId: string, approvedMemberIds: string[]): boolean {
+  return isAdminRole(role) || approvedMemberIds.includes(memberId);
+}

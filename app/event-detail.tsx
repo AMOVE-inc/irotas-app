@@ -12,6 +12,9 @@ import { toggleEventFavorite, useEventFavorites } from "@/lib/event-favorites-st
 import { cancelOrganizerDeadlineNotifications, notifyEventCancellationRequest, notifyEventConfirmation, scheduleEventReminders } from "@/lib/notifications";
 import { approveEventCancellationRequest, getPendingCancellationRequests, submitEventCancellationRequest } from "@/lib/event-cancellation";
 import { useColors } from "@/hooks/use-colors";
+import { useAuthContext } from "@/lib/auth-context";
+import { useClubs } from "@/lib/club-store";
+import { canViewClubEvent } from "@/lib/access-control";
 import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
@@ -30,6 +33,8 @@ export default function EventDetailScreen() {
   const colors = useColors();
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
+  const { user: authUser } = useAuthContext();
+  const clubs = useClubs();
 
   // モックデータ + 動的追加分から検索
   const allEvents = getAllEvents(EVENTS);
@@ -66,6 +71,11 @@ export default function EventDetailScreen() {
         </Text>
       </ScreenContainer>
     );
+  }
+
+  const eventClub = event.eventType === "club" ? clubs.find((club) => club.id === event.clubId) : undefined;
+  if (event.eventType === "club" && !canViewClubEvent(authUser?.role, CURRENT_USER.id, eventClub?.memberIds ?? [])) {
+    return <ScreenContainer edges={["top", "bottom", "left", "right"]}><View style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: 28 }}><IconSymbol name="lock.fill" size={44} color={colors.muted} /><Text style={{ fontSize: 18, fontWeight: "900", color: colors.foreground, marginTop: 15 }}>部員限定イベントです</Text><Text style={{ fontSize: 13, lineHeight: 20, color: colors.muted, textAlign: "center", marginTop: 7 }}>{eventClub?.name ?? "この部活"}に入部すると、イベント詳細の確認と参加申込ができます。</Text><Pressable onPress={() => router.replace("/clubs")} style={{ marginTop: 20, borderRadius: 14, backgroundColor: colors.foreground, paddingHorizontal: 20, paddingVertical: 12 }}><Text style={{ color: colors.background, fontWeight: "900" }}>部活一覧を見る</Text></Pressable></View></ScreenContainer>;
   }
 
   const formatDate = (dateStr: string) => {
@@ -109,6 +119,7 @@ export default function EventDetailScreen() {
   const pendingApplicantIds = getPendingGourmetApplicants(event);
   const pendingCancellationRequests = getPendingCancellationRequests(event);
   const hasPendingCancellationRequest = pendingCancellationRequests.some((request) => request.memberId === CURRENT_USER.id);
+  const requiresOrganizerApproval = event.eventType === "gourmet" || event.eventType === "club";
 
   const handleJoin = () => {
     if (event.status === "full") {
@@ -117,7 +128,7 @@ export default function EventDetailScreen() {
     }
     // 連打防止: 既に処理中の場合はスキップ
     if (joiningRef.current) return;
-    if (event.eventType === "gourmet" && !termsAccepted) {
+    if (requiresOrganizerApproval && !termsAccepted) {
       Alert.alert("規約への同意が必要です", "イベント参加規約を確認し、同意にチェックしてください。");
       return;
     }
@@ -129,7 +140,7 @@ export default function EventDetailScreen() {
         : effectivePrice;
     Alert.alert(
       "参加申込の確認",
-      `「${event.title}」に申し込みますか？\n${event.eventType === "gourmet" ? "幹事の承認後に参加確定となり、参加者チャットへ入れます。" : event.selectionMethod === "lottery" ? "抽選イベントです。申込後、参加確定をお待ちください。" : `参加費: ${priceLabel}`}`,
+      `「${event.title}」に申し込みますか？\n${requiresOrganizerApproval ? "幹事の承認後に参加確定となり、参加者チャットへ入れます。" : event.selectionMethod === "lottery" ? "抽選イベントです。申込後、参加確定をお待ちください。" : `参加費: ${priceLabel}`}`,
       [
         { text: "キャンセル", style: "cancel" },
         {
@@ -140,7 +151,7 @@ export default function EventDetailScreen() {
             joiningRef.current = true;
             try {
               const applicants = event.applicantIds ?? [...(event.participants ?? [])];
-              if (event.eventType === "gourmet") submitGourmetApplication(event, CURRENT_USER.id);
+              if (requiresOrganizerApproval) submitGourmetApplication(event, CURRENT_USER.id);
               else {
                 if (!applicants.includes(CURRENT_USER.id)) applicants.push(CURRENT_USER.id);
                 event.applicantIds = applicants;
@@ -148,7 +159,7 @@ export default function EventDetailScreen() {
               }
               setHasApplied(true);
 
-              if (event.eventType === "gourmet") {
+              if (requiresOrganizerApproval) {
                 Alert.alert("申込完了", "幹事へ参加申込を送りました。承認後、参加者チャットへ入れるようになります。");
                 return;
               }
@@ -714,7 +725,7 @@ export default function EventDetailScreen() {
           </View>
         ) : null}
 
-        {event.eventType === "gourmet" && !isJoined && !hasApplied && !isOrganizer ? (
+        {requiresOrganizerApproval && !isJoined && !hasApplied && !isOrganizer ? (
           <View style={{ backgroundColor: "#FFF8F0", borderRadius: 14, padding: 14, marginBottom: 16, borderWidth: 1, borderColor: "#EED9BF" }}>
             <Pressable onPress={() => setTermsAccepted((value) => !value)} style={{ flexDirection: "row", alignItems: "center" }}>
               <View style={{ width: 24, height: 24, borderRadius: 6, backgroundColor: termsAccepted ? "#E8A0BF" : colors.surface, borderWidth: 1, borderColor: termsAccepted ? "#E8A0BF" : colors.border, alignItems: "center", justifyContent: "center" }}>{termsAccepted ? <IconSymbol name="checkmark" size={15} color="#FFF" /> : null}</View>
@@ -800,7 +811,7 @@ export default function EventDetailScreen() {
 
         {/* 参加ボタン */}
         <Pressable
-          onPress={isJoined || hasApplied || isOrganizer || (event.eventType === "gourmet" && !termsAccepted) ? undefined : handleJoin}
+          onPress={isJoined || hasApplied || isOrganizer || (requiresOrganizerApproval && !termsAccepted) ? undefined : handleJoin}
           style={({ pressed }) => ({
             backgroundColor: isJoined
               ? "#34C759"
@@ -812,11 +823,11 @@ export default function EventDetailScreen() {
             borderRadius: 14,
             paddingVertical: 16,
             alignItems: "center",
-            opacity: event.eventType === "gourmet" && !termsAccepted && !hasApplied && !isJoined && !isOrganizer ? 0.45 : pressed && !isJoined && !hasApplied ? 0.8 : 1,
+            opacity: requiresOrganizerApproval && !termsAccepted && !hasApplied && !isJoined && !isOrganizer ? 0.45 : pressed && !isJoined && !hasApplied ? 0.8 : 1,
           })}
         >
           <Text style={{ fontSize: 17, fontWeight: "700", color: "#FFF" }}>
-            {isOrganizer ? "幹事メニューで申込を管理" : isJoined ? "✓ 参加確定" : hasApplied ? "✓ 申込済み（幹事の承認待ち）" : event.status === "full" ? "満席" : event.eventType === "gourmet" && !termsAccepted ? "規約に同意して申し込む" : event.selectionMethod === "lottery" ? "抽選に申し込む" : "参加を申し込む"}
+            {isOrganizer ? "幹事メニューで申込を管理" : isJoined ? "✓ 参加確定" : hasApplied ? "✓ 申込済み（幹事の承認待ち）" : event.status === "full" ? "満席" : requiresOrganizerApproval && !termsAccepted ? "規約に同意して申し込む" : event.selectionMethod === "lottery" ? "抽選に申し込む" : "参加を申し込む"}
           </Text>
         </Pressable>
       </View>

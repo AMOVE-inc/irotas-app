@@ -5,6 +5,8 @@ import { EVENTS, CURRENT_USER, DEFAULT_AVATAR, getMemberById, type Event } from 
 import { GOURMET_GENRES } from "@/constants/event-options";
 import { EVENT_SEARCH_AREA_GROUPS } from "@/constants/event-areas";
 import { useAuthContext } from "@/lib/auth-context";
+import { useClubs } from "@/lib/club-store";
+import { canViewClubEvent } from "@/lib/access-control";
 import { getAllEvents } from "@/lib/event-store";
 import { DEFAULT_EVENT_SORT_ORDER, filterAndSortEvents, type EventSortOrder, type EventTypeFilter } from "@/lib/event-filters";
 import { getEventParticipationStatus } from "@/lib/event-participation";
@@ -23,12 +25,14 @@ import {
   Modal,
   ScrollView,
   TextInput,
+  Alert,
 } from "react-native";
 
 const TYPE_FILTERS = [
   { key: "all", label: "すべて" },
-  { key: "official", label: "公式イベント" },
+  { key: "official", label: "公式" },
   { key: "gourmet", label: "グルメ会" },
+  { key: "club", label: "部活" },
 ] as const;
 
 const WEEKDAYS = ["日", "月", "火", "水", "木", "金", "土"];
@@ -241,7 +245,7 @@ function StatusBadge({ status }: { status: Event["status"] }) {
   );
 }
 
-function EventCard({ event, onPress, isFavorite, onToggleFavorite }: { event: Event; onPress: () => void; isFavorite: boolean; onToggleFavorite: () => void }) {
+function EventCard({ event, onPress, isFavorite, onToggleFavorite, locked = false, clubName }: { event: Event; onPress: () => void; isFavorite: boolean; onToggleFavorite: () => void; locked?: boolean; clubName?: string }) {
   const colors = useColors();
   const organizer = getMemberById(event.createdBy);
   const confirmedCount = new Set([...(event.participants ?? []), ...(event.companionIds ?? [])]).size;
@@ -272,9 +276,10 @@ function EventCard({ event, onPress, isFavorite, onToggleFavorite }: { event: Ev
         borderColor: colors.border,
         flexDirection: "row",
         minHeight: 142,
+        opacity: locked ? 0.48 : 1,
       }}
     >
-      <View style={{ width: 142, height: 142 }}><Image source={event.image} style={{ width: 142, height: 142 }} contentFit="cover" transition={300} />{event.eventType === "official" ? <View style={{ position: "absolute", left: 7, top: 7, flexDirection: "row", alignItems: "center", minHeight: 30, borderRadius: 10, backgroundColor: "#FFFFFFF5", paddingHorizontal: 9, borderWidth: 2, borderColor: "#E8A0BF", shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.2, shadowRadius: 4, elevation: 4 }}><Text style={{ fontSize: 11, fontWeight: "900", color: "#171717", letterSpacing: 0.4 }}>IRO+</Text><Text style={{ marginLeft: 4, fontSize: 10, fontWeight: "900", color: "#C94F84" }}>公式</Text></View> : null}</View>
+      <View style={{ width: 142, height: 142 }}><Image source={event.image} style={{ width: 142, height: 142 }} contentFit="cover" transition={300} />{event.eventType === "official" ? <View style={{ position: "absolute", left: 7, top: 7, flexDirection: "row", alignItems: "center", minHeight: 30, borderRadius: 10, backgroundColor: "#FFFFFFF5", paddingHorizontal: 9, borderWidth: 2, borderColor: "#E8A0BF", shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.2, shadowRadius: 4, elevation: 4 }}><Text style={{ fontSize: 11, fontWeight: "900", color: "#171717", letterSpacing: 0.4 }}>IRO+</Text><Text style={{ marginLeft: 4, fontSize: 10, fontWeight: "900", color: "#C94F84" }}>公式</Text></View> : event.eventType === "club" ? <View style={{ position: "absolute", left: 7, top: 7, borderRadius: 9, backgroundColor: "#FFFFFFF2", paddingHorizontal: 8, paddingVertical: 5 }}><Text style={{ fontSize: 10, fontWeight: "900", color: "#4E6756" }}>{clubName ?? "部活イベント"}</Text></View> : null}{locked ? <View style={{ position: "absolute", inset: 0, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(40,40,40,0.42)" }}><IconSymbol name="lock.fill" size={28} color="#FFF" /><Text style={{ color: "#FFF", fontSize: 11, fontWeight: "900", marginTop: 5 }}>部員限定</Text></View> : null}</View>
       <View style={{ flex: 1, paddingHorizontal: 11, paddingVertical: 9 }}>
         <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 5 }}>
           <Text style={{ flex: 1, fontSize: 13, fontWeight: "900", color: colors.foreground }}>{formatDate(event.date)} {event.time}</Text>
@@ -295,7 +300,7 @@ function EventCard({ event, onPress, isFavorite, onToggleFavorite }: { event: Ev
           <Text style={{ marginLeft: 5, fontSize: 10, fontWeight: "700", color: colors.muted }} numberOfLines={1}>{event.eventType === "official" ? "IRO＋運営" : (organizer?.name ?? "メンバー")}</Text>
           {event.eventType !== "official" && organizer ? <NewMemberMark member={organizer} size={11} /> : null}
           <View style={{ flex: 1 }} />
-          <Pressable onPress={(pressEvent) => { pressEvent.stopPropagation?.(); onToggleFavorite(); }} accessibilityLabel={isFavorite ? "お気に入りから削除" : "お気に入りに追加"} hitSlop={8} style={{ paddingHorizontal: 4, paddingVertical: 2 }}><IconSymbol name={isFavorite ? "heart.fill" : "heart"} size={20} color={isFavorite ? "#D85B86" : colors.muted} /></Pressable>
+          {!locked ? <Pressable onPress={(pressEvent) => { pressEvent.stopPropagation?.(); onToggleFavorite(); }} accessibilityLabel={isFavorite ? "お気に入りから削除" : "お気に入りに追加"} hitSlop={8} style={{ paddingHorizontal: 4, paddingVertical: 2 }}><IconSymbol name={isFavorite ? "heart.fill" : "heart"} size={20} color={isFavorite ? "#D85B86" : colors.muted} /></Pressable> : <Text style={{ fontSize: 9, fontWeight: "800", color: colors.muted }}>入部すると詳細を表示</Text>}
         </View>
       </View>
     </Pressable>
@@ -325,6 +330,7 @@ export default function EventsScreen() {
   const [allEvents, setAllEvents] = useState<Event[]>(() => getAllEvents(EVENTS));
   const favoriteEventIds = useEventFavorites();
   const { user: authUser } = useAuthContext();
+  const clubs = useClubs();
   const canCreateEvent = Boolean(authUser);
 
   useFocusEffect(useCallback(() => {
@@ -356,7 +362,7 @@ export default function EventsScreen() {
     ? "公式イベント"
     : eventType === "gourmet"
       ? "グルメ会"
-      : "すべてのイベント";
+      : eventType === "club" ? "部活イベント" : "すべてのイベント";
   const detailFilterCount = selectedGenres.length + selectedAreas.length + (budgetMin !== "none" ? 1 : 0) + (budgetMax !== "none" ? 1 : 0) + (keyword.trim() ? 1 : 0) + (favoriteOnly ? 1 : 0);
 
   const resetSearchConditions = useCallback(() => {
@@ -391,7 +397,21 @@ export default function EventsScreen() {
         data={filteredEvents}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
-          <EventCard event={item} isFavorite={favoriteEventIds.includes(item.id)} onToggleFavorite={() => toggleEventFavorite(item.id)} onPress={() => router.push({ pathname: "/event-detail", params: { id: item.id } })} />
+          <EventCard
+            event={item}
+            isFavorite={favoriteEventIds.includes(item.id)}
+            onToggleFavorite={() => toggleEventFavorite(item.id)}
+            locked={item.eventType === "club" && !canViewClubEvent(authUser?.role, CURRENT_USER.id, clubs.find((club) => club.id === item.clubId)?.memberIds ?? [])}
+            clubName={clubs.find((club) => club.id === item.clubId)?.name}
+            onPress={() => {
+              const club = clubs.find((candidate) => candidate.id === item.clubId);
+              if (item.eventType === "club" && !canViewClubEvent(authUser?.role, CURRENT_USER.id, club?.memberIds ?? [])) {
+                Alert.alert("部員限定イベント", `${club?.name ?? "この部活"}に入部すると、詳細の確認と参加申込ができます。`);
+                return;
+              }
+              router.push({ pathname: "/event-detail", params: { id: item.id } });
+            }}
+          />
         )}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#E8A0BF" />

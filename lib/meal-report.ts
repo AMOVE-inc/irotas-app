@@ -33,6 +33,7 @@ export const MEAL_REPORT_AREAS = [
 ];
 
 export const GOURMET_ADVICE_BUDGETS = [
+  "指定なし",
   "〜3,000円",
   "3,000〜5,000円",
   "5,000〜6,000円",

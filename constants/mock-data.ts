@@ -117,7 +117,8 @@ export interface Event {
     platinum?: string;
   };
   category: "all" | "kanto" | "kansai";
-  eventType: "official" | "gourmet";
+  eventType: "official" | "gourmet" | "club";
+  clubId?: string;
   status: "open" | "full" | "ended";
   createdBy: string; // admin member id
   chatId?: string; // private chat id
@@ -197,6 +198,7 @@ export interface BoardThread {
   images?: BoardImage[]; // 投稿添付画像 URLs / bundled assets
   videos?: string[]; // Discord移行投稿などの添付動画 URLs
   mealReport?: {
+    postTitle?: string;
     restaurantName: string;
     prefecture: string;
     areaDisplay?: string;
@@ -209,6 +211,7 @@ export interface BoardThread {
   };
   gourmetAdvice?: {
     theme: string;
+    genres?: string[];
     area: string;
     scene: string;
     budget: string;
@@ -546,6 +549,15 @@ export const EVENTS: Event[] = [
     genres: ["フレンチ", "洋食"], category: "kanto", eventType: "gourmet", status: "open", createdBy: "u6",
     cancellationPolicy: "参加者自身でのキャンセル操作はできません。必ず幹事へ連絡してください。",
   },
+  {
+    id: "e6", createdAt: "2026-08-14T12:00:00+09:00", title: "ワイン部 テイスティング交流会",
+    restaurantName: "Wine Salon IRO", description: "ワイン部員限定のテイスティング交流会です。初心者の方も歓迎します。",
+    date: "2026-09-12", time: "18:00", location: "東京都港区西麻布", prefecture: "東京都",
+    image: "https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?w=400", capacity: 12, attendees: 5,
+    participants: ["u1", "u2", "u4", "u6"], applicantIds: ["u1", "u2", "u4", "u6"], price: "¥5,000", priceMin: 5000, priceMax: 5000,
+    genres: ["ワインバー"], category: "kanto", eventType: "club", clubId: "club-wine", status: "open", createdBy: "u1",
+    cancellationPolicy: "参加者自身でのキャンセル操作はできません。必ず幹事へ連絡してください。",
+  },
 ];
 
 export const RESTAURANTS: Restaurant[] = [
@@ -615,7 +627,7 @@ export const BOARD_THREADS: BoardThread[] = [
     lastUpdated: "2026-03-23T14:00:00",
     preview: "今度渋谷で食事会をするのですが、おすすめの焼肉屋さんがあれば教えてください...",
     isRecruiting: false,
-    gourmetAdvice: { theme: "渋谷でおすすめの焼肉屋さん", area: "渋谷", scene: "友人との食事会", budget: "8,000〜10,000円", comment: "今度渋谷で食事会をするので、おすすめの焼肉屋さんを教えてください！" },
+    gourmetAdvice: { theme: "渋谷でおすすめの焼肉屋さん", genres: ["焼肉"], area: "渋谷", scene: "友人との食事会", budget: "8,000〜10,000円", comment: "今度渋谷で食事会をするので、おすすめの焼肉屋さんを教えてください！" },
   },
   {
     id: "t2", title: "大阪の隠れ家イタリアンを発見！",
@@ -630,7 +642,9 @@ export const BOARD_THREADS: BoardThread[] = [
     lastUpdated: "2026-03-23T21:00:00",
     preview: "銀座の新しいフレンチレストランに行ってきました。コース料理が素晴らしかった...",
     isRecruiting: false,
+    images: ["https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=500"],
     mealReport: {
+      postTitle: "特別な日にまた行きたい一軒",
       restaurantName: "銀座の新しいフレンチレストラン",
       prefecture: "東京都",
       budget: "10,000〜20,000円",
@@ -666,7 +680,7 @@ export const BOARD_THREADS: BoardThread[] = [
     lastUpdated: "2026-03-21T16:00:00",
     preview: "来月の記念日に特別なディナーを予約したいのですが、おすすめはありますか？",
     isRecruiting: false,
-    gourmetAdvice: { theme: "誕生日プレートが可愛いお店", area: "都内", scene: "お誕生日ディナー", budget: "6,000〜8,000円", comment: "友人のお誕生日をサプライズでお祝いしたく、おすすめのお店をご存知の方は教えてください！" },
+    gourmetAdvice: { theme: "誕生日プレートが可愛いお店", genres: ["フレンチ", "イタリアン"], area: "都内", scene: "お誕生日ディナー", budget: "6,000〜8,000円", comment: "友人のお誕生日をサプライズでお祝いしたく、おすすめのお店をご存知の方は教えてください！" },
   },
   {
     id: "t6", title: "関西グルメ同好会 次回集まり🍜",

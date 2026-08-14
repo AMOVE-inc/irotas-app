@@ -51,11 +51,14 @@ describe("event list filtering and sorting", () => {
     expect(result.every((event) => event.attendees < event.capacity)).toBe(true);
   });
 
-  it("filters official events and gourmet gatherings independently", () => {
+  it("filters official, gourmet, and club events independently", () => {
     const official = filterAndSortEvents(events, { area: "all", eventType: "official", openOnly: false }, referenceDate);
     const gourmet = filterAndSortEvents(events, { area: "all", eventType: "gourmet", openOnly: false }, referenceDate);
+    const clubEvents = [...events, makeEvent({ id: "club", eventType: "club", clubId: "club-wine" })];
+    const club = filterAndSortEvents(clubEvents, { area: "all", eventType: "club", openOnly: false }, referenceDate);
     expect(official.every((event) => event.eventType === "official")).toBe(true);
     expect(gourmet.map((event) => event.id)).toEqual(["gourmet"]);
+    expect(club.map((event) => event.id)).toEqual(["club"]);
   });
 
   it("filters events within the selected period", () => {

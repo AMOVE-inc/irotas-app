@@ -59,6 +59,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { boardActivityForThread, recordHomeActivity } from "@/lib/home-activity-store";
+import { GOURMET_GENRES } from "@/constants/event-options";
 
 const BOARD_GROUPS: { key: BoardCategory["group"]; label: string }[] = [
   { key: "all", label: "全体" },
@@ -117,6 +118,8 @@ function MealReportContent({ thread, compact = false }: { thread: BoardThread; c
         borderColor: "#F3E2D2",
       }}
     >
+      {report.postTitle ? <Text style={{ fontSize: 18, lineHeight: 24, fontWeight: "900", color: colors.foreground, marginBottom: 4 }}>{report.postTitle}</Text> : null}
+      <Text style={{ fontSize: 16, lineHeight: 22, fontWeight: "800", color: colors.foreground, marginBottom: 9 }}>{report.restaurantName}</Text>
       <View style={{ flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 8 }}>
         {area ? <Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground }}>📍 {area}</Text> : null}
         {report.budget ? <Text style={{ fontSize: 13, color: colors.muted }}>予算 {report.budget}</Text> : null}
@@ -131,7 +134,7 @@ function MealReportContent({ thread, compact = false }: { thread: BoardThread; c
       ) : null}
       {report.comment ? (
         <Text style={{ fontSize: 14, lineHeight: 21, color: colors.foreground, marginTop: 8 }}>
-          <Text style={{ fontWeight: "800" }}>一言　</Text>{report.comment}
+          <Text style={{ fontWeight: "800" }}>感想　</Text>{report.comment}
         </Text>
       ) : null}
       {(report.googleMapUrl || report.tabelogUrl) ? (
@@ -172,15 +175,44 @@ function MealReportContent({ thread, compact = false }: { thread: BoardThread; c
   );
 }
 
+function MealReportTimelineCard({ thread }: { thread: BoardThread }) {
+  const colors = useColors();
+  const report = thread.mealReport;
+  if (!report) return null;
+  const image = thread.images?.[0];
+  const area = (report.areaDisplay ?? formatMealReportArea(report.prefecture)).replace(/^📍\s*/, "").trim();
+  const rating = Math.max(0, Math.min(5, Math.round(report.rating)));
+  return (
+    <View>
+      <View style={{ flexDirection: "row", alignItems: "stretch" }}>
+        {image ? <Image source={boardImageSource(image)} style={{ width: 112, height: 112, borderRadius: 12, backgroundColor: "#F1EEF0" }} contentFit="cover" /> : <View style={{ width: 112, height: 112, borderRadius: 12, backgroundColor: "#F4F1F3", alignItems: "center", justifyContent: "center" }}><IconSymbol name="fork.knife" size={30} color="#B8AEB4" /><Text style={{ fontSize: 10, color: colors.muted, marginTop: 5 }}>写真なし</Text></View>}
+        <View style={{ flex: 1, minWidth: 0, marginLeft: 12 }}>
+          {report.postTitle ? <Text numberOfLines={2} style={{ fontSize: 15, lineHeight: 20, fontWeight: "900", color: colors.foreground }}>{report.postTitle}</Text> : null}
+          <Text numberOfLines={2} style={{ fontSize: report.postTitle ? 13 : 16, lineHeight: report.postTitle ? 18 : 21, fontWeight: "900", color: colors.foreground, marginTop: report.postTitle ? 3 : 0 }}>{report.restaurantName}</Text>
+          {rating ? <View style={{ flexDirection: "row", alignItems: "center", marginTop: 6 }}><Text style={{ fontSize: 17, fontWeight: "900", color: "#E29A17" }}>★ {rating}.0</Text><Text style={{ fontSize: 11, color: colors.muted, marginLeft: 5 }}>/ 5</Text></View> : null}
+          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 5, marginTop: 7 }}>
+            {area ? <Text numberOfLines={1} style={{ maxWidth: "100%", fontSize: 11, fontWeight: "700", color: "#5F5960", backgroundColor: "#F4F1F3", borderRadius: 8, paddingHorizontal: 7, paddingVertical: 3 }}>📍 {area}</Text> : null}
+            {report.budget ? <Text style={{ fontSize: 11, fontWeight: "700", color: "#5F5960", backgroundColor: "#F4F1F3", borderRadius: 8, paddingHorizontal: 7, paddingVertical: 3 }}>{report.budget}</Text> : null}
+          </View>
+        </View>
+      </View>
+      {report.recommendedMenu ? <Text numberOfLines={1} style={{ fontSize: 12, color: colors.foreground, marginTop: 9 }}><Text style={{ fontWeight: "900" }}>おすすめ　</Text>{report.recommendedMenu}</Text> : null}
+      {report.comment ? <Text numberOfLines={2} style={{ fontSize: 13, lineHeight: 19, color: colors.muted, marginTop: 6 }}>{report.comment}</Text> : null}
+      {thread.images && thread.images.length > 1 ? <Text style={{ fontSize: 11, fontWeight: "800", color: "#8C6276", marginTop: 7 }}>写真 {thread.images.length}枚</Text> : null}
+    </View>
+  );
+}
+
 function GourmetAdviceContent({ thread, compact = false }: { thread: BoardThread; compact?: boolean }) {
   const colors = useColors();
   const advice = thread.gourmetAdvice;
   if (!advice) return null;
   return (
     <View style={{ backgroundColor: "#FFF9EA", borderRadius: 12, padding: compact ? 10 : 14, marginBottom: compact ? 8 : 16, borderWidth: 1, borderColor: "#F0DDA8" }}>
-      {[{ label: "テーマ", value: advice.theme }, { label: "エリア", value: advice.area }, { label: "利用シーン", value: advice.scene }, { label: "予算", value: advice.budget }].map((item) => (
+      {[{ label: "タイトル", value: advice.theme }, { label: "エリア", value: advice.area }, { label: "利用シーン", value: advice.scene }, { label: "予算", value: advice.budget }].map((item) => (
         <View key={item.label} style={{ flexDirection: "row", marginBottom: 5 }}><Text style={{ width: 74, fontSize: 12, fontWeight: "900", color: "#9A6A12" }}>{item.label}</Text><Text style={{ flex: 1, fontSize: 13, color: colors.foreground }} numberOfLines={compact ? 1 : undefined}>{item.value}</Text></View>
       ))}
+      {advice.genres?.length ? <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 5, marginTop: 3, marginBottom: compact ? 0 : 7 }}>{advice.genres.map((genre) => <Text key={genre} style={{ fontSize: 11, fontWeight: "800", color: "#76520E", backgroundColor: "#F7EBC8", borderRadius: 10, paddingHorizontal: 8, paddingVertical: 3 }}>{genre}</Text>)}</View> : null}
       {!compact ? <Text style={{ fontSize: 14, lineHeight: 21, color: colors.foreground, marginTop: 7 }}><Text style={{ fontWeight: "900" }}>一言　</Text>{advice.comment}</Text> : null}
     </View>
   );
@@ -284,7 +316,7 @@ function ThreadCard({ thread, onPress, onEdit }: { thread: BoardThread; onPress:
       <View style={{ flexDirection: "row", alignItems: "flex-start" }}>
         <View style={{ flex: 1, minWidth: 0 }}>
           {/* Title */}
-          {!thread.selfIntroduction ? <Text
+          {!thread.selfIntroduction && !thread.mealReport ? <Text
             style={{ fontSize: 16, fontWeight: "700", color: colors.foreground, marginBottom: 4 }}
             numberOfLines={2}
           >
@@ -293,7 +325,7 @@ function ThreadCard({ thread, onPress, onEdit }: { thread: BoardThread; onPress:
 
           {/* Preview */}
           {thread.mealReport ? (
-            <MealReportContent thread={thread} compact />
+            <MealReportTimelineCard thread={thread} />
           ) : thread.gourmetAdvice ? (
             <GourmetAdviceContent thread={thread} compact />
           ) : thread.selfIntroduction ? (
@@ -312,7 +344,7 @@ function ThreadCard({ thread, onPress, onEdit }: { thread: BoardThread; onPress:
       </View>
 
       {/* Images */}
-      {!rightPreviewImage && thread.images && thread.images.length > 0 && (
+      {!thread.mealReport && !rightPreviewImage && thread.images && thread.images.length > 0 && (
         <View style={{ flexDirection: "row", gap: 6, marginBottom: 8 }}>
           {thread.images.slice(0, 3).map((uri, i) => (
             <View key={i} style={{ position: "relative" }}>
@@ -1436,6 +1468,7 @@ function CreateThreadModal({
   const [capacity, setCapacity] = useState("");
   const [images, setImages] = useState<string[]>([]);
   const [restaurantName, setRestaurantName] = useState("");
+  const [mealTitle, setMealTitle] = useState("");
   const [prefecture, setPrefecture] = useState("");
   const [budget, setBudget] = useState("");
   const [recommendedMenu, setRecommendedMenu] = useState("");
@@ -1445,9 +1478,10 @@ function CreateThreadModal({
   const [tabelogUrl, setTabelogUrl] = useState("");
   const [areaDisplay, setAreaDisplay] = useState("");
   const [adviceTheme, setAdviceTheme] = useState("");
-  const [adviceArea, setAdviceArea] = useState("");
-  const [adviceScene, setAdviceScene] = useState("");
-  const [adviceBudget, setAdviceBudget] = useState("");
+  const [adviceGenres, setAdviceGenres] = useState<string[]>([]);
+  const [adviceArea, setAdviceArea] = useState("指定なし");
+  const [adviceScene, setAdviceScene] = useState("指定なし");
+  const [adviceBudget, setAdviceBudget] = useState("指定なし");
   const [adviceComment, setAdviceComment] = useState("");
   const [contestDeadline, setContestDeadline] = useState("");
   const [contestPrizePoints, setContestPrizePoints] = useState("500");
@@ -1465,7 +1499,7 @@ function CreateThreadModal({
     Boolean(googleMapUrl.trim() || tabelogUrl.trim()) &&
     googleMapUrlValid &&
     tabelogUrlValid;
-  const adviceValid = adviceTheme.trim().length > 0 && adviceArea.trim().length > 0 && adviceScene.trim().length > 0 && adviceBudget.length > 0 && adviceComment.trim().length > 0;
+  const adviceValid = adviceTheme.trim().length > 0 && adviceGenres.length > 0 && adviceArea.trim().length > 0 && adviceScene.trim().length > 0 && adviceBudget.length > 0 && adviceComment.trim().length > 0;
   const contestValid = title.trim().length > 0 && content.trim().length > 0 && /^\d{4}-\d{2}-\d{2}$/.test(contestDeadline) && Number(contestPrizePoints) > 0;
   const canSubmit = isMealReport ? mealReportValid : isGourmetAdvice ? adviceValid : isIntroduction ? introductionText.trim().length > 0 : isGourmetContest ? contestValid : title.trim().length > 0 && content.trim().length > 0;
 
@@ -1505,7 +1539,7 @@ function CreateThreadModal({
       return;
     }
     if (isGourmetAdvice && !adviceValid) {
-      setFormError("テーマ・エリア・利用シーン・予算・一言をすべて入力してください。");
+      setFormError("タイトル・料理カテゴリ・エリア・利用シーン・予算・一言をすべて入力してください。");
       return;
     }
     if (isIntroduction && !introductionText.trim()) {
@@ -1528,7 +1562,7 @@ function CreateThreadModal({
     const normalizedMenu = recommendedMenu.trim();
     const newThread: BoardThread = {
       id: `t_new_${Date.now()}`,
-      title: isMealReport ? restaurantName.trim() : isGourmetAdvice ? adviceTheme.trim() : isIntroduction ? "自己紹介" : title.trim(),
+      title: isMealReport ? (mealTitle.trim() || restaurantName.trim()) : isGourmetAdvice ? adviceTheme.trim() : isIntroduction ? "自己紹介" : title.trim(),
       author: CURRENT_USER,
       category: category as BoardThread["category"],
       commentCount: 0,
@@ -1544,6 +1578,7 @@ function CreateThreadModal({
       images: images.length > 0 ? images : undefined,
       mealReport: isMealReport
         ? {
+            postTitle: mealTitle.trim() || undefined,
             restaurantName: restaurantName.trim(),
             prefecture: resolvedArea,
             areaDisplay: resolvedAreaDisplay || undefined,
@@ -1555,7 +1590,7 @@ function CreateThreadModal({
             tabelogUrl: tabelogUrl.trim() || undefined,
           }
         : undefined,
-      gourmetAdvice: isGourmetAdvice ? { theme: adviceTheme.trim(), area: adviceArea.trim(), scene: adviceScene.trim(), budget: adviceBudget, comment: adviceComment.trim() } : undefined,
+      gourmetAdvice: isGourmetAdvice ? { theme: adviceTheme.trim(), genres: adviceGenres, area: adviceArea.trim(), scene: adviceScene.trim(), budget: adviceBudget, comment: adviceComment.trim() } : undefined,
       selfIntroduction: isIntroduction ? { introduction: introductionText.trim(), wantToTry: wantToTry.trim() || undefined, favoriteRestaurants: favoriteRestaurants.trim() || undefined, desiredRestaurants: desiredRestaurants.trim() || undefined } : undefined,
       gourmetContest: isGourmetContest ? { commentDeadline: contestDeadline, prizePoints: Number(contestPrizePoints) } : undefined,
     };
@@ -1582,6 +1617,7 @@ function CreateThreadModal({
     setCapacity("");
     setImages([]);
     setRestaurantName("");
+    setMealTitle("");
     setPrefecture("");
     setBudget("");
     setRecommendedMenu("");
@@ -1590,7 +1626,7 @@ function CreateThreadModal({
     setGoogleMapUrl("");
     setTabelogUrl("");
     setAreaDisplay("");
-    setAdviceTheme(""); setAdviceArea(""); setAdviceScene(""); setAdviceBudget(""); setAdviceComment("");
+    setAdviceTheme(""); setAdviceGenres([]); setAdviceArea("指定なし"); setAdviceScene("指定なし"); setAdviceBudget("指定なし"); setAdviceComment("");
     setContestDeadline(""); setContestPrizePoints("500");
     setFormError("");
   };
@@ -1719,11 +1755,16 @@ function CreateThreadModal({
               </View>
 
               <View>
-                <Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground, marginBottom: 6 }}>一言（任意）</Text>
+                <Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground, marginBottom: 6 }}>タイトル（任意）</Text>
+                <TextInput value={mealTitle} onChangeText={setMealTitle} placeholder="例：また行きたい、感動の一皿" placeholderTextColor={colors.muted} style={{ backgroundColor: colors.surface, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: colors.foreground }} />
+              </View>
+
+              <View>
+                <Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground, marginBottom: 6 }}>感想（任意）</Text>
                 <TextInput
                   value={mealComment}
                   onChangeText={setMealComment}
-                  placeholder="お店の感想を一言"
+                  placeholder="料理やお店の雰囲気など、感想を自由に入力"
                   placeholderTextColor={colors.muted}
                   multiline
                   textAlignVertical="top"
@@ -1780,9 +1821,10 @@ function CreateThreadModal({
             </View>
           ) : isGourmetAdvice ? (
             <View style={{ gap: 16, marginBottom: 16 }}>
-              <View><Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground, marginBottom: 6 }}>テーマ <Text style={{ color: colors.error }}>必須</Text></Text><TextInput value={adviceTheme} onChangeText={setAdviceTheme} placeholder="例：誕生日プレートが可愛いお店" placeholderTextColor={colors.muted} style={{ backgroundColor: colors.surface, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: colors.foreground }} /></View>
-              <View><Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground, marginBottom: 6 }}>エリア <Text style={{ color: colors.error }}>必須</Text></Text><TextInput value={adviceArea} onChangeText={setAdviceArea} placeholder="例：都内、渋谷周辺" placeholderTextColor={colors.muted} style={{ backgroundColor: colors.surface, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: colors.foreground }} /></View>
-              <View><Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground, marginBottom: 6 }}>利用シーン <Text style={{ color: colors.error }}>必須</Text></Text><TextInput value={adviceScene} onChangeText={setAdviceScene} placeholder="例：お誕生日ディナー" placeholderTextColor={colors.muted} style={{ backgroundColor: colors.surface, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: colors.foreground }} /></View>
+              <View><Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground, marginBottom: 6 }}>タイトル <Text style={{ color: colors.error }}>必須</Text></Text><TextInput value={adviceTheme} onChangeText={setAdviceTheme} placeholder="例：誕生日プレートが可愛いお店" placeholderTextColor={colors.muted} style={{ backgroundColor: colors.surface, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: colors.foreground }} /></View>
+              <View><Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground, marginBottom: 7 }}>料理カテゴリ <Text style={{ color: colors.error }}>必須・複数選択可</Text></Text><View style={{ flexDirection: "row", flexWrap: "wrap", gap: 7 }}>{GOURMET_GENRES.map((genre) => { const selected = adviceGenres.includes(genre); return <Pressable key={genre} onPress={() => setAdviceGenres((current) => selected ? current.filter((item) => item !== genre) : [...current, genre])} style={{ borderRadius: 17, paddingHorizontal: 10, paddingVertical: 7, backgroundColor: selected ? "#5D5C74" : colors.surface, borderWidth: 1, borderColor: selected ? "#5D5C74" : colors.border }}><Text style={{ fontSize: 12, fontWeight: "700", color: selected ? "#FFF" : colors.foreground }}>{genre}</Text></Pressable>; })}</View></View>
+              <View><View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}><Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground }}>エリア <Text style={{ color: colors.error }}>必須</Text></Text><Pressable onPress={() => setAdviceArea("指定なし")}><Text style={{ fontSize: 12, fontWeight: "800", color: "#8C6276" }}>指定なし</Text></Pressable></View><TextInput value={adviceArea} onFocus={() => { if (adviceArea === "指定なし") setAdviceArea(""); }} onChangeText={setAdviceArea} placeholder="例：都内、渋谷周辺" placeholderTextColor={colors.muted} style={{ backgroundColor: colors.surface, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: colors.foreground }} /></View>
+              <View><View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}><Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground }}>利用シーン <Text style={{ color: colors.error }}>必須</Text></Text><Pressable onPress={() => setAdviceScene("指定なし")}><Text style={{ fontSize: 12, fontWeight: "800", color: "#8C6276" }}>指定なし</Text></Pressable></View><TextInput value={adviceScene} onFocus={() => { if (adviceScene === "指定なし") setAdviceScene(""); }} onChangeText={setAdviceScene} placeholder="例：お誕生日ディナー" placeholderTextColor={colors.muted} style={{ backgroundColor: colors.surface, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: colors.foreground }} /></View>
               <View><Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground, marginBottom: 6 }}>予算 <Text style={{ color: colors.error }}>必須</Text></Text><Pressable onPress={() => setOptionModal("advice-budget")} style={{ backgroundColor: colors.surface, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 13, flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}><Text style={{ fontSize: 15, color: adviceBudget ? colors.foreground : colors.muted }}>{adviceBudget || "予算を選択"}</Text><IconSymbol name="chevron.down" size={18} color={colors.muted} /></Pressable></View>
               <View><Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground, marginBottom: 6 }}>一言 <Text style={{ color: colors.error }}>必須</Text></Text><TextInput value={adviceComment} onChangeText={setAdviceComment} placeholder="例：友人のお誕生日をサプライズでお祝いしたく、おすすめのお店を教えてください！" placeholderTextColor={colors.muted} multiline textAlignVertical="top" style={{ backgroundColor: colors.surface, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: colors.foreground, minHeight: 120 }} /></View>
               {formError ? <Text style={{ fontSize: 13, color: colors.error }}>{formError}</Text> : null}
@@ -1854,7 +1896,7 @@ function CreateThreadModal({
                   </Pressable>
                 </View>
               ))}
-              {images.length < 4 && (
+              {images.length < 10 && (
                 <Pressable
                   onPress={handlePickImage}
                   style={{

@@ -42,7 +42,7 @@ describe("Mock Data Integrity", () => {
       expect(e.title).toBeDefined();
       expect(e.date).toBeDefined();
       expect(e.location).toBeDefined();
-      expect(["official", "gourmet"]).toContain(e.eventType);
+      expect(["official", "gourmet", "club"]).toContain(e.eventType);
       expect(["open", "full", "closed"]).toContain(e.status);
       expect(e.capacity).toBeGreaterThan(0);
       expect(e.attendees).toBeLessThanOrEqual(e.capacity);
