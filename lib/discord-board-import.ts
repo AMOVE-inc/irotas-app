@@ -1,5 +1,6 @@
 import archive from "../data/discord-board-2026-08-14.json";
 import { MEMBERS, type BoardComment, type BoardThread, type Member } from "../constants/mock-data";
+import { normalizeBoardReactions } from "./board-reactions";
 
 interface RawRecord {
   id: string;
@@ -67,7 +68,7 @@ export function loadDiscordBoardArchive(): ImportedDiscordBoard {
       createdAt: record.createdAt,
       images: record.images.length ? record.images : undefined,
       videos: record.videos.length ? record.videos : undefined,
-      reactions: record.reactions ?? undefined,
+      reactions: record.reactions ? normalizeBoardReactions(record.reactions) : undefined,
     };
     (comments[record.threadId] ??= []).push(comment);
   });
@@ -85,7 +86,7 @@ export function loadDiscordBoardArchive(): ImportedDiscordBoard {
       isRecruiting: false,
       images: record.images.length ? record.images : undefined,
       videos: record.videos.length ? record.videos : undefined,
-      reactions: record.reactions ?? undefined,
+      reactions: record.reactions ? normalizeBoardReactions(record.reactions) : undefined,
       selfIntroduction: record.selfIntroduction,
       mealReport: record.mealReport,
       gourmetAdvice: record.gourmetAdvice,

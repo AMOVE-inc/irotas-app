@@ -291,8 +291,6 @@ function SelfIntroductionContent({ thread, compact = false }: { thread: BoardThr
       <Text style={{ fontSize: 12, fontWeight: "900", color: "#6A5B87", marginBottom: 5 }}>自己紹介</Text>
       <MentionText content={introduction.introduction} groups={BOARD_MENTION_GROUPS} />
       {!compact && introduction.wantToTry ? <View style={{ marginTop: 12, paddingTop: 10, borderTopWidth: 1, borderTopColor: colors.border }}><Text style={{ fontSize: 12, fontWeight: "900", color: "#6A5B87", marginBottom: 5 }}>IRO+でやってみたいこと</Text><MentionText content={introduction.wantToTry} groups={BOARD_MENTION_GROUPS} /></View> : null}
-      {!compact && introduction.favoriteRestaurants ? <View style={{ marginTop: 12, paddingTop: 10, borderTopWidth: 1, borderTopColor: colors.border }}><Text style={{ fontSize: 12, fontWeight: "900", color: "#6A5B87", marginBottom: 5 }}>お気に入りのお店</Text><Text style={{ fontSize: 14, lineHeight: 21, color: colors.foreground }}>{introduction.favoriteRestaurants}</Text></View> : null}
-      {!compact && introduction.desiredRestaurants ? <View style={{ marginTop: 12, paddingTop: 10, borderTopWidth: 1, borderTopColor: colors.border }}><Text style={{ fontSize: 12, fontWeight: "900", color: "#6A5B87", marginBottom: 5 }}>行ってみたいお店</Text><Text style={{ fontSize: 14, lineHeight: 21, color: colors.foreground }}>{introduction.desiredRestaurants}</Text></View> : null}
     </View>
   );
 }
@@ -689,17 +687,18 @@ function ThreadDetailModal({
   const commentPollValid = !commentPollEnabled || (commentPollQuestion.trim().length > 0 && commentPollOptions.filter((option) => option.trim()).length >= 2 && /^\d{4}-\d{2}-\d{2}$/.test(commentPollDeadline));
 
   useEffect(() => {
+    const sourceComments = [...BOARD_COMMENTS.filter((comment) => comment.threadId === thread.id), ...initialComments];
     void Promise.all([
       loadThreadReactions(thread.id, thread.reactions),
-      loadCommentReactions(comments),
+      loadCommentReactions(sourceComments),
     ]).then(([savedThreadReactions, savedComments]) => {
       setThreadReactions(savedThreadReactions);
       void Promise.all([loadBoardCommentEdits(), loadDeletedBoardCommentIds()]).then(([edits, deletedIds]) => setComments(savedComments.filter((comment) => !deletedIds.includes(comment.id)).map((comment) => edits[comment.id] ? { ...comment, content: edits[comment.id] } : comment)));
       setReactionsHydrated(true);
     });
-  // Initial hydration only; subsequent changes are saved directly.
+  // Rehydrate when a direct-linked Discord thread finishes loading its archive comments.
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [thread.id]);
+  }, [thread.id, initialComments.length]);
 
   useEffect(() => {
     if (!reactionsHydrated || !thread.gourmetContest || thread.gourmetContest.archived || contestCommentingOpen) return;
@@ -1545,8 +1544,6 @@ function CreateThreadModal({
   const [contentSelection, setContentSelection] = useState<TextSelection>({ start: 0, end: 0 });
   const [introductionText, setIntroductionText] = useState("");
   const [wantToTry, setWantToTry] = useState("");
-  const [favoriteRestaurants, setFavoriteRestaurants] = useState("");
-  const [desiredRestaurants, setDesiredRestaurants] = useState("");
   const [introductionSelection, setIntroductionSelection] = useState<TextSelection>({ start: 0, end: 0 });
   const [wantToTrySelection, setWantToTrySelection] = useState<TextSelection>({ start: 0, end: 0 });
   const introductionInputRef = useRef<TextInput>(null);
@@ -1690,7 +1687,7 @@ function CreateThreadModal({
           }
         : undefined,
       gourmetAdvice: isGourmetAdvice ? { theme: adviceTheme.trim(), genres: adviceGenres, area: adviceArea.trim(), scene: adviceScene.trim(), budget: adviceBudget, comment: adviceComment.trim() } : undefined,
-      selfIntroduction: isIntroduction ? { introduction: introductionText.trim(), wantToTry: wantToTry.trim() || undefined, favoriteRestaurants: favoriteRestaurants.trim() || undefined, desiredRestaurants: desiredRestaurants.trim() || undefined } : undefined,
+      selfIntroduction: isIntroduction ? { introduction: introductionText.trim(), wantToTry: wantToTry.trim() || undefined } : undefined,
       gourmetContest: isGourmetContest ? { commentDeadline: contestDeadline, prizePoints: Number(contestPrizePoints) } : undefined,
       poll: pollAllowed && pollEnabled ? {
         question: pollQuestion.trim(),
@@ -1703,7 +1700,7 @@ function CreateThreadModal({
     const homeActivity = boardActivityForThread(newThread);
     if (homeActivity) void recordHomeActivity(homeActivity);
     if (!isMealReport && !isGourmetAdvice) {
-      const mentionContent = isIntroduction ? `${introductionText} ${wantToTry} ${favoriteRestaurants} ${desiredRestaurants}` : content;
+      const mentionContent = isIntroduction ? `${introductionText} ${wantToTry}` : content;
       const preview = mentionContent.length > 50 ? `${mentionContent.slice(0, 50)}...` : mentionContent;
       const boardName = categories.find((item) => item.key === category)?.label ?? "掲示板";
       for (const memberId of getMentionedMemberIds(mentionContent, MEMBERS, BOARD_MENTION_GROUPS).filter((id) => id !== CURRENT_USER.id)) {
@@ -1716,7 +1713,7 @@ function CreateThreadModal({
     setContent("");
     setMentionQuery(null);
     setContentSelection({ start: 0, end: 0 });
-    setIntroductionText(""); setWantToTry(""); setFavoriteRestaurants(""); setDesiredRestaurants("");
+    setIntroductionText(""); setWantToTry("");
     setIntroductionSelection({ start: 0, end: 0 }); setWantToTrySelection({ start: 0, end: 0 });
     setIsRecruiting(false);
     setCapacity("");
@@ -1798,8 +1795,6 @@ function CreateThreadModal({
                 <Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground, marginBottom: 6 }}>IRO+でやってみたいこと（任意）</Text>
                 <TextInput ref={wantToTryInputRef} value={wantToTry} selection={wantToTrySelection} onSelectionChange={(event) => setWantToTrySelection(event.nativeEvent.selection)} onChangeText={setWantToTry} placeholder="例：気になるお店を巡るグルメ会を企画したい" placeholderTextColor={colors.muted} multiline textAlignVertical="top" style={{ backgroundColor: colors.surface, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: colors.foreground, minHeight: 100 }} />
               </View>
-              <View><Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground, marginBottom: 6 }}>お気に入りのお店（任意）</Text><TextInput value={favoriteRestaurants} onChangeText={setFavoriteRestaurants} placeholder="例：店名やURLを自由に入力" placeholderTextColor={colors.muted} multiline textAlignVertical="top" style={{ backgroundColor: colors.surface, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: colors.foreground, minHeight: 80 }} /></View>
-              <View><Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground, marginBottom: 6 }}>行ってみたいお店（任意）</Text><TextInput value={desiredRestaurants} onChangeText={setDesiredRestaurants} placeholder="例：店名やURLを自由に入力" placeholderTextColor={colors.muted} multiline textAlignVertical="top" style={{ backgroundColor: colors.surface, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: colors.foreground, minHeight: 80 }} /></View>
               {formError ? <Text style={{ fontSize: 13, color: colors.error }}>{formError}</Text> : null}
             </View>
           ) : isMealReport ? (

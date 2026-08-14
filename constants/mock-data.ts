@@ -29,6 +29,8 @@ export interface Member {
   allergies?: string;
   drinkingLevel?: string;
   instagramUrl?: string;
+  favoriteRestaurants?: string;
+  desiredRestaurants?: string;
   participationCount?: number;
   organizerCount?: number;
   followerCount?: number;

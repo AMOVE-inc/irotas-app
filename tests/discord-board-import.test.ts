@@ -28,4 +28,12 @@ describe("Discord board archive", () => {
     expect(archive.threads.find((thread) => thread.category === "meal-report")?.mealReport).toBeTruthy();
     expect(archive.threads.find((thread) => thread.category === "gourmet-advice")?.gourmetAdvice).toBeTruthy();
   });
+
+  it("グルメ相談室の全スレ・コメント・添付画像を保持する", () => {
+    const adviceThreads = archive.threads.filter((thread) => thread.category === "gourmet-advice");
+    const adviceComments = adviceThreads.flatMap((thread) => archive.comments[thread.id] ?? []);
+    expect(adviceThreads).toHaveLength(47);
+    expect(adviceComments).toHaveLength(375);
+    expect(adviceComments.flatMap((comment) => comment.images ?? [])).toHaveLength(62);
+  });
 });

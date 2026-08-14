@@ -341,6 +341,8 @@ function EditProfileModal({
   const [allergies, setAllergies] = useState("");
   const [drinkingLevel, setDrinkingLevel] = useState("");
   const [instagramUrl, setInstagramUrl] = useState("");
+  const [favoriteRestaurants, setFavoriteRestaurants] = useState("");
+  const [desiredRestaurants, setDesiredRestaurants] = useState("");
 
   // モーダルが開いたときにAsyncStorageから保存済みデータを読み込む
   useEffect(() => {
@@ -374,6 +376,8 @@ function EditProfileModal({
         setAllergies(details.allergies ?? CURRENT_USER.allergies ?? "");
         setDrinkingLevel(details.drinkingLevel ?? CURRENT_USER.drinkingLevel ?? "");
         setInstagramUrl(details.instagramUrl ?? CURRENT_USER.instagramUrl ?? "");
+        setFavoriteRestaurants(details.favoriteRestaurants ?? CURRENT_USER.favoriteRestaurants ?? "");
+        setDesiredRestaurants(details.desiredRestaurants ?? CURRENT_USER.desiredRestaurants ?? "");
       });
     });
   }, [visible]);
@@ -428,6 +432,7 @@ function EditProfileModal({
       showAge, hometown, residence, occupation: occupation.trim(), hobbies: hobbies.trim(), favoriteCuisines: interests,
       favoriteAlcohol: favoriteAlcohol.trim(), dislikedFoods: dislikedFoods.trim(), allergies: allergies.trim(), drinkingLevel,
       instagramUrl: instagramUrl.trim(),
+      favoriteRestaurants: favoriteRestaurants.trim(), desiredRestaurants: desiredRestaurants.trim(),
     };
     await AsyncStorage.setItem(PROFILE_DETAILS_STORAGE_KEY, JSON.stringify(details));
     if (avatarUri) {
@@ -556,6 +561,8 @@ function EditProfileModal({
 
           <Text style={{ fontSize: 13, fontWeight: "600", color: colors.muted, marginBottom: 6 }}>飲酒量</Text><View style={{ marginBottom: 16 }}><ProfileSelectField label="飲酒量を選択" value={drinkingLevel} options={DRINKING_LEVELS} onChange={setDrinkingLevel} /></View>
           <Text style={{ fontSize: 13, fontWeight: "600", color: colors.muted, marginBottom: 6 }}>Instagram URL</Text><TextInput value={instagramUrl} onChangeText={setInstagramUrl} placeholder="https://www.instagram.com/..." placeholderTextColor={colors.muted} autoCapitalize="none" keyboardType="url" style={{ backgroundColor: colors.surface, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: colors.foreground, marginBottom: 18 }} />
+          <Text style={{ fontSize: 13, fontWeight: "600", color: colors.muted, marginBottom: 6 }}>お気に入りのお店</Text><TextInput value={favoriteRestaurants} onChangeText={setFavoriteRestaurants} placeholder="店名やURLを自由に入力" placeholderTextColor={colors.muted} multiline textAlignVertical="top" style={{ backgroundColor: colors.surface, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, minHeight: 76, fontSize: 15, color: colors.foreground, marginBottom: 16 }} />
+          <Text style={{ fontSize: 13, fontWeight: "600", color: colors.muted, marginBottom: 6 }}>行ってみたいお店</Text><TextInput value={desiredRestaurants} onChangeText={setDesiredRestaurants} placeholder="店名やURLを自由に入力" placeholderTextColor={colors.muted} multiline textAlignVertical="top" style={{ backgroundColor: colors.surface, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, minHeight: 76, fontSize: 15, color: colors.foreground, marginBottom: 18 }} />
 
           {/* Gender */}
           <Text style={{ fontSize: 13, fontWeight: "600", color: colors.muted, marginBottom: 8 }}>
@@ -714,6 +721,7 @@ export default function ProfileScreen() {
     hobbies: CURRENT_USER.hobbies ?? "", favoriteCuisines: CURRENT_USER.favoriteCuisines ?? CURRENT_USER.interests ?? [],
     favoriteAlcohol: CURRENT_USER.favoriteAlcohol ?? "", dislikedFoods: CURRENT_USER.dislikedFoods ?? "", allergies: CURRENT_USER.allergies ?? "",
     drinkingLevel: CURRENT_USER.drinkingLevel ?? "", instagramUrl: CURRENT_USER.instagramUrl ?? "",
+    favoriteRestaurants: CURRENT_USER.favoriteRestaurants ?? "", desiredRestaurants: CURRENT_USER.desiredRestaurants ?? "",
   });
   const [memberId, setMemberId] = useState<string>("");
   useEffect(() => {
@@ -978,6 +986,7 @@ export default function ProfileScreen() {
               { label: "職業", value: profileDetails.occupation }, { label: "趣味", value: profileDetails.hobbies },
               { label: "飲酒量", value: profileDetails.drinkingLevel }, { label: "好きなお酒", value: profileDetails.favoriteAlcohol },
               { label: "苦手な食材", value: profileDetails.dislikedFoods }, { label: "アレルギー", value: profileDetails.allergies },
+              { label: "お気に入りのお店", value: profileDetails.favoriteRestaurants }, { label: "行ってみたいお店", value: profileDetails.desiredRestaurants },
             ].filter((item) => item.value).map((item) => <View key={item.label} style={{ width: "50%", paddingRight: 8 }}><Text style={{ fontSize: 10, color: colors.muted }}>{item.label}</Text><Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground, marginTop: 2 }}>{item.value}</Text></View>)}
           </View>
           {profileDetails.instagramUrl ? <Pressable onPress={() => Linking.openURL(profileDetails.instagramUrl)} style={{ flexDirection: "row", alignItems: "center", marginTop: 14, paddingTop: 12, borderTopWidth: 0.5, borderTopColor: colors.border }}><IconSymbol name="camera.fill" size={17} color="#C13584" /><Text style={{ flex: 1, marginLeft: 7, fontSize: 13, fontWeight: "700", color: "#C13584" }}>Instagramを見る</Text><IconSymbol name="chevron.right" size={15} color="#C13584" /></Pressable> : null}

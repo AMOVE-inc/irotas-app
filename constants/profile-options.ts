@@ -34,4 +34,6 @@ export interface ProfileDetails {
   allergies: string;
   drinkingLevel: string;
   instagramUrl: string;
+  favoriteRestaurants: string;
+  desiredRestaurants: string;
 }

@@ -70,6 +70,7 @@ export default function MemberProfileScreen() {
     occupation: member.occupation, hobbies: member.hobbies, favoriteCuisines: member.favoriteCuisines ?? member.interests,
     favoriteAlcohol: member.favoriteAlcohol, dislikedFoods: member.dislikedFoods, allergies: member.allergies,
     drinkingLevel: member.drinkingLevel, instagramUrl: member.instagramUrl,
+    favoriteRestaurants: member.favoriteRestaurants, desiredRestaurants: member.desiredRestaurants,
   };
   const publishedAge = (() => {
     if (!details.showAge || !details.birthDate) return null;
@@ -267,6 +268,7 @@ export default function MemberProfileScreen() {
                 { label: "職業", value: details.occupation }, { label: "趣味", value: details.hobbies },
                 { label: "飲酒量", value: details.drinkingLevel }, { label: "好きなお酒", value: details.favoriteAlcohol },
                 { label: "苦手な食材", value: details.dislikedFoods }, { label: "アレルギー", value: details.allergies },
+                { label: "お気に入りのお店", value: details.favoriteRestaurants }, { label: "行ってみたいお店", value: details.desiredRestaurants },
               ].filter((item) => item.value).map((item) => <View key={item.label} style={{ width: "50%", paddingRight: 8 }}><Text style={{ fontSize: 10, color: colors.muted }}>{item.label}</Text><Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground, marginTop: 2 }}>{item.value}</Text></View>)}
             </View>
             {details.instagramUrl ? <Pressable onPress={() => Linking.openURL(details.instagramUrl!)} style={{ flexDirection: "row", alignItems: "center", marginTop: 14, paddingTop: 12, borderTopWidth: 0.5, borderTopColor: colors.border }}><IconSymbol name="camera.fill" size={17} color="#C13584" /><Text style={{ flex: 1, marginLeft: 7, fontSize: 13, fontWeight: "700", color: "#C13584" }}>Instagramを見る</Text><IconSymbol name="chevron.right" size={15} color="#C13584" /></Pressable> : null}
