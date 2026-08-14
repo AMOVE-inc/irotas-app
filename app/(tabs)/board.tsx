@@ -14,6 +14,7 @@ import {
   CLUBS,
   type BoardThread,
   type BoardComment,
+  type BoardImage,
   type BoardCategory,
 } from "@/constants/mock-data";
 import { useAuthContext } from "@/lib/auth-context";
@@ -64,7 +65,7 @@ const BOARD_GROUPS: { key: BoardCategory["group"]; label: string }[] = [
 
 const BOARD_MENTION_GROUPS = getMentionGroups(MEMBERS, CLUBS);
 const THREAD_REACTION_EMOJIS = ["👏", "😊", "❤️", "🎉", "😋"] as const;
-const boardImageSource = (image: string | number) => typeof image === "number" ? image : { uri: image };
+const boardImageSource = (image: BoardImage) => typeof image === "string" ? { uri: image } : image;
 
 
 function MealReportContent({ thread, compact = false }: { thread: BoardThread; compact?: boolean }) {

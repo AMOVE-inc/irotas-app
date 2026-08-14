@@ -172,6 +172,13 @@ export interface Restaurant {
   memberRating?: number;
 }
 
+export type BoardImage = string | number | {
+  uri: string;
+  width?: number;
+  height?: number;
+  scale?: number;
+};
+
 export interface BoardThread {
   id: string;
   title: string;
@@ -187,7 +194,7 @@ export interface BoardThread {
   recruitApplicants?: string[]; // 参加申請中 member ids
   chatId?: string; // private chat id
   eventDate?: string; // 開催日（今日のイベント表示用）
-  images?: Array<string | number>; // 投稿添付画像 URLs / bundled assets
+  images?: BoardImage[]; // 投稿添付画像 URLs / bundled assets
   mealReport?: {
     restaurantName: string;
     prefecture: string;
@@ -230,7 +237,7 @@ export interface BoardComment {
   author: Member;
   content: string;
   createdAt: string;
-  images?: Array<string | number>;
+  images?: BoardImage[];
   reactions?: Record<string, string[]>;
 }
 
