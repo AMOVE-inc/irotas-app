@@ -4,12 +4,14 @@ import { loadDiscordBoardArchive } from "../lib/discord-board-import";
 describe("Discord board archive", () => {
   const archive = loadDiscordBoardArchive();
 
-  it("対象4種類を新しい掲示板カテゴリへ移行する", () => {
+  it("対象カテゴリを新しい掲示板へ移行する", () => {
     const categories = new Set(archive.threads.map((thread) => thread.category));
     expect(categories).toContain("introduction");
     expect(categories).toContain("meal-report");
     expect(categories).toContain("gourmet-advice");
     expect([...categories].some((category) => category.startsWith("club-club-"))).toBe(true);
+    expect(categories).toContain("club-introduction");
+    expect(categories).toContain("club-all");
   });
 
   it("excludes operator announcements misclassified as one-star meal reports", () => {
@@ -35,5 +37,19 @@ describe("Discord board archive", () => {
     expect(adviceThreads).toHaveLength(47);
     expect(adviceComments).toHaveLength(375);
     expect(adviceComments.flatMap((comment) => comment.images ?? [])).toHaveLength(62);
+  });
+
+  it("部活紹介と活動報告の全スレ・コメント・添付画像を保持する", () => {
+    const introductionThreads = archive.threads.filter((thread) => thread.category === "club-introduction");
+    const introductionComments = introductionThreads.flatMap((thread) => archive.comments[thread.id] ?? []);
+    expect(introductionThreads).toHaveLength(13);
+    expect(introductionComments).toHaveLength(16);
+    expect([...introductionThreads, ...introductionComments].flatMap((item) => item.images ?? [])).toHaveLength(3);
+
+    const activityThreads = archive.threads.filter((thread) => thread.category === "club-all");
+    const activityComments = activityThreads.flatMap((thread) => archive.comments[thread.id] ?? []);
+    expect(activityThreads).toHaveLength(44);
+    expect(activityComments).toHaveLength(61);
+    expect([...activityThreads, ...activityComments].flatMap((item) => item.images ?? [])).toHaveLength(237);
   });
 });

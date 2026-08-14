@@ -36,6 +36,8 @@ TEXT_CHANNELS = {
 FORUM_CHANNELS = {
     1472183879187042375: ("gourmet-advice", "教えてグルメ相談室"),
     1228614719309352970: ("free-chat", "なんでも掲示板"),
+    1485587152493350932: ("club-introduction", "部活紹介・入部申請"),
+    1485587497374453870: ("club-all", "活動報告"),
     1485649608620113971: ("club-club-disney", "ディズニー部"),
     1485649683345969182: ("club-club-walk", "散歩部"),
     1485649758918807582: ("club-club-travel", "旅行部"),
@@ -342,6 +344,13 @@ async def main() -> None:
     args = parse_args()
     config_path = Path(args.config).expanduser().resolve()
     config = yaml.safe_load(config_path.read_text(encoding="utf-8"))
+    # Support both the migration tool's nested YAML and the existing IRO+
+    # Discord bot's flat JSON settings without copying credentials.
+    discord_config = config.get("discord", config)
+    guild_id = discord_config.get("guild_id")
+    token = discord_config.get("token") or discord_config.get("bot_token")
+    if not guild_id or not token:
+        raise ValueError("Discord guild_id and token are required")
 
     intents = discord.Intents.default()
     intents.message_content = True
@@ -350,7 +359,7 @@ async def main() -> None:
 
     @client.event
     async def on_ready() -> None:
-        guild = client.get_guild(int(config["discord"]["guild_id"]))
+        guild = client.get_guild(int(guild_id))
         if guild is None:
             raise RuntimeError("Configured Discord server was not found")
 
@@ -426,7 +435,7 @@ async def main() -> None:
             await export_archive(guild, Path(args.output), Path(args.assets))
         await client.close()
 
-    await client.start(config["discord"]["token"])
+    await client.start(token)
 
 
 if __name__ == "__main__":

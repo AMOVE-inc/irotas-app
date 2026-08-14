@@ -41,6 +41,10 @@ import { isOperatorRole } from "@/lib/access-control";
 import { getPublishedAgeBand } from "@/lib/member-age";
 import { trpc } from "@/lib/trpc";
 
+const GENDER_OPTIONS = ["男性", "女性", "その他"] as const;
+const genderLabel = (gender: "male" | "female" | "other" | "unset") => ({ male: "男性", female: "女性", other: "その他", unset: "" })[gender];
+const genderValue = (label: string): "male" | "female" | "other" | "unset" => ({ 男性: "male", 女性: "female", その他: "other" } as const)[label as "男性" | "女性" | "その他"] ?? "unset";
+
 function ProfileSelectField({ label, value, options, onChange }: { label: string; value: string; options: readonly string[]; onChange: (value: string) => void }) {
   const colors = useColors();
   const [visible, setVisible] = useState(false);
@@ -520,6 +524,8 @@ function EditProfileModal({
           <View style={{ flexDirection: "row", gap: 7, marginBottom: 10 }}><View style={{ flex: 1.35 }}><ProfileSelectField label="年" value={birthYear} options={BIRTH_YEARS} onChange={setBirthYear} /></View><View style={{ flex: 1 }}><ProfileSelectField label="月" value={birthMonth} options={MONTHS} onChange={setBirthMonth} /></View><View style={{ flex: 1 }}><ProfileSelectField label="日" value={birthDay} options={DAYS} onChange={setBirthDay} /></View></View>
           <Pressable onPress={() => setShowAge((value) => !value)} style={{ flexDirection: "row", alignItems: "center", marginBottom: 18 }}><View style={{ width: 22, height: 22, borderRadius: 6, backgroundColor: showAge ? "#E8A0BF" : colors.surface, borderWidth: 1, borderColor: showAge ? "#E8A0BF" : colors.border, alignItems: "center", justifyContent: "center" }}>{showAge ? <IconSymbol name="checkmark" size={14} color="#FFF" /> : null}</View><View style={{ marginLeft: 8 }}><Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground }}>年齢を公開する</Text><Text style={{ fontSize: 11, color: colors.muted, marginTop: 2 }}>生年月日は表示せず「20代後半」など年代のみ公開されます</Text></View></Pressable>
 
+          <Text style={{ fontSize: 13, fontWeight: "600", color: colors.muted, marginBottom: 6 }}>性別</Text><View style={{ marginBottom: 16 }}><ProfileSelectField label="性別を選択" value={genderLabel(gender)} options={GENDER_OPTIONS} onChange={(value) => setGender(genderValue(value))} /></View>
+
           <Text style={{ fontSize: 13, fontWeight: "600", color: colors.muted, marginBottom: 6 }}>出身地</Text><View style={{ marginBottom: 16 }}><ProfileSelectField label="出身地を選択" value={hometown} options={PREFECTURES} onChange={setHometown} /></View>
           <Text style={{ fontSize: 13, fontWeight: "600", color: colors.muted, marginBottom: 6 }}>居住地</Text><View style={{ marginBottom: 16 }}><ProfileSelectField label="居住地を選択" value={residence} options={PREFECTURES} onChange={setResidence} /></View>
           <Text style={{ fontSize: 13, fontWeight: "600", color: colors.muted, marginBottom: 6 }}>Googleローカルガイドレベル</Text><View style={{ marginBottom: 16 }}><ProfileSelectField label="レベルを選択" value={googleLocalGuideLevel} options={GOOGLE_LOCAL_GUIDE_LEVELS} onChange={setGoogleLocalGuideLevel} /></View>
@@ -569,36 +575,6 @@ function EditProfileModal({
           <Text style={{ fontSize: 13, fontWeight: "600", color: colors.muted, marginBottom: 6 }}>お気に入りのお店</Text><TextInput value={favoriteRestaurants} onChangeText={setFavoriteRestaurants} placeholder="店名やURLを自由に入力" placeholderTextColor={colors.muted} multiline textAlignVertical="top" style={{ backgroundColor: colors.surface, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, minHeight: 76, fontSize: 15, color: colors.foreground, marginBottom: 16 }} />
           <Text style={{ fontSize: 13, fontWeight: "600", color: colors.muted, marginBottom: 6 }}>行ってみたいお店</Text><TextInput value={desiredRestaurants} onChangeText={setDesiredRestaurants} placeholder="店名やURLを自由に入力" placeholderTextColor={colors.muted} multiline textAlignVertical="top" style={{ backgroundColor: colors.surface, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, minHeight: 76, fontSize: 15, color: colors.foreground, marginBottom: 18 }} />
 
-          {/* Gender */}
-          <Text style={{ fontSize: 13, fontWeight: "600", color: colors.muted, marginBottom: 8 }}>
-            性別（分析用）
-          </Text>
-          <View style={{ flexDirection: "row", gap: 8, marginBottom: 24 }}>
-            {([
-              { value: "male", label: "男性" },
-              { value: "female", label: "女性" },
-              { value: "other", label: "その他" },
-              { value: "unset", label: "未設定" },
-            ] as const).map((opt) => (
-              <Pressable
-                key={opt.value}
-                onPress={() => setGender(opt.value)}
-                style={{
-                  flex: 1,
-                  paddingVertical: 10,
-                  borderRadius: 10,
-                  alignItems: "center",
-                  backgroundColor: gender === opt.value ? "#E8A0BF" : colors.surface,
-                  borderWidth: 1,
-                  borderColor: gender === opt.value ? "#E8A0BF" : colors.border,
-                }}
-              >
-                <Text style={{ fontSize: 13, fontWeight: "600", color: gender === opt.value ? "#fff" : colors.foreground }}>
-                  {opt.label}
-                </Text>
-              </Pressable>
-            ))}
-          </View>
         </ScrollView>
       </View>
     </Modal>

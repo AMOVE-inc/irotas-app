@@ -710,20 +710,6 @@ export const BOARD_THREADS: BoardThread[] = [
     preview: "美味しいものを囲んで、みなさんと楽しく交流できたらうれしいです！",
     isRecruiting: false,
   },
-  {
-    id: "club-introduction-guide", title: "部活紹介・入部申請",
-    author: MEMBERS[0], category: "club-introduction", commentCount: 0,
-    lastUpdated: "2026-08-14T12:00:00+09:00",
-    preview: "各部活の紹介を確認し、入りたい部活へ入部申請できます。申請は部長の承認後に確定します。",
-    isRecruiting: false,
-  },
-  {
-    id: "t9", title: "今月の部活動レポート",
-    author: MEMBERS[0], category: "club-all", commentCount: 9,
-    lastUpdated: "2026-03-24T07:30:00",
-    preview: "ラーメン部とワイン部の活動写真をまとめました。次回の参加もお待ちしています！",
-    isRecruiting: false,
-  },
 ];
 
 export const BOARD_COMMENTS: BoardComment[] = [
