@@ -16,6 +16,7 @@ import {
   type BoardComment,
   type BoardImage,
   type BoardCategory,
+  type BoardPoll,
 } from "@/constants/mock-data";
 import { useAuthContext } from "@/lib/auth-context";
 import { useColors } from "@/hooks/use-colors";
@@ -60,6 +61,9 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { boardActivityForThread, recordHomeActivity } from "@/lib/home-activity-store";
 import { GOURMET_GENRES } from "@/constants/event-options";
+import { boardPollResult, finalizeBoardPollOnce, isBoardPollOpen, loadBoardPoll, voteBoardPoll } from "@/lib/board-polls";
+import { addInAppNotification } from "@/lib/in-app-notifications-store";
+import { deleteBoardComment, deleteBoardThread, loadBoardCommentEdits, loadDeletedBoardCommentIds, loadDeletedBoardThreadIds, saveBoardCommentEdit } from "@/lib/board-content-store";
 
 const BOARD_GROUPS: { key: BoardCategory["group"]; label: string }[] = [
   { key: "all", label: "全体" },
@@ -69,29 +73,62 @@ const BOARD_GROUPS: { key: BoardCategory["group"]; label: string }[] = [
 const BOARD_MENTION_GROUPS = getMentionGroups(MEMBERS, CLUBS);
 const THREAD_REACTION_EMOJIS = ["👏", "😊", "❤️", "🎉", "😋"] as const;
 const boardImageSource = (image: BoardImage) => typeof image === "string" ? { uri: image } : image;
+const isOperatorMember = (member: typeof CURRENT_USER) => member.role === "admin" || member.role === "operator" || /IRO[+＋].*運営|【運営】/.test(member.name);
+const normalizedAdviceValue = (value: string) => /^(未設定|特になし|なし|未選択)$/i.test(value.trim()) ? "指定なし" : value;
 
 function mealReportImpression(thread: BoardThread): string | undefined {
   const report = thread.mealReport;
   if (!report) return undefined;
-  const structured = report.comment?.trim();
-  if (structured) return structured;
-
-  const lines = thread.preview.split(/\r?\n/);
+  const source = report.comment?.trim() || thread.preview;
+  const lines = source.split(/\r?\n/);
   const labeledIndex = lines.findIndex((line) => /(?:感想|ひとこと|一言)\s*[：:]/.test(line));
   if (labeledIndex >= 0) {
     const first = lines[labeledIndex].replace(/^.*?(?:感想|ひとこと|一言)\s*[：:]\s*/, "").trim();
-    const value = [first, ...lines.slice(labeledIndex + 1)].join("\n").trim();
+    const value = [first, ...lines.slice(labeledIndex + 1)]
+      .map((line) => line.trim())
+      .filter(Boolean)
+      .filter((line) => !/(?:店名|お店|店舗名|場所|エリア|所在地|評価|おすすめ度|予算|価格帯|おすすめメニュー|メニュー|商品名)\s*[：:]/.test(line))
+      .filter((line) => !/^https?:\/\//i.test(line))
+      .join("\n")
+      .trim();
     if (value) return value;
   }
 
   const residual = lines
     .map((line) => line.trim())
     .filter(Boolean)
-    .filter((line) => !/^(?:[🍴🍽️🥢📍⭐🌟💰💵]\s*)?(?:店名|お店|店舗名|場所|エリア|所在地|評価|おすすめ度|予算|価格帯|おすすめメニュー|メニュー|商品名)\s*[：:]/.test(line))
+    .filter((line) => !/(?:店名|お店|店舗名|場所|エリア|所在地|評価|おすすめ度|予算|価格帯|おすすめメニュー|メニュー|商品名)\s*[：:]/.test(line))
     .filter((line) => !/^https?:\/\//i.test(line));
   const value = residual.join("\n").trim();
   if (!value || value === report.restaurantName.trim() || value === thread.title.trim()) return undefined;
   return value;
+}
+
+function OperatorOrRankBadge({ member }: { member: typeof CURRENT_USER }) {
+  const operator = isOperatorMember(member);
+  const platinum = member.rank === "platinum";
+  if (operator) return <View style={{ backgroundColor: "#D93636", borderRadius: 8, paddingHorizontal: 7, paddingVertical: 2, marginLeft: 6 }}><Text style={{ fontSize: 9, fontWeight: "900", color: "#FFF" }}>運営</Text></View>;
+  return <View style={{ backgroundColor: platinum ? "#171717" : `${RANK_COLORS[member.rank]}20`, borderWidth: platinum ? 1 : 0, borderColor: "#D4AF37", borderRadius: 8, paddingHorizontal: 6, paddingVertical: 1, marginLeft: 6 }}><Text style={{ fontSize: 9, fontWeight: "700", color: platinum ? "#D4AF37" : RANK_COLORS[member.rank] }}>{RANK_LABELS[member.rank]}</Text></View>;
+}
+
+function PollCard({ ownerKey, poll }: { ownerKey: string; poll: BoardPoll }) {
+  const colors = useColors();
+  const [current, setCurrent] = useState(poll);
+  const open = isBoardPollOpen(current);
+  useEffect(() => { void loadBoardPoll(ownerKey, poll).then(setCurrent); }, [ownerKey, poll]);
+  useEffect(() => {
+    if (open) return;
+    void finalizeBoardPollOnce(ownerKey).then((created) => {
+      if (created) addInAppNotification({ targetMemberId: CURRENT_USER.id, type: "poll_result", title: "投票結果が確定しました", body: `${current.question}：${boardPollResult(current)}` });
+    });
+  }, [current, open, ownerKey]);
+  const total = new Set(current.options.flatMap((option) => option.voterIds)).size;
+  return <View style={{ marginTop: 12, borderRadius: 14, padding: 13, backgroundColor: "#F7F5FA", borderWidth: 1, borderColor: "#DED8E8" }}><View style={{ flexDirection: "row", alignItems: "center" }}><IconSymbol name="chart.bar.fill" size={17} color="#6D5B85" /><Text style={{ flex: 1, fontSize: 14, fontWeight: "900", color: colors.foreground, marginLeft: 7 }}>{current.question}</Text><View style={{ borderRadius: 9, paddingHorizontal: 7, paddingVertical: 3, backgroundColor: open ? "#E4F3E8" : "#E8E8EB" }}><Text style={{ fontSize: 10, fontWeight: "900", color: open ? "#277A40" : colors.muted }}>{open ? "投票受付中" : "終了"}</Text></View></View><View style={{ gap: 7, marginTop: 11 }}>{current.options.map((option) => { const selected = option.voterIds.includes(CURRENT_USER.id); const ratio = total ? option.voterIds.length / total : 0; return <Pressable key={option.id} disabled={!open} onPress={() => void voteBoardPoll(ownerKey, current, option.id, CURRENT_USER.id).then(setCurrent)} style={{ overflow: "hidden", borderRadius: 10, borderWidth: 1, borderColor: selected ? "#725C8C" : colors.border, backgroundColor: colors.surface }}><View style={{ position: "absolute", inset: 0, width: `${Math.round(ratio * 100)}%`, backgroundColor: selected ? "#E8DDF1" : "#EEEAF2" }} /><View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 11, paddingVertical: 9 }}><Text style={{ flex: 1, fontSize: 13, fontWeight: selected ? "900" : "700", color: colors.foreground }}>{option.text}</Text><Text style={{ fontSize: 12, fontWeight: "900", color: colors.muted }}>{option.voterIds.length}票</Text></View></Pressable>; })}</View><Text style={{ fontSize: 11, color: colors.muted, marginTop: 9 }}>{open ? `期限：${current.deadline} 23:59` : `結果：${boardPollResult(current)}`}</Text></View>;
+}
+
+function PollComposer({ enabled, setEnabled, question, setQuestion, options, setOptions, deadline, setDeadline }: { enabled: boolean; setEnabled: (value: boolean) => void; question: string; setQuestion: (value: string) => void; options: string[]; setOptions: (value: string[]) => void; deadline: string; setDeadline: (value: string) => void }) {
+  const colors = useColors();
+  return <View><Pressable onPress={() => setEnabled(!enabled)} style={{ flexDirection: "row", alignItems: "center", alignSelf: "flex-start", paddingVertical: 7 }}><IconSymbol name="chart.bar.fill" size={17} color="#6D5B85" /><Text style={{ fontSize: 13, fontWeight: "800", color: "#6D5B85", marginLeft: 6 }}>{enabled ? "投票を取り消す" : "投票を追加"}</Text></Pressable>{enabled ? <View style={{ marginTop: 8, padding: 12, borderRadius: 13, backgroundColor: "#F7F5FA", borderWidth: 1, borderColor: "#DED8E8", gap: 9 }}><TextInput value={question} onChangeText={setQuestion} placeholder="質問を入力" placeholderTextColor={colors.muted} style={{ backgroundColor: colors.surface, borderRadius: 9, padding: 10, color: colors.foreground }} />{options.map((option, index) => <View key={index} style={{ flexDirection: "row", alignItems: "center" }}><TextInput value={option} onChangeText={(value) => setOptions(options.map((item, itemIndex) => itemIndex === index ? value : item))} placeholder={`選択肢 ${index + 1}`} placeholderTextColor={colors.muted} style={{ flex: 1, backgroundColor: colors.surface, borderRadius: 9, padding: 10, color: colors.foreground }} />{options.length > 2 ? <Pressable onPress={() => setOptions(options.filter((_, itemIndex) => itemIndex !== index))} style={{ padding: 8 }}><IconSymbol name="xmark" size={15} color={colors.error} /></Pressable> : null}</View>)}{options.length < 10 ? <Pressable onPress={() => setOptions([...options, ""])}><Text style={{ fontSize: 12, fontWeight: "800", color: "#6D5B85" }}>＋ 選択肢を追加</Text></Pressable> : null}<TextInput value={deadline} onChangeText={setDeadline} placeholder="投票期限 YYYY-MM-DD" placeholderTextColor={colors.muted} style={{ backgroundColor: colors.surface, borderRadius: 9, padding: 10, color: colors.foreground }} /></View> : null}</View>;
 }
 
 function BoardVideo({ uri }: { uri: string }) {
@@ -221,10 +258,9 @@ function MealReportTimelineCard({ thread }: { thread: BoardThread }) {
             {area ? <Text numberOfLines={1} style={{ maxWidth: "100%", fontSize: 11, fontWeight: "700", color: "#5F5960", backgroundColor: "#F4F1F3", borderRadius: 8, paddingHorizontal: 7, paddingVertical: 3 }}>📍 {area}</Text> : null}
             {report.budget ? <Text style={{ fontSize: 11, fontWeight: "700", color: "#5F5960", backgroundColor: "#F4F1F3", borderRadius: 8, paddingHorizontal: 7, paddingVertical: 3 }}>{report.budget}</Text> : null}
           </View>
+          {impression ? <View style={{ marginTop: 7 }}><Text numberOfLines={3} style={{ fontSize: 12, lineHeight: 17, color: colors.foreground }}>{impression}</Text>{hasLongImpression ? <Text style={{ fontSize: 10, fontWeight: "800", color: "#8C6276", marginTop: 2 }}>詳細で続きを読む</Text> : null}</View> : null}
         </View>
       </View>
-      {report.recommendedMenu ? <Text numberOfLines={1} style={{ fontSize: 12, color: colors.foreground, marginTop: 9 }}><Text style={{ fontWeight: "900" }}>おすすめ　</Text>{report.recommendedMenu}</Text> : null}
-      {impression ? <View style={{ marginTop: 8, paddingTop: 8, borderTopWidth: 1, borderTopColor: "#EEE9EC" }}><Text numberOfLines={2} style={{ fontSize: 13, lineHeight: 19, color: colors.foreground }}><Text style={{ fontWeight: "900" }}>感想　</Text>{impression}</Text>{hasLongImpression ? <Text style={{ fontSize: 11, fontWeight: "800", color: "#8C6276", marginTop: 3 }}>詳細で続きを読む</Text> : null}</View> : null}
       {thread.images && thread.images.length > 1 ? <Text style={{ fontSize: 11, fontWeight: "800", color: "#8C6276", marginTop: 7 }}>写真 {thread.images.length}枚</Text> : null}
     </View>
   );
@@ -237,8 +273,7 @@ function GourmetAdviceContent({ thread, compact = false }: { thread: BoardThread
   const genres = advice.genres?.length ? advice.genres : ["指定しない"];
   return (
     <View style={{ backgroundColor: "#FFF9EA", borderRadius: 12, padding: compact ? 10 : 14, marginBottom: compact ? 8 : 16, borderWidth: 1, borderColor: "#F0DDA8" }}>
-      <View style={{ flexDirection: "row", alignItems: "flex-start", marginBottom: 7 }}><Text style={{ width: 74, fontSize: 12, fontWeight: "900", color: "#9A6A12", paddingTop: 3 }}>料理ジャンル</Text><View style={{ flex: 1, flexDirection: "row", flexWrap: "wrap", gap: 5 }}>{genres.map((genre) => <Text key={genre} style={{ fontSize: 11, fontWeight: "800", color: "#76520E", backgroundColor: "#F7EBC8", borderRadius: 10, paddingHorizontal: 8, paddingVertical: 3 }}>{genre}</Text>)}</View></View>
-      {[{ label: "エリア", value: advice.area }, { label: "利用シーン", value: advice.scene }, { label: "予算", value: advice.budget }].map((item) => (
+      {[{ label: "料理ジャンル", value: genres.join("・") }, { label: "エリア", value: normalizedAdviceValue(advice.area) }, { label: "利用シーン", value: normalizedAdviceValue(advice.scene) }, { label: "予算", value: normalizedAdviceValue(advice.budget) }].map((item) => (
         <View key={item.label} style={{ flexDirection: "row", marginBottom: 5 }}><Text style={{ width: 74, fontSize: 12, fontWeight: "900", color: "#9A6A12" }}>{item.label}</Text><Text style={{ flex: 1, fontSize: 13, color: colors.foreground }} numberOfLines={compact ? 1 : undefined}>{item.value}</Text></View>
       ))}
       {!compact ? <Text style={{ fontSize: 14, lineHeight: 21, color: colors.foreground, marginTop: 7 }}><Text style={{ fontWeight: "900" }}>一言　</Text>{advice.comment}</Text> : null}
@@ -265,8 +300,15 @@ function ThreadCard({ thread, onPress, onEdit }: { thread: BoardThread; onPress:
   const colors = useColors();
   const router = useRouter();
   const isParticipant = thread.recruitParticipants?.includes(CURRENT_USER.id);
-  const isAuthorCard = thread.author.id === CURRENT_USER.id;
-  const isPlatinum = thread.author.rank === "platinum";
+  const [cardReactions, setCardReactions] = useState(thread.reactions ?? {});
+  const cardEmoji = thread.selfIntroduction ? "🎉" : thread.mealReport ? "😋" : null;
+  const contestOpen = thread.gourmetContest ? isContestCommentingOpen(thread) : false;
+  useEffect(() => { void loadThreadReactions(thread.id, thread.reactions).then(setCardReactions); }, [thread.id, thread.reactions]);
+  const toggleCardReaction = () => {
+    if (!cardEmoji) return;
+    const next = toggleReactionMember(cardReactions, cardEmoji, CURRENT_USER.id);
+    setCardReactions(next); void saveThreadReactions(thread.id, next);
+  };
   const showsRightPreview =
     thread.category === "gourmet-contest" ||
     thread.category === "free-chat" ||
@@ -311,26 +353,12 @@ function ThreadCard({ thread, onPress, onEdit }: { thread: BoardThread; onPress:
               {thread.author.name}
             </Text>
             <NewMemberMark member={thread.author} size={13} />
-            <View
-              style={{
-                backgroundColor: isPlatinum ? "#171717" : RANK_COLORS[thread.author.rank] + "20",
-                borderWidth: isPlatinum ? 1 : 0,
-                borderColor: "#D4AF37",
-                borderRadius: 8,
-                paddingHorizontal: 6,
-                paddingVertical: 1,
-                marginLeft: 6,
-              }}
-            >
-              <Text style={{ fontSize: 9, fontWeight: "700", color: isPlatinum ? "#D4AF37" : RANK_COLORS[thread.author.rank] }}>
-                {RANK_LABELS[thread.author.rank]}
-              </Text>
-            </View>
+            <OperatorOrRankBadge member={thread.author} />
           </View>
         </View>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
           <Text style={{ fontSize: 11, color: colors.muted }}>{timeAgo(thread.lastUpdated)}</Text>
-          {isAuthorCard && onEdit && (
+          {onEdit && (
             <Pressable
               onPress={(e) => { e.stopPropagation?.(); onEdit(); }}
               style={{ padding: 4 }}
@@ -350,6 +378,7 @@ function ThreadCard({ thread, onPress, onEdit }: { thread: BoardThread; onPress:
           >
             {thread.title}
           </Text> : null}
+          {thread.gourmetContest ? <View style={{ alignSelf: "flex-start", marginBottom: 7, borderRadius: 9, paddingHorizontal: 8, paddingVertical: 4, backgroundColor: contestOpen ? "#DDF3E3" : "#E6E6E9" }}><Text style={{ fontSize: 10, fontWeight: "900", color: contestOpen ? "#247A42" : colors.muted }}>{contestOpen ? "開催中" : "開催終了"}</Text></View> : null}
 
           {/* Preview */}
           {thread.mealReport ? (
@@ -427,6 +456,7 @@ function ThreadCard({ thread, onPress, onEdit }: { thread: BoardThread; onPress:
       {/* Footer */}
       <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
         <View style={{ flexDirection: "row", alignItems: "center" }}>
+          {cardEmoji ? <Pressable onPress={(event) => { event.stopPropagation?.(); toggleCardReaction(); }} accessibilityLabel={`${cardEmoji}スタンプ`} style={{ flexDirection: "row", alignItems: "center", marginRight: 11, borderRadius: 13, paddingHorizontal: 7, paddingVertical: 3, backgroundColor: (cardReactions[cardEmoji] ?? []).includes(CURRENT_USER.id) ? "#F4E5EE" : "#F3F1F3" }}><Text style={{ fontSize: 15 }}>{cardEmoji}</Text>{(cardReactions[cardEmoji]?.length ?? 0) > 0 ? <Text style={{ fontSize: 10, fontWeight: "800", color: colors.muted, marginLeft: 3 }}>{cardReactions[cardEmoji].length}</Text> : null}</Pressable> : null}
           <IconSymbol name="bubble.left.fill" size={14} color={colors.muted} />
           <Text style={{ fontSize: 12, color: colors.muted, marginLeft: 4 }}>
             {thread.commentCount}件のコメント
@@ -603,11 +633,13 @@ function ThreadDetailModal({
   initialComments = [],
   onClose,
   onEditThread,
+  canModerateAll = false,
 }: {
   thread: BoardThread;
   initialComments?: BoardComment[];
   onClose: () => void;
   onEditThread?: () => void;
+  canModerateAll?: boolean;
 }) {
   const colors = useColors();
   const insets = useSafeAreaInsets();
@@ -623,6 +655,10 @@ function ThreadDetailModal({
   const [editingCommentText, setEditingCommentText] = useState("");
   const [mentionQuery, setMentionQuery] = useState<string | null>(null);
   const [commentSelection, setCommentSelection] = useState<TextSelection>({ start: 0, end: 0 });
+  const [commentPollEnabled, setCommentPollEnabled] = useState(false);
+  const [commentPollQuestion, setCommentPollQuestion] = useState("");
+  const [commentPollOptions, setCommentPollOptions] = useState(["", ""]);
+  const [commentPollDeadline, setCommentPollDeadline] = useState("");
   const commentInputRef = useRef<TextInput>(null);
   const mentionGroups = useMemo(() => BOARD_MENTION_GROUPS, []);
   const [comments, setComments] = useState<BoardComment[]>(
@@ -640,11 +676,11 @@ function ThreadDetailModal({
 
   const isAuthor = thread.author.id === CURRENT_USER.id;
   const isParticipant = (thread.recruitParticipants ?? []).includes(CURRENT_USER.id);
-  const isPlatinum = thread.author.rank === "platinum";
   const isContest = Boolean(thread.gourmetContest);
   const contestCommentingOpen = isContest ? isContestCommentingOpen(thread) : true;
   const contestReferenceUrlValid = !contestReferenceUrl.trim() || /^https?:\/\/\S+$/i.test(contestReferenceUrl.trim());
   const contestFormValid = isContestEntryValid({ restaurant: contestRestaurant, menu: contestMenu, pitch: contestPitch, referenceUrl: contestReferenceUrl });
+  const commentPollValid = !commentPollEnabled || (commentPollQuestion.trim().length > 0 && commentPollOptions.filter((option) => option.trim()).length >= 2 && /^\d{4}-\d{2}-\d{2}$/.test(commentPollDeadline));
 
   useEffect(() => {
     void Promise.all([
@@ -652,7 +688,7 @@ function ThreadDetailModal({
       loadCommentReactions(comments),
     ]).then(([savedThreadReactions, savedComments]) => {
       setThreadReactions(savedThreadReactions);
-      setComments(savedComments);
+      void Promise.all([loadBoardCommentEdits(), loadDeletedBoardCommentIds()]).then(([edits, deletedIds]) => setComments(savedComments.filter((comment) => !deletedIds.includes(comment.id)).map((comment) => edits[comment.id] ? { ...comment, content: edits[comment.id] } : comment)));
       setReactionsHydrated(true);
     });
   // Initial hydration only; subsequent changes are saved directly.
@@ -679,7 +715,7 @@ function ThreadDetailModal({
     const content = isContest
       ? buildContestEntryContent({ restaurant: contestRestaurant, menu: contestMenu, pitch: contestPitch, referenceUrl: contestReferenceUrl })
       : commentText.trim();
-    if (isContest ? !contestRestaurant.trim() || !contestMenu.trim() || !contestPitch.trim() : !content) return;
+    if (isContest ? !contestRestaurant.trim() || !contestMenu.trim() || !contestPitch.trim() : (!content && !commentPollEnabled) || !commentPollValid) return;
     const newComment: BoardComment = {
       id: `bc_new_${Date.now()}`,
       threadId: thread.id,
@@ -687,6 +723,7 @@ function ThreadDetailModal({
       content,
       createdAt: new Date().toISOString(),
       images: isContest && contestImages.length ? contestImages : undefined,
+      poll: commentPollEnabled ? { question: commentPollQuestion.trim(), deadline: commentPollDeadline, options: commentPollOptions.filter((option) => option.trim()).map((option, index) => ({ id: `option_${index + 1}`, text: option.trim(), voterIds: [] })) } : undefined,
     };
     setComments([...comments, newComment]);
     if (thread.category === "gourmet-contest") void recordHomeActivity({ id: `comment:${newComment.id}`, kind: "contest_comment", title: `${thread.title}にコメントが追加されました`, description: content, createdAt: newComment.createdAt, route: "/board", params: { category: "gourmet-contest", view: "threads" } });
@@ -699,6 +736,7 @@ function ThreadDetailModal({
     setShowContestComposer(false);
     setCommentSelection({ start: 0, end: 0 });
     setMentionQuery(null);
+    setCommentPollEnabled(false); setCommentPollQuestion(""); setCommentPollOptions(["", ""]); setCommentPollDeadline("");
     const preview = content.length > 50 ? `${content.slice(0, 50)}...` : content;
     for (const memberId of getMentionedMemberIds(content, MEMBERS, mentionGroups).filter((id) => id !== CURRENT_USER.id)) {
       const member = MEMBERS.find((item) => item.id === memberId);
@@ -727,9 +765,12 @@ function ThreadDetailModal({
   const handleSaveCommentEdit = (commentId: string) => {
     if (!editingCommentText.trim()) return;
     setComments((current) => current.map((comment) => comment.id === commentId ? { ...comment, content: editingCommentText.trim() } : comment));
+    void saveBoardCommentEdit(commentId, editingCommentText.trim());
     setEditingCommentId(null);
     setEditingCommentText("");
   };
+
+  const handleDeleteComment = (commentId: string) => Alert.alert("コメントを削除しますか？", "削除後、この端末では表示されなくなります。", [{ text: "キャンセル", style: "cancel" }, { text: "削除", style: "destructive", onPress: () => { setComments((current) => current.filter((comment) => comment.id !== commentId)); void deleteBoardComment(commentId); } }]);
 
   const handleThreadReaction = (emoji: string) => {
     setThreadReactions((current) => {
@@ -743,6 +784,14 @@ function ThreadDetailModal({
     setComments((current) => current.map((comment) => {
       if (comment.id !== commentId) return comment;
       const reactions = toggleReactionMember(comment.reactions, "❤️", CURRENT_USER.id);
+      void saveCommentReactions(comment.id, reactions);
+      return { ...comment, reactions };
+    }));
+  };
+  const handleCommentReaction = (commentId: string, emoji: string) => {
+    setComments((current) => current.map((comment) => {
+      if (comment.id !== commentId) return comment;
+      const reactions = toggleReactionMember(comment.reactions, emoji, CURRENT_USER.id);
       void saveCommentReactions(comment.id, reactions);
       return { ...comment, reactions };
     }));
@@ -848,21 +897,7 @@ function ThreadDetailModal({
                   {thread.author.name}
                 </Text>
                 <NewMemberMark member={thread.author} size={13} />
-                <View
-                  style={{
-                    backgroundColor: isPlatinum ? "#171717" : RANK_COLORS[thread.author.rank] + "20",
-                    borderWidth: isPlatinum ? 1 : 0,
-                    borderColor: "#D4AF37",
-                    borderRadius: 8,
-                    paddingHorizontal: 6,
-                    paddingVertical: 1,
-                    marginLeft: 6,
-                  }}
-                >
-                  <Text style={{ fontSize: 9, fontWeight: "700", color: isPlatinum ? "#D4AF37" : RANK_COLORS[thread.author.rank] }}>
-                    {RANK_LABELS[thread.author.rank]}
-                  </Text>
-                </View>
+                <OperatorOrRankBadge member={thread.author} />
               </View>
               <Text style={{ fontSize: 11, color: colors.muted, marginTop: 2 }}>
                 {thread.author.generation}期生
@@ -882,6 +917,8 @@ function ThreadDetailModal({
             <View style={{ marginBottom: 16 }}><MentionText content={thread.preview} groups={mentionGroups} /></View>
           )}
 
+          {thread.poll ? <PollCard ownerKey={`thread:${thread.id}`} poll={thread.poll} /> : null}
+
           {thread.gourmetContest ? (
             <View style={{ backgroundColor: "#FFF8E8", borderRadius: 16, borderWidth: 1.5, borderColor: "#E9C56D", padding: 16, marginBottom: 16 }}>
               <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}><Text style={{ fontSize: 15, fontWeight: "900", color: "#7A5200" }}>開催概要</Text><View style={{ backgroundColor: contestCommentingOpen ? "#DFF4E6" : "#ECECEF", borderRadius: 12, paddingHorizontal: 9, paddingVertical: 4 }}><Text style={{ fontSize: 11, fontWeight: "900", color: contestCommentingOpen ? "#247A42" : colors.muted }}>{contestCommentingOpen ? "コメント募集中" : "募集終了"}</Text></View></View>
@@ -895,9 +932,9 @@ function ThreadDetailModal({
             </View>
           ) : null}
 
-          {thread.selfIntroduction ? (
+          {thread.selfIntroduction || thread.mealReport ? (
             <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 7, marginBottom: 16 }}>
-              {THREAD_REACTION_EMOJIS.map((emoji) => {
+              {(thread.selfIntroduction ? ["🎉"] : ["😋"]).map((emoji) => {
                 const memberIds = threadReactions[emoji] ?? [];
                 const selected = memberIds.includes(CURRENT_USER.id);
                 return <Pressable key={emoji} onPress={() => handleThreadReaction(emoji)} accessibilityLabel={`${emoji}スタンプ`} style={{ flexDirection: "row", alignItems: "center", backgroundColor: selected ? "#F0E7F7" : colors.surface, borderWidth: 1, borderColor: selected ? "#7D6A92" : colors.border, borderRadius: 16, paddingHorizontal: 10, paddingVertical: 5 }}><Text style={{ fontSize: 17 }}>{emoji}</Text>{memberIds.length > 0 ? <Text style={{ fontSize: 11, fontWeight: "800", color: colors.muted, marginLeft: 4 }}>{memberIds.length}</Text> : null}</Pressable>;
@@ -1026,9 +1063,10 @@ function ThreadDetailModal({
                   <Text style={{ fontSize: 11, color: colors.muted, marginLeft: 8 }}>
                     {timeAgo(comment.createdAt)}
                   </Text>
-                  {!comment.isSystem && (comment.author.id === CURRENT_USER.id || onEditThread) ? <Pressable onPress={() => { setEditingCommentId(comment.id); setEditingCommentText(comment.content); }} style={{ marginLeft: "auto", paddingHorizontal: 8, paddingVertical: 3 }}><Text style={{ fontSize: 11, fontWeight: "800", color: "#3478C7" }}>編集</Text></Pressable> : null}
+                  {comment.author.id === CURRENT_USER.id || canModerateAll ? <Pressable onPress={() => { setEditingCommentId(comment.id); setEditingCommentText(comment.content); }} style={{ marginLeft: "auto", paddingHorizontal: 8, paddingVertical: 3 }}><Text style={{ fontSize: 11, fontWeight: "800", color: "#3478C7" }}>編集</Text></Pressable> : null}
                 </View>
-                {editingCommentId === comment.id ? <View style={{ marginLeft: 32, gap: 7 }}><TextInput value={editingCommentText} onChangeText={setEditingCommentText} multiline autoFocus style={{ minHeight: 90, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: 10, padding: 10, fontSize: 14, color: colors.foreground }} /><View style={{ flexDirection: "row", gap: 8 }}><Pressable onPress={() => handleSaveCommentEdit(comment.id)} style={{ backgroundColor: "#3478C7", borderRadius: 8, paddingHorizontal: 13, paddingVertical: 7 }}><Text style={{ color: "#FFF", fontSize: 12, fontWeight: "800" }}>保存</Text></Pressable><Pressable onPress={() => setEditingCommentId(null)} style={{ paddingHorizontal: 10, paddingVertical: 7 }}><Text style={{ color: colors.muted, fontSize: 12 }}>キャンセル</Text></Pressable></View></View> : <View style={{ marginLeft: 32 }}>{isContest ? (comment.isSystem ? <MentionText content={comment.content} groups={mentionGroups} /> : <LinkifiedText content={comment.content} />) : <MentionText content={comment.content} groups={mentionGroups} />}</View>}
+                {editingCommentId === comment.id ? <View style={{ marginLeft: 32, gap: 7 }}><TextInput value={editingCommentText} onChangeText={setEditingCommentText} multiline autoFocus style={{ minHeight: 90, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: 10, padding: 10, fontSize: 14, color: colors.foreground }} /><View style={{ flexDirection: "row", gap: 8 }}><Pressable onPress={() => handleSaveCommentEdit(comment.id)} style={{ backgroundColor: "#3478C7", borderRadius: 8, paddingHorizontal: 13, paddingVertical: 7 }}><Text style={{ color: "#FFF", fontSize: 12, fontWeight: "800" }}>保存</Text></Pressable><Pressable onPress={() => handleDeleteComment(comment.id)} style={{ backgroundColor: "#FCE7E7", borderRadius: 8, paddingHorizontal: 13, paddingVertical: 7 }}><Text style={{ color: colors.error, fontSize: 12, fontWeight: "800" }}>削除</Text></Pressable><Pressable onPress={() => setEditingCommentId(null)} style={{ paddingHorizontal: 10, paddingVertical: 7 }}><Text style={{ color: colors.muted, fontSize: 12 }}>キャンセル</Text></Pressable></View></View> : <View style={{ marginLeft: 32 }}>{isContest ? (comment.isSystem ? <MentionText content={comment.content} groups={mentionGroups} /> : <LinkifiedText content={comment.content} />) : <MentionText content={comment.content} groups={mentionGroups} />}</View>}
+                {comment.poll ? <View style={{ marginLeft: 32 }}><PollCard ownerKey={`comment:${comment.id}`} poll={comment.poll} /></View> : null}
                 {comment.images?.length ? (
                   <View style={{ marginLeft: 32, marginTop: 8, flexDirection: "row", flexWrap: "wrap", gap: 7 }}>
                     {comment.images.map((uri, index) => <Image key={`${comment.id}-image-${index}`} source={boardImageSource(uri)} style={{ width: 104, height: 104, borderRadius: 10, backgroundColor: colors.surface }} contentFit="cover" />)}
@@ -1036,6 +1074,7 @@ function ThreadDetailModal({
                 ) : null}
                 {comment.videos?.length ? <View style={{ marginLeft: 32, marginTop: 8, gap: 8 }}>{comment.videos.map((uri) => <BoardVideo key={uri} uri={uri} />)}</View> : null}
                 {isContest && !comment.isSystem ? <Pressable onPress={() => handleCommentHeart(comment.id)} disabled={!contestCommentingOpen} style={{ marginLeft: 32, marginTop: 7, flexDirection: "row", alignItems: "center", alignSelf: "flex-start", borderRadius: 14, paddingHorizontal: 9, paddingVertical: 4, backgroundColor: (comment.reactions?.["❤️"] ?? []).includes(CURRENT_USER.id) ? "#FFE4EA" : colors.surface, borderWidth: 1, borderColor: colors.border }}><Text style={{ fontSize: 15 }}>❤️</Text><Text style={{ fontSize: 11, fontWeight: "800", color: colors.muted, marginLeft: 4 }}>{comment.reactions?.["❤️"]?.length ?? 0}</Text></Pressable> : null}
+                {!comment.isSystem && !isContest ? <Pressable onPress={() => handleCommentReaction(comment.id, "👏")} style={{ marginLeft: 32, marginTop: 7, flexDirection: "row", alignItems: "center", alignSelf: "flex-start", borderRadius: 14, paddingHorizontal: 9, paddingVertical: 4, backgroundColor: (comment.reactions?.["👏"] ?? []).includes(CURRENT_USER.id) ? "#F0E7F7" : colors.surface, borderWidth: 1, borderColor: colors.border }}><Text style={{ fontSize: 15 }}>👏</Text>{(comment.reactions?.["👏"]?.length ?? 0) > 0 ? <Text style={{ fontSize: 11, fontWeight: "800", color: colors.muted, marginLeft: 4 }}>{comment.reactions?.["👏"]?.length}</Text> : null}</Pressable> : null}
               </View>
             ))}
           </View>
@@ -1050,6 +1089,7 @@ function ThreadDetailModal({
           <Text style={{ fontSize: 11, color: colors.muted, paddingHorizontal: 16, paddingTop: 6 }}>@を入力して個人・グループをメンション</Text>
           {!thread.selfIntroduction ? <View style={{ paddingHorizontal: 16 }}><TextFormattingToolbar onFormat={handleCommentFormat} /></View> : null}
           {!thread.selfIntroduction ? <View style={{ paddingHorizontal: 16 }}><RichTextPreview content={commentText} groups={mentionGroups} /></View> : null}
+          <View style={{ paddingHorizontal: 16 }}><PollComposer enabled={commentPollEnabled} setEnabled={setCommentPollEnabled} question={commentPollQuestion} setQuestion={setCommentPollQuestion} options={commentPollOptions} setOptions={setCommentPollOptions} deadline={commentPollDeadline} setDeadline={setCommentPollDeadline} /></View>
           <View
           style={{
             flexDirection: "row",
@@ -1080,7 +1120,7 @@ function ThreadDetailModal({
             }}
           />
           <Pressable onPress={handleComment} style={{ marginLeft: 10 }}>
-            <IconSymbol name="paperplane.fill" size={24} color={commentText.trim() ? "#E8A0BF" : colors.muted} />
+            <IconSymbol name="paperplane.fill" size={24} color={(commentText.trim() || (commentPollEnabled && commentPollValid)) ? "#E8A0BF" : colors.muted} />
           </Pressable>
           </View>
           </>}
@@ -1101,7 +1141,8 @@ function ThreadDetailModal({
             <View><Text style={{ fontSize: 13, fontWeight: "800", color: colors.foreground, marginBottom: 6 }}>推しポイント（一言でOK） <Text style={{ color: "#D45470" }}>*</Text></Text><TextInput value={contestPitch} onChangeText={setContestPitch} placeholder="おすすめの理由を入力" placeholderTextColor={colors.muted} multiline style={{ backgroundColor: colors.surface, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 12, minHeight: 88, textAlignVertical: "top", fontSize: 14, color: colors.foreground, borderWidth: 1, borderColor: colors.border }} /></View>
             <View><Text style={{ fontSize: 13, fontWeight: "800", color: colors.foreground, marginBottom: 6 }}>参考URL（食べログ・GoogleMapなど） <Text style={{ fontSize: 11, color: colors.muted }}>任意</Text></Text><TextInput value={contestReferenceUrl} onChangeText={setContestReferenceUrl} placeholder="https://..." placeholderTextColor={colors.muted} autoCapitalize="none" keyboardType="url" style={{ backgroundColor: colors.surface, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 12, fontSize: 14, color: colors.foreground, borderWidth: 1, borderColor: contestReferenceUrlValid ? colors.border : "#D45470" }} />{!contestReferenceUrlValid ? <Text style={{ color: "#D45470", fontSize: 11, marginTop: 5 }}>http:// または https:// から始まるURLを入力してください</Text> : null}</View>
             <View><View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 7 }}><Text style={{ fontSize: 13, fontWeight: "800", color: colors.foreground }}>写真 <Text style={{ fontSize: 11, color: colors.muted }}>任意・最大5枚</Text></Text><Text style={{ fontSize: 11, color: colors.muted }}>{contestImages.length}/5</Text></View><View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>{contestImages.map((uri, index) => <View key={`${uri}-${index}`}><Image source={{ uri }} style={{ width: 82, height: 82, borderRadius: 10 }} contentFit="cover" /><Pressable accessibilityLabel={`写真${index + 1}を削除`} onPress={() => setContestImages((current) => current.filter((_, itemIndex) => itemIndex !== index))} style={{ position: "absolute", right: -5, top: -5, width: 22, height: 22, borderRadius: 11, backgroundColor: "#333", alignItems: "center", justifyContent: "center" }}><Text style={{ color: "#FFF", fontSize: 13, fontWeight: "900" }}>×</Text></Pressable></View>)}{contestImages.length < 5 ? <Pressable accessibilityLabel="写真を追加" onPress={handlePickContestImages} style={{ width: 82, height: 82, borderRadius: 10, borderWidth: 1.5, borderStyle: "dashed", borderColor: colors.border, alignItems: "center", justifyContent: "center", backgroundColor: colors.surface }}><IconSymbol name="photo.on.rectangle.angled" size={22} color={colors.muted} /><Text style={{ fontSize: 11, color: colors.muted, marginTop: 4 }}>写真を追加</Text></Pressable> : null}</View></View>
-            <Pressable accessibilityLabel="選手権の投稿を送信" onPress={handleComment} disabled={!contestFormValid} style={{ marginTop: 5, backgroundColor: contestFormValid ? "#D45470" : colors.border, borderRadius: 13, paddingVertical: 14, alignItems: "center" }}><Text style={{ fontSize: 15, fontWeight: "900", color: "#FFF" }}>投稿する</Text></Pressable>
+            <PollComposer enabled={commentPollEnabled} setEnabled={setCommentPollEnabled} question={commentPollQuestion} setQuestion={setCommentPollQuestion} options={commentPollOptions} setOptions={setCommentPollOptions} deadline={commentPollDeadline} setDeadline={setCommentPollDeadline} />
+            <Pressable accessibilityLabel="選手権の投稿を送信" onPress={handleComment} disabled={!contestFormValid || !commentPollValid} style={{ marginTop: 5, backgroundColor: contestFormValid && commentPollValid ? "#D45470" : colors.border, borderRadius: 13, paddingVertical: 14, alignItems: "center" }}><Text style={{ fontSize: 15, fontWeight: "900", color: "#FFF" }}>投稿する</Text></Pressable>
           </ScrollView>
         </KeyboardAvoidingView>
       </Modal>
@@ -1186,10 +1227,12 @@ function EditThreadModal({
   thread,
   onClose,
   onSave,
+  onDelete,
 }: {
   thread: BoardThread;
   onClose: () => void;
   onSave: (updated: BoardThread) => void;
+  onDelete: () => void;
 }) {
   const colors = useColors();
   const insets = useSafeAreaInsets();
@@ -1228,6 +1271,9 @@ function EditThreadModal({
       ...thread,
       title: title.trim(),
       preview: content.trim(),
+      mealReport: thread.mealReport ? { ...thread.mealReport, comment: content.trim() } : undefined,
+      gourmetAdvice: thread.gourmetAdvice ? { ...thread.gourmetAdvice, comment: content.trim() } : undefined,
+      selfIntroduction: thread.selfIntroduction ? { ...thread.selfIntroduction, introduction: content.trim() } : undefined,
       images: images.length > 0 ? images : undefined,
       gourmetContest: thread.gourmetContest ? {
         ...thread.gourmetContest,
@@ -1388,6 +1434,12 @@ function EditThreadModal({
                 )}
               </View>
             </View>
+            <Pressable
+              onPress={() => Alert.alert("投稿を削除しますか？", "削除した投稿は一覧に表示されなくなります。", [{ text: "キャンセル", style: "cancel" }, { text: "削除", style: "destructive", onPress: onDelete }])}
+              style={{ marginTop: 8, borderRadius: 12, paddingVertical: 13, alignItems: "center", borderWidth: 1, borderColor: colors.error }}
+            >
+              <Text style={{ fontSize: 14, fontWeight: "800", color: colors.error }}>投稿を削除</Text>
+            </Pressable>
           </ScrollView>
         </KeyboardAvoidingView>
       </View>
@@ -1513,6 +1565,10 @@ function CreateThreadModal({
   const [adviceComment, setAdviceComment] = useState("");
   const [contestDeadline, setContestDeadline] = useState("");
   const [contestPrizePoints, setContestPrizePoints] = useState("500");
+  const [pollEnabled, setPollEnabled] = useState(false);
+  const [pollQuestion, setPollQuestion] = useState("");
+  const [pollOptions, setPollOptions] = useState(["", ""]);
+  const [pollDeadline, setPollDeadline] = useState("");
   const [formError, setFormError] = useState("");
   const [optionModal, setOptionModal] = useState<"budget" | "advice-budget" | null>(null);
   const isMealReport = category === "meal-report";
@@ -1529,7 +1585,9 @@ function CreateThreadModal({
     tabelogUrlValid;
   const adviceValid = adviceTheme.trim().length > 0 && adviceGenres.length > 0 && adviceArea.trim().length > 0 && adviceScene.trim().length > 0 && adviceBudget.length > 0 && adviceComment.trim().length > 0;
   const contestValid = title.trim().length > 0 && content.trim().length > 0 && /^\d{4}-\d{2}-\d{2}$/.test(contestDeadline) && Number(contestPrizePoints) > 0;
-  const canSubmit = isMealReport ? mealReportValid : isGourmetAdvice ? adviceValid : isIntroduction ? introductionText.trim().length > 0 : isGourmetContest ? contestValid : title.trim().length > 0 && content.trim().length > 0;
+  const pollValid = !pollEnabled || (pollQuestion.trim().length > 0 && pollOptions.filter((option) => option.trim()).length >= 2 && /^\d{4}-\d{2}-\d{2}$/.test(pollDeadline));
+  const contentValid = isMealReport ? mealReportValid : isGourmetAdvice ? adviceValid : isIntroduction ? introductionText.trim().length > 0 : isGourmetContest ? contestValid : title.trim().length > 0 && content.trim().length > 0;
+  const canSubmit = contentValid && pollValid;
 
   const handlePickImage = async () => {
     if (Platform.OS !== "web") {
@@ -1562,6 +1620,10 @@ function CreateThreadModal({
   };
 
   const handleCreate = async () => {
+    if (!pollValid) {
+      setFormError("投票の質問・選択肢2つ以上・期限（YYYY-MM-DD）を入力してください。");
+      return;
+    }
     if (isMealReport && !mealReportValid) {
       setFormError("店名・評価と、Googleマップまたは食べログの有効なURLを入力してください。");
       return;
@@ -1621,6 +1683,11 @@ function CreateThreadModal({
       gourmetAdvice: isGourmetAdvice ? { theme: adviceTheme.trim(), genres: adviceGenres, area: adviceArea.trim(), scene: adviceScene.trim(), budget: adviceBudget, comment: adviceComment.trim() } : undefined,
       selfIntroduction: isIntroduction ? { introduction: introductionText.trim(), wantToTry: wantToTry.trim() || undefined, favoriteRestaurants: favoriteRestaurants.trim() || undefined, desiredRestaurants: desiredRestaurants.trim() || undefined } : undefined,
       gourmetContest: isGourmetContest ? { commentDeadline: contestDeadline, prizePoints: Number(contestPrizePoints) } : undefined,
+      poll: pollEnabled ? {
+        question: pollQuestion.trim(),
+        deadline: pollDeadline,
+        options: pollOptions.filter((option) => option.trim()).map((option, index) => ({ id: `option_${index + 1}`, text: option.trim(), voterIds: [] })),
+      } : undefined,
     };
     onAdd(newThread);
     const homeActivity = boardActivityForThread(newThread);
@@ -1656,6 +1723,7 @@ function CreateThreadModal({
     setAreaDisplay("");
     setAdviceTheme(""); setAdviceGenres(["指定しない"]); setAdviceArea("指定なし"); setAdviceScene("指定なし"); setAdviceBudget("指定なし"); setAdviceComment("");
     setContestDeadline(""); setContestPrizePoints("500");
+    setPollEnabled(false); setPollQuestion(""); setPollOptions(["", ""]); setPollDeadline("");
     setFormError("");
   };
 
@@ -1947,6 +2015,20 @@ function CreateThreadModal({
             </View>
           </View>
 
+          <View style={{ marginBottom: 16 }}>
+            <PollComposer
+              enabled={pollEnabled}
+              setEnabled={setPollEnabled}
+              question={pollQuestion}
+              setQuestion={setPollQuestion}
+              options={pollOptions}
+              setOptions={setPollOptions}
+              deadline={pollDeadline}
+              setDeadline={setPollDeadline}
+            />
+            {pollEnabled && !pollValid ? <Text style={{ fontSize: 12, color: colors.error, marginTop: 6 }}>質問・選択肢2つ以上・期限を入力してください</Text> : null}
+          </View>
+
           {!isMealReport && !isGourmetAdvice && !isIntroduction && !isGourmetContest ? (
             <>
               {/* Recruiting toggle */}
@@ -2051,6 +2133,7 @@ export default function BoardScreen() {
   const [dynamicThreads, setDynamicThreads] = useState<BoardThread[]>([]);
   const [importedComments, setImportedComments] = useState<Record<string, BoardComment[]>>({});
   const [editedThreads, setEditedThreads] = useState<Record<string, BoardThread>>({});
+  const [deletedThreadIds, setDeletedThreadIds] = useState<string[]>([]);
   const [editingThread, setEditingThread] = useState<BoardThread | null>(null);
   const isThreadView = view === "threads" && Boolean(categoryParam);
 
@@ -2075,6 +2158,7 @@ export default function BoardScreen() {
 
   useEffect(() => {
     void loadBoardThreadEdits().then(setEditedThreads);
+    void loadDeletedBoardThreadIds().then(setDeletedThreadIds);
   }, []);
 
   useEffect(() => {
@@ -2106,8 +2190,8 @@ export default function BoardScreen() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [categoryParam, isThreadView, router]);
   const allThreads = useMemo(
-    () => applyBoardThreadEdits([...dynamicThreads, ...BOARD_THREADS], editedThreads),
-    [dynamicThreads, editedThreads],
+    () => applyBoardThreadEdits([...dynamicThreads, ...BOARD_THREADS], editedThreads).filter((thread) => !deletedThreadIds.includes(thread.id)),
+    [dynamicThreads, editedThreads, deletedThreadIds],
   );
   const filteredThreads = allThreads.filter((t) => t.category === activeCategory);
   useEffect(() => {
@@ -2272,7 +2356,7 @@ export default function BoardScreen() {
           <ThreadCard
             thread={item}
             onPress={() => { setSelectedThread(item); router.setParams({ thread: item.id }); }}
-            onEdit={(item.author.id === CURRENT_USER.id || (userCanManageContests && (item.category === "gourmet-contest" || item.id.startsWith("discord-board-")))) && !item.mealReport ? () => setEditingThread(item) : undefined}
+            onEdit={item.author.id === CURRENT_USER.id || userIsAdmin ? () => setEditingThread(item) : undefined}
           />
         )}
         refreshControl={
@@ -2312,7 +2396,8 @@ export default function BoardScreen() {
             thread={selectedThread}
             initialComments={importedComments[selectedThread.id] ?? []}
             onClose={() => { setSelectedThread(null); router.setParams({ thread: "" }); }}
-            onEditThread={(selectedThread.author.id === CURRENT_USER.id || (userCanManageContests && (selectedThread.category === "gourmet-contest" || selectedThread.id.startsWith("discord-board-")))) ? () => { setEditingThread(selectedThread); setSelectedThread(null); router.setParams({ thread: "" }); } : undefined}
+            onEditThread={selectedThread.author.id === CURRENT_USER.id || userIsAdmin ? () => { setEditingThread(selectedThread); setSelectedThread(null); router.setParams({ thread: "" }); } : undefined}
+            canModerateAll={userIsAdmin}
           />
         )}
       </Modal>
@@ -2348,6 +2433,13 @@ export default function BoardScreen() {
               Alert.alert("保存できませんでした", "通信環境を確認して、もう一度お試しください。");
             });
             setEditingThread(null);
+          }}
+          onDelete={() => {
+            const deletingId = editingThread.id;
+            void deleteBoardThread(deletingId).then(() => setDeletedThreadIds((current) => current.includes(deletingId) ? current : [...current, deletingId]));
+            setSelectedThread(null);
+            setEditingThread(null);
+            router.setParams({ thread: "" });
           }}
         />
       )}

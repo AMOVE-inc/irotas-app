@@ -156,7 +156,7 @@ export default function NotificationsScreen() {
     .filter((notification) => notification.targetMemberId === CURRENT_USER.id)
     .map<Notification>((notification) => ({
       id: notification.id,
-      type: notification.type,
+      type: notification.type === "poll_result" ? "announcement" : notification.type,
       title: notification.title,
       body: notification.body,
       time: "たった今",

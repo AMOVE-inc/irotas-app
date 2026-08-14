@@ -3,7 +3,7 @@ import { useSyncExternalStore } from "react";
 export type InAppNotification = {
   id: string;
   targetMemberId: string;
-  type: "club_application" | "club_approval" | "event_confirmed" | "event_deadline" | "event_reminder" | "event_cancellation";
+  type: "club_application" | "club_approval" | "event_confirmed" | "event_deadline" | "event_reminder" | "event_cancellation" | "poll_result";
   title: string;
   body: string;
   clubId?: string;

@@ -180,6 +180,12 @@ export type BoardImage = string | number | {
   scale?: number;
 };
 
+export interface BoardPoll {
+  question: string;
+  options: Array<{ id: string; text: string; voterIds: string[] }>;
+  deadline: string;
+}
+
 export interface BoardThread {
   id: string;
   title: string;
@@ -224,6 +230,7 @@ export interface BoardThread {
     desiredRestaurants?: string;
   };
   reactions?: Record<string, string[]>;
+  poll?: BoardPoll;
   gourmetContest?: {
     commentDeadline: string;
     /** 優勝者へ自動付与するイロタスポイント。新規大会では必須。 */
@@ -247,6 +254,7 @@ export interface BoardComment {
   images?: BoardImage[];
   videos?: string[];
   reactions?: Record<string, string[]>;
+  poll?: BoardPoll;
   /** 締切後の結果発表など、運営が自動投稿したコメント。 */
   isSystem?: boolean;
 }
