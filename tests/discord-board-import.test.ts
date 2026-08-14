@@ -12,6 +12,11 @@ describe("Discord board archive", () => {
     expect([...categories].some((category) => category.startsWith("club-club-"))).toBe(true);
   });
 
+  it("excludes operator announcements misclassified as one-star meal reports", () => {
+    const archive = loadDiscordBoardArchive();
+    expect(archive.threads.some((thread) => thread.category === "meal-report" && thread.mealReport?.rating === 1 && ["IRO+運営", "IRO＋運営"].includes(thread.author.name))).toBe(false);
+  });
+
   it("移行したコメントと画像を保持する", () => {
     expect(archive.threads.length).toBeGreaterThan(1000);
     expect(Object.values(archive.comments).flat().length).toBeGreaterThan(3000);

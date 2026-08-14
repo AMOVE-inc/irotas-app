@@ -144,7 +144,7 @@ def meal_fields(content: str) -> dict:
         "budget": field(content, ("予算", "価格帯")),
         "recommendedMenu": field(content, ("おすすめメニュー", "メニュー", "商品名")),
         "rating": rating,
-        "comment": field(content, ("一言", "コメント", "推しポイント")),
+        "comment": field(content, ("感想", "ひとこと", "一言", "コメント", "推しポイント")),
         "googleMapUrl": first_url(content, lambda host: "google." in host or "maps.app.goo.gl" in host),
         "tabelogUrl": first_url(content, lambda host: "tabelog.com" in host),
     }
@@ -152,7 +152,7 @@ def meal_fields(content: str) -> dict:
 
 def advice_fields(title: str, content: str) -> dict:
     return {
-        "theme": field(content, ("テーマ",)) or title,
+        "theme": field(content, ("タイトル", "テーマ")) or title,
         "area": field(content, ("エリア", "場所")) or "未設定",
         "scene": field(content, ("利用シーン", "シーン")) or "未設定",
         "budget": field(content, ("予算",)) or "未設定",

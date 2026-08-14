@@ -61,6 +61,15 @@ describe("event list filtering and sorting", () => {
     expect(club.map((event) => event.id)).toEqual(["club"]);
   });
 
+  it("shows every club preview by default and can narrow to joined clubs", () => {
+    const clubEvents = [
+      makeEvent({ id: "joined", eventType: "club", clubId: "club-wine" }),
+      makeEvent({ id: "unjoined", eventType: "club", clubId: "club-travel" }),
+    ];
+    expect(filterAndSortEvents(clubEvents, { area: "all", eventType: "club", openOnly: false }, referenceDate).map((event) => event.id)).toEqual(["joined", "unjoined"]);
+    expect(filterAndSortEvents(clubEvents, { area: "all", eventType: "club", openOnly: false, joinedClubOnly: true, joinedClubIds: ["club-wine"] }, referenceDate).map((event) => event.id)).toEqual(["joined"]);
+  });
+
   it("filters events within the selected period", () => {
     const result = filterAndSortEvents(
       events,

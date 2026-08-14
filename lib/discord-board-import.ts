@@ -49,8 +49,13 @@ export interface ImportedDiscordBoard {
 }
 
 export function loadDiscordBoardArchive(): ImportedDiscordBoard {
-  const rawThreads = archive.threads as RawThread[];
-  const rawComments = archive.comments as RawComment[];
+  const rawThreads = (archive.threads as RawThread[]).filter((record) => !(
+    record.category === "meal-report" &&
+    record.mealReport?.rating === 1 &&
+    ["IRO+運営", "IRO＋運営"].includes(record.authorName.trim())
+  ));
+  const visibleThreadIds = new Set(rawThreads.map((record) => record.id));
+  const rawComments = (archive.comments as RawComment[]).filter((record) => visibleThreadIds.has(record.threadId));
   const comments: Record<string, BoardComment[]> = {};
 
   rawComments.forEach((record) => {

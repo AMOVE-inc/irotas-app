@@ -25,6 +25,8 @@ export interface EventFilters {
   budgetRanges?: Array<{ min?: number; max?: number }>;
   areas?: string[];
   keyword?: string;
+  joinedClubOnly?: boolean;
+  joinedClubIds?: string[];
 }
 
 function eventStart(event: Event): number {
@@ -69,6 +71,7 @@ export function filterAndSortEvents(
   return events
     .filter((event) => filters.area === "all" || event.category === filters.area || event.category === "all")
     .filter((event) => filters.eventType === "all" || event.eventType === filters.eventType)
+    .filter((event) => !filters.joinedClubOnly || (event.eventType === "club" && Boolean(event.clubId && filters.joinedClubIds?.includes(event.clubId))))
     .filter((event) => !filters.openOnly || (event.status === "open" && event.attendees < event.capacity))
     .filter((event) => startBoundary === null || eventStart(event) >= startBoundary)
     .filter((event) => endBoundary === null || eventStart(event) <= endBoundary)

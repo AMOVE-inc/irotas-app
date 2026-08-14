@@ -315,6 +315,7 @@ export default function EventsScreen() {
   const [hostedByMe, setHostedByMe] = useState(false);
   const [appliedOnly, setAppliedOnly] = useState(false);
   const [confirmedOnly, setConfirmedOnly] = useState(false);
+  const [joinedClubOnly, setJoinedClubOnly] = useState(false);
   const [favoriteOnly, setFavoriteOnly] = useState(false);
   const [sortOrder, setSortOrder] = useState<EventSortOrder>(DEFAULT_EVENT_SORT_ORDER);
   const [sortMenuVisible, setSortMenuVisible] = useState(false);
@@ -354,8 +355,10 @@ export default function EventsScreen() {
       budgetMax: budgetMax === "none" ? undefined : Number(budgetMax),
       areas: selectedAreas,
       keyword,
+      joinedClubOnly: eventType === "club" && joinedClubOnly,
+      joinedClubIds: clubs.filter((club) => club.memberIds.includes(CURRENT_USER.id)).map((club) => club.id),
     }),
-    [allEvents, eventType, openOnly, startDate, endDate, sortOrder, hostedByMe, appliedOnly, confirmedOnly, favoriteOnly, favoriteEventIds, selectedGenres, budgetMin, budgetMax, selectedAreas, keyword],
+    [allEvents, eventType, openOnly, startDate, endDate, sortOrder, hostedByMe, appliedOnly, confirmedOnly, favoriteOnly, favoriteEventIds, selectedGenres, budgetMin, budgetMax, selectedAreas, keyword, joinedClubOnly, clubs],
   );
 
   const eventTypeLabel = eventType === "official"
@@ -366,7 +369,7 @@ export default function EventsScreen() {
   const detailFilterCount = selectedGenres.length + selectedAreas.length + (budgetMin !== "none" ? 1 : 0) + (budgetMax !== "none" ? 1 : 0) + (keyword.trim() ? 1 : 0) + (favoriteOnly ? 1 : 0);
 
   const resetSearchConditions = useCallback(() => {
-    setEventType("all"); setOpenOnly(false); setHostedByMe(false); setAppliedOnly(false); setConfirmedOnly(false); setFavoriteOnly(false); setSortOrder(DEFAULT_EVENT_SORT_ORDER);
+    setEventType("all"); setOpenOnly(false); setHostedByMe(false); setAppliedOnly(false); setConfirmedOnly(false); setJoinedClubOnly(false); setFavoriteOnly(false); setSortOrder(DEFAULT_EVENT_SORT_ORDER);
     setSelectedGenres([]); setBudgetMin("none"); setBudgetMax("none"); setSelectedAreas([]); setKeyword(""); setStartDate(""); setEndDate("");
   }, []);
 
@@ -435,7 +438,7 @@ export default function EventsScreen() {
                   return (
                     <Pressable
                       key={filter.key}
-                      onPress={() => setEventType(filter.key)}
+                      onPress={() => { setEventType(filter.key); if (filter.key !== "club") setJoinedClubOnly(false); }}
                       accessibilityRole="button"
                       accessibilityState={{ selected }}
                       style={{
@@ -514,6 +517,7 @@ export default function EventsScreen() {
                 { label: "幹事", value: hostedByMe, toggle: () => setHostedByMe((current) => !current) },
                 { label: "参加申込中", value: appliedOnly, toggle: () => setAppliedOnly((current) => !current) },
                 { label: "参加確定済み", value: confirmedOnly, toggle: () => setConfirmedOnly((current) => !current) },
+                ...(eventType === "club" ? [{ label: "参加中の部活", value: joinedClubOnly, toggle: () => setJoinedClubOnly((current) => !current) }] : []),
               ].map((filter) => (
                 <Pressable key={filter.label} onPress={filter.toggle} accessibilityRole="checkbox" accessibilityState={{ checked: filter.value }} style={{ flexDirection: "row", alignItems: "center" }}>
                   <View style={{ width: 23, height: 23, borderRadius: 5, alignItems: "center", justifyContent: "center", backgroundColor: filter.value ? "#5D5C74" : "#E4E4E7", marginRight: 7 }}>{filter.value && <IconSymbol name="checkmark" size={16} color="#FFF" />}</View>
