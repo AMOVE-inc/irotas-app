@@ -774,7 +774,7 @@ function ThreadDetailModal({
 
           {thread.gourmetContest ? (
             <View style={{ backgroundColor: "#FFF8E8", borderRadius: 16, borderWidth: 1.5, borderColor: "#E9C56D", padding: 16, marginBottom: 16 }}>
-              <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}><Text style={{ fontSize: 15, fontWeight: "900", color: "#7A5200" }}>大会情報</Text><View style={{ backgroundColor: contestCommentingOpen ? "#DFF4E6" : "#ECECEF", borderRadius: 12, paddingHorizontal: 9, paddingVertical: 4 }}><Text style={{ fontSize: 11, fontWeight: "900", color: contestCommentingOpen ? "#247A42" : colors.muted }}>{contestCommentingOpen ? "コメント募集中" : "募集終了"}</Text></View></View>
+              <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}><Text style={{ fontSize: 15, fontWeight: "900", color: "#7A5200" }}>開催概要</Text><View style={{ backgroundColor: contestCommentingOpen ? "#DFF4E6" : "#ECECEF", borderRadius: 12, paddingHorizontal: 9, paddingVertical: 4 }}><Text style={{ fontSize: 11, fontWeight: "900", color: contestCommentingOpen ? "#247A42" : colors.muted }}>{contestCommentingOpen ? "コメント募集中" : "募集終了"}</Text></View></View>
               <View style={{ marginTop: 12, gap: 10 }}>
                 <View><Text style={{ fontSize: 11, fontWeight: "800", color: colors.muted }}>コメント募集期間</Text><Text style={{ fontSize: 15, fontWeight: "800", color: colors.foreground, marginTop: 3 }}>〜 {thread.gourmetContest.commentDeadline} 23:59</Text></View>
                 <View><Text style={{ fontSize: 11, fontWeight: "800", color: colors.muted }}>優勝景品</Text><Text style={{ fontSize: 17, fontWeight: "900", color: "#C97813", marginTop: 3 }}>{thread.gourmetContest.prizePoints ? `IRO+ポイント ${thread.gourmetContest.prizePoints}pt` : thread.gourmetContest.prizeTitle ?? "過去大会の景品"}</Text></View>
@@ -798,7 +798,6 @@ function ThreadDetailModal({
           {/* 画像 */}
           {thread.images && thread.images.length > 0 && (
             <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 20 }}>
-              {isContest ? <Text style={{ width: "100%", fontSize: 13, fontWeight: "900", color: colors.foreground }}>大会フライヤー</Text> : null}
               {thread.images.map((uri, i) => (
                 <Image
                   key={i}
