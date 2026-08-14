@@ -37,6 +37,7 @@ import { addClub, removeClub, updateClub, useClubs } from "@/lib/club-store";
 import { sendLeaderAppointmentNotification } from "@/lib/notifications";
 import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
+import { loadImportedGourmetContests, type ImportedGourmetContest } from "@/lib/gourmet-contest-import";
 
 type PointsHistoryEntry = {
   id: string;
@@ -59,7 +60,7 @@ export default function AdminDashboardScreen() {
   const clubs = useClubs();
 
   // すべての state を条件分岐の外で定義
-  const [activeTab, setActiveTab] = useState<"overview" | "members" | "events" | "clubs" | "payments" | "emails" | "announcements" | "coupons" | "analytics">(tab === "coupons" ? "coupons" : "overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "members" | "events" | "contests" | "clubs" | "payments" | "emails" | "announcements" | "coupons" | "analytics">(tab === "coupons" ? "coupons" : tab === "contests" ? "contests" : "overview");
   const [editingClub, setEditingClub] = useState<Club | null>(null);
   const [paymentRecords, setPaymentRecords] = useState<PaymentRecord[]>([]);
   const [selectedPaymentEventId, setSelectedPaymentEventId] = useState<string | null>(null);
@@ -74,6 +75,7 @@ export default function AdminDashboardScreen() {
   const [irotasHistory, setIrotasHistory] = useState<IrotasPointsHistory[]>([]);
   const [feeExemptIds, setFeeExemptIds] = useState<Set<string>>(new Set());
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  const [gourmetContests, setGourmetContests] = useState<ImportedGourmetContest[]>([]);
   const [showAnnouncementModal, setShowAnnouncementModal] = useState(false);
   const [showCouponModal, setShowCouponModal] = useState(false);
   const [editingCouponId, setEditingCouponId] = useState<string | null>(null);
@@ -155,6 +157,7 @@ export default function AdminDashboardScreen() {
     getFeeExemptionMembers().then(setFeeExemptIds);
     // 支払い状況を読み込む
     getAllPayments().then(setPaymentRecords);
+    loadImportedGourmetContests().then(setGourmetContests);
   }, [userIsAdmin]);
 
   if (!userIsAdmin) {
@@ -428,8 +431,8 @@ export default function AdminDashboardScreen() {
         }}
         style={{ borderBottomWidth: 0.5, borderBottomColor: colors.border, flexGrow: 0 }}
       >
-        {(["overview", "members", "events", "clubs", "payments", "emails", "announcements", "coupons", "analytics"] as const).map((tab) => {
-          const labels = { overview: "概要", members: "会員", events: "イベント", clubs: "部活", payments: "支払管理", emails: "承認メール", announcements: "お知らせ", coupons: "クーポン", analytics: "分析" };
+        {(["overview", "members", "events", "contests", "clubs", "payments", "emails", "announcements", "coupons", "analytics"] as const).map((tab) => {
+          const labels = { overview: "概要", members: "会員", events: "イベント", contests: "グルメ選手権", clubs: "部活", payments: "支払管理", emails: "承認メール", announcements: "お知らせ", coupons: "クーポン", analytics: "分析" };
           return (
             <Pressable
               key={tab}
@@ -1284,6 +1287,59 @@ export default function AdminDashboardScreen() {
               </Pressable>
             ))}
            </>
+        )}
+        {activeTab === "contests" && (
+          <>
+            <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 12 }}>
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontSize: 16, fontWeight: "800", color: colors.foreground }}>
+                  グルメ選手権管理 ({gourmetContests.length}件)
+                </Text>
+                <Text style={{ fontSize: 12, color: colors.muted, marginTop: 4 }}>
+                  Discordから移行した大会を含めて確認できます
+                </Text>
+              </View>
+              <Pressable
+                onPress={() => router.push({ pathname: "/board", params: { category: "gourmet-contest", view: "threads" } })}
+                style={{ backgroundColor: "#C6962C", borderRadius: 16, paddingHorizontal: 12, paddingVertical: 8 }}
+              >
+                <Text style={{ color: "#FFF", fontSize: 12, fontWeight: "800" }}>掲示板で確認</Text>
+              </Pressable>
+            </View>
+            {gourmetContests.length === 0 ? (
+              <View style={{ alignItems: "center", backgroundColor: colors.surface, borderRadius: 14, padding: 28 }}>
+                <IconSymbol name="trophy.fill" size={34} color="#C6962C" />
+                <Text style={{ marginTop: 10, color: colors.muted }}>グルメ選手権を読み込んでいます</Text>
+              </View>
+            ) : gourmetContests.map(({ thread, comments }) => (
+              <Pressable
+                key={thread.id}
+                onPress={() => router.push({ pathname: "/board", params: { category: "gourmet-contest", view: "threads", thread: thread.id } })}
+                style={({ pressed }) => ({
+                  backgroundColor: colors.surface,
+                  borderRadius: 14,
+                  padding: 14,
+                  marginBottom: 10,
+                  borderWidth: 1,
+                  borderColor: colors.border,
+                  opacity: pressed ? 0.72 : 1,
+                })}
+              >
+                <View style={{ flexDirection: "row", alignItems: "flex-start" }}>
+                  <View style={{ width: 38, height: 38, borderRadius: 19, backgroundColor: "#C6962C20", alignItems: "center", justifyContent: "center" }}>
+                    <IconSymbol name="trophy.fill" size={19} color="#C6962C" />
+                  </View>
+                  <View style={{ flex: 1, marginLeft: 11 }}>
+                    <Text style={{ fontSize: 15, fontWeight: "800", color: colors.foreground }}>{thread.title}</Text>
+                    <Text style={{ fontSize: 12, color: colors.muted, marginTop: 5 }}>
+                      コメント {comments.length}件{thread.gourmetContest?.winnerName ? ` ・ 優勝 ${thread.gourmetContest.winnerName}さん` : ""}
+                    </Text>
+                  </View>
+                  <IconSymbol name="chevron.right" size={17} color={colors.muted} />
+                </View>
+              </Pressable>
+            ))}
+          </>
         )}
         {activeTab === "analytics" && (
           <AnalyticsTab />
