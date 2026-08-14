@@ -222,9 +222,12 @@ export interface BoardThread {
   reactions?: Record<string, string[]>;
   gourmetContest?: {
     commentDeadline: string;
-    prizeTitle: string;
-    prizeDescription: string;
-    prizeExpiresAt: string;
+    /** 優勝者へ自動付与するイロタスポイント。新規大会では必須。 */
+    prizePoints?: number;
+    /** 以下はDiscordから移行した旧クーポン大会との互換用。 */
+    prizeTitle?: string;
+    prizeDescription?: string;
+    prizeExpiresAt?: string;
     /** 過去データ移行済みの大会。自動集計・クーポン再配布の対象外。 */
     archived?: boolean;
     winnerName?: string;
@@ -239,6 +242,8 @@ export interface BoardComment {
   createdAt: string;
   images?: BoardImage[];
   reactions?: Record<string, string[]>;
+  /** 締切後の結果発表など、運営が自動投稿したコメント。 */
+  isSystem?: boolean;
 }
 
 export interface ChatRoom {
@@ -641,9 +646,7 @@ export const BOARD_THREADS: BoardThread[] = [
     isRecruiting: false,
     gourmetContest: {
       commentDeadline: "2026-07-31",
-      prizeTitle: "グルメ選手権 優勝クーポン",
-      prizeDescription: "次回のIRO+公式イベントで利用できる優勝特典です。",
-      prizeExpiresAt: "2026-10-31",
+      prizePoints: 500,
     },
   },
   {

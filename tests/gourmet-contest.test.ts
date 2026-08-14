@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { BOARD_COMMENTS, BOARD_THREADS } from "../constants/mock-data";
-import { createContestPrizeCoupon, getContestWinner, isContestCommentingOpen } from "../lib/gourmet-contest";
-import { getCouponAvailability } from "../lib/coupon-rules";
+import { createContestAwardComment, getContestWinner, isContestCommentingOpen } from "../lib/gourmet-contest";
 
 describe("gourmet contest", () => {
   const contest = BOARD_THREADS.find((thread) => thread.id === "t11")!;
@@ -16,9 +15,16 @@ describe("gourmet contest", () => {
     expect(isContestCommentingOpen(contest, new Date("2026-08-01T00:00:00+09:00"))).toBe(false);
   });
 
-  it("creates a coupon visible only to the winner", () => {
-    const coupon = createContestPrizeCoupon(contest, "u2")!;
-    expect(getCouponAvailability(coupon, "gold", undefined, new Date("2026-08-01T00:00:00+09:00"), "u2")).toBe("available");
-    expect(getCouponAvailability(coupon, "gold", undefined, new Date("2026-08-01T00:00:00+09:00"), "u1")).toBe("rank_locked");
+  it("creates an automatic award comment with the configured IRO+ points", () => {
+    const winner = getContestWinner(comments)!;
+    const award = createContestAwardComment(contest, winner)!;
+    expect(award.isSystem).toBe(true);
+    expect(award.content).toContain(`@${winner.author.name}さん`);
+    expect(award.content).toContain("500pt");
+  });
+
+  it("does not count an automatic award comment as an entrant", () => {
+    const systemComment = { ...comments[0], id: "system", isSystem: true, reactions: { "❤️": ["1", "2", "3", "4", "5"] } };
+    expect(getContestWinner([...comments, systemComment])?.id).toBe("bc6");
   });
 });
