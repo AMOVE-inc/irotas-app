@@ -36,6 +36,7 @@ import { toggleReactionMember } from "@/lib/chat-reactions";
 import { awardContestWinnerOnce, buildContestEntryContent, createContestAwardComment, getContestWinner, isContestCommentingOpen, isContestEntryValid } from "@/lib/gourmet-contest";
 import { loadImportedGourmetContests } from "@/lib/gourmet-contest-import";
 import { loadCommentReactions, loadThreadReactions, saveCommentReactions, saveThreadReactions } from "@/lib/board-reactions";
+import { applyBoardThreadEdits, loadBoardThreadEdits, saveBoardThreadEdit } from "@/lib/board-thread-edits";
 import { Image } from "expo-image";
 import { useVideoPlayer, VideoView } from "expo-video";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -1124,6 +1125,7 @@ function EditThreadModal({
   const [images, setImages] = useState<BoardImage[]>(thread.images ?? []);
   const [contestDeadline, setContestDeadline] = useState(thread.gourmetContest?.commentDeadline ?? "");
   const [contestPrizePoints, setContestPrizePoints] = useState(String(thread.gourmetContest?.prizePoints ?? ""));
+  const [contestPrizeTitle, setContestPrizeTitle] = useState(thread.gourmetContest?.prizeTitle ?? "");
 
   const handlePickImage = async () => {
     if (Platform.OS !== "web") {
@@ -1156,6 +1158,7 @@ function EditThreadModal({
         ...thread.gourmetContest,
         commentDeadline: contestDeadline,
         prizePoints: Number(contestPrizePoints) || thread.gourmetContest.prizePoints,
+        prizeTitle: contestPrizeTitle.trim() || thread.gourmetContest.prizeTitle,
       } : undefined,
       lastUpdated: new Date().toISOString(),
     });
@@ -1223,7 +1226,11 @@ function EditThreadModal({
             {thread.gourmetContest ? <View style={{ gap: 12 }}>
               <Text style={{ fontSize: 15, fontWeight: "900", color: colors.foreground }}>大会設定</Text>
               <View><Text style={{ fontSize: 13, fontWeight: "700", color: colors.muted, marginBottom: 6 }}>コメント募集締切</Text><TextInput value={contestDeadline} onChangeText={setContestDeadline} placeholder="YYYY-MM-DD" placeholderTextColor={colors.muted} style={{ backgroundColor: colors.surface, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: colors.foreground }} /></View>
-              <View><Text style={{ fontSize: 13, fontWeight: "700", color: colors.muted, marginBottom: 6 }}>景品（IRO+ポイント）</Text><TextInput value={contestPrizePoints} onChangeText={(value) => setContestPrizePoints(value.replace(/[^0-9]/g, ""))} keyboardType="number-pad" placeholder="例：500" placeholderTextColor={colors.muted} style={{ backgroundColor: colors.surface, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: colors.foreground }} /></View>
+              {thread.gourmetContest.archived ? (
+                <View><Text style={{ fontSize: 13, fontWeight: "700", color: colors.muted, marginBottom: 6 }}>景品内容</Text><TextInput value={contestPrizeTitle} onChangeText={setContestPrizeTitle} placeholder="例：イベントクーポン500円分" placeholderTextColor={colors.muted} style={{ backgroundColor: colors.surface, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: colors.foreground }} /></View>
+              ) : (
+                <View><Text style={{ fontSize: 13, fontWeight: "700", color: colors.muted, marginBottom: 6 }}>景品（IRO+ポイント）</Text><TextInput value={contestPrizePoints} onChangeText={(value) => setContestPrizePoints(value.replace(/[^0-9]/g, ""))} keyboardType="number-pad" placeholder="例：500" placeholderTextColor={colors.muted} style={{ backgroundColor: colors.surface, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: colors.foreground }} /></View>
+              )}
             </View> : null}
 
             {/* 本文 */}
@@ -1285,7 +1292,7 @@ function EditThreadModal({
                     </Pressable>
                   </View>
                 ))}
-                {images.length < 4 && (
+                {images.length < 10 && (
                   <Pressable
                     onPress={handlePickImage}
                     style={{
@@ -1972,6 +1979,10 @@ export default function BoardScreen() {
   }, []);
 
   useEffect(() => {
+    void loadBoardThreadEdits().then(setEditedThreads);
+  }, []);
+
+  useEffect(() => {
     setCategories((current) => [
       ...current.filter((category) => category.group !== "club"),
       { key: "club-all", label: "今月の部活動レポート", group: "club", createdByAdmin: true },
@@ -1999,7 +2010,10 @@ export default function BoardScreen() {
   // `canAccessCategory` reads the current role/club membership on each route change.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [categoryParam, isThreadView, router]);
-  const allThreads = useMemo(() => [...dynamicThreads, ...BOARD_THREADS].map((t) => editedThreads[t.id] ?? t), [dynamicThreads, editedThreads]);
+  const allThreads = useMemo(
+    () => applyBoardThreadEdits([...dynamicThreads, ...BOARD_THREADS], editedThreads),
+    [dynamicThreads, editedThreads],
+  );
   const filteredThreads = allThreads.filter((t) => t.category === activeCategory);
   useEffect(() => {
     if (!threadParam) return;
@@ -2235,6 +2249,9 @@ export default function BoardScreen() {
           onClose={() => setEditingThread(null)}
           onSave={(updated) => {
             setEditedThreads((prev) => ({ ...prev, [updated.id]: updated }));
+            void saveBoardThreadEdit(updated).catch(() => {
+              Alert.alert("保存できませんでした", "通信環境を確認して、もう一度お試しください。");
+            });
             setEditingThread(null);
           }}
         />
