@@ -22,6 +22,22 @@ const AuthContext = createContext<AuthContextType>({
   setUser: () => {},
 });
 
+const previewLoginEnabled = process.env.EXPO_PUBLIC_PREVIEW_LOGIN_ENABLED === "true";
+
+function adminPreviewUser(): Auth.User {
+  return {
+    id: 1,
+    openId: "preview-admin",
+    name: "IRO+運営",
+    email: "admin-preview@irotas.local",
+    loginMethod: "preview",
+    lastSignedIn: new Date(),
+    role: "admin",
+    branch: "kanto",
+    branches: ["kanto"],
+  };
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<Auth.User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -46,6 +62,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           };
           setUser(userInfo);
           await Auth.setUserInfo(userInfo);
+        } else if (previewLoginEnabled && window.location.pathname.startsWith("/admin-dashboard")) {
+          // The public prototype defaults to a member account. A direct admin
+          // dashboard URL gets an isolated admin preview so management screens
+          // remain reviewable without exposing admin privileges elsewhere.
+          const previewAdmin = adminPreviewUser();
+          setUser(previewAdmin);
+          await Auth.setUserInfo(previewAdmin);
         } else {
           setUser(null);
           await Auth.clearUserInfo();
