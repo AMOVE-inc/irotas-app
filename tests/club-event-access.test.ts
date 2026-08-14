@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { canViewClubEvent } from "../lib/access-control";
+import { canCreateClubEvent, canViewClubEvent } from "../lib/access-control";
 
 describe("club event access", () => {
   const approvedMemberIds = ["member-1", "member-2"];
@@ -15,5 +15,11 @@ describe("club event access", () => {
 
   it("allows administrators to moderate every club event", () => {
     expect(canViewClubEvent("admin", "admin-1", approvedMemberIds)).toBe(true);
+  });
+
+  it("allows only club members or the leader to register a club event", () => {
+    expect(canCreateClubEvent("member-1", approvedMemberIds, "leader-1")).toBe(true);
+    expect(canCreateClubEvent("leader-1", approvedMemberIds, "leader-1")).toBe(true);
+    expect(canCreateClubEvent("outsider", approvedMemberIds, "leader-1")).toBe(false);
   });
 });

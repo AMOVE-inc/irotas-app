@@ -40,6 +40,7 @@ import { BIRTH_YEARS, DAYS, DRINKING_LEVELS, GOOGLE_LOCAL_GUIDE_LEVELS, MONTHS, 
 import { isOperatorRole } from "@/lib/access-control";
 import { getPublishedAgeBand } from "@/lib/member-age";
 import { trpc } from "@/lib/trpc";
+import { SocialMemberListModal } from "@/components/social-member-list-modal";
 
 const GENDER_OPTIONS = ["男性", "女性", "その他"] as const;
 const genderLabel = (gender: "male" | "female" | "other" | "unset") => ({ male: "男性", female: "女性", other: "その他", unset: "" })[gender];
@@ -687,6 +688,7 @@ export default function ProfileScreen() {
     .map((branch) => (branch === "kanto" ? "関東支部" : "関西支部"))
     .join("・");
   const [showEditProfile, setShowEditProfile] = useState(false);
+  const [socialList, setSocialList] = useState<"followers" | "following" | null>(null);
   // DBから取得したroleで管理者判定（モックデータのCURRENT_USERではなく実際のログインユーザーを使用）
   const userIsAdmin = authUser?.role === "admin";
   const userIsOperator = isOperatorRole(authUser?.role);
@@ -931,9 +933,9 @@ export default function ProfileScreen() {
           {[
             { label: "参加回数", value: user.participationCount ?? 0 },
             { label: "幹事回数", value: user.organizerCount ?? 0 },
-            { label: "フォロワー", value: user.followerCount ?? 0 },
-            { label: "フォロー", value: user.followingCount ?? 0 },
-          ].map((stat, index) => <View key={stat.label} style={{ flex: 1, alignItems: "center", borderLeftWidth: index ? 0.5 : 0, borderLeftColor: colors.border }}><Text style={{ fontSize: 19, fontWeight: "900", color: colors.foreground }}>{stat.value}</Text><Text style={{ fontSize: 10, color: colors.muted, marginTop: 3 }}>{stat.label}</Text></View>)}
+            { label: "フォロワー", value: 0, social: "followers" as const },
+            { label: "フォロー", value: 0, social: "following" as const },
+          ].map((stat, index) => <Pressable disabled={!('social' in stat)} onPress={() => 'social' in stat && stat.social ? setSocialList(stat.social) : undefined} key={stat.label} style={{ flex: 1, alignItems: "center", borderLeftWidth: index ? 0.5 : 0, borderLeftColor: colors.border }}><Text style={{ fontSize: 19, fontWeight: "900", color: colors.foreground }}>{stat.value}</Text><Text style={{ fontSize: 10, color: 'social' in stat ? "#C05B88" : colors.muted, marginTop: 3 }}>{stat.label}</Text></Pressable>)}
         </View>
 
         <View style={{ marginHorizontal: 16, marginBottom: 16 }}>
@@ -1274,6 +1276,7 @@ export default function ProfileScreen() {
         onInterestsChange={(list) => setProfileInterests(list)}
         onDetailsChange={(details) => setProfileDetails(details)}
       />
+      <SocialMemberListModal visible={socialList !== null} kind={socialList ?? "followers"} onClose={() => setSocialList(null)} />
     </ScreenContainer>
   );
 }

@@ -15,13 +15,13 @@ const STATUS_COPY = {
   available: "利用可能",
 } as const;
 
-function CouponCard({ coupon, usage, onPresent }: { coupon: Coupon; usage?: CouponUsage; onPresent: () => void }) {
+function CouponCard({ coupon, usage, onPresent, onOpen }: { coupon: Coupon; usage?: CouponUsage; onPresent: () => void; onOpen: () => void }) {
   const colors = useColors();
   const availability = getCouponAvailability(coupon, CURRENT_USER.rank, usage, new Date(), CURRENT_USER.id);
   const canPresent = availability === "available";
 
   return (
-    <View style={{ marginHorizontal: 16, marginBottom: 12, borderRadius: 16, overflow: "hidden", opacity: canPresent ? 1 : 0.62 }}>
+    <Pressable onPress={onOpen} style={{ marginHorizontal: 16, marginBottom: 12, borderRadius: 16, overflow: "hidden", opacity: canPresent ? 1 : 0.55, borderWidth: 1, borderColor: canPresent ? "transparent" : colors.border }}>
       <View style={{ flexDirection: "row", backgroundColor: colors.surface }}>
         <View style={{ width: 6, backgroundColor: canPresent ? RANK_COLORS[coupon.requiredRank] : colors.border }} />
         <View style={{ flex: 1, padding: 16 }}>
@@ -49,7 +49,7 @@ function CouponCard({ coupon, usage, onPresent }: { coupon: Coupon; usage?: Coup
             {usage?.useCount ? <Text style={{ fontSize: 12, color: colors.muted }}>利用回数：{usage.useCount}回</Text> : null}
           </View>
           <Pressable
-            onPress={onPresent}
+            onPress={(event) => { event.stopPropagation?.(); onPresent(); }}
             disabled={!canPresent}
             style={{ marginTop: 14, borderRadius: 12, paddingVertical: 12, alignItems: "center", backgroundColor: canPresent ? "#E8A0BF" : colors.border }}
           >
@@ -59,8 +59,15 @@ function CouponCard({ coupon, usage, onPresent }: { coupon: Coupon; usage?: Coup
           </Pressable>
         </View>
       </View>
-    </View>
+    </Pressable>
   );
+}
+
+function CouponDetailModal({ coupon, onClose, onPresent }: { coupon: Coupon | null; onClose: () => void; onPresent: (coupon: Coupon) => void }) {
+  const colors = useColors();
+  if (!coupon) return null;
+  const ended = coupon.status === "ended" || new Date(`${coupon.expiresAt}T23:59:59`).getTime() < Date.now();
+  return <Modal visible animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}><View style={{ flex: 1, backgroundColor: colors.background }}><View style={{ flexDirection: "row", alignItems: "center", padding: 16, borderBottomWidth: 1, borderBottomColor: colors.border }}><Text style={{ flex: 1, fontSize: 18, fontWeight: "900", color: colors.foreground }}>クーポン詳細</Text><Pressable onPress={onClose}><IconSymbol name="xmark" size={22} color={colors.foreground} /></Pressable></View><ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 40 }}>{coupon.imageUrl ? <Image source={{ uri: coupon.imageUrl }} style={{ width: "100%", aspectRatio: 1, borderRadius: 18, opacity: ended ? 0.55 : 1 }} contentFit="cover" /> : null}<View style={{ alignSelf: "flex-start", marginTop: 16, borderRadius: 10, paddingHorizontal: 10, paddingVertical: 5, backgroundColor: ended ? "#E1E1E4" : "#DFF4E6" }}><Text style={{ fontSize: 11, fontWeight: "900", color: ended ? colors.muted : "#247A42" }}>{ended ? "終了" : "利用可能"}</Text></View><Text style={{ fontSize: 23, lineHeight: 31, fontWeight: "900", color: colors.foreground, marginTop: 12 }}>{coupon.title}</Text><Text style={{ fontSize: 28, fontWeight: "900", color: ended ? colors.muted : "#E8A0BF", marginTop: 12 }}>{coupon.discount}</Text><Text style={{ fontSize: 14, lineHeight: 22, color: colors.foreground, marginTop: 14 }}>{coupon.description}</Text><Text style={{ fontSize: 12, color: colors.muted, marginTop: 18 }}>有効期限：{coupon.expiresAt}</Text>{coupon.sourceContestId === "discord-archive" ? <Text style={{ fontSize: 11, color: colors.muted, marginTop: 6 }}>Discordから移行した過去のクーポンです</Text> : null}{!ended ? <Pressable onPress={() => onPresent(coupon)} style={{ marginTop: 24, minHeight: 52, borderRadius: 14, backgroundColor: "#E8A0BF", alignItems: "center", justifyContent: "center" }}><Text style={{ color: "#FFF", fontSize: 15, fontWeight: "900" }}>クーポンを提示する</Text></Pressable> : null}</ScrollView></View></Modal>;
 }
 
 function PresentCouponModal({ coupon, onClose, onRedeem }: { coupon: Coupon | null; onClose: () => void; onRedeem: () => void }) {
@@ -99,6 +106,7 @@ export default function CouponsScreen() {
   const coupons = useCoupons();
   const usages = useCouponUsages(CURRENT_USER.id);
   const [presentingCoupon, setPresentingCoupon] = useState<Coupon | null>(null);
+  const [selectedCoupon, setSelectedCoupon] = useState<Coupon | null>(null);
 
   const handlePresent = async (coupon: Coupon) => {
     if (getCouponAvailability(coupon, CURRENT_USER.rank, usages[coupon.id], new Date(), CURRENT_USER.id) !== "available") return;
@@ -147,9 +155,10 @@ export default function CouponsScreen() {
           <IconSymbol name="crown.fill" size={20} color={RANK_COLORS[CURRENT_USER.rank]} />
           <Text style={{ fontSize: 14, color: colors.foreground, marginLeft: 8 }}>あなたは <Text style={{ fontWeight: "800", color: RANK_COLORS[CURRENT_USER.rank] }}>{RANK_LABELS[CURRENT_USER.rank]}会員</Text> です</Text>
         </View>
-        {sortedCoupons.map((coupon) => <CouponCard key={coupon.id} coupon={coupon} usage={usages[coupon.id]} onPresent={() => { void handlePresent(coupon); }} />)}
+        {sortedCoupons.map((coupon) => <CouponCard key={coupon.id} coupon={coupon} usage={usages[coupon.id]} onOpen={() => setSelectedCoupon(coupon)} onPresent={() => { void handlePresent(coupon); }} />)}
       </ScrollView>
       <PresentCouponModal coupon={presentingCoupon} onClose={() => setPresentingCoupon(null)} onRedeem={handleRedeem} />
+      <CouponDetailModal coupon={selectedCoupon} onClose={() => setSelectedCoupon(null)} onPresent={(coupon) => { setSelectedCoupon(null); void handlePresent(coupon); }} />
     </View>
   );
 }

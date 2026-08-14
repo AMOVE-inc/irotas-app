@@ -5,7 +5,7 @@ import { useColors } from "@/hooks/use-colors";
 import { applyForGift, getGiftApplications, getGiftCampaigns, type GiftCampaign, type GiftCategory } from "@/lib/gift-campaign-store";
 import { useRouter } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
-import { Alert, Pressable, ScrollView, Text, View } from "react-native";
+import { Alert, Modal, Pressable, ScrollView, Text, View } from "react-native";
 import { Image } from "expo-image";
 
 const RANK_ORDER = { regular: 0, silver: 1, gold: 2, platinum: 3 };
@@ -17,6 +17,7 @@ export default function GiftCampaignScreen() {
   const [category, setCategory] = useState<"all" | GiftCategory>("all");
   const [campaigns, setCampaigns] = useState<GiftCampaign[]>([]);
   const [appliedIds, setAppliedIds] = useState<string[]>([]);
+  const [selectedCampaign, setSelectedCampaign] = useState<GiftCampaign | null>(null);
 
   useEffect(() => {
     Promise.all([getGiftCampaigns(), getGiftApplications()]).then(([items, applications]) => {
@@ -53,7 +54,7 @@ export default function GiftCampaignScreen() {
         const closed = campaign.status === "closed";
         const applied = appliedIds.includes(campaign.id);
         const rankEligible = RANK_ORDER[CURRENT_USER.rank] >= RANK_ORDER[campaign.minimumRank];
-        return <View key={campaign.id} style={{ backgroundColor: colors.surface, borderRadius: 16, padding: 16, marginBottom: 14, opacity: closed ? 0.45 : 1 }}>
+        return <Pressable onPress={() => setSelectedCampaign(campaign)} key={campaign.id} style={{ backgroundColor: closed ? "#F0F0F2" : colors.surface, borderRadius: 16, padding: 16, marginBottom: 14, opacity: closed ? 0.55 : 1, borderWidth: 1, borderColor: closed ? "#D4D4D8" : "transparent" }}>
           <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 10 }}>
             <View style={{ backgroundColor: "#E8A0BF20", borderRadius: 8, paddingHorizontal: 8, paddingVertical: 3 }}><Text style={{ color: "#C55D8D", fontWeight: "700", fontSize: 11 }}>{CATEGORY_LABELS[campaign.category]}</Text></View>
             <View style={{ marginLeft: 6, backgroundColor: RANK_COLORS[campaign.minimumRank] + "25", borderRadius: 8, paddingHorizontal: 8, paddingVertical: 3 }}><Text style={{ color: RANK_COLORS[campaign.minimumRank], fontWeight: "700", fontSize: 11 }}>{RANK_LABELS[campaign.minimumRank]}以上</Text></View>
@@ -62,9 +63,10 @@ export default function GiftCampaignScreen() {
           <View style={{ flexDirection: "row", alignItems: "center" }}>{campaign.imageUrl ? <Image source={{ uri: campaign.imageUrl }} style={{ width: 104, height: 104, borderRadius: 13, marginRight: 12 }} contentFit="cover" /> : <Text style={{ fontSize: 34, marginRight: 12 }}>{campaign.imageEmoji}</Text>}<Text style={{ flex: 1, fontSize: 16, fontWeight: "800", color: colors.foreground }}>{campaign.title}</Text></View>
           <Text style={{ color: colors.muted, lineHeight: 20, marginVertical: 10 }}>{campaign.description}</Text>
           <Text style={{ fontSize: 12, color: colors.muted, marginBottom: 10 }}>応募期限：{campaign.deadline}　当選 {campaign.winnerCount}名</Text>
-          <Pressable disabled={closed || applied || !rankEligible} onPress={() => handleApply(campaign)} style={{ alignItems: "center", paddingVertical: 11, borderRadius: 12, backgroundColor: applied ? "#34C75920" : !closed && rankEligible ? "#E8A0BF" : colors.border }}><Text style={{ fontWeight: "800", color: applied ? "#248A3D" : !closed && rankEligible ? "#FFF" : colors.muted }}>{applied ? "申込済み" : closed ? "募集終了" : rankEligible ? "抽選に申し込む" : `${RANK_LABELS[campaign.minimumRank]}以上が対象`}</Text></Pressable>
-        </View>;
+          <Pressable disabled={closed || applied || !rankEligible} onPress={(event) => { event.stopPropagation?.(); handleApply(campaign); }} style={{ alignItems: "center", paddingVertical: 11, borderRadius: 12, backgroundColor: applied ? "#34C75920" : !closed && rankEligible ? "#E8A0BF" : colors.border }}><Text style={{ fontWeight: "800", color: applied ? "#248A3D" : !closed && rankEligible ? "#FFF" : colors.muted }}>{applied ? "申込済み" : closed ? "募集終了" : rankEligible ? "抽選に申し込む" : `${RANK_LABELS[campaign.minimumRank]}以上が対象`}</Text></Pressable>
+        </Pressable>;
       })}
     </ScrollView>
+    <Modal visible={selectedCampaign !== null} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setSelectedCampaign(null)}>{selectedCampaign ? <View style={{ flex: 1, backgroundColor: colors.background }}><View style={{ flexDirection: "row", alignItems: "center", padding: 16, borderBottomWidth: 1, borderBottomColor: colors.border }}><Text style={{ flex: 1, fontSize: 19, fontWeight: "900", color: colors.foreground }}>プレゼント企画詳細</Text><Pressable onPress={() => setSelectedCampaign(null)}><IconSymbol name="xmark" size={22} color={colors.foreground} /></Pressable></View><ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 40 }}>{selectedCampaign.imageUrl ? <Image source={{ uri: selectedCampaign.imageUrl }} style={{ width: "100%", aspectRatio: 1, borderRadius: 18, opacity: selectedCampaign.status === "closed" ? 0.55 : 1 }} contentFit="cover" /> : <Text style={{ fontSize: 68, textAlign: "center", marginVertical: 30 }}>{selectedCampaign.imageEmoji}</Text>}<View style={{ alignSelf: "flex-start", marginTop: 16, borderRadius: 10, paddingHorizontal: 10, paddingVertical: 5, backgroundColor: selectedCampaign.status === "open" ? "#DFF4E6" : "#E1E1E4" }}><Text style={{ fontSize: 11, fontWeight: "900", color: selectedCampaign.status === "open" ? "#247A42" : colors.muted }}>{selectedCampaign.status === "open" ? "募集中" : "募集終了"}</Text></View><Text style={{ fontSize: 23, lineHeight: 31, fontWeight: "900", color: colors.foreground, marginTop: 12 }}>{selectedCampaign.title}</Text><Text style={{ fontSize: 14, lineHeight: 22, color: colors.foreground, marginTop: 14 }}>{selectedCampaign.description}</Text><Text style={{ fontSize: 12, color: colors.muted, marginTop: 18 }}>応募期限：{selectedCampaign.deadline} ／ 当選 {selectedCampaign.winnerCount}名</Text>{selectedCampaign.archivedFromDiscord ? <Text style={{ fontSize: 11, color: colors.muted, marginTop: 7 }}>Discordから移行した終了済み企画です</Text> : null}</ScrollView></View> : null}</Modal>
   </ScreenContainer>;
 }

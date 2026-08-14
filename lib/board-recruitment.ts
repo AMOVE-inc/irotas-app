@@ -4,6 +4,14 @@ export function isRecruitmentBoardCategory(category: string): boolean {
   return category === "free-chat" || category.startsWith("club-club-");
 }
 
+export function isClubSelfIntroduction(thread: Pick<BoardThread, "category" | "title">): boolean {
+  return thread.category.startsWith("club-club-") && /自己紹介/.test(thread.title);
+}
+
+export function isThreadPinned(thread: Pick<BoardThread, "category" | "title" | "isPinned">): boolean {
+  return Boolean(thread.isPinned || isClubSelfIntroduction(thread));
+}
+
 export function inferImportedRecruitment(category: string, title: string, content: string): boolean {
   if (!isRecruitmentBoardCategory(category)) return false;
   const text = `${title}\n${content}`;
@@ -13,6 +21,9 @@ export function inferImportedRecruitment(category: string, title: string, conten
 
 export function sortRecruitmentThreads(threads: BoardThread[]): BoardThread[] {
   return [...threads].sort((left, right) => {
+    const leftPinned = isThreadPinned(left);
+    const rightPinned = isThreadPinned(right);
+    if (leftPinned !== rightPinned) return Number(rightPinned) - Number(leftPinned);
     if (isRecruitmentBoardCategory(left.category) && left.isRecruiting !== right.isRecruiting) {
       return Number(right.isRecruiting) - Number(left.isRecruiting);
     }

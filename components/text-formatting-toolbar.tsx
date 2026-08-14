@@ -5,7 +5,7 @@ import { MentionText } from "@/components/mention-ui";
 import type { MentionGroup } from "@/lib/mentions";
 
 const ACTIONS: { format: TextFormat; label: string; accessibilityLabel: string; style?: object }[] = [
-  { format: "small", label: "小", accessibilityLabel: "文字を小さく" },
+  { format: "small", label: "中", accessibilityLabel: "文字を中サイズに" },
   { format: "large", label: "大", accessibilityLabel: "文字を大きく" },
   { format: "bold", label: "B", accessibilityLabel: "太字", style: { fontWeight: "900" } },
   { format: "underline", label: "U", accessibilityLabel: "アンダーライン", style: { textDecorationLine: "underline" } },

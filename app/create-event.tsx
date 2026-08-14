@@ -3,7 +3,7 @@ import { IconSymbol } from "@/components/ui/icon-symbol";
 import { CURRENT_USER, MEMBERS, type Event } from "@/constants/mock-data";
 import { GOURMET_GENRES } from "@/constants/event-options";
 import { useAuthContext } from "@/lib/auth-context";
-import { isOperatorRole } from "@/lib/access-control";
+import { canCreateClubEvent, isOperatorRole } from "@/lib/access-control";
 import { useClubs } from "@/lib/club-store";
 import { pendingEvents } from "@/lib/event-store";
 import { scheduleOrganizerDeadlineNotification } from "@/lib/notifications";
@@ -126,7 +126,7 @@ export default function CreateEventScreen() {
   const { user: authUser } = useAuthContext();
   const userIsOperator = isOperatorRole(authUser?.role);
   const clubs = useClubs();
-  const joinedClubs = clubs.filter((club) => club.memberIds.includes(CURRENT_USER.id));
+  const joinedClubs = clubs.filter((club) => canCreateClubEvent(CURRENT_USER.id, club.memberIds, club.leaderId));
   const sourceClubId = params.sourceCategory?.startsWith("club-") ? params.sourceCategory.slice("club-".length) : "";
   const sourceIsJoinedClub = Boolean(sourceClubId && joinedClubs.some((club) => club.id === sourceClubId));
   const [eventType, setEventType] = useState<Event["eventType"]>(params.sourceThreadId ? (sourceIsJoinedClub ? "club" : "gourmet") : userIsOperator ? "official" : "gourmet");

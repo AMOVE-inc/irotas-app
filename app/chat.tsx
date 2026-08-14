@@ -43,6 +43,7 @@ import { canAccessChatRoom } from "@/lib/chat-access";
 import { getFriends } from "@/lib/friendship";
 import { getMentionGroups, getMentionQuery, getMentionedMemberIds, insertMention } from "@/lib/mentions";
 import { applyTextFormat, type TextFormat, type TextSelection } from "@/lib/text-formatting";
+import { canPostToChat } from "@/lib/access-control";
 
 const REACTION_EMOJIS = ["👍", "❤️", "😂", "🎉", "😋", "🙏"] as const;
 const MORE_REACTION_EMOJIS = ["👏", "😊", "😍", "🥳", "😆", "😭", "😮", "🤔", "🙌", "✨", "🔥", "💯", "🍽️", "🍣", "🍷", "☕", "🍺", "🍰", "👌", "💪", "🙏🏻", "👀", "💡", "✅"] as const;
@@ -272,6 +273,7 @@ export default function ChatScreen() {
   }, []);
 
   const handleSend = useCallback(() => {
+    if (!canPostToChat(authUser?.role, id ?? "")) return;
     if (!messageText.trim() && !pendingImage) return;
     const content = messageText.trim();
     const newMessage: ChatMessage = {
@@ -302,7 +304,7 @@ export default function ChatScreen() {
         if (member) void sendMentionNotification(member.name, CURRENT_USER.name, room.name, preview);
       }
     }
-  }, [messageText, pendingImage, id, room, mentionGroups]);
+  }, [messageText, pendingImage, id, room, mentionGroups, authUser?.role]);
 
   const handleReaction = useCallback(async (messageId: string, emoji: string) => {
     if (!id) return;
@@ -361,6 +363,7 @@ export default function ChatScreen() {
   const typeColor = room.type === "event" ? "#E8A0BF" : room.type === "board" ? "#A7C7E7" : room.type === "rank" ? "#F59E0B" : room.type === "group" ? "#5B9BD5" : room.type === "dm" ? "#FF9500" : "#34C759";
   const canManageRoom = userIsAdmin || room.createdBy === CURRENT_USER.id;
   const canInviteMembers = canManageRoom && room.type !== "rank" && room.type !== "event" && room.type !== "dm";
+  const canPostAnnouncement = canPostToChat(authUser?.role, room.id);
   const inviteCandidates = (room.type === "group" ? getFriends(CURRENT_USER.id) : MEMBERS.filter((member) => member.id !== CURRENT_USER.id))
     .filter((member) => !roomParticipants.includes(member.id));
 
@@ -464,7 +467,7 @@ export default function ChatScreen() {
         ) : null}
 
         {/* メンション候補リスト */}
-        {mentionQuery !== null && (
+        {canPostAnnouncement && mentionQuery !== null && (
           <MentionSuggestions
             query={mentionQuery}
             groups={mentionGroups}
@@ -474,7 +477,7 @@ export default function ChatScreen() {
         )}
 
         {/* Input */}
-        <View
+        {canPostAnnouncement ? <View
           style={{
             borderTopWidth: 0.5,
             borderTopColor: colors.border,
@@ -576,7 +579,7 @@ export default function ChatScreen() {
               />
             </Pressable>
           </View>
-        </View>
+        </View> : <View style={{ borderTopWidth: 1, borderTopColor: colors.border, backgroundColor: colors.surface, paddingHorizontal: 18, paddingVertical: 14, alignItems: "center" }}><View style={{ flexDirection: "row", alignItems: "center" }}><IconSymbol name="lock.fill" size={15} color={colors.muted} /><Text style={{ marginLeft: 7, fontSize: 13, fontWeight: "800", color: colors.muted }}>運営からのお知らせ専用です</Text></View><Text style={{ marginTop: 4, fontSize: 11, color: colors.muted }}>メンバーから返信することはできません</Text></View>}
       </KeyboardAvoidingView>
 
       {/* ===== 参加者一覧モーダル ===== */}

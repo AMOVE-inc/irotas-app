@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { inferImportedRecruitment, isRecruitmentBoardCategory, sortRecruitmentThreads } from "../lib/board-recruitment";
+import { inferImportedRecruitment, isClubSelfIntroduction, isRecruitmentBoardCategory, isThreadPinned, sortRecruitmentThreads } from "../lib/board-recruitment";
 import { parseDiscordHeading, tokenizeRichTextLinks } from "../lib/discord-rich-text";
 import type { BoardThread } from "../constants/mock-data";
 
@@ -33,5 +33,14 @@ describe("掲示板募集ステータス", () => {
     const closed = { ...base, id: "closed", title: "closed", isRecruiting: false, lastUpdated: "2026-08-15T10:00:00Z" } as BoardThread;
     const open = { ...base, id: "open", title: "open", isRecruiting: true, lastUpdated: "2026-08-14T10:00:00Z" } as BoardThread;
     expect(sortRecruitmentThreads([closed, open]).map((item) => item.id)).toEqual(["open", "closed"]);
+  });
+
+  it("部活の自己紹介を自動で固定し募集状態の上にも表示する", () => {
+    const base = { author: {} as BoardThread["author"], commentCount: 0, preview: "", category: "club-club-wine" };
+    const open = { ...base, id: "open", title: "ワイン会", isRecruiting: true, lastUpdated: "2026-08-15T10:00:00Z" } as BoardThread;
+    const introduction = { ...base, id: "intro", title: "ワイン部 自己紹介", isRecruiting: false, lastUpdated: "2026-01-01T10:00:00Z" } as BoardThread;
+    expect(isClubSelfIntroduction(introduction)).toBe(true);
+    expect(isThreadPinned(introduction)).toBe(true);
+    expect(sortRecruitmentThreads([open, introduction]).map((item) => item.id)).toEqual(["intro", "open"]);
   });
 });

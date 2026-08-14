@@ -5,6 +5,7 @@ import {
   canManageGourmetContests,
   canCreateClub,
   canViewClubThread,
+  canPostToChat,
   isAdminRole,
   isAdminRoute,
   isOperatorRole,
@@ -94,5 +95,12 @@ describe("access control", () => {
     expect(canViewClubThread("user", "u1", ["u1", "u2"])).toBe(true);
     expect(canViewClubThread("user", "u3", ["u1", "u2"])).toBe(false);
     expect(canViewClubThread("admin", "u3", ["u1", "u2"])).toBe(true);
+  });
+
+  it("makes the announcement chat operator-send-only", () => {
+    expect(canPostToChat("user", "board-announcement")).toBe(false);
+    expect(canPostToChat("operator", "board-announcement")).toBe(true);
+    expect(canPostToChat("admin", "board-announcement")).toBe(true);
+    expect(canPostToChat("user", "free-chat")).toBe(true);
   });
 });

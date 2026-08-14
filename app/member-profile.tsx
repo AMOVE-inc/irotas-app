@@ -17,6 +17,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { PROFILE_DETAILS_STORAGE_KEY, type ProfileDetails } from "@/constants/profile-options";
 import { getPrivateMemberNote, savePrivateMemberNote } from "@/lib/profile-notes-store";
 import { getPublishedAgeBand } from "@/lib/member-age";
+import { SocialMemberListModal } from "@/components/social-member-list-modal";
 import { useEffect, useState } from "react";
 import {
   Alert,
@@ -40,6 +41,7 @@ export default function MemberProfileScreen() {
   const [selfName, setSelfName] = useState<string | null>(null);
   const [selfAvatar, setSelfAvatar] = useState<string | null>(null);
   const [privateNote, setPrivateNote] = useState("");
+  const [socialList, setSocialList] = useState<"followers" | "following" | null>(null);
 
   useEffect(() => {
     if (member?.id !== CURRENT_USER.id) { setSelfDetails(null); setSelfBio(null); setSelfName(null); setSelfAvatar(null); return; }
@@ -197,9 +199,9 @@ export default function MemberProfileScreen() {
           {[
             { label: "参加回数", value: member.participationCount ?? Math.round(member.points / 35) },
             { label: "幹事回数", value: member.organizerCount ?? (member.role === "admin" ? 4 : 1) },
-            { label: "フォロワー", value: member.followerCount ?? 20 + member.generation * 7 },
-            { label: "フォロー", value: member.followingCount ?? 18 + member.generation * 5 },
-          ].map((stat, index) => <View key={stat.label} style={{ flex: 1, alignItems: "center", borderLeftWidth: index ? 0.5 : 0, borderLeftColor: colors.border }}><Text style={{ fontSize: 18, fontWeight: "900", color: colors.foreground }}>{stat.value}</Text><Text style={{ fontSize: 10, color: colors.muted, marginTop: 3 }}>{stat.label}</Text></View>)}
+            { label: "フォロワー", value: 0, social: "followers" as const },
+            { label: "フォロー", value: 0, social: "following" as const },
+          ].map((stat, index) => <Pressable disabled={!('social' in stat)} onPress={() => 'social' in stat && stat.social ? setSocialList(stat.social) : undefined} key={stat.label} style={{ flex: 1, alignItems: "center", borderLeftWidth: index ? 0.5 : 0, borderLeftColor: colors.border }}><Text style={{ fontSize: 18, fontWeight: "900", color: colors.foreground }}>{stat.value}</Text><Text style={{ fontSize: 10, color: 'social' in stat ? "#C05B88" : colors.muted, marginTop: 3 }}>{stat.label}</Text></Pressable>)}
         </View>
 
         {!isSelf ? (
@@ -374,6 +376,7 @@ export default function MemberProfileScreen() {
           })()}
         </View>
       </ScrollView>
+      <SocialMemberListModal visible={socialList !== null} kind={socialList ?? "followers"} onClose={() => setSocialList(null)} />
     </ScreenContainer>
   );
 }

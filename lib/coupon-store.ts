@@ -37,7 +37,8 @@ function ensureHydrated() {
     .then(([savedConfig, savedUsage, savedAwarded, savedManaged]) => {
       if (savedManaged) {
         const managed = JSON.parse(savedManaged) as Coupon[];
-        coupons = managed.map((item) => ({ ...item, imageUrl: item.imageUrl ?? COUPONS.find((seed) => seed.id === item.id)?.imageUrl }));
+        const managedIds = new Set(managed.map((item) => item.id));
+        coupons = [...managed, ...COUPONS.filter((item) => item.sourceContestId === "discord-archive" && !managedIds.has(item.id))].map((item) => ({ ...item, imageUrl: item.imageUrl ?? COUPONS.find((seed) => seed.id === item.id)?.imageUrl }));
       }
       if (savedConfig) {
         const config = JSON.parse(savedConfig) as Record<string, Coupon["usageType"]>;

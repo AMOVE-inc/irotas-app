@@ -68,3 +68,13 @@ export function canViewClubThread(role: unknown, memberId: string, approvedMembe
 export function canViewClubEvent(role: unknown, memberId: string, approvedMemberIds: string[]): boolean {
   return isAdminRole(role) || approvedMemberIds.includes(memberId);
 }
+
+/** 部活イベントを登録できるのは承認済み部員または部長のみ。 */
+export function canCreateClubEvent(memberId: string, approvedMemberIds: string[], leaderId: string): boolean {
+  return memberId === leaderId || approvedMemberIds.includes(memberId);
+}
+
+/** 運営アナウンスは運営からの送信専用。他のチャットは通常どおり送信できる。 */
+export function canPostToChat(role: unknown, roomId: string): boolean {
+  return roomId !== "board-announcement" || isOperatorRole(role);
+}
