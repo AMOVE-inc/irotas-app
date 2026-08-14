@@ -9,7 +9,7 @@ import { pendingEvents } from "@/lib/event-store";
 import { scheduleOrganizerDeadlineNotification } from "@/lib/notifications";
 import { eventCategoryFromPrefecture, extractEventLocation, formatEventArea } from "@/lib/event-location";
 import { useColors } from "@/hooks/use-colors";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useMemo, useState } from "react";
 import { Alert, Modal, Pressable, ScrollView, Text, TextInput, View } from "react-native";
 import { Image } from "expo-image";
@@ -122,14 +122,17 @@ function MemberPicker({ selectedIds, onChange }: { selectedIds: string[]; onChan
 export default function CreateEventScreen() {
   const colors = useColors();
   const router = useRouter();
+  const params = useLocalSearchParams<{ sourceThreadId?: string; sourceTitle?: string; sourceDescription?: string; sourceCategory?: string }>();
   const { user: authUser } = useAuthContext();
   const userIsOperator = isOperatorRole(authUser?.role);
   const clubs = useClubs();
   const joinedClubs = clubs.filter((club) => club.memberIds.includes(CURRENT_USER.id));
-  const [eventType, setEventType] = useState<Event["eventType"]>(userIsOperator ? "official" : "gourmet");
-  const [selectedClubId, setSelectedClubId] = useState("");
+  const sourceClubId = params.sourceCategory?.startsWith("club-") ? params.sourceCategory.slice("club-".length) : "";
+  const sourceIsJoinedClub = Boolean(sourceClubId && joinedClubs.some((club) => club.id === sourceClubId));
+  const [eventType, setEventType] = useState<Event["eventType"]>(params.sourceThreadId ? (sourceIsJoinedClub ? "club" : "gourmet") : userIsOperator ? "official" : "gourmet");
+  const [selectedClubId, setSelectedClubId] = useState(sourceIsJoinedClub ? sourceClubId : "");
   const [restaurantName, setRestaurantName] = useState("");
-  const [eventName, setEventName] = useState("");
+  const [eventName, setEventName] = useState(params.sourceTitle ?? "");
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
   const [address, setAddress] = useState("");
@@ -143,7 +146,7 @@ export default function CreateEventScreen() {
   const [companionIds, setCompanionIds] = useState<string[]>([]);
   const [imageUri, setImageUri] = useState("");
   const [decisionDate, setDecisionDate] = useState("");
-  const [publicNotes, setPublicNotes] = useState("");
+  const [publicNotes, setPublicNotes] = useState(params.sourceDescription ?? "");
   const [privateMemo, setPrivateMemo] = useState("");
   const [cancellationPolicy, setCancellationPolicy] = useState(DEFAULT_CANCELLATION_POLICY);
   const [selectionMethod, setSelectionMethod] = useState<"first_come" | "lottery">("first_come");
@@ -209,6 +212,7 @@ export default function CreateEventScreen() {
     <ScreenContainer edges={["top", "left", "right"]}>
       <View style={{ flexDirection: "row", alignItems: "center", padding: 16, borderBottomWidth: 0.5, borderBottomColor: colors.border }}><Pressable onPress={() => router.back()}><Text style={{ color: colors.muted }}>キャンセル</Text></Pressable><Text style={{ flex: 1, textAlign: "center", fontSize: 17, fontWeight: "800", color: colors.foreground }}>イベント作成</Text><View style={{ width: 54 }} /></View>
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 48 }} keyboardShouldPersistTaps="handled">
+        {params.sourceThreadId ? <View style={{ flexDirection: "row", alignItems: "center", borderRadius: 13, padding: 12, marginBottom: 4, backgroundColor: "#EEF4FB", borderWidth: 1, borderColor: "#D4E3F2" }}><IconSymbol name="doc.text.fill" size={18} color="#4D78A4" /><Text style={{ flex: 1, marginLeft: 8, fontSize: 12, lineHeight: 18, fontWeight: "700", color: "#3F6489" }}>掲示板のタイトルと本文を引き継ぎました。必要に応じて編集してください。</Text></View> : null}
         {(userIsOperator || joinedClubs.length > 0) ? <><FieldLabel>イベント種別 *</FieldLabel><View style={{ flexDirection: "row", gap: 8 }}>{([...(userIsOperator ? ["official"] as const : []), "gourmet", ...(joinedClubs.length ? ["club"] as const : [])] as Event["eventType"][]).map((type) => <Pressable key={type} onPress={() => chooseEventType(type)} style={{ flex: 1, paddingVertical: 12, alignItems: "center", borderRadius: 12, backgroundColor: eventType === type ? "#5B9BD5" : colors.surface }}><Text style={{ fontSize: 12, fontWeight: "800", color: eventType === type ? "#FFF" : colors.foreground }}>{type === "official" ? "公式" : type === "club" ? "部活" : "グルメ会"}</Text></Pressable>)}</View></> : null}
 
         {eventType === "club" ? <><FieldLabel>開催する部活 *</FieldLabel><View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>{joinedClubs.map((club) => { const selected = selectedClubId === club.id; return <Pressable key={club.id} onPress={() => setSelectedClubId(club.id)} style={{ borderRadius: 18, paddingHorizontal: 12, paddingVertical: 8, backgroundColor: selected ? "#4E6756" : colors.surface, borderWidth: 1, borderColor: selected ? "#4E6756" : colors.border }}><Text style={{ fontSize: 12, fontWeight: "800", color: selected ? "#FFF" : colors.foreground }}>{club.icon} {club.name}</Text></Pressable>; })}</View></> : null}

@@ -1,29 +1,31 @@
 import { Image } from "expo-image";
-import { Pressable, ScrollView, Text, View, type TextStyle } from "react-native";
+import { Linking, Pressable, ScrollView, Text, View, type TextStyle } from "react-native";
 import { BOARD_THREADS, type Member } from "@/constants/mock-data";
 import type { MentionGroup } from "@/lib/mentions";
 import { extractMentionLabels, isGroupMention } from "@/lib/mentions";
 import { useColors } from "@/hooks/use-colors";
 import type { BoardThread, ChatRoom } from "@/constants/mock-data";
-import { parseInternalLink, splitInternalLinks } from "@/lib/internal-links";
+import { parseInternalLink } from "@/lib/internal-links";
 import { getAllRooms } from "@/lib/chat-store";
 import { useRouter } from "expo-router";
+import { parseDiscordHeading, tokenizeRichTextLinks } from "@/lib/discord-rich-text";
 
 export function MentionText({ content, outgoing = false, groups, rooms = getAllRooms(), threads = BOARD_THREADS, onOpenInternalLink }: { content: string; outgoing?: boolean; groups: MentionGroup[]; rooms?: ChatRoom[]; threads?: BoardThread[]; onOpenInternalLink?: (pathname: "/chat" | "/board", params: Record<string, string>) => void }) {
   const colors = useColors();
   const router = useRouter();
   const openInternalLink = onOpenInternalLink ?? ((pathname: "/chat" | "/board", params: Record<string, string>) => router.push({ pathname, params } as any));
-  const renderPlain = (value: string, keyPrefix: string) => value.split(/(@[^\s@]+)/g).map((part, index) => {
-    if (!part.startsWith("@")) return splitInternalLinks(part).map((segment, segmentIndex) => {
-      if (!segment.isUrl) return <Text key={`${keyPrefix}-${index}-${segmentIndex}`}>{segment.text}</Text>;
-      const internal = parseInternalLink(segment.text, rooms, threads);
-      if (!internal) return <Text key={`${keyPrefix}-${index}-${segmentIndex}`}>{segment.text}</Text>;
-      const suffix = segment.text.slice(internal.raw.length);
-      return <Text key={`${keyPrefix}-${index}-${segmentIndex}`}><Text accessibilityRole="link" onPress={() => openInternalLink(internal.pathname, internal.params)} style={{ fontWeight: "900", color: outgoing ? "#FFF3B0" : "#5B5A73", backgroundColor: outgoing ? "rgba(255,210,70,0.22)" : "#EEEAF7" }}>{internal.label}</Text>{suffix}</Text>;
-    });
+  const renderMentions = (value: string, keyPrefix: string) => value.split(/(@[^\s@]+)/g).map((part, index) => {
+    if (!part.startsWith("@")) return <Text key={`${keyPrefix}-${index}`}>{part}</Text>;
     const [label] = extractMentionLabels(part);
     const grouped = Boolean(label && isGroupMention(label, groups));
     return <Text key={`${keyPrefix}-${index}`} style={{ fontWeight: "800", color: grouped ? (outgoing ? "#FFF3B0" : "#9A6A12") : (outgoing ? "#FFE0F0" : "#C05B88"), backgroundColor: grouped ? (outgoing ? "rgba(255,210,70,0.22)" : "#FFF2C7") : "transparent" }}>{part}</Text>;
+  });
+
+  const renderPlain = (value: string, keyPrefix: string) => tokenizeRichTextLinks(value).map((token, index) => {
+    if (token.type === "text") return <Text key={`${keyPrefix}-${index}`}>{renderMentions(token.value, `${keyPrefix}-${index}-mention`)}</Text>;
+    const internal = parseInternalLink(token.url, rooms, threads);
+    if (internal) return <Text key={`${keyPrefix}-${index}`}><Text accessibilityRole="link" onPress={() => openInternalLink(internal.pathname, internal.params)} style={{ fontWeight: "900", color: outgoing ? "#FFF3B0" : "#5B5A73", backgroundColor: outgoing ? "rgba(255,210,70,0.22)" : "#EEEAF7" }}>{token.label === token.url ? internal.label : token.label}</Text>{token.suffix}</Text>;
+    return <Text key={`${keyPrefix}-${index}`}><Text accessibilityRole="link" onPress={() => void Linking.openURL(token.url)} style={{ color: outgoing ? "#DCEBFF" : "#3478C7", textDecorationLine: "underline", fontWeight: "700" }}>{token.label}</Text>{token.suffix}</Text>;
   });
 
   const renderRich = (value: string, keyPrefix: string): React.ReactNode => {
@@ -44,7 +46,15 @@ export function MentionText({ content, outgoing = false, groups, rooms = getAllR
   };
   return (
     <Text style={{ fontSize: 14, lineHeight: 20, color: outgoing ? "#FFF" : colors.foreground }}>
-      {renderRich(content, "root")}
+      {content.split("\n").map((line, index, lines) => {
+        const heading = parseDiscordHeading(line);
+        const headingStyle: TextStyle = heading.level === 1
+          ? { fontSize: 22, lineHeight: 30, fontWeight: "900" }
+          : heading.level > 1
+            ? { fontSize: 17, lineHeight: 25, fontWeight: "900" }
+            : {};
+        return <Text key={`line-${index}`} style={headingStyle}>{renderRich(heading.content, `line-${index}`)}{index < lines.length - 1 ? "\n" : ""}</Text>;
+      })}
     </Text>
   );
 }

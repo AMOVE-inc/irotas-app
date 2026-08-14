@@ -1,6 +1,7 @@
 import archive from "../data/discord-board-2026-08-14.json";
 import { MEMBERS, type BoardComment, type BoardThread, type Member } from "../constants/mock-data";
 import { normalizeBoardReactions } from "./board-reactions";
+import { inferImportedRecruitment } from "./board-recruitment";
 
 interface RawRecord {
   id: string;
@@ -83,7 +84,7 @@ export function loadDiscordBoardArchive(): ImportedDiscordBoard {
       commentCount: threadComments.length,
       lastUpdated: threadComments.at(-1)?.createdAt ?? record.createdAt,
       preview: record.content,
-      isRecruiting: false,
+      isRecruiting: inferImportedRecruitment(record.category, record.title, record.content),
       images: record.images.length ? record.images : undefined,
       videos: record.videos.length ? record.videos : undefined,
       reactions: record.reactions ? normalizeBoardReactions(record.reactions) : undefined,

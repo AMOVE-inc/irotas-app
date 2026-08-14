@@ -21,7 +21,7 @@ import {
 import { useAuthContext } from "@/lib/auth-context";
 import { useColors } from "@/hooks/use-colors";
 import { createBoardChat } from "@/lib/chat-store";
-import { canManageBoardCategories, canManageGourmetContests, canViewClubThread } from "@/lib/access-control";
+import { canManageBoardCategories, canManageGourmetContests, canViewClubThread, isOperatorRole } from "@/lib/access-control";
 import { GOURMET_ADVICE_BUDGETS, isGoogleMapsUrl, MEAL_BUDGETS } from "@/lib/meal-report";
 import { communityRestaurantFromMealReport, registerCommunityRestaurant } from "@/lib/gourmet-map-community";
 import { resolveRestaurantLocation } from "@/lib/restaurant-location";
@@ -65,6 +65,7 @@ import { boardPollResult, finalizeBoardPollOnce, isBoardPollOpen, loadBoardPoll,
 import { addInAppNotification } from "@/lib/in-app-notifications-store";
 import { deleteBoardComment, deleteBoardThread, loadBoardCommentEdits, loadDeletedBoardCommentIds, loadDeletedBoardThreadIds, saveBoardCommentEdit } from "@/lib/board-content-store";
 import { CalendarField } from "@/components/calendar-field";
+import { isRecruitmentBoardCategory, sortRecruitmentThreads } from "@/lib/board-recruitment";
 
 const BOARD_MENTION_GROUPS = getMentionGroups(MEMBERS, CLUBS);
 const THREAD_REACTION_EMOJIS = ["👏", "😊", "❤️", "🎉", "😋"] as const;
@@ -133,15 +134,11 @@ function BoardVideo({ uri }: { uri: string }) {
 }
 
 function LinkifiedText({ content }: { content: string }) {
-  const colors = useColors();
-  const parts = content.split(/(https?:\/\/[^\s]+)/g);
-  return (
-    <Text style={{ fontSize: 14, lineHeight: 21, color: colors.foreground }}>
-      {parts.map((part, index) => /^https?:\/\//i.test(part)
-        ? <Text key={`${part}-${index}`} accessibilityRole="link" onPress={() => void Linking.openURL(part.replace(/[、。),]+$/, ""))} style={{ color: "#3478C7", textDecorationLine: "underline", fontWeight: "700" }}>{part}</Text>
-        : <Text key={index}>{part}</Text>)}
-    </Text>
-  );
+  return <MentionText content={content} groups={BOARD_MENTION_GROUPS} />;
+}
+
+function RecruitmentStatusBadge({ recruiting, onLongPress }: { recruiting: boolean; onLongPress?: () => void }) {
+  return <Pressable disabled={!onLongPress} onLongPress={onLongPress} delayLongPress={450} accessibilityLabel={recruiting ? "募集中。長押しで状態を変更" : "募集終了。長押しで状態を変更"} style={{ marginRight: 9, borderRadius: 10, paddingHorizontal: 9, paddingVertical: 6, backgroundColor: recruiting ? "#DDF3E3" : "#DADADD" }}><Text style={{ fontSize: 11, fontWeight: "900", color: recruiting ? "#247A42" : "#66666B" }}>{recruiting ? "募集中" : "募集終了"}</Text></Pressable>;
 }
 
 
@@ -289,13 +286,15 @@ function SelfIntroductionContent({ thread, compact = false }: { thread: BoardThr
   );
 }
 
-function ThreadCard({ thread, onPress, onEdit }: { thread: BoardThread; onPress: () => void; onEdit?: () => void }) {
+function ThreadCard({ thread, onPress, onEdit, onChangeRecruitment }: { thread: BoardThread; onPress: () => void; onEdit?: () => void; onChangeRecruitment?: () => void }) {
   const colors = useColors();
   const router = useRouter();
   const isParticipant = thread.recruitParticipants?.includes(CURRENT_USER.id);
   const [cardReactions, setCardReactions] = useState(thread.reactions ?? {});
   const cardEmoji = thread.selfIntroduction ? "🎉" : thread.mealReport ? "❤️" : null;
   const contestOpen = thread.gourmetContest ? isContestCommentingOpen(thread) : false;
+  const recruitmentManaged = isRecruitmentBoardCategory(thread.category);
+  const visuallyClosed = (thread.gourmetContest && !contestOpen) || (recruitmentManaged && !thread.isRecruiting);
   useEffect(() => { void loadThreadReactions(thread.id, thread.reactions).then(setCardReactions); }, [thread.id, thread.reactions]);
   const toggleCardReaction = () => {
     if (!cardEmoji) return;
@@ -322,15 +321,17 @@ function ThreadCard({ thread, onPress, onEdit }: { thread: BoardThread; onPress:
   return (
     <Pressable
       onPress={onPress}
+      onLongPress={onChangeRecruitment}
+      delayLongPress={450}
       style={{
-        backgroundColor: thread.gourmetContest && !contestOpen ? "#F1F1F3" : colors.surface,
+        backgroundColor: visuallyClosed ? "#F1F1F3" : colors.surface,
         borderRadius: 14,
         marginHorizontal: 16,
         marginBottom: 10,
         padding: 14,
         borderWidth: 1,
-        borderColor: thread.gourmetContest && !contestOpen ? "#D2D2D6" : "#E1E1E4",
-        opacity: thread.gourmetContest && !contestOpen ? 0.72 : 1,
+        borderColor: visuallyClosed ? "#D2D2D6" : "#E1E1E4",
+        opacity: visuallyClosed ? 0.72 : 1,
       }}
     >
       {/* Author */}
@@ -338,7 +339,7 @@ function ThreadCard({ thread, onPress, onEdit }: { thread: BoardThread; onPress:
         onPress={() => router.push({ pathname: "/member-profile", params: { id: thread.author.id } })}
         style={{ flexDirection: "row", alignItems: "center", marginBottom: 8 }}
       >
-        {thread.gourmetContest ? <View style={{ marginRight: 9, borderRadius: 10, paddingHorizontal: 9, paddingVertical: 6, backgroundColor: contestOpen ? "#DDF3E3" : "#DADADD" }}><Text style={{ fontSize: 11, fontWeight: "900", color: contestOpen ? "#247A42" : "#66666B" }}>{contestOpen ? "開催中" : "開催終了"}</Text></View> : null}
+        {recruitmentManaged ? <RecruitmentStatusBadge recruiting={thread.isRecruiting} onLongPress={onChangeRecruitment} /> : thread.gourmetContest ? <View style={{ marginRight: 9, borderRadius: 10, paddingHorizontal: 9, paddingVertical: 6, backgroundColor: contestOpen ? "#DDF3E3" : "#DADADD" }}><Text style={{ fontSize: 11, fontWeight: "900", color: contestOpen ? "#247A42" : "#66666B" }}>{contestOpen ? "開催中" : "開催終了"}</Text></View> : null}
         <Image
           source={thread.author.avatar}
           style={{ width: 30, height: 30, borderRadius: 15 }}
@@ -427,7 +428,7 @@ function ThreadCard({ thread, onPress, onEdit }: { thread: BoardThread; onPress:
       )}
 
       {/* Recruiting badge */}
-      {thread.isRecruiting && (
+      {thread.isRecruiting && !recruitmentManaged && (
         <View
           style={{
             flexDirection: "row",
@@ -628,12 +629,14 @@ function ThreadDetailModal({
   initialComments = [],
   onClose,
   onEditThread,
+  onChangeRecruitment,
   canModerateAll = false,
 }: {
   thread: BoardThread;
   initialComments?: BoardComment[];
   onClose: () => void;
   onEditThread?: () => void;
+  onChangeRecruitment?: () => void;
   canModerateAll?: boolean;
 }) {
   const colors = useColors();
@@ -674,6 +677,7 @@ function ThreadDetailModal({
   const isAuthor = thread.author.id === CURRENT_USER.id;
   const isParticipant = (thread.recruitParticipants ?? []).includes(CURRENT_USER.id);
   const isContest = Boolean(thread.gourmetContest);
+  const recruitmentManaged = isRecruitmentBoardCategory(thread.category);
   const pollAllowed = !["introduction", "meal-report", "gourmet-contest", "gourmet-advice"].includes(thread.category);
   const contestCommentingOpen = isContest ? isContestCommentingOpen(thread) : true;
   const contestReferenceUrlValid = !contestReferenceUrl.trim() || /^https?:\/\/\S+$/i.test(contestReferenceUrl.trim());
@@ -885,6 +889,7 @@ function ThreadDetailModal({
         <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16 }}>
           {/* Thread content */}
           <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 12 }}>
+            {recruitmentManaged ? <RecruitmentStatusBadge recruiting={thread.isRecruiting} onLongPress={onChangeRecruitment} /> : null}
             <Image
               source={thread.author.avatar}
               style={{ width: 36, height: 36, borderRadius: 18 }}
@@ -915,6 +920,11 @@ function ThreadDetailModal({
           ) : (
             <View style={{ marginBottom: 16 }}><MentionText content={thread.preview} groups={mentionGroups} /></View>
           )}
+
+          {recruitmentManaged ? <Pressable onPress={() => {
+            onClose();
+            router.push({ pathname: "/create-event", params: { sourceThreadId: thread.id, sourceTitle: thread.title, sourceDescription: thread.preview, sourceCategory: thread.category } });
+          }} style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", minHeight: 46, borderRadius: 13, backgroundColor: "#18171A", marginBottom: 16 }}><IconSymbol name="calendar.badge.plus" size={18} color="#FFF" /><Text style={{ marginLeft: 8, color: "#FFF", fontSize: 14, fontWeight: "900" }}>イベントとして登録</Text></Pressable> : null}
 
           {thread.poll ? <PollCard ownerKey={`thread:${thread.id}`} poll={thread.poll} /> : null}
 
@@ -959,7 +969,7 @@ function ThreadDetailModal({
           {thread.videos?.map((uri) => <View key={uri} style={{ marginBottom: 20 }}><BoardVideo uri={uri} /></View>)}
 
           {/* 募集中バナー（投稿者向け：チャット作成ボタン付き） */}
-          {thread.isRecruiting && (
+          {thread.isRecruiting && !recruitmentManaged && (
             <View
               style={{
                 backgroundColor: "#A7C7E710",
@@ -1574,6 +1584,7 @@ function CreateThreadModal({
   const isGourmetAdvice = category === "gourmet-advice";
   const isIntroduction = category === "introduction";
   const isGourmetContest = category === "gourmet-contest";
+  const hasManagedRecruitmentStatus = isRecruitmentBoardCategory(category);
   const pollAllowed = !["introduction", "meal-report", "gourmet-contest", "gourmet-advice"].includes(category);
   const googleMapUrlValid = !googleMapUrl.trim() || isGoogleMapsUrl(googleMapUrl);
   const tabelogUrlValid = !tabelogUrl.trim() || /^https?:\/\/(?:www\.)?tabelog\.com\//i.test(tabelogUrl.trim());
@@ -1660,8 +1671,8 @@ function CreateThreadModal({
       preview: isMealReport
         ? normalizedComment || normalizedMenu || `${resolvedArea}でいただきました。`
         : isGourmetAdvice ? adviceComment.trim() : isIntroduction ? introductionText.trim() : content.trim(),
-      isRecruiting: isMealReport || isGourmetAdvice || isIntroduction || isGourmetContest ? false : isRecruiting,
-      recruitCapacity: !isMealReport && !isGourmetAdvice && !isIntroduction && !isGourmetContest && isRecruiting ? parseInt(capacity || "10", 10) : undefined,
+      isRecruiting: hasManagedRecruitmentStatus ? true : isMealReport || isGourmetAdvice || isIntroduction || isGourmetContest ? false : isRecruiting,
+      recruitCapacity: !hasManagedRecruitmentStatus && !isMealReport && !isGourmetAdvice && !isIntroduction && !isGourmetContest && isRecruiting ? parseInt(capacity || "10", 10) : undefined,
       recruitAttendees: 0,
       recruitParticipants: [],
       recruitApplicants: [],
@@ -2030,7 +2041,7 @@ function CreateThreadModal({
             {pollEnabled && !pollValid ? <Text style={{ fontSize: 12, color: colors.error, marginTop: 6 }}>質問・選択肢2つ以上・期限を入力してください</Text> : null}
           </View> : null}
 
-          {!isMealReport && !isGourmetAdvice && !isIntroduction && !isGourmetContest ? (
+          {hasManagedRecruitmentStatus ? <View style={{ flexDirection: "row", alignItems: "center", backgroundColor: "#EEF7F0", borderRadius: 12, padding: 13, marginBottom: 16, borderWidth: 1, borderColor: "#CFE7D5" }}><RecruitmentStatusBadge recruiting /><Text style={{ flex: 1, fontSize: 12, lineHeight: 18, color: "#356845" }}>新規投稿は「募集中」で公開されます。投稿後に長押しすると募集終了へ変更できます。</Text></View> : !isMealReport && !isGourmetAdvice && !isIntroduction && !isGourmetContest ? (
             <>
               {/* Recruiting toggle */}
               <Pressable
@@ -2121,6 +2132,7 @@ export default function BoardScreen() {
   const { user: authUser } = useAuthContext();
   const userIsAdmin = canManageBoardCategories(authUser?.role);
   const userCanManageContests = canManageGourmetContests(authUser?.role);
+  const userCanModerateRecruitment = isOperatorRole(authUser?.role);
   const clubs = useClubs();
   const [categories, setCategories] = useState<BoardCategory[]>(BOARD_CATEGORIES);
   const [activeGroup, setActiveGroup] = useState<BoardCategory["group"]>("all");
@@ -2199,7 +2211,22 @@ export default function BoardScreen() {
     () => applyBoardThreadEdits([...dynamicThreads, ...BOARD_THREADS], editedThreads).filter((thread) => !deletedThreadIds.includes(thread.id)),
     [dynamicThreads, editedThreads, deletedThreadIds],
   );
-  const filteredThreads = allThreads.filter((t) => t.category === activeCategory);
+  const filteredThreads = sortRecruitmentThreads(allThreads.filter((t) => t.category === activeCategory));
+  const canChangeRecruitment = (thread: BoardThread) => isRecruitmentBoardCategory(thread.category) && (thread.author.id === CURRENT_USER.id || userCanModerateRecruitment);
+  const updateRecruitmentStatus = (thread: BoardThread, isRecruiting: boolean) => {
+    const updated = { ...thread, isRecruiting, lastUpdated: new Date().toISOString() };
+    setEditedThreads((current) => ({ ...current, [updated.id]: updated }));
+    setSelectedThread((current) => current?.id === updated.id ? updated : current);
+    void saveBoardThreadEdit(updated).catch(() => Alert.alert("保存できませんでした", "通信環境を確認して、もう一度お試しください。"));
+  };
+  const promptRecruitmentStatus = (thread: BoardThread) => {
+    if (!canChangeRecruitment(thread)) return;
+    Alert.alert("募集ステータス", "表示する状態を選択してください。", [
+      { text: "募集中にする", onPress: () => updateRecruitmentStatus(thread, true) },
+      { text: "募集終了にする", onPress: () => updateRecruitmentStatus(thread, false) },
+      { text: "キャンセル", style: "cancel" },
+    ]);
+  };
   useEffect(() => {
     if (!threadParam) return;
     const linkedThread = allThreads.find((item) => item.id === threadParam);
@@ -2344,6 +2371,7 @@ export default function BoardScreen() {
             thread={item}
             onPress={() => { setSelectedThread(item); router.setParams({ thread: item.id }); }}
             onEdit={item.author.id === CURRENT_USER.id || userIsAdmin ? () => setEditingThread(item) : undefined}
+            onChangeRecruitment={canChangeRecruitment(item) ? () => promptRecruitmentStatus(item) : undefined}
           />
         )}
         refreshControl={
@@ -2384,6 +2412,7 @@ export default function BoardScreen() {
             initialComments={importedComments[selectedThread.id] ?? []}
             onClose={() => { setSelectedThread(null); router.setParams({ thread: "" }); }}
             onEditThread={selectedThread.author.id === CURRENT_USER.id || userIsAdmin ? () => { setEditingThread(selectedThread); setSelectedThread(null); router.setParams({ thread: "" }); } : undefined}
+            onChangeRecruitment={canChangeRecruitment(selectedThread) ? () => promptRecruitmentStatus(selectedThread) : undefined}
             canModerateAll={userIsAdmin}
           />
         )}
