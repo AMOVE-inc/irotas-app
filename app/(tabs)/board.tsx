@@ -35,6 +35,7 @@ import { applyTextFormat, type TextFormat, type TextSelection } from "@/lib/text
 import { toggleReactionMember } from "@/lib/chat-reactions";
 import { awardContestWinnerOnce, buildContestEntryContent, createContestAwardComment, getContestWinner, isContestCommentingOpen, isContestEntryValid } from "@/lib/gourmet-contest";
 import { loadImportedGourmetContests } from "@/lib/gourmet-contest-import";
+import { loadDiscordBoardArchive } from "@/lib/discord-board-import";
 import { loadCommentReactions, loadThreadReactions, saveCommentReactions, saveThreadReactions } from "@/lib/board-reactions";
 import { applyBoardThreadEdits, loadBoardThreadEdits, saveBoardThreadEdit } from "@/lib/board-thread-edits";
 import { Image } from "expo-image";
@@ -1979,6 +1980,15 @@ export default function BoardScreen() {
   }, []);
 
   useEffect(() => {
+    const archive = loadDiscordBoardArchive();
+    setDynamicThreads((current) => {
+      const withoutDiscordArchive = current.filter((thread) => !thread.id.startsWith("discord-board-"));
+      return [...archive.threads, ...withoutDiscordArchive];
+    });
+    setImportedComments((current) => ({ ...current, ...archive.comments }));
+  }, []);
+
+  useEffect(() => {
     void loadBoardThreadEdits().then(setEditedThreads);
   }, []);
 
@@ -2177,7 +2187,7 @@ export default function BoardScreen() {
           <ThreadCard
             thread={item}
             onPress={() => { setSelectedThread(item); router.setParams({ thread: item.id }); }}
-            onEdit={(item.author.id === CURRENT_USER.id || (item.category === "gourmet-contest" && userCanManageContests)) && !item.mealReport ? () => setEditingThread(item) : undefined}
+            onEdit={(item.author.id === CURRENT_USER.id || (userCanManageContests && (item.category === "gourmet-contest" || item.id.startsWith("discord-board-")))) && !item.mealReport ? () => setEditingThread(item) : undefined}
           />
         )}
         refreshControl={
@@ -2217,7 +2227,7 @@ export default function BoardScreen() {
             thread={selectedThread}
             initialComments={importedComments[selectedThread.id] ?? []}
             onClose={() => { setSelectedThread(null); router.setParams({ thread: "" }); }}
-            onEditThread={(selectedThread.author.id === CURRENT_USER.id || (selectedThread.category === "gourmet-contest" && userCanManageContests)) ? () => { setEditingThread(selectedThread); setSelectedThread(null); router.setParams({ thread: "" }); } : undefined}
+            onEditThread={(selectedThread.author.id === CURRENT_USER.id || (userCanManageContests && (selectedThread.category === "gourmet-contest" || selectedThread.id.startsWith("discord-board-")))) ? () => { setEditingThread(selectedThread); setSelectedThread(null); router.setParams({ thread: "" }); } : undefined}
           />
         )}
       </Modal>
