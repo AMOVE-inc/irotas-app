@@ -195,6 +195,7 @@ export interface BoardThread {
   chatId?: string; // private chat id
   eventDate?: string; // 開催日（今日のイベント表示用）
   images?: BoardImage[]; // 投稿添付画像 URLs / bundled assets
+  videos?: string[]; // Discord移行投稿などの添付動画 URLs
   mealReport?: {
     restaurantName: string;
     prefecture: string;
@@ -241,6 +242,7 @@ export interface BoardComment {
   content: string;
   createdAt: string;
   images?: BoardImage[];
+  videos?: string[];
   reactions?: Record<string, string[]>;
   /** 締切後の結果発表など、運営が自動投稿したコメント。 */
   isSystem?: boolean;

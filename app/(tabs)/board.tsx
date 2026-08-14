@@ -37,6 +37,7 @@ import { awardContestWinnerOnce, createContestAwardComment, getContestWinner, is
 import { loadImportedGourmetContests } from "@/lib/gourmet-contest-import";
 import { loadCommentReactions, loadThreadReactions, saveCommentReactions, saveThreadReactions } from "@/lib/board-reactions";
 import { Image } from "expo-image";
+import { useVideoPlayer, VideoView } from "expo-video";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
 import { useState, useCallback, useEffect, useMemo, useRef } from "react";
@@ -65,6 +66,11 @@ const BOARD_GROUPS: { key: BoardCategory["group"]; label: string }[] = [
 const BOARD_MENTION_GROUPS = getMentionGroups(MEMBERS, CLUBS);
 const THREAD_REACTION_EMOJIS = ["👏", "😊", "❤️", "🎉", "😋"] as const;
 const boardImageSource = (image: BoardImage) => typeof image === "string" ? { uri: image } : image;
+
+function BoardVideo({ uri }: { uri: string }) {
+  const player = useVideoPlayer(uri);
+  return <VideoView player={player} nativeControls style={{ width: "100%", aspectRatio: 1, borderRadius: 14, backgroundColor: "#111" }} />;
+}
 
 function LinkifiedText({ content }: { content: string }) {
   const colors = useColors();
@@ -808,6 +814,7 @@ function ThreadDetailModal({
               ))}
             </View>
           )}
+          {thread.videos?.map((uri) => <View key={uri} style={{ marginBottom: 20 }}><BoardVideo uri={uri} /></View>)}
 
           {/* 募集中バナー（投稿者向け：チャット作成ボタン付き） */}
           {thread.isRecruiting && (
@@ -923,6 +930,7 @@ function ThreadDetailModal({
                     {comment.images.map((uri, index) => <Image key={`${comment.id}-image-${index}`} source={boardImageSource(uri)} style={{ width: 104, height: 104, borderRadius: 10, backgroundColor: colors.surface }} contentFit="cover" />)}
                   </ScrollView>
                 ) : null}
+                {comment.videos?.length ? <View style={{ marginLeft: 32, marginTop: 8, gap: 8 }}>{comment.videos.map((uri) => <BoardVideo key={uri} uri={uri} />)}</View> : null}
                 {isContest && !comment.isSystem ? <Pressable onPress={() => handleCommentHeart(comment.id)} disabled={!contestCommentingOpen} style={{ marginLeft: 32, marginTop: 7, flexDirection: "row", alignItems: "center", alignSelf: "flex-start", borderRadius: 14, paddingHorizontal: 9, paddingVertical: 4, backgroundColor: (comment.reactions?.["❤️"] ?? []).includes(CURRENT_USER.id) ? "#FFE4EA" : colors.surface, borderWidth: 1, borderColor: colors.border }}><Text style={{ fontSize: 15 }}>❤️</Text><Text style={{ fontSize: 11, fontWeight: "800", color: colors.muted, marginLeft: 4 }}>{comment.reactions?.["❤️"]?.length ?? 0}</Text></Pressable> : null}
               </View>
             ))}
