@@ -20,14 +20,15 @@ export function getContestWinner(comments: BoardComment[]): BoardComment | undef
 export function createContestAwardComment(thread: BoardThread, winner: BoardComment): BoardComment | undefined {
   const points = thread.gourmetContest?.prizePoints;
   if (!thread.gourmetContest || thread.gourmetContest.archived || !points) return undefined;
-  const hearts = winner.reactions?.["❤️"]?.length ?? 0;
+  const contestTitle = thread.title.includes("選手権") ? thread.title : `${thread.title}選手権`;
+  const prizeLabel = thread.gourmetContest.prizeTitle ?? `IRO+ポイント ${points.toLocaleString("ja-JP")}pt`;
   return {
     id: `contest-award-${thread.id}`,
     threadId: thread.id,
     author: thread.author,
     isSystem: true,
     createdAt: `${thread.gourmetContest.commentDeadline}T23:59:59+09:00`,
-    content: `結果発表\n@${winner.author.name}さんが❤️${hearts}件で優勝しました！\n優勝景品としてIRO+ポイント ${points}ptを付与しました。おめでとうございます！`,
+    content: `@everyone\n\n**# ${contestTitle}** 結果発表🏆\n\n見事一位に選ばれたのは...\n**@${winner.author.name}   さん！おめでとうございます🎉**\n景品として**【${prizeLabel}】**をプレゼントさせていただきます🎁\n\nぜひ次回のグルメ選手権もご参加お待ちしております！`,
   };
 }
 

@@ -19,8 +19,7 @@ describe("gourmet contest", () => {
     const winner = getContestWinner(comments)!;
     const award = createContestAwardComment(contest, winner)!;
     expect(award.isSystem).toBe(true);
-    expect(award.content).toContain(`@${winner.author.name}さん`);
-    expect(award.content).toContain("500pt");
+    expect(award.content).toBe(`@everyone\n\n**# ${contest.title}** 結果発表🏆\n\n見事一位に選ばれたのは...\n**@${winner.author.name}   さん！おめでとうございます🎉**\n景品として**【IRO+ポイント 500pt】**をプレゼントさせていただきます🎁\n\nぜひ次回のグルメ選手権もご参加お待ちしております！`);
   });
 
   it("does not count an automatic award comment as an entrant", () => {

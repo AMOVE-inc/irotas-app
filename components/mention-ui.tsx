@@ -27,18 +27,19 @@ export function MentionText({ content, outgoing = false, groups, rooms = getAllR
   });
 
   const renderRich = (value: string, keyPrefix: string): React.ReactNode => {
-    const pattern = /(\*\*([\s\S]+?)\*\*|__([\s\S]+?)__|~~([\s\S]+?)~~|\[small\]([\s\S]+?)\[\/small\]|\[large\]([\s\S]+?)\[\/large\])/;
+    const pattern = /(\*\*# ([\s\S]+?)\*\*|\*\*([\s\S]+?)\*\*|__([\s\S]+?)__|~~([\s\S]+?)~~|\[small\]([\s\S]+?)\[\/small\]|\[large\]([\s\S]+?)\[\/large\])/;
     const match = pattern.exec(value);
     if (!match || match.index === undefined) return renderPlain(value, keyPrefix);
     const before = value.slice(0, match.index);
     const after = value.slice(match.index + match[0].length);
     let inner = "";
     let style: TextStyle = {};
-    if (match[2] !== undefined) { inner = match[2]; style = { fontWeight: "900" }; }
-    else if (match[3] !== undefined) { inner = match[3]; style = { textDecorationLine: "underline" }; }
-    else if (match[4] !== undefined) { inner = match[4]; style = { textDecorationLine: "line-through" }; }
-    else if (match[5] !== undefined) { inner = match[5]; style = { fontSize: 12, lineHeight: 18 }; }
-    else { inner = match[6]; style = { fontSize: 18, lineHeight: 25 }; }
+    if (match[2] !== undefined) { inner = match[2]; style = { fontSize: 18, lineHeight: 25, fontWeight: "900" }; }
+    else if (match[3] !== undefined) { inner = match[3]; style = { fontWeight: "900" }; }
+    else if (match[4] !== undefined) { inner = match[4]; style = { textDecorationLine: "underline" }; }
+    else if (match[5] !== undefined) { inner = match[5]; style = { textDecorationLine: "line-through" }; }
+    else if (match[6] !== undefined) { inner = match[6]; style = { fontSize: 12, lineHeight: 18 }; }
+    else { inner = match[7]; style = { fontSize: 18, lineHeight: 25 }; }
     return <>{renderRich(before, `${keyPrefix}-before`)}<Text key={`${keyPrefix}-formatted`} style={style}>{renderRich(inner, `${keyPrefix}-inner`)}</Text>{renderRich(after, `${keyPrefix}-after`)}</>;
   };
   return (
