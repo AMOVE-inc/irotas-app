@@ -49,6 +49,11 @@ export function canManageBoardCategories(role: unknown): boolean {
   return isAdminRole(role);
 }
 
+/** グルメ選手権の作成・編集は管理者と運営メンバーに限定する。 */
+export function canManageGourmetContests(role: unknown): boolean {
+  return isOperatorRole(role);
+}
+
 /** New clubs affect the whole community and may only be created by administrators. */
 export function canCreateClub(role: unknown): boolean {
   return isAdminRole(role);

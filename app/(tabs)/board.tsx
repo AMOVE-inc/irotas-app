@@ -20,7 +20,7 @@ import {
 import { useAuthContext } from "@/lib/auth-context";
 import { useColors } from "@/hooks/use-colors";
 import { createBoardChat } from "@/lib/chat-store";
-import { canManageBoardCategories, canViewClubThread } from "@/lib/access-control";
+import { canManageBoardCategories, canManageGourmetContests, canViewClubThread } from "@/lib/access-control";
 import { GOURMET_ADVICE_BUDGETS, isGoogleMapsUrl, MEAL_BUDGETS } from "@/lib/meal-report";
 import { communityRestaurantFromMealReport, registerCommunityRestaurant } from "@/lib/gourmet-map-community";
 import { resolveRestaurantLocation } from "@/lib/restaurant-location";
@@ -33,7 +33,7 @@ import { getMentionGroups, getMentionQuery, getMentionedMemberIds, insertMention
 import { sendMentionNotification } from "@/lib/notifications";
 import { applyTextFormat, type TextFormat, type TextSelection } from "@/lib/text-formatting";
 import { toggleReactionMember } from "@/lib/chat-reactions";
-import { awardContestWinnerOnce, createContestAwardComment, getContestWinner, isContestCommentingOpen } from "@/lib/gourmet-contest";
+import { awardContestWinnerOnce, buildContestEntryContent, createContestAwardComment, getContestWinner, isContestCommentingOpen, isContestEntryValid } from "@/lib/gourmet-contest";
 import { loadImportedGourmetContests } from "@/lib/gourmet-contest-import";
 import { loadCommentReactions, loadThreadReactions, saveCommentReactions, saveThreadReactions } from "@/lib/board-reactions";
 import { Image } from "expo-image";
@@ -540,6 +540,9 @@ function ThreadDetailModal({
   const [contestRestaurant, setContestRestaurant] = useState("");
   const [contestMenu, setContestMenu] = useState("");
   const [contestPitch, setContestPitch] = useState("");
+  const [contestReferenceUrl, setContestReferenceUrl] = useState("");
+  const [contestImages, setContestImages] = useState<string[]>([]);
+  const [showContestComposer, setShowContestComposer] = useState(false);
   const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
   const [editingCommentText, setEditingCommentText] = useState("");
   const [mentionQuery, setMentionQuery] = useState<string | null>(null);
@@ -564,6 +567,8 @@ function ThreadDetailModal({
   const isPlatinum = thread.author.rank === "platinum";
   const isContest = Boolean(thread.gourmetContest);
   const contestCommentingOpen = isContest ? isContestCommentingOpen(thread) : true;
+  const contestReferenceUrlValid = !contestReferenceUrl.trim() || /^https?:\/\/\S+$/i.test(contestReferenceUrl.trim());
+  const contestFormValid = isContestEntryValid({ restaurant: contestRestaurant, menu: contestMenu, pitch: contestPitch, referenceUrl: contestReferenceUrl });
 
   useEffect(() => {
     void Promise.all([
@@ -594,8 +599,9 @@ function ThreadDetailModal({
 
   const handleComment = () => {
     if (!contestCommentingOpen) return;
+    if (isContest && !contestFormValid) return;
     const content = isContest
-      ? `・店名 / 場所：${contestRestaurant.trim()}\n・メニュー / 商品名：${contestMenu.trim()}\n・推しポイント（一言でOK）：${contestPitch.trim()}`
+      ? buildContestEntryContent({ restaurant: contestRestaurant, menu: contestMenu, pitch: contestPitch, referenceUrl: contestReferenceUrl })
       : commentText.trim();
     if (isContest ? !contestRestaurant.trim() || !contestMenu.trim() || !contestPitch.trim() : !content) return;
     const newComment: BoardComment = {
@@ -604,6 +610,7 @@ function ThreadDetailModal({
       author: CURRENT_USER,
       content,
       createdAt: new Date().toISOString(),
+      images: isContest && contestImages.length ? contestImages : undefined,
     };
     setComments([...comments, newComment]);
     if (thread.category === "gourmet-contest") void recordHomeActivity({ id: `comment:${newComment.id}`, kind: "contest_comment", title: `${thread.title}にコメントが追加されました`, description: content, createdAt: newComment.createdAt, route: "/board", params: { category: "gourmet-contest", view: "threads" } });
@@ -611,6 +618,9 @@ function ThreadDetailModal({
     setContestRestaurant("");
     setContestMenu("");
     setContestPitch("");
+    setContestReferenceUrl("");
+    setContestImages([]);
+    setShowContestComposer(false);
     setCommentSelection({ start: 0, end: 0 });
     setMentionQuery(null);
     const preview = content.length > 50 ? `${content.slice(0, 50)}...` : content;
@@ -618,6 +628,24 @@ function ThreadDetailModal({
       const member = MEMBERS.find((item) => item.id === memberId);
       if (member) void sendMentionNotification(member.name, CURRENT_USER.name, thread.title || "自己紹介", preview);
     }
+  };
+
+  const handlePickContestImages = async () => {
+    if (contestImages.length >= 5) return;
+    if (Platform.OS !== "web") {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== "granted") {
+        Alert.alert("権限が必要です", "写真ライブラリへのアクセスを許可してください");
+        return;
+      }
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ["images"],
+      allowsMultipleSelection: true,
+      quality: 0.8,
+      selectionLimit: 5 - contestImages.length,
+    });
+    if (!result.canceled) setContestImages((current) => [...current, ...result.assets.map((asset) => asset.uri)].slice(0, 5));
   };
 
   const handleSaveCommentEdit = (commentId: string) => {
@@ -939,12 +967,8 @@ function ThreadDetailModal({
 
         {/* Comment input */}
         {contestCommentingOpen ? <View style={{ backgroundColor: colors.background, borderTopWidth: 0.5, borderTopColor: colors.border }}>
-          {isContest ? <View style={{ paddingHorizontal: 16, paddingTop: 12, gap: 8 }}>
-            <Text style={{ fontSize: 14, fontWeight: "900", color: colors.foreground }}>選手権に投稿する</Text>
-            <TextInput value={contestRestaurant} onChangeText={setContestRestaurant} placeholder="店名 / 場所" placeholderTextColor={colors.muted} style={{ backgroundColor: colors.surface, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, fontSize: 14, color: colors.foreground }} />
-            <TextInput value={contestMenu} onChangeText={setContestMenu} placeholder="メニュー / 商品名" placeholderTextColor={colors.muted} style={{ backgroundColor: colors.surface, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, fontSize: 14, color: colors.foreground }} />
-            <TextInput value={contestPitch} onChangeText={setContestPitch} placeholder="推しポイント（一言でOK）" placeholderTextColor={colors.muted} multiline style={{ backgroundColor: colors.surface, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, minHeight: 58, fontSize: 14, color: colors.foreground }} />
-            <Pressable onPress={handleComment} disabled={!contestRestaurant.trim() || !contestMenu.trim() || !contestPitch.trim()} style={{ backgroundColor: contestRestaurant.trim() && contestMenu.trim() && contestPitch.trim() ? "#D45470" : colors.border, borderRadius: 11, paddingVertical: 11, alignItems: "center" }}><Text style={{ fontSize: 14, fontWeight: "900", color: "#FFF" }}>投稿する</Text></Pressable>
+          {isContest ? <View style={{ paddingHorizontal: 16, paddingTop: 10, paddingBottom: Platform.OS === "ios" ? Math.max(insets.bottom, 10) : 10 }}>
+            <Pressable accessibilityLabel="選手権に投稿する" onPress={() => setShowContestComposer(true)} style={{ backgroundColor: "#D45470", borderRadius: 13, paddingVertical: 13, alignItems: "center" }}><Text style={{ fontSize: 15, fontWeight: "900", color: "#FFF" }}>選手権に投稿する</Text></Pressable>
           </View> : <>
           {mentionQuery !== null ? <MentionSuggestions query={mentionQuery} groups={mentionGroups} members={MEMBERS.filter((member) => member.id !== CURRENT_USER.id)} onSelect={handleCommentMention} /> : null}
           <Text style={{ fontSize: 11, color: colors.muted, paddingHorizontal: 16, paddingTop: 6 }}>@を入力して個人・グループをメンション</Text>
@@ -986,6 +1010,25 @@ function ThreadDetailModal({
           </>}
         </View> : <View style={{ padding: 14, backgroundColor: colors.surface, borderTopWidth: 1, borderTopColor: colors.border }}><Text style={{ textAlign: "center", fontSize: 13, fontWeight: "700", color: colors.muted }}>コメント募集は終了しました</Text></View>}
       </KeyboardAvoidingView>
+
+      <Modal visible={showContestComposer} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setShowContestComposer(false)}>
+        <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ flex: 1, backgroundColor: colors.background }}>
+          <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 16, paddingTop: 16, paddingBottom: 12, borderBottomWidth: 1, borderBottomColor: colors.border }}>
+            <Pressable onPress={() => setShowContestComposer(false)} style={{ paddingVertical: 5, paddingRight: 12 }}><Text style={{ fontSize: 14, color: colors.muted }}>キャンセル</Text></Pressable>
+            <Text style={{ fontSize: 17, fontWeight: "900", color: colors.foreground }}>選手権に投稿する</Text>
+            <View style={{ width: 70 }} />
+          </View>
+          <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ padding: 16, paddingBottom: 30, gap: 13 }}>
+            <Text style={{ fontSize: 12, color: colors.muted }}><Text style={{ color: "#D45470", fontWeight: "900" }}>*</Text> は必須項目です</Text>
+            <View><Text style={{ fontSize: 13, fontWeight: "800", color: colors.foreground, marginBottom: 6 }}>店名 / 場所 <Text style={{ color: "#D45470" }}>*</Text></Text><TextInput value={contestRestaurant} onChangeText={setContestRestaurant} placeholder="例：〇〇食堂 / 恵比寿" placeholderTextColor={colors.muted} style={{ backgroundColor: colors.surface, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 12, fontSize: 14, color: colors.foreground, borderWidth: 1, borderColor: colors.border }} /></View>
+            <View><Text style={{ fontSize: 13, fontWeight: "800", color: colors.foreground, marginBottom: 6 }}>メニュー / 商品名 <Text style={{ color: "#D45470" }}>*</Text></Text><TextInput value={contestMenu} onChangeText={setContestMenu} placeholder="例：季節のコース" placeholderTextColor={colors.muted} style={{ backgroundColor: colors.surface, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 12, fontSize: 14, color: colors.foreground, borderWidth: 1, borderColor: colors.border }} /></View>
+            <View><Text style={{ fontSize: 13, fontWeight: "800", color: colors.foreground, marginBottom: 6 }}>推しポイント（一言でOK） <Text style={{ color: "#D45470" }}>*</Text></Text><TextInput value={contestPitch} onChangeText={setContestPitch} placeholder="おすすめの理由を入力" placeholderTextColor={colors.muted} multiline style={{ backgroundColor: colors.surface, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 12, minHeight: 88, textAlignVertical: "top", fontSize: 14, color: colors.foreground, borderWidth: 1, borderColor: colors.border }} /></View>
+            <View><Text style={{ fontSize: 13, fontWeight: "800", color: colors.foreground, marginBottom: 6 }}>参考URL（食べログ・GoogleMapなど） <Text style={{ fontSize: 11, color: colors.muted }}>任意</Text></Text><TextInput value={contestReferenceUrl} onChangeText={setContestReferenceUrl} placeholder="https://..." placeholderTextColor={colors.muted} autoCapitalize="none" keyboardType="url" style={{ backgroundColor: colors.surface, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 12, fontSize: 14, color: colors.foreground, borderWidth: 1, borderColor: contestReferenceUrlValid ? colors.border : "#D45470" }} />{!contestReferenceUrlValid ? <Text style={{ color: "#D45470", fontSize: 11, marginTop: 5 }}>http:// または https:// から始まるURLを入力してください</Text> : null}</View>
+            <View><View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 7 }}><Text style={{ fontSize: 13, fontWeight: "800", color: colors.foreground }}>写真 <Text style={{ fontSize: 11, color: colors.muted }}>任意・最大5枚</Text></Text><Text style={{ fontSize: 11, color: colors.muted }}>{contestImages.length}/5</Text></View><View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>{contestImages.map((uri, index) => <View key={`${uri}-${index}`}><Image source={{ uri }} style={{ width: 82, height: 82, borderRadius: 10 }} contentFit="cover" /><Pressable accessibilityLabel={`写真${index + 1}を削除`} onPress={() => setContestImages((current) => current.filter((_, itemIndex) => itemIndex !== index))} style={{ position: "absolute", right: -5, top: -5, width: 22, height: 22, borderRadius: 11, backgroundColor: "#333", alignItems: "center", justifyContent: "center" }}><Text style={{ color: "#FFF", fontSize: 13, fontWeight: "900" }}>×</Text></Pressable></View>)}{contestImages.length < 5 ? <Pressable accessibilityLabel="写真を追加" onPress={handlePickContestImages} style={{ width: 82, height: 82, borderRadius: 10, borderWidth: 1.5, borderStyle: "dashed", borderColor: colors.border, alignItems: "center", justifyContent: "center", backgroundColor: colors.surface }}><IconSymbol name="photo.on.rectangle.angled" size={22} color={colors.muted} /><Text style={{ fontSize: 11, color: colors.muted, marginTop: 4 }}>写真を追加</Text></Pressable> : null}</View></View>
+            <Pressable accessibilityLabel="選手権の投稿を送信" onPress={handleComment} disabled={!contestFormValid} style={{ marginTop: 5, backgroundColor: contestFormValid ? "#D45470" : colors.border, borderRadius: 13, paddingVertical: 14, alignItems: "center" }}><Text style={{ fontSize: 15, fontWeight: "900", color: "#FFF" }}>投稿する</Text></Pressable>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </Modal>
 
       {/* メンバー選択モーダル */}
       <SelectMembersModal
@@ -1901,6 +1944,7 @@ export default function BoardScreen() {
   const { compose, category: categoryParam, view, thread: threadParam } = useLocalSearchParams<{ compose?: string; category?: string; view?: string; thread?: string }>();
   const { user: authUser } = useAuthContext();
   const userIsAdmin = canManageBoardCategories(authUser?.role);
+  const userCanManageContests = canManageGourmetContests(authUser?.role);
   const clubs = useClubs();
   const [categories, setCategories] = useState<BoardCategory[]>(BOARD_CATEGORIES);
   const [activeGroup, setActiveGroup] = useState<BoardCategory["group"]>("all");
@@ -2119,7 +2163,7 @@ export default function BoardScreen() {
           <ThreadCard
             thread={item}
             onPress={() => { setSelectedThread(item); router.setParams({ thread: item.id }); }}
-            onEdit={(item.author.id === CURRENT_USER.id || (item.category === "gourmet-contest" && userIsAdmin)) && !item.mealReport ? () => setEditingThread(item) : undefined}
+            onEdit={(item.author.id === CURRENT_USER.id || (item.category === "gourmet-contest" && userCanManageContests)) && !item.mealReport ? () => setEditingThread(item) : undefined}
           />
         )}
         refreshControl={
@@ -2137,7 +2181,7 @@ export default function BoardScreen() {
         }
       /> : <View style={{ flex: 1 }} />}
 
-      {isThreadView && activeCategory !== "gourmet-map" && (activeCategory !== "gourmet-contest" || userIsAdmin) ? (
+      {isThreadView && activeCategory !== "gourmet-map" && (activeCategory !== "gourmet-contest" || userCanManageContests) ? (
         <Pressable
           accessibilityLabel={`${categories.find((category) => category.key === activeCategory)?.label ?? "掲示板"}に投稿`}
           onPress={() => setShowCreateThread(true)}
@@ -2159,7 +2203,7 @@ export default function BoardScreen() {
             thread={selectedThread}
             initialComments={importedComments[selectedThread.id] ?? []}
             onClose={() => { setSelectedThread(null); router.setParams({ thread: "" }); }}
-            onEditThread={(selectedThread.author.id === CURRENT_USER.id || (selectedThread.category === "gourmet-contest" && userIsAdmin)) ? () => { setEditingThread(selectedThread); setSelectedThread(null); router.setParams({ thread: "" }); } : undefined}
+            onEditThread={(selectedThread.author.id === CURRENT_USER.id || (selectedThread.category === "gourmet-contest" && userCanManageContests)) ? () => { setEditingThread(selectedThread); setSelectedThread(null); router.setParams({ thread: "" }); } : undefined}
           />
         )}
       </Modal>
@@ -2170,7 +2214,7 @@ export default function BoardScreen() {
         onClose={() => setShowCreateThread(false)}
         category={activeCategory}
         categories={categories}
-        canManage={userIsAdmin}
+        canManage={userCanManageContests}
         onAdd={(thread) => {
           setDynamicThreads((prev) => [thread, ...prev]);
           const xpAction = thread.category === "meal-report" ? POINT_ACTIONS.mealReportPost : POINT_ACTIONS.boardPost;

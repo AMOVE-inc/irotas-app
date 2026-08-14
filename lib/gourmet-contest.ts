@@ -4,6 +4,24 @@ import { adjustIrotasPoints } from "./irotas-points-store";
 
 const CONTEST_AWARD_KEY = "irotas_gourmet_contest_awards_v1";
 
+export interface ContestEntryFields {
+  restaurant: string;
+  menu: string;
+  pitch: string;
+  referenceUrl?: string;
+}
+
+export function isContestEntryValid(fields: ContestEntryFields): boolean {
+  const referenceUrl = fields.referenceUrl?.trim() ?? "";
+  return Boolean(fields.restaurant.trim() && fields.menu.trim() && fields.pitch.trim() && (!referenceUrl || /^https?:\/\/\S+$/i.test(referenceUrl)));
+}
+
+export function buildContestEntryContent(fields: ContestEntryFields): string {
+  const referenceUrl = fields.referenceUrl?.trim() ?? "";
+  const referenceLine = referenceUrl ? `\n・参考URL（食べログ・GoogleMapなど）：${referenceUrl}` : "";
+  return `・店名 / 場所：${fields.restaurant.trim()}\n・メニュー / 商品名：${fields.menu.trim()}\n・推しポイント（一言でOK）：${fields.pitch.trim()}${referenceLine}`;
+}
+
 export function isContestCommentingOpen(thread: BoardThread, now = new Date()): boolean {
   if (!thread.gourmetContest) return false;
   return now.getTime() <= new Date(`${thread.gourmetContest.commentDeadline}T23:59:59+09:00`).getTime();

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { BOARD_COMMENTS, BOARD_THREADS } from "../constants/mock-data";
-import { createContestAwardComment, getContestWinner, isContestCommentingOpen } from "../lib/gourmet-contest";
+import { buildContestEntryContent, createContestAwardComment, getContestWinner, isContestCommentingOpen, isContestEntryValid } from "../lib/gourmet-contest";
 
 describe("gourmet contest", () => {
   const contest = BOARD_THREADS.find((thread) => thread.id === "t11")!;
@@ -25,5 +25,14 @@ describe("gourmet contest", () => {
   it("does not count an automatic award comment as an entrant", () => {
     const systemComment = { ...comments[0], id: "system", isSystem: true, reactions: { "❤️": ["1", "2", "3", "4", "5"] } };
     expect(getContestWinner([...comments, systemComment])?.id).toBe("bc6");
+  });
+
+  it("requires the three entry fields and keeps URL optional", () => {
+    const required = { restaurant: "IRO食堂 / 恵比寿", menu: "季節のコース", pitch: "旬の食材がおいしい" };
+    expect(isContestEntryValid(required)).toBe(true);
+    expect(isContestEntryValid({ ...required, menu: "" })).toBe(false);
+    expect(isContestEntryValid({ ...required, referenceUrl: "invalid" })).toBe(false);
+    expect(isContestEntryValid({ ...required, referenceUrl: "https://maps.google.com/example" })).toBe(true);
+    expect(buildContestEntryContent({ ...required, referenceUrl: "https://tabelog.com/example" })).toContain("・参考URL（食べログ・GoogleMapなど）：https://tabelog.com/example");
   });
 });

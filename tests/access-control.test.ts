@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   canManageBoardCategories,
+  canManageGourmetContests,
   canCreateClub,
   canViewClubThread,
   isAdminRole,
@@ -73,6 +74,13 @@ describe("access control", () => {
     expect(canManageBoardCategories("user")).toBe(false);
     expect(canManageBoardCategories("member")).toBe(false);
     expect(canManageBoardCategories(undefined)).toBe(false);
+  });
+
+  it("allows operators and administrators to create gourmet contests", () => {
+    expect(canManageGourmetContests("admin")).toBe(true);
+    expect(canManageGourmetContests("operator")).toBe(true);
+    expect(canManageGourmetContests("user")).toBe(false);
+    expect(canManageGourmetContests(undefined)).toBe(false);
   });
 
   it("allows only administrators to create clubs", () => {
