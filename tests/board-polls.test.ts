@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { boardPollResult, isBoardPollOpen } from "../lib/board-polls";
+import { applyBoardPollVote, boardPollResult, isBoardPollOpen } from "../lib/board-polls";
 import type { BoardPoll } from "../constants/mock-data";
 
 const poll: BoardPoll = {
@@ -24,5 +24,12 @@ describe("board polls", () => {
   it("同票なら両方を結果に含める", () => {
     const tied = { ...poll, options: poll.options.map((option) => ({ ...option, voterIds: ["m1"] })) };
     expect(boardPollResult(tied)).toBe("土曜日・日曜日（1票）");
+  });
+
+  it("複数回答を許可した投票では別の選択肢を残す", () => {
+    const multiple = { ...poll, allowMultiple: true, options: poll.options.map((option) => ({ ...option, voterIds: [] })) };
+    const first = applyBoardPollVote(multiple, "one", "m1");
+    const second = applyBoardPollVote(first, "two", "m1");
+    expect(second.options.map((option) => option.voterIds)).toEqual([["m1"], ["m1"]]);
   });
 });

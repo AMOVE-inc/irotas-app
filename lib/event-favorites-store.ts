@@ -1,5 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useSyncExternalStore } from "react";
+import type { Event } from "@/constants/mock-data";
+import { cancelFavoriteDeadlineNotifications, scheduleFavoriteDeadlineNotifications } from "@/lib/notifications";
 
 const KEY = "irotas_event_favorites";
 let favoriteIds: string[] = [];
@@ -31,4 +33,11 @@ export function toggleEventFavorite(eventId: string): boolean {
   emit();
   void AsyncStorage.setItem(KEY, JSON.stringify(favoriteIds));
   return nextFavorite;
+}
+
+export async function toggleEventFavoriteWithNotifications(event: Event, memberId: string): Promise<boolean> {
+  const added = toggleEventFavorite(event.id);
+  if (added) await scheduleFavoriteDeadlineNotifications(event, memberId);
+  else await cancelFavoriteDeadlineNotifications(event.id, memberId);
+  return added;
 }

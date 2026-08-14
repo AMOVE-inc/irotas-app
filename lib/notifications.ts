@@ -2,10 +2,11 @@ import * as Notifications from "expo-notifications";
 import { Platform } from "react-native";
 import { addInAppNotification } from "@/lib/in-app-notifications-store";
 import type { Event } from "@/constants/mock-data";
-import { buildEventReminderPlans, buildOrganizerReminderPlans } from "@/lib/event-reminders";
-import { cancelOrganizerDeadlinePlans, persistOrganizerDeadlinePlan, persistParticipantReminderPlans } from "@/lib/event-automation-store";
+import { buildEventReminderPlans, buildFavoriteDeadlineReminderPlans, buildOrganizerReminderPlans } from "@/lib/event-reminders";
+import { cancelFavoriteDeadlinePlans, cancelOrganizerDeadlinePlans, persistFavoriteDeadlinePlans, persistOrganizerDeadlinePlan, persistParticipantReminderPlans } from "@/lib/event-automation-store";
 
 const organizerNotificationIds = new Map<string, string[]>();
+const favoriteNotificationIds = new Map<string, string[]>();
 
 // 通知ハンドラーの設定（フォアグラウンドでも通知を表示）
 Notifications.setNotificationHandler({
@@ -81,6 +82,24 @@ export async function cancelOrganizerDeadlineNotifications(eventId: string): Pro
   const identifiers = organizerNotificationIds.get(eventId) ?? [];
   await Promise.all(identifiers.map((identifier) => Notifications.cancelScheduledNotificationAsync(identifier)));
   organizerNotificationIds.delete(eventId);
+}
+
+export async function scheduleFavoriteDeadlineNotifications(event: Event, memberId: string): Promise<void> {
+  await persistFavoriteDeadlinePlans(event, memberId);
+  if (Platform.OS === "web") return;
+  const identifiers: string[] = [];
+  for (const plan of buildFavoriteDeadlineReminderPlans(event)) {
+    if (plan.scheduledAt.getTime() <= Date.now()) continue;
+    identifiers.push(await Notifications.scheduleNotificationAsync({ content: { title: "お気に入りイベントの募集期限が近づいています", body: `「${event.title}」の募集期限は${plan.label}です。申込み忘れがないかご確認ください。`, data: { type: "event_reminder", eventId: event.id }, sound: true }, trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: plan.scheduledAt } }));
+  }
+  favoriteNotificationIds.set(`${event.id}:${memberId}`, identifiers);
+}
+
+export async function cancelFavoriteDeadlineNotifications(eventId: string, memberId: string): Promise<void> {
+  await cancelFavoriteDeadlinePlans(eventId, memberId);
+  const key = `${eventId}:${memberId}`;
+  await Promise.all((favoriteNotificationIds.get(key) ?? []).map((identifier) => Notifications.cancelScheduledNotificationAsync(identifier)));
+  favoriteNotificationIds.delete(key);
 }
 
 // メンション通知を送信する

@@ -3,14 +3,14 @@ import type { Event } from "@/constants/mock-data";
 import { addMessage, saveMessagesToStorage } from "@/lib/chat-store";
 import { addInAppNotification } from "@/lib/in-app-notifications-store";
 import { buildEventReminderPlans } from "@/lib/event-reminders";
-import { buildOrganizerReminderPlans } from "@/lib/event-reminders";
+import { buildFavoriteDeadlineReminderPlans, buildOrganizerReminderPlans } from "@/lib/event-reminders";
 import { EVENTS } from "@/constants/mock-data";
 import { getAllEvents } from "@/lib/event-store";
 
 const KEY = "irotas_scheduled_event_actions";
 type ScheduledAction = {
   id: string;
-  kind: "seven_days" | "two_days" | "organizer_three_days" | "organizer_two_days" | "organizer_one_day" | "organizer_same_day";
+  kind: "seven_days" | "two_days" | "organizer_three_days" | "organizer_two_days" | "organizer_one_day" | "organizer_same_day" | "favorite_three_days" | "favorite_one_day";
   eventId: string;
   eventTitle: string;
   targetMemberId: string;
@@ -42,13 +42,28 @@ export async function cancelOrganizerDeadlinePlans(eventId: string): Promise<voi
   await AsyncStorage.setItem(KEY, JSON.stringify(actions.filter((action) => !(action.eventId === eventId && action.kind.startsWith("organizer_")))));
 }
 
+export async function persistFavoriteDeadlinePlans(event: Event, memberId: string): Promise<void> {
+  await mergeActions(buildFavoriteDeadlineReminderPlans(event).map((plan) => ({ id: `${event.id}:${memberId}:${plan.kind}`, kind: plan.kind, eventId: event.id, eventTitle: event.title, targetMemberId: memberId, scheduledAt: plan.scheduledAt.toISOString() })));
+}
+
+export async function cancelFavoriteDeadlinePlans(eventId: string, memberId: string): Promise<void> {
+  const actions = await readActions();
+  await AsyncStorage.setItem(KEY, JSON.stringify(actions.filter((action) => !(action.eventId === eventId && action.targetMemberId === memberId && action.kind.startsWith("favorite_")))));
+}
+
 /** アプリ起動中に期限へ達した処理を配信。DB版では同じIDでバックグラウンドワーカーが実行する。 */
 export async function dispatchDueEventActions(now = new Date()): Promise<number> {
   const actions = await readActions();
   const due = actions.filter((action) => Date.parse(action.scheduledAt) <= now.getTime());
   const remaining = actions.filter((action) => Date.parse(action.scheduledAt) > now.getTime());
   for (const action of due) {
-    if (action.kind.startsWith("organizer_")) {
+    if (action.kind.startsWith("favorite_")) {
+      const currentEvent = getAllEvents(EVENTS).find((item) => item.id === action.eventId);
+      if (currentEvent?.status === "open") {
+        const label = action.kind === "favorite_three_days" ? "3日前" : "前日";
+        addInAppNotification({ targetMemberId: action.targetMemberId, type: "event_reminder", title: "お気に入りイベントの募集期限が近づいています", body: `「${action.eventTitle}」の募集期限は${label}です。申込み忘れがないかご確認ください。`, eventId: action.eventId });
+      }
+    } else if (action.kind.startsWith("organizer_")) {
       const currentEvent = getAllEvents(EVENTS).find((item) => item.id === action.eventId);
       if (!currentEvent?.participantsFinalizedAt) {
         const label = action.kind === "organizer_three_days" ? "3日前" : action.kind === "organizer_two_days" ? "2日前" : action.kind === "organizer_one_day" ? "前日" : "当日";

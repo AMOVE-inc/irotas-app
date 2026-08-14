@@ -2,6 +2,7 @@ import type { Event } from "@/constants/mock-data";
 
 export type EventReminderPlan = { kind: "seven_days" | "two_days"; scheduledAt: Date };
 export type OrganizerReminderPlan = { kind: "organizer_three_days" | "organizer_two_days" | "organizer_one_day" | "organizer_same_day"; scheduledAt: Date; label: string };
+export type FavoriteDeadlineReminderPlan = { kind: "favorite_three_days" | "favorite_one_day"; scheduledAt: Date; label: string };
 
 export function buildEventReminderPlans(event: Pick<Event, "date" | "time">): EventReminderPlan[] {
   const start = new Date(`${event.date}T${event.time || "00:00"}:00+09:00`);
@@ -28,4 +29,13 @@ export function buildOrganizerReminderPlans(event: Pick<Event, "applicationDeadl
     { kind: "organizer_same_day", days: 0, label: "当日" },
   ];
   return offsets.map(({ kind, days, label }) => ({ kind, label, scheduledAt: new Date(deadline.getTime() - days * 86400000) }));
+}
+
+export function buildFavoriteDeadlineReminderPlans(event: Pick<Event, "applicationDeadline">): FavoriteDeadlineReminderPlan[] {
+  const deadline = parseApplicationDeadline(event.applicationDeadline);
+  if (!deadline) return [];
+  return [
+    { kind: "favorite_three_days", label: "3日前", scheduledAt: new Date(deadline.getTime() - 3 * 86400000) },
+    { kind: "favorite_one_day", label: "前日", scheduledAt: new Date(deadline.getTime() - 86400000) },
+  ];
 }

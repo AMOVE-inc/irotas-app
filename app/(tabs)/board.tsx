@@ -64,6 +64,7 @@ import { GOURMET_GENRES } from "@/constants/event-options";
 import { boardPollResult, finalizeBoardPollOnce, isBoardPollOpen, loadBoardPoll, voteBoardPoll } from "@/lib/board-polls";
 import { addInAppNotification } from "@/lib/in-app-notifications-store";
 import { deleteBoardComment, deleteBoardThread, loadBoardCommentEdits, loadDeletedBoardCommentIds, loadDeletedBoardThreadIds, saveBoardCommentEdit } from "@/lib/board-content-store";
+import { CalendarField } from "@/components/calendar-field";
 
 const BOARD_GROUPS: { key: BoardCategory["group"]; label: string }[] = [
   { key: "all", label: "全体" },
@@ -123,12 +124,12 @@ function PollCard({ ownerKey, poll }: { ownerKey: string; poll: BoardPoll }) {
     });
   }, [current, open, ownerKey]);
   const total = new Set(current.options.flatMap((option) => option.voterIds)).size;
-  return <View style={{ marginTop: 12, borderRadius: 14, padding: 13, backgroundColor: "#F7F5FA", borderWidth: 1, borderColor: "#DED8E8" }}><View style={{ flexDirection: "row", alignItems: "center" }}><IconSymbol name="chart.bar.fill" size={17} color="#6D5B85" /><Text style={{ flex: 1, fontSize: 14, fontWeight: "900", color: colors.foreground, marginLeft: 7 }}>{current.question}</Text><View style={{ borderRadius: 9, paddingHorizontal: 7, paddingVertical: 3, backgroundColor: open ? "#E4F3E8" : "#E8E8EB" }}><Text style={{ fontSize: 10, fontWeight: "900", color: open ? "#277A40" : colors.muted }}>{open ? "投票受付中" : "終了"}</Text></View></View><View style={{ gap: 7, marginTop: 11 }}>{current.options.map((option) => { const selected = option.voterIds.includes(CURRENT_USER.id); const ratio = total ? option.voterIds.length / total : 0; return <Pressable key={option.id} disabled={!open} onPress={() => void voteBoardPoll(ownerKey, current, option.id, CURRENT_USER.id).then(setCurrent)} style={{ overflow: "hidden", borderRadius: 10, borderWidth: 1, borderColor: selected ? "#725C8C" : colors.border, backgroundColor: colors.surface }}><View style={{ position: "absolute", inset: 0, width: `${Math.round(ratio * 100)}%`, backgroundColor: selected ? "#E8DDF1" : "#EEEAF2" }} /><View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 11, paddingVertical: 9 }}><Text style={{ flex: 1, fontSize: 13, fontWeight: selected ? "900" : "700", color: colors.foreground }}>{option.text}</Text><Text style={{ fontSize: 12, fontWeight: "900", color: colors.muted }}>{option.voterIds.length}票</Text></View></Pressable>; })}</View><Text style={{ fontSize: 11, color: colors.muted, marginTop: 9 }}>{open ? `期限：${current.deadline} 23:59` : `結果：${boardPollResult(current)}`}</Text></View>;
+  return <View style={{ marginTop: 12, borderRadius: 14, padding: 13, backgroundColor: "#F7F5FA", borderWidth: 1, borderColor: "#DED8E8" }}><View style={{ flexDirection: "row", alignItems: "center" }}><IconSymbol name="chart.bar.fill" size={17} color="#6D5B85" /><Text style={{ flex: 1, fontSize: 14, fontWeight: "900", color: colors.foreground, marginLeft: 7 }}>{current.question}</Text><View style={{ borderRadius: 9, paddingHorizontal: 7, paddingVertical: 3, backgroundColor: open ? "#E4F3E8" : "#E8E8EB" }}><Text style={{ fontSize: 10, fontWeight: "900", color: open ? "#277A40" : colors.muted }}>{open ? "投票受付中" : "終了"}</Text></View></View>{current.allowMultiple ? <Text style={{ fontSize: 10, fontWeight: "800", color: "#6D5B85", marginTop: 5 }}>複数回答可</Text> : null}<View style={{ gap: 7, marginTop: 11 }}>{current.options.map((option) => { const selected = option.voterIds.includes(CURRENT_USER.id); const ratio = total ? option.voterIds.length / total : 0; return <Pressable key={option.id} disabled={!open} onPress={() => void voteBoardPoll(ownerKey, current, option.id, CURRENT_USER.id).then(setCurrent)} style={{ overflow: "hidden", borderRadius: 10, borderWidth: 1, borderColor: selected ? "#725C8C" : colors.border, backgroundColor: colors.surface }}><View style={{ position: "absolute", inset: 0, width: `${Math.round(ratio * 100)}%`, backgroundColor: selected ? "#E8DDF1" : "#EEEAF2" }} /><View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 11, paddingVertical: 9 }}><Text style={{ flex: 1, fontSize: 13, fontWeight: selected ? "900" : "700", color: colors.foreground }}>{option.text}</Text><Text style={{ fontSize: 12, fontWeight: "900", color: colors.muted }}>{option.voterIds.length}票</Text></View></Pressable>; })}</View><Text style={{ fontSize: 11, color: colors.muted, marginTop: 9 }}>{open ? `期限：${current.deadline} 23:59` : `結果：${boardPollResult(current)}`}</Text></View>;
 }
 
-function PollComposer({ enabled, setEnabled, question, setQuestion, options, setOptions, deadline, setDeadline }: { enabled: boolean; setEnabled: (value: boolean) => void; question: string; setQuestion: (value: string) => void; options: string[]; setOptions: (value: string[]) => void; deadline: string; setDeadline: (value: string) => void }) {
+function PollComposer({ enabled, setEnabled, question, setQuestion, options, setOptions, deadline, setDeadline, allowMultiple, setAllowMultiple }: { enabled: boolean; setEnabled: (value: boolean) => void; question: string; setQuestion: (value: string) => void; options: string[]; setOptions: (value: string[]) => void; deadline: string; setDeadline: (value: string) => void; allowMultiple: boolean; setAllowMultiple: (value: boolean) => void }) {
   const colors = useColors();
-  return <View><Pressable onPress={() => setEnabled(!enabled)} style={{ flexDirection: "row", alignItems: "center", alignSelf: "flex-start", paddingVertical: 7 }}><IconSymbol name="chart.bar.fill" size={17} color="#6D5B85" /><Text style={{ fontSize: 13, fontWeight: "800", color: "#6D5B85", marginLeft: 6 }}>{enabled ? "投票を取り消す" : "投票を追加"}</Text></Pressable>{enabled ? <View style={{ marginTop: 8, padding: 12, borderRadius: 13, backgroundColor: "#F7F5FA", borderWidth: 1, borderColor: "#DED8E8", gap: 9 }}><TextInput value={question} onChangeText={setQuestion} placeholder="質問を入力" placeholderTextColor={colors.muted} style={{ backgroundColor: colors.surface, borderRadius: 9, padding: 10, color: colors.foreground }} />{options.map((option, index) => <View key={index} style={{ flexDirection: "row", alignItems: "center" }}><TextInput value={option} onChangeText={(value) => setOptions(options.map((item, itemIndex) => itemIndex === index ? value : item))} placeholder={`選択肢 ${index + 1}`} placeholderTextColor={colors.muted} style={{ flex: 1, backgroundColor: colors.surface, borderRadius: 9, padding: 10, color: colors.foreground }} />{options.length > 2 ? <Pressable onPress={() => setOptions(options.filter((_, itemIndex) => itemIndex !== index))} style={{ padding: 8 }}><IconSymbol name="xmark" size={15} color={colors.error} /></Pressable> : null}</View>)}{options.length < 10 ? <Pressable onPress={() => setOptions([...options, ""])}><Text style={{ fontSize: 12, fontWeight: "800", color: "#6D5B85" }}>＋ 選択肢を追加</Text></Pressable> : null}<TextInput value={deadline} onChangeText={setDeadline} placeholder="投票期限 YYYY-MM-DD" placeholderTextColor={colors.muted} style={{ backgroundColor: colors.surface, borderRadius: 9, padding: 10, color: colors.foreground }} /></View> : null}</View>;
+  return <View><Pressable onPress={() => setEnabled(!enabled)} style={{ flexDirection: "row", alignItems: "center", alignSelf: "flex-start", paddingVertical: 7 }}><IconSymbol name="chart.bar.fill" size={17} color="#6D5B85" /><Text style={{ fontSize: 13, fontWeight: "800", color: "#6D5B85", marginLeft: 6 }}>{enabled ? "投票を取り消す" : "投票を追加"}</Text></Pressable>{enabled ? <View style={{ marginTop: 8, padding: 12, borderRadius: 13, backgroundColor: "#F7F5FA", borderWidth: 1, borderColor: "#DED8E8", gap: 9 }}><TextInput value={question} onChangeText={setQuestion} placeholder="質問を入力" placeholderTextColor={colors.muted} style={{ backgroundColor: colors.surface, borderRadius: 9, padding: 10, color: colors.foreground }} />{options.map((option, index) => <View key={index} style={{ flexDirection: "row", alignItems: "center" }}><TextInput value={option} onChangeText={(value) => setOptions(options.map((item, itemIndex) => itemIndex === index ? value : item))} placeholder={`選択肢 ${index + 1}`} placeholderTextColor={colors.muted} style={{ flex: 1, backgroundColor: colors.surface, borderRadius: 9, padding: 10, color: colors.foreground }} />{options.length > 2 ? <Pressable onPress={() => setOptions(options.filter((_, itemIndex) => itemIndex !== index))} style={{ padding: 8 }}><IconSymbol name="xmark" size={15} color={colors.error} /></Pressable> : null}</View>)}{options.length < 10 ? <Pressable onPress={() => setOptions([...options, ""])}><Text style={{ fontSize: 12, fontWeight: "800", color: "#6D5B85" }}>＋ 選択肢を追加</Text></Pressable> : null}<View><Text style={{ fontSize: 12, fontWeight: "800", color: colors.foreground, marginBottom: 6 }}>投票期限</Text><CalendarField label="投票期限" value={deadline} onChange={setDeadline} /></View><Pressable accessibilityRole="checkbox" accessibilityState={{ checked: allowMultiple }} onPress={() => setAllowMultiple(!allowMultiple)} style={{ flexDirection: "row", alignItems: "center", paddingVertical: 4 }}><View style={{ width: 21, height: 21, borderRadius: 5, borderWidth: 1.5, borderColor: allowMultiple ? "#6D5B85" : colors.border, backgroundColor: allowMultiple ? "#6D5B85" : colors.surface, alignItems: "center", justifyContent: "center" }}>{allowMultiple ? <IconSymbol name="checkmark" size={14} color="#FFF" /> : null}</View><Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground, marginLeft: 8 }}>複数回答を許可する</Text></Pressable></View> : null}</View>;
 }
 
 function BoardVideo({ uri }: { uri: string }) {
@@ -248,8 +249,8 @@ function MealReportTimelineCard({ thread }: { thread: BoardThread }) {
   const hasLongImpression = Boolean(impression && impression.length > 64);
   return (
     <View>
-      <View style={{ flexDirection: "row", alignItems: "stretch" }}>
-        {image ? <Image source={boardImageSource(image)} style={{ width: 112, height: 112, borderRadius: 12, backgroundColor: "#F1EEF0" }} contentFit="cover" /> : <View style={{ width: 112, height: 112, borderRadius: 12, backgroundColor: "#F4F1F3", alignItems: "center", justifyContent: "center" }}><IconSymbol name="fork.knife" size={30} color="#B8AEB4" /><Text style={{ fontSize: 10, color: colors.muted, marginTop: 5 }}>写真なし</Text></View>}
+      <View style={{ flexDirection: "row", alignItems: "stretch", height: 128 }}>
+        {image ? <Image source={boardImageSource(image)} style={{ width: 128, height: 128, borderRadius: 12, backgroundColor: "#F1EEF0" }} contentFit="cover" /> : <View style={{ width: 128, height: 128, borderRadius: 12, backgroundColor: "#F4F1F3", alignItems: "center", justifyContent: "center" }}><IconSymbol name="fork.knife" size={30} color="#B8AEB4" /><Text style={{ fontSize: 10, color: colors.muted, marginTop: 5 }}>写真なし</Text></View>}
         <View style={{ flex: 1, minWidth: 0, marginLeft: 12 }}>
           {report.postTitle ? <Text numberOfLines={2} style={{ fontSize: 15, lineHeight: 20, fontWeight: "900", color: colors.foreground }}>{report.postTitle}</Text> : null}
           <Text numberOfLines={2} style={{ fontSize: report.postTitle ? 13 : 16, lineHeight: report.postTitle ? 18 : 21, fontWeight: "900", color: colors.foreground, marginTop: report.postTitle ? 3 : 0 }}>{report.restaurantName}</Text>
@@ -258,7 +259,7 @@ function MealReportTimelineCard({ thread }: { thread: BoardThread }) {
             {area ? <Text numberOfLines={1} style={{ maxWidth: "100%", fontSize: 11, fontWeight: "700", color: "#5F5960", backgroundColor: "#F4F1F3", borderRadius: 8, paddingHorizontal: 7, paddingVertical: 3 }}>📍 {area}</Text> : null}
             {report.budget ? <Text style={{ fontSize: 11, fontWeight: "700", color: "#5F5960", backgroundColor: "#F4F1F3", borderRadius: 8, paddingHorizontal: 7, paddingVertical: 3 }}>{report.budget}</Text> : null}
           </View>
-          {impression ? <View style={{ marginTop: 7 }}><Text numberOfLines={3} style={{ fontSize: 12, lineHeight: 17, color: colors.foreground }}>{impression}</Text>{hasLongImpression ? <Text style={{ fontSize: 10, fontWeight: "800", color: "#8C6276", marginTop: 2 }}>詳細で続きを読む</Text> : null}</View> : null}
+          {impression ? <View style={{ marginTop: 7, flex: 1 }}><Text numberOfLines={2} style={{ fontSize: 12, lineHeight: 17, color: colors.foreground }}>{impression}</Text>{hasLongImpression ? <Text style={{ fontSize: 10, fontWeight: "800", color: "#8C6276", marginTop: 2 }}>詳細で続きを読む</Text> : null}</View> : null}
         </View>
       </View>
       {thread.images && thread.images.length > 1 ? <Text style={{ fontSize: 11, fontWeight: "800", color: "#8C6276", marginTop: 7 }}>写真 {thread.images.length}枚</Text> : null}
@@ -270,7 +271,7 @@ function GourmetAdviceContent({ thread, compact = false }: { thread: BoardThread
   const colors = useColors();
   const advice = thread.gourmetAdvice;
   if (!advice) return null;
-  const genres = advice.genres?.length ? advice.genres : ["指定しない"];
+  const genres = (advice.genres?.length ? advice.genres : ["指定なし"]).map((genre) => genre === "指定しない" ? "指定なし" : genre);
   return (
     <View style={{ backgroundColor: "#FFF9EA", borderRadius: 12, padding: compact ? 10 : 14, marginBottom: compact ? 8 : 16, borderWidth: 1, borderColor: "#F0DDA8" }}>
       {[{ label: "料理ジャンル", value: genres.join("・") }, { label: "エリア", value: normalizedAdviceValue(advice.area) }, { label: "利用シーン", value: normalizedAdviceValue(advice.scene) }, { label: "予算", value: normalizedAdviceValue(advice.budget) }].map((item) => (
@@ -301,7 +302,7 @@ function ThreadCard({ thread, onPress, onEdit }: { thread: BoardThread; onPress:
   const router = useRouter();
   const isParticipant = thread.recruitParticipants?.includes(CURRENT_USER.id);
   const [cardReactions, setCardReactions] = useState(thread.reactions ?? {});
-  const cardEmoji = thread.selfIntroduction ? "🎉" : thread.mealReport ? "😋" : null;
+  const cardEmoji = thread.selfIntroduction ? "🎉" : thread.mealReport ? "❤️" : null;
   const contestOpen = thread.gourmetContest ? isContestCommentingOpen(thread) : false;
   useEffect(() => { void loadThreadReactions(thread.id, thread.reactions).then(setCardReactions); }, [thread.id, thread.reactions]);
   const toggleCardReaction = () => {
@@ -330,11 +331,14 @@ function ThreadCard({ thread, onPress, onEdit }: { thread: BoardThread; onPress:
     <Pressable
       onPress={onPress}
       style={{
-        backgroundColor: colors.surface,
+        backgroundColor: thread.gourmetContest && !contestOpen ? "#F1F1F3" : colors.surface,
         borderRadius: 14,
         marginHorizontal: 16,
         marginBottom: 10,
         padding: 14,
+        borderWidth: 1,
+        borderColor: thread.gourmetContest && !contestOpen ? "#D2D2D6" : "#E1E1E4",
+        opacity: thread.gourmetContest && !contestOpen ? 0.72 : 1,
       }}
     >
       {/* Author */}
@@ -342,6 +346,7 @@ function ThreadCard({ thread, onPress, onEdit }: { thread: BoardThread; onPress:
         onPress={() => router.push({ pathname: "/member-profile", params: { id: thread.author.id } })}
         style={{ flexDirection: "row", alignItems: "center", marginBottom: 8 }}
       >
+        {thread.gourmetContest ? <View style={{ marginRight: 9, borderRadius: 10, paddingHorizontal: 9, paddingVertical: 6, backgroundColor: contestOpen ? "#DDF3E3" : "#DADADD" }}><Text style={{ fontSize: 11, fontWeight: "900", color: contestOpen ? "#247A42" : "#66666B" }}>{contestOpen ? "開催中" : "開催終了"}</Text></View> : null}
         <Image
           source={thread.author.avatar}
           style={{ width: 30, height: 30, borderRadius: 15 }}
@@ -378,8 +383,6 @@ function ThreadCard({ thread, onPress, onEdit }: { thread: BoardThread; onPress:
           >
             {thread.title}
           </Text> : null}
-          {thread.gourmetContest ? <View style={{ alignSelf: "flex-start", marginBottom: 7, borderRadius: 9, paddingHorizontal: 8, paddingVertical: 4, backgroundColor: contestOpen ? "#DDF3E3" : "#E6E6E9" }}><Text style={{ fontSize: 10, fontWeight: "900", color: contestOpen ? "#247A42" : colors.muted }}>{contestOpen ? "開催中" : "開催終了"}</Text></View> : null}
-
           {/* Preview */}
           {thread.mealReport ? (
             <MealReportTimelineCard thread={thread} />
@@ -659,12 +662,14 @@ function ThreadDetailModal({
   const [commentPollQuestion, setCommentPollQuestion] = useState("");
   const [commentPollOptions, setCommentPollOptions] = useState(["", ""]);
   const [commentPollDeadline, setCommentPollDeadline] = useState("");
+  const [commentPollAllowMultiple, setCommentPollAllowMultiple] = useState(false);
   const commentInputRef = useRef<TextInput>(null);
   const mentionGroups = useMemo(() => BOARD_MENTION_GROUPS, []);
   const [comments, setComments] = useState<BoardComment[]>(
     [...BOARD_COMMENTS.filter((c) => c.threadId === thread.id), ...initialComments],
   );
   const [threadReactions, setThreadReactions] = useState(thread.reactions ?? {});
+  const [showThreadEmojiPicker, setShowThreadEmojiPicker] = useState(false);
   const [contestWinnerName, setContestWinnerName] = useState<string | null>(null);
   const [reactionsHydrated, setReactionsHydrated] = useState(false);
   const contestFinalizedRef = useRef(false);
@@ -677,6 +682,7 @@ function ThreadDetailModal({
   const isAuthor = thread.author.id === CURRENT_USER.id;
   const isParticipant = (thread.recruitParticipants ?? []).includes(CURRENT_USER.id);
   const isContest = Boolean(thread.gourmetContest);
+  const pollAllowed = !["introduction", "meal-report", "gourmet-contest", "gourmet-advice"].includes(thread.category);
   const contestCommentingOpen = isContest ? isContestCommentingOpen(thread) : true;
   const contestReferenceUrlValid = !contestReferenceUrl.trim() || /^https?:\/\/\S+$/i.test(contestReferenceUrl.trim());
   const contestFormValid = isContestEntryValid({ restaurant: contestRestaurant, menu: contestMenu, pitch: contestPitch, referenceUrl: contestReferenceUrl });
@@ -723,7 +729,7 @@ function ThreadDetailModal({
       content,
       createdAt: new Date().toISOString(),
       images: isContest && contestImages.length ? contestImages : undefined,
-      poll: commentPollEnabled ? { question: commentPollQuestion.trim(), deadline: commentPollDeadline, options: commentPollOptions.filter((option) => option.trim()).map((option, index) => ({ id: `option_${index + 1}`, text: option.trim(), voterIds: [] })) } : undefined,
+      poll: pollAllowed && commentPollEnabled ? { question: commentPollQuestion.trim(), deadline: commentPollDeadline, allowMultiple: commentPollAllowMultiple, options: commentPollOptions.filter((option) => option.trim()).map((option, index) => ({ id: `option_${index + 1}`, text: option.trim(), voterIds: [] })) } : undefined,
     };
     setComments([...comments, newComment]);
     if (thread.category === "gourmet-contest") void recordHomeActivity({ id: `comment:${newComment.id}`, kind: "contest_comment", title: `${thread.title}にコメントが追加されました`, description: content, createdAt: newComment.createdAt, route: "/board", params: { category: "gourmet-contest", view: "threads" } });
@@ -736,7 +742,7 @@ function ThreadDetailModal({
     setShowContestComposer(false);
     setCommentSelection({ start: 0, end: 0 });
     setMentionQuery(null);
-    setCommentPollEnabled(false); setCommentPollQuestion(""); setCommentPollOptions(["", ""]); setCommentPollDeadline("");
+    setCommentPollEnabled(false); setCommentPollQuestion(""); setCommentPollOptions(["", ""]); setCommentPollDeadline(""); setCommentPollAllowMultiple(false);
     const preview = content.length > 50 ? `${content.slice(0, 50)}...` : content;
     for (const memberId of getMentionedMemberIds(content, MEMBERS, mentionGroups).filter((id) => id !== CURRENT_USER.id)) {
       const member = MEMBERS.find((item) => item.id === memberId);
@@ -934,11 +940,13 @@ function ThreadDetailModal({
 
           {thread.selfIntroduction || thread.mealReport ? (
             <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 7, marginBottom: 16 }}>
-              {(thread.selfIntroduction ? ["🎉"] : ["😋"]).map((emoji) => {
+              {(thread.selfIntroduction ? ["🎉"] : Array.from(new Set(["❤️", ...Object.keys(threadReactions)]))).map((emoji) => {
                 const memberIds = threadReactions[emoji] ?? [];
                 const selected = memberIds.includes(CURRENT_USER.id);
                 return <Pressable key={emoji} onPress={() => handleThreadReaction(emoji)} accessibilityLabel={`${emoji}スタンプ`} style={{ flexDirection: "row", alignItems: "center", backgroundColor: selected ? "#F0E7F7" : colors.surface, borderWidth: 1, borderColor: selected ? "#7D6A92" : colors.border, borderRadius: 16, paddingHorizontal: 10, paddingVertical: 5 }}><Text style={{ fontSize: 17 }}>{emoji}</Text>{memberIds.length > 0 ? <Text style={{ fontSize: 11, fontWeight: "800", color: colors.muted, marginLeft: 4 }}>{memberIds.length}</Text> : null}</Pressable>;
               })}
+              {thread.mealReport ? <Pressable accessibilityLabel="別の絵文字を追加" onPress={() => setShowThreadEmojiPicker((current) => !current)} style={{ width: 34, height: 31, borderRadius: 16, alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface }}><IconSymbol name="plus" size={16} color={colors.muted} /></Pressable> : null}
+              {thread.mealReport && showThreadEmojiPicker ? <View style={{ width: "100%", flexDirection: "row", flexWrap: "wrap", gap: 7, paddingTop: 3 }}>{THREAD_REACTION_EMOJIS.filter((emoji) => emoji !== "❤️").map((emoji) => <Pressable key={emoji} onPress={() => { handleThreadReaction(emoji); setShowThreadEmojiPicker(false); }} style={{ width: 38, height: 34, borderRadius: 17, alignItems: "center", justifyContent: "center", backgroundColor: "#F4F1F3" }}><Text style={{ fontSize: 19 }}>{emoji}</Text></Pressable>)}</View> : null}
             </View>
           ) : null}
 
@@ -1089,7 +1097,7 @@ function ThreadDetailModal({
           <Text style={{ fontSize: 11, color: colors.muted, paddingHorizontal: 16, paddingTop: 6 }}>@を入力して個人・グループをメンション</Text>
           {!thread.selfIntroduction ? <View style={{ paddingHorizontal: 16 }}><TextFormattingToolbar onFormat={handleCommentFormat} /></View> : null}
           {!thread.selfIntroduction ? <View style={{ paddingHorizontal: 16 }}><RichTextPreview content={commentText} groups={mentionGroups} /></View> : null}
-          <View style={{ paddingHorizontal: 16 }}><PollComposer enabled={commentPollEnabled} setEnabled={setCommentPollEnabled} question={commentPollQuestion} setQuestion={setCommentPollQuestion} options={commentPollOptions} setOptions={setCommentPollOptions} deadline={commentPollDeadline} setDeadline={setCommentPollDeadline} /></View>
+          {pollAllowed ? <View style={{ paddingHorizontal: 16 }}><PollComposer enabled={commentPollEnabled} setEnabled={setCommentPollEnabled} question={commentPollQuestion} setQuestion={setCommentPollQuestion} options={commentPollOptions} setOptions={setCommentPollOptions} deadline={commentPollDeadline} setDeadline={setCommentPollDeadline} allowMultiple={commentPollAllowMultiple} setAllowMultiple={setCommentPollAllowMultiple} /></View> : null}
           <View
           style={{
             flexDirection: "row",
@@ -1141,7 +1149,6 @@ function ThreadDetailModal({
             <View><Text style={{ fontSize: 13, fontWeight: "800", color: colors.foreground, marginBottom: 6 }}>推しポイント（一言でOK） <Text style={{ color: "#D45470" }}>*</Text></Text><TextInput value={contestPitch} onChangeText={setContestPitch} placeholder="おすすめの理由を入力" placeholderTextColor={colors.muted} multiline style={{ backgroundColor: colors.surface, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 12, minHeight: 88, textAlignVertical: "top", fontSize: 14, color: colors.foreground, borderWidth: 1, borderColor: colors.border }} /></View>
             <View><Text style={{ fontSize: 13, fontWeight: "800", color: colors.foreground, marginBottom: 6 }}>参考URL（食べログ・GoogleMapなど） <Text style={{ fontSize: 11, color: colors.muted }}>任意</Text></Text><TextInput value={contestReferenceUrl} onChangeText={setContestReferenceUrl} placeholder="https://..." placeholderTextColor={colors.muted} autoCapitalize="none" keyboardType="url" style={{ backgroundColor: colors.surface, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 12, fontSize: 14, color: colors.foreground, borderWidth: 1, borderColor: contestReferenceUrlValid ? colors.border : "#D45470" }} />{!contestReferenceUrlValid ? <Text style={{ color: "#D45470", fontSize: 11, marginTop: 5 }}>http:// または https:// から始まるURLを入力してください</Text> : null}</View>
             <View><View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 7 }}><Text style={{ fontSize: 13, fontWeight: "800", color: colors.foreground }}>写真 <Text style={{ fontSize: 11, color: colors.muted }}>任意・最大5枚</Text></Text><Text style={{ fontSize: 11, color: colors.muted }}>{contestImages.length}/5</Text></View><View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>{contestImages.map((uri, index) => <View key={`${uri}-${index}`}><Image source={{ uri }} style={{ width: 82, height: 82, borderRadius: 10 }} contentFit="cover" /><Pressable accessibilityLabel={`写真${index + 1}を削除`} onPress={() => setContestImages((current) => current.filter((_, itemIndex) => itemIndex !== index))} style={{ position: "absolute", right: -5, top: -5, width: 22, height: 22, borderRadius: 11, backgroundColor: "#333", alignItems: "center", justifyContent: "center" }}><Text style={{ color: "#FFF", fontSize: 13, fontWeight: "900" }}>×</Text></Pressable></View>)}{contestImages.length < 5 ? <Pressable accessibilityLabel="写真を追加" onPress={handlePickContestImages} style={{ width: 82, height: 82, borderRadius: 10, borderWidth: 1.5, borderStyle: "dashed", borderColor: colors.border, alignItems: "center", justifyContent: "center", backgroundColor: colors.surface }}><IconSymbol name="photo.on.rectangle.angled" size={22} color={colors.muted} /><Text style={{ fontSize: 11, color: colors.muted, marginTop: 4 }}>写真を追加</Text></Pressable> : null}</View></View>
-            <PollComposer enabled={commentPollEnabled} setEnabled={setCommentPollEnabled} question={commentPollQuestion} setQuestion={setCommentPollQuestion} options={commentPollOptions} setOptions={setCommentPollOptions} deadline={commentPollDeadline} setDeadline={setCommentPollDeadline} />
             <Pressable accessibilityLabel="選手権の投稿を送信" onPress={handleComment} disabled={!contestFormValid || !commentPollValid} style={{ marginTop: 5, backgroundColor: contestFormValid && commentPollValid ? "#D45470" : colors.border, borderRadius: 13, paddingVertical: 14, alignItems: "center" }}><Text style={{ fontSize: 15, fontWeight: "900", color: "#FFF" }}>投稿する</Text></Pressable>
           </ScrollView>
         </KeyboardAvoidingView>
@@ -1558,7 +1565,7 @@ function CreateThreadModal({
   const [tabelogUrl, setTabelogUrl] = useState("");
   const [areaDisplay, setAreaDisplay] = useState("");
   const [adviceTheme, setAdviceTheme] = useState("");
-  const [adviceGenres, setAdviceGenres] = useState<string[]>(["指定しない"]);
+  const [adviceGenres, setAdviceGenres] = useState<string[]>(["指定なし"]);
   const [adviceArea, setAdviceArea] = useState("指定なし");
   const [adviceScene, setAdviceScene] = useState("指定なし");
   const [adviceBudget, setAdviceBudget] = useState("指定なし");
@@ -1569,12 +1576,14 @@ function CreateThreadModal({
   const [pollQuestion, setPollQuestion] = useState("");
   const [pollOptions, setPollOptions] = useState(["", ""]);
   const [pollDeadline, setPollDeadline] = useState("");
+  const [pollAllowMultiple, setPollAllowMultiple] = useState(false);
   const [formError, setFormError] = useState("");
   const [optionModal, setOptionModal] = useState<"budget" | "advice-budget" | null>(null);
   const isMealReport = category === "meal-report";
   const isGourmetAdvice = category === "gourmet-advice";
   const isIntroduction = category === "introduction";
   const isGourmetContest = category === "gourmet-contest";
+  const pollAllowed = !["introduction", "meal-report", "gourmet-contest", "gourmet-advice"].includes(category);
   const googleMapUrlValid = !googleMapUrl.trim() || isGoogleMapsUrl(googleMapUrl);
   const tabelogUrlValid = !tabelogUrl.trim() || /^https?:\/\/(?:www\.)?tabelog\.com\//i.test(tabelogUrl.trim());
   const mealReportValid =
@@ -1585,7 +1594,7 @@ function CreateThreadModal({
     tabelogUrlValid;
   const adviceValid = adviceTheme.trim().length > 0 && adviceGenres.length > 0 && adviceArea.trim().length > 0 && adviceScene.trim().length > 0 && adviceBudget.length > 0 && adviceComment.trim().length > 0;
   const contestValid = title.trim().length > 0 && content.trim().length > 0 && /^\d{4}-\d{2}-\d{2}$/.test(contestDeadline) && Number(contestPrizePoints) > 0;
-  const pollValid = !pollEnabled || (pollQuestion.trim().length > 0 && pollOptions.filter((option) => option.trim()).length >= 2 && /^\d{4}-\d{2}-\d{2}$/.test(pollDeadline));
+  const pollValid = !pollAllowed || !pollEnabled || (pollQuestion.trim().length > 0 && pollOptions.filter((option) => option.trim()).length >= 2 && /^\d{4}-\d{2}-\d{2}$/.test(pollDeadline));
   const contentValid = isMealReport ? mealReportValid : isGourmetAdvice ? adviceValid : isIntroduction ? introductionText.trim().length > 0 : isGourmetContest ? contestValid : title.trim().length > 0 && content.trim().length > 0;
   const canSubmit = contentValid && pollValid;
 
@@ -1683,9 +1692,10 @@ function CreateThreadModal({
       gourmetAdvice: isGourmetAdvice ? { theme: adviceTheme.trim(), genres: adviceGenres, area: adviceArea.trim(), scene: adviceScene.trim(), budget: adviceBudget, comment: adviceComment.trim() } : undefined,
       selfIntroduction: isIntroduction ? { introduction: introductionText.trim(), wantToTry: wantToTry.trim() || undefined, favoriteRestaurants: favoriteRestaurants.trim() || undefined, desiredRestaurants: desiredRestaurants.trim() || undefined } : undefined,
       gourmetContest: isGourmetContest ? { commentDeadline: contestDeadline, prizePoints: Number(contestPrizePoints) } : undefined,
-      poll: pollEnabled ? {
+      poll: pollAllowed && pollEnabled ? {
         question: pollQuestion.trim(),
         deadline: pollDeadline,
+        allowMultiple: pollAllowMultiple,
         options: pollOptions.filter((option) => option.trim()).map((option, index) => ({ id: `option_${index + 1}`, text: option.trim(), voterIds: [] })),
       } : undefined,
     };
@@ -1721,9 +1731,9 @@ function CreateThreadModal({
     setGoogleMapUrl("");
     setTabelogUrl("");
     setAreaDisplay("");
-    setAdviceTheme(""); setAdviceGenres(["指定しない"]); setAdviceArea("指定なし"); setAdviceScene("指定なし"); setAdviceBudget("指定なし"); setAdviceComment("");
+    setAdviceTheme(""); setAdviceGenres(["指定なし"]); setAdviceArea("指定なし"); setAdviceScene("指定なし"); setAdviceBudget("指定なし"); setAdviceComment("");
     setContestDeadline(""); setContestPrizePoints("500");
-    setPollEnabled(false); setPollQuestion(""); setPollOptions(["", ""]); setPollDeadline("");
+    setPollEnabled(false); setPollQuestion(""); setPollOptions(["", ""]); setPollDeadline(""); setPollAllowMultiple(false);
     setFormError("");
   };
 
@@ -1919,7 +1929,7 @@ function CreateThreadModal({
           ) : isGourmetAdvice ? (
             <View style={{ gap: 16, marginBottom: 16 }}>
               <View><Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground, marginBottom: 6 }}>タイトル <Text style={{ color: colors.error }}>必須</Text></Text><TextInput value={adviceTheme} onChangeText={setAdviceTheme} placeholder="例：誕生日プレートが可愛いお店" placeholderTextColor={colors.muted} style={{ backgroundColor: colors.surface, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: colors.foreground }} /></View>
-              <View><Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground, marginBottom: 7 }}>料理カテゴリ <Text style={{ color: colors.error }}>複数選択可</Text></Text><View style={{ flexDirection: "row", flexWrap: "wrap", gap: 7 }}>{["指定しない", ...GOURMET_GENRES].map((genre) => { const selected = adviceGenres.includes(genre); return <Pressable key={genre} onPress={() => setAdviceGenres((current) => { if (genre === "指定しない") return ["指定しない"]; const withoutDefault = current.filter((item) => item !== "指定しない"); return selected ? (withoutDefault.filter((item) => item !== genre).length ? withoutDefault.filter((item) => item !== genre) : ["指定しない"]) : [...withoutDefault, genre]; })} style={{ borderRadius: 17, paddingHorizontal: 10, paddingVertical: 7, backgroundColor: selected ? "#5D5C74" : colors.surface, borderWidth: 1, borderColor: selected ? "#5D5C74" : colors.border }}><Text style={{ fontSize: 12, fontWeight: "700", color: selected ? "#FFF" : colors.foreground }}>{genre}</Text></Pressable>; })}</View></View>
+              <View><Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground, marginBottom: 7 }}>料理カテゴリ <Text style={{ color: colors.error }}>複数選択可</Text></Text><View style={{ flexDirection: "row", flexWrap: "wrap", gap: 7 }}>{["指定なし", ...GOURMET_GENRES].map((genre) => { const selected = adviceGenres.includes(genre); return <Pressable key={genre} onPress={() => setAdviceGenres((current) => { if (genre === "指定なし") return ["指定なし"]; const withoutDefault = current.filter((item) => item !== "指定なし" && item !== "指定しない"); return selected ? (withoutDefault.filter((item) => item !== genre).length ? withoutDefault.filter((item) => item !== genre) : ["指定なし"]) : [...withoutDefault, genre]; })} style={{ borderRadius: 17, paddingHorizontal: 10, paddingVertical: 7, backgroundColor: selected ? "#5D5C74" : colors.surface, borderWidth: 1, borderColor: selected ? "#5D5C74" : colors.border }}><Text style={{ fontSize: 12, fontWeight: "700", color: selected ? "#FFF" : colors.foreground }}>{genre}</Text></Pressable>; })}</View></View>
               <View><View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}><Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground }}>エリア <Text style={{ color: colors.error }}>必須</Text></Text><Pressable onPress={() => setAdviceArea("指定なし")}><Text style={{ fontSize: 12, fontWeight: "800", color: "#8C6276" }}>指定なし</Text></Pressable></View><TextInput value={adviceArea} onFocus={() => { if (adviceArea === "指定なし") setAdviceArea(""); }} onChangeText={setAdviceArea} placeholder="例：都内、渋谷周辺" placeholderTextColor={colors.muted} style={{ backgroundColor: colors.surface, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: colors.foreground }} /></View>
               <View><View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}><Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground }}>利用シーン <Text style={{ color: colors.error }}>必須</Text></Text><Pressable onPress={() => setAdviceScene("指定なし")}><Text style={{ fontSize: 12, fontWeight: "800", color: "#8C6276" }}>指定なし</Text></Pressable></View><TextInput value={adviceScene} onFocus={() => { if (adviceScene === "指定なし") setAdviceScene(""); }} onChangeText={setAdviceScene} placeholder="例：お誕生日ディナー" placeholderTextColor={colors.muted} style={{ backgroundColor: colors.surface, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: colors.foreground }} /></View>
               <View><Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground, marginBottom: 6 }}>予算 <Text style={{ color: colors.error }}>必須</Text></Text><Pressable onPress={() => setOptionModal("advice-budget")} style={{ backgroundColor: colors.surface, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 13, flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}><Text style={{ fontSize: 15, color: adviceBudget ? colors.foreground : colors.muted }}>{adviceBudget || "予算を選択"}</Text><IconSymbol name="chevron.down" size={18} color={colors.muted} /></Pressable></View>
@@ -2015,7 +2025,7 @@ function CreateThreadModal({
             </View>
           </View>
 
-          <View style={{ marginBottom: 16 }}>
+          {pollAllowed ? <View style={{ marginBottom: 16 }}>
             <PollComposer
               enabled={pollEnabled}
               setEnabled={setPollEnabled}
@@ -2025,9 +2035,11 @@ function CreateThreadModal({
               setOptions={setPollOptions}
               deadline={pollDeadline}
               setDeadline={setPollDeadline}
+              allowMultiple={pollAllowMultiple}
+              setAllowMultiple={setPollAllowMultiple}
             />
             {pollEnabled && !pollValid ? <Text style={{ fontSize: 12, color: colors.error, marginTop: 6 }}>質問・選択肢2つ以上・期限を入力してください</Text> : null}
-          </View>
+          </View> : null}
 
           {!isMealReport && !isGourmetAdvice && !isIntroduction && !isGourmetContest ? (
             <>

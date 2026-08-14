@@ -8,7 +8,7 @@ import { approveGourmetApplication, cancelGourmetParticipation, getPendingGourme
 import { getIrotasPoints, adjustIrotasPoints } from "@/lib/irotas-points-store";
 import { createPaymentRecord } from "@/lib/payment-store";
 import { getGoogleCalendarUrl, getOutlookCalendarUrl } from "@/lib/calendar-links";
-import { toggleEventFavorite, useEventFavorites } from "@/lib/event-favorites-store";
+import { toggleEventFavoriteWithNotifications, useEventFavorites } from "@/lib/event-favorites-store";
 import { cancelOrganizerDeadlineNotifications, notifyEventCancellationRequest, notifyEventConfirmation, scheduleEventReminders } from "@/lib/notifications";
 import { approveEventCancellationRequest, getPendingCancellationRequests, submitEventCancellationRequest } from "@/lib/event-cancellation";
 import { useColors } from "@/hooks/use-colors";
@@ -400,7 +400,7 @@ export default function EventDetailScreen() {
             </Text>
           </View>
         </View>
-        <Pressable onPress={() => toggleEventFavorite(event.id)} accessibilityLabel={favoriteEventIds.includes(event.id) ? "お気に入りから削除" : "お気に入りに追加"} style={{ position: "absolute", top: 92, right: 16, width: 38, height: 38, borderRadius: 19, backgroundColor: "rgba(0,0,0,0.5)", alignItems: "center", justifyContent: "center" }}>
+        <Pressable onPress={() => { void toggleEventFavoriteWithNotifications(event, CURRENT_USER.id); }} accessibilityLabel={favoriteEventIds.includes(event.id) ? "お気に入りから削除" : "お気に入りに追加"} style={{ position: "absolute", top: 92, right: 16, width: 38, height: 38, borderRadius: 19, backgroundColor: "rgba(0,0,0,0.5)", alignItems: "center", justifyContent: "center" }}>
           <IconSymbol name={favoriteEventIds.includes(event.id) ? "heart.fill" : "heart"} size={20} color={favoriteEventIds.includes(event.id) ? "#F59AB9" : "#FFF"} />
         </Pressable>
       </View>

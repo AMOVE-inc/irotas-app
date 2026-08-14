@@ -19,11 +19,18 @@ export async function loadBoardPoll(ownerKey: string, fallback: BoardPoll): Prom
 
 export async function voteBoardPoll(ownerKey: string, poll: BoardPoll, optionId: string, memberId: string): Promise<BoardPoll> {
   if (!isBoardPollOpen(poll)) return poll;
-  const selected = poll.options.find((option) => option.id === optionId)?.voterIds.includes(memberId);
-  const cleared = poll.options.map((option) => ({ ...option, voterIds: option.voterIds.filter((id) => id !== memberId) }));
-  const next = { ...poll, options: cleared.map((option) => option.id === optionId && !selected ? { ...option, voterIds: [...option.voterIds, memberId] } : option) };
+  const next = applyBoardPollVote(poll, optionId, memberId);
   await AsyncStorage.setItem(POLLS_KEY, JSON.stringify({ ...(await readPolls()), [ownerKey]: next }));
   return next;
+}
+
+export function applyBoardPollVote(poll: BoardPoll, optionId: string, memberId: string): BoardPoll {
+  const selected = poll.options.find((option) => option.id === optionId)?.voterIds.includes(memberId);
+  const cleared = poll.options.map((option) => ({
+    ...option,
+    voterIds: poll.allowMultiple && option.id !== optionId ? option.voterIds : option.voterIds.filter((id) => id !== memberId),
+  }));
+  return { ...poll, options: cleared.map((option) => option.id === optionId && !selected ? { ...option, voterIds: [...option.voterIds, memberId] } : option) };
 }
 
 export function boardPollResult(poll: BoardPoll): string {

@@ -184,6 +184,7 @@ export interface BoardPoll {
   question: string;
   options: Array<{ id: string; text: string; voterIds: string[] }>;
   deadline: string;
+  allowMultiple?: boolean;
 }
 
 export interface BoardThread {

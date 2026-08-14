@@ -10,7 +10,7 @@ import { canViewClubEvent } from "@/lib/access-control";
 import { getAllEvents } from "@/lib/event-store";
 import { DEFAULT_EVENT_SORT_ORDER, filterAndSortEvents, type EventSortOrder, type EventTypeFilter } from "@/lib/event-filters";
 import { getEventParticipationStatus } from "@/lib/event-participation";
-import { toggleEventFavorite, useEventFavorites } from "@/lib/event-favorites-store";
+import { toggleEventFavoriteWithNotifications, useEventFavorites } from "@/lib/event-favorites-store";
 import { formatEventArea, TOKYO_EVENT_AREAS } from "@/lib/event-location";
 import { useColors } from "@/hooks/use-colors";
 import { Image } from "expo-image";
@@ -286,8 +286,8 @@ function EventCard({ event, onPress, isFavorite, onToggleFavorite, locked = fals
           <View style={{ flexDirection: "row", gap: 4 }}><StatusBadge status={event.status} />{isConfirmed ? <Text style={{ fontSize: 9, fontWeight: "900", color: "#FFF", backgroundColor: "#D94C55", borderRadius: 7, paddingHorizontal: 7, paddingVertical: 4 }}>参加確定</Text> : null}</View>
         </View>
         <Text style={{ fontSize: 14, lineHeight: 19, fontWeight: "900", color: colors.foreground }}>{event.title}</Text>
-        {event.restaurantName && event.restaurantName !== event.title ? <Text style={{ fontSize: 11, lineHeight: 16, fontWeight: "700", color: colors.foreground, marginTop: 3 }}>店名：{event.restaurantName}</Text> : null}
-        <Text style={{ fontSize: 10, lineHeight: 15, color: colors.muted, marginTop: 2 }}>場所：{locationLabel}</Text>
+        {event.restaurantName && event.restaurantName !== event.title ? <Text style={{ fontSize: 11, lineHeight: 16, fontWeight: "700", color: colors.foreground, marginTop: 3 }}>{event.restaurantName}</Text> : null}
+        <Text style={{ fontSize: 10, lineHeight: 15, color: colors.muted, marginTop: 2 }}>{locationLabel}</Text>
         <View style={{ flexDirection: "row", alignItems: "center", marginTop: 5 }}>
           <Text style={{ fontSize: 10, fontWeight: "900", color: "#34A853" }}>{remainingCapacity}名/{reservationCapacity}名 {event.status === "open" ? "募集中" : ""}</Text>
         </View>
@@ -403,7 +403,7 @@ export default function EventsScreen() {
           <EventCard
             event={item}
             isFavorite={favoriteEventIds.includes(item.id)}
-            onToggleFavorite={() => toggleEventFavorite(item.id)}
+            onToggleFavorite={() => { void toggleEventFavoriteWithNotifications(item, CURRENT_USER.id); }}
             locked={item.eventType === "club" && !canViewClubEvent(authUser?.role, CURRENT_USER.id, clubs.find((club) => club.id === item.clubId)?.memberIds ?? [])}
             clubName={clubs.find((club) => club.id === item.clubId)?.name}
             onPress={() => {
