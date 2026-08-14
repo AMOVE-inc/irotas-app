@@ -36,8 +36,9 @@ import * as ImagePicker from "expo-image-picker";
 import * as Clipboard from "expo-clipboard";
 import { OFFICIAL_INSTAGRAM_URL } from "@/constants/external-links";
 import { GOURMET_GENRES } from "@/constants/event-options";
-import { BIRTH_YEARS, DAYS, DRINKING_LEVELS, MONTHS, PREFECTURES, PROFILE_DETAILS_STORAGE_KEY, type ProfileDetails } from "@/constants/profile-options";
+import { BIRTH_YEARS, DAYS, DRINKING_LEVELS, GOOGLE_LOCAL_GUIDE_LEVELS, MONTHS, PREFECTURES, PROFILE_DETAILS_STORAGE_KEY, type ProfileDetails } from "@/constants/profile-options";
 import { isOperatorRole } from "@/lib/access-control";
+import { getPublishedAgeBand } from "@/lib/member-age";
 import { trpc } from "@/lib/trpc";
 
 function ProfileSelectField({ label, value, options, onChange }: { label: string; value: string; options: readonly string[]; onChange: (value: string) => void }) {
@@ -343,6 +344,7 @@ function EditProfileModal({
   const [instagramUrl, setInstagramUrl] = useState("");
   const [favoriteRestaurants, setFavoriteRestaurants] = useState("");
   const [desiredRestaurants, setDesiredRestaurants] = useState("");
+  const [googleLocalGuideLevel, setGoogleLocalGuideLevel] = useState("");
 
   // モーダルが開いたときにAsyncStorageから保存済みデータを読み込む
   useEffect(() => {
@@ -378,6 +380,7 @@ function EditProfileModal({
         setInstagramUrl(details.instagramUrl ?? CURRENT_USER.instagramUrl ?? "");
         setFavoriteRestaurants(details.favoriteRestaurants ?? CURRENT_USER.favoriteRestaurants ?? "");
         setDesiredRestaurants(details.desiredRestaurants ?? CURRENT_USER.desiredRestaurants ?? "");
+        setGoogleLocalGuideLevel(details.googleLocalGuideLevel ?? CURRENT_USER.googleLocalGuideLevel ?? "");
       });
     });
   }, [visible]);
@@ -433,6 +436,7 @@ function EditProfileModal({
       favoriteAlcohol: favoriteAlcohol.trim(), dislikedFoods: dislikedFoods.trim(), allergies: allergies.trim(), drinkingLevel,
       instagramUrl: instagramUrl.trim(),
       favoriteRestaurants: favoriteRestaurants.trim(), desiredRestaurants: desiredRestaurants.trim(),
+      googleLocalGuideLevel: googleLocalGuideLevel === "未設定" ? "" : googleLocalGuideLevel,
     };
     await AsyncStorage.setItem(PROFILE_DETAILS_STORAGE_KEY, JSON.stringify(details));
     if (avatarUri) {
@@ -514,10 +518,11 @@ function EditProfileModal({
 
           <Text style={{ fontSize: 13, fontWeight: "600", color: colors.muted, marginBottom: 6 }}>生年月日</Text>
           <View style={{ flexDirection: "row", gap: 7, marginBottom: 10 }}><View style={{ flex: 1.35 }}><ProfileSelectField label="年" value={birthYear} options={BIRTH_YEARS} onChange={setBirthYear} /></View><View style={{ flex: 1 }}><ProfileSelectField label="月" value={birthMonth} options={MONTHS} onChange={setBirthMonth} /></View><View style={{ flex: 1 }}><ProfileSelectField label="日" value={birthDay} options={DAYS} onChange={setBirthDay} /></View></View>
-          <Pressable onPress={() => setShowAge((value) => !value)} style={{ flexDirection: "row", alignItems: "center", marginBottom: 18 }}><View style={{ width: 22, height: 22, borderRadius: 6, backgroundColor: showAge ? "#E8A0BF" : colors.surface, borderWidth: 1, borderColor: showAge ? "#E8A0BF" : colors.border, alignItems: "center", justifyContent: "center" }}>{showAge ? <IconSymbol name="checkmark" size={14} color="#FFF" /> : null}</View><View style={{ marginLeft: 8 }}><Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground }}>年齢を公開する</Text><Text style={{ fontSize: 11, color: colors.muted, marginTop: 2 }}>生年月日は表示せず「X歳」のみ公開されます</Text></View></Pressable>
+          <Pressable onPress={() => setShowAge((value) => !value)} style={{ flexDirection: "row", alignItems: "center", marginBottom: 18 }}><View style={{ width: 22, height: 22, borderRadius: 6, backgroundColor: showAge ? "#E8A0BF" : colors.surface, borderWidth: 1, borderColor: showAge ? "#E8A0BF" : colors.border, alignItems: "center", justifyContent: "center" }}>{showAge ? <IconSymbol name="checkmark" size={14} color="#FFF" /> : null}</View><View style={{ marginLeft: 8 }}><Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground }}>年齢を公開する</Text><Text style={{ fontSize: 11, color: colors.muted, marginTop: 2 }}>生年月日は表示せず「20代後半」など年代のみ公開されます</Text></View></Pressable>
 
           <Text style={{ fontSize: 13, fontWeight: "600", color: colors.muted, marginBottom: 6 }}>出身地</Text><View style={{ marginBottom: 16 }}><ProfileSelectField label="出身地を選択" value={hometown} options={PREFECTURES} onChange={setHometown} /></View>
           <Text style={{ fontSize: 13, fontWeight: "600", color: colors.muted, marginBottom: 6 }}>居住地</Text><View style={{ marginBottom: 16 }}><ProfileSelectField label="居住地を選択" value={residence} options={PREFECTURES} onChange={setResidence} /></View>
+          <Text style={{ fontSize: 13, fontWeight: "600", color: colors.muted, marginBottom: 6 }}>Googleローカルガイドレベル</Text><View style={{ marginBottom: 16 }}><ProfileSelectField label="レベルを選択" value={googleLocalGuideLevel} options={GOOGLE_LOCAL_GUIDE_LEVELS} onChange={setGoogleLocalGuideLevel} /></View>
 
           {[
             { label: "職業", value: occupation, setter: setOccupation, placeholder: "職業を入力" },
@@ -722,6 +727,7 @@ export default function ProfileScreen() {
     favoriteAlcohol: CURRENT_USER.favoriteAlcohol ?? "", dislikedFoods: CURRENT_USER.dislikedFoods ?? "", allergies: CURRENT_USER.allergies ?? "",
     drinkingLevel: CURRENT_USER.drinkingLevel ?? "", instagramUrl: CURRENT_USER.instagramUrl ?? "",
     favoriteRestaurants: CURRENT_USER.favoriteRestaurants ?? "", desiredRestaurants: CURRENT_USER.desiredRestaurants ?? "",
+    googleLocalGuideLevel: CURRENT_USER.googleLocalGuideLevel ?? "",
   });
   const [memberId, setMemberId] = useState<string>("");
   useEffect(() => {
@@ -774,15 +780,7 @@ export default function ProfileScreen() {
     }, [memberIdentity?.memberId, user.id])
   );
 
-  const publishedAge = (() => {
-    if (!profileDetails.showAge || !profileDetails.birthDate) return null;
-    const birth = new Date(`${profileDetails.birthDate}T00:00:00`);
-    if (Number.isNaN(birth.getTime())) return null;
-    const now = new Date();
-    let age = now.getFullYear() - birth.getFullYear();
-    if (now.getMonth() < birth.getMonth() || (now.getMonth() === birth.getMonth() && now.getDate() < birth.getDate())) age -= 1;
-    return age;
-  })();
+  const publishedAge = getPublishedAgeBand(profileDetails.birthDate, profileDetails.showAge);
 
   return (
     <ScreenContainer>
@@ -981,12 +979,13 @@ export default function ProfileScreen() {
           <Text style={{ fontSize: 14, fontWeight: "800", color: colors.foreground, marginBottom: 12 }}>プロフィール情報</Text>
           <View style={{ flexDirection: "row", flexWrap: "wrap", rowGap: 12 }}>
             {[
-              ...(publishedAge !== null ? [{ label: "年齢", value: `${publishedAge}歳` }] : []),
+              ...(publishedAge !== null ? [{ label: "年代", value: publishedAge }] : []),
               { label: "出身地", value: profileDetails.hometown }, { label: "居住地", value: profileDetails.residence },
               { label: "職業", value: profileDetails.occupation }, { label: "趣味", value: profileDetails.hobbies },
               { label: "飲酒量", value: profileDetails.drinkingLevel }, { label: "好きなお酒", value: profileDetails.favoriteAlcohol },
               { label: "苦手な食材", value: profileDetails.dislikedFoods }, { label: "アレルギー", value: profileDetails.allergies },
               { label: "お気に入りのお店", value: profileDetails.favoriteRestaurants }, { label: "行ってみたいお店", value: profileDetails.desiredRestaurants },
+              { label: "Googleローカルガイド", value: profileDetails.googleLocalGuideLevel },
             ].filter((item) => item.value).map((item) => <View key={item.label} style={{ width: "50%", paddingRight: 8 }}><Text style={{ fontSize: 10, color: colors.muted }}>{item.label}</Text><Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground, marginTop: 2 }}>{item.value}</Text></View>)}
           </View>
           {profileDetails.instagramUrl ? <Pressable onPress={() => Linking.openURL(profileDetails.instagramUrl)} style={{ flexDirection: "row", alignItems: "center", marginTop: 14, paddingTop: 12, borderTopWidth: 0.5, borderTopColor: colors.border }}><IconSymbol name="camera.fill" size={17} color="#C13584" /><Text style={{ flex: 1, marginLeft: 7, fontSize: 13, fontWeight: "700", color: "#C13584" }}>Instagramを見る</Text><IconSymbol name="chevron.right" size={15} color="#C13584" /></Pressable> : null}

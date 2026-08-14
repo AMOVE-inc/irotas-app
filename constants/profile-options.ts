@@ -15,6 +15,11 @@ export const DRINKING_LEVELS = [
   "日による",
 ] as const;
 
+export const GOOGLE_LOCAL_GUIDE_LEVELS = [
+  "未設定",
+  ...Array.from({ length: 10 }, (_, index) => `レベル${index + 1}`),
+] as const;
+
 export const BIRTH_YEARS = Array.from({ length: 83 }, (_, index) => String(new Date().getFullYear() - 18 - index));
 export const MONTHS = Array.from({ length: 12 }, (_, index) => String(index + 1).padStart(2, "0"));
 export const DAYS = Array.from({ length: 31 }, (_, index) => String(index + 1).padStart(2, "0"));
@@ -36,4 +41,5 @@ export interface ProfileDetails {
   instagramUrl: string;
   favoriteRestaurants: string;
   desiredRestaurants: string;
+  googleLocalGuideLevel: string;
 }

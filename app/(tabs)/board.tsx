@@ -287,10 +287,9 @@ function SelfIntroductionContent({ thread, compact = false }: { thread: BoardThr
   const introduction = thread.selfIntroduction;
   if (!introduction) return null;
   return (
-    <View style={{ backgroundColor: "#F5F2F8", borderRadius: 12, padding: compact ? 10 : 14, marginBottom: compact ? 8 : 16, borderWidth: 1, borderColor: "#DED6E7" }}>
-      <Text style={{ fontSize: 12, fontWeight: "900", color: "#6A5B87", marginBottom: 5 }}>自己紹介</Text>
+    <View style={{ backgroundColor: colors.surface, padding: 0, marginBottom: compact ? 8 : 16 }}>
       <MentionText content={introduction.introduction} groups={BOARD_MENTION_GROUPS} />
-      {!compact && introduction.wantToTry ? <View style={{ marginTop: 12, paddingTop: 10, borderTopWidth: 1, borderTopColor: colors.border }}><Text style={{ fontSize: 12, fontWeight: "900", color: "#6A5B87", marginBottom: 5 }}>IRO+でやってみたいこと</Text><MentionText content={introduction.wantToTry} groups={BOARD_MENTION_GROUPS} /></View> : null}
+      {!compact && introduction.wantToTry ? <View style={{ marginTop: 12, paddingTop: 10, borderTopWidth: 1, borderTopColor: colors.border }}><Text style={{ fontSize: 12, fontWeight: "900", color: colors.foreground, marginBottom: 5 }}>IRO+でやってみたいこと</Text><MentionText content={introduction.wantToTry} groups={BOARD_MENTION_GROUPS} /></View> : null}
     </View>
   );
 }
@@ -2150,7 +2149,10 @@ export default function BoardScreen() {
         const withoutImports = current.filter((thread) => !thread.id.startsWith("imported-contest-"));
         return [...items.map((item) => item.thread), ...withoutImports];
       });
-      setImportedComments(Object.fromEntries(items.map((item) => [item.thread.id, item.comments])));
+      setImportedComments((current) => ({
+        ...current,
+        ...Object.fromEntries(items.map((item) => [item.thread.id, item.comments])),
+      }));
     });
   }, []);
 
@@ -2171,7 +2173,8 @@ export default function BoardScreen() {
   useEffect(() => {
     setCategories((current) => [
       ...current.filter((category) => category.group !== "club"),
-      { key: "club-all", label: "今月の部活動レポート", group: "club", createdByAdmin: true },
+      { key: "club-introduction", label: "部活紹介・入部申請", group: "club", createdByAdmin: true },
+      { key: "club-all", label: "活動報告", group: "club", createdByAdmin: true },
       ...clubs.map((club) => ({ key: `club-${club.id}`, label: club.name, group: "club" as const, createdByAdmin: true })),
     ]);
   }, [clubs]);
@@ -2208,16 +2211,16 @@ export default function BoardScreen() {
   }, [threadParam, allThreads]);
   const canAccessCategory = (category: BoardCategory) => {
     if (category.group !== "club" || userIsAdmin) return true;
-    if (category.key === "club-all") {
-      return clubs.some((club) => canViewClubThread(authUser?.role, CURRENT_USER.id, club.memberIds));
-    }
+    if (category.key === "club-all" || category.key === "club-introduction") return true;
     const club = clubs.find((item) => `club-${item.id}` === category.key);
     return Boolean(club && canViewClubThread(authUser?.role, CURRENT_USER.id, club.memberIds));
   };
   const visibleCategories = categories
-    .filter((category) => category.group === activeGroup && (activeGroup === "club" || canAccessCategory(category)))
+    .filter((category) => category.group === activeGroup && canAccessCategory(category))
     .sort((a, b) => {
       if (activeGroup !== "club") return 0;
+      if (a.key === "club-introduction") return -1;
+      if (b.key === "club-introduction") return 1;
       if (a.key === "club-all") return -1;
       if (b.key === "club-all") return 1;
       const aClub = clubs.find((club) => `club-${club.id}` === a.key);
@@ -2242,7 +2245,8 @@ export default function BoardScreen() {
       "gourmet-advice": { icon: "sparkles", description: "お店選びやグルメの相談", accent: "#8C6DB0" },
       "free-chat": { icon: "bubble.left.and.bubble.right.fill", description: "気軽に投稿できる自由な掲示板", accent: "#5F9E8C" },
       "gourmet-map": { icon: "map.fill", description: "みんなの厳選グルメを地図と一覧で探す", accent: "#D56791" },
-      "club-all": { icon: "calendar", description: "各部活の今月の活動をまとめて確認", accent: "#4E8F65" },
+      "club-introduction": { icon: "person.badge.plus", description: "部活を見つけて部長へ入部申請", accent: "#5579A6" },
+      "club-all": { icon: "calendar", description: "各部活の活動レポートをまとめて確認", accent: "#4E8F65" },
     };
     return presentations[category.key] ?? { icon: "bubble.left.and.bubble.right.fill", description: "掲示板カテゴリ", accent: "#A7C7E7" };
   };
@@ -2274,7 +2278,7 @@ export default function BoardScreen() {
       router.push("/gourmet-map" as any);
       return;
     }
-    if (category.group === "club" && category.key !== "club-all" && !canAccessCategory(category)) {
+    if (category.group === "club" && category.key !== "club-all" && category.key !== "club-introduction" && !canAccessCategory(category)) {
       router.push("/clubs");
       return;
     }
@@ -2282,6 +2286,20 @@ export default function BoardScreen() {
   };
 
   const activeCategoryLabel = categories.find((category) => category.key === activeCategory)?.label ?? "掲示板";
+  const renderCategoryRow = (cat: BoardCategory) => {
+    const presentation = categoryPresentation(cat);
+    return (
+      <Pressable
+        key={cat.key}
+        onPress={() => handleOpenCategory(cat)}
+        style={{ flexDirection: "row", alignItems: "center", minHeight: 62, borderRadius: 14, paddingHorizontal: 13, paddingVertical: 9, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border }}
+      >
+        <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: `${presentation.accent}20`, alignItems: "center", justifyContent: "center" }}><IconSymbol name={presentation.icon as any} size={21} color={presentation.accent} /></View>
+        <View style={{ flex: 1, marginLeft: 11 }}><Text style={{ fontSize: 15, fontWeight: "900", color: colors.foreground }}>{cat.label}</Text><Text style={{ fontSize: 11, color: colors.muted, marginTop: 3 }}>{presentation.description}</Text></View>
+        <IconSymbol name="chevron.right" size={17} color={colors.muted} />
+      </Pressable>
+    );
+  };
 
   return (
     <ScreenContainer>
@@ -2336,22 +2354,10 @@ export default function BoardScreen() {
           })}
         </View>
         <View style={{ paddingHorizontal: 16, paddingVertical: 10, gap: 8 }}>
-            {activeGroup === "club" ? <Text style={{ fontSize: 12, fontWeight: "700", color: colors.muted, marginBottom: 1 }}>活動レポートと入部中の部活</Text> : null}
-            {visibleCategories.map((cat) => {
-              const presentation = categoryPresentation(cat);
-              const isLockedClub = cat.group === "club" && cat.key !== "club-all" && !canAccessCategory(cat);
-              return (
-                <Pressable
-                  key={cat.key}
-                  onPress={() => handleOpenCategory(cat)}
-                  style={{ flexDirection: "row", alignItems: "center", minHeight: 62, borderRadius: 14, paddingHorizontal: 13, paddingVertical: 9, backgroundColor: isLockedClub ? "#EFEFF2" : colors.surface, borderWidth: 1, borderColor: colors.border, opacity: isLockedClub ? 0.68 : 1 }}
-                >
-                  <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: `${presentation.accent}20`, alignItems: "center", justifyContent: "center" }}><IconSymbol name={presentation.icon as any} size={21} color={presentation.accent} /></View>
-                  <View style={{ flex: 1, marginLeft: 11 }}><Text style={{ fontSize: 15, fontWeight: "900", color: isLockedClub ? colors.muted : colors.foreground }}>{cat.label}</Text><Text style={{ fontSize: 11, color: colors.muted, marginTop: 3 }}>{isLockedClub ? "未参加・タップして入部申請" : presentation.description}</Text></View>
-                  <IconSymbol name="chevron.right" size={17} color={colors.muted} />
-                </Pressable>
-              );
-            })}
+            {activeGroup === "club" ? <Text style={{ fontSize: 13, fontWeight: "900", color: colors.foreground, marginBottom: 1 }}>全体共通</Text> : null}
+            {visibleCategories.filter((cat) => activeGroup !== "club" || cat.key === "club-introduction" || cat.key === "club-all").map(renderCategoryRow)}
+            {activeGroup === "club" ? <Text style={{ fontSize: 13, fontWeight: "900", color: colors.foreground, marginTop: 8, marginBottom: 1 }}>入部中の部活</Text> : null}
+            {activeGroup === "club" ? visibleCategories.filter((cat) => cat.key !== "club-introduction" && cat.key !== "club-all").map(renderCategoryRow) : null}
         </View>
         {userIsAdmin ? <Pressable onPress={() => setShowAddCategory(true)} style={{ flexDirection: "row", alignItems: "center", alignSelf: "flex-end", marginHorizontal: 16, marginBottom: 10, paddingVertical: 5 }}><IconSymbol name="plus" size={13} color={colors.muted} /><Text style={{ fontSize: 12, color: colors.muted, marginLeft: 4 }}>カテゴリを追加</Text></Pressable> : null}
       </View> : null}

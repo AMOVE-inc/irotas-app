@@ -16,6 +16,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { PROFILE_DETAILS_STORAGE_KEY, type ProfileDetails } from "@/constants/profile-options";
 import { getPrivateMemberNote, savePrivateMemberNote } from "@/lib/profile-notes-store";
+import { getPublishedAgeBand } from "@/lib/member-age";
 import { useEffect, useState } from "react";
 import {
   Alert,
@@ -71,15 +72,9 @@ export default function MemberProfileScreen() {
     favoriteAlcohol: member.favoriteAlcohol, dislikedFoods: member.dislikedFoods, allergies: member.allergies,
     drinkingLevel: member.drinkingLevel, instagramUrl: member.instagramUrl,
     favoriteRestaurants: member.favoriteRestaurants, desiredRestaurants: member.desiredRestaurants,
+    googleLocalGuideLevel: member.googleLocalGuideLevel,
   };
-  const publishedAge = (() => {
-    if (!details.showAge || !details.birthDate) return null;
-    const birth = new Date(`${details.birthDate}T00:00:00`);
-    const now = new Date();
-    let age = now.getFullYear() - birth.getFullYear();
-    if (now.getMonth() < birth.getMonth() || (now.getMonth() === birth.getMonth() && now.getDate() < birth.getDate())) age -= 1;
-    return age;
-  })();
+  const publishedAge = getPublishedAgeBand(details.birthDate, details.showAge);
 
   const handleStartDM = () => {
     const roomId = getOrCreateDMChat(CURRENT_USER.id, member.id, member.name);
@@ -263,12 +258,13 @@ export default function MemberProfileScreen() {
           <View style={{ backgroundColor: colors.surface, borderRadius: 14, padding: 16 }}>
             <View style={{ flexDirection: "row", flexWrap: "wrap", rowGap: 13 }}>
               {[
-                ...(publishedAge !== null ? [{ label: "年齢", value: `${publishedAge}歳` }] : []),
+                ...(publishedAge !== null ? [{ label: "年代", value: publishedAge }] : []),
                 { label: "出身地", value: details.hometown }, { label: "居住地", value: details.residence },
                 { label: "職業", value: details.occupation }, { label: "趣味", value: details.hobbies },
                 { label: "飲酒量", value: details.drinkingLevel }, { label: "好きなお酒", value: details.favoriteAlcohol },
                 { label: "苦手な食材", value: details.dislikedFoods }, { label: "アレルギー", value: details.allergies },
                 { label: "お気に入りのお店", value: details.favoriteRestaurants }, { label: "行ってみたいお店", value: details.desiredRestaurants },
+                { label: "Googleローカルガイド", value: details.googleLocalGuideLevel },
               ].filter((item) => item.value).map((item) => <View key={item.label} style={{ width: "50%", paddingRight: 8 }}><Text style={{ fontSize: 10, color: colors.muted }}>{item.label}</Text><Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground, marginTop: 2 }}>{item.value}</Text></View>)}
             </View>
             {details.instagramUrl ? <Pressable onPress={() => Linking.openURL(details.instagramUrl!)} style={{ flexDirection: "row", alignItems: "center", marginTop: 14, paddingTop: 12, borderTopWidth: 0.5, borderTopColor: colors.border }}><IconSymbol name="camera.fill" size={17} color="#C13584" /><Text style={{ flex: 1, marginLeft: 7, fontSize: 13, fontWeight: "700", color: "#C13584" }}>Instagramを見る</Text><IconSymbol name="chevron.right" size={15} color="#C13584" /></Pressable> : null}

@@ -31,6 +31,7 @@ export interface Member {
   instagramUrl?: string;
   favoriteRestaurants?: string;
   desiredRestaurants?: string;
+  googleLocalGuideLevel?: string;
   participationCount?: number;
   organizerCount?: number;
   followerCount?: number;
@@ -710,6 +711,13 @@ export const BOARD_THREADS: BoardThread[] = [
     isRecruiting: false,
   },
   {
+    id: "club-introduction-guide", title: "部活紹介・入部申請",
+    author: MEMBERS[0], category: "club-introduction", commentCount: 0,
+    lastUpdated: "2026-08-14T12:00:00+09:00",
+    preview: "各部活の紹介を確認し、入りたい部活へ入部申請できます。申請は部長の承認後に確定します。",
+    isRecruiting: false,
+  },
+  {
     id: "t9", title: "今月の部活動レポート",
     author: MEMBERS[0], category: "club-all", commentCount: 9,
     lastUpdated: "2026-03-24T07:30:00",
@@ -906,7 +914,8 @@ export const BOARD_CATEGORIES: BoardCategory[] = [
   { key: "gourmet-advice", label: "教えてグルメ相談室", group: "all", createdByAdmin: true },
   { key: "free-chat", label: "なんでも掲示板", group: "all", createdByAdmin: true },
   { key: "gourmet-map", label: "グルメマップ", group: "all", createdByAdmin: true },
-  { key: "club-all", label: "今月の部活動レポート", group: "club", createdByAdmin: true },
+  { key: "club-introduction", label: "部活紹介・入部申請", group: "club", createdByAdmin: true },
+  { key: "club-all", label: "活動報告", group: "club", createdByAdmin: true },
   ...CLUBS.map((club) => ({
     key: `club-${club.id}`,
     label: club.name,

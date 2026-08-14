@@ -23,11 +23,11 @@ describe("board category ordering", () => {
     expect(introduction?.label).toBe("自己紹介");
   });
 
-  it("puts the monthly report before clubs the member has joined", () => {
+  it("separates shared club boards from joined clubs", () => {
     const clubCategories = BOARD_CATEGORIES.filter((category) => category.group === "club");
-    expect(clubCategories[0].label).toBe("今月の部活動レポート");
+    expect(clubCategories.slice(0, 2).map((category) => category.label)).toEqual(["部活紹介・入部申請", "活動報告"]);
     const joinedClubNames = CLUBS.filter((club) => club.memberIds.includes(CURRENT_USER.id)).map((club) => club.name);
-    const visibleLabels = clubCategories.slice(1).filter((category) => joinedClubNames.includes(category.label)).map((category) => category.label);
+    const visibleLabels = clubCategories.slice(2).filter((category) => joinedClubNames.includes(category.label)).map((category) => category.label);
     expect(visibleLabels).toEqual(joinedClubNames);
   });
 

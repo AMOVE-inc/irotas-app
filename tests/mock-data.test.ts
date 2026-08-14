@@ -83,7 +83,8 @@ describe("Mock Data Integrity", () => {
       "教えてグルメ相談室",
       "なんでも掲示板",
       "グルメマップ",
-      "今月の部活動レポート",
+      "部活紹介・入部申請",
+      "活動報告",
       "ディズニー部",
       "散歩部",
       "旅行部",
@@ -97,7 +98,7 @@ describe("Mock Data Integrity", () => {
       "ランニング部",
       "スポーツ部",
     ]);
-    expect(BOARD_CATEGORIES.filter((category) => category.group === "club")).toHaveLength(13);
+    expect(BOARD_CATEGORIES.filter((category) => category.group === "club")).toHaveLength(14);
     expect(labels).not.toContain("関東グルメ");
     expect(labels).not.toContain("関西グルメ");
   });
