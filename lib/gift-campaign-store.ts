@@ -1,5 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import type { MemberRank } from "@/constants/mock-data";
+import { loadImportedDiscordGiftCampaigns } from "@/lib/discord-benefits-import";
 
 export type GiftCategory = "gourmet" | "non_gourmet";
 export type GiftStatus = "open" | "closed";
@@ -29,10 +30,10 @@ export interface GiftApplication {
 
 const CAMPAIGNS_KEY = "gift_campaigns_v2";
 const APPLICATIONS_KEY = "gift_campaign_applications_v2";
+const LEGACY_DISCORD_GIFT_IDS = new Set(["discord-gift-afternoon-tea", "discord-gift-ushifuji"]);
 
 export const INITIAL_GIFT_CAMPAIGNS: GiftCampaign[] = [
-  { id: "discord-gift-afternoon-tea", title: "アフタヌーンティー女子会", description: "Discordのプレゼント企画で実施したアフタヌーンティー女子会の記録です。", category: "gourmet", minimumRank: "regular", winnerCount: 4, deadline: "2026-05-31", status: "closed", imageEmoji: "🫖", archivedFromDiscord: true },
-  { id: "discord-gift-ushifuji", title: "焼肉うしふじ お食事会", description: "Discordのプレゼント企画で実施したお食事会の記録です。", category: "gourmet", minimumRank: "regular", winnerCount: 4, deadline: "2026-04-30", status: "closed", imageEmoji: "🥩", archivedFromDiscord: true },
+  ...loadImportedDiscordGiftCampaigns(),
   { id: "g1", title: "高級レストラン ペアディナー券", description: "都内レストランのペアディナーへご招待します。", category: "gourmet", minimumRank: "gold", winnerCount: 3, deadline: "2026-08-31", status: "open", imageEmoji: "🍽️", imageUrl: "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=600&h=600&fit=crop" },
   { id: "g2", title: "ソムリエ厳選ワインセット", description: "厳選したワイン3本セットをプレゼントします。", category: "gourmet", minimumRank: "silver", winnerCount: 5, deadline: "2026-08-25", status: "open", imageEmoji: "🍷", imageUrl: "https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?w=600&h=600&fit=crop" },
   { id: "g3", title: "IRO+ オリジナルグッズ", description: "トートバッグとタンブラーのセットです。", category: "non_gourmet", minimumRank: "regular", winnerCount: 10, deadline: "2026-08-20", status: "open", imageEmoji: "🎁", imageUrl: "https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=600&h=600&fit=crop" },
@@ -42,7 +43,7 @@ export const INITIAL_GIFT_CAMPAIGNS: GiftCampaign[] = [
 export async function getGiftCampaigns(): Promise<GiftCampaign[]> {
   const raw = await AsyncStorage.getItem(CAMPAIGNS_KEY);
   if (!raw) return INITIAL_GIFT_CAMPAIGNS;
-  const saved = JSON.parse(raw) as GiftCampaign[];
+  const saved = (JSON.parse(raw) as GiftCampaign[]).filter((item) => !LEGACY_DISCORD_GIFT_IDS.has(item.id));
   const savedIds = new Set(saved.map((item) => item.id));
   return [...saved, ...INITIAL_GIFT_CAMPAIGNS.filter((item) => item.archivedFromDiscord && !savedIds.has(item.id))].map((item) => ({
     ...item,

@@ -2,6 +2,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useEffect, useSyncExternalStore } from "react";
 import { COUPONS, type Coupon } from "@/constants/mock-data";
 import type { CouponUsage } from "@/lib/coupon-rules";
+import { loadImportedDiscordCoupons } from "@/lib/discord-benefits-import";
 
 const CONFIG_KEY = "coupon_usage_types_v1";
 const USAGE_KEY = "coupon_member_usage_v1";
@@ -11,7 +12,10 @@ const MANAGED_KEY = "coupon_managed_v2";
 type UsageByMember = Record<string, Record<string, CouponUsage>>;
 const EMPTY_USAGES: Record<string, CouponUsage> = {};
 
-let coupons: Coupon[] = COUPONS.map((coupon) => ({ ...coupon }));
+const IMPORTED_DISCORD_COUPONS = loadImportedDiscordCoupons();
+const INITIAL_COUPONS = [...IMPORTED_DISCORD_COUPONS, ...COUPONS];
+const LEGACY_DISCORD_COUPON_IDS = new Set(["discord-coupon-contest-3000", "discord-coupon-contest-5000"]);
+let coupons: Coupon[] = INITIAL_COUPONS.map((coupon) => ({ ...coupon }));
 let usages: UsageByMember = {};
 let hydrated = false;
 let hydrationPromise: Promise<void> | null = null;
@@ -36,9 +40,9 @@ function ensureHydrated() {
   hydrationPromise = Promise.all([AsyncStorage.getItem(CONFIG_KEY), AsyncStorage.getItem(USAGE_KEY), AsyncStorage.getItem(AWARDED_KEY), AsyncStorage.getItem(MANAGED_KEY)])
     .then(([savedConfig, savedUsage, savedAwarded, savedManaged]) => {
       if (savedManaged) {
-        const managed = JSON.parse(savedManaged) as Coupon[];
+        const managed = (JSON.parse(savedManaged) as Coupon[]).filter((item) => !LEGACY_DISCORD_COUPON_IDS.has(item.id));
         const managedIds = new Set(managed.map((item) => item.id));
-        coupons = [...managed, ...COUPONS.filter((item) => item.sourceContestId === "discord-archive" && !managedIds.has(item.id))].map((item) => ({ ...item, imageUrl: item.imageUrl ?? COUPONS.find((seed) => seed.id === item.id)?.imageUrl }));
+        coupons = [...managed, ...IMPORTED_DISCORD_COUPONS.filter((item) => !managedIds.has(item.id))].map((item) => ({ ...item, imageUrl: item.imageUrl ?? INITIAL_COUPONS.find((seed) => seed.id === item.id)?.imageUrl }));
       }
       if (savedConfig) {
         const config = JSON.parse(savedConfig) as Record<string, Coupon["usageType"]>;

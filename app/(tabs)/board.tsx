@@ -67,7 +67,7 @@ import { boardPollResult, finalizeBoardPollOnce, isBoardPollOpen, loadBoardPoll,
 import { addInAppNotification } from "@/lib/in-app-notifications-store";
 import { deleteBoardComment, deleteBoardThread, loadBoardCommentEdits, loadDeletedBoardCommentIds, loadDeletedBoardThreadIds, saveBoardCommentEdit } from "@/lib/board-content-store";
 import { CalendarField } from "@/components/calendar-field";
-import { isClubSelfIntroduction, isRecruitmentBoardCategory, isThreadPinned, sortRecruitmentThreads } from "@/lib/board-recruitment";
+import { getBoardRecruitmentStatus, isClubSelfIntroduction, isRecruitmentBoardCategory, isThreadPinned, sortRecruitmentThreads, type BoardRecruitmentStatus } from "@/lib/board-recruitment";
 
 const BOARD_MENTION_GROUPS = getMentionGroups(MEMBERS, CLUBS);
 const THREAD_REACTION_EMOJIS = ["👏", "😊", "❤️", "🎉", "😋"] as const;
@@ -139,7 +139,9 @@ function LinkifiedText({ content }: { content: string }) {
   return <MentionText content={content} groups={BOARD_MENTION_GROUPS} />;
 }
 
-function RecruitmentStatusBadge({ recruiting, onLongPress }: { recruiting: boolean; onLongPress?: () => void }) {
+function RecruitmentStatusBadge({ status, onLongPress }: { status: BoardRecruitmentStatus; onLongPress?: () => void }) {
+  if (status === "none") return null;
+  const recruiting = status === "open";
   return <Pressable disabled={!onLongPress} onLongPress={onLongPress} delayLongPress={450} accessibilityLabel={recruiting ? "募集中。長押しで状態を変更" : "募集終了。長押しで状態を変更"} style={{ marginRight: 9, borderRadius: 10, paddingHorizontal: 9, paddingVertical: 6, backgroundColor: recruiting ? "#DDF3E3" : "#DADADD" }}><Text style={{ fontSize: 11, fontWeight: "900", color: recruiting ? "#247A42" : "#66666B" }}>{recruiting ? "募集中" : "募集終了"}</Text></Pressable>;
 }
 
@@ -297,8 +299,9 @@ function ThreadCard({ thread, onPress, onEdit, onChangeRecruitment }: { thread: 
   const contestOpen = thread.gourmetContest ? isContestCommentingOpen(thread) : false;
   const clubSelfIntroduction = isClubSelfIntroduction(thread);
   const recruitmentManaged = isRecruitmentBoardCategory(thread.category) && !clubSelfIntroduction;
+  const recruitmentStatus = getBoardRecruitmentStatus(thread);
   const pinned = isThreadPinned(thread);
-  const visuallyClosed = (thread.gourmetContest && !contestOpen) || (recruitmentManaged && !thread.isRecruiting);
+  const visuallyClosed = (thread.gourmetContest && !contestOpen) || (recruitmentManaged && recruitmentStatus === "closed");
   useEffect(() => { void loadThreadReactions(thread.id, thread.reactions).then(setCardReactions); }, [thread.id, thread.reactions]);
   const toggleCardReaction = () => {
     if (!cardEmoji) return;
@@ -344,7 +347,7 @@ function ThreadCard({ thread, onPress, onEdit, onChangeRecruitment }: { thread: 
         style={{ flexDirection: "row", alignItems: "center", marginBottom: 8 }}
       >
         {pinned ? <View style={{ marginRight: 7, borderRadius: 10, paddingHorizontal: 8, paddingVertical: 6, backgroundColor: "#FFF2C7" }}><Text style={{ fontSize: 11, fontWeight: "900", color: "#8A6512" }}>📌 固定</Text></View> : null}
-        {recruitmentManaged ? <RecruitmentStatusBadge recruiting={thread.isRecruiting} onLongPress={onChangeRecruitment} /> : thread.gourmetContest ? <View style={{ marginRight: 9, borderRadius: 10, paddingHorizontal: 9, paddingVertical: 6, backgroundColor: contestOpen ? "#DDF3E3" : "#DADADD" }}><Text style={{ fontSize: 11, fontWeight: "900", color: contestOpen ? "#247A42" : "#66666B" }}>{contestOpen ? "開催中" : "開催終了"}</Text></View> : null}
+        {recruitmentManaged ? <RecruitmentStatusBadge status={recruitmentStatus} onLongPress={onChangeRecruitment} /> : thread.gourmetContest ? <View style={{ marginRight: 9, borderRadius: 10, paddingHorizontal: 9, paddingVertical: 6, backgroundColor: contestOpen ? "#DDF3E3" : "#DADADD" }}><Text style={{ fontSize: 11, fontWeight: "900", color: contestOpen ? "#247A42" : "#66666B" }}>{contestOpen ? "開催中" : "開催終了"}</Text></View> : null}
         <Image
           source={thread.author.avatar}
           style={{ width: 30, height: 30, borderRadius: 15 }}
@@ -691,6 +694,7 @@ function ThreadDetailModal({
   const isContest = Boolean(thread.gourmetContest);
   const clubSelfIntroduction = isClubSelfIntroduction(thread);
   const recruitmentManaged = isRecruitmentBoardCategory(thread.category) && !clubSelfIntroduction;
+  const recruitmentStatus = getBoardRecruitmentStatus(thread);
   const pollAllowed = !["introduction", "meal-report", "gourmet-contest", "gourmet-advice"].includes(thread.category);
   const contestCommentingOpen = isContest ? isContestCommentingOpen(thread) : true;
   const contestReferenceUrlValid = !contestReferenceUrl.trim() || /^https?:\/\/\S+$/i.test(contestReferenceUrl.trim());
@@ -914,7 +918,7 @@ function ThreadDetailModal({
           {/* Thread content */}
           <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 12 }}>
             {isThreadPinned(thread) ? <View style={{ marginRight: 7, borderRadius: 10, paddingHorizontal: 8, paddingVertical: 6, backgroundColor: "#FFF2C7" }}><Text style={{ fontSize: 11, fontWeight: "900", color: "#8A6512" }}>📌 固定</Text></View> : null}
-            {recruitmentManaged ? <RecruitmentStatusBadge recruiting={thread.isRecruiting} onLongPress={onChangeRecruitment} /> : null}
+            {recruitmentManaged ? <RecruitmentStatusBadge status={recruitmentStatus} onLongPress={onChangeRecruitment} /> : null}
             <Image
               source={thread.author.avatar}
               style={{ width: 36, height: 36, borderRadius: 18 }}
@@ -1700,6 +1704,7 @@ function CreateThreadModal({
         ? normalizedComment || normalizedMenu || `${resolvedArea}でいただきました。`
         : isGourmetAdvice ? adviceComment.trim() : isIntroduction ? introductionText.trim() : content.trim(),
       isRecruiting: hasManagedRecruitmentStatus ? !(category.startsWith("club-club-") && /自己紹介/.test(title.trim())) : isMealReport || isGourmetAdvice || isIntroduction || isGourmetContest ? false : isRecruiting,
+      recruitmentStatus: hasManagedRecruitmentStatus ? (category.startsWith("club-club-") && /自己紹介/.test(title.trim()) ? "none" : "open") : undefined,
       isPinned: category.startsWith("club-club-") && /自己紹介/.test(title.trim()) ? true : undefined,
       recruitCapacity: !hasManagedRecruitmentStatus && !isMealReport && !isGourmetAdvice && !isIntroduction && !isGourmetContest && isRecruiting ? parseInt(capacity || "10", 10) : undefined,
       recruitAttendees: 0,
@@ -2070,7 +2075,7 @@ function CreateThreadModal({
             {pollEnabled && !pollValid ? <Text style={{ fontSize: 12, color: colors.error, marginTop: 6 }}>質問・選択肢2つ以上・期限を入力してください</Text> : null}
           </View> : null}
 
-          {hasManagedRecruitmentStatus ? <View style={{ flexDirection: "row", alignItems: "center", backgroundColor: "#EEF7F0", borderRadius: 12, padding: 13, marginBottom: 16, borderWidth: 1, borderColor: "#CFE7D5" }}><RecruitmentStatusBadge recruiting /><Text style={{ flex: 1, fontSize: 12, lineHeight: 18, color: "#356845" }}>新規投稿は「募集中」で公開されます。投稿後に長押しすると募集終了へ変更できます。</Text></View> : !isMealReport && !isGourmetAdvice && !isIntroduction && !isGourmetContest ? (
+          {hasManagedRecruitmentStatus ? <View style={{ flexDirection: "row", alignItems: "center", backgroundColor: "#EEF7F0", borderRadius: 12, padding: 13, marginBottom: 16, borderWidth: 1, borderColor: "#CFE7D5" }}><RecruitmentStatusBadge status="open" /><Text style={{ flex: 1, fontSize: 12, lineHeight: 18, color: "#356845" }}>新規投稿は「募集中」で公開されます。投稿後に長押しすると「募集中・募集終了・なし」から変更できます。</Text></View> : !isMealReport && !isGourmetAdvice && !isIntroduction && !isGourmetContest ? (
             <>
               {/* Recruiting toggle */}
               <Pressable
@@ -2244,7 +2249,7 @@ export default function BoardScreen() {
   const clubForThread = (thread: BoardThread) => clubs.find((club) => `club-${club.id}` === thread.category);
   const canChangeRecruitment = (thread: BoardThread) => isRecruitmentBoardCategory(thread.category) && !isClubSelfIntroduction(thread) && (thread.author.id === CURRENT_USER.id || userCanModerateRecruitment || clubForThread(thread)?.leaderId === CURRENT_USER.id);
   const canPinThread = (thread: BoardThread) => thread.category.startsWith("club-club-") && !isClubSelfIntroduction(thread) && (thread.author.id === CURRENT_USER.id || clubForThread(thread)?.leaderId === CURRENT_USER.id || userCanModerateRecruitment);
-  const updateThreadManagement = (thread: BoardThread, changes: Pick<BoardThread, "isRecruiting" | "isPinned">) => {
+  const updateThreadManagement = (thread: BoardThread, changes: Pick<BoardThread, "isRecruiting" | "isPinned" | "recruitmentStatus">) => {
     const updated = { ...thread, ...changes, lastUpdated: new Date().toISOString() };
     setEditedThreads((current) => ({ ...current, [updated.id]: updated }));
     setSelectedThread((current) => current?.id === updated.id ? updated : current);
@@ -2253,10 +2258,11 @@ export default function BoardScreen() {
   const promptRecruitmentStatus = (thread: BoardThread) => {
     if (!canChangeRecruitment(thread) && !canPinThread(thread)) return;
     Alert.alert("投稿の管理", "変更する項目を選択してください。", [
-      ...(canPinThread(thread) ? [{ text: isThreadPinned(thread) ? "固定表示を解除" : "一番上に固定", onPress: () => updateThreadManagement(thread, { isRecruiting: thread.isRecruiting, isPinned: !isThreadPinned(thread) }) }] : []),
+      ...(canPinThread(thread) ? [{ text: isThreadPinned(thread) ? "固定表示を解除" : "一番上に固定", onPress: () => updateThreadManagement(thread, { isRecruiting: thread.isRecruiting, isPinned: !isThreadPinned(thread), recruitmentStatus: getBoardRecruitmentStatus(thread) }) }] : []),
       ...(canChangeRecruitment(thread) ? [
-        { text: "募集中にする", onPress: () => updateThreadManagement(thread, { isRecruiting: true, isPinned: thread.isPinned }) },
-        { text: "募集終了にする", onPress: () => updateThreadManagement(thread, { isRecruiting: false, isPinned: thread.isPinned }) },
+        { text: "募集中にする", onPress: () => updateThreadManagement(thread, { isRecruiting: true, isPinned: thread.isPinned, recruitmentStatus: "open" }) },
+        { text: "募集終了にする", onPress: () => updateThreadManagement(thread, { isRecruiting: false, isPinned: thread.isPinned, recruitmentStatus: "closed" }) },
+        { text: "ステータスなし", onPress: () => updateThreadManagement(thread, { isRecruiting: false, isPinned: thread.isPinned, recruitmentStatus: "none" }) },
       ] : []),
       { text: "キャンセル", style: "cancel" },
     ] as any);

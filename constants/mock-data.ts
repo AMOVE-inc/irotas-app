@@ -199,6 +199,7 @@ export interface BoardThread {
   lastUpdated: string;
   preview: string;
   isRecruiting: boolean; // 参加者募集中かどうか
+  recruitmentStatus?: "open" | "closed" | "none"; // 掲示板上の募集ステータス（旧データはisRecruitingから補完）
   isPinned?: boolean; // 一覧上部へ固定（部活の自己紹介は常に固定）
   recruitCapacity?: number;
   recruitAttendees?: number;
@@ -825,14 +826,6 @@ export const CLUBS: Club[] = [
 ];
 
 export const COUPONS: Coupon[] = [
-  {
-    id: "discord-coupon-contest-3000", title: "グルメ選手権 イベントクーポン3,000円分",
-    description: "Discordで実施した過去のグルメ選手権で配布されたイベント割引クーポンの記録です。", discount: "3,000円OFF", expiresAt: "2026-03-31", code: "ARCHIVED", requiredRank: "regular", usageType: "single", status: "ended", sourceContestId: "discord-archive",
-  },
-  {
-    id: "discord-coupon-contest-5000", title: "グルメ選手権 イベントクーポン5,000円分",
-    description: "Discordで実施した過去のグルメ選手権で配布されたイベント割引クーポンの記録です。", discount: "5,000円OFF", expiresAt: "2025-12-31", code: "ARCHIVED", requiredRank: "regular", usageType: "single", status: "ended", sourceContestId: "discord-archive",
-  },
   {
     id: "c1", title: "焼肉 罪と罰 10%OFF",
     description: "IRO＋会員限定！お会計から10%割引", imageUrl: "https://images.unsplash.com/photo-1544025162-d76694265947?w=600&h=600&fit=crop",

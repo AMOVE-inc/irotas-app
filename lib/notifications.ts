@@ -138,7 +138,7 @@ export async function sendClubApprovalNotification(
     targetMemberId: applicantId,
     type: "club_approval",
     title: `${clubName}への入部が承認されました`,
-    body: `${leaderName}さんが入部申請を承認しました。部員限定スレッドを閲覧できます。`,
+    body: `${leaderName}さんが入部申請を承認しました。部員限定スレッドを閲覧できます。まずは${clubName}の自己紹介スレッドへ投稿しましょう。`,
     clubId,
   });
   if (Platform.OS === "web") return;
@@ -147,7 +147,7 @@ export async function sendClubApprovalNotification(
     await Notifications.scheduleNotificationAsync({
       content: {
         title: `${clubName}への入部が承認されました`,
-        body: `${leaderName}さんが入部申請を承認しました。部員限定コンテンツが閲覧できます。`,
+        body: `${leaderName}さんが入部申請を承認しました。まずは${clubName}の自己紹介スレッドへ投稿しましょう。`,
         data: { type: "club_approval", clubName },
         sound: true,
       },

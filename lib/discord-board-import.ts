@@ -1,7 +1,7 @@
 import archive from "../data/discord-board-2026-08-14.json";
 import { MEMBERS, type BoardComment, type BoardThread, type Member } from "../constants/mock-data";
 import { normalizeBoardReactions } from "./board-reactions";
-import { inferImportedRecruitment } from "./board-recruitment";
+import { inferImportedRecruitmentStatus } from "./board-recruitment";
 
 interface RawRecord {
   id: string;
@@ -50,6 +50,14 @@ export interface ImportedDiscordBoard {
   comments: Record<string, BoardComment[]>;
 }
 
+export function stripLegacyClubApplicationBlock(content: string): string {
+  return content
+    .replace(/\*{0,2}📝\s*入部申請フォーム\*{0,2}[\s\S]*?https:\/\/docs\.google\.com\/forms\/[^\s*]+\*{0,2}/g, "")
+    .replace(/\*{0,2}🔒\s*部員専用チャット\*{0,2}[\s\S]*?https:\/\/discord\.com\/channels\/[^\s*]+\*{0,2}/g, "")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
 export function loadDiscordBoardArchive(): ImportedDiscordBoard {
   const rawThreads = (archive.threads as RawThread[]).filter((record) => !(
     record.category === "meal-report" &&
@@ -76,6 +84,8 @@ export function loadDiscordBoardArchive(): ImportedDiscordBoard {
 
   const threads = rawThreads.map((record): BoardThread => {
     const threadComments = comments[record.id] ?? [];
+    const preview = record.category === "club-introduction" ? stripLegacyClubApplicationBlock(record.content) : record.content;
+    const recruitmentStatus = inferImportedRecruitmentStatus(record.category, record.title, preview);
     return {
       id: record.id,
       title: record.title,
@@ -83,8 +93,9 @@ export function loadDiscordBoardArchive(): ImportedDiscordBoard {
       category: record.category,
       commentCount: threadComments.length,
       lastUpdated: threadComments.at(-1)?.createdAt ?? record.createdAt,
-      preview: record.content,
-      isRecruiting: inferImportedRecruitment(record.category, record.title, record.content),
+      preview,
+      isRecruiting: recruitmentStatus === "open",
+      recruitmentStatus,
       images: record.images.length ? record.images : undefined,
       videos: record.videos.length ? record.videos : undefined,
       reactions: record.reactions ? normalizeBoardReactions(record.reactions) : undefined,
