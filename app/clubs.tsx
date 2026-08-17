@@ -672,6 +672,7 @@ function ClubDetailModal({
   const [wantsToDo, setWantsToDo] = useState("");
   const [messageToLeader, setMessageToLeader] = useState("");
   const [applicationError, setApplicationError] = useState("");
+  const [previewApplication, setPreviewApplication] = useState(false);
 
   const isMember = memberIds.includes(CURRENT_USER.id);
   const hasApplied = applicantIds.includes(CURRENT_USER.id);
@@ -820,7 +821,7 @@ function ClubDetailModal({
   };
 
   // 部員でない場合は申請画面のみ表示
-  if (!isMember) {
+  if (!isMember || previewApplication) {
     return (
       <View style={{ flex: 1, backgroundColor: colors.background }}>
         <View
@@ -834,7 +835,7 @@ function ClubDetailModal({
             borderBottomColor: colors.border,
           }}
         >
-          <Pressable onPress={onClose}>
+          <Pressable onPress={() => previewApplication ? setPreviewApplication(false) : onClose()}>
             <IconSymbol name="xmark" size={22} color={colors.foreground} />
           </Pressable>
           <Text style={{ flex: 1, fontSize: 17, fontWeight: "700", color: colors.foreground, marginLeft: 12 }}>
@@ -845,6 +846,7 @@ function ClubDetailModal({
           contentContainerStyle={{ alignItems: "center", padding: 24, paddingBottom: 48 }}
           keyboardShouldPersistTaps="handled"
         >
+          {previewApplication ? <View style={{ width: "100%", backgroundColor: "#EAF3FA", borderRadius: 12, padding: 12, marginBottom: 16 }}><Text style={{ fontSize: 12, fontWeight: "800", color: "#3E6F97", textAlign: "center" }}>管理者・部長向けの申請画面プレビューです</Text></View> : null}
           <Text style={{ fontSize: 48, marginBottom: 16 }}>{club.icon}</Text>
           <Text style={{ fontSize: 22, fontWeight: "800", color: colors.foreground, marginBottom: 8 }}>
             {club.name}
@@ -901,9 +903,9 @@ function ClubDetailModal({
               {applicationError ? <Text style={{ fontSize: 13, color: colors.error }}>{applicationError}</Text> : null}
               <Pressable
                 onPress={handleApply}
-                disabled={!wantsToDo.trim() || !messageToLeader.trim()}
+                disabled={previewApplication || !wantsToDo.trim() || !messageToLeader.trim()}
                 style={{
-                  backgroundColor: wantsToDo.trim() && messageToLeader.trim() ? "#E8A0BF" : colors.border,
+                  backgroundColor: !previewApplication && wantsToDo.trim() && messageToLeader.trim() ? "#E8A0BF" : colors.border,
                   borderRadius: 14,
                   paddingVertical: 14,
                   paddingHorizontal: 32,
@@ -911,7 +913,7 @@ function ClubDetailModal({
                   width: "100%",
                 }}
               >
-                <Text style={{ fontSize: 16, fontWeight: "700", color: "#FFF" }}>入部申請を送る</Text>
+                <Text style={{ fontSize: 16, fontWeight: "700", color: "#FFF" }}>{previewApplication ? "入部申請を送る（プレビュー）" : "入部申請を送る"}</Text>
               </Pressable>
             </View>
           ) : (
@@ -957,6 +959,7 @@ function ClubDetailModal({
         <Text style={{ flex: 1, fontSize: 17, fontWeight: "700", color: colors.foreground, marginLeft: 12 }}>
           {club.name}
         </Text>
+        {canManageMembers ? <Pressable onPress={() => setPreviewApplication(true)} style={{ borderRadius: 8, backgroundColor: "#EAF3FA", paddingHorizontal: 10, paddingVertical: 6, marginRight: 8 }}><Text style={{ fontSize: 11, fontWeight: "800", color: "#3E6F97" }}>申請画面</Text></Pressable> : null}
         {club.chatId && (
           <Pressable
             onPress={() => handleOpenChat(club.chatId!)}
