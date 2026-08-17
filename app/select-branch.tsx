@@ -7,7 +7,7 @@ import * as Auth from "@/lib/_core/auth";
 import { trpc } from "@/lib/trpc";
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import { ActivityIndicator, Pressable, Text, View } from "react-native";
+import { ActivityIndicator, Platform, Pressable, Text, View } from "react-native";
 
 const previewLoginEnabled = process.env.EXPO_PUBLIC_PREVIEW_LOGIN_ENABLED === "true";
 
@@ -64,6 +64,10 @@ export default function SelectBranchScreen() {
     setError("");
     try {
       await logout();
+      if (Platform.OS === "web" && typeof window !== "undefined") {
+        window.location.replace("/login");
+        return;
+      }
       router.replace("/login");
     } catch {
       setError("ログアウトできませんでした。通信状況を確認してもう一度お試しください。");
