@@ -1,5 +1,5 @@
 import type { CreateExpressContextOptions } from "@trpc/server/adapters/express";
-import type { User } from "../../drizzle/schema";
+import type { User } from "../mysql-drizzle/schema";
 import { sdk } from "./sdk";
 
 export type TrpcContext = {
@@ -8,7 +8,9 @@ export type TrpcContext = {
   user: User | null;
 };
 
-export async function createContext(opts: CreateExpressContextOptions): Promise<TrpcContext> {
+export async function createContext(
+  opts: CreateExpressContextOptions,
+): Promise<TrpcContext> {
   let user: User | null = null;
 
   try {

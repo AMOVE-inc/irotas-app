@@ -249,7 +249,9 @@ describe("Points-based Rank System", () => {
   });
 
   it("platinum threshold should be 1000 (会費無料)", () => {
-    const platinumThreshold = RANK_THRESHOLDS_POINTS.find((t) => t.rank === "platinum");
+    const platinumThreshold = RANK_THRESHOLDS_POINTS.find(
+      (t) => t.rank === "platinum",
+    );
     expect(platinumThreshold).toBeDefined();
     expect(platinumThreshold!.minPoints).toBe(1000);
   });
@@ -258,7 +260,7 @@ describe("Points-based Rank System", () => {
 // Auth schema validation tests
 describe("Auth schema", () => {
   it("users table should include passwordHash column", async () => {
-    const schema = await import("../drizzle/schema");
+    const schema = await import("../server/mysql-drizzle/schema");
     expect(schema.users).toBeDefined();
     // Verify the users table has the expected columns
     const columns = Object.keys(schema.users);
