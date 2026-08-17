@@ -1,6 +1,7 @@
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { useColors } from "@/hooks/use-colors";
+import { apiCall } from "@/lib/_core/api";
 import { useAuthContext } from "@/lib/auth-context";
 import { trpc } from "@/lib/trpc";
 import { GOURMET_CONTEST_IMPORT_COLUMNS, parseGourmetContestImport, saveImportedGourmetContests } from "@/lib/gourmet-contest-import";
@@ -13,12 +14,20 @@ import {
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
+  ActivityIndicator,
   Alert,
   Pressable,
   ScrollView,
   Text,
+  TextInput,
   View,
 } from "react-native";
+
+type ImportReadiness = {
+  authentication: boolean;
+  square: boolean;
+  ready: boolean;
+};
 
 interface ImportRecord {
   id: string;
@@ -76,7 +85,25 @@ export default function CsvImportScreen() {
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
   const [memberSources, setMemberSources] = useState<Partial<Record<"subscriptions" | "discord" | "customers", { name: string; csv: string }>>>({});
   const [memberDryRun, setMemberDryRun] = useState<MemberImportDryRun | null>(null);
+  const [readiness, setReadiness] = useState<ImportReadiness | null>(null);
+  const [readinessLoading, setReadinessLoading] = useState(false);
+  const [testImportCount, setTestImportCount] = useState(1);
+  const [importConfirmation, setImportConfirmation] = useState("");
+  const [memberImporting, setMemberImporting] = useState(false);
   const importMutation = trpc.migration.importCsv.useMutation();
+
+  useEffect(() => {
+    if (authUser?.role !== "admin") return;
+    let active = true;
+    setReadinessLoading(true);
+    apiCall<{ configuration: ImportReadiness }>("/api/admin/member-import/readiness")
+      .then((result) => active && setReadiness(result.configuration))
+      .catch(() => active && setReadiness(null))
+      .finally(() => active && setReadinessLoading(false));
+    return () => {
+      active = false;
+    };
+  }, [authUser?.role]);
 
   useEffect(() => {
     if (!Object.keys(memberSources).length) return;
@@ -178,6 +205,59 @@ export default function CsvImportScreen() {
     link.download = `irotas-member-migration-review-${new Date().toISOString().slice(0, 10)}.csv`;
     link.click();
     URL.revokeObjectURL(url);
+  };
+
+  const handleTestMemberImport = async () => {
+    if (!memberDryRun || !readiness?.ready || memberImporting) return;
+    const rows = memberDryRun.candidates
+      .filter((candidate) => candidate.migration_action === "import")
+      .slice(0, testImportCount);
+    const expectedConfirmation = `IMPORT_${rows.length}`;
+    if (!rows.length) {
+      Alert.alert("登録対象がありません", "自動取込可能な会員を確認してください。");
+      return;
+    }
+    if (importConfirmation !== expectedConfirmation) {
+      Alert.alert("確認文字が一致しません", `${expectedConfirmation} と入力してください。`);
+      return;
+    }
+    setMemberImporting(true);
+    try {
+      const result = await apiCall<{ success: boolean; runId: string; importedCount: number }>(
+        "/api/admin/member-import/commit",
+        {
+          method: "POST",
+          body: JSON.stringify({
+            confirmation: expectedConfirmation,
+            sourceFilename: "reviewed-member-migration.csv",
+            rows,
+          }),
+        },
+      );
+      setHistory((current) => [
+        {
+          id: result.runId,
+          filename: "reviewed-member-migration.csv",
+          importedAt: new Date().toLocaleString("ja-JP"),
+          recordCount: result.importedCount,
+          status: "success",
+          type: "members",
+        },
+        ...current,
+      ]);
+      setImportConfirmation("");
+      Alert.alert(
+        "テスト登録が完了しました",
+        `${result.importedCount}名を登録しました。ログイン確認後に次の登録へ進んでください。`,
+      );
+    } catch (error) {
+      Alert.alert(
+        "登録できませんでした",
+        error instanceof Error ? error.message : "設定とデータを確認してください。",
+      );
+    } finally {
+      setMemberImporting(false);
+    }
   };
 
   return (
@@ -311,6 +391,70 @@ export default function CsvImportScreen() {
               >
                 <Text style={{ color: "#C46691", fontSize: 13, fontWeight: "800" }}>確認・修正用CSVをダウンロード</Text>
               </Pressable>
+
+              <View style={{ marginTop: 16, backgroundColor: colors.background, borderRadius: 14, padding: 13, borderWidth: 1, borderColor: colors.border }}>
+                <Text style={{ fontSize: 14, fontWeight: "800", color: colors.foreground }}>初回テスト登録</Text>
+                <Text style={{ fontSize: 11, lineHeight: 17, color: colors.muted, marginTop: 4 }}>
+                  自動取込可能な会員から少人数だけ登録します。要確認・退会・一時停止の会員は対象になりません。
+                </Text>
+                {readinessLoading ? (
+                  <ActivityIndicator style={{ marginVertical: 14 }} color="#D97FA8" />
+                ) : (
+                  <View style={{ marginTop: 10, gap: 6 }}>
+                    {[
+                      ["メール認証", readiness?.authentication],
+                      ["Square連携", readiness?.square],
+                    ].map(([label, configured]) => (
+                      <View key={String(label)} style={{ flexDirection: "row", alignItems: "center" }}>
+                        <IconSymbol name={configured ? "checkmark.circle.fill" : "exclamationmark.circle.fill"} size={16} color={configured ? "#16803A" : "#C97813"} />
+                        <Text style={{ marginLeft: 7, fontSize: 12, fontWeight: "700", color: configured ? "#16803A" : "#8A5700" }}>
+                          {label}：{configured ? "設定済み" : "未設定"}
+                        </Text>
+                      </View>
+                    ))}
+                  </View>
+                )}
+
+                <Text style={{ fontSize: 12, fontWeight: "700", color: colors.foreground, marginTop: 13, marginBottom: 7 }}>テスト登録人数</Text>
+                <View style={{ flexDirection: "row", gap: 8 }}>
+                  {[1, 3, 5].map((count) => (
+                    <Pressable
+                      key={count}
+                      onPress={() => {
+                        setTestImportCount(count);
+                        setImportConfirmation("");
+                      }}
+                      style={{ flex: 1, borderRadius: 10, paddingVertical: 9, alignItems: "center", backgroundColor: testImportCount === count ? "#17171A" : colors.surface, borderWidth: 1, borderColor: testImportCount === count ? "#17171A" : colors.border }}
+                    >
+                      <Text style={{ color: testImportCount === count ? "#FFF" : colors.foreground, fontSize: 12, fontWeight: "800" }}>{count}名</Text>
+                    </Pressable>
+                  ))}
+                </View>
+
+                <Text style={{ fontSize: 11, color: colors.muted, marginTop: 12, marginBottom: 6 }}>
+                  実行するには IMPORT_{Math.min(testImportCount, memberDryRun.summary.importableMembers)} と入力
+                </Text>
+                <TextInput
+                  value={importConfirmation}
+                  onChangeText={setImportConfirmation}
+                  autoCapitalize="characters"
+                  autoCorrect={false}
+                  placeholder={`IMPORT_${Math.min(testImportCount, memberDryRun.summary.importableMembers)}`}
+                  placeholderTextColor={colors.muted}
+                  style={{ borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, color: colors.foreground, fontSize: 13 }}
+                />
+                <Pressable
+                  disabled={!readiness?.ready || memberImporting}
+                  onPress={handleTestMemberImport}
+                  style={{ marginTop: 10, borderRadius: 11, paddingVertical: 12, alignItems: "center", backgroundColor: readiness?.ready ? "#C46691" : colors.border, opacity: memberImporting ? 0.6 : 1 }}
+                >
+                  {memberImporting ? <ActivityIndicator color="#FFF" /> : (
+                    <Text style={{ color: readiness?.ready ? "#FFF" : colors.muted, fontSize: 13, fontWeight: "800" }}>
+                      {readiness?.ready ? "少人数でテスト登録する" : "連携設定完了後に利用できます"}
+                    </Text>
+                  )}
+                </Pressable>
+              </View>
             </View>
           )}
         </View>

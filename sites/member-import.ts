@@ -2,7 +2,8 @@ import type { MemberImportCandidate } from "../lib/member-import-dry-run";
 import { authenticatedRequestMember, normalizeEmail } from "./auth";
 import type { D1Database, SitesEnv } from "./platform-types";
 
-const ENDPOINT = "/api/admin/member-import/commit";
+const COMMIT_ENDPOINT = "/api/admin/member-import/commit";
+const READINESS_ENDPOINT = "/api/admin/member-import/readiness";
 const MAX_BATCH_SIZE = 25;
 const MAX_REQUEST_BYTES = 256 * 1024;
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -29,6 +30,19 @@ type ImportBody = {
   sourceFilename?: unknown;
   rows?: unknown;
 };
+
+export function memberImportConfiguration(env: SitesEnv) {
+  const authentication = Boolean(
+    env.AUTH_SECRET && env.EMAIL_DELIVERY_WEBHOOK_URL,
+  );
+  const square = Boolean(
+    env.SQUARE_ACCESS_TOKEN &&
+    env.SQUARE_WEBHOOK_SIGNATURE_KEY &&
+    env.SQUARE_WEBHOOK_NOTIFICATION_URL &&
+    env.SQUARE_ALLOWED_PLAN_VARIATION_IDS,
+  );
+  return { authentication, square, ready: authentication && square };
+}
 
 function responseJson(body: unknown, status = 200) {
   return Response.json(body, {
@@ -292,8 +306,11 @@ export async function handleMemberImportRequest(
   env: SitesEnv,
 ): Promise<Response | null> {
   const pathname = new URL(request.url).pathname;
-  if (pathname !== ENDPOINT) return null;
-  if (request.method !== "POST")
+  if (![COMMIT_ENDPOINT, READINESS_ENDPOINT].includes(pathname)) return null;
+  if (
+    (pathname === READINESS_ENDPOINT && request.method !== "GET") ||
+    (pathname === COMMIT_ENDPOINT && request.method !== "POST")
+  )
     return responseJson({ error: "method_not_allowed" }, 405);
   if (!env.DB)
     return responseJson({ error: "データベースに接続できません" }, 503);
@@ -302,6 +319,14 @@ export async function handleMemberImportRequest(
   if (!member) return responseJson({ error: "ログインが必要です" }, 401);
   if (member.role !== "admin" && member.access_role !== "admin")
     return responseJson({ error: "管理者権限が必要です" }, 403);
+
+  const configuration = memberImportConfiguration(env);
+  if (pathname === READINESS_ENDPOINT) return responseJson({ configuration });
+  if (!configuration.ready)
+    return responseJson(
+      { error: "メール認証とSquare連携の設定が完了していません" },
+      503,
+    );
 
   const contentType = (request.headers.get("content-type") ?? "").toLowerCase();
   if (!contentType.startsWith("application/json"))

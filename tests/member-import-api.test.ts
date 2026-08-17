@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { validateMemberImportRequest } from "../sites/member-import";
+import {
+  memberImportConfiguration,
+  validateMemberImportRequest,
+} from "../sites/member-import";
 
 function row(overrides: Record<string, unknown> = {}) {
   return {
@@ -23,6 +26,24 @@ function row(overrides: Record<string, unknown> = {}) {
 }
 
 describe("secure member import validation", () => {
+  it("requires email authentication and Square before production import", () => {
+    expect(memberImportConfiguration({} as never)).toEqual({
+      authentication: false,
+      square: false,
+      ready: false,
+    });
+    expect(
+      memberImportConfiguration({
+        AUTH_SECRET: "secret",
+        EMAIL_DELIVERY_WEBHOOK_URL: "https://email.example.test",
+        SQUARE_ACCESS_TOKEN: "token",
+        SQUARE_WEBHOOK_SIGNATURE_KEY: "signature",
+        SQUARE_WEBHOOK_NOTIFICATION_URL: "https://app.example.test/webhook",
+        SQUARE_ALLOWED_PLAN_VARIATION_IDS: "plan-1",
+      } as never),
+    ).toEqual({ authentication: true, square: true, ready: true });
+  });
+
   it("normalizes a reviewed import row without carrying privileged Discord roles", () => {
     const result = validateMemberImportRequest({
       confirmation: "IMPORT_1",
