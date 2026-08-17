@@ -4,6 +4,12 @@ import { useColors } from "@/hooks/use-colors";
 import { useAuthContext } from "@/lib/auth-context";
 import { trpc } from "@/lib/trpc";
 import { GOURMET_CONTEST_IMPORT_COLUMNS, parseGourmetContestImport, saveImportedGourmetContests } from "@/lib/gourmet-contest-import";
+import {
+  buildMemberImportDryRun,
+  decodeCsvBuffer,
+  exportMemberImportCsv,
+  type MemberImportDryRun,
+} from "@/lib/member-import-dry-run";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
@@ -68,6 +74,8 @@ export default function CsvImportScreen() {
   const { user: authUser } = useAuthContext();
   const [history, setHistory] = useState<ImportRecord[]>(IMPORT_HISTORY);
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
+  const [memberSources, setMemberSources] = useState<Partial<Record<"subscriptions" | "discord" | "customers", { name: string; csv: string }>>>({});
+  const [memberDryRun, setMemberDryRun] = useState<MemberImportDryRun | null>(null);
   const importMutation = trpc.migration.importCsv.useMutation();
 
   if (authUser?.role !== "admin") {
@@ -117,6 +125,48 @@ export default function CsvImportScreen() {
     setSelectedTemplate(selectedTemplate === template.type ? null : template.type);
   };
 
+  const handleMemberSource = (source: "subscriptions" | "discord" | "customers") => {
+    if (typeof document === "undefined") return;
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = ".csv,text/csv,text/tab-separated-values";
+    input.onchange = async () => {
+      const file = input.files?.[0];
+      if (!file) return;
+      const csv = decodeCsvBuffer(await file.arrayBuffer());
+      setMemberSources((current) => ({ ...current, [source]: { name: file.name, csv } }));
+      setMemberDryRun(null);
+    };
+    input.click();
+  };
+
+  const handleMemberDryRun = () => {
+    if (!memberSources.subscriptions || !memberSources.discord || !memberSources.customers) {
+      Alert.alert("3ファイルを選択してください", "Squareサブスク一覧・Discordメンバー一覧・Square顧客ID一覧が必要です。");
+      return;
+    }
+    try {
+      setMemberDryRun(buildMemberImportDryRun(
+        memberSources.subscriptions.csv,
+        memberSources.discord.csv,
+        memberSources.customers.csv,
+      ));
+    } catch (error) {
+      Alert.alert("照合エラー", error instanceof Error ? error.message : "ファイルを照合できませんでした");
+    }
+  };
+
+  const handleDownloadMemberDryRun = () => {
+    if (!memberDryRun || typeof document === "undefined") return;
+    const csv = exportMemberImportCsv(memberDryRun.candidates);
+    const url = URL.createObjectURL(new Blob(["\uFEFF", csv], { type: "text/csv;charset=utf-8" }));
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `irotas-member-migration-review-${new Date().toISOString().slice(0, 10)}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <ScreenContainer edges={["top", "left", "right"]}>
       {/* Header */}
@@ -144,6 +194,87 @@ export default function CsvImportScreen() {
       </View>
 
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
+        <View style={{ backgroundColor: colors.surface, borderRadius: 18, padding: 16, marginBottom: 24, borderWidth: 1, borderColor: colors.border }}>
+          <Text style={{ fontSize: 17, fontWeight: "800", color: colors.foreground }}>
+            既存会員データの3ファイル照合
+          </Text>
+          <Text style={{ fontSize: 12, lineHeight: 18, color: colors.muted, marginTop: 5, marginBottom: 14 }}>
+            本番DBへ書き込まずに、メールアドレスでSquare・Discord・顧客IDを照合します。SquareのUTF-16形式にも対応しています。
+          </Text>
+          <View style={{ gap: 8 }}>
+            {([
+              ["subscriptions", "Square サブスク一覧"],
+              ["discord", "Discord メンバー一覧"],
+              ["customers", "Square 顧客ID一覧"],
+            ] as const).map(([source, label]) => (
+              <Pressable
+                key={source}
+                onPress={() => handleMemberSource(source)}
+                style={({ pressed }) => ({
+                  flexDirection: "row",
+                  alignItems: "center",
+                  borderWidth: 1,
+                  borderColor: memberSources[source] ? "#34C759" : colors.border,
+                  backgroundColor: memberSources[source] ? "#34C7590D" : colors.background,
+                  borderRadius: 12,
+                  padding: 12,
+                  opacity: pressed ? 0.7 : 1,
+                })}
+              >
+                <IconSymbol name={memberSources[source] ? "checkmark.circle.fill" : "doc.fill"} size={18} color={memberSources[source] ? "#34C759" : colors.muted} />
+                <View style={{ flex: 1, marginLeft: 10 }}>
+                  <Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground }}>{label}</Text>
+                  <Text numberOfLines={1} style={{ fontSize: 11, color: colors.muted, marginTop: 2 }}>
+                    {memberSources[source]?.name ?? "CSVファイルを選択"}
+                  </Text>
+                </View>
+                <IconSymbol name="chevron.right" size={14} color={colors.muted} />
+              </Pressable>
+            ))}
+          </View>
+          <Pressable
+            onPress={handleMemberDryRun}
+            style={({ pressed }) => ({
+              marginTop: 14,
+              backgroundColor: "#17171A",
+              borderRadius: 12,
+              paddingVertical: 13,
+              alignItems: "center",
+              opacity: pressed ? 0.75 : 1,
+            })}
+          >
+            <Text style={{ color: "#FFF", fontSize: 14, fontWeight: "800" }}>安全に照合する（DBには未登録）</Text>
+          </Pressable>
+
+          {memberDryRun && (
+            <View style={{ marginTop: 16, borderTopWidth: 1, borderTopColor: colors.border, paddingTop: 14 }}>
+              <Text style={{ fontSize: 15, fontWeight: "800", color: colors.foreground, marginBottom: 10 }}>照合結果</Text>
+              <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+                {[
+                  ["自動取込可能", memberDryRun.summary.importableMembers, "#16803A"],
+                  ["要確認", memberDryRun.summary.reviewMembers, "#C97813"],
+                  ["移行対象外", memberDryRun.summary.excludedMembers, colors.muted],
+                  ["一時停止", memberDryRun.summary.pausedAccess, "#A14C72"],
+                ].map(([label, count, color]) => (
+                  <View key={String(label)} style={{ width: "48%", backgroundColor: colors.background, borderRadius: 12, padding: 11 }}>
+                    <Text style={{ fontSize: 11, color: colors.muted }}>{label}</Text>
+                    <Text style={{ fontSize: 22, fontWeight: "900", color: String(color), marginTop: 2 }}>{Number(count).toLocaleString()}件</Text>
+                  </View>
+                ))}
+              </View>
+              <Text style={{ fontSize: 11, lineHeight: 17, color: colors.muted, marginTop: 10 }}>
+                元データ：サブスク {memberDryRun.summary.subscriptionRows.toLocaleString()}行／Discord {memberDryRun.summary.discordRows.toLocaleString()}行／顧客ID {memberDryRun.summary.customerRows.toLocaleString()}行
+              </Text>
+              <Pressable
+                onPress={handleDownloadMemberDryRun}
+                style={({ pressed }) => ({ marginTop: 12, borderWidth: 1, borderColor: "#D97FA8", borderRadius: 12, paddingVertical: 11, alignItems: "center", opacity: pressed ? 0.7 : 1 })}
+              >
+                <Text style={{ color: "#C46691", fontSize: 13, fontWeight: "800" }}>確認・修正用CSVをダウンロード</Text>
+              </Pressable>
+            </View>
+          )}
+        </View>
+
         {/* インポートボタン */}
         <Text style={{ fontSize: 16, fontWeight: "700", color: colors.foreground, marginBottom: 12 }}>
           データをインポート
