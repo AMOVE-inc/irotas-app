@@ -154,22 +154,11 @@ export default function LoginScreen() {
               <BrandLogo width={250} />
               <Text
                 style={{
-                  fontSize: 24,
-                  fontWeight: "800",
-                  color: colors.foreground,
-                  marginTop: -8,
-                }}
-              >
-                おかえりなさい
-              </Text>
-              <Text
-                style={{
                   fontSize: 14,
                   color: colors.muted,
-                  marginTop: 7,
                 }}
               >
-                会員限定コミュニティへログイン
+                会員限定アプリにログイン
               </Text>
             </View>
 
@@ -327,7 +316,7 @@ export default function LoginScreen() {
                   })}
                 >
                   <Text style={{ fontSize: 14, color: colors.muted }}>
-                    初めて利用する決済済み会員の方は{" "}
+                    初めてアプリを利用する会員の方は{" "}
                     <Text style={{ color: "#D97FA8", fontWeight: "700" }}>
                       パスワード設定
                     </Text>
