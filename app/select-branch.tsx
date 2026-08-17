@@ -4,6 +4,7 @@ import { IconSymbol } from "@/components/ui/icon-symbol";
 import { useColors } from "@/hooks/use-colors";
 import { useAuthContext } from "@/lib/auth-context";
 import * as Auth from "@/lib/_core/auth";
+import * as Api from "@/lib/_core/api";
 import { trpc } from "@/lib/trpc";
 import { useRouter } from "expo-router";
 import { useState } from "react";
@@ -28,6 +29,7 @@ export default function SelectBranchScreen() {
   const [selected, setSelected] = useState<Auth.BranchRole[]>(currentBranches);
   const [error, setError] = useState("");
   const [loggingOut, setLoggingOut] = useState(false);
+  const [saving, setSaving] = useState(false);
   const mutation = trpc.auth.selectBranches.useMutation();
 
   const toggleBranch = (branch: Auth.BranchRole) => {
@@ -41,10 +43,17 @@ export default function SelectBranchScreen() {
   const handleConfirm = async () => {
     if (selected.length === 0 || !user) return;
     setError("");
+    setSaving(true);
 
     try {
       if (!previewLoginEnabled) {
-        await mutation.mutateAsync({ branches: selected });
+        try {
+          await Api.selectBranches(selected);
+        } catch (error) {
+          if (!(error instanceof Api.ApiError) || error.statusCode !== 404)
+            throw error;
+          await mutation.mutateAsync({ branches: selected });
+        }
       }
       const updatedUser: Auth.User = {
         ...user,
@@ -56,6 +65,8 @@ export default function SelectBranchScreen() {
       router.replace(isEditing ? "/(tabs)/profile" : "/(tabs)");
     } catch {
       setError("所属支部を保存できませんでした。通信状況を確認してもう一度お試しください。");
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -153,7 +164,7 @@ export default function SelectBranchScreen() {
           {error ? <Text style={{ color: colors.error, textAlign: "center", marginTop: 14 }}>{error}</Text> : null}
 
           <Pressable
-            disabled={selected.length === 0 || mutation.isPending || loggingOut}
+            disabled={selected.length === 0 || saving || loggingOut}
             onPress={handleConfirm}
             style={({ pressed }) => ({
               marginTop: 22,
@@ -165,7 +176,7 @@ export default function SelectBranchScreen() {
               opacity: pressed ? 0.82 : 1,
             })}
           >
-            {mutation.isPending ? (
+            {saving ? (
               <ActivityIndicator color="#FFFFFF" />
             ) : (
               <Text style={{ color: "#FFFFFF", fontSize: 16, fontWeight: "800" }}>

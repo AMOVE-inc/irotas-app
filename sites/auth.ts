@@ -57,6 +57,22 @@ export function normalizeEmail(value: string) {
   return value.trim().toLowerCase();
 }
 
+export function normalizeBranchSelection(value: unknown) {
+  if (!Array.isArray(value)) return null;
+  const branches = value.filter(
+    (branch): branch is "kanto" | "kansai" =>
+      branch === "kanto" || branch === "kansai",
+  );
+  if (
+    branches.length !== value.length ||
+    branches.length < 1 ||
+    branches.length > 2 ||
+    new Set(branches).size !== branches.length
+  )
+    return null;
+  return branches;
+}
+
 export function isBootstrapAdminEmail(env: SitesEnv, email: string) {
   const configured = normalizeEmail(env.BOOTSTRAP_ADMIN_EMAIL ?? "");
   return Boolean(configured && configured === normalizeEmail(email));
@@ -692,6 +708,47 @@ async function logout(request: Request, db: D1Database) {
   });
 }
 
+async function selectBranches(
+  request: Request,
+  env: SitesEnv,
+  db: D1Database,
+) {
+  const member = await authenticatedRequestMember(request, env);
+  if (!member) return responseJson({ error: "ログインが必要です" }, 401);
+  const input = await readJson(request);
+  const branches = normalizeBranchSelection(input.branches);
+  if (!branches)
+    return responseJson(
+      { error: "所属支部を1つ以上選択してください" },
+      400,
+    );
+  const now = new Date().toISOString();
+  await db.batch([
+    db
+      .prepare(
+        "UPDATE members SET branches_json = ?, updated_at = ? WHERE id = ?",
+      )
+      .bind(JSON.stringify(branches), now, member.id),
+    db
+      .prepare(
+        `INSERT INTO audit_logs
+        (actor_user_id, action, entity_type, entity_id, metadata_json, created_at)
+        VALUES (?, 'member.branches_updated', 'member', ?, ?, ?)`,
+      )
+      .bind(
+        member.id,
+        String(member.id),
+        JSON.stringify({ branches }),
+        now,
+      ),
+  ]);
+  return responseJson({
+    success: true,
+    branch: branches[0],
+    branches,
+  });
+}
+
 export async function handleAuthRequest(
   request: Request,
   env: SitesEnv,
@@ -716,6 +773,8 @@ export async function handleAuthRequest(
       return me(request, env.DB);
     if (pathname === "/api/auth/logout" && request.method === "POST")
       return logout(request, env.DB);
+    if (pathname === "/api/auth/branches" && request.method === "POST")
+      return selectBranches(request, env, env.DB);
     return responseJson({ error: "not found" }, 404);
   } catch (error) {
     const message = error instanceof Error ? error.message : "unknown";

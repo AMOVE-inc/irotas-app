@@ -7,6 +7,7 @@ import {
   normalizeEmail,
   isTrustedBrowserOrigin,
   isBootstrapAdminEmail,
+  normalizeBranchSelection,
   verifyPassword,
 } from "../sites/auth";
 import { squareBillingEvent, squareSignature } from "../sites/square-webhook";
@@ -21,6 +22,17 @@ describe("Sites production authentication", () => {
     expect(isBootstrapAdminEmail(env, "admin@example.com")).toBe(true);
     expect(isBootstrapAdminEmail(env, "member@example.com")).toBe(false);
     expect(isBootstrapAdminEmail({} as never, "admin@example.com")).toBe(false);
+  });
+
+  it("accepts only unique supported branch selections", () => {
+    expect(normalizeBranchSelection(["kanto"])).toEqual(["kanto"]);
+    expect(normalizeBranchSelection(["kanto", "kansai"])).toEqual([
+      "kanto",
+      "kansai",
+    ]);
+    expect(normalizeBranchSelection([])).toBeNull();
+    expect(normalizeBranchSelection(["kanto", "kanto"])).toBeNull();
+    expect(normalizeBranchSelection(["unknown"])).toBeNull();
   });
 
   it("hashes and verifies passwords without storing the plaintext", async () => {

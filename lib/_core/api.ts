@@ -156,6 +156,17 @@ export async function register(input: {
   );
 }
 
+export async function selectBranches(branches: Auth.BranchRole[]) {
+  return apiCall<{
+    success: boolean;
+    branch: Auth.BranchRole;
+    branches: Auth.BranchRole[];
+  }>("/api/auth/branches", {
+    method: "POST",
+    body: JSON.stringify({ branches }),
+  });
+}
+
 // Get current authenticated user (web uses cookie-based auth)
 export async function getMe(): Promise<AuthApiUser | null> {
   try {
