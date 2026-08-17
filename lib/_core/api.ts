@@ -8,6 +8,18 @@ type ApiResponse<T> = {
   error?: string;
 };
 
+export type AuthApiUser = {
+  id: number;
+  openId: string;
+  name: string | null;
+  email: string | null;
+  loginMethod: string | null;
+  lastSignedIn: string;
+  role: Auth.UserRole;
+  branch: Auth.BranchRole | null;
+  branches: Auth.BranchRole[] | null;
+};
+
 export class ApiError extends Error {
   constructor(
     message: string,
@@ -18,7 +30,10 @@ export class ApiError extends Error {
   }
 }
 
-export async function apiCall<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+export async function apiCall<T>(
+  endpoint: string,
+  options: RequestInit = {},
+): Promise<T> {
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
     ...((options.headers as Record<string, string>) || {}),
@@ -72,7 +87,10 @@ export async function apiCall<T>(endpoint: string, options: RequestInit = {}): P
     const text = await response.text();
     return (text ? JSON.parse(text) : {}) as T;
   } catch (error) {
-    logger.error(`API request failed: ${options.method || "GET"} ${endpoint}`, error);
+    logger.error(
+      `API request failed: ${options.method || "GET"} ${endpoint}`,
+      error,
+    );
     if (error instanceof Error) {
       throw error;
     }
@@ -106,18 +124,40 @@ export async function logout(): Promise<void> {
   });
 }
 
+export async function login(email: string, password: string) {
+  return apiCall<{ success: boolean; sessionToken: string; user: AuthApiUser }>(
+    "/api/auth/login",
+    {
+      method: "POST",
+      body: JSON.stringify({ email, password }),
+    },
+  );
+}
+
+export async function requestSetupCode(email: string) {
+  return apiCall<{ success: boolean }>("/api/auth/request-setup-code", {
+    method: "POST",
+    body: JSON.stringify({ email }),
+  });
+}
+
+export async function register(input: {
+  email: string;
+  password: string;
+  name: string;
+  verificationCode: string;
+}) {
+  return apiCall<{ success: boolean; sessionToken: string; user: AuthApiUser }>(
+    "/api/auth/register",
+    {
+      method: "POST",
+      body: JSON.stringify(input),
+    },
+  );
+}
+
 // Get current authenticated user (web uses cookie-based auth)
-export async function getMe(): Promise<{
-  id: number;
-  openId: string;
-  name: string | null;
-  email: string | null;
-  loginMethod: string | null;
-  lastSignedIn: string;
-  role: Auth.UserRole;
-  branch: Auth.BranchRole | null;
-  branches: Auth.BranchRole[] | null;
-} | null> {
+export async function getMe(): Promise<AuthApiUser | null> {
   try {
     const result = await apiCall<{ user: any }>("/api/auth/me");
     return result.user || null;

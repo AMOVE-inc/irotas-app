@@ -1,7 +1,7 @@
 import { ScreenContainer } from "@/components/screen-container";
 import { useColors } from "@/hooks/use-colors";
-import { trpc } from "@/lib/trpc";
 import * as Auth from "@/lib/_core/auth";
+import * as Api from "@/lib/_core/api";
 import { logger } from "@/lib/_core/logger";
 import { useRouter } from "expo-router";
 import { useState } from "react";
@@ -30,9 +30,7 @@ export default function RegisterScreen() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-
-  const registerMutation = trpc.auth.register.useMutation();
-  const setupCodeMutation = trpc.auth.requestSetupCode.useMutation();
+  const [codeLoading, setCodeLoading] = useState(false);
 
   const handleRegister = async () => {
     if (!name.trim()) {
@@ -60,7 +58,7 @@ export default function RegisterScreen() {
     setLoading(true);
 
     try {
-      const result = await registerMutation.mutateAsync({
+      const result = await Api.register({
         email: email.trim(),
         password,
         name: name.trim(),
@@ -83,7 +81,10 @@ export default function RegisterScreen() {
             lastSignedIn: new Date(result.user.lastSignedIn),
             role: Auth.normalizeUserRole(result.user.role),
             branch: Auth.normalizeBranchRole(result.user.branch),
-            branches: Auth.normalizeBranchRoles(result.user.branches, result.user.branch),
+            branches: Auth.normalizeBranchRoles(
+              result.user.branches,
+              result.user.branch,
+            ),
           });
         }
         // Update auth context and navigate
@@ -97,7 +98,10 @@ export default function RegisterScreen() {
             lastSignedIn: new Date(result.user.lastSignedIn),
             role: Auth.normalizeUserRole(result.user.role),
             branch: Auth.normalizeBranchRole(result.user.branch),
-            branches: Auth.normalizeBranchRoles(result.user.branches, result.user.branch),
+            branches: Auth.normalizeBranchRoles(
+              result.user.branches,
+              result.user.branch,
+            ),
           });
         } else {
           await refresh();
@@ -123,7 +127,16 @@ export default function RegisterScreen() {
           contentContainerStyle={{ flexGrow: 1, justifyContent: "center" }}
           keyboardShouldPersistTaps="handled"
         >
-          <View style={{ width: "100%", maxWidth: 440, alignSelf: "center", paddingHorizontal: 22, paddingVertical: 20, gap: 16 }}>
+          <View
+            style={{
+              width: "100%",
+              maxWidth: 440,
+              alignSelf: "center",
+              paddingHorizontal: 22,
+              paddingVertical: 20,
+              gap: 16,
+            }}
+          >
             {/* Logo & Title */}
             <View style={{ alignItems: "center", marginBottom: 8 }}>
               <BrandLogo width={210} compact style={{ marginBottom: 6 }} />
@@ -158,7 +171,13 @@ export default function RegisterScreen() {
                   padding: 12,
                 }}
               >
-                <Text style={{ fontSize: 14, color: colors.error, textAlign: "center" }}>
+                <Text
+                  style={{
+                    fontSize: 14,
+                    color: colors.error,
+                    textAlign: "center",
+                  }}
+                >
                   {error}
                 </Text>
               </View>
@@ -166,7 +185,13 @@ export default function RegisterScreen() {
 
             {/* Name Input */}
             <View style={{ gap: 6 }}>
-              <Text style={{ fontSize: 14, fontWeight: "600", color: colors.foreground }}>
+              <Text
+                style={{
+                  fontSize: 14,
+                  fontWeight: "600",
+                  color: colors.foreground,
+                }}
+              >
                 名前
               </Text>
               <TextInput
@@ -190,7 +215,13 @@ export default function RegisterScreen() {
 
             {/* Email Input */}
             <View style={{ gap: 6 }}>
-              <Text style={{ fontSize: 14, fontWeight: "600", color: colors.foreground }}>
+              <Text
+                style={{
+                  fontSize: 14,
+                  fontWeight: "600",
+                  color: colors.foreground,
+                }}
+              >
                 メールアドレス
               </Text>
               <TextInput
@@ -216,27 +247,83 @@ export default function RegisterScreen() {
 
             <View style={{ gap: 8 }}>
               <Pressable
-                disabled={!email.trim() || setupCodeMutation.isPending}
+                disabled={!email.trim() || codeLoading}
                 onPress={async () => {
                   setError("");
+                  setCodeLoading(true);
                   try {
-                    await setupCodeMutation.mutateAsync({ email: email.trim() });
+                    await Api.requestSetupCode(email.trim());
                     setCodeSent(true);
                   } catch (error) {
-                    setError(error instanceof Error ? error.message : "認証コードを送信できませんでした");
+                    setError(
+                      error instanceof Error
+                        ? error.message
+                        : "認証コードを送信できませんでした",
+                    );
+                  } finally {
+                    setCodeLoading(false);
                   }
                 }}
-                style={{ borderRadius: 12, borderWidth: 1, borderColor: "#D97FA8", paddingVertical: 11, alignItems: "center", opacity: !email.trim() ? 0.45 : 1 }}
+                style={{
+                  borderRadius: 12,
+                  borderWidth: 1,
+                  borderColor: "#D97FA8",
+                  paddingVertical: 11,
+                  alignItems: "center",
+                  opacity: !email.trim() ? 0.45 : 1,
+                }}
               >
-                <Text style={{ fontSize: 14, fontWeight: "800", color: "#D97FA8" }}>{codeSent ? "認証コードを再送する" : "認証コードを送信"}</Text>
+                <Text
+                  style={{ fontSize: 14, fontWeight: "800", color: "#D97FA8" }}
+                >
+                  {codeLoading
+                    ? "送信中..."
+                    : codeSent
+                      ? "認証コードを再送する"
+                      : "認証コードを送信"}
+                </Text>
               </Pressable>
-              <TextInput value={verificationCode} onChangeText={setVerificationCode} placeholder="6桁の認証コード" placeholderTextColor={colors.muted} keyboardType="number-pad" maxLength={6} style={{ backgroundColor: colors.background, borderRadius: 14, padding: 14, fontSize: 18, letterSpacing: 5, color: colors.foreground, borderWidth: 1, borderColor: colors.border, textAlign: "center" }} />
-              {codeSent ? <Text style={{ fontSize: 12, color: colors.muted, textAlign: "center" }}>決済メールへ送信しました。有効期限は10分です。</Text> : null}
+              <TextInput
+                value={verificationCode}
+                onChangeText={setVerificationCode}
+                placeholder="6桁の認証コード"
+                placeholderTextColor={colors.muted}
+                keyboardType="number-pad"
+                maxLength={6}
+                style={{
+                  backgroundColor: colors.background,
+                  borderRadius: 14,
+                  padding: 14,
+                  fontSize: 18,
+                  letterSpacing: 5,
+                  color: colors.foreground,
+                  borderWidth: 1,
+                  borderColor: colors.border,
+                  textAlign: "center",
+                }}
+              />
+              {codeSent ? (
+                <Text
+                  style={{
+                    fontSize: 12,
+                    color: colors.muted,
+                    textAlign: "center",
+                  }}
+                >
+                  決済メールへ送信しました。有効期限は10分です。
+                </Text>
+              ) : null}
             </View>
 
             {/* Password Input */}
             <View style={{ gap: 6 }}>
-              <Text style={{ fontSize: 14, fontWeight: "600", color: colors.foreground }}>
+              <Text
+                style={{
+                  fontSize: 14,
+                  fontWeight: "600",
+                  color: colors.foreground,
+                }}
+              >
                 パスワード
               </Text>
               <TextInput
@@ -260,7 +347,13 @@ export default function RegisterScreen() {
 
             {/* Confirm Password Input */}
             <View style={{ gap: 6 }}>
-              <Text style={{ fontSize: 14, fontWeight: "600", color: colors.foreground }}>
+              <Text
+                style={{
+                  fontSize: 14,
+                  fontWeight: "600",
+                  color: colors.foreground,
+                }}
+              >
                 パスワード（確認）
               </Text>
               <TextInput
@@ -300,7 +393,9 @@ export default function RegisterScreen() {
               {loading ? (
                 <ActivityIndicator color="#FFF" />
               ) : (
-                <Text style={{ fontSize: 17, fontWeight: "700", color: "#FFF" }}>
+                <Text
+                  style={{ fontSize: 17, fontWeight: "700", color: "#FFF" }}
+                >
                   パスワードを設定する
                 </Text>
               )}
@@ -316,7 +411,9 @@ export default function RegisterScreen() {
               >
                 <Text style={{ fontSize: 14, color: colors.muted }}>
                   既にアカウントをお持ちの方は{" "}
-                  <Text style={{ color: "#D97FA8", fontWeight: "700" }}>ログイン</Text>
+                  <Text style={{ color: "#D97FA8", fontWeight: "700" }}>
+                    ログイン
+                  </Text>
                 </Text>
               </Pressable>
             </View>

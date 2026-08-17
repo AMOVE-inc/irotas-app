@@ -1,21 +1,6 @@
-interface SitesEnv {
-  ASSETS: {
-    fetch(request: Request): Promise<Response>;
-  };
-  DB?: {
-    prepare(query: string): {
-      bind(...values: unknown[]): {
-        first(): Promise<Record<string, unknown> | null>;
-      };
-      first(): Promise<Record<string, unknown> | null>;
-    };
-  };
-  UPLOADS?: {
-    list(options?: { limit?: number }): Promise<unknown>;
-  };
-  GOURMET_MAP_FEED_URL?: string;
-  GOOGLE_MAPS_API_KEY?: string;
-}
+import { handleAuthRequest } from "./auth";
+import type { SitesEnv } from "./platform-types";
+import { handleSquareWebhook } from "./square-webhook";
 
 type CommunitySubmission = {
   reportId: string;
@@ -185,6 +170,10 @@ function assetRequest(request: Request, pathname: string) {
 export default {
   async fetch(request: Request, env: SitesEnv): Promise<Response> {
     const { pathname } = new URL(request.url);
+    const authResponse = await handleAuthRequest(request, env);
+    if (authResponse) return authResponse;
+    const squareResponse = await handleSquareWebhook(request, env);
+    if (squareResponse) return squareResponse;
     if (pathname === "/api/platform/health" && request.method === "GET") {
       const startedAt = Date.now();
       let database: "ok" | "unavailable" = "unavailable";
@@ -219,6 +208,13 @@ export default {
         {
           status: healthy ? "ok" : "degraded",
           services: { database, uploads },
+          configuration: {
+            auth: Boolean(env.AUTH_SECRET && env.EMAIL_DELIVERY_WEBHOOK_URL),
+            square: Boolean(
+              env.SQUARE_WEBHOOK_SIGNATURE_KEY &&
+                env.SQUARE_WEBHOOK_NOTIFICATION_URL,
+            ),
+          },
           schemaVersion,
           elapsedMs: Date.now() - startedAt,
         },

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import worker from "../sites/worker";
+import type { SitesEnv } from "../sites/platform-types";
 
 function environment(options?: { database?: boolean; uploads?: boolean }) {
   const database = options?.database ?? true;
@@ -15,7 +16,7 @@ function environment(options?: { database?: boolean; uploads?: boolean }) {
         }
       : undefined,
     UPLOADS: uploads ? { list: async () => ({ objects: [] }) } : undefined,
-  };
+  } as unknown as SitesEnv;
 }
 
 describe("platform health endpoint", () => {

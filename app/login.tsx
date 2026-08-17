@@ -1,7 +1,7 @@
 import { ScreenContainer } from "@/components/screen-container";
 import { useColors } from "@/hooks/use-colors";
-import { trpc } from "@/lib/trpc";
 import * as Auth from "@/lib/_core/auth";
+import * as Api from "@/lib/_core/api";
 import { logger } from "@/lib/_core/logger";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
@@ -18,7 +18,8 @@ import {
 import { useAuthContext } from "@/lib/auth-context";
 import { BrandLogo } from "@/components/brand-logo";
 
-const previewLoginEnabled = process.env.EXPO_PUBLIC_PREVIEW_LOGIN_ENABLED === "true";
+const previewLoginEnabled =
+  process.env.EXPO_PUBLIC_PREVIEW_LOGIN_ENABLED === "true";
 const previewUserRole: Auth.UserRole =
   process.env.EXPO_PUBLIC_PREVIEW_USER_ROLE === "user" ? "user" : "admin";
 
@@ -42,8 +43,6 @@ export default function LoginScreen() {
   const [password, setPassword] = useState(previewLoginEnabled ? "1" : "");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-
-  const loginMutation = trpc.auth.login.useMutation();
 
   useEffect(() => {
     if (!previewLoginEnabled) return;
@@ -77,10 +76,7 @@ export default function LoginScreen() {
         return;
       }
 
-      const result = await loginMutation.mutateAsync({
-        email: email.trim(),
-        password,
-      });
+      const result = await Api.login(email.trim(), password);
 
       if (result.success && result.sessionToken) {
         // Store session token for native
@@ -98,7 +94,10 @@ export default function LoginScreen() {
             lastSignedIn: new Date(result.user.lastSignedIn),
             role: Auth.normalizeUserRole(result.user.role),
             branch: Auth.normalizeBranchRole(result.user.branch),
-            branches: Auth.normalizeBranchRoles(result.user.branches, result.user.branch),
+            branches: Auth.normalizeBranchRoles(
+              result.user.branches,
+              result.user.branch,
+            ),
           });
         }
         // Update auth context and navigate
@@ -112,7 +111,10 @@ export default function LoginScreen() {
             lastSignedIn: new Date(result.user.lastSignedIn),
             role: Auth.normalizeUserRole(result.user.role),
             branch: Auth.normalizeBranchRole(result.user.branch),
-            branches: Auth.normalizeBranchRoles(result.user.branches, result.user.branch),
+            branches: Auth.normalizeBranchRoles(
+              result.user.branches,
+              result.user.branch,
+            ),
           });
         } else {
           await refresh();
@@ -138,7 +140,15 @@ export default function LoginScreen() {
           contentContainerStyle={{ flexGrow: 1, justifyContent: "center" }}
           keyboardShouldPersistTaps="handled"
         >
-          <View style={{ width: "100%", maxWidth: 440, alignSelf: "center", paddingHorizontal: 22, gap: 18 }}>
+          <View
+            style={{
+              width: "100%",
+              maxWidth: 440,
+              alignSelf: "center",
+              paddingHorizontal: 22,
+              gap: 18,
+            }}
+          >
             {/* Logo & Title */}
             <View style={{ alignItems: "center", marginBottom: 4 }}>
               <BrandLogo width={250} />
@@ -178,125 +188,152 @@ export default function LoginScreen() {
                 elevation: 5,
               }}
             >
+              {/* Error */}
+              {previewLoginEnabled ? (
+                <View
+                  style={{
+                    backgroundColor: "#EEF7FC",
+                    borderRadius: 14,
+                    padding: 10,
+                  }}
+                >
+                  <Text
+                    style={{
+                      fontSize: 13,
+                      color: colors.foreground,
+                      textAlign: "center",
+                    }}
+                  >
+                    プレビューモード：メールアドレス・パスワードは「1」
+                  </Text>
+                </View>
+              ) : null}
 
-            {/* Error */}
-            {previewLoginEnabled ? (
-              <View
-                style={{
-                  backgroundColor: "#EEF7FC",
-                  borderRadius: 14,
-                  padding: 10,
-                }}
-              >
-                <Text style={{ fontSize: 13, color: colors.foreground, textAlign: "center" }}>
-                  プレビューモード：メールアドレス・パスワードは「1」
+              {error ? (
+                <View
+                  style={{
+                    backgroundColor: colors.error + "15",
+                    borderRadius: 12,
+                    padding: 12,
+                  }}
+                >
+                  <Text
+                    style={{
+                      fontSize: 14,
+                      color: colors.error,
+                      textAlign: "center",
+                    }}
+                  >
+                    {error}
+                  </Text>
+                </View>
+              ) : null}
+
+              {/* Email Input */}
+              <View style={{ gap: 6 }}>
+                <Text
+                  style={{
+                    fontSize: 14,
+                    fontWeight: "600",
+                    color: colors.foreground,
+                  }}
+                >
+                  メールアドレス
                 </Text>
+                <TextInput
+                  value={email}
+                  onChangeText={setEmail}
+                  placeholder="example@email.com"
+                  placeholderTextColor={colors.muted}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  returnKeyType="next"
+                  style={{
+                    backgroundColor: colors.background,
+                    borderRadius: 14,
+                    paddingHorizontal: 15,
+                    paddingVertical: 14,
+                    fontSize: 16,
+                    color: colors.foreground,
+                    borderWidth: 1,
+                    borderColor: "#E9DDE3",
+                  }}
+                />
               </View>
-            ) : null}
 
-            {error ? (
-              <View
-                style={{
-                  backgroundColor: colors.error + "15",
-                  borderRadius: 12,
-                  padding: 12,
-                }}
-              >
-                <Text style={{ fontSize: 14, color: colors.error, textAlign: "center" }}>
-                  {error}
+              {/* Password Input */}
+              <View style={{ gap: 6 }}>
+                <Text
+                  style={{
+                    fontSize: 14,
+                    fontWeight: "600",
+                    color: colors.foreground,
+                  }}
+                >
+                  パスワード
                 </Text>
+                <TextInput
+                  value={password}
+                  onChangeText={setPassword}
+                  placeholder="パスワード"
+                  placeholderTextColor={colors.muted}
+                  secureTextEntry
+                  returnKeyType="done"
+                  onSubmitEditing={handleLogin}
+                  style={{
+                    backgroundColor: colors.background,
+                    borderRadius: 14,
+                    paddingHorizontal: 15,
+                    paddingVertical: 14,
+                    fontSize: 16,
+                    color: colors.foreground,
+                    borderWidth: 1,
+                    borderColor: "#E9DDE3",
+                  }}
+                />
               </View>
-            ) : null}
 
-            {/* Email Input */}
-            <View style={{ gap: 6 }}>
-              <Text style={{ fontSize: 14, fontWeight: "600", color: colors.foreground }}>
-                メールアドレス
-              </Text>
-              <TextInput
-                value={email}
-                onChangeText={setEmail}
-                placeholder="example@email.com"
-                placeholderTextColor={colors.muted}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                autoCorrect={false}
-                returnKeyType="next"
-                style={{
-                  backgroundColor: colors.background,
-                  borderRadius: 14,
-                  paddingHorizontal: 15,
-                  paddingVertical: 14,
-                  fontSize: 16,
-                  color: colors.foreground,
-                  borderWidth: 1,
-                  borderColor: "#E9DDE3",
-                }}
-              />
-            </View>
-
-            {/* Password Input */}
-            <View style={{ gap: 6 }}>
-              <Text style={{ fontSize: 14, fontWeight: "600", color: colors.foreground }}>
-                パスワード
-              </Text>
-              <TextInput
-                value={password}
-                onChangeText={setPassword}
-                placeholder="パスワード"
-                placeholderTextColor={colors.muted}
-                secureTextEntry
-                returnKeyType="done"
-                onSubmitEditing={handleLogin}
-                style={{
-                  backgroundColor: colors.background,
-                  borderRadius: 14,
-                  paddingHorizontal: 15,
-                  paddingVertical: 14,
-                  fontSize: 16,
-                  color: colors.foreground,
-                  borderWidth: 1,
-                  borderColor: "#E9DDE3",
-                }}
-              />
-            </View>
-
-            {/* Login Button */}
-            <Pressable
-              onPress={handleLogin}
-              disabled={loading}
-              style={({ pressed }) => ({
-                backgroundColor: "#18171A",
-                borderRadius: 16,
-                padding: 16,
-                alignItems: "center",
-                opacity: loading ? 0.6 : pressed ? 0.8 : 1,
-                transform: [{ scale: pressed ? 0.98 : 1 }],
-              })}
-            >
-              {loading ? (
-                <ActivityIndicator color="#FFF" />
-              ) : (
-                <Text style={{ fontSize: 17, fontWeight: "700", color: "#FFF" }}>
-                  ログイン
-                </Text>
-              )}
-            </Pressable>
-
-            {/* Register Link */}
-            <View style={{ alignItems: "center", marginTop: 8 }}>
+              {/* Login Button */}
               <Pressable
-                onPress={() => router.push("/register" as any)}
+                onPress={handleLogin}
+                disabled={loading}
                 style={({ pressed }) => ({
-                  opacity: pressed ? 0.6 : 1,
+                  backgroundColor: "#18171A",
+                  borderRadius: 16,
+                  padding: 16,
+                  alignItems: "center",
+                  opacity: loading ? 0.6 : pressed ? 0.8 : 1,
+                  transform: [{ scale: pressed ? 0.98 : 1 }],
                 })}
               >
-                <Text style={{ fontSize: 14, color: colors.muted }}>
-                  初めて利用する決済済み会員の方は{" "}
-                  <Text style={{ color: "#D97FA8", fontWeight: "700" }}>パスワード設定</Text>
-                </Text>
+                {loading ? (
+                  <ActivityIndicator color="#FFF" />
+                ) : (
+                  <Text
+                    style={{ fontSize: 17, fontWeight: "700", color: "#FFF" }}
+                  >
+                    ログイン
+                  </Text>
+                )}
               </Pressable>
-            </View>
+
+              {/* Register Link */}
+              <View style={{ alignItems: "center", marginTop: 8 }}>
+                <Pressable
+                  onPress={() => router.push("/register" as any)}
+                  style={({ pressed }) => ({
+                    opacity: pressed ? 0.6 : 1,
+                  })}
+                >
+                  <Text style={{ fontSize: 14, color: colors.muted }}>
+                    初めて利用する決済済み会員の方は{" "}
+                    <Text style={{ color: "#D97FA8", fontWeight: "700" }}>
+                      パスワード設定
+                    </Text>
+                  </Text>
+                </Pressable>
+              </View>
             </View>
           </View>
         </ScrollView>

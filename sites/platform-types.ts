@@ -1,0 +1,38 @@
+export type D1Result<T = unknown> = {
+  success?: boolean;
+  results?: T[];
+  meta?: Record<string, unknown>;
+};
+
+export interface D1PreparedStatement {
+  bind(...values: unknown[]): D1PreparedStatement;
+  first<T = Record<string, unknown>>(): Promise<T | null>;
+  run<T = unknown>(): Promise<D1Result<T>>;
+  all<T = Record<string, unknown>>(): Promise<D1Result<T>>;
+}
+
+export interface D1Database {
+  prepare(query: string): D1PreparedStatement;
+  batch<T = unknown>(
+    statements: D1PreparedStatement[],
+  ): Promise<Array<D1Result<T>>>;
+}
+
+export interface R2Bucket {
+  list(options?: { limit?: number }): Promise<unknown>;
+}
+
+export interface SitesEnv {
+  ASSETS: { fetch(request: Request): Promise<Response> };
+  DB?: D1Database;
+  UPLOADS?: R2Bucket;
+  GOURMET_MAP_FEED_URL?: string;
+  GOOGLE_MAPS_API_KEY?: string;
+  AUTH_SECRET?: string;
+  EMAIL_DELIVERY_WEBHOOK_URL?: string;
+  EMAIL_DELIVERY_WEBHOOK_TOKEN?: string;
+  SQUARE_ACCESS_TOKEN?: string;
+  SQUARE_ALLOWED_PLAN_VARIATION_IDS?: string;
+  SQUARE_WEBHOOK_SIGNATURE_KEY?: string;
+  SQUARE_WEBHOOK_NOTIFICATION_URL?: string;
+}
