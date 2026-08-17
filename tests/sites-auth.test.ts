@@ -6,6 +6,7 @@ import {
   membershipAllowsAccess,
   normalizeEmail,
   isTrustedBrowserOrigin,
+  isBootstrapAdminEmail,
   verifyPassword,
 } from "../sites/auth";
 import { squareBillingEvent, squareSignature } from "../sites/square-webhook";
@@ -13,6 +14,13 @@ import { squareBillingEvent, squareSignature } from "../sites/square-webhook";
 describe("Sites production authentication", () => {
   it("normalizes billing email addresses", () => {
     expect(normalizeEmail("  Member@Example.COM ")).toBe("member@example.com");
+  });
+
+  it("only recognizes the exact configured bootstrap administrator email", () => {
+    const env = { BOOTSTRAP_ADMIN_EMAIL: " Admin@Example.COM " } as never;
+    expect(isBootstrapAdminEmail(env, "admin@example.com")).toBe(true);
+    expect(isBootstrapAdminEmail(env, "member@example.com")).toBe(false);
+    expect(isBootstrapAdminEmail({} as never, "admin@example.com")).toBe(false);
   });
 
   it("hashes and verifies passwords without storing the plaintext", async () => {

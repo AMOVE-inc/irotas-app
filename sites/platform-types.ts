@@ -29,6 +29,7 @@ export interface SitesEnv {
   GOURMET_MAP_FEED_URL?: string;
   GOOGLE_MAPS_API_KEY?: string;
   AUTH_SECRET?: string;
+  BOOTSTRAP_ADMIN_EMAIL?: string;
   EMAIL_DELIVERY_WEBHOOK_URL?: string;
   EMAIL_DELIVERY_WEBHOOK_TOKEN?: string;
   RESEND_API_KEY?: string;

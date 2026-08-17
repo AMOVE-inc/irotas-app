@@ -53,6 +53,11 @@ export function normalizeEmail(value: string) {
   return value.trim().toLowerCase();
 }
 
+export function isBootstrapAdminEmail(env: SitesEnv, email: string) {
+  const configured = normalizeEmail(env.BOOTSTRAP_ADMIN_EMAIL ?? "");
+  return Boolean(configured && configured === normalizeEmail(email));
+}
+
 export async function sha256(value: string) {
   return toBase64Url(
     new Uint8Array(
@@ -416,7 +421,43 @@ async function requestSetupCode(
   )
     return responseJson({ success: true });
   const subscription = await findSubscription(db, email);
-  const member = await findMember(db, email);
+  let member = await findMember(db, email);
+  if (isBootstrapAdminEmail(env, email)) {
+    const needsBootstrap =
+      !member ||
+      member.role !== "admin" ||
+      member.access_role !== "admin" ||
+      member.account_status !== "active";
+    if (needsBootstrap) {
+      const now = new Date().toISOString();
+      await db
+        .prepare(
+          `INSERT INTO members
+          (email, display_name, role, access_role, branches_json, account_status, created_at, updated_at)
+          VALUES (?, '', 'admin', 'admin', '[]', 'active', ?, ?)
+          ON CONFLICT(email) DO UPDATE SET
+            role = 'admin',
+            access_role = 'admin',
+            account_status = 'active',
+            updated_at = excluded.updated_at`,
+        )
+        .bind(email, now, now)
+        .run();
+      member = await findMember(db, email);
+      await db
+        .prepare(
+          `INSERT INTO audit_logs
+          (actor_user_id, action, entity_type, entity_id, metadata_json, created_at)
+          VALUES (NULL, 'auth.bootstrap_admin', 'member', ?, ?, ?)`,
+        )
+        .bind(
+          member ? String(member.id) : null,
+          JSON.stringify({ source: "BOOTSTRAP_ADMIN_EMAIL" }),
+          now,
+        )
+        .run();
+    }
+  }
   const eligible = member
     ? membershipAllowsAccess(subscription, member)
     : Boolean(
