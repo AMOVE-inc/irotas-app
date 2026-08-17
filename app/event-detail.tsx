@@ -15,6 +15,7 @@ import { useColors } from "@/hooks/use-colors";
 import { useAuthContext } from "@/lib/auth-context";
 import { useClubs } from "@/lib/club-store";
 import { canViewClubEvent } from "@/lib/access-control";
+import { recordActivityEvent } from "@/lib/ai-data-store";
 import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
@@ -62,6 +63,7 @@ export default function EventDetailScreen() {
   useEffect(() => {
     getIrotasPoints(CURRENT_USER.id).then(setIrotasPoints);
   }, []);
+  useEffect(() => { if (!event?.id) return; void recordActivityEvent({ userId: CURRENT_USER.id, eventName: "event_viewed", entityType: "event", entityId: event.id, dedupeKey: `${CURRENT_USER.id}:event_viewed:${event.id}:${new Date().toISOString().slice(0, 10)}` }); }, [event?.id]);
 
   if (!event) {
     return (
@@ -158,6 +160,7 @@ export default function EventDetailScreen() {
                 event.attendees = applicants.length;
               }
               setHasApplied(true);
+              await recordActivityEvent({ userId: CURRENT_USER.id, eventName: "event_applied", entityType: "event", entityId: event.id });
 
               if (requiresOrganizerApproval) {
                 Alert.alert("申込完了", "幹事へ参加申込を送りました。承認後、参加者チャットへ入れるようになります。");
@@ -186,6 +189,7 @@ export default function EventDetailScreen() {
                 event.participants = participants;
               }
               setIsJoined(true);
+              await recordActivityEvent({ userId: CURRENT_USER.id, eventName: "event_confirmed", entityType: "event", entityId: event.id });
 
               // 支払いレコードを作成
               await createPaymentRecord({
@@ -400,7 +404,7 @@ export default function EventDetailScreen() {
             </Text>
           </View>
         </View>
-        <Pressable onPress={() => { void toggleEventFavoriteWithNotifications(event, CURRENT_USER.id); }} accessibilityLabel={favoriteEventIds.includes(event.id) ? "お気に入りから削除" : "お気に入りに追加"} style={{ position: "absolute", top: 92, right: 16, width: 38, height: 38, borderRadius: 19, backgroundColor: "rgba(0,0,0,0.5)", alignItems: "center", justifyContent: "center" }}>
+        <Pressable onPress={() => { const becomingFavorite = !favoriteEventIds.includes(event.id); void toggleEventFavoriteWithNotifications(event, CURRENT_USER.id); if (becomingFavorite) void recordActivityEvent({ userId: CURRENT_USER.id, eventName: "event_favorited", entityType: "event", entityId: event.id }); }} accessibilityLabel={favoriteEventIds.includes(event.id) ? "お気に入りから削除" : "お気に入りに追加"} style={{ position: "absolute", top: 92, right: 16, width: 38, height: 38, borderRadius: 19, backgroundColor: "rgba(0,0,0,0.5)", alignItems: "center", justifyContent: "center" }}>
           <IconSymbol name={favoriteEventIds.includes(event.id) ? "heart.fill" : "heart"} size={20} color={favoriteEventIds.includes(event.id) ? "#F59AB9" : "#FFF"} />
         </Pressable>
       </View>
@@ -736,6 +740,8 @@ export default function EventDetailScreen() {
         ) : null}
 
         {[{ url: event.tabelogUrl, label: "食べログを開く" }, { url: event.googleMapsUrl, label: "Googleマップを開く" }, { url: !event.tabelogUrl && !event.googleMapsUrl ? event.externalUrl : undefined, label: "店舗・イベントURLを開く" }].map((link) => link.url ? <Pressable key={link.label} onPress={() => Linking.openURL(link.url!)} style={{ flexDirection: "row", alignItems: "center", backgroundColor: "#EAF5FA", borderRadius: 14, padding: 14, marginBottom: 10 }}><IconSymbol name="link" size={18} color="#5B9BD5" /><Text style={{ flex: 1, fontSize: 14, fontWeight: "700", color: "#5B9BD5", marginLeft: 8 }} numberOfLines={1}>{link.label}</Text><IconSymbol name="chevron.right" size={16} color="#5B9BD5" /></Pressable> : null)}
+
+        {isJoined && new Date(`${event.date}T${event.time}:00`) < new Date() ? <Pressable onPress={() => router.push({ pathname: "/event-feedback" as any, params: { id: event.id } })} style={{ flexDirection: "row", alignItems: "center", backgroundColor: "#FFF4D8", borderRadius: 14, padding: 15, marginBottom: 16, borderWidth: 1, borderColor: "#EFD494" }}><IconSymbol name="star.fill" size={22} color="#D69A14" /><View style={{ flex: 1, marginLeft: 10 }}><Text style={{ fontSize: 14, fontWeight: "900", color: colors.foreground }}>イベントを評価する</Text><Text style={{ fontSize: 11, color: colors.muted, marginTop: 3 }}>次回のイベント改善にご協力ください</Text></View><IconSymbol name="chevron.right" size={17} color="#D69A14" /></Pressable> : null}
 
         {/* 参加確定者一覧 */}
         {confirmedIds.length > 0 && (

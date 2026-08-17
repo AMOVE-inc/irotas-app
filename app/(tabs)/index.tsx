@@ -9,6 +9,7 @@ import {
   RANK_LABELS,
   RANK_ICONS,
   getTodayEvents,
+  EVENTS,
   CURRENT_USER,
   type TimelinePost,
   type Announcement,
@@ -35,6 +36,9 @@ import {
 import { getHomeActivities, type HomeActivity, type HomeActivityKind } from "@/lib/home-activity-store";
 import { getGiftCampaigns, type GiftCampaign } from "@/lib/gift-campaign-store";
 import { useFocusEffect } from "expo-router";
+import { getAllEvents } from "@/lib/event-store";
+import { createDefaultPreferences, loadMemberAiConsents, loadMemberPreferences, recordActivityEvent, type MemberAiConsents, type MemberPreferences } from "@/lib/ai-data-store";
+import { recommendEvents, type RecommendedEvent } from "@/lib/event-recommendation";
 
 // タイムラインコメント型
 interface TimelineComment {
@@ -176,6 +180,13 @@ function CampaignSection({ gifts }: { gifts: GiftCampaign[] }) {
       </ScrollView>
     </View>
   );
+}
+
+function RecommendedEventsSection({ items, enabled }: { items: RecommendedEvent[]; enabled: boolean }) {
+  const colors = useColors(); const router = useRouter();
+  if (!enabled) return <Pressable onPress={() => router.push("/ai-settings" as any)} style={{ marginHorizontal: 16, marginBottom: 16, padding: 15, borderRadius: 16, backgroundColor: "#FCEAF2", borderWidth: 1, borderColor: "#F0C7D8", flexDirection: "row", alignItems: "center" }}><View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: "#FFF", alignItems: "center", justifyContent: "center" }}><IconSymbol name="sparkles" size={20} color="#D65E8D" /></View><View style={{ flex: 1, marginLeft: 11 }}><Text style={{ fontSize: 14, fontWeight: "900", color: colors.foreground }}>あなた向けのイベントを表示</Text><Text style={{ fontSize: 11, lineHeight: 16, color: colors.muted, marginTop: 3 }}>希望条件を設定すると、参加しやすいイベントがホームに届きます</Text></View><IconSymbol name="chevron.right" size={17} color="#D65E8D" /></Pressable>;
+  if (!items.length) return null;
+  return <View style={{ marginBottom: 16 }}><View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 16, marginBottom: 10 }}><IconSymbol name="sparkles" size={18} color="#D65E8D" /><Text style={{ fontSize: 16, fontWeight: "900", color: colors.foreground, marginLeft: 7 }}>あなたへのおすすめ</Text><Pressable onPress={() => router.push("/ai-settings" as any)} style={{ marginLeft: "auto" }}><Text style={{ fontSize: 11, fontWeight: "800", color: "#D65E8D" }}>条件を変更</Text></Pressable></View><ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, gap: 10 }}>{items.map(({ event, score, reasons }) => <Pressable key={event.id} onPress={() => { void recordActivityEvent({ userId: CURRENT_USER.id, eventName: "recommendation_clicked", entityType: "recommendation", entityId: event.id }); router.push({ pathname: "/event-detail", params: { id: event.id } }); }} style={{ width: 245, backgroundColor: colors.surface, borderRadius: 16, overflow: "hidden", borderWidth: 1, borderColor: colors.border }}><Image source={event.image} style={{ width: 245, height: 110 }} contentFit="cover" /><View style={{ padding: 12 }}><View style={{ flexDirection: "row", alignItems: "center" }}><Text style={{ fontSize: 10, fontWeight: "900", color: "#B44772", backgroundColor: "#FCEAF2", borderRadius: 10, paddingHorizontal: 8, paddingVertical: 4 }}>おすすめ度 {score}%</Text><Text style={{ marginLeft: "auto", fontSize: 10, color: colors.muted }}>{event.date.slice(5).replace("-", "/")}</Text></View><Text numberOfLines={2} style={{ fontSize: 14, lineHeight: 19, fontWeight: "900", color: colors.foreground, marginTop: 8 }}>{event.title}</Text><Text numberOfLines={1} style={{ fontSize: 11, color: "#B44772", marginTop: 6 }}>{reasons.slice(0, 2).join("・")}が一致</Text></View></Pressable>)}</ScrollView></View>;
 }
 
 const ACTIVITY_PRESENTATION: Record<HomeActivityKind, { icon: string; label: string; color: string }> = {
@@ -567,10 +578,13 @@ export default function HomeScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [activities, setActivities] = useState<HomeActivity[]>([]);
   const [giftCampaigns, setGiftCampaigns] = useState<GiftCampaign[]>([]);
+  const [preferences, setPreferences] = useState<MemberPreferences>(() => createDefaultPreferences({ residence: CURRENT_USER.residence, favoriteCuisines: CURRENT_USER.favoriteCuisines }));
+  const [aiConsents, setAiConsents] = useState<MemberAiConsents>({ eventRecommendation: false, memberMatching: false, conciergeHistory: false, anonymousImprovement: false, updatedAt: "" });
 
   const loadHomeContent = useCallback(() => {
-    void Promise.all([getHomeActivities(), getGiftCampaigns()]).then(([nextActivities, gifts]) => {
+    void Promise.all([getHomeActivities(), getGiftCampaigns(), loadMemberPreferences(CURRENT_USER.id, { residence: CURRENT_USER.residence, favoriteCuisines: CURRENT_USER.favoriteCuisines }), loadMemberAiConsents(CURRENT_USER.id)]).then(([nextActivities, gifts, nextPreferences, nextConsents]) => {
       setActivities(nextActivities);
+      setPreferences(nextPreferences); setAiConsents(nextConsents);
       const today = new Date().toISOString().slice(0, 10);
       setGiftCampaigns(gifts.filter((gift) => gift.status === "open" && gift.deadline >= today).sort((a, b) => a.deadline.localeCompare(b.deadline)));
     });
@@ -593,12 +607,15 @@ export default function HomeScreen() {
     ...activities.map((activity) => ({ type: "activity" as const, id: activity.id, createdAt: activity.createdAt, activity })),
     ...TIMELINE_POSTS.map((post) => ({ type: "post" as const, id: post.id, createdAt: post.createdAt, post })),
   ].sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt)), [activities]);
+  const recommendedEvents = useMemo(() => recommendEvents(getAllEvents(EVENTS), preferences, CURRENT_USER.id), [preferences]);
+  useEffect(() => { if (!aiConsents.eventRecommendation) return; recommendedEvents.forEach(({ event }) => { void recordActivityEvent({ userId: CURRENT_USER.id, eventName: "recommendation_shown", entityType: "recommendation", entityId: event.id, dedupeKey: `${CURRENT_USER.id}:recommendation_shown:${event.id}:${new Date().toISOString().slice(0, 10)}` }); }); }, [aiConsents.eventRecommendation, recommendedEvents]);
 
   const ListHeader = useMemo(
     () => (
       <>
         <AnnouncementBanner announcements={ANNOUNCEMENTS} />
         <CampaignSection gifts={giftCampaigns} />
+        <RecommendedEventsSection items={recommendedEvents} enabled={aiConsents.eventRecommendation} />
         <TodayEventsSection events={todayEvents} boardEvents={todayBoardEvents} />
         <View style={{ paddingHorizontal: 16, paddingVertical: 8, borderBottomWidth: 0.5, borderBottomColor: colors.border }}>
           <Text style={{ fontSize: 16, fontWeight: "700", color: colors.foreground }}>
@@ -607,7 +624,7 @@ export default function HomeScreen() {
         </View>
       </>
     ),
-    [todayEvents, todayBoardEvents, giftCampaigns, colors],
+    [todayEvents, todayBoardEvents, giftCampaigns, recommendedEvents, aiConsents.eventRecommendation, colors],
   );
 
   return (

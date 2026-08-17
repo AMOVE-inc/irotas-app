@@ -264,7 +264,6 @@ export default function MemberProfileScreen() {
                 { label: "出身地", value: details.hometown }, { label: "居住地", value: details.residence },
                 { label: "職業", value: details.occupation }, { label: "趣味", value: details.hobbies },
                 { label: "飲酒量", value: details.drinkingLevel }, { label: "好きなお酒", value: details.favoriteAlcohol },
-                { label: "苦手な食材", value: details.dislikedFoods }, { label: "アレルギー", value: details.allergies },
                 { label: "お気に入りのお店", value: details.favoriteRestaurants }, { label: "行ってみたいお店", value: details.desiredRestaurants },
                 { label: "Googleローカルガイド", value: details.googleLocalGuideLevel },
               ].filter((item) => item.value).map((item) => <View key={item.label} style={{ width: "50%", paddingRight: 8 }}><Text style={{ fontSize: 10, color: colors.muted }}>{item.label}</Text><Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground, marginTop: 2 }}>{item.value}</Text></View>)}

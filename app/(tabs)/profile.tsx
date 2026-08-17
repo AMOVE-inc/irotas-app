@@ -961,7 +961,6 @@ export default function ProfileScreen() {
               { label: "出身地", value: profileDetails.hometown }, { label: "居住地", value: profileDetails.residence },
               { label: "職業", value: profileDetails.occupation }, { label: "趣味", value: profileDetails.hobbies },
               { label: "飲酒量", value: profileDetails.drinkingLevel }, { label: "好きなお酒", value: profileDetails.favoriteAlcohol },
-              { label: "苦手な食材", value: profileDetails.dislikedFoods }, { label: "アレルギー", value: profileDetails.allergies },
               { label: "お気に入りのお店", value: profileDetails.favoriteRestaurants }, { label: "行ってみたいお店", value: profileDetails.desiredRestaurants },
               { label: "Googleローカルガイド", value: profileDetails.googleLocalGuideLevel },
             ].filter((item) => item.value).map((item) => <View key={item.label} style={{ width: "50%", paddingRight: 8 }}><Text style={{ fontSize: 10, color: colors.muted }}>{item.label}</Text><Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground, marginTop: 2 }}>{item.value}</Text></View>)}
@@ -1148,6 +1147,12 @@ export default function ProfileScreen() {
         <MenuSection
           title="コミュニティ"
           items={[
+            {
+              icon: "sparkles",
+              label: "AI・おすすめ設定",
+              color: "#D65E8D",
+              onPress: () => router.push("/ai-settings" as any),
+            },
             {
               icon: "person.2.fill",
               label: "メンバー検索",

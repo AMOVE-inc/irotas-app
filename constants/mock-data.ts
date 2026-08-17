@@ -572,6 +572,15 @@ export const EVENTS: Event[] = [
     genres: ["ワインバー"], category: "kanto", eventType: "club", clubId: "club-wine", status: "open", createdBy: "u1",
     cancellationPolicy: "参加者自身でのキャンセル操作はできません。必ず幹事へ連絡してください。",
   },
+  {
+    id: "e7", createdAt: "2026-08-17T09:00:00+09:00", title: "銀座で楽しむ少人数の鮨会",
+    restaurantName: "鮨 IRO", description: "初参加・おひとり参加も歓迎の少人数グルメ会です。カウンターで旬の握りを楽しみましょう。",
+    date: "2026-09-20", time: "18:30", location: "東京都中央区銀座", prefecture: "東京都", tokyoArea: "銀座・有楽町・日比谷",
+    image: "https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=600", capacity: 6, attendees: 2,
+    participants: ["u2"], applicantIds: ["u2"], price: "¥8,000", priceMin: 8000, priceMax: 8000,
+    genres: ["寿司", "和食"], category: "kanto", eventType: "gourmet", status: "open", createdBy: "u2",
+    applicationDeadline: "2026-09-13", selectionMethod: "first_come",
+  },
 ];
 
 export const RESTAURANTS: Restaurant[] = [

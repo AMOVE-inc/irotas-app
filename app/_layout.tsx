@@ -198,6 +198,7 @@ export default function RootLayout() {
                 <Stack.Screen name="select-branch" options={{ presentation: "fullScreenModal" }} />
                 <Stack.Screen name="(tabs)" />
                 <Stack.Screen name="event-detail" options={{ presentation: "card" }} />
+                <Stack.Screen name="event-feedback" options={{ presentation: "card" }} />
                 <Stack.Screen name="concierge" options={{ presentation: "card" }} />
                 <Stack.Screen name="notifications" options={{ presentation: "card" }} />
                 <Stack.Screen name="create-post" options={{ presentation: "modal" }} />
@@ -216,6 +217,7 @@ export default function RootLayout() {
                 <Stack.Screen name="gift-campaign-manager" options={{ presentation: "card" }} />
                 <Stack.Screen name="csv-import" options={{ presentation: "card" }} />
                 <Stack.Screen name="app-settings" options={{ presentation: "card" }} />
+                <Stack.Screen name="ai-settings" options={{ presentation: "card" }} />
                 <Stack.Screen name="notification-settings" options={{ presentation: "card" }} />
                 <Stack.Screen name="faq" options={{ presentation: "card" }} />
                 <Stack.Screen name="community-rules" options={{ presentation: "card" }} />
