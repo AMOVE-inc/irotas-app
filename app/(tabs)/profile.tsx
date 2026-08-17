@@ -24,6 +24,7 @@ import {
   Alert,
   Linking,
   Modal,
+  Platform,
   Pressable,
   ScrollView,
   Text,
@@ -678,6 +679,14 @@ export default function ProfileScreen() {
   const colors = useColors();
   const router = useRouter();
   const { logout, user: authUser } = useAuthContext();
+  const performLogout = useCallback(async () => {
+    await logout();
+    if (Platform.OS === "web" && typeof window !== "undefined") {
+      window.location.replace("/login");
+      return;
+    }
+    router.replace("/login");
+  }, [logout, router]);
   const user = CURRENT_USER;
   const { data: achievementBadges = [] } = trpc.memberData.achievementBadges.useQuery(undefined, { enabled: Boolean(authUser) });
   const { data: memberIdentity } = trpc.memberData.identity.useQuery(undefined, { enabled: Boolean(authUser) });
@@ -1236,6 +1245,11 @@ export default function ProfileScreen() {
         <View style={{ paddingHorizontal: 16, paddingTop: 8, paddingBottom: 4 }}>
           <Pressable
             onPress={() => {
+              if (Platform.OS === "web" && typeof window !== "undefined") {
+                if (window.confirm("本当にログアウトしますか？"))
+                  void performLogout();
+                return;
+              }
               Alert.alert(
                 "ログアウト",
                 "本当にログアウトしますか？",
@@ -1244,9 +1258,7 @@ export default function ProfileScreen() {
                   {
                     text: "ログアウト",
                     style: "destructive",
-                    onPress: async () => {
-                      await logout();
-                    },
+                    onPress: performLogout,
                   },
                 ],
               );
