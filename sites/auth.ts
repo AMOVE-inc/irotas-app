@@ -3,7 +3,11 @@ import type { D1Database, SitesEnv } from "./platform-types";
 const encoder = new TextEncoder();
 const SESSION_COOKIE = "__Host-irotas_session";
 const SESSION_DAYS = 30;
-const PASSWORD_ITERATIONS = 600_000;
+// Cloudflare Workers currently caps a single PBKDF2 operation at 100,000
+// iterations. Production hashes also use AUTH_SECRET as an HMAC pepper so a
+// database-only leak is not sufficient to test password guesses offline.
+const PASSWORD_ITERATIONS = 100_000;
+const PASSWORD_SCHEME = "pbkdf2_sha256_hmac";
 
 type MemberRow = {
   id: number;
@@ -98,10 +102,14 @@ async function hmacSha256(secret: string, value: string) {
 export async function hashPassword(
   password: string,
   salt = crypto.getRandomValues(new Uint8Array(16)),
+  pepper = "",
 ) {
+  const passwordMaterial = pepper
+    ? await hmacSha256(pepper, password)
+    : password;
   const key = await crypto.subtle.importKey(
     "raw",
-    encoder.encode(password),
+    encoder.encode(passwordMaterial),
     "PBKDF2",
     false,
     ["deriveBits"],
@@ -111,12 +119,22 @@ export async function hashPassword(
     key,
     256,
   );
-  return `pbkdf2_sha256$${PASSWORD_ITERATIONS}$${toBase64Url(salt)}$${toBase64Url(new Uint8Array(bits))}`;
+  const scheme = pepper ? PASSWORD_SCHEME : "pbkdf2_sha256";
+  return `${scheme}$${PASSWORD_ITERATIONS}$${toBase64Url(salt)}$${toBase64Url(new Uint8Array(bits))}`;
 }
 
-export async function verifyPassword(password: string, encoded: string) {
+export async function verifyPassword(
+  password: string,
+  encoded: string,
+  pepper = "",
+) {
   const [scheme, iterationsText, saltText, expected] = encoded.split("$");
-  if (scheme !== "pbkdf2_sha256" || !iterationsText || !saltText || !expected)
+  if (
+    !["pbkdf2_sha256", PASSWORD_SCHEME].includes(scheme) ||
+    !iterationsText ||
+    !saltText ||
+    !expected
+  )
     return false;
   const iterations = Number(iterationsText);
   if (
@@ -126,9 +144,14 @@ export async function verifyPassword(password: string, encoded: string) {
   )
     return false;
   const salt = fromBase64Url(saltText);
+  if (scheme === PASSWORD_SCHEME && !pepper) return false;
+  const passwordMaterial =
+    scheme === PASSWORD_SCHEME
+      ? await hmacSha256(pepper, password)
+      : password;
   const key = await crypto.subtle.importKey(
     "raw",
-    encoder.encode(password),
+    encoder.encode(passwordMaterial),
     "PBKDF2",
     false,
     ["deriveBits"],
@@ -560,7 +583,7 @@ async function register(request: Request, env: SitesEnv, db: D1Database) {
       400,
     );
   }
-  const passwordHash = await hashPassword(password);
+  const passwordHash = await hashPassword(password, undefined, env.AUTH_SECRET);
   const now = new Date().toISOString();
   await db.batch([
     db
@@ -604,7 +627,7 @@ async function register(request: Request, env: SitesEnv, db: D1Database) {
   );
 }
 
-async function login(request: Request, db: D1Database) {
+async function login(request: Request, env: SitesEnv, db: D1Database) {
   const input = await readJson(request);
   const email = normalizeEmail(String(input.email ?? ""));
   const password = String(input.password ?? "");
@@ -617,7 +640,7 @@ async function login(request: Request, db: D1Database) {
   const member = await findMember(db, email);
   if (
     !member?.password_hash ||
-    !(await verifyPassword(password, member.password_hash))
+    !(await verifyPassword(password, member.password_hash, env.AUTH_SECRET))
   )
     return responseJson(
       { error: "メールアドレスまたはパスワードが正しくありません" },
@@ -688,7 +711,7 @@ export async function handleAuthRequest(
     if (pathname === "/api/auth/register" && request.method === "POST")
       return register(request, env, env.DB);
     if (pathname === "/api/auth/login" && request.method === "POST")
-      return login(request, env.DB);
+      return login(request, env, env.DB);
     if (pathname === "/api/auth/me" && request.method === "GET")
       return me(request, env.DB);
     if (pathname === "/api/auth/logout" && request.method === "POST")

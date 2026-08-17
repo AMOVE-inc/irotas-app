@@ -26,11 +26,37 @@ describe("Sites production authentication", () => {
   it("hashes and verifies passwords without storing the plaintext", async () => {
     const encoded = await hashPassword("correct horse battery staple");
     expect(encoded).not.toContain("correct horse");
-    expect(encoded).toContain("$600000$");
+    expect(encoded).toContain("$100000$");
     expect(await verifyPassword("correct horse battery staple", encoded)).toBe(
       true,
     );
     expect(await verifyPassword("wrong password", encoded)).toBe(false);
+  });
+
+  it("uses the server secret as a password pepper in production hashes", async () => {
+    const encoded = await hashPassword(
+      "correct horse battery staple",
+      undefined,
+      "server-side-secret",
+    );
+    expect(encoded.startsWith("pbkdf2_sha256_hmac$100000$")).toBe(true);
+    expect(
+      await verifyPassword(
+        "correct horse battery staple",
+        encoded,
+        "server-side-secret",
+      ),
+    ).toBe(true);
+    expect(
+      await verifyPassword(
+        "correct horse battery staple",
+        encoded,
+        "different-secret",
+      ),
+    ).toBe(false);
+    expect(
+      await verifyPassword("correct horse battery staple", encoded),
+    ).toBe(false);
   });
 
   it("accepts a bearer token before a cookie token", () => {
