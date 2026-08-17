@@ -51,6 +51,11 @@ describe("member migration dry run", () => {
     const paused = result.candidates.find((candidate) => candidate.billing_email === "paused@example.com");
 
     expect(result.summary.uniqueSubscriptionEmails).toBe(2);
+    expect(result.summary.reviewReasons).toEqual({
+      duplicateSourceRecords: 0,
+      discordWithdrawn: 0,
+      missingDiscord: 0,
+    });
     expect(current).toMatchObject({
       square_subscription_id: "sub-live",
       display_name: "アプリ表示名",

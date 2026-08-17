@@ -27,6 +27,11 @@ type SubscriptionRow = {
 
 type SessionMemberRow = MemberRow & SubscriptionRow;
 
+export type AuthenticatedRequestMember = Pick<
+  MemberRow,
+  "id" | "role" | "access_role" | "account_status"
+>;
+
 function toBase64Url(bytes: Uint8Array) {
   let binary = "";
   for (const byte of bytes) binary += String.fromCharCode(byte);
@@ -314,17 +319,31 @@ export async function requestHasMemberAccess(
   env: SitesEnv,
   allowedAccessRoles?: Array<MemberRow["access_role"]>,
 ) {
-  if (!env.DB) return false;
-  const token = extractSessionToken(request);
-  if (!token) return false;
-  const member = await sessionMember(env.DB, token);
-  if (!member || !membershipAllowsAccess(member, member)) return false;
+  const member = await authenticatedRequestMember(request, env);
+  if (!member) return false;
   if (!allowedAccessRoles?.length) return true;
   return (
     allowedAccessRoles.includes(member.access_role) ||
     member.role === "admin" ||
     member.role === "operator"
   );
+}
+
+export async function authenticatedRequestMember(
+  request: Request,
+  env: SitesEnv,
+): Promise<AuthenticatedRequestMember | null> {
+  if (!env.DB) return null;
+  const token = extractSessionToken(request);
+  if (!token) return null;
+  const member = await sessionMember(env.DB, token);
+  if (!member || !membershipAllowsAccess(member, member)) return null;
+  return {
+    id: member.id,
+    role: member.role,
+    access_role: member.access_role,
+    account_status: member.account_status,
+  };
 }
 
 async function verificationHash(

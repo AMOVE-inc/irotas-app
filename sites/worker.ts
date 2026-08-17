@@ -4,6 +4,7 @@ import {
   requestHasMemberAccess,
 } from "./auth";
 import type { SitesEnv } from "./platform-types";
+import { handleMemberImportRequest } from "./member-import";
 import { handleSquareWebhook } from "./square-webhook";
 
 type CommunitySubmission = {
@@ -222,6 +223,8 @@ async function routeRequest(request: Request, env: SitesEnv): Promise<Response> 
     if (authResponse) return authResponse;
     const squareResponse = await handleSquareWebhook(request, env);
     if (squareResponse) return squareResponse;
+    const memberImportResponse = await handleMemberImportRequest(request, env);
+    if (memberImportResponse) return memberImportResponse;
     if (pathname === "/api/platform/health" && request.method === "GET") {
       const startedAt = Date.now();
       let database: "ok" | "unavailable" = "unavailable";

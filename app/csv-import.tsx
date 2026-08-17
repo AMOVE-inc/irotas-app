@@ -295,6 +295,16 @@ export default function CsvImportScreen() {
               <Text style={{ fontSize: 11, lineHeight: 17, color: colors.muted, marginTop: 10 }}>
                 元データ：サブスク {memberDryRun.summary.subscriptionRows.toLocaleString()}行／Discord {memberDryRun.summary.discordRows.toLocaleString()}行／顧客ID {memberDryRun.summary.customerRows.toLocaleString()}行
               </Text>
+              {memberDryRun.summary.reviewMembers > 0 && (
+                <View style={{ marginTop: 10, backgroundColor: "#FFF7E8", borderRadius: 11, padding: 11 }}>
+                  <Text style={{ color: "#8A5700", fontSize: 12, fontWeight: "800", marginBottom: 5 }}>要確認の内訳（個人情報は非表示）</Text>
+                  <Text style={{ color: "#8A5700", fontSize: 11, lineHeight: 18 }}>
+                    重複履歴 {memberDryRun.summary.reviewReasons.duplicateSourceRecords}件{"\n"}
+                    Square有効・Discord退会 {memberDryRun.summary.reviewReasons.discordWithdrawn}件{"\n"}
+                    Discord情報なし {memberDryRun.summary.reviewReasons.missingDiscord}件
+                  </Text>
+                </View>
+              )}
               <Pressable
                 onPress={handleDownloadMemberDryRun}
                 style={({ pressed }) => ({ marginTop: 12, borderWidth: 1, borderColor: "#D97FA8", borderRadius: 12, paddingVertical: 11, alignItems: "center", opacity: pressed ? 0.7 : 1 })}

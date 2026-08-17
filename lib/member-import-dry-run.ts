@@ -54,6 +54,11 @@ export type MemberImportDryRun = {
     activeAccess: number;
     graceAccess: number;
     pausedAccess: number;
+    reviewReasons: {
+      duplicateSourceRecords: number;
+      discordWithdrawn: number;
+      missingDiscord: number;
+    };
   };
   candidates: MemberImportCandidate[];
   issues: MemberImportIssue[];
@@ -304,6 +309,18 @@ export function buildMemberImportDryRun(
     };
   });
 
+  const reviewEmails = new Set(
+    candidates
+      .filter((candidate) => candidate.migration_action === "review")
+      .map((candidate) => candidate.billing_email),
+  );
+  const reviewIssueEmails = (codes: MemberImportIssueCode[]) =>
+    new Set(
+      issues
+        .filter((issue) => reviewEmails.has(issue.email) && codes.includes(issue.code))
+        .map((issue) => issue.email),
+    ).size;
+
   return {
     summary: {
       subscriptionRows: subscriptions.length,
@@ -316,6 +333,14 @@ export function buildMemberImportDryRun(
       activeAccess: candidates.filter((candidate) => candidate.access_status === "active").length,
       graceAccess: candidates.filter((candidate) => candidate.access_status === "grace").length,
       pausedAccess: candidates.filter((candidate) => candidate.access_status === "paused").length,
+      reviewReasons: {
+        duplicateSourceRecords: reviewIssueEmails([
+          "duplicate_subscription_email",
+          "duplicate_discord_email",
+        ]),
+        discordWithdrawn: reviewIssueEmails(["discord_withdrawn_but_subscription_active"]),
+        missingDiscord: reviewIssueEmails(["missing_discord_member"]),
+      },
     },
     candidates,
     issues,
