@@ -102,7 +102,8 @@ export async function getUserInfo(): Promise<User | null> {
   try {
     let info: string | null = null;
     if (Platform.OS === "web") {
-      // Use localStorage for web
+      // Only synthetic preview users are cached on web. Real member identity is
+      // always reloaded from the HttpOnly server session.
       info = window.localStorage.getItem(USER_INFO_KEY);
     } else {
       // Use SecureStore for native
@@ -112,7 +113,9 @@ export async function getUserInfo(): Promise<User | null> {
     if (!info) {
       return null;
     }
-    return deserializeUser(info);
+    const user = deserializeUser(info);
+    if (Platform.OS === "web" && user?.loginMethod !== "preview") return null;
+    return user;
   } catch (error) {
     logger.error("Failed to get cached user info", error);
     return null;
@@ -122,8 +125,11 @@ export async function getUserInfo(): Promise<User | null> {
 export async function setUserInfo(user: User): Promise<void> {
   try {
     if (Platform.OS === "web") {
-      // Use localStorage for web
-      window.localStorage.setItem(USER_INFO_KEY, JSON.stringify(user));
+      if (user.loginMethod === "preview") {
+        window.localStorage.setItem(USER_INFO_KEY, JSON.stringify(user));
+      } else {
+        window.localStorage.removeItem(USER_INFO_KEY);
+      }
       return;
     }
 

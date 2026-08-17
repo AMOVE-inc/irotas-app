@@ -4,6 +4,7 @@ import {
   hashPassword,
   membershipAllowsAccess,
   normalizeEmail,
+  isTrustedBrowserOrigin,
   verifyPassword,
 } from "../sites/auth";
 import { squareSignature } from "../sites/square-webhook";
@@ -16,6 +17,7 @@ describe("Sites production authentication", () => {
   it("hashes and verifies passwords without storing the plaintext", async () => {
     const encoded = await hashPassword("correct horse battery staple");
     expect(encoded).not.toContain("correct horse");
+    expect(encoded).toContain("$600000$");
     expect(await verifyPassword("correct horse battery staple", encoded)).toBe(
       true,
     );
@@ -26,10 +28,23 @@ describe("Sites production authentication", () => {
     const request = new Request("https://example.com/api/auth/me", {
       headers: {
         authorization: "Bearer native-token",
-        cookie: "irotas_session=web-token",
+        cookie: "__Host-irotas_session=web-token",
       },
     });
     expect(extractSessionToken(request)).toBe("native-token");
+  });
+
+  it("rejects cross-origin browser mutations while allowing native requests", () => {
+    expect(
+      isTrustedBrowserOrigin(
+        new Request("https://app.example/api/auth/login", {
+          headers: { origin: "https://evil.example" },
+        }),
+      ),
+    ).toBe(false);
+    expect(
+      isTrustedBrowserOrigin(new Request("https://app.example/api/auth/login")),
+    ).toBe(true);
   });
 
   it("allows a seven-day overdue grace period but blocks paused members", () => {

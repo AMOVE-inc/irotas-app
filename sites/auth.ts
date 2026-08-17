@@ -1,9 +1,9 @@
 import type { D1Database, SitesEnv } from "./platform-types";
 
 const encoder = new TextEncoder();
-const SESSION_COOKIE = "irotas_session";
-const SESSION_DAYS = 365;
-const PASSWORD_ITERATIONS = 210_000;
+const SESSION_COOKIE = "__Host-irotas_session";
+const SESSION_DAYS = 30;
+const PASSWORD_ITERATIONS = 600_000;
 
 type MemberRow = {
   id: number;
@@ -54,6 +54,20 @@ export async function sha256(value: string) {
       await crypto.subtle.digest("SHA-256", encoder.encode(value)),
     ),
   );
+}
+
+function constantTimeEqual(left: string, right: string) {
+  if (left.length !== right.length) return false;
+  let difference = 0;
+  for (let index = 0; index < left.length; index += 1)
+    difference |= left.charCodeAt(index) ^ right.charCodeAt(index);
+  return difference === 0;
+}
+
+export function isTrustedBrowserOrigin(request: Request) {
+  const origin = request.headers.get("origin");
+  if (!origin) return true;
+  return origin === new URL(request.url).origin;
 }
 
 async function hmacSha256(secret: string, value: string) {
@@ -115,11 +129,7 @@ export async function verifyPassword(password: string, encoded: string) {
     256,
   );
   const actual = toBase64Url(new Uint8Array(bits));
-  if (actual.length !== expected.length) return false;
-  let difference = 0;
-  for (let index = 0; index < actual.length; index += 1)
-    difference |= actual.charCodeAt(index) ^ expected.charCodeAt(index);
-  return difference === 0;
+  return constantTimeEqual(actual, expected);
 }
 
 function addDays(date: Date, days: number) {
@@ -207,6 +217,12 @@ function clearSessionCookie() {
 }
 
 async function readJson(request: Request) {
+  if (
+    !(request.headers.get("content-type") ?? "")
+      .toLowerCase()
+      .startsWith("application/json")
+  )
+    throw new Error("unsupported_media_type");
   const contentLength = Number(request.headers.get("content-length") ?? 0);
   if (contentLength > 32_768) throw new Error("request_too_large");
   return (await request.json()) as Record<string, unknown>;
@@ -291,6 +307,24 @@ async function sessionMember(db: D1Database, token: string) {
     )
     .bind(tokenHash, new Date().toISOString())
     .first<SessionMemberRow>();
+}
+
+export async function requestHasMemberAccess(
+  request: Request,
+  env: SitesEnv,
+  allowedAccessRoles?: Array<MemberRow["access_role"]>,
+) {
+  if (!env.DB) return false;
+  const token = extractSessionToken(request);
+  if (!token) return false;
+  const member = await sessionMember(env.DB, token);
+  if (!member || !membershipAllowsAccess(member, member)) return false;
+  if (!allowedAccessRoles?.length) return true;
+  return (
+    allowedAccessRoles.includes(member.access_role) ||
+    member.role === "admin" ||
+    member.role === "operator"
+  );
 }
 
 async function verificationHash(
@@ -423,7 +457,7 @@ async function register(request: Request, env: SitesEnv, db: D1Database) {
     "initial_setup",
     code,
   );
-  if (suppliedHash !== verification.code_hash) {
+  if (!constantTimeEqual(suppliedHash, verification.code_hash)) {
     await db
       .prepare(
         "UPDATE email_verification_codes SET failed_attempts = failed_attempts + 1 WHERE id = ?",
@@ -552,6 +586,8 @@ export async function handleAuthRequest(
   if (!pathname.startsWith("/api/auth/")) return null;
   if (!env.DB)
     return responseJson({ error: "データベースに接続できません" }, 503);
+  if (request.method === "POST" && !isTrustedBrowserOrigin(request))
+    return responseJson({ error: "許可されていない送信元です" }, 403);
   try {
     if (
       pathname === "/api/auth/request-setup-code" &&
@@ -571,6 +607,8 @@ export async function handleAuthRequest(
     const message = error instanceof Error ? error.message : "unknown";
     if (message === "request_too_large")
       return responseJson({ error: "リクエストが大きすぎます" }, 413);
+    if (message === "unsupported_media_type")
+      return responseJson({ error: "JSON形式で送信してください" }, 415);
     return responseJson({ error: "一時的な問題が発生しました" }, 500);
   }
 }

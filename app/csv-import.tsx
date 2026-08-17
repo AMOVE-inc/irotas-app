@@ -11,7 +11,7 @@ import {
   type MemberImportDryRun,
 } from "@/lib/member-import-dry-run";
 import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Alert,
   Pressable,
@@ -78,6 +78,15 @@ export default function CsvImportScreen() {
   const [memberDryRun, setMemberDryRun] = useState<MemberImportDryRun | null>(null);
   const importMutation = trpc.migration.importCsv.useMutation();
 
+  useEffect(() => {
+    if (!Object.keys(memberSources).length) return;
+    const timeout = setTimeout(() => {
+      setMemberSources({});
+      setMemberDryRun(null);
+    }, 30 * 60_000);
+    return () => clearTimeout(timeout);
+  }, [memberSources]);
+
   if (authUser?.role !== "admin") {
     return (
       <ScreenContainer className="p-6">
@@ -133,6 +142,10 @@ export default function CsvImportScreen() {
     input.onchange = async () => {
       const file = input.files?.[0];
       if (!file) return;
+      if (file.size > 20 * 1024 * 1024) {
+        Alert.alert("ファイルが大きすぎます", "個人情報保護と端末負荷軽減のため、1ファイル20MB以内にしてください。");
+        return;
+      }
       const csv = decodeCsvBuffer(await file.arrayBuffer());
       setMemberSources((current) => ({ ...current, [source]: { name: file.name, csv } }));
       setMemberDryRun(null);
@@ -201,6 +214,11 @@ export default function CsvImportScreen() {
           <Text style={{ fontSize: 12, lineHeight: 18, color: colors.muted, marginTop: 5, marginBottom: 14 }}>
             本番DBへ書き込まずに、メールアドレスでSquare・Discord・顧客IDを照合します。SquareのUTF-16形式にも対応しています。
           </Text>
+          <View style={{ backgroundColor: "#EAF6EF", borderRadius: 11, padding: 11, marginBottom: 12 }}>
+            <Text style={{ color: "#196B39", fontSize: 11, lineHeight: 17, fontWeight: "700" }}>
+              選択したCSVはこの端末内だけで処理され、サーバーへ送信・保存・ログ記録されません。30分後に画面上のデータを自動破棄します。
+            </Text>
+          </View>
           <View style={{ gap: 8 }}>
             {([
               ["subscriptions", "Square サブスク一覧"],
@@ -245,6 +263,18 @@ export default function CsvImportScreen() {
           >
             <Text style={{ color: "#FFF", fontSize: 14, fontWeight: "800" }}>安全に照合する（DBには未登録）</Text>
           </Pressable>
+
+          {Object.keys(memberSources).length > 0 && (
+            <Pressable
+              onPress={() => {
+                setMemberSources({});
+                setMemberDryRun(null);
+              }}
+              style={({ pressed }) => ({ alignSelf: "center", paddingHorizontal: 12, paddingVertical: 9, marginTop: 4, opacity: pressed ? 0.6 : 1 })}
+            >
+              <Text style={{ color: colors.muted, fontSize: 12, fontWeight: "700" }}>選択した個人情報を今すぐ破棄</Text>
+            </Pressable>
+          )}
 
           {memberDryRun && (
             <View style={{ marginTop: 16, borderTopWidth: 1, borderTopColor: colors.border, paddingTop: 14 }}>

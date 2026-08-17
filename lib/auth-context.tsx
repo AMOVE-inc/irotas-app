@@ -64,13 +64,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           await Auth.setUserInfo(userInfo);
         } else if (
           previewLoginEnabled &&
+          ["localhost", "127.0.0.1"].includes(window.location.hostname) &&
           ["/admin-dashboard", "/csv-import", "/campaign-manager", "/gift-campaign-manager"].some((path) =>
             window.location.pathname.startsWith(path),
           )
         ) {
-          // The public prototype defaults to a member account. A direct admin
-          // dashboard URL gets an isolated admin preview so management screens
-          // remain reviewable without exposing admin privileges elsewhere.
+          // Management previews are intentionally limited to the local machine.
+          // Public deployments must never mint client-side admin privileges.
           const previewAdmin = adminPreviewUser();
           setUser(previewAdmin);
           await Auth.setUserInfo(previewAdmin);

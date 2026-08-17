@@ -31,6 +31,11 @@ describe("platform health endpoint", () => {
       services: { database: "ok", uploads: "ok" },
       schemaVersion: "1",
     });
+    expect(response.headers.get("strict-transport-security")).toContain("max-age=");
+    expect(response.headers.get("x-content-type-options")).toBe("nosniff");
+    expect(response.headers.get("x-frame-options")).toBe("DENY");
+    expect(response.headers.get("content-security-policy")).toContain("frame-ancestors 'none'");
+    expect(response.headers.get("cache-control")).toBe("no-store");
   });
 
   it("reports degraded without a storage binding", async () => {
@@ -43,5 +48,21 @@ describe("platform health endpoint", () => {
       status: "degraded",
       services: { database: "ok", uploads: "unavailable" },
     });
+  });
+
+  it("blocks cross-origin mutation requests before processing personal data", async () => {
+    const response = await worker.fetch(
+      new Request("https://example.com/api/restaurant-location", {
+        method: "POST",
+        headers: {
+          origin: "https://attacker.example",
+          "content-type": "application/json",
+        },
+        body: "{}",
+      }),
+      environment(),
+    );
+    expect(response.status).toBe(403);
+    expect(response.headers.get("access-control-allow-origin")).toBeNull();
   });
 });

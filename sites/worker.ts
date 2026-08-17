@@ -1,4 +1,8 @@
-import { handleAuthRequest } from "./auth";
+import {
+  handleAuthRequest,
+  isTrustedBrowserOrigin,
+  requestHasMemberAccess,
+} from "./auth";
 import type { SitesEnv } from "./platform-types";
 import { handleSquareWebhook } from "./square-webhook";
 
@@ -167,9 +171,53 @@ function assetRequest(request: Request, pathname: string) {
   return new Request(url, request);
 }
 
-export default {
-  async fetch(request: Request, env: SitesEnv): Promise<Response> {
+function withSecurityHeaders(response: Response, request: Request) {
+  const headers = new Headers(response.headers);
+  headers.set("x-content-type-options", "nosniff");
+  headers.set("x-frame-options", "DENY");
+  headers.set("x-xss-protection", "0");
+  headers.set("referrer-policy", "strict-origin-when-cross-origin");
+  headers.set("permissions-policy", "camera=(), microphone=(), geolocation=(), payment=()");
+  headers.set("cross-origin-opener-policy", "same-origin");
+  headers.set("cross-origin-resource-policy", "same-site");
+  headers.set(
+    "content-security-policy",
+    "frame-ancestors 'none'; base-uri 'self'; object-src 'none'; form-action 'self'",
+  );
+  if (new URL(request.url).protocol === "https:")
+    headers.set("strict-transport-security", "max-age=31536000; includeSubDomains");
+  if (new URL(request.url).pathname.startsWith("/api/") && !headers.has("cache-control"))
+    headers.set("cache-control", "no-store");
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers,
+  });
+}
+
+function apiError(error: string, status: number) {
+  return Response.json({ error }, { status, headers: { "cache-control": "no-store" } });
+}
+
+async function protectedWhenAuthEnabled(
+  request: Request,
+  env: SitesEnv,
+  roles?: Array<"member" | "club_leader" | "operator" | "admin">,
+) {
+  if (!env.AUTH_SECRET) return null;
+  return (await requestHasMemberAccess(request, env, roles))
+    ? null
+    : apiError("ログインが必要です", 401);
+}
+
+async function routeRequest(request: Request, env: SitesEnv): Promise<Response> {
     const { pathname } = new URL(request.url);
+    if (
+      ["POST", "PUT", "PATCH", "DELETE"].includes(request.method) &&
+      pathname !== "/api/webhooks/square" &&
+      !isTrustedBrowserOrigin(request)
+    )
+      return apiError("許可されていない送信元です", 403);
     const authResponse = await handleAuthRequest(request, env);
     if (authResponse) return authResponse;
     const squareResponse = await handleSquareWebhook(request, env);
@@ -226,6 +274,8 @@ export default {
     }
 
     if (pathname === "/api/gourmet-map/feed" && request.method === "GET") {
+      const denied = await protectedWhenAuthEnabled(request, env);
+      if (denied) return denied;
       if (!env.GOURMET_MAP_FEED_URL) {
         return Response.json(
           { configured: false, restaurants: [] },
@@ -254,6 +304,8 @@ export default {
     }
 
     if (pathname === "/api/restaurant-location" && request.method === "POST") {
+      const denied = await protectedWhenAuthEnabled(request, env);
+      if (denied) return denied;
       try {
         const input = (await request.json()) as Record<string, unknown>;
         const place = await resolveRestaurantAddress(
@@ -280,6 +332,12 @@ export default {
       pathname === "/api/gourmet-map/community" &&
       ["POST", "PATCH"].includes(request.method)
     ) {
+      const denied = await protectedWhenAuthEnabled(
+        request,
+        env,
+        request.method === "PATCH" ? ["operator", "admin"] : undefined,
+      );
+      if (denied) return denied;
       if (!env.GOURMET_MAP_FEED_URL)
         return Response.json({ success: false }, { status: 503 });
       try {
@@ -344,5 +402,10 @@ export default {
     }
 
     return env.ASSETS.fetch(assetRequest(request, "/+not-found.html"));
+}
+
+export default {
+  async fetch(request: Request, env: SitesEnv): Promise<Response> {
+    return withSecurityHeaders(await routeRequest(request, env), request);
   },
 };
