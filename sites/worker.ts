@@ -1,4 +1,5 @@
 import {
+  emailDeliveryConfigured,
   handleAuthRequest,
   isTrustedBrowserOrigin,
   requestHasMemberAccess,
@@ -178,7 +179,10 @@ function withSecurityHeaders(response: Response, request: Request) {
   headers.set("x-frame-options", "DENY");
   headers.set("x-xss-protection", "0");
   headers.set("referrer-policy", "strict-origin-when-cross-origin");
-  headers.set("permissions-policy", "camera=(), microphone=(), geolocation=(), payment=()");
+  headers.set(
+    "permissions-policy",
+    "camera=(), microphone=(), geolocation=(), payment=()",
+  );
   headers.set("cross-origin-opener-policy", "same-origin");
   headers.set("cross-origin-resource-policy", "same-site");
   headers.set(
@@ -186,8 +190,14 @@ function withSecurityHeaders(response: Response, request: Request) {
     "frame-ancestors 'none'; base-uri 'self'; object-src 'none'; form-action 'self'",
   );
   if (new URL(request.url).protocol === "https:")
-    headers.set("strict-transport-security", "max-age=31536000; includeSubDomains");
-  if (new URL(request.url).pathname.startsWith("/api/") && !headers.has("cache-control"))
+    headers.set(
+      "strict-transport-security",
+      "max-age=31536000; includeSubDomains",
+    );
+  if (
+    new URL(request.url).pathname.startsWith("/api/") &&
+    !headers.has("cache-control")
+  )
     headers.set("cache-control", "no-store");
   return new Response(response.body, {
     status: response.status,
@@ -197,7 +207,10 @@ function withSecurityHeaders(response: Response, request: Request) {
 }
 
 function apiError(error: string, status: number) {
-  return Response.json({ error }, { status, headers: { "cache-control": "no-store" } });
+  return Response.json(
+    { error },
+    { status, headers: { "cache-control": "no-store" } },
+  );
 }
 
 async function protectedWhenAuthEnabled(
@@ -211,200 +224,201 @@ async function protectedWhenAuthEnabled(
     : apiError("ログインが必要です", 401);
 }
 
-async function routeRequest(request: Request, env: SitesEnv): Promise<Response> {
-    const { pathname } = new URL(request.url);
-    if (
-      ["POST", "PUT", "PATCH", "DELETE"].includes(request.method) &&
-      pathname !== "/api/webhooks/square" &&
-      !isTrustedBrowserOrigin(request)
-    )
-      return apiError("許可されていない送信元です", 403);
-    const authResponse = await handleAuthRequest(request, env);
-    if (authResponse) return authResponse;
-    const squareResponse = await handleSquareWebhook(request, env);
-    if (squareResponse) return squareResponse;
-    const memberImportResponse = await handleMemberImportRequest(request, env);
-    if (memberImportResponse) return memberImportResponse;
-    if (pathname === "/api/platform/health" && request.method === "GET") {
-      const startedAt = Date.now();
-      let database: "ok" | "unavailable" = "unavailable";
-      let uploads: "ok" | "unavailable" = "unavailable";
-      let schemaVersion: string | null = null;
+async function routeRequest(
+  request: Request,
+  env: SitesEnv,
+): Promise<Response> {
+  const { pathname } = new URL(request.url);
+  if (
+    ["POST", "PUT", "PATCH", "DELETE"].includes(request.method) &&
+    pathname !== "/api/webhooks/square" &&
+    !isTrustedBrowserOrigin(request)
+  )
+    return apiError("許可されていない送信元です", 403);
+  const authResponse = await handleAuthRequest(request, env);
+  if (authResponse) return authResponse;
+  const squareResponse = await handleSquareWebhook(request, env);
+  if (squareResponse) return squareResponse;
+  const memberImportResponse = await handleMemberImportRequest(request, env);
+  if (memberImportResponse) return memberImportResponse;
+  if (pathname === "/api/platform/health" && request.method === "GET") {
+    const startedAt = Date.now();
+    let database: "ok" | "unavailable" = "unavailable";
+    let uploads: "ok" | "unavailable" = "unavailable";
+    let schemaVersion: string | null = null;
 
-      try {
-        if (env.DB) {
-          const row = await env.DB.prepare(
-            "SELECT value FROM system_metadata WHERE key = ?",
-          )
-            .bind("platform_schema_version")
-            .first();
-          schemaVersion = typeof row?.value === "string" ? row.value : null;
-          database = schemaVersion ? "ok" : "unavailable";
-        }
-      } catch {
-        database = "unavailable";
+    try {
+      if (env.DB) {
+        const row = await env.DB.prepare(
+          "SELECT value FROM system_metadata WHERE key = ?",
+        )
+          .bind("platform_schema_version")
+          .first();
+        schemaVersion = typeof row?.value === "string" ? row.value : null;
+        database = schemaVersion ? "ok" : "unavailable";
       }
+    } catch {
+      database = "unavailable";
+    }
 
-      try {
-        if (env.UPLOADS) {
-          await env.UPLOADS.list({ limit: 1 });
-          uploads = "ok";
-        }
-      } catch {
-        uploads = "unavailable";
+    try {
+      if (env.UPLOADS) {
+        await env.UPLOADS.list({ limit: 1 });
+        uploads = "ok";
       }
+    } catch {
+      uploads = "unavailable";
+    }
 
-      const healthy = database === "ok" && uploads === "ok";
+    const healthy = database === "ok" && uploads === "ok";
+    return Response.json(
+      {
+        status: healthy ? "ok" : "degraded",
+        services: { database, uploads },
+        configuration: {
+          auth: Boolean(env.AUTH_SECRET && emailDeliveryConfigured(env)),
+          square: Boolean(
+            env.SQUARE_WEBHOOK_SIGNATURE_KEY &&
+            env.SQUARE_WEBHOOK_NOTIFICATION_URL,
+          ),
+        },
+        schemaVersion,
+        elapsedMs: Date.now() - startedAt,
+      },
+      {
+        status: healthy ? 200 : 503,
+        headers: { "cache-control": "no-store" },
+      },
+    );
+  }
+
+  if (pathname === "/api/gourmet-map/feed" && request.method === "GET") {
+    const denied = await protectedWhenAuthEnabled(request, env);
+    if (denied) return denied;
+    if (!env.GOURMET_MAP_FEED_URL) {
+      return Response.json(
+        { configured: false, restaurants: [] },
+        { status: 503 },
+      );
+    }
+    try {
+      const feedResponse = await fetch(env.GOURMET_MAP_FEED_URL, {
+        headers: { accept: "application/json" },
+        redirect: "follow",
+      });
+      if (!feedResponse.ok)
+        throw new Error(`Feed returned ${feedResponse.status}`);
+      return new Response(await feedResponse.text(), {
+        headers: {
+          "content-type": "application/json; charset=utf-8",
+          "cache-control": "public, max-age=300",
+        },
+      });
+    } catch {
+      return Response.json(
+        { configured: true, restaurants: [] },
+        { status: 502 },
+      );
+    }
+  }
+
+  if (pathname === "/api/restaurant-location" && request.method === "POST") {
+    const denied = await protectedWhenAuthEnabled(request, env);
+    if (denied) return denied;
+    try {
+      const input = (await request.json()) as Record<string, unknown>;
+      const place = await resolveRestaurantAddress(
+        input,
+        env.GOOGLE_MAPS_API_KEY,
+      );
+      if (!place?.formattedAddress)
+        return Response.json({ success: false }, { status: 404 });
       return Response.json(
         {
-          status: healthy ? "ok" : "degraded",
-          services: { database, uploads },
-          configuration: {
-            auth: Boolean(env.AUTH_SECRET && env.EMAIL_DELIVERY_WEBHOOK_URL),
-            square: Boolean(
-              env.SQUARE_WEBHOOK_SIGNATURE_KEY &&
-                env.SQUARE_WEBHOOK_NOTIFICATION_URL,
-            ),
-          },
-          schemaVersion,
-          elapsedMs: Date.now() - startedAt,
+          success: true,
+          formattedAddress: place.formattedAddress,
+          name: place.displayName?.text,
+          googleMapsUrl: place.googleMapsUri,
         },
-        {
-          status: healthy ? 200 : 503,
-          headers: { "cache-control": "no-store" },
+        { headers: { "cache-control": "no-store" } },
+      );
+    } catch {
+      return Response.json({ success: false }, { status: 400 });
+    }
+  }
+
+  if (
+    pathname === "/api/gourmet-map/community" &&
+    ["POST", "PATCH"].includes(request.method)
+  ) {
+    const denied = await protectedWhenAuthEnabled(
+      request,
+      env,
+      request.method === "PATCH" ? ["operator", "admin"] : undefined,
+    );
+    if (denied) return denied;
+    if (!env.GOURMET_MAP_FEED_URL)
+      return Response.json({ success: false }, { status: 503 });
+    try {
+      const body = await request.json();
+      if (request.method === "POST" && !validCommunitySubmission(body)) {
+        return Response.json(
+          { success: false, message: "invalid report" },
+          { status: 400 },
+        );
+      }
+      if (request.method === "PATCH") {
+        const patch = body as Record<string, unknown>;
+        if (
+          typeof patch.id !== "string" ||
+          typeof patch.published !== "boolean"
+        )
+          return Response.json({ success: false }, { status: 400 });
+      }
+      const payload =
+        request.method === "POST"
+          ? await enrichWithPlaces(
+              body as CommunitySubmission,
+              env.GOOGLE_MAPS_API_KEY,
+            )
+          : body;
+      const feedResponse = await fetch(env.GOURMET_MAP_FEED_URL, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          action:
+            request.method === "POST" ? "upsertMealReport" : "setPublished",
+          payload,
+        }),
+        redirect: "follow",
+      });
+      if (!feedResponse.ok) throw new Error("feed update failed");
+      return new Response(await feedResponse.text(), {
+        headers: {
+          "content-type": "application/json; charset=utf-8",
+          "cache-control": "no-store",
         },
-      );
+      });
+    } catch {
+      return Response.json({ success: false }, { status: 502 });
     }
+  }
 
-    if (pathname === "/api/gourmet-map/feed" && request.method === "GET") {
-      const denied = await protectedWhenAuthEnabled(request, env);
-      if (denied) return denied;
-      if (!env.GOURMET_MAP_FEED_URL) {
-        return Response.json(
-          { configured: false, restaurants: [] },
-          { status: 503 },
-        );
-      }
-      try {
-        const feedResponse = await fetch(env.GOURMET_MAP_FEED_URL, {
-          headers: { accept: "application/json" },
-          redirect: "follow",
-        });
-        if (!feedResponse.ok)
-          throw new Error(`Feed returned ${feedResponse.status}`);
-        return new Response(await feedResponse.text(), {
-          headers: {
-            "content-type": "application/json; charset=utf-8",
-            "cache-control": "public, max-age=300",
-          },
-        });
-      } catch {
-        return Response.json(
-          { configured: true, restaurants: [] },
-          { status: 502 },
-        );
-      }
-    }
+  const response = await env.ASSETS.fetch(request);
+  if (response.status !== 404 || !["GET", "HEAD"].includes(request.method)) {
+    return response;
+  }
 
-    if (pathname === "/api/restaurant-location" && request.method === "POST") {
-      const denied = await protectedWhenAuthEnabled(request, env);
-      if (denied) return denied;
-      try {
-        const input = (await request.json()) as Record<string, unknown>;
-        const place = await resolveRestaurantAddress(
-          input,
-          env.GOOGLE_MAPS_API_KEY,
-        );
-        if (!place?.formattedAddress)
-          return Response.json({ success: false }, { status: 404 });
-        return Response.json(
-          {
-            success: true,
-            formattedAddress: place.formattedAddress,
-            name: place.displayName?.text,
-            googleMapsUrl: place.googleMapsUri,
-          },
-          { headers: { "cache-control": "no-store" } },
-        );
-      } catch {
-        return Response.json({ success: false }, { status: 400 });
-      }
-    }
+  if (!pathname.split("/").at(-1)?.includes(".")) {
+    const routePath =
+      pathname === "/" ? "/index.html" : `${pathname.replace(/\/$/, "")}.html`;
+    const routeResponse = await env.ASSETS.fetch(
+      assetRequest(request, routePath),
+    );
+    if (routeResponse.status !== 404) return routeResponse;
+  }
 
-    if (
-      pathname === "/api/gourmet-map/community" &&
-      ["POST", "PATCH"].includes(request.method)
-    ) {
-      const denied = await protectedWhenAuthEnabled(
-        request,
-        env,
-        request.method === "PATCH" ? ["operator", "admin"] : undefined,
-      );
-      if (denied) return denied;
-      if (!env.GOURMET_MAP_FEED_URL)
-        return Response.json({ success: false }, { status: 503 });
-      try {
-        const body = await request.json();
-        if (request.method === "POST" && !validCommunitySubmission(body)) {
-          return Response.json(
-            { success: false, message: "invalid report" },
-            { status: 400 },
-          );
-        }
-        if (request.method === "PATCH") {
-          const patch = body as Record<string, unknown>;
-          if (
-            typeof patch.id !== "string" ||
-            typeof patch.published !== "boolean"
-          )
-            return Response.json({ success: false }, { status: 400 });
-        }
-        const payload =
-          request.method === "POST"
-            ? await enrichWithPlaces(
-                body as CommunitySubmission,
-                env.GOOGLE_MAPS_API_KEY,
-              )
-            : body;
-        const feedResponse = await fetch(env.GOURMET_MAP_FEED_URL, {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({
-            action:
-              request.method === "POST" ? "upsertMealReport" : "setPublished",
-            payload,
-          }),
-          redirect: "follow",
-        });
-        if (!feedResponse.ok) throw new Error("feed update failed");
-        return new Response(await feedResponse.text(), {
-          headers: {
-            "content-type": "application/json; charset=utf-8",
-            "cache-control": "no-store",
-          },
-        });
-      } catch {
-        return Response.json({ success: false }, { status: 502 });
-      }
-    }
-
-    const response = await env.ASSETS.fetch(request);
-    if (response.status !== 404 || !["GET", "HEAD"].includes(request.method)) {
-      return response;
-    }
-
-    if (!pathname.split("/").at(-1)?.includes(".")) {
-      const routePath =
-        pathname === "/"
-          ? "/index.html"
-          : `${pathname.replace(/\/$/, "")}.html`;
-      const routeResponse = await env.ASSETS.fetch(
-        assetRequest(request, routePath),
-      );
-      if (routeResponse.status !== 404) return routeResponse;
-    }
-
-    return env.ASSETS.fetch(assetRequest(request, "/+not-found.html"));
+  return env.ASSETS.fetch(assetRequest(request, "/+not-found.html"));
 }
 
 export default {

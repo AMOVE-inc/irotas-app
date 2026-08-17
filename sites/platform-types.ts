@@ -31,6 +31,8 @@ export interface SitesEnv {
   AUTH_SECRET?: string;
   EMAIL_DELIVERY_WEBHOOK_URL?: string;
   EMAIL_DELIVERY_WEBHOOK_TOKEN?: string;
+  RESEND_API_KEY?: string;
+  AUTH_EMAIL_FROM?: string;
   SQUARE_ACCESS_TOKEN?: string;
   SQUARE_ALLOWED_PLAN_VARIATION_IDS?: string;
   SQUARE_WEBHOOK_SIGNATURE_KEY?: string;

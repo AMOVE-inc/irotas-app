@@ -2,12 +2,13 @@ import { describe, expect, it } from "vitest";
 import {
   extractSessionToken,
   hashPassword,
+  emailDeliveryConfigured,
   membershipAllowsAccess,
   normalizeEmail,
   isTrustedBrowserOrigin,
   verifyPassword,
 } from "../sites/auth";
-import { squareSignature } from "../sites/square-webhook";
+import { squareBillingEvent, squareSignature } from "../sites/square-webhook";
 
 describe("Sites production authentication", () => {
   it("normalizes billing email addresses", () => {
@@ -106,5 +107,38 @@ describe("Sites production authentication", () => {
       "https://example.com/api/webhooks/square",
     );
     expect(signature).toMatch(/^[A-Za-z0-9+/]+={0,2}$/);
+  });
+
+  it("accepts either a private email webhook or a configured Resend sender", () => {
+    expect(emailDeliveryConfigured({} as never)).toBe(false);
+    expect(
+      emailDeliveryConfigured({
+        RESEND_API_KEY: "re_test",
+        AUTH_EMAIL_FROM: "IRO+ <app@example.com>",
+      } as never),
+    ).toBe(true);
+  });
+
+  it("recognizes failed Square subscription payments for the grace period", () => {
+    expect(
+      squareBillingEvent({
+        type: "payment.updated",
+        data: {
+          object: {
+            payment: { status: "FAILED", customer_id: "CUSTOMER-1" },
+          },
+        },
+      }),
+    ).toEqual({ kind: "overdue", customerId: "CUSTOMER-1" });
+    expect(
+      squareBillingEvent({
+        type: "payment.updated",
+        data: {
+          object: {
+            payment: { status: "COMPLETED", customer_id: "CUSTOMER-1" },
+          },
+        },
+      }),
+    ).toBeNull();
   });
 });

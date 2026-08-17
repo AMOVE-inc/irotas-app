@@ -1,5 +1,9 @@
 import type { MemberImportCandidate } from "../lib/member-import-dry-run";
-import { authenticatedRequestMember, normalizeEmail } from "./auth";
+import {
+  authenticatedRequestMember,
+  emailDeliveryConfigured,
+  normalizeEmail,
+} from "./auth";
 import type { D1Database, SitesEnv } from "./platform-types";
 
 const COMMIT_ENDPOINT = "/api/admin/member-import/commit";
@@ -33,7 +37,7 @@ type ImportBody = {
 
 export function memberImportConfiguration(env: SitesEnv) {
   const authentication = Boolean(
-    env.AUTH_SECRET && env.EMAIL_DELIVERY_WEBHOOK_URL,
+    env.AUTH_SECRET && emailDeliveryConfigured(env),
   );
   const square = Boolean(
     env.SQUARE_ACCESS_TOKEN &&

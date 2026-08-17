@@ -58,12 +58,42 @@ function accessStatus(status: string) {
   return "suspended";
 }
 
-async function processEvent(db: D1Database, event: Record<string, any>) {
+export type SquareBillingEvent =
+  | { kind: "subscription"; subscription: Record<string, unknown> }
+  | { kind: "overdue"; customerId: string }
+  | { kind: "paid"; customerId: string };
+
+export function squareBillingEvent(
+  event: Record<string, any>,
+): SquareBillingEvent | null {
   const eventType = String(event.type ?? "");
   const object = event.data?.object ?? {};
+  if (eventType.startsWith("subscription.") && object.subscription)
+    return { kind: "subscription", subscription: object.subscription };
+  const invoiceCustomerId = String(
+    object.invoice?.primary_recipient?.customer_id ?? "",
+  );
+  if (eventType === "invoice.scheduled_charge_failed" && invoiceCustomerId)
+    return { kind: "overdue", customerId: invoiceCustomerId };
+  if (eventType === "invoice.payment_made" && invoiceCustomerId)
+    return { kind: "paid", customerId: invoiceCustomerId };
+  const payment = object.payment as Record<string, unknown> | undefined;
+  const paymentCustomerId = String(payment?.customer_id ?? "");
+  if (
+    eventType === "payment.updated" &&
+    payment?.status === "FAILED" &&
+    paymentCustomerId
+  )
+    return { kind: "overdue", customerId: paymentCustomerId };
+  return null;
+}
+
+async function processEvent(db: D1Database, event: Record<string, any>) {
+  const action = squareBillingEvent(event);
+  if (!action) return;
   const now = new Date();
-  if (eventType.startsWith("subscription.") && object.subscription) {
-    const subscription = object.subscription as Record<string, unknown>;
+  if (action.kind === "subscription") {
+    const subscription = action.subscription;
     const subscriptionId = String(subscription.id ?? "");
     const customerId = String(subscription.customer_id ?? "");
     const status = String(subscription.status ?? "UNKNOWN");
@@ -91,20 +121,21 @@ async function processEvent(db: D1Database, event: Record<string, any>) {
       .run();
     return;
   }
-  const customerId = String(
-    object.invoice?.primary_recipient?.customer_id ?? "",
-  );
-  if (!customerId) return;
-  if (eventType === "invoice.scheduled_charge_failed") {
+  if (action.kind === "overdue") {
     await db
       .prepare(
         `UPDATE member_subscriptions
       SET billing_status = 'OVERDUE', access_status = 'grace', overdue_since = ?, grace_until_date = ?, updated_at = ?
       WHERE square_customer_id = ? AND square_status = 'ACTIVE'`,
       )
-      .bind(now.toISOString(), addGraceDays(now), now.toISOString(), customerId)
+      .bind(
+        now.toISOString(),
+        addGraceDays(now),
+        now.toISOString(),
+        action.customerId,
+      )
       .run();
-  } else if (eventType === "invoice.payment_made") {
+  } else if (action.kind === "paid") {
     await db
       .prepare(
         `UPDATE member_subscriptions
@@ -112,7 +143,7 @@ async function processEvent(db: D1Database, event: Record<string, any>) {
           overdue_since = NULL, grace_until_date = NULL, last_verified_at = ?, updated_at = ?
       WHERE square_customer_id = ?`,
       )
-      .bind(now.toISOString(), now.toISOString(), customerId)
+      .bind(now.toISOString(), now.toISOString(), action.customerId)
       .run();
   }
 }

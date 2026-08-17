@@ -355,22 +355,43 @@ async function verificationHash(
   return hmacSha256(secret, `${email}:${purpose}:${code}`);
 }
 
+export function emailDeliveryConfigured(env: SitesEnv) {
+  return Boolean(
+    env.EMAIL_DELIVERY_WEBHOOK_URL ||
+    (env.RESEND_API_KEY && env.AUTH_EMAIL_FROM),
+  );
+}
+
 async function sendCode(env: SitesEnv, email: string, code: string) {
-  if (!env.EMAIL_DELIVERY_WEBHOOK_URL) throw new Error("email_not_configured");
-  const response = await fetch(env.EMAIL_DELIVERY_WEBHOOK_URL, {
-    method: "POST",
-    headers: {
-      "content-type": "application/json",
-      ...(env.EMAIL_DELIVERY_WEBHOOK_TOKEN
-        ? { authorization: `Bearer ${env.EMAIL_DELIVERY_WEBHOOK_TOKEN}` }
-        : {}),
-    },
-    body: JSON.stringify({
-      to: email,
-      subject: "IRO+ 初回認証コード",
-      text: `認証コードは ${code} です。有効期限は10分です。`,
-    }),
-  });
+  if (!emailDeliveryConfigured(env)) throw new Error("email_not_configured");
+  const subject = "IRO+ 初回認証コード";
+  const text = `認証コードは ${code} です。有効期限は10分です。心当たりがない場合は、このメールを破棄してください。`;
+  const idempotencyKey = await sha256(`initial-setup:${email}:${code}`);
+  const response = env.EMAIL_DELIVERY_WEBHOOK_URL
+    ? await fetch(env.EMAIL_DELIVERY_WEBHOOK_URL, {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          ...(env.EMAIL_DELIVERY_WEBHOOK_TOKEN
+            ? { authorization: `Bearer ${env.EMAIL_DELIVERY_WEBHOOK_TOKEN}` }
+            : {}),
+        },
+        body: JSON.stringify({ to: email, subject, text }),
+      })
+    : await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          authorization: `Bearer ${env.RESEND_API_KEY}`,
+          "idempotency-key": idempotencyKey,
+        },
+        body: JSON.stringify({
+          from: env.AUTH_EMAIL_FROM,
+          to: [email],
+          subject,
+          text,
+        }),
+      });
   if (!response.ok) throw new Error("email_delivery_failed");
 }
 
@@ -420,7 +441,17 @@ async function requestSetupCode(
     )
     .bind(email, codeHash, expires)
     .run();
-  await sendCode(env, email, code);
+  try {
+    await sendCode(env, email, code);
+  } catch (error) {
+    await db
+      .prepare(
+        "DELETE FROM email_verification_codes WHERE email = ? AND code_hash = ?",
+      )
+      .bind(email, codeHash)
+      .run();
+    throw error;
+  }
   return responseJson({ success: true });
 }
 
