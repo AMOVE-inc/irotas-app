@@ -22,11 +22,12 @@ const BRANCHES: {
 export default function SelectBranchScreen() {
   const colors = useColors();
   const router = useRouter();
-  const { user, setUser } = useAuthContext();
+  const { user, setUser, logout } = useAuthContext();
   const currentBranches = Auth.normalizeBranchRoles(user?.branches, user?.branch);
   const isEditing = currentBranches.length > 0;
   const [selected, setSelected] = useState<Auth.BranchRole[]>(currentBranches);
   const [error, setError] = useState("");
+  const [loggingOut, setLoggingOut] = useState(false);
   const mutation = trpc.auth.selectBranches.useMutation();
 
   const toggleBranch = (branch: Auth.BranchRole) => {
@@ -55,6 +56,19 @@ export default function SelectBranchScreen() {
       router.replace(isEditing ? "/(tabs)/profile" : "/(tabs)");
     } catch {
       setError("所属支部を保存できませんでした。通信状況を確認してもう一度お試しください。");
+    }
+  };
+
+  const handleSwitchAccount = async () => {
+    setLoggingOut(true);
+    setError("");
+    try {
+      await logout();
+      router.replace("/login");
+    } catch {
+      setError("ログアウトできませんでした。通信状況を確認してもう一度お試しください。");
+    } finally {
+      setLoggingOut(false);
     }
   };
 
@@ -135,7 +149,7 @@ export default function SelectBranchScreen() {
           {error ? <Text style={{ color: colors.error, textAlign: "center", marginTop: 14 }}>{error}</Text> : null}
 
           <Pressable
-            disabled={selected.length === 0 || mutation.isPending}
+            disabled={selected.length === 0 || mutation.isPending || loggingOut}
             onPress={handleConfirm}
             style={({ pressed }) => ({
               marginTop: 22,
@@ -155,6 +169,24 @@ export default function SelectBranchScreen() {
               </Text>
             )}
           </Pressable>
+
+          {!isEditing ? (
+            <Pressable
+              disabled={loggingOut}
+              onPress={handleSwitchAccount}
+              style={({ pressed }) => ({
+                alignSelf: "center",
+                marginTop: 18,
+                paddingHorizontal: 14,
+                paddingVertical: 10,
+                opacity: loggingOut ? 0.5 : pressed ? 0.65 : 1,
+              })}
+            >
+              <Text style={{ color: colors.muted, fontSize: 14, fontWeight: "700" }}>
+                {loggingOut ? "ログアウト中…" : "別のアカウントでログイン"}
+              </Text>
+            </Pressable>
+          ) : null}
         </View>
       </View>
     </ScreenContainer>
