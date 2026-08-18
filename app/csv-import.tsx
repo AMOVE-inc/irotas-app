@@ -77,6 +77,17 @@ const CSV_TEMPLATES = [
   },
 ];
 
+function createCsvFileInput(accept: string) {
+  const input = document.createElement("input");
+  input.type = "file";
+  input.accept = accept;
+  input.style.position = "fixed";
+  input.style.left = "-9999px";
+  input.setAttribute("aria-hidden", "true");
+  document.body.appendChild(input);
+  return input;
+}
+
 export default function CsvImportScreen() {
   const colors = useColors();
   const router = useRouter();
@@ -129,12 +140,13 @@ export default function CsvImportScreen() {
       Alert.alert("PC版で操作してください", "個人情報を含むCSVの一括移行は、管理者用Web画面から行ってください。");
       return;
     }
-    const input = document.createElement("input");
-    input.type = "file";
-    input.accept = ".csv,text/csv";
+    const input = createCsvFileInput(".csv,text/csv");
     input.onchange = async () => {
       const file = input.files?.[0];
-      if (!file) return;
+      if (!file) {
+        input.remove();
+        return;
+      }
       const pending: ImportRecord = { id: `imp_${Date.now()}`, filename: file.name, importedAt: new Date().toLocaleString("ja-JP"), recordCount: 0, status: "processing", type };
       setHistory((current) => [pending, ...current]);
       try {
@@ -152,6 +164,8 @@ export default function CsvImportScreen() {
         const message = error instanceof Error ? error.message : "CSVを取り込めませんでした";
         setHistory((current) => current.map((item) => item.id === pending.id ? { ...item, status: "error", errorMessage: message } : item));
         Alert.alert("インポートエラー", message);
+      } finally {
+        input.remove();
       }
     };
     input.click();
@@ -163,19 +177,25 @@ export default function CsvImportScreen() {
 
   const handleMemberSource = (source: "subscriptions" | "discord" | "customers") => {
     if (typeof document === "undefined") return;
-    const input = document.createElement("input");
-    input.type = "file";
-    input.accept = ".csv,text/csv,text/tab-separated-values";
+    const input = createCsvFileInput(".csv,text/csv,text/tab-separated-values");
     input.onchange = async () => {
       const file = input.files?.[0];
-      if (!file) return;
-      if (file.size > 20 * 1024 * 1024) {
-        Alert.alert("ファイルが大きすぎます", "個人情報保護と端末負荷軽減のため、1ファイル20MB以内にしてください。");
+      if (!file) {
+        input.remove();
         return;
       }
-      const csv = decodeCsvBuffer(await file.arrayBuffer());
-      setMemberSources((current) => ({ ...current, [source]: { name: file.name, csv } }));
-      setMemberDryRun(null);
+      if (file.size > 20 * 1024 * 1024) {
+        Alert.alert("ファイルが大きすぎます", "個人情報保護と端末負荷軽減のため、1ファイル20MB以内にしてください。");
+        input.remove();
+        return;
+      }
+      try {
+        const csv = decodeCsvBuffer(await file.arrayBuffer());
+        setMemberSources((current) => ({ ...current, [source]: { name: file.name, csv } }));
+        setMemberDryRun(null);
+      } finally {
+        input.remove();
+      }
     };
     input.click();
   };
