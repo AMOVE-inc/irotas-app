@@ -302,7 +302,7 @@ export async function reviewEventCancellation(eventId: string, memberId: string,
 }
 
 export async function syncSquareSubscriptions() {
-  return apiCall<{ success: boolean; scanned: number; updated: number }>(
+  return apiCall<{ success: boolean; scanned: number; updated: number; failed: number }>(
     "/api/admin/square-sync",
     { method: "POST" },
   );

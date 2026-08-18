@@ -487,7 +487,7 @@ export default function AdminDashboardScreen() {
                     const result = await syncSquareSubscriptions();
                     Alert.alert(
                       "同期完了",
-                      `${result.scanned}件を確認し、登録済み会員${result.updated}件を更新しました。`,
+                      `${result.scanned}件を確認し、登録済み会員${result.updated}件を更新しました。${result.failed ? `\n確認できなかったもの: ${result.failed}件` : ""}`,
                     );
                   } catch (error) {
                     Alert.alert(

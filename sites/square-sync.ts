@@ -11,9 +11,8 @@ type SquareSubscription = {
   paid_until_date?: string;
 };
 
-type SquareSearchResponse = {
-  subscriptions?: SquareSubscription[];
-  cursor?: string;
+type SquareRetrieveResponse = {
+  subscription?: SquareSubscription;
   errors?: Array<{ detail?: string }>;
 };
 
@@ -77,33 +76,47 @@ export function subscriptionAccessState(
   return { status, accessStatus: "active", paidUntil, graceUntil: null };
 }
 
-async function searchSubscriptions(
+async function retrieveRegisteredSubscriptions(
+  db: D1Database,
   accessToken: string,
-): Promise<SquareSubscription[]> {
+) {
+  const result = await db
+    .prepare(
+      `SELECT square_subscription_id
+       FROM member_subscriptions
+       WHERE square_subscription_id IS NOT NULL AND square_subscription_id != ''`,
+    )
+    .all<{ square_subscription_id: string }>();
+  const ids = (result.results ?? []).map((row) => row.square_subscription_id);
   const subscriptions: SquareSubscription[] = [];
-  let cursor: string | undefined;
-  for (let page = 0; page < 100; page += 1) {
-    const response = await fetch(
-      "https://connect.squareup.com/v2/subscriptions/search",
-      {
-        method: "POST",
-        headers: {
-          authorization: `Bearer ${accessToken}`,
-          "content-type": "application/json",
-          "square-version": SQUARE_VERSION,
-        },
-        body: JSON.stringify(cursor ? { cursor } : {}),
-      },
+  let failed = 0;
+
+  for (let index = 0; index < ids.length; index += 20) {
+    const batch = ids.slice(index, index + 20);
+    const responses = await Promise.all(
+      batch.map(async (id) => {
+        const response = await fetch(
+          `https://connect.squareup.com/v2/subscriptions/${encodeURIComponent(id)}`,
+          {
+            headers: {
+              authorization: `Bearer ${accessToken}`,
+              "content-type": "application/json",
+              "square-version": SQUARE_VERSION,
+            },
+          },
+        );
+        const body = (await response.json().catch(() => ({}))) as SquareRetrieveResponse;
+        if ([401, 403].includes(response.status))
+          throw new Error(body.errors?.[0]?.detail ?? `square_${response.status}`);
+        return response.ok ? body.subscription ?? null : null;
+      }),
     );
-    const result = (await response.json().catch(() => ({}))) as SquareSearchResponse;
-    if (!response.ok) {
-      throw new Error(result.errors?.[0]?.detail ?? `square_${response.status}`);
+    for (const subscription of responses) {
+      if (subscription) subscriptions.push(subscription);
+      else failed += 1;
     }
-    subscriptions.push(...(result.subscriptions ?? []));
-    cursor = result.cursor;
-    if (!cursor) break;
   }
-  return subscriptions;
+  return { subscriptions, scanned: ids.length, failed };
 }
 
 async function reconcileSubscriptions(
@@ -172,7 +185,11 @@ export async function handleSquareSyncRequest(
         .map((value) => value.trim())
         .filter(Boolean),
     );
-    const subscriptions = await searchSubscriptions(env.SQUARE_ACCESS_TOKEN);
+    const retrieved = await retrieveRegisteredSubscriptions(
+      env.DB,
+      env.SQUARE_ACCESS_TOKEN,
+    );
+    const subscriptions = retrieved.subscriptions;
     const updated = await reconcileSubscriptions(
       env.DB,
       subscriptions,
@@ -186,11 +203,16 @@ export async function handleSquareSyncRequest(
     )
       .bind(
         String(member.id),
-        JSON.stringify({ scanned: subscriptions.length, updated }),
+        JSON.stringify({ scanned: retrieved.scanned, updated, failed: retrieved.failed }),
         now,
       )
       .run();
-    return Response.json({ success: true, scanned: subscriptions.length, updated });
+    return Response.json({
+      success: true,
+      scanned: retrieved.scanned,
+      updated,
+      failed: retrieved.failed,
+    });
   } catch (error) {
     console.error("Square subscription reconciliation failed", error instanceof Error ? error.message : "unknown");
     return Response.json(
