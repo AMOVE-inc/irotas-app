@@ -19,6 +19,7 @@ import { recordActivityEvent } from "@/lib/ai-data-store";
 import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
+import * as Api from "@/lib/_core/api";
 import {
   Alert,
   Linking,
@@ -39,7 +40,8 @@ export default function EventDetailScreen() {
 
   // モックデータ + 動的追加分から検索
   const allEvents = getAllEvents(EVENTS);
-  const event = allEvents.find((e) => e.id === id);
+  const initialEvent = allEvents.find((e) => e.id === id);
+  const [event, setEvent] = useState<Event | undefined>(initialEvent);
 
   const [isJoined, setIsJoined] = useState(() => {
     // 既に参加済かチェック
@@ -59,6 +61,16 @@ export default function EventDetailScreen() {
   // ボタン連打防止フラグ
   const joiningRef = useRef(false);
   const favoriteEventIds = useEventFavorites();
+
+  useEffect(() => {
+    setEvent(allEvents.find((item) => item.id === id));
+    if (!id || !authUser) return;
+    let active = true;
+    void Api.getEvent(id)
+      .then((value) => { if (active) setEvent(value); })
+      .catch(() => undefined);
+    return () => { active = false; };
+  }, [authUser, id]);
 
   useEffect(() => {
     getIrotasPoints(CURRENT_USER.id).then(setIrotasPoints);

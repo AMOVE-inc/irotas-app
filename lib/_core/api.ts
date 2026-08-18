@@ -2,6 +2,7 @@ import { Platform } from "react-native";
 import { getApiBaseUrl } from "@/constants/oauth";
 import * as Auth from "./auth";
 import { logger } from "./logger";
+import type { Event } from "@/constants/mock-data";
 
 type ApiResponse<T> = {
   data?: T;
@@ -217,6 +218,48 @@ export async function setPrivateMemberNote(memberId: string, note: string) {
     `/api/members/${encodeURIComponent(memberId)}/private-note`,
     { method: "PATCH", body: JSON.stringify({ note }) },
   );
+}
+
+export async function getEvents() {
+  const result = await apiCall<{ events: Event[] }>("/api/events");
+  return result.events;
+}
+
+export async function getEvent(eventId: string) {
+  const result = await apiCall<{ event: Event }>(`/api/events/${encodeURIComponent(eventId)}`);
+  return result.event;
+}
+
+export async function uploadEventImage(uri: string) {
+  const source = await fetch(uri);
+  if (!source.ok) throw new Error("画像を読み込めませんでした");
+  const blob = await source.blob();
+  const baseUrl = getApiBaseUrl();
+  const cleanBaseUrl = baseUrl.endsWith("/") ? baseUrl.slice(0, -1) : baseUrl;
+  const headers: Record<string, string> = { "content-type": blob.type || "image/jpeg" };
+  if (Platform.OS !== "web") {
+    const sessionToken = await Auth.getSessionToken();
+    if (sessionToken) headers.Authorization = `Bearer ${sessionToken}`;
+  }
+  const response = await fetch(`${cleanBaseUrl}/api/event-images`, {
+    method: "POST",
+    headers,
+    body: blob,
+    credentials: "include",
+  });
+  if (!response.ok) {
+    const result = await response.json().catch(() => ({})) as { error?: string };
+    throw new ApiError(result.error ?? "画像を保存できませんでした", response.status);
+  }
+  return (await response.json()) as { imageUrl: string };
+}
+
+export async function createEvent(event: Event) {
+  const result = await apiCall<{ event: Event }>("/api/events", {
+    method: "POST",
+    body: JSON.stringify({ event: { ...event, privateMemo: undefined }, privateMemo: event.privateMemo }),
+  });
+  return result.event;
 }
 
 // Establish session cookie on the backend (3000-xxx domain)

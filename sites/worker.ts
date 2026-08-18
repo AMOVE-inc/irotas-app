@@ -8,6 +8,7 @@ import type { SitesEnv } from "./platform-types";
 import { handleMemberImportRequest } from "./member-import";
 import { handleSquareWebhook } from "./square-webhook";
 import { handleMemberDirectoryRequest } from "./member-directory";
+import { handleEventRequest } from "./events";
 
 type CommunitySubmission = {
   reportId: string;
@@ -244,6 +245,8 @@ async function routeRequest(
   if (memberImportResponse) return memberImportResponse;
   const memberDirectoryResponse = await handleMemberDirectoryRequest(request, env);
   if (memberDirectoryResponse) return memberDirectoryResponse;
+  const eventResponse = await handleEventRequest(request, env);
+  if (eventResponse) return eventResponse;
   if (pathname === "/api/platform/health" && request.method === "GET") {
     const startedAt = Date.now();
     let database: "ok" | "unavailable" = "unavailable";

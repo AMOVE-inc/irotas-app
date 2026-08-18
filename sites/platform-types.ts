@@ -20,6 +20,15 @@ export interface D1Database {
 
 export interface R2Bucket {
   list(options?: { limit?: number }): Promise<unknown>;
+  put(
+    key: string,
+    value: ArrayBuffer,
+    options?: { httpMetadata?: { contentType?: string } },
+  ): Promise<unknown>;
+  get(key: string): Promise<{
+    body: ReadableStream;
+    httpMetadata?: { contentType?: string };
+  } | null>;
 }
 
 export interface SitesEnv {

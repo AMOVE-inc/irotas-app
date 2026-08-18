@@ -16,6 +16,7 @@ import { useColors } from "@/hooks/use-colors";
 import { Image } from "expo-image";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useState, useCallback, useMemo } from "react";
+import * as Api from "@/lib/_core/api";
 import {
   FlatList,
   Pressable,
@@ -334,9 +335,20 @@ export default function EventsScreen() {
   const clubs = useClubs();
   const canCreateEvent = Boolean(authUser);
 
+  const refreshEvents = useCallback(async () => {
+    if (!authUser) { setAllEvents([...getAllEvents(EVENTS)]); return; }
+    try {
+      const databaseEvents = await Api.getEvents();
+      const databaseIds = new Set(databaseEvents.map((event) => event.id));
+      setAllEvents([...databaseEvents, ...getAllEvents(EVENTS).filter((event) => !databaseIds.has(event.id))]);
+    } catch {
+      setAllEvents([...getAllEvents(EVENTS)]);
+    }
+  }, [authUser]);
+
   useFocusEffect(useCallback(() => {
-    setAllEvents([...getAllEvents(EVENTS)]);
-  }, []));
+    void refreshEvents();
+  }, [refreshEvents]));
   const filteredEvents = useMemo(
     () => filterAndSortEvents(allEvents, {
       area: "all",
@@ -373,10 +385,11 @@ export default function EventsScreen() {
     setSelectedGenres([]); setBudgetMin("none"); setBudgetMax("none"); setSelectedAreas([]); setKeyword(""); setStartDate(""); setEndDate("");
   }, []);
 
-  const onRefresh = useCallback(() => {
+  const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    setTimeout(() => setRefreshing(false), 1000);
-  }, []);
+    await refreshEvents();
+    setRefreshing(false);
+  }, [refreshEvents]);
 
   return (
     <ScreenContainer>
