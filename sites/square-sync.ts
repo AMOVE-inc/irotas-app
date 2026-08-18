@@ -155,8 +155,17 @@ async function reconcileSubscriptions(
           `UPDATE member_subscriptions
            SET square_customer_id = COALESCE(NULLIF(?, ''), square_customer_id),
                plan_variation_id = COALESCE(NULLIF(?, ''), plan_variation_id),
-               square_status = ?, access_status = ?, paid_until_date = ?,
-               grace_until_date = ?, subscription_started_at = COALESCE(subscription_started_at, ?),
+               square_status = ?,
+               access_status = CASE
+                 WHEN ? = 'active' AND access_status = 'grace' AND grace_until_date IS NOT NULL THEN 'grace'
+                 ELSE ?
+               END,
+               paid_until_date = ?,
+               grace_until_date = CASE
+                 WHEN ? = 'active' AND access_status = 'grace' AND grace_until_date IS NOT NULL THEN grace_until_date
+                 ELSE ?
+               END,
+               subscription_started_at = COALESCE(subscription_started_at, ?),
                last_verified_at = ?, updated_at = ?
            WHERE square_subscription_id = ?`,
         )
@@ -165,7 +174,9 @@ async function reconcileSubscriptions(
           subscription.plan_variation_id ?? "",
           state.status,
           state.accessStatus,
+          state.accessStatus,
           state.paidUntil,
+          state.accessStatus,
           state.graceUntil,
           subscription.start_date ?? null,
           now,

@@ -10,7 +10,11 @@ import {
   normalizeBranchSelection,
   verifyPassword,
 } from "../sites/auth";
-import { squareBillingEvent, squareSignature } from "../sites/square-webhook";
+import {
+  preserveOverdueGrace,
+  squareBillingEvent,
+  squareSignature,
+} from "../sites/square-webhook";
 
 describe("Sites production authentication", () => {
   it("normalizes billing email addresses", () => {
@@ -127,6 +131,21 @@ describe("Sites production authentication", () => {
         now,
       ),
     ).toBe(false);
+  });
+
+  it("does not clear payment-failure grace on a later active subscription update", () => {
+    expect(preserveOverdueGrace("active", "grace", "2026-08-25")).toEqual({
+      accessStatus: "grace",
+      graceUntil: "2026-08-25",
+    });
+    expect(preserveOverdueGrace("active", "suspended", null)).toEqual({
+      accessStatus: "active",
+      graceUntil: null,
+    });
+    expect(preserveOverdueGrace("suspended", "grace", "2026-08-25")).toEqual({
+      accessStatus: "suspended",
+      graceUntil: null,
+    });
   });
 
   it("lets operators and club leaders sign in without a subscription", () => {

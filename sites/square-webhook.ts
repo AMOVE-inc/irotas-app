@@ -58,6 +58,21 @@ function accessStatus(status: string) {
   return "suspended";
 }
 
+export function preserveOverdueGrace(
+  nextAccessStatus: string,
+  currentAccessStatus: string | null,
+  currentGraceUntil: string | null,
+) {
+  if (
+    nextAccessStatus === "active" &&
+    currentAccessStatus === "grace" &&
+    currentGraceUntil
+  ) {
+    return { accessStatus: "grace", graceUntil: currentGraceUntil };
+  }
+  return { accessStatus: nextAccessStatus, graceUntil: null };
+}
+
 export type SquareBillingEvent =
   | { kind: "subscription"; subscription: Record<string, unknown> }
   | { kind: "overdue"; customerId: string }
@@ -98,17 +113,28 @@ async function processEvent(db: D1Database, event: Record<string, any>) {
     const customerId = String(subscription.customer_id ?? "");
     const status = String(subscription.status ?? "UNKNOWN");
     if (!subscriptionId) return;
+    const nextAccessStatus = accessStatus(status);
     await db
       .prepare(
         `UPDATE member_subscriptions
-      SET square_customer_id = COALESCE(NULLIF(?, ''), square_customer_id), square_status = ?, access_status = ?,
+      SET square_customer_id = COALESCE(NULLIF(?, ''), square_customer_id), square_status = ?,
+          access_status = CASE
+            WHEN ? = 'active' AND access_status = 'grace' AND grace_until_date IS NOT NULL THEN 'grace'
+            ELSE ?
+          END,
+          grace_until_date = CASE
+            WHEN ? = 'active' AND access_status = 'grace' AND grace_until_date IS NOT NULL THEN grace_until_date
+            ELSE NULL
+          END,
           paid_until_date = ?, last_verified_at = ?, updated_at = ?
       WHERE square_subscription_id = ? OR (? != '' AND square_customer_id = ?)`,
       )
       .bind(
         customerId,
         status,
-        accessStatus(status),
+        nextAccessStatus,
+        nextAccessStatus,
+        nextAccessStatus,
         subscription.paid_until_date ??
           subscription.charged_through_date ??
           null,
