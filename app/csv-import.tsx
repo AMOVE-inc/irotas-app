@@ -472,7 +472,7 @@ export default function CsvImportScreen() {
               <View style={{ marginTop: 16, backgroundColor: colors.background, borderRadius: 14, padding: 13, borderWidth: 1, borderColor: colors.border }}>
                 <Text style={{ fontSize: 14, fontWeight: "800", color: colors.foreground }}>初回テスト登録</Text>
                 <Text style={{ fontSize: 11, lineHeight: 17, color: colors.muted, marginTop: 4 }}>
-                  自動取込可能な会員から少人数だけ登録します。要確認・退会・一時停止の会員は対象になりません。
+                  自動取込可能な会員から少人数だけ登録します。要確認・退会の会員は対象外です。一時停止中の会員は移行しますが、ログインは許可されません。
                 </Text>
                 {readinessLoading ? (
                   <ActivityIndicator style={{ marginVertical: 14 }} color="#D97FA8" />
@@ -536,7 +536,7 @@ export default function CsvImportScreen() {
               <View style={{ marginTop: 12, backgroundColor: "#FFF7E8", borderRadius: 14, padding: 13, borderWidth: 1, borderColor: "#E7C98B" }}>
                 <Text style={{ fontSize: 14, fontWeight: "800", color: "#6F4700" }}>確認済み会員を本登録</Text>
                 <Text style={{ fontSize: 11, lineHeight: 17, color: "#8A5700", marginTop: 4 }}>
-                  自動取込可能な{memberDryRun.summary.importableMembers.toLocaleString()}名のみを25名ずつ安全に登録します。要確認・退会・一時停止の会員は含みません。途中で失敗した場合は完了済み人数を表示し、再実行しても重複登録されません。
+                  自動取込可能な{memberDryRun.summary.importableMembers.toLocaleString()}名のみを25名ずつ安全に登録します。要確認・退会の会員は含みません。一時停止中の会員は移行しますが、ログインは許可されません。途中で失敗した場合は完了済み人数を表示し、再実行しても重複登録されません。
                 </Text>
                 <Text style={{ fontSize: 11, color: "#8A5700", marginTop: 12, marginBottom: 6 }}>
                   実行するには IMPORT_ALL_{memberDryRun.summary.importableMembers} と入力
