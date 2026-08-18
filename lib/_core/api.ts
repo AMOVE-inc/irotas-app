@@ -262,6 +262,45 @@ export async function createEvent(event: Event) {
   return result.event;
 }
 
+export async function setEventFavorite(eventId: string, favorite: boolean) {
+  return apiCall<{ success: boolean; favorite: boolean }>(
+    `/api/events/${encodeURIComponent(eventId)}/favorite`,
+    { method: "PUT", body: JSON.stringify({ favorite }) },
+  );
+}
+
+export async function applyToEvent(eventId: string, termsAccepted: boolean) {
+  const result = await apiCall<{ event: Event }>(
+    `/api/events/${encodeURIComponent(eventId)}/applications`,
+    { method: "POST", body: JSON.stringify({ termsAccepted }) },
+  );
+  return result.event;
+}
+
+export async function reviewEventApplicant(eventId: string, memberId: string, action: "approve" | "cancel") {
+  const result = await apiCall<{ event: Event }>(
+    `/api/events/${encodeURIComponent(eventId)}/participants/${encodeURIComponent(memberId)}`,
+    { method: "PATCH", body: JSON.stringify({ action }) },
+  );
+  return result.event;
+}
+
+export async function requestEventCancellation(eventId: string, contactedOrganizer: boolean, policyConfirmed: boolean) {
+  const result = await apiCall<{ event: Event }>(
+    `/api/events/${encodeURIComponent(eventId)}/cancellation-requests`,
+    { method: "POST", body: JSON.stringify({ contactedOrganizer, policyConfirmed }) },
+  );
+  return result.event;
+}
+
+export async function reviewEventCancellation(eventId: string, memberId: string, action: "approve" | "reject") {
+  const result = await apiCall<{ event: Event }>(
+    `/api/events/${encodeURIComponent(eventId)}/cancellation-requests/${encodeURIComponent(memberId)}`,
+    { method: "PATCH", body: JSON.stringify({ action }) },
+  );
+  return result.event;
+}
+
 // Establish session cookie on the backend (3000-xxx domain)
 // Called after receiving token via postMessage to get a proper Set-Cookie from the backend
 export async function establishSession(token: string): Promise<boolean> {

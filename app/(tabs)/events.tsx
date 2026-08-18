@@ -250,7 +250,9 @@ function EventCard({ event, onPress, isFavorite, onToggleFavorite, locked = fals
   const colors = useColors();
   const organizer = getMemberById(event.createdBy);
   const confirmedCount = new Set([...(event.participants ?? []), ...(event.companionIds ?? [])]).size;
-  const participationStatus = getEventParticipationStatus(event, CURRENT_USER.id);
+  const participationStatus = event.viewerParticipationStatus === "cancel_requested"
+    ? "confirmed"
+    : event.viewerParticipationStatus ?? getEventParticipationStatus(event, event.viewerMemberId ?? CURRENT_USER.id);
   const isConfirmed = participationStatus === "confirmed";
   const isApplied = participationStatus === "applied";
   const remainingCapacity = Math.max(event.capacity - confirmedCount, 0);
@@ -331,6 +333,10 @@ export default function EventsScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [allEvents, setAllEvents] = useState<Event[]>(() => getAllEvents(EVENTS));
   const favoriteEventIds = useEventFavorites();
+  const effectiveFavoriteEventIds = useMemo(
+    () => [...new Set([...favoriteEventIds, ...allEvents.filter((event) => event.isFavorite).map((event) => event.id)])],
+    [allEvents, favoriteEventIds],
+  );
   const { user: authUser } = useAuthContext();
   const clubs = useClubs();
   const canCreateEvent = Boolean(authUser);
@@ -361,7 +367,7 @@ export default function EventsScreen() {
       participatingMemberId: appliedOnly || confirmedOnly ? CURRENT_USER.id : undefined,
       participationStatuses: [appliedOnly ? "applied" as const : null, confirmedOnly ? "confirmed" as const : null].filter((value): value is "applied" | "confirmed" => value !== null),
       favoriteOnly,
-      favoriteEventIds,
+      favoriteEventIds: effectiveFavoriteEventIds,
       genres: selectedGenres,
       budgetMin: budgetMin === "none" ? undefined : Number(budgetMin),
       budgetMax: budgetMax === "none" ? undefined : Number(budgetMax),
@@ -370,7 +376,7 @@ export default function EventsScreen() {
       joinedClubOnly: eventType === "club" && joinedClubOnly,
       joinedClubIds: clubs.filter((club) => club.memberIds.includes(CURRENT_USER.id)).map((club) => club.id),
     }),
-    [allEvents, eventType, openOnly, startDate, endDate, sortOrder, hostedByMe, appliedOnly, confirmedOnly, favoriteOnly, favoriteEventIds, selectedGenres, budgetMin, budgetMax, selectedAreas, keyword, joinedClubOnly, clubs],
+    [allEvents, eventType, openOnly, startDate, endDate, sortOrder, hostedByMe, appliedOnly, confirmedOnly, favoriteOnly, effectiveFavoriteEventIds, selectedGenres, budgetMin, budgetMax, selectedAreas, keyword, joinedClubOnly, clubs],
   );
 
   const eventTypeLabel = eventType === "official"
@@ -415,8 +421,19 @@ export default function EventsScreen() {
         renderItem={({ item }) => (
           <EventCard
             event={item}
-            isFavorite={favoriteEventIds.includes(item.id)}
-            onToggleFavorite={() => { void toggleEventFavoriteWithNotifications(item, CURRENT_USER.id); }}
+            isFavorite={item.isFavorite ?? favoriteEventIds.includes(item.id)}
+            onToggleFavorite={() => {
+              const favorite = item.isFavorite ?? favoriteEventIds.includes(item.id);
+              if (item.viewerMemberId) {
+                setAllEvents((current) => current.map((event) => event.id === item.id ? { ...event, isFavorite: !favorite } : event));
+                void Api.setEventFavorite(item.id, !favorite).catch((error) => {
+                  setAllEvents((current) => current.map((event) => event.id === item.id ? { ...event, isFavorite: favorite } : event));
+                  Alert.alert("更新できませんでした", error instanceof Error ? error.message : "もう一度お試しください。");
+                });
+              } else {
+                void toggleEventFavoriteWithNotifications(item, CURRENT_USER.id);
+              }
+            }}
             locked={item.eventType === "club" && !canViewClubEvent(authUser?.role, CURRENT_USER.id, clubs.find((club) => club.id === item.clubId)?.memberIds ?? [])}
             clubName={clubs.find((club) => club.id === item.clubId)?.name}
             onPress={() => {

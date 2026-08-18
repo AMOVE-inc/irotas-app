@@ -148,6 +148,11 @@ export interface Event {
     status: "pending" | "approved" | "rejected";
   }>;
   priceMin?: number;
+  /** 本番APIが返す、閲覧者に固有の状態。端末内モックとの互換用に任意。 */
+  viewerMemberId?: string;
+  viewerParticipationStatus?: "applied" | "confirmed" | "cancel_requested" | null;
+  isFavorite?: boolean;
+  isOrganizer?: boolean;
   priceMax?: number;
 }
 

@@ -75,9 +75,13 @@ export function filterAndSortEvents(
     .filter((event) => !filters.openOnly || (event.status === "open" && event.attendees < event.capacity))
     .filter((event) => startBoundary === null || eventStart(event) >= startBoundary)
     .filter((event) => endBoundary === null || eventStart(event) <= endBoundary)
-    .filter((event) => !filters.hostedByMemberId || event.createdBy === filters.hostedByMemberId)
+    .filter((event) => !filters.hostedByMemberId || event.isOrganizer === true || event.createdBy === filters.hostedByMemberId)
     .filter((event) => {
       if (filters.participationStatuses?.length) {
+        if (event.viewerParticipationStatus !== undefined) {
+          const normalized = event.viewerParticipationStatus === "cancel_requested" ? "confirmed" : event.viewerParticipationStatus;
+          return normalized !== null && filters.participationStatuses.includes(normalized);
+        }
         if (!filters.participatingMemberId) return false;
         const memberId = filters.participatingMemberId;
         const confirmed = event.participants.includes(memberId) || Boolean(event.companionIds?.includes(memberId));

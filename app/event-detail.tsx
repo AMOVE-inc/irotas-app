@@ -73,6 +73,14 @@ export default function EventDetailScreen() {
   }, [authUser, id]);
 
   useEffect(() => {
+    if (!event) return;
+    const viewerId = event.viewerMemberId ?? CURRENT_USER.id;
+    const status = event.viewerParticipationStatus;
+    setIsJoined(status ? status === "confirmed" || status === "cancel_requested" : event.participants.includes(viewerId));
+    setHasApplied(status ? status === "applied" || status === "confirmed" || status === "cancel_requested" : Boolean(event.applicantIds?.includes(viewerId)));
+  }, [event?.id, event?.viewerParticipationStatus]);
+
+  useEffect(() => {
     getIrotasPoints(CURRENT_USER.id).then(setIrotasPoints);
   }, []);
   useEffect(() => { if (!event?.id) return; void recordActivityEvent({ userId: CURRENT_USER.id, eventName: "event_viewed", entityType: "event", entityId: event.id, dedupeKey: `${CURRENT_USER.id}:event_viewed:${event.id}:${new Date().toISOString().slice(0, 10)}` }); }, [event?.id]);
@@ -129,10 +137,11 @@ export default function EventDetailScreen() {
   const confirmedIds = [...new Set([...(event.participants ?? []), ...(event.companionIds ?? [])])];
   const applicantCount = event.applicantIds?.length ?? event.attendees;
   const organizer = getMemberById(event.createdBy);
-  const isOrganizer = event.createdBy === CURRENT_USER.id;
+  const viewerMemberId = event.viewerMemberId ?? CURRENT_USER.id;
+  const isOrganizer = event.isOrganizer ?? event.createdBy === viewerMemberId;
   const pendingApplicantIds = getPendingGourmetApplicants(event);
   const pendingCancellationRequests = getPendingCancellationRequests(event);
-  const hasPendingCancellationRequest = pendingCancellationRequests.some((request) => request.memberId === CURRENT_USER.id);
+  const hasPendingCancellationRequest = pendingCancellationRequests.some((request) => request.memberId === viewerMemberId);
   const requiresOrganizerApproval = event.eventType === "gourmet" || event.eventType === "club";
 
   const handleJoin = () => {
@@ -142,7 +151,7 @@ export default function EventDetailScreen() {
     }
     // 連打防止: 既に処理中の場合はスキップ
     if (joiningRef.current) return;
-    if (requiresOrganizerApproval && !termsAccepted) {
+    if (!termsAccepted) {
       Alert.alert("規約への同意が必要です", "イベント参加規約を確認し、同意にチェックしてください。");
       return;
     }
@@ -164,6 +173,22 @@ export default function EventDetailScreen() {
             if (joiningRef.current) return;
             joiningRef.current = true;
             try {
+              if (event.viewerMemberId) {
+                const updated = await Api.applyToEvent(event.id, termsAccepted);
+                setEvent(updated);
+                const confirmed = updated.viewerParticipationStatus === "confirmed";
+                setHasApplied(true);
+                setIsJoined(confirmed);
+                Alert.alert(
+                  confirmed ? "参加確定" : "申込完了",
+                  confirmed
+                    ? "参加が確定しました。参加者専用チャットは確定者へ順次案内されます。"
+                    : requiresOrganizerApproval
+                      ? "幹事へ参加申込を送りました。承認後に参加が確定します。"
+                      : "抽選への申込を受け付けました。参加確定の連絡をお待ちください。",
+                );
+                return;
+              }
               const applicants = event.applicantIds ?? [...(event.participants ?? [])];
               if (requiresOrganizerApproval) submitGourmetApplication(event, CURRENT_USER.id);
               else {
@@ -255,6 +280,15 @@ export default function EventDetailScreen() {
     Alert.alert("参加申込を承認", `${member?.name ?? "メンバー"}さんの参加を確定しますか？`, [
       { text: "キャンセル", style: "cancel" },
       { text: "承認する", onPress: async () => {
+        if (event.viewerMemberId) {
+          try {
+            setEvent(await Api.reviewEventApplicant(event.id, memberId, "approve"));
+            Alert.alert("承認完了", `${member?.name ?? "メンバー"}さんの参加を確定しました。`);
+          } catch (error) {
+            Alert.alert("承認できませんでした", error instanceof Error ? error.message : "もう一度お試しください。");
+          }
+          return;
+        }
         approveGourmetApplication(event, memberId);
         const room = joinEventChat(event.id, event.title, event.chatId, event.createdBy);
         joinEventChat(event.id, event.title, room.id, memberId);
@@ -298,6 +332,15 @@ export default function EventDetailScreen() {
     Alert.alert("参加をキャンセル", `${member?.name ?? "メンバー"}さんの参加を幹事側でキャンセルしますか？`, [
       { text: "戻る", style: "cancel" },
       { text: "キャンセルする", style: "destructive", onPress: async () => {
+        if (event.viewerMemberId) {
+          try {
+            setEvent(await Api.reviewEventApplicant(event.id, memberId, "cancel"));
+            Alert.alert("キャンセル完了", "空席をイベント一覧へ反映しました。");
+          } catch (error) {
+            Alert.alert("処理できませんでした", error instanceof Error ? error.message : "もう一度お試しください。");
+          }
+          return;
+        }
         cancelGourmetParticipation(event, memberId);
         if (event.chatId) await removeMemberFromRoom(event.chatId, memberId);
         setEventRevision((value) => value + 1);
@@ -323,6 +366,15 @@ export default function EventDetailScreen() {
     Alert.alert("キャンセル申請", "幹事へキャンセル申請を送りますか？", [
       { text: "戻る", style: "cancel" },
       { text: "申請する", style: "destructive", onPress: async () => {
+        if (event.viewerMemberId) {
+          try {
+            setEvent(await Api.requestEventCancellation(event.id, contactedOrganizer, cancellationPolicyConfirmed));
+            Alert.alert("申請しました", "幹事にキャンセル申請を送りました。確定連絡をお待ちください。");
+          } catch (error) {
+            Alert.alert("申請できませんでした", error instanceof Error ? error.message : "もう一度お試しください。");
+          }
+          return;
+        }
         submitEventCancellationRequest(event, CURRENT_USER.id);
         await notifyEventCancellationRequest(event, CURRENT_USER.id);
         setEventRevision((value) => value + 1);
@@ -336,6 +388,15 @@ export default function EventDetailScreen() {
     Alert.alert("キャンセルを承認", `${member?.name ?? "メンバー"}さんを参加者から外し、1枠を再募集しますか？`, [
       { text: "戻る", style: "cancel" },
       { text: "承認して再募集", onPress: async () => {
+        if (event.viewerMemberId) {
+          try {
+            setEvent(await Api.reviewEventCancellation(event.id, memberId, "approve"));
+            Alert.alert("再募集を開始しました", "キャンセル分の空席をイベント一覧へ反映しました。");
+          } catch (error) {
+            Alert.alert("承認できませんでした", error instanceof Error ? error.message : "もう一度お試しください。");
+          }
+          return;
+        }
         approveEventCancellationRequest(event, memberId);
         if (event.chatId) await removeMemberFromRoom(event.chatId, memberId);
         setEventRevision((value) => value + 1);
@@ -416,8 +477,8 @@ export default function EventDetailScreen() {
             </Text>
           </View>
         </View>
-        <Pressable onPress={() => { const becomingFavorite = !favoriteEventIds.includes(event.id); void toggleEventFavoriteWithNotifications(event, CURRENT_USER.id); if (becomingFavorite) void recordActivityEvent({ userId: CURRENT_USER.id, eventName: "event_favorited", entityType: "event", entityId: event.id }); }} accessibilityLabel={favoriteEventIds.includes(event.id) ? "お気に入りから削除" : "お気に入りに追加"} style={{ position: "absolute", top: 92, right: 16, width: 38, height: 38, borderRadius: 19, backgroundColor: "rgba(0,0,0,0.5)", alignItems: "center", justifyContent: "center" }}>
-          <IconSymbol name={favoriteEventIds.includes(event.id) ? "heart.fill" : "heart"} size={20} color={favoriteEventIds.includes(event.id) ? "#F59AB9" : "#FFF"} />
+        <Pressable onPress={() => { const favorite = event.isFavorite ?? favoriteEventIds.includes(event.id); if (event.viewerMemberId) { void Api.setEventFavorite(event.id, !favorite).then(() => setEvent({ ...event, isFavorite: !favorite })).catch((error) => Alert.alert("更新できませんでした", error instanceof Error ? error.message : "もう一度お試しください。")); } else { void toggleEventFavoriteWithNotifications(event, CURRENT_USER.id); } if (!favorite) void recordActivityEvent({ userId: CURRENT_USER.id, eventName: "event_favorited", entityType: "event", entityId: event.id }); }} accessibilityLabel={(event.isFavorite ?? favoriteEventIds.includes(event.id)) ? "お気に入りから削除" : "お気に入りに追加"} style={{ position: "absolute", top: 92, right: 16, width: 38, height: 38, borderRadius: 19, backgroundColor: "rgba(0,0,0,0.5)", alignItems: "center", justifyContent: "center" }}>
+          <IconSymbol name={(event.isFavorite ?? favoriteEventIds.includes(event.id)) ? "heart.fill" : "heart"} size={20} color={(event.isFavorite ?? favoriteEventIds.includes(event.id)) ? "#F59AB9" : "#FFF"} />
         </Pressable>
       </View>
 
@@ -741,7 +802,7 @@ export default function EventDetailScreen() {
           </View>
         ) : null}
 
-        {requiresOrganizerApproval && !isJoined && !hasApplied && !isOrganizer ? (
+        {!isJoined && !hasApplied && !isOrganizer ? (
           <View style={{ backgroundColor: "#FFF8F0", borderRadius: 14, padding: 14, marginBottom: 16, borderWidth: 1, borderColor: "#EED9BF" }}>
             <Pressable onPress={() => setTermsAccepted((value) => !value)} style={{ flexDirection: "row", alignItems: "center" }}>
               <View style={{ width: 24, height: 24, borderRadius: 6, backgroundColor: termsAccepted ? "#E8A0BF" : colors.surface, borderWidth: 1, borderColor: termsAccepted ? "#E8A0BF" : colors.border, alignItems: "center", justifyContent: "center" }}>{termsAccepted ? <IconSymbol name="checkmark" size={15} color="#FFF" /> : null}</View>
