@@ -101,6 +101,8 @@ export default function CsvImportScreen() {
   const [testImportCount, setTestImportCount] = useState(1);
   const [importConfirmation, setImportConfirmation] = useState("");
   const [memberImporting, setMemberImporting] = useState(false);
+  const [bulkImportConfirmation, setBulkImportConfirmation] = useState("");
+  const [bulkImportProgress, setBulkImportProgress] = useState<string | null>(null);
   const importMutation = trpc.migration.importCsv.useMutation();
 
   useEffect(() => {
@@ -243,7 +245,7 @@ export default function CsvImportScreen() {
     }
     setMemberImporting(true);
     try {
-      const result = await apiCall<{ success: boolean; runId: string; importedCount: number }>(
+      const result = await apiCall<{ success: boolean; runId: string; importedCount: number; createdCount: number; updatedCount: number }>(
         "/api/admin/member-import/commit",
         {
           method: "POST",
@@ -268,7 +270,7 @@ export default function CsvImportScreen() {
       setImportConfirmation("");
       Alert.alert(
         "テスト登録が完了しました",
-        `${result.importedCount}名を登録しました。ログイン確認後に次の登録へ進んでください。`,
+        `${result.importedCount}名を処理しました（新規${result.createdCount}名・既存更新${result.updatedCount}名）。ログイン確認後に次の登録へ進んでください。`,
       );
     } catch (error) {
       Alert.alert(
@@ -276,6 +278,61 @@ export default function CsvImportScreen() {
         error instanceof Error ? error.message : "設定とデータを確認してください。",
       );
     } finally {
+      setMemberImporting(false);
+    }
+  };
+
+  const handleBulkMemberImport = async () => {
+    if (!memberDryRun || !readiness?.ready || memberImporting) return;
+    const rows = memberDryRun.candidates.filter((candidate) => candidate.migration_action === "import");
+    const expectedConfirmation = `IMPORT_ALL_${rows.length}`;
+    if (bulkImportConfirmation !== expectedConfirmation) {
+      Alert.alert("確認文字が一致しません", `${expectedConfirmation} と入力してください。`);
+      return;
+    }
+    setMemberImporting(true);
+    let processedCount = 0;
+    let createdCount = 0;
+    let updatedCount = 0;
+    try {
+      for (let offset = 0; offset < rows.length; offset += 25) {
+        const batch = rows.slice(offset, offset + 25);
+        setBulkImportProgress(`${Math.min(offset + batch.length, rows.length)} / ${rows.length}名を処理中`);
+        const result = await apiCall<{ success: boolean; importedCount: number; createdCount: number; updatedCount: number }>(
+          "/api/admin/member-import/commit",
+          {
+            method: "POST",
+            body: JSON.stringify({
+              confirmation: `IMPORT_${batch.length}`,
+              sourceFilename: "reviewed-member-migration.csv",
+              rows: batch,
+            }),
+          },
+        );
+        processedCount += result.importedCount;
+        createdCount += result.createdCount;
+        updatedCount += result.updatedCount;
+      }
+      setHistory((current) => [
+        {
+          id: `bulk_${Date.now()}`,
+          filename: "reviewed-member-migration.csv",
+          importedAt: new Date().toLocaleString("ja-JP"),
+          recordCount: processedCount,
+          status: "success",
+          type: "members",
+        },
+        ...current,
+      ]);
+      setBulkImportConfirmation("");
+      Alert.alert("本登録が完了しました", `${processedCount}名を処理しました（新規${createdCount}名・既存更新${updatedCount}名）。`);
+    } catch (error) {
+      Alert.alert(
+        "本登録を中断しました",
+        `${processedCount}名まで完了しています。${error instanceof Error ? error.message : "設定とデータを確認してください。"}`,
+      );
+    } finally {
+      setBulkImportProgress(null);
       setMemberImporting(false);
     }
   };
@@ -474,6 +531,39 @@ export default function CsvImportScreen() {
                     </Text>
                   )}
                 </Pressable>
+              </View>
+
+              <View style={{ marginTop: 12, backgroundColor: "#FFF7E8", borderRadius: 14, padding: 13, borderWidth: 1, borderColor: "#E7C98B" }}>
+                <Text style={{ fontSize: 14, fontWeight: "800", color: "#6F4700" }}>確認済み会員を本登録</Text>
+                <Text style={{ fontSize: 11, lineHeight: 17, color: "#8A5700", marginTop: 4 }}>
+                  自動取込可能な{memberDryRun.summary.importableMembers.toLocaleString()}名のみを25名ずつ安全に登録します。要確認・退会・一時停止の会員は含みません。途中で失敗した場合は完了済み人数を表示し、再実行しても重複登録されません。
+                </Text>
+                <Text style={{ fontSize: 11, color: "#8A5700", marginTop: 12, marginBottom: 6 }}>
+                  実行するには IMPORT_ALL_{memberDryRun.summary.importableMembers} と入力
+                </Text>
+                <TextInput
+                  value={bulkImportConfirmation}
+                  onChangeText={setBulkImportConfirmation}
+                  autoCapitalize="characters"
+                  autoCorrect={false}
+                  placeholder={`IMPORT_ALL_${memberDryRun.summary.importableMembers}`}
+                  placeholderTextColor={colors.muted}
+                  style={{ borderWidth: 1, borderColor: "#E7C98B", backgroundColor: colors.surface, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, color: colors.foreground, fontSize: 13 }}
+                />
+                <Pressable
+                  disabled={!readiness?.ready || memberImporting}
+                  onPress={handleBulkMemberImport}
+                  style={{ marginTop: 10, borderRadius: 11, paddingVertical: 12, alignItems: "center", backgroundColor: readiness?.ready ? "#8A5700" : colors.border, opacity: memberImporting ? 0.6 : 1 }}
+                >
+                  {memberImporting ? <ActivityIndicator color="#FFF" /> : (
+                    <Text style={{ color: readiness?.ready ? "#FFF" : colors.muted, fontSize: 13, fontWeight: "800" }}>
+                      確認済み会員を本登録する
+                    </Text>
+                  )}
+                </Pressable>
+                {bulkImportProgress && (
+                  <Text style={{ color: "#8A5700", fontSize: 11, fontWeight: "700", textAlign: "center", marginTop: 8 }}>{bulkImportProgress}</Text>
+                )}
               </View>
             </View>
           )}

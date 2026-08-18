@@ -246,6 +246,19 @@ async function importMembers(
 ) {
   const runId = crypto.randomUUID();
   const now = new Date().toISOString();
+  const existingEmails = new Set<string>();
+  const placeholders = rows.map(() => "?").join(", ");
+  if (placeholders) {
+    const existing = await db
+      .prepare(`SELECT email FROM members WHERE email IN (${placeholders})`)
+      .bind(...rows.map((row) => row.email))
+      .all<{ email: string }>();
+    for (const member of existing.results ?? []) {
+      existingEmails.add(normalizeEmail(member.email));
+    }
+  }
+  const createdCount = rows.filter((row) => !existingEmails.has(row.email)).length;
+  const updatedCount = rows.length - createdCount;
   await db
     .prepare(
       `INSERT INTO migration_runs
@@ -316,7 +329,7 @@ async function importMembers(
         )
         .bind(
           rows.length,
-          JSON.stringify({ importedCount: rows.length }),
+          JSON.stringify({ importedCount: rows.length, createdCount, updatedCount }),
           now,
           runId,
         ),
@@ -329,11 +342,11 @@ async function importMembers(
         .bind(
           String(actorId),
           runId,
-          JSON.stringify({ importedCount: rows.length }),
+          JSON.stringify({ importedCount: rows.length, createdCount, updatedCount }),
           now,
         ),
     ]);
-    return runId;
+    return { runId, createdCount, updatedCount };
   } catch (error) {
     await db
       .prepare(
@@ -388,7 +401,7 @@ export async function handleMemberImportRequest(
     const validated = validateMemberImportRequest(
       JSON.parse(rawBody) as ImportBody,
     );
-    const runId = await importMembers(
+    const result = await importMembers(
       env.DB,
       validated.rows,
       member.id,
@@ -396,8 +409,10 @@ export async function handleMemberImportRequest(
     );
     return responseJson({
       success: true,
-      runId,
+      runId: result.runId,
       importedCount: validated.rows.length,
+      createdCount: result.createdCount,
+      updatedCount: result.updatedCount,
     });
   } catch (error) {
     if (error instanceof SyntaxError)
