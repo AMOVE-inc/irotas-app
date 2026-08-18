@@ -301,6 +301,13 @@ export async function reviewEventCancellation(eventId: string, memberId: string,
   return result.event;
 }
 
+export async function syncSquareSubscriptions() {
+  return apiCall<{ success: boolean; scanned: number; updated: number }>(
+    "/api/admin/square-sync",
+    { method: "POST" },
+  );
+}
+
 // Establish session cookie on the backend (3000-xxx domain)
 // Called after receiving token via postMessage to get a proper Set-Cookie from the backend
 export async function establishSession(token: string): Promise<boolean> {

@@ -38,6 +38,7 @@ import { sendLeaderAppointmentNotification } from "@/lib/notifications";
 import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
 import { loadImportedGourmetContests, type ImportedGourmetContest } from "@/lib/gourmet-contest-import";
+import { syncSquareSubscriptions } from "@/lib/_core/api";
 
 type PointsHistoryEntry = {
   id: string;
@@ -83,6 +84,7 @@ export default function AdminDashboardScreen() {
   const [newEmail, setNewEmail] = useState("");
   const [newNote, setNewNote] = useState("");
   const [newAccessRole, setNewAccessRole] = useState<"member" | "club_leader" | "operator" | "admin">("member");
+  const [squareSyncing, setSquareSyncing] = useState(false);
   const { data: allowedEmails, refetch: refetchEmails, isLoading: emailsLoading } = trpc.allowedEmails.list.useQuery(
     undefined,
     { enabled: userIsAdmin && activeTab === "emails" },
@@ -461,6 +463,59 @@ export default function AdminDashboardScreen() {
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
         {activeTab === "overview" && (
           <>
+            <View
+              style={{
+                backgroundColor: colors.surface,
+                borderRadius: 14,
+                padding: 16,
+                marginBottom: 20,
+                borderWidth: 1,
+                borderColor: colors.border,
+              }}
+            >
+              <Text style={{ fontSize: 16, fontWeight: "700", color: colors.foreground }}>
+                Square会員状態の同期
+              </Text>
+              <Text style={{ fontSize: 13, lineHeight: 20, color: colors.muted, marginTop: 6, marginBottom: 12 }}>
+                Squareのサブスク状態だけを照合します。カード番号・支払額などの決済情報は取得・表示しません。
+              </Text>
+              <Pressable
+                disabled={squareSyncing}
+                onPress={async () => {
+                  setSquareSyncing(true);
+                  try {
+                    const result = await syncSquareSubscriptions();
+                    Alert.alert(
+                      "同期完了",
+                      `${result.scanned}件を確認し、登録済み会員${result.updated}件を更新しました。`,
+                    );
+                  } catch (error) {
+                    Alert.alert(
+                      "同期できませんでした",
+                      error instanceof Error ? error.message : "時間をおいて再度お試しください。",
+                    );
+                  } finally {
+                    setSquareSyncing(false);
+                  }
+                }}
+                style={{
+                  minHeight: 48,
+                  borderRadius: 12,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  backgroundColor: squareSyncing ? colors.border : "#E8A0BF",
+                }}
+              >
+                {squareSyncing ? (
+                  <ActivityIndicator color="#FFF" />
+                ) : (
+                  <Text style={{ color: "#FFF", fontSize: 15, fontWeight: "700" }}>
+                    Squareと今すぐ同期
+                  </Text>
+                )}
+              </Pressable>
+            </View>
+
             {/* KPIカード */}
             <Text style={{ fontSize: 16, fontWeight: "700", color: colors.foreground, marginBottom: 12 }}>
               主要指標

@@ -7,6 +7,7 @@ import {
 import type { SitesEnv } from "./platform-types";
 import { handleMemberImportRequest } from "./member-import";
 import { handleSquareWebhook } from "./square-webhook";
+import { handleSquareSyncRequest } from "./square-sync";
 import { handleMemberDirectoryRequest } from "./member-directory";
 import { handleEventRequest } from "./events";
 
@@ -241,6 +242,8 @@ async function routeRequest(
   if (authResponse) return authResponse;
   const squareResponse = await handleSquareWebhook(request, env);
   if (squareResponse) return squareResponse;
+  const squareSyncResponse = await handleSquareSyncRequest(request, env);
+  if (squareSyncResponse) return squareSyncResponse;
   const memberImportResponse = await handleMemberImportRequest(request, env);
   if (memberImportResponse) return memberImportResponse;
   const memberDirectoryResponse = await handleMemberDirectoryRequest(request, env);
