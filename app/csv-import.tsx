@@ -103,6 +103,7 @@ export default function CsvImportScreen() {
   const [memberImporting, setMemberImporting] = useState(false);
   const [bulkImportConfirmation, setBulkImportConfirmation] = useState("");
   const [bulkImportProgress, setBulkImportProgress] = useState<string | null>(null);
+  const [reviewImportConfirmation, setReviewImportConfirmation] = useState("");
   const importMutation = trpc.migration.importCsv.useMutation();
 
   useEffect(() => {
@@ -337,6 +338,47 @@ export default function CsvImportScreen() {
     }
   };
 
+  const handleReviewedMemberImport = async () => {
+    if (!memberDryRun || !readiness?.ready || memberImporting) return;
+    const rows = memberDryRun.candidates.filter((candidate) => candidate.migration_action === "review");
+    const expectedConfirmation = `IMPORT_REVIEW_${rows.length}`;
+    if (!rows.length) {
+      Alert.alert("要確認会員はいません", "追加で承認する会員はありません。");
+      return;
+    }
+    if (reviewImportConfirmation !== expectedConfirmation) {
+      Alert.alert("確認文字が一致しません", `${expectedConfirmation} と入力してください。`);
+      return;
+    }
+    setMemberImporting(true);
+    try {
+      const result = await apiCall<{ success: boolean; importedCount: number; createdCount: number; updatedCount: number }>(
+        "/api/admin/member-import/commit",
+        {
+          method: "POST",
+          body: JSON.stringify({
+            confirmation: expectedConfirmation,
+            reviewApproved: true,
+            sourceFilename: "approved-member-review.xlsx",
+            rows,
+          }),
+        },
+      );
+      setReviewImportConfirmation("");
+      Alert.alert(
+        "承認済み会員を登録しました",
+        `${result.importedCount}名を処理しました（新規${result.createdCount}名・既存更新${result.updatedCount}名）。`,
+      );
+    } catch (error) {
+      Alert.alert(
+        "承認済み会員を登録できませんでした",
+        error instanceof Error ? error.message : "設定とデータを確認してください。",
+      );
+    } finally {
+      setMemberImporting(false);
+    }
+  };
+
   return (
     <ScreenContainer edges={["top", "left", "right"]}>
       {/* Header */}
@@ -565,6 +607,38 @@ export default function CsvImportScreen() {
                   <Text style={{ color: "#8A5700", fontSize: 11, fontWeight: "700", textAlign: "center", marginTop: 8 }}>{bulkImportProgress}</Text>
                 )}
               </View>
+
+              {memberDryRun.summary.reviewMembers > 0 && (
+                <View style={{ marginTop: 12, backgroundColor: "#F5EEF9", borderRadius: 14, padding: 13, borderWidth: 1, borderColor: "#D8C4E4" }}>
+                  <Text style={{ fontSize: 14, fontWeight: "800", color: "#5E3974" }}>管理者確認済み会員を追加登録</Text>
+                  <Text style={{ fontSize: 11, lineHeight: 17, color: "#6F4A83", marginTop: 4 }}>
+                    確認用ファイルで「移行する」と判断した{memberDryRun.summary.reviewMembers}名を登録します。この操作は要確認会員専用で、移行対象外の会員は登録できません。
+                  </Text>
+                  <Text style={{ fontSize: 11, color: "#6F4A83", marginTop: 12, marginBottom: 6 }}>
+                    実行するには IMPORT_REVIEW_{memberDryRun.summary.reviewMembers} と入力
+                  </Text>
+                  <TextInput
+                    value={reviewImportConfirmation}
+                    onChangeText={setReviewImportConfirmation}
+                    autoCapitalize="characters"
+                    autoCorrect={false}
+                    placeholder={`IMPORT_REVIEW_${memberDryRun.summary.reviewMembers}`}
+                    placeholderTextColor={colors.muted}
+                    style={{ borderWidth: 1, borderColor: "#D8C4E4", backgroundColor: colors.surface, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, color: colors.foreground, fontSize: 13 }}
+                  />
+                  <Pressable
+                    disabled={!readiness?.ready || memberImporting}
+                    onPress={handleReviewedMemberImport}
+                    style={{ marginTop: 10, borderRadius: 11, paddingVertical: 12, alignItems: "center", backgroundColor: readiness?.ready ? "#6F4A83" : colors.border, opacity: memberImporting ? 0.6 : 1 }}
+                  >
+                    {memberImporting ? <ActivityIndicator color="#FFF" /> : (
+                      <Text style={{ color: readiness?.ready ? "#FFF" : colors.muted, fontSize: 13, fontWeight: "800" }}>
+                        管理者確認済み会員を登録する
+                      </Text>
+                    )}
+                  </Pressable>
+                </View>
+              )}
             </View>
           )}
         </View>

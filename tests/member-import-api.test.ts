@@ -88,6 +88,23 @@ describe("secure member import validation", () => {
     ).toThrow("duplicate_email");
   });
 
+  it("accepts review rows only with explicit administrator approval", () => {
+    expect(
+      validateMemberImportRequest({
+        confirmation: "IMPORT_REVIEW_1",
+        reviewApproved: true,
+        rows: [row({ migration_action: "review" })],
+      }).rows,
+    ).toHaveLength(1);
+    expect(() =>
+      validateMemberImportRequest({
+        confirmation: "IMPORT_REVIEW_1",
+        reviewApproved: true,
+        rows: [row({ migration_action: "exclude" })],
+      }),
+    ).toThrow("unsafe_action");
+  });
+
   it("limits each reviewed batch to 25 members", () => {
     const rows = Array.from({ length: 26 }, (_, index) =>
       row({

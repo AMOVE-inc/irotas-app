@@ -38,6 +38,7 @@ type ImportBody = {
   confirmation?: unknown;
   sourceFilename?: unknown;
   rows?: unknown;
+  reviewApproved?: unknown;
 };
 
 export function memberImportConfiguration(env: SitesEnv) {
@@ -122,7 +123,11 @@ export function validateMemberImportRequest(body: ImportBody): {
   if (!Array.isArray(body.rows) || body.rows.length < 1)
     throw new Error("rows_required");
   if (body.rows.length > MAX_BATCH_SIZE) throw new Error("too_many_rows");
-  if (body.confirmation !== `IMPORT_${body.rows.length}`)
+  const reviewApproved = body.reviewApproved === true;
+  const expectedConfirmation = reviewApproved
+    ? `IMPORT_REVIEW_${body.rows.length}`
+    : `IMPORT_${body.rows.length}`;
+  if (body.confirmation !== expectedConfirmation)
     throw new Error("confirmation_required");
 
   const seenEmails = new Set<string>();
@@ -135,7 +140,10 @@ export function validateMemberImportRequest(body: ImportBody): {
     if (!value || typeof value !== "object")
       throw new Error(`invalid_row:${index}`);
     const row = value as Partial<MemberImportCandidate>;
-    if (row.migration_action !== "import")
+    if (
+      (!reviewApproved && row.migration_action !== "import") ||
+      (reviewApproved && row.migration_action !== "review")
+    )
       throw new Error(`unsafe_action:${index}`);
     const email = normalizeEmail(String(row.billing_email ?? ""));
     const displayName = requiredText(row.display_name, 80);
