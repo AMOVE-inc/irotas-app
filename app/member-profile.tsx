@@ -5,8 +5,11 @@ import {
   RANK_COLORS,
   RANK_LABELS,
   CURRENT_USER,
+  DEFAULT_AVATAR,
   getMemberById,
   getNextRankInfo,
+  type Member,
+  type MemberRank,
 } from "@/constants/mock-data";
 import { useColors } from "@/hooks/use-colors";
 import { getOrCreateDMChat } from "@/lib/chat-store";
@@ -18,7 +21,9 @@ import { PROFILE_DETAILS_STORAGE_KEY, type ProfileDetails } from "@/constants/pr
 import { getPrivateMemberNote, savePrivateMemberNote } from "@/lib/profile-notes-store";
 import { getPublishedAgeBand } from "@/lib/member-age";
 import { SocialMemberListModal } from "@/components/social-member-list-modal";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useAuthContext } from "@/lib/auth-context";
+import * as Api from "@/lib/_core/api";
 import {
   Alert,
   Linking,
@@ -34,8 +39,11 @@ export default function MemberProfileScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const clubs = useClubs();
+  const { user: authUser } = useAuthContext();
 
-  const member = getMemberById(id || "");
+  const mockMember = getMemberById(id || "");
+  const [databaseMember, setDatabaseMember] = useState<Api.PublicMember | null>(null);
+  const [databaseLookupComplete, setDatabaseLookupComplete] = useState(false);
   const [selfDetails, setSelfDetails] = useState<Partial<ProfileDetails> | null>(null);
   const [selfBio, setSelfBio] = useState<string | null>(null);
   const [selfName, setSelfName] = useState<string | null>(null);
@@ -44,22 +52,75 @@ export default function MemberProfileScreen() {
   const [socialList, setSocialList] = useState<"followers" | "following" | null>(null);
 
   useEffect(() => {
-    if (member?.id !== CURRENT_USER.id) { setSelfDetails(null); setSelfBio(null); setSelfName(null); setSelfAvatar(null); return; }
+    if (!id || !authUser) { setDatabaseMember(null); setDatabaseLookupComplete(true); return; }
+    let active = true;
+    setDatabaseLookupComplete(false);
+    void Api.getMemberProfile(id)
+      .then((value) => { if (active) setDatabaseMember(value); })
+      .catch(() => { if (active) setDatabaseMember(null); })
+      .finally(() => { if (active) setDatabaseLookupComplete(true); });
+    return () => { active = false; };
+  }, [authUser, id]);
+
+  const member = useMemo<Member | undefined>(() => {
+    if (!databaseMember) return mockMember;
+    const profile = databaseMember.profile;
+    const rank = (["regular", "silver", "gold", "platinum"].includes(databaseMember.memberRank)
+      ? databaseMember.memberRank
+      : "regular") as MemberRank;
+    const branch = databaseMember.branches.includes("kansai") && !databaseMember.branches.includes("kanto")
+      ? "kansai"
+      : "kanto";
+    const text = (key: string) => typeof profile[key] === "string" ? profile[key] as string : undefined;
+    return {
+      id: databaseMember.id,
+      name: databaseMember.displayName,
+      avatar: DEFAULT_AVATAR,
+      rank,
+      points: databaseMember.xp,
+      level: 1,
+      branch,
+      generation: Number(databaseMember.memberTerm?.match(/\d+/)?.[0] ?? 0),
+      bio: text("bio") ?? "",
+      interests: Array.isArray(profile.favoriteCuisines) ? profile.favoriteCuisines.filter((item): item is string => typeof item === "string") : [],
+      role: databaseMember.accessRole === "admin" ? "admin" : databaseMember.accessRole === "operator" ? "operator" : "member",
+      joinedAt: databaseMember.joinedAt,
+      birthDate: text("birthDate"), showAge: profile.showAge === true,
+      hometown: text("hometown"), residence: text("residence"), occupation: text("occupation"), hobbies: text("hobbies"),
+      favoriteCuisines: Array.isArray(profile.favoriteCuisines) ? profile.favoriteCuisines.filter((item): item is string => typeof item === "string") : [],
+      favoriteAlcohol: text("favoriteAlcohol"), dislikedFoods: text("dislikedFoods"), allergies: text("allergies"),
+      drinkingLevel: text("drinkingLevel"), instagramUrl: text("instagramUrl"), favoriteRestaurants: text("favoriteRestaurants"),
+      desiredRestaurants: text("desiredRestaurants"), googleLocalGuideLevel: text("googleLocalGuideLevel"),
+      participationCount: databaseMember.participationCount, organizerCount: databaseMember.organizerCount,
+    };
+  }, [databaseMember, mockMember]);
+
+  useEffect(() => {
+    const isCurrentMember = databaseMember ? databaseMember.userId === authUser?.id : member?.id === CURRENT_USER.id;
+    if (!isCurrentMember) { setSelfDetails(null); setSelfBio(null); setSelfName(null); setSelfAvatar(null); return; }
     void Promise.all([AsyncStorage.getItem(PROFILE_DETAILS_STORAGE_KEY), AsyncStorage.getItem("profile_bio"), AsyncStorage.getItem("profile_name"), AsyncStorage.getItem("profile_avatar_uri")]).then(([raw, bio, name, avatar]) => {
       setSelfDetails(raw ? JSON.parse(raw) as ProfileDetails : null); setSelfBio(bio); setSelfName(name); setSelfAvatar(avatar);
     });
-  }, [member?.id]);
+  }, [authUser?.id, databaseMember, member?.id]);
 
   useEffect(() => {
-    if (!id || id === CURRENT_USER.id) return;
+    if (!id) return;
+    if (databaseMember) {
+      if (databaseMember.userId === authUser?.id) return;
+      void Api.getPrivateMemberNote(id).then((result) => setPrivateNote(result.note)).catch(() => setPrivateNote(""));
+      return;
+    }
+    if (id === CURRENT_USER.id) return;
     void getPrivateMemberNote(CURRENT_USER.id, id).then(setPrivateNote);
-  }, [id]);
+  }, [authUser?.id, databaseMember, id]);
 
   if (!member) {
     return (
       <ScreenContainer edges={["top", "left", "right"]}>
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-          <Text style={{ fontSize: 16, color: colors.muted }}>メンバーが見つかりません</Text>
+          <Text style={{ fontSize: 16, color: colors.muted }}>
+            {databaseLookupComplete ? "メンバーが見つかりません" : "メンバー情報を読み込んでいます"}
+          </Text>
         </View>
       </ScreenContainer>
     );
@@ -67,7 +128,7 @@ export default function MemberProfileScreen() {
 
   const memberClubs = clubs.filter((club) => club.memberIds.includes(member.id));
   const rankColor = RANK_COLORS[member.rank];
-  const isSelf = member.id === CURRENT_USER.id;
+  const isSelf = databaseMember ? databaseMember.userId === authUser?.id : member.id === CURRENT_USER.id;
   const details: Partial<ProfileDetails> = selfDetails ?? {
     birthDate: member.birthDate, showAge: member.showAge, hometown: member.hometown, residence: member.residence,
     occupation: member.occupation, hobbies: member.hobbies, favoriteCuisines: member.favoriteCuisines ?? member.interests,
@@ -172,6 +233,16 @@ export default function MemberProfileScreen() {
             </View>
           </View>
 
+          {databaseMember?.achievementBadges.length ? (
+            <View style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "center", gap: 6, marginTop: 10, paddingHorizontal: 16 }}>
+              {databaseMember.achievementBadges.map((badge) => (
+                <View key={badge} style={{ borderRadius: 10, paddingHorizontal: 9, paddingVertical: 4, backgroundColor: "#FFF4D6", borderWidth: 1, borderColor: "#D6A928" }}>
+                  <Text style={{ fontSize: 11, fontWeight: "800", color: "#7A5B00" }}>{badge}</Text>
+                </View>
+              ))}
+            </View>
+          ) : null}
+
           {/* DM Button */}
           {!isSelf && (
             <Pressable
@@ -210,7 +281,15 @@ export default function MemberProfileScreen() {
             <View style={{ backgroundColor: colors.surface, borderRadius: 14, padding: 14 }}>
               <Text style={{ fontSize: 11, color: colors.muted, marginBottom: 8 }}>この内容は相手や他のメンバーには表示されません。</Text>
               <TextInput value={privateNote} onChangeText={setPrivateNote} multiline placeholder="会話した内容や次回話したいことなど" placeholderTextColor={colors.muted} style={{ minHeight: 88, borderRadius: 10, borderWidth: 1, borderColor: colors.border, padding: 11, color: colors.foreground, textAlignVertical: "top" }} />
-              <Pressable onPress={async () => { await savePrivateMemberNote(CURRENT_USER.id, member.id, privateNote); Alert.alert("保存しました", "このメモは自分だけが確認できます。"); }} style={{ alignSelf: "flex-end", marginTop: 9, borderRadius: 10, backgroundColor: "#5D5C74", paddingHorizontal: 18, paddingVertical: 9 }}><Text style={{ color: "#FFF", fontSize: 13, fontWeight: "800" }}>メモを保存</Text></Pressable>
+              <Pressable onPress={async () => {
+                try {
+                  if (databaseMember) await Api.setPrivateMemberNote(databaseMember.id, privateNote);
+                  else await savePrivateMemberNote(CURRENT_USER.id, member.id, privateNote);
+                  Alert.alert("保存しました", "このメモは自分だけが確認できます。");
+                } catch {
+                  Alert.alert("保存できませんでした", "通信状況を確認して、もう一度お試しください。");
+                }
+              }} style={{ alignSelf: "flex-end", marginTop: 9, borderRadius: 10, backgroundColor: "#5D5C74", paddingHorizontal: 18, paddingVertical: 9 }}><Text style={{ color: "#FFF", fontSize: 13, fontWeight: "800" }}>メモを保存</Text></Pressable>
             </View>
           </View>
         ) : null}

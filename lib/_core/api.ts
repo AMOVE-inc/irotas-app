@@ -20,6 +20,22 @@ export type AuthApiUser = {
   branches: Auth.BranchRole[] | null;
 };
 
+export type PublicMember = {
+  id: string;
+  userId: number;
+  displayName: string;
+  accessRole: "member" | "club_leader" | "operator" | "admin";
+  branches: string[];
+  memberTerm: string | null;
+  memberRank: string;
+  achievementBadges: string[];
+  joinedAt: string;
+  profile: Record<string, unknown>;
+  xp: number;
+  participationCount: number;
+  organizerCount: number;
+};
+
 export class ApiError extends Error {
   constructor(
     message: string,
@@ -176,6 +192,31 @@ export async function getMe(): Promise<AuthApiUser | null> {
     logger.warn("Unable to fetch the authenticated user", error);
     return null;
   }
+}
+
+export async function getMemberDirectory() {
+  const result = await apiCall<{ members: PublicMember[] }>("/api/members");
+  return result.members;
+}
+
+export async function getMemberProfile(memberId: string) {
+  const result = await apiCall<{ member: PublicMember }>(
+    `/api/members/${encodeURIComponent(memberId)}`,
+  );
+  return result.member;
+}
+
+export async function getPrivateMemberNote(memberId: string) {
+  return apiCall<{ note: string; updatedAt: string | null }>(
+    `/api/members/${encodeURIComponent(memberId)}/private-note`,
+  );
+}
+
+export async function setPrivateMemberNote(memberId: string, note: string) {
+  return apiCall<{ success: boolean; updatedAt: string }>(
+    `/api/members/${encodeURIComponent(memberId)}/private-note`,
+    { method: "PATCH", body: JSON.stringify({ note }) },
+  );
 }
 
 // Establish session cookie on the backend (3000-xxx domain)

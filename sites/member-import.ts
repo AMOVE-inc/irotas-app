@@ -27,6 +27,11 @@ export type ValidatedMemberImport = {
   graceUntilDate: string | null;
   subscriptionStartedAt: string | null;
   branchesJson: string;
+  memberTerm: string | null;
+  memberRank: "regular" | "silver" | "gold" | "platinum";
+  discordRolesJson: string;
+  achievementBadgesJson: string;
+  discordJoinedAt: string | null;
 };
 
 type ImportBody = {
@@ -86,8 +91,28 @@ function accessStatus(value: unknown): ValidatedMemberImport["accessStatus"] {
 
 function branches(value: unknown) {
   const roles = typeof value === "string" ? value : "";
-  const result = ["関東", "関西"].filter((branch) => roles.includes(branch));
+  const result = [
+    ...(roles.includes("関東") ? ["kanto"] : []),
+    ...(roles.includes("関西") ? ["kansai"] : []),
+  ];
   return JSON.stringify(result);
+}
+
+function pipeSeparatedJson(value: unknown) {
+  if (typeof value !== "string") return "[]";
+  return JSON.stringify(
+    value
+      .split(/[|,;]/)
+      .map((item) => item.normalize("NFKC").trim())
+      .filter(Boolean),
+  );
+}
+
+function memberRank(value: unknown): ValidatedMemberImport["memberRank"] {
+  const normalized = String(value ?? "").toLowerCase();
+  if (["silver", "gold", "platinum"].includes(normalized))
+    return normalized as ValidatedMemberImport["memberRank"];
+  return "regular";
 }
 
 export function validateMemberImportRequest(body: ImportBody): {
@@ -158,6 +183,11 @@ export function validateMemberImportRequest(body: ImportBody): {
       graceUntilDate: dateOnly(row.grace_until_date),
       subscriptionStartedAt: dateOnly(row.subscription_created_at),
       branchesJson: branches(row.discord_roles),
+      memberTerm: optionalText(row.member_term, 32),
+      memberRank: memberRank(row.member_rank),
+      discordRolesJson: pipeSeparatedJson(row.discord_roles),
+      achievementBadgesJson: pipeSeparatedJson(row.achievement_badges),
+      discordJoinedAt: dateOnly(row.discord_joined_at),
     };
   });
 
@@ -175,13 +205,20 @@ function memberStatement(
   return db
     .prepare(
       `INSERT INTO members
-      (email, display_name, discord_user_id, public_member_id, role, access_role, branches_json, account_status, created_at, updated_at)
-      VALUES (?, ?, ?, ?, 'user', 'member', ?, 'active', ?, ?)
+      (email, display_name, discord_user_id, public_member_id, role, access_role, branches_json,
+       member_term, member_rank, discord_roles_json, achievement_badges_json, discord_joined_at,
+       account_status, created_at, updated_at)
+      VALUES (?, ?, ?, ?, 'user', 'member', ?, ?, ?, ?, ?, ?, 'active', ?, ?)
       ON CONFLICT(email) DO UPDATE SET
         display_name = excluded.display_name,
         discord_user_id = excluded.discord_user_id,
         public_member_id = excluded.public_member_id,
         branches_json = excluded.branches_json,
+        member_term = excluded.member_term,
+        member_rank = excluded.member_rank,
+        discord_roles_json = excluded.discord_roles_json,
+        achievement_badges_json = excluded.achievement_badges_json,
+        discord_joined_at = excluded.discord_joined_at,
         account_status = 'active',
         updated_at = excluded.updated_at`,
     )
@@ -191,6 +228,11 @@ function memberStatement(
       row.discordUserId,
       row.memberId,
       row.branchesJson,
+      row.memberTerm,
+      row.memberRank,
+      row.discordRolesJson,
+      row.achievementBadgesJson,
+      row.discordJoinedAt,
       now,
       now,
     );

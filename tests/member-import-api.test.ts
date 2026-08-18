@@ -12,6 +12,10 @@ function row(overrides: Record<string, unknown> = {}) {
     billing_email: "Member@Example.com",
     display_name: "テスト会員",
     discord_roles: "関東支部|運営メンバー|ゴールド",
+    achievement_badges: "イベント大賞|グルメ大賞",
+    discord_joined_at: "2024-01-02",
+    member_term: "第1期",
+    member_rank: "gold",
     square_customer_id: "CUSTOMER-1",
     square_subscription_id: "SUBSCRIPTION-1",
     square_plan_id: "PLAN-1",
@@ -54,7 +58,10 @@ describe("secure member import validation", () => {
       email: "member@example.com",
       accessStatus: "active",
       squareStatus: "ACTIVE",
-      branchesJson: '["関東"]',
+      branchesJson: '["kanto"]',
+      memberTerm: "第1期",
+      memberRank: "gold",
+      achievementBadgesJson: '["イベント大賞","グルメ大賞"]',
     });
     expect(result.rows[0]).not.toHaveProperty("role");
     expect(result.rows[0]).not.toHaveProperty("accessRole");

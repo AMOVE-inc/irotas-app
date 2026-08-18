@@ -5,11 +5,11 @@ import { MEMBERS, CURRENT_USER, DEFAULT_AVATAR, RANK_COLORS, RANK_LABELS, type M
 import { useColors } from "@/hooks/use-colors";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
-import { useState, useMemo } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { FlatList, Pressable, Text, TextInput, View } from "react-native";
-import { trpc } from "@/lib/trpc";
 import { useAuthContext } from "@/lib/auth-context";
 import { matchesAllSearchWords } from "@/lib/multi-word-search";
+import * as Api from "@/lib/_core/api";
 
 function normalizeRank(value?: string | null): MemberRank {
   if (/プラチナ|platinum/i.test(value ?? "")) return "platinum";
@@ -22,17 +22,28 @@ export default function MembersScreen() {
   const colors = useColors();
   const router = useRouter();
   const { user: authUser } = useAuthContext();
-  const { data: directory } = trpc.memberData.directory.useQuery(undefined, { enabled: Boolean(authUser) });
+  const [directory, setDirectory] = useState<Api.PublicMember[] | null>(null);
+  const [directoryError, setDirectoryError] = useState(false);
   const [searchText, setSearchText] = useState("");
 
-  const searchableMembers = useMemo(() => directory?.length ? directory.map((member) => ({
-    id: member.memberId ?? `member-${member.userId ?? "unknown"}`,
-    name: member.displayName ?? "IRO+メンバー",
+  useEffect(() => {
+    if (!authUser) { setDirectory(null); setDirectoryError(false); return; }
+    let active = true;
+    setDirectoryError(false);
+    void Api.getMemberDirectory()
+      .then((members) => { if (active) setDirectory(members); })
+      .catch(() => { if (active) { setDirectory([]); setDirectoryError(true); } });
+    return () => { active = false; };
+  }, [authUser]);
+
+  const searchableMembers = useMemo(() => directory !== null ? directory.map((member) => ({
+    id: member.id,
+    name: member.displayName,
     rank: normalizeRank(member.memberRank),
     generation: Number(member.memberTerm?.match(/\d+/)?.[0] ?? 0),
     avatar: DEFAULT_AVATAR,
-    bio: "",
-    joinedAt: "",
+    bio: typeof member.profile.bio === "string" ? member.profile.bio : "",
+    joinedAt: member.joinedAt,
     isCurrentUser: member.userId === authUser?.id,
     isDatabaseMember: true,
   })) : MEMBERS.map((member) => ({ ...member, isCurrentUser: member.id === CURRENT_USER.id, isDatabaseMember: false })), [authUser?.id, directory]);
@@ -84,6 +95,11 @@ export default function MembersScreen() {
             style={{ flex: 1, marginLeft: 8, fontSize: 14, color: colors.foreground }}
           />
         </View>
+        {directoryError ? (
+          <Text style={{ marginTop: 8, fontSize: 12, color: "#D94C55" }}>
+            メンバー情報を読み込めませんでした。時間をおいて再度お試しください。
+          </Text>
+        ) : null}
       </View>
 
       {/* Member list */}
@@ -95,7 +111,7 @@ export default function MembersScreen() {
           const isMe = item.isCurrentUser;
           return (
             <Pressable
-              onPress={() => { if (!item.isDatabaseMember) router.push({ pathname: "/member-profile", params: { id: item.id } }); }}
+              onPress={() => router.push({ pathname: "/member-profile", params: { id: item.id } })}
               style={({ pressed }) => ({
                 flexDirection: "row",
                 alignItems: "center",
@@ -173,7 +189,7 @@ export default function MembersScreen() {
                   </Text>
                 )}
               </View>
-              {!item.isDatabaseMember ? <IconSymbol name="chevron.right" size={16} color={colors.muted} /> : null}
+              <IconSymbol name="chevron.right" size={16} color={colors.muted} />
             </Pressable>
           );
         }}
