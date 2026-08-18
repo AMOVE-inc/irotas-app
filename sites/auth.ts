@@ -19,6 +19,16 @@ type MemberRow = {
   branches_json: string;
   account_status: "active" | "suspended" | "withdrawn";
   last_signed_in_at: string | null;
+  public_member_id: string | null;
+  member_term: string | null;
+  member_rank: string | null;
+  discord_roles_json: string | null;
+  achievement_badges_json: string | null;
+  profile_json: string | null;
+  xp: number | null;
+  participation_count: number | null;
+  organizer_count: number | null;
+  subscription_started_at?: string | null;
 };
 
 type SubscriptionRow = {
@@ -232,6 +242,52 @@ export function extractSessionToken(request: Request) {
   return null;
 }
 
+function jsonArray(value: string | null | undefined) {
+  if (!value) return [];
+  try {
+    const parsed = JSON.parse(value);
+    return Array.isArray(parsed)
+      ? parsed.filter((item): item is string => typeof item === "string")
+      : [];
+  } catch {
+    return [];
+  }
+}
+
+export function cleanMemberDisplayName(value: string) {
+  return value
+    .replace(/\s*[【\[]\s*(?:💎\s*)?PLATINUM\s*[】\]]\s*$/iu, "")
+    .replace(/\s*[【\[]\s*(?:🥇\s*)?GOLD\s*[】\]]\s*$/iu, "")
+    .replace(/\s*[【\[]\s*(?:🥈\s*)?SILVER\s*[】\]]\s*$/iu, "")
+    .replace(/\s*[【\[]\s*REGULAR\s*[】\]]\s*$/iu, "")
+    .trim();
+}
+
+export function effectiveMemberRank(
+  storedRank: string | null | undefined,
+  rolesJson: string | null | undefined,
+) {
+  const roles = jsonArray(rolesJson).join(" ").toLowerCase();
+  if (roles.includes("platinum") || roles.includes("プラチナ")) return "platinum";
+  if (roles.includes("gold") || roles.includes("ゴールド")) return "gold";
+  if (roles.includes("silver") || roles.includes("シルバー")) return "silver";
+  return ["regular", "silver", "gold", "platinum"].includes(storedRank ?? "")
+    ? storedRank
+    : "regular";
+}
+
+function profilePayload(value: string | null | undefined) {
+  if (!value) return {};
+  try {
+    const parsed = JSON.parse(value);
+    return parsed && typeof parsed === "object" && !Array.isArray(parsed)
+      ? parsed as Record<string, unknown>
+      : {};
+  } catch {
+    return {};
+  }
+}
+
 function memberPayload(row: MemberRow) {
   let branches: string[] = [];
   try {
@@ -240,13 +296,22 @@ function memberPayload(row: MemberRow) {
   return {
     id: row.id,
     openId: `member:${row.id}`,
-    name: row.display_name,
+    name: cleanMemberDisplayName(row.display_name),
     email: row.email,
     loginMethod: "email",
     lastSignedIn: row.last_signed_in_at ?? new Date().toISOString(),
     role: row.role === "operator" ? "operator" : row.role,
     branch: branches[0] ?? null,
     branches,
+    memberId: row.public_member_id,
+    memberTerm: row.member_term,
+    memberRank: effectiveMemberRank(row.member_rank, row.discord_roles_json),
+    joinedAt: row.subscription_started_at ?? null,
+    achievementBadges: jsonArray(row.achievement_badges_json),
+    profile: profilePayload(row.profile_json),
+    xp: row.xp ?? 0,
+    participationCount: row.participation_count ?? 0,
+    organizerCount: row.organizer_count ?? 0,
   };
 }
 
@@ -323,7 +388,14 @@ async function findSubscription(db: D1Database, email: string) {
 async function findMember(db: D1Database, email: string) {
   return db
     .prepare(
-      "SELECT id, email, password_hash, display_name, role, access_role, branches_json, account_status, last_signed_in_at FROM members WHERE email = ?",
+      `SELECT m.id, m.email, m.password_hash, m.display_name, m.role, m.access_role,
+      m.branches_json, m.account_status, m.last_signed_in_at, m.public_member_id,
+      m.member_term, m.member_rank, m.discord_roles_json, m.achievement_badges_json,
+      m.profile_json, m.xp, m.participation_count, m.organizer_count,
+      s.subscription_started_at
+      FROM members m
+      LEFT JOIN member_subscriptions s ON s.member_id = m.id OR s.billing_email = m.email
+      WHERE m.email = ? ORDER BY s.id DESC LIMIT 1`,
     )
     .bind(email)
     .first<MemberRow>();
@@ -347,6 +419,9 @@ async function sessionMember(db: D1Database, token: string) {
   return db
     .prepare(
       `SELECT m.id, m.email, m.password_hash, m.display_name, m.role, m.access_role, m.branches_json, m.account_status, m.last_signed_in_at,
+    m.public_member_id, m.member_term, m.member_rank, m.discord_roles_json,
+    m.achievement_badges_json, m.profile_json, m.xp, m.participation_count,
+    m.organizer_count, s.subscription_started_at,
     s.billing_email, s.square_status, s.access_status, s.paid_until_date, s.grace_until_date
     FROM member_sessions ms
     JOIN members m ON m.id = ms.member_id

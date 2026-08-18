@@ -28,6 +28,15 @@ export type User = {
   role: UserRole;
   branch: BranchRole | null;
   branches: BranchRole[];
+  memberId?: string | null;
+  memberTerm?: string | null;
+  memberRank?: string;
+  joinedAt?: string | null;
+  achievementBadges?: string[];
+  profile?: Record<string, unknown>;
+  xp?: number;
+  participationCount?: number;
+  organizerCount?: number;
 };
 
 function deserializeUser(value: string): User | null {
@@ -50,6 +59,15 @@ function deserializeUser(value: string): User | null {
     role: normalizeUserRole(candidate.role),
     branch: normalizeBranchRole(candidate.branch),
     branches: normalizeBranchRoles(candidate.branches, candidate.branch),
+    memberId: typeof candidate.memberId === "string" ? candidate.memberId : null,
+    memberTerm: typeof candidate.memberTerm === "string" ? candidate.memberTerm : null,
+    memberRank: typeof candidate.memberRank === "string" ? candidate.memberRank : "regular",
+    joinedAt: typeof candidate.joinedAt === "string" ? candidate.joinedAt : null,
+    achievementBadges: Array.isArray(candidate.achievementBadges) ? candidate.achievementBadges.filter((item): item is string => typeof item === "string") : [],
+    profile: candidate.profile && typeof candidate.profile === "object" && !Array.isArray(candidate.profile) ? candidate.profile : {},
+    xp: typeof candidate.xp === "number" ? candidate.xp : 0,
+    participationCount: typeof candidate.participationCount === "number" ? candidate.participationCount : 0,
+    organizerCount: typeof candidate.organizerCount === "number" ? candidate.organizerCount : 0,
   };
 }
 

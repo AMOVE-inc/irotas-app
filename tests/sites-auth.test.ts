@@ -8,6 +8,8 @@ import {
   isTrustedBrowserOrigin,
   isBootstrapAdminEmail,
   normalizeBranchSelection,
+  cleanMemberDisplayName,
+  effectiveMemberRank,
   verifyPassword,
 } from "../sites/auth";
 import {
@@ -37,6 +39,12 @@ describe("Sites production authentication", () => {
     expect(normalizeBranchSelection([])).toBeNull();
     expect(normalizeBranchSelection(["kanto", "kanto"])).toBeNull();
     expect(normalizeBranchSelection(["unknown"])).toBeNull();
+  });
+
+  it("uses the authenticated Discord member identity instead of demo rank decorations", () => {
+    expect(cleanMemberDisplayName("Aoi【🥇GOLD 】")).toBe("Aoi");
+    expect(cleanMemberDisplayName("みょん🍳料理教室部長 【💎PLATINUM 】")).toBe("みょん🍳料理教室部長");
+    expect(effectiveMemberRank("regular", '["レギュラー会員","🥇GOLD会員"]')).toBe("gold");
   });
 
   it("hashes and verifies passwords without storing the plaintext", async () => {

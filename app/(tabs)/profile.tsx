@@ -19,7 +19,7 @@ import { getEventParticipationStatus } from "@/lib/event-participation";
 import { getIrotasPoints, isFeeExempt, RANK_UP_BONUS } from "@/lib/irotas-points-store";
 import { Image } from "expo-image";
 import { useFocusEffect, useRouter } from "expo-router";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Alert,
   Linking,
@@ -37,7 +37,7 @@ import * as ImagePicker from "expo-image-picker";
 import * as Clipboard from "expo-clipboard";
 import { OFFICIAL_INSTAGRAM_URL } from "@/constants/external-links";
 import { GOURMET_GENRES } from "@/constants/event-options";
-import { BIRTH_YEARS, DAYS, DRINKING_LEVELS, GOOGLE_LOCAL_GUIDE_LEVELS, MONTHS, PREFECTURES, PROFILE_DETAILS_STORAGE_KEY, type ProfileDetails } from "@/constants/profile-options";
+import { BIRTH_YEARS, DAYS, DRINKING_LEVELS, GOOGLE_LOCAL_GUIDE_LEVELS, MONTHS, PREFECTURES, type ProfileDetails } from "@/constants/profile-options";
 import { isOperatorRole } from "@/lib/access-control";
 import { getPublishedAgeBand } from "@/lib/member-age";
 import { trpc } from "@/lib/trpc";
@@ -46,6 +46,33 @@ import { SocialMemberListModal } from "@/components/social-member-list-modal";
 const GENDER_OPTIONS = ["男性", "女性", "その他"] as const;
 const genderLabel = (gender: "male" | "female" | "other" | "unset") => ({ male: "男性", female: "女性", other: "その他", unset: "" })[gender];
 const genderValue = (label: string): "male" | "female" | "other" | "unset" => ({ 男性: "male", 女性: "female", その他: "other" } as const)[label as "男性" | "女性" | "その他"] ?? "unset";
+
+const profileString = (profile: Record<string, unknown>, key: string) =>
+  typeof profile[key] === "string" ? profile[key] as string : "";
+const profileBoolean = (profile: Record<string, unknown>, key: string) =>
+  typeof profile[key] === "boolean" ? profile[key] as boolean : false;
+const profileStrings = (profile: Record<string, unknown>, key: string) =>
+  Array.isArray(profile[key]) ? (profile[key] as unknown[]).filter((item): item is string => typeof item === "string") : [];
+
+function profileDetailsFromRecord(profile: Record<string, unknown>): ProfileDetails {
+  return {
+    birthDate: profileString(profile, "birthDate"),
+    showAge: profileBoolean(profile, "showAge"),
+    hometown: profileString(profile, "hometown"),
+    residence: profileString(profile, "residence"),
+    occupation: profileString(profile, "occupation"),
+    hobbies: profileString(profile, "hobbies"),
+    favoriteCuisines: profileStrings(profile, "favoriteCuisines"),
+    favoriteAlcohol: profileString(profile, "favoriteAlcohol"),
+    dislikedFoods: profileString(profile, "dislikedFoods"),
+    allergies: profileString(profile, "allergies"),
+    drinkingLevel: profileString(profile, "drinkingLevel"),
+    instagramUrl: profileString(profile, "instagramUrl"),
+    favoriteRestaurants: profileString(profile, "favoriteRestaurants"),
+    desiredRestaurants: profileString(profile, "desiredRestaurants"),
+    googleLocalGuideLevel: profileString(profile, "googleLocalGuideLevel"),
+  };
+}
 
 function ProfileSelectField({ label, value, options, onChange }: { label: string; value: string; options: readonly string[]; onChange: (value: string) => void }) {
   const colors = useColors();
@@ -320,6 +347,11 @@ function EditProfileModal({
   onInterestsChange,
   onNameChange,
   onDetailsChange,
+  storageNamespace,
+  initialName,
+  initialBio,
+  initialInterests,
+  initialDetails,
 }: {
   visible: boolean;
   onClose: () => void;
@@ -328,6 +360,11 @@ function EditProfileModal({
   onInterestsChange?: (interests: string[]) => void;
   onNameChange?: (name: string) => void;
   onDetailsChange?: (details: ProfileDetails) => void;
+  storageNamespace: string;
+  initialName: string;
+  initialBio: string;
+  initialInterests: string[];
+  initialDetails: ProfileDetails;
 }) {
   const colors = useColors();
   const [name, setName] = useState("");
@@ -357,39 +394,39 @@ function EditProfileModal({
     if (!visible) return;
     import("@react-native-async-storage/async-storage").then(({ default: AsyncStorage }) => {
       Promise.all([
-        AsyncStorage.getItem("profile_name"),
-        AsyncStorage.getItem("profile_bio"),
-        AsyncStorage.getItem("profile_interests"),
-        AsyncStorage.getItem("profile_avatar_uri"),
-        AsyncStorage.getItem("profile_gender"),
-        AsyncStorage.getItem(PROFILE_DETAILS_STORAGE_KEY),
+        AsyncStorage.getItem(`${storageNamespace}:name`),
+        AsyncStorage.getItem(`${storageNamespace}:bio`),
+        AsyncStorage.getItem(`${storageNamespace}:interests`),
+        AsyncStorage.getItem(`${storageNamespace}:avatar`),
+        AsyncStorage.getItem(`${storageNamespace}:gender`),
+        AsyncStorage.getItem(`${storageNamespace}:details`),
       ]).then(([savedName, savedBio, savedInterests, savedAvatar, savedGender, savedDetails]) => {
-        setName(savedName ?? CURRENT_USER.name ?? "");
-        setBio(savedBio ?? CURRENT_USER.bio ?? "");
+        setName(savedName ?? initialName);
+        setBio(savedBio ?? initialBio);
         const storedInterests = savedInterests?.split(",").map((item) => item.trim()).filter(Boolean);
-        setInterests(storedInterests?.length ? storedInterests : (CURRENT_USER.favoriteCuisines ?? CURRENT_USER.interests ?? []));
-        if (savedAvatar) setAvatarUri(savedAvatar);
+        setInterests(storedInterests?.length ? storedInterests : initialInterests);
+        setAvatarUri(savedAvatar);
         if (savedGender) setGender(savedGender as "male" | "female" | "other" | "unset");
         const details = savedDetails ? JSON.parse(savedDetails) as Partial<ProfileDetails> : {};
-        const birthDate = details.birthDate ?? CURRENT_USER.birthDate ?? "";
+        const birthDate = details.birthDate ?? initialDetails.birthDate ?? "";
         const [year = "", month = "", day = ""] = birthDate.split("-");
         setBirthYear(year); setBirthMonth(month); setBirthDay(day);
-        setShowAge(details.showAge ?? CURRENT_USER.showAge ?? false);
-        setHometown(details.hometown ?? CURRENT_USER.hometown ?? "");
-        setResidence(details.residence ?? CURRENT_USER.residence ?? "");
-        setOccupation(details.occupation ?? CURRENT_USER.occupation ?? "");
-        setHobbies(details.hobbies ?? CURRENT_USER.hobbies ?? "");
-        setFavoriteAlcohol(details.favoriteAlcohol ?? CURRENT_USER.favoriteAlcohol ?? "");
-        setDislikedFoods(details.dislikedFoods ?? CURRENT_USER.dislikedFoods ?? "");
-        setAllergies(details.allergies ?? CURRENT_USER.allergies ?? "");
-        setDrinkingLevel(details.drinkingLevel ?? CURRENT_USER.drinkingLevel ?? "");
-        setInstagramUrl(details.instagramUrl ?? CURRENT_USER.instagramUrl ?? "");
-        setFavoriteRestaurants(details.favoriteRestaurants ?? CURRENT_USER.favoriteRestaurants ?? "");
-        setDesiredRestaurants(details.desiredRestaurants ?? CURRENT_USER.desiredRestaurants ?? "");
-        setGoogleLocalGuideLevel(details.googleLocalGuideLevel ?? CURRENT_USER.googleLocalGuideLevel ?? "");
+        setShowAge(details.showAge ?? initialDetails.showAge ?? false);
+        setHometown(details.hometown ?? initialDetails.hometown ?? "");
+        setResidence(details.residence ?? initialDetails.residence ?? "");
+        setOccupation(details.occupation ?? initialDetails.occupation ?? "");
+        setHobbies(details.hobbies ?? initialDetails.hobbies ?? "");
+        setFavoriteAlcohol(details.favoriteAlcohol ?? initialDetails.favoriteAlcohol ?? "");
+        setDislikedFoods(details.dislikedFoods ?? initialDetails.dislikedFoods ?? "");
+        setAllergies(details.allergies ?? initialDetails.allergies ?? "");
+        setDrinkingLevel(details.drinkingLevel ?? initialDetails.drinkingLevel ?? "");
+        setInstagramUrl(details.instagramUrl ?? initialDetails.instagramUrl ?? "");
+        setFavoriteRestaurants(details.favoriteRestaurants ?? initialDetails.favoriteRestaurants ?? "");
+        setDesiredRestaurants(details.desiredRestaurants ?? initialDetails.desiredRestaurants ?? "");
+        setGoogleLocalGuideLevel(details.googleLocalGuideLevel ?? initialDetails.googleLocalGuideLevel ?? "");
       });
     });
-  }, [visible]);
+  }, [visible, storageNamespace, initialName, initialBio, initialInterests, initialDetails]);
 
   const handlePickPhoto = async () => {
     // 権限を事前にリクエスト（初回のみ許可ダイアログが表示される）
@@ -431,11 +468,11 @@ function EditProfileModal({
     }
     const AsyncStorage = (await import("@react-native-async-storage/async-storage")).default;
     // nameシbio・interests・avatar・genderをAsyncStorageに保存
-    await AsyncStorage.setItem("profile_name", name.trim());
-    await AsyncStorage.setItem("profile_bio", bio);
+    await AsyncStorage.setItem(`${storageNamespace}:name`, name.trim());
+    await AsyncStorage.setItem(`${storageNamespace}:bio`, bio);
     const interestList = interests;
-    await AsyncStorage.setItem("profile_interests", interests.join(","));
-    await AsyncStorage.setItem("profile_gender", gender);
+    await AsyncStorage.setItem(`${storageNamespace}:interests`, interests.join(","));
+    await AsyncStorage.setItem(`${storageNamespace}:gender`, gender);
     const details: ProfileDetails = {
       birthDate: birthYear && birthMonth && birthDay ? `${birthYear}-${birthMonth}-${birthDay}` : "",
       showAge, hometown, residence, occupation: occupation.trim(), hobbies: hobbies.trim(), favoriteCuisines: interests,
@@ -444,9 +481,9 @@ function EditProfileModal({
       favoriteRestaurants: favoriteRestaurants.trim(), desiredRestaurants: desiredRestaurants.trim(),
       googleLocalGuideLevel: googleLocalGuideLevel === "未設定" ? "" : googleLocalGuideLevel,
     };
-    await AsyncStorage.setItem(PROFILE_DETAILS_STORAGE_KEY, JSON.stringify(details));
+    await AsyncStorage.setItem(`${storageNamespace}:details`, JSON.stringify(details));
     if (avatarUri) {
-      await AsyncStorage.setItem("profile_avatar_uri", avatarUri);
+      await AsyncStorage.setItem(`${storageNamespace}:avatar`, avatarUri);
       onAvatarChange?.(avatarUri);
     }
     onNameChange?.(name.trim());
@@ -687,8 +724,35 @@ export default function ProfileScreen() {
     }
     router.replace("/login");
   }, [logout, router]);
-  const user = CURRENT_USER;
-  const { data: achievementBadges = [] } = trpc.memberData.achievementBadges.useQuery(undefined, { enabled: Boolean(authUser) });
+  const isRealMember = authUser?.loginMethod === "email";
+  const serverProfile = useMemo(() => authUser?.profile ?? {}, [authUser?.profile]);
+  const serverDetails = useMemo(() => profileDetailsFromRecord(serverProfile), [serverProfile]);
+  const authenticatedRank: MemberRank = ["regular", "silver", "gold", "platinum"].includes(authUser?.memberRank ?? "")
+    ? authUser!.memberRank as MemberRank
+    : "regular";
+  const authenticatedGeneration = Number(authUser?.memberTerm?.match(/\d+/)?.[0] ?? 0);
+  const user = useMemo(() => isRealMember ? {
+    ...CURRENT_USER,
+    id: String(authUser.id),
+    name: authUser.name || authUser.email?.split("@")[0] || "会員",
+    rank: authenticatedRank,
+    points: authUser.xp ?? 0,
+    level: 1,
+    branch: authUser.branch ?? "kanto",
+    generation: authenticatedGeneration,
+    bio: profileString(serverProfile, "bio"),
+    interests: profileStrings(serverProfile, "favoriteCuisines"),
+    favoriteCuisines: profileStrings(serverProfile, "favoriteCuisines"),
+    role: authUser.role === "admin" ? "admin" as const : authUser.role === "operator" ? "operator" as const : "member" as const,
+    joinedAt: authUser.joinedAt ?? "",
+    participationCount: authUser.participationCount ?? 0,
+    organizerCount: authUser.organizerCount ?? 0,
+    followerCount: 0,
+    followingCount: 0,
+  } : CURRENT_USER, [authUser, authenticatedGeneration, authenticatedRank, isRealMember, serverProfile]);
+  const storageNamespace = `profile:${authUser?.id ?? user.id}`;
+  const { data: queriedAchievementBadges = [] } = trpc.memberData.achievementBadges.useQuery(undefined, { enabled: Boolean(authUser) });
+  const achievementBadges = authUser?.achievementBadges?.length ? authUser.achievementBadges : queriedAchievementBadges;
   const { data: memberIdentity } = trpc.memberData.identity.useQuery(undefined, { enabled: Boolean(authUser) });
   const selectedBranches = authUser?.branches?.length
     ? authUser.branches
@@ -704,23 +768,16 @@ export default function ProfileScreen() {
   const [myRooms, setMyRooms] = useState(() => getMyRooms(user.id));
   const [participatingEvents, setParticipatingEvents] = useState<Event[]>([]);
   const [avatarUri, setAvatarUri] = useState<string | null>(null);
-  const [profileName, setProfileName] = useState<string>(CURRENT_USER.name ?? "");
-  const [profileBio, setProfileBio] = useState<string>(CURRENT_USER.bio ?? "");
-  const [profileInterests, setProfileInterests] = useState<string[]>(CURRENT_USER.favoriteCuisines ?? CURRENT_USER.interests ?? []);
-  const [profileDetails, setProfileDetails] = useState<ProfileDetails>({
-    birthDate: CURRENT_USER.birthDate ?? "", showAge: CURRENT_USER.showAge ?? false,
-    hometown: CURRENT_USER.hometown ?? "", residence: CURRENT_USER.residence ?? "", occupation: CURRENT_USER.occupation ?? "",
-    hobbies: CURRENT_USER.hobbies ?? "", favoriteCuisines: CURRENT_USER.favoriteCuisines ?? CURRENT_USER.interests ?? [],
-    favoriteAlcohol: CURRENT_USER.favoriteAlcohol ?? "", dislikedFoods: CURRENT_USER.dislikedFoods ?? "", allergies: CURRENT_USER.allergies ?? "",
-    drinkingLevel: CURRENT_USER.drinkingLevel ?? "", instagramUrl: CURRENT_USER.instagramUrl ?? "",
-    favoriteRestaurants: CURRENT_USER.favoriteRestaurants ?? "", desiredRestaurants: CURRENT_USER.desiredRestaurants ?? "",
-    googleLocalGuideLevel: CURRENT_USER.googleLocalGuideLevel ?? "",
-  });
+  const [profileName, setProfileName] = useState<string>("");
+  const [profileBio, setProfileBio] = useState<string>("");
+  const [profileInterests, setProfileInterests] = useState<string[]>([]);
+  const [profileDetails, setProfileDetails] = useState<ProfileDetails>(profileDetailsFromRecord({}));
   const [memberId, setMemberId] = useState<string>("");
   useEffect(() => {
-    if (memberIdentity?.memberId) setMemberId(memberIdentity.memberId);
+    if (authUser?.memberId) setMemberId(authUser.memberId);
+    else if (memberIdentity?.memberId) setMemberId(memberIdentity.memberId);
     if (memberIdentity?.displayName) setProfileName((current) => current || memberIdentity.displayName || "");
-  }, [memberIdentity]);
+  }, [authUser?.memberId, memberIdentity]);
   // イロタスポイント
   const [irotasPoints, setIrotasPoints] = useState(0);
   const [feeExempt, setFeeExempt] = useState(false);
@@ -728,43 +785,48 @@ export default function ProfileScreen() {
   useFocusEffect(
     useCallback(() => {
       setMyRooms(getMyRooms(user.id));
-      setParticipatingEvents(getAllEvents(EVENTS)
+      setParticipatingEvents(isRealMember ? [] : getAllEvents(EVENTS)
         .filter((event) => getEventParticipationStatus(event, user.id) !== null)
         .sort((a, b) => Date.parse(`${a.date}T${a.time}:00`) - Date.parse(`${b.date}T${b.time}:00`)));
       // AsyncStorageから保存済みデータを読み込む
       import("@react-native-async-storage/async-storage").then(({ default: AsyncStorage }) => {
         Promise.all([
-          AsyncStorage.getItem("profile_avatar_uri"),
-          AsyncStorage.getItem("profile_name"),
-          AsyncStorage.getItem("profile_bio"),
-          AsyncStorage.getItem("profile_interests"),
-          AsyncStorage.getItem("member_id"),
-          AsyncStorage.getItem(PROFILE_DETAILS_STORAGE_KEY),
-        ]).then(([uri, savedName, savedBio, savedInterests, savedMemberId, savedDetails]) => {
-          if (uri) setAvatarUri(uri);
-          if (savedName !== null) setProfileName(savedName);
-          if (savedBio !== null) setProfileBio(savedBio);
+          AsyncStorage.getItem(`${storageNamespace}:avatar`),
+          AsyncStorage.getItem(`${storageNamespace}:name`),
+          AsyncStorage.getItem(`${storageNamespace}:bio`),
+          AsyncStorage.getItem(`${storageNamespace}:interests`),
+          AsyncStorage.getItem(`${storageNamespace}:details`),
+        ]).then(([uri, savedName, savedBio, savedInterests, savedDetails]) => {
+          setAvatarUri(uri);
+          setProfileName(savedName ?? user.name);
+          setProfileBio(savedBio ?? user.bio);
           if (savedInterests !== null) {
             const list = savedInterests.split(",").map((s) => s.trim()).filter(Boolean);
             setProfileInterests(list);
-          }
-          if (memberIdentity?.memberId) {
+          } else setProfileInterests(user.favoriteCuisines ?? user.interests ?? []);
+          if (authUser?.memberId) {
+            setMemberId(authUser.memberId);
+          } else if (memberIdentity?.memberId) {
             setMemberId(memberIdentity.memberId);
-          } else if (savedMemberId) {
-            setMemberId(savedMemberId);
           } else {
-            // プレビュー用。実会員はサブスク登録日時順のDB採番を表示する。
-            const newId = "IRO-000001";
-            AsyncStorage.setItem("member_id", newId);
-            setMemberId(newId);
+            setMemberId(isRealMember ? "" : "IRO-000001");
           }
-          if (savedDetails) setProfileDetails(JSON.parse(savedDetails) as ProfileDetails);
+          setProfileDetails(savedDetails ? JSON.parse(savedDetails) as ProfileDetails : (isRealMember ? serverDetails : {
+            ...profileDetailsFromRecord({}),
+            birthDate: user.birthDate ?? "", showAge: user.showAge ?? false,
+            hometown: user.hometown ?? "", residence: user.residence ?? "", occupation: user.occupation ?? "",
+            hobbies: user.hobbies ?? "", favoriteCuisines: user.favoriteCuisines ?? user.interests ?? [],
+            favoriteAlcohol: user.favoriteAlcohol ?? "", dislikedFoods: user.dislikedFoods ?? "", allergies: user.allergies ?? "",
+            drinkingLevel: user.drinkingLevel ?? "", instagramUrl: user.instagramUrl ?? "",
+            favoriteRestaurants: user.favoriteRestaurants ?? "", desiredRestaurants: user.desiredRestaurants ?? "",
+            googleLocalGuideLevel: user.googleLocalGuideLevel ?? "",
+          }));
         });
       });
       // イロタスポイント・会費免除を読み込む
       getIrotasPoints(user.id).then(setIrotasPoints);
       isFeeExempt(user.id).then(setFeeExempt);
-    }, [memberIdentity?.memberId, user.id])
+    }, [authUser?.memberId, isRealMember, memberIdentity?.memberId, serverDetails, storageNamespace, user])
   );
 
   const publishedAge = getPublishedAgeBand(profileDetails.birthDate, profileDetails.showAge);
@@ -1292,6 +1354,11 @@ export default function ProfileScreen() {
         onBioChange={(bio) => setProfileBio(bio)}
         onInterestsChange={(list) => setProfileInterests(list)}
         onDetailsChange={(details) => setProfileDetails(details)}
+        storageNamespace={storageNamespace}
+        initialName={profileName || user.name}
+        initialBio={profileBio}
+        initialInterests={profileInterests}
+        initialDetails={profileDetails}
       />
       <SocialMemberListModal visible={socialList !== null} kind={socialList ?? "followers"} onClose={() => setSocialList(null)} />
     </ScreenContainer>

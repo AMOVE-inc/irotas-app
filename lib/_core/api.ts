@@ -19,6 +19,15 @@ export type AuthApiUser = {
   role: Auth.UserRole;
   branch: Auth.BranchRole | null;
   branches: Auth.BranchRole[] | null;
+  memberId: string | null;
+  memberTerm: string | null;
+  memberRank: string;
+  joinedAt: string | null;
+  achievementBadges: string[];
+  profile: Record<string, unknown>;
+  xp: number;
+  participationCount: number;
+  organizerCount: number;
 };
 
 export type PublicMember = {

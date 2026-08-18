@@ -59,6 +59,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             role: Auth.normalizeUserRole(apiUser.role),
             branch: Auth.normalizeBranchRole(apiUser.branch),
             branches: Auth.normalizeBranchRoles(apiUser.branches, apiUser.branch),
+            memberId: apiUser.memberId,
+            memberTerm: apiUser.memberTerm,
+            memberRank: apiUser.memberRank,
+            joinedAt: apiUser.joinedAt,
+            achievementBadges: apiUser.achievementBadges,
+            profile: apiUser.profile,
+            xp: apiUser.xp,
+            participationCount: apiUser.participationCount,
+            organizerCount: apiUser.organizerCount,
           };
           setUser(userInfo);
           await Auth.setUserInfo(userInfo);
