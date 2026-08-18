@@ -17,6 +17,7 @@ type SquareRetrieveResponse = {
 };
 
 const SQUARE_VERSION = "2026-07-15";
+export const SQUARE_SYNC_BATCH_SIZE = 40;
 const VALID_STATUSES = new Set([
   "PENDING",
   "ACTIVE",
@@ -79,13 +80,25 @@ export function subscriptionAccessState(
 async function retrieveRegisteredSubscriptions(
   db: D1Database,
   accessToken: string,
+  offset: number,
 ) {
+  const countRow = await db
+    .prepare(
+      `SELECT COUNT(*) AS count
+       FROM member_subscriptions
+       WHERE square_subscription_id IS NOT NULL AND square_subscription_id != ''`,
+    )
+    .first<{ count: number }>();
+  const total = Number(countRow?.count ?? 0);
   const result = await db
     .prepare(
       `SELECT square_subscription_id
        FROM member_subscriptions
-       WHERE square_subscription_id IS NOT NULL AND square_subscription_id != ''`,
+       WHERE square_subscription_id IS NOT NULL AND square_subscription_id != ''
+       ORDER BY id
+       LIMIT ? OFFSET ?`,
     )
+    .bind(SQUARE_SYNC_BATCH_SIZE, offset)
     .all<{ square_subscription_id: string }>();
   const ids = (result.results ?? []).map((row) => row.square_subscription_id);
   const subscriptions: SquareSubscription[] = [];
@@ -116,7 +129,15 @@ async function retrieveRegisteredSubscriptions(
       else failed += 1;
     }
   }
-  return { subscriptions, scanned: ids.length, failed };
+  const nextOffset = offset + ids.length;
+  return {
+    subscriptions,
+    scanned: ids.length,
+    failed,
+    total,
+    nextOffset,
+    hasMore: nextOffset < total,
+  };
 }
 
 async function reconcileSubscriptions(
@@ -178,6 +199,11 @@ export async function handleSquareSyncRequest(
     return Response.json({ error: "Square連携が設定されていません" }, { status: 503 });
 
   try {
+    const input = (await request.json().catch(() => ({}))) as Record<string, unknown>;
+    const requestedOffset = Number(input.offset ?? 0);
+    const offset = Number.isInteger(requestedOffset) && requestedOffset >= 0
+      ? requestedOffset
+      : 0;
     const now = new Date().toISOString();
     const allowedPlanIds = new Set(
       (env.SQUARE_ALLOWED_PLAN_VARIATION_IDS ?? "")
@@ -188,6 +214,7 @@ export async function handleSquareSyncRequest(
     const retrieved = await retrieveRegisteredSubscriptions(
       env.DB,
       env.SQUARE_ACCESS_TOKEN,
+      offset,
     );
     const subscriptions = retrieved.subscriptions;
     const updated = await reconcileSubscriptions(
@@ -203,7 +230,15 @@ export async function handleSquareSyncRequest(
     )
       .bind(
         String(member.id),
-        JSON.stringify({ scanned: retrieved.scanned, updated, failed: retrieved.failed }),
+        JSON.stringify({
+          offset,
+          scanned: retrieved.scanned,
+          updated,
+          failed: retrieved.failed,
+          total: retrieved.total,
+          nextOffset: retrieved.nextOffset,
+          hasMore: retrieved.hasMore,
+        }),
         now,
       )
       .run();
@@ -212,6 +247,9 @@ export async function handleSquareSyncRequest(
       scanned: retrieved.scanned,
       updated,
       failed: retrieved.failed,
+      total: retrieved.total,
+      nextOffset: retrieved.nextOffset,
+      hasMore: retrieved.hasMore,
     });
   } catch (error) {
     console.error("Square subscription reconciliation failed", error instanceof Error ? error.message : "unknown");

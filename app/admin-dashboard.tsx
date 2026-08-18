@@ -85,6 +85,7 @@ export default function AdminDashboardScreen() {
   const [newNote, setNewNote] = useState("");
   const [newAccessRole, setNewAccessRole] = useState<"member" | "club_leader" | "operator" | "admin">("member");
   const [squareSyncing, setSquareSyncing] = useState(false);
+  const [squareSyncProgress, setSquareSyncProgress] = useState<string | null>(null);
   const { data: allowedEmails, refetch: refetchEmails, isLoading: emailsLoading } = trpc.allowedEmails.list.useQuery(
     undefined,
     { enabled: userIsAdmin && activeTab === "emails" },
@@ -483,11 +484,27 @@ export default function AdminDashboardScreen() {
                 disabled={squareSyncing}
                 onPress={async () => {
                   setSquareSyncing(true);
+                  setSquareSyncProgress("Squareと照合を開始しています…");
                   try {
-                    const result = await syncSquareSubscriptions();
+                    let offset = 0;
+                    let scanned = 0;
+                    let updated = 0;
+                    let failed = 0;
+                    let total = 0;
+                    for (let batch = 0; batch < 100; batch += 1) {
+                      const result = await syncSquareSubscriptions(offset);
+                      scanned += result.scanned;
+                      updated += result.updated;
+                      failed += result.failed;
+                      total = result.total;
+                      setSquareSyncProgress(`${Math.min(scanned, total)} / ${total}件を確認中`);
+                      if (!result.hasMore) break;
+                      if (result.nextOffset <= offset) throw new Error("同期位置を更新できませんでした");
+                      offset = result.nextOffset;
+                    }
                     Alert.alert(
                       "同期完了",
-                      `${result.scanned}件を確認し、登録済み会員${result.updated}件を更新しました。${result.failed ? `\n確認できなかったもの: ${result.failed}件` : ""}`,
+                      `${scanned}件を確認し、登録済み会員${updated}件を更新しました。${failed ? `\n確認できなかったもの: ${failed}件` : ""}`,
                     );
                   } catch (error) {
                     Alert.alert(
@@ -496,6 +513,7 @@ export default function AdminDashboardScreen() {
                     );
                   } finally {
                     setSquareSyncing(false);
+                    setSquareSyncProgress(null);
                   }
                 }}
                 style={{
@@ -514,6 +532,11 @@ export default function AdminDashboardScreen() {
                   </Text>
                 )}
               </Pressable>
+              {squareSyncProgress && (
+                <Text style={{ fontSize: 12, color: colors.muted, textAlign: "center", marginTop: 8 }}>
+                  {squareSyncProgress}
+                </Text>
+              )}
             </View>
 
             {/* KPIカード */}

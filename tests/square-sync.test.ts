@@ -1,7 +1,16 @@
 import { describe, expect, it } from "vitest";
-import { isStrictAdmin, subscriptionAccessState } from "../sites/square-sync";
+import {
+  isStrictAdmin,
+  SQUARE_SYNC_BATCH_SIZE,
+  subscriptionAccessState,
+} from "../sites/square-sync";
 
 describe("Square subscription reconciliation", () => {
+  it("keeps each synchronization batch below the worker subrequest limit", () => {
+    expect(SQUARE_SYNC_BATCH_SIZE).toBe(40);
+    expect(SQUARE_SYNC_BATCH_SIZE).toBeLessThan(50);
+  });
+
   it("allows administrators but not operators", () => {
     expect(isStrictAdmin({ role: "admin", access_role: "admin" })).toBe(true);
     expect(isStrictAdmin({ role: "user", access_role: "admin" })).toBe(true);

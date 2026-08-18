@@ -301,10 +301,18 @@ export async function reviewEventCancellation(eventId: string, memberId: string,
   return result.event;
 }
 
-export async function syncSquareSubscriptions() {
-  return apiCall<{ success: boolean; scanned: number; updated: number; failed: number }>(
+export async function syncSquareSubscriptions(offset = 0) {
+  return apiCall<{
+    success: boolean;
+    scanned: number;
+    updated: number;
+    failed: number;
+    total: number;
+    nextOffset: number;
+    hasMore: boolean;
+  }>(
     "/api/admin/square-sync",
-    { method: "POST" },
+    { method: "POST", body: JSON.stringify({ offset }) },
   );
 }
 
