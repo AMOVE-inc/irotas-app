@@ -325,6 +325,23 @@ export async function syncSquareSubscriptions(offset = 0) {
   );
 }
 
+export type MembershipSummary = {
+  total: number;
+  active: number;
+  grace: number;
+  suspended: number;
+  pending: number;
+  missingSubscription: number;
+  webhookEvents: number;
+  webhookFailures: number;
+  lastVerifiedAt: string | null;
+  lastWebhookAt: string | null;
+};
+
+export async function getMembershipSummary() {
+  return apiCall<MembershipSummary>("/api/admin/membership-summary");
+}
+
 // Establish session cookie on the backend (3000-xxx domain)
 // Called after receiving token via postMessage to get a proper Set-Cookie from the backend
 export async function establishSession(token: string): Promise<boolean> {

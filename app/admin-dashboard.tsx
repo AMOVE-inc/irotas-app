@@ -38,7 +38,7 @@ import { sendLeaderAppointmentNotification } from "@/lib/notifications";
 import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
 import { loadImportedGourmetContests, type ImportedGourmetContest } from "@/lib/gourmet-contest-import";
-import { syncSquareSubscriptions } from "@/lib/_core/api";
+import { getMembershipSummary, syncSquareSubscriptions, type MembershipSummary } from "@/lib/_core/api";
 
 type PointsHistoryEntry = {
   id: string;
@@ -86,6 +86,21 @@ export default function AdminDashboardScreen() {
   const [newAccessRole, setNewAccessRole] = useState<"member" | "club_leader" | "operator" | "admin">("member");
   const [squareSyncing, setSquareSyncing] = useState(false);
   const [squareSyncProgress, setSquareSyncProgress] = useState<string | null>(null);
+  const [membershipSummary, setMembershipSummary] = useState<MembershipSummary | null>(null);
+  const [membershipSummaryLoading, setMembershipSummaryLoading] = useState(false);
+  const loadMembershipSummary = async () => {
+    setMembershipSummaryLoading(true);
+    try {
+      setMembershipSummary(await getMembershipSummary());
+    } catch {
+      setMembershipSummary(null);
+    } finally {
+      setMembershipSummaryLoading(false);
+    }
+  };
+  useEffect(() => {
+    if (userIsAdmin && activeTab === "overview") void loadMembershipSummary();
+  }, [userIsAdmin, activeTab]);
   const { data: allowedEmails, refetch: refetchEmails, isLoading: emailsLoading } = trpc.allowedEmails.list.useQuery(
     undefined,
     { enabled: userIsAdmin && activeTab === "emails" },
@@ -480,6 +495,34 @@ export default function AdminDashboardScreen() {
               <Text style={{ fontSize: 13, lineHeight: 20, color: colors.muted, marginTop: 6, marginBottom: 12 }}>
                 Squareのサブスク状態だけを照合します。カード番号・支払額などの決済情報は取得・表示しません。
               </Text>
+              {membershipSummaryLoading ? (
+                <ActivityIndicator color="#E8A0BF" style={{ marginVertical: 8 }} />
+              ) : membershipSummary ? (
+                <View style={{ marginBottom: 14 }}>
+                  <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+                    {[
+                      ["有効", membershipSummary.active, "#237A3B", "#E6F6EA"],
+                      ["猶予中", membershipSummary.grace, "#9A6700", "#FFF4D6"],
+                      ["停止", membershipSummary.suspended, "#B42318", "#FDECEC"],
+                      ["確認待ち", membershipSummary.pending, "#586174", "#F1F2F4"],
+                    ].map(([label, value, color, background]) => (
+                      <View key={String(label)} style={{ width: "48%", borderRadius: 10, backgroundColor: String(background), paddingHorizontal: 12, paddingVertical: 10 }}>
+                        <Text style={{ fontSize: 11, color: String(color), fontWeight: "700" }}>{label}</Text>
+                        <Text style={{ fontSize: 22, color: String(color), fontWeight: "900", marginTop: 2 }}>{Number(value).toLocaleString()}件</Text>
+                      </View>
+                    ))}
+                  </View>
+                  <Text style={{ fontSize: 11, lineHeight: 17, color: colors.muted, marginTop: 9 }}>
+                    Square紐づけ済み {membershipSummary.total.toLocaleString()}件／未紐づけ {membershipSummary.missingSubscription.toLocaleString()}件{"\n"}
+                    自動通知 {membershipSummary.webhookEvents.toLocaleString()}件（エラー {membershipSummary.webhookFailures.toLocaleString()}件）
+                  </Text>
+                  {membershipSummary.lastVerifiedAt ? (
+                    <Text style={{ fontSize: 10, color: colors.muted, marginTop: 4 }}>
+                      最終一括確認：{new Date(membershipSummary.lastVerifiedAt).toLocaleString("ja-JP")}
+                    </Text>
+                  ) : null}
+                </View>
+              ) : null}
               <Pressable
                 disabled={squareSyncing}
                 onPress={async () => {
@@ -506,6 +549,7 @@ export default function AdminDashboardScreen() {
                       "同期完了",
                       `${scanned}件を確認し、登録済み会員${updated}件を更新しました。${failed ? `\n確認できなかったもの: ${failed}件` : ""}`,
                     );
+                    await loadMembershipSummary();
                   } catch (error) {
                     Alert.alert(
                       "同期できませんでした",

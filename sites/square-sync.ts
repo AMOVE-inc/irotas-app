@@ -198,15 +198,61 @@ export async function handleSquareSyncRequest(
   env: SitesEnv,
 ): Promise<Response | null> {
   const { pathname } = new URL(request.url);
-  if (pathname !== "/api/admin/square-sync") return null;
-  if (request.method !== "POST")
-    return Response.json({ error: "Method not allowed" }, { status: 405 });
+  if (!["/api/admin/square-sync", "/api/admin/membership-summary"].includes(pathname)) return null;
 
   const member = await authenticatedRequestMember(request, env);
   if (!member) return Response.json({ error: "ログインが必要です" }, { status: 401 });
   if (!isStrictAdmin(member))
     return Response.json({ error: "管理者のみ実行できます" }, { status: 403 });
-  if (!env.DB || !env.SQUARE_ACCESS_TOKEN)
+  if (!env.DB)
+    return Response.json({ error: "会員DBが設定されていません" }, { status: 503 });
+
+  if (pathname === "/api/admin/membership-summary") {
+    if (request.method !== "GET")
+      return Response.json({ error: "Method not allowed" }, { status: 405 });
+    const [status, missing, webhook] = await Promise.all([
+      env.DB.prepare(
+        `SELECT COUNT(*) AS total,
+         SUM(CASE WHEN access_status = 'active' THEN 1 ELSE 0 END) AS active,
+         SUM(CASE WHEN access_status = 'grace' THEN 1 ELSE 0 END) AS grace,
+         SUM(CASE WHEN access_status = 'suspended' THEN 1 ELSE 0 END) AS suspended,
+         SUM(CASE WHEN access_status = 'pending' THEN 1 ELSE 0 END) AS pending,
+         MAX(last_verified_at) AS last_verified_at
+         FROM member_subscriptions`,
+      ).first<Record<string, number | string | null>>(),
+      env.DB.prepare(
+        `SELECT COUNT(*) AS count FROM members m
+         WHERE m.account_status = 'active' AND m.role = 'user' AND m.access_role = 'member'
+         AND NOT EXISTS (
+           SELECT 1 FROM member_subscriptions s
+           WHERE s.member_id = m.id OR s.billing_email = m.email
+         )`,
+      ).first<{ count: number }>(),
+      env.DB.prepare(
+        `SELECT COUNT(*) AS total,
+         SUM(CASE WHEN processing_error IS NOT NULL THEN 1 ELSE 0 END) AS failed,
+         MAX(received_at) AS last_received_at
+         FROM square_webhook_events`,
+      ).first<Record<string, number | string | null>>(),
+    ]);
+    const number = (value: unknown) => Number(value ?? 0) || 0;
+    return Response.json({
+      total: number(status?.total),
+      active: number(status?.active),
+      grace: number(status?.grace),
+      suspended: number(status?.suspended),
+      pending: number(status?.pending),
+      missingSubscription: number(missing?.count),
+      webhookEvents: number(webhook?.total),
+      webhookFailures: number(webhook?.failed),
+      lastVerifiedAt: typeof status?.last_verified_at === "string" ? status.last_verified_at : null,
+      lastWebhookAt: typeof webhook?.last_received_at === "string" ? webhook.last_received_at : null,
+    });
+  }
+
+  if (request.method !== "POST")
+    return Response.json({ error: "Method not allowed" }, { status: 405 });
+  if (!env.SQUARE_ACCESS_TOKEN)
     return Response.json({ error: "Square連携が設定されていません" }, { status: 503 });
 
   try {
