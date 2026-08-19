@@ -779,9 +779,18 @@ async function logout(request: Request, db: D1Database) {
       .prepare("DELETE FROM member_sessions WHERE token_hash = ?")
       .bind(await sha256(token))
       .run();
-  return responseJson({ success: true }, 200, {
-    "set-cookie": clearSessionCookie(),
-  });
+  const clearCookie = clearSessionCookie();
+  if (new URL(request.url).searchParams.get("redirect") === "login") {
+    return new Response(null, {
+      status: 303,
+      headers: {
+        "cache-control": "no-store",
+        location: "/login",
+        "set-cookie": clearCookie,
+      },
+    });
+  }
+  return responseJson({ success: true }, 200, { "set-cookie": clearCookie });
 }
 
 async function selectBranches(

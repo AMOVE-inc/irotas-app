@@ -74,11 +74,8 @@ export default function SelectBranchScreen() {
     setLoggingOut(true);
     setError("");
     try {
+      if (Api.submitBrowserLogout()) return;
       await logout();
-      if (Platform.OS === "web" && typeof window !== "undefined") {
-        window.location.replace("/login");
-        return;
-      }
       router.replace("/login");
     } catch {
       setError("ログアウトできませんでした。通信状況を確認してもう一度お試しください。");

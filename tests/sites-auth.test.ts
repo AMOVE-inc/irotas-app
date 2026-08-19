@@ -11,6 +11,7 @@ import {
   cleanMemberDisplayName,
   effectiveMemberRank,
   verifyPassword,
+  handleAuthRequest,
 } from "../sites/auth";
 import {
   preserveOverdueGrace,
@@ -19,6 +20,20 @@ import {
 } from "../sites/square-webhook";
 
 describe("Sites production authentication", () => {
+  it("clears the cookie before redirecting browser logout to login", async () => {
+    const response = await handleAuthRequest(
+      new Request("https://app.example/api/auth/logout?redirect=login", {
+        method: "POST",
+        headers: { origin: "https://app.example", "content-type": "application/json" },
+      }),
+      { DB: {} } as never,
+    );
+    expect(response?.status).toBe(303);
+    expect(response?.headers.get("location")).toBe("/login");
+    expect(response?.headers.get("set-cookie")).toContain("__Host-irotas_session=;");
+    expect(response?.headers.get("set-cookie")).toContain("Max-Age=0");
+  });
+
   it("normalizes billing email addresses", () => {
     expect(normalizeEmail("  Member@Example.COM ")).toBe("member@example.com");
   });

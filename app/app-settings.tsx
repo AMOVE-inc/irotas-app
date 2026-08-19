@@ -3,6 +3,8 @@ import { IconSymbol } from "@/components/ui/icon-symbol";
 import { useColors } from "@/hooks/use-colors";
 import { useRouter } from "expo-router";
 import { useState } from "react";
+import { useAuthContext } from "@/lib/auth-context";
+import * as Api from "@/lib/_core/api";
 import {
   Alert,
   Pressable,
@@ -15,6 +17,7 @@ import {
 export default function AppSettingsScreen() {
   const colors = useColors();
   const router = useRouter();
+  const { logout } = useAuthContext();
 
   const [settings, setSettings] = useState({
     pushNotifications: true,
@@ -59,7 +62,11 @@ export default function AppSettingsScreen() {
         {
           text: "ログアウト",
           style: "destructive",
-          onPress: () => router.replace("/login"),
+          onPress: async () => {
+            if (Api.submitBrowserLogout()) return;
+            await logout();
+            router.replace("/login");
+          },
         },
       ],
     );

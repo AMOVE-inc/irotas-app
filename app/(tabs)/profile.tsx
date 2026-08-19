@@ -42,6 +42,7 @@ import { isAdminRole, isOperatorRole } from "@/lib/access-control";
 import { getPublishedAgeBand } from "@/lib/member-age";
 import { trpc } from "@/lib/trpc";
 import { SocialMemberListModal } from "@/components/social-member-list-modal";
+import * as Api from "@/lib/_core/api";
 
 const GENDER_OPTIONS = ["男性", "女性", "その他"] as const;
 const genderLabel = (gender: "male" | "female" | "other" | "unset") => ({ male: "男性", female: "女性", other: "その他", unset: "" })[gender];
@@ -717,11 +718,8 @@ export default function ProfileScreen() {
   const router = useRouter();
   const { logout, user: authUser } = useAuthContext();
   const performLogout = useCallback(async () => {
+    if (Api.submitBrowserLogout()) return;
     await logout();
-    if (Platform.OS === "web" && typeof window !== "undefined") {
-      window.location.replace("/login");
-      return;
-    }
     router.replace("/login");
   }, [logout, router]);
   const isRealMember = authUser?.loginMethod === "email";

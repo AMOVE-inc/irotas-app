@@ -151,6 +151,21 @@ export async function logout(): Promise<void> {
   });
 }
 
+/**
+ * Web logout uses a top-level form navigation so the browser applies the
+ * Set-Cookie deletion before React can re-check the current session.
+ */
+export function submitBrowserLogout(): boolean {
+  if (Platform.OS !== "web" || typeof document === "undefined") return false;
+  const form = document.createElement("form");
+  form.method = "POST";
+  form.action = "/api/auth/logout?redirect=login";
+  form.style.display = "none";
+  document.body.appendChild(form);
+  form.submit();
+  return true;
+}
+
 export async function login(email: string, password: string) {
   return apiCall<{ success: boolean; sessionToken: string; user: AuthApiUser }>(
     "/api/auth/login",
