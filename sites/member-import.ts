@@ -246,6 +246,61 @@ function memberStatement(
     );
 }
 
+function reconcileApprovedDiscordAccessRoles(db: D1Database, now: string) {
+  return db
+    .prepare(
+      `UPDATE members
+       SET role = CASE
+             WHEN role = 'admin' OR access_role = 'admin' THEN 'admin'
+             WHEN EXISTS (
+               SELECT 1 FROM discord_access_role_assignments assignment
+               WHERE assignment.discord_user_id = members.discord_user_id
+                 AND assignment.intended_access_role = 'operator'
+             ) THEN 'operator'
+             ELSE role
+           END,
+           access_role = CASE
+             WHEN role = 'admin' OR access_role = 'admin' THEN 'admin'
+             WHEN EXISTS (
+               SELECT 1 FROM discord_access_role_assignments assignment
+               WHERE assignment.discord_user_id = members.discord_user_id
+                 AND assignment.intended_access_role = 'operator'
+             ) THEN 'operator'
+             WHEN access_role = 'member' AND EXISTS (
+               SELECT 1 FROM discord_access_role_assignments assignment
+               WHERE assignment.discord_user_id = members.discord_user_id
+                 AND assignment.intended_access_role = 'club_leader'
+             ) THEN 'club_leader'
+             ELSE access_role
+           END,
+           updated_at = ?
+       WHERE discord_user_id IN (SELECT discord_user_id FROM discord_access_role_assignments)`,
+    )
+    .bind(now);
+}
+
+function linkApprovedDiscordAccessRoles(db: D1Database, now: string) {
+  return db
+    .prepare(
+      `UPDATE discord_access_role_assignments
+       SET linked_member_id = (
+             SELECT members.id
+             FROM members
+             WHERE members.discord_user_id = discord_access_role_assignments.discord_user_id
+           ),
+           status = CASE
+             WHEN EXISTS (
+               SELECT 1
+               FROM members
+               WHERE members.discord_user_id = discord_access_role_assignments.discord_user_id
+             ) THEN 'linked'
+             ELSE 'pending'
+           END,
+           updated_at = ?`,
+    )
+    .bind(now);
+}
+
 async function importMembers(
   db: D1Database,
   rows: ValidatedMemberImport[],
@@ -282,7 +337,11 @@ async function importMembers(
     .run();
 
   try {
-    await db.batch(rows.map((row) => memberStatement(db, row, now)));
+    await db.batch([
+      ...rows.map((row) => memberStatement(db, row, now)),
+      reconcileApprovedDiscordAccessRoles(db, now),
+      linkApprovedDiscordAccessRoles(db, now),
+    ]);
     for (const row of rows) {
       const member = await db
         .prepare("SELECT id FROM members WHERE email = ?")
