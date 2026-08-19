@@ -55,8 +55,8 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const currentRoute = segments[0];
   const isForbidden = isAuthenticated && (
-    (isAdminRoute(currentRoute) && !isAdminRole(user?.role)) ||
-    (isOperatorRoute(currentRoute) && !isOperatorRole(user?.role))
+    (isAdminRoute(currentRoute) && !isAdminRole(user?.role, user?.accessRole)) ||
+    (isOperatorRoute(currentRoute) && !isOperatorRole(user?.role, user?.accessRole))
   );
   const hasSelectedBranch = Boolean(user && (user.branches.length > 0 || user.branch));
 

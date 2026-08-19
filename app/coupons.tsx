@@ -7,6 +7,8 @@ import { useRouter } from "expo-router";
 import { useState } from "react";
 import { Alert, Modal, Platform, Pressable, ScrollView, Text, View } from "react-native";
 import { Image } from "expo-image";
+import { useAuthContext } from "@/lib/auth-context";
+import { isAdminRole } from "@/lib/access-control";
 
 const STATUS_COPY = {
   rank_locked: "対象ランク外",
@@ -85,6 +87,7 @@ function PresentCouponModal({ coupon, onClose, onRedeem }: { coupon: Coupon | nu
 }
 
 export default function CouponsScreen() {
+  const { user: authUser } = useAuthContext();
   const colors = useColors();
   const router = useRouter();
   const coupons = useCoupons();
@@ -128,7 +131,7 @@ export default function CouponsScreen() {
       <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 16, paddingTop: Platform.OS === "web" ? 16 : 56, paddingBottom: 12, borderBottomWidth: 0.5, borderBottomColor: colors.border }}>
         <Pressable onPress={() => router.back()} style={{ marginRight: 12 }}><IconSymbol name="arrow.left" size={24} color={colors.foreground} /></Pressable>
         <Text style={{ flex: 1, fontSize: 20, fontWeight: "800", color: colors.foreground }}>会員限定クーポン</Text>
-        {CURRENT_USER.role === "admin" ? (
+        {isAdminRole(authUser?.role, authUser?.accessRole) ? (
           <Pressable onPress={() => router.push({ pathname: "/admin-dashboard", params: { tab: "coupons" } })}>
             <Text style={{ color: "#E8A0BF", fontSize: 13, fontWeight: "800" }}>管理設定</Text>
           </Pressable>

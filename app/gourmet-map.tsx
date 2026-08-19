@@ -6,6 +6,7 @@ import {
 } from "@/constants/mock-data";
 import { GOURMET_MAP_SEED } from "@/constants/gourmet-map-seed";
 import { useAuthContext } from "@/lib/auth-context";
+import { isAdminRole } from "@/lib/access-control";
 import { mergeGourmetMapRestaurants, previewGourmetMapCsv, type GourmetMapImportPreview } from "@/lib/gourmet-map-csv";
 import { fetchGourmetMapFeed, mergeGourmetMapFeed } from "@/lib/gourmet-map-feed";
 import { setCommunityRestaurantPublished } from "@/lib/gourmet-map-community";
@@ -398,7 +399,7 @@ export default function GourmetMapScreen() {
   const [restaurants, setRestaurants] = useState<Restaurant[]>(SEEDED_RESTAURANTS);
   const [feedUpdatedAt, setFeedUpdatedAt] = useState<string | null>(null);
   const { user: authUser } = useAuthContext();
-  const userIsAdmin = authUser?.role === "admin";
+  const userIsAdmin = isAdminRole(authUser?.role, authUser?.accessRole);
 
   useEffect(() => {
     if (Platform.OS !== "web") return;

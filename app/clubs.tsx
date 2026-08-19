@@ -11,7 +11,7 @@ import {
 import { useAuthContext } from "@/lib/auth-context";
 import { useColors } from "@/hooks/use-colors";
 import { createBoardChat } from "@/lib/chat-store";
-import { canCreateClub } from "@/lib/access-control";
+import { canCreateClub, isAdminRole } from "@/lib/access-control";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { useState } from "react";
@@ -221,7 +221,7 @@ function ClubPostDetailModal({
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { user: authUser } = useAuthContext();
-  const userIsAdmin = authUser?.role === "admin";
+  const userIsAdmin = isAdminRole(authUser?.role, authUser?.accessRole);
   const [commentText, setCommentText] = useState("");
   const [comments, setComments] = useState<ClubPostComment[]>([]);
   const [chatId, setChatId] = useState<string | null>(post.chatId ?? null);
@@ -657,7 +657,7 @@ function ClubDetailModal({
   const colors = useColors();
   const router = useRouter();
   const { user: authUser } = useAuthContext();
-  const userIsAdmin = authUser?.role === "admin";
+  const userIsAdmin = isAdminRole(authUser?.role, authUser?.accessRole);
   const leader = getMemberById(club.leaderId);
   const [memberIds, setMemberIds] = useState(club.memberIds);
   const [applicantIds, setApplicantIds] = useState(club.applicantIds);
@@ -1589,7 +1589,7 @@ function AddClubModal({
 export default function ClubsScreen() {
   const colors = useColors();
   const { user: authUser } = useAuthContext();
-  const userIsAdmin = canCreateClub(authUser?.role);
+  const userIsAdmin = canCreateClub(authUser?.role, authUser?.accessRole);
   const clubs = useClubs();
   const [selectedClub, setSelectedClub] = useState<Club | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);

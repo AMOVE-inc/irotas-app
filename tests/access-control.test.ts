@@ -21,6 +21,8 @@ describe("access control", () => {
     expect(isAdminRole("user")).toBe(false);
     expect(isAdminRole("ADMIN")).toBe(false);
     expect(isAdminRole(undefined)).toBe(false);
+    expect(isAdminRole("user", "admin")).toBe(true);
+    expect(isAdminRole("user", "operator")).toBe(false);
   });
 
   it("normalizes unknown role values to a regular user", () => {
@@ -34,6 +36,8 @@ describe("access control", () => {
     expect(isOperatorRole("admin")).toBe(true);
     expect(isOperatorRole("operator")).toBe(true);
     expect(isOperatorRole("user")).toBe(false);
+    expect(isOperatorRole("user", "operator")).toBe(true);
+    expect(isOperatorRole("user", "club_leader")).toBe(false);
   });
 
   it("accepts only supported branch roles", () => {

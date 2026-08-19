@@ -33,6 +33,7 @@ function adminPreviewUser(): Auth.User {
     loginMethod: "preview",
     lastSignedIn: new Date(),
     role: "admin",
+    accessRole: "admin",
     branch: "kanto",
     branches: ["kanto"],
   };
@@ -57,6 +58,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             loginMethod: apiUser.loginMethod,
             lastSignedIn: new Date(apiUser.lastSignedIn),
             role: Auth.normalizeUserRole(apiUser.role),
+            accessRole: Auth.normalizeAccessRole(apiUser.accessRole),
             branch: Auth.normalizeBranchRole(apiUser.branch),
             branches: Auth.normalizeBranchRoles(apiUser.branches, apiUser.branch),
             memberId: apiUser.memberId,

@@ -2,6 +2,7 @@ import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { MEMBERS, EVENTS, CURRENT_USER, RANK_LABELS, RANK_COLORS, getRankFromPoints, type Announcement, type Club, type Coupon, type MemberRank } from "@/constants/mock-data";
 import { useAuthContext } from "@/lib/auth-context";
+import { isAdminRole } from "@/lib/access-control";
 import { useColors } from "@/hooks/use-colors";
 import { trpc } from "@/lib/trpc";
 import { getIrotasPointsBalances,
@@ -56,7 +57,7 @@ export default function AdminDashboardScreen() {
   const router = useRouter();
   const { tab } = useLocalSearchParams<{ tab?: string }>();
   const { user: authUser } = useAuthContext();
-  const userIsAdmin = authUser?.role === "admin";
+  const userIsAdmin = isAdminRole(authUser?.role, authUser?.accessRole);
   const coupons = useCoupons();
   const clubs = useClubs();
 

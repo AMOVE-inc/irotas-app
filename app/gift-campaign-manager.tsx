@@ -20,7 +20,7 @@ export default function GiftCampaignManagerScreen() {
   const [draft, setDraft] = useState<GiftCampaign>(EMPTY_GIFT); const [editingId, setEditingId] = useState<string | null>(null); const [showModal, setShowModal] = useState(false);
   const reload = async () => { const [gifts, apps] = await Promise.all([getGiftCampaigns(), getGiftApplications()]); setItems(gifts); setApplications(apps); };
   useEffect(() => { void reload(); }, []);
-  if (!isOperatorRole(user?.role)) return <ScreenContainer className="p-6"><Text style={{ textAlign: "center", color: colors.muted, marginTop: 40 }}>運営メンバーのみアクセスできます</Text></ScreenContainer>;
+  if (!isOperatorRole(user?.role, user?.accessRole)) return <ScreenContainer className="p-6"><Text style={{ textAlign: "center", color: colors.muted, marginTop: 40 }}>運営メンバーのみアクセスできます</Text></ScreenContainer>;
 
   const openCreate = () => { setEditingId(null); setDraft({ ...EMPTY_GIFT, id: `gift_${Date.now()}`, deadline: new Date().toISOString().slice(0, 10) }); setShowModal(true); };
   const openEdit = (gift: GiftCampaign) => { setEditingId(gift.id); setDraft({ ...gift }); setShowModal(true); };

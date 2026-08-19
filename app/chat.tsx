@@ -13,6 +13,7 @@ import {
   type ChatMessage,
 } from "@/constants/mock-data";
 import { useAuthContext } from "@/lib/auth-context";
+import { isAdminRole } from "@/lib/access-control";
 import { getAllRooms, getRoomById, getMessages, saveMessagesToStorage, loadMessagesFromStorage, loadDynamicRooms, renameRoom, addMemberToRoom, removeMemberFromRoom, toggleMessageReaction } from "@/lib/chat-store";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useColors } from "@/hooks/use-colors";
@@ -162,7 +163,7 @@ export default function ChatScreen() {
   const colors = useColors();
   const router = useRouter();
   const { user: authUser } = useAuthContext();
-  const userIsAdmin = authUser?.role === "admin";
+  const userIsAdmin = isAdminRole(authUser?.role, authUser?.accessRole);
   const { id, unreadCount: unreadCountParam } = useLocalSearchParams<{ id: string; unreadCount?: string }>();
   const [messageText, setMessageText] = useState("");
   const [mentionQuery, setMentionQuery] = useState<string | null>(null);
@@ -273,7 +274,7 @@ export default function ChatScreen() {
   }, []);
 
   const handleSend = useCallback(() => {
-    if (!canPostToChat(authUser?.role, id ?? "")) return;
+    if (!canPostToChat(authUser?.role, id ?? "", authUser?.accessRole)) return;
     if (!messageText.trim() && !pendingImage) return;
     const content = messageText.trim();
     const newMessage: ChatMessage = {
@@ -363,7 +364,7 @@ export default function ChatScreen() {
   const typeColor = room.type === "event" ? "#E8A0BF" : room.type === "board" ? "#A7C7E7" : room.type === "rank" ? "#F59E0B" : room.type === "group" ? "#5B9BD5" : room.type === "dm" ? "#FF9500" : "#34C759";
   const canManageRoom = userIsAdmin || room.createdBy === CURRENT_USER.id;
   const canInviteMembers = canManageRoom && room.type !== "rank" && room.type !== "event" && room.type !== "dm";
-  const canPostAnnouncement = canPostToChat(authUser?.role, room.id);
+  const canPostAnnouncement = canPostToChat(authUser?.role, room.id, authUser?.accessRole);
   const inviteCandidates = (room.type === "group" ? getFriends(CURRENT_USER.id) : MEMBERS.filter((member) => member.id !== CURRENT_USER.id))
     .filter((member) => !roomParticipants.includes(member.id));
 

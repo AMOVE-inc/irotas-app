@@ -31,6 +31,7 @@ const previewUser: Auth.User = {
   loginMethod: "preview",
   lastSignedIn: new Date(),
   role: previewUserRole,
+  accessRole: previewUserRole === "admin" ? "admin" : "member",
   branch: null,
   branches: [],
 };
@@ -93,6 +94,7 @@ export default function LoginScreen() {
             loginMethod: result.user.loginMethod,
             lastSignedIn: new Date(result.user.lastSignedIn),
             role: Auth.normalizeUserRole(result.user.role),
+            accessRole: Auth.normalizeAccessRole(result.user.accessRole),
             branch: Auth.normalizeBranchRole(result.user.branch),
             branches: Auth.normalizeBranchRoles(
               result.user.branches,
@@ -110,6 +112,7 @@ export default function LoginScreen() {
             loginMethod: result.user.loginMethod,
             lastSignedIn: new Date(result.user.lastSignedIn),
             role: Auth.normalizeUserRole(result.user.role),
+            accessRole: Auth.normalizeAccessRole(result.user.accessRole),
             branch: Auth.normalizeBranchRole(result.user.branch),
             branches: Auth.normalizeBranchRoles(
               result.user.branches,

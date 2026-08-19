@@ -301,6 +301,7 @@ function memberPayload(row: MemberRow) {
     loginMethod: "email",
     lastSignedIn: row.last_signed_in_at ?? new Date().toISOString(),
     role: row.role === "operator" ? "operator" : row.role,
+    accessRole: row.access_role,
     branch: branches[0] ?? null,
     branches,
     memberId: row.public_member_id,

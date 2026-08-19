@@ -32,6 +32,7 @@ export function useAuth(options?: UseAuthOptions) {
             loginMethod: apiUser.loginMethod,
             lastSignedIn: new Date(apiUser.lastSignedIn),
             role: Auth.normalizeUserRole(apiUser.role),
+            accessRole: Auth.normalizeAccessRole(apiUser.accessRole),
             branch: Auth.normalizeBranchRole(apiUser.branch),
             branches: Auth.normalizeBranchRoles(apiUser.branches, apiUser.branch),
           };

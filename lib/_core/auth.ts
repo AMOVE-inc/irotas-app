@@ -5,7 +5,9 @@ import { logger } from "@/lib/_core/logger";
 import {
   normalizeBranchRole,
   normalizeBranchRoles,
+  normalizeAccessRole,
   normalizeUserRole,
+  type AccessRole,
   type BranchRole,
   type UserRole,
 } from "@/lib/access-control";
@@ -13,7 +15,9 @@ import {
 export {
   normalizeBranchRole,
   normalizeBranchRoles,
+  normalizeAccessRole,
   normalizeUserRole,
+  type AccessRole,
   type BranchRole,
   type UserRole,
 } from "@/lib/access-control";
@@ -26,6 +30,7 @@ export type User = {
   loginMethod: string | null;
   lastSignedIn: Date;
   role: UserRole;
+  accessRole: AccessRole;
   branch: BranchRole | null;
   branches: BranchRole[];
   memberId?: string | null;
@@ -57,6 +62,7 @@ function deserializeUser(value: string): User | null {
     loginMethod: typeof candidate.loginMethod === "string" ? candidate.loginMethod : null,
     lastSignedIn,
     role: normalizeUserRole(candidate.role),
+    accessRole: normalizeAccessRole(candidate.accessRole),
     branch: normalizeBranchRole(candidate.branch),
     branches: normalizeBranchRoles(candidate.branches, candidate.branch),
     memberId: typeof candidate.memberId === "string" ? candidate.memberId : null,

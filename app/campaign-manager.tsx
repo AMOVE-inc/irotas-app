@@ -36,7 +36,7 @@ export default function CampaignManagerScreen() {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
 
-  if (!isOperatorRole(authUser?.role)) {
+  if (!isOperatorRole(authUser?.role, authUser?.accessRole)) {
     return (
       <ScreenContainer className="p-6">
         <Text style={{ fontSize: 16, color: colors.muted, textAlign: "center", marginTop: 40 }}>

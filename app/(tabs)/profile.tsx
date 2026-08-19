@@ -38,7 +38,7 @@ import * as Clipboard from "expo-clipboard";
 import { OFFICIAL_INSTAGRAM_URL } from "@/constants/external-links";
 import { GOURMET_GENRES } from "@/constants/event-options";
 import { BIRTH_YEARS, DAYS, DRINKING_LEVELS, GOOGLE_LOCAL_GUIDE_LEVELS, MONTHS, PREFECTURES, type ProfileDetails } from "@/constants/profile-options";
-import { isOperatorRole } from "@/lib/access-control";
+import { isAdminRole, isOperatorRole } from "@/lib/access-control";
 import { getPublishedAgeBand } from "@/lib/member-age";
 import { trpc } from "@/lib/trpc";
 import { SocialMemberListModal } from "@/components/social-member-list-modal";
@@ -743,7 +743,7 @@ export default function ProfileScreen() {
     bio: profileString(serverProfile, "bio"),
     interests: profileStrings(serverProfile, "favoriteCuisines"),
     favoriteCuisines: profileStrings(serverProfile, "favoriteCuisines"),
-    role: authUser.role === "admin" ? "admin" as const : authUser.role === "operator" ? "operator" as const : "member" as const,
+    role: authUser.accessRole === "admin" || authUser.role === "admin" ? "admin" as const : authUser.accessRole === "operator" || authUser.role === "operator" ? "operator" as const : "member" as const,
     joinedAt: authUser.joinedAt ?? "",
     participationCount: authUser.participationCount ?? 0,
     organizerCount: authUser.organizerCount ?? 0,
@@ -763,8 +763,9 @@ export default function ProfileScreen() {
   const [showEditProfile, setShowEditProfile] = useState(false);
   const [socialList, setSocialList] = useState<"followers" | "following" | null>(null);
   // DBから取得したroleで管理者判定（モックデータのCURRENT_USERではなく実際のログインユーザーを使用）
-  const userIsAdmin = authUser?.role === "admin";
-  const userIsOperator = isOperatorRole(authUser?.role);
+  const userIsAdmin = isAdminRole(authUser?.role, authUser?.accessRole);
+  const userIsOperator = isOperatorRole(authUser?.role, authUser?.accessRole);
+  const accessRoleLabel = userIsAdmin ? "管理者" : authUser?.accessRole === "operator" ? "運営メンバー" : authUser?.accessRole === "club_leader" ? "部長" : null;
   const [myRooms, setMyRooms] = useState(() => getMyRooms(user.id));
   const [participatingEvents, setParticipatingEvents] = useState<Event[]>([]);
   const [avatarUri, setAvatarUri] = useState<string | null>(null);
@@ -889,6 +890,11 @@ export default function ProfileScreen() {
               {branchLabel}
             </Text>
           </View>
+          {accessRoleLabel ? (
+            <View style={{ marginTop: 7, borderRadius: 12, paddingHorizontal: 10, paddingVertical: 4, backgroundColor: userIsAdmin || authUser?.accessRole === "operator" ? "#FFE6E6" : "#EEF2FF" }}>
+              <Text style={{ fontSize: 11, fontWeight: "800", color: userIsAdmin || authUser?.accessRole === "operator" ? "#C83D4D" : "#4C5F9E" }}>{accessRoleLabel}</Text>
+            </View>
+          ) : null}
 
           {achievementBadges.length > 0 ? (
             <View style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "center", gap: 6, marginTop: 9, paddingHorizontal: 24 }}>

@@ -125,7 +125,7 @@ export default function CreateEventScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ sourceThreadId?: string; sourceTitle?: string; sourceDescription?: string; sourceCategory?: string }>();
   const { user: authUser } = useAuthContext();
-  const userIsOperator = isOperatorRole(authUser?.role);
+  const userIsOperator = isOperatorRole(authUser?.role, authUser?.accessRole);
   const clubs = useClubs();
   const joinedClubs = clubs.filter((club) => canCreateClubEvent(CURRENT_USER.id, club.memberIds, club.leaderId));
   const sourceClubId = params.sourceCategory?.startsWith("club-") ? params.sourceCategory.slice("club-".length) : "";

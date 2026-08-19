@@ -2164,9 +2164,9 @@ export default function BoardScreen() {
   const router = useRouter();
   const { compose, category: categoryParam, view, thread: threadParam } = useLocalSearchParams<{ compose?: string; category?: string; view?: string; thread?: string }>();
   const { user: authUser } = useAuthContext();
-  const userIsAdmin = canManageBoardCategories(authUser?.role);
-  const userCanManageContests = canManageGourmetContests(authUser?.role);
-  const userCanModerateRecruitment = isOperatorRole(authUser?.role);
+  const userIsAdmin = canManageBoardCategories(authUser?.role, authUser?.accessRole);
+  const userCanManageContests = canManageGourmetContests(authUser?.role, authUser?.accessRole);
+  const userCanModerateRecruitment = isOperatorRole(authUser?.role, authUser?.accessRole);
   const clubs = useClubs();
   const [categories, setCategories] = useState<BoardCategory[]>(BOARD_CATEGORIES);
   const [activeGroup, setActiveGroup] = useState<BoardCategory["group"]>("all");

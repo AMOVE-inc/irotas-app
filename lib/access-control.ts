@@ -1,4 +1,5 @@
 export type UserRole = "user" | "operator" | "admin";
+export type AccessRole = "member" | "club_leader" | "operator" | "admin";
 export type BranchRole = "kanto" | "kansai";
 
 const ADMIN_ROUTE_NAMES = new Set([
@@ -10,6 +11,11 @@ const OPERATOR_ROUTE_NAMES = new Set(["campaign-manager", "gift-campaign-manager
 /** Unknown or missing role values must always fail closed. */
 export function normalizeUserRole(role: unknown): UserRole {
   return role === "admin" || role === "operator" ? role : "user";
+}
+
+/** Detailed operational role stored on the member record. Unknown values fail closed. */
+export function normalizeAccessRole(role: unknown): AccessRole {
+  return role === "admin" || role === "operator" || role === "club_leader" ? role : "member";
 }
 
 export function normalizeBranchRole(branch: unknown): BranchRole | null {
@@ -26,14 +32,19 @@ export function normalizeBranchRoles(branches: unknown, fallback?: unknown): Bra
   return [...new Set(normalized)];
 }
 
-export function isAdminRole(role: unknown): boolean {
-  return normalizeUserRole(role) === "admin";
+export function isAdminRole(role: unknown, accessRole?: unknown): boolean {
+  return normalizeUserRole(role) === "admin" || normalizeAccessRole(accessRole) === "admin";
 }
 
 /** 運営作業は管理者と運営メンバーが実行できる。管理画面は引き続き管理者専用。 */
-export function isOperatorRole(role: unknown): boolean {
+export function isOperatorRole(role: unknown, accessRole?: unknown): boolean {
   const normalized = normalizeUserRole(role);
-  return normalized === "admin" || normalized === "operator";
+  const detailed = normalizeAccessRole(accessRole);
+  return normalized === "admin" || normalized === "operator" || detailed === "admin" || detailed === "operator";
+}
+
+export function isClubLeaderRole(accessRole: unknown): boolean {
+  return normalizeAccessRole(accessRole) === "club_leader";
 }
 
 export function isAdminRoute(route: unknown): boolean {
@@ -45,18 +56,18 @@ export function isOperatorRoute(route: unknown): boolean {
 }
 
 /** Board category creation is an application-wide management action. */
-export function canManageBoardCategories(role: unknown): boolean {
-  return isAdminRole(role);
+export function canManageBoardCategories(role: unknown, accessRole?: unknown): boolean {
+  return isAdminRole(role, accessRole);
 }
 
 /** グルメ選手権の作成・編集は管理者と運営メンバーに限定する。 */
-export function canManageGourmetContests(role: unknown): boolean {
-  return isOperatorRole(role);
+export function canManageGourmetContests(role: unknown, accessRole?: unknown): boolean {
+  return isOperatorRole(role, accessRole);
 }
 
 /** New clubs affect the whole community and may only be created by administrators. */
-export function canCreateClub(role: unknown): boolean {
-  return isAdminRole(role);
+export function canCreateClub(role: unknown, accessRole?: unknown): boolean {
+  return isAdminRole(role, accessRole);
 }
 
 /** Club threads are private to approved members, with administrator access for moderation. */
@@ -75,6 +86,6 @@ export function canCreateClubEvent(memberId: string, approvedMemberIds: string[]
 }
 
 /** 運営アナウンスは運営からの送信専用。他のチャットは通常どおり送信できる。 */
-export function canPostToChat(role: unknown, roomId: string): boolean {
-  return roomId !== "board-announcement" || isOperatorRole(role);
+export function canPostToChat(role: unknown, roomId: string, accessRole?: unknown): boolean {
+  return roomId !== "board-announcement" || isOperatorRole(role, accessRole);
 }
