@@ -767,23 +767,28 @@ function ClubDetailModal({
   // 部長・管理者が申請を承認
   const handleApprove = (memberId: string) => {
     const member = getMemberById(memberId);
+    const approve = async () => {
+      try {
+        const updated = await reviewClubApplicationInStore(club.id, memberId, "approve");
+        setMemberIds(updated.memberIds);
+        setApplicantIds(updated.applicantIds);
+        setPendingIds(updated.applications.filter((item) => item.status === "on_hold").map((item) => item.memberId));
+        setApplications(updated.applications);
+        onUpdateClub(updated);
+        Alert.alert("承認完了", `${member?.name ?? ""}さんの入部を承認しました。`);
+      } catch (error) {
+        Alert.alert("承認できませんでした", error instanceof Error ? error.message : "もう一度お試しください。");
+      }
+    };
+    if (Platform.OS === "web") {
+      void approve();
+      return;
+    }
     Alert.alert("入部承認", `${member?.name ?? ""}さんの入部を承認しますか？`, [
       { text: "キャンセル", style: "cancel" },
       {
         text: "承認する",
-        onPress: async () => {
-          try {
-            const updated = await reviewClubApplicationInStore(club.id, memberId, "approve");
-            setMemberIds(updated.memberIds);
-            setApplicantIds(updated.applicantIds);
-            setPendingIds(updated.applications.filter((item) => item.status === "on_hold").map((item) => item.memberId));
-            setApplications(updated.applications);
-            onUpdateClub(updated);
-            Alert.alert("承認完了", `${member?.name ?? ""}さんの入部を承認しました。`);
-          } catch (error) {
-            Alert.alert("承認できませんでした", error instanceof Error ? error.message : "もう一度お試しください。");
-          }
-        },
+        onPress: approve,
       },
     ]);
   };
@@ -791,6 +796,22 @@ function ClubDetailModal({
   // 部長・管理者が申請を保留
   const handlePending = (memberId: string) => {
     const member = getMemberById(memberId);
+    const hold = async () => {
+      try {
+        const updated = await reviewClubApplicationInStore(club.id, memberId, "hold");
+        setApplicantIds(updated.applicantIds);
+        setPendingIds(updated.applications.filter((item) => item.status === "on_hold").map((item) => item.memberId));
+        setApplications(updated.applications);
+        onUpdateClub(updated);
+        Alert.alert("保留完了", `${member?.name ?? ""}さんの申請を保留にしました。`);
+      } catch (error) {
+        Alert.alert("保留にできませんでした", error instanceof Error ? error.message : "もう一度お試しください。");
+      }
+    };
+    if (Platform.OS === "web") {
+      void hold();
+      return;
+    }
     Alert.alert(
       "保留にする",
       `${member?.name ?? ""}さんの申請を保留にしますか？\n後から承認または却下できます。`,
@@ -798,18 +819,7 @@ function ClubDetailModal({
         { text: "キャンセル", style: "cancel" },
         {
           text: "保留にする",
-          onPress: async () => {
-            try {
-              const updated = await reviewClubApplicationInStore(club.id, memberId, "hold");
-              setApplicantIds(updated.applicantIds);
-              setPendingIds(updated.applications.filter((item) => item.status === "on_hold").map((item) => item.memberId));
-              setApplications(updated.applications);
-              onUpdateClub(updated);
-              Alert.alert("保留完了", `${member?.name ?? ""}さんの申請を保留にしました。`);
-            } catch (error) {
-              Alert.alert("保留にできませんでした", error instanceof Error ? error.message : "もう一度お試しください。");
-            }
-          },
+          onPress: hold,
         },
       ],
     );
@@ -818,22 +828,27 @@ function ClubDetailModal({
   // 部長・管理者が申請を却下
   const handleReject = (memberId: string) => {
     const member = getMemberById(memberId);
+    const reject = async () => {
+      try {
+        const updated = await reviewClubApplicationInStore(club.id, memberId, "reject");
+        setApplicantIds(updated.applicantIds);
+        setPendingIds(updated.applications.filter((item) => item.status === "on_hold").map((item) => item.memberId));
+        setApplications(updated.applications);
+        onUpdateClub(updated);
+      } catch (error) {
+        Alert.alert("却下できませんでした", error instanceof Error ? error.message : "もう一度お試しください。");
+      }
+    };
+    if (Platform.OS === "web") {
+      void reject();
+      return;
+    }
     Alert.alert("却下確認", `${member?.name ?? ""}さんの申請を却下しますか？`, [
       { text: "キャンセル", style: "cancel" },
       {
         text: "却下する",
         style: "destructive",
-        onPress: async () => {
-          try {
-            const updated = await reviewClubApplicationInStore(club.id, memberId, "reject");
-            setApplicantIds(updated.applicantIds);
-            setPendingIds(updated.applications.filter((item) => item.status === "on_hold").map((item) => item.memberId));
-            setApplications(updated.applications);
-            onUpdateClub(updated);
-          } catch (error) {
-            Alert.alert("却下できませんでした", error instanceof Error ? error.message : "もう一度お試しください。");
-          }
-        },
+        onPress: reject,
       },
     ]);
   };
