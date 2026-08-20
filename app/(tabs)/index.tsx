@@ -39,6 +39,7 @@ import { useFocusEffect } from "expo-router";
 import { getAllEvents } from "@/lib/event-store";
 import { createDefaultPreferences, loadMemberAiConsents, loadMemberPreferences, recordActivityEvent, type MemberAiConsents, type MemberPreferences } from "@/lib/ai-data-store";
 import { recommendEvents, type RecommendedEvent } from "@/lib/event-recommendation";
+import * as Api from "@/lib/_core/api";
 
 // タイムラインコメント型
 interface TimelineComment {
@@ -579,10 +580,14 @@ export default function HomeScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [activities, setActivities] = useState<HomeActivity[]>([]);
   const [giftCampaigns, setGiftCampaigns] = useState<GiftCampaign[]>([]);
+  const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
   const [preferences, setPreferences] = useState<MemberPreferences>(() => createDefaultPreferences({ residence: CURRENT_USER.residence, favoriteCuisines: CURRENT_USER.favoriteCuisines }));
   const [aiConsents, setAiConsents] = useState<MemberAiConsents>({ eventRecommendation: false, memberMatching: false, conciergeHistory: false, anonymousImprovement: false, updatedAt: "" });
 
   const loadHomeContent = useCallback(() => {
+    void Api.getNotifications()
+      .then((items) => setUnreadNotificationCount(items.filter((item) => !item.read).length))
+      .catch(() => setUnreadNotificationCount(0));
     void Promise.all([getHomeActivities(), getGiftCampaigns(), loadMemberPreferences(CURRENT_USER.id, { residence: CURRENT_USER.residence, favoriteCuisines: CURRENT_USER.favoriteCuisines }), loadMemberAiConsents(CURRENT_USER.id)]).then(([nextActivities, gifts, nextPreferences, nextConsents]) => {
       setActivities(nextActivities);
       setPreferences(nextPreferences); setAiConsents(nextConsents);
@@ -645,6 +650,7 @@ export default function HomeScreen() {
         <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
           <Pressable onPress={() => router.push("/notifications")} style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: "#EEF6FB", alignItems: "center", justifyContent: "center" }}>
             <IconSymbol name="bell.fill" size={22} color={colors.foreground} />
+            {unreadNotificationCount > 0 ? <View style={{ position: "absolute", top: -4, right: -4, minWidth: 18, height: 18, borderRadius: 9, paddingHorizontal: 4, alignItems: "center", justifyContent: "center", backgroundColor: "#E34E5F", borderWidth: 2, borderColor: colors.background }}><Text style={{ color: "#FFF", fontSize: 9, fontWeight: "900" }}>{unreadNotificationCount > 99 ? "99+" : unreadNotificationCount}</Text></View> : null}
           </Pressable>
         </View>
       </View>

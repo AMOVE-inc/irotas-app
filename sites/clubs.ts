@@ -116,6 +116,27 @@ async function audit(db: D1Database, actorId: number, action: string, clubId: st
     VALUES (?, ?, 'club', ?, ?, ?)`).bind(String(actorId), action, clubId, JSON.stringify(metadata), new Date().toISOString()).run();
 }
 
+async function memberDisplayName(db: D1Database, memberId: number) {
+  const row = await db.prepare("SELECT display_name FROM members WHERE id = ? LIMIT 1")
+    .bind(memberId).first<{ display_name: string }>();
+  return row?.display_name?.trim() || "メンバー";
+}
+
+async function notifyClubMember(
+  db: D1Database,
+  targetMemberId: number | null,
+  type: "club_application" | "club_approval",
+  title: string,
+  body: string,
+  clubId: string,
+) {
+  if (!targetMemberId) return;
+  await db.prepare(`INSERT INTO in_app_notifications
+    (id, target_member_id, type, title, body, club_id, created_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?)`)
+    .bind(crypto.randomUUID(), targetMemberId, type, title, body, clubId, new Date().toISOString()).run();
+}
+
 async function memberIdFromPublicId(db: D1Database, value: string) {
   const fallback = /^member-(\d+)$/.exec(value);
   if (fallback) return Number(fallback[1]);
@@ -183,6 +204,15 @@ export async function handleClubRequest(request: Request, env: SitesEnv): Promis
         approved_at = NULL, decided_at = NULL, decided_by_member_id = NULL, updated_at = excluded.updated_at`)
       .bind(id, member.id, wantsToDo, messageToLeader, now, now).run();
     await audit(env.DB, member.id, "club.application_submitted", id);
+    const applicantName = await memberDisplayName(env.DB, member.id);
+    await notifyClubMember(
+      env.DB,
+      row.leader_member_id,
+      "club_application",
+      `${row.name}に入部申請が届きました`,
+      `${applicantName}さんから入部申請が届いています。申請内容と参加履歴を確認してください。`,
+      id,
+    );
     const memberships = await membershipsForClubs(env.DB, [id]);
     return json({ club: serializeClub(row, memberships, member.id, elevated) }, 201);
   }
@@ -206,6 +236,17 @@ export async function handleClubRequest(request: Request, env: SitesEnv): Promis
       decided_by_member_id = ?, updated_at = ? WHERE club_id = ? AND member_id = ?`)
       .bind(nextStatus, nextStatus === "approved" ? now : null, now, member.id, now, id, targetId).run();
     await audit(env.DB, member.id, `club.application_${nextStatus}`, id, { targetMemberId: targetId });
+    if (nextStatus === "approved") {
+      const leaderName = await memberDisplayName(env.DB, member.id);
+      await notifyClubMember(
+        env.DB,
+        targetId,
+        "club_approval",
+        `${row.name}への入部が承認されました`,
+        `${leaderName}さんが入部申請を承認しました。部員限定スレッドを閲覧できます。まずは${row.name}の自己紹介スレッドへ投稿しましょう。`,
+        id,
+      );
+    }
     const memberships = await membershipsForClubs(env.DB, [id]);
     return json({ club: serializeClub(row, memberships, member.id, elevated) });
   }

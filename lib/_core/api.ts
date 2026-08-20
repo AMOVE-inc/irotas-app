@@ -98,6 +98,17 @@ export type ClubApplicantReview = {
   eventHistory: Array<{ id: string; title: string; date: string; eventType: string }>;
 };
 
+export type AppNotification = {
+  id: string;
+  type: "club_application" | "club_approval" | "event_confirmed" | "event_deadline" | "event_reminder" | "event_cancellation" | "poll_result" | "announcement" | "event" | "like" | "comment" | "coupon";
+  title: string;
+  body: string;
+  clubId: string | null;
+  eventId: string | null;
+  read: boolean;
+  createdAt: string;
+};
+
 export class ApiError extends Error {
   constructor(
     message: string,
@@ -340,6 +351,23 @@ export async function leaveClub(clubId: string) {
     method: "DELETE",
   });
   return result.club;
+}
+
+export async function getNotifications() {
+  const result = await apiCall<{ notifications: AppNotification[] }>("/api/notifications");
+  return result.notifications;
+}
+
+export async function markNotificationRead(notificationId: string) {
+  const result = await apiCall<{ notification: AppNotification }>(
+    `/api/notifications/${encodeURIComponent(notificationId)}`,
+    { method: "PATCH" },
+  );
+  return result.notification;
+}
+
+export async function markAllNotificationsRead() {
+  return apiCall<{ success: boolean; readAt: string }>("/api/notifications/read-all", { method: "PATCH" });
 }
 
 export async function setPrivateMemberNote(memberId: string, note: string) {

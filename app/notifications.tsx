@@ -1,69 +1,11 @@
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { useColors } from "@/hooks/use-colors";
 import { useRouter } from "expo-router";
-import { FlatList, Platform, Pressable, Text, View } from "react-native";
-import { CURRENT_USER } from "@/constants/mock-data";
-import { useInAppNotifications } from "@/lib/in-app-notifications-store";
+import { useEffect, useState } from "react";
+import { ActivityIndicator, FlatList, Platform, Pressable, Text, View } from "react-native";
+import * as Api from "@/lib/_core/api";
 
-interface Notification {
-  id: string;
-  type: "event" | "announcement" | "like" | "comment" | "coupon" | "club_application" | "club_approval" | "event_confirmed" | "event_deadline" | "event_reminder" | "event_cancellation";
-  title: string;
-  body: string;
-  time: string;
-  read: boolean;
-}
-
-const NOTIFICATIONS: Notification[] = [
-  {
-    id: "club-application-sample",
-    type: "club_application",
-    title: "ラーメン部に入部申請が届きました",
-    body: "りょうさんの申請内容とイベント参加履歴を確認してください",
-    time: "30分前",
-    read: false,
-  },
-  {
-    id: "n1",
-    type: "announcement",
-    title: "IRO＋ 2周年記念イベント開催決定！",
-    body: "2026年4月に2周年記念パーティーを開催します",
-    time: "3時間前",
-    read: false,
-  },
-  {
-    id: "n2",
-    type: "like",
-    title: "さくらさんがいいねしました",
-    body: "あなたの投稿「昨日行った渋谷の焼肉屋さんが...」",
-    time: "5時間前",
-    read: false,
-  },
-  {
-    id: "n3",
-    type: "event",
-    title: "第3回 関東支部交流会",
-    body: "イベントの参加受付が開始されました",
-    time: "1日前",
-    read: true,
-  },
-  {
-    id: "n4",
-    type: "comment",
-    title: "たくみさんがコメントしました",
-    body: "「渋谷でおすすめの焼肉屋さん教えてください！」に返信",
-    time: "1日前",
-    read: true,
-  },
-  {
-    id: "n5",
-    type: "coupon",
-    title: "新しいクーポンが届きました",
-    body: "焼肉 罪と罰 10%OFFクーポン",
-    time: "2日前",
-    read: true,
-  },
-];
+type Notification = Api.AppNotification;
 
 const ICON_MAP: Record<string, { icon: string; color: string }> = {
   event: { icon: "calendar", color: "#A7C7E7" },
@@ -79,20 +21,25 @@ const ICON_MAP: Record<string, { icon: string; color: string }> = {
   event_cancellation: { icon: "exclamationmark.triangle.fill", color: "#D94C55" },
 };
 
-function NotificationItem({ notification }: { notification: Notification }) {
+function relativeTime(value: string) {
+  const elapsed = Math.max(0, Date.now() - new Date(value).getTime());
+  const minutes = Math.floor(elapsed / 60_000);
+  if (minutes < 1) return "たった今";
+  if (minutes < 60) return `${minutes}分前`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}時間前`;
+  const days = Math.floor(hours / 24);
+  if (days < 30) return `${days}日前`;
+  return new Date(value).toLocaleDateString("ja-JP");
+}
+
+function NotificationItem({ notification, onOpen }: { notification: Notification; onOpen: (notification: Notification) => void }) {
   const colors = useColors();
-  const router = useRouter();
-  const iconConfig = ICON_MAP[notification.type];
+  const iconConfig = ICON_MAP[notification.type] ?? ICON_MAP.announcement;
 
   return (
     <Pressable
-      onPress={() => {
-        if (notification.type === "club_application" || notification.type === "club_approval") {
-          router.push("/clubs");
-        } else if (notification.type === "event" || notification.type.startsWith("event_")) {
-          router.push("/events");
-        }
-      }}
+      onPress={() => onOpen(notification)}
       style={{
         flexDirection: "row",
         paddingHorizontal: 16,
@@ -143,7 +90,7 @@ function NotificationItem({ notification }: { notification: Notification }) {
         <Text style={{ fontSize: 13, color: colors.muted, marginBottom: 2 }} numberOfLines={1}>
           {notification.body}
         </Text>
-        <Text style={{ fontSize: 11, color: colors.muted }}>{notification.time}</Text>
+        <Text style={{ fontSize: 11, color: colors.muted }}>{relativeTime(notification.createdAt)}</Text>
       </View>
     </Pressable>
   );
@@ -152,17 +99,35 @@ function NotificationItem({ notification }: { notification: Notification }) {
 export default function NotificationsScreen() {
   const colors = useColors();
   const router = useRouter();
-  const inAppNotifications = useInAppNotifications()
-    .filter((notification) => notification.targetMemberId === CURRENT_USER.id)
-    .map<Notification>((notification) => ({
-      id: notification.id,
-      type: notification.type === "poll_result" ? "announcement" : notification.type,
-      title: notification.title,
-      body: notification.body,
-      time: "たった今",
-      read: notification.read,
-    }));
-  const notifications = [...inAppNotifications, ...NOTIFICATIONS];
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    let mounted = true;
+    Api.getNotifications()
+      .then((items) => { if (mounted) setNotifications(items); })
+      .catch((cause) => { if (mounted) setError(cause instanceof Error ? cause.message : "通知を読み込めませんでした"); })
+      .finally(() => { if (mounted) setLoading(false); });
+    return () => { mounted = false; };
+  }, []);
+
+  const openNotification = async (notification: Notification) => {
+    if (!notification.read) {
+      setNotifications((items) => items.map((item) => item.id === notification.id ? { ...item, read: true } : item));
+      try { await Api.markNotificationRead(notification.id); } catch {}
+    }
+    if (notification.type === "club_application" || notification.type === "club_approval") {
+      router.push("/clubs");
+    } else if (notification.type === "event" || notification.type.startsWith("event_")) {
+      router.push(notification.eventId ? { pathname: "/event-detail", params: { id: notification.eventId } } : "/events");
+    }
+  };
+
+  const markAllRead = async () => {
+    setNotifications((items) => items.map((item) => ({ ...item, read: true })));
+    try { await Api.markAllNotificationsRead(); } catch {}
+  };
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
@@ -183,12 +148,19 @@ export default function NotificationsScreen() {
           <IconSymbol name="arrow.left" size={24} color={colors.foreground} />
         </Pressable>
         <Text style={{ fontSize: 20, fontWeight: "700", color: colors.foreground }}>通知</Text>
+        {notifications.some((item) => !item.read) ? (
+          <Pressable onPress={() => { void markAllRead(); }} style={{ marginLeft: "auto", paddingVertical: 6, paddingLeft: 12 }}>
+            <Text style={{ color: "#D26C98", fontSize: 13, fontWeight: "700" }}>すべて既読</Text>
+          </Pressable>
+        ) : null}
       </View>
 
-      <FlatList
+      {loading ? <ActivityIndicator style={{ marginTop: 60 }} color="#D26C98" /> : error ? (
+        <View style={{ padding: 24 }}><Text style={{ color: colors.error, textAlign: "center" }}>{error}</Text></View>
+      ) : <FlatList
         data={notifications}
         keyExtractor={(item) => item.id}
-        renderItem={({ item }) => <NotificationItem notification={item} />}
+        renderItem={({ item }) => <NotificationItem notification={item} onOpen={openNotification} />}
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={
           <View style={{ alignItems: "center", paddingTop: 60 }}>
@@ -198,7 +170,7 @@ export default function NotificationsScreen() {
             </Text>
           </View>
         }
-      />
+      />}
     </View>
   );
 }
