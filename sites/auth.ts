@@ -582,6 +582,32 @@ async function requestSetupCode(
         subscription.access_status !== "pending",
       );
   if (!eligible) return responseJson({ success: true });
+  if (!member) {
+    const now = new Date().toISOString();
+    await db
+      .prepare(
+        `INSERT INTO members
+        (email, display_name, role, access_role, branches_json, account_status, created_at, updated_at)
+        VALUES (?, ?, 'user', 'member', '[]', 'active', ?, ?)`
+      )
+      .bind(email, email.split("@")[0], now, now)
+      .run();
+    member = await findMember(db, email);
+    if (!member)
+      return responseJson({ error: "会員アカウントを作成できませんでした" }, 500);
+    await db
+      .prepare(
+        `INSERT INTO audit_logs
+        (actor_user_id, action, entity_type, entity_id, metadata_json, created_at)
+        VALUES (NULL, 'member.auto_created_from_square', 'member', ?, ?, ?)`
+      )
+      .bind(
+        String(member.id),
+        JSON.stringify({ billingEmail: email, publicMemberId: member.public_member_id }),
+        now,
+      )
+      .run();
+  }
   const code = String(
     crypto.getRandomValues(new Uint32Array(1))[0] % 1_000_000,
   ).padStart(6, "0");

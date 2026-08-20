@@ -216,11 +216,10 @@ function memberStatement(
       (email, display_name, discord_user_id, public_member_id, role, access_role, branches_json,
        member_term, member_rank, discord_roles_json, achievement_badges_json, discord_joined_at,
        account_status, created_at, updated_at)
-      VALUES (?, ?, ?, ?, 'user', 'member', ?, ?, ?, ?, ?, ?, 'active', ?, ?)
+      VALUES (?, ?, ?, NULL, 'user', 'member', ?, ?, ?, ?, ?, ?, 'active', ?, ?)
       ON CONFLICT(email) DO UPDATE SET
         display_name = excluded.display_name,
         discord_user_id = excluded.discord_user_id,
-        public_member_id = excluded.public_member_id,
         branches_json = excluded.branches_json,
         member_term = excluded.member_term,
         member_rank = excluded.member_rank,
@@ -234,7 +233,6 @@ function memberStatement(
       row.email,
       row.displayName,
       row.discordUserId,
-      row.memberId,
       row.branchesJson,
       row.memberTerm,
       row.memberRank,
