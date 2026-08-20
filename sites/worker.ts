@@ -11,6 +11,7 @@ import { handleSquareSyncRequest } from "./square-sync";
 import { handleMemberDirectoryRequest } from "./member-directory";
 import { handleEventRequest } from "./events";
 import { handleOperatorManagementRequest } from "./operator-management";
+import { handleMemberHistoryImportRequest } from "./member-history-import";
 
 type CommunitySubmission = {
   reportId: string;
@@ -249,6 +250,8 @@ async function routeRequest(
   if (memberImportResponse) return memberImportResponse;
   const operatorManagementResponse = await handleOperatorManagementRequest(request, env);
   if (operatorManagementResponse) return operatorManagementResponse;
+  const memberHistoryImportResponse = await handleMemberHistoryImportRequest(request, env);
+  if (memberHistoryImportResponse) return memberHistoryImportResponse;
   const memberDirectoryResponse = await handleMemberDirectoryRequest(request, env);
   if (memberDirectoryResponse) return memberDirectoryResponse;
   const eventResponse = await handleEventRequest(request, env);

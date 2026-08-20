@@ -11,6 +11,10 @@ import {
   exportMemberImportCsv,
   type MemberImportDryRun,
 } from "@/lib/member-import-dry-run";
+import {
+  parseMemberHistoryImport,
+  type MemberHistoryImportPreview,
+} from "@/lib/member-history-import";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
@@ -104,6 +108,12 @@ export default function CsvImportScreen() {
   const [bulkImportConfirmation, setBulkImportConfirmation] = useState("");
   const [bulkImportProgress, setBulkImportProgress] = useState<string | null>(null);
   const [reviewImportConfirmation, setReviewImportConfirmation] = useState("");
+  const [historySource, setHistorySource] = useState<{
+    name: string;
+    preview: MemberHistoryImportPreview;
+  } | null>(null);
+  const [historyConfirmation, setHistoryConfirmation] = useState("");
+  const [historyImporting, setHistoryImporting] = useState(false);
   const importMutation = trpc.migration.importCsv.useMutation();
 
   useEffect(() => {
@@ -176,6 +186,78 @@ export default function CsvImportScreen() {
 
   const handleDownloadTemplate = (template: typeof CSV_TEMPLATES[0]) => {
     setSelectedTemplate(selectedTemplate === template.type ? null : template.type);
+  };
+
+  const handleMemberHistorySource = () => {
+    if (typeof document === "undefined") return;
+    const input = createCsvFileInput(".csv,text/csv");
+    input.onchange = async () => {
+      const file = input.files?.[0];
+      if (!file) {
+        input.remove();
+        return;
+      }
+      if (file.size > 2 * 1024 * 1024) {
+        Alert.alert("ファイルが大きすぎます", "2MB以内の集計済みCSVを選択してください。");
+        input.remove();
+        return;
+      }
+      try {
+        setHistorySource({ name: file.name, preview: parseMemberHistoryImport(await file.text()) });
+        setHistoryConfirmation("");
+      } catch (error) {
+        Alert.alert("CSVを確認できませんでした", error instanceof Error ? error.message : "ファイル形式を確認してください。");
+      } finally {
+        input.remove();
+      }
+    };
+    input.click();
+  };
+
+  const handleMemberHistoryCommit = async () => {
+    if (!historySource || historyImporting) return;
+    const expected = `IMPORT_HISTORY_${historySource.preview.rows.length}`;
+    if (historyConfirmation !== expected) {
+      Alert.alert("確認文字が一致しません", `${expected} と入力してください。`);
+      return;
+    }
+    setHistoryImporting(true);
+    try {
+      const result = await apiCall<{
+        success: boolean;
+        runId: string;
+        matchedCount: number;
+        unmatchedCount: number;
+        participationTotal: number;
+        organizerTotal: number;
+      }>("/api/admin/member-history-import/commit", {
+        method: "POST",
+        body: JSON.stringify({
+          confirmation: expected,
+          sourceFilename: historySource.name,
+          rows: historySource.preview.rows,
+        }),
+      });
+      setHistory((current) => [{
+        id: result.runId,
+        filename: historySource.name,
+        importedAt: new Date().toLocaleString("ja-JP"),
+        recordCount: result.matchedCount,
+        status: "success",
+        type: "participations",
+        errorMessage: result.unmatchedCount ? `${result.unmatchedCount}名は会員未照合です` : undefined,
+      }, ...current]);
+      setHistorySource(null);
+      setHistoryConfirmation("");
+      Alert.alert(
+        "参加・幹事回数を移行しました",
+        `${result.matchedCount}名を更新しました。参加${result.participationTotal}回・幹事${result.organizerTotal}回です。${result.unmatchedCount ? ` ${result.unmatchedCount}名は会員未照合のため更新していません。` : ""}`,
+      );
+    } catch (error) {
+      Alert.alert("移行できませんでした", error instanceof Error ? error.message : "データを確認してください。");
+    } finally {
+      setHistoryImporting(false);
+    }
   };
 
   const handleMemberSource = (source: "subscriptions" | "discord" | "customers") => {
@@ -639,6 +721,76 @@ export default function CsvImportScreen() {
                   </Pressable>
                 </View>
               )}
+            </View>
+          )}
+        </View>
+
+        <View style={{ backgroundColor: "#F5EEF9", borderRadius: 18, padding: 16, marginBottom: 24, borderWidth: 1, borderColor: "#D8C4E4" }}>
+          <Text style={{ fontSize: 17, fontWeight: "800", color: "#4D2C61" }}>
+            過去の参加回数・幹事回数
+          </Text>
+          <Text style={{ fontSize: 12, lineHeight: 18, color: "#6F4A83", marginTop: 5 }}>
+            Discord IDで既存会員と照合し、プロフィールの参加回数・幹事回数を更新します。名前の表記揺れには影響されません。
+          </Text>
+          <View style={{ backgroundColor: "#FFFFFFB8", borderRadius: 11, padding: 11, marginTop: 12 }}>
+            <Text style={{ fontSize: 11, lineHeight: 17, color: "#5E3974", fontWeight: "700" }}>
+              必須列：discord_user_id, participation_count, organizer_count{"\n"}
+              幹事情報をまだ用意していない場合は organizer_count を0にしてください。
+            </Text>
+          </View>
+          <Pressable
+            onPress={handleMemberHistorySource}
+            style={({ pressed }) => ({
+              marginTop: 12,
+              borderWidth: 1,
+              borderColor: historySource ? "#34C759" : "#B997CB",
+              backgroundColor: colors.surface,
+              borderRadius: 12,
+              padding: 12,
+              flexDirection: "row",
+              alignItems: "center",
+              opacity: pressed ? 0.7 : 1,
+            })}
+          >
+            <IconSymbol name={historySource ? "checkmark.circle.fill" : "doc.fill"} size={18} color={historySource ? "#34C759" : "#6F4A83"} />
+            <View style={{ flex: 1, marginLeft: 10 }}>
+              <Text style={{ fontSize: 13, fontWeight: "800", color: colors.foreground }}>集計済みCSVを選択</Text>
+              <Text numberOfLines={1} style={{ fontSize: 11, color: colors.muted, marginTop: 2 }}>{historySource?.name ?? "CSVファイルを選択"}</Text>
+            </View>
+          </Pressable>
+          {historySource && (
+            <View style={{ marginTop: 12 }}>
+              <View style={{ flexDirection: "row", gap: 8 }}>
+                {[
+                  ["照合対象", historySource.preview.rows.length, "名"],
+                  ["参加履歴", historySource.preview.participationTotal, "回"],
+                  ["幹事履歴", historySource.preview.organizerTotal, "回"],
+                ].map(([label, value, unit]) => (
+                  <View key={String(label)} style={{ flex: 1, backgroundColor: colors.surface, borderRadius: 10, padding: 9 }}>
+                    <Text style={{ color: colors.muted, fontSize: 10 }}>{label}</Text>
+                    <Text style={{ color: "#5E3974", fontSize: 18, fontWeight: "900", marginTop: 2 }}>{Number(value).toLocaleString()}{unit}</Text>
+                  </View>
+                ))}
+              </View>
+              <Text style={{ fontSize: 11, color: "#6F4A83", marginTop: 12, marginBottom: 6 }}>
+                実行するには IMPORT_HISTORY_{historySource.preview.rows.length} と入力
+              </Text>
+              <TextInput
+                value={historyConfirmation}
+                onChangeText={setHistoryConfirmation}
+                autoCapitalize="characters"
+                autoCorrect={false}
+                placeholder={`IMPORT_HISTORY_${historySource.preview.rows.length}`}
+                placeholderTextColor={colors.muted}
+                style={{ borderWidth: 1, borderColor: "#D8C4E4", backgroundColor: colors.surface, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, color: colors.foreground, fontSize: 13 }}
+              />
+              <Pressable
+                disabled={historyImporting}
+                onPress={handleMemberHistoryCommit}
+                style={{ marginTop: 10, borderRadius: 11, paddingVertical: 12, alignItems: "center", backgroundColor: "#6F4A83", opacity: historyImporting ? 0.6 : 1 }}
+              >
+                {historyImporting ? <ActivityIndicator color="#FFF" /> : <Text style={{ color: "#FFF", fontSize: 13, fontWeight: "800" }}>参加・幹事回数を本番反映する</Text>}
+              </Pressable>
             </View>
           )}
         </View>
