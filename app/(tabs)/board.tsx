@@ -18,7 +18,6 @@ import {
   type BoardCategory,
   type BoardPoll,
   type Club,
-  type ClubApplication,
 } from "@/constants/mock-data";
 import { useAuthContext } from "@/lib/auth-context";
 import { useColors } from "@/hooks/use-colors";
@@ -31,7 +30,7 @@ import { formatMealReportArea } from "@/lib/restaurant-location";
 import { XpRewardPopup } from "@/components/xp-reward-popup";
 import { awardXp, type XpReward } from "@/lib/xp-store";
 import { POINT_ACTIONS } from "@/constants/mock-data";
-import { updateClub, useClubs } from "@/lib/club-store";
+import { submitClubApplication as submitClubApplicationToStore, updateClub, useClubs } from "@/lib/club-store";
 import { getMentionGroups, getMentionQuery, getMentionedMemberIds, insertMention } from "@/lib/mentions";
 import { sendClubApplicationNotification, sendMentionNotification } from "@/lib/notifications";
 import { applyTextFormat, type TextFormat, type TextSelection } from "@/lib/text-formatting";
@@ -703,13 +702,16 @@ function ThreadDetailModal({
   const clubApplicationPending = Boolean(applicationClub?.applicantIds.includes(CURRENT_USER.id));
   const clubApplicationMember = Boolean(applicationClub?.memberIds.includes(CURRENT_USER.id));
 
-  const submitClubApplication = () => {
+  const submitClubApplication = async () => {
     if (!applicationClub || !clubWantsToDo.trim() || !clubLeaderMessage.trim()) return;
-    const application: ClubApplication = { memberId: CURRENT_USER.id, wantsToDo: clubWantsToDo.trim(), messageToLeader: clubLeaderMessage.trim(), status: "pending", appliedAt: new Date().toISOString() };
-    updateClub({ ...applicationClub, applicantIds: [...new Set([...applicationClub.applicantIds, CURRENT_USER.id])], applications: [...applicationClub.applications.filter((item) => item.memberId !== CURRENT_USER.id), application] });
-    sendClubApplicationNotification(applicationClub.name, CURRENT_USER.name, applicationClub.leaderId, applicationClub.id);
-    setShowClubApplication(false);
-    Alert.alert("申請を送信しました", "部長の承認後、部員限定の掲示板を閲覧できます。");
+    try {
+      await submitClubApplicationToStore(applicationClub.id, clubWantsToDo.trim(), clubLeaderMessage.trim());
+      sendClubApplicationNotification(applicationClub.name, CURRENT_USER.name, applicationClub.leaderId, applicationClub.id);
+      setShowClubApplication(false);
+      Alert.alert("申請を送信しました", "部長の承認後、部員限定の掲示板を閲覧できます。");
+    } catch (error) {
+      Alert.alert("申請できませんでした", error instanceof Error ? error.message : "もう一度お試しください。");
+    }
   };
 
   useEffect(() => {

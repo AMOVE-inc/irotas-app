@@ -33,7 +33,14 @@ import {
   sendLeaderAppointmentNotification,
   sendClubApplicationNotification,
 } from "@/lib/notifications";
-import { addClub as addClubToStore, updateClub as updateClubInStore, useClubs } from "@/lib/club-store";
+import {
+  addClub as addClubToStore,
+  leaveClub as leaveClubInStore,
+  reviewClubApplication as reviewClubApplicationInStore,
+  submitClubApplication as submitClubApplicationToStore,
+  updateClub as updateClubInStore,
+  useClubs,
+} from "@/lib/club-store";
 
 // 部活動掲示板の投稿型
 interface ClubPost {
@@ -650,8 +657,8 @@ function ClubDetailModal({
 }: {
   club: Club;
   onClose: () => void;
-  onApply: (clubId: string, application: ClubApplication) => void;
-  onLeave: (clubId: string) => void;
+  onApply: (clubId: string, application: ClubApplication) => Promise<Club>;
+  onLeave: (clubId: string) => Promise<Club>;
   onUpdateClub: (updated: Club) => void;
 }) {
   const colors = useColors();
@@ -680,7 +687,7 @@ function ClubDetailModal({
   const isLeader = currentLeaderId === CURRENT_USER.id;
   const canManageMembers = isLeader || userIsAdmin;
 
-  const handleApply = () => {
+  const handleApply = async () => {
     if (hasApplied || isMember) return;
     if (!wantsToDo.trim() || !messageToLeader.trim()) {
       setApplicationError("どちらの項目も入力してください。");
@@ -693,11 +700,15 @@ function ClubDetailModal({
       status: "pending",
       appliedAt: new Date().toISOString(),
     };
-    onApply(club.id, application);
-    setApplicantIds([...applicantIds, CURRENT_USER.id]);
-    setApplications([...applications, application]);
-    sendClubApplicationNotification(club.name, CURRENT_USER.name, currentLeaderId, club.id);
-    Alert.alert("申請完了", `${club.name}への入部申請を送りました。部長の審査をお待ちください。`);
+    try {
+      const updated = await onApply(club.id, application);
+      setApplicantIds(updated.applicantIds);
+      setApplications(updated.applications);
+      sendClubApplicationNotification(club.name, CURRENT_USER.name, currentLeaderId, club.id);
+      Alert.alert("申請完了", `${club.name}への入部申請を送りました。部長の審査をお待ちください。`);
+    } catch (error) {
+      Alert.alert("申請できませんでした", error instanceof Error ? error.message : "もう一度お試しください。");
+    }
   };
 
   const handleLeave = () => {
@@ -706,10 +717,14 @@ function ClubDetailModal({
       {
         text: "退部する",
         style: "destructive",
-        onPress: () => {
-          onLeave(club.id);
-          setMemberIds(memberIds.filter((id) => id !== CURRENT_USER.id));
-          onClose();
+        onPress: async () => {
+          try {
+            const updated = await onLeave(club.id);
+            setMemberIds(updated.memberIds);
+            onClose();
+          } catch (error) {
+            Alert.alert("退部できませんでした", error instanceof Error ? error.message : "もう一度お試しください。");
+          }
         },
       },
     ]);
@@ -722,16 +737,19 @@ function ClubDetailModal({
       { text: "キャンセル", style: "cancel" },
       {
         text: "承認する",
-        onPress: () => {
-          const newMembers = [...memberIds, memberId];
-          setMemberIds(newMembers);
-          setApplicantIds(applicantIds.filter((id) => id !== memberId));
-          setPendingIds(pendingIds.filter((id) => id !== memberId));
-          const remainingApplications = applications.filter((application) => application.memberId !== memberId);
-          setApplications(remainingApplications);
-          onUpdateClub({ ...club, memberIds: newMembers, applicantIds: applicantIds.filter((id) => id !== memberId), applications: remainingApplications });
-          sendClubApprovalNotification(club.name, CURRENT_USER.name, memberId, club.id);
-          Alert.alert("承認完了", `${member?.name ?? ""}さんの入部を承認しました。`);
+        onPress: async () => {
+          try {
+            const updated = await reviewClubApplicationInStore(club.id, memberId, "approve");
+            setMemberIds(updated.memberIds);
+            setApplicantIds(updated.applicantIds);
+            setPendingIds(updated.applications.filter((item) => item.status === "on_hold").map((item) => item.memberId));
+            setApplications(updated.applications);
+            onUpdateClub(updated);
+            sendClubApprovalNotification(club.name, CURRENT_USER.name, memberId, club.id);
+            Alert.alert("承認完了", `${member?.name ?? ""}さんの入部を承認しました。`);
+          } catch (error) {
+            Alert.alert("承認できませんでした", error instanceof Error ? error.message : "もう一度お試しください。");
+          }
         },
       },
     ]);
@@ -747,15 +765,17 @@ function ClubDetailModal({
         { text: "キャンセル", style: "cancel" },
         {
           text: "保留にする",
-          onPress: () => {
-            setPendingIds([...pendingIds, memberId]);
-            setApplicantIds(applicantIds.filter((id) => id !== memberId));
-            const updatedApplications = applications.map((application) =>
-              application.memberId === memberId ? { ...application, status: "on_hold" as const } : application,
-            );
-            setApplications(updatedApplications);
-            onUpdateClub({ ...club, applicantIds: applicantIds.filter((id) => id !== memberId), applications: updatedApplications });
-            Alert.alert("保留完了", `${member?.name ?? ""}さんの申請を保留にしました。`);
+          onPress: async () => {
+            try {
+              const updated = await reviewClubApplicationInStore(club.id, memberId, "hold");
+              setApplicantIds(updated.applicantIds);
+              setPendingIds(updated.applications.filter((item) => item.status === "on_hold").map((item) => item.memberId));
+              setApplications(updated.applications);
+              onUpdateClub(updated);
+              Alert.alert("保留完了", `${member?.name ?? ""}さんの申請を保留にしました。`);
+            } catch (error) {
+              Alert.alert("保留にできませんでした", error instanceof Error ? error.message : "もう一度お試しください。");
+            }
           },
         },
       ],
@@ -770,12 +790,16 @@ function ClubDetailModal({
       {
         text: "却下する",
         style: "destructive",
-        onPress: () => {
-          setApplicantIds(applicantIds.filter((id) => id !== memberId));
-          setPendingIds(pendingIds.filter((id) => id !== memberId));
-          const remainingApplications = applications.filter((application) => application.memberId !== memberId);
-          setApplications(remainingApplications);
-          onUpdateClub({ ...club, applicantIds: applicantIds.filter((id) => id !== memberId), applications: remainingApplications });
+        onPress: async () => {
+          try {
+            const updated = await reviewClubApplicationInStore(club.id, memberId, "reject");
+            setApplicantIds(updated.applicantIds);
+            setPendingIds(updated.applications.filter((item) => item.status === "on_hold").map((item) => item.memberId));
+            setApplications(updated.applications);
+            onUpdateClub(updated);
+          } catch (error) {
+            Alert.alert("却下できませんでした", error instanceof Error ? error.message : "もう一度お試しください。");
+          }
         },
       },
     ]);
@@ -1594,22 +1618,16 @@ export default function ClubsScreen() {
   const [selectedClub, setSelectedClub] = useState<Club | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
 
-  const handleApply = (clubId: string, application: ClubApplication) => {
-    const club = clubs.find((item) => item.id === clubId);
-    if (!club) return;
-    const updated = {
-      ...club,
-      applicantIds: [...club.applicantIds, CURRENT_USER.id],
-      applications: [...club.applications, application],
-    };
-    updateClubInStore(updated);
+  const handleApply = async (clubId: string, application: ClubApplication) => {
+    const updated = await submitClubApplicationToStore(clubId, application.wantsToDo, application.messageToLeader);
     setSelectedClub(updated);
+    return updated;
   };
 
-  const handleLeave = (clubId: string) => {
-    const club = clubs.find((item) => item.id === clubId);
-    if (!club) return;
-    updateClubInStore({ ...club, memberIds: club.memberIds.filter((id) => id !== CURRENT_USER.id) });
+  const handleLeave = async (clubId: string) => {
+    const updated = await leaveClubInStore(clubId);
+    if (selectedClub?.id === clubId) setSelectedClub(updated);
+    return updated;
   };
 
   const handleUpdateClub = (updated: Club) => {

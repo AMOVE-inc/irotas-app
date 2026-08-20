@@ -299,6 +299,66 @@ function linkApprovedDiscordAccessRoles(db: D1Database, now: string) {
     .bind(now);
 }
 
+function refreshClubLeaders(db: D1Database, now: string) {
+  return db.prepare(`UPDATE clubs
+    SET leader_member_id = (
+      SELECT m.id FROM members m WHERE m.discord_user_id = CASE clubs.id
+        WHEN 'club-disney' THEN '1457371560670265374'
+        WHEN 'club-walk' THEN '1457652020164034686'
+        WHEN 'club-travel' THEN '1353010654189191178'
+        WHEN 'club-sports-watch' THEN '916635788366708767'
+        WHEN 'club-wine' THEN '1446344592214724700'
+        WHEN 'club-bread' THEN '1228677952334725213'
+        WHEN 'club-sweets' THEN '1459195336991047815'
+        WHEN 'club-cooking-class' THEN '1353587486604922921'
+        WHEN 'club-day-drinking' THEN '1353735645373136926'
+        WHEN 'club-theater' THEN '1458772421887656090'
+        WHEN 'club-running' THEN '1228678386902372374'
+        WHEN 'club-sports' THEN '1403348999557222473'
+      END
+    ), updated_at = ?
+    WHERE status = 'active' AND EXISTS (
+      SELECT 1 FROM members m WHERE m.discord_user_id = CASE clubs.id
+        WHEN 'club-disney' THEN '1457371560670265374'
+        WHEN 'club-walk' THEN '1457652020164034686'
+        WHEN 'club-travel' THEN '1353010654189191178'
+        WHEN 'club-sports-watch' THEN '916635788366708767'
+        WHEN 'club-wine' THEN '1446344592214724700'
+        WHEN 'club-bread' THEN '1228677952334725213'
+        WHEN 'club-sweets' THEN '1459195336991047815'
+        WHEN 'club-cooking-class' THEN '1353587486604922921'
+        WHEN 'club-day-drinking' THEN '1353735645373136926'
+        WHEN 'club-theater' THEN '1458772421887656090'
+        WHEN 'club-running' THEN '1228678386902372374'
+        WHEN 'club-sports' THEN '1403348999557222473'
+      END
+    )`).bind(now);
+}
+
+function syncClubMembershipsFromDiscordRoles(db: D1Database, now: string) {
+  return db.prepare(`INSERT INTO club_memberships
+    (club_id, member_id, status, source, applied_at, approved_at, updated_at)
+    SELECT c.id, m.id, 'approved', 'discord', ?, ?, ?
+    FROM clubs c
+    CROSS JOIN members m
+    CROSS JOIN json_each(CASE WHEN json_valid(m.discord_roles_json) THEN m.discord_roles_json ELSE '[]' END) r
+    WHERE CAST(r.value AS TEXT) LIKE '%' || c.name || '%'
+    ON CONFLICT(club_id, member_id) DO UPDATE SET
+      status = CASE WHEN club_memberships.status = 'approved' THEN club_memberships.status ELSE 'approved' END,
+      source = CASE WHEN club_memberships.status = 'approved' THEN club_memberships.source ELSE 'discord' END,
+      approved_at = COALESCE(club_memberships.approved_at, excluded.approved_at), updated_at = excluded.updated_at`)
+    .bind(now, now, now);
+}
+
+function syncClubLeaderMemberships(db: D1Database, now: string) {
+  return db.prepare(`INSERT INTO club_memberships
+    (club_id, member_id, status, source, applied_at, approved_at, updated_at)
+    SELECT id, leader_member_id, 'approved', 'admin', ?, ?, ? FROM clubs WHERE leader_member_id IS NOT NULL
+    ON CONFLICT(club_id, member_id) DO UPDATE SET status = 'approved', source = 'admin',
+      approved_at = COALESCE(club_memberships.approved_at, excluded.approved_at), updated_at = excluded.updated_at`)
+    .bind(now, now, now);
+}
+
 async function importMembers(
   db: D1Database,
   rows: ValidatedMemberImport[],
@@ -339,6 +399,9 @@ async function importMembers(
       ...rows.map((row) => memberStatement(db, row, now)),
       reconcileApprovedDiscordAccessRoles(db, now),
       linkApprovedDiscordAccessRoles(db, now),
+      refreshClubLeaders(db, now),
+      syncClubMembershipsFromDiscordRoles(db, now),
+      syncClubLeaderMemberships(db, now),
     ]);
     for (const row of rows) {
       const member = await db

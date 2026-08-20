@@ -54,6 +54,32 @@ export type OperatorMember = {
   memberTerm: string | null;
 };
 
+export type ClubApplicationRecord = {
+  memberId: string;
+  wantsToDo: string;
+  messageToLeader: string;
+  status: "pending" | "on_hold";
+  appliedAt: string;
+};
+
+export type ClubRecord = {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  leaderId: string;
+  memberIds: string[];
+  applicantIds: string[];
+  applications: ClubApplicationRecord[];
+  createdByAdmin: true;
+  events: [];
+  status: "active" | "archived";
+  canReviewApplications: boolean;
+  viewerMembershipStatus: "pending" | "on_hold" | "approved" | "rejected" | "left" | null;
+  viewerIsLeader: boolean;
+  viewerMemberId: string | null;
+};
+
 export class ApiError extends Error {
   constructor(
     message: string,
@@ -256,6 +282,39 @@ export async function getPrivateMemberNote(memberId: string) {
   return apiCall<{ note: string; updatedAt: string | null }>(
     `/api/members/${encodeURIComponent(memberId)}/private-note`,
   );
+}
+
+export async function getClubs() {
+  const result = await apiCall<{ clubs: ClubRecord[] }>("/api/clubs");
+  return result.clubs;
+}
+
+export async function getClub(clubId: string) {
+  const result = await apiCall<{ club: ClubRecord }>(`/api/clubs/${encodeURIComponent(clubId)}`);
+  return result.club;
+}
+
+export async function submitClubApplication(clubId: string, wantsToDo: string, messageToLeader: string) {
+  const result = await apiCall<{ club: ClubRecord }>(`/api/clubs/${encodeURIComponent(clubId)}/applications`, {
+    method: "POST",
+    body: JSON.stringify({ wantsToDo, messageToLeader }),
+  });
+  return result.club;
+}
+
+export async function reviewClubApplication(clubId: string, memberId: string, action: "approve" | "hold" | "reject") {
+  const result = await apiCall<{ club: ClubRecord }>(
+    `/api/clubs/${encodeURIComponent(clubId)}/applications/${encodeURIComponent(memberId)}`,
+    { method: "PATCH", body: JSON.stringify({ action }) },
+  );
+  return result.club;
+}
+
+export async function leaveClub(clubId: string) {
+  const result = await apiCall<{ club: ClubRecord }>(`/api/clubs/${encodeURIComponent(clubId)}/membership`, {
+    method: "DELETE",
+  });
+  return result.club;
 }
 
 export async function setPrivateMemberNote(memberId: string, note: string) {
