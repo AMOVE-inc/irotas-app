@@ -180,7 +180,7 @@ export default function MembersScreen() {
                   </View>
                 </View>
                 <Text style={{ fontSize: 12, color: colors.muted, marginTop: 2 }}>
-                  ID: {item.id} · {item.generation}期生
+                  ID: {item.id}{item.generation > 0 ? ` · ${item.generation}期生` : ""}
                 </Text>
                 {item.bio && (
                   <Text

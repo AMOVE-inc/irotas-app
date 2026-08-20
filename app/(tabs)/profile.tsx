@@ -914,7 +914,7 @@ export default function ProfileScreen() {
             <View style={{ flexDirection: "row", alignItems: "center" }}>
               <IconSymbol name="person.fill" size={14} color={colors.muted} />
               <Text style={{ fontSize: 13, color: colors.muted, marginLeft: 4 }}>
-                {user.generation}期生
+                {user.generation > 0 ? `${user.generation}期生` : "期設定なし"}
               </Text>
             </View>
             <View style={{ flexDirection: "row", alignItems: "center" }}>
@@ -1114,7 +1114,7 @@ export default function ProfileScreen() {
         </Pressable>
 
         {/* Points Progress */}
-        <PointsProgressCard points={user.points} rank={user.rank} showRank={!userIsOperator} />
+        {!userIsOperator ? <PointsProgressCard points={user.points} rank={user.rank} /> : null}
 
         {/* イロタスポイントカード */}
         <View

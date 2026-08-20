@@ -310,7 +310,9 @@ function memberPayload(row: MemberRow) {
     joinedAt: row.subscription_started_at ?? null,
     achievementBadges: jsonArray(row.achievement_badges_json),
     profile: profilePayload(row.profile_json),
-    xp: row.xp ?? 0,
+    xp: ["operator", "admin"].includes(row.access_role) || ["operator", "admin"].includes(row.role)
+      ? 0
+      : row.xp ?? 0,
     participationCount: row.participation_count ?? 0,
     organizerCount: row.organizer_count ?? 0,
   };
@@ -444,8 +446,7 @@ export async function requestHasMemberAccess(
   if (!allowedAccessRoles?.length) return true;
   return (
     allowedAccessRoles.includes(member.access_role) ||
-    member.role === "admin" ||
-    member.role === "operator"
+    member.role === "admin"
   );
 }
 

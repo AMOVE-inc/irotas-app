@@ -227,7 +227,7 @@ export default function MemberProfileScreen() {
             <View style={{ flexDirection: "row", alignItems: "center" }}>
               <IconSymbol name="person.fill" size={14} color={colors.muted} />
               <Text style={{ fontSize: 13, color: colors.muted, marginLeft: 4 }}>
-                {member.generation}期生
+                {member.generation > 0 ? `${member.generation}期生` : "期設定なし"}
               </Text>
             </View>
             <View style={{ flexDirection: "row", alignItems: "center" }}>

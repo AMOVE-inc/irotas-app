@@ -57,7 +57,7 @@ export function publicMemberFromRow(row: MemberDirectoryRow) {
     joinedAt:
       row.subscription_started_at ?? row.discord_joined_at ?? row.created_at,
     profile: jsonObject(row.profile_json),
-    xp: row.xp,
+    xp: ["operator", "admin"].includes(row.access_role) ? 0 : row.xp,
     participationCount: row.participation_count,
     organizerCount: row.organizer_count,
   };

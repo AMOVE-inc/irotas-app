@@ -2475,7 +2475,9 @@ export default function BoardScreen() {
         onAdd={(thread) => {
           setDynamicThreads((prev) => [thread, ...prev]);
           const xpAction = thread.category === "meal-report" ? POINT_ACTIONS.mealReportPost : POINT_ACTIONS.boardPost;
-          void awardXp(CURRENT_USER.points, xpAction.points, xpAction.label).then(setXpReward);
+          if (!isOperatorRole(authUser?.role, authUser?.accessRole)) {
+            void awardXp(CURRENT_USER.points, xpAction.points, xpAction.label).then(setXpReward);
+          }
           const submission = communityRestaurantFromMealReport(thread);
           if (submission) {
             void registerCommunityRestaurant(submission).catch(() => {

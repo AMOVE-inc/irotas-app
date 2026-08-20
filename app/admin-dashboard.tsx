@@ -39,7 +39,14 @@ import { sendLeaderAppointmentNotification } from "@/lib/notifications";
 import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
 import { loadImportedGourmetContests, type ImportedGourmetContest } from "@/lib/gourmet-contest-import";
-import { getMembershipSummary, syncSquareSubscriptions, type MembershipSummary } from "@/lib/_core/api";
+import {
+  getMembershipSummary,
+  getOperatorMembers,
+  syncSquareSubscriptions,
+  updateOperatorMemberTerm,
+  type MembershipSummary,
+  type OperatorMember,
+} from "@/lib/_core/api";
 
 type PointsHistoryEntry = {
   id: string;
@@ -62,7 +69,7 @@ export default function AdminDashboardScreen() {
   const clubs = useClubs();
 
   // すべての state を条件分岐の外で定義
-  const [activeTab, setActiveTab] = useState<"overview" | "members" | "events" | "contests" | "clubs" | "payments" | "emails" | "announcements" | "coupons" | "analytics">(tab === "coupons" ? "coupons" : tab === "contests" ? "contests" : "overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "operators" | "members" | "events" | "contests" | "clubs" | "payments" | "emails" | "announcements" | "coupons" | "analytics">(tab === "coupons" ? "coupons" : tab === "contests" ? "contests" : tab === "operators" ? "operators" : "overview");
   const [editingClub, setEditingClub] = useState<Club | null>(null);
   const [paymentRecords, setPaymentRecords] = useState<PaymentRecord[]>([]);
   const [selectedPaymentEventId, setSelectedPaymentEventId] = useState<string | null>(null);
@@ -89,6 +96,10 @@ export default function AdminDashboardScreen() {
   const [squareSyncProgress, setSquareSyncProgress] = useState<string | null>(null);
   const [membershipSummary, setMembershipSummary] = useState<MembershipSummary | null>(null);
   const [membershipSummaryLoading, setMembershipSummaryLoading] = useState(false);
+  const [operatorMembers, setOperatorMembers] = useState<OperatorMember[]>([]);
+  const [operatorTerms, setOperatorTerms] = useState<Record<number, string>>({});
+  const [operatorsLoading, setOperatorsLoading] = useState(false);
+  const [savingOperatorId, setSavingOperatorId] = useState<number | null>(null);
   const loadMembershipSummary = async () => {
     setMembershipSummaryLoading(true);
     try {
@@ -101,6 +112,22 @@ export default function AdminDashboardScreen() {
   };
   useEffect(() => {
     if (userIsAdmin && activeTab === "overview") void loadMembershipSummary();
+  }, [userIsAdmin, activeTab]);
+  useEffect(() => {
+    if (!userIsAdmin || activeTab !== "operators") return;
+    setOperatorsLoading(true);
+    getOperatorMembers()
+      .then((operators) => {
+        setOperatorMembers(operators);
+        setOperatorTerms(Object.fromEntries(operators.map((operator) => [
+          operator.userId,
+          operator.memberTerm?.match(/\d+/)?.[0] ?? "",
+        ])));
+      })
+      .catch((error) => {
+        Alert.alert("読み込みエラー", error instanceof Error ? error.message : "運営メンバーを読み込めませんでした");
+      })
+      .finally(() => setOperatorsLoading(false));
   }, [userIsAdmin, activeTab]);
   const { data: allowedEmails, refetch: refetchEmails, isLoading: emailsLoading } = trpc.allowedEmails.list.useQuery(
     undefined,
@@ -406,6 +433,27 @@ export default function AdminDashboardScreen() {
     );
   };
 
+  const saveOperatorTerm = async (operator: OperatorMember) => {
+    const raw = operatorTerms[operator.userId]?.trim() ?? "";
+    if (raw && (!/^\d{1,2}$/.test(raw) || Number(raw) < 1 || Number(raw) > 99)) {
+      Alert.alert("入力内容を確認", "期は1〜99の半角数字で入力してください。");
+      return;
+    }
+    setSavingOperatorId(operator.userId);
+    try {
+      const updated = await updateOperatorMemberTerm(
+        operator.userId,
+        raw ? `第${Number(raw)}期` : null,
+      );
+      setOperatorMembers((current) => current.map((item) => item.userId === updated.userId ? updated : item));
+      Alert.alert("保存しました", `${updated.displayName}さんを${updated.memberTerm ?? "期設定なし"}に設定しました。`);
+    } catch (error) {
+      Alert.alert("保存できませんでした", error instanceof Error ? error.message : "通信状況を確認してください");
+    } finally {
+      setSavingOperatorId(null);
+    }
+  };
+
   return (
     <ScreenContainer edges={["top", "left", "right"]}>
       {/* Header */}
@@ -450,8 +498,8 @@ export default function AdminDashboardScreen() {
         }}
         style={{ borderBottomWidth: 0.5, borderBottomColor: colors.border, flexGrow: 0 }}
       >
-        {(["overview", "members", "events", "contests", "clubs", "payments", "emails", "announcements", "coupons", "analytics"] as const).map((tab) => {
-          const labels = { overview: "概要", members: "会員", events: "イベント", contests: "グルメ選手権", clubs: "部活", payments: "支払管理", emails: "承認メール", announcements: "お知らせ", coupons: "クーポン", analytics: "分析" };
+        {(["overview", "operators", "members", "events", "contests", "clubs", "payments", "emails", "announcements", "coupons", "analytics"] as const).map((tab) => {
+          const labels = { overview: "概要", operators: "運営メンバー", members: "会員", events: "イベント", contests: "グルメ選手権", clubs: "部活", payments: "支払管理", emails: "承認メール", announcements: "お知らせ", coupons: "クーポン", analytics: "分析" };
           return (
             <Pressable
               key={tab}
@@ -689,6 +737,95 @@ export default function AdminDashboardScreen() {
                 </View>
               </>
             )}
+          </>
+        )}
+
+        {activeTab === "operators" && (
+          <>
+            <Text style={{ fontSize: 18, fontWeight: "800", color: colors.foreground }}>
+              運営メンバー管理
+            </Text>
+            <Text style={{ fontSize: 13, lineHeight: 20, color: colors.muted, marginTop: 6, marginBottom: 14 }}>
+              運営メンバーの「第X期」を設定します。この画面と保存機能は管理者だけが利用できます。運営メンバーには会員ランクとXPは表示されません。
+            </Text>
+            {operatorsLoading ? (
+              <ActivityIndicator color="#E8A0BF" style={{ marginVertical: 24 }} />
+            ) : operatorMembers.length === 0 ? (
+              <View style={{ backgroundColor: colors.surface, borderRadius: 14, padding: 18 }}>
+                <Text style={{ color: colors.muted, textAlign: "center" }}>運営メンバーが登録されていません。</Text>
+              </View>
+            ) : operatorMembers.map((operator) => (
+              <View
+                key={operator.userId}
+                style={{
+                  backgroundColor: colors.surface,
+                  borderRadius: 14,
+                  borderWidth: 1,
+                  borderColor: colors.border,
+                  padding: 14,
+                  marginBottom: 10,
+                }}
+              >
+                <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 12 }}>
+                  <View style={{ flex: 1 }}>
+                    <View style={{ flexDirection: "row", alignItems: "center", flexWrap: "wrap", gap: 6 }}>
+                      <Text style={{ fontSize: 15, fontWeight: "800", color: colors.foreground }}>{operator.displayName}</Text>
+                      <View style={{ borderRadius: 8, paddingHorizontal: 7, paddingVertical: 3, backgroundColor: "#FDE7E7" }}>
+                        <Text style={{ fontSize: 10, fontWeight: "900", color: "#C92A2A" }}>運営メンバー</Text>
+                      </View>
+                    </View>
+                    {operator.memberId ? <Text style={{ fontSize: 11, color: colors.muted, marginTop: 4 }}>会員ID {operator.memberId}</Text> : null}
+                  </View>
+                  <Text style={{ fontSize: 12, fontWeight: "700", color: colors.muted }}>{operator.memberTerm ?? "期設定なし"}</Text>
+                </View>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                  <Text style={{ fontSize: 14, fontWeight: "700", color: colors.foreground }}>第</Text>
+                  <TextInput
+                    value={operatorTerms[operator.userId] ?? ""}
+                    onChangeText={(value) => setOperatorTerms((current) => ({
+                      ...current,
+                      [operator.userId]: value.replace(/[^0-9]/g, "").slice(0, 2),
+                    }))}
+                    keyboardType="number-pad"
+                    placeholder="例：2"
+                    placeholderTextColor={colors.muted}
+                    style={{
+                      flex: 1,
+                      borderRadius: 10,
+                      borderWidth: 1,
+                      borderColor: colors.border,
+                      backgroundColor: colors.background,
+                      paddingHorizontal: 12,
+                      paddingVertical: 9,
+                      fontSize: 15,
+                      color: colors.foreground,
+                    }}
+                  />
+                  <Text style={{ fontSize: 14, fontWeight: "700", color: colors.foreground }}>期</Text>
+                  <Pressable
+                    disabled={savingOperatorId === operator.userId}
+                    onPress={() => void saveOperatorTerm(operator)}
+                    style={({ pressed }) => ({
+                      minWidth: 72,
+                      alignItems: "center",
+                      borderRadius: 10,
+                      paddingHorizontal: 14,
+                      paddingVertical: 10,
+                      backgroundColor: "#E8A0BF",
+                      opacity: pressed || savingOperatorId === operator.userId ? 0.6 : 1,
+                    })}
+                  >
+                    {savingOperatorId === operator.userId ? <ActivityIndicator size="small" color="#FFF" /> : <Text style={{ fontSize: 13, fontWeight: "800", color: "#FFF" }}>保存</Text>}
+                  </Pressable>
+                </View>
+                <Pressable
+                  onPress={() => setOperatorTerms((current) => ({ ...current, [operator.userId]: "" }))}
+                  style={{ alignSelf: "flex-start", marginTop: 8, paddingVertical: 3 }}
+                >
+                  <Text style={{ fontSize: 11, fontWeight: "700", color: colors.muted }}>期設定を外す</Text>
+                </Pressable>
+              </View>
+            ))}
           </>
         )}
 

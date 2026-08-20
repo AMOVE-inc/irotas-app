@@ -10,6 +10,7 @@ import { handleSquareWebhook } from "./square-webhook";
 import { handleSquareSyncRequest } from "./square-sync";
 import { handleMemberDirectoryRequest } from "./member-directory";
 import { handleEventRequest } from "./events";
+import { handleOperatorManagementRequest } from "./operator-management";
 
 type CommunitySubmission = {
   reportId: string;
@@ -246,6 +247,8 @@ async function routeRequest(
   if (squareSyncResponse) return squareSyncResponse;
   const memberImportResponse = await handleMemberImportRequest(request, env);
   if (memberImportResponse) return memberImportResponse;
+  const operatorManagementResponse = await handleOperatorManagementRequest(request, env);
+  if (operatorManagementResponse) return operatorManagementResponse;
   const memberDirectoryResponse = await handleMemberDirectoryRequest(request, env);
   if (memberDirectoryResponse) return memberDirectoryResponse;
   const eventResponse = await handleEventRequest(request, env);

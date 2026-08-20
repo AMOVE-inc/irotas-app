@@ -47,6 +47,13 @@ export type PublicMember = {
   organizerCount: number;
 };
 
+export type OperatorMember = {
+  userId: number;
+  memberId: string | null;
+  displayName: string;
+  memberTerm: string | null;
+};
+
 export class ApiError extends Error {
   constructor(
     message: string,
@@ -223,6 +230,19 @@ export async function getMe(): Promise<AuthApiUser | null> {
 export async function getMemberDirectory() {
   const result = await apiCall<{ members: PublicMember[] }>("/api/members");
   return result.members;
+}
+
+export async function getOperatorMembers() {
+  const result = await apiCall<{ operators: OperatorMember[] }>("/api/admin/operators");
+  return result.operators;
+}
+
+export async function updateOperatorMemberTerm(userId: number, memberTerm: string | null) {
+  const result = await apiCall<{ operator: OperatorMember }>(
+    `/api/admin/operators/${userId}/member-term`,
+    { method: "PATCH", body: JSON.stringify({ memberTerm }) },
+  );
+  return result.operator;
 }
 
 export async function getMemberProfile(memberId: string) {
