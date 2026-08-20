@@ -15,6 +15,7 @@ type ClubRow = {
   icon: string;
   leader_member_id: number | null;
   leader_public_member_id: string | null;
+  leader_display_name: string | null;
   status: "active" | "archived";
 };
 
@@ -58,7 +59,8 @@ async function viewerPublicId(db: D1Database, memberId: number) {
 }
 
 async function clubRow(db: D1Database, id: string) {
-  return db.prepare(`SELECT c.*, leader.public_member_id AS leader_public_member_id
+  return db.prepare(`SELECT c.*, leader.public_member_id AS leader_public_member_id,
+      leader.display_name AS leader_display_name
     FROM clubs c LEFT JOIN members leader ON leader.id = c.leader_member_id
     WHERE c.id = ? LIMIT 1`).bind(id).first<ClubRow>();
 }
@@ -87,6 +89,7 @@ function serializeClub(row: ClubRow, memberships: MembershipRow[], viewerId: num
     description: row.description,
     icon: row.icon,
     leaderId: row.leader_public_member_id ?? "",
+    leaderName: row.leader_display_name ?? "未設定",
     memberIds: approved.map(publicId),
     applicantIds: pending.map(publicId),
     applications: pending
@@ -142,7 +145,8 @@ export async function handleClubRequest(request: Request, env: SitesEnv): Promis
   const elevated = isElevated(member);
 
   if (pathname === CLUBS_PATH && request.method === "GET") {
-    const rows = await env.DB.prepare(`SELECT c.*, leader.public_member_id AS leader_public_member_id
+    const rows = await env.DB.prepare(`SELECT c.*, leader.public_member_id AS leader_public_member_id,
+        leader.display_name AS leader_display_name
       FROM clubs c LEFT JOIN members leader ON leader.id = c.leader_member_id
       WHERE c.status = 'active' ORDER BY c.created_at, c.name`).all<ClubRow>();
     const clubs = rows.results ?? [];
@@ -204,6 +208,53 @@ export async function handleClubRequest(request: Request, env: SitesEnv): Promis
     await audit(env.DB, member.id, `club.application_${nextStatus}`, id, { targetMemberId: targetId });
     const memberships = await membershipsForClubs(env.DB, [id]);
     return json({ club: serializeClub(row, memberships, member.id, elevated) });
+  }
+
+  if (reviewMatch && request.method === "GET") {
+    const id = decodeURIComponent(reviewMatch[1]);
+    const targetPublicId = decodeURIComponent(reviewMatch[2]);
+    const row = await clubRow(env.DB, id);
+    if (!row) return json({ error: "部活が見つかりません" }, 404);
+    if (!(elevated || row.leader_member_id === member.id)) return json({ error: "申請者情報を確認できるのは、この部活の部長または運営のみです" }, 403);
+    const targetId = await memberIdFromPublicId(env.DB, targetPublicId);
+    if (!targetId) return json({ error: "メンバーが見つかりません" }, 404);
+    const application = await env.DB.prepare(`SELECT status, wants_to_do, message_to_leader, applied_at
+      FROM club_memberships WHERE club_id = ? AND member_id = ? AND status IN ('pending', 'on_hold')`)
+      .bind(id, targetId).first<{ status: string; wants_to_do: string; message_to_leader: string; applied_at: string }>();
+    if (!application) return json({ error: "審査対象の申請が見つかりません" }, 404);
+    const applicant = await env.DB.prepare(`SELECT m.public_member_id, m.display_name, m.member_term, m.member_rank,
+        m.branches_json, m.profile_json, m.participation_count, m.organizer_count,
+        COALESCE(s.subscription_started_at, m.discord_joined_at, m.created_at) AS joined_at
+      FROM members m LEFT JOIN member_subscriptions s ON s.member_id = m.id
+      WHERE m.id = ? AND m.account_status = 'active' LIMIT 1`).bind(targetId).first<{
+        public_member_id: string | null; display_name: string; member_term: string | null; member_rank: string;
+        branches_json: string; profile_json: string; participation_count: number; organizer_count: number; joined_at: string;
+      }>();
+    if (!applicant) return json({ error: "メンバーが見つかりません" }, 404);
+    const history = await env.DB.prepare(`SELECT e.id, e.title, e.event_date AS date, e.event_type AS eventType
+      FROM event_participations p JOIN events e ON e.id = p.event_id
+      WHERE p.member_id = ? AND p.status = 'confirmed' AND e.status != 'cancelled'
+      ORDER BY e.event_date DESC LIMIT 5`).bind(targetId).all<{ id: string; title: string; date: string; eventType: string }>();
+    let branches: string[] = [];
+    let profile: Record<string, unknown> = {};
+    try { branches = JSON.parse(applicant.branches_json) as string[]; } catch {}
+    try { profile = JSON.parse(applicant.profile_json) as Record<string, unknown>; } catch {}
+    return json({ review: {
+      memberId: applicant.public_member_id ?? `member-${targetId}`,
+      displayName: applicant.display_name,
+      memberTerm: applicant.member_term,
+      memberRank: applicant.member_rank,
+      branches,
+      profile,
+      joinedAt: applicant.joined_at,
+      participationCount: applicant.participation_count,
+      organizerCount: applicant.organizer_count,
+      wantsToDo: application.wants_to_do,
+      messageToLeader: application.message_to_leader,
+      status: application.status,
+      appliedAt: application.applied_at,
+      eventHistory: history.results ?? [],
+    } });
   }
 
   if (membershipMatch && request.method === "DELETE") {

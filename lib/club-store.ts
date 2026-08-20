@@ -45,6 +45,7 @@ function asClub(record: Api.ClubRecord): Club {
     description: record.description,
     icon: record.icon,
     leaderId: record.viewerIsLeader ? viewerAlias : record.leaderId,
+    leaderName: record.leaderName,
     memberIds,
     applicantIds,
     applications: record.applications.map((item) => ({

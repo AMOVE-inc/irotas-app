@@ -68,6 +68,7 @@ export type ClubRecord = {
   description: string;
   icon: string;
   leaderId: string;
+  leaderName: string;
   memberIds: string[];
   applicantIds: string[];
   applications: ClubApplicationRecord[];
@@ -78,6 +79,23 @@ export type ClubRecord = {
   viewerMembershipStatus: "pending" | "on_hold" | "approved" | "rejected" | "left" | null;
   viewerIsLeader: boolean;
   viewerMemberId: string | null;
+};
+
+export type ClubApplicantReview = {
+  memberId: string;
+  displayName: string;
+  memberTerm: string | null;
+  memberRank: string;
+  branches: string[];
+  profile: Record<string, unknown>;
+  joinedAt: string;
+  participationCount: number;
+  organizerCount: number;
+  wantsToDo: string;
+  messageToLeader: string;
+  status: "pending" | "on_hold";
+  appliedAt: string;
+  eventHistory: Array<{ id: string; title: string; date: string; eventType: string }>;
 };
 
 export class ApiError extends Error {
@@ -308,6 +326,13 @@ export async function reviewClubApplication(clubId: string, memberId: string, ac
     { method: "PATCH", body: JSON.stringify({ action }) },
   );
   return result.club;
+}
+
+export async function getClubApplicantReview(clubId: string, memberId: string) {
+  const result = await apiCall<{ review: ClubApplicantReview }>(
+    `/api/clubs/${encodeURIComponent(clubId)}/applications/${encodeURIComponent(memberId)}`,
+  );
+  return result.review;
 }
 
 export async function leaveClub(clubId: string) {

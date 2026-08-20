@@ -336,6 +336,7 @@ export interface Club {
   name: string;
   description: string;
   leaderId: string; // 部長（運営が任命）
+  leaderName?: string;
   memberIds: string[];
   applicantIds: string[]; // 入部申請中のメンバーID
   applications: ClubApplication[];

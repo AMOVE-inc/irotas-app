@@ -14,7 +14,8 @@ import { createBoardChat } from "@/lib/chat-store";
 import { canCreateClub, isAdminRole } from "@/lib/access-control";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import * as Api from "@/lib/_core/api";
 import {
   Alert,
   FlatList,
@@ -121,7 +122,7 @@ function ClubCard({ club, onPress }: { club: Club; onPress: () => void }) {
             )}
           </View>
           <Text style={{ fontSize: 12, color: colors.muted, marginTop: 2 }}>
-            部長: {leader?.name} · {club.memberIds.length}人
+            部長: {leader?.name ?? club.leaderName ?? "未設定"} · {club.memberIds.length}人
           </Text>
         </View>
       </View>
@@ -593,38 +594,74 @@ function SelectMembersForChatModal({
   );
 }
 
-function ApplicationReviewDetails({ memberId, application }: { memberId: string; application?: ClubApplication }) {
+function ApplicationReviewDetails({ clubId, memberId, application }: { clubId: string; memberId: string; application?: ClubApplication }) {
   const colors = useColors();
-  const member = getMemberById(memberId);
-  if (!member) return null;
-  const eventHistory = EVENTS.filter((event) => event.participants.includes(memberId))
+  const fallbackMember = getMemberById(memberId);
+  const [review, setReview] = useState<Api.ClubApplicantReview | null>(null);
+  const [loaded, setLoaded] = useState(Boolean(fallbackMember));
+
+  useEffect(() => {
+    let active = true;
+    void Api.getClubApplicantReview(clubId, memberId)
+      .then((value) => { if (active) setReview(value); })
+      .catch(() => {})
+      .finally(() => { if (active) setLoaded(true); });
+    return () => { active = false; };
+  }, [clubId, memberId]);
+
+  const fallbackHistory = EVENTS.filter((event) => event.participants.includes(memberId))
     .sort((a, b) => b.date.localeCompare(a.date))
     .slice(0, 3);
+  if (!loaded) return <Text style={{ fontSize: 12, color: colors.muted, marginBottom: 10 }}>申請者情報を読み込んでいます</Text>;
+  if (!review && !fallbackMember) return <Text style={{ fontSize: 12, color: colors.error, marginBottom: 10 }}>申請者情報を取得できませんでした</Text>;
+
+  const displayName = review?.displayName ?? fallbackMember?.name ?? "メンバー";
+  const memberTerm = review?.memberTerm ?? (fallbackMember ? `${fallbackMember.generation}期生` : null);
+  const branches = review?.branches ?? (fallbackMember ? [fallbackMember.branch] : []);
+  const rank = review?.memberRank ?? fallbackMember?.rank ?? "regular";
+  const profile = review?.profile ?? {};
+  const favoriteCuisines = Array.isArray(profile.favoriteCuisines)
+    ? profile.favoriteCuisines.filter((item): item is string => typeof item === "string")
+    : fallbackMember?.interests ?? [];
+  const eventHistory = review?.eventHistory ?? fallbackHistory;
+  const wantsToDo = review?.wantsToDo ?? application?.wantsToDo ?? "申請内容の詳細はありません";
+  const messageToLeader = review?.messageToLeader ?? application?.messageToLeader ?? "メッセージはありません";
+  const joinedYear = new Date(review?.joinedAt ?? fallbackMember?.joinedAt ?? "").getFullYear();
+  const rankLabel = RANK_LABELS[rank as keyof typeof RANK_LABELS] ?? rank;
 
   return (
     <View style={{ backgroundColor: colors.background, borderRadius: 12, padding: 12, marginBottom: 10, gap: 10 }}>
+      <View style={{ flexDirection: "row", alignItems: "center" }}>
+        <Image source={fallbackMember?.avatar ?? require("@/assets/images/icon.png")} style={{ width: 38, height: 38, borderRadius: 19 }} contentFit="cover" />
+        <View style={{ marginLeft: 10, flex: 1 }}>
+          <Text style={{ fontSize: 14, fontWeight: "800", color: colors.foreground }}>{displayName}</Text>
+          <Text style={{ fontSize: 11, color: colors.muted }}>会員ID {memberId}</Text>
+        </View>
+      </View>
       <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6 }}>
-        {[`${member.generation}期生`, member.branch === "kanto" ? "関東支部" : "関西支部", member.role === "admin" ? "管理者" : member.role === "operator" ? "運営メンバー" : RANK_LABELS[member.rank], `入会 ${new Date(member.joinedAt).getFullYear()}年`].map((label) => (
+        {[memberTerm, ...branches.map((branch) => branch === "kanto" ? "関東支部" : branch === "kansai" ? "関西支部" : branch), rankLabel, Number.isFinite(joinedYear) ? `入会 ${joinedYear}年` : null].filter((label): label is string => Boolean(label)).map((label) => (
           <View key={label} style={{ backgroundColor: colors.surface, borderRadius: 8, paddingHorizontal: 8, paddingVertical: 4 }}>
             <Text style={{ fontSize: 11, fontWeight: "600", color: colors.foreground }}>{label}</Text>
           </View>
         ))}
       </View>
 
-      {member.interests.length > 0 ? (
-        <Text style={{ fontSize: 12, color: colors.muted }}>好きなグルメ：{member.interests.join("・")}</Text>
+      {favoriteCuisines.length > 0 ? (
+        <Text style={{ fontSize: 12, color: colors.muted }}>好きなグルメ：{favoriteCuisines.join("・")}</Text>
       ) : null}
+
+      {review ? <Text style={{ fontSize: 12, color: colors.muted }}>参加回数 {review.participationCount}回 · 幹事回数 {review.organizerCount}回</Text> : null}
 
       <View>
         <Text style={{ fontSize: 12, fontWeight: "800", color: colors.foreground, marginBottom: 3 }}>部活でやってみたいこと</Text>
         <Text style={{ fontSize: 13, lineHeight: 19, color: colors.foreground }}>
-          {application?.wantsToDo ?? "申請内容の詳細はありません"}
+          {wantsToDo}
         </Text>
       </View>
       <View>
         <Text style={{ fontSize: 12, fontWeight: "800", color: colors.foreground, marginBottom: 3 }}>部長へのメッセージ</Text>
         <Text style={{ fontSize: 13, lineHeight: 19, color: colors.foreground }}>
-          {application?.messageToLeader ?? "メッセージはありません"}
+          {messageToLeader}
         </Text>
       </View>
 
@@ -1019,9 +1056,9 @@ function ClubDetailModal({
         <Text style={{ fontSize: 14, fontWeight: "700", color: colors.foreground, marginBottom: 10 }}>部長</Text>
         {(() => {
           const currentLeader = getMemberById(currentLeaderId);
-          return currentLeader ? (
+          return currentLeaderId ? (
             <Pressable
-              onPress={() => { onClose(); router.push({ pathname: "/member-profile", params: { id: currentLeader.id } }); }}
+              onPress={() => { onClose(); router.push({ pathname: "/member-profile", params: { id: currentLeaderId } }); }}
               style={{
                 flexDirection: "row",
                 alignItems: "center",
@@ -1031,10 +1068,10 @@ function ClubDetailModal({
                 marginBottom: 16,
               }}
             >
-              <Image source={currentLeader.avatar} style={{ width: 40, height: 40, borderRadius: 20 }} contentFit="cover" />
+              <Image source={currentLeader?.avatar ?? require("@/assets/images/icon.png")} style={{ width: 40, height: 40, borderRadius: 20 }} contentFit="cover" />
               <View style={{ marginLeft: 12, flex: 1 }}>
-                <Text style={{ fontSize: 15, fontWeight: "600", color: colors.foreground }}>{currentLeader.name}</Text>
-                <Text style={{ fontSize: 12, color: colors.muted }}>{currentLeader.generation}期生 · {currentLeader.branch}支部</Text>
+                <Text style={{ fontSize: 15, fontWeight: "600", color: colors.foreground }}>{currentLeader?.name ?? club.leaderName ?? "部長"}</Text>
+                {currentLeader ? <Text style={{ fontSize: 12, color: colors.muted }}>{currentLeader.generation}期生 · {currentLeader.branch}支部</Text> : null}
               </View>
               <View style={{ backgroundColor: "#FFD70020", borderRadius: 8, paddingHorizontal: 8, paddingVertical: 2, marginRight: 8 }}>
                 <Text style={{ fontSize: 10, fontWeight: "700", color: "#FFD700" }}>部長</Text>
@@ -1057,8 +1094,6 @@ function ClubDetailModal({
                   </View>
                 </View>
                 {applicantIds.map((memberId) => {
-                  const member = getMemberById(memberId);
-                  if (!member) return null;
                   return (
                     <View
                       key={memberId}
@@ -1069,17 +1104,8 @@ function ClubDetailModal({
                         marginBottom: 8,
                       }}
                     >
-                      <Pressable
-                        onPress={() => { onClose(); router.push({ pathname: "/member-profile", params: { id: memberId } }); }}
-                        style={{ flexDirection: "row", alignItems: "center", marginBottom: 10 }}
-                      >
-                        <Image source={member.avatar} style={{ width: 36, height: 36, borderRadius: 18 }} contentFit="cover" />
-                        <View style={{ marginLeft: 10, flex: 1 }}>
-                          <Text style={{ fontSize: 14, fontWeight: "600", color: colors.foreground }}>{member.name}</Text>
-                          <Text style={{ fontSize: 12, color: colors.muted }}>{member.generation}期生 · {member.branch}支部</Text>
-                        </View>
-                      </Pressable>
                       <ApplicationReviewDetails
+                        clubId={club.id}
                         memberId={memberId}
                         application={applications.find((application) => application.memberId === memberId)}
                       />
@@ -1119,8 +1145,6 @@ function ClubDetailModal({
                   </View>
                 </View>
                 {pendingIds.map((memberId) => {
-                  const member = getMemberById(memberId);
-                  if (!member) return null;
                   return (
                     <View
                       key={memberId}
@@ -1133,20 +1157,8 @@ function ClubDetailModal({
                         borderColor: "#A7C7E730",
                       }}
                     >
-                      <Pressable
-                        onPress={() => { onClose(); router.push({ pathname: "/member-profile", params: { id: memberId } }); }}
-                        style={{ flexDirection: "row", alignItems: "center", marginBottom: 10 }}
-                      >
-                        <Image source={member.avatar} style={{ width: 36, height: 36, borderRadius: 18 }} contentFit="cover" />
-                        <View style={{ marginLeft: 10, flex: 1 }}>
-                          <Text style={{ fontSize: 14, fontWeight: "600", color: colors.foreground }}>{member.name}</Text>
-                          <Text style={{ fontSize: 12, color: colors.muted }}>{member.generation}期生 · {member.branch}支部</Text>
-                        </View>
-                        <View style={{ backgroundColor: "#A7C7E720", borderRadius: 8, paddingHorizontal: 8, paddingVertical: 2 }}>
-                          <Text style={{ fontSize: 10, fontWeight: "700", color: "#A7C7E7" }}>保留中</Text>
-                        </View>
-                      </Pressable>
                       <ApplicationReviewDetails
+                        clubId={club.id}
                         memberId={memberId}
                         application={applications.find((application) => application.memberId === memberId)}
                       />
