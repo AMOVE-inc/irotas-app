@@ -913,7 +913,7 @@ function ClubDetailModal({
             {club.name}
           </Text>
           <Text style={{ fontSize: 14, color: colors.muted, textAlign: "center", marginBottom: 8 }}>
-            部長: {leader?.name} · {club.memberIds.length}人のメンバー
+            部長: {leader?.name ?? club.leaderName ?? "未設定"} · {club.memberIds.length}人のメンバー
           </Text>
           <View
             style={{
