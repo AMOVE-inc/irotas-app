@@ -344,6 +344,14 @@ export interface Club {
   icon: string;
   createdByAdmin: boolean; // 管理者のみ作成可能
   events: ClubEvent[]; // 部活動イベント（部員が企画可能）
+  /** サーバーで判定した現在のログイン会員の所属状態 */
+  viewerMembershipStatus?: "approved" | "pending" | "on_hold" | "rejected" | "left" | null;
+  /** 現在のログイン会員が部長か */
+  viewerIsLeader?: boolean;
+  /** 管理者・部長として申請を審査できるか */
+  canReviewApplications?: boolean;
+  /** 現在のログイン会員の公開会員ID */
+  viewerMemberId?: string | null;
 }
 
 export interface ClubApplication {

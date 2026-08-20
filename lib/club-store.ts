@@ -54,6 +54,10 @@ function asClub(record: Api.ClubRecord): Club {
     })),
     createdByAdmin: true,
     events: [],
+    viewerMembershipStatus: record.viewerMembershipStatus,
+    viewerIsLeader: record.viewerIsLeader,
+    canReviewApplications: record.canReviewApplications,
+    viewerMemberId: record.viewerMemberId,
   };
 }
 

@@ -30,9 +30,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
-  sendClubApprovalNotification,
   sendLeaderAppointmentNotification,
-  sendClubApplicationNotification,
 } from "@/lib/notifications";
 import {
   addClub as addClubToStore,
@@ -72,8 +70,8 @@ interface ClubPostComment {
 function ClubCard({ club, onPress }: { club: Club; onPress: () => void }) {
   const colors = useColors();
   const leader = getMemberById(club.leaderId);
-  const isMember = club.memberIds.includes(CURRENT_USER.id);
-  const hasApplied = club.applicantIds.includes(CURRENT_USER.id);
+  const isMember = club.viewerMembershipStatus === "approved" || club.memberIds.includes(CURRENT_USER.id);
+  const hasApplied = club.viewerMembershipStatus === "pending" || club.viewerMembershipStatus === "on_hold" || club.applicantIds.includes(CURRENT_USER.id);
 
   return (
     <Pressable
@@ -718,11 +716,11 @@ function ClubDetailModal({
   const [applicationError, setApplicationError] = useState("");
   const [previewApplication, setPreviewApplication] = useState(false);
 
-  const isMember = memberIds.includes(CURRENT_USER.id);
-  const hasApplied = applicantIds.includes(CURRENT_USER.id);
-  const isPending = pendingIds.includes(CURRENT_USER.id);
-  const isLeader = currentLeaderId === CURRENT_USER.id;
-  const canManageMembers = isLeader || userIsAdmin;
+  const isMember = club.viewerMembershipStatus === "approved" || memberIds.includes(CURRENT_USER.id);
+  const hasApplied = club.viewerMembershipStatus === "pending" || applicantIds.includes(CURRENT_USER.id);
+  const isPending = club.viewerMembershipStatus === "on_hold" || pendingIds.includes(CURRENT_USER.id);
+  const isLeader = club.viewerIsLeader === true || currentLeaderId === CURRENT_USER.id;
+  const canManageMembers = club.canReviewApplications === true || isLeader || userIsAdmin;
 
   const handleApply = async () => {
     if (hasApplied || isMember) return;
@@ -741,7 +739,6 @@ function ClubDetailModal({
       const updated = await onApply(club.id, application);
       setApplicantIds(updated.applicantIds);
       setApplications(updated.applications);
-      sendClubApplicationNotification(club.name, CURRENT_USER.name, currentLeaderId, club.id);
       Alert.alert("申請完了", `${club.name}への入部申請を送りました。部長の審査をお待ちください。`);
     } catch (error) {
       Alert.alert("申請できませんでした", error instanceof Error ? error.message : "もう一度お試しください。");
@@ -782,7 +779,6 @@ function ClubDetailModal({
             setPendingIds(updated.applications.filter((item) => item.status === "on_hold").map((item) => item.memberId));
             setApplications(updated.applications);
             onUpdateClub(updated);
-            sendClubApprovalNotification(club.name, CURRENT_USER.name, memberId, club.id);
             Alert.alert("承認完了", `${member?.name ?? ""}さんの入部を承認しました。`);
           } catch (error) {
             Alert.alert("承認できませんでした", error instanceof Error ? error.message : "もう一度お試しください。");
@@ -882,7 +878,7 @@ function ClubDetailModal({
   };
 
   // 部員でない場合は申請画面のみ表示
-  if (!isMember || previewApplication) {
+  if ((!isMember && !canManageMembers) || previewApplication) {
     return (
       <View style={{ flex: 1, backgroundColor: colors.background }}>
         <View
@@ -1690,7 +1686,7 @@ export default function ClubsScreen() {
       </View>
 
       <FlatList
-        data={[...clubs].sort((a, b) => Number(b.memberIds.includes(CURRENT_USER.id)) - Number(a.memberIds.includes(CURRENT_USER.id)))}
+        data={[...clubs].sort((a, b) => Number(b.viewerMembershipStatus === "approved" || b.memberIds.includes(CURRENT_USER.id)) - Number(a.viewerMembershipStatus === "approved" || a.memberIds.includes(CURRENT_USER.id)))}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <ClubCard club={item} onPress={() => setSelectedClub(item)} />
