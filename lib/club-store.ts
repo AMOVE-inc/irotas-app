@@ -32,26 +32,16 @@ export function useClubs(): Club[] {
 }
 
 function asClub(record: Api.ClubRecord): Club {
-  const viewerAlias = "u1";
-  const memberIds = record.viewerMembershipStatus === "approved"
-    ? [...new Set([...record.memberIds, viewerAlias])]
-    : [...record.memberIds];
-  const applicantIds = record.viewerMembershipStatus === "pending" || record.viewerMembershipStatus === "on_hold"
-    ? [...new Set([...record.applicantIds, viewerAlias])]
-    : [...record.applicantIds];
   return {
     id: record.id,
     name: record.name,
     description: record.description,
     icon: record.icon,
-    leaderId: record.viewerIsLeader ? viewerAlias : record.leaderId,
+    leaderId: record.leaderId,
     leaderName: record.leaderName,
-    memberIds,
-    applicantIds,
-    applications: record.applications.map((item) => ({
-      ...item,
-      memberId: item.memberId === record.viewerMemberId ? viewerAlias : item.memberId,
-    })),
+    memberIds: [...record.memberIds],
+    applicantIds: [...record.applicantIds],
+    applications: record.applications.map((item) => ({ ...item })),
     createdByAdmin: true,
     events: [],
     viewerMembershipStatus: record.viewerMembershipStatus,
