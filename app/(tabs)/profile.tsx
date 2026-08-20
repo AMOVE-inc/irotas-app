@@ -81,7 +81,7 @@ function ProfileSelectField({ label, value, options, onChange }: { label: string
   return <><Pressable onPress={() => setVisible(true)} style={{ minHeight: 46, borderRadius: 12, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, paddingHorizontal: 13, flexDirection: "row", alignItems: "center" }}><Text style={{ flex: 1, fontSize: 14, color: value ? colors.foreground : colors.muted }}>{value || label}</Text><IconSymbol name="chevron.down" size={16} color={colors.muted} /></Pressable><Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setVisible(false)}><View style={{ flex: 1, backgroundColor: colors.background }}><View style={{ flexDirection: "row", alignItems: "center", padding: 16, borderBottomWidth: 0.5, borderBottomColor: colors.border }}><Text style={{ flex: 1, fontSize: 18, fontWeight: "800", color: colors.foreground }}>{label}</Text><Pressable onPress={() => setVisible(false)}><Text style={{ color: "#E8A0BF", fontWeight: "800" }}>閉じる</Text></Pressable></View><ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 30 }}>{options.map((option) => <Pressable key={option} onPress={() => { onChange(option); setVisible(false); }} style={{ flexDirection: "row", alignItems: "center", paddingVertical: 14, borderBottomWidth: 0.5, borderBottomColor: colors.border }}><Text style={{ flex: 1, fontSize: 15, color: colors.foreground }}>{option}</Text>{value === option ? <IconSymbol name="checkmark" size={18} color="#E8A0BF" /> : null}</Pressable>)}</ScrollView></View></Modal></>;
 }
 
-function PointsProgressCard({ points, rank }: { points: number; rank: MemberRank }) {
+function PointsProgressCard({ points, rank, showRank = true }: { points: number; rank: MemberRank; showRank?: boolean }) {
   const colors = useColors();
   const rankColor = RANK_COLORS[rank];
   const nextInfo = getNextRankInfo(points);
@@ -108,7 +108,7 @@ function PointsProgressCard({ points, rank }: { points: number; rank: MemberRank
             <Text style={{ fontSize: 14, fontWeight: "600", color: rankColor, marginLeft: 4 }}>XP</Text>
           </View>
         </View>
-        <View
+        {showRank ? <View
           style={{
             backgroundColor: rankColor + "15",
             borderRadius: 14,
@@ -121,11 +121,11 @@ function PointsProgressCard({ points, rank }: { points: number; rank: MemberRank
           <Text style={{ fontSize: 11, fontWeight: "700", color: rankColor, marginTop: 2 }}>
             {RANK_LABELS[rank]}
           </Text>
-        </View>
+        </View> : null}
       </View>
 
       {/* Progress bar */}
-      {nextInfo ? (
+      {showRank && nextInfo ? (
         <View>
           <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 6 }}>
             <Text style={{ fontSize: 12, color: colors.muted }}>
@@ -161,13 +161,13 @@ function PointsProgressCard({ points, rank }: { points: number; rank: MemberRank
             </Text>
           </View>
         </View>
-      ) : (
+      ) : showRank ? (
         <View style={{ alignItems: "center", paddingVertical: 4 }}>
           <Text style={{ fontSize: 13, fontWeight: "600", color: rankColor }}>
             最高ランク達成！会費無料特典適用中
           </Text>
         </View>
-      )}
+      ) : null}
     </View>
   );
 }
@@ -841,7 +841,7 @@ export default function ProfileScreen() {
               style={{ width: 80, height: 80, borderRadius: 40 }}
               contentFit="cover"
             />
-            <View
+            {!userIsOperator ? <View
               style={{
                 position: "absolute",
                 bottom: -2,
@@ -857,14 +857,18 @@ export default function ProfileScreen() {
               }}
             >
               <IconSymbol name="crown.fill" size={12} color="#FFF" />
-            </View>
+            </View> : null}
           </View>
           <View style={{ flexDirection: "row", alignItems: "center", marginTop: 12 }}>
             <Text style={{ fontSize: 22, fontWeight: "800", color: colors.foreground }}>{profileName}</Text>
             <NewMemberMark member={user} size={17} />
           </View>
           <View style={{ flexDirection: "row", alignItems: "center", marginTop: 4 }}>
-            <View
+            {userIsOperator ? (
+              <View style={{ backgroundColor: "#D93636", borderRadius: 12, paddingHorizontal: 12, paddingVertical: 4 }}>
+                <Text style={{ fontSize: 12, fontWeight: "900", color: "#FFF" }}>{userIsAdmin ? "管理者" : "運営メンバー"}</Text>
+              </View>
+            ) : <View
               style={{
                 backgroundColor: RANK_COLORS[user.rank] + "20",
                 borderColor: RANK_COLORS[user.rank],
@@ -883,12 +887,12 @@ export default function ProfileScreen() {
               >
                 {RANK_LABELS[user.rank]}会員
               </Text>
-            </View>
+            </View>}
             <Text style={{ fontSize: 14, color: colors.muted, marginLeft: 8 }}>
               {branchLabel}
             </Text>
           </View>
-          {accessRoleLabel ? (
+          {accessRoleLabel && !userIsOperator ? (
             <View style={{ marginTop: 7, borderRadius: 12, paddingHorizontal: 10, paddingVertical: 4, backgroundColor: userIsAdmin || authUser?.accessRole === "operator" ? "#FFE6E6" : "#EEF2FF" }}>
               <Text style={{ fontSize: 11, fontWeight: "800", color: userIsAdmin || authUser?.accessRole === "operator" ? "#C83D4D" : "#4C5F9E" }}>{accessRoleLabel}</Text>
             </View>
@@ -1110,7 +1114,7 @@ export default function ProfileScreen() {
         </Pressable>
 
         {/* Points Progress */}
-        <PointsProgressCard points={user.points} rank={user.rank} />
+        <PointsProgressCard points={user.points} rank={user.rank} showRank={!userIsOperator} />
 
         {/* イロタスポイントカード */}
         <View
@@ -1152,7 +1156,7 @@ export default function ProfileScreen() {
         </View>
 
         {/* Rank Card */}
-        <RankCard rank={user.rank} />
+        {!userIsOperator ? <RankCard rank={user.rank} /> : null}
 
         {/* Rank Tiers - hidden per user request */}
         {/* <RankTiersCard /> */}

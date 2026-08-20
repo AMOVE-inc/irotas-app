@@ -106,7 +106,7 @@ function mealReportImpression(thread: BoardThread): string | undefined {
 function OperatorOrRankBadge({ member }: { member: typeof CURRENT_USER }) {
   const operator = isOperatorMember(member);
   const platinum = member.rank === "platinum";
-  if (operator) return <View style={{ backgroundColor: "#D93636", borderRadius: 8, paddingHorizontal: 7, paddingVertical: 2, marginLeft: 6 }}><Text style={{ fontSize: 9, fontWeight: "900", color: "#FFF" }}>運営</Text></View>;
+  if (operator) return <View style={{ backgroundColor: "#D93636", borderRadius: 8, paddingHorizontal: 7, paddingVertical: 2, marginLeft: 6 }}><Text style={{ fontSize: 9, fontWeight: "900", color: "#FFF" }}>運営メンバー</Text></View>;
   return <View style={{ backgroundColor: platinum ? "#171717" : `${RANK_COLORS[member.rank]}20`, borderWidth: platinum ? 1 : 0, borderColor: "#D4AF37", borderRadius: 8, paddingHorizontal: 6, paddingVertical: 1, marginLeft: 6 }}><Text style={{ fontSize: 9, fontWeight: "700", color: platinum ? "#D4AF37" : RANK_COLORS[member.rank] }}>{RANK_LABELS[member.rank]}</Text></View>;
 }
 

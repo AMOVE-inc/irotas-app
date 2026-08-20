@@ -333,15 +333,16 @@ function TodayEventsSection({
   );
 }
 
-function RankBadge({ rank }: { rank: string }) {
+function RankBadge({ rank, role }: { rank: string; role?: string }) {
+  const elevatedRoleLabel = role === "admin" ? "管理者" : role === "operator" ? "運営メンバー" : null;
   const color = RANK_COLORS[rank as keyof typeof RANK_COLORS] || "#C0C0C0";
   const isPlatinum = rank === "platinum";
   const label = RANK_LABELS[rank as keyof typeof RANK_LABELS] || rank;
   return (
     <View
       style={{
-        backgroundColor: isPlatinum ? "#171717" : color + "20",
-        borderColor: isPlatinum ? "#D4AF37" : color,
+        backgroundColor: elevatedRoleLabel ? "#D93636" : isPlatinum ? "#171717" : color + "20",
+        borderColor: elevatedRoleLabel ? "#D93636" : isPlatinum ? "#D4AF37" : color,
         borderWidth: 1,
         borderRadius: 10,
         paddingHorizontal: 7,
@@ -349,7 +350,7 @@ function RankBadge({ rank }: { rank: string }) {
         marginLeft: 6,
       }}
     >
-      <Text style={{ fontSize: 10, fontWeight: "700", color: isPlatinum ? "#D4AF37" : color }}>{label}</Text>
+      <Text style={{ fontSize: 10, fontWeight: elevatedRoleLabel ? "900" : "700", color: elevatedRoleLabel ? "#FFF" : isPlatinum ? "#D4AF37" : color }}>{elevatedRoleLabel ?? label}</Text>
     </View>
   );
 }
@@ -417,7 +418,7 @@ function TimelinePostCard({ post }: { post: TimelinePost }) {
               {post.author.name}
             </Text>
             <NewMemberMark member={post.author} />
-            <RankBadge rank={post.author.rank} />
+            <RankBadge rank={post.author.rank} role={post.author.role} />
           </View>
           <Text style={{ fontSize: 12, color: colors.muted, marginTop: 1 }}>
             {post.author.generation}期生 · {timeAgo(post.createdAt)}

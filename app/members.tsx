@@ -40,13 +40,14 @@ export default function MembersScreen() {
     id: member.id,
     name: member.displayName,
     rank: normalizeRank(member.memberRank),
+    accessRole: member.accessRole,
     generation: Number(member.memberTerm?.match(/\d+/)?.[0] ?? 0),
     avatar: DEFAULT_AVATAR,
     bio: typeof member.profile.bio === "string" ? member.profile.bio : "",
     joinedAt: member.joinedAt,
     isCurrentUser: member.userId === authUser?.id,
     isDatabaseMember: true,
-  })) : MEMBERS.map((member) => ({ ...member, isCurrentUser: member.id === CURRENT_USER.id, isDatabaseMember: false })), [authUser?.id, directory]);
+  })) : MEMBERS.map((member) => ({ ...member, accessRole: member.role, isCurrentUser: member.id === CURRENT_USER.id, isDatabaseMember: false })), [authUser?.id, directory]);
 
   const filteredMembers = useMemo(() => {
     return searchableMembers.filter((member) => matchesAllSearchWords(searchText, [member.name, member.id]));
@@ -109,6 +110,7 @@ export default function MembersScreen() {
         renderItem={({ item }) => {
           const rankColor = RANK_COLORS[item.rank];
           const isMe = item.isCurrentUser;
+          const elevatedRoleLabel = item.accessRole === "admin" ? "管理者" : item.accessRole === "operator" ? "運営メンバー" : null;
           return (
             <Pressable
               onPress={() => router.push({ pathname: "/member-profile", params: { id: item.id } })}
@@ -128,7 +130,7 @@ export default function MembersScreen() {
                   style={{ width: 48, height: 48, borderRadius: 24 }}
                   contentFit="cover"
                 />
-                <View
+                {!elevatedRoleLabel ? <View
                   style={{
                     position: "absolute",
                     bottom: -2,
@@ -144,7 +146,7 @@ export default function MembersScreen() {
                   }}
                 >
                   <IconSymbol name="crown.fill" size={8} color="#FFF" />
-                </View>
+                </View> : null}
               </View>
               <View style={{ flex: 1, marginLeft: 12 }}>
                 <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
@@ -166,14 +168,14 @@ export default function MembersScreen() {
                   )}
                   <View
                     style={{
-                      backgroundColor: rankColor + "20",
+                      backgroundColor: elevatedRoleLabel ? "#D93636" : rankColor + "20",
                       borderRadius: 8,
                       paddingHorizontal: 6,
                       paddingVertical: 1,
                     }}
                   >
-                    <Text style={{ fontSize: 10, fontWeight: "700", color: rankColor }}>
-                      {RANK_LABELS[item.rank]}
+                    <Text style={{ fontSize: 10, fontWeight: elevatedRoleLabel ? "900" : "700", color: elevatedRoleLabel ? "#FFF" : rankColor }}>
+                      {elevatedRoleLabel ?? RANK_LABELS[item.rank]}
                     </Text>
                   </View>
                 </View>

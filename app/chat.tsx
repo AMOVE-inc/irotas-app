@@ -740,7 +740,7 @@ export default function ChatScreen() {
                         {member.name}{isCurrentUser ? " (あなた)" : ""}
                       </Text>
                       <Text style={{ fontSize: 12, color: colors.muted, marginTop: 1 }}>
-                        {member.branch} ・ {member.rank}
+                        {member.branch} ・ {member.role === "admin" ? "管理者" : member.role === "operator" ? "運営メンバー" : member.rank}
                       </Text>
                     </View>
                     <IconSymbol name="chevron.right" size={16} color={colors.muted} />
@@ -847,7 +847,7 @@ export default function ChatScreen() {
                 />
                 <View style={{ marginLeft: 12, flex: 1 }}>
                   <Text style={{ fontSize: 15, fontWeight: "600", color: colors.foreground }}>{member.name}</Text>
-                  <Text style={{ fontSize: 12, color: colors.muted, marginTop: 1 }}>{member.branch} ・ {member.rank}</Text>
+                  <Text style={{ fontSize: 12, color: colors.muted, marginTop: 1 }}>{member.branch} ・ {member.role === "admin" ? "管理者" : member.role === "operator" ? "運営メンバー" : member.rank}</Text>
                 </View>
                 <View
                   style={{

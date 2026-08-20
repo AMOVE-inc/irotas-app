@@ -128,6 +128,7 @@ export default function MemberProfileScreen() {
 
   const memberClubs = clubs.filter((club) => club.memberIds.includes(member.id));
   const rankColor = RANK_COLORS[member.rank];
+  const elevatedRoleLabel = member.role === "admin" ? "管理者" : member.role === "operator" ? "運営メンバー" : null;
   const isSelf = databaseMember ? databaseMember.userId === authUser?.id : member.id === CURRENT_USER.id;
   const details: Partial<ProfileDetails> = selfDetails ?? {
     birthDate: member.birthDate, showAge: member.showAge, hometown: member.hometown, residence: member.residence,
@@ -174,7 +175,7 @@ export default function MemberProfileScreen() {
               style={{ width: 90, height: 90, borderRadius: 45 }}
               contentFit="cover"
             />
-            <View
+            {!elevatedRoleLabel ? <View
               style={{
                 position: "absolute",
                 bottom: -2,
@@ -190,7 +191,7 @@ export default function MemberProfileScreen() {
               }}
             >
               <IconSymbol name="crown.fill" size={12} color="#FFF" />
-            </View>
+            </View> : null}
           </View>
 
           <View style={{ flexDirection: "row", alignItems: "center", marginTop: 12 }}>
@@ -199,7 +200,11 @@ export default function MemberProfileScreen() {
           </View>
 
           <View style={{ flexDirection: "row", alignItems: "center", marginTop: 6, gap: 8 }}>
-            <View
+            {elevatedRoleLabel ? (
+              <View style={{ backgroundColor: "#D93636", borderRadius: 12, paddingHorizontal: 12, paddingVertical: 4 }}>
+                <Text style={{ fontSize: 12, fontWeight: "900", color: "#FFF" }}>{elevatedRoleLabel}</Text>
+              </View>
+            ) : <View
               style={{
                 backgroundColor: rankColor + "20",
                 borderColor: rankColor,
@@ -212,7 +217,7 @@ export default function MemberProfileScreen() {
               <Text style={{ fontSize: 13, fontWeight: "700", color: rankColor }}>
                 {RANK_LABELS[member.rank]}会員
               </Text>
-            </View>
+            </View>}
             <Text style={{ fontSize: 14, color: colors.muted }}>
               {member.branch === "kanto" ? "関東支部" : "関西支部"}
             </Text>

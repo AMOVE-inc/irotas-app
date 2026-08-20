@@ -597,7 +597,7 @@ function ApplicationReviewDetails({ memberId, application }: { memberId: string;
   return (
     <View style={{ backgroundColor: colors.background, borderRadius: 12, padding: 12, marginBottom: 10, gap: 10 }}>
       <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6 }}>
-        {[`${member.generation}期生`, member.branch === "kanto" ? "関東支部" : "関西支部", RANK_LABELS[member.rank], `入会 ${new Date(member.joinedAt).getFullYear()}年`].map((label) => (
+        {[`${member.generation}期生`, member.branch === "kanto" ? "関東支部" : "関西支部", member.role === "admin" ? "管理者" : member.role === "operator" ? "運営メンバー" : RANK_LABELS[member.rank], `入会 ${new Date(member.joinedAt).getFullYear()}年`].map((label) => (
           <View key={label} style={{ backgroundColor: colors.surface, borderRadius: 8, paddingHorizontal: 8, paddingVertical: 4 }}>
             <Text style={{ fontSize: 11, fontWeight: "600", color: colors.foreground }}>{label}</Text>
           </View>
