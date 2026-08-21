@@ -11,7 +11,7 @@ export function clubMembershipActionLabel(
   access: Pick<ClubViewerAccess, "isMember" | "hasApplied">,
 ) {
   if (access.isMember) return "入部済み";
-  if (access.hasApplied) return "審査中";
+  if (access.hasApplied) return "審査中（申請済み）";
   return "入部申請する";
 }
 

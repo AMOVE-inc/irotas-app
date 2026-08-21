@@ -36,7 +36,7 @@ describe("club viewer access", () => {
 
   it("shows a clear membership action for every club-list state", () => {
     expect(clubMembershipActionLabel({ isMember: false, hasApplied: false })).toBe("入部申請する");
-    expect(clubMembershipActionLabel({ isMember: false, hasApplied: true })).toBe("審査中");
+    expect(clubMembershipActionLabel({ isMember: false, hasApplied: true })).toBe("審査中（申請済み）");
     expect(clubMembershipActionLabel({ isMember: true, hasApplied: false })).toBe("入部済み");
   });
 });
