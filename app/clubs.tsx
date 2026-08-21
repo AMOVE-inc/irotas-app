@@ -20,7 +20,6 @@ import { useEffect, useState } from "react";
 import * as Api from "@/lib/_core/api";
 import {
   Alert,
-  FlatList,
   KeyboardAvoidingView,
   Modal,
   Platform,
@@ -47,7 +46,7 @@ import {
   clubMembershipSortPriority,
   getClubViewerAccess,
 } from "@/lib/club-viewer-access";
-import { getClubIntroductionContent } from "@/lib/club-introduction";
+import { getClubIntroductionContent, getLatestClubActivityReports } from "@/lib/club-introduction";
 import { MentionText } from "@/components/mention-ui";
 import { getMentionGroups } from "@/lib/mentions";
 
@@ -1719,11 +1718,26 @@ function AddClubModal({
 // ============================================================
 export default function ClubsScreen() {
   const colors = useColors();
+  const router = useRouter();
   const { user: authUser } = useAuthContext();
   const userIsAdmin = canCreateClub(authUser?.role, authUser?.accessRole);
   const clubs = useClubs();
   const [selectedClub, setSelectedClub] = useState<Club | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
+  const activityReports = getLatestClubActivityReports(3);
+  const clubsWithAccess = clubs.map((club) => ({
+    club,
+    access: getClubViewerAccess(club, authUser?.memberId, CURRENT_USER.id),
+  }));
+  const joinedClubs = clubsWithAccess
+    .filter(({ access }) => access.isMember)
+    .map(({ club }) => club)
+    .sort((a, b) => a.name.localeCompare(b.name, "ja"));
+  const discoverClubs = clubsWithAccess
+    .filter(({ access }) => !access.isMember)
+    .sort((a, b) => clubMembershipSortPriority(a.access) - clubMembershipSortPriority(b.access)
+      || a.club.name.localeCompare(b.club.name, "ja"))
+    .map(({ club }) => club);
 
   const handleApply = async (clubId: string, application: ClubApplication) => {
     const updated = await submitClubApplicationToStore(clubId, application.wantsToDo, application.messageToLeader);
@@ -1784,28 +1798,79 @@ export default function ClubsScreen() {
         )}
       </View>
 
-      <FlatList
-        data={[...clubs].sort((a, b) => {
-          const priorityDifference = clubMembershipSortPriority(getClubViewerAccess(a, authUser?.memberId, CURRENT_USER.id))
-            - clubMembershipSortPriority(getClubViewerAccess(b, authUser?.memberId, CURRENT_USER.id));
-          return priorityDifference || a.name.localeCompare(b.name, "ja");
-        })}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <ClubCard club={item} onPress={() => setSelectedClub(item)} />
-        )}
-        contentContainerStyle={{ paddingTop: 16, paddingBottom: 32 }}
-        ListHeaderComponent={
-          <View style={{ paddingHorizontal: 16, marginBottom: 12 }}>
-            <Text style={{ fontSize: 13, color: colors.muted }}>
-              部活動は審査制です。入部申請を送ると部長が審査を行います。
-            </Text>
-            <Text style={{ fontSize: 12, fontWeight: "800", color: colors.foreground, marginTop: 12 }}>
-              入部済み、申請中、未参加の順に表示しています
+      <ScrollView contentContainerStyle={{ paddingTop: 16, paddingBottom: 32 }}>
+        <View style={{ paddingHorizontal: 16, marginBottom: 22 }}>
+          <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 11 }}>
+            <View style={{ flex: 1 }}>
+              <Text style={{ fontSize: 19, fontWeight: "900", color: colors.foreground }}>活動報告</Text>
+              <Text style={{ fontSize: 12, color: colors.muted, marginTop: 3 }}>各部活の最新レポート</Text>
+            </View>
+            <Pressable
+              onPress={() => router.push({ pathname: "/board", params: { category: "club-all", view: "threads" } })}
+              accessibilityRole="button"
+              accessibilityLabel="活動報告をすべて見る"
+              hitSlop={8}
+            >
+              <Text style={{ fontSize: 13, fontWeight: "800", color: "#5579A6" }}>すべて見る ›</Text>
+            </Pressable>
+          </View>
+          <View style={{ gap: 9 }}>
+            {activityReports.map((report) => (
+              <Pressable
+                key={report.id}
+                onPress={() => router.push({ pathname: "/board", params: { category: "club-all", view: "threads", thread: report.id } })}
+                accessibilityRole="button"
+                accessibilityLabel={report.title}
+                style={({ pressed }) => ({
+                  flexDirection: "row",
+                  alignItems: "center",
+                  minHeight: 78,
+                  padding: 11,
+                  borderRadius: 15,
+                  backgroundColor: pressed ? "#F2F0F3" : colors.surface,
+                  borderWidth: 1,
+                  borderColor: colors.border,
+                })}
+              >
+                {report.images?.[0] ? (
+                  <Image source={report.images[0]} style={{ width: 56, height: 56, borderRadius: 11, marginRight: 11 }} contentFit="cover" />
+                ) : (
+                  <View style={{ width: 56, height: 56, borderRadius: 11, marginRight: 11, backgroundColor: "#EAF3FA", alignItems: "center", justifyContent: "center" }}>
+                    <IconSymbol name="doc.text.fill" size={23} color="#5579A6" />
+                  </View>
+                )}
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: 14, fontWeight: "800", color: colors.foreground, lineHeight: 20 }} numberOfLines={2}>{report.title}</Text>
+                  <Text style={{ fontSize: 11, color: colors.muted, marginTop: 4 }} numberOfLines={1}>
+                    {report.author.name} · {new Intl.DateTimeFormat("ja-JP", { timeZone: "Asia/Tokyo", month: "numeric", day: "numeric" }).format(new Date(report.lastUpdated))}
+                  </Text>
+                </View>
+                <IconSymbol name="chevron.right" size={16} color={colors.muted} />
+              </Pressable>
+            ))}
+          </View>
+        </View>
+
+        {joinedClubs.length > 0 ? (
+          <View style={{ marginBottom: 18 }}>
+            <View style={{ paddingHorizontal: 16, marginBottom: 10 }}>
+              <Text style={{ fontSize: 19, fontWeight: "900", color: colors.foreground }}>入部中の部活</Text>
+              <Text style={{ fontSize: 12, color: colors.muted, marginTop: 3 }}>部活を開くと投稿やメンバーを確認できます</Text>
+            </View>
+            {joinedClubs.map((club) => <ClubCard key={club.id} club={club} onPress={() => setSelectedClub(club)} />)}
+          </View>
+        ) : null}
+
+        <View>
+          <View style={{ paddingHorizontal: 16, marginBottom: 10 }}>
+            <Text style={{ fontSize: 19, fontWeight: "900", color: colors.foreground }}>部活を探す</Text>
+            <Text style={{ fontSize: 12, lineHeight: 18, color: colors.muted, marginTop: 3 }}>
+              申請済みの部活は「審査中」、未申請の部活は「入部申請する」と表示されます
             </Text>
           </View>
-        }
-      />
+          {discoverClubs.map((club) => <ClubCard key={club.id} club={club} onPress={() => setSelectedClub(club)} />)}
+        </View>
+      </ScrollView>
 
       {/* 部活動詳細モーダル */}
       {selectedClub && (
