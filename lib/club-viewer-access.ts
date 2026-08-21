@@ -15,6 +15,14 @@ export function clubMembershipActionLabel(
   return "入部申請する";
 }
 
+export function clubMembershipSortPriority(
+  access: Pick<ClubViewerAccess, "isMember" | "hasApplied">,
+) {
+  if (access.isMember) return 0;
+  if (access.hasApplied) return 1;
+  return 2;
+}
+
 /**
  * The bundled club catalog contains legacy preview membership for CURRENT_USER.
  * Once a real member is authenticated, only server-provided viewer metadata may

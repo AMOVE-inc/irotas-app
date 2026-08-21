@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { CLUBS, CURRENT_USER } from "../constants/mock-data";
 import {
   clubMembershipActionLabel,
+  clubMembershipSortPriority,
   getClubViewerAccess,
 } from "../lib/club-viewer-access";
 
@@ -38,5 +39,11 @@ describe("club viewer access", () => {
     expect(clubMembershipActionLabel({ isMember: false, hasApplied: false })).toBe("入部申請する");
     expect(clubMembershipActionLabel({ isMember: false, hasApplied: true })).toBe("審査中（申請済み）");
     expect(clubMembershipActionLabel({ isMember: true, hasApplied: false })).toBe("入部済み");
+  });
+
+  it("sorts joined clubs first, pending applications second, and other clubs last", () => {
+    expect(clubMembershipSortPriority({ isMember: true, hasApplied: false })).toBe(0);
+    expect(clubMembershipSortPriority({ isMember: false, hasApplied: true })).toBe(1);
+    expect(clubMembershipSortPriority({ isMember: false, hasApplied: false })).toBe(2);
   });
 });

@@ -1,8 +1,10 @@
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import {
+  CLUBS,
   CURRENT_USER,
   EVENTS,
+  MEMBERS,
   RANK_LABELS,
   getMemberById,
   type Club,
@@ -42,8 +44,14 @@ import {
 } from "@/lib/club-store";
 import {
   clubMembershipActionLabel,
+  clubMembershipSortPriority,
   getClubViewerAccess,
 } from "@/lib/club-viewer-access";
+import { getClubIntroductionContent } from "@/lib/club-introduction";
+import { MentionText } from "@/components/mention-ui";
+import { getMentionGroups } from "@/lib/mentions";
+
+const CLUB_OVERVIEW_MENTION_GROUPS = getMentionGroups(MEMBERS, CLUBS);
 
 // 部活動掲示板の投稿型
 interface ClubPost {
@@ -736,6 +744,7 @@ function ClubDetailModal({
   const [messageToLeader, setMessageToLeader] = useState("");
   const [applicationError, setApplicationError] = useState("");
   const [previewApplication, setPreviewApplication] = useState(false);
+  const [showClubOverview, setShowClubOverview] = useState(false);
 
   const viewerAccess = getClubViewerAccess(
     { ...club, memberIds, applicantIds, applications, leaderId: currentLeaderId },
@@ -744,6 +753,7 @@ function ClubDetailModal({
   );
   const { isMember, hasApplied, isPending, isLeader } = viewerAccess;
   const canManageMembers = club.canReviewApplications === true || isLeader || userIsAdmin;
+  const clubOverview = getClubIntroductionContent(club);
 
   const handleApply = async () => {
     if (hasApplied || isMember) return;
@@ -949,6 +959,28 @@ function ClubDetailModal({
           <Text style={{ fontSize: 14, color: colors.muted, textAlign: "center", marginBottom: 8 }}>
             部長: {leader?.name ?? club.leaderName ?? "未設定"} · {club.memberIds.length}人のメンバー
           </Text>
+          <Pressable
+            onPress={() => setShowClubOverview(true)}
+            accessibilityRole="button"
+            accessibilityLabel={`${club.name}の部活概要を見る`}
+            style={({ pressed }) => ({
+              width: "100%",
+              minHeight: 46,
+              borderRadius: 13,
+              marginTop: 10,
+              marginBottom: 16,
+              alignItems: "center",
+              justifyContent: "center",
+              flexDirection: "row",
+              gap: 7,
+              backgroundColor: pressed ? "#E2EDF6" : "#EFF6FB",
+              borderWidth: 1,
+              borderColor: "#B9D1E5",
+            })}
+          >
+            <IconSymbol name="doc.text.fill" size={17} color="#3E6F97" />
+            <Text style={{ fontSize: 14, fontWeight: "800", color: "#3E6F97" }}>部活概要を見る</Text>
+          </Pressable>
           <View
             style={{
               backgroundColor: colors.surface,
@@ -1029,6 +1061,35 @@ function ClubDetailModal({
             </View>
           )}
         </ScrollView>
+        <Modal
+          visible={showClubOverview}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setShowClubOverview(false)}
+        >
+          <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.42)", justifyContent: "center", padding: 20 }}>
+            <View style={{ width: "100%", maxHeight: "82%", backgroundColor: colors.background, borderRadius: 20, overflow: "hidden" }}>
+              <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 18, paddingVertical: 15, borderBottomWidth: 1, borderBottomColor: colors.border }}>
+                <Text style={{ fontSize: 22, marginRight: 9 }}>{club.icon}</Text>
+                <Text style={{ flex: 1, fontSize: 17, fontWeight: "900", color: colors.foreground }}>{club.name}の概要</Text>
+                <Pressable onPress={() => setShowClubOverview(false)} accessibilityRole="button" accessibilityLabel="部活概要を閉じる" hitSlop={10}>
+                  <IconSymbol name="xmark" size={21} color={colors.foreground} />
+                </Pressable>
+              </View>
+              <ScrollView contentContainerStyle={{ padding: 18, paddingBottom: 24 }}>
+                <MentionText content={clubOverview} groups={CLUB_OVERVIEW_MENTION_GROUPS} />
+              </ScrollView>
+              <View style={{ paddingHorizontal: 18, paddingBottom: 18 }}>
+                <Pressable
+                  onPress={() => setShowClubOverview(false)}
+                  style={({ pressed }) => ({ minHeight: 46, borderRadius: 13, alignItems: "center", justifyContent: "center", backgroundColor: pressed ? "#D57DA5" : "#E8A0BF" })}
+                >
+                  <Text style={{ fontSize: 15, fontWeight: "800", color: "#FFF" }}>閉じる</Text>
+                </Pressable>
+              </View>
+            </View>
+          </View>
+        </Modal>
       </View>
     );
   }
@@ -1724,7 +1785,11 @@ export default function ClubsScreen() {
       </View>
 
       <FlatList
-        data={[...clubs].sort((a, b) => Number(getClubViewerAccess(b, authUser?.memberId, CURRENT_USER.id).isMember) - Number(getClubViewerAccess(a, authUser?.memberId, CURRENT_USER.id).isMember))}
+        data={[...clubs].sort((a, b) => {
+          const priorityDifference = clubMembershipSortPriority(getClubViewerAccess(a, authUser?.memberId, CURRENT_USER.id))
+            - clubMembershipSortPriority(getClubViewerAccess(b, authUser?.memberId, CURRENT_USER.id));
+          return priorityDifference || a.name.localeCompare(b.name, "ja");
+        })}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <ClubCard club={item} onPress={() => setSelectedClub(item)} />
@@ -1736,7 +1801,7 @@ export default function ClubsScreen() {
               部活動は審査制です。入部申請を送ると部長が審査を行います。
             </Text>
             <Text style={{ fontSize: 12, fontWeight: "800", color: colors.foreground, marginTop: 12 }}>
-              参加中の部活を上に表示しています
+              入部済み、申請中、未参加の順に表示しています
             </Text>
           </View>
         }
