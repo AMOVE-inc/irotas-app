@@ -499,7 +499,7 @@ export default function AdminDashboardScreen() {
         style={{ borderBottomWidth: 0.5, borderBottomColor: colors.border, flexGrow: 0 }}
       >
         {(["overview", "operators", "members", "events", "contests", "clubs", "payments", "emails", "announcements", "coupons", "analytics"] as const).map((tab) => {
-          const labels = { overview: "概要", operators: "運営メンバー", members: "会員", events: "イベント", contests: "グルメ選手権", clubs: "部活", payments: "支払管理", emails: "承認メール", announcements: "お知らせ", coupons: "クーポン", analytics: "分析" };
+          const labels = { overview: "概要", operators: "運営メンバー", members: "会員", events: "イベント", contests: "グルメ選手権", clubs: "部活動", payments: "支払管理", emails: "承認メール", announcements: "お知らせ", coupons: "クーポン", analytics: "分析" };
           return (
             <Pressable
               key={tab}
@@ -1057,7 +1057,7 @@ export default function AdminDashboardScreen() {
           <>
             <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 12 }}>
               <View style={{ flex: 1 }}>
-                <Text style={{ fontSize: 16, fontWeight: "800", color: colors.foreground }}>部活一覧管理</Text>
+                <Text style={{ fontSize: 16, fontWeight: "800", color: colors.foreground }}>部活動一覧管理</Text>
                 <Text style={{ fontSize: 12, lineHeight: 18, color: colors.muted, marginTop: 3 }}>部長を設定すると、入部申請がその部長に通知されます。</Text>
               </View>
               <Pressable onPress={() => setEditingClub({ id: `club_${Date.now()}`, name: "", description: "", icon: "🏃", leaderId: CURRENT_USER.id, memberIds: [CURRENT_USER.id], applicantIds: [], applications: [], createdByAdmin: true, events: [] })} style={{ backgroundColor: "#E8A0BF", borderRadius: 10, paddingHorizontal: 12, paddingVertical: 8 }}><Text style={{ color: "#FFF", fontSize: 12, fontWeight: "800" }}>＋ 新規追加</Text></Pressable>
@@ -1183,7 +1183,7 @@ export default function AdminDashboardScreen() {
             <View style={{ backgroundColor: "#FFF8E8", borderRadius: 12, padding: 12, marginBottom: 14, borderWidth: 1, borderColor: "#E5C875" }}>
               <Text style={{ fontSize: 12, fontWeight: "900", color: "#71520B" }}>権限の強さ</Text>
               <Text style={{ fontSize: 13, fontWeight: "800", color: colors.foreground, marginTop: 5 }}>管理者 ＞ 運営メンバー ＞ 部長 ＞ 一般会員</Text>
-              <Text style={{ fontSize: 11, lineHeight: 17, color: colors.muted, marginTop: 5 }}>管理者は全機能、運営メンバーは運営業務、部長は担当部活の申請・部員管理のみ行えます。</Text>
+              <Text style={{ fontSize: 11, lineHeight: 17, color: colors.muted, marginTop: 5 }}>管理者は全機能、運営メンバーは運営業務、部長は担当部活動の申請・部員管理のみ行えます。</Text>
             </View>
 
             {/* 新規追加フォーム */}
@@ -1608,14 +1608,14 @@ export default function AdminDashboardScreen() {
 
       <Modal visible={!!editingClub} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setEditingClub(null)}>
         {editingClub ? <View style={{ flex: 1, backgroundColor: colors.background }}>
-          <View style={{ flexDirection: "row", alignItems: "center", padding: 16, borderBottomWidth: 1, borderBottomColor: colors.border }}><Pressable onPress={() => setEditingClub(null)}><Text style={{ color: colors.muted }}>キャンセル</Text></Pressable><Text style={{ flex: 1, textAlign: "center", fontSize: 17, fontWeight: "800", color: colors.foreground }}>部活を編集</Text><Pressable onPress={() => { const existing = clubs.some((club) => club.id === editingClub.id); const normalized = { ...editingClub, name: editingClub.name.trim(), description: editingClub.description.trim(), memberIds: editingClub.memberIds.includes(editingClub.leaderId) ? editingClub.memberIds : [editingClub.leaderId, ...editingClub.memberIds] }; if (!normalized.name || !normalized.description) return; existing ? updateClub(normalized) : addClub(normalized); setEditingClub(null); }}><Text style={{ color: "#E8A0BF", fontWeight: "800" }}>保存</Text></Pressable></View>
+          <View style={{ flexDirection: "row", alignItems: "center", padding: 16, borderBottomWidth: 1, borderBottomColor: colors.border }}><Pressable onPress={() => setEditingClub(null)}><Text style={{ color: colors.muted }}>キャンセル</Text></Pressable><Text style={{ flex: 1, textAlign: "center", fontSize: 17, fontWeight: "800", color: colors.foreground }}>部活動を編集</Text><Pressable onPress={() => { const existing = clubs.some((club) => club.id === editingClub.id); const normalized = { ...editingClub, name: editingClub.name.trim(), description: editingClub.description.trim(), memberIds: editingClub.memberIds.includes(editingClub.leaderId) ? editingClub.memberIds : [editingClub.leaderId, ...editingClub.memberIds] }; if (!normalized.name || !normalized.description) return; existing ? updateClub(normalized) : addClub(normalized); setEditingClub(null); }}><Text style={{ color: "#E8A0BF", fontWeight: "800" }}>保存</Text></Pressable></View>
           <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
             <Text style={{ fontSize: 12, fontWeight: "700", color: colors.muted, marginBottom: 6 }}>アイコン</Text><TextInput value={editingClub.icon} onChangeText={(icon) => setEditingClub({ ...editingClub, icon })} maxLength={4} style={{ backgroundColor: colors.surface, borderRadius: 10, padding: 12, fontSize: 22, marginBottom: 14, color: colors.foreground }} />
-            <Text style={{ fontSize: 12, fontWeight: "700", color: colors.muted, marginBottom: 6 }}>部活名</Text><TextInput value={editingClub.name} onChangeText={(name) => setEditingClub({ ...editingClub, name })} style={{ backgroundColor: colors.surface, borderRadius: 10, padding: 12, fontSize: 15, marginBottom: 14, color: colors.foreground }} />
+            <Text style={{ fontSize: 12, fontWeight: "700", color: colors.muted, marginBottom: 6 }}>部活動名</Text><TextInput value={editingClub.name} onChangeText={(name) => setEditingClub({ ...editingClub, name })} style={{ backgroundColor: colors.surface, borderRadius: 10, padding: 12, fontSize: 15, marginBottom: 14, color: colors.foreground }} />
             <Text style={{ fontSize: 12, fontWeight: "700", color: colors.muted, marginBottom: 6 }}>説明</Text><TextInput value={editingClub.description} onChangeText={(description) => setEditingClub({ ...editingClub, description })} multiline style={{ backgroundColor: colors.surface, borderRadius: 10, padding: 12, fontSize: 15, minHeight: 90, marginBottom: 18, color: colors.foreground, textAlignVertical: "top" }} />
             <Text style={{ fontSize: 13, fontWeight: "800", color: colors.foreground, marginBottom: 9 }}>部長を選択</Text>
-            {MEMBERS.map((member) => <Pressable key={member.id} onPress={() => { const changed = member.id !== editingClub.leaderId; setEditingClub({ ...editingClub, leaderId: member.id }); if (changed) sendLeaderAppointmentNotification(editingClub.name || "部活", CURRENT_USER.name); }} style={{ flexDirection: "row", alignItems: "center", padding: 12, borderRadius: 10, marginBottom: 6, backgroundColor: editingClub.leaderId === member.id ? "#FFF0F6" : colors.surface, borderWidth: 1, borderColor: editingClub.leaderId === member.id ? "#E8A0BF" : colors.border }}><Text style={{ flex: 1, fontSize: 14, fontWeight: "700", color: colors.foreground }}>{member.name}</Text>{editingClub.leaderId === member.id ? <Text style={{ color: "#E8A0BF", fontWeight: "900" }}>部長</Text> : null}</Pressable>)}
-            {clubs.some((club) => club.id === editingClub.id) ? <Pressable onPress={() => Alert.alert("部活を削除しますか？", `${editingClub.name}を一覧から削除します。`, [{ text: "キャンセル", style: "cancel" }, { text: "削除", style: "destructive", onPress: () => { removeClub(editingClub.id); setEditingClub(null); } }])} style={{ alignItems: "center", paddingVertical: 14, marginTop: 16 }}><Text style={{ color: "#C94B55", fontWeight: "800" }}>この部活を削除</Text></Pressable> : null}
+            {MEMBERS.map((member) => <Pressable key={member.id} onPress={() => { const changed = member.id !== editingClub.leaderId; setEditingClub({ ...editingClub, leaderId: member.id }); if (changed) sendLeaderAppointmentNotification(editingClub.name || "部活動", CURRENT_USER.name); }} style={{ flexDirection: "row", alignItems: "center", padding: 12, borderRadius: 10, marginBottom: 6, backgroundColor: editingClub.leaderId === member.id ? "#FFF0F6" : colors.surface, borderWidth: 1, borderColor: editingClub.leaderId === member.id ? "#E8A0BF" : colors.border }}><Text style={{ flex: 1, fontSize: 14, fontWeight: "700", color: colors.foreground }}>{member.name}</Text>{editingClub.leaderId === member.id ? <Text style={{ color: "#E8A0BF", fontWeight: "900" }}>部長</Text> : null}</Pressable>)}
+            {clubs.some((club) => club.id === editingClub.id) ? <Pressable onPress={() => Alert.alert("部活動を削除しますか？", `${editingClub.name}を一覧から削除します。`, [{ text: "キャンセル", style: "cancel" }, { text: "削除", style: "destructive", onPress: () => { removeClub(editingClub.id); setEditingClub(null); } }])} style={{ alignItems: "center", paddingVertical: 14, marginTop: 16 }}><Text style={{ color: "#C94B55", fontWeight: "800" }}>この部活動を削除</Text></Pressable> : null}
           </ScrollView>
         </View> : null}
       </Modal>

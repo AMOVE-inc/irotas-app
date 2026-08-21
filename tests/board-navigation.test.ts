@@ -25,7 +25,7 @@ describe("board category ordering", () => {
 
   it("separates shared club boards from joined clubs", () => {
     const clubCategories = BOARD_CATEGORIES.filter((category) => category.group === "club");
-    expect(clubCategories.slice(0, 2).map((category) => category.label)).toEqual(["部活紹介・入部申請", "活動報告"]);
+    expect(clubCategories.slice(0, 2).map((category) => category.label)).toEqual(["部活動紹介・入部申請", "活動報告"]);
     const joinedClubNames = CLUBS.filter((club) => club.memberIds.includes(CURRENT_USER.id)).map((club) => club.name);
     const visibleLabels = clubCategories.slice(2).filter((category) => joinedClubNames.includes(category.label)).map((category) => category.label);
     expect(visibleLabels).toEqual(joinedClubNames);

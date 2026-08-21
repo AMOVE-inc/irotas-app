@@ -78,12 +78,14 @@ interface ClubPostComment {
 // ============================================================
 // ClubCard - 一覧カード
 // ============================================================
-function ClubCard({ club, onPress }: { club: Club; onPress: () => void }) {
+function ClubCard({ club, onPress, previewAsMember = false }: { club: Club; onPress?: () => void; previewAsMember?: boolean }) {
   const colors = useColors();
   const { user: authUser } = useAuthContext();
   const leader = getMemberById(club.leaderId);
-  const { isMember, hasApplied } = getClubViewerAccess(club, authUser?.memberId, CURRENT_USER.id);
-  const actionLabel = clubMembershipActionLabel({ isMember, hasApplied });
+  const viewerAccess = getClubViewerAccess(club, authUser?.memberId, CURRENT_USER.id);
+  const isMember = previewAsMember || viewerAccess.isMember;
+  const hasApplied = !previewAsMember && viewerAccess.hasApplied;
+  const actionLabel = previewAsMember ? "入部済み（プレビュー）" : clubMembershipActionLabel({ isMember, hasApplied });
   const actionColors = isMember
     ? { background: "#E6F4EA", border: "#B7DEC1", text: "#237A3B" }
     : hasApplied
@@ -93,6 +95,7 @@ function ClubCard({ club, onPress }: { club: Club; onPress: () => void }) {
   return (
     <Pressable
       onPress={onPress}
+      disabled={!onPress}
       accessibilityRole="button"
       accessibilityLabel={`${club.name} ${actionLabel}`}
       style={({ pressed }) => ({
@@ -124,7 +127,11 @@ function ClubCard({ club, onPress }: { club: Club; onPress: () => void }) {
             <Text style={{ fontSize: 17, fontWeight: "700", color: colors.foreground }}>
               {club.name}
             </Text>
-            {!isMember && (
+            {previewAsMember ? (
+              <View style={{ backgroundColor: "#FFF0F6", borderRadius: 8, paddingHorizontal: 8, paddingVertical: 2 }}>
+                <Text style={{ fontSize: 10, fontWeight: "800", color: "#C05B88" }}>表示イメージ</Text>
+              </View>
+            ) : !isMember && (
               <View style={{ backgroundColor: colors.border + "60", borderRadius: 8, paddingHorizontal: 8, paddingVertical: 2 }}>
                 <Text style={{ fontSize: 10, fontWeight: "600", color: colors.muted }}>🔒 審査制</Text>
               </View>
@@ -679,7 +686,7 @@ function ApplicationReviewDetails({ clubId, memberId, application }: { clubId: s
       {review ? <Text style={{ fontSize: 12, color: colors.muted }}>参加回数 {review.participationCount}回 · 幹事回数 {review.organizerCount}回</Text> : null}
 
       <View>
-        <Text style={{ fontSize: 12, fontWeight: "800", color: colors.foreground, marginBottom: 3 }}>部活でやってみたいこと</Text>
+        <Text style={{ fontSize: 12, fontWeight: "800", color: colors.foreground, marginBottom: 3 }}>部活動でやってみたいこと</Text>
         <Text style={{ fontSize: 13, lineHeight: 19, color: colors.foreground }}>
           {wantsToDo}
         </Text>
@@ -961,7 +968,7 @@ function ClubDetailModal({
           <Pressable
             onPress={() => setShowClubOverview(true)}
             accessibilityRole="button"
-            accessibilityLabel={`${club.name}の部活概要を見る`}
+            accessibilityLabel={`${club.name}の部活動概要を見る`}
             style={({ pressed }) => ({
               width: "100%",
               minHeight: 46,
@@ -978,7 +985,7 @@ function ClubDetailModal({
             })}
           >
             <IconSymbol name="doc.text.fill" size={17} color="#3E6F97" />
-            <Text style={{ fontSize: 14, fontWeight: "800", color: "#3E6F97" }}>部活概要を見る</Text>
+            <Text style={{ fontSize: 14, fontWeight: "800", color: "#3E6F97" }}>部活動概要を見る</Text>
           </Pressable>
           <View
             style={{
@@ -1000,7 +1007,7 @@ function ClubDetailModal({
             <View style={{ width: "100%", gap: 14 }}>
               <View>
                 <Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground, marginBottom: 6 }}>
-                  部活でやってみたいこと <Text style={{ color: colors.error }}>必須</Text>
+                  部活動でやってみたいこと <Text style={{ color: colors.error }}>必須</Text>
                 </Text>
                 <TextInput
                   value={wantsToDo}
@@ -1071,7 +1078,7 @@ function ClubDetailModal({
               <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 18, paddingVertical: 15, borderBottomWidth: 1, borderBottomColor: colors.border }}>
                 <Text style={{ fontSize: 22, marginRight: 9 }}>{club.icon}</Text>
                 <Text style={{ flex: 1, fontSize: 17, fontWeight: "900", color: colors.foreground }}>{club.name}の概要</Text>
-                <Pressable onPress={() => setShowClubOverview(false)} accessibilityRole="button" accessibilityLabel="部活概要を閉じる" hitSlop={10}>
+                <Pressable onPress={() => setShowClubOverview(false)} accessibilityRole="button" accessibilityLabel="部活動概要を閉じる" hitSlop={10}>
                   <IconSymbol name="xmark" size={21} color={colors.foreground} />
                 </Pressable>
               </View>
@@ -1128,7 +1135,7 @@ function ClubDetailModal({
             }}
           >
             <IconSymbol name="message.fill" size={14} color="#34C759" />
-            <Text style={{ fontSize: 12, fontWeight: "600", color: "#34C759", marginLeft: 4 }}>部活チャット</Text>
+            <Text style={{ fontSize: 12, fontWeight: "600", color: "#34C759", marginLeft: 4 }}>部活動チャット</Text>
           </Pressable>
         )}
       </View>
@@ -1673,7 +1680,7 @@ function AddClubModal({
               </Pressable>
             ))}
           </ScrollView>
-          <Text style={{ fontSize: 13, fontWeight: "600", color: colors.muted, marginBottom: 6 }}>部活名 *</Text>
+          <Text style={{ fontSize: 13, fontWeight: "600", color: colors.muted, marginBottom: 6 }}>部活動名 *</Text>
           <TextInput
             value={name}
             onChangeText={setName}
@@ -1738,6 +1745,9 @@ export default function ClubsScreen() {
     .sort((a, b) => clubMembershipSortPriority(a.access) - clubMembershipSortPriority(b.access)
       || a.club.name.localeCompare(b.club.name, "ja"))
     .map(({ club }) => club);
+  const joinedClubPreview = joinedClubs.length === 0
+    ? clubs.find((club) => club.name === "スイーツ部")
+    : undefined;
 
   const handleApply = async (clubId: string, application: ClubApplication) => {
     const updated = await submitClubApplicationToStore(clubId, application.wantsToDo, application.messageToLeader);
@@ -1803,7 +1813,7 @@ export default function ClubsScreen() {
           <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 11 }}>
             <View style={{ flex: 1 }}>
               <Text style={{ fontSize: 19, fontWeight: "900", color: colors.foreground }}>活動報告</Text>
-              <Text style={{ fontSize: 12, color: colors.muted, marginTop: 3 }}>各部活の最新レポート</Text>
+              <Text style={{ fontSize: 12, color: colors.muted, marginTop: 3 }}>各部活動の最新レポート</Text>
             </View>
             <Pressable
               onPress={() => router.push({ pathname: "/board", params: { category: "club-all", view: "threads" } })}
@@ -1851,19 +1861,22 @@ export default function ClubsScreen() {
           </View>
         </View>
 
-        {joinedClubs.length > 0 ? (
+        {joinedClubs.length > 0 || joinedClubPreview ? (
           <View style={{ marginBottom: 18 }}>
             <View style={{ paddingHorizontal: 16, marginBottom: 10 }}>
-              <Text style={{ fontSize: 19, fontWeight: "900", color: colors.foreground }}>入部中の部活</Text>
-              <Text style={{ fontSize: 12, color: colors.muted, marginTop: 3 }}>部活を開くと投稿やメンバーを確認できます</Text>
+              <Text style={{ fontSize: 19, fontWeight: "900", color: colors.foreground }}>入部中の部活動</Text>
+              <Text style={{ fontSize: 12, color: colors.muted, marginTop: 3 }}>
+                {joinedClubPreview ? "入部後の表示イメージです（実際には未入部です）" : "部活動を開くと投稿やメンバーを確認できます"}
+              </Text>
             </View>
             {joinedClubs.map((club) => <ClubCard key={club.id} club={club} onPress={() => setSelectedClub(club)} />)}
+            {joinedClubPreview ? <ClubCard club={joinedClubPreview} previewAsMember /> : null}
           </View>
         ) : null}
 
         <View>
           <View style={{ paddingHorizontal: 16, marginBottom: 10 }}>
-            <Text style={{ fontSize: 19, fontWeight: "900", color: colors.foreground }}>部活を探す</Text>
+            <Text style={{ fontSize: 19, fontWeight: "900", color: colors.foreground }}>部活動を探す</Text>
             <Text style={{ fontSize: 12, lineHeight: 18, color: colors.muted, marginTop: 3 }}>
               申請済みの部活は「審査中」、未申請の部活は「入部申請する」と表示されます
             </Text>

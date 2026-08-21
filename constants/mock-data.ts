@@ -925,7 +925,7 @@ export const BOARD_CATEGORIES: BoardCategory[] = [
   { key: "gourmet-advice", label: "教えてグルメ相談室", group: "all", createdByAdmin: true },
   { key: "free-chat", label: "なんでも掲示板", group: "all", createdByAdmin: true },
   { key: "gourmet-map", label: "グルメマップ", group: "all", createdByAdmin: true },
-  { key: "club-introduction", label: "部活紹介・入部申請", group: "club", createdByAdmin: true },
+  { key: "club-introduction", label: "部活動紹介・入部申請", group: "club", createdByAdmin: true },
   { key: "club-all", label: "活動報告", group: "club", createdByAdmin: true },
   ...CLUBS.map((club) => ({
     key: `club-${club.id}`,

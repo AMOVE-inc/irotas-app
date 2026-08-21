@@ -1198,7 +1198,7 @@ function ThreadDetailModal({
         onClose={() => setShowSelectMembers(false)}
         onCreateChat={handleCreateChat}
       />
-      <Modal visible={showClubApplication} animationType="slide" presentationStyle="formSheet" onRequestClose={() => setShowClubApplication(false)}><KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ flex: 1, backgroundColor: colors.background }}><View style={{ flexDirection: "row", alignItems: "center", padding: 16, borderBottomWidth: 1, borderBottomColor: colors.border }}><Pressable onPress={() => setShowClubApplication(false)}><Text style={{ color: colors.muted }}>キャンセル</Text></Pressable><Text style={{ flex: 1, textAlign: "center", fontSize: 17, fontWeight: "900", color: colors.foreground }}>{applicationClub?.name} 入部申請</Text><View style={{ width: 64 }} /></View><ScrollView contentContainerStyle={{ padding: 18, gap: 16 }}><View><Text style={{ fontSize: 13, fontWeight: "800", color: colors.foreground, marginBottom: 7 }}>部活でやってみたいこと <Text style={{ color: colors.error }}>*</Text></Text><TextInput value={clubWantsToDo} onChangeText={setClubWantsToDo} multiline placeholder="参加後に挑戦したいことを入力" placeholderTextColor={colors.muted} style={{ minHeight: 110, borderRadius: 13, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, padding: 13, color: colors.foreground, textAlignVertical: "top" }} /></View><View><Text style={{ fontSize: 13, fontWeight: "800", color: colors.foreground, marginBottom: 7 }}>部長へのメッセージ <Text style={{ color: colors.error }}>*</Text></Text><TextInput value={clubLeaderMessage} onChangeText={setClubLeaderMessage} multiline placeholder="自己紹介や入部への意気込みを入力" placeholderTextColor={colors.muted} style={{ minHeight: 110, borderRadius: 13, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, padding: 13, color: colors.foreground, textAlignVertical: "top" }} /></View><Pressable disabled={!clubWantsToDo.trim() || !clubLeaderMessage.trim()} onPress={submitClubApplication} style={{ minHeight: 52, borderRadius: 14, alignItems: "center", justifyContent: "center", backgroundColor: clubWantsToDo.trim() && clubLeaderMessage.trim() ? "#5579A6" : colors.border }}><Text style={{ color: "#FFF", fontSize: 15, fontWeight: "900" }}>申請を送信する</Text></Pressable></ScrollView></KeyboardAvoidingView></Modal>
+      <Modal visible={showClubApplication} animationType="slide" presentationStyle="formSheet" onRequestClose={() => setShowClubApplication(false)}><KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ flex: 1, backgroundColor: colors.background }}><View style={{ flexDirection: "row", alignItems: "center", padding: 16, borderBottomWidth: 1, borderBottomColor: colors.border }}><Pressable onPress={() => setShowClubApplication(false)}><Text style={{ color: colors.muted }}>キャンセル</Text></Pressable><Text style={{ flex: 1, textAlign: "center", fontSize: 17, fontWeight: "900", color: colors.foreground }}>{applicationClub?.name} 入部申請</Text><View style={{ width: 64 }} /></View><ScrollView contentContainerStyle={{ padding: 18, gap: 16 }}><View><Text style={{ fontSize: 13, fontWeight: "800", color: colors.foreground, marginBottom: 7 }}>部活動でやってみたいこと <Text style={{ color: colors.error }}>*</Text></Text><TextInput value={clubWantsToDo} onChangeText={setClubWantsToDo} multiline placeholder="参加後に挑戦したいことを入力" placeholderTextColor={colors.muted} style={{ minHeight: 110, borderRadius: 13, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, padding: 13, color: colors.foreground, textAlignVertical: "top" }} /></View><View><Text style={{ fontSize: 13, fontWeight: "800", color: colors.foreground, marginBottom: 7 }}>部長へのメッセージ <Text style={{ color: colors.error }}>*</Text></Text><TextInput value={clubLeaderMessage} onChangeText={setClubLeaderMessage} multiline placeholder="自己紹介や入部への意気込みを入力" placeholderTextColor={colors.muted} style={{ minHeight: 110, borderRadius: 13, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, padding: 13, color: colors.foreground, textAlignVertical: "top" }} /></View><Pressable disabled={!clubWantsToDo.trim() || !clubLeaderMessage.trim()} onPress={submitClubApplication} style={{ minHeight: 52, borderRadius: 14, alignItems: "center", justifyContent: "center", backgroundColor: clubWantsToDo.trim() && clubLeaderMessage.trim() ? "#5579A6" : colors.border }}><Text style={{ color: "#FFF", fontSize: 15, fontWeight: "900" }}>申請を送信する</Text></Pressable></ScrollView></KeyboardAvoidingView></Modal>
     </View>
   );
 }
@@ -2188,6 +2188,10 @@ export default function BoardScreen() {
   const isClubIndexView = view === "clubs";
 
   useEffect(() => {
+    if (isClubIndexView) router.replace("/clubs");
+  }, [isClubIndexView, router]);
+
+  useEffect(() => {
     void loadImportedGourmetContests().then((items) => {
       setDynamicThreads((current) => {
         const withoutImports = current.filter((thread) => !thread.id.startsWith("imported-contest-"));
@@ -2217,7 +2221,7 @@ export default function BoardScreen() {
   useEffect(() => {
     setCategories((current) => [
       ...current.filter((category) => category.group !== "club"),
-      { key: "club-introduction", label: "部活紹介・入部申請", group: "club", createdByAdmin: true },
+      { key: "club-introduction", label: "部活動紹介・入部申請", group: "club", createdByAdmin: true },
       { key: "club-all", label: "活動報告", group: "club", createdByAdmin: true },
       ...clubs.map((club) => ({ key: `club-${club.id}`, label: club.name, group: "club" as const, createdByAdmin: true })),
     ]);
@@ -2310,12 +2314,11 @@ export default function BoardScreen() {
       "gourmet-advice": { icon: "sparkles", description: "お店選びやグルメの相談", accent: "#8C6DB0" },
       "free-chat": { icon: "bubble.left.and.bubble.right.fill", description: "気軽に投稿できる自由な掲示板", accent: "#5F9E8C" },
       "gourmet-map": { icon: "map.fill", description: "みんなの厳選グルメを地図と一覧で探す", accent: "#D56791" },
-      "club-introduction": { icon: "person.badge.plus", description: "部活を見つけて部長へ入部申請", accent: "#5579A6" },
-      "club-all": { icon: "calendar", description: "各部活の活動レポートをまとめて確認", accent: "#4E8F65" },
+      "club-introduction": { icon: "person.badge.plus", description: "部活動を見つけて部長へ入部申請", accent: "#5579A6" },
+      "club-all": { icon: "calendar", description: "各部活動の活動レポートをまとめて確認", accent: "#4E8F65" },
     };
     return presentations[category.key] ?? { icon: "bubble.left.and.bubble.right.fill", description: "掲示板カテゴリ", accent: "#A7C7E7" };
   };
-  const pendingClubs = clubs.filter((club) => club.applicantIds.includes(CURRENT_USER.id) && !club.memberIds.includes(CURRENT_USER.id));
   const applicationClubForThread = (thread: BoardThread) => thread.category === "club-introduction"
     ? clubs.find((club) => thread.title.includes(club.name) || thread.author.id === club.leaderId)
     : undefined;
@@ -2382,7 +2385,7 @@ export default function BoardScreen() {
           <Pressable accessibilityLabel="掲示板トップへ戻る" onPress={() => router.replace("/board")} style={{ flexDirection: "row", alignItems: "center", flex: 1, paddingVertical: 4 }}>
             <IconSymbol name="chevron.left" size={20} color={colors.foreground} />
             <Text numberOfLines={1} style={{ flex: 1, marginLeft: 8, fontSize: 20, fontWeight: "800", color: colors.foreground }}>
-              {isClubIndexView ? "部活" : activeCategoryLabel}
+              {isClubIndexView ? "部活動" : activeCategoryLabel}
             </Text>
           </Pressable>
         ) : (
@@ -2394,21 +2397,14 @@ export default function BoardScreen() {
 
       {!isThreadView && !isClubIndexView ? <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 12, paddingBottom: 92, gap: 8, backgroundColor: "#FBFDFF" }}>
         {visibleCategories.map(renderCategoryRow)}
-        <Pressable onPress={() => { setActiveGroup("club"); router.push({ pathname: "/board", params: { view: "clubs" } }); }} style={{ flexDirection: "row", alignItems: "center", minHeight: 62, borderRadius: 14, paddingHorizontal: 13, paddingVertical: 9, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border }}>
+        <Pressable onPress={() => router.push("/clubs")} style={{ flexDirection: "row", alignItems: "center", minHeight: 62, borderRadius: 14, paddingHorizontal: 13, paddingVertical: 9, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border }}>
           <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: "#5579A620", alignItems: "center", justifyContent: "center" }}><IconSymbol name="person.3.fill" size={21} color="#5579A6" /></View>
-          <View style={{ flex: 1, marginLeft: 11 }}><Text style={{ fontSize: 15, fontWeight: "900", color: colors.foreground }}>部活</Text><Text style={{ fontSize: 11, color: colors.muted, marginTop: 3 }}>部活紹介・活動報告・入部中の部活</Text></View>
+          <View style={{ flex: 1, marginLeft: 11 }}><Text style={{ fontSize: 15, fontWeight: "900", color: colors.foreground }}>部活動</Text><Text style={{ fontSize: 11, color: colors.muted, marginTop: 3 }}>活動報告・入部中の部活動・部活動を探す</Text></View>
           <IconSymbol name="chevron.right" size={17} color={colors.muted} />
         </Pressable>
       </ScrollView> : null}
 
-      {isClubIndexView ? <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 12, paddingBottom: 92, gap: 8, backgroundColor: "#FBFDFF" }}>
-        <Text style={{ fontSize: 13, fontWeight: "900", color: colors.foreground, marginBottom: 1 }}>全体共通</Text>
-        {visibleCategories.filter((cat) => cat.key === "club-introduction" || cat.key === "club-all").map(renderCategoryRow)}
-        <Text style={{ fontSize: 13, fontWeight: "900", color: colors.foreground, marginTop: 8, marginBottom: 1 }}>入部中の部活</Text>
-        {visibleCategories.filter((cat) => cat.key !== "club-introduction" && cat.key !== "club-all").map(renderCategoryRow)}
-        {pendingClubs.length ? <><Text style={{ fontSize: 13, fontWeight: "900", color: colors.foreground, marginTop: 8, marginBottom: 1 }}>入部承認待ちの部活</Text>{pendingClubs.map((club) => <Pressable key={club.id} onPress={() => router.push("/clubs")} style={{ flexDirection: "row", alignItems: "center", minHeight: 62, borderRadius: 14, paddingHorizontal: 13, paddingVertical: 9, backgroundColor: "#EFEFF1", borderWidth: 1, borderColor: "#D6D6DA", opacity: 0.72 }}><View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: "#DADAE0", alignItems: "center", justifyContent: "center" }}><Text style={{ fontSize: 20 }}>{club.icon}</Text></View><View style={{ flex: 1, marginLeft: 11 }}><Text style={{ fontSize: 15, fontWeight: "900", color: colors.muted }}>{club.name}</Text><Text style={{ fontSize: 11, color: colors.muted, marginTop: 3 }}>部長の承認待ち・中身はまだ閲覧できません</Text></View><IconSymbol name="lock.fill" size={16} color={colors.muted} /></Pressable>)}</> : null}
-        {userIsAdmin ? <Pressable onPress={() => setShowAddCategory(true)} style={{ flexDirection: "row", alignItems: "center", alignSelf: "flex-end", paddingVertical: 5 }}><IconSymbol name="plus" size={13} color={colors.muted} /><Text style={{ fontSize: 12, color: colors.muted, marginLeft: 4 }}>カテゴリを追加</Text></Pressable> : null}
-      </ScrollView> : null}
+      {isClubIndexView ? <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}><Text style={{ color: colors.muted }}>部活動ページを開いています…</Text></View> : null}
 
       {isThreadView ? <FlatList
         data={filteredThreads}

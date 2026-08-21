@@ -33,7 +33,7 @@ const TYPE_FILTERS = [
   { key: "all", label: "すべて" },
   { key: "official", label: "公式" },
   { key: "gourmet", label: "グルメ会" },
-  { key: "club", label: "部活" },
+  { key: "club", label: "部活動" },
 ] as const;
 
 const WEEKDAYS = ["日", "月", "火", "水", "木", "金", "土"];
@@ -282,7 +282,7 @@ function EventCard({ event, onPress, isFavorite, onToggleFavorite, locked = fals
         opacity: locked ? 0.48 : 1,
       }}
     >
-      <View style={{ width: 142, minHeight: 142, alignSelf: "stretch", overflow: "hidden" }}><Image source={event.image} style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }} contentFit="cover" contentPosition="center" transition={300} />{event.eventType === "official" ? <View style={{ position: "absolute", left: 7, top: 7, flexDirection: "row", alignItems: "center", minHeight: 30, borderRadius: 10, backgroundColor: "#FFFFFFF5", paddingHorizontal: 9, borderWidth: 2, borderColor: "#E8A0BF", shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.2, shadowRadius: 4, elevation: 4 }}><Text style={{ fontSize: 11, fontWeight: "900", color: "#171717", letterSpacing: 0.4 }}>IRO+</Text><Text style={{ marginLeft: 4, fontSize: 10, fontWeight: "900", color: "#C94F84" }}>公式</Text></View> : event.eventType === "club" ? <View style={{ position: "absolute", left: 7, top: 7, borderRadius: 9, backgroundColor: "#FFFFFFF2", paddingHorizontal: 8, paddingVertical: 5 }}><Text style={{ fontSize: 10, fontWeight: "900", color: "#4E6756" }}>{clubName ?? "部活イベント"}</Text></View> : null}{locked ? <View style={{ position: "absolute", inset: 0, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(40,40,40,0.42)" }}><IconSymbol name="lock.fill" size={28} color="#FFF" /><Text style={{ color: "#FFF", fontSize: 11, fontWeight: "900", marginTop: 5 }}>部員限定</Text></View> : null}</View>
+      <View style={{ width: 142, minHeight: 142, alignSelf: "stretch", overflow: "hidden" }}><Image source={event.image} style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }} contentFit="cover" contentPosition="center" transition={300} />{event.eventType === "official" ? <View style={{ position: "absolute", left: 7, top: 7, flexDirection: "row", alignItems: "center", minHeight: 30, borderRadius: 10, backgroundColor: "#FFFFFFF5", paddingHorizontal: 9, borderWidth: 2, borderColor: "#E8A0BF", shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.2, shadowRadius: 4, elevation: 4 }}><Text style={{ fontSize: 11, fontWeight: "900", color: "#171717", letterSpacing: 0.4 }}>IRO+</Text><Text style={{ marginLeft: 4, fontSize: 10, fontWeight: "900", color: "#C94F84" }}>公式</Text></View> : event.eventType === "club" ? <View style={{ position: "absolute", left: 7, top: 7, borderRadius: 9, backgroundColor: "#FFFFFFF2", paddingHorizontal: 8, paddingVertical: 5 }}><Text style={{ fontSize: 10, fontWeight: "900", color: "#4E6756" }}>{clubName ?? "部活動イベント"}</Text></View> : null}{locked ? <View style={{ position: "absolute", inset: 0, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(40,40,40,0.42)" }}><IconSymbol name="lock.fill" size={28} color="#FFF" /><Text style={{ color: "#FFF", fontSize: 11, fontWeight: "900", marginTop: 5 }}>部員限定</Text></View> : null}</View>
       <View style={{ flex: 1, paddingHorizontal: 11, paddingVertical: 9 }}>
         <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 5 }}>
           <Text style={{ flex: 1, fontSize: 13, fontWeight: "900", color: colors.foreground }}>{formatDate(event.date)} {event.time}</Text>
@@ -383,7 +383,7 @@ export default function EventsScreen() {
     ? "公式イベント"
     : eventType === "gourmet"
       ? "グルメ会"
-      : eventType === "club" ? "部活イベント" : "すべてのイベント";
+      : eventType === "club" ? "部活動イベント" : "すべてのイベント";
   const detailFilterCount = selectedGenres.length + selectedAreas.length + (budgetMin !== "none" ? 1 : 0) + (budgetMax !== "none" ? 1 : 0) + (keyword.trim() ? 1 : 0) + (favoriteOnly ? 1 : 0);
 
   const resetSearchConditions = useCallback(() => {
@@ -439,7 +439,7 @@ export default function EventsScreen() {
             onPress={() => {
               const club = clubs.find((candidate) => candidate.id === item.clubId);
               if (item.eventType === "club" && !canViewClubEvent(authUser?.role, CURRENT_USER.id, club?.memberIds ?? [])) {
-                Alert.alert("部員限定イベント", `${club?.name ?? "この部活"}に入部すると、詳細の確認と参加申込ができます。`);
+                Alert.alert("部員限定イベント", `${club?.name ?? "この部活動"}に入部すると、詳細の確認と参加申込ができます。`);
                 return;
               }
               router.push({ pathname: "/event-detail", params: { id: item.id } });
@@ -547,7 +547,7 @@ export default function EventsScreen() {
                 { label: "幹事", value: hostedByMe, toggle: () => setHostedByMe((current) => !current) },
                 { label: "参加申込中", value: appliedOnly, toggle: () => setAppliedOnly((current) => !current) },
                 { label: "参加確定済み", value: confirmedOnly, toggle: () => setConfirmedOnly((current) => !current) },
-                ...(eventType === "club" ? [{ label: "参加中の部活", value: joinedClubOnly, toggle: () => setJoinedClubOnly((current) => !current) }] : []),
+                ...(eventType === "club" ? [{ label: "参加中の部活動", value: joinedClubOnly, toggle: () => setJoinedClubOnly((current) => !current) }] : []),
               ].map((filter) => (
                 <Pressable key={filter.label} onPress={filter.toggle} accessibilityRole="checkbox" accessibilityState={{ checked: filter.value }} style={{ flexDirection: "row", alignItems: "center" }}>
                   <View style={{ width: 23, height: 23, borderRadius: 5, alignItems: "center", justifyContent: "center", backgroundColor: filter.value ? "#5D5C74" : "#E4E4E7", marginRight: 7 }}>{filter.value && <IconSymbol name="checkmark" size={16} color="#FFF" />}</View>
