@@ -80,7 +80,15 @@ export default function EventDetailScreen() {
     const status = event.viewerParticipationStatus;
     setIsJoined(status ? status === "confirmed" || status === "cancel_requested" : event.participants.includes(viewerId));
     setHasApplied(status ? status === "applied" || status === "confirmed" || status === "cancel_requested" : Boolean(event.applicantIds?.includes(viewerId)));
-  }, [authenticatedViewerMemberId, event?.id, event?.viewerParticipationStatus]);
+    if (!event.viewerMemberId || !event.chatId) return;
+    if (event.isOrganizer || status === "confirmed" || status === "cancel_requested") {
+      const room = joinEventChat(event.id, event.title, event.chatId, viewerId);
+      setChatRoomId(room.id);
+    } else {
+      void removeMemberFromRoom(event.chatId, viewerId);
+      setChatRoomId(null);
+    }
+  }, [authenticatedViewerMemberId, event?.chatId, event?.id, event?.isOrganizer, event?.viewerMemberId, event?.viewerParticipationStatus]);
 
   useEffect(() => {
     getIrotasPoints(CURRENT_USER.id).then(setIrotasPoints);
@@ -284,8 +292,13 @@ export default function EventDetailScreen() {
       { text: "承認する", onPress: async () => {
         if (event.viewerMemberId) {
           try {
-            setEvent(await Api.reviewEventApplicant(event.id, memberId, "approve"));
-            Alert.alert("承認完了", `${member?.name ?? "メンバー"}さんの参加を確定しました。`);
+            const updated = await Api.reviewEventApplicant(event.id, memberId, "approve");
+            if (updated.chatId) {
+              joinEventChat(updated.id, updated.title, updated.chatId, updated.createdBy);
+              joinEventChat(updated.id, updated.title, updated.chatId, memberId);
+            }
+            setEvent(updated);
+            Alert.alert("承認完了", `${member?.name ?? "メンバー"}さんの参加を確定し、参加者専用チャットへ追加しました。`);
           } catch (error) {
             Alert.alert("承認できませんでした", error instanceof Error ? error.message : "もう一度お試しください。");
           }

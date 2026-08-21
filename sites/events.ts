@@ -250,6 +250,24 @@ async function audit(db: D1Database, actorId: number, action: string, eventId: s
     VALUES (?, ?, 'event', ?, ?, ?)`).bind(String(actorId), action, eventId, JSON.stringify(metadata), new Date().toISOString()).run();
 }
 
+function eventChatId(eventId: string) {
+  return `event_chat_${eventId}`;
+}
+
+async function notifyEventConfirmation(db: D1Database, targetMemberId: number, eventId: string, eventTitle: string) {
+  await db.prepare(`INSERT INTO in_app_notifications
+    (id, target_member_id, type, title, body, event_id, created_at)
+    VALUES (?, ?, 'event_confirmed', ?, ?, ?, ?)`)
+    .bind(
+      crypto.randomUUID(),
+      targetMemberId,
+      "イベント参加が確定しました",
+      `「${eventTitle}」の参加者専用チャットへ追加されました。`,
+      eventId,
+      new Date().toISOString(),
+    ).run();
+}
+
 async function createEvent(request: Request, db: D1Database, member: Awaited<ReturnType<typeof authenticatedRequestMember>>) {
   if (!member) return responseJson({ error: "ログインが必要です" }, 401);
   const raw = await request.text();
@@ -404,11 +422,20 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
     if (input.action === "approve") {
       let data: Record<string, unknown> = {};
       try { data = JSON.parse(row.public_data_json) as Record<string, unknown>; } catch {}
+      const participation = await env.DB.prepare("SELECT status FROM event_participations WHERE event_id = ? AND member_id = ?")
+        .bind(id, targetId).first<{ status: string }>();
+      if (!participation || !["applied", "cancelled", "rejected"].includes(participation.status))
+        return responseJson({ error: "承認可能な参加申込が見つかりません" }, 409);
       const capacity = typeof data.capacity === "number" ? data.capacity : 0;
       const count = await env.DB.prepare(`SELECT COUNT(*) AS count FROM event_participations WHERE event_id = ? AND status IN ('confirmed','cancel_requested')`).bind(id).first<{ count: number }>();
       if ((count?.count ?? 0) >= capacity) return responseJson({ error: "満席のため承認できません" }, 409);
       await env.DB.prepare(`UPDATE event_participations SET status = 'confirmed', confirmed_at = ?, cancelled_at = NULL, updated_at = ?
         WHERE event_id = ? AND member_id = ? AND status IN ('applied','cancelled','rejected')`).bind(now, now, id, targetId).run();
+      const chatId = typeof data.chatId === "string" && data.chatId ? data.chatId : eventChatId(id);
+      data.chatId = chatId;
+      await env.DB.prepare("UPDATE events SET public_data_json = ?, updated_at = ? WHERE id = ?")
+        .bind(JSON.stringify(data), now, id).run();
+      await notifyEventConfirmation(env.DB, targetId, id, row.title);
       if ((count?.count ?? 0) + 1 >= capacity) await env.DB.prepare("UPDATE events SET status = 'full', updated_at = ? WHERE id = ?").bind(now, id).run();
     } else {
       await env.DB.prepare(`UPDATE event_participations SET status = 'cancelled', cancelled_at = ?, updated_at = ?

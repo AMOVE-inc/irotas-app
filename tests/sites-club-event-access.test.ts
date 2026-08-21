@@ -50,20 +50,40 @@ const eventRow = {
 };
 
 class EventAccessDatabase implements D1Database {
+  row = { ...eventRow };
+  participationStatus: string | null = null;
+  notifications: Array<{ targetMemberId: number; type: string; eventId: string }> = [];
+
   prepare(sql: string): D1PreparedStatement {
+    const db = this;
+    let values: unknown[] = [];
     const statement: D1PreparedStatement = {
-      bind: () => statement,
+      bind: (...next: unknown[]) => { values = next; return statement; },
       first: async <T>() => {
         if (sql.includes("SELECT public_member_id FROM members")) return { public_member_id: "IRO0010" } as T;
-        if (sql.includes("FROM events e JOIN members")) return eventRow as T;
+        if (sql.includes("SELECT id FROM members WHERE public_member_id")) return { id: 10 } as T;
+        if (sql.includes("FROM events e JOIN members")) return db.row as T;
+        if (sql.includes("SELECT status FROM event_participations")) return db.participationStatus ? { status: db.participationStatus } as T : null;
+        if (sql.includes("COUNT(*) AS count FROM event_participations")) return { count: db.participationStatus === "confirmed" ? 1 : 0 } as T;
         if (sql.includes("FROM event_favorites")) return null;
         return null;
       },
       all: async <T>() => {
-        if (sql.includes("FROM events e JOIN members")) return { results: [eventRow] as T[] };
+        if (sql.includes("FROM events e JOIN members")) return { results: [db.row] as T[] };
+        if (sql.includes("FROM event_participations p JOIN members")) {
+          return { results: db.participationStatus ? [{ event_id: db.row.id, member_id: 10, public_member_id: "IRO0010", status: db.participationStatus }] as T[] : [] };
+        }
         return { results: [] as T[] };
       },
-      run: async () => ({ success: true }),
+      run: async () => {
+        if (sql.includes("INSERT INTO event_participations")) db.participationStatus = String(values[2]);
+        if (sql.includes("UPDATE event_participations SET status = 'confirmed'")) db.participationStatus = "confirmed";
+        if (sql.includes("UPDATE events SET public_data_json")) db.row.public_data_json = String(values[0]);
+        if (sql.includes("INSERT INTO in_app_notifications")) {
+          db.notifications.push({ targetMemberId: Number(values[1]), type: "event_confirmed", eventId: String(values[4]) });
+        }
+        return { success: true };
+      },
     };
     return statement;
   }
@@ -73,13 +93,15 @@ class EventAccessDatabase implements D1Database {
   }
 }
 
-const db = new EventAccessDatabase();
-const env = { DB: db } as SitesEnv;
+let db: EventAccessDatabase;
+let env: SitesEnv;
 
 describe("club event access", () => {
   beforeEach(() => {
     authenticatedRequestMember.mockResolvedValue({ id: 10, role: "user", access_role: "member" });
     canMemberAccessClub.mockReset();
+    db = new EventAccessDatabase();
+    env = { DB: db } as unknown as SitesEnv;
   });
 
   it("shows a redacted list preview but blocks detail and favorites for non-members", async () => {
@@ -116,5 +138,39 @@ describe("club event access", () => {
       expect(body.event).toMatchObject({ location: "東京都渋谷区の集合場所", googleMapsUrl: "https://maps.google.com/secret" });
       expect(body.event.lockedClubEvent).toBeUndefined();
     }
+  });
+
+  it("persists application, approval, event chat id, and confirmation notification", async () => {
+    canMemberAccessClub.mockResolvedValue(true);
+    authenticatedRequestMember.mockResolvedValue({ id: 10, role: "user", access_role: "member" });
+    const applyResponse = await handleEventRequest(new Request("https://app.example/api/events/event-club-1/applications", {
+      method: "POST",
+      body: JSON.stringify({ termsAccepted: true }),
+    }), env);
+    const applyBody = await applyResponse?.json() as { event: Record<string, unknown> };
+    expect(applyResponse?.status).toBe(201);
+    expect(applyBody.event.viewerParticipationStatus).toBe("applied");
+
+    authenticatedRequestMember.mockResolvedValue({ id: 30, role: "user", access_role: "member" });
+    const unrelatedResponse = await handleEventRequest(new Request("https://app.example/api/events/event-club-1/participants/IRO0010", {
+      method: "PATCH",
+      body: JSON.stringify({ action: "approve" }),
+    }), env);
+    expect(unrelatedResponse?.status).toBe(403);
+
+    authenticatedRequestMember.mockResolvedValue({ id: 20, role: "user", access_role: "club_leader" });
+    const approveResponse = await handleEventRequest(new Request("https://app.example/api/events/event-club-1/participants/IRO0010", {
+      method: "PATCH",
+      body: JSON.stringify({ action: "approve" }),
+    }), env);
+    const approveBody = await approveResponse?.json() as { event: Record<string, unknown> };
+    expect(approveResponse?.status).toBe(200);
+    expect(approveBody.event).toMatchObject({ chatId: "event_chat_event-club-1", participants: ["IRO0010"] });
+    expect(db.notifications).toContainEqual({ targetMemberId: 10, type: "event_confirmed", eventId: "event-club-1" });
+
+    authenticatedRequestMember.mockResolvedValue({ id: 10, role: "user", access_role: "member" });
+    const confirmedResponse = await handleEventRequest(new Request("https://app.example/api/events/event-club-1"), env);
+    const confirmedBody = await confirmedResponse?.json() as { event: Record<string, unknown> };
+    expect(confirmedBody.event).toMatchObject({ viewerParticipationStatus: "confirmed", chatId: "event_chat_event-club-1" });
   });
 });
