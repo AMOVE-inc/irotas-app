@@ -101,7 +101,7 @@ export type ClubApplicantReview = {
 
 export type AppNotification = {
   id: string;
-  type: "club_application" | "club_approval" | "event_confirmed" | "event_deadline" | "event_reminder" | "event_cancellation" | "poll_result" | "announcement" | "event" | "like" | "comment" | "coupon";
+  type: "club_application" | "club_approval" | "club_membership" | "event_confirmed" | "event_deadline" | "event_reminder" | "event_cancellation" | "poll_result" | "announcement" | "event" | "like" | "comment" | "coupon";
   title: string;
   body: string;
   clubId: string | null;
@@ -355,6 +355,14 @@ export async function leaveClub(clubId: string) {
   const result = await apiCall<{ club: ClubRecord }>(`/api/clubs/${encodeURIComponent(clubId)}/membership`, {
     method: "DELETE",
   });
+  return result.club;
+}
+
+export async function removeClubMember(clubId: string, memberId: string) {
+  const result = await apiCall<{ club: ClubRecord }>(
+    `/api/clubs/${encodeURIComponent(clubId)}/members/${encodeURIComponent(memberId)}`,
+    { method: "DELETE" },
+  );
   return result.club;
 }
 

@@ -148,6 +148,13 @@ class ClubFlowDatabase implements D1Database {
       });
       return;
     }
+    if (sql.startsWith("UPDATE club_memberships SET status = 'left'")) {
+      const clubId = String(values[3]);
+      const memberId = Number(values[4]);
+      const membership = this.memberships.get(this.membershipKey(clubId, memberId));
+      if (membership) membership.status = "left";
+      return;
+    }
     if (sql.startsWith("UPDATE club_memberships SET status")) {
       const [status, , , , , clubId, memberId] = values;
       const key = this.membershipKey(String(clubId), Number(memberId));
@@ -311,5 +318,68 @@ describe("club application lifecycle", () => {
     expect(db.memberships.get("club-bread:10")?.status).toBe("rejected");
     expect(rejectBody.club.applicantIds).toEqual([]);
     expect(rejectBody.club.applications).toEqual([]);
+  });
+
+  it("persists self-leave, blocks the leader from leaving, and revokes private access", async () => {
+    db.memberships.set("club-bread:10", {
+      club_id: "club-bread",
+      member_id: 10,
+      status: "approved",
+      wants_to_do: "",
+      message_to_leader: "",
+      applied_at: "2026-08-01T00:00:00.000Z",
+    });
+    authenticatedRequestMember.mockResolvedValue(sessionMember(10));
+    const leaveResponse = await handleClubRequest(
+      new Request("https://app.example/api/clubs/club-bread/membership", { method: "DELETE" }),
+      env,
+    );
+    expect(leaveResponse?.status).toBe(200);
+    expect(db.memberships.get("club-bread:10")?.status).toBe("left");
+    await expect(canMemberAccessClub(db, "club-bread", 10)).resolves.toBe(false);
+    expect(db.audits).toContainEqual({ action: "club.membership_left", clubId: "club-bread" });
+
+    authenticatedRequestMember.mockResolvedValue(sessionMember(20, "club_leader"));
+    const leaderLeaveResponse = await handleClubRequest(
+      new Request("https://app.example/api/clubs/club-bread/membership", { method: "DELETE" }),
+      env,
+    );
+    expect(leaderLeaveResponse?.status).toBe(409);
+  });
+
+  it("allows only the assigned leader to remove a member and notifies the removed member", async () => {
+    db.memberships.set("club-bread:10", {
+      club_id: "club-bread",
+      member_id: 10,
+      status: "approved",
+      wants_to_do: "",
+      message_to_leader: "",
+      applied_at: "2026-08-01T00:00:00.000Z",
+    });
+
+    authenticatedRequestMember.mockResolvedValue(sessionMember(30, "club_leader"));
+    const unrelatedLeaderResponse = await handleClubRequest(
+      new Request("https://app.example/api/clubs/club-bread/members/IRO0010", { method: "DELETE" }),
+      env,
+    );
+    expect(unrelatedLeaderResponse?.status).toBe(403);
+    expect(db.memberships.get("club-bread:10")?.status).toBe("approved");
+
+    authenticatedRequestMember.mockResolvedValue(sessionMember(20, "club_leader"));
+    const removeResponse = await handleClubRequest(
+      new Request("https://app.example/api/clubs/club-bread/members/IRO0010", { method: "DELETE" }),
+      env,
+    );
+    expect(removeResponse?.status).toBe(200);
+    expect(db.memberships.get("club-bread:10")?.status).toBe("left");
+    await expect(canMemberAccessClub(db, "club-bread", 10)).resolves.toBe(false);
+    expect(db.notifications).toContainEqual({ targetMemberId: 10, type: "club_membership", clubId: "club-bread" });
+    expect(db.audits).toContainEqual({ action: "club.membership_removed", clubId: "club-bread" });
+
+    const removeLeaderResponse = await handleClubRequest(
+      new Request("https://app.example/api/clubs/club-bread/members/IRO0020", { method: "DELETE" }),
+      env,
+    );
+    expect(removeLeaderResponse?.status).toBe(409);
   });
 });

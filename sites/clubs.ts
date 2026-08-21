@@ -6,6 +6,7 @@ const CLUB_PATH = /^\/api\/clubs\/([^/]+)$/;
 const APPLICATION_PATH = /^\/api\/clubs\/([^/]+)\/applications$/;
 const APPLICATION_REVIEW_PATH = /^\/api\/clubs\/([^/]+)\/applications\/([^/]+)$/;
 const MEMBERSHIP_PATH = /^\/api\/clubs\/([^/]+)\/membership$/;
+const MEMBER_PATH = /^\/api\/clubs\/([^/]+)\/members\/([^/]+)$/;
 const MAX_BODY_BYTES = 16 * 1024;
 
 type ClubRow = {
@@ -125,7 +126,7 @@ async function memberDisplayName(db: D1Database, memberId: number) {
 async function notifyClubMember(
   db: D1Database,
   targetMemberId: number | null,
-  type: "club_application" | "club_approval",
+  type: "club_application" | "club_approval" | "club_membership",
   title: string,
   body: string,
   clubId: string,
@@ -159,7 +160,8 @@ export async function handleClubRequest(request: Request, env: SitesEnv): Promis
   const applicationMatch = APPLICATION_PATH.exec(pathname);
   const reviewMatch = APPLICATION_REVIEW_PATH.exec(pathname);
   const membershipMatch = MEMBERSHIP_PATH.exec(pathname);
-  if (pathname !== CLUBS_PATH && !clubMatch && !applicationMatch && !reviewMatch && !membershipMatch) return null;
+  const memberMatch = MEMBER_PATH.exec(pathname);
+  if (pathname !== CLUBS_PATH && !clubMatch && !applicationMatch && !reviewMatch && !membershipMatch && !memberMatch) return null;
   if (!env.DB) return json({ error: "データベースに接続できません" }, 503);
   const member = await authenticatedRequestMember(request, env);
   if (!member) return json({ error: "ログインが必要です" }, 401);
@@ -296,6 +298,35 @@ export async function handleClubRequest(request: Request, env: SitesEnv): Promis
       appliedAt: application.applied_at,
       eventHistory: history.results ?? [],
     } });
+  }
+
+  if (memberMatch && request.method === "DELETE") {
+    const id = decodeURIComponent(memberMatch[1]);
+    const targetPublicId = decodeURIComponent(memberMatch[2]);
+    const row = await clubRow(env.DB, id);
+    if (!row || row.status !== "active") return json({ error: "部活が見つかりません" }, 404);
+    if (!(elevated || row.leader_member_id === member.id)) return json({ error: "部員を退部させられるのは、この部活の部長または運営のみです" }, 403);
+    const targetId = await memberIdFromPublicId(env.DB, targetPublicId);
+    if (!targetId) return json({ error: "メンバーが見つかりません" }, 404);
+    if (targetId === row.leader_member_id) return json({ error: "部長は後任が設定されるまで退部できません" }, 409);
+    const current = await env.DB.prepare("SELECT status FROM club_memberships WHERE club_id = ? AND member_id = ?")
+      .bind(id, targetId).first<{ status: string }>();
+    if (current?.status !== "approved") return json({ error: "入部中のメンバーではありません" }, 409);
+    const now = new Date().toISOString();
+    await env.DB.prepare(`UPDATE club_memberships SET status = 'left', decided_at = ?, decided_by_member_id = ?, updated_at = ?
+      WHERE club_id = ? AND member_id = ?`).bind(now, member.id, now, id, targetId).run();
+    await audit(env.DB, member.id, "club.membership_removed", id, { targetMemberId: targetId });
+    const actorName = await memberDisplayName(env.DB, member.id);
+    await notifyClubMember(
+      env.DB,
+      targetId,
+      "club_membership",
+      `${row.name}から退部となりました`,
+      `${actorName}さんが部員登録を解除しました。詳細は運営または部長へお問い合わせください。`,
+      id,
+    );
+    const memberships = await membershipsForClubs(env.DB, [id]);
+    return json({ club: serializeClub(row, memberships, member.id, elevated) });
   }
 
   if (membershipMatch && request.method === "DELETE") {

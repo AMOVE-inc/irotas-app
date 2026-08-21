@@ -37,6 +37,7 @@ import {
 import {
   addClub as addClubToStore,
   leaveClub as leaveClubInStore,
+  removeClubMember as removeClubMemberInStore,
   reviewClubApplication as reviewClubApplicationInStore,
   submitClubApplication as submitClubApplicationToStore,
   updateClub as updateClubInStore,
@@ -908,11 +909,15 @@ function ClubDetailModal({
       {
         text: "退会させる",
         style: "destructive",
-        onPress: () => {
-          const newMembers = memberIds.filter((id) => id !== memberId);
-          setMemberIds(newMembers);
-          onUpdateClub({ ...club, memberIds: newMembers });
-          Alert.alert("退会完了", `${member?.name ?? ""}さんを退会させました。`);
+        onPress: async () => {
+          try {
+            const updated = await removeClubMemberInStore(club.id, memberId);
+            setMemberIds(updated.memberIds);
+            onUpdateClub(updated);
+            Alert.alert("退会完了", `${member?.name ?? ""}さんを退会させました。`);
+          } catch (error) {
+            Alert.alert("退会処理に失敗しました", error instanceof Error ? error.message : "もう一度お試しください。");
+          }
         },
       },
     ]);

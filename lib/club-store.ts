@@ -81,6 +81,12 @@ export async function leaveClub(clubId: string) {
   return updated;
 }
 
+export async function removeClubMember(clubId: string, memberId: string) {
+  const updated = asClub(await Api.removeClubMember(clubId, memberId));
+  updateClub(updated);
+  return updated;
+}
+
 export function updateClub(updated: Club) {
   clubs = clubs.map((club) => (club.id === updated.id ? updated : club));
   emitChange();
