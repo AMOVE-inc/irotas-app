@@ -39,7 +39,8 @@ import { applyTextFormat, type TextFormat, type TextSelection } from "@/lib/text
 import { toggleReactionMember } from "@/lib/chat-reactions";
 import { awardContestWinnerOnce, buildContestEntryContent, createContestAwardComment, getContestWinner, isContestCommentingOpen, isContestEntryValid } from "@/lib/gourmet-contest";
 import { loadImportedGourmetContests } from "@/lib/gourmet-contest-import";
-import { loadDiscordBoardArchive } from "@/lib/discord-board-import";
+import { parseDiscordBoardArchive } from "@/lib/discord-board-import";
+import * as Api from "@/lib/_core/api";
 import { loadCommentReactions, loadThreadReactions, saveCommentReactions, saveThreadReactions } from "@/lib/board-reactions";
 import { applyBoardThreadEdits, loadBoardThreadEdits, saveBoardThreadEdit } from "@/lib/board-thread-edits";
 import { Image } from "expo-image";
@@ -2225,12 +2226,19 @@ export default function BoardScreen() {
   }, []);
 
   useEffect(() => {
-    const archive = loadDiscordBoardArchive();
-    setDynamicThreads((current) => {
-      const withoutDiscordArchive = current.filter((thread) => !thread.id.startsWith("discord-board-"));
-      return [...archive.threads, ...withoutDiscordArchive];
+    let active = true;
+    void Api.getBoardArchive("all").then((rawArchive) => {
+      if (!active) return;
+      const archive = parseDiscordBoardArchive(rawArchive);
+      setDynamicThreads((current) => {
+        const withoutDiscordArchive = current.filter((thread) => !thread.id.startsWith("discord-board-"));
+        return [...archive.threads, ...withoutDiscordArchive];
+      });
+      setImportedComments((current) => ({ ...current, ...archive.comments }));
+    }).catch(() => {
+      // 認証または通信に失敗した場合は、移行済みデータを表示しない（fail closed）。
     });
-    setImportedComments((current) => ({ ...current, ...archive.comments }));
+    return () => { active = false; };
   }, []);
 
   useEffect(() => {

@@ -9,6 +9,7 @@ import {
   getMemberById,
   type Club,
   type ClubApplication,
+  type BoardThread,
 } from "@/constants/mock-data";
 import { useAuthContext } from "@/lib/auth-context";
 import { useColors } from "@/hooks/use-colors";
@@ -47,6 +48,7 @@ import {
   getClubViewerAccess,
 } from "@/lib/club-viewer-access";
 import { getClubIntroductionContent, getLatestClubActivityReports } from "@/lib/club-introduction";
+import { parseDiscordBoardArchive } from "@/lib/discord-board-import";
 import { MentionText } from "@/components/mention-ui";
 import { getMentionGroups } from "@/lib/mentions";
 
@@ -724,12 +726,14 @@ function ApplicationReviewDetails({ clubId, memberId, application }: { clubId: s
 // ============================================================
 function ClubDetailModal({
   club,
+  archiveThreads,
   onClose,
   onApply,
   onLeave,
   onUpdateClub,
 }: {
   club: Club;
+  archiveThreads: BoardThread[];
   onClose: () => void;
   onApply: (clubId: string, application: ClubApplication) => Promise<Club>;
   onLeave: (clubId: string) => Promise<Club>;
@@ -763,7 +767,7 @@ function ClubDetailModal({
   );
   const { isMember, hasApplied, isPending, isLeader } = viewerAccess;
   const canManageMembers = club.canReviewApplications === true || isLeader || userIsAdmin;
-  const clubOverview = getClubIntroductionContent(club);
+  const clubOverview = getClubIntroductionContent(club, archiveThreads);
 
   const handleApply = async () => {
     if (hasApplied || isMember) return;
@@ -1735,7 +1739,18 @@ export default function ClubsScreen() {
   const clubs = useClubs();
   const [selectedClub, setSelectedClub] = useState<Club | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
-  const activityReports = getLatestClubActivityReports(3);
+  const [archiveThreads, setArchiveThreads] = useState<BoardThread[]>([]);
+  const activityReports = getLatestClubActivityReports(archiveThreads, 3);
+
+  useEffect(() => {
+    let active = true;
+    void Api.getBoardArchive("public").then((archive) => {
+      if (active) setArchiveThreads(parseDiscordBoardArchive(archive).threads);
+    }).catch(() => {
+      // 公開範囲の移行データが取得できない場合も、部活動一覧は利用できる。
+    });
+    return () => { active = false; };
+  }, []);
   const clubsWithAccess = clubs.map((club) => ({
     club,
     access: getClubViewerAccess(club, authUser?.memberId, CURRENT_USER.id),
@@ -1914,6 +1929,7 @@ export default function ClubsScreen() {
         >
           <ClubDetailModal
             club={selectedClub}
+            archiveThreads={archiveThreads}
             onClose={() => setSelectedClub(null)}
             onApply={handleApply}
             onLeave={handleLeave}

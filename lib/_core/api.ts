@@ -3,6 +3,7 @@ import { getApiBaseUrl } from "@/constants/oauth";
 import * as Auth from "./auth";
 import { logger } from "./logger";
 import type { Event } from "@/constants/mock-data";
+import type { RawDiscordBoardArchive } from "@/lib/discord-board-import";
 
 type ApiResponse<T> = {
   data?: T;
@@ -316,6 +317,10 @@ export async function getPrivateMemberNote(memberId: string) {
 export async function getClubs() {
   const result = await apiCall<{ clubs: ClubRecord[] }>("/api/clubs");
   return result.clubs;
+}
+
+export async function getBoardArchive(scope: "all" | "public" = "all") {
+  return apiCall<RawDiscordBoardArchive>(`/api/board/archive?scope=${scope}`);
 }
 
 export async function getClub(clubId: string) {

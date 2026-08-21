@@ -14,6 +14,7 @@ import { handleOperatorManagementRequest } from "./operator-management";
 import { handleMemberHistoryImportRequest } from "./member-history-import";
 import { handleClubRequest } from "./clubs";
 import { handleNotificationRequest } from "./notifications";
+import { handleBoardArchiveRequest } from "./board-archive";
 
 type CommunitySubmission = {
   reportId: string;
@@ -260,6 +261,8 @@ async function routeRequest(
   if (clubResponse) return clubResponse;
   const notificationResponse = await handleNotificationRequest(request, env);
   if (notificationResponse) return notificationResponse;
+  const boardArchiveResponse = await handleBoardArchiveRequest(request, env);
+  if (boardArchiveResponse) return boardArchiveResponse;
   const eventResponse = await handleEventRequest(request, env);
   if (eventResponse) return eventResponse;
   if (pathname === "/api/platform/health" && request.method === "GET") {

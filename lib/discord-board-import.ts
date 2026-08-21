@@ -1,9 +1,8 @@
-import archive from "../data/discord-board-2026-08-14.json";
 import { MEMBERS, type BoardComment, type BoardThread, type Member } from "../constants/mock-data";
 import { normalizeBoardReactions } from "./board-reactions";
 import { inferImportedRecruitmentStatus } from "./board-recruitment";
 
-interface RawRecord {
+export interface RawDiscordBoardRecord {
   id: string;
   authorId: string;
   authorName: string;
@@ -14,7 +13,7 @@ interface RawRecord {
   reactions?: Record<string, string[]> | null;
 }
 
-interface RawThread extends RawRecord {
+export interface RawDiscordBoardThread extends RawDiscordBoardRecord {
   category: string;
   title: string;
   selfIntroduction?: BoardThread["selfIntroduction"];
@@ -22,11 +21,16 @@ interface RawThread extends RawRecord {
   gourmetAdvice?: BoardThread["gourmetAdvice"];
 }
 
-interface RawComment extends RawRecord {
+export interface RawDiscordBoardComment extends RawDiscordBoardRecord {
   threadId: string;
 }
 
-function authorFor(record: RawRecord): Member {
+export interface RawDiscordBoardArchive {
+  threads: RawDiscordBoardThread[];
+  comments: RawDiscordBoardComment[];
+}
+
+function authorFor(record: RawDiscordBoardRecord): Member {
   const existing = MEMBERS.find((member) => member.id === record.authorId || member.name === record.authorName);
   if (existing) return existing;
   return {
@@ -58,14 +62,14 @@ export function stripLegacyClubApplicationBlock(content: string): string {
     .trim();
 }
 
-export function loadDiscordBoardArchive(): ImportedDiscordBoard {
-  const rawThreads = (archive.threads as RawThread[]).filter((record) => !(
+export function parseDiscordBoardArchive(archive: RawDiscordBoardArchive): ImportedDiscordBoard {
+  const rawThreads = archive.threads.filter((record) => !(
     record.category === "meal-report" &&
     record.mealReport?.rating === 1 &&
     ["IRO+運営", "IRO＋運営"].includes(record.authorName.trim())
   ));
   const visibleThreadIds = new Set(rawThreads.map((record) => record.id));
-  const rawComments = (archive.comments as RawComment[]).filter((record) => visibleThreadIds.has(record.threadId));
+  const rawComments = archive.comments.filter((record) => visibleThreadIds.has(record.threadId));
   const comments: Record<string, BoardComment[]> = {};
 
   rawComments.forEach((record) => {

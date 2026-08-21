@@ -1,8 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { loadDiscordBoardArchive } from "../lib/discord-board-import";
+import rawArchive from "../data/discord-board-2026-08-14.json";
+import { parseDiscordBoardArchive, type RawDiscordBoardArchive } from "../lib/discord-board-import";
 
 describe("Discord board archive", () => {
-  const archive = loadDiscordBoardArchive();
+  const archive = parseDiscordBoardArchive(rawArchive as RawDiscordBoardArchive);
 
   it("対象カテゴリを新しい掲示板へ移行する", () => {
     const categories = new Set(archive.threads.map((thread) => thread.category));
@@ -15,7 +16,7 @@ describe("Discord board archive", () => {
   });
 
   it("excludes operator announcements misclassified as one-star meal reports", () => {
-    const archive = loadDiscordBoardArchive();
+    const archive = parseDiscordBoardArchive(rawArchive as RawDiscordBoardArchive);
     expect(archive.threads.some((thread) => thread.category === "meal-report" && thread.mealReport?.rating === 1 && ["IRO+運営", "IRO＋運営"].includes(thread.author.name))).toBe(false);
   });
 
