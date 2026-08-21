@@ -510,13 +510,21 @@ function EditProfileModal({
             borderBottomColor: colors.border,
           }}
         >
-          <Pressable onPress={onClose}>
+          <Pressable
+            onPress={onClose}
+            accessibilityRole="button"
+            accessibilityLabel="プロフィール編集をキャンセル"
+          >
             <Text style={{ fontSize: 16, color: colors.muted }}>キャンセル</Text>
           </Pressable>
           <Text style={{ fontSize: 17, fontWeight: "700", color: colors.foreground }}>
             プロフィール編集
           </Text>
-          <Pressable onPress={handleSave}>
+          <Pressable
+            onPress={handleSave}
+            accessibilityRole="button"
+            accessibilityLabel="プロフィールを保存"
+          >
             <Text style={{ fontSize: 16, fontWeight: "700", color: "#E8A0BF" }}>保存</Text>
           </Pressable>
         </View>
@@ -665,6 +673,9 @@ function MenuSection({ title, items }: { title: string; items: MenuItem[] }) {
           <Pressable
             key={item.label}
             onPress={item.onPress}
+            accessibilityRole="button"
+            accessibilityLabel={item.badge ? `${item.label}、${item.badge}` : item.label}
+            accessibilityHint={`${item.label}を開きます`}
             style={{
               flexDirection: "row",
               alignItems: "center",
@@ -991,6 +1002,9 @@ export default function ProfileScreen() {
           {/* Edit profile button */}
           <Pressable
             onPress={() => setShowEditProfile(true)}
+            accessibilityRole="button"
+            accessibilityLabel="プロフィール編集"
+            accessibilityHint="プロフィールの設定画面を開きます"
             style={{
               marginTop: 14,
               backgroundColor: colors.surface,
@@ -1314,6 +1328,9 @@ export default function ProfileScreen() {
         {/* Logout Button */}
         <View style={{ paddingHorizontal: 16, paddingTop: 8, paddingBottom: 4 }}>
           <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="ログアウト"
+            accessibilityHint="現在のアカウントからログアウトします"
             onPress={() => {
               if (Platform.OS === "web" && typeof window !== "undefined") {
                 if (window.confirm("本当にログアウトしますか？"))
