@@ -40,7 +40,10 @@ import {
   updateClub as updateClubInStore,
   useClubs,
 } from "@/lib/club-store";
-import { getClubViewerAccess } from "@/lib/club-viewer-access";
+import {
+  clubMembershipActionLabel,
+  getClubViewerAccess,
+} from "@/lib/club-viewer-access";
 
 // 部活動掲示板の投稿型
 interface ClubPost {
@@ -73,17 +76,27 @@ function ClubCard({ club, onPress }: { club: Club; onPress: () => void }) {
   const { user: authUser } = useAuthContext();
   const leader = getMemberById(club.leaderId);
   const { isMember, hasApplied } = getClubViewerAccess(club, authUser?.memberId, CURRENT_USER.id);
+  const actionLabel = clubMembershipActionLabel({ isMember, hasApplied });
+  const actionColors = isMember
+    ? { background: "#E6F4EA", border: "#B7DEC1", text: "#237A3B" }
+    : hasApplied
+      ? { background: "#FFF4E5", border: "#FFD7A3", text: "#C66A00" }
+      : { background: "#5579A6", border: "#5579A6", text: "#FFFFFF" };
 
   return (
     <Pressable
       onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={`${club.name} ${actionLabel}`}
       style={({ pressed }) => ({
-        backgroundColor: isMember ? colors.surface : "#EFEFF2",
+        backgroundColor: colors.surface,
         borderRadius: 16,
         marginHorizontal: 16,
         marginBottom: 12,
         padding: 16,
-        opacity: pressed ? 0.72 : (isMember ? 1 : 0.7),
+        borderWidth: 1,
+        borderColor: isMember ? "#B7DEC1" : hasApplied ? "#FFD7A3" : colors.border,
+        opacity: pressed ? 0.82 : 1,
       })}
     >
       <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 10 }}>
@@ -104,17 +117,7 @@ function ClubCard({ club, onPress }: { club: Club; onPress: () => void }) {
             <Text style={{ fontSize: 17, fontWeight: "700", color: colors.foreground }}>
               {club.name}
             </Text>
-            {isMember && (
-              <View style={{ backgroundColor: "#34C75920", borderRadius: 8, paddingHorizontal: 8, paddingVertical: 2 }}>
-                <Text style={{ fontSize: 10, fontWeight: "700", color: "#34C759" }}>参加中</Text>
-              </View>
-            )}
-            {!isMember && hasApplied && (
-              <View style={{ backgroundColor: "#FF990020", borderRadius: 8, paddingHorizontal: 8, paddingVertical: 2 }}>
-                <Text style={{ fontSize: 10, fontWeight: "700", color: "#FF9900" }}>審査中</Text>
-              </View>
-            )}
-            {!isMember && !hasApplied && (
+            {!isMember && (
               <View style={{ backgroundColor: colors.border + "60", borderRadius: 8, paddingHorizontal: 8, paddingVertical: 2 }}>
                 <Text style={{ fontSize: 10, fontWeight: "600", color: colors.muted }}>🔒 審査制</Text>
               </View>
@@ -126,8 +129,25 @@ function ClubCard({ club, onPress }: { club: Club; onPress: () => void }) {
         </View>
       </View>
       <Text style={{ fontSize: 14, lineHeight: 20, color: colors.muted }} numberOfLines={2}>
-        {isMember ? club.description : "部員のみ閲覧できます。入部申請をしてください。"}
+        {club.description}
       </Text>
+      <View
+        pointerEvents="none"
+        style={{
+          minHeight: 42,
+          borderRadius: 12,
+          marginTop: 14,
+          alignItems: "center",
+          justifyContent: "center",
+          backgroundColor: actionColors.background,
+          borderWidth: 1,
+          borderColor: actionColors.border,
+        }}
+      >
+        <Text style={{ fontSize: 14, fontWeight: "800", color: actionColors.text }}>
+          {actionLabel}
+        </Text>
+      </View>
     </Pressable>
   );
 }

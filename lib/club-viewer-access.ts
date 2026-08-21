@@ -7,6 +7,14 @@ export type ClubViewerAccess = {
   isLeader: boolean;
 };
 
+export function clubMembershipActionLabel(
+  access: Pick<ClubViewerAccess, "isMember" | "hasApplied">,
+) {
+  if (access.isMember) return "入部済み";
+  if (access.hasApplied) return "審査中";
+  return "入部申請する";
+}
+
 /**
  * The bundled club catalog contains legacy preview membership for CURRENT_USER.
  * Once a real member is authenticated, only server-provided viewer metadata may

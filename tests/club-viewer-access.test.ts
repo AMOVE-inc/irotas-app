@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { CLUBS, CURRENT_USER } from "../constants/mock-data";
-import { getClubViewerAccess } from "../lib/club-viewer-access";
+import {
+  clubMembershipActionLabel,
+  getClubViewerAccess,
+} from "../lib/club-viewer-access";
 
 describe("club viewer access", () => {
   const breadClub = CLUBS.find((club) => club.name === "パン部")!;
@@ -29,5 +32,11 @@ describe("club viewer access", () => {
 
     expect(access.isMember).toBe(true);
     expect(access.isLeader).toBe(true);
+  });
+
+  it("shows a clear membership action for every club-list state", () => {
+    expect(clubMembershipActionLabel({ isMember: false, hasApplied: false })).toBe("入部申請する");
+    expect(clubMembershipActionLabel({ isMember: false, hasApplied: true })).toBe("審査中");
+    expect(clubMembershipActionLabel({ isMember: true, hasApplied: false })).toBe("入部済み");
   });
 });
