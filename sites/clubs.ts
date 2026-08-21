@@ -92,7 +92,7 @@ function serializeClub(row: ClubRow, memberships: MembershipRow[], viewerId: num
     leaderId: row.leader_public_member_id ?? "",
     leaderName: row.leader_display_name ?? "未設定",
     memberIds: approved.map(publicId),
-    applicantIds: visiblePending.map(publicId),
+    applicantIds: visiblePending.filter((item) => item.status === "pending").map(publicId),
     applications: visiblePending
       .map((item) => ({
         memberId: publicId(item),
