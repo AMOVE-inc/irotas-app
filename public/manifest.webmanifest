@@ -1,0 +1,20 @@
+{
+  "name": "IRO＋ Gourmet Community",
+  "short_name": "IRO＋",
+  "description": "IRO＋会員限定アプリ",
+  "lang": "ja",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#FFFFFF",
+  "theme_color": "#E8A0BF",
+  "icons": [
+    {
+      "src": "/pwa/icon-1024.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
