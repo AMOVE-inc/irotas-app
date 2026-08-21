@@ -6,6 +6,7 @@ import { IconSymbol } from "@/components/ui/icon-symbol";
 import {
   BOARD_THREADS,
   BOARD_CATEGORIES,
+  BOARD_HOME_ORDER,
   BOARD_COMMENTS,
   RANK_COLORS,
   RANK_LABELS,
@@ -2396,12 +2397,19 @@ export default function BoardScreen() {
       </View>
 
       {!isThreadView && !isClubIndexView ? <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 12, paddingBottom: 92, gap: 8, backgroundColor: "#FBFDFF" }}>
-        {visibleCategories.map(renderCategoryRow)}
-        <Pressable onPress={() => router.push("/clubs")} style={{ flexDirection: "row", alignItems: "center", minHeight: 62, borderRadius: 14, paddingHorizontal: 13, paddingVertical: 9, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border }}>
-          <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: "#5579A620", alignItems: "center", justifyContent: "center" }}><IconSymbol name="person.3.fill" size={21} color="#5579A6" /></View>
-          <View style={{ flex: 1, marginLeft: 11 }}><Text style={{ fontSize: 15, fontWeight: "900", color: colors.foreground }}>部活動</Text><Text style={{ fontSize: 11, color: colors.muted, marginTop: 3 }}>活動報告・入部中の部活動・部活動を探す</Text></View>
-          <IconSymbol name="chevron.right" size={17} color={colors.muted} />
-        </Pressable>
+        {BOARD_HOME_ORDER.map((categoryKey) => {
+          if (categoryKey === "club") {
+            return (
+              <Pressable key="club" onPress={() => router.push("/clubs")} style={{ flexDirection: "row", alignItems: "center", minHeight: 62, borderRadius: 14, paddingHorizontal: 13, paddingVertical: 9, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border }}>
+                <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: "#5579A620", alignItems: "center", justifyContent: "center" }}><IconSymbol name="person.3.fill" size={21} color="#5579A6" /></View>
+                <View style={{ flex: 1, marginLeft: 11 }}><Text style={{ fontSize: 15, fontWeight: "900", color: colors.foreground }}>部活動</Text><Text style={{ fontSize: 11, color: colors.muted, marginTop: 3 }}>活動報告・入部中の部活動・部活動を探す</Text></View>
+                <IconSymbol name="chevron.right" size={17} color={colors.muted} />
+              </Pressable>
+            );
+          }
+          const category = visibleCategories.find((item) => item.key === categoryKey);
+          return category ? renderCategoryRow(category) : null;
+        })}
       </ScrollView> : null}
 
       {isClubIndexView ? <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}><Text style={{ color: colors.muted }}>部活動ページを開いています…</Text></View> : null}

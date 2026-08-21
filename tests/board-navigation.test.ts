@@ -1,10 +1,25 @@
 import { describe, expect, it } from "vitest";
-import { BOARD_CATEGORIES, CHAT_ROOMS, CLUBS, CURRENT_USER } from "../constants/mock-data";
+import { BOARD_CATEGORIES, BOARD_HOME_ORDER, CHAT_ROOMS, CLUBS, CURRENT_USER } from "../constants/mock-data";
 
 describe("board category ordering", () => {
   it("orders the general categories from top to bottom", () => {
     expect(BOARD_CATEGORIES.filter((category) => category.group === "all").map((category) => category.label)).toEqual([
       "自己紹介",
+      "今日のごちそうさま報告",
+      "グルメ選手権",
+      "教えてグルメ相談室",
+      "なんでも掲示板",
+      "グルメマップ",
+    ]);
+  });
+
+  it("places club activity directly below self-introductions on the board home", () => {
+    const labels = BOARD_HOME_ORDER.map((key) => key === "club"
+      ? "部活動"
+      : BOARD_CATEGORIES.find((category) => category.key === key)?.label);
+    expect(labels).toEqual([
+      "自己紹介",
+      "部活動",
       "今日のごちそうさま報告",
       "グルメ選手権",
       "教えてグルメ相談室",

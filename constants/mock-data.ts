@@ -935,6 +935,16 @@ export const BOARD_CATEGORIES: BoardCategory[] = [
   })),
 ];
 
+export const BOARD_HOME_ORDER = [
+  "introduction",
+  "club",
+  "meal-report",
+  "gourmet-contest",
+  "gourmet-advice",
+  "free-chat",
+  "gourmet-map",
+] as const;
+
 export const GENRES = [
   "焼肉", "寿司", "ラーメン", "居酒屋", "イタリアン", "フレンチ",
   "中華", "カフェ", "和食", "創作料理", "たこ焼き", "その他",

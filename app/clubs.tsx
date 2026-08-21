@@ -85,7 +85,11 @@ function ClubCard({ club, onPress, previewAsMember = false }: { club: Club; onPr
   const viewerAccess = getClubViewerAccess(club, authUser?.memberId, CURRENT_USER.id);
   const isMember = previewAsMember || viewerAccess.isMember;
   const hasApplied = !previewAsMember && viewerAccess.hasApplied;
-  const actionLabel = previewAsMember ? "入部済み（プレビュー）" : clubMembershipActionLabel({ isMember, hasApplied });
+  const actionLabel = previewAsMember
+    ? "部員専用スレへ（プレビュー）"
+    : isMember
+      ? "部員専用スレへ"
+      : clubMembershipActionLabel({ isMember, hasApplied });
   const actionColors = isMember
     ? { background: "#E6F4EA", border: "#B7DEC1", text: "#237A3B" }
     : hasApplied
@@ -1789,6 +1793,15 @@ export default function ClubsScreen() {
           borderBottomColor: colors.border,
         }}
       >
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="前の画面へ戻る"
+          hitSlop={10}
+          onPress={() => router.canGoBack() ? router.back() : router.replace("/profile")}
+          style={{ width: 38, height: 38, alignItems: "center", justifyContent: "center", marginRight: 4 }}
+        >
+          <IconSymbol name="chevron.left" size={23} color={colors.foreground} />
+        </Pressable>
         <Text style={{ flex: 1, fontSize: 22, fontWeight: "800", color: colors.foreground }}>部活動</Text>
         {userIsAdmin && (
           <Pressable
@@ -1869,7 +1882,13 @@ export default function ClubsScreen() {
                 {joinedClubPreview ? "入部後の表示イメージです（実際には未入部です）" : "部活動を開くと投稿やメンバーを確認できます"}
               </Text>
             </View>
-            {joinedClubs.map((club) => <ClubCard key={club.id} club={club} onPress={() => setSelectedClub(club)} />)}
+            {joinedClubs.map((club) => (
+              <ClubCard
+                key={club.id}
+                club={club}
+                onPress={() => router.push({ pathname: "/board", params: { category: `club-${club.id}`, view: "threads" } })}
+              />
+            ))}
             {joinedClubPreview ? <ClubCard club={joinedClubPreview} previewAsMember /> : null}
           </View>
         ) : null}
