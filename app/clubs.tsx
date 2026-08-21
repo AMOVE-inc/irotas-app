@@ -40,6 +40,7 @@ import {
   updateClub as updateClubInStore,
   useClubs,
 } from "@/lib/club-store";
+import { getClubViewerAccess } from "@/lib/club-viewer-access";
 
 // 部活動掲示板の投稿型
 interface ClubPost {
@@ -69,9 +70,9 @@ interface ClubPostComment {
 // ============================================================
 function ClubCard({ club, onPress }: { club: Club; onPress: () => void }) {
   const colors = useColors();
+  const { user: authUser } = useAuthContext();
   const leader = getMemberById(club.leaderId);
-  const isMember = club.viewerMembershipStatus === "approved" || club.memberIds.includes(CURRENT_USER.id);
-  const hasApplied = club.viewerMembershipStatus === "pending" || club.viewerMembershipStatus === "on_hold" || club.applicantIds.includes(CURRENT_USER.id);
+  const { isMember, hasApplied } = getClubViewerAccess(club, authUser?.memberId, CURRENT_USER.id);
 
   return (
     <Pressable
@@ -716,10 +717,12 @@ function ClubDetailModal({
   const [applicationError, setApplicationError] = useState("");
   const [previewApplication, setPreviewApplication] = useState(false);
 
-  const isMember = club.viewerMembershipStatus === "approved" || memberIds.includes(CURRENT_USER.id);
-  const hasApplied = club.viewerMembershipStatus === "pending" || applicantIds.includes(CURRENT_USER.id);
-  const isPending = club.viewerMembershipStatus === "on_hold" || pendingIds.includes(CURRENT_USER.id);
-  const isLeader = club.viewerIsLeader === true || currentLeaderId === CURRENT_USER.id;
+  const viewerAccess = getClubViewerAccess(
+    { ...club, memberIds, applicantIds, applications, leaderId: currentLeaderId },
+    authUser?.memberId,
+    CURRENT_USER.id,
+  );
+  const { isMember, hasApplied, isPending, isLeader } = viewerAccess;
   const canManageMembers = club.canReviewApplications === true || isLeader || userIsAdmin;
 
   const handleApply = async () => {
@@ -1701,7 +1704,7 @@ export default function ClubsScreen() {
       </View>
 
       <FlatList
-        data={[...clubs].sort((a, b) => Number(b.viewerMembershipStatus === "approved" || b.memberIds.includes(CURRENT_USER.id)) - Number(a.viewerMembershipStatus === "approved" || a.memberIds.includes(CURRENT_USER.id)))}
+        data={[...clubs].sort((a, b) => Number(getClubViewerAccess(b, authUser?.memberId, CURRENT_USER.id).isMember) - Number(getClubViewerAccess(a, authUser?.memberId, CURRENT_USER.id).isMember))}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <ClubCard club={item} onPress={() => setSelectedClub(item)} />
