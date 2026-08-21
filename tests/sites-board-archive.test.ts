@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { filterBoardArchive } from "../sites/board-archive";
+import {
+  allowedPrivateClubCategories,
+  filterBoardArchive,
+} from "../sites/board-archive";
 import type { RawDiscordBoardArchive } from "../lib/discord-board-import";
+import type { D1Database, D1PreparedStatement } from "../sites/platform-types";
 
 const fixture: RawDiscordBoardArchive = {
   threads: [
@@ -15,6 +19,34 @@ const fixture: RawDiscordBoardArchive = {
   ],
 };
 
+function membershipDatabase(options: {
+  clubId?: string;
+  membershipStatus?: "pending" | "approved" | "rejected";
+  isLeader?: boolean;
+}) {
+  let preparedSql = "";
+  const db: D1Database = {
+    prepare(sql) {
+      preparedSql = sql;
+      const statement: D1PreparedStatement = {
+        bind() { return statement; },
+        async first<T>() { return null as T | null; },
+        async run() { return { success: true }; },
+        async all<T>() {
+          const visible = options.isLeader || options.membershipStatus === "approved";
+          return {
+            success: true,
+            results: visible && options.clubId ? [{ id: options.clubId } as T] : [],
+          };
+        },
+      };
+      return statement;
+    },
+    async batch() { return []; },
+  };
+  return { db, sql: () => preparedSql };
+}
+
 describe("authenticated board archive filtering", () => {
   it("未入部ユーザーには部員専用スレとコメントを返さない", () => {
     const result = filterBoardArchive(fixture, new Set());
@@ -27,5 +59,32 @@ describe("authenticated board archive filtering", () => {
     expect(result.threads.map((thread) => thread.id)).toEqual(["public", "bread"]);
     expect(result.comments.map((comment) => comment.id)).toEqual(["c1", "c2"]);
     expect(JSON.stringify(result)).not.toContain("ワイン部限定");
+  });
+});
+
+describe("club archive permission states", () => {
+  it("未入部ユーザーには部員専用カテゴリを許可しない", async () => {
+    const scenario = membershipDatabase({});
+    await expect(allowedPrivateClubCategories(scenario.db, 10)).resolves.toEqual(new Set());
+  });
+
+  it("申請中ユーザーには承認前の部員専用カテゴリを許可しない", async () => {
+    const scenario = membershipDatabase({ clubId: "club-bread", membershipStatus: "pending" });
+    await expect(allowedPrivateClubCategories(scenario.db, 11)).resolves.toEqual(new Set());
+    expect(scenario.sql()).toContain("cm.status = 'approved'");
+  });
+
+  it("入部済みユーザーには承認された部活動だけを許可する", async () => {
+    const scenario = membershipDatabase({ clubId: "club-bread", membershipStatus: "approved" });
+    await expect(allowedPrivateClubCategories(scenario.db, 12)).resolves.toEqual(
+      new Set(["club-club-bread"]),
+    );
+  });
+
+  it("部長には担当する部活動だけを許可する", async () => {
+    const scenario = membershipDatabase({ clubId: "club-bread", isLeader: true });
+    const allowed = await allowedPrivateClubCategories(scenario.db, 13);
+    expect(allowed).toEqual(new Set(["club-club-bread"]));
+    expect(allowed.has("club-club-wine")).toBe(false);
   });
 });

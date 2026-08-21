@@ -1,11 +1,9 @@
 import archive from "../data/discord-board-2026-08-14.json";
 import type {
   RawDiscordBoardArchive,
-  RawDiscordBoardThread,
 } from "../lib/discord-board-import";
 import { authenticatedRequestMember } from "./auth";
-import { canMemberAccessClub } from "./clubs";
-import type { SitesEnv } from "./platform-types";
+import type { D1Database, SitesEnv } from "./platform-types";
 
 const ARCHIVE_PATH = "/api/board/archive";
 
@@ -23,6 +21,26 @@ export function filterBoardArchive(
   const threadIds = new Set(threads.map((thread) => thread.id));
   const comments = source.comments.filter((comment) => threadIds.has(comment.threadId));
   return { threads, comments };
+}
+
+export async function allowedPrivateClubCategories(
+  db: D1Database,
+  memberId: number,
+): Promise<Set<string>> {
+  const result = await db
+    .prepare(
+      `SELECT DISTINCT c.id
+      FROM clubs c
+      LEFT JOIN club_memberships cm
+        ON cm.club_id = c.id
+       AND cm.member_id = ?
+       AND cm.status = 'approved'
+      WHERE c.status = 'active'
+        AND (c.leader_member_id = ? OR cm.member_id IS NOT NULL)`,
+    )
+    .bind(memberId, memberId)
+    .all<{ id: string }>();
+  return new Set((result.results ?? []).map((row) => `club-${row.id}`));
 }
 
 export async function handleBoardArchiveRequest(
@@ -47,17 +65,14 @@ export async function handleBoardArchiveRequest(
   const allowed = new Set<string>();
   const isAdmin = member.role === "admin" || member.access_role === "admin";
   if (!publicOnly) {
-    const categories = [...new Set(
-      source.threads
-        .map((thread: RawDiscordBoardThread) => thread.category)
-        .filter(isPrivateClubCategory),
-    )];
-    await Promise.all(categories.map(async (category) => {
-      const clubId = category.slice("club-".length);
-      if (isAdmin || await canMemberAccessClub(env.DB!, clubId, member.id, false)) {
-        allowed.add(category);
-      }
-    }));
+    if (isAdmin) {
+      source.threads.forEach((thread) => {
+        if (isPrivateClubCategory(thread.category)) allowed.add(thread.category);
+      });
+    } else {
+      const memberCategories = await allowedPrivateClubCategories(env.DB, member.id);
+      memberCategories.forEach((category) => allowed.add(category));
+    }
   }
 
   const filtered = filterBoardArchive(source, allowed);
