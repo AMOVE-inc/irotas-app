@@ -52,6 +52,7 @@ const eventRow = {
 class EventAccessDatabase implements D1Database {
   row = { ...eventRow };
   participationStatus: string | null = null;
+  cancellationPending = false;
   notifications: Array<{ targetMemberId: number; type: string; eventId: string }> = [];
 
   prepare(sql: string): D1PreparedStatement {
@@ -64,6 +65,7 @@ class EventAccessDatabase implements D1Database {
         if (sql.includes("SELECT id FROM members WHERE public_member_id")) return { id: 10 } as T;
         if (sql.includes("FROM events e JOIN members")) return db.row as T;
         if (sql.includes("SELECT status FROM event_participations")) return db.participationStatus ? { status: db.participationStatus } as T : null;
+        if (sql.includes("FROM event_cancellation_requests") && sql.includes("status = 'pending'")) return db.cancellationPending ? { id: "cancel-1" } as T : null;
         if (sql.includes("COUNT(*) AS count FROM event_participations")) return { count: db.participationStatus === "confirmed" ? 1 : 0 } as T;
         if (sql.includes("FROM event_favorites")) return null;
         return null;
@@ -79,8 +81,13 @@ class EventAccessDatabase implements D1Database {
         if (sql.includes("INSERT INTO event_participations")) db.participationStatus = String(values[2]);
         if (sql.includes("UPDATE event_participations SET status = 'confirmed'")) db.participationStatus = "confirmed";
         if (sql.includes("UPDATE events SET public_data_json")) db.row.public_data_json = String(values[0]);
+        if (sql.includes("INSERT INTO event_cancellation_requests")) db.cancellationPending = true;
+        if (sql.includes("UPDATE event_cancellation_requests SET status")) db.cancellationPending = false;
+        if (sql.includes("UPDATE event_participations SET status = ?")) db.participationStatus = String(values[0]);
+        if (sql.includes("UPDATE event_participations SET status = 'cancel_requested'")) db.participationStatus = "cancel_requested";
         if (sql.includes("INSERT INTO in_app_notifications")) {
-          db.notifications.push({ targetMemberId: Number(values[1]), type: "event_confirmed", eventId: String(values[4]) });
+          const type = sql.includes("'event_cancellation'") ? "event_cancellation" : "event_confirmed";
+          db.notifications.push({ targetMemberId: Number(values[1]), type, eventId: String(values[4]) });
         }
         return { success: true };
       },
@@ -89,7 +96,7 @@ class EventAccessDatabase implements D1Database {
   }
 
   async batch<T>(statements: D1PreparedStatement[]) {
-    return statements.map(() => ({ success: true })) as T[];
+    return Promise.all(statements.map((statement) => statement.run())) as Promise<T[]>;
   }
 }
 
@@ -179,5 +186,28 @@ describe("club event access", () => {
     const confirmedResponse = await handleEventRequest(new Request("https://app.example/api/events/event-club-1"), env);
     const confirmedBody = await confirmedResponse?.json() as { event: Record<string, unknown> };
     expect(confirmedBody.event).toMatchObject({ viewerParticipationStatus: "confirmed", chatId: "event_chat_event-club-1" });
+  });
+
+  it("notifies the organizer once for a cancellation request and the member after review", async () => {
+    canMemberAccessClub.mockResolvedValue(true);
+    db.participationStatus = "confirmed";
+    authenticatedRequestMember.mockResolvedValue({ id: 10, role: "user", access_role: "member" });
+
+    const request = () => handleEventRequest(new Request("https://app.example/api/events/event-club-1/cancellation-requests", {
+      method: "POST",
+      body: JSON.stringify({ contactedOrganizer: true, policyConfirmed: true }),
+    }), env);
+    expect((await request())?.status).toBe(201);
+    expect(db.notifications).toContainEqual({ targetMemberId: 20, type: "event_cancellation", eventId: "event-club-1" });
+    expect((await request())?.status).toBe(409);
+    expect(db.notifications.filter((item) => item.targetMemberId === 20 && item.type === "event_cancellation")).toHaveLength(1);
+
+    authenticatedRequestMember.mockResolvedValue({ id: 20, role: "user", access_role: "club_leader" });
+    const reviewResponse = await handleEventRequest(new Request("https://app.example/api/events/event-club-1/cancellation-requests/IRO0010", {
+      method: "PATCH",
+      body: JSON.stringify({ action: "approve" }),
+    }), env);
+    expect(reviewResponse?.status).toBe(200);
+    expect(db.notifications).toContainEqual({ targetMemberId: 10, type: "event_cancellation", eventId: "event-club-1" });
   });
 });

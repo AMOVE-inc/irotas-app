@@ -272,6 +272,19 @@ async function notifyEventConfirmation(db: D1Database, targetMemberId: number, e
     ).run();
 }
 
+async function notifyEventCancellation(
+  db: D1Database,
+  targetMemberId: number,
+  eventId: string,
+  title: string,
+  body: string,
+) {
+  await db.prepare(`INSERT INTO in_app_notifications
+    (id, target_member_id, type, title, body, event_id, created_at)
+    VALUES (?, ?, 'event_cancellation', ?, ?, ?, ?)`)
+    .bind(crypto.randomUUID(), targetMemberId, title, body, eventId, new Date().toISOString()).run();
+}
+
 async function createEvent(request: Request, db: D1Database, member: Awaited<ReturnType<typeof authenticatedRequestMember>>) {
   if (!member) return responseJson({ error: "ログインが必要です" }, 401);
   const raw = await request.text();
@@ -471,6 +484,13 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
       env.DB.prepare("UPDATE event_participations SET status = 'cancel_requested', updated_at = ? WHERE event_id = ? AND member_id = ?").bind(now, id, member.id),
     ]);
     await audit(env.DB, member.id, "event.cancellation_requested", id);
+    await notifyEventCancellation(
+      env.DB,
+      row.organizer_member_id,
+      id,
+      "イベントのキャンセル申請が届きました",
+      `「${row.title}」の参加者からキャンセル申請が届いています。申請内容を確認してください。`,
+    );
     return responseJson({ event: await hydratedEvent(env.DB, row, member.id, elevated, memberPublicId) }, 201);
   }
   if (cancellationReviewMatch && request.method === "PATCH") {
@@ -498,6 +518,15 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
     );
     await env.DB.batch(statements);
     await audit(env.DB, member.id, approved ? "event.cancellation_approved" : "event.cancellation_rejected", id, { targetId });
+    await notifyEventCancellation(
+      env.DB,
+      targetId,
+      id,
+      approved ? "キャンセル申請が承認されました" : "キャンセル申請が却下されました",
+      approved
+        ? `「${row.title}」のキャンセルが確定しました。必要に応じて幹事へご連絡ください。`
+        : `「${row.title}」の参加は継続となりました。詳細は幹事へご確認ください。`,
+    );
     const updated = await eventRow(env.DB, id);
     return responseJson({ event: await hydratedEvent(env.DB, updated!, member.id, elevated, memberPublicId) });
   }
