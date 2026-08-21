@@ -121,6 +121,34 @@ describe("Sites production authentication", () => {
     ).toBe(true);
   });
 
+  it("rejects malformed and oversized JSON bodies without a server error", async () => {
+    const malformed = await handleAuthRequest(
+      new Request("https://app.example/api/auth/login", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: "{not-json}",
+      }),
+      { DB: {} } as never,
+    );
+    expect(malformed?.status).toBe(400);
+    expect(await malformed?.json()).toEqual({
+      error: "正しいJSON形式で送信してください",
+    });
+
+    const oversized = await handleAuthRequest(
+      new Request("https://app.example/api/auth/login", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ value: "a".repeat(33_000) }),
+      }),
+      { DB: {} } as never,
+    );
+    expect(oversized?.status).toBe(413);
+    expect(await oversized?.json()).toEqual({
+      error: "リクエストが大きすぎます",
+    });
+  });
+
   it("allows a seven-day overdue grace period but blocks paused members", () => {
     const member = {
       role: "user" as const,

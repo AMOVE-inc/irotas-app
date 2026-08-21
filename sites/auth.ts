@@ -342,7 +342,14 @@ async function readJson(request: Request) {
     throw new Error("unsupported_media_type");
   const contentLength = Number(request.headers.get("content-length") ?? 0);
   if (contentLength > 32_768) throw new Error("request_too_large");
-  return (await request.json()) as Record<string, unknown>;
+  const raw = await request.text();
+  if (new TextEncoder().encode(raw).byteLength > 32_768)
+    throw new Error("request_too_large");
+  try {
+    return JSON.parse(raw) as Record<string, unknown>;
+  } catch {
+    throw new Error("invalid_json");
+  }
 }
 
 async function rateLimit(
@@ -876,17 +883,17 @@ export async function handleAuthRequest(
       pathname === "/api/auth/request-setup-code" &&
       request.method === "POST"
     )
-      return requestSetupCode(request, env, env.DB);
+      return await requestSetupCode(request, env, env.DB);
     if (pathname === "/api/auth/register" && request.method === "POST")
-      return register(request, env, env.DB);
+      return await register(request, env, env.DB);
     if (pathname === "/api/auth/login" && request.method === "POST")
-      return login(request, env, env.DB);
+      return await login(request, env, env.DB);
     if (pathname === "/api/auth/me" && request.method === "GET")
-      return me(request, env.DB);
+      return await me(request, env.DB);
     if (pathname === "/api/auth/logout" && request.method === "POST")
-      return logout(request, env.DB);
+      return await logout(request, env.DB);
     if (pathname === "/api/auth/branches" && request.method === "POST")
-      return selectBranches(request, env, env.DB);
+      return await selectBranches(request, env, env.DB);
     return responseJson({ error: "not found" }, 404);
   } catch (error) {
     const message = error instanceof Error ? error.message : "unknown";
@@ -894,6 +901,8 @@ export async function handleAuthRequest(
       return responseJson({ error: "リクエストが大きすぎます" }, 413);
     if (message === "unsupported_media_type")
       return responseJson({ error: "JSON形式で送信してください" }, 415);
+    if (message === "invalid_json")
+      return responseJson({ error: "正しいJSON形式で送信してください" }, 400);
     return responseJson({ error: "一時的な問題が発生しました" }, 500);
   }
 }
