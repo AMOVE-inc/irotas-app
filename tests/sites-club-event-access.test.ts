@@ -124,11 +124,11 @@ describe("club event access", () => {
     expect(favoriteResponse?.status).toBe(403);
   });
 
-  it("returns full detail to an approved member, assigned leader, or elevated operator", async () => {
+  it("returns full detail to an approved member, assigned leader, or administrator", async () => {
     for (const session of [
       { id: 10, role: "user", access_role: "member" },
       { id: 20, role: "user", access_role: "club_leader" },
-      { id: 30, role: "operator", access_role: "operator" },
+      { id: 40, role: "admin", access_role: "admin" },
     ]) {
       authenticatedRequestMember.mockResolvedValue(session);
       canMemberAccessClub.mockResolvedValue(true);
@@ -138,6 +138,13 @@ describe("club event access", () => {
       expect(body.event).toMatchObject({ location: "東京都渋谷区の集合場所", googleMapsUrl: "https://maps.google.com/secret" });
       expect(body.event.lockedClubEvent).toBeUndefined();
     }
+  });
+
+  it("keeps club event details private from operators who are not club members", async () => {
+    authenticatedRequestMember.mockResolvedValue({ id: 30, role: "operator", access_role: "operator" });
+    canMemberAccessClub.mockResolvedValue(false);
+    const response = await handleEventRequest(new Request("https://app.example/api/events/event-club-1"), env);
+    expect(response?.status).toBe(403);
   });
 
   it("persists application, approval, event chat id, and confirmation notification", async () => {

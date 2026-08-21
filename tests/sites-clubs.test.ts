@@ -22,7 +22,7 @@ describe("club access enforcement", () => {
     await expect(canMemberAccessClub(accessDatabase(true), "club-wine", 42)).resolves.toBe(true);
   });
 
-  it("blocks non-members and allows elevated operators", async () => {
+  it("blocks non-members and allows administrator moderation", async () => {
     await expect(canMemberAccessClub(accessDatabase(false), "club-wine", 42)).resolves.toBe(false);
     await expect(canMemberAccessClub(accessDatabase(false), "club-wine", 42, true)).resolves.toBe(true);
   });

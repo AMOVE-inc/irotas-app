@@ -172,10 +172,10 @@ class ClubFlowDatabase implements D1Database {
   }
 }
 
-function sessionMember(id: number, accessRole: "member" | "club_leader" = "member") {
+function sessionMember(id: number, accessRole: "member" | "club_leader" | "operator" | "admin" = "member") {
   return {
     id,
-    role: "user",
+    role: accessRole === "operator" || accessRole === "admin" ? accessRole : "user",
     access_role: accessRole,
     account_status: "active",
   };
@@ -216,6 +216,14 @@ describe("club application lifecycle", () => {
     );
     expect(duplicateResponse?.status).toBe(409);
     expect(db.notifications).toHaveLength(1);
+
+    authenticatedRequestMember.mockResolvedValue(sessionMember(50, "operator"));
+    const operatorResponse = await handleClubRequest(
+      jsonRequest("/api/clubs/club-bread/applications/IRO0010", "PATCH", { action: "approve" }),
+      env,
+    );
+    expect(operatorResponse?.status).toBe(403);
+    expect(db.memberships.get("club-bread:10")?.status).toBe("pending");
 
     authenticatedRequestMember.mockResolvedValue(sessionMember(30, "club_leader"));
     const unrelatedLeaderResponse = await handleClubRequest(

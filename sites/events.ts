@@ -209,6 +209,10 @@ function isElevated(member: NonNullable<Awaited<ReturnType<typeof authenticatedR
   return member.access_role === "operator" || member.access_role === "admin" || member.role === "operator" || member.role === "admin";
 }
 
+function isAdmin(member: NonNullable<Awaited<ReturnType<typeof authenticatedRequestMember>>>) {
+  return member.access_role === "admin" || member.role === "admin";
+}
+
 async function viewerPublicId(db: D1Database, memberId: number) {
   const row = await db.prepare("SELECT public_member_id FROM members WHERE id = ?").bind(memberId).first<{ public_member_id: string | null }>();
   return row?.public_member_id ?? `member-${memberId}`;
@@ -277,10 +281,11 @@ async function createEvent(request: Request, db: D1Database, member: Awaited<Ret
   const event = sanitizeEvent(input.event);
   if (!event) return responseJson({ error: "イベントの入力内容を確認してください" }, 400);
   const elevated = isElevated(member);
+  const admin = isAdmin(member);
   if (event.eventType === "official" && !elevated)
     return responseJson({ error: "公式イベントは運営メンバーのみ作成できます" }, 403);
-  if (event.eventType === "club" && !await canMemberAccessClub(db, event.clubId!, member.id, elevated))
-    return responseJson({ error: "部活イベントは所属部員・部長・運営メンバーのみ作成できます" }, 403);
+  if (event.eventType === "club" && !await canMemberAccessClub(db, event.clubId!, member.id, admin))
+    return responseJson({ error: "部活イベントは所属部員または部長のみ作成できます" }, 403);
   const privateMemo = text(input.privateMemo, 5000) || null;
   const id = `event_${crypto.randomUUID()}`;
   const now = new Date().toISOString();
@@ -328,6 +333,7 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
   const member = await authenticatedRequestMember(request, env);
   if (!member) return responseJson({ error: "ログインが必要です" }, 401);
   const elevated = isElevated(member);
+  const admin = isAdmin(member);
   const memberPublicId = await viewerPublicId(env.DB, member.id);
 
   if (pathname === "/api/event-images" && request.method === "POST")
@@ -345,7 +351,7 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
   if (pathname === EVENTS_ENDPOINT && request.method === "GET") {
     const rows = await env.DB.prepare(`${selectEvents} WHERE e.status != 'cancelled' ORDER BY e.event_date, e.created_at DESC`).all<EventRow>();
     const events = await Promise.all((rows.results ?? []).map(async (row) => {
-      if (row.event_type === "club" && row.club_id && !await canMemberAccessClub(env.DB!, row.club_id, member.id, elevated))
+      if (row.event_type === "club" && row.club_id && !await canMemberAccessClub(env.DB!, row.club_id, member.id, admin))
         return lockedClubEventPreview(row);
       return hydratedEvent(env.DB!, row, member.id, elevated, memberPublicId);
     }));
@@ -354,7 +360,7 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
   if (eventMatch && request.method === "GET") {
     const row = await eventRow(env.DB, decodeURIComponent(eventMatch[1]));
     if (!row || row.status === "cancelled") return responseJson({ error: "イベントが見つかりません" }, 404);
-    if (row.event_type === "club" && row.club_id && !await canMemberAccessClub(env.DB, row.club_id, member.id, elevated))
+    if (row.event_type === "club" && row.club_id && !await canMemberAccessClub(env.DB, row.club_id, member.id, admin))
       return responseJson({ error: "この部活の部員のみ詳細を閲覧できます" }, 403);
     return responseJson({ event: await hydratedEvent(env.DB, row, member.id, elevated, memberPublicId) });
   }
@@ -362,7 +368,7 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
     const id = decodeURIComponent(favoriteMatch[1]);
     const row = await eventRow(env.DB, id);
     if (!row) return responseJson({ error: "イベントが見つかりません" }, 404);
-    if (row.event_type === "club" && row.club_id && !await canMemberAccessClub(env.DB, row.club_id, member.id, elevated))
+    if (row.event_type === "club" && row.club_id && !await canMemberAccessClub(env.DB, row.club_id, member.id, admin))
       return responseJson({ error: "この部活の部員のみお気に入り登録できます" }, 403);
     const input = await readBody(request);
     if (typeof input?.favorite !== "boolean") return responseJson({ error: "入力内容を確認してください" }, 400);
@@ -378,7 +384,7 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
     const id = decodeURIComponent(applicationMatch[1]);
     const row = await eventRow(env.DB, id);
     if (!row || row.status !== "open") return responseJson({ error: "現在、このイベントには申し込めません" }, 409);
-    if (row.event_type === "club" && row.club_id && !await canMemberAccessClub(env.DB, row.club_id, member.id, elevated))
+    if (row.event_type === "club" && row.club_id && !await canMemberAccessClub(env.DB, row.club_id, member.id, admin))
       return responseJson({ error: "この部活の部員のみ参加申込できます" }, 403);
     if (row.organizer_member_id === member.id) return responseJson({ error: "幹事は参加申込できません" }, 409);
     const input = await readBody(request);
