@@ -82,6 +82,7 @@ function serializeClub(row: ClubRow, memberships: MembershipRow[], viewerId: num
   const pending = clubMemberships.filter((item) => item.status === "pending" || item.status === "on_hold");
   const canReview = elevated || row.leader_member_id === viewerId;
   const viewerMembership = clubMemberships.find((item) => item.member_id === viewerId);
+  const visiblePending = pending.filter((item) => canReview || item.member_id === viewerId);
   const viewerMemberPublicId = viewerMembership ? publicId(viewerMembership) : null;
   return {
     id: row.id,
@@ -91,9 +92,8 @@ function serializeClub(row: ClubRow, memberships: MembershipRow[], viewerId: num
     leaderId: row.leader_public_member_id ?? "",
     leaderName: row.leader_display_name ?? "未設定",
     memberIds: approved.map(publicId),
-    applicantIds: pending.map(publicId),
-    applications: pending
-      .filter((item) => canReview || item.member_id === viewerId)
+    applicantIds: visiblePending.map(publicId),
+    applications: visiblePending
       .map((item) => ({
         memberId: publicId(item),
         wantsToDo: item.wants_to_do,
