@@ -51,3 +51,27 @@ export function getClubViewerAccess(
     isLeader: club.viewerIsLeader === true || (!hasAuthenticatedMember && club.leaderId === legacyViewerId),
   };
 }
+
+/**
+ * Club-only content must be authorized from the authenticated viewer metadata.
+ * The legacy viewer is only used by signed-out local previews.
+ */
+export function canViewerAccessClubContent(
+  club: Club,
+  authenticatedMemberId: string | null | undefined,
+  legacyViewerId: string,
+  isAdministrator = false,
+): boolean {
+  if (isAdministrator) return true;
+  const access = getClubViewerAccess(club, authenticatedMemberId, legacyViewerId);
+  return access.isMember || access.isLeader;
+}
+
+/** Real sessions fail closed when their member ID is unexpectedly missing. */
+export function resolveViewerMemberId(
+  authenticatedMemberId: string | null | undefined,
+  hasAuthenticatedSession: boolean,
+  legacyViewerId: string,
+): string {
+  return authenticatedMemberId ?? (hasAuthenticatedSession ? "" : legacyViewerId);
+}

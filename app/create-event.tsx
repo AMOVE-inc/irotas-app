@@ -3,7 +3,8 @@ import { IconSymbol } from "@/components/ui/icon-symbol";
 import { CURRENT_USER, MEMBERS, type Event } from "@/constants/mock-data";
 import { GOURMET_GENRES } from "@/constants/event-options";
 import { useAuthContext } from "@/lib/auth-context";
-import { canCreateClubEvent, isOperatorRole } from "@/lib/access-control";
+import { isOperatorRole } from "@/lib/access-control";
+import { canViewerAccessClubContent, resolveViewerMemberId } from "@/lib/club-viewer-access";
 import { useClubs } from "@/lib/club-store";
 import { pendingEvents } from "@/lib/event-store";
 import { scheduleOrganizerDeadlineNotification } from "@/lib/notifications";
@@ -127,7 +128,8 @@ export default function CreateEventScreen() {
   const { user: authUser } = useAuthContext();
   const userIsOperator = isOperatorRole(authUser?.role, authUser?.accessRole);
   const clubs = useClubs();
-  const joinedClubs = clubs.filter((club) => canCreateClubEvent(CURRENT_USER.id, club.memberIds, club.leaderId));
+  const viewerMemberId = resolveViewerMemberId(authUser?.memberId, Boolean(authUser), CURRENT_USER.id);
+  const joinedClubs = clubs.filter((club) => canViewerAccessClubContent(club, authUser?.memberId, CURRENT_USER.id));
   const sourceClubId = params.sourceCategory?.startsWith("club-") ? params.sourceCategory.slice("club-".length) : "";
   const sourceIsJoinedClub = Boolean(sourceClubId && joinedClubs.some((club) => club.id === sourceClubId));
   const [eventType, setEventType] = useState<Event["eventType"]>(params.sourceThreadId ? (sourceIsJoinedClub ? "club" : "gourmet") : userIsOperator ? "official" : "gourmet");
@@ -200,7 +202,7 @@ export default function CreateEventScreen() {
     const draftEvent: Event = {
       id: `event_${Date.now()}`, createdAt: new Date().toISOString(), title, restaurantName: restaurantName.trim() || undefined, description: publicNotes.trim() || (finalType === "official" ? "IRO＋公式イベントです。" : finalType === "club" ? `${joinedClubs.find((club) => club.id === selectedClubId)?.name ?? "部活動"}の部員限定イベントです。` : "メンバー主催のグルメ会です。"), date, time,
       location: address.trim() || "住所未設定", prefecture: extractedLocation.prefecture, tokyoArea: extractedLocation.tokyoArea, image: imageUri, capacity: Number(recruitCapacity), reservationCapacity: Number(reservationCapacity), attendees: 0, applicantIds: [], participants: [], companionIds,
-      price, priceMin: numericAmount(budgetMin), priceMax: fixedAmount ? numericAmount(budgetMin) : numericAmount(budgetMax), genres, ...(configuredRankPrices && Object.keys(configuredRankPrices).length ? { rankPrices: configuredRankPrices } : {}), category: eventCategoryFromPrefecture(extractedLocation.prefecture), eventType: finalType, clubId: finalType === "club" ? selectedClubId : undefined, status: "open", createdBy: CURRENT_USER.id,
+      price, priceMin: numericAmount(budgetMin), priceMax: fixedAmount ? numericAmount(budgetMin) : numericAmount(budgetMax), genres, ...(configuredRankPrices && Object.keys(configuredRankPrices).length ? { rankPrices: configuredRankPrices } : {}), category: eventCategoryFromPrefecture(extractedLocation.prefecture), eventType: finalType, clubId: finalType === "club" ? selectedClubId : undefined, status: "open", createdBy: viewerMemberId,
       applicationDeadline: decisionDate, cancellationPolicy: cancellationPolicy.trim() || DEFAULT_CANCELLATION_POLICY, selectionMethod: finalType === "official" ? selectionMethod : "first_come", tabelogUrl: tabelogUrl.trim() || undefined, googleMapsUrl: googleMapsUrl.trim() || undefined, publicNotes: publicNotes.trim() || undefined, privateMemo: privateMemo.trim() || undefined,
     };
     setIsSubmitting(true);

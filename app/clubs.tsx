@@ -771,8 +771,8 @@ function ClubDetailModal({
       setApplicationError("どちらの項目も入力してください。");
       return;
     }
-    const application: ClubApplication = {
-      memberId: CURRENT_USER.id,
+  const application: ClubApplication = {
+      memberId: authUser?.memberId ?? CURRENT_USER.id,
       wantsToDo: wantsToDo.trim(),
       messageToLeader: messageToLeader.trim(),
       status: "pending",

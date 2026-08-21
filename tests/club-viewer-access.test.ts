@@ -3,7 +3,9 @@ import { CLUBS, CURRENT_USER } from "../constants/mock-data";
 import {
   clubMembershipActionLabel,
   clubMembershipSortPriority,
+  canViewerAccessClubContent,
   getClubViewerAccess,
+  resolveViewerMemberId,
 } from "../lib/club-viewer-access";
 
 describe("club viewer access", () => {
@@ -33,6 +35,34 @@ describe("club viewer access", () => {
 
     expect(access.isMember).toBe(true);
     expect(access.isLeader).toBe(true);
+  });
+
+  it("denies private content to unjoined and pending authenticated members", () => {
+    expect(canViewerAccessClubContent(breadClub, "IRO-OUTSIDER", CURRENT_USER.id)).toBe(false);
+    expect(canViewerAccessClubContent(
+      { ...breadClub, viewerMembershipStatus: "pending", viewerIsLeader: false },
+      "IRO-PENDING",
+      CURRENT_USER.id,
+    )).toBe(false);
+  });
+
+  it("allows approved members, club leaders, and administrators", () => {
+    expect(canViewerAccessClubContent(
+      { ...breadClub, viewerMembershipStatus: "approved", viewerIsLeader: false },
+      "IRO-MEMBER",
+      CURRENT_USER.id,
+    )).toBe(true);
+    expect(canViewerAccessClubContent(
+      { ...breadClub, viewerMembershipStatus: null, viewerIsLeader: true },
+      "IRO-LEADER",
+      CURRENT_USER.id,
+    )).toBe(true);
+    expect(canViewerAccessClubContent(breadClub, "IRO-ADMIN", CURRENT_USER.id, true)).toBe(true);
+  });
+
+  it("fails closed when an authenticated session has no member ID", () => {
+    expect(resolveViewerMemberId(undefined, true, CURRENT_USER.id)).toBe("");
+    expect(resolveViewerMemberId(undefined, false, CURRENT_USER.id)).toBe(CURRENT_USER.id);
   });
 
   it("shows a clear membership action for every club-list state", () => {

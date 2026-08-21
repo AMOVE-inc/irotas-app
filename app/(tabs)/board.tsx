@@ -23,7 +23,8 @@ import {
 import { useAuthContext } from "@/lib/auth-context";
 import { useColors } from "@/hooks/use-colors";
 import { createBoardChat } from "@/lib/chat-store";
-import { canCreateClubEvent, canManageBoardCategories, canManageGourmetContests, canViewClubThread, isOperatorRole } from "@/lib/access-control";
+import { canManageBoardCategories, canManageGourmetContests, isOperatorRole } from "@/lib/access-control";
+import { canViewerAccessClubContent, getClubViewerAccess, resolveViewerMemberId } from "@/lib/club-viewer-access";
 import { GOURMET_ADVICE_BUDGETS, isGoogleMapsUrl, MEAL_BUDGETS } from "@/lib/meal-report";
 import { communityRestaurantFromMealReport, registerCommunityRestaurant } from "@/lib/gourmet-map-community";
 import { resolveRestaurantLocation } from "@/lib/restaurant-location";
@@ -654,6 +655,8 @@ function ThreadDetailModal({
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const { user: authUser } = useAuthContext();
+  const viewerMemberId = resolveViewerMemberId(authUser?.memberId, Boolean(authUser), CURRENT_USER.id);
   const [commentText, setCommentText] = useState("");
   const [contestRestaurant, setContestRestaurant] = useState("");
   const [contestMenu, setContestMenu] = useState("");
@@ -689,8 +692,8 @@ function ThreadDetailModal({
   const [clubWantsToDo, setClubWantsToDo] = useState("");
   const [clubLeaderMessage, setClubLeaderMessage] = useState("");
 
-  const isAuthor = thread.author.id === CURRENT_USER.id;
-  const isParticipant = (thread.recruitParticipants ?? []).includes(CURRENT_USER.id);
+  const isAuthor = thread.author.id === viewerMemberId;
+  const isParticipant = (thread.recruitParticipants ?? []).includes(viewerMemberId);
   const isContest = Boolean(thread.gourmetContest);
   const clubSelfIntroduction = isClubSelfIntroduction(thread);
   const recruitmentManaged = isRecruitmentBoardCategory(thread.category) && !clubSelfIntroduction;
@@ -700,8 +703,11 @@ function ThreadDetailModal({
   const contestReferenceUrlValid = !contestReferenceUrl.trim() || /^https?:\/\/\S+$/i.test(contestReferenceUrl.trim());
   const contestFormValid = isContestEntryValid({ restaurant: contestRestaurant, menu: contestMenu, pitch: contestPitch, referenceUrl: contestReferenceUrl });
   const commentPollValid = !commentPollEnabled || (commentPollQuestion.trim().length > 0 && commentPollOptions.filter((option) => option.trim()).length >= 2 && /^\d{4}-\d{2}-\d{2}$/.test(commentPollDeadline));
-  const clubApplicationPending = Boolean(applicationClub?.applicantIds.includes(CURRENT_USER.id));
-  const clubApplicationMember = Boolean(applicationClub?.memberIds.includes(CURRENT_USER.id));
+  const applicationAccess = applicationClub
+    ? getClubViewerAccess(applicationClub, authUser?.memberId, CURRENT_USER.id)
+    : null;
+  const clubApplicationPending = Boolean(applicationAccess?.hasApplied);
+  const clubApplicationMember = Boolean(applicationAccess?.isMember);
 
   const submitClubApplication = async () => {
     if (!applicationClub || !clubWantsToDo.trim() || !clubLeaderMessage.trim()) return;
@@ -2187,6 +2193,19 @@ export default function BoardScreen() {
   const [editingThread, setEditingThread] = useState<BoardThread | null>(null);
   const isThreadView = view === "threads" && Boolean(categoryParam);
   const isClubIndexView = view === "clubs";
+  const viewerMemberId = resolveViewerMemberId(authUser?.memberId, Boolean(authUser), CURRENT_USER.id);
+
+  const canAccessCategory = useCallback((category: BoardCategory) => {
+    if (category.group !== "club" || userIsAdmin) return true;
+    if (category.key === "club-all" || category.key === "club-introduction") return true;
+    const club = clubs.find((item) => `club-${item.id}` === category.key);
+    return Boolean(club && canViewerAccessClubContent(
+      club,
+      authUser?.memberId,
+      CURRENT_USER.id,
+      userIsAdmin,
+    ));
+  }, [authUser?.memberId, clubs, userIsAdmin]);
 
   useEffect(() => {
     if (isClubIndexView) router.replace("/clubs");
@@ -2245,17 +2264,19 @@ export default function BoardScreen() {
     }
     setActiveGroup(selectedCategory.group);
     setActiveCategory(selectedCategory.key);
-  // `canAccessCategory` reads the current role/club membership on each route change.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [categoryParam, isThreadView, router]);
+  }, [canAccessCategory, categories, categoryParam, isThreadView, router]);
   const allThreads = useMemo(
     () => applyBoardThreadEdits([...dynamicThreads, ...BOARD_THREADS], editedThreads).filter((thread) => !deletedThreadIds.includes(thread.id)),
     [dynamicThreads, editedThreads, deletedThreadIds],
   );
   const filteredThreads = sortRecruitmentThreads(allThreads.filter((t) => t.category === activeCategory));
   const clubForThread = (thread: BoardThread) => clubs.find((club) => `club-${club.id}` === thread.category);
-  const canChangeRecruitment = (thread: BoardThread) => isRecruitmentBoardCategory(thread.category) && !isClubSelfIntroduction(thread) && (thread.author.id === CURRENT_USER.id || userCanModerateRecruitment || clubForThread(thread)?.leaderId === CURRENT_USER.id);
-  const canPinThread = (thread: BoardThread) => thread.category.startsWith("club-club-") && !isClubSelfIntroduction(thread) && (thread.author.id === CURRENT_USER.id || clubForThread(thread)?.leaderId === CURRENT_USER.id || userCanModerateRecruitment);
+  const canChangeRecruitment = (thread: BoardThread) => {
+    const club = clubForThread(thread);
+    const viewerIsLeader = Boolean(club && getClubViewerAccess(club, authUser?.memberId, CURRENT_USER.id).isLeader);
+    return isRecruitmentBoardCategory(thread.category) && !isClubSelfIntroduction(thread) && (thread.author.id === viewerMemberId || userCanModerateRecruitment || viewerIsLeader);
+  };
+  const canPinThread = (thread: BoardThread) => thread.category.startsWith("club-club-") && !isClubSelfIntroduction(thread) && (thread.author.id === viewerMemberId || Boolean(clubForThread(thread) && getClubViewerAccess(clubForThread(thread)!, authUser?.memberId, CURRENT_USER.id).isLeader) || userCanModerateRecruitment);
   const updateThreadManagement = (thread: BoardThread, changes: Pick<BoardThread, "isRecruiting" | "isPinned" | "recruitmentStatus">) => {
     const updated = { ...thread, ...changes, lastUpdated: new Date().toISOString() };
     setEditedThreads((current) => ({ ...current, [updated.id]: updated }));
@@ -2279,12 +2300,6 @@ export default function BoardScreen() {
     const linkedThread = allThreads.find((item) => item.id === threadParam);
     if (linkedThread) setSelectedThread(linkedThread);
   }, [threadParam, allThreads]);
-  const canAccessCategory = (category: BoardCategory) => {
-    if (category.group !== "club" || userIsAdmin) return true;
-    if (category.key === "club-all" || category.key === "club-introduction") return true;
-    const club = clubs.find((item) => `club-${item.id}` === category.key);
-    return Boolean(club && (club.leaderId === CURRENT_USER.id || canViewClubThread(authUser?.role, CURRENT_USER.id, club.memberIds)));
-  };
   const visibleCategories = categories
     .filter((category) => category.group === (isClubIndexView ? "club" : "all") && canAccessCategory(category))
     .sort((a, b) => {
@@ -2295,8 +2310,8 @@ export default function BoardScreen() {
       if (b.key === "club-all") return 1;
       const aClub = clubs.find((club) => `club-${club.id}` === a.key);
       const bClub = clubs.find((club) => `club-${club.id}` === b.key);
-      const aJoined = Boolean(aClub?.memberIds.includes(CURRENT_USER.id));
-      const bJoined = Boolean(bClub?.memberIds.includes(CURRENT_USER.id));
+      const aJoined = Boolean(aClub && getClubViewerAccess(aClub, authUser?.memberId, CURRENT_USER.id).isMember);
+      const bJoined = Boolean(bClub && getClubViewerAccess(bClub, authUser?.memberId, CURRENT_USER.id).isMember);
       return Number(bJoined) - Number(aJoined);
     });
   const categoryPresentation = (category: BoardCategory) => {
@@ -2421,7 +2436,7 @@ export default function BoardScreen() {
           <ThreadCard
             thread={item}
             onPress={() => { setSelectedThread(item); router.setParams({ thread: item.id }); }}
-            onEdit={item.author.id === CURRENT_USER.id || userIsAdmin ? () => setEditingThread(item) : undefined}
+            onEdit={item.author.id === viewerMemberId || userIsAdmin ? () => setEditingThread(item) : undefined}
             onChangeRecruitment={canChangeRecruitment(item) || canPinThread(item) ? () => promptRecruitmentStatus(item) : undefined}
           />
         )}
@@ -2462,9 +2477,9 @@ export default function BoardScreen() {
             thread={selectedThread}
             initialComments={importedComments[selectedThread.id] ?? []}
             onClose={() => { setSelectedThread(null); router.setParams({ thread: "" }); }}
-            onEditThread={selectedThread.author.id === CURRENT_USER.id || userIsAdmin ? () => { setEditingThread(selectedThread); setSelectedThread(null); router.setParams({ thread: "" }); } : undefined}
+            onEditThread={selectedThread.author.id === viewerMemberId || userIsAdmin ? () => { setEditingThread(selectedThread); setSelectedThread(null); router.setParams({ thread: "" }); } : undefined}
             onChangeRecruitment={canChangeRecruitment(selectedThread) || canPinThread(selectedThread) ? () => promptRecruitmentStatus(selectedThread) : undefined}
-            canRegisterEvent={selectedThread.category === "free-chat" || Boolean(clubForThread(selectedThread) && canCreateClubEvent(CURRENT_USER.id, clubForThread(selectedThread)!.memberIds, clubForThread(selectedThread)!.leaderId))}
+            canRegisterEvent={selectedThread.category === "free-chat" || Boolean(clubForThread(selectedThread) && canViewerAccessClubContent(clubForThread(selectedThread)!, authUser?.memberId, CURRENT_USER.id, userIsAdmin))}
             applicationClub={applicationClubForThread(selectedThread)}
             canModerateAll={userIsAdmin}
           />

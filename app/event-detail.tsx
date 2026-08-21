@@ -14,7 +14,8 @@ import { approveEventCancellationRequest, getPendingCancellationRequests, submit
 import { useColors } from "@/hooks/use-colors";
 import { useAuthContext } from "@/lib/auth-context";
 import { useClubs } from "@/lib/club-store";
-import { canViewClubEvent } from "@/lib/access-control";
+import { isAdminRole } from "@/lib/access-control";
+import { canViewerAccessClubContent, resolveViewerMemberId } from "@/lib/club-viewer-access";
 import { recordActivityEvent } from "@/lib/ai-data-store";
 import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -37,6 +38,7 @@ export default function EventDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { user: authUser } = useAuthContext();
   const clubs = useClubs();
+  const authenticatedViewerMemberId = resolveViewerMemberId(authUser?.memberId, Boolean(authUser), CURRENT_USER.id);
 
   // モックデータ + 動的追加分から検索
   const allEvents = getAllEvents(EVENTS);
@@ -74,11 +76,11 @@ export default function EventDetailScreen() {
 
   useEffect(() => {
     if (!event) return;
-    const viewerId = event.viewerMemberId ?? CURRENT_USER.id;
+    const viewerId = event.viewerMemberId ?? authenticatedViewerMemberId;
     const status = event.viewerParticipationStatus;
     setIsJoined(status ? status === "confirmed" || status === "cancel_requested" : event.participants.includes(viewerId));
     setHasApplied(status ? status === "applied" || status === "confirmed" || status === "cancel_requested" : Boolean(event.applicantIds?.includes(viewerId)));
-  }, [event?.id, event?.viewerParticipationStatus]);
+  }, [authenticatedViewerMemberId, event?.id, event?.viewerParticipationStatus]);
 
   useEffect(() => {
     getIrotasPoints(CURRENT_USER.id).then(setIrotasPoints);
@@ -96,7 +98,7 @@ export default function EventDetailScreen() {
   }
 
   const eventClub = event.eventType === "club" ? clubs.find((club) => club.id === event.clubId) : undefined;
-  if (event.eventType === "club" && !canViewClubEvent(authUser?.role, CURRENT_USER.id, eventClub?.memberIds ?? [])) {
+  if (event.eventType === "club" && (!eventClub || !canViewerAccessClubContent(eventClub, authUser?.memberId, CURRENT_USER.id, isAdminRole(authUser?.role, authUser?.accessRole)))) {
     return <ScreenContainer edges={["top", "bottom", "left", "right"]}><View style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: 28 }}><IconSymbol name="lock.fill" size={44} color={colors.muted} /><Text style={{ fontSize: 18, fontWeight: "900", color: colors.foreground, marginTop: 15 }}>部員限定イベントです</Text><Text style={{ fontSize: 13, lineHeight: 20, color: colors.muted, textAlign: "center", marginTop: 7 }}>{eventClub?.name ?? "この部活動"}に入部すると、イベント詳細の確認と参加申込ができます。</Text><Pressable onPress={() => router.replace("/clubs")} style={{ marginTop: 20, borderRadius: 14, backgroundColor: colors.foreground, paddingHorizontal: 20, paddingVertical: 12 }}><Text style={{ color: colors.background, fontWeight: "900" }}>部活動一覧を見る</Text></Pressable></View></ScreenContainer>;
   }
 
@@ -137,7 +139,7 @@ export default function EventDetailScreen() {
   const confirmedIds = [...new Set([...(event.participants ?? []), ...(event.companionIds ?? [])])];
   const applicantCount = event.applicantIds?.length ?? event.attendees;
   const organizer = getMemberById(event.createdBy);
-  const viewerMemberId = event.viewerMemberId ?? CURRENT_USER.id;
+  const viewerMemberId = event.viewerMemberId ?? authenticatedViewerMemberId;
   const isOrganizer = event.isOrganizer ?? event.createdBy === viewerMemberId;
   const pendingApplicantIds = getPendingGourmetApplicants(event);
   const pendingCancellationRequests = getPendingCancellationRequests(event);

@@ -6,7 +6,8 @@ import { GOURMET_GENRES } from "@/constants/event-options";
 import { EVENT_SEARCH_AREA_GROUPS } from "@/constants/event-areas";
 import { useAuthContext } from "@/lib/auth-context";
 import { useClubs } from "@/lib/club-store";
-import { canViewClubEvent } from "@/lib/access-control";
+import { isAdminRole } from "@/lib/access-control";
+import { canViewerAccessClubContent, getClubViewerAccess, resolveViewerMemberId } from "@/lib/club-viewer-access";
 import { getAllEvents } from "@/lib/event-store";
 import { DEFAULT_EVENT_SORT_ORDER, filterAndSortEvents, type EventSortOrder, type EventTypeFilter } from "@/lib/event-filters";
 import { getEventParticipationStatus } from "@/lib/event-participation";
@@ -340,6 +341,12 @@ export default function EventsScreen() {
   const { user: authUser } = useAuthContext();
   const clubs = useClubs();
   const canCreateEvent = Boolean(authUser);
+  const viewerMemberId = resolveViewerMemberId(authUser?.memberId, Boolean(authUser), CURRENT_USER.id);
+  const userIsAdmin = isAdminRole(authUser?.role, authUser?.accessRole);
+  const canAccessClubEvent = useCallback((clubId?: string) => {
+    const club = clubs.find((candidate) => candidate.id === clubId);
+    return Boolean(club && canViewerAccessClubContent(club, authUser?.memberId, CURRENT_USER.id, userIsAdmin));
+  }, [authUser?.memberId, clubs, userIsAdmin]);
 
   const refreshEvents = useCallback(async () => {
     if (!authUser) { setAllEvents([...getAllEvents(EVENTS)]); return; }
@@ -363,8 +370,8 @@ export default function EventsScreen() {
       startDate,
       endDate,
       sortOrder,
-      hostedByMemberId: hostedByMe ? CURRENT_USER.id : undefined,
-      participatingMemberId: appliedOnly || confirmedOnly ? CURRENT_USER.id : undefined,
+      hostedByMemberId: hostedByMe ? viewerMemberId : undefined,
+      participatingMemberId: appliedOnly || confirmedOnly ? viewerMemberId : undefined,
       participationStatuses: [appliedOnly ? "applied" as const : null, confirmedOnly ? "confirmed" as const : null].filter((value): value is "applied" | "confirmed" => value !== null),
       favoriteOnly,
       favoriteEventIds: effectiveFavoriteEventIds,
@@ -374,9 +381,9 @@ export default function EventsScreen() {
       areas: selectedAreas,
       keyword,
       joinedClubOnly: eventType === "club" && joinedClubOnly,
-      joinedClubIds: clubs.filter((club) => club.memberIds.includes(CURRENT_USER.id)).map((club) => club.id),
+      joinedClubIds: clubs.filter((club) => getClubViewerAccess(club, authUser?.memberId, CURRENT_USER.id).isMember).map((club) => club.id),
     }),
-    [allEvents, eventType, openOnly, startDate, endDate, sortOrder, hostedByMe, appliedOnly, confirmedOnly, favoriteOnly, effectiveFavoriteEventIds, selectedGenres, budgetMin, budgetMax, selectedAreas, keyword, joinedClubOnly, clubs],
+    [allEvents, eventType, openOnly, startDate, endDate, sortOrder, hostedByMe, appliedOnly, confirmedOnly, favoriteOnly, effectiveFavoriteEventIds, selectedGenres, budgetMin, budgetMax, selectedAreas, keyword, joinedClubOnly, clubs, authUser?.memberId, viewerMemberId],
   );
 
   const eventTypeLabel = eventType === "official"
@@ -434,11 +441,11 @@ export default function EventsScreen() {
                 void toggleEventFavoriteWithNotifications(item, CURRENT_USER.id);
               }
             }}
-            locked={item.eventType === "club" && !canViewClubEvent(authUser?.role, CURRENT_USER.id, clubs.find((club) => club.id === item.clubId)?.memberIds ?? [])}
+            locked={item.eventType === "club" && !canAccessClubEvent(item.clubId)}
             clubName={clubs.find((club) => club.id === item.clubId)?.name}
             onPress={() => {
               const club = clubs.find((candidate) => candidate.id === item.clubId);
-              if (item.eventType === "club" && !canViewClubEvent(authUser?.role, CURRENT_USER.id, club?.memberIds ?? [])) {
+              if (item.eventType === "club" && !canAccessClubEvent(item.clubId)) {
                 Alert.alert("部員限定イベント", `${club?.name ?? "この部活動"}に入部すると、詳細の確認と参加申込ができます。`);
                 return;
               }
