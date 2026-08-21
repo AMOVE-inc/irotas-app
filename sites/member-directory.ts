@@ -78,6 +78,7 @@ const publicMemberSelect = `
   FROM members m
   LEFT JOIN member_subscriptions s ON s.member_id = m.id
   WHERE m.account_status = 'active'
+    AND COALESCE(json_extract(m.profile_json, '$.isTestAccount'), 0) <> 1
     AND (m.access_role IN ('club_leader', 'operator', 'admin')
       OR s.access_status IN ('active', 'grace'))`;
 

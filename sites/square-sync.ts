@@ -218,11 +218,13 @@ export async function handleSquareSyncRequest(
          SUM(CASE WHEN access_status = 'suspended' THEN 1 ELSE 0 END) AS suspended,
          SUM(CASE WHEN access_status = 'pending' THEN 1 ELSE 0 END) AS pending,
          MAX(last_verified_at) AS last_verified_at
-         FROM member_subscriptions`,
+         FROM member_subscriptions
+         WHERE COALESCE(billing_status, '') <> 'TEST_ACCOUNT'`,
       ).first<Record<string, number | string | null>>(),
       env.DB.prepare(
         `SELECT COUNT(*) AS count FROM members m
          WHERE m.account_status = 'active' AND m.role = 'user' AND m.access_role = 'member'
+         AND COALESCE(json_extract(m.profile_json, '$.isTestAccount'), 0) <> 1
          AND NOT EXISTS (
            SELECT 1 FROM member_subscriptions s
            WHERE s.member_id = m.id OR s.billing_email = m.email
