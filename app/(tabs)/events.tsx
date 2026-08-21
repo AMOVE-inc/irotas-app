@@ -286,10 +286,12 @@ function EventCard({ event, onPress, isFavorite, onToggleFavorite, locked = fals
       <View style={{ width: 142, minHeight: 142, alignSelf: "stretch", overflow: "hidden" }}><Image source={event.image} style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }} contentFit="cover" contentPosition="center" transition={300} />{event.eventType === "official" ? <View style={{ position: "absolute", left: 7, top: 7, flexDirection: "row", alignItems: "center", minHeight: 30, borderRadius: 10, backgroundColor: "#FFFFFFF5", paddingHorizontal: 9, borderWidth: 2, borderColor: "#E8A0BF", shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.2, shadowRadius: 4, elevation: 4 }}><Text style={{ fontSize: 11, fontWeight: "900", color: "#171717", letterSpacing: 0.4 }}>IRO+</Text><Text style={{ marginLeft: 4, fontSize: 10, fontWeight: "900", color: "#C94F84" }}>公式</Text></View> : event.eventType === "club" ? <View style={{ position: "absolute", left: 7, top: 7, borderRadius: 9, backgroundColor: "#FFFFFFF2", paddingHorizontal: 8, paddingVertical: 5 }}><Text style={{ fontSize: 10, fontWeight: "900", color: "#4E6756" }}>{clubName ?? "部活動イベント"}</Text></View> : null}{locked ? <View style={{ position: "absolute", inset: 0, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(40,40,40,0.42)" }}><IconSymbol name="lock.fill" size={28} color="#FFF" /><Text style={{ color: "#FFF", fontSize: 11, fontWeight: "900", marginTop: 5 }}>部員限定</Text></View> : null}</View>
       <View style={{ flex: 1, paddingHorizontal: 11, paddingVertical: 9 }}>
         <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 5 }}>
-          <Text style={{ flex: 1, fontSize: 13, fontWeight: "900", color: colors.foreground }}>{formatDate(event.date)} {event.time}</Text>
+          <Text style={{ flex: 1, fontSize: 13, fontWeight: "900", color: colors.foreground }}>{formatDate(event.date)}{locked ? "" : ` ${event.time}`}</Text>
           <View style={{ flexDirection: "row", gap: 4 }}><StatusBadge status={event.status} />{isConfirmed ? <Text style={{ fontSize: 9, fontWeight: "900", color: "#FFF", backgroundColor: "#D94C55", borderRadius: 7, paddingHorizontal: 7, paddingVertical: 4 }}>参加確定</Text> : null}</View>
         </View>
         <Text style={{ fontSize: 14, lineHeight: 19, fontWeight: "900", color: colors.foreground }}>{event.title}</Text>
+        {locked ? <Text style={{ fontSize: 11, lineHeight: 17, fontWeight: "700", color: colors.muted, marginTop: 8 }}>入部後に日時・場所・参加状況などの詳細を確認できます。</Text> : null}
+        {!locked ? <>
         {event.restaurantName && event.restaurantName !== event.title ? <Text style={{ fontSize: 11, lineHeight: 16, fontWeight: "700", color: colors.foreground, marginTop: 3 }}>{event.restaurantName}</Text> : null}
         <Text style={{ fontSize: 10, lineHeight: 15, color: colors.muted, marginTop: 2 }}>{locationLabel}</Text>
         <View style={{ flexDirection: "row", alignItems: "center", marginTop: 5 }}>
@@ -299,10 +301,11 @@ function EventCard({ event, onPress, isFavorite, onToggleFavorite, locked = fals
           {event.selectionMethod ? <Text style={{ fontSize: 9, fontWeight: "700", color: colors.muted }}>{event.selectionMethod === "lottery" ? "抽選" : "先着順"}</Text> : null}
           {isApplied ? <Text style={{ fontSize: 9, fontWeight: "900", color: "#3E78A1", backgroundColor: "#E8F2FA", borderRadius: 7, paddingHorizontal: 7, paddingVertical: 2 }}>申込中</Text> : null}
         </View>
+        </> : null}
         <View style={{ flexDirection: "row", alignItems: "center", marginTop: 5 }}>
-          <Image source={event.eventType === "official" ? DEFAULT_AVATAR : (organizer?.avatar ?? DEFAULT_AVATAR)} style={{ width: 18, height: 18, borderRadius: 9 }} contentFit="cover" />
+          {!locked ? <><Image source={event.eventType === "official" ? DEFAULT_AVATAR : (organizer?.avatar ?? DEFAULT_AVATAR)} style={{ width: 18, height: 18, borderRadius: 9 }} contentFit="cover" />
           <Text style={{ marginLeft: 5, fontSize: 10, fontWeight: "700", color: colors.muted }} numberOfLines={1}>{event.eventType === "official" ? "IRO＋運営" : (organizer?.name ?? "メンバー")}</Text>
-          {event.eventType !== "official" && organizer ? <NewMemberMark member={organizer} size={11} /> : null}
+          {event.eventType !== "official" && organizer ? <NewMemberMark member={organizer} size={11} /> : null}</> : null}
           <View style={{ flex: 1 }} />
           {!locked ? <Pressable onPress={(pressEvent) => { pressEvent.stopPropagation?.(); onToggleFavorite(); }} accessibilityLabel={isFavorite ? "お気に入りから削除" : "お気に入りに追加"} hitSlop={8} style={{ paddingHorizontal: 4, paddingVertical: 2 }}><IconSymbol name={isFavorite ? "heart.fill" : "heart"} size={20} color={isFavorite ? "#D85B86" : colors.muted} /></Pressable> : <Text style={{ fontSize: 9, fontWeight: "800", color: colors.muted }}>入部すると詳細を表示</Text>}
         </View>
@@ -441,11 +444,11 @@ export default function EventsScreen() {
                 void toggleEventFavoriteWithNotifications(item, CURRENT_USER.id);
               }
             }}
-            locked={item.eventType === "club" && !canAccessClubEvent(item.clubId)}
+            locked={Boolean(item.lockedClubEvent || (item.eventType === "club" && !canAccessClubEvent(item.clubId)))}
             clubName={clubs.find((club) => club.id === item.clubId)?.name}
             onPress={() => {
               const club = clubs.find((candidate) => candidate.id === item.clubId);
-              if (item.eventType === "club" && !canAccessClubEvent(item.clubId)) {
+              if (item.lockedClubEvent || (item.eventType === "club" && !canAccessClubEvent(item.clubId))) {
                 Alert.alert("部員限定イベント", `${club?.name ?? "この部活動"}に入部すると、詳細の確認と参加申込ができます。`);
                 return;
               }

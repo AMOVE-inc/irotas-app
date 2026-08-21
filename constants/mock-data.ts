@@ -153,6 +153,8 @@ export interface Event {
   viewerParticipationStatus?: "applied" | "confirmed" | "cancel_requested" | null;
   isFavorite?: boolean;
   isOrganizer?: boolean;
+  /** 未入部者向けに詳細を除いた部活動イベントの一覧プレビュー。 */
+  lockedClubEvent?: boolean;
   priceMax?: number;
 }
 

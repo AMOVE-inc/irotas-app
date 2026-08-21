@@ -171,6 +171,37 @@ function publicEvent(
   };
 }
 
+export function lockedClubEventPreview(row: EventRow) {
+  let data: Record<string, unknown> = {};
+  try { data = JSON.parse(row.public_data_json) as Record<string, unknown>; } catch {}
+  return {
+    id: row.id,
+    createdAt: row.created_at,
+    eventType: "club" as const,
+    clubId: row.club_id ?? undefined,
+    date: row.event_date,
+    status: row.status === "cancelled" ? "ended" as const : row.status,
+    title: row.title,
+    image: typeof data.image === "string" && data.image.startsWith("/api/event-images/") ? data.image : "",
+    createdBy: row.public_member_id ?? `member-${row.organizer_member_id}`,
+    description: "",
+    time: "",
+    location: "部員限定",
+    capacity: 0,
+    reservationCapacity: 0,
+    attendees: 0,
+    participants: [] as string[],
+    applicantIds: [] as string[],
+    companionIds: [] as string[],
+    price: "",
+    priceMin: 0,
+    priceMax: 0,
+    genres: [] as string[],
+    category: "all" as const,
+    lockedClubEvent: true,
+  };
+}
+
 const selectEvents = `SELECT e.*, m.public_member_id
   FROM events e JOIN members m ON m.id = e.organizer_member_id`;
 
@@ -295,7 +326,11 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
     return createEvent(request, env.DB, member);
   if (pathname === EVENTS_ENDPOINT && request.method === "GET") {
     const rows = await env.DB.prepare(`${selectEvents} WHERE e.status != 'cancelled' ORDER BY e.event_date, e.created_at DESC`).all<EventRow>();
-    const events = await Promise.all((rows.results ?? []).map((row) => hydratedEvent(env.DB!, row, member.id, elevated, memberPublicId)));
+    const events = await Promise.all((rows.results ?? []).map(async (row) => {
+      if (row.event_type === "club" && row.club_id && !await canMemberAccessClub(env.DB!, row.club_id, member.id, elevated))
+        return lockedClubEventPreview(row);
+      return hydratedEvent(env.DB!, row, member.id, elevated, memberPublicId);
+    }));
     return responseJson({ events });
   }
   if (eventMatch && request.method === "GET") {
@@ -307,7 +342,10 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
   }
   if (favoriteMatch && request.method === "PUT") {
     const id = decodeURIComponent(favoriteMatch[1]);
-    if (!await eventRow(env.DB, id)) return responseJson({ error: "イベントが見つかりません" }, 404);
+    const row = await eventRow(env.DB, id);
+    if (!row) return responseJson({ error: "イベントが見つかりません" }, 404);
+    if (row.event_type === "club" && row.club_id && !await canMemberAccessClub(env.DB, row.club_id, member.id, elevated))
+      return responseJson({ error: "この部活の部員のみお気に入り登録できます" }, 403);
     const input = await readBody(request);
     if (typeof input?.favorite !== "boolean") return responseJson({ error: "入力内容を確認してください" }, 400);
     if (input.favorite) {

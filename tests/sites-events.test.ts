@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { sanitizeEvent } from "../sites/events";
+import { lockedClubEventPreview, sanitizeEvent } from "../sites/events";
 
 function validEvent(overrides: Record<string, unknown> = {}) {
   return {
@@ -43,5 +43,43 @@ describe("production event validation", () => {
     expect(sanitizeEvent(validEvent({ time: "19:10" }))).toBeNull();
     expect(sanitizeEvent(validEvent({ image: "https://example.com/a.jpg" }))).toBeNull();
     expect(sanitizeEvent(validEvent({ applicationDeadline: "2026-09-21" }))).toBeNull();
+  });
+
+  it("returns only a safe preview for a club event visible to a non-member", () => {
+    const preview = lockedClubEventPreview({
+      id: "event-club-1",
+      organizer_member_id: 20,
+      public_member_id: "IRO0020",
+      event_type: "club",
+      club_id: "club-bread",
+      event_date: "2026-09-20",
+      status: "open",
+      title: "パン部限定パン屋巡り",
+      public_data_json: JSON.stringify({
+        image: "/api/event-images/events%2F20%2Fbread.jpg",
+        time: "10:00",
+        location: "東京都渋谷区の集合場所",
+        tabelogUrl: "https://tabelog.com/secret",
+        googleMapsUrl: "https://maps.google.com/secret",
+        participants: ["IRO0010"],
+        privateMemo: "非公開メモ",
+      }),
+      private_memo: "幹事だけのメモ",
+      created_at: "2026-08-22T00:00:00.000Z",
+    });
+
+    expect(preview).toMatchObject({
+      id: "event-club-1",
+      clubId: "club-bread",
+      title: "パン部限定パン屋巡り",
+      date: "2026-09-20",
+      lockedClubEvent: true,
+      location: "部員限定",
+      participants: [],
+      applicantIds: [],
+    });
+    expect(preview).not.toHaveProperty("tabelogUrl");
+    expect(preview).not.toHaveProperty("googleMapsUrl");
+    expect(preview).not.toHaveProperty("privateMemo");
   });
 });
