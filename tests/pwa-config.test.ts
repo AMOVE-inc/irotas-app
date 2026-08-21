@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 const html = readFileSync("app/+html.tsx", "utf8");
 const manifest = JSON.parse(readFileSync("public/manifest.webmanifest", "utf8"));
 const packageJson = JSON.parse(readFileSync("package.json", "utf8"));
+const staticHeaders = readFileSync("public/_headers", "utf8");
 
 describe("mobile web and home screen configuration", () => {
   it("uses Japanese metadata and iPhone standalone settings", () => {
@@ -33,5 +34,12 @@ describe("mobile web and home screen configuration", () => {
     expect(packageJson.scripts["build:sites"]).toContain(
       "cp assets/images/icon.png dist/client/pwa/icon-1024.png",
     );
+  });
+
+  it("protects cached HTML and static assets with security headers", () => {
+    expect(staticHeaders).toContain("X-Content-Type-Options: nosniff");
+    expect(staticHeaders).toContain("X-Frame-Options: DENY");
+    expect(staticHeaders).toContain("Content-Security-Policy:");
+    expect(staticHeaders).toContain("Strict-Transport-Security:");
   });
 });
