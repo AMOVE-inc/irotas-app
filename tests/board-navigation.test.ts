@@ -54,11 +54,11 @@ describe("board category ordering", () => {
     expect(CHAT_ROOMS.some((room) => room.id === "board-free-chat")).toBe(false);
   });
 
-  it("opens the member-only board from the joined-club preview card", () => {
+  it("keeps the non-member preview informational while joined clubs open their member-only board", () => {
     const clubsScreen = readFileSync(resolve(process.cwd(), "app/clubs.tsx"), "utf8");
     expect(clubsScreen).toContain("previewAsMember");
-    expect(clubsScreen).toContain("onPress={() => router.push");
-    expect(clubsScreen).toContain("club-${joinedClubPreview.id}");
+    expect(clubsScreen).toContain('"入部後の表示イメージ"');
+    expect(clubsScreen).toContain("club-${club.id}");
     expect(clubsScreen).toContain("view: \"threads\"");
   });
 });

@@ -89,7 +89,7 @@ function ClubCard({ club, onPress, previewAsMember = false }: { club: Club; onPr
   const isMember = previewAsMember || viewerAccess.isMember;
   const hasApplied = !previewAsMember && viewerAccess.hasApplied;
   const actionLabel = previewAsMember
-    ? "部員専用スレへ（プレビュー）"
+    ? "入部後の表示イメージ"
     : isMember
       ? "部員専用スレへ"
       : clubMembershipActionLabel({ isMember, hasApplied });
@@ -1913,7 +1913,6 @@ export default function ClubsScreen() {
               <ClubCard
                 club={joinedClubPreview}
                 previewAsMember
-                onPress={() => router.push({ pathname: "/board", params: { category: `club-${joinedClubPreview.id}`, view: "threads" } })}
               />
             ) : null}
           </View>
