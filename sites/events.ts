@@ -414,6 +414,7 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
     if (immediate && (count?.count ?? 0) >= capacity) return responseJson({ error: "満席です" }, 409);
     const now = new Date().toISOString();
     const status = immediate ? "confirmed" : "applied";
+    if (immediate && !(typeof data.chatId === "string" && data.chatId)) data.chatId = eventChatId(id);
     await env.DB.prepare(`INSERT INTO event_participations
       (event_id, member_id, status, terms_accepted_at, applied_at, confirmed_at, updated_at)
       VALUES (?, ?, ?, ?, ?, ?, ?)
@@ -421,6 +422,11 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
         terms_accepted_at = excluded.terms_accepted_at, applied_at = excluded.applied_at,
         confirmed_at = excluded.confirmed_at, cancelled_at = NULL, updated_at = excluded.updated_at`)
       .bind(id, member.id, status, now, now, immediate ? now : null, now).run();
+    if (immediate) {
+      await env.DB.prepare("UPDATE events SET public_data_json = ?, updated_at = ? WHERE id = ?")
+        .bind(JSON.stringify(data), now, id).run();
+      await notifyEventConfirmation(env.DB, member.id, id, row.title);
+    }
     if (immediate && (count?.count ?? 0) + 1 >= capacity)
       await env.DB.prepare("UPDATE events SET status = 'full', updated_at = ? WHERE id = ?").bind(now, id).run();
     await audit(env.DB, member.id, "event.application_submitted", id, { status });

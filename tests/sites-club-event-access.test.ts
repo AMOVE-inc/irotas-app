@@ -50,7 +50,10 @@ const eventRow = {
 };
 
 class EventAccessDatabase implements D1Database {
-  row = { ...eventRow };
+  row = { ...eventRow } as Omit<typeof eventRow, "event_type" | "club_id"> & {
+    event_type: "official" | "club";
+    club_id: string | null;
+  };
   participationStatus: string | null = null;
   cancellationPending = false;
   notifications: Array<{ targetMemberId: number; type: string; eventId: string }> = [];
@@ -186,6 +189,35 @@ describe("club event access", () => {
     const confirmedResponse = await handleEventRequest(new Request("https://app.example/api/events/event-club-1"), env);
     const confirmedBody = await confirmedResponse?.json() as { event: Record<string, unknown> };
     expect(confirmedBody.event).toMatchObject({ viewerParticipationStatus: "confirmed", chatId: "event_chat_event-club-1" });
+  });
+
+  it("immediately confirms first-come official applications and creates the event chat", async () => {
+    db.row.event_type = "official";
+    db.row.club_id = null;
+    db.row.public_data_json = JSON.stringify({
+      ...JSON.parse(eventRow.public_data_json),
+      eventType: "official",
+      clubId: undefined,
+      selectionMethod: "first_come",
+    });
+    canMemberAccessClub.mockResolvedValue(false);
+
+    const response = await handleEventRequest(new Request("https://app.example/api/events/event-club-1/applications", {
+      method: "POST",
+      body: JSON.stringify({ termsAccepted: true }),
+    }), env);
+    const body = await response?.json() as { event: Record<string, unknown> };
+
+    expect(response?.status).toBe(201);
+    expect(body.event).toMatchObject({
+      viewerParticipationStatus: "confirmed",
+      chatId: "event_chat_event-club-1",
+    });
+    expect(db.notifications).toContainEqual({
+      targetMemberId: 10,
+      type: "event_confirmed",
+      eventId: "event-club-1",
+    });
   });
 
   it("notifies the organizer once for a cancellation request and the member after review", async () => {
