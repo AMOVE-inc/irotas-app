@@ -11,6 +11,11 @@ export default function Root({ children }: PropsWithChildren) {
           content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover"
         />
         <meta name="theme-color" content="#E8A0BF" />
+        <meta name="referrer" content="strict-origin-when-cross-origin" />
+        <meta
+          httpEquiv="Content-Security-Policy"
+          content="base-uri 'self'; object-src 'none'; form-action 'self'"
+        />
         <meta name="application-name" content="IRO＋" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
@@ -18,6 +23,12 @@ export default function Root({ children }: PropsWithChildren) {
         <link rel="manifest" href="/manifest.webmanifest" />
         <link rel="apple-touch-icon" href="/pwa/icon-1024.png" />
         <title>IRO＋</title>
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "if (window.top !== window.self) document.documentElement.style.display = 'none';",
+          }}
+        />
         <ScrollViewStyleReset />
       </head>
       <body>{children}</body>
