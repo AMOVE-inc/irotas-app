@@ -23,6 +23,7 @@ import { useEffect, useRef, useState } from "react";
 import * as Api from "@/lib/_core/api";
 import {
   Alert,
+  type AlertButton,
   Linking,
   Platform,
   Pressable,
@@ -31,6 +32,16 @@ import {
   Text,
   View,
 } from "react-native";
+
+function showApplicationConfirmation(title: string, message: string, buttons: AlertButton[]) {
+  if (Platform.OS === "web") {
+    if (window.confirm(`${title}\n\n${message}`)) {
+      buttons.find((button) => button.style !== "cancel")?.onPress?.();
+    }
+    return;
+  }
+  Alert.alert(title, message, buttons);
+}
 
 export default function EventDetailScreen() {
   const colors = useColors();
@@ -171,7 +182,7 @@ export default function EventDetailScreen() {
       : usePoints && pointsToUse > 0
         ? `${finalPrice.toLocaleString()}円（${pointsToUse}pt割引適用）`
         : effectivePrice;
-    Alert.alert(
+    showApplicationConfirmation(
       "参加申込の確認",
       `「${event.title}」に申し込みますか？\n${requiresOrganizerApproval ? "幹事の承認後に参加確定となり、参加者チャットへ入れます。" : event.selectionMethod === "lottery" ? "抽選イベントです。申込後、参加確定をお待ちください。" : `参加費: ${priceLabel}`}`,
       [
