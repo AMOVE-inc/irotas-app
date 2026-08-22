@@ -1,4 +1,6 @@
 import { describe, expect, it } from "vitest";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { BOARD_CATEGORIES, BOARD_HOME_ORDER, CHAT_ROOMS, CLUBS, CURRENT_USER } from "../constants/mock-data";
 
 describe("board category ordering", () => {
@@ -50,5 +52,11 @@ describe("board category ordering", () => {
     expect(CHAT_ROOMS.find((room) => room.id === "board-announcement")?.sourceId).toBe("announcement");
     expect(BOARD_CATEGORIES.some((category) => category.key === "announcement")).toBe(false);
     expect(CHAT_ROOMS.some((room) => room.id === "board-free-chat")).toBe(false);
+  });
+
+  it("opens the member-only board from the joined-club preview card", () => {
+    const clubsScreen = readFileSync(resolve(process.cwd(), "app/clubs.tsx"), "utf8");
+    expect(clubsScreen).toContain("club-${joinedClubPreview.id}");
+    expect(clubsScreen).toContain("view: \"threads\"");
   });
 });

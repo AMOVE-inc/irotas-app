@@ -1909,7 +1909,13 @@ export default function ClubsScreen() {
                 onPress={() => router.push({ pathname: "/board", params: { category: `club-${club.id}`, view: "threads" } })}
               />
             ))}
-            {joinedClubPreview ? <ClubCard club={joinedClubPreview} previewAsMember /> : null}
+            {joinedClubPreview ? (
+              <ClubCard
+                club={joinedClubPreview}
+                previewAsMember
+                onPress={() => router.push({ pathname: "/board", params: { category: `club-${joinedClubPreview.id}`, view: "threads" } })}
+              />
+            ) : null}
           </View>
         ) : null}
 
