@@ -56,6 +56,8 @@ describe("board category ordering", () => {
 
   it("opens the member-only board from the joined-club preview card", () => {
     const clubsScreen = readFileSync(resolve(process.cwd(), "app/clubs.tsx"), "utf8");
+    expect(clubsScreen).toContain("previewAsMember");
+    expect(clubsScreen).toContain("onPress={() => router.push");
     expect(clubsScreen).toContain("club-${joinedClubPreview.id}");
     expect(clubsScreen).toContain("view: \"threads\"");
   });
