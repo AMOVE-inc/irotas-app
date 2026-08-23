@@ -110,10 +110,11 @@ async function deliverReminder(db: D1Database, reminder: Reminder, now: Date) {
     await db.batch([
       db.prepare(`INSERT OR IGNORE INTO chat_rooms (id, name, room_type, source_id, created_by_member_id, created_at, updated_at)
         VALUES (?, ?, 'event', ?, ?, ?, ?)`).bind(reminder.chatRoomId, reminder.event.title, reminder.event.id, reminder.event.organizer_member_id, now.toISOString(), now.toISOString()),
-      db.prepare(`INSERT OR IGNORE INTO chat_room_members (room_id, member_id, member_role, joined_at) VALUES (?, ?, 'member', ?)`)
+      db.prepare(`INSERT INTO chat_room_members (room_id, member_id, member_role, joined_at, left_at) VALUES (?, ?, 'member', ?, NULL)
+        ON CONFLICT(room_id, member_id) DO UPDATE SET left_at = NULL`)
         .bind(reminder.chatRoomId, reminder.targetMemberId, now.toISOString()),
       db.prepare(`INSERT OR IGNORE INTO chat_messages (id, room_id, sender_member_id, content, created_at, updated_at)
-        VALUES (?, ?, ?, ?, ?, ?)`).bind(`event-reminder-message:${id}`, reminder.chatRoomId, reminder.event.organizer_member_id, `【自動リマインド】「${reminder.event.title}」の開催${eventLabel}です。集合時間や連絡事項をご確認ください。`, now.toISOString(), now.toISOString()),
+        VALUES (?, ?, ?, ?, ?, ?)`).bind(`event-reminder-message:${reminder.event.id}:${reminder.kind}`, reminder.chatRoomId, reminder.event.organizer_member_id, `【自動リマインド】「${reminder.event.title}」の開催${eventLabel}です。集合時間や連絡事項をご確認ください。`, now.toISOString(), now.toISOString()),
       db.prepare(`INSERT OR IGNORE INTO in_app_notifications
         (id, target_member_id, type, title, body, event_id, chat_room_id, created_at) VALUES (?, ?, 'event_reminder', ?, ?, ?, ?, ?)`)
         .bind(notificationId, reminder.targetMemberId, `${reminder.event.title}は${eventLabel}です`, "参加者チャットをご確認ください。", reminder.event.id, reminder.chatRoomId, now.toISOString()),

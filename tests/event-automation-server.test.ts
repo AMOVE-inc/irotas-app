@@ -29,6 +29,8 @@ describe("server event automation", () => {
     expect(automation).toContain("seven_days");
     expect(automation).toContain("INSERT OR IGNORE INTO event_automation_deliveries");
     expect(automation).toContain("INSERT OR IGNORE INTO chat_messages");
+    expect(automation).toContain("event-reminder-message:${reminder.event.id}:${reminder.kind}");
+    expect(automation).toContain("ON CONFLICT(room_id, member_id) DO UPDATE SET left_at = NULL");
   });
 
   it("serves the home feed from shared server data", () => {
