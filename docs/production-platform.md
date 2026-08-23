@@ -39,6 +39,7 @@
 
 ## 運用手順
 
+- [運用・障害報告・問い合わせ対応手順](./operations/incident-support-runbook.md)
 - [APIキー・Secrets ローテーション手順](./operations/secret-rotation-runbook.md)
 - [個人情報・決済・権限 最終レビュー](./operations/final-security-review.md)
 - [バックアップ復元訓練](./operations/backup-restore-drill.md)
