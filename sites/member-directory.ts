@@ -4,6 +4,8 @@ import type { D1Database, SitesEnv } from "./platform-types";
 const DIRECTORY_ENDPOINT = "/api/members";
 const SELF_PROFILE_ENDPOINT = "/api/members/me/profile";
 const MEMBER_PATH = /^\/api\/members\/([^/]+)(?:\/(private-note))?$/;
+const FOLLOW_PATH = /^\/api\/members\/([^/]+)\/follow$/;
+const SOCIAL_PATH = /^\/api\/members\/([^/]+)\/(followers|following)$/;
 
 const PROFILE_TEXT_LIMITS = {
   bio: 2000,
@@ -79,6 +81,8 @@ type MemberDirectoryRow = {
   organizer_count: number;
   created_at: string;
   subscription_started_at: string | null;
+  follower_count?: number;
+  following_count?: number;
 };
 
 function jsonArray(value: string) {
@@ -103,7 +107,7 @@ function jsonObject(value: string) {
   }
 }
 
-export function publicMemberFromRow(row: MemberDirectoryRow) {
+export function publicMemberFromRow(row: MemberDirectoryRow, relationship: { isFollowing?: boolean; followsViewer?: boolean } = {}) {
   return {
     id: row.public_member_id ?? `member-${row.id}`,
     userId: row.id,
@@ -119,6 +123,11 @@ export function publicMemberFromRow(row: MemberDirectoryRow) {
     xp: ["operator", "admin"].includes(row.access_role) ? 0 : row.xp,
     participationCount: row.participation_count,
     organizerCount: row.organizer_count,
+    followerCount: row.follower_count ?? 0,
+    followingCount: row.following_count ?? 0,
+    isFollowing: relationship.isFollowing === true,
+    followsViewer: relationship.followsViewer === true,
+    isFriend: relationship.isFollowing === true && relationship.followsViewer === true,
   };
 }
 
@@ -133,7 +142,9 @@ const publicMemberSelect = `
   SELECT m.id, m.public_member_id, m.display_name, m.access_role, m.branches_json,
          m.member_term, m.member_rank, m.achievement_badges_json,
          m.discord_joined_at, m.profile_json, m.xp, m.participation_count,
-         m.organizer_count, m.created_at, s.subscription_started_at
+         m.organizer_count, m.created_at, s.subscription_started_at,
+         (SELECT COUNT(*) FROM member_follows mf WHERE mf.followed_member_id = m.id) AS follower_count,
+         (SELECT COUNT(*) FROM member_follows mf WHERE mf.follower_member_id = m.id) AS following_count
   FROM members m
   LEFT JOIN member_subscriptions s ON s.member_id = m.id
   WHERE m.account_status = 'active'
@@ -151,6 +162,18 @@ async function findPublicMember(db: D1Database, key: string) {
     )
     .bind(key, numericId)
     .first<MemberDirectoryRow>();
+}
+
+async function relationship(db: D1Database, viewerId: number, targetId: number) {
+  const rows = await db.prepare(`SELECT follower_member_id, followed_member_id FROM member_follows
+    WHERE (follower_member_id = ? AND followed_member_id = ?)
+       OR (follower_member_id = ? AND followed_member_id = ?)`).bind(viewerId, targetId, targetId, viewerId)
+    .all<{ follower_member_id: number; followed_member_id: number }>();
+  const values = rows.results ?? [];
+  return {
+    isFollowing: values.some((row) => row.follower_member_id === viewerId && row.followed_member_id === targetId),
+    followsViewer: values.some((row) => row.follower_member_id === targetId && row.followed_member_id === viewerId),
+  };
 }
 
 async function readNote(db: D1Database, ownerId: number, targetId: number) {
@@ -209,7 +232,9 @@ export async function handleMemberDirectoryRequest(
 ): Promise<Response | null> {
   const pathname = new URL(request.url).pathname;
   const match = MEMBER_PATH.exec(pathname);
-  if (pathname !== DIRECTORY_ENDPOINT && pathname !== SELF_PROFILE_ENDPOINT && !match) return null;
+  const followMatch = FOLLOW_PATH.exec(pathname);
+  const socialMatch = SOCIAL_PATH.exec(pathname);
+  if (pathname !== DIRECTORY_ENDPOINT && pathname !== SELF_PROFILE_ENDPOINT && !match && !followMatch && !socialMatch) return null;
   if (!env.DB) return responseJson({ error: "データベースに接続できません" }, 503);
   const viewer = await authenticatedRequestMember(request, env);
   if (!viewer) return responseJson({ error: "ログインが必要です" }, 401);
@@ -224,7 +249,42 @@ export async function handleMemberDirectoryRequest(
     const rows = await env.DB.prepare(
       `${publicMemberSelect} ORDER BY m.display_name COLLATE NOCASE, m.id`,
     ).all<MemberDirectoryRow>();
-    return responseJson({ members: (rows.results ?? []).map(publicMemberFromRow) });
+    const followRows = await env.DB.prepare(`SELECT follower_member_id, followed_member_id FROM member_follows
+      WHERE follower_member_id = ? OR followed_member_id = ?`).bind(viewer.id, viewer.id)
+      .all<{ follower_member_id: number; followed_member_id: number }>();
+    const viewerFollowing = new Set((followRows.results ?? []).filter((row) => row.follower_member_id === viewer.id).map((row) => row.followed_member_id));
+    const viewerFollowers = new Set((followRows.results ?? []).filter((row) => row.followed_member_id === viewer.id).map((row) => row.follower_member_id));
+    return responseJson({ members: (rows.results ?? []).map((row) => publicMemberFromRow(row, {
+      isFollowing: viewerFollowing.has(row.id), followsViewer: viewerFollowers.has(row.id),
+    })) });
+  }
+
+  if (followMatch || socialMatch) {
+    const key = decodeURIComponent((followMatch ?? socialMatch)![1]);
+    const target = await findPublicMember(env.DB, key);
+    if (!target) return responseJson({ error: "メンバーが見つかりません" }, 404);
+    if (followMatch) {
+      if (viewer.id === target.id) return responseJson({ error: "自分自身はフォローできません" }, 400);
+      const now = new Date().toISOString();
+      if (request.method === "PUT") await env.DB.prepare(`INSERT OR IGNORE INTO member_follows
+        (follower_member_id, followed_member_id, created_at) VALUES (?, ?, ?)`).bind(viewer.id, target.id, now).run();
+      else if (request.method === "DELETE") await env.DB.prepare(`DELETE FROM member_follows
+        WHERE follower_member_id = ? AND followed_member_id = ?`).bind(viewer.id, target.id).run();
+      else return responseJson({ error: "method_not_allowed" }, 405);
+      await env.DB.prepare(`INSERT INTO audit_logs (actor_user_id, action, entity_type, entity_id, metadata_json, created_at)
+        VALUES (?, ?, 'member', ?, '{}', ?)`).bind(viewer.id, request.method === "PUT" ? "member.followed" : "member.unfollowed", String(target.id), now).run();
+      const current = await findPublicMember(env.DB, key);
+      return responseJson({ member: publicMemberFromRow(current!, await relationship(env.DB, viewer.id, target.id)) });
+    }
+    if (request.method !== "GET") return responseJson({ error: "method_not_allowed" }, 405);
+    const direction = socialMatch![2];
+    const socialRows = await env.DB.prepare(`${publicMemberSelect} AND m.id IN (
+      SELECT ${direction === "followers" ? "follower_member_id" : "followed_member_id"} FROM member_follows
+      WHERE ${direction === "followers" ? "followed_member_id" : "follower_member_id"} = ?)
+      ORDER BY m.display_name COLLATE NOCASE`).bind(target.id).all<MemberDirectoryRow>();
+    const members = [];
+    for (const row of socialRows.results ?? []) members.push(publicMemberFromRow(row, await relationship(env.DB, viewer.id, row.id)));
+    return responseJson({ members });
   }
 
   const key = decodeURIComponent(match![1]);
@@ -240,5 +300,5 @@ export async function handleMemberDirectoryRequest(
   }
 
   if (request.method !== "GET") return responseJson({ error: "method_not_allowed" }, 405);
-  return responseJson({ member: publicMemberFromRow(member) });
+  return responseJson({ member: publicMemberFromRow(member, await relationship(env.DB, viewer.id, member.id)) });
 }

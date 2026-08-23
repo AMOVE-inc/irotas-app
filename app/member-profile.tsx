@@ -49,6 +49,7 @@ export default function MemberProfileScreen() {
   const [selfAvatar, setSelfAvatar] = useState<string | null>(null);
   const [privateNote, setPrivateNote] = useState("");
   const [socialList, setSocialList] = useState<"followers" | "following" | null>(null);
+  const [followSaving, setFollowSaving] = useState(false);
 
   useEffect(() => {
     if (!id || !authUser) { setDatabaseMember(null); setDatabaseLookupComplete(true); return; }
@@ -159,6 +160,19 @@ export default function MemberProfileScreen() {
     }
   };
 
+  const handleToggleFollow = async () => {
+    if (!databaseMember || followSaving) return;
+    setFollowSaving(true);
+    try {
+      const updated = await Api.setMemberFollow(databaseMember.id, !databaseMember.isFollowing);
+      setDatabaseMember(updated);
+    } catch (error) {
+      Alert.alert("フォロー設定を変更できませんでした", error instanceof Error ? error.message : "もう一度お試しください。");
+    } finally {
+      setFollowSaving(false);
+    }
+  };
+
   return (
     <ScreenContainer edges={["top", "left", "right"]}>
       {/* Header */}
@@ -264,24 +278,15 @@ export default function MemberProfileScreen() {
 
           {/* DM Button */}
           {!isSelf && (
-            <Pressable
-              onPress={handleStartDM}
-              style={{
-                marginTop: 16,
-                backgroundColor: "#E8A0BF",
-                borderRadius: 22,
-                paddingHorizontal: 28,
-                paddingVertical: 11,
-                flexDirection: "row",
-                alignItems: "center",
-                gap: 8,
-              }}
-            >
-              <IconSymbol name="message.fill" size={16} color="#FFF" />
-              <Text style={{ fontSize: 14, fontWeight: "700", color: "#FFF" }}>
-                メッセージを送る
-              </Text>
-            </Pressable>
+            <View style={{ flexDirection: "row", gap: 8, marginTop: 16 }}>
+              <Pressable onPress={() => void handleToggleFollow()} disabled={!databaseMember || followSaving} style={{ borderRadius: 22, paddingHorizontal: 22, paddingVertical: 11, borderWidth: 1, borderColor: "#E8A0BF", backgroundColor: databaseMember?.isFollowing ? "#FFF" : "#E8A0BF" }}>
+                <Text style={{ fontSize: 14, fontWeight: "800", color: databaseMember?.isFollowing ? "#C05B88" : "#FFF" }}>{followSaving ? "更新中" : databaseMember?.isFollowing ? "フォロー中" : "フォローする"}</Text>
+              </Pressable>
+              <Pressable onPress={handleStartDM} style={{ backgroundColor: "#5D5C74", borderRadius: 22, paddingHorizontal: 22, paddingVertical: 11, flexDirection: "row", alignItems: "center", gap: 7 }}>
+                <IconSymbol name="message.fill" size={16} color="#FFF" />
+                <Text style={{ fontSize: 14, fontWeight: "700", color: "#FFF" }}>メッセージ</Text>
+              </Pressable>
+            </View>
           )}
         </View>
 
@@ -289,8 +294,8 @@ export default function MemberProfileScreen() {
           {[
             { label: "参加回数", value: member.participationCount ?? Math.round(member.points / 35) },
             { label: "幹事回数", value: member.organizerCount ?? (member.role === "admin" ? 4 : 1) },
-            { label: "フォロワー", value: 0, social: "followers" as const },
-            { label: "フォロー", value: 0, social: "following" as const },
+            { label: "フォロワー", value: databaseMember?.followerCount ?? 0, social: "followers" as const },
+            { label: "フォロー", value: databaseMember?.followingCount ?? 0, social: "following" as const },
           ].map((stat, index) => <Pressable disabled={!('social' in stat)} onPress={() => 'social' in stat && stat.social ? setSocialList(stat.social) : undefined} key={stat.label} style={{ flex: 1, alignItems: "center", borderLeftWidth: index ? 0.5 : 0, borderLeftColor: colors.border }}><Text style={{ fontSize: 18, fontWeight: "900", color: colors.foreground }}>{stat.value}</Text><Text style={{ fontSize: 10, color: 'social' in stat ? "#C05B88" : colors.muted, marginTop: 3 }}>{stat.label}</Text></Pressable>)}
         </View>
 
@@ -473,7 +478,7 @@ export default function MemberProfileScreen() {
           })()}
         </View>
       </ScrollView>
-      <SocialMemberListModal visible={socialList !== null} kind={socialList ?? "followers"} onClose={() => setSocialList(null)} />
+      <SocialMemberListModal visible={socialList !== null} kind={socialList ?? "followers"} memberId={databaseMember?.id ?? member.id} onClose={() => setSocialList(null)} />
     </ScreenContainer>
   );
 }

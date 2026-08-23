@@ -42,6 +42,7 @@ class ChatDatabase implements D1Database {
     const statement: D1PreparedStatement = {
       bind: (...next) => { values = next; return statement; },
       first: async <T>() => {
+        if (sql.includes("SELECT COUNT(*) AS count FROM member_follows")) return { count: 2 } as T;
         if (sql.includes("FROM members WHERE account_status = 'active'")) {
           return (this.members.find((member) => member.public_member_id === values[0] || member.id === Number(values[1])) ?? null) as T;
         }

@@ -33,6 +33,16 @@ describe("member directory privacy", () => {
     expect(member).not.toHaveProperty("squareCustomerId");
     expect(member).not.toHaveProperty("discordUserId");
   });
+
+  it("exposes only relationship state needed by member-facing screens", () => {
+    const member = publicMemberFromRow({
+      id: 12, public_member_id: "IRO0012", display_name: "友達", access_role: "member",
+      branches_json: "[]", member_term: null, member_rank: "regular", achievement_badges_json: "[]",
+      discord_joined_at: null, profile_json: "{}", xp: 0, participation_count: 0, organizer_count: 0,
+      created_at: "2026-01-01", subscription_started_at: null, follower_count: 2, following_count: 3,
+    }, { isFollowing: true, followsViewer: true });
+    expect(member).toMatchObject({ followerCount: 2, followingCount: 3, isFollowing: true, followsViewer: true, isFriend: true });
+  });
 });
 
 describe("member profile updates", () => {

@@ -807,11 +807,19 @@ export default function ProfileScreen() {
   const [profileInterests, setProfileInterests] = useState<string[]>([]);
   const [profileDetails, setProfileDetails] = useState<ProfileDetails>(profileDetailsFromRecord({}));
   const [memberId, setMemberId] = useState<string>("");
+  const [socialStats, setSocialStats] = useState({ followers: 0, following: 0 });
   useEffect(() => {
     if (authUser?.memberId) setMemberId(authUser.memberId);
     else if (memberIdentity?.memberId) setMemberId(memberIdentity.memberId);
     if (memberIdentity?.displayName) setProfileName((current) => current || memberIdentity.displayName || "");
   }, [authUser?.memberId, memberIdentity]);
+  useEffect(() => {
+    if (!isRealMember || !authUser) return;
+    void Api.getMemberDirectory().then((members) => {
+      const self = members.find((member) => member.userId === authUser.id);
+      if (self) setSocialStats({ followers: self.followerCount, following: self.followingCount });
+    }).catch(() => {});
+  }, [authUser, isRealMember]);
   // イロタスポイント
   const [irotasPoints, setIrotasPoints] = useState(0);
   const [feeExempt, setFeeExempt] = useState(false);
@@ -1051,8 +1059,8 @@ export default function ProfileScreen() {
           {[
             { label: "参加回数", value: user.participationCount ?? 0 },
             { label: "幹事回数", value: user.organizerCount ?? 0 },
-            { label: "フォロワー", value: 0, social: "followers" as const },
-            { label: "フォロー", value: 0, social: "following" as const },
+            { label: "フォロワー", value: socialStats.followers, social: "followers" as const },
+            { label: "フォロー", value: socialStats.following, social: "following" as const },
           ].map((stat, index) => <Pressable disabled={!('social' in stat)} onPress={() => 'social' in stat && stat.social ? setSocialList(stat.social) : undefined} key={stat.label} style={{ flex: 1, alignItems: "center", borderLeftWidth: index ? 0.5 : 0, borderLeftColor: colors.border }}><Text style={{ fontSize: 19, fontWeight: "900", color: colors.foreground }}>{stat.value}</Text><Text style={{ fontSize: 10, color: 'social' in stat ? "#C05B88" : colors.muted, marginTop: 3 }}>{stat.label}</Text></Pressable>)}
         </View>
 
@@ -1414,7 +1422,7 @@ export default function ProfileScreen() {
         serverBacked={isRealMember}
         onServerSaved={refreshAuthUser}
       />
-      <SocialMemberListModal visible={socialList !== null} kind={socialList ?? "followers"} onClose={() => setSocialList(null)} />
+      <SocialMemberListModal visible={socialList !== null} kind={socialList ?? "followers"} memberId={memberId || undefined} onClose={() => setSocialList(null)} />
     </ScreenContainer>
   );
 }

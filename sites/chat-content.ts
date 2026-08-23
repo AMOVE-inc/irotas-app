@@ -83,6 +83,14 @@ async function roomById(db: D1Database, roomId: string) {
     .bind(roomId).first<RoomRow>();
 }
 
+async function mutualFriends(db: D1Database, memberId: number, targetId: number) {
+  const row = await db.prepare(`SELECT COUNT(*) AS count FROM member_follows
+    WHERE (follower_member_id = ? AND followed_member_id = ?)
+       OR (follower_member_id = ? AND followed_member_id = ?)`).bind(memberId, targetId, targetId, memberId)
+    .first<{ count: number }>();
+  return Number(row?.count ?? 0) === 2;
+}
+
 async function ensureEventRoom(db: D1Database, roomId: string) {
   const event = await db.prepare(`SELECT id, title, organizer_member_id
     FROM events
@@ -330,6 +338,12 @@ export async function handleChatContentRequest(
       return json({ error: "DMの相手を1人指定してください" }, 400);
     if (type === "group" && targets.length < 2)
       return json({ error: "グループには2人以上招待してください" }, 400);
+    if (type === "group") {
+      for (const target of targets) {
+        if (!await mutualFriends(env.DB, member.id, target.id))
+          return json({ error: "グループには相互フォローの友達だけを招待できます" }, 403);
+      }
+    }
 
     if (type === "dm") {
       const pair = [member.id, targets[0].id].sort((a, b) => a - b).join(":");
@@ -405,6 +419,8 @@ export async function handleChatContentRequest(
     const input = await readBody(request);
     const target = typeof input?.memberId === "string" ? await memberByPublicId(env.DB, input.memberId) : null;
     if (!target) return json({ error: "メンバーが見つかりません" }, 404);
+    if (room.room_type === "group" && !await mutualFriends(env.DB, member.id, target.id))
+      return json({ error: "グループには相互フォローの友達だけを招待できます" }, 403);
     const now = new Date().toISOString();
     await env.DB.prepare(`INSERT INTO chat_room_members
       (room_id, member_id, member_role, joined_at, left_at) VALUES (?, ?, 'member', ?, NULL)

@@ -78,7 +78,7 @@ function CreateFriendGroupModal({ visible, onClose, onCreated }: { visible: bool
   useEffect(() => {
     if (!visible) return;
     void Api.getMemberDirectory()
-      .then((items) => setMembers(items.filter((item) => item.id !== viewerMemberId)))
+      .then((items) => setMembers(items.filter((item) => item.id !== viewerMemberId && item.isFriend)))
       .catch(() => setError("メンバー一覧を読み込めませんでした"));
   }, [viewerMemberId, visible]);
 
@@ -121,7 +121,7 @@ function CreateFriendGroupModal({ visible, onClose, onCreated }: { visible: bool
             style={{ backgroundColor: colors.surface, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: colors.foreground, borderWidth: 1, borderColor: colors.border }}
           />
           <Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground, marginTop: 20 }}>招待するメンバー</Text>
-          <Text style={{ fontSize: 12, lineHeight: 18, color: colors.muted, marginTop: 4, marginBottom: 8 }}>2人以上選択してください。作成後もメンバーを追加・削除できます。</Text>
+          <Text style={{ fontSize: 12, lineHeight: 18, color: colors.muted, marginTop: 4, marginBottom: 8 }}>相互フォローの友達から2人以上選択してください。作成後も友達を追加・削除できます。</Text>
           {members.map((friend) => {
             const selected = selectedIds.includes(friend.id);
             return (
@@ -141,6 +141,7 @@ function CreateFriendGroupModal({ visible, onClose, onCreated }: { visible: bool
               </Pressable>
             );
           })}
+          {!members.length && !error ? <Text style={{ fontSize: 13, color: colors.muted, textAlign: "center", paddingVertical: 30 }}>相互フォローの友達がまだいません。メンバープロフィールからお互いにフォローすると表示されます。</Text> : null}
           {error ? <Text style={{ fontSize: 13, color: colors.error, marginTop: 12 }}>{error}</Text> : null}
         </ScrollView>
       </View>

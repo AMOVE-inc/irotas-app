@@ -46,6 +46,11 @@ export type PublicMember = {
   xp: number;
   participationCount: number;
   organizerCount: number;
+  followerCount: number;
+  followingCount: number;
+  isFollowing: boolean;
+  followsViewer: boolean;
+  isFriend: boolean;
 };
 
 export type OperatorMember = {
@@ -531,6 +536,18 @@ export async function updateMyProfile(input: {
     "/api/members/me/profile",
     { method: "PATCH", body: JSON.stringify(input) },
   );
+}
+
+export async function setMemberFollow(memberId: string, following: boolean) {
+  const result = await apiCall<{ member: PublicMember }>(`/api/members/${encodeURIComponent(memberId)}/follow`, {
+    method: following ? "PUT" : "DELETE",
+  });
+  return result.member;
+}
+
+export async function getMemberSocialList(memberId: string, kind: "followers" | "following") {
+  const result = await apiCall<{ members: PublicMember[] }>(`/api/members/${encodeURIComponent(memberId)}/${kind}`);
+  return result.members;
 }
 
 export async function getPrivateMemberNote(memberId: string) {

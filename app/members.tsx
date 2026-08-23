@@ -42,7 +42,7 @@ export default function MembersScreen() {
     rank: normalizeRank(member.memberRank),
     accessRole: member.accessRole,
     generation: Number(member.memberTerm?.match(/\d+/)?.[0] ?? 0),
-    avatar: DEFAULT_AVATAR,
+    avatar: typeof member.profile.avatarUrl === "string" ? { uri: member.profile.avatarUrl } : DEFAULT_AVATAR,
     bio: typeof member.profile.bio === "string" ? member.profile.bio : "",
     joinedAt: member.joinedAt,
     isCurrentUser: member.userId === authUser?.id,
