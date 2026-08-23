@@ -60,6 +60,26 @@ export type OperatorMember = {
   memberTerm: string | null;
 };
 
+export type SystemAuditLog = {
+  id: number;
+  actor_user_id: string | null;
+  actor_name: string | null;
+  action: string;
+  entity_type: string;
+  entity_id: string | null;
+  created_at: string;
+};
+
+export type ApplicationErrorLog = {
+  id: number;
+  request_id: string;
+  method: string;
+  path: string;
+  error_name: string;
+  error_message: string;
+  created_at: string;
+};
+
 export type ClubApplicationRecord = {
   memberId: string;
   wantsToDo: string;
@@ -584,6 +604,14 @@ export async function updateOperatorMemberTerm(userId: number, memberTerm: strin
     { method: "PATCH", body: JSON.stringify({ memberTerm }) },
   );
   return result.operator;
+}
+
+export async function getSystemMonitoring() {
+  return apiCall<{
+    generatedAt: string;
+    auditLogs: SystemAuditLog[];
+    applicationErrors: ApplicationErrorLog[];
+  }>("/api/admin/system-monitoring");
 }
 
 export async function getMemberProfile(memberId: string) {

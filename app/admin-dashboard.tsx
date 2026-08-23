@@ -42,10 +42,13 @@ import { loadImportedGourmetContests, type ImportedGourmetContest } from "@/lib/
 import {
   getMembershipSummary,
   getOperatorMembers,
+  getSystemMonitoring,
   syncSquareSubscriptions,
   updateOperatorMemberTerm,
   type MembershipSummary,
   type OperatorMember,
+  type SystemAuditLog,
+  type ApplicationErrorLog,
 } from "@/lib/_core/api";
 
 type PointsHistoryEntry = {
@@ -69,7 +72,7 @@ export default function AdminDashboardScreen() {
   const clubs = useClubs();
 
   // すべての state を条件分岐の外で定義
-  const [activeTab, setActiveTab] = useState<"overview" | "operators" | "members" | "events" | "contests" | "clubs" | "payments" | "emails" | "announcements" | "coupons" | "analytics">(tab === "coupons" ? "coupons" : tab === "contests" ? "contests" : tab === "operators" ? "operators" : "overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "monitoring" | "operators" | "members" | "events" | "contests" | "clubs" | "payments" | "emails" | "announcements" | "coupons" | "analytics">(tab === "monitoring" ? "monitoring" : tab === "coupons" ? "coupons" : tab === "contests" ? "contests" : tab === "operators" ? "operators" : "overview");
   const [editingClub, setEditingClub] = useState<Club | null>(null);
   const [paymentRecords, setPaymentRecords] = useState<PaymentRecord[]>([]);
   const [selectedPaymentEventId, setSelectedPaymentEventId] = useState<string | null>(null);
@@ -100,6 +103,9 @@ export default function AdminDashboardScreen() {
   const [operatorTerms, setOperatorTerms] = useState<Record<number, string>>({});
   const [operatorsLoading, setOperatorsLoading] = useState(false);
   const [savingOperatorId, setSavingOperatorId] = useState<number | null>(null);
+  const [auditLogs, setAuditLogs] = useState<SystemAuditLog[]>([]);
+  const [applicationErrors, setApplicationErrors] = useState<ApplicationErrorLog[]>([]);
+  const [monitoringLoading, setMonitoringLoading] = useState(false);
   const loadMembershipSummary = async () => {
     setMembershipSummaryLoading(true);
     try {
@@ -112,6 +118,21 @@ export default function AdminDashboardScreen() {
   };
   useEffect(() => {
     if (userIsAdmin && activeTab === "overview") void loadMembershipSummary();
+  }, [userIsAdmin, activeTab]);
+  const loadSystemMonitoring = async () => {
+    setMonitoringLoading(true);
+    try {
+      const result = await getSystemMonitoring();
+      setAuditLogs(result.auditLogs);
+      setApplicationErrors(result.applicationErrors);
+    } catch (error) {
+      Alert.alert("読み込みエラー", error instanceof Error ? error.message : "監視情報を読み込めませんでした");
+    } finally {
+      setMonitoringLoading(false);
+    }
+  };
+  useEffect(() => {
+    if (userIsAdmin && activeTab === "monitoring") void loadSystemMonitoring();
   }, [userIsAdmin, activeTab]);
   useEffect(() => {
     if (!userIsAdmin || activeTab !== "operators") return;
@@ -498,8 +519,8 @@ export default function AdminDashboardScreen() {
         }}
         style={{ borderBottomWidth: 0.5, borderBottomColor: colors.border, flexGrow: 0 }}
       >
-        {(["overview", "operators", "members", "events", "contests", "clubs", "payments", "emails", "announcements", "coupons", "analytics"] as const).map((tab) => {
-          const labels = { overview: "概要", operators: "運営メンバー", members: "会員", events: "イベント", contests: "グルメ選手権", clubs: "部活動", payments: "支払管理", emails: "承認メール", announcements: "お知らせ", coupons: "クーポン", analytics: "分析" };
+        {(["overview", "monitoring", "operators", "members", "events", "contests", "clubs", "payments", "emails", "announcements", "coupons", "analytics"] as const).map((tab) => {
+          const labels = { overview: "概要", monitoring: "監視ログ", operators: "運営メンバー", members: "会員", events: "イベント", contests: "グルメ選手権", clubs: "部活動", payments: "支払管理", emails: "承認メール", announcements: "お知らせ", coupons: "クーポン", analytics: "分析" };
           return (
             <Pressable
               key={tab}
@@ -526,6 +547,45 @@ export default function AdminDashboardScreen() {
       </ScrollView>
 
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
+        {activeTab === "monitoring" && (
+          <>
+            <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 14 }}>
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontSize: 18, fontWeight: "800", color: colors.foreground }}>監査ログ・エラー監視</Text>
+                <Text style={{ fontSize: 12, lineHeight: 18, color: colors.muted, marginTop: 4 }}>管理者のみ閲覧できます。パスワード・決済情報・送信本文は記録しません。</Text>
+              </View>
+              <Pressable onPress={() => void loadSystemMonitoring()} style={{ borderRadius: 12, backgroundColor: "#E8A0BF", paddingHorizontal: 13, paddingVertical: 9 }}>
+                <Text style={{ color: "#FFF", fontSize: 12, fontWeight: "800" }}>更新</Text>
+              </Pressable>
+            </View>
+            {monitoringLoading ? <ActivityIndicator color="#E8A0BF" style={{ marginVertical: 28 }} /> : (
+              <>
+                <View style={{ backgroundColor: applicationErrors.length ? "#FDECEC" : "#E8F7EC", borderRadius: 14, padding: 14, marginBottom: 18 }}>
+                  <Text style={{ fontSize: 13, fontWeight: "800", color: applicationErrors.length ? "#B42318" : "#237A3B" }}>
+                    {applicationErrors.length ? `未処理エラー記録 ${applicationErrors.length}件` : "未処理エラー記録はありません"}
+                  </Text>
+                  <Text style={{ fontSize: 11, lineHeight: 17, color: colors.muted, marginTop: 4 }}>直近100件を表示します。問い合わせ時は確認IDで照合できます。</Text>
+                </View>
+                {applicationErrors.length > 0 && <Text style={{ fontSize: 15, fontWeight: "800", color: colors.foreground, marginBottom: 8 }}>アプリケーションエラー</Text>}
+                {applicationErrors.map((entry) => (
+                  <View key={entry.id} style={{ backgroundColor: colors.surface, borderRadius: 12, borderWidth: 1, borderColor: "#F1C7C7", padding: 12, marginBottom: 8 }}>
+                    <Text style={{ fontSize: 13, fontWeight: "800", color: "#B42318" }}>{entry.method} {entry.path}</Text>
+                    <Text style={{ fontSize: 12, color: colors.foreground, marginTop: 4 }}>{entry.error_name}: {entry.error_message}</Text>
+                    <Text style={{ fontSize: 10, color: colors.muted, marginTop: 6 }}>確認ID {entry.request_id} ・ {new Date(entry.created_at).toLocaleString("ja-JP")}</Text>
+                  </View>
+                ))}
+                <Text style={{ fontSize: 15, fontWeight: "800", color: colors.foreground, marginTop: 10, marginBottom: 8 }}>重要操作の監査ログ</Text>
+                {auditLogs.length === 0 ? <Text style={{ color: colors.muted }}>監査ログはありません。</Text> : auditLogs.map((entry) => (
+                  <View key={entry.id} style={{ backgroundColor: colors.surface, borderRadius: 12, borderWidth: 1, borderColor: colors.border, padding: 12, marginBottom: 8 }}>
+                    <Text style={{ fontSize: 13, fontWeight: "800", color: colors.foreground }}>{entry.action}</Text>
+                    <Text style={{ fontSize: 11, color: colors.muted, marginTop: 4 }}>{entry.actor_name ?? `ユーザー ${entry.actor_user_id ?? "システム"}`} ・ {entry.entity_type}{entry.entity_id ? ` / ${entry.entity_id}` : ""}</Text>
+                    <Text style={{ fontSize: 10, color: colors.muted, marginTop: 4 }}>{new Date(entry.created_at).toLocaleString("ja-JP")}</Text>
+                  </View>
+                ))}
+              </>
+            )}
+          </>
+        )}
         {activeTab === "overview" && (
           <>
             <View

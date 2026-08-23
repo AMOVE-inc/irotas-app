@@ -20,6 +20,10 @@ import { handleChatContentRequest } from "./chat-content";
 import { handleBenefitsRequest } from "./benefits";
 import { handleHomeAutomationRequest, runEventAutomation } from "./home-automation";
 import { handleXpRequest } from "./xp";
+import {
+  handleSystemMonitoringRequest,
+  recordApplicationError,
+} from "./system-monitoring";
 
 type CommunitySubmission = {
   reportId: string;
@@ -258,6 +262,8 @@ async function routeRequest(
   if (memberImportResponse) return memberImportResponse;
   const operatorManagementResponse = await handleOperatorManagementRequest(request, env);
   if (operatorManagementResponse) return operatorManagementResponse;
+  const systemMonitoringResponse = await handleSystemMonitoringRequest(request, env);
+  if (systemMonitoringResponse) return systemMonitoringResponse;
   const memberHistoryImportResponse = await handleMemberHistoryImportRequest(request, env);
   if (memberHistoryImportResponse) return memberHistoryImportResponse;
   const memberDirectoryResponse = await handleMemberDirectoryRequest(request, env);
@@ -462,7 +468,26 @@ async function routeRequest(
 
 export default {
   async fetch(request: Request, env: SitesEnv): Promise<Response> {
-    return withSecurityHeaders(await routeRequest(request, env), request);
+    const requestId = crypto.randomUUID();
+    try {
+      const response = withSecurityHeaders(await routeRequest(request, env), request);
+      const headers = new Headers(response.headers);
+      headers.set("x-request-id", requestId);
+      return new Response(response.body, {
+        status: response.status,
+        statusText: response.statusText,
+        headers,
+      });
+    } catch (error) {
+      await recordApplicationError(env.DB, request, requestId, error);
+      const response = withSecurityHeaders(
+        apiError(`サーバーエラーが発生しました（確認ID: ${requestId}）`, 500),
+        request,
+      );
+      const headers = new Headers(response.headers);
+      headers.set("x-request-id", requestId);
+      return new Response(response.body, { status: 500, headers });
+    }
   },
   async scheduled(_controller: unknown, env: SitesEnv): Promise<void> {
     if (env.DB) await runEventAutomation(env.DB);
