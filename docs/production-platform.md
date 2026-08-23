@@ -41,3 +41,5 @@
 
 - [APIキー・Secrets ローテーション手順](./operations/secret-rotation-runbook.md)
 - [個人情報・決済・権限 最終レビュー](./operations/final-security-review.md)
+- [バックアップ復元訓練](./operations/backup-restore-drill.md)
+- [本番最終移行・更新凍結](./operations/final-migration-freeze.md)
