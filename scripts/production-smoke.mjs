@@ -9,6 +9,7 @@ export const DEFAULT_CHECKS = [
     expectedStatus: 200,
   })),
   { kind: "health", path: "/api/platform/health", expectedStatus: 200 },
+  { kind: "protected", path: "/api/admin/backup-readiness", expectedStatus: 401 },
   { kind: "protected", path: "/api/admin/member-import/reconciliation", expectedStatus: 401 },
   { kind: "protected", path: "/api/chats", expectedStatus: 401 },
   { kind: "protected", path: "/api/board/content?category=free-chat", expectedStatus: 401 },

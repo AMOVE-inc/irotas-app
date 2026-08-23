@@ -19,6 +19,9 @@ describe("production smoke monitor", () => {
     const report = await runProductionSmoke({ baseUrl: "https://example.test", fetchImpl });
     expect(report.ok).toBe(true);
     expect(report.passed).toBe(DEFAULT_CHECKS.length);
+    expect(report.results).toEqual(expect.arrayContaining([
+      expect.objectContaining({ path: "/api/admin/backup-readiness", status: 401, ok: true }),
+    ]));
     expect(report.results.every((result: { ok: boolean }) => result.ok)).toBe(true);
   });
 
