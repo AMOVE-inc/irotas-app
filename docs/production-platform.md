@@ -39,6 +39,7 @@
 
 ## 運用手順
 
+- [公開後監視・本番スモークテスト](./operations/production-monitoring.md)
 - [運用・障害報告・問い合わせ対応手順](./operations/incident-support-runbook.md)
 - [既存会員への登録・移行案内](./operations/existing-member-migration-guide.md)
 - [APIキー・Secrets ローテーション手順](./operations/secret-rotation-runbook.md)
