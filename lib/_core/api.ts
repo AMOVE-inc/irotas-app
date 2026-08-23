@@ -110,6 +110,33 @@ export type AppNotification = {
   createdAt: string;
 };
 
+export type SharedBoardThread = {
+  id: string;
+  authorId: string;
+  authorName: string;
+  category: string;
+  title: string;
+  content: string;
+  status: "open" | "closed" | "none";
+  pinned: boolean;
+  data: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+  reactions: Record<string, { count: number; reacted: boolean }>;
+};
+
+export type SharedBoardComment = {
+  id: string;
+  threadId: string;
+  authorId: string;
+  authorName: string;
+  content: string;
+  data: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+  reactions: Record<string, { count: number; reacted: boolean }>;
+};
+
 export class ApiError extends Error {
   constructor(
     message: string,
@@ -211,6 +238,79 @@ export async function exchangeOAuthCode(
 export async function logout(): Promise<void> {
   await apiCall<void>("/api/auth/logout", {
     method: "POST",
+  });
+}
+
+export async function getSharedBoardContent(category?: string) {
+  const query = category ? `?category=${encodeURIComponent(category)}` : "";
+  return apiCall<{ threads: SharedBoardThread[]; comments: SharedBoardComment[] }>(
+    `/api/board/content${query}`,
+  );
+}
+
+export async function createSharedBoardThread(input: {
+  category: string;
+  title: string;
+  content: string;
+  status?: "open" | "closed" | "none";
+  data?: Record<string, unknown>;
+}) {
+  return apiCall<{ id: string; createdAt: string }>("/api/board/threads", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+
+export async function createSharedBoardComment(
+  threadId: string,
+  input: { content: string; data?: Record<string, unknown> },
+) {
+  return apiCall<{ id: string; createdAt: string }>(
+    `/api/board/threads/${encodeURIComponent(threadId)}/comments`,
+    { method: "POST", body: JSON.stringify(input) },
+  );
+}
+
+export async function updateSharedBoardThread(
+  threadId: string,
+  input: Partial<Pick<SharedBoardThread, "title" | "content" | "status" | "pinned" | "data">>,
+) {
+  return apiCall<{ success: true; updatedAt: string }>(
+    `/api/board/threads/${encodeURIComponent(threadId)}`,
+    { method: "PATCH", body: JSON.stringify(input) },
+  );
+}
+
+export async function deleteSharedBoardThread(threadId: string) {
+  return apiCall<{ success: true }>(`/api/board/threads/${encodeURIComponent(threadId)}`, {
+    method: "DELETE",
+  });
+}
+
+export async function updateSharedBoardComment(
+  commentId: string,
+  input: { content?: string; data?: Record<string, unknown> },
+) {
+  return apiCall<{ success: true; updatedAt: string }>(
+    `/api/board/comments/${encodeURIComponent(commentId)}`,
+    { method: "PATCH", body: JSON.stringify(input) },
+  );
+}
+
+export async function deleteSharedBoardComment(commentId: string) {
+  return apiCall<{ success: true }>(`/api/board/comments/${encodeURIComponent(commentId)}`, {
+    method: "DELETE",
+  });
+}
+
+export async function setSharedBoardReaction(input: {
+  targetType: "thread" | "comment";
+  targetId: string;
+  emoji: string;
+}, active: boolean) {
+  return apiCall<{ success: true }>("/api/board/reactions", {
+    method: active ? "PUT" : "DELETE",
+    body: JSON.stringify(input),
   });
 }
 
