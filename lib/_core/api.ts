@@ -702,6 +702,28 @@ export type AccountDeletionRequest = {
   scheduledFor: string;
 };
 
+export type AdminAccountDeletionRequest = AccountDeletionRequest & {
+  memberId: number;
+  publicMemberId: string | null;
+  displayName: string;
+  completedAt: string | null;
+};
+
+export async function getAdminAccountDeletionRequests() {
+  const result = await apiCall<{ requests: AdminAccountDeletionRequest[] }>(
+    "/api/admin/account-deletions",
+  );
+  return result.requests;
+}
+
+export async function completeAdminAccountDeletion(requestId: string) {
+  const result = await apiCall<{ request: AdminAccountDeletionRequest }>(
+    `/api/admin/account-deletions/${encodeURIComponent(requestId)}/complete`,
+    { method: "POST", body: JSON.stringify({ confirm: "ANONYMIZE" }) },
+  );
+  return result.request;
+}
+
 export async function getAccountDeletionRequest() {
   return apiCall<{ request: AccountDeletionRequest | null }>(
     "/api/auth/account-deletion",

@@ -24,6 +24,7 @@ import {
   handleSystemMonitoringRequest,
   recordApplicationError,
 } from "./system-monitoring";
+import { handleAccountDeletionAdminRequest } from "./account-deletion-admin";
 
 type CommunitySubmission = {
   reportId: string;
@@ -264,6 +265,8 @@ async function routeRequest(
   if (operatorManagementResponse) return operatorManagementResponse;
   const systemMonitoringResponse = await handleSystemMonitoringRequest(request, env);
   if (systemMonitoringResponse) return systemMonitoringResponse;
+  const accountDeletionAdminResponse = await handleAccountDeletionAdminRequest(request, env);
+  if (accountDeletionAdminResponse) return accountDeletionAdminResponse;
   const memberHistoryImportResponse = await handleMemberHistoryImportRequest(request, env);
   if (memberHistoryImportResponse) return memberHistoryImportResponse;
   const memberDirectoryResponse = await handleMemberDirectoryRequest(request, env);

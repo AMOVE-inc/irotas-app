@@ -44,6 +44,8 @@ import {
   getMemberReconciliationReport,
   getOperatorMembers,
   getSystemMonitoring,
+  getAdminAccountDeletionRequests,
+  completeAdminAccountDeletion,
   syncSquareSubscriptions,
   updateOperatorMemberTerm,
   type MembershipSummary,
@@ -51,6 +53,7 @@ import {
   type OperatorMember,
   type SystemAuditLog,
   type ApplicationErrorLog,
+  type AdminAccountDeletionRequest,
 } from "@/lib/_core/api";
 
 type PointsHistoryEntry = {
@@ -74,7 +77,7 @@ export default function AdminDashboardScreen() {
   const clubs = useClubs();
 
   // すべての state を条件分岐の外で定義
-  const [activeTab, setActiveTab] = useState<"overview" | "monitoring" | "operators" | "members" | "events" | "contests" | "clubs" | "payments" | "emails" | "announcements" | "coupons" | "analytics">(tab === "monitoring" ? "monitoring" : tab === "coupons" ? "coupons" : tab === "contests" ? "contests" : tab === "operators" ? "operators" : "overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "monitoring" | "deletions" | "operators" | "members" | "events" | "contests" | "clubs" | "payments" | "emails" | "announcements" | "coupons" | "analytics">(tab === "monitoring" ? "monitoring" : tab === "deletions" ? "deletions" : tab === "coupons" ? "coupons" : tab === "contests" ? "contests" : tab === "operators" ? "operators" : "overview");
   const [editingClub, setEditingClub] = useState<Club | null>(null);
   const [paymentRecords, setPaymentRecords] = useState<PaymentRecord[]>([]);
   const [selectedPaymentEventId, setSelectedPaymentEventId] = useState<string | null>(null);
@@ -109,6 +112,9 @@ export default function AdminDashboardScreen() {
   const [auditLogs, setAuditLogs] = useState<SystemAuditLog[]>([]);
   const [applicationErrors, setApplicationErrors] = useState<ApplicationErrorLog[]>([]);
   const [monitoringLoading, setMonitoringLoading] = useState(false);
+  const [deletionRequests, setDeletionRequests] = useState<AdminAccountDeletionRequest[]>([]);
+  const [deletionsLoading, setDeletionsLoading] = useState(false);
+  const [completingDeletionId, setCompletingDeletionId] = useState<string | null>(null);
   const loadMembershipSummary = async () => {
     setMembershipSummaryLoading(true);
     try {
@@ -142,6 +148,19 @@ export default function AdminDashboardScreen() {
   };
   useEffect(() => {
     if (userIsAdmin && activeTab === "monitoring") void loadSystemMonitoring();
+  }, [userIsAdmin, activeTab]);
+  const loadDeletionRequests = async () => {
+    setDeletionsLoading(true);
+    try {
+      setDeletionRequests(await getAdminAccountDeletionRequests());
+    } catch (error) {
+      Alert.alert("読み込みエラー", error instanceof Error ? error.message : "削除申請を読み込めませんでした");
+    } finally {
+      setDeletionsLoading(false);
+    }
+  };
+  useEffect(() => {
+    if (userIsAdmin && activeTab === "deletions") void loadDeletionRequests();
   }, [userIsAdmin, activeTab]);
   useEffect(() => {
     if (!userIsAdmin || activeTab !== "operators") return;
@@ -528,8 +547,8 @@ export default function AdminDashboardScreen() {
         }}
         style={{ borderBottomWidth: 0.5, borderBottomColor: colors.border, flexGrow: 0 }}
       >
-        {(["overview", "monitoring", "operators", "members", "events", "contests", "clubs", "payments", "emails", "announcements", "coupons", "analytics"] as const).map((tab) => {
-          const labels = { overview: "概要", monitoring: "監視ログ", operators: "運営メンバー", members: "会員", events: "イベント", contests: "グルメ選手権", clubs: "部活動", payments: "支払管理", emails: "承認メール", announcements: "お知らせ", coupons: "クーポン", analytics: "分析" };
+        {(["overview", "monitoring", "deletions", "operators", "members", "events", "contests", "clubs", "payments", "emails", "announcements", "coupons", "analytics"] as const).map((tab) => {
+          const labels = { overview: "概要", monitoring: "監視ログ", deletions: "退会申請", operators: "運営メンバー", members: "会員", events: "イベント", contests: "グルメ選手権", clubs: "部活動", payments: "支払管理", emails: "承認メール", announcements: "お知らせ", coupons: "クーポン", analytics: "分析" };
           return (
             <Pressable
               key={tab}
@@ -556,6 +575,58 @@ export default function AdminDashboardScreen() {
       </ScrollView>
 
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
+        {activeTab === "deletions" && (
+          <>
+            <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 14 }}>
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontSize: 18, fontWeight: "800", color: colors.foreground }}>退会・アカウント削除申請</Text>
+                <Text style={{ fontSize: 12, lineHeight: 18, color: colors.muted, marginTop: 4 }}>完了するとログインを停止し、プロフィール等の個人情報を匿名化します。Square契約の停止は別途確認してください。</Text>
+              </View>
+              <Pressable onPress={() => void loadDeletionRequests()} style={{ borderRadius: 12, backgroundColor: "#E8A0BF", paddingHorizontal: 13, paddingVertical: 9 }}>
+                <Text style={{ color: "#FFF", fontSize: 12, fontWeight: "800" }}>更新</Text>
+              </Pressable>
+            </View>
+            {deletionsLoading ? <ActivityIndicator color="#E8A0BF" style={{ marginVertical: 28 }} /> : deletionRequests.length === 0 ? (
+              <Text style={{ color: colors.muted, textAlign: "center", marginVertical: 40 }}>削除申請はありません。</Text>
+            ) : deletionRequests.map((item) => (
+              <View key={item.id} style={{ backgroundColor: colors.surface, borderRadius: 14, borderWidth: 1, borderColor: item.status === "pending" ? "#E8A0BF" : colors.border, padding: 14, marginBottom: 10, opacity: item.status === "pending" ? 1 : 0.65 }}>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                  <Text style={{ flex: 1, fontSize: 15, fontWeight: "800", color: colors.foreground }}>{item.displayName}</Text>
+                  <Text style={{ fontSize: 11, fontWeight: "800", color: item.status === "pending" ? "#B42318" : colors.muted }}>{item.status === "pending" ? "処理待ち" : item.status === "completed" ? "完了" : "取消済み"}</Text>
+                </View>
+                <Text style={{ fontSize: 11, color: colors.muted, marginTop: 5 }}>{item.publicMemberId ?? `内部ID ${item.memberId}`}</Text>
+                <Text style={{ fontSize: 11, color: colors.muted, marginTop: 4 }}>申請：{new Date(item.requestedAt).toLocaleString("ja-JP")} ／ 期限：{new Date(item.scheduledFor).toLocaleDateString("ja-JP")}</Text>
+                {item.status === "pending" && (
+                  <Pressable
+                    disabled={completingDeletionId === item.id}
+                    onPress={() => Alert.alert(
+                      "削除・匿名化を完了しますか？",
+                      "この操作は元に戻せません。Squareサブスクリプションの停止状況も別途確認してください。",
+                      [
+                        { text: "キャンセル", style: "cancel" },
+                        { text: "匿名化して完了", style: "destructive", onPress: async () => {
+                          setCompletingDeletionId(item.id);
+                          try {
+                            await completeAdminAccountDeletion(item.id);
+                            await loadDeletionRequests();
+                            Alert.alert("完了", "ログインを停止し、個人情報を匿名化しました。");
+                          } catch (error) {
+                            Alert.alert("処理できませんでした", error instanceof Error ? error.message : "時間をおいて再度お試しください");
+                          } finally {
+                            setCompletingDeletionId(null);
+                          }
+                        } },
+                      ],
+                    )}
+                    style={{ minHeight: 46, borderRadius: 12, backgroundColor: completingDeletionId === item.id ? colors.border : "#B42318", alignItems: "center", justifyContent: "center", marginTop: 12 }}
+                  >
+                    {completingDeletionId === item.id ? <ActivityIndicator color="#FFF" /> : <Text style={{ color: "#FFF", fontSize: 14, fontWeight: "800" }}>削除・匿名化を完了</Text>}
+                  </Pressable>
+                )}
+              </View>
+            ))}
+          </>
+        )}
         {activeTab === "monitoring" && (
           <>
             <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 14 }}>
