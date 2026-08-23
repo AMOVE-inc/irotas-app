@@ -1,6 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import type { MemberRank } from "@/constants/mock-data";
 import { loadImportedDiscordGiftCampaigns } from "@/lib/discord-benefits-import";
+import { applyForSharedGift, deleteSharedGift, getSharedBenefits, runSharedGiftLottery, saveSharedGift } from "./benefits-api";
 
 export type GiftCategory = "gourmet" | "non_gourmet";
 export type GiftStatus = "open" | "closed";
@@ -41,6 +42,11 @@ export const INITIAL_GIFT_CAMPAIGNS: GiftCampaign[] = [
 ];
 
 export async function getGiftCampaigns(): Promise<GiftCampaign[]> {
+  try {
+    const shared = await getSharedBenefits();
+    const sharedIds = new Set(shared.gifts.map((item) => item.id));
+    return [...shared.gifts, ...INITIAL_GIFT_CAMPAIGNS.filter((item) => item.archivedFromDiscord && !sharedIds.has(item.id))];
+  } catch {}
   const raw = await AsyncStorage.getItem(CAMPAIGNS_KEY);
   if (!raw) return INITIAL_GIFT_CAMPAIGNS;
   const saved = (JSON.parse(raw) as GiftCampaign[]).filter((item) => !LEGACY_DISCORD_GIFT_IDS.has(item.id));
@@ -52,15 +58,24 @@ export async function getGiftCampaigns(): Promise<GiftCampaign[]> {
 }
 
 export async function saveGiftCampaigns(campaigns: GiftCampaign[]): Promise<void> {
+  const previous = await getGiftCampaigns();
+  const nextIds = new Set(campaigns.map((item) => item.id));
+  await Promise.all([
+    ...campaigns.filter((item) => !item.archivedFromDiscord).map(saveSharedGift),
+    ...previous.filter((item) => !item.archivedFromDiscord && !nextIds.has(item.id)).map((item) => deleteSharedGift(item.id)),
+  ]);
   await AsyncStorage.setItem(CAMPAIGNS_KEY, JSON.stringify(campaigns));
 }
 
 export async function getGiftApplications(): Promise<GiftApplication[]> {
+  try { return (await getSharedBenefits()).applications; } catch {}
   const raw = await AsyncStorage.getItem(APPLICATIONS_KEY);
   return raw ? (JSON.parse(raw) as GiftApplication[]) : [];
 }
 
 export async function applyForGift(campaignId: string, memberId: string, memberName: string): Promise<GiftApplication[]> {
+  await applyForSharedGift(campaignId);
+  try { return (await getSharedBenefits()).applications; } catch {}
   const applications = await getGiftApplications();
   if (applications.some((item) => item.campaignId === campaignId && item.memberId === memberId)) return applications;
   const next: GiftApplication[] = [{
@@ -76,6 +91,8 @@ export async function applyForGift(campaignId: string, memberId: string, memberN
 }
 
 export async function confirmGiftLottery(campaignId: string, winnerCount: number): Promise<GiftApplication[]> {
+  await runSharedGiftLottery(campaignId);
+  try { return (await getSharedBenefits()).applications; } catch {}
   const applications = await getGiftApplications();
   const candidates = applications
     .filter((item) => item.campaignId === campaignId && item.result === "pending")

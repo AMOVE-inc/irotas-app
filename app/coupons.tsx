@@ -17,9 +17,9 @@ const STATUS_COPY = {
   available: "利用可能",
 } as const;
 
-function CouponCard({ coupon, usage, onOpen }: { coupon: Coupon; usage?: CouponUsage; onOpen: () => void }) {
+function CouponCard({ coupon, usage, onOpen, memberRank, memberId }: { coupon: Coupon; usage?: CouponUsage; onOpen: () => void; memberRank: typeof CURRENT_USER.rank; memberId: string }) {
   const colors = useColors();
-  const availability = getCouponAvailability(coupon, CURRENT_USER.rank, usage, new Date(), CURRENT_USER.id);
+  const availability = getCouponAvailability(coupon, memberRank, usage, new Date(), memberId);
   const canPresent = availability === "available";
 
   return (
@@ -48,10 +48,10 @@ function CouponCard({ coupon, usage, onOpen }: { coupon: Coupon; usage?: CouponU
   );
 }
 
-function CouponDetailModal({ coupon, usage, onClose, onPresent }: { coupon: Coupon | null; usage?: CouponUsage; onClose: () => void; onPresent: (coupon: Coupon) => void }) {
+function CouponDetailModal({ coupon, usage, onClose, onPresent, memberRank, memberId }: { coupon: Coupon | null; usage?: CouponUsage; onClose: () => void; onPresent: (coupon: Coupon) => void; memberRank: typeof CURRENT_USER.rank; memberId: string }) {
   const colors = useColors();
   if (!coupon) return null;
-  const availability = getCouponAvailability(coupon, CURRENT_USER.rank, usage, new Date(), CURRENT_USER.id);
+  const availability = getCouponAvailability(coupon, memberRank, usage, new Date(), memberId);
   const canPresent = availability === "available";
   return <Modal visible animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}><View style={{ flex: 1, backgroundColor: colors.background }}><View style={{ flexDirection: "row", alignItems: "center", padding: 16, borderBottomWidth: 1, borderBottomColor: colors.border }}><Text style={{ flex: 1, fontSize: 18, fontWeight: "900", color: colors.foreground }}>クーポン詳細</Text><Pressable onPress={onClose}><IconSymbol name="xmark" size={22} color={colors.foreground} /></Pressable></View><ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 40 }}>{coupon.imageUrl ? <Image source={{ uri: coupon.imageUrl }} style={{ width: "100%", aspectRatio: 1, borderRadius: 18, opacity: canPresent ? 1 : 0.55 }} contentFit="cover" /> : null}<View style={{ alignSelf: "flex-start", marginTop: 16, borderRadius: 10, paddingHorizontal: 10, paddingVertical: 5, backgroundColor: canPresent ? "#DFF4E6" : "#E1E1E4" }}><Text style={{ fontSize: 11, fontWeight: "900", color: canPresent ? "#247A42" : colors.muted }}>{STATUS_COPY[availability]}</Text></View><Text style={{ fontSize: 23, lineHeight: 31, fontWeight: "900", color: colors.foreground, marginTop: 12 }}>{coupon.title}</Text><Text style={{ fontSize: 28, fontWeight: "900", color: canPresent ? "#E8A0BF" : colors.muted, marginTop: 12 }}>{coupon.discount}</Text><Text style={{ fontSize: 14, lineHeight: 22, color: colors.foreground, marginTop: 14 }}>{coupon.description}</Text><View style={{ marginTop: 18, gap: 5 }}><Text style={{ fontSize: 12, color: colors.muted }}>回数：{coupon.usageType === "single" ? "1回限定" : "期間中何度でも"}</Text><Text style={{ fontSize: 12, color: colors.muted }}>有効期限：{coupon.expiresAt}</Text><Text style={{ fontSize: 12, color: colors.muted }}>最終提示：{formatCouponTimestamp(usage?.lastPresentedAt)}</Text>{usage?.useCount ? <Text style={{ fontSize: 12, color: colors.muted }}>利用回数：{usage.useCount}回</Text> : null}</View>{coupon.sourceContestId === "discord-archive" ? <Text style={{ fontSize: 11, color: colors.muted, marginTop: 6 }}>Discordから移行した過去のクーポンです</Text> : null}<Pressable disabled={!canPresent} onPress={() => onPresent(coupon)} style={{ marginTop: 24, minHeight: 52, borderRadius: 14, backgroundColor: canPresent ? "#E8A0BF" : colors.border, alignItems: "center", justifyContent: "center" }}><Text style={{ color: canPresent ? "#FFF" : colors.muted, fontSize: 15, fontWeight: "900" }}>{canPresent ? "クーポンを提示する" : STATUS_COPY[availability]}</Text></Pressable></ScrollView></View></Modal>;
 }
@@ -91,13 +91,15 @@ export default function CouponsScreen() {
   const colors = useColors();
   const router = useRouter();
   const coupons = useCoupons();
-  const usages = useCouponUsages(CURRENT_USER.id);
+  const memberId = authUser?.memberId ?? String(authUser?.id ?? CURRENT_USER.id);
+  const memberRank = (authUser?.memberRank ?? CURRENT_USER.rank) as typeof CURRENT_USER.rank;
+  const usages = useCouponUsages(memberId);
   const [presentingCoupon, setPresentingCoupon] = useState<Coupon | null>(null);
   const [selectedCoupon, setSelectedCoupon] = useState<Coupon | null>(null);
 
   const handlePresent = async (coupon: Coupon) => {
-    if (getCouponAvailability(coupon, CURRENT_USER.rank, usages[coupon.id], new Date(), CURRENT_USER.id) !== "available") return;
-    await recordCouponPresentation(CURRENT_USER.id, coupon.id);
+    if (getCouponAvailability(coupon, memberRank, usages[coupon.id], new Date(), memberId) !== "available") return;
+    await recordCouponPresentation(memberId, coupon.id);
     setPresentingCoupon(coupon);
   };
 
@@ -105,7 +107,7 @@ export default function CouponsScreen() {
     if (!presentingCoupon) return;
     const coupon = presentingCoupon;
     const complete = async () => {
-      await redeemCoupon(CURRENT_USER.id, coupon);
+      await redeemCoupon(memberId, coupon);
       setPresentingCoupon(null);
       Alert.alert("利用を記録しました", coupon.usageType === "single" ? "このクーポンは使用済みになりました。" : "最新の利用日時を更新しました。");
     };
@@ -119,9 +121,9 @@ export default function CouponsScreen() {
     ]);
   };
 
-  const sortedCoupons = coupons.filter((coupon) => !coupon.recipientIds || coupon.recipientIds.includes(CURRENT_USER.id)).sort((a, b) => {
-    const aAvailable = getCouponAvailability(a, CURRENT_USER.rank, usages[a.id], new Date(), CURRENT_USER.id) === "available";
-    const bAvailable = getCouponAvailability(b, CURRENT_USER.rank, usages[b.id], new Date(), CURRENT_USER.id) === "available";
+  const sortedCoupons = coupons.filter((coupon) => !coupon.recipientIds || coupon.recipientIds.includes(memberId)).sort((a, b) => {
+    const aAvailable = getCouponAvailability(a, memberRank, usages[a.id], new Date(), memberId) === "available";
+    const bAvailable = getCouponAvailability(b, memberRank, usages[b.id], new Date(), memberId) === "available";
     if (aAvailable !== bAvailable) return aAvailable ? -1 : 1;
     return b.expiresAt.localeCompare(a.expiresAt);
   });
@@ -138,14 +140,14 @@ export default function CouponsScreen() {
         ) : null}
       </View>
       <ScrollView contentContainerStyle={{ paddingTop: 12, paddingBottom: 30 }}>
-        <View style={{ marginHorizontal: 16, marginBottom: 14, backgroundColor: RANK_COLORS[CURRENT_USER.rank] + "15", borderRadius: 12, padding: 14, flexDirection: "row", alignItems: "center" }}>
-          <IconSymbol name="crown.fill" size={20} color={RANK_COLORS[CURRENT_USER.rank]} />
-          <Text style={{ fontSize: 14, color: colors.foreground, marginLeft: 8 }}>あなたは <Text style={{ fontWeight: "800", color: RANK_COLORS[CURRENT_USER.rank] }}>{RANK_LABELS[CURRENT_USER.rank]}会員</Text> です</Text>
+        <View style={{ marginHorizontal: 16, marginBottom: 14, backgroundColor: RANK_COLORS[memberRank] + "15", borderRadius: 12, padding: 14, flexDirection: "row", alignItems: "center" }}>
+          <IconSymbol name="crown.fill" size={20} color={RANK_COLORS[memberRank]} />
+          <Text style={{ fontSize: 14, color: colors.foreground, marginLeft: 8 }}>あなたは <Text style={{ fontWeight: "800", color: RANK_COLORS[memberRank] }}>{RANK_LABELS[memberRank]}会員</Text> です</Text>
         </View>
-        {sortedCoupons.map((coupon) => <CouponCard key={coupon.id} coupon={coupon} usage={usages[coupon.id]} onOpen={() => setSelectedCoupon(coupon)} />)}
+        {sortedCoupons.map((coupon) => <CouponCard key={coupon.id} coupon={coupon} usage={usages[coupon.id]} memberRank={memberRank} memberId={memberId} onOpen={() => setSelectedCoupon(coupon)} />)}
       </ScrollView>
       <PresentCouponModal coupon={presentingCoupon} onClose={() => setPresentingCoupon(null)} onRedeem={handleRedeem} />
-      <CouponDetailModal coupon={selectedCoupon} usage={selectedCoupon ? usages[selectedCoupon.id] : undefined} onClose={() => setSelectedCoupon(null)} onPresent={(coupon) => { setSelectedCoupon(null); void handlePresent(coupon); }} />
+      <CouponDetailModal coupon={selectedCoupon} usage={selectedCoupon ? usages[selectedCoupon.id] : undefined} memberRank={memberRank} memberId={memberId} onClose={() => setSelectedCoupon(null)} onPresent={(coupon) => { setSelectedCoupon(null); void handlePresent(coupon); }} />
     </View>
   );
 }

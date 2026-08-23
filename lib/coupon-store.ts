@@ -3,6 +3,7 @@ import { useEffect, useSyncExternalStore } from "react";
 import { COUPONS, type Coupon } from "@/constants/mock-data";
 import type { CouponUsage } from "@/lib/coupon-rules";
 import { loadImportedDiscordCoupons } from "@/lib/discord-benefits-import";
+import { deleteSharedCoupon, getSharedBenefits, saveSharedCoupon, useSharedCoupon } from "./benefits-api";
 
 const CONFIG_KEY = "coupon_usage_types_v1";
 const USAGE_KEY = "coupon_member_usage_v1";
@@ -54,6 +55,13 @@ function ensureHydrated() {
         const ids = new Set(coupons.map((coupon) => coupon.id));
         coupons = [...coupons, ...awarded.filter((coupon) => !ids.has(coupon.id))];
       }
+      return getSharedBenefits().then((shared) => {
+        const sharedIds = new Set(shared.coupons.map((coupon) => coupon.id));
+        coupons = [...shared.coupons, ...IMPORTED_DISCORD_COUPONS.filter((coupon) => !sharedIds.has(coupon.id))];
+        usages = { ...usages, current: shared.usages };
+      }).catch(() => undefined);
+    })
+    .then(() => {
       hydrated = true;
       emitChange();
     })
@@ -81,13 +89,15 @@ export function useCouponUsages(memberId: string): Record<string, CouponUsage> {
   useEffect(() => { void ensureHydrated(); }, []);
   return useSyncExternalStore(
     subscribe,
-    () => usages[memberId] ?? EMPTY_USAGES,
-    () => usages[memberId] ?? EMPTY_USAGES,
+    () => usages[memberId] ?? usages.current ?? EMPTY_USAGES,
+    () => usages[memberId] ?? usages.current ?? EMPTY_USAGES,
   );
 }
 
 export async function updateCouponUsageType(couponId: string, usageType: Coupon["usageType"]) {
   coupons = coupons.map((coupon) => (coupon.id === couponId ? { ...coupon, usageType } : coupon));
+  const coupon = coupons.find((item) => item.id === couponId);
+  if (coupon) await saveSharedCoupon(coupon);
   emitChange();
   await AsyncStorage.setItem(CONFIG_KEY, JSON.stringify(Object.fromEntries(coupons.map((coupon) => [coupon.id, coupon.usageType]))));
 }
@@ -99,12 +109,14 @@ async function saveManagedCoupons() {
 
 export async function createCoupon(coupon: Coupon) {
   await ensureHydrated();
+  await saveSharedCoupon(coupon);
   coupons = [coupon, ...coupons];
   await saveManagedCoupons();
 }
 
 export async function updateCoupon(coupon: Coupon) {
   await ensureHydrated();
+  await saveSharedCoupon(coupon);
   coupons = coupons.map((item) => item.id === coupon.id ? coupon : item);
   await saveManagedCoupons();
 }
@@ -112,11 +124,14 @@ export async function updateCoupon(coupon: Coupon) {
 export async function setCouponStatus(couponId: string, status: "active" | "ended") {
   await ensureHydrated();
   coupons = coupons.map((item) => item.id === couponId ? { ...item, status } : item);
+  const coupon = coupons.find((item) => item.id === couponId);
+  if (coupon) await saveSharedCoupon(coupon);
   await saveManagedCoupons();
 }
 
 export async function deleteCoupon(couponId: string) {
   await ensureHydrated();
+  await deleteSharedCoupon(couponId);
   coupons = coupons.filter((item) => item.id !== couponId);
   await AsyncStorage.setItem(AWARDED_KEY, JSON.stringify(coupons.filter((item) => item.sourceContestId)));
   await saveManagedCoupons();
@@ -132,11 +147,19 @@ async function saveMemberUsage(memberId: string, couponId: string, usage: Coupon
 }
 
 export async function recordCouponPresentation(memberId: string, couponId: string) {
+  const shared = await useSharedCoupon(couponId, "present");
+  usages = { ...usages, [memberId]: { ...(usages[memberId] ?? {}), [couponId]: shared.usage }, current: { ...(usages.current ?? {}), [couponId]: shared.usage } };
+  emitChange();
+  return;
   const current = usages[memberId]?.[couponId] ?? { useCount: 0 };
   await saveMemberUsage(memberId, couponId, { ...current, lastPresentedAt: new Date().toISOString() });
 }
 
 export async function redeemCoupon(memberId: string, coupon: Coupon) {
+  const shared = await useSharedCoupon(coupon.id, "redeem");
+  usages = { ...usages, [memberId]: { ...(usages[memberId] ?? {}), [coupon.id]: shared.usage }, current: { ...(usages.current ?? {}), [coupon.id]: shared.usage } };
+  emitChange();
+  return;
   const current = usages[memberId]?.[coupon.id] ?? { useCount: 0 };
   const now = new Date().toISOString();
   await saveMemberUsage(memberId, coupon.id, {

@@ -247,6 +247,51 @@ export async function apiCall<T>(
   }
 }
 
+export type SharedBenefits = {
+  memberRank: "regular" | "silver" | "gold" | "platinum";
+  coupons: import("@/constants/mock-data").Coupon[];
+  usages: Record<string, import("@/lib/coupon-rules").CouponUsage>;
+  gifts: import("@/lib/gift-campaign-store").GiftCampaign[];
+  applications: import("@/lib/gift-campaign-store").GiftApplication[];
+  points: { balance: number; balances: Record<string, number>; history: Array<Record<string, unknown>> };
+};
+
+export function getSharedBenefits() {
+  return apiCall<SharedBenefits>("/api/benefits");
+}
+
+export function saveSharedCoupon(coupon: import("@/constants/mock-data").Coupon) {
+  return apiCall<{ success: true }>(`/api/benefits/coupons/${encodeURIComponent(coupon.id)}`, { method: "PUT", body: JSON.stringify(coupon) });
+}
+
+export function deleteSharedCoupon(couponId: string) {
+  return apiCall<{ success: true }>(`/api/benefits/coupons/${encodeURIComponent(couponId)}`, { method: "DELETE" });
+}
+
+export function useSharedCoupon(couponId: string, action: "present" | "redeem") {
+  return apiCall<{ success: true; usage: import("@/lib/coupon-rules").CouponUsage }>(`/api/benefits/coupons/${encodeURIComponent(couponId)}/${action}`, { method: "POST" });
+}
+
+export function saveSharedGift(gift: import("@/lib/gift-campaign-store").GiftCampaign) {
+  return apiCall<{ success: true }>(`/api/benefits/gifts/${encodeURIComponent(gift.id)}`, { method: "PUT", body: JSON.stringify(gift) });
+}
+
+export function deleteSharedGift(giftId: string) {
+  return apiCall<{ success: true }>(`/api/benefits/gifts/${encodeURIComponent(giftId)}`, { method: "DELETE" });
+}
+
+export function applyForSharedGift(giftId: string) {
+  return apiCall<{ success: true; alreadyApplied: boolean }>(`/api/benefits/gifts/${encodeURIComponent(giftId)}/apply`, { method: "POST" });
+}
+
+export function runSharedGiftLottery(giftId: string) {
+  return apiCall<{ success: true; winnerIds: string[] }>(`/api/benefits/gifts/${encodeURIComponent(giftId)}/lottery`, { method: "POST" });
+}
+
+export function adjustSharedIrotasPoints(input: { amount: number; reason: string; idempotencyKey: string; memberId?: string }) {
+  return apiCall<{ success: true; balance: number; duplicate?: boolean; transactionId?: string }>("/api/benefits/points/adjust", { method: "POST", body: JSON.stringify(input) });
+}
+
 // OAuth callback handler - exchange code for session token
 // Calls /api/oauth/mobile endpoint which returns JSON with app_session_id and user
 export async function exchangeOAuthCode(

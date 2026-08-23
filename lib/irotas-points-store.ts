@@ -7,6 +7,7 @@
  * - 書き込みはシリアライズして競合・二重消費を防ぐ
  */
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { adjustSharedIrotasPoints, getSharedBenefits } from "./benefits-api";
 
 const IROTAS_POINTS_KEY = "irotas_points_balances";
 const IROTAS_POINTS_HISTORY_KEY = "irotas_points_history";
@@ -46,6 +47,11 @@ function enqueuePointsWrite(fn: () => Promise<void>): Promise<void> {
 export async function getIrotasPointsBalances(): Promise<Record<string, number>> {
   if (balancesCache) return balancesCache;
   try {
+    const shared = await getSharedBenefits();
+    balancesCache = { ...shared.points.balances, current: shared.points.balance };
+    return balancesCache;
+  } catch {}
+  try {
     const raw = await AsyncStorage.getItem(IROTAS_POINTS_KEY);
     balancesCache = raw ? (JSON.parse(raw) as Record<string, number>) : {};
     return balancesCache!;
@@ -57,7 +63,7 @@ export async function getIrotasPointsBalances(): Promise<Record<string, number>>
 /** 特定メンバーのイロタスポイント残高を取得 */
 export async function getIrotasPoints(memberId: string): Promise<number> {
   const balances = await getIrotasPointsBalances();
-  return balances[memberId] ?? 0;
+  return balances[memberId] ?? balances.current ?? 0;
 }
 
 /** イロタスポイントを付与・消費する（シリアライズ済み） */
@@ -66,10 +72,16 @@ export async function adjustIrotasPoints(
   memberName: string,
   amount: number,
   reason: string,
+  idempotencyKey = `client:${memberId}:${Date.now()}:${Math.random().toString(36).slice(2)}`,
 ): Promise<number> {
   let resultBalance = 0;
 
   await enqueuePointsWrite(async () => {
+    const shared = await adjustSharedIrotasPoints({ amount, reason, idempotencyKey, ...(amount > 0 ? { memberId } : {}) });
+    resultBalance = shared.balance;
+    balancesCache = { ...(balancesCache ?? {}), [memberId]: shared.balance, current: shared.balance };
+    historyCache = null;
+    return;
     // キャッシュを無効化して最新データを取得（競合防止）
     balancesCache = null;
     const balances = await getIrotasPointsBalances();
@@ -103,6 +115,18 @@ export async function adjustIrotasPoints(
 /** イロタスポイント変更履歴を取得 */
 export async function getIrotasPointsHistory(): Promise<IrotasPointsHistory[]> {
   if (historyCache) return historyCache;
+  try {
+    const shared = await getSharedBenefits();
+    historyCache = shared.points.history.map((entry) => ({
+      id: String(entry.id),
+      memberId: String(entry.public_member_id ?? `member-${entry.member_id}`),
+      memberName: String(entry.display_name ?? "会員"),
+      amount: Number(entry.amount),
+      reason: String(entry.reason),
+      at: String(entry.created_at),
+    }));
+    return historyCache;
+  } catch {}
   try {
     const raw = await AsyncStorage.getItem(IROTAS_POINTS_HISTORY_KEY);
     historyCache = raw ? (JSON.parse(raw) as IrotasPointsHistory[]) : [];
