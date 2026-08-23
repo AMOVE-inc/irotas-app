@@ -18,6 +18,7 @@ import { handleBoardArchiveRequest } from "./board-archive";
 import { handleBoardContentRequest } from "./board-content";
 import { handleChatContentRequest } from "./chat-content";
 import { handleBenefitsRequest } from "./benefits";
+import { handleHomeAutomationRequest, runEventAutomation } from "./home-automation";
 
 type CommunitySubmission = {
   reportId: string;
@@ -270,6 +271,8 @@ async function routeRequest(
   if (chatContentResponse) return chatContentResponse;
   const benefitsResponse = await handleBenefitsRequest(request, env);
   if (benefitsResponse) return benefitsResponse;
+  const homeAutomationResponse = await handleHomeAutomationRequest(request, env);
+  if (homeAutomationResponse) return homeAutomationResponse;
   const boardArchiveResponse = await handleBoardArchiveRequest(request, env);
   if (boardArchiveResponse) return boardArchiveResponse;
   const eventResponse = await handleEventRequest(request, env);
@@ -457,5 +460,8 @@ async function routeRequest(
 export default {
   async fetch(request: Request, env: SitesEnv): Promise<Response> {
     return withSecurityHeaders(await routeRequest(request, env), request);
+  },
+  async scheduled(_controller: unknown, env: SitesEnv): Promise<void> {
+    if (env.DB) await runEventAutomation(env.DB);
   },
 };

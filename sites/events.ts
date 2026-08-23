@@ -6,6 +6,7 @@ const EVENTS_ENDPOINT = "/api/events";
 const EVENT_PATH = /^\/api\/events\/([^/]+)$/;
 const EVENT_FAVORITE_PATH = /^\/api\/events\/([^/]+)\/favorite$/;
 const EVENT_APPLICATION_PATH = /^\/api\/events\/([^/]+)\/applications$/;
+const EVENT_FINALIZE_PATH = /^\/api\/events\/([^/]+)\/finalize$/;
 const EVENT_PARTICIPANT_PATH = /^\/api\/events\/([^/]+)\/participants\/([^/]+)$/;
 const EVENT_CANCELLATION_PATH = /^\/api\/events\/([^/]+)\/cancellation-requests$/;
 const EVENT_CANCELLATION_REVIEW_PATH = /^\/api\/events\/([^/]+)\/cancellation-requests\/([^/]+)$/;
@@ -337,11 +338,12 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
   const eventMatch = EVENT_PATH.exec(pathname);
   const favoriteMatch = EVENT_FAVORITE_PATH.exec(pathname);
   const applicationMatch = EVENT_APPLICATION_PATH.exec(pathname);
+  const finalizeMatch = EVENT_FINALIZE_PATH.exec(pathname);
   const participantMatch = EVENT_PARTICIPANT_PATH.exec(pathname);
   const cancellationMatch = EVENT_CANCELLATION_PATH.exec(pathname);
   const cancellationReviewMatch = EVENT_CANCELLATION_REVIEW_PATH.exec(pathname);
   const imageMatch = EVENT_IMAGE_PATH.exec(pathname);
-  if (pathname !== EVENTS_ENDPOINT && !eventMatch && !favoriteMatch && !applicationMatch && !participantMatch && !cancellationMatch && !cancellationReviewMatch && !imageMatch && pathname !== "/api/event-images") return null;
+  if (pathname !== EVENTS_ENDPOINT && !eventMatch && !favoriteMatch && !applicationMatch && !finalizeMatch && !participantMatch && !cancellationMatch && !cancellationReviewMatch && !imageMatch && pathname !== "/api/event-images") return null;
   if (!env.DB) return responseJson({ error: "データベースに接続できません" }, 503);
   const member = await authenticatedRequestMember(request, env);
   if (!member) return responseJson({ error: "ログインが必要です" }, 401);
@@ -432,6 +434,40 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
     await audit(env.DB, member.id, "event.application_submitted", id, { status });
     const updated = await eventRow(env.DB, id);
     return responseJson({ event: await hydratedEvent(env.DB, updated!, member.id, elevated, memberPublicId) }, 201);
+  }
+  if (finalizeMatch && request.method === "POST") {
+    const id = decodeURIComponent(finalizeMatch[1]);
+    const row = await eventRow(env.DB, id);
+    if (!row) return responseJson({ error: "イベントが見つかりません" }, 404);
+    if (!(elevated || row.organizer_member_id === member.id)) return responseJson({ error: "幹事または運営メンバーのみ操作できます" }, 403);
+    const pending = await env.DB.prepare("SELECT COUNT(*) AS count FROM event_participations WHERE event_id = ? AND status = 'applied'").bind(id).first<{ count: number }>();
+    if ((pending?.count ?? 0) > 0) return responseJson({ error: "承認待ちの参加申込をすべて確認してください" }, 409);
+    let data: Record<string, unknown> = {};
+    try { data = JSON.parse(row.public_data_json) as Record<string, unknown>; } catch {}
+    if (typeof data.participantsFinalizedAt === "string" && data.participantsFinalizedAt) {
+      return responseJson({ event: await hydratedEvent(env.DB, row, member.id, elevated, memberPublicId) });
+    }
+    const now = new Date().toISOString();
+    const chatId = typeof data.chatId === "string" && data.chatId ? data.chatId : eventChatId(id);
+    data.chatId = chatId;
+    data.participantsFinalizedAt = now;
+    const confirmed = await env.DB.prepare("SELECT member_id FROM event_participations WHERE event_id = ? AND status IN ('confirmed','cancel_requested')").bind(id).all<{ member_id: number }>();
+    await env.DB.batch([
+      env.DB.prepare("UPDATE events SET public_data_json = ?, updated_at = ? WHERE id = ?").bind(JSON.stringify(data), now, id),
+      env.DB.prepare(`INSERT OR IGNORE INTO chat_rooms (id, name, room_type, source_id, created_by_member_id, created_at, updated_at)
+        VALUES (?, ?, 'event', ?, ?, ?, ?)`).bind(chatId, row.title, id, row.organizer_member_id, now, now),
+      env.DB.prepare(`INSERT INTO chat_room_members (room_id, member_id, member_role, joined_at, left_at) VALUES (?, ?, 'owner', ?, NULL)
+        ON CONFLICT(room_id, member_id) DO UPDATE SET member_role = 'owner', left_at = NULL`)
+        .bind(chatId, row.organizer_member_id, now),
+      ...(confirmed.results ?? []).map((participant) => env.DB!.prepare(`INSERT INTO chat_room_members (room_id, member_id, member_role, joined_at, left_at) VALUES (?, ?, 'member', ?, NULL)
+        ON CONFLICT(room_id, member_id) DO UPDATE SET left_at = NULL`)
+        .bind(chatId, participant.member_id, now)),
+      env.DB.prepare(`INSERT INTO audit_logs (actor_user_id, action, entity_type, entity_id, metadata_json, created_at)
+        VALUES (?, 'event.participants_finalized', 'event', ?, ?, ?)`).bind(String(member.id), id, JSON.stringify({ chatId, count: confirmed.results?.length ?? 0 }), now),
+    ]);
+    for (const participant of confirmed.results ?? []) await notifyEventConfirmation(env.DB, participant.member_id, id, row.title);
+    const updated = await eventRow(env.DB, id);
+    return responseJson({ event: await hydratedEvent(env.DB, updated!, member.id, elevated, memberPublicId) });
   }
   if (participantMatch && request.method === "PATCH") {
     const id = decodeURIComponent(participantMatch[1]);

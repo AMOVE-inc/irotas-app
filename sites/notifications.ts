@@ -12,6 +12,7 @@ type NotificationRow = {
   body: string;
   club_id: string | null;
   event_id: string | null;
+  chat_room_id: string | null;
   read_at: string | null;
   created_at: string;
 };
@@ -28,6 +29,7 @@ function serialize(row: NotificationRow) {
     body: row.body,
     clubId: row.club_id,
     eventId: row.event_id,
+    chatRoomId: row.chat_room_id,
     read: Boolean(row.read_at),
     createdAt: row.created_at,
   };
@@ -42,7 +44,7 @@ export async function handleNotificationRequest(request: Request, env: SitesEnv)
   if (!member) return json({ error: "ログインが必要です" }, 401);
 
   if (pathname === NOTIFICATIONS_PATH && request.method === "GET") {
-    const rows = await env.DB.prepare(`SELECT id, type, title, body, club_id, event_id, read_at, created_at
+    const rows = await env.DB.prepare(`SELECT id, type, title, body, club_id, event_id, chat_room_id, read_at, created_at
       FROM in_app_notifications WHERE target_member_id = ?
       ORDER BY created_at DESC LIMIT 100`).bind(member.id).all<NotificationRow>();
     return json({ notifications: (rows.results ?? []).map(serialize) });
@@ -58,7 +60,7 @@ export async function handleNotificationRequest(request: Request, env: SitesEnv)
   if (notificationMatch && request.method === "PATCH") {
     const id = decodeURIComponent(notificationMatch[1]);
     const now = new Date().toISOString();
-    const row = await env.DB.prepare(`SELECT id, type, title, body, club_id, event_id,
+    const row = await env.DB.prepare(`SELECT id, type, title, body, club_id, event_id, chat_room_id,
         COALESCE(read_at, ?) AS read_at, created_at
       FROM in_app_notifications WHERE id = ? AND target_member_id = ? LIMIT 1`)
       .bind(now, id, member.id).first<NotificationRow>();

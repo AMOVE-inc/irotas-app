@@ -588,7 +588,7 @@ export default function HomeScreen() {
     void Api.getNotifications()
       .then((items) => setUnreadNotificationCount(items.filter((item) => !item.read).length))
       .catch(() => setUnreadNotificationCount(0));
-    void Promise.all([getHomeActivities(), getGiftCampaigns(), loadMemberPreferences(CURRENT_USER.id, { residence: CURRENT_USER.residence, favoriteCuisines: CURRENT_USER.favoriteCuisines }), loadMemberAiConsents(CURRENT_USER.id)]).then(([nextActivities, gifts, nextPreferences, nextConsents]) => {
+    void Promise.all([Api.getHomeActivities().catch(() => getHomeActivities()), getGiftCampaigns(), loadMemberPreferences(CURRENT_USER.id, { residence: CURRENT_USER.residence, favoriteCuisines: CURRENT_USER.favoriteCuisines }), loadMemberAiConsents(CURRENT_USER.id)]).then(([nextActivities, gifts, nextPreferences, nextConsents]) => {
       setActivities(nextActivities);
       setPreferences(nextPreferences); setAiConsents(nextConsents);
       const today = new Date().toISOString().slice(0, 10);

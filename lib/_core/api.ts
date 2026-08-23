@@ -658,6 +658,11 @@ export async function getNotifications() {
   return result.notifications;
 }
 
+export async function getHomeActivities() {
+  const result = await apiCall<{ activities: import("@/lib/home-activity-store").HomeActivity[] }>("/api/home/activities");
+  return result.activities;
+}
+
 export async function markNotificationRead(notificationId: string) {
   const result = await apiCall<{ notification: AppNotification }>(
     `/api/notifications/${encodeURIComponent(notificationId)}`,
@@ -738,6 +743,14 @@ export async function reviewEventApplicant(eventId: string, memberId: string, ac
   const result = await apiCall<{ event: Event }>(
     `/api/events/${encodeURIComponent(eventId)}/participants/${encodeURIComponent(memberId)}`,
     { method: "PATCH", body: JSON.stringify({ action }) },
+  );
+  return result.event;
+}
+
+export async function finalizeEventParticipants(eventId: string) {
+  const result = await apiCall<{ event: Event }>(
+    `/api/events/${encodeURIComponent(eventId)}/finalize`,
+    { method: "POST" },
   );
   return result.event;
 }
