@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { publicMemberFromRow } from "../sites/member-directory";
+import { publicMemberFromRow, sanitizeProfileUpdate } from "../sites/member-directory";
 
 describe("member directory privacy", () => {
   it("returns public profile fields without email or billing identifiers", () => {
@@ -32,5 +32,35 @@ describe("member directory privacy", () => {
     expect(member).not.toHaveProperty("email");
     expect(member).not.toHaveProperty("squareCustomerId");
     expect(member).not.toHaveProperty("discordUserId");
+  });
+});
+
+describe("member profile updates", () => {
+  it("keeps only public profile fields and normalizes values", () => {
+    expect(sanitizeProfileUpdate({
+      displayName: "  Aoi  ",
+      profile: {
+        bio: " よろしくお願いします ",
+        favoriteCuisines: ["寿司", "寿司", ""],
+        showAge: true,
+        avatarUrl: "/api/event-images/avatar.jpg",
+        email: "private@example.com",
+        squareCustomerId: "secret",
+      },
+    })).toEqual({
+      displayName: "Aoi",
+      profile: {
+        bio: "よろしくお願いします",
+        favoriteCuisines: ["寿司"],
+        showAge: true,
+        avatarUrl: "/api/event-images/avatar.jpg",
+      },
+    });
+  });
+
+  it("rejects invalid profile values", () => {
+    expect(() => sanitizeProfileUpdate({ displayName: "", profile: {} })).toThrow();
+    expect(() => sanitizeProfileUpdate({ displayName: "会員", profile: { showAge: "yes" } })).toThrow();
+    expect(() => sanitizeProfileUpdate({ displayName: "会員", profile: { instagramUrl: "javascript:alert(1)" } })).toThrow();
   });
 });

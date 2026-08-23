@@ -523,6 +523,16 @@ export async function getMemberProfile(memberId: string) {
   return result.member;
 }
 
+export async function updateMyProfile(input: {
+  displayName: string;
+  profile: Record<string, unknown>;
+}) {
+  return apiCall<{ success: boolean; displayName: string; profile: Record<string, unknown>; updatedAt: string }>(
+    "/api/members/me/profile",
+    { method: "PATCH", body: JSON.stringify(input) },
+  );
+}
+
 export async function getPrivateMemberNote(memberId: string) {
   return apiCall<{ note: string; updatedAt: string | null }>(
     `/api/members/${encodeURIComponent(memberId)}/private-note`,

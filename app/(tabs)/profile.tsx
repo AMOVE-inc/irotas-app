@@ -353,6 +353,10 @@ function EditProfileModal({
   initialBio,
   initialInterests,
   initialDetails,
+  initialAvatar,
+  initialGender,
+  serverBacked = false,
+  onServerSaved,
 }: {
   visible: boolean;
   onClose: () => void;
@@ -366,6 +370,10 @@ function EditProfileModal({
   initialBio: string;
   initialInterests: string[];
   initialDetails: ProfileDetails;
+  initialAvatar?: string;
+  initialGender?: "male" | "female" | "other" | "unset";
+  serverBacked?: boolean;
+  onServerSaved?: () => Promise<void>;
 }) {
   const colors = useColors();
   const [name, setName] = useState("");
@@ -402,13 +410,13 @@ function EditProfileModal({
         AsyncStorage.getItem(`${storageNamespace}:gender`),
         AsyncStorage.getItem(`${storageNamespace}:details`),
       ]).then(([savedName, savedBio, savedInterests, savedAvatar, savedGender, savedDetails]) => {
-        setName(savedName ?? initialName);
-        setBio(savedBio ?? initialBio);
+        setName(serverBacked ? initialName : (savedName ?? initialName));
+        setBio(serverBacked ? initialBio : (savedBio ?? initialBio));
         const storedInterests = savedInterests?.split(",").map((item) => item.trim()).filter(Boolean);
-        setInterests(storedInterests?.length ? storedInterests : initialInterests);
-        setAvatarUri(savedAvatar);
-        if (savedGender) setGender(savedGender as "male" | "female" | "other" | "unset");
-        const details = savedDetails ? JSON.parse(savedDetails) as Partial<ProfileDetails> : {};
+        setInterests(serverBacked ? initialInterests : (storedInterests?.length ? storedInterests : initialInterests));
+        setAvatarUri(serverBacked ? (initialAvatar ?? null) : savedAvatar);
+        setGender(serverBacked ? (initialGender ?? "unset") : (savedGender as "male" | "female" | "other" | "unset" || "unset"));
+        const details = !serverBacked && savedDetails ? JSON.parse(savedDetails) as Partial<ProfileDetails> : {};
         const birthDate = details.birthDate ?? initialDetails.birthDate ?? "";
         const [year = "", month = "", day = ""] = birthDate.split("-");
         setBirthYear(year); setBirthMonth(month); setBirthDay(day);
@@ -427,7 +435,7 @@ function EditProfileModal({
         setGoogleLocalGuideLevel(details.googleLocalGuideLevel ?? initialDetails.googleLocalGuideLevel ?? "");
       });
     });
-  }, [visible, storageNamespace, initialName, initialBio, initialInterests, initialDetails]);
+  }, [visible, storageNamespace, initialName, initialBio, initialInterests, initialDetails, initialAvatar, initialGender, serverBacked]);
 
   const handlePickPhoto = async () => {
     // 権限を事前にリクエスト（初回のみ許可ダイアログが表示される）
@@ -482,10 +490,26 @@ function EditProfileModal({
       favoriteRestaurants: favoriteRestaurants.trim(), desiredRestaurants: desiredRestaurants.trim(),
       googleLocalGuideLevel: googleLocalGuideLevel === "未設定" ? "" : googleLocalGuideLevel,
     };
+    let savedAvatarUri = avatarUri ?? "";
+    try {
+      if (serverBacked && savedAvatarUri && !/^https?:\/\//i.test(savedAvatarUri) && !savedAvatarUri.startsWith("/api/event-images/")) {
+        savedAvatarUri = (await Api.uploadEventImage(savedAvatarUri)).imageUrl;
+      }
+      if (serverBacked) {
+        await Api.updateMyProfile({
+          displayName: name.trim(),
+          profile: { ...details, bio, gender, favoriteCuisines: interestList, avatarUrl: savedAvatarUri },
+        });
+        await onServerSaved?.();
+      }
+    } catch (error) {
+      Alert.alert("保存できませんでした", error instanceof Error ? error.message : "通信状況を確認してもう一度お試しください。");
+      return;
+    }
     await AsyncStorage.setItem(`${storageNamespace}:details`, JSON.stringify(details));
-    if (avatarUri) {
-      await AsyncStorage.setItem(`${storageNamespace}:avatar`, avatarUri);
-      onAvatarChange?.(avatarUri);
+    if (savedAvatarUri) {
+      await AsyncStorage.setItem(`${storageNamespace}:avatar`, savedAvatarUri);
+      onAvatarChange?.(savedAvatarUri);
     }
     onNameChange?.(name.trim());
     onBioChange?.(bio);
@@ -727,7 +751,7 @@ export default function ProfileScreen() {
   const coupons = useCoupons();
   const colors = useColors();
   const router = useRouter();
-  const { logout, user: authUser } = useAuthContext();
+  const { logout, refresh: refreshAuthUser, user: authUser } = useAuthContext();
   const performLogout = useCallback(async () => {
     if (Api.submitBrowserLogout()) return;
     await logout();
@@ -807,10 +831,11 @@ export default function ProfileScreen() {
           AsyncStorage.getItem(`${storageNamespace}:interests`),
           AsyncStorage.getItem(`${storageNamespace}:details`),
         ]).then(([uri, savedName, savedBio, savedInterests, savedDetails]) => {
-          setAvatarUri(uri);
-          setProfileName(savedName ?? user.name);
-          setProfileBio(savedBio ?? user.bio);
-          if (savedInterests !== null) {
+          const serverAvatar = profileString(serverProfile, "avatarUrl");
+          setAvatarUri(isRealMember ? (serverAvatar || null) : uri);
+          setProfileName(isRealMember ? user.name : (savedName ?? user.name));
+          setProfileBio(isRealMember ? user.bio : (savedBio ?? user.bio));
+          if (!isRealMember && savedInterests !== null) {
             const list = savedInterests.split(",").map((s) => s.trim()).filter(Boolean);
             setProfileInterests(list);
           } else setProfileInterests(user.favoriteCuisines ?? user.interests ?? []);
@@ -821,7 +846,7 @@ export default function ProfileScreen() {
           } else {
             setMemberId(isRealMember ? "" : "IRO-000001");
           }
-          setProfileDetails(savedDetails ? JSON.parse(savedDetails) as ProfileDetails : (isRealMember ? serverDetails : {
+          setProfileDetails(!isRealMember && savedDetails ? JSON.parse(savedDetails) as ProfileDetails : (isRealMember ? serverDetails : {
             ...profileDetailsFromRecord({}),
             birthDate: user.birthDate ?? "", showAge: user.showAge ?? false,
             hometown: user.hometown ?? "", residence: user.residence ?? "", occupation: user.occupation ?? "",
@@ -836,7 +861,7 @@ export default function ProfileScreen() {
       // イロタスポイント・会費免除を読み込む
       getIrotasPoints(user.id).then(setIrotasPoints);
       isFeeExempt(user.id).then(setFeeExempt);
-    }, [authUser?.memberId, isRealMember, memberIdentity?.memberId, serverDetails, storageNamespace, user])
+    }, [authUser?.memberId, isRealMember, memberIdentity?.memberId, serverDetails, serverProfile, storageNamespace, user])
   );
 
   const publishedAge = getPublishedAgeBand(profileDetails.birthDate, profileDetails.showAge);
@@ -1384,6 +1409,10 @@ export default function ProfileScreen() {
         initialBio={profileBio}
         initialInterests={profileInterests}
         initialDetails={profileDetails}
+        initialAvatar={avatarUri ?? undefined}
+        initialGender={(profileString(serverProfile, "gender") as "male" | "female" | "other" | "unset") || "unset"}
+        serverBacked={isRealMember}
+        onServerSaved={refreshAuthUser}
       />
       <SocialMemberListModal visible={socialList !== null} kind={socialList ?? "followers"} onClose={() => setSocialList(null)} />
     </ScreenContainer>

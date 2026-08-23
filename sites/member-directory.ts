@@ -2,7 +2,66 @@ import { authenticatedRequestMember } from "./auth";
 import type { D1Database, SitesEnv } from "./platform-types";
 
 const DIRECTORY_ENDPOINT = "/api/members";
+const SELF_PROFILE_ENDPOINT = "/api/members/me/profile";
 const MEMBER_PATH = /^\/api\/members\/([^/]+)(?:\/(private-note))?$/;
+
+const PROFILE_TEXT_LIMITS = {
+  bio: 2000,
+  gender: 10,
+  birthDate: 10,
+  hometown: 100,
+  residence: 100,
+  occupation: 200,
+  hobbies: 1000,
+  favoriteAlcohol: 500,
+  dislikedFoods: 1000,
+  allergies: 1000,
+  drinkingLevel: 100,
+  instagramUrl: 1000,
+  favoriteRestaurants: 2000,
+  desiredRestaurants: 2000,
+  googleLocalGuideLevel: 100,
+  avatarUrl: 2000,
+} as const;
+
+export function sanitizeProfileUpdate(input: unknown) {
+  if (!input || typeof input !== "object" || Array.isArray(input))
+    throw new Error("プロフィール情報を確認してください");
+  const source = input as Record<string, unknown>;
+  const displayName = typeof source.displayName === "string" ? source.displayName.trim() : "";
+  if (!displayName || displayName.length > 100)
+    throw new Error("表示名は1〜100文字で入力してください");
+  if (!source.profile || typeof source.profile !== "object" || Array.isArray(source.profile))
+    throw new Error("プロフィール情報を確認してください");
+  const rawProfile = source.profile as Record<string, unknown>;
+  const profile: Record<string, unknown> = {};
+  for (const [key, limit] of Object.entries(PROFILE_TEXT_LIMITS)) {
+    const value = rawProfile[key];
+    if (value === undefined) continue;
+    if (typeof value !== "string" || value.length > limit)
+      throw new Error(`${key}の入力内容を確認してください`);
+    profile[key] = value.trim();
+  }
+  if (rawProfile.showAge !== undefined) {
+    if (typeof rawProfile.showAge !== "boolean") throw new Error("年齢公開設定を確認してください");
+    profile.showAge = rawProfile.showAge;
+  }
+  if (rawProfile.favoriteCuisines !== undefined) {
+    if (!Array.isArray(rawProfile.favoriteCuisines) || rawProfile.favoriteCuisines.length > 50 || rawProfile.favoriteCuisines.some((value) => typeof value !== "string" || value.length > 100))
+      throw new Error("好きな料理ジャンルを確認してください");
+    profile.favoriteCuisines = [...new Set(rawProfile.favoriteCuisines.map((value) => value.trim()).filter(Boolean))];
+  }
+  if (typeof profile.gender === "string" && !["", "male", "female", "other", "unset"].includes(profile.gender))
+    throw new Error("性別を確認してください");
+  if (typeof profile.birthDate === "string" && profile.birthDate && !/^\d{4}-\d{2}-\d{2}$/.test(profile.birthDate))
+    throw new Error("生年月日を確認してください");
+  for (const key of ["instagramUrl", "avatarUrl"] as const) {
+    const value = profile[key];
+    if (typeof value === "string" && value && !/^https?:\/\//i.test(value) && !(key === "avatarUrl" && value.startsWith("/api/event-images/")))
+      throw new Error(`${key}は有効なURLを入力してください`);
+  }
+  return { displayName, profile };
+}
 
 type MemberDirectoryRow = {
   id: number;
@@ -126,16 +185,39 @@ async function saveNote(
   return responseJson({ success: true, updatedAt: now });
 }
 
+async function updateSelfProfile(request: Request, db: D1Database, memberId: number) {
+  let update: ReturnType<typeof sanitizeProfileUpdate>;
+  try {
+    update = sanitizeProfileUpdate(await request.json());
+  } catch (error) {
+    return responseJson({ error: error instanceof Error ? error.message : "プロフィール情報を確認してください" }, 400);
+  }
+  const current = await db.prepare("SELECT profile_json FROM members WHERE id = ?").bind(memberId).first<{ profile_json: string | null }>();
+  if (!current) return responseJson({ error: "メンバーが見つかりません" }, 404);
+  const mergedProfile = { ...jsonObject(current.profile_json ?? "{}"), ...update.profile };
+  const now = new Date().toISOString();
+  await db.prepare("UPDATE members SET display_name = ?, profile_json = ?, updated_at = ? WHERE id = ?")
+    .bind(update.displayName, JSON.stringify(mergedProfile), now, memberId).run();
+  await db.prepare(`INSERT INTO audit_logs (actor_user_id, action, entity_type, entity_id, metadata_json, created_at)
+    VALUES (?, 'member.profile_updated', 'member', ?, '{}', ?)`).bind(memberId, String(memberId), now).run();
+  return responseJson({ success: true, displayName: update.displayName, profile: mergedProfile, updatedAt: now });
+}
+
 export async function handleMemberDirectoryRequest(
   request: Request,
   env: SitesEnv,
 ): Promise<Response | null> {
   const pathname = new URL(request.url).pathname;
   const match = MEMBER_PATH.exec(pathname);
-  if (pathname !== DIRECTORY_ENDPOINT && !match) return null;
+  if (pathname !== DIRECTORY_ENDPOINT && pathname !== SELF_PROFILE_ENDPOINT && !match) return null;
   if (!env.DB) return responseJson({ error: "データベースに接続できません" }, 503);
   const viewer = await authenticatedRequestMember(request, env);
   if (!viewer) return responseJson({ error: "ログインが必要です" }, 401);
+
+  if (pathname === SELF_PROFILE_ENDPOINT) {
+    if (request.method !== "PATCH") return responseJson({ error: "method_not_allowed" }, 405);
+    return updateSelfProfile(request, env.DB, viewer.id);
+  }
 
   if (pathname === DIRECTORY_ENDPOINT) {
     if (request.method !== "GET") return responseJson({ error: "method_not_allowed" }, 405);

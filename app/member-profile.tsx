@@ -74,7 +74,7 @@ export default function MemberProfileScreen() {
     return {
       id: databaseMember.id,
       name: databaseMember.displayName,
-      avatar: DEFAULT_AVATAR,
+      avatar: text("avatarUrl") ? { uri: text("avatarUrl")! } : DEFAULT_AVATAR,
       rank,
       points: databaseMember.xp,
       level: 1,
@@ -97,6 +97,13 @@ export default function MemberProfileScreen() {
   useEffect(() => {
     const isCurrentMember = databaseMember ? databaseMember.userId === authUser?.id : member?.id === CURRENT_USER.id;
     if (!isCurrentMember) { setSelfDetails(null); setSelfBio(null); setSelfName(null); setSelfAvatar(null); return; }
+    if (databaseMember) {
+      setSelfDetails(databaseMember.profile as Partial<ProfileDetails>);
+      setSelfBio(typeof databaseMember.profile.bio === "string" ? databaseMember.profile.bio : null);
+      setSelfName(databaseMember.displayName);
+      setSelfAvatar(typeof databaseMember.profile.avatarUrl === "string" ? databaseMember.profile.avatarUrl : null);
+      return;
+    }
     void Promise.all([AsyncStorage.getItem(PROFILE_DETAILS_STORAGE_KEY), AsyncStorage.getItem("profile_bio"), AsyncStorage.getItem("profile_name"), AsyncStorage.getItem("profile_avatar_uri")]).then(([raw, bio, name, avatar]) => {
       setSelfDetails(raw ? JSON.parse(raw) as ProfileDetails : null); setSelfBio(bio); setSelfName(name); setSelfAvatar(avatar);
     });
