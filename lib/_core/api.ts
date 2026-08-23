@@ -126,7 +126,7 @@ export type ClubApplicantReview = {
 
 export type AppNotification = {
   id: string;
-  type: "club_application" | "club_approval" | "club_membership" | "event_confirmed" | "event_deadline" | "event_reminder" | "event_cancellation" | "poll_result" | "announcement" | "event" | "like" | "comment" | "coupon";
+  type: "club_application" | "club_approval" | "club_membership" | "event_confirmed" | "event_deadline" | "event_reminder" | "event_cancellation" | "poll_result" | "announcement" | "event" | "like" | "comment" | "coupon" | "system_error";
   title: string;
   body: string;
   clubId: string | null;

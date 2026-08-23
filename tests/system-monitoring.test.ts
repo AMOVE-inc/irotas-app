@@ -25,12 +25,18 @@ describe("system monitoring", () => {
   it("stores only a sanitized path and bounded error details", async () => {
     const values: unknown[] = [];
     const request = new Request("https://app.example/api/private?token=secret", { method: "POST" });
-    await recordApplicationError(captureDatabase(values), request, "req-123", new Error("failed\nAuthorization: secret"));
+    await recordApplicationError(captureDatabase(values), request, "req-123", new Error("failed\nAuthorization: secret user@example.com 4111 1111 1111 1111"));
     const serialized = JSON.stringify(values);
     expect(serialized).toContain("/api/private");
     expect(serialized).not.toContain("token=secret");
-    expect(serialized).not.toContain("Authorization: secret\n");
-    expect(serialized).toContain("failed Authorization: secret");
+    expect(serialized).not.toContain("Authorization: secret");
+    expect(serialized).not.toContain("user@example.com");
+    expect(serialized).not.toContain("4111 1111 1111 1111");
+    expect(serialized).toContain("Authorization=[REDACTED]");
+    expect(serialized).toContain("[EMAIL_REDACTED]");
+    expect(serialized).toContain("[NUMBER_REDACTED]");
+    expect(serialized).toContain("system_error");
+    expect(serialized).toContain("NOT EXISTS");
   });
 
   it("never exposes query strings and bounds untrusted errors", () => {

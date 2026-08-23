@@ -34,9 +34,14 @@ function json(body: unknown, status = 200) {
 export function safeErrorDetails(error: unknown) {
   const name = error instanceof Error ? error.name : "Error";
   const rawMessage = error instanceof Error ? error.message : "Unexpected error";
+  const redactedMessage = rawMessage
+    .replace(/\bBearer\s+[A-Za-z0-9._~+\/-]+=*/gi, "Bearer [REDACTED]")
+    .replace(/\b(password|token|secret|api[_-]?key|authorization)\s*[:=]\s*[^\s,;&]+/gi, "$1=[REDACTED]")
+    .replace(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi, "[EMAIL_REDACTED]")
+    .replace(/\b(?:\d[ -]*?){13,19}\b/g, "[NUMBER_REDACTED]");
   return {
     name: name.replace(/[\r\n]/g, " ").slice(0, 80) || "Error",
-    message: rawMessage.replace(/[\r\n]/g, " ").slice(0, 500) || "Unexpected error",
+    message: redactedMessage.replace(/[\r\n]/g, " ").slice(0, 500) || "Unexpected error",
   };
 }
 
@@ -57,17 +62,40 @@ export async function recordApplicationError(
   if (!db) return;
   const details = safeErrorDetails(error);
   try {
+    const createdAt = new Date().toISOString();
+    const method = request.method.slice(0, 12);
+    const path = safeRequestPath(request);
     await db.prepare(
       `INSERT OR IGNORE INTO application_errors
        (request_id, method, path, error_name, error_message, created_at)
        VALUES (?, ?, ?, ?, ?, ?)`,
     ).bind(
       requestId,
-      request.method.slice(0, 12),
-      safeRequestPath(request),
+      method,
+      path,
       details.name,
       details.message,
-      new Date().toISOString(),
+      createdAt,
+    ).run();
+    await db.prepare(
+      `INSERT INTO in_app_notifications
+       (id, target_member_id, type, title, body, created_at)
+       SELECT ? || '-' || CAST(m.id AS TEXT), m.id, 'system_error',
+              'アプリでエラーを検知しました', ?, ?
+       FROM members m
+       WHERE m.account_status = 'active'
+         AND (m.access_role = 'admin' OR m.role = 'admin')
+         AND NOT EXISTS (
+           SELECT 1 FROM in_app_notifications n
+           WHERE n.target_member_id = m.id AND n.type = 'system_error'
+             AND n.body LIKE ? AND n.created_at >= ?
+         )`,
+    ).bind(
+      `system-error-${requestId}`,
+      `${method} ${path} でエラーを検知しました。確認ID: ${requestId}`,
+      createdAt,
+      `${method} ${path}%`,
+      new Date(Date.now() - 15 * 60_000).toISOString(),
     ).run();
   } catch {
     // Monitoring must never replace the original application response.
