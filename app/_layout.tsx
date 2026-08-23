@@ -20,16 +20,29 @@ import {
 import type { EdgeInsets, Metrics, Rect } from "react-native-safe-area-context";
 
 import { trpc, createTRPCClient } from "@/lib/trpc";
-import { initManusRuntime, subscribeSafeAreaInsets } from "@/lib/_core/manus-runtime";
+import {
+  initManusRuntime,
+  subscribeSafeAreaInsets,
+} from "@/lib/_core/manus-runtime";
 import { AuthProvider, useAuthContext } from "@/lib/auth-context";
 import { AppErrorBoundary } from "@/components/app-error-boundary";
-import { isAdminRole, isAdminRoute, isOperatorRole, isOperatorRoute } from "@/lib/access-control";
+import {
+  isAdminRole,
+  isAdminRoute,
+  isOperatorRole,
+  isOperatorRoute,
+} from "@/lib/access-control";
 import { dispatchDueEventActions } from "@/lib/event-automation-store";
 
 // Mobile browsers already exclude the status bar from their visual viewport.
 // Keep only a small breathing space instead of adding a native-sized 44px inset.
 const WEB_TOP_INSET = 8;
-const DEFAULT_WEB_INSETS: EdgeInsets = { top: WEB_TOP_INSET, right: 0, bottom: 0, left: 0 };
+const DEFAULT_WEB_INSETS: EdgeInsets = {
+  top: WEB_TOP_INSET,
+  right: 0,
+  bottom: 0,
+  left: 0,
+};
 const getRootFrame = (): Rect => {
   if (typeof document !== "undefined") {
     const el = document.getElementById("root");
@@ -54,23 +67,38 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
   const segments = useSegments();
   const router = useRouter();
   const currentRoute = segments[0];
-  const isForbidden = isAuthenticated && (
-    (isAdminRoute(currentRoute) && !isAdminRole(user?.role, user?.accessRole)) ||
-    (isOperatorRoute(currentRoute) && !isOperatorRole(user?.role, user?.accessRole))
+  const isForbidden =
+    isAuthenticated &&
+    ((isAdminRoute(currentRoute) &&
+      !isAdminRole(user?.role, user?.accessRole)) ||
+      (isOperatorRoute(currentRoute) &&
+        !isOperatorRole(user?.role, user?.accessRole)));
+  const hasSelectedBranch = Boolean(
+    user && (user.branches.length > 0 || user.branch),
   );
-  const hasSelectedBranch = Boolean(user && (user.branches.length > 0 || user.branch));
 
   useEffect(() => {
     if (loading) return;
 
     const inAuthGroup = segments[0] === "login" || segments[0] === "register";
     const inOAuthCallback = segments[0] === "oauth";
+    const inPublicAccountDeletion = String(segments[0]) === "account-deletion";
     const inBranchSelection = String(segments[0]) === "select-branch";
 
-    if (!isAuthenticated && !inAuthGroup && !inOAuthCallback) {
+    if (
+      !isAuthenticated &&
+      !inAuthGroup &&
+      !inOAuthCallback &&
+      !inPublicAccountDeletion
+    ) {
       // Redirect to login
       router.replace("/login");
-    } else if (isAuthenticated && !hasSelectedBranch && !inBranchSelection && !inOAuthCallback) {
+    } else if (
+      isAuthenticated &&
+      !hasSelectedBranch &&
+      !inBranchSelection &&
+      !inOAuthCallback
+    ) {
       router.replace("/select-branch" as any);
     } else if (isAuthenticated && hasSelectedBranch && inAuthGroup) {
       // Redirect to home if already logged in
@@ -78,11 +106,25 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
     } else if (isForbidden) {
       router.replace("/(tabs)/profile");
     }
-  }, [hasSelectedBranch, isAuthenticated, isForbidden, loading, segments, router]);
+  }, [
+    hasSelectedBranch,
+    isAuthenticated,
+    isForbidden,
+    loading,
+    segments,
+    router,
+  ]);
 
   if (loading) {
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#FFF8F0" }}>
+      <View
+        style={{
+          flex: 1,
+          justifyContent: "center",
+          alignItems: "center",
+          backgroundColor: "#FFF8F0",
+        }}
+      >
         <ActivityIndicator size="large" color="#E8A0BF" />
       </View>
     );
@@ -90,7 +132,14 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
 
   if (isForbidden) {
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#FFF8F0" }}>
+      <View
+        style={{
+          flex: 1,
+          justifyContent: "center",
+          alignItems: "center",
+          backgroundColor: "#FFF8F0",
+        }}
+      >
         <ActivityIndicator size="large" color="#E8A0BF" />
       </View>
     );
@@ -134,7 +183,9 @@ export default function RootLayout() {
 
   useEffect(() => {
     void dispatchDueEventActions();
-    const timer = setInterval(() => { void dispatchDueEventActions(); }, 60_000);
+    const timer = setInterval(() => {
+      void dispatchDueEventActions();
+    }, 60_000);
     return () => clearInterval(timer);
   }, []);
 
@@ -168,7 +219,10 @@ export default function RootLayout() {
 
   // Ensure minimum padding for top and bottom
   const providerInitialMetrics = useMemo(() => {
-    const metrics = initialWindowMetrics ?? { insets: initialInsets, frame: initialFrame };
+    const metrics = initialWindowMetrics ?? {
+      insets: initialInsets,
+      frame: initialFrame,
+    };
     if (Platform.OS === "web") {
       return {
         ...metrics,
@@ -193,36 +247,114 @@ export default function RootLayout() {
           <AuthProvider>
             <AuthGuard>
               <Stack screenOptions={{ headerShown: false }}>
-                <Stack.Screen name="login" options={{ presentation: "fullScreenModal" }} />
-                <Stack.Screen name="register" options={{ presentation: "fullScreenModal" }} />
-                <Stack.Screen name="select-branch" options={{ presentation: "fullScreenModal" }} />
+                <Stack.Screen
+                  name="login"
+                  options={{ presentation: "fullScreenModal" }}
+                />
+                <Stack.Screen
+                  name="register"
+                  options={{ presentation: "fullScreenModal" }}
+                />
+                <Stack.Screen
+                  name="select-branch"
+                  options={{ presentation: "fullScreenModal" }}
+                />
                 <Stack.Screen name="(tabs)" />
-                <Stack.Screen name="event-detail" options={{ presentation: "card" }} />
-                <Stack.Screen name="event-feedback" options={{ presentation: "card" }} />
-                <Stack.Screen name="concierge" options={{ presentation: "card" }} />
-                <Stack.Screen name="notifications" options={{ presentation: "card" }} />
-                <Stack.Screen name="create-post" options={{ presentation: "modal" }} />
-                <Stack.Screen name="coupons" options={{ presentation: "card" }} />
-                <Stack.Screen name="chat-list" options={{ presentation: "card" }} />
+                <Stack.Screen
+                  name="event-detail"
+                  options={{ presentation: "card" }}
+                />
+                <Stack.Screen
+                  name="event-feedback"
+                  options={{ presentation: "card" }}
+                />
+                <Stack.Screen
+                  name="concierge"
+                  options={{ presentation: "card" }}
+                />
+                <Stack.Screen
+                  name="notifications"
+                  options={{ presentation: "card" }}
+                />
+                <Stack.Screen
+                  name="create-post"
+                  options={{ presentation: "modal" }}
+                />
+                <Stack.Screen
+                  name="coupons"
+                  options={{ presentation: "card" }}
+                />
+                <Stack.Screen
+                  name="chat-list"
+                  options={{ presentation: "card" }}
+                />
                 <Stack.Screen name="chat" options={{ presentation: "card" }} />
                 <Stack.Screen name="clubs" options={{ presentation: "card" }} />
-                <Stack.Screen name="member-profile" options={{ presentation: "card" }} />
-                <Stack.Screen name="create-event" options={{ presentation: "modal" }} />
-                <Stack.Screen name="members" options={{ presentation: "card" }} />
-                <Stack.Screen name="admin-dashboard" options={{ presentation: "card" }} />
-                <Stack.Screen name="gift-campaign" options={{ presentation: "card" }} />
-                <Stack.Screen name="campaigns" options={{ presentation: "card" }} />
-                <Stack.Screen name="gourmet-map" options={{ presentation: "card" }} />
-                <Stack.Screen name="campaign-manager" options={{ presentation: "card" }} />
-                <Stack.Screen name="gift-campaign-manager" options={{ presentation: "card" }} />
-                <Stack.Screen name="csv-import" options={{ presentation: "card" }} />
-                <Stack.Screen name="app-settings" options={{ presentation: "card" }} />
-                <Stack.Screen name="ai-settings" options={{ presentation: "card" }} />
-                <Stack.Screen name="notification-settings" options={{ presentation: "card" }} />
+                <Stack.Screen
+                  name="member-profile"
+                  options={{ presentation: "card" }}
+                />
+                <Stack.Screen
+                  name="create-event"
+                  options={{ presentation: "modal" }}
+                />
+                <Stack.Screen
+                  name="members"
+                  options={{ presentation: "card" }}
+                />
+                <Stack.Screen
+                  name="admin-dashboard"
+                  options={{ presentation: "card" }}
+                />
+                <Stack.Screen
+                  name="gift-campaign"
+                  options={{ presentation: "card" }}
+                />
+                <Stack.Screen
+                  name="campaigns"
+                  options={{ presentation: "card" }}
+                />
+                <Stack.Screen
+                  name="gourmet-map"
+                  options={{ presentation: "card" }}
+                />
+                <Stack.Screen
+                  name="campaign-manager"
+                  options={{ presentation: "card" }}
+                />
+                <Stack.Screen
+                  name="gift-campaign-manager"
+                  options={{ presentation: "card" }}
+                />
+                <Stack.Screen
+                  name="csv-import"
+                  options={{ presentation: "card" }}
+                />
+                <Stack.Screen
+                  name="app-settings"
+                  options={{ presentation: "card" }}
+                />
+                <Stack.Screen
+                  name="ai-settings"
+                  options={{ presentation: "card" }}
+                />
+                <Stack.Screen
+                  name="notification-settings"
+                  options={{ presentation: "card" }}
+                />
                 <Stack.Screen name="faq" options={{ presentation: "card" }} />
-                <Stack.Screen name="community-rules" options={{ presentation: "card" }} />
-                <Stack.Screen name="contact" options={{ presentation: "card" }} />
-                <Stack.Screen name="manual" options={{ presentation: "card" }} />
+                <Stack.Screen
+                  name="community-rules"
+                  options={{ presentation: "card" }}
+                />
+                <Stack.Screen
+                  name="contact"
+                  options={{ presentation: "card" }}
+                />
+                <Stack.Screen
+                  name="manual"
+                  options={{ presentation: "card" }}
+                />
                 <Stack.Screen name="oauth/callback" />
               </Stack>
             </AuthGuard>
@@ -235,7 +367,14 @@ export default function RootLayout() {
 
   if (!iconsLoaded) {
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#FFFFFF" }}>
+      <View
+        style={{
+          flex: 1,
+          justifyContent: "center",
+          alignItems: "center",
+          backgroundColor: "#FFFFFF",
+        }}
+      >
         <ActivityIndicator size="large" color="#D97FA8" />
       </View>
     );
@@ -262,7 +401,9 @@ export default function RootLayout() {
   return (
     <AppErrorBoundary>
       <ThemeProvider>
-        <SafeAreaProvider initialMetrics={providerInitialMetrics}>{content}</SafeAreaProvider>
+        <SafeAreaProvider initialMetrics={providerInitialMetrics}>
+          {content}
+        </SafeAreaProvider>
       </ThemeProvider>
     </AppErrorBoundary>
   );

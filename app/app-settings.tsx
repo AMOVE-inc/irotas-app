@@ -360,6 +360,14 @@ export default function AppSettingsScreen() {
         {/* ログアウト */}
         <SectionHeader title="アカウント" />
         <SettingRow
+          icon="person.crop.circle.badge.minus"
+          iconColor="#FF3B30"
+          label="退会・アカウント削除"
+          sublabel="削除申請と申請状況の確認"
+          onPress={() => router.push("/account-deletion" as any)}
+          isDestructive
+        />
+        <SettingRow
           icon="rectangle.portrait.and.arrow.right"
           iconColor="#FF3B30"
           label="ログアウト"

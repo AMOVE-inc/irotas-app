@@ -9,6 +9,8 @@ const plan = readFileSync(
   "utf8",
 );
 const settings = readFileSync("app/app-settings.tsx", "utf8");
+const deletionPage = readFileSync("app/account-deletion.tsx", "utf8");
+const layout = readFileSync("app/_layout.tsx", "utf8");
 
 describe("native distribution readiness", () => {
   it("uses a stable production identifier and separated EAS profiles", () => {
@@ -35,5 +37,13 @@ describe("native distribution readiness", () => {
     ]) {
       expect(plan).toContain(requirement);
     }
+  });
+
+  it("provides a public web entry and in-app account deletion request", () => {
+    expect(settings).toContain('router.push("/account-deletion"');
+    expect(layout).toContain('String(segments[0]) === "account-deletion"');
+    expect(deletionPage).toContain("ログインして削除申請へ");
+    expect(deletionPage).toContain("Squareの定期決済は別途解約手続き");
+    expect(deletionPage).toContain("requestAccountDeletion");
   });
 });

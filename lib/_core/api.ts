@@ -102,7 +102,13 @@ export type ClubRecord = {
   events: [];
   status: "active" | "archived";
   canReviewApplications: boolean;
-  viewerMembershipStatus: "pending" | "on_hold" | "approved" | "rejected" | "left" | null;
+  viewerMembershipStatus:
+    | "pending"
+    | "on_hold"
+    | "approved"
+    | "rejected"
+    | "left"
+    | null;
   viewerIsLeader: boolean;
   viewerMemberId: string | null;
 };
@@ -121,12 +127,31 @@ export type ClubApplicantReview = {
   messageToLeader: string;
   status: "pending" | "on_hold";
   appliedAt: string;
-  eventHistory: Array<{ id: string; title: string; date: string; eventType: string }>;
+  eventHistory: Array<{
+    id: string;
+    title: string;
+    date: string;
+    eventType: string;
+  }>;
 };
 
 export type AppNotification = {
   id: string;
-  type: "club_application" | "club_approval" | "club_membership" | "event_confirmed" | "event_deadline" | "event_reminder" | "event_cancellation" | "poll_result" | "announcement" | "event" | "like" | "comment" | "coupon" | "system_error";
+  type:
+    | "club_application"
+    | "club_approval"
+    | "club_membership"
+    | "event_confirmed"
+    | "event_deadline"
+    | "event_reminder"
+    | "event_cancellation"
+    | "poll_result"
+    | "announcement"
+    | "event"
+    | "like"
+    | "comment"
+    | "coupon"
+    | "system_error";
   title: string;
   body: string;
   clubId: string | null;
@@ -273,47 +298,105 @@ export type SharedBenefits = {
   usages: Record<string, import("@/lib/coupon-rules").CouponUsage>;
   gifts: import("@/lib/gift-campaign-store").GiftCampaign[];
   applications: import("@/lib/gift-campaign-store").GiftApplication[];
-  points: { balance: number; balances: Record<string, number>; history: Array<Record<string, unknown>> };
+  points: {
+    balance: number;
+    balances: Record<string, number>;
+    history: Array<Record<string, unknown>>;
+  };
 };
 
 export function getSharedBenefits() {
   return apiCall<SharedBenefits>("/api/benefits");
 }
 
-export function saveSharedCoupon(coupon: import("@/constants/mock-data").Coupon) {
-  return apiCall<{ success: true }>(`/api/benefits/coupons/${encodeURIComponent(coupon.id)}`, { method: "PUT", body: JSON.stringify(coupon) });
+export function saveSharedCoupon(
+  coupon: import("@/constants/mock-data").Coupon,
+) {
+  return apiCall<{ success: true }>(
+    `/api/benefits/coupons/${encodeURIComponent(coupon.id)}`,
+    { method: "PUT", body: JSON.stringify(coupon) },
+  );
 }
 
 export function deleteSharedCoupon(couponId: string) {
-  return apiCall<{ success: true }>(`/api/benefits/coupons/${encodeURIComponent(couponId)}`, { method: "DELETE" });
+  return apiCall<{ success: true }>(
+    `/api/benefits/coupons/${encodeURIComponent(couponId)}`,
+    { method: "DELETE" },
+  );
 }
 
-export function useSharedCoupon(couponId: string, action: "present" | "redeem") {
-  return apiCall<{ success: true; usage: import("@/lib/coupon-rules").CouponUsage }>(`/api/benefits/coupons/${encodeURIComponent(couponId)}/${action}`, { method: "POST" });
+export function useSharedCoupon(
+  couponId: string,
+  action: "present" | "redeem",
+) {
+  return apiCall<{
+    success: true;
+    usage: import("@/lib/coupon-rules").CouponUsage;
+  }>(`/api/benefits/coupons/${encodeURIComponent(couponId)}/${action}`, {
+    method: "POST",
+  });
 }
 
-export function saveSharedGift(gift: import("@/lib/gift-campaign-store").GiftCampaign) {
-  return apiCall<{ success: true }>(`/api/benefits/gifts/${encodeURIComponent(gift.id)}`, { method: "PUT", body: JSON.stringify(gift) });
+export function saveSharedGift(
+  gift: import("@/lib/gift-campaign-store").GiftCampaign,
+) {
+  return apiCall<{ success: true }>(
+    `/api/benefits/gifts/${encodeURIComponent(gift.id)}`,
+    { method: "PUT", body: JSON.stringify(gift) },
+  );
 }
 
 export function deleteSharedGift(giftId: string) {
-  return apiCall<{ success: true }>(`/api/benefits/gifts/${encodeURIComponent(giftId)}`, { method: "DELETE" });
+  return apiCall<{ success: true }>(
+    `/api/benefits/gifts/${encodeURIComponent(giftId)}`,
+    { method: "DELETE" },
+  );
 }
 
 export function applyForSharedGift(giftId: string) {
-  return apiCall<{ success: true; alreadyApplied: boolean }>(`/api/benefits/gifts/${encodeURIComponent(giftId)}/apply`, { method: "POST" });
+  return apiCall<{ success: true; alreadyApplied: boolean }>(
+    `/api/benefits/gifts/${encodeURIComponent(giftId)}/apply`,
+    { method: "POST" },
+  );
 }
 
 export function runSharedGiftLottery(giftId: string) {
-  return apiCall<{ success: true; winnerIds: string[] }>(`/api/benefits/gifts/${encodeURIComponent(giftId)}/lottery`, { method: "POST" });
+  return apiCall<{ success: true; winnerIds: string[] }>(
+    `/api/benefits/gifts/${encodeURIComponent(giftId)}/lottery`,
+    { method: "POST" },
+  );
 }
 
-export function adjustSharedIrotasPoints(input: { amount: number; reason: string; idempotencyKey: string; memberId?: string }) {
-  return apiCall<{ success: true; balance: number; duplicate?: boolean; transactionId?: string }>("/api/benefits/points/adjust", { method: "POST", body: JSON.stringify(input) });
+export function adjustSharedIrotasPoints(input: {
+  amount: number;
+  reason: string;
+  idempotencyKey: string;
+  memberId?: string;
+}) {
+  return apiCall<{
+    success: true;
+    balance: number;
+    duplicate?: boolean;
+    transactionId?: string;
+  }>("/api/benefits/points/adjust", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
 }
 
-export function awardSharedXp(action: "event_create" | "board_post" | "meal_report_post", sourceId: string) {
-  return apiCall<{ amount: number; reason: string; previousXp: number; nextXp: number; previousRank: import("@/constants/mock-data").MemberRank; nextRank: import("@/constants/mock-data").MemberRank; duplicate?: boolean }>("/api/xp/award", {
+export function awardSharedXp(
+  action: "event_create" | "board_post" | "meal_report_post",
+  sourceId: string,
+) {
+  return apiCall<{
+    amount: number;
+    reason: string;
+    previousXp: number;
+    nextXp: number;
+    previousRank: import("@/constants/mock-data").MemberRank;
+    nextRank: import("@/constants/mock-data").MemberRank;
+    duplicate?: boolean;
+  }>("/api/xp/award", {
     method: "POST",
     body: JSON.stringify({ action, sourceId }),
   });
@@ -347,9 +430,10 @@ export async function logout(): Promise<void> {
 
 export async function getSharedBoardContent(category?: string) {
   const query = category ? `?category=${encodeURIComponent(category)}` : "";
-  return apiCall<{ threads: SharedBoardThread[]; comments: SharedBoardComment[] }>(
-    `/api/board/content${query}`,
-  );
+  return apiCall<{
+    threads: SharedBoardThread[];
+    comments: SharedBoardComment[];
+  }>(`/api/board/content${query}`);
 }
 
 export async function createSharedBoardThread(input: {
@@ -384,7 +468,9 @@ export async function ensureSharedImportedBoardThread(threadId: string) {
 
 export async function updateSharedBoardThread(
   threadId: string,
-  input: Partial<Pick<SharedBoardThread, "title" | "content" | "status" | "pinned" | "data">>,
+  input: Partial<
+    Pick<SharedBoardThread, "title" | "content" | "status" | "pinned" | "data">
+  >,
 ) {
   return apiCall<{ success: true; updatedAt: string }>(
     `/api/board/threads/${encodeURIComponent(threadId)}`,
@@ -393,9 +479,12 @@ export async function updateSharedBoardThread(
 }
 
 export async function deleteSharedBoardThread(threadId: string) {
-  return apiCall<{ success: true }>(`/api/board/threads/${encodeURIComponent(threadId)}`, {
-    method: "DELETE",
-  });
+  return apiCall<{ success: true }>(
+    `/api/board/threads/${encodeURIComponent(threadId)}`,
+    {
+      method: "DELETE",
+    },
+  );
 }
 
 export async function updateSharedBoardComment(
@@ -409,29 +498,42 @@ export async function updateSharedBoardComment(
 }
 
 export async function deleteSharedBoardComment(commentId: string) {
-  return apiCall<{ success: true }>(`/api/board/comments/${encodeURIComponent(commentId)}`, {
-    method: "DELETE",
-  });
+  return apiCall<{ success: true }>(
+    `/api/board/comments/${encodeURIComponent(commentId)}`,
+    {
+      method: "DELETE",
+    },
+  );
 }
 
-export async function setSharedBoardReaction(input: {
-  targetType: "thread" | "comment";
-  targetId: string;
-  emoji: string;
-}, active: boolean) {
+export async function setSharedBoardReaction(
+  input: {
+    targetType: "thread" | "comment";
+    targetId: string;
+    emoji: string;
+  },
+  active: boolean,
+) {
   return apiCall<{ success: true }>("/api/board/reactions", {
     method: active ? "PUT" : "DELETE",
     body: JSON.stringify(input),
   });
 }
 
-export async function getSharedBoardPoll(ownerType: "thread" | "comment", ownerId: string) {
+export async function getSharedBoardPoll(
+  ownerType: "thread" | "comment",
+  ownerId: string,
+) {
   return apiCall<{ poll: BoardPoll; viewerMemberId: string }>(
     `/api/board/polls/${ownerType}/${encodeURIComponent(ownerId)}`,
   );
 }
 
-export async function voteSharedBoardPoll(ownerType: "thread" | "comment", ownerId: string, optionId: string) {
+export async function voteSharedBoardPoll(
+  ownerType: "thread" | "comment",
+  ownerId: string,
+  optionId: string,
+) {
   return apiCall<{ poll: BoardPoll; viewerMemberId: string }>(
     `/api/board/polls/${ownerType}/${encodeURIComponent(ownerId)}`,
     { method: "PUT", body: JSON.stringify({ optionId }) },
@@ -471,12 +573,18 @@ export async function renameSharedChatRoom(roomId: string, name: string) {
 }
 
 export async function deleteSharedChatRoom(roomId: string) {
-  return apiCall<{ success: true }>(`/api/chats/${encodeURIComponent(roomId)}`, {
-    method: "DELETE",
-  });
+  return apiCall<{ success: true }>(
+    `/api/chats/${encodeURIComponent(roomId)}`,
+    {
+      method: "DELETE",
+    },
+  );
 }
 
-export async function addSharedChatRoomMember(roomId: string, memberId: string) {
+export async function addSharedChatRoomMember(
+  roomId: string,
+  memberId: string,
+) {
   const result = await apiCall<{ room: SharedChatRoom }>(
     `/api/chats/${encodeURIComponent(roomId)}/members`,
     { method: "POST", body: JSON.stringify({ memberId }) },
@@ -484,7 +592,10 @@ export async function addSharedChatRoomMember(roomId: string, memberId: string) 
   return result.room;
 }
 
-export async function removeSharedChatRoomMember(roomId: string, memberId: string) {
+export async function removeSharedChatRoomMember(
+  roomId: string,
+  memberId: string,
+) {
   return apiCall<{ success: true }>(
     `/api/chats/${encodeURIComponent(roomId)}/members/${encodeURIComponent(memberId)}`,
     { method: "DELETE" },
@@ -492,9 +603,12 @@ export async function removeSharedChatRoomMember(roomId: string, memberId: strin
 }
 
 export async function markSharedChatRoomRead(roomId: string) {
-  return apiCall<{ success: true }>(`/api/chats/${encodeURIComponent(roomId)}/read`, {
-    method: "PUT",
-  });
+  return apiCall<{ success: true }>(
+    `/api/chats/${encodeURIComponent(roomId)}/read`,
+    {
+      method: "PUT",
+    },
+  );
 }
 
 export async function createSharedChatMessage(
@@ -515,7 +629,10 @@ export async function setSharedChatReaction(
 ) {
   return apiCall<{ success: true; reactions: Record<string, string[]> }>(
     "/api/chats/reactions",
-    { method: active ? "PUT" : "DELETE", body: JSON.stringify({ messageId, emoji }) },
+    {
+      method: active ? "PUT" : "DELETE",
+      body: JSON.stringify({ messageId, emoji }),
+    },
   );
 }
 
@@ -577,6 +694,39 @@ export async function selectBranches(branches: Auth.BranchRole[]) {
   });
 }
 
+export type AccountDeletionRequest = {
+  id: string;
+  status: "pending" | "cancelled" | "completed";
+  source: "app" | "web";
+  requestedAt: string;
+  scheduledFor: string;
+};
+
+export async function getAccountDeletionRequest() {
+  return apiCall<{ request: AccountDeletionRequest | null }>(
+    "/api/auth/account-deletion",
+  );
+}
+
+export async function requestAccountDeletion(input: {
+  password: string;
+  understandSubscriptionSeparate: boolean;
+  understandDataHandling: boolean;
+  source: "app" | "web";
+}) {
+  return apiCall<{ success: true; request: AccountDeletionRequest }>(
+    "/api/auth/account-deletion",
+    { method: "POST", body: JSON.stringify(input) },
+  );
+}
+
+export async function cancelAccountDeletion() {
+  return apiCall<{ success: true; request: null }>(
+    "/api/auth/account-deletion",
+    { method: "DELETE" },
+  );
+}
+
 // Get current authenticated user (web uses cookie-based auth)
 export async function getMe(): Promise<AuthApiUser | null> {
   try {
@@ -594,11 +744,16 @@ export async function getMemberDirectory() {
 }
 
 export async function getOperatorMembers() {
-  const result = await apiCall<{ operators: OperatorMember[] }>("/api/admin/operators");
+  const result = await apiCall<{ operators: OperatorMember[] }>(
+    "/api/admin/operators",
+  );
   return result.operators;
 }
 
-export async function updateOperatorMemberTerm(userId: number, memberTerm: string | null) {
+export async function updateOperatorMemberTerm(
+  userId: number,
+  memberTerm: string | null,
+) {
   const result = await apiCall<{ operator: OperatorMember }>(
     `/api/admin/operators/${userId}/member-term`,
     { method: "PATCH", body: JSON.stringify({ memberTerm }) },
@@ -625,21 +780,34 @@ export async function updateMyProfile(input: {
   displayName: string;
   profile: Record<string, unknown>;
 }) {
-  return apiCall<{ success: boolean; displayName: string; profile: Record<string, unknown>; updatedAt: string }>(
-    "/api/members/me/profile",
-    { method: "PATCH", body: JSON.stringify(input) },
-  );
+  return apiCall<{
+    success: boolean;
+    displayName: string;
+    profile: Record<string, unknown>;
+    updatedAt: string;
+  }>("/api/members/me/profile", {
+    method: "PATCH",
+    body: JSON.stringify(input),
+  });
 }
 
 export async function setMemberFollow(memberId: string, following: boolean) {
-  const result = await apiCall<{ member: PublicMember }>(`/api/members/${encodeURIComponent(memberId)}/follow`, {
-    method: following ? "PUT" : "DELETE",
-  });
+  const result = await apiCall<{ member: PublicMember }>(
+    `/api/members/${encodeURIComponent(memberId)}/follow`,
+    {
+      method: following ? "PUT" : "DELETE",
+    },
+  );
   return result.member;
 }
 
-export async function getMemberSocialList(memberId: string, kind: "followers" | "following") {
-  const result = await apiCall<{ members: PublicMember[] }>(`/api/members/${encodeURIComponent(memberId)}/${kind}`);
+export async function getMemberSocialList(
+  memberId: string,
+  kind: "followers" | "following",
+) {
+  const result = await apiCall<{ members: PublicMember[] }>(
+    `/api/members/${encodeURIComponent(memberId)}/${kind}`,
+  );
   return result.members;
 }
 
@@ -659,19 +827,32 @@ export async function getBoardArchive(scope: "all" | "public" = "all") {
 }
 
 export async function getClub(clubId: string) {
-  const result = await apiCall<{ club: ClubRecord }>(`/api/clubs/${encodeURIComponent(clubId)}`);
+  const result = await apiCall<{ club: ClubRecord }>(
+    `/api/clubs/${encodeURIComponent(clubId)}`,
+  );
   return result.club;
 }
 
-export async function submitClubApplication(clubId: string, wantsToDo: string, messageToLeader: string) {
-  const result = await apiCall<{ club: ClubRecord }>(`/api/clubs/${encodeURIComponent(clubId)}/applications`, {
-    method: "POST",
-    body: JSON.stringify({ wantsToDo, messageToLeader }),
-  });
+export async function submitClubApplication(
+  clubId: string,
+  wantsToDo: string,
+  messageToLeader: string,
+) {
+  const result = await apiCall<{ club: ClubRecord }>(
+    `/api/clubs/${encodeURIComponent(clubId)}/applications`,
+    {
+      method: "POST",
+      body: JSON.stringify({ wantsToDo, messageToLeader }),
+    },
+  );
   return result.club;
 }
 
-export async function reviewClubApplication(clubId: string, memberId: string, action: "approve" | "hold" | "reject") {
+export async function reviewClubApplication(
+  clubId: string,
+  memberId: string,
+  action: "approve" | "hold" | "reject",
+) {
   const result = await apiCall<{ club: ClubRecord }>(
     `/api/clubs/${encodeURIComponent(clubId)}/applications/${encodeURIComponent(memberId)}`,
     { method: "PATCH", body: JSON.stringify({ action }) },
@@ -687,9 +868,12 @@ export async function getClubApplicantReview(clubId: string, memberId: string) {
 }
 
 export async function leaveClub(clubId: string) {
-  const result = await apiCall<{ club: ClubRecord }>(`/api/clubs/${encodeURIComponent(clubId)}/membership`, {
-    method: "DELETE",
-  });
+  const result = await apiCall<{ club: ClubRecord }>(
+    `/api/clubs/${encodeURIComponent(clubId)}/membership`,
+    {
+      method: "DELETE",
+    },
+  );
   return result.club;
 }
 
@@ -702,12 +886,16 @@ export async function removeClubMember(clubId: string, memberId: string) {
 }
 
 export async function getNotifications() {
-  const result = await apiCall<{ notifications: AppNotification[] }>("/api/notifications");
+  const result = await apiCall<{ notifications: AppNotification[] }>(
+    "/api/notifications",
+  );
   return result.notifications;
 }
 
 export async function getHomeActivities() {
-  const result = await apiCall<{ activities: import("@/lib/home-activity-store").HomeActivity[] }>("/api/home/activities");
+  const result = await apiCall<{
+    activities: import("@/lib/home-activity-store").HomeActivity[];
+  }>("/api/home/activities");
   return result.activities;
 }
 
@@ -720,7 +908,10 @@ export async function markNotificationRead(notificationId: string) {
 }
 
 export async function markAllNotificationsRead() {
-  return apiCall<{ success: boolean; readAt: string }>("/api/notifications/read-all", { method: "PATCH" });
+  return apiCall<{ success: boolean; readAt: string }>(
+    "/api/notifications/read-all",
+    { method: "PATCH" },
+  );
 }
 
 export async function setPrivateMemberNote(memberId: string, note: string) {
@@ -736,7 +927,9 @@ export async function getEvents() {
 }
 
 export async function getEvent(eventId: string) {
-  const result = await apiCall<{ event: Event }>(`/api/events/${encodeURIComponent(eventId)}`);
+  const result = await apiCall<{ event: Event }>(
+    `/api/events/${encodeURIComponent(eventId)}`,
+  );
   return result.event;
 }
 
@@ -746,7 +939,9 @@ export async function uploadEventImage(uri: string) {
   const blob = await source.blob();
   const baseUrl = getApiBaseUrl();
   const cleanBaseUrl = baseUrl.endsWith("/") ? baseUrl.slice(0, -1) : baseUrl;
-  const headers: Record<string, string> = { "content-type": blob.type || "image/jpeg" };
+  const headers: Record<string, string> = {
+    "content-type": blob.type || "image/jpeg",
+  };
   if (Platform.OS !== "web") {
     const sessionToken = await Auth.getSessionToken();
     if (sessionToken) headers.Authorization = `Bearer ${sessionToken}`;
@@ -758,8 +953,13 @@ export async function uploadEventImage(uri: string) {
     credentials: "include",
   });
   if (!response.ok) {
-    const result = await response.json().catch(() => ({})) as { error?: string };
-    throw new ApiError(result.error ?? "画像を保存できませんでした", response.status);
+    const result = (await response.json().catch(() => ({}))) as {
+      error?: string;
+    };
+    throw new ApiError(
+      result.error ?? "画像を保存できませんでした",
+      response.status,
+    );
   }
   return (await response.json()) as { imageUrl: string };
 }
@@ -767,7 +967,10 @@ export async function uploadEventImage(uri: string) {
 export async function createEvent(event: Event) {
   const result = await apiCall<{ event: Event }>("/api/events", {
     method: "POST",
-    body: JSON.stringify({ event: { ...event, privateMemo: undefined }, privateMemo: event.privateMemo }),
+    body: JSON.stringify({
+      event: { ...event, privateMemo: undefined },
+      privateMemo: event.privateMemo,
+    }),
   });
   return result.event;
 }
@@ -779,14 +982,26 @@ export async function setEventFavorite(eventId: string, favorite: boolean) {
   );
 }
 
-export async function applyToEvent(eventId: string, termsAccepted: boolean, pointsToUse = 0) {
-  return apiCall<{ event: Event; pointBalance: number | null; pointsUsed: number }>(
-    `/api/events/${encodeURIComponent(eventId)}/applications`,
-    { method: "POST", body: JSON.stringify({ termsAccepted, pointsToUse }) },
-  );
+export async function applyToEvent(
+  eventId: string,
+  termsAccepted: boolean,
+  pointsToUse = 0,
+) {
+  return apiCall<{
+    event: Event;
+    pointBalance: number | null;
+    pointsUsed: number;
+  }>(`/api/events/${encodeURIComponent(eventId)}/applications`, {
+    method: "POST",
+    body: JSON.stringify({ termsAccepted, pointsToUse }),
+  });
 }
 
-export async function reviewEventApplicant(eventId: string, memberId: string, action: "approve" | "cancel") {
+export async function reviewEventApplicant(
+  eventId: string,
+  memberId: string,
+  action: "approve" | "cancel",
+) {
   const result = await apiCall<{ event: Event }>(
     `/api/events/${encodeURIComponent(eventId)}/participants/${encodeURIComponent(memberId)}`,
     { method: "PATCH", body: JSON.stringify({ action }) },
@@ -809,15 +1024,26 @@ export async function cancelEvent(eventId: string) {
   );
 }
 
-export async function requestEventCancellation(eventId: string, contactedOrganizer: boolean, policyConfirmed: boolean) {
+export async function requestEventCancellation(
+  eventId: string,
+  contactedOrganizer: boolean,
+  policyConfirmed: boolean,
+) {
   const result = await apiCall<{ event: Event }>(
     `/api/events/${encodeURIComponent(eventId)}/cancellation-requests`,
-    { method: "POST", body: JSON.stringify({ contactedOrganizer, policyConfirmed }) },
+    {
+      method: "POST",
+      body: JSON.stringify({ contactedOrganizer, policyConfirmed }),
+    },
   );
   return result.event;
 }
 
-export async function reviewEventCancellation(eventId: string, memberId: string, action: "approve" | "reject") {
+export async function reviewEventCancellation(
+  eventId: string,
+  memberId: string,
+  action: "approve" | "reject",
+) {
   const result = await apiCall<{ event: Event }>(
     `/api/events/${encodeURIComponent(eventId)}/cancellation-requests/${encodeURIComponent(memberId)}`,
     { method: "PATCH", body: JSON.stringify({ action }) },
@@ -834,10 +1060,10 @@ export async function syncSquareSubscriptions(offset = 0) {
     total: number;
     nextOffset: number;
     hasMore: boolean;
-  }>(
-    "/api/admin/square-sync",
-    { method: "POST", body: JSON.stringify({ offset }) },
-  );
+  }>("/api/admin/square-sync", {
+    method: "POST",
+    body: JSON.stringify({ offset }),
+  });
 }
 
 export type MembershipSummary = {
@@ -881,7 +1107,9 @@ export type MemberReconciliationReport = {
 };
 
 export async function getMemberReconciliationReport() {
-  return apiCall<MemberReconciliationReport>("/api/admin/member-import/reconciliation");
+  return apiCall<MemberReconciliationReport>(
+    "/api/admin/member-import/reconciliation",
+  );
 }
 
 // Establish session cookie on the backend (3000-xxx domain)

@@ -172,9 +172,7 @@ export async function verifyPassword(
   const salt = fromBase64Url(saltText);
   if (scheme === PASSWORD_SCHEME && !pepper) return false;
   const passwordMaterial =
-    scheme === PASSWORD_SCHEME
-      ? await hmacSha256(pepper, password)
-      : password;
+    scheme === PASSWORD_SCHEME ? await hmacSha256(pepper, password) : password;
   const key = await crypto.subtle.importKey(
     "raw",
     encoder.encode(passwordMaterial),
@@ -193,6 +191,10 @@ export async function verifyPassword(
 
 function addDays(date: Date, days: number) {
   return new Date(date.getTime() + days * 86_400_000);
+}
+
+export function accountDeletionDeadline(now = new Date()) {
+  return addDays(now, 30);
 }
 
 function endOfDate(value: string) {
@@ -268,7 +270,8 @@ export function effectiveMemberRank(
   rolesJson: string | null | undefined,
 ) {
   const roles = jsonArray(rolesJson).join(" ").toLowerCase();
-  if (roles.includes("platinum") || roles.includes("プラチナ")) return "platinum";
+  if (roles.includes("platinum") || roles.includes("プラチナ"))
+    return "platinum";
   if (roles.includes("gold") || roles.includes("ゴールド")) return "gold";
   if (roles.includes("silver") || roles.includes("シルバー")) return "silver";
   return ["regular", "silver", "gold", "platinum"].includes(storedRank ?? "")
@@ -281,7 +284,7 @@ function profilePayload(value: string | null | undefined) {
   try {
     const parsed = JSON.parse(value);
     return parsed && typeof parsed === "object" && !Array.isArray(parsed)
-      ? parsed as Record<string, unknown>
+      ? (parsed as Record<string, unknown>)
       : {};
   } catch {
     return {};
@@ -310,9 +313,11 @@ function memberPayload(row: MemberRow) {
     joinedAt: row.subscription_started_at ?? null,
     achievementBadges: jsonArray(row.achievement_badges_json),
     profile: profilePayload(row.profile_json),
-    xp: ["operator", "admin"].includes(row.access_role) || ["operator", "admin"].includes(row.role)
-      ? 0
-      : row.xp ?? 0,
+    xp:
+      ["operator", "admin"].includes(row.access_role) ||
+      ["operator", "admin"].includes(row.role)
+        ? 0
+        : (row.xp ?? 0),
     participationCount: row.participation_count ?? 0,
     organizerCount: row.organizer_count ?? 0,
   };
@@ -452,8 +457,7 @@ export async function requestHasMemberAccess(
   if (!member) return false;
   if (!allowedAccessRoles?.length) return true;
   return (
-    allowedAccessRoles.includes(member.access_role) ||
-    member.role === "admin"
+    allowedAccessRoles.includes(member.access_role) || member.role === "admin"
   );
 }
 
@@ -595,22 +599,28 @@ async function requestSetupCode(
       .prepare(
         `INSERT INTO members
         (email, display_name, role, access_role, branches_json, account_status, created_at, updated_at)
-        VALUES (?, ?, 'user', 'member', '[]', 'active', ?, ?)`
+        VALUES (?, ?, 'user', 'member', '[]', 'active', ?, ?)`,
       )
       .bind(email, email.split("@")[0], now, now)
       .run();
     member = await findMember(db, email);
     if (!member)
-      return responseJson({ error: "会員アカウントを作成できませんでした" }, 500);
+      return responseJson(
+        { error: "会員アカウントを作成できませんでした" },
+        500,
+      );
     await db
       .prepare(
         `INSERT INTO audit_logs
         (actor_user_id, action, entity_type, entity_id, metadata_json, created_at)
-        VALUES (NULL, 'member.auto_created_from_square', 'member', ?, ?, ?)`
+        VALUES (NULL, 'member.auto_created_from_square', 'member', ?, ?, ?)`,
       )
       .bind(
         String(member.id),
-        JSON.stringify({ billingEmail: email, publicMemberId: member.public_member_id }),
+        JSON.stringify({
+          billingEmail: email,
+          publicMemberId: member.public_member_id,
+        }),
         now,
       )
       .run();
@@ -827,20 +837,13 @@ async function logout(request: Request, db: D1Database) {
   return responseJson({ success: true }, 200, { "set-cookie": clearCookie });
 }
 
-async function selectBranches(
-  request: Request,
-  env: SitesEnv,
-  db: D1Database,
-) {
+async function selectBranches(request: Request, env: SitesEnv, db: D1Database) {
   const member = await authenticatedRequestMember(request, env);
   if (!member) return responseJson({ error: "ログインが必要です" }, 401);
   const input = await readJson(request);
   const branches = normalizeBranchSelection(input.branches);
   if (!branches)
-    return responseJson(
-      { error: "所属支部を1つ以上選択してください" },
-      400,
-    );
+    return responseJson({ error: "所属支部を1つ以上選択してください" }, 400);
   const now = new Date().toISOString();
   await db.batch([
     db
@@ -854,18 +857,166 @@ async function selectBranches(
         (actor_user_id, action, entity_type, entity_id, metadata_json, created_at)
         VALUES (?, 'member.branches_updated', 'member', ?, ?, ?)`,
       )
-      .bind(
-        member.id,
-        String(member.id),
-        JSON.stringify({ branches }),
-        now,
-      ),
+      .bind(member.id, String(member.id), JSON.stringify({ branches }), now),
   ]);
   return responseJson({
     success: true,
     branch: branches[0],
     branches,
   });
+}
+
+type AccountDeletionRow = {
+  id: string;
+  status: "pending" | "cancelled" | "completed";
+  source: "app" | "web";
+  requested_at: string;
+  scheduled_for: string;
+};
+
+function deletionPayload(row: AccountDeletionRow | null) {
+  return row
+    ? {
+        id: row.id,
+        status: row.status,
+        source: row.source,
+        requestedAt: row.requested_at,
+        scheduledFor: row.scheduled_for,
+      }
+    : null;
+}
+
+async function accountDeletion(
+  request: Request,
+  env: SitesEnv,
+  db: D1Database,
+) {
+  const token = extractSessionToken(request);
+  const member = token ? await sessionMember(db, token) : null;
+  if (!member || !membershipAllowsAccess(member, member))
+    return responseJson({ error: "ログインが必要です" }, 401);
+
+  if (request.method === "GET") {
+    const pending = await db
+      .prepare(
+        `SELECT id, status, source, requested_at, scheduled_for
+         FROM account_deletion_requests
+         WHERE member_id = ? AND status = 'pending'
+         ORDER BY requested_at DESC LIMIT 1`,
+      )
+      .bind(member.id)
+      .first<AccountDeletionRow>();
+    return responseJson({ request: deletionPayload(pending) });
+  }
+
+  if (request.method === "POST") {
+    const input = await readJson(request);
+    const password = String(input.password ?? "");
+    if (
+      input.understandSubscriptionSeparate !== true ||
+      input.understandDataHandling !== true
+    )
+      return responseJson({ error: "確認事項への同意が必要です" }, 400);
+    if (
+      !member.password_hash ||
+      !(await verifyPassword(password, member.password_hash, env.AUTH_SECRET))
+    )
+      return responseJson({ error: "パスワードが正しくありません" }, 401);
+    if (!(await rateLimit(db, `account-deletion:${member.id}`, 5, 60)))
+      return responseJson(
+        { error: "操作回数が多すぎます。時間をおいてお試しください" },
+        429,
+      );
+
+    const existing = await db
+      .prepare(
+        `SELECT id, status, source, requested_at, scheduled_for
+         FROM account_deletion_requests
+         WHERE member_id = ? AND status = 'pending'
+         ORDER BY requested_at DESC LIMIT 1`,
+      )
+      .bind(member.id)
+      .first<AccountDeletionRow>();
+    if (existing)
+      return responseJson({
+        success: true,
+        request: deletionPayload(existing),
+      });
+
+    const now = new Date();
+    const id = crypto.randomUUID();
+    const source = input.source === "app" ? "app" : "web";
+    const requestedAt = now.toISOString();
+    const scheduledFor = accountDeletionDeadline(now).toISOString();
+    await db.batch([
+      db
+        .prepare(
+          `INSERT INTO account_deletion_requests
+           (id, member_id, status, source, requested_at, scheduled_for, updated_at)
+           VALUES (?, ?, 'pending', ?, ?, ?, ?)`,
+        )
+        .bind(id, member.id, source, requestedAt, scheduledFor, requestedAt),
+      db
+        .prepare(
+          `INSERT INTO audit_logs
+           (actor_user_id, action, entity_type, entity_id, metadata_json, created_at)
+           VALUES (?, 'member.account_deletion_requested', 'account_deletion', ?, ?, ?)`,
+        )
+        .bind(
+          member.id,
+          id,
+          JSON.stringify({ source, scheduledFor }),
+          requestedAt,
+        ),
+    ]);
+    return responseJson(
+      {
+        success: true,
+        request: deletionPayload({
+          id,
+          status: "pending",
+          source,
+          requested_at: requestedAt,
+          scheduled_for: scheduledFor,
+        }),
+      },
+      202,
+    );
+  }
+
+  if (request.method === "DELETE") {
+    const pending = await db
+      .prepare(
+        `SELECT id, status, source, requested_at, scheduled_for
+         FROM account_deletion_requests
+         WHERE member_id = ? AND status = 'pending'
+         ORDER BY requested_at DESC LIMIT 1`,
+      )
+      .bind(member.id)
+      .first<AccountDeletionRow>();
+    if (!pending)
+      return responseJson({ error: "申請中の削除依頼はありません" }, 404);
+    const now = new Date().toISOString();
+    await db.batch([
+      db
+        .prepare(
+          `UPDATE account_deletion_requests
+           SET status = 'cancelled', cancelled_at = ?, updated_at = ?
+           WHERE id = ? AND member_id = ? AND status = 'pending'`,
+        )
+        .bind(now, now, pending.id, member.id),
+      db
+        .prepare(
+          `INSERT INTO audit_logs
+           (actor_user_id, action, entity_type, entity_id, metadata_json, created_at)
+           VALUES (?, 'member.account_deletion_cancelled', 'account_deletion', ?, NULL, ?)`,
+        )
+        .bind(member.id, pending.id, now),
+    ]);
+    return responseJson({ success: true, request: null });
+  }
+
+  return responseJson({ error: "not found" }, 404);
 }
 
 export async function handleAuthRequest(
@@ -894,6 +1045,11 @@ export async function handleAuthRequest(
       return await logout(request, env.DB);
     if (pathname === "/api/auth/branches" && request.method === "POST")
       return await selectBranches(request, env, env.DB);
+    if (
+      pathname === "/api/auth/account-deletion" &&
+      ["GET", "POST", "DELETE"].includes(request.method)
+    )
+      return await accountDeletion(request, env, env.DB);
     return responseJson({ error: "not found" }, 404);
   } catch (error) {
     const message = error instanceof Error ? error.message : "unknown";
