@@ -41,6 +41,7 @@ import { awardContestWinnerOnce, buildContestEntryContent, createContestAwardCom
 import { loadImportedGourmetContests } from "@/lib/gourmet-contest-import";
 import { parseDiscordBoardArchive } from "@/lib/discord-board-import";
 import * as Api from "@/lib/_core/api";
+import { boardCommentData, boardThreadData, sharedCommentToBoardComment, sharedThreadToBoardThread } from "@/lib/shared-board-content";
 import { loadCommentReactions, loadThreadReactions, saveCommentReactions, saveThreadReactions } from "@/lib/board-reactions";
 import { applyBoardThreadEdits, loadBoardThreadEdits, saveBoardThreadEdit } from "@/lib/board-thread-edits";
 import { Image } from "expo-image";
@@ -750,14 +751,14 @@ function ThreadDetailModal({
     }
   }, [comments, contestCommentingOpen, reactionsHydrated, thread]);
 
-  const handleComment = () => {
+  const handleComment = async () => {
     if (!contestCommentingOpen) return;
     if (isContest && !contestFormValid) return;
     const content = isContest
       ? buildContestEntryContent({ restaurant: contestRestaurant, menu: contestMenu, pitch: contestPitch, referenceUrl: contestReferenceUrl })
       : commentText.trim();
     if (isContest ? !contestRestaurant.trim() || !contestMenu.trim() || !contestPitch.trim() : (!content && !commentPollEnabled) || !commentPollValid) return;
-    const newComment: BoardComment = {
+    let newComment: BoardComment = {
       id: `bc_new_${Date.now()}`,
       threadId: thread.id,
       author: CURRENT_USER,
@@ -766,6 +767,15 @@ function ThreadDetailModal({
       images: isContest && contestImages.length ? contestImages : undefined,
       poll: pollAllowed && commentPollEnabled ? { question: commentPollQuestion.trim(), deadline: commentPollDeadline, allowMultiple: commentPollAllowMultiple, options: commentPollOptions.filter((option) => option.trim()).map((option, index) => ({ id: `option_${index + 1}`, text: option.trim(), voterIds: [] })) } : undefined,
     };
+    if (thread.shared) {
+      try {
+        const saved = await Api.createSharedBoardComment(thread.id, { content, data: boardCommentData(newComment) });
+        newComment = { ...newComment, id: saved.id, createdAt: saved.createdAt, shared: true };
+      } catch (error) {
+        Alert.alert("コメントを送信できませんでした", error instanceof Error ? error.message : "通信環境を確認して、もう一度お試しください。");
+        return;
+      }
+    }
     setComments([...comments, newComment]);
     if (thread.category === "gourmet-contest") void recordHomeActivity({ id: `comment:${newComment.id}`, kind: "contest_comment", title: `${thread.title}にコメントが追加されました`, description: content, createdAt: newComment.createdAt, route: "/board", params: { category: "gourmet-contest", view: "threads" } });
     setCommentText("");
@@ -803,20 +813,35 @@ function ThreadDetailModal({
     if (!result.canceled) setContestImages((current) => [...current, ...result.assets.map((asset) => asset.uri)].slice(0, 5));
   };
 
-  const handleSaveCommentEdit = (commentId: string) => {
+  const handleSaveCommentEdit = async (commentId: string) => {
     if (!editingCommentText.trim()) return;
+    const target = comments.find((comment) => comment.id === commentId);
+    if (target?.shared) {
+      try {
+        await Api.updateSharedBoardComment(commentId, { content: editingCommentText.trim(), data: boardCommentData(target) });
+      } catch (error) {
+        Alert.alert("保存できませんでした", error instanceof Error ? error.message : "もう一度お試しください。");
+        return;
+      }
+    }
     setComments((current) => current.map((comment) => comment.id === commentId ? { ...comment, content: editingCommentText.trim() } : comment));
-    void saveBoardCommentEdit(commentId, editingCommentText.trim());
+    if (!target?.shared) void saveBoardCommentEdit(commentId, editingCommentText.trim());
     setEditingCommentId(null);
     setEditingCommentText("");
   };
 
-  const handleDeleteComment = (commentId: string) => Alert.alert("コメントを削除しますか？", "削除後、この端末では表示されなくなります。", [{ text: "キャンセル", style: "cancel" }, { text: "削除", style: "destructive", onPress: () => { setComments((current) => current.filter((comment) => comment.id !== commentId)); void deleteBoardComment(commentId); } }]);
+  const handleDeleteComment = (commentId: string) => Alert.alert("コメントを削除しますか？", "削除後は元に戻せません。", [{ text: "キャンセル", style: "cancel" }, { text: "削除", style: "destructive", onPress: () => {
+    const target = comments.find((comment) => comment.id === commentId);
+    const remove = () => setComments((current) => current.filter((comment) => comment.id !== commentId));
+    if (target?.shared) void Api.deleteSharedBoardComment(commentId).then(remove).catch((error) => Alert.alert("削除できませんでした", error instanceof Error ? error.message : "もう一度お試しください。"));
+    else { remove(); void deleteBoardComment(commentId); }
+  } }]);
 
   const handleThreadReaction = (emoji: string) => {
     setThreadReactions((current) => {
       const next = toggleReactionMember(current, emoji, CURRENT_USER.id);
-      void saveThreadReactions(thread.id, next);
+      if (thread.shared) void Api.setSharedBoardReaction({ targetType: "thread", targetId: thread.id, emoji }, next[emoji]?.includes(CURRENT_USER.id) ?? false).catch(() => setThreadReactions(current));
+      else void saveThreadReactions(thread.id, next);
       return next;
     });
   };
@@ -825,7 +850,8 @@ function ThreadDetailModal({
     setComments((current) => current.map((comment) => {
       if (comment.id !== commentId) return comment;
       const reactions = toggleReactionMember(comment.reactions, "❤️", CURRENT_USER.id);
-      void saveCommentReactions(comment.id, reactions);
+      if (comment.shared) void Api.setSharedBoardReaction({ targetType: "comment", targetId: comment.id, emoji: "❤️" }, reactions["❤️"]?.includes(CURRENT_USER.id) ?? false);
+      else void saveCommentReactions(comment.id, reactions);
       return { ...comment, reactions };
     }));
   };
@@ -833,7 +859,8 @@ function ThreadDetailModal({
     setComments((current) => current.map((comment) => {
       if (comment.id !== commentId) return comment;
       const reactions = toggleReactionMember(comment.reactions, emoji, CURRENT_USER.id);
-      void saveCommentReactions(comment.id, reactions);
+      if (comment.shared) void Api.setSharedBoardReaction({ targetType: "comment", targetId: comment.id, emoji }, reactions[emoji]?.includes(CURRENT_USER.id) ?? false);
+      else void saveCommentReactions(comment.id, reactions);
       return { ...comment, reactions };
     }));
   };
@@ -1579,7 +1606,7 @@ function CreateThreadModal({
   onClose: () => void;
   category: string;
   categories: BoardCategory[];
-  onAdd: (thread: BoardThread) => void;
+  onAdd: (thread: BoardThread) => Promise<BoardThread> | BoardThread;
   canManage: boolean;
 }) {
   const colors = useColors();
@@ -1745,8 +1772,14 @@ function CreateThreadModal({
         options: pollOptions.filter((option) => option.trim()).map((option, index) => ({ id: `option_${index + 1}`, text: option.trim(), voterIds: [] })),
       } : undefined,
     };
-    onAdd(newThread);
-    const homeActivity = boardActivityForThread(newThread);
+    let savedThread: BoardThread;
+    try {
+      savedThread = await onAdd(newThread);
+    } catch (error) {
+      setFormError(error instanceof Error ? error.message : "投稿を保存できませんでした。もう一度お試しください。");
+      return;
+    }
+    const homeActivity = boardActivityForThread(savedThread);
     if (homeActivity) void recordHomeActivity(homeActivity);
     if (!isMealReport && !isGourmetAdvice) {
       const mentionContent = isIntroduction ? `${introductionText} ${wantToTry}` : content;
@@ -2241,6 +2274,44 @@ export default function BoardScreen() {
     return () => { active = false; };
   }, []);
 
+  const loadSharedBoardContent = useCallback(async (category?: string) => {
+    const result = await Api.getSharedBoardContent(category);
+    const commentsByThread = result.comments
+      .map((comment) => sharedCommentToBoardComment(comment, CURRENT_USER.id))
+      .reduce<Record<string, BoardComment[]>>((groups, comment) => {
+        (groups[comment.threadId] ??= []).push(comment);
+        return groups;
+      }, {});
+    const threads = result.threads.map((thread) => ({
+      ...sharedThreadToBoardThread(thread, CURRENT_USER.id),
+      commentCount: commentsByThread[thread.id]?.length ?? 0,
+    }));
+    setDynamicThreads((current) => {
+      const incomingIds = new Set(threads.map((thread) => thread.id));
+      const retained = category
+        ? current.filter((thread) => !(thread.shared && thread.category === category && !incomingIds.has(thread.id)))
+        : current.filter((thread) => !thread.shared || thread.category.startsWith("club-club-"));
+      return [...threads, ...retained.filter((thread) => !incomingIds.has(thread.id))];
+    });
+    setImportedComments((current) => ({
+      ...current,
+      ...Object.fromEntries(result.threads.map((thread) => [thread.id, commentsByThread[thread.id] ?? []])),
+    }));
+  }, []);
+
+  useEffect(() => {
+    void loadSharedBoardContent().catch(() => {
+      // 既存の移行データは表示を続け、共有DBの再取得は更新操作時に再試行する。
+    });
+  }, [loadSharedBoardContent]);
+
+  useEffect(() => {
+    if (!activeCategory.startsWith("club-club-") || !canAccessCategory(categories.find((item) => item.key === activeCategory) ?? { key: activeCategory, label: "部活動", group: "club", createdByAdmin: true })) return;
+    void loadSharedBoardContent(activeCategory).catch(() => {
+      // 非部員・通信失敗時は共有投稿を表示しない。
+    });
+  }, [activeCategory, canAccessCategory, categories, loadSharedBoardContent]);
+
   useEffect(() => {
     void loadBoardThreadEdits().then(setEditedThreads);
     void loadDeletedBoardThreadIds().then(setDeletedThreadIds);
@@ -2285,11 +2356,19 @@ export default function BoardScreen() {
     return isRecruitmentBoardCategory(thread.category) && !isClubSelfIntroduction(thread) && (thread.author.id === viewerMemberId || userCanModerateRecruitment || viewerIsLeader);
   };
   const canPinThread = (thread: BoardThread) => thread.category.startsWith("club-club-") && !isClubSelfIntroduction(thread) && (thread.author.id === viewerMemberId || Boolean(clubForThread(thread) && getClubViewerAccess(clubForThread(thread)!, authUser?.memberId, CURRENT_USER.id).isLeader) || userCanModerateRecruitment);
-  const updateThreadManagement = (thread: BoardThread, changes: Pick<BoardThread, "isRecruiting" | "isPinned" | "recruitmentStatus">) => {
+  const updateThreadManagement = async (thread: BoardThread, changes: Pick<BoardThread, "isRecruiting" | "isPinned" | "recruitmentStatus">) => {
     const updated = { ...thread, ...changes, lastUpdated: new Date().toISOString() };
+    if (thread.shared) {
+      try {
+        await Api.updateSharedBoardThread(thread.id, { status: changes.recruitmentStatus ?? "none", pinned: Boolean(changes.isPinned), data: boardThreadData(updated) });
+      } catch (error) {
+        Alert.alert("保存できませんでした", error instanceof Error ? error.message : "通信環境を確認して、もう一度お試しください。");
+        return;
+      }
+    }
     setEditedThreads((current) => ({ ...current, [updated.id]: updated }));
     setSelectedThread((current) => current?.id === updated.id ? updated : current);
-    void saveBoardThreadEdit(updated).catch(() => Alert.alert("保存できませんでした", "通信環境を確認して、もう一度お試しください。"));
+    if (!thread.shared) void saveBoardThreadEdit(updated).catch(() => Alert.alert("保存できませんでした", "通信環境を確認して、もう一度お試しください。"));
   };
   const promptRecruitmentStatus = (thread: BoardThread) => {
     if (!canChangeRecruitment(thread) && !canPinThread(thread)) return;
@@ -2501,8 +2580,17 @@ export default function BoardScreen() {
         category={activeCategory}
         categories={categories}
         canManage={userCanManageContests}
-        onAdd={(thread) => {
-          setDynamicThreads((prev) => [thread, ...prev]);
+        onAdd={async (thread) => {
+          const saved = await Api.createSharedBoardThread({
+            category: thread.category,
+            title: thread.title,
+            content: thread.preview,
+            status: thread.recruitmentStatus ?? (thread.isRecruiting ? "open" : "none"),
+            data: boardThreadData(thread),
+          });
+          const sharedThread = { ...thread, id: saved.id, lastUpdated: saved.createdAt, shared: true };
+          setDynamicThreads((prev) => [sharedThread, ...prev]);
+          setImportedComments((current) => ({ ...current, [sharedThread.id]: [] }));
           const xpAction = thread.category === "meal-report" ? POINT_ACTIONS.mealReportPost : POINT_ACTIONS.boardPost;
           if (!isOperatorRole(authUser?.role, authUser?.accessRole)) {
             void awardXp(CURRENT_USER.points, xpAction.points, xpAction.label).then(setXpReward);
@@ -2513,6 +2601,7 @@ export default function BoardScreen() {
               Alert.alert("投稿は完了しました", "グルメマップへの自動登録のみ失敗しました。運営が後ほど確認します。");
             });
           }
+          return sharedThread;
         }}
       />
 
@@ -2522,6 +2611,13 @@ export default function BoardScreen() {
           thread={editingThread}
           onClose={() => setEditingThread(null)}
           onSave={(updated) => {
+            if (updated.shared) {
+              void Api.updateSharedBoardThread(updated.id, { title: updated.title, content: updated.preview, status: updated.recruitmentStatus ?? (updated.isRecruiting ? "open" : "none"), pinned: Boolean(updated.isPinned), data: boardThreadData(updated) }).then(() => {
+                setEditedThreads((prev) => ({ ...prev, [updated.id]: updated }));
+                setEditingThread(null);
+              }).catch((error) => Alert.alert("保存できませんでした", error instanceof Error ? error.message : "もう一度お試しください。"));
+              return;
+            }
             setEditedThreads((prev) => ({ ...prev, [updated.id]: updated }));
             void saveBoardThreadEdit(updated).catch(() => {
               Alert.alert("保存できませんでした", "通信環境を確認して、もう一度お試しください。");
@@ -2530,7 +2626,8 @@ export default function BoardScreen() {
           }}
           onDelete={() => {
             const deletingId = editingThread.id;
-            void deleteBoardThread(deletingId).then(() => setDeletedThreadIds((current) => current.includes(deletingId) ? current : [...current, deletingId]));
+            const deletion = editingThread.shared ? Api.deleteSharedBoardThread(deletingId) : deleteBoardThread(deletingId);
+            void deletion.then(() => setDeletedThreadIds((current) => current.includes(deletingId) ? current : [...current, deletingId])).catch((error) => Alert.alert("削除できませんでした", error instanceof Error ? error.message : "もう一度お試しください。"));
             setSelectedThread(null);
             setEditingThread(null);
             router.setParams({ thread: "" });

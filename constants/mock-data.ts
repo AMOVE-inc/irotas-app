@@ -256,6 +256,8 @@ export interface BoardThread {
     archived?: boolean;
     winnerName?: string;
   };
+  /** 端末保存ではなく共有DBに保存された投稿。 */
+  shared?: boolean;
 }
 
 export interface BoardComment {
@@ -270,6 +272,8 @@ export interface BoardComment {
   poll?: BoardPoll;
   /** 締切後の結果発表など、運営が自動投稿したコメント。 */
   isSystem?: boolean;
+  /** 端末保存ではなく共有DBに保存されたコメント。 */
+  shared?: boolean;
 }
 
 export interface ChatRoom {

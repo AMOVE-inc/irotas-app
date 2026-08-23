@@ -12,8 +12,10 @@ const MAX_BODY_BYTES = 64 * 1024;
 const MAX_DATA_BYTES = 48 * 1024;
 const PUBLIC_CATEGORIES = new Set([
   "introduction",
+  "meal-report",
   "gourmet-report",
   "gourmet-contest",
+  "gourmet-advice",
   "gourmet-consultation",
   "free-chat",
   "club-all",

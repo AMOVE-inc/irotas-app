@@ -111,6 +111,15 @@ describe("shared board content API", () => {
     expect(writes.some((item) => item.sql.includes("INSERT INTO audit_logs"))).toBe(true);
   });
 
+  it.each(["meal-report", "gourmet-advice"])("accepts the app category %s", async (category) => {
+    const { db } = testDatabase({ id: 9, role: "user", access_role: "member", account_status: "active" });
+    const response = await handleBoardContentRequest(
+      request("/api/board/threads", "POST", { category, title: "投稿", content: "本文", status: "none" }),
+      { DB: db } as SitesEnv,
+    );
+    expect(response?.status).toBe(201);
+  });
+
   it("allows only operators to create gourmet contests", async () => {
     const general = testDatabase({ id: 9, role: "user", access_role: "member", account_status: "active" });
     const denied = await handleBoardContentRequest(
