@@ -26,7 +26,8 @@ export default function Root({ children }: PropsWithChildren) {
         <script
           dangerouslySetInnerHTML={{
             __html:
-              "if (window.top !== window.self) document.documentElement.style.display = 'none';",
+              "if (window.top !== window.self) document.documentElement.style.display = 'none';" +
+              "if ('serviceWorker' in navigator) window.addEventListener('load', function () { navigator.serviceWorker.register('/sw.js'); });",
           }}
         />
         <ScrollViewStyleReset />

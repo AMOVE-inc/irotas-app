@@ -7,6 +7,7 @@ const manifest = JSON.parse(
 );
 const packageJson = JSON.parse(readFileSync("package.json", "utf8"));
 const staticHeaders = readFileSync("public/_headers", "utf8");
+const serviceWorker = readFileSync("public/sw.js", "utf8");
 
 describe("mobile web and home screen configuration", () => {
   it("uses Japanese metadata and iPhone standalone settings", () => {
@@ -38,6 +39,16 @@ describe("mobile web and home screen configuration", () => {
     expect(packageJson.scripts["build:sites"]).toContain(
       "cp assets/images/icon.png dist/client/pwa/icon-1024.png",
     );
+  });
+
+  it("registers an updateable service worker without caching member data", () => {
+    expect(html).toContain("navigator.serviceWorker.register('/sw.js')");
+    expect(staticHeaders).toContain("/sw.js");
+    expect(staticHeaders).toContain("Cache-Control: no-cache, no-store, must-revalidate");
+    expect(serviceWorker).toContain('"/_expo/static/"');
+    expect(serviceWorker).toContain('"/pwa/"');
+    expect(serviceWorker).not.toContain('"/api/"');
+    expect(serviceWorker).not.toContain("caches.match(event.request, { ignoreSearch: true })");
   });
 
   it("protects cached HTML and static assets with security headers", () => {
