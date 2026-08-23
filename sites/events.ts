@@ -1,6 +1,7 @@
 import { authenticatedRequestMember } from "./auth";
 import { canMemberAccessClub } from "./clubs";
 import { reverseCancelledEventHostXp } from "./event-host-xp";
+import { applyEventPointDiscount, refundEventPointDiscount } from "./event-points";
 import type { D1Database, SitesEnv } from "./platform-types";
 
 const EVENTS_ENDPOINT = "/api/events";
@@ -61,6 +62,11 @@ function number(value: unknown, minimum: number, maximum: number) {
   return typeof value === "number" && Number.isInteger(value) && value >= minimum && value <= maximum
     ? value
     : null;
+}
+
+function priceNumber(value: unknown) {
+  const match = String(value ?? "").replace(/,/g, "").match(/\d+/);
+  return match ? Number(match[0]) : 0;
 }
 
 function stringArray(value: unknown, maximumItems: number, maximumLength = 80) {
@@ -390,6 +396,9 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
     if (row.status === "cancelled") return responseJson({ success: true, cancelled: true });
     const now = new Date().toISOString();
     await reverseCancelledEventHostXp(env.DB, id, now);
+    const pointUsers = await env.DB.prepare("SELECT member_id FROM event_point_usages WHERE event_id = ? AND status = 'applied'")
+      .bind(id).all<{ member_id: number }>();
+    for (const pointUser of pointUsers.results ?? []) await refundEventPointDiscount(env.DB, id, pointUser.member_id, row.title, now);
     await env.DB.batch([
       env.DB.prepare("UPDATE events SET status = 'cancelled', updated_at = ? WHERE id = ?").bind(now, id),
       env.DB.prepare(`INSERT INTO audit_logs (actor_user_id, action, entity_type, entity_id, metadata_json, created_at)
@@ -434,14 +443,31 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
     if (immediate && (count?.count ?? 0) >= capacity) return responseJson({ error: "満席です" }, 409);
     const now = new Date().toISOString();
     const status = immediate ? "confirmed" : "applied";
+    const requestedPoints = Number(input?.pointsToUse ?? 0);
+    if (!Number.isInteger(requestedPoints) || requestedPoints < 0 || requestedPoints > 300_000)
+      return responseJson({ error: "利用ポイントを確認してください" }, 400);
+    const rankRow = await env.DB.prepare("SELECT member_rank FROM members WHERE id = ?").bind(member.id).first<{ member_rank: string }>();
+    const rankPrices = data.rankPrices && typeof data.rankPrices === "object" ? data.rankPrices as Record<string, unknown> : {};
+    const eventPrice = priceNumber(rankPrices[rankRow?.member_rank ?? "regular"] ?? data.price);
+    if (requestedPoints > eventPrice) return responseJson({ error: "参加費を超えるポイントは利用できません" }, 400);
+    let pointResult: Awaited<ReturnType<typeof applyEventPointDiscount>> | null = null;
+    if (requestedPoints > 0) {
+      pointResult = await applyEventPointDiscount(env.DB, id, member.id, requestedPoints, row.title, now);
+      if (!pointResult.success) return responseJson({ error: "イロタスポイント残高が不足しています" }, 409);
+    }
     if (immediate && !(typeof data.chatId === "string" && data.chatId)) data.chatId = eventChatId(id);
-    await env.DB.prepare(`INSERT INTO event_participations
-      (event_id, member_id, status, terms_accepted_at, applied_at, confirmed_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
-      ON CONFLICT(event_id, member_id) DO UPDATE SET status = excluded.status,
-        terms_accepted_at = excluded.terms_accepted_at, applied_at = excluded.applied_at,
-        confirmed_at = excluded.confirmed_at, cancelled_at = NULL, updated_at = excluded.updated_at`)
-      .bind(id, member.id, status, now, now, immediate ? now : null, now).run();
+    try {
+      await env.DB.prepare(`INSERT INTO event_participations
+        (event_id, member_id, status, terms_accepted_at, applied_at, confirmed_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+        ON CONFLICT(event_id, member_id) DO UPDATE SET status = excluded.status,
+          terms_accepted_at = excluded.terms_accepted_at, applied_at = excluded.applied_at,
+          confirmed_at = excluded.confirmed_at, cancelled_at = NULL, updated_at = excluded.updated_at`)
+        .bind(id, member.id, status, now, now, immediate ? now : null, now).run();
+    } catch (error) {
+      if (pointResult && !pointResult.duplicate) await refundEventPointDiscount(env.DB, id, member.id, row.title, now);
+      throw error;
+    }
     if (immediate) {
       await env.DB.prepare("UPDATE events SET public_data_json = ?, updated_at = ? WHERE id = ?")
         .bind(JSON.stringify(data), now, id).run();
@@ -451,7 +477,7 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
       await env.DB.prepare("UPDATE events SET status = 'full', updated_at = ? WHERE id = ?").bind(now, id).run();
     await audit(env.DB, member.id, "event.application_submitted", id, { status });
     const updated = await eventRow(env.DB, id);
-    return responseJson({ event: await hydratedEvent(env.DB, updated!, member.id, elevated, memberPublicId) }, 201);
+    return responseJson({ event: await hydratedEvent(env.DB, updated!, member.id, elevated, memberPublicId), pointBalance: pointResult?.balance ?? null, pointsUsed: pointResult?.amount ?? 0 }, 201);
   }
   if (finalizeMatch && request.method === "POST") {
     const id = decodeURIComponent(finalizeMatch[1]);
@@ -520,6 +546,7 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
       await env.DB.prepare(`UPDATE event_participations SET status = 'cancelled', cancelled_at = ?, updated_at = ?
         WHERE event_id = ? AND member_id = ?`).bind(now, now, id, targetId).run();
       await env.DB.prepare("UPDATE events SET status = 'open', updated_at = ? WHERE id = ? AND status = 'full'").bind(now, id).run();
+      await refundEventPointDiscount(env.DB, id, targetId, row.title, now);
     }
     await audit(env.DB, member.id, input.action === "approve" ? "event.participant_confirmed" : "event.participant_cancelled", id, { targetId });
     const updated = await eventRow(env.DB, id);
@@ -577,6 +604,7 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
       env.DB.prepare("UPDATE events SET status = 'open', updated_at = ? WHERE id = ? AND status = 'full'").bind(now, id),
     );
     await env.DB.batch(statements);
+    if (approved) await refundEventPointDiscount(env.DB, id, targetId, row.title, now);
     await audit(env.DB, member.id, approved ? "event.cancellation_approved" : "event.cancellation_rejected", id, { targetId });
     await notifyEventCancellation(
       env.DB,

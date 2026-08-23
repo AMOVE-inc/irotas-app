@@ -55,3 +55,17 @@ describe("benefits and IRO+ points persistence", () => {
     await expect(response?.json()).resolves.toMatchObject({ memberRank: "gold", coupons: [], gifts: [], points: { balance: 0 } });
   });
 });
+
+describe("event fee point discounts", () => {
+  it("stores event point usage and refunds it idempotently", () => {
+    const migration = readFileSync(resolve(process.cwd(), "drizzle/0019_event_point_discounts.sql"), "utf8");
+    const service = readFileSync(resolve(process.cwd(), "sites/event-points.ts"), "utf8");
+    const events = readFileSync(resolve(process.cwd(), "sites/events.ts"), "utf8");
+    expect(migration).toContain("CREATE TABLE IF NOT EXISTS event_point_usages");
+    expect(migration).toContain("PRIMARY KEY(event_id, member_id)");
+    expect(migration).toContain("'20'");
+    expect(service).toContain("event-discount-refund:");
+    expect(events).toContain("pointsToUse");
+    expect(events).toContain("refundEventPointDiscount");
+  });
+});

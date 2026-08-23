@@ -751,12 +751,11 @@ export async function setEventFavorite(eventId: string, favorite: boolean) {
   );
 }
 
-export async function applyToEvent(eventId: string, termsAccepted: boolean) {
-  const result = await apiCall<{ event: Event }>(
+export async function applyToEvent(eventId: string, termsAccepted: boolean, pointsToUse = 0) {
+  return apiCall<{ event: Event; pointBalance: number | null; pointsUsed: number }>(
     `/api/events/${encodeURIComponent(eventId)}/applications`,
-    { method: "POST", body: JSON.stringify({ termsAccepted }) },
+    { method: "POST", body: JSON.stringify({ termsAccepted, pointsToUse }) },
   );
-  return result.event;
 }
 
 export async function reviewEventApplicant(eventId: string, memberId: string, action: "approve" | "cancel") {

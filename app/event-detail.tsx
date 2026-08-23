@@ -140,7 +140,7 @@ export default function EventDetailScreen() {
   // ユーザーのランクに応じた料金を取得
   const getRankPrice = (evt: Event): string => {
     if (!evt.rankPrices) return evt.price;
-    const rank = CURRENT_USER.rank as "regular" | "silver" | "gold" | "platinum";
+    const rank = (authUser?.memberRank ?? CURRENT_USER.rank) as "regular" | "silver" | "gold" | "platinum";
     return evt.rankPrices[rank] ?? evt.price;
   };
   const effectivePrice = getRankPrice(event);
@@ -195,17 +195,19 @@ export default function EventDetailScreen() {
             joiningRef.current = true;
             try {
               if (event.viewerMemberId) {
-                const updated = await Api.applyToEvent(event.id, termsAccepted);
+                const application = await Api.applyToEvent(event.id, termsAccepted, usePoints ? pointsToUse : 0);
+                const updated = application.event;
                 setEvent(updated);
+                if (application.pointBalance !== null) setIrotasPoints(application.pointBalance);
                 const confirmed = updated.viewerParticipationStatus === "confirmed";
                 setHasApplied(true);
                 setIsJoined(confirmed);
                 Alert.alert(
                   confirmed ? "参加確定" : "申込完了",
                   confirmed
-                    ? "参加が確定しました。参加者専用チャットは確定者へ順次案内されます。"
+                    ? `参加が確定しました。${application.pointsUsed ? `${application.pointsUsed.toLocaleString()}ptを参加費に利用しました。` : ""}参加者専用チャットは確定者へ順次案内されます。`
                     : requiresOrganizerApproval
-                      ? "幹事へ参加申込を送りました。承認後に参加が確定します。"
+                      ? `幹事へ参加申込を送りました。${application.pointsUsed ? `${application.pointsUsed.toLocaleString()}ptを確保しました。` : ""}承認後に参加が確定します。`
                       : "抽選への申込を受け付けました。参加確定の連絡をお待ちください。",
                 );
                 return;
