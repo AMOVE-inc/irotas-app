@@ -1,12 +1,9 @@
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
+import { COMMUNITY_TERMS_URL, EVENT_TERMS_URL, REPORT_FORM_URL } from "@/constants/external-links";
 import { useColors } from "@/hooks/use-colors";
 import { useRouter } from "expo-router";
 import { Linking, Pressable, ScrollView, Text, View } from "react-native";
-
-const REPORT_URL = "https://discord.com/channels/1217327152098312245/1217830541064273992";
-const COMMUNITY_TERMS_URL = "https://irotas-community.com/terms";
-const EVENT_TERMS_URL = "https://irotas-community.com/event-terms";
 
 const COMMUNITY_RULES = [
   "コミュニティ内では、年齢・性別・出身・職業を問わず、すべての人に思いやりと敬意を持って接しましょう。",
@@ -156,10 +153,10 @@ export default function CommunityRulesScreen() {
             </Text>
             <Pressable
               accessibilityRole="link"
-              onPress={() => void Linking.openURL(REPORT_URL)}
+              onPress={() => void Linking.openURL(REPORT_FORM_URL)}
               style={({ pressed }) => ({ alignSelf: "flex-start", marginTop: 8, paddingHorizontal: 13, paddingVertical: 9, borderRadius: 10, backgroundColor: "#5B5A73", opacity: pressed ? 0.75 : 1 })}
             >
-              <Text style={{ fontSize: 13, fontWeight: "800", color: "#FFFFFF" }}>運営へ連絡する</Text>
+              <Text style={{ fontSize: 13, fontWeight: "800", color: "#FFFFFF" }}>相談・通報フォームを開く</Text>
             </Pressable>
             <View style={{ marginTop: 8 }}>
               {PROHIBITED_ITEMS.map((item) => (
