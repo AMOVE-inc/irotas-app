@@ -2,7 +2,7 @@ import { Platform } from "react-native";
 import { getApiBaseUrl } from "@/constants/oauth";
 import * as Auth from "./auth";
 import { logger } from "./logger";
-import type { Event } from "@/constants/mock-data";
+import type { BoardPoll, Event } from "@/constants/mock-data";
 import type { RawDiscordBoardArchive } from "@/lib/discord-board-import";
 
 type ApiResponse<T> = {
@@ -396,6 +396,19 @@ export async function setSharedBoardReaction(input: {
     method: active ? "PUT" : "DELETE",
     body: JSON.stringify(input),
   });
+}
+
+export async function getSharedBoardPoll(ownerType: "thread" | "comment", ownerId: string) {
+  return apiCall<{ poll: BoardPoll; viewerMemberId: string }>(
+    `/api/board/polls/${ownerType}/${encodeURIComponent(ownerId)}`,
+  );
+}
+
+export async function voteSharedBoardPoll(ownerType: "thread" | "comment", ownerId: string, optionId: string) {
+  return apiCall<{ poll: BoardPoll; viewerMemberId: string }>(
+    `/api/board/polls/${ownerType}/${encodeURIComponent(ownerId)}`,
+    { method: "PUT", body: JSON.stringify({ optionId }) },
+  );
 }
 
 export async function getSharedChatMessages(roomId: string) {

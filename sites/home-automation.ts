@@ -127,7 +127,49 @@ async function deliverReminder(db: D1Database, reminder: Reminder, now: Date) {
 export async function runEventAutomation(db: D1Database, now = new Date()) {
   let delivered = 0;
   for (const reminder of await pendingReminders(db, now)) if (await deliverReminder(db, reminder, now)) delivered += 1;
+  delivered += await finalizeExpiredBoardPolls(db, now);
   return delivered;
+}
+
+type PollOwnerRow = { owner_type: "thread" | "comment"; owner_id: string; author_member_id: number; data_json: string };
+
+function pollFromData(dataJson: string) {
+  try {
+    const data = JSON.parse(dataJson) as Record<string, unknown>;
+    const poll = data.poll as { question?: unknown; deadline?: unknown; options?: unknown } | undefined;
+    if (!poll || typeof poll.question !== "string" || typeof poll.deadline !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(poll.deadline) || !Array.isArray(poll.options)) return null;
+    const options = poll.options.flatMap((item) => item && typeof item === "object" && typeof (item as { id?: unknown }).id === "string" && typeof (item as { text?: unknown }).text === "string"
+      ? [{ id: (item as { id: string }).id, text: (item as { text: string }).text }]
+      : []);
+    return options.length >= 2 ? { question: poll.question, deadline: poll.deadline, options } : null;
+  } catch { return null; }
+}
+
+async function finalizeExpiredBoardPolls(db: D1Database, now: Date) {
+  const owners = await db.prepare(`SELECT 'thread' AS owner_type, id AS owner_id, author_member_id, data_json FROM board_threads WHERE deleted_at IS NULL AND data_json LIKE '%"poll"%'
+    UNION ALL
+    SELECT 'comment' AS owner_type, id AS owner_id, author_member_id, data_json FROM board_comments WHERE deleted_at IS NULL AND data_json LIKE '%"poll"%'`).all<PollOwnerRow>();
+  let finalized = 0;
+  for (const owner of owners.results ?? []) {
+    const poll = pollFromData(owner.data_json);
+    if (!poll || now.getTime() <= new Date(`${poll.deadline}T23:59:59+09:00`).getTime()) continue;
+    const key = `${owner.owner_type}:${owner.owner_id}`;
+    await db.prepare(`INSERT OR IGNORE INTO board_poll_finalizations (owner_type, owner_id, status) VALUES (?, ?, 'pending')`).bind(owner.owner_type, owner.owner_id).run();
+    const state = await db.prepare("SELECT status FROM board_poll_finalizations WHERE owner_type = ? AND owner_id = ?").bind(owner.owner_type, owner.owner_id).first<{ status: string }>();
+    if (state?.status === "delivered") continue;
+    const votes = await db.prepare(`SELECT option_id, member_id FROM board_poll_votes WHERE owner_type = ? AND owner_id = ?`).bind(owner.owner_type, owner.owner_id).all<{ option_id: string; member_id: number }>();
+    const counts = Object.fromEntries(poll.options.map((option) => [option.id, (votes.results ?? []).filter((vote) => vote.option_id === option.id).length]));
+    const maximum = Math.max(0, ...Object.values(counts));
+    const winners = maximum === 0 ? [] : poll.options.filter((option) => counts[option.id] === maximum).map((option) => option.text);
+    const result = maximum === 0 ? "投票はありませんでした" : `${winners.join("・")}（${maximum}票）`;
+    const targets = [...new Set([owner.author_member_id, ...(votes.results ?? []).map((vote) => vote.member_id)])];
+    for (const target of targets) await db.prepare(`INSERT OR IGNORE INTO in_app_notifications
+      (id, target_member_id, type, title, body, created_at) VALUES (?, ?, 'poll_result', '投票結果が確定しました', ?, ?)`).bind(`poll-result:${key}:${target}`, target, `${poll.question}：${result}`, now.toISOString()).run();
+    await db.prepare("UPDATE board_poll_finalizations SET status = 'delivered', result_json = ?, finalized_at = ? WHERE owner_type = ? AND owner_id = ?")
+      .bind(JSON.stringify({ question: poll.question, result, counts }), now.toISOString(), owner.owner_type, owner.owner_id).run();
+    finalized += 1;
+  }
+  return finalized;
 }
 
 async function homeActivities(db: D1Database) {

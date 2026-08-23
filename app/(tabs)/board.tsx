@@ -127,16 +127,27 @@ function OperatorOrRankBadge({ member }: { member: typeof CURRENT_USER }) {
 function PollCard({ ownerKey, poll }: { ownerKey: string; poll: BoardPoll }) {
   const colors = useColors();
   const [current, setCurrent] = useState(poll);
+  const [viewerMemberId, setViewerMemberId] = useState(CURRENT_USER.id);
+  const [shared, setShared] = useState(false);
   const open = isBoardPollOpen(current);
-  useEffect(() => { void loadBoardPoll(ownerKey, poll).then(setCurrent); }, [ownerKey, poll]);
   useEffect(() => {
-    if (open) return;
+    setShared(false);
+    setViewerMemberId(CURRENT_USER.id);
+    const [ownerType, ownerId] = ownerKey.split(":", 2) as ["thread" | "comment", string];
+    void Api.getSharedBoardPoll(ownerType, ownerId).then((result) => {
+      setCurrent(result.poll);
+      setViewerMemberId(result.viewerMemberId);
+      setShared(true);
+    }).catch(() => void loadBoardPoll(ownerKey, poll).then(setCurrent));
+  }, [ownerKey, poll]);
+  useEffect(() => {
+    if (open || shared) return;
     void finalizeBoardPollOnce(ownerKey).then((created) => {
       if (created) addInAppNotification({ targetMemberId: CURRENT_USER.id, type: "poll_result", title: "投票結果が確定しました", body: `${current.question}：${boardPollResult(current)}` });
     });
-  }, [current, open, ownerKey]);
+  }, [current, open, ownerKey, shared]);
   const total = new Set(current.options.flatMap((option) => option.voterIds)).size;
-  return <View style={{ marginTop: 12, borderRadius: 14, padding: 13, backgroundColor: "#F7F5FA", borderWidth: 1, borderColor: "#DED8E8" }}><View style={{ flexDirection: "row", alignItems: "center" }}><IconSymbol name="chart.bar.fill" size={17} color="#6D5B85" /><Text style={{ flex: 1, fontSize: 14, fontWeight: "900", color: colors.foreground, marginLeft: 7 }}>{current.question}</Text><View style={{ borderRadius: 9, paddingHorizontal: 7, paddingVertical: 3, backgroundColor: open ? "#E4F3E8" : "#E8E8EB" }}><Text style={{ fontSize: 10, fontWeight: "900", color: open ? "#277A40" : colors.muted }}>{open ? "投票受付中" : "終了"}</Text></View></View>{current.allowMultiple ? <Text style={{ fontSize: 10, fontWeight: "800", color: "#6D5B85", marginTop: 5 }}>複数回答可</Text> : null}<View style={{ gap: 7, marginTop: 11 }}>{current.options.map((option) => { const selected = option.voterIds.includes(CURRENT_USER.id); const ratio = total ? option.voterIds.length / total : 0; return <Pressable key={option.id} disabled={!open} onPress={() => void voteBoardPoll(ownerKey, current, option.id, CURRENT_USER.id).then(setCurrent)} style={{ overflow: "hidden", borderRadius: 10, borderWidth: 1, borderColor: selected ? "#725C8C" : colors.border, backgroundColor: colors.surface }}><View style={{ position: "absolute", inset: 0, width: `${Math.round(ratio * 100)}%`, backgroundColor: selected ? "#E8DDF1" : "#EEEAF2" }} /><View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 11, paddingVertical: 9 }}><Text style={{ flex: 1, fontSize: 13, fontWeight: selected ? "900" : "700", color: colors.foreground }}>{option.text}</Text><Text style={{ fontSize: 12, fontWeight: "900", color: colors.muted }}>{option.voterIds.length}票</Text></View></Pressable>; })}</View><Text style={{ fontSize: 11, color: colors.muted, marginTop: 9 }}>{open ? `期限：${current.deadline} 23:59` : `結果：${boardPollResult(current)}`}</Text></View>;
+  return <View style={{ marginTop: 12, borderRadius: 14, padding: 13, backgroundColor: "#F7F5FA", borderWidth: 1, borderColor: "#DED8E8" }}><View style={{ flexDirection: "row", alignItems: "center" }}><IconSymbol name="chart.bar.fill" size={17} color="#6D5B85" /><Text style={{ flex: 1, fontSize: 14, fontWeight: "900", color: colors.foreground, marginLeft: 7 }}>{current.question}</Text><View style={{ borderRadius: 9, paddingHorizontal: 7, paddingVertical: 3, backgroundColor: open ? "#E4F3E8" : "#E8E8EB" }}><Text style={{ fontSize: 10, fontWeight: "900", color: open ? "#277A40" : colors.muted }}>{open ? "投票受付中" : "終了"}</Text></View></View>{current.allowMultiple ? <Text style={{ fontSize: 10, fontWeight: "800", color: "#6D5B85", marginTop: 5 }}>複数回答可</Text> : null}<View style={{ gap: 7, marginTop: 11 }}>{current.options.map((option) => { const selected = option.voterIds.includes(viewerMemberId); const ratio = total ? option.voterIds.length / total : 0; return <Pressable key={option.id} disabled={!open} onPress={() => { const [ownerType, ownerId] = ownerKey.split(":", 2) as ["thread" | "comment", string]; void (shared ? Api.voteSharedBoardPoll(ownerType, ownerId, option.id).then((result) => { setCurrent(result.poll); setViewerMemberId(result.viewerMemberId); }) : voteBoardPoll(ownerKey, current, option.id, viewerMemberId).then(setCurrent)); }} style={{ overflow: "hidden", borderRadius: 10, borderWidth: 1, borderColor: selected ? "#725C8C" : colors.border, backgroundColor: colors.surface }}><View style={{ position: "absolute", inset: 0, width: `${Math.round(ratio * 100)}%`, backgroundColor: selected ? "#E8DDF1" : "#EEEAF2" }} /><View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 11, paddingVertical: 9 }}><Text style={{ flex: 1, fontSize: 13, fontWeight: selected ? "900" : "700", color: colors.foreground }}>{option.text}</Text><Text style={{ fontSize: 12, fontWeight: "900", color: colors.muted }}>{option.voterIds.length}票</Text></View></Pressable>; })}</View><Text style={{ fontSize: 11, color: colors.muted, marginTop: 9 }}>{open ? `期限：${current.deadline} 23:59` : `結果：${boardPollResult(current)}`}</Text></View>;
 }
 
 function PollComposer({ enabled, setEnabled, question, setQuestion, options, setOptions, deadline, setDeadline, allowMultiple, setAllowMultiple }: { enabled: boolean; setEnabled: (value: boolean) => void; question: string; setQuestion: (value: string) => void; options: string[]; setOptions: (value: string[]) => void; deadline: string; setDeadline: (value: string) => void; allowMultiple: boolean; setAllowMultiple: (value: boolean) => void }) {

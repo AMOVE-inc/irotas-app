@@ -10,6 +10,7 @@ const THREAD_PATH = /^\/api\/board\/threads\/([^/]+)$/;
 const COMMENTS_PATH = /^\/api\/board\/threads\/([^/]+)\/comments$/;
 const COMMENT_PATH = /^\/api\/board\/comments\/([^/]+)$/;
 const REACTIONS_PATH = "/api/board/reactions";
+const POLL_PATH = /^\/api\/board\/polls\/(thread|comment)\/([^/]+)$/;
 const IMPORTED_THREAD_ENSURE_PATH = /^\/api\/board\/imported-threads\/([^/]+)\/ensure$/;
 const MAX_BODY_BYTES = 64 * 1024;
 const MAX_DATA_BYTES = 48 * 1024;
@@ -57,6 +58,8 @@ type ReactionRow = {
   member_id: number;
   emoji: string;
 };
+type PollOption = { id: string; text: string; voterIds: string[] };
+type BoardPollData = { question: string; options: PollOption[]; deadline: string; allowMultiple?: boolean };
 
 function json(body: unknown, status = 200) {
   return Response.json(body, {
@@ -110,6 +113,44 @@ function parseData(value: string) {
   } catch {
     return {};
   }
+}
+
+function validPoll(value: unknown): BoardPollData | null {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+  const poll = value as Record<string, unknown>;
+  const question = text(poll.question, 300, true);
+  const deadline = text(poll.deadline, 10, true);
+  if (!question || !deadline || !/^\d{4}-\d{2}-\d{2}$/.test(deadline) || !Array.isArray(poll.options) || poll.options.length < 2 || poll.options.length > 10) return null;
+  const options = poll.options.map((item) => {
+    if (!item || typeof item !== "object" || Array.isArray(item)) return null;
+    const record = item as Record<string, unknown>;
+    const id = text(record.id, 80, true);
+    const optionText = text(record.text, 300, true);
+    return id && optionText ? { id, text: optionText, voterIds: [] } : null;
+  });
+  if (options.some((item) => !item)) return null;
+  return { question, deadline, options: options as PollOption[], allowMultiple: poll.allowMultiple === true };
+}
+
+async function pollOwner(db: D1Database, ownerType: "thread" | "comment", ownerId: string) {
+  return ownerType === "thread"
+    ? db.prepare("SELECT bt.author_member_id, bt.category, bt.data_json FROM board_threads bt WHERE bt.id = ? AND bt.deleted_at IS NULL").bind(ownerId).first<{ author_member_id: number; category: string; data_json: string }>()
+    : db.prepare(`SELECT bc.author_member_id, bt.category, bc.data_json FROM board_comments bc
+        JOIN board_threads bt ON bt.id = bc.thread_id
+        WHERE bc.id = ? AND bc.deleted_at IS NULL AND bt.deleted_at IS NULL`).bind(ownerId).first<{ author_member_id: number; category: string; data_json: string }>();
+}
+
+async function hydratedPoll(db: D1Database, ownerType: "thread" | "comment", ownerId: string, poll: BoardPollData) {
+  const votes = await db.prepare(`SELECT v.option_id, v.member_id, m.public_member_id
+    FROM board_poll_votes v JOIN members m ON m.id = v.member_id
+    WHERE v.owner_type = ? AND v.owner_id = ?`).bind(ownerType, ownerId).all<{ option_id: string; member_id: number; public_member_id: string | null }>();
+  return {
+    ...poll,
+    options: poll.options.map((option) => ({
+      ...option,
+      voterIds: (votes.results ?? []).filter((vote) => vote.option_id === option.id).map((vote) => vote.public_member_id ?? `member-${vote.member_id}`),
+    })),
+  };
 }
 
 function validCategory(value: unknown) {
@@ -239,7 +280,7 @@ async function audit(
   db: D1Database,
   actorId: number,
   action: string,
-  entityType: "board_thread" | "board_comment" | "board_reaction",
+  entityType: "board_thread" | "board_comment" | "board_reaction" | "board_poll",
   entityId: string,
   metadata: Record<string, unknown> = {},
 ) {
@@ -258,13 +299,39 @@ export async function handleBoardContentRequest(
   const commentsMatch = COMMENTS_PATH.exec(url.pathname);
   const commentMatch = COMMENT_PATH.exec(url.pathname);
   const importedThreadEnsureMatch = IMPORTED_THREAD_ENSURE_PATH.exec(url.pathname);
+  const pollMatch = POLL_PATH.exec(url.pathname);
   const handled = url.pathname === CONTENT_PATH || url.pathname === THREADS_PATH ||
-    url.pathname === REACTIONS_PATH || threadMatch || commentsMatch || commentMatch || importedThreadEnsureMatch;
+    url.pathname === REACTIONS_PATH || threadMatch || commentsMatch || commentMatch || importedThreadEnsureMatch || pollMatch;
   if (!handled) return null;
   if (!env.DB) return json({ error: "データベースに接続できません" }, 503);
   const member = await authenticatedRequestMember(request, env);
   if (!member) return json({ error: "ログインが必要です" }, 401);
   const db = env.DB;
+
+  if (pollMatch && (request.method === "GET" || request.method === "PUT")) {
+    const ownerType = pollMatch[1] as "thread" | "comment";
+    const ownerId = decodeURIComponent(pollMatch[2]);
+    const owner = await pollOwner(db, ownerType, ownerId);
+    if (!owner || !await canAccessBoardCategory(db, owner.category, member)) return json({ error: "投票が見つかりません" }, 404);
+    const poll = validPoll((parseData(owner.data_json) as Record<string, unknown>).poll);
+    if (!poll) return json({ error: "投票が見つかりません" }, 404);
+    const memberPublicId = await db.prepare("SELECT public_member_id FROM members WHERE id = ?").bind(member.id).first<{ public_member_id: string | null }>();
+    if (request.method === "GET") return json({ poll: await hydratedPoll(db, ownerType, ownerId, poll), viewerMemberId: memberPublicId?.public_member_id ?? `member-${member.id}` });
+    if (Date.now() > new Date(`${poll.deadline}T23:59:59+09:00`).getTime()) return json({ error: "投票期間は終了しました" }, 409);
+    const input = await readBody(request);
+    const optionId = text(input?.optionId, 80, true);
+    if (!optionId || !poll.options.some((option) => option.id === optionId)) return json({ error: "選択肢が不正です" }, 400);
+    const selected = await db.prepare(`SELECT 1 AS present FROM board_poll_votes
+      WHERE owner_type = ? AND owner_id = ? AND option_id = ? AND member_id = ?`).bind(ownerType, ownerId, optionId, member.id).first<{ present: number }>();
+    const statements = [];
+    if (!poll.allowMultiple) statements.push(db.prepare("DELETE FROM board_poll_votes WHERE owner_type = ? AND owner_id = ? AND member_id = ?").bind(ownerType, ownerId, member.id));
+    else if (selected) statements.push(db.prepare("DELETE FROM board_poll_votes WHERE owner_type = ? AND owner_id = ? AND option_id = ? AND member_id = ?").bind(ownerType, ownerId, optionId, member.id));
+    if (!selected) statements.push(db.prepare(`INSERT OR IGNORE INTO board_poll_votes
+      (owner_type, owner_id, option_id, member_id, created_at) VALUES (?, ?, ?, ?, ?)`).bind(ownerType, ownerId, optionId, member.id, new Date().toISOString()));
+    if (statements.length) await db.batch(statements);
+    await audit(db, member.id, selected ? "board.poll_vote_removed" : "board.poll_vote_added", "board_poll", `${ownerType}:${ownerId}`, { optionId });
+    return json({ poll: await hydratedPoll(db, ownerType, ownerId, poll), viewerMemberId: memberPublicId?.public_member_id ?? `member-${member.id}` });
+  }
 
   if (importedThreadEnsureMatch && request.method === "POST") {
     const id = decodeURIComponent(importedThreadEnsureMatch[1]);
