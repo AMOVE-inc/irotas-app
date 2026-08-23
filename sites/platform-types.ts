@@ -19,7 +19,11 @@ export interface D1Database {
 }
 
 export interface R2Bucket {
-  list(options?: { limit?: number }): Promise<unknown>;
+  list(options?: { limit?: number; cursor?: string }): Promise<{
+    objects: Array<{ key: string; size: number }>;
+    truncated: boolean;
+    cursor?: string;
+  }>;
   put(
     key: string,
     value: ArrayBuffer,

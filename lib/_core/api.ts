@@ -759,6 +759,21 @@ export async function suspendReviewAccount() {
   return result.account;
 }
 
+export type BackupReadinessManifest = {
+  version: 1;
+  createdAt: string;
+  sourceEnvironment: "production";
+  schemaVersion: number;
+  d1: { tableCounts: Record<string, number> };
+  r2: { objectCount: number; totalBytes: number };
+};
+
+export async function getBackupReadiness() {
+  return apiCall<{ ready: true; manifest: BackupReadinessManifest }>(
+    "/api/admin/backup-readiness",
+  );
+}
+
 export async function getAccountDeletionRequest() {
   return apiCall<{ request: AccountDeletionRequest | null }>(
     "/api/auth/account-deletion",

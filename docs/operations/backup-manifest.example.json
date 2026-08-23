@@ -2,7 +2,7 @@
   "version": 1,
   "createdAt": "2026-08-23T00:00:00.000Z",
   "sourceEnvironment": "production",
-  "schemaVersion": 21,
+  "schemaVersion": 22,
   "d1": {
     "tableCounts": {
       "members": 500,

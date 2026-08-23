@@ -38,6 +38,7 @@ import { addClub, removeClub, updateClub, useClubs } from "@/lib/club-store";
 import { sendLeaderAppointmentNotification } from "@/lib/notifications";
 import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
+import * as Clipboard from "expo-clipboard";
 import { loadImportedGourmetContests, type ImportedGourmetContest } from "@/lib/gourmet-contest-import";
 import {
   getMembershipSummary,
@@ -49,6 +50,7 @@ import {
   getReviewAccountStatus,
   configureReviewAccount,
   suspendReviewAccount,
+  getBackupReadiness,
   syncSquareSubscriptions,
   updateOperatorMemberTerm,
   type MembershipSummary,
@@ -58,6 +60,7 @@ import {
   type ApplicationErrorLog,
   type AdminAccountDeletionRequest,
   type ReviewAccountStatus,
+  type BackupReadinessManifest,
 } from "@/lib/_core/api";
 
 type PointsHistoryEntry = {
@@ -81,7 +84,7 @@ export default function AdminDashboardScreen() {
   const clubs = useClubs();
 
   // すべての state を条件分岐の外で定義
-  const [activeTab, setActiveTab] = useState<"overview" | "monitoring" | "deletions" | "review" | "operators" | "members" | "events" | "contests" | "clubs" | "payments" | "emails" | "announcements" | "coupons" | "analytics">(tab === "monitoring" ? "monitoring" : tab === "deletions" ? "deletions" : tab === "review" ? "review" : tab === "coupons" ? "coupons" : tab === "contests" ? "contests" : tab === "operators" ? "operators" : "overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "monitoring" | "backups" | "deletions" | "review" | "operators" | "members" | "events" | "contests" | "clubs" | "payments" | "emails" | "announcements" | "coupons" | "analytics">(tab === "monitoring" ? "monitoring" : tab === "backups" ? "backups" : tab === "deletions" ? "deletions" : tab === "review" ? "review" : tab === "coupons" ? "coupons" : tab === "contests" ? "contests" : tab === "operators" ? "operators" : "overview");
   const [editingClub, setEditingClub] = useState<Club | null>(null);
   const [paymentRecords, setPaymentRecords] = useState<PaymentRecord[]>([]);
   const [selectedPaymentEventId, setSelectedPaymentEventId] = useState<string | null>(null);
@@ -123,6 +126,8 @@ export default function AdminDashboardScreen() {
   const [reviewEmail, setReviewEmail] = useState("");
   const [reviewPassword, setReviewPassword] = useState("");
   const [reviewSaving, setReviewSaving] = useState(false);
+  const [backupManifest, setBackupManifest] = useState<BackupReadinessManifest | null>(null);
+  const [backupLoading, setBackupLoading] = useState(false);
   const loadMembershipSummary = async () => {
     setMembershipSummaryLoading(true);
     try {
@@ -176,6 +181,20 @@ export default function AdminDashboardScreen() {
       setReviewAccount(account);
       setReviewEmail(account.email ?? "");
     }).catch((error) => Alert.alert("読み込みエラー", error instanceof Error ? error.message : "審査アカウントを確認できませんでした"));
+  }, [userIsAdmin, activeTab]);
+  const loadBackupReadiness = async () => {
+    setBackupLoading(true);
+    try {
+      const result = await getBackupReadiness();
+      setBackupManifest(result.manifest);
+    } catch (error) {
+      Alert.alert("確認できませんでした", error instanceof Error ? error.message : "時間をおいて再度お試しください");
+    } finally {
+      setBackupLoading(false);
+    }
+  };
+  useEffect(() => {
+    if (userIsAdmin && activeTab === "backups") void loadBackupReadiness();
   }, [userIsAdmin, activeTab]);
   useEffect(() => {
     if (!userIsAdmin || activeTab !== "operators") return;
@@ -562,8 +581,8 @@ export default function AdminDashboardScreen() {
         }}
         style={{ borderBottomWidth: 0.5, borderBottomColor: colors.border, flexGrow: 0 }}
       >
-        {(["overview", "monitoring", "deletions", "review", "operators", "members", "events", "contests", "clubs", "payments", "emails", "announcements", "coupons", "analytics"] as const).map((tab) => {
-          const labels = { overview: "概要", monitoring: "監視ログ", deletions: "退会申請", review: "審査アカウント", operators: "運営メンバー", members: "会員", events: "イベント", contests: "グルメ選手権", clubs: "部活動", payments: "支払管理", emails: "承認メール", announcements: "お知らせ", coupons: "クーポン", analytics: "分析" };
+        {(["overview", "monitoring", "backups", "deletions", "review", "operators", "members", "events", "contests", "clubs", "payments", "emails", "announcements", "coupons", "analytics"] as const).map((tab) => {
+          const labels = { overview: "概要", monitoring: "監視ログ", backups: "バックアップ", deletions: "退会申請", review: "審査アカウント", operators: "運営メンバー", members: "会員", events: "イベント", contests: "グルメ選手権", clubs: "部活動", payments: "支払管理", emails: "承認メール", announcements: "お知らせ", coupons: "クーポン", analytics: "分析" };
           return (
             <Pressable
               key={tab}
@@ -590,6 +609,29 @@ export default function AdminDashboardScreen() {
       </ScrollView>
 
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
+        {activeTab === "backups" && (
+          <View style={{ backgroundColor: colors.surface, borderRadius: 14, borderWidth: 1, borderColor: colors.border, padding: 16 }}>
+            <Text style={{ fontSize: 18, fontWeight: "800", color: colors.foreground }}>バックアップ準備状況</Text>
+            <Text style={{ fontSize: 12, lineHeight: 19, color: colors.muted, marginTop: 6 }}>個人情報を表示せず、復元後の照合に必要なDB・画像の集計値だけを確認します。この画面から本番データを削除・復元することはありません。</Text>
+            {backupLoading ? <ActivityIndicator color="#E8A0BF" style={{ marginVertical: 28 }} /> : backupManifest ? (
+              <>
+                <View style={{ backgroundColor: "#E8F7EC", borderRadius: 12, padding: 12, marginTop: 14 }}>
+                  <Text style={{ color: "#237A3B", fontWeight: "800" }}>集計成功・個人情報なし</Text>
+                  <Text style={{ color: colors.foreground, fontSize: 12, marginTop: 5 }}>スキーマ {backupManifest.schemaVersion} ／ DB {Object.values(backupManifest.d1.tableCounts).reduce((sum, count) => sum + count, 0).toLocaleString()}件</Text>
+                  <Text style={{ color: colors.foreground, fontSize: 12, marginTop: 3 }}>画像 {backupManifest.r2.objectCount.toLocaleString()}件 ／ {(backupManifest.r2.totalBytes / 1024 / 1024).toFixed(1)} MB</Text>
+                  <Text style={{ color: colors.muted, fontSize: 10, marginTop: 5 }}>集計日時 {new Date(backupManifest.createdAt).toLocaleString("ja-JP")}</Text>
+                </View>
+                <Pressable onPress={async () => { await Clipboard.setStringAsync(JSON.stringify(backupManifest, null, 2)); Alert.alert("コピーしました", "個人情報を含まない照合用マニフェストをコピーしました。"); }} style={{ minHeight: 48, borderRadius: 12, backgroundColor: "#5A7FA8", alignItems: "center", justifyContent: "center", marginTop: 14 }}>
+                  <Text style={{ color: "#FFF", fontWeight: "800" }}>照合用マニフェストをコピー</Text>
+                </Pressable>
+              </>
+            ) : null}
+            <Pressable disabled={backupLoading} onPress={() => void loadBackupReadiness()} style={{ minHeight: 46, borderRadius: 12, borderWidth: 1, borderColor: colors.border, alignItems: "center", justifyContent: "center", marginTop: 10 }}>
+              <Text style={{ color: colors.foreground, fontWeight: "700" }}>準備状況を再集計</Text>
+            </Pressable>
+            <Text style={{ fontSize: 11, lineHeight: 18, color: colors.muted, marginTop: 14 }}>実バックアップはSites管理画面から取得し、暗号化した限定保管先へ保存します。復元テストは本番とは別の一時D1・R2で行います。</Text>
+          </View>
+        )}
         {activeTab === "review" && (
           <View style={{ backgroundColor: colors.surface, borderRadius: 14, borderWidth: 1, borderColor: colors.border, padding: 16 }}>
             <Text style={{ fontSize: 18, fontWeight: "800", color: colors.foreground }}>ストア審査用アカウント</Text>

@@ -26,6 +26,7 @@ import {
 } from "./system-monitoring";
 import { handleAccountDeletionAdminRequest } from "./account-deletion-admin";
 import { handleReviewAccountRequest } from "./review-account";
+import { handleBackupReadinessRequest } from "./backup-readiness";
 
 type CommunitySubmission = {
   reportId: string;
@@ -270,6 +271,8 @@ async function routeRequest(
   if (accountDeletionAdminResponse) return accountDeletionAdminResponse;
   const reviewAccountResponse = await handleReviewAccountRequest(request, env);
   if (reviewAccountResponse) return reviewAccountResponse;
+  const backupReadinessResponse = await handleBackupReadinessRequest(request, env);
+  if (backupReadinessResponse) return backupReadinessResponse;
   const memberHistoryImportResponse = await handleMemberHistoryImportRequest(request, env);
   if (memberHistoryImportResponse) return memberHistoryImportResponse;
   const memberDirectoryResponse = await handleMemberDirectoryRequest(request, env);
