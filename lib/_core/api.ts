@@ -137,6 +137,33 @@ export type SharedBoardComment = {
   reactions: Record<string, { count: number; reacted: boolean }>;
 };
 
+export type SharedChatMessage = {
+  id: string;
+  chatId: string;
+  senderId: string;
+  externalAuthorName: string;
+  content: string;
+  imageUri?: string;
+  reactions: Record<string, string[]>;
+  createdAt: string;
+  updatedAt: string;
+  shared: true;
+};
+
+export type SharedChatRoom = {
+  id: string;
+  name: string;
+  type: "event" | "board" | "club" | "rank" | "dm" | "group";
+  sourceId: string;
+  participants: string[];
+  createdBy: string;
+  requiredRank?: string;
+  lastMessage?: string;
+  lastMessageAt?: string;
+  unreadCount: number;
+  shared: true;
+};
+
 export class ApiError extends Error {
   constructor(
     message: string,
@@ -319,6 +346,46 @@ export async function setSharedBoardReaction(input: {
     method: active ? "PUT" : "DELETE",
     body: JSON.stringify(input),
   });
+}
+
+export async function getSharedChatMessages(roomId: string) {
+  const result = await apiCall<{ messages: SharedChatMessage[] }>(
+    `/api/chats/${encodeURIComponent(roomId)}/messages`,
+  );
+  return result.messages;
+}
+
+export async function getSharedChatRooms() {
+  const result = await apiCall<{ rooms: SharedChatRoom[] }>("/api/chats");
+  return result.rooms;
+}
+
+export async function markSharedChatRoomRead(roomId: string) {
+  return apiCall<{ success: true }>(`/api/chats/${encodeURIComponent(roomId)}/read`, {
+    method: "PUT",
+  });
+}
+
+export async function createSharedChatMessage(
+  roomId: string,
+  input: { content: string; imageUrl?: string },
+) {
+  const result = await apiCall<{ message: SharedChatMessage }>(
+    `/api/chats/${encodeURIComponent(roomId)}/messages`,
+    { method: "POST", body: JSON.stringify(input) },
+  );
+  return result.message;
+}
+
+export async function setSharedChatReaction(
+  messageId: string,
+  emoji: string,
+  active: boolean,
+) {
+  return apiCall<{ success: true; reactions: Record<string, string[]> }>(
+    "/api/chats/reactions",
+    { method: active ? "PUT" : "DELETE", body: JSON.stringify({ messageId, emoji }) },
+  );
 }
 
 /**

@@ -11,6 +11,7 @@ import {
   BOARD_THREADS,
   getMemberById,
   type ChatMessage,
+  type ChatRoom,
 } from "@/constants/mock-data";
 import { useAuthContext } from "@/lib/auth-context";
 import { isAdminRole } from "@/lib/access-control";
@@ -45,11 +46,12 @@ import { getFriends } from "@/lib/friendship";
 import { getMentionGroups, getMentionQuery, getMentionedMemberIds, insertMention } from "@/lib/mentions";
 import { applyTextFormat, type TextFormat, type TextSelection } from "@/lib/text-formatting";
 import { canPostToChat } from "@/lib/access-control";
+import * as Api from "@/lib/_core/api";
 
 const REACTION_EMOJIS = ["👍", "❤️", "😂", "🎉", "😋", "🙏"] as const;
 const MORE_REACTION_EMOJIS = ["👏", "😊", "😍", "🥳", "😆", "😭", "😮", "🤔", "🙌", "✨", "🔥", "💯", "🍽️", "🍣", "🍷", "☕", "🍺", "🍰", "👌", "💪", "🙏🏻", "👀", "💡", "✅"] as const;
 
-function MessageBubble({ message, isMe, myAvatarUri, onReact, mentionGroups, onOpenInternalLink }: { message: ChatMessage; isMe: boolean; myAvatarUri?: string | null; onReact: (emoji: string) => void; mentionGroups: ReturnType<typeof getMentionGroups>; onOpenInternalLink: (pathname: "/chat" | "/board", params: Record<string, string>) => void }) {
+function MessageBubble({ message, isMe, viewerId, myAvatarUri, onReact, mentionGroups, onOpenInternalLink }: { message: ChatMessage; isMe: boolean; viewerId: string; myAvatarUri?: string | null; onReact: (emoji: string) => void; mentionGroups: ReturnType<typeof getMentionGroups>; onOpenInternalLink: (pathname: "/chat" | "/board", params: Record<string, string>) => void }) {
   const colors = useColors();
   const sender = getMemberById(message.senderId);
   const [showReactionPicker, setShowReactionPicker] = useState(false);
@@ -137,7 +139,7 @@ function MessageBubble({ message, isMe, myAvatarUri, onReact, mentionGroups, onO
             <Pressable
               key={emoji}
               onPress={() => onReact(emoji)}
-              style={{ flexDirection: "row", alignItems: "center", borderRadius: 11, paddingHorizontal: 7, paddingVertical: 2, backgroundColor: memberIds.includes(CURRENT_USER.id) ? "#F8DCE9" : colors.surface, borderWidth: 1, borderColor: memberIds.includes(CURRENT_USER.id) ? "#E8A0BF" : colors.border }}
+              style={{ flexDirection: "row", alignItems: "center", borderRadius: 11, paddingHorizontal: 7, paddingVertical: 2, backgroundColor: memberIds.includes(viewerId) ? "#F8DCE9" : colors.surface, borderWidth: 1, borderColor: memberIds.includes(viewerId) ? "#E8A0BF" : colors.border }}
             >
               <Text style={{ fontSize: 13 }}>{emoji}</Text>
               <Text style={{ fontSize: 10, fontWeight: "700", color: colors.muted, marginLeft: 3 }}>{memberIds.length}</Text>
@@ -163,6 +165,7 @@ export default function ChatScreen() {
   const colors = useColors();
   const router = useRouter();
   const { user: authUser } = useAuthContext();
+  const viewerMemberId = authUser?.memberId ?? (authUser?.id ? `member-${authUser.id}` : CURRENT_USER.id);
   const userIsAdmin = isAdminRole(authUser?.role, authUser?.accessRole);
   const { id, unreadCount: unreadCountParam } = useLocalSearchParams<{ id: string; unreadCount?: string }>();
   const [messageText, setMessageText] = useState("");
@@ -223,6 +226,22 @@ export default function ChatScreen() {
           });
         }
       });
+      Api.getSharedChatMessages(id).then((shared) => {
+        setMessages((previous) => {
+          const byId = new Map(previous.map((message) => [message.id, message]));
+          for (const message of shared) byId.set(message.id, message);
+          return [...byId.values()].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+        });
+      }).catch(() => {
+        // 旧移行チャットは共有DBへの切替対象外でも、既存履歴を引き続き表示する。
+      });
+      Api.getSharedChatRooms().then((sharedRooms) => {
+        const sharedRoom = sharedRooms.find((item) => item.id === id);
+        if (!sharedRoom) return;
+        const normalized = sharedRoom as unknown as ChatRoom;
+        setRoom(normalized);
+        setRoomParticipants([...normalized.participants]);
+      }).catch(() => {});
     });
   }, [id]);
 
@@ -273,45 +292,70 @@ export default function ChatScreen() {
     }
   }, []);
 
-  const handleSend = useCallback(() => {
+  const handleSend = useCallback(async () => {
     if (!canPostToChat(authUser?.role, id ?? "", authUser?.accessRole)) return;
     if (!messageText.trim() && !pendingImage) return;
     const content = messageText.trim();
-    const newMessage: ChatMessage = {
-      id: `m_new_${Date.now()}`,
-      chatId: id || "",
-      senderId: CURRENT_USER.id,
-      content,
-      imageUri: pendingImage ?? undefined,
-      createdAt: new Date().toISOString(),
-    };
-    setMessages((prev) => [...prev, newMessage]);
-    setMessageText("");
-    setMessageSelection({ start: 0, end: 0 });
-    setPendingImage(null);
-    setMentionQuery(null);
+    if (!id) return;
+    try {
+      let imageUrl: string | undefined;
+      const supportsSharedStorage = id === "board-announcement" || id.startsWith("rank-") || id.startsWith("event_chat_");
+      if (pendingImage && supportsSharedStorage) imageUrl = (await Api.uploadEventImage(pendingImage)).imageUrl;
+      const newMessage = await Api.createSharedChatMessage(id, { content, imageUrl });
+      setMessages((prev) => [...prev.filter((item) => item.id !== newMessage.id), newMessage]);
+      setMessageText("");
+      setMessageSelection({ start: 0, end: 0 });
+      setPendingImage(null);
+      setMentionQuery(null);
 
-    // AsyncStorageに永続化
-    if (id) {
-      saveMessagesToStorage(id, [newMessage]);
-    }
-
-    // メンション通知を送信
-    if (room && content.includes("@")) {
-      const preview = content.length > 50 ? `${content.slice(0, 50)}...` : content;
-      const targets = getMentionedMemberIds(content, MEMBERS, mentionGroups, room.participants).filter((memberId) => memberId !== CURRENT_USER.id);
-      for (const memberId of targets) {
-        const member = getMemberById(memberId);
-        if (member) void sendMentionNotification(member.name, CURRENT_USER.name, room.name, preview);
+      // メンション通知を送信
+      if (room && content.includes("@")) {
+        const preview = content.length > 50 ? `${content.slice(0, 50)}...` : content;
+        const targets = getMentionedMemberIds(content, MEMBERS, mentionGroups, room.participants).filter((memberId) => memberId !== viewerMemberId);
+        for (const memberId of targets) {
+          const member = getMemberById(memberId);
+          if (member) void sendMentionNotification(member.name, authUser?.name ?? "メンバー", room.name, preview);
+        }
       }
+    } catch (error) {
+      if (error instanceof Api.ApiError && error.statusCode === 404) {
+        const legacyMessage: ChatMessage = {
+          id: `m_new_${Date.now()}`,
+          chatId: id,
+          senderId: viewerMemberId,
+          externalAuthorName: authUser?.name ?? undefined,
+          content,
+          imageUri: pendingImage ?? undefined,
+          createdAt: new Date().toISOString(),
+        };
+        setMessages((previous) => [...previous, legacyMessage]);
+        await saveMessagesToStorage(id, [legacyMessage]);
+        setMessageText("");
+        setMessageSelection({ start: 0, end: 0 });
+        setPendingImage(null);
+        setMentionQuery(null);
+        return;
+      }
+      Alert.alert("送信できませんでした", error instanceof Error ? error.message : "通信状況を確認してもう一度お試しください。");
     }
-  }, [messageText, pendingImage, id, room, mentionGroups, authUser?.role]);
+  }, [messageText, pendingImage, id, room, mentionGroups, authUser?.role, authUser?.accessRole, authUser?.name, viewerMemberId]);
 
   const handleReaction = useCallback(async (messageId: string, emoji: string) => {
     if (!id) return;
-    const updated = await toggleMessageReaction(id, messageId, emoji, CURRENT_USER.id);
+    const sharedMessage = messages.find((item) => item.id === messageId && item.shared);
+    if (sharedMessage) {
+      try {
+        const active = !(sharedMessage.reactions?.[emoji] ?? []).includes(viewerMemberId);
+        const result = await Api.setSharedChatReaction(messageId, emoji, active);
+        setMessages((current) => current.map((message) => message.id === messageId ? { ...message, reactions: result.reactions } : message));
+      } catch (error) {
+        Alert.alert("リアクションできませんでした", error instanceof Error ? error.message : "もう一度お試しください。");
+      }
+      return;
+    }
+    const updated = await toggleMessageReaction(id, messageId, emoji, viewerMemberId);
     if (updated) setMessages((current) => current.map((message) => message.id === updated.id ? updated : message));
-  }, [id]);
+  }, [id, messages, viewerMemberId]);
 
   useEffect(() => {
     if (messages.length > 0) {
@@ -329,12 +373,12 @@ export default function ChatScreen() {
           didInitialScrollRef.current = true;
           return;
         }
-        if (messages.at(-1)?.senderId === CURRENT_USER.id) {
+        if (messages.at(-1)?.senderId === viewerMemberId) {
           flatListRef.current?.scrollToEnd({ animated: true });
         }
       }, 100);
     }
-  }, [messages, unreadCountParam]);
+  }, [messages, unreadCountParam, viewerMemberId]);
 
   if (!room) {
     return (
@@ -346,7 +390,7 @@ export default function ChatScreen() {
     );
   }
 
-  if (!canAccessChatRoom(room, CURRENT_USER.id, CURRENT_USER.rank, userIsAdmin)) {
+  if (!canAccessChatRoom(room, viewerMemberId, (authUser?.memberRank ?? CURRENT_USER.rank) as typeof CURRENT_USER.rank, userIsAdmin) && room.id !== "board-announcement") {
     return (
       <ScreenContainer edges={["top", "left", "right"]}>
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: 24 }}>
@@ -428,7 +472,8 @@ export default function ChatScreen() {
           renderItem={({ item }) => (
             <MessageBubble
               message={item}
-              isMe={item.senderId === CURRENT_USER.id}
+              isMe={item.senderId === viewerMemberId}
+              viewerId={viewerMemberId}
               myAvatarUri={myAvatarUri}
               onReact={(emoji) => handleReaction(item.id, emoji)}
               mentionGroups={mentionGroups}

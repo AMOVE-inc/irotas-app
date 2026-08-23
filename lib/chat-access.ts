@@ -7,7 +7,7 @@ export function canAccessChatRoom(
   isAdmin = false,
 ): boolean {
   if (room.type === "rank") {
-    return room.requiredRank === memberRank && room.participants.includes(memberId);
+    return room.requiredRank === memberRank && (room.participants.length === 0 || room.participants.includes(memberId));
   }
   return isAdmin || room.participants.includes(memberId);
 }

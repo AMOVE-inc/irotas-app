@@ -59,7 +59,7 @@ export function getMyRooms(userId: string): ChatRoom[] {
 export async function applyReadRoomState(rooms: ChatRoom[]): Promise<ChatRoom[]> {
   const raw = await AsyncStorage.getItem(READ_ROOMS_KEY);
   const readIds = new Set<string>(raw ? JSON.parse(raw) : []);
-  return sortRoomsByRecent(rooms).map((room) => readIds.has(room.id) ? { ...room, unreadCount: 0 } : room);
+  return sortRoomsByRecent(rooms).map((room) => !room.shared && readIds.has(room.id) ? { ...room, unreadCount: 0 } : room);
 }
 
 export async function markRoomRead(roomId: string): Promise<void> {

@@ -16,6 +16,7 @@ import { handleClubRequest } from "./clubs";
 import { handleNotificationRequest } from "./notifications";
 import { handleBoardArchiveRequest } from "./board-archive";
 import { handleBoardContentRequest } from "./board-content";
+import { handleChatContentRequest } from "./chat-content";
 
 type CommunitySubmission = {
   reportId: string;
@@ -264,6 +265,8 @@ async function routeRequest(
   if (notificationResponse) return notificationResponse;
   const boardContentResponse = await handleBoardContentRequest(request, env);
   if (boardContentResponse) return boardContentResponse;
+  const chatContentResponse = await handleChatContentRequest(request, env);
+  if (chatContentResponse) return chatContentResponse;
   const boardArchiveResponse = await handleBoardArchiveRequest(request, env);
   if (boardArchiveResponse) return boardArchiveResponse;
   const eventResponse = await handleEventRequest(request, env);

@@ -287,6 +287,8 @@ export interface ChatRoom {
   lastMessageAt?: string;
   requiredRank?: MemberRank; // ランクチャット: このランクのメンバーのみ参加可能
   unreadCount?: number;
+  /** 共有DBから読み込まれたチャットルーム。 */
+  shared?: boolean;
 }
 
 export interface ChatMessage {
@@ -300,6 +302,8 @@ export interface ChatMessage {
   externalAuthorName?: string;
   reactions?: Record<string, string[]>; // emoji -> member ids（通知なしリアクション）
   createdAt: string;
+  /** 端末保存ではなく共有DBに保存されたメッセージ。 */
+  shared?: boolean;
 }
 
 export interface Coupon {

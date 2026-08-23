@@ -9,6 +9,7 @@ import { Image } from "expo-image";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useState } from "react";
 import { FlatList, Modal, Pressable, ScrollView, Text, TextInput, View } from "react-native";
+import * as Api from "@/lib/_core/api";
 
 function ChatRoomCard({ room }: { room: ChatRoom }) {
   const colors = useColors();
@@ -35,6 +36,7 @@ function ChatRoomCard({ room }: { room: ChatRoom }) {
       onPress={() => {
         const unreadCount = room.unreadCount ?? 0;
         void markRoomRead(room.id);
+        void Api.markSharedChatRoomRead(room.id).catch(() => {});
         router.push({ pathname: "/chat", params: { id: room.id, unreadCount: String(unreadCount) } });
       }}
       style={({ pressed }) => ({ flexDirection: "row", alignItems: "center", paddingHorizontal: 16, paddingVertical: 14, borderBottomWidth: 0.5, borderBottomColor: colors.border, opacity: pressed ? 0.7 : 1 })}
@@ -139,16 +141,28 @@ export default function ChatListScreen() {
   const router = useRouter();
   const { user: authUser } = useAuthContext();
   const userIsAdmin = authUser?.role === "admin";
+  const viewerMemberId = authUser?.memberId ?? (authUser?.id ? `member-${authUser.id}` : CURRENT_USER.id);
+  const viewerRank = authUser?.memberRank ?? CURRENT_USER.rank;
   const [showCreateGroup, setShowCreateGroup] = useState(false);
   const [myRooms, setMyRooms] = useState<ChatRoom[]>([]);
   const [rankRooms, setRankRooms] = useState<ChatRoom[]>([]);
 
   const refreshRooms = useCallback(async () => {
-    const joinedRooms = userIsAdmin ? getAllRooms().filter((room) => room.type !== "rank") : getMyRooms(CURRENT_USER.id).filter((room) => room.type !== "rank");
-    const [sortedJoined, sortedRank] = await Promise.all([applyReadRoomState(joinedRooms), applyReadRoomState(getRankRoomsForUser(CURRENT_USER.rank))]);
+    const localJoinedRooms = userIsAdmin ? getAllRooms().filter((room) => room.type !== "rank") : getMyRooms(viewerMemberId).filter((room) => room.type !== "rank");
+    const localRankRooms = getRankRoomsForUser(viewerRank);
+    let sharedRooms: ChatRoom[] = [];
+    try {
+      sharedRooms = (await Api.getSharedChatRooms()).map((room) => ({ ...room, requiredRank: room.requiredRank as ChatRoom["requiredRank"] }));
+    } catch {
+      // オフライン時も端末内の移行済みチャット一覧は利用できる。
+    }
+    const sharedById = new Map(sharedRooms.map((room) => [room.id, room]));
+    const mergedJoined = [...localJoinedRooms.filter((room) => !sharedById.has(room.id)), ...sharedRooms.filter((room) => room.type !== "rank")];
+    const mergedRank = [...localRankRooms.filter((room) => !sharedById.has(room.id)), ...sharedRooms.filter((room) => room.type === "rank")];
+    const [sortedJoined, sortedRank] = await Promise.all([applyReadRoomState(mergedJoined), applyReadRoomState(mergedRank)]);
     setMyRooms(sortedJoined);
     setRankRooms(sortedRank);
-  }, [userIsAdmin]);
+  }, [userIsAdmin, viewerMemberId, viewerRank]);
 
   useFocusEffect(useCallback(() => {
     let active = true;
