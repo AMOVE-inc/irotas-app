@@ -46,6 +46,9 @@ import {
   getSystemMonitoring,
   getAdminAccountDeletionRequests,
   completeAdminAccountDeletion,
+  getReviewAccountStatus,
+  configureReviewAccount,
+  suspendReviewAccount,
   syncSquareSubscriptions,
   updateOperatorMemberTerm,
   type MembershipSummary,
@@ -54,6 +57,7 @@ import {
   type SystemAuditLog,
   type ApplicationErrorLog,
   type AdminAccountDeletionRequest,
+  type ReviewAccountStatus,
 } from "@/lib/_core/api";
 
 type PointsHistoryEntry = {
@@ -77,7 +81,7 @@ export default function AdminDashboardScreen() {
   const clubs = useClubs();
 
   // すべての state を条件分岐の外で定義
-  const [activeTab, setActiveTab] = useState<"overview" | "monitoring" | "deletions" | "operators" | "members" | "events" | "contests" | "clubs" | "payments" | "emails" | "announcements" | "coupons" | "analytics">(tab === "monitoring" ? "monitoring" : tab === "deletions" ? "deletions" : tab === "coupons" ? "coupons" : tab === "contests" ? "contests" : tab === "operators" ? "operators" : "overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "monitoring" | "deletions" | "review" | "operators" | "members" | "events" | "contests" | "clubs" | "payments" | "emails" | "announcements" | "coupons" | "analytics">(tab === "monitoring" ? "monitoring" : tab === "deletions" ? "deletions" : tab === "review" ? "review" : tab === "coupons" ? "coupons" : tab === "contests" ? "contests" : tab === "operators" ? "operators" : "overview");
   const [editingClub, setEditingClub] = useState<Club | null>(null);
   const [paymentRecords, setPaymentRecords] = useState<PaymentRecord[]>([]);
   const [selectedPaymentEventId, setSelectedPaymentEventId] = useState<string | null>(null);
@@ -115,6 +119,10 @@ export default function AdminDashboardScreen() {
   const [deletionRequests, setDeletionRequests] = useState<AdminAccountDeletionRequest[]>([]);
   const [deletionsLoading, setDeletionsLoading] = useState(false);
   const [completingDeletionId, setCompletingDeletionId] = useState<string | null>(null);
+  const [reviewAccount, setReviewAccount] = useState<ReviewAccountStatus | null>(null);
+  const [reviewEmail, setReviewEmail] = useState("");
+  const [reviewPassword, setReviewPassword] = useState("");
+  const [reviewSaving, setReviewSaving] = useState(false);
   const loadMembershipSummary = async () => {
     setMembershipSummaryLoading(true);
     try {
@@ -161,6 +169,13 @@ export default function AdminDashboardScreen() {
   };
   useEffect(() => {
     if (userIsAdmin && activeTab === "deletions") void loadDeletionRequests();
+  }, [userIsAdmin, activeTab]);
+  useEffect(() => {
+    if (!userIsAdmin || activeTab !== "review") return;
+    getReviewAccountStatus().then((account) => {
+      setReviewAccount(account);
+      setReviewEmail(account.email ?? "");
+    }).catch((error) => Alert.alert("読み込みエラー", error instanceof Error ? error.message : "審査アカウントを確認できませんでした"));
   }, [userIsAdmin, activeTab]);
   useEffect(() => {
     if (!userIsAdmin || activeTab !== "operators") return;
@@ -547,8 +562,8 @@ export default function AdminDashboardScreen() {
         }}
         style={{ borderBottomWidth: 0.5, borderBottomColor: colors.border, flexGrow: 0 }}
       >
-        {(["overview", "monitoring", "deletions", "operators", "members", "events", "contests", "clubs", "payments", "emails", "announcements", "coupons", "analytics"] as const).map((tab) => {
-          const labels = { overview: "概要", monitoring: "監視ログ", deletions: "退会申請", operators: "運営メンバー", members: "会員", events: "イベント", contests: "グルメ選手権", clubs: "部活動", payments: "支払管理", emails: "承認メール", announcements: "お知らせ", coupons: "クーポン", analytics: "分析" };
+        {(["overview", "monitoring", "deletions", "review", "operators", "members", "events", "contests", "clubs", "payments", "emails", "announcements", "coupons", "analytics"] as const).map((tab) => {
+          const labels = { overview: "概要", monitoring: "監視ログ", deletions: "退会申請", review: "審査アカウント", operators: "運営メンバー", members: "会員", events: "イベント", contests: "グルメ選手権", clubs: "部活動", payments: "支払管理", emails: "承認メール", announcements: "お知らせ", coupons: "クーポン", analytics: "分析" };
           return (
             <Pressable
               key={tab}
@@ -575,6 +590,36 @@ export default function AdminDashboardScreen() {
       </ScrollView>
 
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
+        {activeTab === "review" && (
+          <View style={{ backgroundColor: colors.surface, borderRadius: 14, borderWidth: 1, borderColor: colors.border, padding: 16 }}>
+            <Text style={{ fontSize: 18, fontWeight: "800", color: colors.foreground }}>ストア審査用アカウント</Text>
+            <Text style={{ fontSize: 12, lineHeight: 19, color: colors.muted, marginTop: 6 }}>一般会員権限だけを持つ専用アカウントです。Square本番会員には登録せず、会員検索・集計から除外します。個人用パスワードは使わないでください。</Text>
+            {reviewAccount?.configured && (
+              <View style={{ backgroundColor: reviewAccount.active ? "#E8F7EC" : "#F1F2F4", borderRadius: 12, padding: 12, marginTop: 14 }}>
+                <Text style={{ color: reviewAccount.active ? "#237A3B" : colors.muted, fontWeight: "800" }}>{reviewAccount.active ? "審査利用可能" : "停止中"}</Text>
+                <Text style={{ color: colors.foreground, marginTop: 4 }}>{reviewAccount.email}</Text>
+              </View>
+            )}
+            <Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground, marginTop: 16, marginBottom: 6 }}>審査専用メールアドレス</Text>
+            <TextInput value={reviewEmail} onChangeText={setReviewEmail} autoCapitalize="none" keyboardType="email-address" placeholder="review@example.com" style={{ borderWidth: 1, borderColor: colors.border, borderRadius: 12, padding: 13, color: colors.foreground }} />
+            <Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground, marginTop: 14, marginBottom: 6 }}>一時パスワード（英字・数字を含む12文字以上）</Text>
+            <TextInput value={reviewPassword} onChangeText={setReviewPassword} secureTextEntry placeholder="保存後は再表示されません" style={{ borderWidth: 1, borderColor: colors.border, borderRadius: 12, padding: 13, color: colors.foreground }} />
+            <Pressable disabled={reviewSaving} onPress={async () => {
+              setReviewSaving(true);
+              try {
+                const account = await configureReviewAccount({ email: reviewEmail, displayName: "App Review Member", password: reviewPassword });
+                setReviewAccount(account);
+                setReviewPassword("");
+                Alert.alert("設定完了", "審査用アカウントを有効化しました。パスワードは安全な方法で審査メモへ転記してください。");
+              } catch (error) {
+                Alert.alert("設定できませんでした", error instanceof Error ? error.message : "入力内容を確認してください");
+              } finally { setReviewSaving(false); }
+            }} style={{ minHeight: 48, borderRadius: 12, backgroundColor: reviewSaving ? colors.border : "#E8A0BF", alignItems: "center", justifyContent: "center", marginTop: 16 }}>
+              {reviewSaving ? <ActivityIndicator color="#FFF" /> : <Text style={{ color: "#FFF", fontWeight: "800" }}>審査アカウントを設定・更新</Text>}
+            </Pressable>
+            {reviewAccount?.active && <Pressable onPress={() => Alert.alert("審査アカウントを停止しますか？", "全セッションを失効し、ログインできない状態にします。", [{ text: "キャンセル", style: "cancel" }, { text: "停止", style: "destructive", onPress: async () => { try { setReviewAccount(await suspendReviewAccount()); Alert.alert("停止しました"); } catch (error) { Alert.alert("停止できませんでした", error instanceof Error ? error.message : "再度お試しください"); } } }])} style={{ alignItems: "center", padding: 14, marginTop: 8 }}><Text style={{ color: "#B42318", fontWeight: "700" }}>審査アカウントを停止</Text></Pressable>}
+          </View>
+        )}
         {activeTab === "deletions" && (
           <>
             <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 14 }}>

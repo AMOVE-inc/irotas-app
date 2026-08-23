@@ -724,6 +724,41 @@ export async function completeAdminAccountDeletion(requestId: string) {
   return result.request;
 }
 
+export type ReviewAccountStatus = {
+  configured: boolean;
+  email: string | null;
+  displayName: string | null;
+  active: boolean;
+  updatedAt: string | null;
+};
+
+export async function getReviewAccountStatus() {
+  const result = await apiCall<{ account: ReviewAccountStatus }>(
+    "/api/admin/review-account",
+  );
+  return result.account;
+}
+
+export async function configureReviewAccount(input: {
+  email: string;
+  displayName: string;
+  password: string;
+}) {
+  const result = await apiCall<{ account: ReviewAccountStatus }>(
+    "/api/admin/review-account",
+    { method: "PUT", body: JSON.stringify(input) },
+  );
+  return result.account;
+}
+
+export async function suspendReviewAccount() {
+  const result = await apiCall<{ account: ReviewAccountStatus }>(
+    "/api/admin/review-account",
+    { method: "DELETE" },
+  );
+  return result.account;
+}
+
 export async function getAccountDeletionRequest() {
   return apiCall<{ request: AccountDeletionRequest | null }>(
     "/api/auth/account-deletion",
