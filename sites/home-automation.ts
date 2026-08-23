@@ -1,4 +1,5 @@
 import { authenticatedRequestMember } from "./auth";
+import { awardCompletedEventHostXp } from "./event-host-xp";
 import type { D1Database, SitesEnv } from "./platform-types";
 
 const HOME_ACTIVITIES = "/api/home/activities";
@@ -127,8 +128,23 @@ async function deliverReminder(db: D1Database, reminder: Reminder, now: Date) {
 export async function runEventAutomation(db: D1Database, now = new Date()) {
   let delivered = 0;
   for (const reminder of await pendingReminders(db, now)) if (await deliverReminder(db, reminder, now)) delivered += 1;
+  delivered += await completePastEvents(db, now);
   delivered += await finalizeExpiredBoardPolls(db, now);
   return delivered;
+}
+
+async function completePastEvents(db: D1Database, now: Date) {
+  const tokyoToday = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Tokyo", year: "numeric", month: "2-digit", day: "2-digit" }).format(now);
+  const events = await db.prepare(`SELECT id, organizer_member_id FROM events
+    WHERE status IN ('open', 'full') AND event_date < ?`).bind(tokyoToday).all<{ id: string; organizer_member_id: number }>();
+  let completed = 0;
+  for (const event of events.results ?? []) {
+    const timestamp = now.toISOString();
+    await db.prepare("UPDATE events SET status = 'ended', updated_at = ? WHERE id = ? AND status IN ('open', 'full')")
+      .bind(timestamp, event.id).run();
+    if (await awardCompletedEventHostXp(db, event.id, event.organizer_member_id, timestamp)) completed += 1;
+  }
+  return completed;
 }
 
 type PollOwnerRow = { owner_type: "thread" | "comment"; owner_id: string; author_member_id: number; data_json: string };

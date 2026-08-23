@@ -1,5 +1,6 @@
 import { authenticatedRequestMember } from "./auth";
 import { canMemberAccessClub } from "./clubs";
+import { reverseCancelledEventHostXp } from "./event-host-xp";
 import type { D1Database, SitesEnv } from "./platform-types";
 
 const EVENTS_ENDPOINT = "/api/events";
@@ -378,6 +379,23 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
     if (row.event_type === "club" && row.club_id && !await canMemberAccessClub(env.DB, row.club_id, member.id, admin))
       return responseJson({ error: "この部活の部員のみ詳細を閲覧できます" }, 403);
     return responseJson({ event: await hydratedEvent(env.DB, row, member.id, elevated, memberPublicId) });
+  }
+  if (eventMatch && request.method === "PATCH") {
+    const id = decodeURIComponent(eventMatch[1]);
+    const row = await eventRow(env.DB, id);
+    if (!row) return responseJson({ error: "イベントが見つかりません" }, 404);
+    if (!(elevated || row.organizer_member_id === member.id)) return responseJson({ error: "幹事または運営メンバーのみ操作できます" }, 403);
+    const input = await readBody(request);
+    if (input?.action !== "cancel") return responseJson({ error: "操作を選択してください" }, 400);
+    if (row.status === "cancelled") return responseJson({ success: true, cancelled: true });
+    const now = new Date().toISOString();
+    await reverseCancelledEventHostXp(env.DB, id, now);
+    await env.DB.batch([
+      env.DB.prepare("UPDATE events SET status = 'cancelled', updated_at = ? WHERE id = ?").bind(now, id),
+      env.DB.prepare(`INSERT INTO audit_logs (actor_user_id, action, entity_type, entity_id, metadata_json, created_at)
+        VALUES (?, 'event.cancelled', 'event', ?, '{}', ?)`).bind(String(member.id), id, now),
+    ]);
+    return responseJson({ success: true, cancelled: true });
   }
   if (favoriteMatch && request.method === "PUT") {
     const id = decodeURIComponent(favoriteMatch[1]);

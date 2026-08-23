@@ -775,6 +775,13 @@ export async function finalizeEventParticipants(eventId: string) {
   return result.event;
 }
 
+export async function cancelEvent(eventId: string) {
+  return apiCall<{ success: boolean; cancelled: boolean }>(
+    `/api/events/${encodeURIComponent(eventId)}`,
+    { method: "PATCH", body: JSON.stringify({ action: "cancel" }) },
+  );
+}
+
 export async function requestEventCancellation(eventId: string, contactedOrganizer: boolean, policyConfirmed: boolean) {
   const result = await apiCall<{ event: Event }>(
     `/api/events/${encodeURIComponent(eventId)}/cancellation-requests`,

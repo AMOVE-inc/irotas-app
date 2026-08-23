@@ -17,4 +17,16 @@ describe("shared XP", () => {
     expect(migration).toContain("platform_schema_version");
     expect(migration).toContain("'18'");
   });
+
+  it("awards 20 XP to a completed event host and can reverse it on cancellation", () => {
+    const migration = fs.readFileSync(path.join(process.cwd(), "drizzle/0018_event_host_xp.sql"), "utf8");
+    const hostXp = fs.readFileSync(path.join(process.cwd(), "sites/event-host-xp.ts"), "utf8");
+    const events = fs.readFileSync(path.join(process.cwd(), "sites/events.ts"), "utf8");
+    expect(migration).toContain("amount INTEGER NOT NULL DEFAULT 20");
+    expect(migration).toContain("'reversed'");
+    expect(migration).toContain("'19'");
+    expect(hostXp).toContain("const HOST_REWARD = 20");
+    expect(hostXp).toContain("reverseCancelledEventHostXp");
+    expect(events).toContain("event.cancelled");
+  });
 });

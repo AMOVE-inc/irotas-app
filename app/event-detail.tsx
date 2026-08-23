@@ -367,6 +367,20 @@ export default function EventDetailScreen() {
     ]);
   };
 
+  const handleCancelEvent = () => {
+    Alert.alert("イベントを中止", "イベントを中止すると一覧から非表示になり、開催後に付与済みの幹事XPも取り消されます。中止しますか？", [
+      { text: "戻る", style: "cancel" },
+      { text: "中止する", style: "destructive", onPress: async () => {
+        try {
+          await Api.cancelEvent(event.id);
+          Alert.alert("イベントを中止しました", "イベント一覧へ戻ります。", [{ text: "OK", onPress: () => router.replace("/events") }]);
+        } catch (error) {
+          Alert.alert("中止できませんでした", error instanceof Error ? error.message : "もう一度お試しください。");
+        }
+      } },
+    ]);
+  };
+
   const cancelGourmetParticipant = (memberId: string) => {
     const member = getMemberById(memberId);
     Alert.alert("参加をキャンセル", `${member?.name ?? "メンバー"}さんの参加を幹事側でキャンセルしますか？`, [
@@ -683,6 +697,7 @@ export default function EventDetailScreen() {
             })}
             {event.status !== "open" && (event.participants ?? []).length < event.capacity ? <Pressable onPress={handleReopenGourmetRecruitment} style={{ marginTop: 12, borderRadius: 11, backgroundColor: "#E8A0BF", paddingVertical: 11, alignItems: "center" }}><Text style={{ fontSize: 14, fontWeight: "900", color: "#FFF" }}>追加募集を開始</Text></Pressable> : null}
             <Pressable disabled={Boolean(event.participantsFinalizedAt)} onPress={handleFinalizeParticipants} style={{ marginTop: 12, borderRadius: 11, backgroundColor: event.participantsFinalizedAt ? "#93C9A0" : "#34A853", paddingVertical: 11, alignItems: "center" }}><Text style={{ fontSize: 14, fontWeight: "900", color: "#FFF" }}>{event.participantsFinalizedAt ? "参加者確定済み" : "参加者確定を完了"}</Text></Pressable>
+            <Pressable onPress={handleCancelEvent} style={{ marginTop: 10, borderRadius: 11, borderWidth: 1, borderColor: "#D94C55", paddingVertical: 11, alignItems: "center" }}><Text style={{ fontSize: 14, fontWeight: "900", color: "#D94C55" }}>イベントを中止</Text></Pressable>
           </View>
         ) : null}
 
