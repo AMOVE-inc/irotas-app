@@ -23,16 +23,12 @@ type SharedXpReward = Pick<XpReward, "amount" | "reason" | "previousXp" | "nextX
 
 export async function awardXp(baseXp: number, amount: number, reason: string, remoteAward?: () => Promise<SharedXpReward>): Promise<XpReward> {
   if (remoteAward) {
-    try {
-      const reward = await remoteAward();
-      return {
-        ...reward,
-        previousLevel: getLevelFromXp(reward.previousXp),
-        nextLevel: getLevelFromXp(reward.nextXp),
-      };
-    } catch {
-      // 一時的にAPIへ接続できないプレビューでは端末内表示へフォールバックする。
-    }
+    const reward = await remoteAward();
+    return {
+      ...reward,
+      previousLevel: getLevelFromXp(reward.previousXp),
+      nextLevel: getLevelFromXp(reward.nextXp),
+    };
   }
   let previousXp = baseXp;
   try {

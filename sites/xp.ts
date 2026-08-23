@@ -66,9 +66,9 @@ async function award(request: Request, db: D1Database, viewer: Viewer) {
     db.prepare(`INSERT OR IGNORE INTO xp_operation_requests
       (idempotency_key, member_id, action, source_id, amount, reason, xp_before, rank_before, created_at)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`).bind(idempotencyKey, viewer.id, action, sourceId, reward.amount, reward.reason, previousXp, previousRank, now),
-    db.prepare(`UPDATE members SET xp = xp + ?, member_rank = CASE
-      WHEN xp + ? >= 1000 THEN 'platinum' WHEN xp + ? >= 500 THEN 'gold'
-      WHEN xp + ? >= 100 THEN 'silver' ELSE 'regular' END, updated_at = ?
+    db.prepare(`UPDATE members SET xp = COALESCE(xp, 0) + ?, member_rank = CASE
+      WHEN COALESCE(xp, 0) + ? >= 1000 THEN 'platinum' WHEN COALESCE(xp, 0) + ? >= 500 THEN 'gold'
+      WHEN COALESCE(xp, 0) + ? >= 100 THEN 'silver' ELSE 'regular' END, updated_at = ?
       WHERE id = ? AND EXISTS (SELECT 1 FROM xp_operation_requests WHERE idempotency_key = ? AND status = 'pending')`)
       .bind(reward.amount, reward.amount, reward.amount, reward.amount, now, viewer.id, idempotencyKey),
     db.prepare(`UPDATE xp_operation_requests SET status = 'applied', xp_after = xp_before + amount,
