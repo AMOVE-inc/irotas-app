@@ -29,4 +29,13 @@ describe("store submission packet", () => {
     expect(reviewAccount).toContain("square_customer_id = NULL");
     expect(reviewAccount).toContain("access_role = 'member'");
   });
+
+  it("includes store copy and a privacy-safe screenshot plan", () => {
+    expect(packet).toContain("## ストア掲載文案");
+    expect(packet).toContain("食でつながる会員限定コミュニティ");
+    expect(packet).toContain("## スクリーンショット撮影計画");
+    expect(packet).toContain("実在会員の非公開情報を写さない");
+    for (const screen of ["ホーム", "イベント一覧", "イベント詳細", "掲示板", "グルメマップ", "チャット", "部活動", "マイページ"])
+      expect(packet).toContain(`| ${screen} |`);
+  });
 });
