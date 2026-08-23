@@ -271,6 +271,13 @@ export async function createSharedBoardComment(
   );
 }
 
+export async function ensureSharedImportedBoardThread(threadId: string) {
+  return apiCall<{ success: true; id: string }>(
+    `/api/board/imported-threads/${encodeURIComponent(threadId)}/ensure`,
+    { method: "POST" },
+  );
+}
+
 export async function updateSharedBoardThread(
   threadId: string,
   input: Partial<Pick<SharedBoardThread, "title" | "content" | "status" | "pinned" | "data">>,

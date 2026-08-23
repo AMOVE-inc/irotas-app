@@ -1,6 +1,8 @@
 import { authenticatedRequestMember } from "./auth";
 import { canMemberAccessClub } from "./clubs";
 import type { D1Database, SitesEnv } from "./platform-types";
+import archive from "../data/discord-board-2026-08-14.json";
+import type { RawDiscordBoardArchive } from "../lib/discord-board-import";
 
 const CONTENT_PATH = "/api/board/content";
 const THREADS_PATH = "/api/board/threads";
@@ -8,6 +10,7 @@ const THREAD_PATH = /^\/api\/board\/threads\/([^/]+)$/;
 const COMMENTS_PATH = /^\/api\/board\/threads\/([^/]+)\/comments$/;
 const COMMENT_PATH = /^\/api\/board\/comments\/([^/]+)$/;
 const REACTIONS_PATH = "/api/board/reactions";
+const IMPORTED_THREAD_ENSURE_PATH = /^\/api\/board\/imported-threads\/([^/]+)\/ensure$/;
 const MAX_BODY_BYTES = 64 * 1024;
 const MAX_DATA_BYTES = 48 * 1024;
 const PUBLIC_CATEGORIES = new Set([
@@ -186,6 +189,46 @@ async function threadById(db: D1Database, id: string) {
     .bind(id).first<ThreadRow>();
 }
 
+async function ensureImportedThread(
+  db: D1Database,
+  id: string,
+  member: BoardMember,
+) {
+  const existing = await threadById(db, id);
+  if (existing) return existing;
+  const raw = (archive as RawDiscordBoardArchive).threads.find((thread) => thread.id === id);
+  const category = raw ? validCategory(raw.category) : null;
+  if (!raw || !category) return null;
+  if (!await canAccessBoardCategory(db, category, member)) return null;
+  const now = new Date().toISOString();
+  await db.prepare(`INSERT OR IGNORE INTO board_threads
+    (id, author_member_id, category, title, content, status, pinned, data_json, created_at, updated_at)
+    VALUES (?, ?, ?, ?, ?, 'none', 0, ?, ?, ?)`).bind(
+      id,
+      member.id,
+      category,
+      raw.title || "移行済み投稿",
+      raw.content || "移行済み投稿",
+      JSON.stringify({ archiveShadow: true }),
+      raw.createdAt || now,
+      now,
+    ).run();
+  return {
+    id,
+    author_member_id: member.id,
+    author_public_member_id: null,
+    author_display_name: null,
+    category,
+    title: raw.title || "移行済み投稿",
+    content: raw.content || "移行済み投稿",
+    status: "none" as const,
+    pinned: 0,
+    data_json: JSON.stringify({ archiveShadow: true }),
+    created_at: raw.createdAt || now,
+    updated_at: now,
+  };
+}
+
 async function targetOwner(db: D1Database, targetType: string, id: string) {
   const table = targetType === "thread" ? "board_threads" : "board_comments";
   return db.prepare(`SELECT author_member_id FROM ${table} WHERE id = ? AND deleted_at IS NULL LIMIT 1`)
@@ -214,13 +257,23 @@ export async function handleBoardContentRequest(
   const threadMatch = THREAD_PATH.exec(url.pathname);
   const commentsMatch = COMMENTS_PATH.exec(url.pathname);
   const commentMatch = COMMENT_PATH.exec(url.pathname);
+  const importedThreadEnsureMatch = IMPORTED_THREAD_ENSURE_PATH.exec(url.pathname);
   const handled = url.pathname === CONTENT_PATH || url.pathname === THREADS_PATH ||
-    url.pathname === REACTIONS_PATH || threadMatch || commentsMatch || commentMatch;
+    url.pathname === REACTIONS_PATH || threadMatch || commentsMatch || commentMatch || importedThreadEnsureMatch;
   if (!handled) return null;
   if (!env.DB) return json({ error: "データベースに接続できません" }, 503);
   const member = await authenticatedRequestMember(request, env);
   if (!member) return json({ error: "ログインが必要です" }, 401);
   const db = env.DB;
+
+  if (importedThreadEnsureMatch && request.method === "POST") {
+    const id = decodeURIComponent(importedThreadEnsureMatch[1]);
+    if (!/^discord-board-[0-9]{10,30}$/.test(id)) return json({ error: "移行済み投稿が見つかりません" }, 404);
+    const thread = await ensureImportedThread(db, id, member);
+    if (!thread) return json({ error: "移行済み投稿が見つからないか、閲覧権限がありません" }, 404);
+    await audit(db, member.id, "board.imported_thread_materialized", "board_thread", id);
+    return json({ success: true, id });
+  }
 
   if (url.pathname === CONTENT_PATH && request.method === "GET") {
     const categoryParam = url.searchParams.get("category");

@@ -704,6 +704,7 @@ function ThreadDetailModal({
   const [showClubApplication, setShowClubApplication] = useState(false);
   const [clubWantsToDo, setClubWantsToDo] = useState("");
   const [clubLeaderMessage, setClubLeaderMessage] = useState("");
+  const persistedThread = thread.shared || thread.id.startsWith("discord-board-");
 
   const isAuthor = thread.author.id === viewerMemberId;
   const isParticipant = (thread.recruitParticipants ?? []).includes(viewerMemberId);
@@ -749,6 +750,24 @@ function ThreadDetailModal({
   }, [thread.id, initialComments.length]);
 
   useEffect(() => {
+    if (!persistedThread) return;
+    let active = true;
+    void Api.getSharedBoardContent(thread.category).then((result) => {
+      if (!active) return;
+      const shared = result.comments
+        .filter((comment) => comment.threadId === thread.id && comment.data.archiveShadow !== true)
+        .map((comment) => sharedCommentToBoardComment(comment, CURRENT_USER.id));
+      setComments((current) => {
+        const sharedIds = new Set(shared.map((comment) => comment.id));
+        return [...current.filter((comment) => !comment.shared && !sharedIds.has(comment.id)), ...shared];
+      });
+    }).catch(() => {
+      // 移行済み本文は表示を続け、共有コメントだけ次回再取得する。
+    });
+    return () => { active = false; };
+  }, [persistedThread, thread.category, thread.id]);
+
+  useEffect(() => {
     if (!reactionsHydrated || !thread.gourmetContest || thread.gourmetContest.archived || contestCommentingOpen) return;
     if (contestFinalizedRef.current) return;
     const winner = getContestWinner(comments);
@@ -778,8 +797,9 @@ function ThreadDetailModal({
       images: isContest && contestImages.length ? contestImages : undefined,
       poll: pollAllowed && commentPollEnabled ? { question: commentPollQuestion.trim(), deadline: commentPollDeadline, allowMultiple: commentPollAllowMultiple, options: commentPollOptions.filter((option) => option.trim()).map((option, index) => ({ id: `option_${index + 1}`, text: option.trim(), voterIds: [] })) } : undefined,
     };
-    if (thread.shared) {
+    if (persistedThread) {
       try {
+        if (!thread.shared) await Api.ensureSharedImportedBoardThread(thread.id);
         newComment = { ...newComment, images: await uploadBoardImages(newComment.images) };
         const saved = await Api.createSharedBoardComment(thread.id, { content, data: boardCommentData(newComment) });
         newComment = { ...newComment, id: saved.id, createdAt: saved.createdAt, shared: true };
@@ -2302,7 +2322,8 @@ export default function BoardScreen() {
         (groups[comment.threadId] ??= []).push(comment);
         return groups;
       }, {});
-    const threads = result.threads.map((thread) => ({
+    const visibleRecords = result.threads.filter((thread) => thread.data.archiveShadow !== true);
+    const threads = visibleRecords.map((thread) => ({
       ...sharedThreadToBoardThread(thread, CURRENT_USER.id),
       commentCount: commentsByThread[thread.id]?.length ?? 0,
     }));
@@ -2315,7 +2336,7 @@ export default function BoardScreen() {
     });
     setImportedComments((current) => ({
       ...current,
-      ...Object.fromEntries(result.threads.map((thread) => [thread.id, commentsByThread[thread.id] ?? []])),
+      ...Object.fromEntries(visibleRecords.map((thread) => [thread.id, commentsByThread[thread.id] ?? []])),
     }));
   }, []);
 

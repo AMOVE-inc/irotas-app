@@ -152,4 +152,23 @@ describe("shared board content API", () => {
     const allowed = testDatabase(member, true);
     await expect(canAccessBoardCategory(allowed.db, "club-club-bread", member)).resolves.toBe(true);
   });
+
+  it("materializes a known Discord thread before accepting new shared comments", async () => {
+    const { db, writes } = testDatabase({ id: 9, role: "user", access_role: "member", account_status: "active" });
+    const response = await handleBoardContentRequest(
+      request("/api/board/imported-threads/discord-board-1537685822852173907/ensure", "POST"),
+      { DB: db } as SitesEnv,
+    );
+    expect(response?.status).toBe(200);
+    expect(writes.some((item) => item.sql.includes("INSERT OR IGNORE INTO board_threads"))).toBe(true);
+  });
+
+  it("rejects unknown imported thread identifiers", async () => {
+    const { db } = testDatabase({ id: 9, role: "user", access_role: "member", account_status: "active" });
+    const response = await handleBoardContentRequest(
+      request("/api/board/imported-threads/discord-board-9999999999999999999/ensure", "POST"),
+      { DB: db } as SitesEnv,
+    );
+    expect(response?.status).toBe(404);
+  });
 });
