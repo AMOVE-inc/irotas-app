@@ -43,3 +43,4 @@
 - [個人情報・決済・権限 最終レビュー](./operations/final-security-review.md)
 - [バックアップ復元訓練](./operations/backup-restore-drill.md)
 - [本番最終移行・更新凍結](./operations/final-migration-freeze.md)
+- [Go / NoGo 判定資料](./operations/go-nogo-decision-packet.md)
