@@ -27,6 +27,9 @@ describe("FAQ, rules and manual", () => {
     expect(manual).toContain("6桁の認証コード");
     expect(manual).toContain("入部申請");
     expect(manual).toContain("部員専用スレ");
+    expect(manual).toContain("iPhoneはSafari");
+    expect(manual).toContain("AndroidはChrome");
+    expect(manual).toContain("ホーム画面に追加");
   });
 
   it("keeps support and policy routes visible from My Page", () => {
