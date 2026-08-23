@@ -1,13 +1,12 @@
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
-import { CURRENT_USER, type ChatRoom } from "@/constants/mock-data";
+import { CURRENT_USER, DEFAULT_AVATAR, type ChatRoom } from "@/constants/mock-data";
 import { useAuthContext } from "@/lib/auth-context";
-import { applyReadRoomState, createFriendGroupChat, getAllRooms, getMyRooms, getRankRoomsForUser, loadDynamicRooms, markRoomRead } from "@/lib/chat-store";
-import { getFriends } from "@/lib/friendship";
+import { applyReadRoomState, getAllRooms, getMyRooms, getRankRoomsForUser, loadDynamicRooms, markRoomRead } from "@/lib/chat-store";
 import { useColors } from "@/hooks/use-colors";
 import { Image } from "expo-image";
 import { useFocusEffect, useRouter } from "expo-router";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { FlatList, Modal, Pressable, ScrollView, Text, TextInput, View } from "react-native";
 import * as Api from "@/lib/_core/api";
 
@@ -67,11 +66,21 @@ function ChatRoomCard({ room }: { room: ChatRoom }) {
 
 function CreateFriendGroupModal({ visible, onClose, onCreated }: { visible: boolean; onClose: () => void; onCreated: (room: ChatRoom) => void }) {
   const colors = useColors();
-  const friends = getFriends(CURRENT_USER.id);
+  const { user } = useAuthContext();
+  const viewerMemberId = user?.memberId ?? (user?.id ? `member-${user.id}` : CURRENT_USER.id);
+  const [members, setMembers] = useState<Api.PublicMember[]>([]);
   const [name, setName] = useState("");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [error, setError] = useState("");
+  const [saving, setSaving] = useState(false);
   const canCreate = name.trim().length > 0 && selectedIds.length >= 2;
+
+  useEffect(() => {
+    if (!visible) return;
+    void Api.getMemberDirectory()
+      .then((items) => setMembers(items.filter((item) => item.id !== viewerMemberId)))
+      .catch(() => setError("メンバー一覧を読み込めませんでした"));
+  }, [viewerMemberId, visible]);
 
   const closeAndReset = () => {
     setName("");
@@ -80,14 +89,17 @@ function CreateFriendGroupModal({ visible, onClose, onCreated }: { visible: bool
     onClose();
   };
 
-  const handleCreate = () => {
-    if (!canCreate) return;
+  const handleCreate = async () => {
+    if (!canCreate || saving) return;
+    setSaving(true);
     try {
-      const room = createFriendGroupChat(name, selectedIds, CURRENT_USER.id);
+      const room = await Api.createSharedChatRoom({ type: "group", name, memberIds: selectedIds });
       closeAndReset();
-      onCreated(room);
+      onCreated(room as unknown as ChatRoom);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "グループを作成できませんでした");
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -97,7 +109,7 @@ function CreateFriendGroupModal({ visible, onClose, onCreated }: { visible: bool
         <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 16, paddingTop: 20, paddingBottom: 12, borderBottomWidth: 0.5, borderBottomColor: colors.border }}>
           <Pressable onPress={closeAndReset}><Text style={{ fontSize: 15, color: colors.muted }}>キャンセル</Text></Pressable>
           <Text style={{ flex: 1, textAlign: "center", fontSize: 18, fontWeight: "800", color: colors.foreground }}>友達とグループ作成</Text>
-          <Pressable onPress={handleCreate} disabled={!canCreate}><Text style={{ fontSize: 15, fontWeight: "800", color: canCreate ? "#E8A0BF" : colors.border }}>作成</Text></Pressable>
+          <Pressable onPress={() => void handleCreate()} disabled={!canCreate || saving}><Text style={{ fontSize: 15, fontWeight: "800", color: canCreate && !saving ? "#E8A0BF" : colors.border }}>{saving ? "作成中" : "作成"}</Text></Pressable>
         </View>
         <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }} keyboardShouldPersistTaps="handled">
           <Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground, marginBottom: 7 }}>グループ名</Text>
@@ -108,9 +120,9 @@ function CreateFriendGroupModal({ visible, onClose, onCreated }: { visible: bool
             placeholderTextColor={colors.muted}
             style={{ backgroundColor: colors.surface, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: colors.foreground, borderWidth: 1, borderColor: colors.border }}
           />
-          <Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground, marginTop: 20 }}>招待する友達</Text>
-          <Text style={{ fontSize: 12, lineHeight: 18, color: colors.muted, marginTop: 4, marginBottom: 8 }}>自分と相互に友達のメンバーだけを招待できます。2人以上選択してください。</Text>
-          {friends.map((friend) => {
+          <Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground, marginTop: 20 }}>招待するメンバー</Text>
+          <Text style={{ fontSize: 12, lineHeight: 18, color: colors.muted, marginTop: 4, marginBottom: 8 }}>2人以上選択してください。作成後もメンバーを追加・削除できます。</Text>
+          {members.map((friend) => {
             const selected = selectedIds.includes(friend.id);
             return (
               <Pressable
@@ -118,10 +130,10 @@ function CreateFriendGroupModal({ visible, onClose, onCreated }: { visible: bool
                 onPress={() => { setSelectedIds((current) => selected ? current.filter((id) => id !== friend.id) : [...current, friend.id]); setError(""); }}
                 style={{ flexDirection: "row", alignItems: "center", paddingVertical: 11, borderBottomWidth: 0.5, borderBottomColor: colors.border }}
               >
-                <Image source={friend.avatar} style={{ width: 42, height: 42, borderRadius: 21 }} contentFit="cover" />
+                <Image source={DEFAULT_AVATAR} style={{ width: 42, height: 42, borderRadius: 21 }} contentFit="cover" />
                 <View style={{ flex: 1, marginLeft: 11 }}>
-                  <Text style={{ fontSize: 15, fontWeight: "700", color: colors.foreground }}>{friend.name}</Text>
-                  <Text style={{ fontSize: 12, color: colors.muted }}>{friend.generation}期生・{friend.branch === "kanto" ? "関東" : "関西"}支部</Text>
+                  <Text style={{ fontSize: 15, fontWeight: "700", color: colors.foreground }}>{friend.displayName}</Text>
+                  <Text style={{ fontSize: 12, color: colors.muted }}>{friend.memberTerm ?? "期生未設定"}</Text>
                 </View>
                 <View style={{ width: 24, height: 24, borderRadius: 12, alignItems: "center", justifyContent: "center", backgroundColor: selected ? "#E8A0BF" : colors.surface, borderWidth: 1, borderColor: selected ? "#E8A0BF" : colors.border }}>
                   {selected ? <IconSymbol name="checkmark" size={14} color="#FFF" /> : null}

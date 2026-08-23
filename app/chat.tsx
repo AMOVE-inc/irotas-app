@@ -196,6 +196,7 @@ export default function ChatScreen() {
   const [roomParticipants, setRoomParticipants] = useState<string[]>(
     () => getRoomById(id ?? "")?.participants ?? []
   );
+  const [directory, setDirectory] = useState<Api.PublicMember[]>([]);
   const [messages, setMessages] = useState<ChatMessage[]>(() =>
     id ? getMessages(id) : [],
   );
@@ -242,6 +243,7 @@ export default function ChatScreen() {
         setRoom(normalized);
         setRoomParticipants([...normalized.participants]);
       }).catch(() => {});
+      Api.getMemberDirectory().then(setDirectory).catch(() => {});
     });
   }, [id]);
 
@@ -299,7 +301,7 @@ export default function ChatScreen() {
     if (!id) return;
     try {
       let imageUrl: string | undefined;
-      const supportsSharedStorage = id === "board-announcement" || id.startsWith("rank-") || id.startsWith("event_chat_");
+      const supportsSharedStorage = Boolean(room?.shared) || id === "board-announcement" || id.startsWith("rank-") || id.startsWith("event_chat_");
       if (pendingImage && supportsSharedStorage) imageUrl = (await Api.uploadEventImage(pendingImage)).imageUrl;
       const newMessage = await Api.createSharedChatMessage(id, { content, imageUrl });
       setMessages((prev) => [...prev.filter((item) => item.id !== newMessage.id), newMessage]);
@@ -406,10 +408,11 @@ export default function ChatScreen() {
 
   const typeLabel = room.type === "event" ? "イベント" : room.type === "board" ? "掲示板" : room.type === "rank" ? "ランク専用" : room.type === "group" ? "友達グループ" : room.type === "dm" ? "DM" : "部活動";
   const typeColor = room.type === "event" ? "#E8A0BF" : room.type === "board" ? "#A7C7E7" : room.type === "rank" ? "#F59E0B" : room.type === "group" ? "#5B9BD5" : room.type === "dm" ? "#FF9500" : "#34C759";
-  const canManageRoom = userIsAdmin || room.createdBy === CURRENT_USER.id;
+  const canManageRoom = userIsAdmin || room.createdBy === viewerMemberId;
   const canInviteMembers = canManageRoom && room.type !== "rank" && room.type !== "event" && room.type !== "dm";
   const canPostAnnouncement = canPostToChat(authUser?.role, room.id, authUser?.accessRole);
-  const inviteCandidates = (room.type === "group" ? getFriends(CURRENT_USER.id) : MEMBERS.filter((member) => member.id !== CURRENT_USER.id))
+  const sharedInviteCandidates = directory.filter((member) => member.id !== viewerMemberId && !roomParticipants.includes(member.id));
+  const localInviteCandidates = (room.type === "group" ? getFriends(CURRENT_USER.id) : MEMBERS.filter((member) => member.id !== CURRENT_USER.id))
     .filter((member) => !roomParticipants.includes(member.id));
 
   return (
@@ -696,13 +699,19 @@ export default function ChatScreen() {
                   <TouchableOpacity
                     onPress={async () => {
                       if (!newTitle.trim() || !id) return;
-                      const ok = await renameRoom(id, newTitle.trim());
-                      if (ok) {
-                        const r = getRoomById(id);
-                        if (r) setRoom(r);
+                      try {
+                        if (room.shared) {
+                          const updated = await Api.renameSharedChatRoom(id, newTitle.trim());
+                          setRoom(updated as unknown as ChatRoom);
+                        } else {
+                          const ok = await renameRoom(id, newTitle.trim());
+                          if (!ok) throw new Error("デフォルトチャットは変更できません");
+                          const updated = getRoomById(id);
+                          if (updated) setRoom(updated);
+                        }
                         Alert.alert("変更完了", `チャット名を「${newTitle.trim()}」に変更しました`);
-                      } else {
-                        Alert.alert("エラー", "変更できませんでした（デフォルトチャットは変更不可）");
+                      } catch (error) {
+                        Alert.alert("エラー", error instanceof Error ? error.message : "変更できませんでした");
                       }
                       setEditingTitle(false);
                       setNewTitle("");
@@ -754,8 +763,10 @@ export default function ChatScreen() {
           <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 32 }}>
             {roomParticipants.map((pid) => {
               const member = getMemberById(pid);
-              if (!member) return null;
-              const isCurrentUser = pid === CURRENT_USER.id;
+              const sharedMember = directory.find((item) => item.id === pid);
+              if (!member && !sharedMember) return null;
+              const memberName = sharedMember?.displayName ?? member?.name ?? "メンバー";
+              const isCurrentUser = pid === viewerMemberId;
               const canRemove = canManageRoom && room.type !== "event" && !isCurrentUser;
               return (
                 <View
@@ -776,16 +787,16 @@ export default function ChatScreen() {
                     style={{ flexDirection: "row", alignItems: "center", flex: 1 }}
                   >
                     <Image
-                      source={member.avatar}
+                      source={member?.avatar ?? DEFAULT_AVATAR}
                       style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: colors.surface }}
                       contentFit="cover"
                     />
                     <View style={{ marginLeft: 12, flex: 1 }}>
                       <Text style={{ fontSize: 15, fontWeight: "600", color: colors.foreground }}>
-                        {member.name}{isCurrentUser ? " (あなた)" : ""}
+                        {memberName}{isCurrentUser ? " (あなた)" : ""}
                       </Text>
                       <Text style={{ fontSize: 12, color: colors.muted, marginTop: 1 }}>
-                        {member.branch} ・ {member.role === "admin" ? "管理者" : member.role === "operator" ? "運営メンバー" : member.rank}
+                        {sharedMember ? (sharedMember.memberTerm ?? "会員") : `${member?.branch} ・ ${member?.role === "admin" ? "管理者" : member?.role === "operator" ? "運営メンバー" : member?.rank}`}
                       </Text>
                     </View>
                     <IconSymbol name="chevron.right" size={16} color={colors.muted} />
@@ -795,7 +806,7 @@ export default function ChatScreen() {
                       onPress={() => {
                         Alert.alert(
                           "メンバーを削除",
-                          `${member.name}をこのチャットから削除しますか？`,
+                          `${memberName}をこのチャットから削除しますか？`,
                           [
                             { text: "キャンセル", style: "cancel" },
                             {
@@ -803,7 +814,8 @@ export default function ChatScreen() {
                               style: "destructive",
                               onPress: async () => {
                                 if (!id) return;
-                                await removeMemberFromRoom(id, pid);
+                                if (room.shared) await Api.removeSharedChatRoomMember(id, pid);
+                                else await removeMemberFromRoom(id, pid);
                                 setRoomParticipants((prev) => prev.filter((p) => p !== pid));
                               },
                             },
@@ -824,7 +836,8 @@ export default function ChatScreen() {
                   { text: "キャンセル", style: "cancel" },
                   { text: "退出する", style: "destructive", onPress: async () => {
                     if (!id) return;
-                    await removeMemberFromRoom(id, CURRENT_USER.id);
+                    if (room.shared) await Api.removeSharedChatRoomMember(id, viewerMemberId);
+                    else await removeMemberFromRoom(id, CURRENT_USER.id);
                     setShowParticipants(false);
                     router.replace("/chat-list");
                   } },
@@ -864,18 +877,27 @@ export default function ChatScreen() {
             </Pressable>
           </View>
           <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 32 }}>
-            {inviteCandidates.map((member) => (
+            {(room.shared ? sharedInviteCandidates : localInviteCandidates).map((candidate) => {
+              const member = "displayName" in candidate ? null : candidate;
+              const sharedMember = "displayName" in candidate ? candidate : null;
+              const candidateId = sharedMember?.id ?? member!.id;
+              const candidateName = sharedMember?.displayName ?? member!.name;
+              return (
               <TouchableOpacity
-                key={member.id}
+                key={candidateId}
                 onPress={async () => {
                   if (!id) return;
-                  const added = await addMemberToRoom(id, member.id);
-                  if (!added) {
-                    Alert.alert("追加できません", "相互に友達のメンバーだけを追加できます。");
-                    return;
+                  try {
+                    if (room.shared) await Api.addSharedChatRoomMember(id, candidateId);
+                    else {
+                      const added = await addMemberToRoom(id, candidateId);
+                      if (!added) throw new Error("相互に友達のメンバーだけを追加できます。");
+                    }
+                    setRoomParticipants((prev) => prev.includes(candidateId) ? prev : [...prev, candidateId]);
+                    Alert.alert("追加完了", `${candidateName}をチャットに追加しました`);
+                  } catch (error) {
+                    Alert.alert("追加できません", error instanceof Error ? error.message : "もう一度お試しください。");
                   }
-                  setRoomParticipants((prev) => [...prev, member.id]);
-                  Alert.alert("追加完了", `${member.name}をチャットに追加しました`);
                 }}
                 style={{
                   flexDirection: "row",
@@ -886,13 +908,13 @@ export default function ChatScreen() {
                 }}
               >
                 <Image
-                  source={member.avatar}
+                  source={member?.avatar ?? DEFAULT_AVATAR}
                   style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: colors.surface }}
                   contentFit="cover"
                 />
                 <View style={{ marginLeft: 12, flex: 1 }}>
-                  <Text style={{ fontSize: 15, fontWeight: "600", color: colors.foreground }}>{member.name}</Text>
-                  <Text style={{ fontSize: 12, color: colors.muted, marginTop: 1 }}>{member.branch} ・ {member.role === "admin" ? "管理者" : member.role === "operator" ? "運営メンバー" : member.rank}</Text>
+                  <Text style={{ fontSize: 15, fontWeight: "600", color: colors.foreground }}>{candidateName}</Text>
+                  <Text style={{ fontSize: 12, color: colors.muted, marginTop: 1 }}>{sharedMember ? (sharedMember.memberTerm ?? "会員") : `${member?.branch} ・ ${member?.role === "admin" ? "管理者" : member?.role === "operator" ? "運営メンバー" : member?.rank}`}</Text>
                 </View>
                 <View
                   style={{
@@ -905,8 +927,8 @@ export default function ChatScreen() {
                   <Text style={{ fontSize: 12, color: "#34C759", fontWeight: "600" }}>追加</Text>
                 </View>
               </TouchableOpacity>
-            ))}
-            {inviteCandidates.length === 0 && (
+            );})}
+            {(room.shared ? sharedInviteCandidates : localInviteCandidates).length === 0 && (
               <View style={{ alignItems: "center", paddingVertical: 40 }}>
                 <Text style={{ fontSize: 14, color: colors.muted }}>追加できるメンバーはいません</Text>
               </View>

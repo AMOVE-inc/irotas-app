@@ -360,6 +360,47 @@ export async function getSharedChatRooms() {
   return result.rooms;
 }
 
+export async function createSharedChatRoom(input: {
+  type: "dm" | "group";
+  name?: string;
+  memberIds: string[];
+}) {
+  const result = await apiCall<{ room: SharedChatRoom }>("/api/chats", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+  return result.room;
+}
+
+export async function renameSharedChatRoom(roomId: string, name: string) {
+  const result = await apiCall<{ room: SharedChatRoom }>(
+    `/api/chats/${encodeURIComponent(roomId)}`,
+    { method: "PATCH", body: JSON.stringify({ name }) },
+  );
+  return result.room;
+}
+
+export async function deleteSharedChatRoom(roomId: string) {
+  return apiCall<{ success: true }>(`/api/chats/${encodeURIComponent(roomId)}`, {
+    method: "DELETE",
+  });
+}
+
+export async function addSharedChatRoomMember(roomId: string, memberId: string) {
+  const result = await apiCall<{ room: SharedChatRoom }>(
+    `/api/chats/${encodeURIComponent(roomId)}/members`,
+    { method: "POST", body: JSON.stringify({ memberId }) },
+  );
+  return result.room;
+}
+
+export async function removeSharedChatRoomMember(roomId: string, memberId: string) {
+  return apiCall<{ success: true }>(
+    `/api/chats/${encodeURIComponent(roomId)}/members/${encodeURIComponent(memberId)}`,
+    { method: "DELETE" },
+  );
+}
+
 export async function markSharedChatRoomRead(roomId: string) {
   return apiCall<{ success: true }>(`/api/chats/${encodeURIComponent(roomId)}/read`, {
     method: "PUT",

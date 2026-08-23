@@ -12,7 +12,6 @@ import {
   type MemberRank,
 } from "@/constants/mock-data";
 import { useColors } from "@/hooks/use-colors";
-import { getOrCreateDMChat } from "@/lib/chat-store";
 import { useClubs } from "@/lib/club-store";
 import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -140,9 +139,17 @@ export default function MemberProfileScreen() {
   };
   const publishedAge = getPublishedAgeBand(details.birthDate, details.showAge);
 
-  const handleStartDM = () => {
-    const roomId = getOrCreateDMChat(CURRENT_USER.id, member.id, member.name);
-    router.push({ pathname: "/chat", params: { id: roomId } });
+  const handleStartDM = async () => {
+    if (!databaseMember) {
+      Alert.alert("準備中です", "移行済みの会員プロフィールからDMを開始してください。");
+      return;
+    }
+    try {
+      const room = await Api.createSharedChatRoom({ type: "dm", memberIds: [databaseMember.id] });
+      router.push({ pathname: "/chat", params: { id: room.id } });
+    } catch (error) {
+      Alert.alert("DMを開始できませんでした", error instanceof Error ? error.message : "もう一度お試しください。");
+    }
   };
 
   return (

@@ -4,6 +4,9 @@ import type { D1Database, SitesEnv } from "./platform-types";
 
 const MESSAGES_PATH = /^\/api\/chats\/([^/]+)\/messages$/;
 const ROOMS_PATH = "/api/chats";
+const ROOM_PATH = /^\/api\/chats\/([^/]+)$/;
+const MEMBERS_PATH = /^\/api\/chats\/([^/]+)\/members$/;
+const MEMBER_PATH = /^\/api\/chats\/([^/]+)\/members\/([^/]+)$/;
 const READ_PATH = /^\/api\/chats\/([^/]+)\/read$/;
 const REACTIONS_PATH = "/api/chats/reactions";
 const MAX_BODY_BYTES = 64 * 1024;
@@ -57,6 +60,10 @@ async function readBody(request: Request) {
 
 function elevated(member: Viewer) {
   return member.role === "admin" || member.access_role === "admin" || member.access_role === "operator";
+}
+
+function administrator(member: Viewer) {
+  return member.role === "admin" || member.access_role === "admin";
 }
 
 function validRoomId(value: string) {
@@ -137,11 +144,34 @@ async function canAccessRoom(db: D1Database, room: RoomRow, member: Viewer) {
       .bind(room.source_id, member.id).first<{ allowed: number }>();
     return Boolean(participation);
   }
-  if (elevated(member)) return true;
+  // DMと友達グループは運営メンバーにも公開しない。最上位管理者だけが
+  // 不正利用・事故対応のためにアクセスできる。
+  if (administrator(member)) return true;
   const membership = await db.prepare(`SELECT 1 AS allowed FROM chat_room_members
     WHERE room_id = ? AND member_id = ? AND left_at IS NULL LIMIT 1`)
     .bind(room.id, member.id).first<{ allowed: number }>();
   return Boolean(membership);
+}
+
+async function memberByPublicId(db: D1Database, memberId: string) {
+  const numericId = /^member-(\d+)$/.exec(memberId)?.[1] ?? null;
+  return db.prepare(`SELECT id, public_member_id, display_name
+    FROM members WHERE account_status = 'active'
+      AND (public_member_id = ? OR id = ?) LIMIT 1`)
+    .bind(memberId, numericId).first<{ id: number; public_member_id: string | null; display_name: string }>();
+}
+
+async function canManageRoom(db: D1Database, room: RoomRow, member: Viewer) {
+  if (administrator(member)) return true;
+  if (room.created_by_member_id === member.id) return true;
+  const membership = await db.prepare(`SELECT member_role FROM chat_room_members
+    WHERE room_id = ? AND member_id = ? AND left_at IS NULL LIMIT 1`)
+    .bind(room.id, member.id).first<{ member_role: string }>();
+  return membership?.member_role === "owner";
+}
+
+function mutableRoom(room: RoomRow) {
+  return room.room_type === "dm" || room.room_type === "group" || room.room_type === "board";
 }
 
 function canPost(room: RoomRow, member: Viewer) {
@@ -217,10 +247,10 @@ async function ensureViewerEventRooms(db: D1Database, member: Viewer) {
 }
 
 async function serializeRoom(db: D1Database, room: RoomRow, member: Viewer) {
-  const participantResult = await db.prepare(`SELECT crm.member_id, m.public_member_id
+  const participantResult = await db.prepare(`SELECT crm.member_id, m.public_member_id, m.display_name
     FROM chat_room_members crm JOIN members m ON m.id = crm.member_id
     WHERE crm.room_id = ? AND crm.left_at IS NULL ORDER BY crm.joined_at`)
-    .bind(room.id).all<{ member_id: number; public_member_id: string | null }>();
+    .bind(room.id).all<{ member_id: number; public_member_id: string | null; display_name: string }>();
   const last = await db.prepare(`SELECT content, image_url, created_at FROM chat_messages
     WHERE room_id = ? AND deleted_at IS NULL ORDER BY created_at DESC LIMIT 1`)
     .bind(room.id).first<{ content: string; image_url: string | null; created_at: string }>();
@@ -229,13 +259,23 @@ async function serializeRoom(db: D1Database, room: RoomRow, member: Viewer) {
     WHERE cm.room_id = ? AND cm.deleted_at IS NULL AND cm.sender_member_id != ?
       AND (crr.last_read_at IS NULL OR cm.created_at > crr.last_read_at)`)
     .bind(member.id, room.id, member.id).first<{ count: number }>();
+  const creator = room.created_by_member_id
+    ? await db.prepare("SELECT public_member_id FROM members WHERE id = ? LIMIT 1")
+      .bind(room.created_by_member_id).first<{ public_member_id: string | null }>()
+    : null;
+  const participants = participantResult.results ?? [];
+  const dmPartner = room.room_type === "dm"
+    ? participants.find((item) => item.member_id !== member.id)
+    : null;
   return {
     id: room.id,
-    name: room.name,
+    name: dmPartner?.display_name || room.name,
     type: room.room_type === "announcement" ? "board" : room.room_type,
     sourceId: room.source_id ?? room.id,
-    participants: (participantResult.results ?? []).map((item) => publicMemberId(item.member_id, item.public_member_id)),
-    createdBy: room.created_by_member_id ? `member-${room.created_by_member_id}` : "system",
+    participants: participants.map((item) => publicMemberId(item.member_id, item.public_member_id)),
+    createdBy: room.created_by_member_id
+      ? publicMemberId(room.created_by_member_id, creator?.public_member_id ?? null)
+      : "system",
     requiredRank: room.required_rank ?? undefined,
     lastMessage: last?.content || (last?.image_url ? "画像が送信されました" : ""),
     lastMessageAt: last?.created_at,
@@ -251,7 +291,11 @@ export async function handleChatContentRequest(
   const url = new URL(request.url);
   const messagesMatch = MESSAGES_PATH.exec(url.pathname);
   const readMatch = READ_PATH.exec(url.pathname);
-  if (!messagesMatch && !readMatch && url.pathname !== REACTIONS_PATH && url.pathname !== ROOMS_PATH) return null;
+  const membersMatch = MEMBERS_PATH.exec(url.pathname);
+  const memberMatch = MEMBER_PATH.exec(url.pathname);
+  const roomMatch = ROOM_PATH.exec(url.pathname);
+  if (!messagesMatch && !readMatch && !membersMatch && !memberMatch && !roomMatch &&
+      url.pathname !== REACTIONS_PATH && url.pathname !== ROOMS_PATH) return null;
   if (!env.DB) return json({ error: "データベースに接続できません" }, 503);
   const member = await authenticatedRequestMember(request, env);
   if (!member) return json({ error: "ログインが必要です" }, 401);
@@ -265,6 +309,143 @@ export async function handleChatContentRequest(
       if (await canAccessRoom(env.DB, room, member)) visible.push(room);
     }
     return json({ rooms: await Promise.all(visible.map((room) => serializeRoom(env.DB!, room, member))) });
+  }
+
+  if (url.pathname === ROOMS_PATH && request.method === "POST") {
+    const input = await readBody(request);
+    const type = input?.type;
+    if (!input || (type !== "dm" && type !== "group"))
+      return json({ error: "チャット種別が不正です" }, 400);
+    const rawMemberIds = Array.isArray(input.memberIds)
+      ? input.memberIds.filter((item): item is string => typeof item === "string")
+      : [];
+    const uniqueMemberIds = [...new Set(rawMemberIds)].slice(0, 99);
+    const targets = [] as Array<{ id: number; public_member_id: string | null; display_name: string }>;
+    for (const publicId of uniqueMemberIds) {
+      const target = await memberByPublicId(env.DB, publicId);
+      if (!target || target.id === member.id) continue;
+      targets.push(target);
+    }
+    if (type === "dm" && targets.length !== 1)
+      return json({ error: "DMの相手を1人指定してください" }, 400);
+    if (type === "group" && targets.length < 2)
+      return json({ error: "グループには2人以上招待してください" }, 400);
+
+    if (type === "dm") {
+      const pair = [member.id, targets[0].id].sort((a, b) => a - b).join(":");
+      const existing = await env.DB.prepare(`SELECT id, name, room_type, source_id, required_rank, created_by_member_id
+        FROM chat_rooms WHERE room_type = 'dm' AND source_id = ? AND deleted_at IS NULL LIMIT 1`)
+        .bind(pair).first<RoomRow>();
+      if (existing) {
+        const now = new Date().toISOString();
+        await env.DB.batch([member.id, targets[0].id].map((memberId) => env.DB!.prepare(`INSERT INTO chat_room_members
+          (room_id, member_id, member_role, joined_at, left_at) VALUES (?, ?, 'member', ?, NULL)
+          ON CONFLICT(room_id, member_id) DO UPDATE SET left_at = NULL`)
+          .bind(existing.id, memberId, now)));
+        return json({ room: await serializeRoom(env.DB, existing, member) });
+      }
+    }
+
+    const name = type === "dm"
+      ? targets[0].display_name
+      : (typeof input.name === "string" ? input.name.normalize("NFKC").trim() : "");
+    if (!name || name.length > 100) return json({ error: "チャット名は100文字以内で入力してください" }, 400);
+    const now = new Date().toISOString();
+    const roomId = `${type}_${crypto.randomUUID().replaceAll("-", "")}`;
+    const sourceId = type === "dm"
+      ? [member.id, targets[0].id].sort((a, b) => a - b).join(":")
+      : roomId;
+    await env.DB.prepare(`INSERT INTO chat_rooms
+      (id, name, room_type, source_id, created_by_member_id, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?)`).bind(roomId, name, type, sourceId, member.id, now, now).run();
+    await env.DB.batch([
+      env.DB.prepare(`INSERT INTO chat_room_members
+        (room_id, member_id, member_role, joined_at) VALUES (?, ?, 'owner', ?)`)
+        .bind(roomId, member.id, now),
+      ...targets.map((target) => env.DB!.prepare(`INSERT INTO chat_room_members
+        (room_id, member_id, member_role, joined_at) VALUES (?, ?, 'member', ?)`)
+        .bind(roomId, target.id, now)),
+    ]);
+    const room = await roomById(env.DB, roomId);
+    return json({ room: room ? await serializeRoom(env.DB, room, member) : null }, 201);
+  }
+
+  if (roomMatch && url.pathname !== REACTIONS_PATH && !messagesMatch && !readMatch && !membersMatch && !memberMatch) {
+    const roomId = decodeURIComponent(roomMatch[1]);
+    const room = validRoomId(roomId) ? await ensureKnownRoom(env.DB, roomId) : null;
+    if (!room) return json({ error: "チャットが見つかりません" }, 404);
+    if (!await canAccessRoom(env.DB, room, member))
+      return json({ error: "このチャットを閲覧する権限がありません" }, 403);
+    if (request.method === "PATCH") {
+      if (!mutableRoom(room) || room.room_type === "dm" || !await canManageRoom(env.DB, room, member))
+        return json({ error: "チャット名を変更する権限がありません" }, 403);
+      const input = await readBody(request);
+      const name = typeof input?.name === "string" ? input.name.normalize("NFKC").trim() : "";
+      if (!name || name.length > 100) return json({ error: "チャット名は100文字以内で入力してください" }, 400);
+      await env.DB.prepare("UPDATE chat_rooms SET name = ?, updated_at = ? WHERE id = ?")
+        .bind(name, new Date().toISOString(), roomId).run();
+      const updated = await roomById(env.DB, roomId);
+      return json({ room: updated ? await serializeRoom(env.DB, updated, member) : null });
+    }
+    if (request.method === "DELETE") {
+      if (!mutableRoom(room) || !await canManageRoom(env.DB, room, member))
+        return json({ error: "チャットを削除する権限がありません" }, 403);
+      await env.DB.prepare("UPDATE chat_rooms SET deleted_at = ?, updated_at = ? WHERE id = ?")
+        .bind(new Date().toISOString(), new Date().toISOString(), roomId).run();
+      return json({ success: true });
+    }
+  }
+
+  if (membersMatch && request.method === "POST") {
+    const roomId = decodeURIComponent(membersMatch[1]);
+    const room = validRoomId(roomId) ? await ensureKnownRoom(env.DB, roomId) : null;
+    if (!room) return json({ error: "チャットが見つかりません" }, 404);
+    if ((room.room_type !== "group" && room.room_type !== "board") || !await canManageRoom(env.DB, room, member))
+      return json({ error: "メンバーを招待する権限がありません" }, 403);
+    const input = await readBody(request);
+    const target = typeof input?.memberId === "string" ? await memberByPublicId(env.DB, input.memberId) : null;
+    if (!target) return json({ error: "メンバーが見つかりません" }, 404);
+    const now = new Date().toISOString();
+    await env.DB.prepare(`INSERT INTO chat_room_members
+      (room_id, member_id, member_role, joined_at, left_at) VALUES (?, ?, 'member', ?, NULL)
+      ON CONFLICT(room_id, member_id) DO UPDATE SET left_at = NULL, joined_at = excluded.joined_at`)
+      .bind(roomId, target.id, now).run();
+    await env.DB.prepare("UPDATE chat_rooms SET updated_at = ? WHERE id = ?").bind(now, roomId).run();
+    const updated = await roomById(env.DB, roomId);
+    return json({ room: updated ? await serializeRoom(env.DB, updated, member) : null });
+  }
+
+  if (memberMatch && request.method === "DELETE") {
+    const roomId = decodeURIComponent(memberMatch[1]);
+    const targetPublicId = decodeURIComponent(memberMatch[2]);
+    const room = validRoomId(roomId) ? await ensureKnownRoom(env.DB, roomId) : null;
+    if (!room) return json({ error: "チャットが見つかりません" }, 404);
+    if (!mutableRoom(room)) return json({ error: "このチャットからは退出できません" }, 403);
+    const target = await memberByPublicId(env.DB, targetPublicId);
+    if (!target) return json({ error: "メンバーが見つかりません" }, 404);
+    const removingSelf = target.id === member.id;
+    if (!removingSelf && !await canManageRoom(env.DB, room, member))
+      return json({ error: "メンバーを削除する権限がありません" }, 403);
+    const now = new Date().toISOString();
+    await env.DB.prepare(`UPDATE chat_room_members SET left_at = ?
+      WHERE room_id = ? AND member_id = ?`).bind(now, roomId, target.id).run();
+    if (target.id === room.created_by_member_id) {
+      const successor = await env.DB.prepare(`SELECT member_id FROM chat_room_members
+        WHERE room_id = ? AND left_at IS NULL ORDER BY joined_at LIMIT 1`)
+        .bind(roomId).first<{ member_id: number }>();
+      if (successor) {
+        await env.DB.batch([
+          env.DB.prepare("UPDATE chat_room_members SET member_role = 'owner' WHERE room_id = ? AND member_id = ?")
+            .bind(roomId, successor.member_id),
+          env.DB.prepare("UPDATE chat_rooms SET created_by_member_id = ?, updated_at = ? WHERE id = ?")
+            .bind(successor.member_id, now, roomId),
+        ]);
+      } else {
+        await env.DB.prepare("UPDATE chat_rooms SET deleted_at = ?, updated_at = ? WHERE id = ?")
+          .bind(now, now, roomId).run();
+      }
+    }
+    return json({ success: true });
   }
 
   if (readMatch && request.method === "PUT") {
