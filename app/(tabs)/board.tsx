@@ -75,6 +75,17 @@ import { getBoardRecruitmentStatus, isClubSelfIntroduction, isRecruitmentBoardCa
 const BOARD_MENTION_GROUPS = getMentionGroups(MEMBERS, CLUBS);
 const THREAD_REACTION_EMOJIS = ["👏", "😊", "❤️", "🎉", "😋"] as const;
 const boardImageSource = (image: BoardImage) => typeof image === "string" ? { uri: image } : image;
+const isDurableBoardImage = (uri: string) => /^https:\/\//i.test(uri) || uri.startsWith("/api/event-images/");
+async function uploadBoardImages(images?: BoardImage[]) {
+  if (!images?.length) return undefined;
+  return Promise.all(images.map(async (image) => {
+    if (typeof image === "number") return image;
+    const uri = typeof image === "string" ? image : image.uri;
+    if (isDurableBoardImage(uri)) return image;
+    const uploaded = await Api.uploadEventImage(uri);
+    return uploaded.imageUrl;
+  }));
+}
 const isOperatorMember = (member: typeof CURRENT_USER) => member.role === "admin" || member.role === "operator" || /IRO[+＋].*運営|【運営】/.test(member.name);
 const normalizedAdviceValue = (value: string) => /^(未設定|特になし|なし|未選択)$/i.test(value.trim()) ? "指定なし" : value;
 
@@ -769,6 +780,7 @@ function ThreadDetailModal({
     };
     if (thread.shared) {
       try {
+        newComment = { ...newComment, images: await uploadBoardImages(newComment.images) };
         const saved = await Api.createSharedBoardComment(thread.id, { content, data: boardCommentData(newComment) });
         newComment = { ...newComment, id: saved.id, createdAt: saved.createdAt, shared: true };
       } catch (error) {
@@ -1730,7 +1742,7 @@ function CreateThreadModal({
     const resolvedAreaDisplay = detectedLocation?.areaDisplay || areaDisplay;
     const normalizedComment = mealComment.trim();
     const normalizedMenu = recommendedMenu.trim();
-    const newThread: BoardThread = {
+    let newThread: BoardThread = {
       id: `t_new_${Date.now()}`,
       title: isMealReport ? (mealTitle.trim() || restaurantName.trim()) : isGourmetAdvice ? adviceTheme.trim() : isIntroduction ? "自己紹介" : title.trim(),
       author: CURRENT_USER,
@@ -1772,6 +1784,14 @@ function CreateThreadModal({
         options: pollOptions.filter((option) => option.trim()).map((option, index) => ({ id: `option_${index + 1}`, text: option.trim(), voterIds: [] })),
       } : undefined,
     };
+    if (newThread.images?.length) {
+      try {
+        newThread = { ...newThread, images: await uploadBoardImages(newThread.images) };
+      } catch (error) {
+        setFormError(error instanceof Error ? error.message : "画像を保存できませんでした。もう一度お試しください。");
+        return;
+      }
+    }
     let savedThread: BoardThread;
     try {
       savedThread = await onAdd(newThread);

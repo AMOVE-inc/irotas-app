@@ -14,8 +14,8 @@ describe("shared board content mapping", () => {
   });
 
   it("does not persist device-local image URIs", () => {
-    const thread = { id: "local", title: "投稿", author: CURRENT_USER, category: "free-chat", commentCount: 0, lastUpdated: "", preview: "本文", isRecruiting: false, images: ["blob:local", "file:///photo.jpg", "https://example.com/photo.jpg"] } satisfies BoardThread;
-    expect(boardThreadData(thread).images).toEqual(["https://example.com/photo.jpg"]);
+    const thread = { id: "local", title: "投稿", author: CURRENT_USER, category: "free-chat", commentCount: 0, lastUpdated: "", preview: "本文", isRecruiting: false, images: ["blob:local", "file:///photo.jpg", "https://example.com/photo.jpg", "/api/event-images/events/1/photo.jpg"] } satisfies BoardThread;
+    expect(boardThreadData(thread).images).toEqual(["https://example.com/photo.jpg", "/api/event-images/events/1/photo.jpg"]);
   });
 
   it("round-trips shared comment metadata", () => {

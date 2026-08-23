@@ -10,9 +10,10 @@ import type { SharedBoardComment, SharedBoardThread } from "./_core/api";
 
 type ReactionSummary = Record<string, { count: number; reacted: boolean }>;
 
+const durableUri = (uri: string) => /^https:\/\//i.test(uri) || uri.startsWith("/api/event-images/");
 const durableImages = (images?: BoardImage[]) => images?.filter((image) =>
-  typeof image === "number" || (typeof image === "string" && /^https:\/\//i.test(image)) ||
-  (typeof image === "object" && /^https:\/\//i.test(image.uri)),
+  typeof image === "number" || (typeof image === "string" && durableUri(image)) ||
+  (typeof image === "object" && durableUri(image.uri)),
 );
 
 function memberFor(id: string, name: string): Member {
