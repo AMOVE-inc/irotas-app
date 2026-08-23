@@ -2645,7 +2645,9 @@ export default function BoardScreen() {
           setImportedComments((current) => ({ ...current, [sharedThread.id]: [] }));
           const xpAction = thread.category === "meal-report" ? POINT_ACTIONS.mealReportPost : POINT_ACTIONS.boardPost;
           if (!isOperatorRole(authUser?.role, authUser?.accessRole)) {
-            void awardXp(CURRENT_USER.points, xpAction.points, xpAction.label).then(setXpReward);
+            void awardXp(authUser?.xp ?? CURRENT_USER.points, xpAction.points, xpAction.label, () => Api.awardSharedXp(thread.category === "meal-report" ? "meal_report_post" : "board_post", saved.id)).then(setXpReward).catch(() => {
+              Alert.alert("投稿しました", "XPの反映に時間がかかっています。マイページを再読み込みしてください。");
+            });
           }
           const submission = communityRestaurantFromMealReport(thread);
           if (submission) {

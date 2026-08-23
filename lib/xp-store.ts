@@ -18,7 +18,22 @@ export function getLevelFromXp(xp: number): number {
   return Math.max(1, Math.floor(Math.max(0, xp) / 50) + 1);
 }
 
-export async function awardXp(baseXp: number, amount: number, reason: string): Promise<XpReward> {
+export type XpAction = "event_create" | "board_post" | "meal_report_post";
+type SharedXpReward = Pick<XpReward, "amount" | "reason" | "previousXp" | "nextXp" | "previousRank" | "nextRank">;
+
+export async function awardXp(baseXp: number, amount: number, reason: string, remoteAward?: () => Promise<SharedXpReward>): Promise<XpReward> {
+  if (remoteAward) {
+    try {
+      const reward = await remoteAward();
+      return {
+        ...reward,
+        previousLevel: getLevelFromXp(reward.previousXp),
+        nextLevel: getLevelFromXp(reward.nextXp),
+      };
+    } catch {
+      // 一時的にAPIへ接続できないプレビューでは端末内表示へフォールバックする。
+    }
+  }
   let previousXp = baseXp;
   try {
     const stored = await AsyncStorage.getItem(STORAGE_KEY);

@@ -219,7 +219,10 @@ export default function CreateEventScreen() {
     void recordHomeActivity({ id: `event:${newEvent.id}`, kind: "event", title: newEvent.title, description: finalType === "official" ? "新しい公式イベントが公開されました" : finalType === "club" ? "新しい部活動イベントが公開されました" : "新しいグルメ会が公開されました", createdAt: newEvent.createdAt!, route: "/event-detail", params: { id: newEvent.id } });
     void scheduleOrganizerDeadlineNotification(newEvent);
     if (!userIsOperator) {
-      void awardXp(CURRENT_USER.points, POINT_ACTIONS.eventCreate.points, POINT_ACTIONS.eventCreate.label).then(setXpReward);
+      void awardXp(authUser?.xp ?? CURRENT_USER.points, POINT_ACTIONS.eventCreate.points, POINT_ACTIONS.eventCreate.label, () => Api.awardSharedXp("event_create", newEvent.id)).then(setXpReward).catch(() => {
+        Alert.alert("イベントを作成しました", "XPの反映に時間がかかっています。マイページを再読み込みしてください。");
+        router.back();
+      });
     }
     setIsSubmitting(false);
   };

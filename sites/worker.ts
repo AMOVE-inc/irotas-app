@@ -19,6 +19,7 @@ import { handleBoardContentRequest } from "./board-content";
 import { handleChatContentRequest } from "./chat-content";
 import { handleBenefitsRequest } from "./benefits";
 import { handleHomeAutomationRequest, runEventAutomation } from "./home-automation";
+import { handleXpRequest } from "./xp";
 
 type CommunitySubmission = {
   reportId: string;
@@ -271,6 +272,8 @@ async function routeRequest(
   if (chatContentResponse) return chatContentResponse;
   const benefitsResponse = await handleBenefitsRequest(request, env);
   if (benefitsResponse) return benefitsResponse;
+  const xpResponse = await handleXpRequest(request, env);
+  if (xpResponse) return xpResponse;
   const homeAutomationResponse = await handleHomeAutomationRequest(request, env);
   if (homeAutomationResponse) return homeAutomationResponse;
   const boardArchiveResponse = await handleBoardArchiveRequest(request, env);

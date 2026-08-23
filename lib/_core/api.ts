@@ -292,6 +292,13 @@ export function adjustSharedIrotasPoints(input: { amount: number; reason: string
   return apiCall<{ success: true; balance: number; duplicate?: boolean; transactionId?: string }>("/api/benefits/points/adjust", { method: "POST", body: JSON.stringify(input) });
 }
 
+export function awardSharedXp(action: "event_create" | "board_post" | "meal_report_post", sourceId: string) {
+  return apiCall<{ amount: number; reason: string; previousXp: number; nextXp: number; previousRank: import("@/constants/mock-data").MemberRank; nextRank: import("@/constants/mock-data").MemberRank; duplicate?: boolean }>("/api/xp/award", {
+    method: "POST",
+    body: JSON.stringify({ action, sourceId }),
+  });
+}
+
 // OAuth callback handler - exchange code for session token
 // Calls /api/oauth/mobile endpoint which returns JSON with app_session_id and user
 export async function exchangeOAuthCode(
