@@ -1,6 +1,12 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { COMMUNITY_TERMS_URL, EVENT_TERMS_URL, OFFICIAL_LINE_URL, REPORT_FORM_URL } from "../constants/external-links";
+import {
+  COMMUNITY_TERMS_URL,
+  EVENT_TERMS_URL,
+  OFFICIAL_LINE_URL,
+  PRIVACY_POLICY_URL,
+  REPORT_FORM_URL,
+} from "../constants/external-links";
 
 const faq = readFileSync("app/faq.tsx", "utf8");
 const manual = readFileSync("app/manual.tsx", "utf8");
@@ -31,6 +37,7 @@ describe("FAQ, rules and manual", () => {
   it("uses the official policy and report destinations", () => {
     expect(COMMUNITY_TERMS_URL).toBe("https://irotas-community.com/terms");
     expect(EVENT_TERMS_URL).toBe("https://irotas-community.com/event-terms");
+    expect(PRIVACY_POLICY_URL).toBe("https://irotas-community.com/privacy");
     expect(OFFICIAL_LINE_URL).toBe("https://lin.ee/Rr00sCb");
     expect(REPORT_FORM_URL).toContain("docs.google.com/forms/");
     expect(rules).toContain("REPORT_FORM_URL");

@@ -2,12 +2,11 @@
 import "./scripts/load-env.js";
 import type { ExpoConfig } from "expo/config";
 
-// Bundle ID format: space.manus.<project_name_dots>.<timestamp>
-// e.g., "my-app" created at 2024-01-15 10:30:45 -> "space.manus.my.app.t20240115103045"
-// Bundle ID can only contain letters, numbers, and dots
+// Store identifiers must remain unchanged after the first App Store / Play Store release.
+// Override only before the first store record is created.
 // Android requires each dot-separated segment to start with a letter
 const rawBundleId =
-  process.env.EXPO_PUBLIC_BUNDLE_IDENTIFIER ?? "space.manus.irotas.app.t20260323084952";
+  process.env.EXPO_PUBLIC_BUNDLE_IDENTIFIER ?? "com.irotas.community";
 const bundleId =
   rawBundleId
     .replace(/[-_]/g, ".") // Replace hyphens/underscores with dots
@@ -22,10 +21,7 @@ const bundleId =
       return /^[a-zA-Z]/.test(segment) ? segment : "x" + segment;
     })
     .join(".") || "space.manus.app";
-// Extract timestamp from bundle ID and prefix with "manus" for deep link scheme
-// e.g., "space.manus.my.app.t20240115103045" -> "manus20240115103045"
-const timestamp = bundleId.split(".").pop()?.replace(/^t/, "") ?? "";
-const schemeFromBundleId = process.env.EXPO_PUBLIC_APP_SCHEME ?? `manus${timestamp}`;
+const schemeFromBundleId = process.env.EXPO_PUBLIC_APP_SCHEME ?? "iroplus";
 
 const env = {
   // App branding - update these values directly (do not use env vars)
@@ -33,7 +29,8 @@ const env = {
   appSlug: "irotas-app",
   // S3 URL of the app logo - set this to the URL returned by generate_image when creating custom logo
   // Leave empty to use the default icon from assets/images/icon.png
-  logoUrl: "https://d2xsxph8kpxj0f.cloudfront.net/310519663131608042/RByLczUGFaawmetYWjMbRt/iro-plus-icon-SKFBtK8UGn5GJVQgZnQZza.png",
+  logoUrl:
+    "https://d2xsxph8kpxj0f.cloudfront.net/310519663131608042/RByLczUGFaawmetYWjMbRt/iro-plus-icon-SKFBtK8UGn5GJVQgZnQZza.png",
   scheme: schemeFromBundleId,
   iosBundleId: bundleId,
   androidPackage: bundleId,
@@ -93,8 +90,10 @@ const config: ExpoConfig = {
     [
       "expo-image-picker",
       {
-        photosPermission: "プロフィールや投稿に写真を追加するため、写真ライブラリへのアクセスを許可してください。",
-        cameraPermission: "投稿用の写真を撮影するため、カメラへのアクセスを許可してください。",
+        photosPermission:
+          "プロフィールや投稿に写真を追加するため、写真ライブラリへのアクセスを許可してください。",
+        cameraPermission:
+          "投稿用の写真を撮影するため、カメラへのアクセスを許可してください。",
         microphonePermission: false,
       },
     ],

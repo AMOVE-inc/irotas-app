@@ -1,8 +1,11 @@
 export const OFFICIAL_LINE_URL = "https://lin.ee/Rr00sCb";
-export const REPORT_FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSfpVLP9W38hWY-C-2p8_YLXUffxKkxrKsiopqK7Rw3qcXBLfg/viewform?usp=dialog";
-export const OFFICIAL_INSTAGRAM_URL = "https://www.instagram.com/irotas_community_official";
+export const REPORT_FORM_URL =
+  "https://docs.google.com/forms/d/e/1FAIpQLSfpVLP9W38hWY-C-2p8_YLXUffxKkxrKsiopqK7Rw3qcXBLfg/viewform?usp=dialog";
+export const OFFICIAL_INSTAGRAM_URL =
+  "https://www.instagram.com/irotas_community_official";
 export const COMMUNITY_TERMS_URL = "https://irotas-community.com/terms";
 export const EVENT_TERMS_URL = "https://irotas-community.com/event-terms";
+export const PRIVACY_POLICY_URL = "https://irotas-community.com/privacy";
 
 export const GOOGLE_GOURMET_MAP_LISTS = [
   ["居酒屋", "https://maps.app.goo.gl/7ajz64U2NqnXMhx3A"],
@@ -28,7 +31,13 @@ export const GOOGLE_GOURMET_MAP_LISTS = [
   ["カレー", "https://maps.app.goo.gl/UysAXftU6MpHsu85A"],
   ["創作料理・イノベーティブ", "https://maps.app.goo.gl/hbK16R5AHZDpJ83k9"],
   ["洋食", "https://maps.app.goo.gl/ob4e1sabycaGcExL6"],
-  ["欧州料理（イギリス、ドイツ、スイスなど）", "https://maps.app.goo.gl/TweuPk5GRW3XYvFS8"],
-  ["中南米料理（メキシコ、ブラジル、ペルーなど）", "https://maps.app.goo.gl/ud8hVLWcGwiiEnP18"],
+  [
+    "欧州料理（イギリス、ドイツ、スイスなど）",
+    "https://maps.app.goo.gl/TweuPk5GRW3XYvFS8",
+  ],
+  [
+    "中南米料理（メキシコ、ブラジル、ペルーなど）",
+    "https://maps.app.goo.gl/ud8hVLWcGwiiEnP18",
+  ],
   ["シーフード・海鮮", "https://maps.app.goo.gl/njXMr3oYA4mXtPPm8"],
 ] as const satisfies readonly (readonly [string, string])[];

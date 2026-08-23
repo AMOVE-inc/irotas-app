@@ -6,7 +6,12 @@ import { useState } from "react";
 import { useAuthContext } from "@/lib/auth-context";
 import * as Api from "@/lib/_core/api";
 import {
+  COMMUNITY_TERMS_URL,
+  PRIVACY_POLICY_URL,
+} from "@/constants/external-links";
+import {
   Alert,
+  Linking,
   Pressable,
   ScrollView,
   Switch,
@@ -54,22 +59,18 @@ export default function AppSettingsScreen() {
   };
 
   const handleLogout = () => {
-    Alert.alert(
-      "ログアウト",
-      "ログアウトしますか？",
-      [
-        { text: "キャンセル", style: "cancel" },
-        {
-          text: "ログアウト",
-          style: "destructive",
-          onPress: async () => {
-            if (Api.submitBrowserLogout()) return;
-            await logout();
-            router.replace("/login");
-          },
+    Alert.alert("ログアウト", "ログアウトしますか？", [
+      { text: "キャンセル", style: "cancel" },
+      {
+        text: "ログアウト",
+        style: "destructive",
+        onPress: async () => {
+          if (Api.submitBrowserLogout()) return;
+          await logout();
+          router.replace("/login");
         },
-      ],
-    );
+      },
+    ]);
   };
 
   const SectionHeader = ({ title }: { title: string }) => (
@@ -150,7 +151,9 @@ export default function AppSettingsScreen() {
           {label}
         </Text>
         {sublabel && (
-          <Text style={{ fontSize: 12, color: colors.muted, marginTop: 2 }}>{sublabel}</Text>
+          <Text style={{ fontSize: 12, color: colors.muted, marginTop: 2 }}>
+            {sublabel}
+          </Text>
         )}
       </View>
       {onToggle !== undefined && value !== undefined && (
@@ -186,12 +189,21 @@ export default function AppSettingsScreen() {
         <Pressable onPress={() => router.back()}>
           <IconSymbol name="arrow.left" size={22} color={colors.foreground} />
         </Pressable>
-        <Text style={{ fontSize: 20, fontWeight: "800", color: colors.foreground, marginLeft: 12 }}>
+        <Text
+          style={{
+            fontSize: 20,
+            fontWeight: "800",
+            color: colors.foreground,
+            marginLeft: 12,
+          }}
+        >
           アプリ設定
         </Text>
       </View>
 
-      <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 40 }}>
+      <ScrollView
+        contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 40 }}
+      >
         {/* 通知設定 */}
         <SectionHeader title="通知" />
         <SettingRow
@@ -279,13 +291,31 @@ export default function AppSettingsScreen() {
           label="文字サイズ"
           onPress={() =>
             Alert.alert("文字サイズ", "文字サイズを選択してください", [
-              { text: "小", onPress: () => setSettings((p) => ({ ...p, fontSize: "small" })) },
-              { text: "中（標準）", onPress: () => setSettings((p) => ({ ...p, fontSize: "medium" })) },
-              { text: "大", onPress: () => setSettings((p) => ({ ...p, fontSize: "large" })) },
+              {
+                text: "小",
+                onPress: () =>
+                  setSettings((p) => ({ ...p, fontSize: "small" })),
+              },
+              {
+                text: "中（標準）",
+                onPress: () =>
+                  setSettings((p) => ({ ...p, fontSize: "medium" })),
+              },
+              {
+                text: "大",
+                onPress: () =>
+                  setSettings((p) => ({ ...p, fontSize: "large" })),
+              },
               { text: "キャンセル", style: "cancel" },
             ])
           }
-          rightLabel={settings.fontSize === "small" ? "小" : settings.fontSize === "large" ? "大" : "中"}
+          rightLabel={
+            settings.fontSize === "small"
+              ? "小"
+              : settings.fontSize === "large"
+                ? "大"
+                : "中"
+          }
         />
         <SettingRow
           icon="moon.fill"
@@ -293,7 +323,10 @@ export default function AppSettingsScreen() {
           label="テーマ"
           rightLabel="ライト"
           onPress={() =>
-            Alert.alert("テーマ設定", "IROTASは白を基調としたライトテーマを使用します。")
+            Alert.alert(
+              "テーマ設定",
+              "IROTASは白を基調としたライトテーマを使用します。",
+            )
           }
         />
 
@@ -309,13 +342,13 @@ export default function AppSettingsScreen() {
           icon="doc.text.fill"
           iconColor="#8E8E93"
           label="利用規約"
-          onPress={() => Alert.alert("利用規約", "利用規約はWebサイトでご確認ください。")}
+          onPress={() => void Linking.openURL(COMMUNITY_TERMS_URL)}
         />
         <SettingRow
           icon="lock.fill"
           iconColor="#8E8E93"
           label="プライバシーポリシー"
-          onPress={() => Alert.alert("プライバシーポリシー", "プライバシーポリシーはWebサイトでご確認ください。")}
+          onPress={() => void Linking.openURL(PRIVACY_POLICY_URL)}
         />
         <SettingRow
           icon="trash.fill"
