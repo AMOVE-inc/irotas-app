@@ -8,6 +8,7 @@ import type { D1Database, SitesEnv } from "./platform-types";
 
 const COMMIT_ENDPOINT = "/api/admin/member-import/commit";
 const READINESS_ENDPOINT = "/api/admin/member-import/readiness";
+const RECONCILIATION_ENDPOINT = "/api/admin/member-import/reconciliation";
 const MAX_BATCH_SIZE = 25;
 const MAX_REQUEST_BYTES = 256 * 1024;
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -40,6 +41,146 @@ type ImportBody = {
   rows?: unknown;
   reviewApproved?: unknown;
 };
+
+type CountRow = { count?: number | string | null } | null;
+
+export type MemberReconciliationReport = {
+  activeMembers: number;
+  activeGeneralMembers: number;
+  discordLinkedMembers: number;
+  discordMissingMembers: number;
+  subscriptions: number;
+  linkedSubscriptions: number;
+  unlinkedSubscriptions: number;
+  membersWithoutSubscription: number;
+  duplicateEmailGroups: number;
+  duplicateDiscordIdGroups: number;
+  duplicateMemberIdGroups: number;
+  duplicateSquareCustomerIdGroups: number;
+  duplicateSquareSubscriptionIdGroups: number;
+  blockingIssueCount: number;
+  lastImport: {
+    status: string;
+    importedCount: number;
+    errorCount: number;
+    completedAt: string | null;
+  } | null;
+};
+
+function count(row: CountRow) {
+  return Number(row?.count ?? 0) || 0;
+}
+
+export function buildMemberReconciliationReport(input: {
+  members: Record<string, unknown> | null;
+  subscriptions: Record<string, unknown> | null;
+  duplicates: Array<CountRow>;
+  lastImport: Record<string, unknown> | null;
+}): MemberReconciliationReport {
+  const activeMembers = Number(input.members?.active_members ?? 0) || 0;
+  const activeGeneralMembers = Number(input.members?.active_general_members ?? 0) || 0;
+  const discordLinkedMembers = Number(input.members?.discord_linked_members ?? 0) || 0;
+  const discordMissingMembers = Math.max(0, activeMembers - discordLinkedMembers);
+  const subscriptions = Number(input.subscriptions?.subscriptions ?? 0) || 0;
+  const linkedSubscriptions = Number(input.subscriptions?.linked_subscriptions ?? 0) || 0;
+  const unlinkedSubscriptions = Math.max(0, subscriptions - linkedSubscriptions);
+  const membersWithoutSubscription = Number(input.members?.members_without_subscription ?? 0) || 0;
+  const duplicateCounts = input.duplicates.map(count);
+  const duplicateEmailGroups = duplicateCounts[0] ?? 0;
+  const duplicateDiscordIdGroups = duplicateCounts[1] ?? 0;
+  const duplicateMemberIdGroups = duplicateCounts[2] ?? 0;
+  const duplicateSquareCustomerIdGroups = duplicateCounts[3] ?? 0;
+  const duplicateSquareSubscriptionIdGroups = duplicateCounts[4] ?? 0;
+  const blockingIssueCount =
+    unlinkedSubscriptions +
+    membersWithoutSubscription +
+    duplicateEmailGroups +
+    duplicateDiscordIdGroups +
+    duplicateMemberIdGroups +
+    duplicateSquareCustomerIdGroups +
+    duplicateSquareSubscriptionIdGroups;
+  return {
+    activeMembers,
+    activeGeneralMembers,
+    discordLinkedMembers,
+    discordMissingMembers,
+    subscriptions,
+    linkedSubscriptions,
+    unlinkedSubscriptions,
+    membersWithoutSubscription,
+    duplicateEmailGroups,
+    duplicateDiscordIdGroups,
+    duplicateMemberIdGroups,
+    duplicateSquareCustomerIdGroups,
+    duplicateSquareSubscriptionIdGroups,
+    blockingIssueCount,
+    lastImport: input.lastImport
+      ? {
+          status: String(input.lastImport.status ?? "unknown"),
+          importedCount: Number(input.lastImport.imported_count ?? 0) || 0,
+          errorCount: Number(input.lastImport.error_count ?? 0) || 0,
+          completedAt:
+            typeof input.lastImport.completed_at === "string"
+              ? input.lastImport.completed_at
+              : null,
+        }
+      : null,
+  };
+}
+
+export async function getMemberReconciliationReport(db: D1Database) {
+  const [members, subscriptions, ...rest] = await Promise.all([
+    db.prepare(
+      `SELECT
+         COUNT(*) AS active_members,
+         SUM(CASE WHEN role = 'user' AND access_role = 'member' THEN 1 ELSE 0 END) AS active_general_members,
+         SUM(CASE WHEN discord_user_id IS NOT NULL AND TRIM(discord_user_id) <> '' THEN 1 ELSE 0 END) AS discord_linked_members,
+         SUM(CASE WHEN role = 'user' AND access_role = 'member' AND NOT EXISTS (
+           SELECT 1 FROM member_subscriptions s
+           WHERE COALESCE(s.billing_status, '') <> 'TEST_ACCOUNT'
+             AND (s.member_id = members.id OR LOWER(TRIM(s.billing_email)) = LOWER(TRIM(members.email)))
+         ) THEN 1 ELSE 0 END) AS members_without_subscription
+       FROM members
+       WHERE account_status = 'active'
+         AND COALESCE(json_extract(profile_json, '$.isTestAccount'), 0) <> 1`,
+    ).first<Record<string, unknown>>(),
+    db.prepare(
+      `SELECT COUNT(*) AS subscriptions,
+         SUM(CASE WHEN member_id IS NOT NULL OR EXISTS (
+           SELECT 1 FROM members m
+           WHERE LOWER(TRIM(m.email)) = LOWER(TRIM(member_subscriptions.billing_email))
+         ) THEN 1 ELSE 0 END) AS linked_subscriptions
+       FROM member_subscriptions
+       WHERE COALESCE(billing_status, '') <> 'TEST_ACCOUNT'`,
+    ).first<Record<string, unknown>>(),
+    db.prepare(`SELECT COUNT(*) AS count FROM (
+      SELECT LOWER(TRIM(email)) FROM members WHERE TRIM(email) <> '' GROUP BY LOWER(TRIM(email)) HAVING COUNT(*) > 1
+    )`).first<CountRow>(),
+    db.prepare(`SELECT COUNT(*) AS count FROM (
+      SELECT discord_user_id FROM members WHERE discord_user_id IS NOT NULL AND TRIM(discord_user_id) <> '' GROUP BY discord_user_id HAVING COUNT(*) > 1
+    )`).first<CountRow>(),
+    db.prepare(`SELECT COUNT(*) AS count FROM (
+      SELECT public_member_id FROM members WHERE public_member_id IS NOT NULL AND TRIM(public_member_id) <> '' GROUP BY public_member_id HAVING COUNT(*) > 1
+    )`).first<CountRow>(),
+    db.prepare(`SELECT COUNT(*) AS count FROM (
+      SELECT square_customer_id FROM member_subscriptions WHERE square_customer_id IS NOT NULL AND TRIM(square_customer_id) <> '' GROUP BY square_customer_id HAVING COUNT(*) > 1
+    )`).first<CountRow>(),
+    db.prepare(`SELECT COUNT(*) AS count FROM (
+      SELECT square_subscription_id FROM member_subscriptions WHERE square_subscription_id IS NOT NULL AND TRIM(square_subscription_id) <> '' GROUP BY square_subscription_id HAVING COUNT(*) > 1
+    )`).first<CountRow>(),
+    db.prepare(
+      `SELECT status, imported_count, error_count, completed_at
+       FROM migration_runs WHERE migration_type = 'member_import'
+       ORDER BY started_at DESC LIMIT 1`,
+    ).first<Record<string, unknown>>(),
+  ]);
+  return buildMemberReconciliationReport({
+    members,
+    subscriptions,
+    duplicates: rest.slice(0, 5) as CountRow[],
+    lastImport: rest[5] as Record<string, unknown> | null,
+  });
+}
 
 export function memberImportConfiguration(env: SitesEnv) {
   const authentication = Boolean(
@@ -493,9 +634,9 @@ export async function handleMemberImportRequest(
   env: SitesEnv,
 ): Promise<Response | null> {
   const pathname = new URL(request.url).pathname;
-  if (![COMMIT_ENDPOINT, READINESS_ENDPOINT].includes(pathname)) return null;
+  if (![COMMIT_ENDPOINT, READINESS_ENDPOINT, RECONCILIATION_ENDPOINT].includes(pathname)) return null;
   if (
-    (pathname === READINESS_ENDPOINT && request.method !== "GET") ||
+    ([READINESS_ENDPOINT, RECONCILIATION_ENDPOINT].includes(pathname) && request.method !== "GET") ||
     (pathname === COMMIT_ENDPOINT && request.method !== "POST")
   )
     return responseJson({ error: "method_not_allowed" }, 405);
@@ -509,6 +650,8 @@ export async function handleMemberImportRequest(
 
   const configuration = memberImportConfiguration(env);
   if (pathname === READINESS_ENDPOINT) return responseJson({ configuration });
+  if (pathname === RECONCILIATION_ENDPOINT)
+    return responseJson(await getMemberReconciliationReport(env.DB));
   if (!configuration.ready)
     return responseJson(
       { error: "メール認証とSquare連携の設定が完了していません" },

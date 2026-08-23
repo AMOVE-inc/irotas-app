@@ -857,6 +857,33 @@ export async function getMembershipSummary() {
   return apiCall<MembershipSummary>("/api/admin/membership-summary");
 }
 
+export type MemberReconciliationReport = {
+  activeMembers: number;
+  activeGeneralMembers: number;
+  discordLinkedMembers: number;
+  discordMissingMembers: number;
+  subscriptions: number;
+  linkedSubscriptions: number;
+  unlinkedSubscriptions: number;
+  membersWithoutSubscription: number;
+  duplicateEmailGroups: number;
+  duplicateDiscordIdGroups: number;
+  duplicateMemberIdGroups: number;
+  duplicateSquareCustomerIdGroups: number;
+  duplicateSquareSubscriptionIdGroups: number;
+  blockingIssueCount: number;
+  lastImport: {
+    status: string;
+    importedCount: number;
+    errorCount: number;
+    completedAt: string | null;
+  } | null;
+};
+
+export async function getMemberReconciliationReport() {
+  return apiCall<MemberReconciliationReport>("/api/admin/member-import/reconciliation");
+}
+
 // Establish session cookie on the backend (3000-xxx domain)
 // Called after receiving token via postMessage to get a proper Set-Cookie from the backend
 export async function establishSession(token: string): Promise<boolean> {

@@ -41,11 +41,13 @@ import * as ImagePicker from "expo-image-picker";
 import { loadImportedGourmetContests, type ImportedGourmetContest } from "@/lib/gourmet-contest-import";
 import {
   getMembershipSummary,
+  getMemberReconciliationReport,
   getOperatorMembers,
   getSystemMonitoring,
   syncSquareSubscriptions,
   updateOperatorMemberTerm,
   type MembershipSummary,
+  type MemberReconciliationReport,
   type OperatorMember,
   type SystemAuditLog,
   type ApplicationErrorLog,
@@ -98,6 +100,7 @@ export default function AdminDashboardScreen() {
   const [squareSyncing, setSquareSyncing] = useState(false);
   const [squareSyncProgress, setSquareSyncProgress] = useState<string | null>(null);
   const [membershipSummary, setMembershipSummary] = useState<MembershipSummary | null>(null);
+  const [memberReconciliation, setMemberReconciliation] = useState<MemberReconciliationReport | null>(null);
   const [membershipSummaryLoading, setMembershipSummaryLoading] = useState(false);
   const [operatorMembers, setOperatorMembers] = useState<OperatorMember[]>([]);
   const [operatorTerms, setOperatorTerms] = useState<Record<number, string>>({});
@@ -109,9 +112,15 @@ export default function AdminDashboardScreen() {
   const loadMembershipSummary = async () => {
     setMembershipSummaryLoading(true);
     try {
-      setMembershipSummary(await getMembershipSummary());
+      const [summary, reconciliation] = await Promise.all([
+        getMembershipSummary(),
+        getMemberReconciliationReport(),
+      ]);
+      setMembershipSummary(summary);
+      setMemberReconciliation(reconciliation);
     } catch {
       setMembershipSummary(null);
+      setMemberReconciliation(null);
     } finally {
       setMembershipSummaryLoading(false);
     }
@@ -690,6 +699,42 @@ export default function AdminDashboardScreen() {
                   {squareSyncProgress}
                 </Text>
               )}
+            </View>
+
+            <View style={{ backgroundColor: colors.surface, borderRadius: 14, padding: 16, marginBottom: 20, borderWidth: 1, borderColor: colors.border }}>
+              <Text style={{ fontSize: 16, fontWeight: "700", color: colors.foreground }}>会員突合レポート</Text>
+              <Text style={{ fontSize: 12, lineHeight: 18, color: colors.muted, marginTop: 5, marginBottom: 12 }}>
+                Square・Discord・会員DBの紐づけ状況を集計しています。メールアドレス・Discord ID・決済情報は表示しません。
+              </Text>
+              {membershipSummaryLoading ? <ActivityIndicator color="#E8A0BF" /> : memberReconciliation ? (
+                <>
+                  <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+                    {[
+                      ["有効会員", memberReconciliation.activeMembers],
+                      ["Discord紐づけ", memberReconciliation.discordLinkedMembers],
+                      ["Square紐づけ", memberReconciliation.linkedSubscriptions],
+                      ["要確認", memberReconciliation.blockingIssueCount],
+                    ].map(([label, value]) => (
+                      <View key={String(label)} style={{ width: "48%", borderRadius: 10, backgroundColor: label === "要確認" && Number(value) > 0 ? "#FFF4D6" : colors.background, padding: 11 }}>
+                        <Text style={{ fontSize: 11, color: colors.muted, fontWeight: "700" }}>{label}</Text>
+                        <Text style={{ fontSize: 21, color: label === "要確認" && Number(value) > 0 ? "#9A6700" : colors.foreground, fontWeight: "900", marginTop: 2 }}>{Number(value).toLocaleString()}件</Text>
+                      </View>
+                    ))}
+                  </View>
+                  <Text style={{ fontSize: 11, lineHeight: 18, color: colors.muted, marginTop: 10 }}>
+                    Discord未紐づけ {memberReconciliation.discordMissingMembers.toLocaleString()}件／Square未紐づけ {memberReconciliation.unlinkedSubscriptions.toLocaleString()}件{"\n"}
+                    一般会員でサブスク未紐づけ {memberReconciliation.membersWithoutSubscription.toLocaleString()}件／重複グループ {(
+                      memberReconciliation.duplicateEmailGroups + memberReconciliation.duplicateDiscordIdGroups + memberReconciliation.duplicateMemberIdGroups + memberReconciliation.duplicateSquareCustomerIdGroups + memberReconciliation.duplicateSquareSubscriptionIdGroups
+                    ).toLocaleString()}件
+                  </Text>
+                  {memberReconciliation.lastImport ? (
+                    <Text style={{ fontSize: 10, color: colors.muted, marginTop: 5 }}>
+                      最終移行：{memberReconciliation.lastImport.status}・{memberReconciliation.lastImport.importedCount.toLocaleString()}件
+                      {memberReconciliation.lastImport.completedAt ? `（${new Date(memberReconciliation.lastImport.completedAt).toLocaleString("ja-JP")}）` : ""}
+                    </Text>
+                  ) : null}
+                </>
+              ) : <Text style={{ color: colors.muted, fontSize: 12 }}>集計情報を読み込めませんでした。</Text>}
             </View>
 
             {/* KPIカード */}
