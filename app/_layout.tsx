@@ -33,6 +33,7 @@ import {
   isOperatorRoute,
 } from "@/lib/access-control";
 import { dispatchDueEventActions } from "@/lib/event-automation-store";
+import { GourmetReportReminderGate } from "@/components/gourmet-report-reminder-gate";
 
 // Mobile browsers already exclude the status bar from their visual viewport.
 // Keep only a small breathing space instead of adding a native-sized 44px inset.
@@ -357,6 +358,7 @@ export default function RootLayout() {
                 />
                 <Stack.Screen name="oauth/callback" />
               </Stack>
+              <GourmetReportReminderGate />
             </AuthGuard>
           </AuthProvider>
           <StatusBar style="auto" />
