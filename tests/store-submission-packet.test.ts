@@ -11,7 +11,7 @@ describe("store submission packet", () => {
     expect(packet).toContain("Apple App Privacy");
     expect(packet).toContain("Google Play Data Safety");
     expect(packet).toContain("/account-deletion");
-    expect(packet).toContain("https://irotas-community.com/privacy-policy");
+    expect(packet).toContain("https://irotas-community.com/privacy");
   });
 
   it("matches declared device permission behavior", () => {

@@ -7,7 +7,7 @@
 - アプリ名: IRO＋
 - Bundle ID / Package: `com.irotas.community`
 - サポートURL: https://irotas-community.com/
-- プライバシーポリシー: https://irotas-community.com/privacy-policy
+- プライバシーポリシー: https://irotas-community.com/privacy
 - コミュニティ利用規約: https://irotas-community.com/terms
 - イベント参加規約: https://irotas-community.com/event-terms
 - アカウント削除URL: https://irotas-app-20260721.k1998915n.chatgpt.site/account-deletion
