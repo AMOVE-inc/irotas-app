@@ -153,7 +153,8 @@ export default function EventDetailScreen() {
     return isNaN(num) ? 0 : num;
   };
   const priceNum = parsePriceNumber(effectivePrice);
-  const pointsToUse = usePoints ? Math.min(irotasPoints, priceNum) : 0;
+  const isOfficialEvent = event.eventType === "official";
+  const pointsToUse = usePoints && isOfficialEvent ? Math.min(irotasPoints, priceNum) : 0;
   const finalPrice = Math.max(0, priceNum - pointsToUse);
   const confirmedIds = [...new Set([...(event.participants ?? []), ...(event.companionIds ?? [])])];
   const applicantCount = event.applicantIds?.length ?? event.attendees;
@@ -195,7 +196,7 @@ export default function EventDetailScreen() {
             joiningRef.current = true;
             try {
               if (event.viewerMemberId) {
-                const application = await Api.applyToEvent(event.id, termsAccepted, usePoints ? pointsToUse : 0);
+                const application = await Api.applyToEvent(event.id, termsAccepted, pointsToUse);
                 const updated = application.event;
                 setEvent(updated);
                 if (application.pointBalance !== null) setIrotasPoints(application.pointBalance);
@@ -795,7 +796,7 @@ export default function EventDetailScreen() {
           )}
 
           {/* イロタスポイント割引トグル */}
-          {priceNum > 0 && irotasPoints > 0 && !isJoined && (
+          {isOfficialEvent && priceNum > 0 && irotasPoints > 0 && !isJoined && (
             <View
               style={{
                 marginTop: 12,
@@ -823,6 +824,11 @@ export default function EventDetailScreen() {
                 thumbColor="#FFF"
               />
             </View>
+          )}
+          {!isOfficialEvent && priceNum > 0 && (
+            <Text style={{ marginTop: 12, fontSize: 12, color: colors.muted }}>
+              イロタスポイントは公式イベントの参加費にのみ利用できます。
+            </Text>
           )}
         </View>
 

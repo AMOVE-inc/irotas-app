@@ -446,6 +446,8 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
     const requestedPoints = Number(input?.pointsToUse ?? 0);
     if (!Number.isInteger(requestedPoints) || requestedPoints < 0 || requestedPoints > 300_000)
       return responseJson({ error: "利用ポイントを確認してください" }, 400);
+    if (requestedPoints > 0 && row.event_type !== "official")
+      return responseJson({ error: "イロタスポイントは公式イベントの参加費にのみ利用できます" }, 400);
     const rankRow = await env.DB.prepare("SELECT member_rank FROM members WHERE id = ?").bind(member.id).first<{ member_rank: string }>();
     const rankPrices = data.rankPrices && typeof data.rankPrices === "object" ? data.rankPrices as Record<string, unknown> : {};
     const eventPrice = priceNumber(rankPrices[rankRow?.member_rank ?? "regular"] ?? data.price);

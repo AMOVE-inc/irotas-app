@@ -1,5 +1,6 @@
 import type { D1Database } from "./platform-types";
 import { rankFromXp } from "./xp";
+import { rankUpPointAwardStatements } from "./rank-up-points";
 
 const HOST_REWARD = 20;
 
@@ -22,15 +23,18 @@ export async function awardCompletedEventHostXp(db: D1Database, eventId: string,
   if (existing) return false;
   const previousXp = Math.max(0, Number(member.xp ?? 0));
   const nextXp = previousXp + HOST_REWARD;
+  const previousRank = rankFromXp(previousXp);
+  const nextRank = rankFromXp(nextXp);
   await db.batch([
     db.prepare(`INSERT OR IGNORE INTO event_host_xp_operations
       (event_id, member_id, amount, status, xp_before, created_at)
       VALUES (?, ?, ?, 'pending', ?, ?)`).bind(eventId, organizerMemberId, HOST_REWARD, previousXp, now),
     db.prepare(`UPDATE members SET xp = COALESCE(xp, 0) + ?, member_rank = ?, updated_at = ?
       WHERE id = ? AND EXISTS (SELECT 1 FROM event_host_xp_operations WHERE event_id = ? AND status = 'pending')`)
-      .bind(HOST_REWARD, rankFromXp(nextXp), now, organizerMemberId, eventId),
+      .bind(HOST_REWARD, nextRank, now, organizerMemberId, eventId),
     db.prepare(`UPDATE event_host_xp_operations SET status = 'applied', xp_after = xp_before + amount, applied_at = ?
       WHERE event_id = ? AND status = 'pending'`).bind(now, eventId),
+    ...rankUpPointAwardStatements(db, { memberId: organizerMemberId, previousRank, nextRank, now }),
   ]);
   return true;
 }

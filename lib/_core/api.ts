@@ -395,6 +395,11 @@ export function awardSharedXp(
     nextXp: number;
     previousRank: import("@/constants/mock-data").MemberRank;
     nextRank: import("@/constants/mock-data").MemberRank;
+    rankPointAward?: {
+      rank: "silver" | "gold" | "platinum";
+      amount: number;
+      balance: number;
+    };
     duplicate?: boolean;
   }>("/api/xp/award", {
     method: "POST",

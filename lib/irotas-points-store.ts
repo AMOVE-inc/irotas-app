@@ -24,9 +24,9 @@ export type IrotasPointsHistory = {
 
 // ランクアップ時の付与ポイント
 export const RANK_UP_BONUS: Record<string, number> = {
-  silver: 100,
-  gold: 300,
-  platinum: 500,
+  silver: 500,
+  gold: 1000,
+  platinum: 2000,
 };
 
 // インメモリキャッシュ

@@ -1,5 +1,6 @@
 import { authenticatedRequestMember } from "./auth";
 import type { D1Database, SitesEnv } from "./platform-types";
+import { rankUpPointAwardStatements, readNewRankUpPointAward } from "./rank-up-points";
 
 const XP_AWARD_ENDPOINT = "/api/xp/award";
 const REWARDS = {
@@ -59,6 +60,7 @@ async function award(request: Request, db: D1Database, viewer: Viewer) {
   if (!member) return json({ error: "会員が見つかりません" }, 404);
   const previousXp = Math.max(0, Number(member.xp ?? 0));
   const previousRank = rankFromXp(previousXp);
+  const nextRank = rankFromXp(previousXp + reward.amount);
   const idempotencyKey = `xp:${viewer.id}:${action}:${sourceId}`;
   const now = new Date().toISOString();
 
@@ -75,16 +77,24 @@ async function award(request: Request, db: D1Database, viewer: Viewer) {
       rank_after = CASE WHEN xp_before + amount >= 1000 THEN 'platinum' WHEN xp_before + amount >= 500 THEN 'gold'
       WHEN xp_before + amount >= 100 THEN 'silver' ELSE 'regular' END, completed_at = ?
       WHERE idempotency_key = ? AND status = 'pending'`).bind(now, idempotencyKey),
+    ...rankUpPointAwardStatements(db, { memberId: viewer.id, previousRank, nextRank, now }),
   ]);
 
   const operation = await db.prepare(`SELECT amount, reason, xp_before, xp_after, rank_before, rank_after, created_at
     FROM xp_operation_requests WHERE idempotency_key = ?`).bind(idempotencyKey).first<Record<string, unknown>>();
   if (!operation) return json({ error: "XPを更新できませんでした" }, 409);
+  const rankPointAward = await readNewRankUpPointAward(db, {
+    memberId: viewer.id,
+    previousRank: String(operation.rank_before),
+    nextRank: String(operation.rank_after),
+    now,
+  });
   return json({
     amount: Number(operation.amount), reason: operation.reason,
     previousXp: Number(operation.xp_before), nextXp: Number(operation.xp_after),
     previousRank: operation.rank_before, nextRank: operation.rank_after,
     duplicate: String(operation.created_at) !== now,
+    ...(rankPointAward ? { rankPointAward } : {}),
   });
 }
 

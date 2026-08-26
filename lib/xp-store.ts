@@ -12,6 +12,11 @@ export type XpReward = {
   nextLevel: number;
   previousRank: MemberRank;
   nextRank: MemberRank;
+  rankPointAward?: {
+    rank: Extract<MemberRank, "silver" | "gold" | "platinum">;
+    amount: number;
+    balance: number;
+  };
 };
 
 export function getLevelFromXp(xp: number): number {
@@ -19,7 +24,7 @@ export function getLevelFromXp(xp: number): number {
 }
 
 export type XpAction = "event_create" | "board_post" | "meal_report_post";
-type SharedXpReward = Pick<XpReward, "amount" | "reason" | "previousXp" | "nextXp" | "previousRank" | "nextRank">;
+type SharedXpReward = Pick<XpReward, "amount" | "reason" | "previousXp" | "nextXp" | "previousRank" | "nextRank" | "rankPointAward">;
 
 export async function awardXp(baseXp: number, amount: number, reason: string, remoteAward?: () => Promise<SharedXpReward>): Promise<XpReward> {
   if (remoteAward) {
