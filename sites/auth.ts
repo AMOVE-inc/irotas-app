@@ -451,7 +451,7 @@ async function sessionMember(db: D1Database, token: string) {
 export async function requestHasMemberAccess(
   request: Request,
   env: SitesEnv,
-  allowedAccessRoles?: Array<MemberRow["access_role"]>,
+  allowedAccessRoles?: MemberRow["access_role"][],
 ) {
   const member = await authenticatedRequestMember(request, env);
   if (!member) return false;

@@ -66,9 +66,7 @@ function deletionDatabase(passwordHash: string) {
   const db: D1Database = {
     prepare,
     batch: async (statements) => {
-      for (const statement of statements as Array<
-        D1PreparedStatement & { __sql: string; __values: () => unknown[] }
-      >) {
+      for (const statement of statements as (D1PreparedStatement & { __sql: string; __values: () => unknown[] })[]) {
         writes.push(statement.__sql);
         const values = statement.__values();
         if (statement.__sql.includes("INSERT INTO account_deletion_requests")) {

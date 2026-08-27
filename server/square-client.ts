@@ -65,7 +65,7 @@ async function squarePost<T>(path: string, body: unknown): Promise<T> {
     },
     body: JSON.stringify(body),
   });
-  const result = await response.json() as T & { errors?: Array<{ detail?: string }> };
+  const result = await response.json() as T & { errors?: { detail?: string }[] };
   if (!response.ok) {
     console.error("[Square] API request failed", path, response.status, result.errors);
     throw new Error("Squareの会員資格を確認できませんでした。しばらくしてから再度お試しください。");

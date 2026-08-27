@@ -522,49 +522,25 @@ export default function EventsScreen() {
               </Pressable>
             </View>
 
-            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 9 }}>
-              <Text style={{ fontSize: 15, fontWeight: "800", color: colors.foreground }}>期間</Text>
-              <Pressable onPress={resetSearchConditions}>
-                <Text
-                  style={{
-                    fontSize: 12,
-                    fontWeight: "700",
-                    color: colors.primary,
-                    textDecorationLine: "underline",
-                  }}
-                >
-                  検索条件をリセット
-                </Text>
-              </Pressable>
-            </View>
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 9, marginBottom: 14 }}>
-              <CalendarDateField
-                value={startDate}
-                onChange={setStartDate}
-                label="開始日"
-              />
-              <Text style={{ fontSize: 19, color: colors.foreground }}>〜</Text>
-              <CalendarDateField
-                value={endDate}
-                onChange={setEndDate}
-                label="終了日"
-              />
-            </View>
-
-            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 14, marginBottom: 14 }}>
+            <View style={{ flexDirection: "row", gap: 5, marginBottom: 14 }}>
               {[
                 { label: "空席あり", value: openOnly, toggle: () => setOpenOnly((current) => !current) },
                 { label: "幹事", value: hostedByMe, toggle: () => setHostedByMe((current) => !current) },
                 { label: "参加申込中", value: appliedOnly, toggle: () => setAppliedOnly((current) => !current) },
-                { label: "参加確定済み", value: confirmedOnly, toggle: () => setConfirmedOnly((current) => !current) },
-                ...(eventType === "club" ? [{ label: "参加中の部活動", value: joinedClubOnly, toggle: () => setJoinedClubOnly((current) => !current) }] : []),
+                { label: "参加確定", value: confirmedOnly, toggle: () => setConfirmedOnly((current) => !current) },
               ].map((filter) => (
-                <Pressable key={filter.label} onPress={filter.toggle} accessibilityRole="checkbox" accessibilityState={{ checked: filter.value }} style={{ flexDirection: "row", alignItems: "center" }}>
-                  <View style={{ width: 23, height: 23, borderRadius: 5, alignItems: "center", justifyContent: "center", backgroundColor: filter.value ? "#5D5C74" : "#E4E4E7", marginRight: 7 }}>{filter.value && <IconSymbol name="checkmark" size={16} color="#FFF" />}</View>
-                  <Text style={{ fontSize: 14, fontWeight: "600", color: colors.foreground }}>{filter.label}</Text>
+                <Pressable key={filter.label} onPress={filter.toggle} accessibilityRole="checkbox" accessibilityState={{ checked: filter.value }} style={{ flex: 1, minWidth: 0, flexDirection: "row", alignItems: "center" }}>
+                  <View style={{ width: 19, height: 19, borderRadius: 4, alignItems: "center", justifyContent: "center", backgroundColor: filter.value ? "#5D5C74" : "#E4E4E7", marginRight: 4 }}>{filter.value && <IconSymbol name="checkmark" size={13} color="#FFF" />}</View>
+                  <Text numberOfLines={1} style={{ fontSize: 11, fontWeight: "700", color: colors.foreground }}>{filter.label}</Text>
                 </Pressable>
               ))}
             </View>
+            {eventType === "club" ? (
+              <Pressable onPress={() => setJoinedClubOnly((current) => !current)} accessibilityRole="checkbox" accessibilityState={{ checked: joinedClubOnly }} style={{ flexDirection: "row", alignItems: "center", marginTop: -5, marginBottom: 14 }}>
+                <View style={{ width: 19, height: 19, borderRadius: 4, alignItems: "center", justifyContent: "center", backgroundColor: joinedClubOnly ? "#5D5C74" : "#E4E4E7", marginRight: 6 }}>{joinedClubOnly && <IconSymbol name="checkmark" size={13} color="#FFF" />}</View>
+                <Text style={{ fontSize: 12, fontWeight: "700", color: colors.foreground }}>参加中の部活動</Text>
+              </Pressable>
+            ) : null}
 
             <Pressable onPress={() => setDetailSearchVisible(true)} style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", borderRadius: 11, borderWidth: 1, borderColor: "#D2D2D6", backgroundColor: "#FAFAFB", paddingVertical: 11, marginBottom: 16 }}>
               <IconSymbol name="line.3.horizontal.decrease.circle" size={18} color="#5D5C74" />
@@ -615,6 +591,8 @@ export default function EventsScreen() {
         <View style={{ flex: 1, backgroundColor: colors.background }}>
           <View style={{ flexDirection: "row", alignItems: "center", padding: 16, borderBottomWidth: 0.5, borderBottomColor: colors.border }}><Text style={{ flex: 1, fontSize: 19, fontWeight: "900", color: colors.foreground }}>イベント詳細検索</Text><Pressable onPress={resetSearchConditions} style={{ marginRight: 15 }}><Text style={{ color: colors.muted, fontWeight: "700" }}>リセット</Text></Pressable><Pressable onPress={() => setDetailSearchVisible(false)}><Text style={{ color: "#9C4F73", fontWeight: "800" }}>結果を表示</Text></Pressable></View>
           <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
+            <Text style={{ fontSize: 16, fontWeight: "800", color: colors.foreground, marginBottom: 10 }}>開催期間</Text>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 9, marginBottom: 24 }}><CalendarDateField value={startDate} onChange={setStartDate} label="開始日" /><Text style={{ fontSize: 19, color: colors.foreground }}>〜</Text><CalendarDateField value={endDate} onChange={setEndDate} label="終了日" /></View>
             <Pressable onPress={() => setFavoriteOnly((current) => !current)} accessibilityRole="checkbox" accessibilityState={{ checked: favoriteOnly }} style={{ flexDirection: "row", alignItems: "center", padding: 14, marginBottom: 20, borderRadius: 12, backgroundColor: favoriteOnly ? "#FCEAF2" : colors.surface, borderWidth: 1, borderColor: favoriteOnly ? "#D85B86" : colors.border }}>
               <IconSymbol name={favoriteOnly ? "heart.fill" : "heart"} size={20} color={favoriteOnly ? "#D85B86" : colors.muted} />
               <Text style={{ flex: 1, marginLeft: 9, fontSize: 14, fontWeight: "800", color: colors.foreground }}>お気に入りだけ表示</Text>

@@ -6,9 +6,8 @@
  * - イベント作成後の一覧反映
  */
 import { describe, it, expect, beforeEach } from "vitest";
-import { CLUBS, MEMBERS, getMemberById, isAdmin, CURRENT_USER } from "../constants/mock-data";
+import { CLUBS, MEMBERS, getMemberById, isAdmin, CURRENT_USER , EVENTS } from "../constants/mock-data";
 import { pendingEvents, getAllEvents } from "../lib/event-store";
-import { EVENTS } from "../constants/mock-data";
 
 // --- 部長任命UI テスト ---
 describe("部長任命UI", () => {

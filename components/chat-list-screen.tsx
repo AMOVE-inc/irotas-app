@@ -189,8 +189,7 @@ export default function ChatListScreen() {
   return (
     <ScreenContainer edges={["top", "left", "right"]}>
       <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 16, paddingVertical: 10, borderBottomWidth: 0.5, borderBottomColor: colors.border }}>
-        <Pressable onPress={() => router.back()}><IconSymbol name="arrow.left" size={22} color={colors.foreground} /></Pressable>
-        <Text style={{ fontSize: 20, fontWeight: "800", color: colors.foreground, marginLeft: 12 }}>チャット</Text>
+        <Text style={{ fontSize: 20, fontWeight: "800", color: colors.foreground }}>チャット</Text>
         <View style={{ flex: 1 }} />
         <Pressable onPress={() => setShowCreateGroup(true)} style={{ flexDirection: "row", alignItems: "center", backgroundColor: "#E8A0BF18", borderRadius: 10, paddingHorizontal: 10, paddingVertical: 7 }}>
           <IconSymbol name="person.badge.plus" size={17} color="#E8A0BF" />

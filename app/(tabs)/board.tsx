@@ -19,6 +19,7 @@ import {
   type BoardCategory,
   type BoardPoll,
   type Club,
+  type Member,
 } from "@/constants/mock-data";
 import { useAuthContext } from "@/lib/auth-context";
 import { useColors } from "@/hooks/use-colors";
@@ -27,12 +28,11 @@ import { canManageBoardCategories, canManageGourmetContests, isOperatorRole } fr
 import { canViewerAccessClubContent, getClubViewerAccess, resolveViewerMemberId } from "@/lib/club-viewer-access";
 import { GOURMET_ADVICE_BUDGETS, isGoogleMapsUrl, MEAL_BUDGETS } from "@/lib/meal-report";
 import { communityRestaurantFromMealReport, registerCommunityRestaurant } from "@/lib/gourmet-map-community";
-import { resolveRestaurantLocation } from "@/lib/restaurant-location";
-import { formatMealReportArea } from "@/lib/restaurant-location";
+import { formatMealReportArea, resolveRestaurantLocation } from "@/lib/restaurant-location";
 import { XpRewardPopup } from "@/components/xp-reward-popup";
 import { awardXp, type XpReward } from "@/lib/xp-store";
 import { POINT_ACTIONS } from "@/constants/mock-data";
-import { submitClubApplication as submitClubApplicationToStore, updateClub, useClubs } from "@/lib/club-store";
+import { submitClubApplication as submitClubApplicationToStore, useClubs } from "@/lib/club-store";
 import { getMentionGroups, getMentionQuery, getMentionedMemberIds, insertMention } from "@/lib/mentions";
 import { sendClubApplicationNotification, sendMentionNotification } from "@/lib/notifications";
 import { applyTextFormat, type TextFormat, type TextSelection } from "@/lib/text-formatting";
@@ -71,6 +71,7 @@ import { addInAppNotification } from "@/lib/in-app-notifications-store";
 import { deleteBoardComment, deleteBoardThread, loadBoardCommentEdits, loadDeletedBoardCommentIds, loadDeletedBoardThreadIds, saveBoardCommentEdit } from "@/lib/board-content-store";
 import { CalendarField } from "@/components/calendar-field";
 import { getBoardRecruitmentStatus, isClubSelfIntroduction, isRecruitmentBoardCategory, isThreadPinned, sortRecruitmentThreads, type BoardRecruitmentStatus } from "@/lib/board-recruitment";
+import { memberFromAuthUser } from "@/lib/auth-member";
 
 const BOARD_MENTION_GROUPS = getMentionGroups(MEMBERS, CLUBS);
 const THREAD_REACTION_EMOJIS = ["👏", "😊", "❤️", "🎉", "😋"] as const;
@@ -413,7 +414,7 @@ function ThreadCard({ thread, onPress, onEdit, onChangeRecruitment }: { thread: 
           {thread.mealReport ? (
             <MealReportTimelineCard thread={thread} />
           ) : thread.gourmetAdvice ? (
-            <GourmetAdviceContent thread={thread} compact />
+            null
           ) : thread.selfIntroduction ? (
             <SelfIntroductionContent thread={thread} compact />
           ) : (
@@ -681,6 +682,7 @@ function ThreadDetailModal({
   const router = useRouter();
   const { user: authUser } = useAuthContext();
   const viewerMemberId = resolveViewerMemberId(authUser?.memberId, Boolean(authUser), CURRENT_USER.id);
+  const viewerMember = memberFromAuthUser(authUser);
   const [commentText, setCommentText] = useState("");
   const [contestRestaurant, setContestRestaurant] = useState("");
   const [contestMenu, setContestMenu] = useState("");
@@ -802,7 +804,7 @@ function ThreadDetailModal({
     let newComment: BoardComment = {
       id: `bc_new_${Date.now()}`,
       threadId: thread.id,
-      author: CURRENT_USER,
+      author: viewerMember,
       content,
       createdAt: new Date().toISOString(),
       images: isContest && contestImages.length ? contestImages : undefined,
@@ -834,7 +836,7 @@ function ThreadDetailModal({
     const preview = content.length > 50 ? `${content.slice(0, 50)}...` : content;
     for (const memberId of getMentionedMemberIds(content, MEMBERS, mentionGroups).filter((id) => id !== CURRENT_USER.id)) {
       const member = MEMBERS.find((item) => item.id === memberId);
-      if (member) void sendMentionNotification(member.name, CURRENT_USER.name, thread.title || "自己紹介", preview);
+      if (member) void sendMentionNotification(member.name, viewerMember.name, thread.title || "自己紹介", preview);
     }
   };
 
@@ -1644,6 +1646,7 @@ function CreateThreadModal({
   categories,
   onAdd,
   canManage,
+  author,
 }: {
   visible: boolean;
   onClose: () => void;
@@ -1651,10 +1654,13 @@ function CreateThreadModal({
   categories: BoardCategory[];
   onAdd: (thread: BoardThread) => Promise<BoardThread> | BoardThread;
   canManage: boolean;
+  author: Member;
 }) {
   const colors = useColors();
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
+  const submittingRef = useRef(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [mentionQuery, setMentionQuery] = useState<string | null>(null);
   const contentInputRef = useRef<TextInput>(null);
   const [contentSelection, setContentSelection] = useState<TextSelection>({ start: 0, end: 0 });
@@ -1743,6 +1749,10 @@ function CreateThreadModal({
   };
 
   const handleCreate = async () => {
+    if (submittingRef.current) return;
+    submittingRef.current = true;
+    setIsSubmitting(true);
+    try {
     if (!pollValid) {
       setFormError("投票の質問・選択肢2つ以上・期限（YYYY-MM-DD）を入力してください。");
       return;
@@ -1776,7 +1786,7 @@ function CreateThreadModal({
     let newThread: BoardThread = {
       id: `t_new_${Date.now()}`,
       title: isMealReport ? (mealTitle.trim() || restaurantName.trim()) : isGourmetAdvice ? adviceTheme.trim() : isIntroduction ? "自己紹介" : title.trim(),
-      author: CURRENT_USER,
+      author,
       category: category as BoardThread["category"],
       commentCount: 0,
       lastUpdated: new Date().toISOString(),
@@ -1838,7 +1848,7 @@ function CreateThreadModal({
       const boardName = categories.find((item) => item.key === category)?.label ?? "掲示板";
       for (const memberId of getMentionedMemberIds(mentionContent, MEMBERS, BOARD_MENTION_GROUPS).filter((id) => id !== CURRENT_USER.id)) {
         const member = MEMBERS.find((item) => item.id === memberId);
-        if (member) void sendMentionNotification(member.name, CURRENT_USER.name, boardName, preview);
+        if (member) void sendMentionNotification(member.name, author.name, boardName, preview);
       }
     }
     onClose();
@@ -1865,6 +1875,10 @@ function CreateThreadModal({
     setContestDeadline(""); setContestPrizePoints("500");
     setPollEnabled(false); setPollQuestion(""); setPollOptions(["", ""]); setPollDeadline(""); setPollAllowMultiple(false);
     setFormError("");
+    } finally {
+      submittingRef.current = false;
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -1888,15 +1902,15 @@ function CreateThreadModal({
           <Text style={{ fontSize: 17, fontWeight: "700", color: colors.foreground }}>
             新規投稿
           </Text>
-          <Pressable onPress={handleCreate}>
+          <Pressable onPress={handleCreate} disabled={!canSubmit || isSubmitting}>
             <Text
               style={{
                 fontSize: 16,
                 fontWeight: "700",
-                color: canSubmit ? "#E8A0BF" : colors.muted,
+                color: canSubmit && !isSubmitting ? "#E8A0BF" : colors.muted,
               }}
             >
-              投稿
+              {isSubmitting ? "投稿中…" : "投稿"}
             </Text>
           </Pressable>
         </View>
@@ -2279,6 +2293,7 @@ export default function BoardScreen() {
   const isThreadView = view === "threads" && Boolean(categoryParam);
   const isClubIndexView = view === "clubs";
   const viewerMemberId = resolveViewerMemberId(authUser?.memberId, Boolean(authUser), CURRENT_USER.id);
+  const viewerMember = memberFromAuthUser(authUser);
 
   const canAccessCategory = useCallback((category: BoardCategory) => {
     if (category.group !== "club" || userIsAdmin) return true;
@@ -2632,6 +2647,7 @@ export default function BoardScreen() {
         category={activeCategory}
         categories={categories}
         canManage={userCanManageContests}
+        author={viewerMember}
         onAdd={async (thread) => {
           const saved = await Api.createSharedBoardThread({
             category: thread.category,

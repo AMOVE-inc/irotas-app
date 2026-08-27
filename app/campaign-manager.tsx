@@ -5,7 +5,7 @@ import { useAuthContext } from "@/lib/auth-context";
 import { isOperatorRole } from "@/lib/access-control";
 import { createCampaign, deleteCampaign, setCampaignStatus, updateCampaign, useCampaigns, type Campaign } from "@/lib/campaign-store";
 import { useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   Alert,
   Modal,
@@ -69,7 +69,8 @@ export default function CampaignManagerScreen() {
       type: newType,
       reachCount: editingCampaign?.reachCount ?? 0,
     };
-    editingCampaign ? await updateCampaign(savedCampaign) : await createCampaign(savedCampaign);
+    if (editingCampaign) await updateCampaign(savedCampaign);
+    else await createCampaign(savedCampaign);
     setShowCreate(false);
     Alert.alert(editingCampaign ? "更新完了" : "作成完了", editingCampaign ? "キャンペーンを更新しました。" : "キャンペーンを作成しました。");
   };

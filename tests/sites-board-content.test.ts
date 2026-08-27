@@ -16,8 +16,12 @@ type Member = {
   account_status: "active";
 };
 
-function testDatabase(member: Member, clubAllowed = false) {
-  const writes: Array<{ sql: string; values: unknown[] }> = [];
+function testDatabase(
+  member: Member,
+  clubAllowed = false,
+  recentIntroduction?: { id: string; created_at: string },
+) {
+  const writes: { sql: string; values: unknown[] }[] = [];
   const db: D1Database = {
     prepare(sql) {
       let values: unknown[] = [];
@@ -54,6 +58,8 @@ function testDatabase(member: Member, clubAllowed = false) {
           }
           if (sql.includes("SELECT 1 AS allowed"))
             return (clubAllowed ? { allowed: 1 } : null) as T | null;
+          if (sql.includes("category = 'introduction'"))
+            return (recentIntroduction ?? null) as T | null;
           return null;
         },
         async run() {
@@ -109,6 +115,27 @@ describe("shared board content API", () => {
     expect(response?.status).toBe(201);
     expect(writes.some((item) => item.sql.includes("INSERT INTO board_threads"))).toBe(true);
     expect(writes.some((item) => item.sql.includes("INSERT INTO audit_logs"))).toBe(true);
+  });
+
+  it("returns the recent self-introduction instead of creating it twice", async () => {
+    const existing = { id: "intro-existing", created_at: "2026-08-28T01:00:00.000Z" };
+    const { db, writes } = testDatabase(
+      { id: 9, role: "user", access_role: "member", account_status: "active" },
+      false,
+      existing,
+    );
+    const response = await handleBoardContentRequest(
+      request("/api/board/threads", "POST", {
+        category: "introduction",
+        title: "自己紹介",
+        content: "はじめまして。よろしくお願いします。",
+        status: "none",
+      }),
+      { DB: db } as SitesEnv,
+    );
+    expect(response?.status).toBe(200);
+    await expect(response?.json()).resolves.toMatchObject({ id: existing.id, duplicate: true });
+    expect(writes.some((item) => item.sql.includes("INSERT INTO board_threads"))).toBe(false);
   });
 
   it.each(["meal-report", "gourmet-advice"])("accepts the app category %s", async (category) => {

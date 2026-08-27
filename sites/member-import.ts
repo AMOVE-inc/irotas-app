@@ -74,7 +74,7 @@ function count(row: CountRow) {
 export function buildMemberReconciliationReport(input: {
   members: Record<string, unknown> | null;
   subscriptions: Record<string, unknown> | null;
-  duplicates: Array<CountRow>;
+  duplicates: CountRow[];
   lastImport: Record<string, unknown> | null;
 }): MemberReconciliationReport {
   const activeMembers = Number(input.members?.active_members ?? 0) || 0;
@@ -300,7 +300,7 @@ export function validateMemberImportRequest(body: ImportBody): {
     if (discordUserId && !/^\d{17,20}$/.test(discordUserId))
       throw new Error(`invalid_discord_id:${index}`);
 
-    const uniqueValues: Array<[Set<string>, string | null, string]> = [
+    const uniqueValues: [Set<string>, string | null, string][] = [
       [seenEmails, email, "email"],
       [seenMemberIds, memberId, "member_id"],
       [seenDiscordIds, discordUserId, "discord_id"],

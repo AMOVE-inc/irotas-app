@@ -22,7 +22,7 @@ export function parseApplicationDeadline(value?: string): Date | null {
 export function buildOrganizerReminderPlans(event: Pick<Event, "applicationDeadline">): OrganizerReminderPlan[] {
   const deadline = parseApplicationDeadline(event.applicationDeadline);
   if (!deadline) return [];
-  const offsets: Array<{ kind: OrganizerReminderPlan["kind"]; days: number; label: string }> = [
+  const offsets: { kind: OrganizerReminderPlan["kind"]; days: number; label: string }[] = [
     { kind: "organizer_three_days", days: 3, label: "3日前" },
     { kind: "organizer_two_days", days: 2, label: "2日前" },
     { kind: "organizer_one_day", days: 1, label: "前日" },

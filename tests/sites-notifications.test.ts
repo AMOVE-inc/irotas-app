@@ -1,12 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("../sites/auth", () => ({
-  authenticatedRequestMember: vi.fn(),
-}));
-
 import { authenticatedRequestMember } from "../sites/auth";
 import { handleNotificationRequest } from "../sites/notifications";
 import type { D1Database, D1PreparedStatement } from "../sites/platform-types";
+
+vi.mock("../sites/auth", () => ({
+  authenticatedRequestMember: vi.fn(),
+}));
 
 type Row = {
   id: string;
@@ -74,7 +74,7 @@ describe("notification API ownership", () => {
     const db = new NotificationDb([notification("own", 10), notification("other", 11)]);
     const response = await handleNotificationRequest(new Request("https://app.example/api/notifications"), { DB: db } as never);
     expect(response?.status).toBe(200);
-    const body = await response?.json() as { notifications: Array<{ id: string }> };
+    const body = await response?.json() as { notifications: { id: string }[] };
     expect(body.notifications.map((item) => item.id)).toEqual(["own"]);
   });
 

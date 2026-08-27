@@ -1,5 +1,5 @@
 import {
-  CURRENT_USER,
+  DEFAULT_AVATAR,
   MEMBERS,
   type BoardComment,
   type BoardImage,
@@ -18,11 +18,16 @@ const durableImages = (images?: BoardImage[]) => images?.filter((image) =>
 
 function memberFor(id: string, name: string): Member {
   return MEMBERS.find((member) => member.id === id) ?? {
-    ...CURRENT_USER,
     id,
     name,
+    avatar: DEFAULT_AVATAR,
     rank: "regular",
+    branch: "kanto",
+    generation: 0,
+    bio: "",
+    interests: [],
     role: "member",
+    joinedAt: "",
     points: 0,
     level: 1,
     participationCount: 0,

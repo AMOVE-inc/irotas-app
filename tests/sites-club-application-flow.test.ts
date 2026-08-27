@@ -1,11 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { D1Database, D1PreparedStatement, SitesEnv } from "../sites/platform-types";
 
+import { canMemberAccessClub, handleClubRequest } from "../sites/clubs";
+
 const { authenticatedRequestMember } = vi.hoisted(() => ({ authenticatedRequestMember: vi.fn() }));
 
 vi.mock("../sites/auth", () => ({ authenticatedRequestMember }));
-
-import { canMemberAccessClub, handleClubRequest } from "../sites/clubs";
 
 type TestMember = {
   id: number;
@@ -45,8 +45,8 @@ class ClubFlowDatabase implements D1Database {
   ]);
 
   readonly memberships = new Map<string, TestMembership>();
-  readonly notifications: Array<{ targetMemberId: number; type: string; clubId: string }> = [];
-  readonly audits: Array<{ action: string; clubId: string }> = [];
+  readonly notifications: { targetMemberId: number; type: string; clubId: string }[] = [];
+  readonly audits: { action: string; clubId: string }[] = [];
 
   prepare(query: string): D1PreparedStatement {
     const sql = normalize(query);
@@ -312,7 +312,7 @@ describe("club application lifecycle", () => {
       jsonRequest("/api/clubs/club-bread/applications/IRO0010", "PATCH", { action: "hold" }),
       env,
     );
-    const holdBody = await holdResponse?.json() as { club: { applicantIds: string[]; applications: Array<{ status: string }> } };
+    const holdBody = await holdResponse?.json() as { club: { applicantIds: string[]; applications: { status: string }[] } };
     expect(holdResponse?.status).toBe(200);
     expect(holdBody.club.applicantIds).toEqual([]);
     expect(holdBody.club.applications).toEqual([expect.objectContaining({ status: "on_hold" })]);

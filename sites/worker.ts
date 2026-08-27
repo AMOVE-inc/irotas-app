@@ -86,7 +86,7 @@ async function enrichWithPlaces(input: CommunitySubmission, apiKey?: string) {
     );
     if (!response.ok) return input;
     const result = (await response.json()) as {
-      places?: Array<Record<string, any>>;
+      places?: Record<string, any>[];
     };
     const place = result.places?.[0];
     return place ? { ...input, place } : input;
@@ -178,11 +178,11 @@ async function resolveRestaurantAddress(
   );
   if (!response.ok) return null;
   const result = (await response.json()) as {
-    places?: Array<{
+    places?: {
       formattedAddress?: string;
       displayName?: { text?: string };
       googleMapsUri?: string;
-    }>;
+    }[];
   };
   return result.places?.[0] ?? null;
 }
@@ -236,7 +236,7 @@ function apiError(error: string, status: number) {
 async function protectedWhenAuthEnabled(
   request: Request,
   env: SitesEnv,
-  roles?: Array<"member" | "club_leader" | "operator" | "admin">,
+  roles?: ("member" | "club_leader" | "operator" | "admin")[],
 ) {
   if (!env.AUTH_SECRET) return null;
   return (await requestHasMemberAccess(request, env, roles))

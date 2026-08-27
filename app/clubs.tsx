@@ -3,6 +3,7 @@ import { IconSymbol } from "@/components/ui/icon-symbol";
 import {
   CLUBS,
   CURRENT_USER,
+  DEFAULT_AVATAR,
   EVENTS,
   MEMBERS,
   RANK_LABELS,
@@ -212,7 +213,7 @@ function ClubPostCard({
     >
       <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 8 }}>
         <Image
-          source={author?.avatar ?? require("@/assets/images/icon.png")}
+          source={author?.avatar ?? DEFAULT_AVATAR}
           style={{ width: 28, height: 28, borderRadius: 14 }}
           contentFit="cover"
         />
@@ -360,7 +361,7 @@ function ClubPostDetailModal({
           {/* 投稿者 */}
           <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 12 }}>
             <Image
-              source={author?.avatar ?? require("@/assets/images/icon.png")}
+              source={author?.avatar ?? DEFAULT_AVATAR}
               style={{ width: 36, height: 36, borderRadius: 18 }}
               contentFit="cover"
             />
@@ -470,7 +471,7 @@ function ClubPostDetailModal({
                 <View key={comment.id} style={{ marginBottom: 14 }}>
                   <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 4 }}>
                     <Image
-                      source={commentAuthor?.avatar ?? require("@/assets/images/icon.png")}
+                      source={commentAuthor?.avatar ?? DEFAULT_AVATAR}
                       style={{ width: 24, height: 24, borderRadius: 12 }}
                       contentFit="cover"
                     />
@@ -672,7 +673,7 @@ function ApplicationReviewDetails({ clubId, memberId, application }: { clubId: s
   return (
     <View style={{ backgroundColor: colors.background, borderRadius: 12, padding: 12, marginBottom: 10, gap: 10 }}>
       <View style={{ flexDirection: "row", alignItems: "center" }}>
-        <Image source={fallbackMember?.avatar ?? require("@/assets/images/icon.png")} style={{ width: 38, height: 38, borderRadius: 19 }} contentFit="cover" />
+        <Image source={fallbackMember?.avatar ?? DEFAULT_AVATAR} style={{ width: 38, height: 38, borderRadius: 19 }} contentFit="cover" />
         <View style={{ marginLeft: 10, flex: 1 }}>
           <Text style={{ fontSize: 14, fontWeight: "800", color: colors.foreground }}>{displayName}</Text>
           <Text style={{ fontSize: 11, color: colors.muted }}>会員ID {memberId}</Text>
@@ -1182,7 +1183,7 @@ function ClubDetailModal({
                 marginBottom: 16,
               }}
             >
-              <Image source={currentLeader?.avatar ?? require("@/assets/images/icon.png")} style={{ width: 40, height: 40, borderRadius: 20 }} contentFit="cover" />
+              <Image source={currentLeader?.avatar ?? DEFAULT_AVATAR} style={{ width: 40, height: 40, borderRadius: 20 }} contentFit="cover" />
               <View style={{ marginLeft: 12, flex: 1 }}>
                 <Text style={{ fontSize: 15, fontWeight: "600", color: colors.foreground }}>{currentLeader?.name ?? club.leaderName ?? "部長"}</Text>
                 {currentLeader ? <Text style={{ fontSize: 12, color: colors.muted }}>{currentLeader.generation}期生 · {currentLeader.branch}支部</Text> : null}

@@ -396,8 +396,18 @@ export async function handleBoardContentRequest(
       return json({ error: "この部活動の部員のみ投稿できます" }, 403);
     if (category === "gourmet-contest" && member.access_role !== "operator" && !elevated(member))
       return json({ error: "グルメ選手権は運営メンバーのみ作成できます" }, 403);
-    const id = crypto.randomUUID();
     const now = new Date().toISOString();
+    if (category === "introduction") {
+      const duplicateSince = new Date(Date.parse(now) - 30_000).toISOString();
+      const existing = await db.prepare(`SELECT id, created_at FROM board_threads
+        WHERE author_member_id = ? AND category = 'introduction' AND content = ?
+          AND deleted_at IS NULL AND created_at >= ?
+        ORDER BY created_at DESC LIMIT 1`)
+        .bind(member.id, content, duplicateSince)
+        .first<{ id: string; created_at: string }>();
+      if (existing) return json({ id: existing.id, createdAt: existing.created_at, duplicate: true }, 200);
+    }
+    const id = crypto.randomUUID();
     await db.prepare(`INSERT INTO board_threads
       (id, author_member_id, category, title, content, status, pinned, data_json, created_at, updated_at)
       VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?, ?)`)

@@ -8,7 +8,7 @@ import * as Api from "@/lib/_core/api";
 import { trpc } from "@/lib/trpc";
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import { ActivityIndicator, Platform, Pressable, Text, View } from "react-native";
+import { ActivityIndicator, Pressable, Text, View } from "react-native";
 
 const previewLoginEnabled = process.env.EXPO_PUBLIC_PREVIEW_LOGIN_ENABLED === "true";
 

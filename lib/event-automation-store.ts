@@ -2,8 +2,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import type { Event } from "@/constants/mock-data";
 import { addMessage, saveMessagesToStorage } from "@/lib/chat-store";
 import { addInAppNotification } from "@/lib/in-app-notifications-store";
-import { buildEventReminderPlans } from "@/lib/event-reminders";
-import { buildFavoriteDeadlineReminderPlans, buildOrganizerReminderPlans } from "@/lib/event-reminders";
+import { buildEventReminderPlans , buildFavoriteDeadlineReminderPlans, buildOrganizerReminderPlans } from "@/lib/event-reminders";
 import { EVENTS } from "@/constants/mock-data";
 import { getAllEvents } from "@/lib/event-store";
 

@@ -328,7 +328,7 @@ export async function handleChatContentRequest(
       ? input.memberIds.filter((item): item is string => typeof item === "string")
       : [];
     const uniqueMemberIds = [...new Set(rawMemberIds)].slice(0, 99);
-    const targets = [] as Array<{ id: number; public_member_id: string | null; display_name: string }>;
+    const targets = [] as { id: number; public_member_id: string | null; display_name: string }[];
     for (const publicId of uniqueMemberIds) {
       const target = await memberByPublicId(env.DB, publicId);
       if (!target || target.id === member.id) continue;

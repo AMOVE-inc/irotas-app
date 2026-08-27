@@ -35,7 +35,7 @@ export function parseInternalLink(rawValue: string, rooms: ChatRoom[], threads: 
 export function splitInternalLinks(content: string) {
   const matches = [...content.matchAll(URL_PATTERN)];
   if (!matches.length) return [{ text: content, isUrl: false }];
-  const parts: Array<{ text: string; isUrl: boolean }> = [];
+  const parts: { text: string; isUrl: boolean }[] = [];
   let cursor = 0;
   matches.forEach((match) => {
     const index = match.index ?? 0;

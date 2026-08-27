@@ -15,12 +15,12 @@ export interface D1Database {
   prepare(query: string): D1PreparedStatement;
   batch<T = unknown>(
     statements: D1PreparedStatement[],
-  ): Promise<Array<D1Result<T>>>;
+  ): Promise<D1Result<T>[]>;
 }
 
 export interface R2Bucket {
   list(options?: { limit?: number; cursor?: string }): Promise<{
-    objects: Array<{ key: string; size: number }>;
+    objects: { key: string; size: number }[];
     truncated: boolean;
     cursor?: string;
   }>;

@@ -35,6 +35,15 @@ export function useAuth(options?: UseAuthOptions) {
             accessRole: Auth.normalizeAccessRole(apiUser.accessRole),
             branch: Auth.normalizeBranchRole(apiUser.branch),
             branches: Auth.normalizeBranchRoles(apiUser.branches, apiUser.branch),
+            memberId: apiUser.memberId ?? undefined,
+            memberTerm: apiUser.memberTerm ?? undefined,
+            memberRank: apiUser.memberRank ?? undefined,
+        joinedAt: apiUser.joinedAt ?? undefined,
+            achievementBadges: apiUser.achievementBadges ?? undefined,
+            profile: apiUser.profile ?? undefined,
+            xp: apiUser.xp ?? undefined,
+            participationCount: apiUser.participationCount ?? undefined,
+            organizerCount: apiUser.organizerCount ?? undefined,
           };
           setUser(userInfo);
           // Cache user info in localStorage for faster subsequent loads

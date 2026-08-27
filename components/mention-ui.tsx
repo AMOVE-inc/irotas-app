@@ -1,10 +1,9 @@
 import { Image } from "expo-image";
 import { Linking, Pressable, ScrollView, Text, View, type TextStyle } from "react-native";
-import { BOARD_THREADS, type Member } from "@/constants/mock-data";
+import { BOARD_THREADS, type Member , BoardThread, ChatRoom } from "@/constants/mock-data";
 import type { MentionGroup } from "@/lib/mentions";
 import { extractMentionLabels, isGroupMention } from "@/lib/mentions";
 import { useColors } from "@/hooks/use-colors";
-import type { BoardThread, ChatRoom } from "@/constants/mock-data";
 import { parseInternalLink } from "@/lib/internal-links";
 import { getAllRooms } from "@/lib/chat-store";
 import { useRouter } from "expo-router";

@@ -37,7 +37,7 @@ describe("mobile web and home screen configuration", () => {
 
   it("copies the production app icon into the published output", () => {
     expect(packageJson.scripts["build:sites"]).toContain(
-      "cp assets/images/icon.png dist/client/pwa/icon-1024.png",
+      "cp assets/images/irotas-logo-square.png dist/client/pwa/icon-1024.png",
     );
   });
 

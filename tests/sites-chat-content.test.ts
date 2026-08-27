@@ -1,14 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { handleChatContentRequest } from "../sites/chat-content";
+import type { D1Database, D1PreparedStatement, SitesEnv } from "../sites/platform-types";
+
 const { authenticatedRequestMember } = vi.hoisted(() => ({
   authenticatedRequestMember: vi.fn(),
 }));
 
 vi.mock("../sites/auth", () => ({ authenticatedRequestMember }));
 vi.mock("../sites/clubs", () => ({ canMemberAccessClub: vi.fn() }));
-
-import { handleChatContentRequest } from "../sites/chat-content";
-import type { D1Database, D1PreparedStatement, SitesEnv } from "../sites/platform-types";
 
 type Message = {
   id: string;
@@ -30,7 +30,7 @@ class ChatDatabase implements D1Database {
     ["board-announcement", { id: "board-announcement", name: "運営アナウンス", room_type: "announcement", source_id: "announcement", required_rank: null, created_by_member_id: null }],
     ["rank-gold", { id: "rank-gold", name: "ゴールドメンバールーム", room_type: "rank", source_id: "rank-gold", required_rank: "gold", created_by_member_id: null }],
   ]);
-  roomMembers: Array<{ roomId: string; memberId: number; role: string; left: boolean }> = [];
+  roomMembers: { roomId: string; memberId: number; role: string; left: boolean }[] = [];
   members = [
     { id: 9, public_member_id: "IRO0009", display_name: "テスト本人" },
     { id: 10, public_member_id: "IRO0010", display_name: "友達A" },

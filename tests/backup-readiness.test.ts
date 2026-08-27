@@ -33,14 +33,14 @@ function database(role: "member" | "admin") {
       success: true,
       results: [{ count: index + 1 }],
       meta: { sql: (statement as D1PreparedStatement & { __sql: string }).__sql },
-    })) as unknown as Array<D1Result<T>>,
+    })) as unknown as D1Result<T>[],
   };
   return { db, preparedSql };
 }
 
 function environment(role: "member" | "admin") {
   const store = database(role);
-  const cursors: Array<string | undefined> = [];
+  const cursors: (string | undefined)[] = [];
   const env = {
     DB: store.db,
     AUTH_SECRET: "secret",

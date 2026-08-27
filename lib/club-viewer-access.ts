@@ -33,22 +33,23 @@ export function getClubViewerAccess(
   club: Club,
   authenticatedMemberId: string | null | undefined,
   legacyViewerId: string,
+  hasAuthenticatedSession = false,
 ): ClubViewerAccess {
-  const hasAuthenticatedMember = Boolean(authenticatedMemberId);
+  const allowLegacyViewer = !hasAuthenticatedSession && !authenticatedMemberId;
   const status = club.viewerMembershipStatus;
 
   return {
-    isMember: status === "approved" || (!hasAuthenticatedMember && club.memberIds.includes(legacyViewerId)),
+    isMember: status === "approved" || (allowLegacyViewer && club.memberIds.includes(legacyViewerId)),
     hasApplied:
       status === "pending" ||
       status === "on_hold" ||
-      (!hasAuthenticatedMember && club.applicantIds.includes(legacyViewerId)),
+      (allowLegacyViewer && club.applicantIds.includes(legacyViewerId)),
     isPending:
       status === "on_hold" ||
-      (!hasAuthenticatedMember && club.applications.some(
+      (allowLegacyViewer && club.applications.some(
         (application) => application.memberId === legacyViewerId && application.status === "on_hold",
       )),
-    isLeader: club.viewerIsLeader === true || (!hasAuthenticatedMember && club.leaderId === legacyViewerId),
+    isLeader: club.viewerIsLeader === true || (allowLegacyViewer && club.leaderId === legacyViewerId),
   };
 }
 
@@ -61,9 +62,15 @@ export function canViewerAccessClubContent(
   authenticatedMemberId: string | null | undefined,
   legacyViewerId: string,
   isAdministrator = false,
+  hasAuthenticatedSession = false,
 ): boolean {
   if (isAdministrator) return true;
-  const access = getClubViewerAccess(club, authenticatedMemberId, legacyViewerId);
+  const access = getClubViewerAccess(
+    club,
+    authenticatedMemberId,
+    legacyViewerId,
+    hasAuthenticatedSession,
+  );
   return access.isMember || access.isLeader;
 }
 

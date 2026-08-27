@@ -96,7 +96,7 @@ export default function AdminDashboardScreen() {
   const [rankOverrides, setRankOverrides] = useState<Record<string, string>>({});
   const [pointsHistory, setPointsHistory] = useState<PointsHistoryEntry[]>([]);
   const [irotasBalances, setIrotasBalances] = useState<Record<string, number>>({});
-  const [irotasHistory, setIrotasHistory] = useState<IrotasPointsHistory[]>([]);
+  const [, setIrotasHistory] = useState<IrotasPointsHistory[]>([]);
   const [feeExemptIds, setFeeExemptIds] = useState<Set<string>>(new Set());
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [gourmetContests, setGourmetContests] = useState<ImportedGourmetContest[]>([]);
@@ -239,7 +239,8 @@ export default function AdminDashboardScreen() {
   const openCouponEdit = (coupon: Coupon) => { setEditingCouponId(coupon.id); setCouponDraft({ ...coupon, status: coupon.status ?? "active" }); setShowCouponModal(true); };
   const saveCoupon = async () => {
     if (!couponDraft.title.trim() || !couponDraft.discount.trim() || !couponDraft.expiresAt.trim() || !couponDraft.code.trim()) { Alert.alert("入力内容を確認", "タイトル・特典内容・有効期限・コードは必須です。"); return; }
-    editingCouponId ? await updateCoupon(couponDraft) : await createCoupon(couponDraft);
+    if (editingCouponId) await updateCoupon(couponDraft);
+    else await createCoupon(couponDraft);
     setShowCouponModal(false);
     Alert.alert(editingCouponId ? "更新完了" : "作成完了", editingCouponId ? "クーポンを更新しました。" : "クーポンを作成しました。");
   };
@@ -1648,7 +1649,6 @@ export default function AdminDashboardScreen() {
                   {selectedPaymentEventId && (() => {
                     const ev = EVENTS.find((e) => e.id === selectedPaymentEventId);
                     const records = paymentRecords.filter((r) => r.eventId === selectedPaymentEventId);
-                    const totalAmount = records.reduce((s, r) => s + r.amount, 0);
                     const paidAmount = records.filter((r) => r.status === "paid").reduce((s, r) => s + r.amount, 0);
                     return (
                       <>
@@ -1691,7 +1691,6 @@ export default function AdminDashboardScreen() {
                         ) : (
                           records.map((rec) => {
                             const statusColor = rec.status === "paid" ? "#34C759" : rec.status === "exempted" ? "#AF52DE" : "#FF3B30";
-                            const statusLabel = rec.status === "paid" ? "支払済" : rec.status === "exempted" ? "免除" : "未払い";
                             return (
                               <View
                                 key={rec.id}
@@ -1871,7 +1870,7 @@ export default function AdminDashboardScreen() {
 
       <Modal visible={!!editingClub} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setEditingClub(null)}>
         {editingClub ? <View style={{ flex: 1, backgroundColor: colors.background }}>
-          <View style={{ flexDirection: "row", alignItems: "center", padding: 16, borderBottomWidth: 1, borderBottomColor: colors.border }}><Pressable onPress={() => setEditingClub(null)}><Text style={{ color: colors.muted }}>キャンセル</Text></Pressable><Text style={{ flex: 1, textAlign: "center", fontSize: 17, fontWeight: "800", color: colors.foreground }}>部活動を編集</Text><Pressable onPress={() => { const existing = clubs.some((club) => club.id === editingClub.id); const normalized = { ...editingClub, name: editingClub.name.trim(), description: editingClub.description.trim(), memberIds: editingClub.memberIds.includes(editingClub.leaderId) ? editingClub.memberIds : [editingClub.leaderId, ...editingClub.memberIds] }; if (!normalized.name || !normalized.description) return; existing ? updateClub(normalized) : addClub(normalized); setEditingClub(null); }}><Text style={{ color: "#E8A0BF", fontWeight: "800" }}>保存</Text></Pressable></View>
+          <View style={{ flexDirection: "row", alignItems: "center", padding: 16, borderBottomWidth: 1, borderBottomColor: colors.border }}><Pressable onPress={() => setEditingClub(null)}><Text style={{ color: colors.muted }}>キャンセル</Text></Pressable><Text style={{ flex: 1, textAlign: "center", fontSize: 17, fontWeight: "800", color: colors.foreground }}>部活動を編集</Text><Pressable onPress={() => { const existing = clubs.some((club) => club.id === editingClub.id); const normalized = { ...editingClub, name: editingClub.name.trim(), description: editingClub.description.trim(), memberIds: editingClub.memberIds.includes(editingClub.leaderId) ? editingClub.memberIds : [editingClub.leaderId, ...editingClub.memberIds] }; if (!normalized.name || !normalized.description) return; if (existing) updateClub(normalized); else addClub(normalized); setEditingClub(null); }}><Text style={{ color: "#E8A0BF", fontWeight: "800" }}>保存</Text></Pressable></View>
           <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
             <Text style={{ fontSize: 12, fontWeight: "700", color: colors.muted, marginBottom: 6 }}>アイコン</Text><TextInput value={editingClub.icon} onChangeText={(icon) => setEditingClub({ ...editingClub, icon })} maxLength={4} style={{ backgroundColor: colors.surface, borderRadius: 10, padding: 12, fontSize: 22, marginBottom: 14, color: colors.foreground }} />
             <Text style={{ fontSize: 12, fontWeight: "700", color: colors.muted, marginBottom: 6 }}>部活動名</Text><TextInput value={editingClub.name} onChangeText={(name) => setEditingClub({ ...editingClub, name })} style={{ backgroundColor: colors.surface, borderRadius: 10, padding: 12, fontSize: 15, marginBottom: 14, color: colors.foreground }} />

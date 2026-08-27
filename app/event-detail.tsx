@@ -19,7 +19,7 @@ import { canViewerAccessClubContent, resolveViewerMemberId } from "@/lib/club-vi
 import { recordActivityEvent } from "@/lib/ai-data-store";
 import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import * as Api from "@/lib/_core/api";
 import {
   Alert,
@@ -52,7 +52,7 @@ export default function EventDetailScreen() {
   const authenticatedViewerMemberId = resolveViewerMemberId(authUser?.memberId, Boolean(authUser), CURRENT_USER.id);
 
   // モックデータ + 動的追加分から検索
-  const allEvents = getAllEvents(EVENTS);
+  const allEvents = useMemo(() => getAllEvents(EVENTS), []);
   const initialEvent = allEvents.find((e) => e.id === id);
   const [event, setEvent] = useState<Event | undefined>(initialEvent);
 
@@ -83,7 +83,7 @@ export default function EventDetailScreen() {
       .then((value) => { if (active) setEvent(value); })
       .catch(() => undefined);
     return () => { active = false; };
-  }, [authUser, id]);
+  }, [allEvents, authUser, id]);
 
   useEffect(() => {
     if (!event) return;
@@ -99,7 +99,7 @@ export default function EventDetailScreen() {
       void removeMemberFromRoom(event.chatId, viewerId);
       setChatRoomId(null);
     }
-  }, [authenticatedViewerMemberId, event?.chatId, event?.id, event?.isOrganizer, event?.viewerMemberId, event?.viewerParticipationStatus]);
+  }, [authenticatedViewerMemberId, event]);
 
   useEffect(() => {
     getIrotasPoints(CURRENT_USER.id).then(setIrotasPoints);

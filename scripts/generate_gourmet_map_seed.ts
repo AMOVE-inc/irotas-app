@@ -6,7 +6,7 @@ async function main() {
   const sourcePaths = process.argv.slice(2);
   if (!sourcePaths.length) throw new Error("One or more CSV paths are required");
   const importedAt = "2026-08-01T00:00:00+09:00";
-  const records = [] as Array<Record<string, unknown>>;
+  const records = [] as Record<string, unknown>[];
   const knownPlaceIds = new Set<string>();
   for (const sourcePath of sourcePaths) {
     const sourceList = basename(sourcePath).replace(/\.csv$/i, "").replace(/^\d{6,8}[_-]?/, "").trim() || "未分類";

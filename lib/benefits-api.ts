@@ -8,7 +8,7 @@ export type SharedBenefits = {
   usages: Record<string, CouponUsage>;
   gifts: GiftCampaign[];
   applications: GiftApplication[];
-  points: { balance: number; balances: Record<string, number>; history: Array<Record<string, unknown>> };
+  points: { balance: number; balances: Record<string, number>; history: Record<string, unknown>[] };
 };
 
 async function request<T>(path: string, init: RequestInit = {}) {

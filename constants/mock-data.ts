@@ -140,13 +140,13 @@ export interface Event {
   tabelogUrl?: string;
   googleMapsUrl?: string;
   participantsFinalizedAt?: string;
-  cancellationRequests?: Array<{
+  cancellationRequests?: {
     memberId: string;
     requestedAt: string;
     contactedOrganizer: boolean;
     policyConfirmed: boolean;
     status: "pending" | "approved" | "rejected";
-  }>;
+  }[];
   priceMin?: number;
   /** 本番APIが返す、閲覧者に固有の状態。端末内モックとの互換用に任意。 */
   viewerMemberId?: string;
@@ -192,7 +192,7 @@ export type BoardImage = string | number | {
 
 export interface BoardPoll {
   question: string;
-  options: Array<{ id: string; text: string; voterIds: string[] }>;
+  options: { id: string; text: string; voterIds: string[] }[];
   deadline: string;
   allowMultiple?: boolean;
 }
@@ -388,7 +388,7 @@ export interface RankBenefit {
 
 /** Shared avatar shown until a member uploads their own profile image. */
 export const DEFAULT_AVATAR =
-  process.env.NODE_ENV === "test" ? 1 : require("../assets/images/icon.png");
+  process.env.NODE_ENV === "test" ? 1 : require("../assets/images/default-avatar-gray.png");
 
 export const CURRENT_USER: Member = {
   id: "u1",

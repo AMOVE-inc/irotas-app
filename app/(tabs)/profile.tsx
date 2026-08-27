@@ -6,7 +6,6 @@ import {
   RANK_COLORS,
   RANK_LABELS,
   POINT_ACTIONS,
-  RANK_THRESHOLDS_POINTS,
   getNextRankInfo,
   EVENTS,
   type Event,
@@ -16,7 +15,7 @@ import { useColors } from "@/hooks/use-colors";
 import { getMyRooms } from "@/lib/chat-store";
 import { getAllEvents } from "@/lib/event-store";
 import { getEventParticipationStatus } from "@/lib/event-participation";
-import { getIrotasPoints, isFeeExempt, RANK_UP_BONUS } from "@/lib/irotas-points-store";
+import { getIrotasPoints } from "@/lib/irotas-points-store";
 import { Image } from "expo-image";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -85,7 +84,6 @@ function PointsProgressCard({ points, rank, showRank = true }: { points: number;
   const colors = useColors();
   const rankColor = RANK_COLORS[rank];
   const nextInfo = getNextRankInfo(points);
-  const isMaxRank = !nextInfo;
 
   return (
     <View
@@ -214,6 +212,8 @@ function PointActionsCard() {
   );
 }
 
+void PointActionsCard;
+
 function RankCard({ rank }: { rank: MemberRank }) {
   const colors = useColors();
   const rankColor = RANK_COLORS[rank];
@@ -339,6 +339,8 @@ function RankTiersCard() {
     </View>
   );
 }
+
+void RankTiersCard;
 
 function EditProfileModal({
   visible,
@@ -822,7 +824,6 @@ export default function ProfileScreen() {
   }, [authUser, isRealMember]);
   // イロタスポイント
   const [irotasPoints, setIrotasPoints] = useState(0);
-  const [feeExempt, setFeeExempt] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -868,7 +869,6 @@ export default function ProfileScreen() {
       });
       // イロタスポイント・会費免除を読み込む
       getIrotasPoints(user.id).then(setIrotasPoints);
-      isFeeExempt(user.id).then(setFeeExempt);
     }, [authUser?.memberId, isRealMember, memberIdentity?.memberId, serverDetails, serverProfile, storageNamespace, user])
   );
 

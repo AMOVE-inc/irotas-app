@@ -16,13 +16,13 @@ export interface EventFilters {
   sortOrder?: EventSortOrder;
   hostedByMemberId?: string;
   participatingMemberId?: string;
-  participationStatuses?: Array<"applied" | "confirmed">;
+  participationStatuses?: ("applied" | "confirmed")[];
   favoriteOnly?: boolean;
   favoriteEventIds?: string[];
   genres?: string[];
   budgetMin?: number;
   budgetMax?: number;
-  budgetRanges?: Array<{ min?: number; max?: number }>;
+  budgetRanges?: { min?: number; max?: number }[];
   areas?: string[];
   keyword?: string;
   joinedClubOnly?: boolean;

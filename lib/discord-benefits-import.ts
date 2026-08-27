@@ -20,7 +20,7 @@ function cleanForumDescription(record: RawBenefitRecord): string {
     .trim();
 }
 
-const COUPON_METADATA: Array<Pick<Coupon, "discount" | "expiresAt" | "status" | "imageUrl">> = [
+const COUPON_METADATA: Pick<Coupon, "discount" | "expiresAt" | "status" | "imageUrl">[] = [
   { discount: "美容施術16,500円分無料", expiresAt: "2099-12-31", status: "active", imageUrl: "/discord-benefits/coupon-0.webp" },
   { discount: "限定コラボコース", expiresAt: "2026-05-31", status: "ended", imageUrl: "/discord-benefits/coupon-1.webp" },
   { discount: "限定コラボコース", expiresAt: "2026-02-28", status: "ended", imageUrl: "/discord-benefits/coupon-2.webp" },
@@ -47,7 +47,7 @@ export function loadImportedDiscordCoupons(): Coupon[] {
   }));
 }
 
-const GIFT_METADATA: Array<Pick<GiftCampaign, "winnerCount" | "deadline" | "imageUrl" | "imageEmoji">> = [
+const GIFT_METADATA: Pick<GiftCampaign, "winnerCount" | "deadline" | "imageUrl" | "imageEmoji">[] = [
   { winnerCount: 3, deadline: "2026-06-24", imageUrl: "/discord-benefits/gift-0.webp", imageEmoji: "🥩" },
   { winnerCount: 4, deadline: "2026-05-23", imageUrl: "/discord-benefits/gift-1.webp", imageEmoji: "🥩" },
   { winnerCount: 3, deadline: "2026-04-21", imageUrl: "/discord-benefits/gift-2.webp", imageEmoji: "🫖" },

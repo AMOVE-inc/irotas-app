@@ -1,5 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { handleEventRequest } from "../sites/events";
+import type { D1Database, D1PreparedStatement, SitesEnv } from "../sites/platform-types";
+
 const { authenticatedRequestMember, canMemberAccessClub } = vi.hoisted(() => ({
   authenticatedRequestMember: vi.fn(),
   canMemberAccessClub: vi.fn(),
@@ -7,9 +10,6 @@ const { authenticatedRequestMember, canMemberAccessClub } = vi.hoisted(() => ({
 
 vi.mock("../sites/auth", () => ({ authenticatedRequestMember }));
 vi.mock("../sites/clubs", () => ({ canMemberAccessClub }));
-
-import { handleEventRequest } from "../sites/events";
-import type { D1Database, D1PreparedStatement, SitesEnv } from "../sites/platform-types";
 
 const eventRow = {
   id: "event-club-1",
@@ -56,7 +56,7 @@ class EventAccessDatabase implements D1Database {
   };
   participationStatus: string | null = null;
   cancellationPending = false;
-  notifications: Array<{ targetMemberId: number; type: string; eventId: string }> = [];
+  notifications: { targetMemberId: number; type: string; eventId: string }[] = [];
 
   prepare(sql: string): D1PreparedStatement {
     const db = this;
@@ -118,7 +118,7 @@ describe("club event access", () => {
     canMemberAccessClub.mockResolvedValue(false);
 
     const listResponse = await handleEventRequest(new Request("https://app.example/api/events"), env);
-    const listBody = await listResponse?.json() as { events: Array<Record<string, unknown>> };
+    const listBody = await listResponse?.json() as { events: Record<string, unknown>[] };
     expect(listResponse?.status).toBe(200);
     expect(listBody.events[0]).toMatchObject({ lockedClubEvent: true, location: "部員限定", participants: [] });
     expect(listBody.events[0]).not.toHaveProperty("googleMapsUrl");

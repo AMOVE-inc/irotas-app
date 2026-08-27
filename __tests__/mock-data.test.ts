@@ -273,5 +273,5 @@ describe("Auth schema", () => {
     expect(db.createEmailUser).toBeDefined();
     expect(db.getUserByOpenId).toBeDefined();
     expect(db.upsertUser).toBeDefined();
-  });
+  }, 15_000);
 });

@@ -127,12 +127,12 @@ export type ClubApplicantReview = {
   messageToLeader: string;
   status: "pending" | "on_hold";
   appliedAt: string;
-  eventHistory: Array<{
+  eventHistory: {
     id: string;
     title: string;
     date: string;
     eventType: string;
-  }>;
+  }[];
 };
 
 export type AppNotification = {
@@ -301,7 +301,7 @@ export type SharedBenefits = {
   points: {
     balance: number;
     balances: Record<string, number>;
-    history: Array<Record<string, unknown>>;
+    history: Record<string, unknown>[];
   };
 };
 
@@ -448,7 +448,7 @@ export async function createSharedBoardThread(input: {
   status?: "open" | "closed" | "none";
   data?: Record<string, unknown>;
 }) {
-  return apiCall<{ id: string; createdAt: string }>("/api/board/threads", {
+  return apiCall<{ id: string; createdAt: string; duplicate?: boolean }>("/api/board/threads", {
     method: "POST",
     body: JSON.stringify(input),
   });

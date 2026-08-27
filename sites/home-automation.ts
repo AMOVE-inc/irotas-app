@@ -63,14 +63,14 @@ async function pendingReminders(db: D1Database, now: Date) {
     const deadline = typeof data.applicationDeadline === "string" ? tokyoDateTime(data.applicationDeadline) : null;
     const finalized = typeof data.participantsFinalizedAt === "string" && data.participantsFinalizedAt.length > 0;
     if (deadline && !finalized) {
-      const offsets: Array<[ReminderKind, number]> = [["organizer_three_days", 3], ["organizer_two_days", 2], ["organizer_one_day", 1], ["organizer_same_day", 0]];
+      const offsets: [ReminderKind, number][] = [["organizer_three_days", 3], ["organizer_two_days", 2], ["organizer_one_day", 1], ["organizer_same_day", 0]];
       for (const [kind, days] of offsets) {
         const scheduledAt = new Date(deadline.getTime() - days * DAY);
         if (dueRecently(scheduledAt, now)) reminders.push({ event, targetMemberId: event.organizer_member_id, kind, scheduledAt });
       }
       const favorites = await db.prepare("SELECT member_id FROM event_favorites WHERE event_id = ?").bind(event.id).all<{ member_id: number }>();
       for (const favorite of favorites.results ?? []) {
-        for (const [kind, days] of [["favorite_three_days", 3], ["favorite_one_day", 1]] as Array<[ReminderKind, number]>) {
+        for (const [kind, days] of [["favorite_three_days", 3], ["favorite_one_day", 1]] as [ReminderKind, number][]) {
           const scheduledAt = new Date(deadline.getTime() - days * DAY);
           if (dueRecently(scheduledAt, now)) reminders.push({ event, targetMemberId: favorite.member_id, kind, scheduledAt });
         }
@@ -80,7 +80,7 @@ async function pendingReminders(db: D1Database, now: Date) {
       const dataChatId = typeof data.chatId === "string" && data.chatId ? data.chatId : `event_chat_${event.id}`;
       const participants = await db.prepare("SELECT member_id FROM event_participations WHERE event_id = ? AND status IN ('confirmed','cancel_requested')").bind(event.id).all<{ member_id: number }>();
       for (const participant of participants.results ?? []) {
-        for (const [kind, days] of [["seven_days", 7], ["two_days", 2]] as Array<[ReminderKind, number]>) {
+        for (const [kind, days] of [["seven_days", 7], ["two_days", 2]] as [ReminderKind, number][]) {
           const scheduledAt = new Date(start.getTime() - days * DAY);
           if (dueRecently(scheduledAt, now)) reminders.push({ event, targetMemberId: participant.member_id, kind, scheduledAt, chatRoomId: dataChatId });
         }
@@ -191,9 +191,9 @@ async function finalizeExpiredBoardPolls(db: D1Database, now: Date) {
 async function homeActivities(db: D1Database) {
   const [events, threads, comments, announcements] = await Promise.all([
     db.prepare(`SELECT id, event_type, title, created_at FROM events WHERE status != 'cancelled' ORDER BY created_at DESC LIMIT 50`).all<Record<string, unknown>>(),
-    db.prepare(`SELECT t.id, t.category, t.title, t.content, t.created_at, m.display_name
+    db.prepare(`SELECT t.id, t.category, t.title, t.content, t.data_json, t.created_at, m.display_name
       FROM board_threads t JOIN members m ON m.id = t.author_member_id
-      WHERE t.deleted_at IS NULL AND t.category IN ('gourmet-contest','introduction','meal-report','gourmet-advice','free-chat')
+      WHERE t.deleted_at IS NULL AND t.category IN ('gourmet-contest','meal-report','gourmet-advice','free-chat')
       ORDER BY t.created_at DESC LIMIT 80`).all<Record<string, unknown>>(),
     db.prepare(`SELECT c.id, c.content, c.created_at, t.id AS thread_id, t.title
       FROM board_comments c JOIN board_threads t ON t.id = c.thread_id
@@ -202,10 +202,10 @@ async function homeActivities(db: D1Database) {
     db.prepare(`SELECT id, content, created_at FROM chat_messages
       WHERE room_id = 'board-announcement' AND deleted_at IS NULL ORDER BY created_at DESC LIMIT 30`).all<Record<string, unknown>>(),
   ]);
-  const kindByCategory: Record<string, string> = { "gourmet-contest": "contest_thread", introduction: "introduction", "meal-report": "meal_report", "gourmet-advice": "gourmet_advice", "free-chat": "free_chat" };
+  const kindByCategory: Record<string, string> = { "gourmet-contest": "contest_thread", "meal-report": "meal_report", "gourmet-advice": "gourmet_advice", "free-chat": "free_chat" };
   return [
     ...(events.results ?? []).map((row) => ({ id: `event:${row.id}`, kind: "event", title: row.title, description: row.event_type === "official" ? "新しい公式イベントが公開されました" : row.event_type === "club" ? "新しい部活動イベントが公開されました" : "新しいグルメ会が公開されました", createdAt: row.created_at, route: "/event-detail", params: { id: String(row.id) } })),
-    ...(threads.results ?? []).map((row) => ({ id: `thread:${row.id}`, kind: kindByCategory[String(row.category)], title: row.category === "introduction" ? `${row.display_name}さんが自己紹介を投稿しました` : row.title, description: String(row.content ?? "").slice(0, 180), createdAt: row.created_at, route: "/board", params: { category: String(row.category), view: "threads", thread: String(row.id) } })),
+    ...(threads.results ?? []).map((row) => { const data = (() => { try { return JSON.parse(String(row.data_json ?? "{}")) as { images?: string[] }; } catch { return {}; } })(); return { id: `thread:${row.id}`, kind: kindByCategory[String(row.category)], title: row.title, description: String(row.content ?? "").slice(0, 180), createdAt: row.created_at, route: "/board", params: { category: String(row.category), view: "threads", thread: String(row.id) }, image: row.category === "meal-report" ? data.images?.[0] : undefined }; }),
     ...(comments.results ?? []).map((row) => ({ id: `comment:${row.id}`, kind: "contest_comment", title: `${row.title}にコメントが追加されました`, description: String(row.content ?? "").slice(0, 180), createdAt: row.created_at, route: "/board", params: { category: "gourmet-contest", view: "threads", thread: String(row.thread_id) } })),
     ...(announcements.results ?? []).map((row) => ({ id: `announcement:${row.id}`, kind: "announcement", title: "運営アナウンスが更新されました", description: String(row.content ?? "").slice(0, 180), createdAt: row.created_at, route: "/chat", params: { id: "board-announcement" } })),
   ].sort((a, b) => Date.parse(String(b.createdAt)) - Date.parse(String(a.createdAt))).slice(0, 200);

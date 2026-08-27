@@ -20,7 +20,7 @@ function database(accessRole: "member" | "admin") {
     Object.assign(statement, { __sql: sql, __values: () => values });
     return statement;
   };
-  const db: D1Database = { prepare, batch: async (statements) => { for (const statement of statements as Array<D1PreparedStatement & { __sql: string }>) writes.push(statement.__sql); return statements.map(() => ({ success: true })); } };
+  const db: D1Database = { prepare, batch: async (statements) => { for (const statement of statements as (D1PreparedStatement & { __sql: string })[]) writes.push(statement.__sql); return statements.map(() => ({ success: true })); } };
   return { db, writes };
 }
 

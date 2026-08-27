@@ -7,7 +7,6 @@ import {
   TIMELINE_POSTS,
   RANK_COLORS,
   RANK_LABELS,
-  RANK_ICONS,
   getTodayEvents,
   EVENTS,
   CURRENT_USER,
@@ -18,7 +17,7 @@ import {
 } from "@/constants/mock-data";
 import { useColors } from "@/hooks/use-colors";
 import { Image } from "expo-image";
-import { useRouter } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 import { useRef, useState, useCallback, useEffect, useMemo } from "react";
 import {
   FlatList,
@@ -35,7 +34,6 @@ import {
 } from "react-native";
 import { getHomeActivities, type HomeActivity, type HomeActivityKind } from "@/lib/home-activity-store";
 import { getGiftCampaigns, type GiftCampaign } from "@/lib/gift-campaign-store";
-import { useFocusEffect } from "expo-router";
 import { getAllEvents } from "@/lib/event-store";
 import { createDefaultPreferences, loadMemberAiConsents, loadMemberPreferences, recordActivityEvent, type MemberAiConsents, type MemberPreferences } from "@/lib/ai-data-store";
 import { recommendEvents, type RecommendedEvent } from "@/lib/event-recommendation";
@@ -46,7 +44,6 @@ interface TimelineComment {
   id: string;
   postId: string;
   authorName: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   authorAvatar: any;
   text: string;
   createdAt: string;
@@ -209,7 +206,7 @@ function ActivityCard({ activity }: { activity: HomeActivity }) {
   const timeLabel = elapsed < 3_600_000 ? "たった今" : elapsed < 86_400_000 ? `${Math.floor(elapsed / 3_600_000)}時間前` : `${Math.floor(elapsed / 86_400_000)}日前`;
   return <Pressable onPress={() => router.push({ pathname: activity.route as any, params: activity.params } as any)} style={{ flexDirection: "row", paddingHorizontal: 16, paddingVertical: 13, borderBottomWidth: 0.5, borderBottomColor: colors.border }}>
     <View style={{ width: 42, height: 42, borderRadius: 21, backgroundColor: `${presentation.color}18`, alignItems: "center", justifyContent: "center" }}><IconSymbol name={presentation.icon as any} size={20} color={presentation.color} /></View>
-    <View style={{ flex: 1, marginLeft: 11 }}><View style={{ flexDirection: "row", alignItems: "center" }}><Text style={{ flex: 1, fontSize: 11, fontWeight: "800", color: presentation.color }}>{presentation.label}</Text><Text style={{ fontSize: 10, color: colors.muted }}>{timeLabel}</Text></View><Text numberOfLines={2} style={{ fontSize: 14, fontWeight: "800", color: colors.foreground, marginTop: 3 }}>{activity.title}</Text><Text numberOfLines={2} style={{ fontSize: 12, lineHeight: 17, color: colors.muted, marginTop: 3 }}>{activity.description}</Text></View>
+    <View style={{ flex: 1, marginLeft: 11 }}><View style={{ flexDirection: "row", alignItems: "center" }}><Text style={{ flex: 1, fontSize: 11, fontWeight: "800", color: presentation.color }}>{presentation.label}</Text><Text style={{ fontSize: 10, color: colors.muted }}>{timeLabel}</Text></View><Text numberOfLines={2} style={{ fontSize: 14, fontWeight: "800", color: colors.foreground, marginTop: 3 }}>{activity.title}</Text><Text numberOfLines={2} style={{ fontSize: 12, lineHeight: 17, color: colors.muted, marginTop: 3 }}>{activity.description}</Text>{activity.image ? <Image source={typeof activity.image === "string" ? { uri: activity.image } : activity.image} style={{ width: "100%", height: 150, borderRadius: 12, marginTop: 9 }} contentFit="cover" /> : null}</View>
     <IconSymbol name="chevron.right" size={15} color={colors.muted} style={{ alignSelf: "center", marginLeft: 5 }} />
   </Pressable>;
 }

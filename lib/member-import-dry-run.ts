@@ -352,7 +352,7 @@ function escapeCsv(value: string): string {
 }
 
 export function exportMemberImportCsv(candidates: MemberImportCandidate[]): string {
-  const headers = Object.keys(candidates[0] ?? {}) as Array<keyof MemberImportCandidate>;
+  const headers = Object.keys(candidates[0] ?? {}) as (keyof MemberImportCandidate)[];
   if (!headers.length) return "";
   return [
     headers.join(","),

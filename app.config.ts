@@ -27,8 +27,8 @@ const env = {
   // App branding - update these values directly (do not use env vars)
   appName: "IRO＋",
   appSlug: "irotas-app",
-  // S3 URL of the app logo - set this to the URL returned by generate_image when creating custom logo
-  // Leave empty to use the default icon from assets/images/icon.png
+  // Hosted app logo used by screens that need an absolute URL.
+  // Native and web preview icons use assets/images/irotas-logo-square.png below.
   logoUrl:
     "https://d2xsxph8kpxj0f.cloudfront.net/310519663131608042/RByLczUGFaawmetYWjMbRt/iro-plus-icon-SKFBtK8UGn5GJVQgZnQZza.png",
   scheme: schemeFromBundleId,
@@ -41,7 +41,7 @@ const config: ExpoConfig = {
   slug: env.appSlug,
   version: "1.0.0",
   orientation: "portrait",
-  icon: "./assets/images/icon.png",
+  icon: "./assets/images/irotas-logo-square.png",
   scheme: env.scheme,
   userInterfaceStyle: "light",
   newArchEnabled: true,
@@ -83,7 +83,7 @@ const config: ExpoConfig = {
   web: {
     bundler: "metro",
     output: "static",
-    favicon: "./assets/images/favicon.png",
+    favicon: "./assets/images/irotas-logo-square.png",
   },
   plugins: [
     "expo-router",

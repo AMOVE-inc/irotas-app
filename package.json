@@ -8,7 +8,7 @@
     "dev:server": "cross-env NODE_ENV=development tsx watch server/_core/index.ts",
     "dev:metro": "cross-env EXPO_USE_METRO_WORKSPACE_ROOT=1 npx expo start --web --port ${EXPO_PORT:-8081}",
     "build": "esbuild server/_core/index.ts --tsconfig=tsconfig.json --platform=node --packages=external --bundle --format=esm --outdir=dist",
-    "build:sites": "rm -rf dist && cross-env EXPO_NO_METRO_WORKSPACE_ROOT=1 EXPO_PUBLIC_PREVIEW_LOGIN_ENABLED=false EXPO_PUBLIC_PREVIEW_USER_ROLE=user expo export --clear --platform web --output-dir dist/client && mkdir -p dist/client/pwa && cp assets/images/icon.png dist/client/pwa/icon-1024.png && esbuild sites/worker.ts --bundle --minify --platform=browser --format=esm --outfile=dist/server/index.js && cp sites/wrangler.json dist/wrangler.json",
+    "build:sites": "rm -rf dist && cross-env EXPO_NO_METRO_WORKSPACE_ROOT=1 EXPO_PUBLIC_PREVIEW_LOGIN_ENABLED=false EXPO_PUBLIC_PREVIEW_USER_ROLE=user expo export --clear --platform web --output-dir dist/client && mkdir -p dist/client/pwa && cp assets/images/irotas-logo-square.png dist/client/pwa/icon-1024.png && esbuild sites/worker.ts --bundle --minify --platform=browser --format=esm --outfile=dist/server/index.js && cp sites/wrangler.json dist/wrangler.json",
     "start": "NODE_ENV=production node dist/index.js",
     "check": "tsc --noEmit",
     "lint": "expo lint",

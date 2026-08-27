@@ -1,5 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { BOARD_COMMENTS, BOARD_THREADS, CHAT_MESSAGES, EVENTS } from "../constants/mock-data";
+import { BOARD_COMMENTS, BOARD_THREADS, CHAT_MESSAGES, EVENTS, type BoardImage } from "../constants/mock-data";
 import { formatMealReportArea } from "./restaurant-location";
 
 export type HomeActivityKind = "announcement" | "event" | "contest_thread" | "contest_comment" | "introduction" | "meal_report" | "gourmet_advice" | "free_chat";
@@ -12,12 +12,12 @@ export interface HomeActivity {
   createdAt: string;
   route: string;
   params?: Record<string, string>;
+  image?: BoardImage;
 }
 
 const STORAGE_KEY = "irotas_home_activities_v1";
 const RELEVANT_BOARD_KINDS: Record<string, HomeActivityKind | undefined> = {
   "gourmet-contest": "contest_thread",
-  introduction: "introduction",
   "meal-report": "meal_report",
   "gourmet-advice": "gourmet_advice",
   "free-chat": "free_chat",
@@ -35,7 +35,7 @@ export function initialHomeActivities(): HomeActivity[] {
   }));
   const threadActivities = BOARD_THREADS.flatMap((thread): HomeActivity[] => {
     const kind = RELEVANT_BOARD_KINDS[thread.category];
-    return kind ? [{ id: `thread:${thread.id}`, kind, title: thread.category === "introduction" ? `${thread.author.name}さんが自己紹介を投稿しました` : thread.title, description: thread.mealReport ? `📍 ${thread.mealReport.areaDisplay ?? formatMealReportArea(thread.mealReport.prefecture)}　${thread.preview}` : thread.preview, createdAt: thread.lastUpdated, route: "/board", params: { category: thread.category, view: "threads" } }] : [];
+    return kind ? [{ id: `thread:${thread.id}`, kind, title: thread.title, description: thread.mealReport ? `📍 ${thread.mealReport.areaDisplay ?? formatMealReportArea(thread.mealReport.prefecture)}　${thread.preview}` : thread.preview, createdAt: thread.lastUpdated, route: "/board", params: { category: thread.category, view: "threads" }, image: thread.mealReport ? thread.images?.[0] : undefined }] : [];
   });
   const contestComments = BOARD_COMMENTS.flatMap((comment): HomeActivity[] => {
     const thread = BOARD_THREADS.find((item) => item.id === comment.threadId && item.category === "gourmet-contest");
@@ -68,8 +68,8 @@ export async function getHomeActivities(): Promise<HomeActivity[]> {
   return [...merged.values()].sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));
 }
 
-export function boardActivityForThread(thread: { id: string; category: string; title: string; preview: string; lastUpdated: string; author: { name: string }; mealReport?: { prefecture: string; areaDisplay?: string } }): HomeActivity | null {
+export function boardActivityForThread(thread: { id: string; category: string; title: string; preview: string; lastUpdated: string; author: { name: string }; images?: BoardImage[]; mealReport?: { prefecture: string; areaDisplay?: string } }): HomeActivity | null {
   const kind = RELEVANT_BOARD_KINDS[thread.category];
   if (!kind) return null;
-  return { id: `thread:${thread.id}`, kind, title: thread.category === "introduction" ? `${thread.author.name}さんが自己紹介を投稿しました` : thread.title, description: thread.mealReport ? `📍 ${thread.mealReport.areaDisplay ?? formatMealReportArea(thread.mealReport.prefecture)}　${thread.preview}` : thread.preview, createdAt: thread.lastUpdated, route: "/board", params: { category: thread.category, view: "threads" } };
+  return { id: `thread:${thread.id}`, kind, title: thread.title, description: thread.mealReport ? `📍 ${thread.mealReport.areaDisplay ?? formatMealReportArea(thread.mealReport.prefecture)}　${thread.preview}` : thread.preview, createdAt: thread.lastUpdated, route: "/board", params: { category: thread.category, view: "threads" }, image: thread.mealReport ? thread.images?.[0] : undefined };
 }

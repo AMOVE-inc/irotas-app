@@ -13,7 +13,7 @@ type SquareSubscription = {
 
 type SquareRetrieveResponse = {
   subscription?: SquareSubscription;
-  errors?: Array<{ detail?: string }>;
+  errors?: { detail?: string }[];
 };
 
 const SQUARE_VERSION = "2026-07-15";

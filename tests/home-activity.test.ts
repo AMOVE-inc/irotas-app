@@ -4,7 +4,8 @@ import { initialHomeActivities } from "../lib/home-activity-store";
 describe("home activity feed", () => {
   it("contains every requested automatic activity type", () => {
     const kinds = new Set(initialHomeActivities().map((activity) => activity.kind));
-    expect(kinds).toEqual(new Set(["announcement", "event", "contest_thread", "contest_comment", "introduction", "meal_report", "gourmet_advice", "free_chat"]));
+    expect(kinds).toEqual(new Set(["announcement", "event", "contest_thread", "contest_comment", "meal_report", "gourmet_advice", "free_chat"]));
+    expect(kinds.has("introduction")).toBe(false);
   });
 
   it("links new events to their detail screen", () => {

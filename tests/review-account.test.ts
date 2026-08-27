@@ -5,7 +5,7 @@ import type { D1Database, D1PreparedStatement, SitesEnv } from "../sites/platfor
 type Role = "member" | "admin";
 
 function database(role: Role, current: Record<string, unknown> | null = null) {
-  const writes: Array<{ sql: string; values: unknown[] }> = [];
+  const writes: { sql: string; values: unknown[] }[] = [];
   const prepare = (sql: string): D1PreparedStatement => {
     let values: unknown[] = [];
     const statement: D1PreparedStatement = {
@@ -37,7 +37,7 @@ function database(role: Role, current: Record<string, unknown> | null = null) {
   const db: D1Database = {
     prepare,
     batch: async (statements) => {
-      for (const statement of statements as Array<D1PreparedStatement & { __sql: string; __values: () => unknown[] }>) {
+      for (const statement of statements as (D1PreparedStatement & { __sql: string; __values: () => unknown[] })[]) {
         writes.push({ sql: statement.__sql, values: statement.__values() });
       }
       return statements.map(() => ({ success: true }));

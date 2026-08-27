@@ -5,15 +5,15 @@ export type GourmetMapFeedRestaurant = Omit<Restaurant, "registeredBy">;
 export type GourmetMapFeed = {
   updatedAt: string;
   sourceFolderId: string;
-  files: Array<{
+  files: {
     id: string;
     name: string;
     updatedAt: string;
     category: string;
     rowCount: number;
-  }>;
+  }[];
   restaurants: GourmetMapFeedRestaurant[];
-  errors: Array<{ file: string; row: number; message: string }>;
+  errors: { file: string; row: number; message: string }[];
 };
 
 function restaurantKey(restaurant: Pick<Restaurant, "placeId" | "googleMapsUrl" | "name" | "address">) {

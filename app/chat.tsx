@@ -1,7 +1,7 @@
 import { ScreenContainer } from "@/components/screen-container";
 import { NewMemberMark } from "@/components/new-member-mark";
 import { MentionSuggestions, MentionText } from "@/components/mention-ui";
-import { RichTextPreview, TextFormattingToolbar } from "@/components/text-formatting-toolbar";
+import { RichTextPreview } from "@/components/text-formatting-toolbar";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import {
   CURRENT_USER,
@@ -14,7 +14,7 @@ import {
   type ChatRoom,
 } from "@/constants/mock-data";
 import { useAuthContext } from "@/lib/auth-context";
-import { isAdminRole } from "@/lib/access-control";
+import { isAdminRole , canPostToChat } from "@/lib/access-control";
 import { getAllRooms, getRoomById, getMessages, saveMessagesToStorage, loadMessagesFromStorage, loadDynamicRooms, renameRoom, addMemberToRoom, removeMemberFromRoom, toggleMessageReaction } from "@/lib/chat-store";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useColors } from "@/hooks/use-colors";
@@ -44,8 +44,7 @@ import {
 import { canAccessChatRoom } from "@/lib/chat-access";
 import { getFriends } from "@/lib/friendship";
 import { getMentionGroups, getMentionQuery, getMentionedMemberIds, insertMention } from "@/lib/mentions";
-import { applyTextFormat, type TextFormat, type TextSelection } from "@/lib/text-formatting";
-import { canPostToChat } from "@/lib/access-control";
+import { type TextSelection } from "@/lib/text-formatting";
 import * as Api from "@/lib/_core/api";
 
 const REACTION_EMOJIS = ["👍", "❤️", "😂", "🎉", "😋", "🙏"] as const;
@@ -263,12 +262,6 @@ export default function ChatScreen() {
       inputRef.current?.focus();
   }, []);
 
-  const handleMessageFormat = useCallback((format: TextFormat) => {
-    const result = applyTextFormat(messageText, messageSelection, format);
-    setMessageText(result.text);
-    setMessageSelection(result.selection);
-    inputRef.current?.focus();
-  }, [messageSelection, messageText]);
 
   // 通知権限を初回に要求
   useEffect(() => {
@@ -547,7 +540,6 @@ export default function ChatScreen() {
               @を入力してメンション
             </Text>
           </View>
-          <View style={{ paddingHorizontal: 16 }}><TextFormattingToolbar onFormat={handleMessageFormat} /></View>
           <View style={{ paddingHorizontal: 16 }}><RichTextPreview content={messageText} groups={mentionGroups} /></View>
           {/* 画像プレビュー */}
           {pendingImage && (

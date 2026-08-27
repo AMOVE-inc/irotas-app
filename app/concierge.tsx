@@ -1,4 +1,3 @@
-import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { RESTAURANTS } from "@/constants/mock-data";
 import { useColors } from "@/hooks/use-colors";
@@ -37,6 +36,19 @@ const buildRestaurantContext = () => {
       `${r.name}（${r.genre}）: ${r.address} / 評価${r.rating}（${r.reviewCount}件）/ ${r.description}`,
   ).join("\n");
 };
+
+function localConciergeReply(query: string) {
+  const normalized = query.toLowerCase();
+  const scored = RESTAURANTS.map((restaurant) => {
+    const haystack = `${restaurant.name} ${restaurant.genre} ${restaurant.address} ${restaurant.description}`.toLowerCase();
+    const terms = normalized.split(/[\s、。,.!?！？]+/).filter((term) => term.length >= 2);
+    const score = terms.reduce((total, term) => total + (haystack.includes(term) ? 3 : 0), 0) + restaurant.rating;
+    return { restaurant, score };
+  }).sort((a, b) => b.score - a.score).slice(0, 3);
+  if (!scored.length) return "条件に合う候補を見つけられませんでした。エリア、料理ジャンル、予算を教えてください。";
+  const recommendations = scored.map(({ restaurant }) => `・${restaurant.name}（${restaurant.genre}／${restaurant.address}）\n${restaurant.description}`).join("\n\n");
+  return `ご希望から、まずはこちらがおすすめです。\n\n${recommendations}\n\n予算や利用シーンを教えていただければ、さらに絞り込みます。`;
+}
 
 function ChatBubble({ message }: { message: Message }) {
   const colors = useColors();
@@ -109,15 +121,15 @@ export default function ConciergeScreen() {
       };
       setMessages((prev) => [...prev, aiMessage]);
     },
-    onError: () => {
-      const errorMessage: Message = {
+    onError: (_error, variables) => {
+      const latestQuery = [...variables.messages].reverse().find((message) => message.role === "user")?.content ?? "";
+      const fallbackMessage: Message = {
         id: `m${Date.now()}`,
         role: "assistant",
-        content:
-          "申し訳ありません。現在AIサービスに接続できません。しばらく経ってからもう一度お試しください。",
+        content: localConciergeReply(latestQuery),
         timestamp: new Date(),
       };
-      setMessages((prev) => [...prev, errorMessage]);
+      setMessages((prev) => [...prev, fallbackMessage]);
     },
   });
 
