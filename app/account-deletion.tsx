@@ -41,6 +41,10 @@ export default function AccountDeletionScreen() {
   const [requestType, setRequestType] = useState<"pause" | "withdrawal">("pause");
   const [reasons, setReasons] = useState<string[]>([]);
   const [surveyComment, setSurveyComment] = useState("");
+  const [satisfaction, setSatisfaction] = useState(3);
+  const [expectationsMet, setExpectationsMet] = useState("だいたい期待通りだった");
+  const [valuedFeatures, setValuedFeatures] = useState<string[]>([]);
+  const [continuationCondition, setContinuationCondition] = useState("");
   const [subscriptionConfirmed, setSubscriptionConfirmed] = useState(false);
   const [dataConfirmed, setDataConfirmed] = useState(false);
 
@@ -77,6 +81,10 @@ export default function AccountDeletionScreen() {
                 requestType,
                 reasons,
                 surveyComment,
+                satisfaction,
+                expectationsMet,
+                valuedFeatures,
+                continuationCondition,
                 understandSquareChange: subscriptionConfirmed,
                 understandDataHandling: dataConfirmed,
                 source: Platform.OS === "web" ? "web" : "app",
@@ -277,6 +285,13 @@ export default function AccountDeletionScreen() {
             <Text style={{ fontSize: 14, fontWeight: "900", color: colors.foreground }}>アンケート（複数選択可）</Text>
             {['仕事や家庭の都合', '参加する時間が取れない', '費用を見直したい', '利用したい機能が少ない', 'その他'].map((reason) => <CheckRow key={reason} checked={reasons.includes(reason)} onPress={() => setReasons((current) => current.includes(reason) ? current.filter((item) => item !== reason) : [...current, reason])}>{reason}</CheckRow>)}
             <TextInput value={surveyComment} onChangeText={setSurveyComment} multiline placeholder="ご意見や再開条件など（任意）" placeholderTextColor={colors.muted} style={{ minHeight: 96, marginTop: 14, borderRadius: 13, borderWidth: 1, borderColor: colors.border, padding: 13, color: colors.foreground, textAlignVertical: "top" }} />
+            <Text style={{ fontSize: 14, fontWeight: "900", color: colors.foreground, marginTop: 20 }}>入会前の期待は満たされましたか？</Text>
+            {['期待以上だった', 'だいたい期待通りだった', '一部期待通りではなかった', 'ほとんど期待通りではなかった'].map((option) => <Pressable key={option} onPress={() => setExpectationsMet(option)} style={{ flexDirection: "row", alignItems: "center", marginTop: 10 }}><View style={{ width: 20, height: 20, borderRadius: 10, borderWidth: 2, borderColor: expectationsMet === option ? "#C94F7C" : colors.border, alignItems: "center", justifyContent: "center" }}>{expectationsMet === option ? <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: "#C94F7C" }} /> : null}</View><Text style={{ marginLeft: 9, fontSize: 13, color: colors.foreground }}>{option}</Text></Pressable>)}
+            <Text style={{ fontSize: 14, fontWeight: "900", color: colors.foreground, marginTop: 20 }}>総合満足度</Text>
+            <View style={{ flexDirection: "row", gap: 8, marginTop: 10 }}>{[1,2,3,4,5].map((value) => <Pressable key={value} onPress={() => setSatisfaction(value)} style={{ flex: 1, minHeight: 42, borderRadius: 10, alignItems: "center", justifyContent: "center", backgroundColor: satisfaction === value ? "#C94F7C" : colors.surface, borderWidth: 1, borderColor: satisfaction === value ? "#C94F7C" : colors.border }}><Text style={{ fontWeight: "900", color: satisfaction === value ? "#FFF" : colors.foreground }}>{value}</Text></Pressable>)}</View>
+            <Text style={{ fontSize: 14, fontWeight: "900", color: colors.foreground, marginTop: 20 }}>良かったサービス（複数選択可）</Text>
+            {['運営主催イベント', 'メンバー主催イベント', '会員限定クーポン', 'プレゼント企画', '共有グルメマップ', 'メンバー間の交流'].map((feature) => <CheckRow key={feature} checked={valuedFeatures.includes(feature)} onPress={() => setValuedFeatures((current) => current.includes(feature) ? current.filter((item) => item !== feature) : [...current, feature])}>{feature}</CheckRow>)}
+            <TextInput value={continuationCondition} onChangeText={setContinuationCondition} multiline placeholder="どのような内容があれば継続・再開を検討しますか？（任意）" placeholderTextColor={colors.muted} style={{ minHeight: 88, marginTop: 14, borderRadius: 13, borderWidth: 1, borderColor: colors.border, padding: 13, color: colors.foreground, textAlignVertical: "top" }} />
             <Text
               style={{
                 fontSize: 14,

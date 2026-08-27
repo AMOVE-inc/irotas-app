@@ -4,6 +4,12 @@ export type MemberHistoryImportRow = {
   discordUserId: string;
   participationCount: number;
   organizerCount: number;
+  xp?: number;
+  memberRank?: "regular" | "silver" | "gold" | "platinum";
+  bio?: string;
+  avatarUrl?: string;
+  discordRoles?: string[];
+  clubIds?: string[];
 };
 
 export type MemberHistoryImportPreview = {
@@ -39,6 +45,14 @@ export function parseMemberHistoryImport(csv: string): MemberHistoryImportPrevie
     if (seen.has(discordUserId))
       throw new Error(`${index + 2}行目のDiscord IDが重複しています`);
     seen.add(discordUserId);
+    const rank = String(row.member_rank ?? "").trim().toLowerCase();
+    if (rank && !["regular", "silver", "gold", "platinum"].includes(rank))
+      throw new Error(`${index + 2}行目のランクが正しくありません`);
+    const xpText = String(row.xp ?? "").trim();
+    const avatarUrl = String(row.avatar_url ?? "").trim();
+    if (avatarUrl && !/^https:\/\//i.test(avatarUrl))
+      throw new Error(`${index + 2}行目のプロフィール画像URLはHTTPSで入力してください`);
+    const splitList = (value: unknown) => String(value ?? "").split(/[|;]/).map((item) => item.trim()).filter(Boolean);
     return {
       discordUserId,
       participationCount: nonNegativeInteger(
@@ -51,6 +65,12 @@ export function parseMemberHistoryImport(csv: string): MemberHistoryImportPrevie
         "幹事回数",
         index,
       ),
+      ...(xpText ? { xp: nonNegativeInteger(xpText, "XP", index) } : {}),
+      ...(rank ? { memberRank: rank as MemberHistoryImportRow["memberRank"] } : {}),
+      ...(row.bio ? { bio: String(row.bio).trim() } : {}),
+      ...(avatarUrl ? { avatarUrl } : {}),
+      ...(row.discord_roles ? { discordRoles: splitList(row.discord_roles) } : {}),
+      ...(row.club_ids ? { clubIds: splitList(row.club_ids) } : {}),
     };
   });
 
@@ -60,4 +80,3 @@ export function parseMemberHistoryImport(csv: string): MemberHistoryImportPrevie
     organizerTotal: rows.reduce((sum, row) => sum + row.organizerCount, 0),
   };
 }
-

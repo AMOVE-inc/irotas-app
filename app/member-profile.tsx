@@ -89,7 +89,7 @@ export default function MemberProfileScreen() {
       hometown: text("hometown"), residence: text("residence"), occupation: text("occupation"), hobbies: text("hobbies"),
       favoriteCuisines: Array.isArray(profile.favoriteCuisines) ? profile.favoriteCuisines.filter((item): item is string => typeof item === "string") : [],
       favoriteAlcohol: text("favoriteAlcohol"), dislikedFoods: text("dislikedFoods"), allergies: text("allergies"),
-      drinkingLevel: text("drinkingLevel"), instagramUrl: text("instagramUrl"), favoriteRestaurants: text("favoriteRestaurants"),
+      drinkingLevel: text("drinkingLevel"), instagramUrl: text("instagramUrl"), tabelogUrl: text("tabelogUrl"), favoriteRestaurants: text("favoriteRestaurants"),
       desiredRestaurants: text("desiredRestaurants"), googleLocalGuideLevel: text("googleLocalGuideLevel"),
       participationCount: databaseMember.participationCount, organizerCount: databaseMember.organizerCount,
     };
@@ -141,7 +141,7 @@ export default function MemberProfileScreen() {
     birthDate: member.birthDate, showAge: member.showAge, hometown: member.hometown, residence: member.residence,
     occupation: member.occupation, hobbies: member.hobbies, favoriteCuisines: member.favoriteCuisines ?? member.interests,
     favoriteAlcohol: member.favoriteAlcohol, dislikedFoods: member.dislikedFoods, allergies: member.allergies,
-    drinkingLevel: member.drinkingLevel, instagramUrl: member.instagramUrl,
+    drinkingLevel: member.drinkingLevel, instagramUrl: member.instagramUrl, tabelogUrl: member.tabelogUrl,
     favoriteRestaurants: member.favoriteRestaurants, desiredRestaurants: member.desiredRestaurants,
     googleLocalGuideLevel: member.googleLocalGuideLevel,
   };
@@ -368,10 +368,11 @@ export default function MemberProfileScreen() {
                 { label: "職業", value: details.occupation }, { label: "趣味", value: details.hobbies },
                 { label: "飲酒量", value: details.drinkingLevel }, { label: "好きなお酒", value: details.favoriteAlcohol },
                 { label: "お気に入りのお店", value: details.favoriteRestaurants }, { label: "行ってみたいお店", value: details.desiredRestaurants },
-                { label: "Googleローカルガイド", value: details.googleLocalGuideLevel },
               ].filter((item) => item.value).map((item) => <View key={item.label} style={{ width: "50%", paddingRight: 8 }}><Text style={{ fontSize: 10, color: colors.muted }}>{item.label}</Text><Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground, marginTop: 2 }}>{item.value}</Text></View>)}
             </View>
             {details.instagramUrl ? <Pressable onPress={() => Linking.openURL(details.instagramUrl!)} style={{ flexDirection: "row", alignItems: "center", marginTop: 14, paddingTop: 12, borderTopWidth: 0.5, borderTopColor: colors.border }}><IconSymbol name="camera.fill" size={17} color="#C13584" /><Text style={{ flex: 1, marginLeft: 7, fontSize: 13, fontWeight: "700", color: "#C13584" }}>Instagramを見る</Text><IconSymbol name="chevron.right" size={15} color="#C13584" /></Pressable> : null}
+            {details.tabelogUrl ? <Pressable onPress={() => Linking.openURL(details.tabelogUrl!)} style={{ flexDirection: "row", alignItems: "center", marginTop: 12, paddingTop: 12, borderTopWidth: 0.5, borderTopColor: colors.border }}><IconSymbol name="fork.knife" size={17} color="#E06B24" /><Text style={{ flex: 1, marginLeft: 7, fontSize: 13, fontWeight: "700", color: "#E06B24" }}>食べログを見る</Text><IconSymbol name="chevron.right" size={15} color="#E06B24" /></Pressable> : null}
+            {details.googleLocalGuideLevel ? <View style={{ marginTop: 12, paddingTop: 12, borderTopWidth: 0.5, borderTopColor: colors.border }}><Text style={{ fontSize: 10, color: colors.muted }}>Googleローカルガイドレベル</Text><Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground, marginTop: 2 }}>{details.googleLocalGuideLevel}</Text></View> : null}
           </View>
         </View>
 

@@ -22,7 +22,15 @@ describe("member history import", () => {
 
   it("requires a precise confirmation phrase on the server", () => {
     const rows = parseMemberHistoryImport(csv).rows;
-    expect(validateMemberHistoryImport({ confirmation: "IMPORT_HISTORY_2", rows }).rows).toEqual(rows);
+    expect(validateMemberHistoryImport({ confirmation: "IMPORT_HISTORY_2", rows }).rows).toEqual(rows.map((row) => ({
+      ...row,
+      xp: null,
+      memberRank: null,
+      bio: "",
+      avatarUrl: "",
+      discordRoles: [],
+      clubIds: [],
+    })));
     expect(() => validateMemberHistoryImport({ confirmation: "IMPORT_HISTORY", rows })).toThrow("confirmation_required");
   });
 
@@ -38,4 +46,3 @@ describe("member history import", () => {
     })).toThrow("invalid_participation_count");
   });
 });
-

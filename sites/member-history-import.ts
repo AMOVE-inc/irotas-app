@@ -9,6 +9,12 @@ export type ValidatedMemberHistoryRow = {
   discordUserId: string;
   participationCount: number;
   organizerCount: number;
+  xp: number | null;
+  memberRank: "regular" | "silver" | "gold" | "platinum" | null;
+  bio: string;
+  avatarUrl: string;
+  discordRoles: string[];
+  clubIds: string[];
 };
 
 type ImportBody = {
@@ -45,6 +51,12 @@ export function validateMemberHistoryImport(body: ImportBody) {
     const discordUserId = String(row.discordUserId ?? "").trim();
     const participationCount = Number(row.participationCount);
     const organizerCount = Number(row.organizerCount);
+    const xp = row.xp === undefined || row.xp === null || row.xp === "" ? null : Number(row.xp);
+    const memberRank = ["regular", "silver", "gold", "platinum"].includes(String(row.memberRank)) ? String(row.memberRank) as Exclude<ValidatedMemberHistoryRow["memberRank"], null> : null;
+    const bio = typeof row.bio === "string" ? row.bio.trim().slice(0, 2000) : "";
+    const avatarUrl = typeof row.avatarUrl === "string" && /^https:\/\//i.test(row.avatarUrl) ? row.avatarUrl.slice(0, 2000) : "";
+    const discordRoles = Array.isArray(row.discordRoles) ? row.discordRoles.filter((value): value is string => typeof value === "string").slice(0, 100) : [];
+    const clubIds = Array.isArray(row.clubIds) ? row.clubIds.filter((value): value is string => typeof value === "string" && /^club-[a-z0-9-]+$/.test(value)).slice(0, 30) : [];
     if (!/^\d{17,20}$/.test(discordUserId))
       throw new Error(`invalid_discord_id:${index}`);
     if (seen.has(discordUserId))
@@ -57,7 +69,8 @@ export function validateMemberHistoryImport(body: ImportBody) {
       if (!Number.isSafeInteger(count) || count < 0 || count > 10_000)
         throw new Error(`invalid_${label}:${index}`);
     }
-    return { discordUserId, participationCount, organizerCount };
+    if (xp !== null && (!Number.isSafeInteger(xp) || xp < 0 || xp > 10_000_000)) throw new Error(`invalid_xp:${index}`);
+    return { discordUserId, participationCount, organizerCount, xp, memberRank, bio, avatarUrl, discordRoles, clubIds };
   });
   return { rows, sourceFilename: safeFilename(body.sourceFilename) };
 }
@@ -103,15 +116,33 @@ async function importMemberHistory(
     ...matched.map((row) =>
       db.prepare(
         `UPDATE members
-         SET participation_count = ?, organizer_count = ?, updated_at = ?
+         SET participation_count = ?, organizer_count = ?, xp = COALESCE(?, xp), member_rank = COALESCE(?, member_rank),
+             discord_roles_json = CASE WHEN json_array_length(?) > 0 THEN ? ELSE discord_roles_json END,
+             profile_json = json_set(CASE WHEN json_valid(profile_json) THEN profile_json ELSE '{}' END,
+               '$.bio', CASE WHEN ? != '' THEN ? ELSE json_extract(CASE WHEN json_valid(profile_json) THEN profile_json ELSE '{}' END, '$.bio') END,
+               '$.avatarUrl', CASE WHEN ? != '' THEN ? ELSE json_extract(CASE WHEN json_valid(profile_json) THEN profile_json ELSE '{}' END, '$.avatarUrl') END),
+             updated_at = ?
          WHERE id = ?`,
       ).bind(
         row.participationCount,
         row.organizerCount,
+        row.xp,
+        row.memberRank,
+        JSON.stringify(row.discordRoles),
+        JSON.stringify(row.discordRoles),
+        row.bio,
+        row.bio,
+        row.avatarUrl,
+        row.avatarUrl,
         now,
         membersByDiscordId.get(row.discordUserId),
       ),
     ),
+    ...matched.flatMap((row) => row.clubIds.map((clubId) => db.prepare(`INSERT INTO club_memberships
+      (club_id, member_id, status, source, applied_at, approved_at, updated_at)
+      VALUES (?, ?, 'approved', 'discord', ?, ?, ?)
+      ON CONFLICT(club_id, member_id) DO UPDATE SET status = 'approved', source = 'discord', approved_at = COALESCE(club_memberships.approved_at, excluded.approved_at), updated_at = excluded.updated_at`)
+      .bind(clubId, membersByDiscordId.get(row.discordUserId), now, now, now))),
     db.prepare(
       `INSERT INTO audit_logs
        (actor_user_id, action, entity_type, entity_id, metadata_json, created_at)
@@ -166,4 +197,3 @@ export async function handleMemberHistoryImportRequest(
       : responseJson({ error: "参加・幹事履歴を登録できませんでした" }, 500);
   }
 }
-

@@ -730,11 +730,13 @@ export default function CsvImportScreen() {
             過去の参加回数・幹事回数
           </Text>
           <Text style={{ fontSize: 12, lineHeight: 18, color: "#6F4A83", marginTop: 5 }}>
-            Discord IDで既存会員と照合し、プロフィールの参加回数・幹事回数を更新します。名前の表記揺れには影響されません。
+            Discord IDで既存会員と照合し、参加・幹事回数に加えて、ランク、XP、自己紹介、プロフィール画像、ロール、部活動を移行できます。名前の表記揺れには影響されません。
           </Text>
           <View style={{ backgroundColor: "#FFFFFFB8", borderRadius: 11, padding: 11, marginTop: 12 }}>
             <Text style={{ fontSize: 11, lineHeight: 17, color: "#5E3974", fontWeight: "700" }}>
               必須列：discord_user_id, participation_count, organizer_count{"\n"}
+              任意列：xp, member_rank, bio, avatar_url, discord_roles, club_ids{"\n"}
+              複数のロール・部活IDは | 区切りで入力してください。任意列が空の場合、現在値を保持します。{"\n"}
               幹事情報をまだ用意していない場合は organizer_count を0にしてください。
             </Text>
           </View>
@@ -789,7 +791,7 @@ export default function CsvImportScreen() {
                 onPress={handleMemberHistoryCommit}
                 style={{ marginTop: 10, borderRadius: 11, paddingVertical: 12, alignItems: "center", backgroundColor: "#6F4A83", opacity: historyImporting ? 0.6 : 1 }}
               >
-                {historyImporting ? <ActivityIndicator color="#FFF" /> : <Text style={{ color: "#FFF", fontSize: 13, fontWeight: "800" }}>参加・幹事回数を本番反映する</Text>}
+                {historyImporting ? <ActivityIndicator color="#FFF" /> : <Text style={{ color: "#FFF", fontSize: 13, fontWeight: "800" }}>Discord会員情報を本番反映する</Text>}
               </Pressable>
             </View>
           )}

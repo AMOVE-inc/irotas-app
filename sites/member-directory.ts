@@ -20,6 +20,7 @@ const PROFILE_TEXT_LIMITS = {
   allergies: 1000,
   drinkingLevel: 100,
   instagramUrl: 1000,
+  tabelogUrl: 1000,
   favoriteRestaurants: 2000,
   desiredRestaurants: 2000,
   googleLocalGuideLevel: 100,
@@ -57,7 +58,7 @@ export function sanitizeProfileUpdate(input: unknown) {
     throw new Error("性別を確認してください");
   if (typeof profile.birthDate === "string" && profile.birthDate && !/^\d{4}-\d{2}-\d{2}$/.test(profile.birthDate))
     throw new Error("生年月日を確認してください");
-  for (const key of ["instagramUrl", "avatarUrl"] as const) {
+  for (const key of ["instagramUrl", "tabelogUrl", "avatarUrl"] as const) {
     const value = profile[key];
     if (typeof value === "string" && value && !/^https?:\/\//i.test(value) && !(key === "avatarUrl" && value.startsWith("/api/event-images/")))
       throw new Error(`${key}は有効なURLを入力してください`);

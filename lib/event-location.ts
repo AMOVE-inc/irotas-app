@@ -35,5 +35,5 @@ export function formatEventArea(prefecture?: string, tokyoArea?: string, fallbac
   if (prefecture !== "東京都") return prefectureLabel;
   const resolvedTokyoArea = tokyoArea ?? extractEventLocation(fallback).tokyoArea;
   const area = TOKYO_EVENT_AREAS.find((item) => item.key === resolvedTokyoArea);
-  return `${prefectureLabel}／${area?.label ?? "その他"}`;
+  return area?.label ?? "その他";
 }

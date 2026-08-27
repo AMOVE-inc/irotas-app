@@ -4,7 +4,7 @@ import { eventCategoryFromPrefecture, extractEventLocation, formatEventArea } fr
 describe("event location", () => {
   it("extracts Tokyo and its detailed area from an address", () => {
     expect(extractEventLocation("東京都渋谷区恵比寿1-1-1")).toEqual({ prefecture: "東京都", tokyoArea: "ebisu-daikanyama-nakameguro" });
-    expect(formatEventArea("東京都", "ebisu-daikanyama-nakameguro")).toBe("東京／恵比寿・代官山・中目黒");
+    expect(formatEventArea("東京都", "ebisu-daikanyama-nakameguro")).toBe("恵比寿・代官山・中目黒");
   });
 
   it("falls back to the other Tokyo area and derives broad regions", () => {

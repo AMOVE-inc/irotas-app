@@ -133,6 +133,7 @@ async function viewerRank(db: D1Database, memberId: number) {
 }
 
 async function canAccessRoom(db: D1Database, room: RoomRow, member: Viewer) {
+  if (elevated(member)) return true;
   if (room.room_type === "announcement") return true;
   if (room.room_type === "rank")
     return !elevated(member) && (await viewerRank(db, member.id)) === room.required_rank;
@@ -152,9 +153,7 @@ async function canAccessRoom(db: D1Database, room: RoomRow, member: Viewer) {
       .bind(room.source_id, member.id).first<{ allowed: number }>();
     return Boolean(participation);
   }
-  // DMと友達グループは運営メンバーにも公開しない。最上位管理者だけが
-  // 不正利用・事故対応のためにアクセスできる。
-  if (administrator(member)) return true;
+  // 運営メンバーは問い合わせ・安全対応のため全チャットを閲覧できる。
   const membership = await db.prepare(`SELECT 1 AS allowed FROM chat_room_members
     WHERE room_id = ? AND member_id = ? AND left_at IS NULL LIMIT 1`)
     .bind(room.id, member.id).first<{ allowed: number }>();

@@ -3,7 +3,6 @@ import { NewMemberMark } from "@/components/new-member-mark";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { EVENTS, CURRENT_USER, DEFAULT_AVATAR, getMemberById, type Event } from "@/constants/mock-data";
 import { GOURMET_GENRES } from "@/constants/event-options";
-import { EVENT_SEARCH_AREA_GROUPS } from "@/constants/event-areas";
 import { useAuthContext } from "@/lib/auth-context";
 import { useClubs } from "@/lib/club-store";
 import { isAdminRole } from "@/lib/access-control";
@@ -603,8 +602,7 @@ export default function EventsScreen() {
 
             <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}><Text style={{ fontSize: 16, fontWeight: "800", color: colors.foreground }}>エリア</Text><Pressable disabled={!selectedAreas.length} onPress={() => setSelectedAreas([])}><Text style={{ fontSize: 12, color: selectedAreas.length ? "#9C4F73" : colors.border }}>選択解除</Text></Pressable></View>
             <Text style={{ fontSize: 12, color: colors.muted, marginBottom: 12 }}>複数選択できます。東京はエリアまで指定できます</Text>
-            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>{EVENT_SEARCH_AREA_GROUPS.map((group) => { const selected = selectedAreas.includes(group.value); return <Pressable key={group.value} onPress={() => setSelectedAreas((current) => selected ? current.filter((item) => item !== group.value) : [...current, group.value])} style={{ paddingHorizontal: 12, paddingVertical: 8, borderRadius: 18, backgroundColor: selected ? "#5D5C74" : colors.surface, borderWidth: 1, borderColor: selected ? "#5D5C74" : colors.border }}><Text style={{ fontSize: 12, fontWeight: "800", color: selected ? "#FFF" : colors.foreground }}>{group.label}</Text></Pressable>; })}</View>
-            <Text style={{ fontSize: 13, fontWeight: "800", color: colors.foreground, marginTop: 16, marginBottom: 8 }}>東京のエリア</Text>
+            <Text style={{ fontSize: 13, fontWeight: "800", color: colors.foreground, marginBottom: 8 }}>東京のエリア</Text>
             <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 7 }}>{TOKYO_EVENT_AREAS.map((area) => { const value = `tokyo:${area.key}`; const selected = selectedAreas.includes(value); return <Pressable key={area.key} onPress={() => setSelectedAreas((current) => selected ? current.filter((item) => item !== value) : [...current, value])} style={{ paddingHorizontal: 10, paddingVertical: 7, borderRadius: 15, backgroundColor: selected ? "#E9D4DE" : colors.surface, borderWidth: 1, borderColor: selected ? "#9C4F73" : colors.border }}><Text style={{ fontSize: 11, fontWeight: "700", color: selected ? "#9C4F73" : colors.foreground }}>{area.label}</Text></Pressable>; })}</View>
 
             <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}><Text style={{ fontSize: 16, fontWeight: "800", color: colors.foreground }}>グルメジャンル</Text><Pressable disabled={!selectedGenres.length} onPress={() => setSelectedGenres([])}><Text style={{ fontSize: 12, color: selectedGenres.length ? "#9C4F73" : colors.border }}>選択解除</Text></Pressable></View>

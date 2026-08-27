@@ -29,6 +29,7 @@ export interface Member {
   allergies?: string;
   drinkingLevel?: string;
   instagramUrl?: string;
+  tabelogUrl?: string;
   favoriteRestaurants?: string;
   desiredRestaurants?: string;
   googleLocalGuideLevel?: string;

@@ -269,6 +269,10 @@ export default function RootLayout() {
                   options={{ presentation: "card" }}
                 />
                 <Stack.Screen
+                  name="my-events"
+                  options={{ presentation: "card" }}
+                />
+                <Stack.Screen
                   name="concierge"
                   options={{ presentation: "card" }}
                 />
