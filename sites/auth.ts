@@ -33,6 +33,7 @@ type MemberRow = {
 
 type SubscriptionRow = {
   billing_email: string;
+  square_subscription_id?: string | null;
   square_status: string;
   access_status: "pending" | "active" | "grace" | "suspended";
   paid_until_date: string | null;
@@ -437,7 +438,7 @@ async function sessionMember(db: D1Database, token: string) {
     m.public_member_id, m.member_term, m.member_rank, m.discord_roles_json,
     m.achievement_badges_json, m.profile_json, m.xp, m.participation_count,
     m.organizer_count, s.subscription_started_at,
-    s.billing_email, s.square_status, s.access_status, s.paid_until_date, s.grace_until_date
+    s.billing_email, s.square_subscription_id, s.square_status, s.access_status, s.paid_until_date, s.grace_until_date
     FROM member_sessions ms
     JOIN members m ON m.id = ms.member_id
     LEFT JOIN member_subscriptions s ON s.member_id = m.id OR s.billing_email = m.email
@@ -872,6 +873,8 @@ type AccountDeletionRow = {
   source: "app" | "web";
   requested_at: string;
   scheduled_for: string;
+  request_type?: "pause" | "withdrawal";
+  square_action?: string | null;
 };
 
 function deletionPayload(row: AccountDeletionRow | null) {
@@ -882,8 +885,24 @@ function deletionPayload(row: AccountDeletionRow | null) {
         source: row.source,
         requestedAt: row.requested_at,
         scheduledFor: row.scheduled_for,
+        requestType: row.request_type ?? "withdrawal",
+        squareAction: row.square_action ?? null,
       }
     : null;
+}
+
+async function scheduleSquareMembershipChange(env: SitesEnv, subscriptionId: string, requestType: "pause" | "withdrawal", reason: string) {
+  if (!env.SQUARE_ACCESS_TOKEN) throw new Error("Square連携が設定されていません");
+  const action = requestType === "pause" ? "pause" : "cancel";
+  const body = requestType === "pause" ? JSON.stringify({ pause_reason: reason.slice(0, 255) }) : undefined;
+  const response = await fetch(`https://connect.squareup.com/v2/subscriptions/${encodeURIComponent(subscriptionId)}/${action}`, {
+    method: "POST",
+    headers: { authorization: `Bearer ${env.SQUARE_ACCESS_TOKEN}`, "square-version": "2026-08-19", "content-type": "application/json" },
+    body,
+  });
+  const result = await response.json().catch(() => ({})) as { subscription?: { canceled_date?: string; charged_through_date?: string }; errors?: Array<{ detail?: string }> };
+  if (!response.ok) throw new Error(result.errors?.[0]?.detail ?? "Squareの定期決済を変更できませんでした");
+  return { action: requestType === "pause" ? "pause_scheduled" : "cancel_scheduled", effectiveDate: result.subscription?.canceled_date ?? result.subscription?.charged_through_date ?? null };
 }
 
 async function accountDeletion(
@@ -899,9 +918,9 @@ async function accountDeletion(
   if (request.method === "GET") {
     const pending = await db
       .prepare(
-        `SELECT id, status, source, requested_at, scheduled_for
+        `SELECT id, status, source, requested_at, scheduled_for, request_type, square_action
          FROM account_deletion_requests
-         WHERE member_id = ? AND status = 'pending'
+         WHERE member_id = ? AND status IN ('pending', 'completed')
          ORDER BY requested_at DESC LIMIT 1`,
       )
       .bind(member.id)
@@ -912,8 +931,11 @@ async function accountDeletion(
   if (request.method === "POST") {
     const input = await readJson(request);
     const password = String(input.password ?? "");
+    const requestType = input.requestType === "pause" ? "pause" : "withdrawal";
+    const reasons = Array.isArray(input.reasons) ? input.reasons.filter((value: unknown): value is string => typeof value === "string").slice(0, 8) : [];
+    const surveyComment = typeof input.surveyComment === "string" ? input.surveyComment.trim().slice(0, 1000) : "";
     if (
-      input.understandSubscriptionSeparate !== true ||
+      input.understandSquareChange !== true ||
       input.understandDataHandling !== true
     )
       return responseJson({ error: "確認事項への同意が必要です" }, 400);
@@ -927,21 +949,24 @@ async function accountDeletion(
         { error: "操作回数が多すぎます。時間をおいてお試しください" },
         429,
       );
-
     const existing = await db
       .prepare(
-        `SELECT id, status, source, requested_at, scheduled_for
+        `SELECT id, status, source, requested_at, scheduled_for, request_type, square_action
          FROM account_deletion_requests
          WHERE member_id = ? AND status = 'pending'
          ORDER BY requested_at DESC LIMIT 1`,
       )
       .bind(member.id)
       .first<AccountDeletionRow>();
-    if (existing)
-      return responseJson({
-        success: true,
-        request: deletionPayload(existing),
-      });
+    if (existing) return responseJson({ success: true, request: deletionPayload(existing) });
+    if (!member.square_subscription_id) return responseJson({ error: "Squareの定期決済情報が見つかりません。運営へお問い合わせください" }, 409);
+
+    let squareChange: { action: string; effectiveDate: string | null };
+    try {
+      squareChange = await scheduleSquareMembershipChange(env, member.square_subscription_id, requestType, [...reasons, surveyComment].filter(Boolean).join(" / ") || "IRO+アプリからの手続き");
+    } catch (error) {
+      return responseJson({ error: error instanceof Error ? error.message : "Squareの定期決済を変更できませんでした" }, 502);
+    }
 
     const now = new Date();
     const id = crypto.randomUUID();
@@ -952,10 +977,10 @@ async function accountDeletion(
       db
         .prepare(
           `INSERT INTO account_deletion_requests
-           (id, member_id, status, source, requested_at, scheduled_for, updated_at)
-           VALUES (?, ?, 'pending', ?, ?, ?, ?)`,
+           (id, member_id, status, source, requested_at, scheduled_for, updated_at, request_type, survey_json, square_action, square_effective_date)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         )
-        .bind(id, member.id, source, requestedAt, scheduledFor, requestedAt),
+        .bind(id, member.id, requestType === "pause" ? "completed" : "pending", source, requestedAt, scheduledFor, requestedAt, requestType, JSON.stringify({ reasons, comment: surveyComment }), squareChange.action, squareChange.effectiveDate),
       db
         .prepare(
           `INSERT INTO audit_logs
@@ -965,7 +990,7 @@ async function accountDeletion(
         .bind(
           member.id,
           id,
-          JSON.stringify({ source, scheduledFor }),
+          JSON.stringify({ source, scheduledFor, requestType, squareAction: squareChange.action, squareEffectiveDate: squareChange.effectiveDate }),
           requestedAt,
         ),
     ]);
@@ -974,10 +999,12 @@ async function accountDeletion(
         success: true,
         request: deletionPayload({
           id,
-          status: "pending",
+          status: requestType === "pause" ? "completed" : "pending",
           source,
           requested_at: requestedAt,
           scheduled_for: scheduledFor,
+          request_type: requestType,
+          square_action: squareChange.action,
         }),
       },
       202,
@@ -987,7 +1014,7 @@ async function accountDeletion(
   if (request.method === "DELETE") {
     const pending = await db
       .prepare(
-        `SELECT id, status, source, requested_at, scheduled_for
+        `SELECT id, status, source, requested_at, scheduled_for, request_type, square_action
          FROM account_deletion_requests
          WHERE member_id = ? AND status = 'pending'
          ORDER BY requested_at DESC LIMIT 1`,

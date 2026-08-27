@@ -58,6 +58,7 @@ export async function handleAccountDeletionAdminRequest(
               r.scheduled_for, r.completed_at, m.display_name, m.public_member_id
        FROM account_deletion_requests r
        JOIN members m ON m.id = r.member_id
+       WHERE r.request_type = 'withdrawal'
        ORDER BY CASE r.status WHEN 'pending' THEN 0 ELSE 1 END,
                 r.requested_at DESC
        LIMIT 200`,
@@ -76,7 +77,7 @@ export async function handleAccountDeletionAdminRequest(
             r.scheduled_for, r.completed_at, m.display_name, m.public_member_id
      FROM account_deletion_requests r
      JOIN members m ON m.id = r.member_id
-     WHERE r.id = ?`,
+     WHERE r.id = ? AND r.request_type = 'withdrawal'`,
   ).bind(requestId).first<DeletionRequestRow>();
   if (!current) return json({ error: "削除申請が見つかりません" }, 404);
   if (current.status !== "pending")

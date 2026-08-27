@@ -1362,6 +1362,8 @@ function EditThreadModal({
   const insets = useSafeAreaInsets();
   const [title, setTitle] = useState(thread.title);
   const [content, setContent] = useState(thread.preview);
+  const [introductionText, setIntroductionText] = useState(thread.selfIntroduction?.introduction ?? thread.preview);
+  const [wantToTry, setWantToTry] = useState(thread.selfIntroduction?.wantToTry ?? "");
   const [contentSelection, setContentSelection] = useState<TextSelection>({ start: 0, end: 0 });
   const contentInputRef = useRef<TextInput>(null);
   const [images, setImages] = useState<BoardImage[]>(thread.images ?? []);
@@ -1390,14 +1392,15 @@ function EditThreadModal({
   };
 
   const handleSave = () => {
-    if (!title.trim() || !content.trim()) return;
+    if (!title.trim() || (thread.selfIntroduction ? !introductionText.trim() : !content.trim())) return;
+    const savedContent = thread.selfIntroduction ? introductionText.trim() : content.trim();
     onSave({
       ...thread,
       title: title.trim(),
-      preview: content.trim(),
-      mealReport: thread.mealReport ? { ...thread.mealReport, comment: content.trim() } : undefined,
-      gourmetAdvice: thread.gourmetAdvice ? { ...thread.gourmetAdvice, comment: content.trim() } : undefined,
-      selfIntroduction: thread.selfIntroduction ? { ...thread.selfIntroduction, introduction: content.trim() } : undefined,
+      preview: savedContent,
+      mealReport: thread.mealReport ? { ...thread.mealReport, comment: savedContent } : undefined,
+      gourmetAdvice: thread.gourmetAdvice ? { ...thread.gourmetAdvice, comment: savedContent } : undefined,
+      selfIntroduction: thread.selfIntroduction ? { introduction: introductionText.trim(), wantToTry: wantToTry.trim() || undefined } : undefined,
       images: images.length > 0 ? images : undefined,
       gourmetContest: thread.gourmetContest ? {
         ...thread.gourmetContest,
@@ -1435,7 +1438,7 @@ function EditThreadModal({
               style={{
                 fontSize: 16,
                 fontWeight: "700",
-                color: title.trim() && content.trim() ? "#E8A0BF" : colors.muted,
+                color: title.trim() && (thread.selfIntroduction ? introductionText.trim() : content.trim()) ? "#E8A0BF" : colors.muted,
               }}
             >
               保存
@@ -1450,7 +1453,7 @@ function EditThreadModal({
         >
           <ScrollView contentContainerStyle={{ padding: 16, gap: 16 }}>
             {/* タイトル */}
-            <View>
+            {!thread.selfIntroduction ? <View>
               <Text style={{ fontSize: 13, fontWeight: "600", color: colors.muted, marginBottom: 6 }}>タイトル</Text>
               <TextInput
                 value={title}
@@ -1466,7 +1469,7 @@ function EditThreadModal({
                   color: colors.foreground,
                 }}
               />
-            </View>
+            </View> : null}
 
             {thread.gourmetContest ? <View style={{ gap: 12 }}>
               <Text style={{ fontSize: 15, fontWeight: "900", color: colors.foreground }}>大会設定</Text>
@@ -1479,7 +1482,7 @@ function EditThreadModal({
             </View> : null}
 
             {/* 本文 */}
-            <View>
+            {thread.selfIntroduction ? <View style={{ gap: 14 }}><View><Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground, marginBottom: 6 }}>自己紹介文 <Text style={{ color: colors.error }}>必須</Text></Text><TextInput value={introductionText} onChangeText={setIntroductionText} multiline textAlignVertical="top" placeholder="お名前、好きなグルメ、活動エリアなどを入力" placeholderTextColor={colors.muted} style={{ minHeight: 150, backgroundColor: colors.surface, borderRadius: 12, padding: 14, fontSize: 14, lineHeight: 21, color: colors.foreground }} /></View><View><Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground, marginBottom: 6 }}>IRO＋でやってみたいこと</Text><TextInput value={wantToTry} onChangeText={setWantToTry} multiline textAlignVertical="top" placeholder="参加したいイベント、企画したいことなど" placeholderTextColor={colors.muted} style={{ minHeight: 100, backgroundColor: colors.surface, borderRadius: 12, padding: 14, fontSize: 14, lineHeight: 21, color: colors.foreground }} /></View></View> : <View>
               <Text style={{ fontSize: 13, fontWeight: "600", color: colors.muted, marginBottom: 6 }}>本文</Text>
               <TextInput
                 ref={contentInputRef}
@@ -1504,7 +1507,7 @@ function EditThreadModal({
               />
               <TextFormattingToolbar onFormat={(format) => { const result = applyTextFormat(content, contentSelection, format); setContent(result.text); setContentSelection(result.selection); contentInputRef.current?.focus(); }} />
               <RichTextPreview content={content} groups={BOARD_MENTION_GROUPS} />
-            </View>
+            </View>}
 
             {/* 写真 */}
             <View>

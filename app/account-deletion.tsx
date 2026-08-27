@@ -8,7 +8,7 @@ import { useColors } from "@/hooks/use-colors";
 import * as Api from "@/lib/_core/api";
 import { useAuthContext } from "@/lib/auth-context";
 import { useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -38,6 +38,9 @@ export default function AccountDeletionScreen() {
   );
   const [loading, setLoading] = useState(false);
   const [password, setPassword] = useState("");
+  const [requestType, setRequestType] = useState<"pause" | "withdrawal">("pause");
+  const [reasons, setReasons] = useState<string[]>([]);
+  const [surveyComment, setSurveyComment] = useState("");
   const [subscriptionConfirmed, setSubscriptionConfirmed] = useState(false);
   const [dataConfirmed, setDataConfirmed] = useState(false);
 
@@ -59,19 +62,22 @@ export default function AccountDeletionScreen() {
       return;
     }
     Alert.alert(
-      "アカウント削除を申請しますか？",
-      "申請後も処理完了までは取り消せます。運営が確認し、30日以内に削除処理を行います。",
+      requestType === "pause" ? "休会を申請しますか？" : "退会を申請しますか？",
+      requestType === "pause" ? "Squareの定期決済を休止する処理を行います。" : "Squareの定期決済を解約予約し、退会処理を開始します。",
       [
         { text: "キャンセル", style: "cancel" },
         {
-          text: "削除を申請する",
+          text: requestType === "pause" ? "休会を申請する" : "退会を申請する",
           style: "destructive",
           onPress: async () => {
             setLoading(true);
             try {
               const result = await Api.requestAccountDeletion({
                 password,
-                understandSubscriptionSeparate: subscriptionConfirmed,
+                requestType,
+                reasons,
+                surveyComment,
+                understandSquareChange: subscriptionConfirmed,
                 understandDataHandling: dataConfirmed,
                 source: Platform.OS === "web" ? "web" : "app",
               });
@@ -79,41 +85,11 @@ export default function AccountDeletionScreen() {
               setPassword("");
               Alert.alert(
                 "申請を受け付けました",
-                "削除処理が完了するまで、この画面から申請を取り消せます。",
+                requestType === "pause" ? "Squareの休止処理を予約しました。反映日はSquareの請求周期に従います。" : "Squareの解約処理と退会手続きを受け付けました。",
               );
             } catch (error) {
               Alert.alert(
                 "申請できませんでした",
-                error instanceof Error
-                  ? error.message
-                  : "もう一度お試しください。",
-              );
-            } finally {
-              setLoading(false);
-            }
-          },
-        },
-      ],
-    );
-  };
-
-  const cancel = () => {
-    Alert.alert(
-      "削除申請を取り消しますか？",
-      "アカウントはそのまま利用できます。",
-      [
-        { text: "戻る", style: "cancel" },
-        {
-          text: "申請を取り消す",
-          onPress: async () => {
-            setLoading(true);
-            try {
-              await Api.cancelAccountDeletion();
-              setRequest(null);
-              Alert.alert("取り消しました", "削除申請を取り消しました。");
-            } catch (error) {
-              Alert.alert(
-                "取り消せませんでした",
                 error instanceof Error
                   ? error.message
                   : "もう一度お試しください。",
@@ -134,7 +110,7 @@ export default function AccountDeletionScreen() {
   }: {
     checked: boolean;
     onPress: () => void;
-    children: string;
+    children: ReactNode;
   }) => (
     <Pressable
       onPress={onPress}
@@ -194,7 +170,7 @@ export default function AccountDeletionScreen() {
         <Text
           style={{ fontSize: 21, fontWeight: "900", color: colors.foreground }}
         >
-          退会・アカウント削除
+          休会・退会手続き
         </Text>
       </View>
 
@@ -202,7 +178,7 @@ export default function AccountDeletionScreen() {
         <Text
           style={{ fontSize: 14, lineHeight: 23, color: colors.foreground }}
         >
-          IRO+アプリのアカウント削除を申請できます。申請内容を運営が確認し、原則30日以内に処理します。
+          アプリから休会または退会を申請できます。アンケート送信時に、連携済みのSquare定期決済も自動で休止または解約予約します。
         </Text>
 
         <View
@@ -216,7 +192,7 @@ export default function AccountDeletionScreen() {
           }}
         >
           <Text style={{ fontSize: 15, fontWeight: "900", color: "#9A3434" }}>
-            削除前にご確認ください
+            手続き前にご確認ください
           </Text>
           <Text
             style={{
@@ -226,7 +202,7 @@ export default function AccountDeletionScreen() {
               color: colors.foreground,
             }}
           >
-            ・アプリのアカウント削除だけではSquareの定期決済は解約されません。定期決済の解約は運営へ別途ご連絡ください。
+            ・休会はSquareの定期決済を次回請求周期から休止します。退会は現在の請求期間終了時に解約されます。
             {"\n"}
             ・プロフィールやログイン情報は削除対象です。法令、会計、不正防止、トラブル対応に必要な取引・監査記録は、必要な期間に限り保持する場合があります。
             {"\n"}
@@ -279,7 +255,7 @@ export default function AccountDeletionScreen() {
             }}
           >
             <Text style={{ fontSize: 18, fontWeight: "900", color: "#A46400" }}>
-              削除申請を受付済みです
+              {request.requestType === "pause" ? "休会申請を受付済みです" : "退会申請を受付済みです"}
             </Text>
             <Text
               style={{
@@ -292,27 +268,15 @@ export default function AccountDeletionScreen() {
               申請日：{formatDate(request.requestedAt)}
               {"\n"}処理予定期限：{formatDate(request.scheduledFor)}
             </Text>
-            <Pressable
-              onPress={cancel}
-              style={{
-                minHeight: 48,
-                marginTop: 18,
-                borderRadius: 13,
-                borderWidth: 1,
-                borderColor: "#A46400",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <Text
-                style={{ color: "#A46400", fontSize: 15, fontWeight: "900" }}
-              >
-                削除申請を取り消す
-              </Text>
-            </Pressable>
+            <Text style={{ marginTop: 12, fontSize: 12, lineHeight: 19, color: colors.muted }}>Square側の予約を含むため、変更や取り消しは運営へお問い合わせください。</Text>
           </View>
         ) : (
           <View style={{ marginTop: 22 }}>
+            <Text style={{ fontSize: 14, fontWeight: "900", color: colors.foreground, marginBottom: 9 }}>手続きの種類</Text>
+            <View style={{ flexDirection: "row", gap: 10, marginBottom: 18 }}>{(["pause", "withdrawal"] as const).map((type) => <Pressable key={type} onPress={() => setRequestType(type)} style={{ flex: 1, minHeight: 48, borderRadius: 13, alignItems: "center", justifyContent: "center", backgroundColor: requestType === type ? "#C94F7C" : colors.surface, borderWidth: 1, borderColor: requestType === type ? "#C94F7C" : colors.border }}><Text style={{ fontSize: 15, fontWeight: "900", color: requestType === type ? "#FFF" : colors.foreground }}>{type === "pause" ? "休会" : "退会"}</Text></Pressable>)}</View>
+            <Text style={{ fontSize: 14, fontWeight: "900", color: colors.foreground }}>アンケート（複数選択可）</Text>
+            {['仕事や家庭の都合', '参加する時間が取れない', '費用を見直したい', '利用したい機能が少ない', 'その他'].map((reason) => <CheckRow key={reason} checked={reasons.includes(reason)} onPress={() => setReasons((current) => current.includes(reason) ? current.filter((item) => item !== reason) : [...current, reason])}>{reason}</CheckRow>)}
+            <TextInput value={surveyComment} onChangeText={setSurveyComment} multiline placeholder="ご意見や再開条件など（任意）" placeholderTextColor={colors.muted} style={{ minHeight: 96, marginTop: 14, borderRadius: 13, borderWidth: 1, borderColor: colors.border, padding: 13, color: colors.foreground, textAlignVertical: "top" }} />
             <Text
               style={{
                 fontSize: 14,
@@ -344,13 +308,13 @@ export default function AccountDeletionScreen() {
               checked={subscriptionConfirmed}
               onPress={() => setSubscriptionConfirmed((value) => !value)}
             >
-              Squareの定期決済は別途解約手続きが必要であることを確認しました。
+              送信するとSquareの定期決済が自動で{requestType === "pause" ? "休止予約" : "解約予約"}されることを確認しました。
             </CheckRow>
             <CheckRow
               checked={dataConfirmed}
               onPress={() => setDataConfirmed((value) => !value)}
             >
-              削除後は元に戻せず、法令等で必要な記録が一定期間保持される場合があることを確認しました。
+              {requestType === "pause" ? "休会中は会員機能が停止され、再開には運営への連絡が必要です。" : "退会後は元に戻せず、法令等で必要な記録が一定期間保持される場合があります。"}
             </CheckRow>
             <Pressable
               onPress={() => void submit()}
@@ -369,7 +333,7 @@ export default function AccountDeletionScreen() {
               <Text
                 style={{ color: "#FFFFFF", fontSize: 16, fontWeight: "900" }}
               >
-                アカウント削除を申請する
+                {requestType === "pause" ? "休会を申請する" : "退会を申請する"}
               </Text>
             </Pressable>
           </View>

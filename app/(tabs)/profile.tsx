@@ -12,6 +12,7 @@ import {
   type MemberRank,
 } from "@/constants/mock-data";
 import { useColors } from "@/hooks/use-colors";
+import { useClubs } from "@/lib/club-store";
 import { getMyRooms } from "@/lib/chat-store";
 import { getAllEvents } from "@/lib/event-store";
 import { getEventParticipationStatus } from "@/lib/event-participation";
@@ -596,7 +597,7 @@ function EditProfileModal({
 
           <Text style={{ fontSize: 13, fontWeight: "600", color: colors.muted, marginBottom: 6 }}>生年月日</Text>
           <View style={{ flexDirection: "row", gap: 7, marginBottom: 10 }}><View style={{ flex: 1.35 }}><ProfileSelectField label="年" value={birthYear} options={BIRTH_YEARS} onChange={setBirthYear} /></View><View style={{ flex: 1 }}><ProfileSelectField label="月" value={birthMonth} options={MONTHS} onChange={setBirthMonth} /></View><View style={{ flex: 1 }}><ProfileSelectField label="日" value={birthDay} options={DAYS} onChange={setBirthDay} /></View></View>
-          <Pressable onPress={() => setShowAge((value) => !value)} style={{ flexDirection: "row", alignItems: "center", marginBottom: 18 }}><View style={{ width: 22, height: 22, borderRadius: 6, backgroundColor: showAge ? "#E8A0BF" : colors.surface, borderWidth: 1, borderColor: showAge ? "#E8A0BF" : colors.border, alignItems: "center", justifyContent: "center" }}>{showAge ? <IconSymbol name="checkmark" size={14} color="#FFF" /> : null}</View><View style={{ marginLeft: 8 }}><Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground }}>年齢を公開する</Text><Text style={{ fontSize: 11, color: colors.muted, marginTop: 2 }}>生年月日は表示せず「20代後半」など年代のみ公開されます</Text></View></Pressable>
+          <Pressable onPress={() => setShowAge((value) => !value)} style={{ flexDirection: "row", alignItems: "center", marginBottom: 18 }}><View style={{ width: 22, height: 22, borderRadius: 6, backgroundColor: showAge ? "#E8A0BF" : colors.surface, borderWidth: 1, borderColor: showAge ? "#E8A0BF" : colors.border, alignItems: "center", justifyContent: "center" }}>{showAge ? <IconSymbol name="checkmark" size={14} color="#FFF" /> : null}</View><View style={{ marginLeft: 8 }}><Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground }}>年齢を公開する</Text><Text style={{ fontSize: 11, color: colors.muted, marginTop: 2 }}>生年月日は表示せず「27歳」のように年齢のみ公開されます</Text></View></Pressable>
 
           <Text style={{ fontSize: 13, fontWeight: "600", color: colors.muted, marginBottom: 6 }}>性別</Text><View style={{ marginBottom: 16 }}><ProfileSelectField label="性別を選択" value={genderLabel(gender)} options={GENDER_OPTIONS} onChange={(value) => setGender(genderValue(value))} /></View>
 
@@ -752,6 +753,7 @@ function MenuSection({ title, items }: { title: string; items: MenuItem[] }) {
 export default function ProfileScreen() {
   const coupons = useCoupons();
   const colors = useColors();
+  const clubs = useClubs();
   const router = useRouter();
   const { logout, refresh: refreshAuthUser, user: authUser } = useAuthContext();
   const performLogout = useCallback(async () => {
@@ -873,6 +875,7 @@ export default function ProfileScreen() {
   );
 
   const publishedAge = getPublishedAgeBand(profileDetails.birthDate, profileDetails.showAge);
+  const joinedClubs = clubs.filter((club) => club.viewerIsLeader || club.viewerMembershipStatus === "approved" || (club.viewerMemberId ? club.memberIds.includes(club.viewerMemberId) : club.memberIds.includes(user.id)));
 
   return (
     <ScreenContainer>
@@ -1083,7 +1086,7 @@ export default function ProfileScreen() {
           <Text style={{ fontSize: 14, fontWeight: "800", color: colors.foreground, marginBottom: 12 }}>プロフィール情報</Text>
           <View style={{ flexDirection: "row", flexWrap: "wrap", rowGap: 12 }}>
             {[
-              ...(publishedAge !== null ? [{ label: "年代", value: publishedAge }] : []),
+              ...(publishedAge !== null ? [{ label: "年齢", value: publishedAge }] : []),
               { label: "出身地", value: profileDetails.hometown }, { label: "居住地", value: profileDetails.residence },
               { label: "職業", value: profileDetails.occupation }, { label: "趣味", value: profileDetails.hobbies },
               { label: "飲酒量", value: profileDetails.drinkingLevel }, { label: "好きなお酒", value: profileDetails.favoriteAlcohol },
@@ -1094,8 +1097,10 @@ export default function ProfileScreen() {
           {profileDetails.instagramUrl ? <Pressable onPress={() => Linking.openURL(profileDetails.instagramUrl)} style={{ flexDirection: "row", alignItems: "center", marginTop: 14, paddingTop: 12, borderTopWidth: 0.5, borderTopColor: colors.border }}><IconSymbol name="camera.fill" size={17} color="#C13584" /><Text style={{ flex: 1, marginLeft: 7, fontSize: 13, fontWeight: "700", color: "#C13584" }}>Instagramを見る</Text><IconSymbol name="chevron.right" size={15} color="#C13584" /></Pressable> : null}
         </View>
 
+        {joinedClubs.length > 0 ? <View style={{ marginHorizontal: 16, marginBottom: 16 }}><Text style={{ fontSize: 14, fontWeight: "800", color: colors.foreground, marginBottom: 8 }}>参加している部活動</Text><View style={{ backgroundColor: colors.surface, borderRadius: 16, overflow: "hidden" }}>{joinedClubs.map((club, index) => <Pressable key={club.id} onPress={() => router.push("/clubs" as any)} style={{ flexDirection: "row", alignItems: "center", padding: 14, borderTopWidth: index ? 0.5 : 0, borderTopColor: colors.border }}><Text style={{ fontSize: 24, marginRight: 12 }}>{club.icon}</Text><View style={{ flex: 1 }}><Text style={{ fontSize: 15, fontWeight: "800", color: colors.foreground }}>{club.name}</Text><Text style={{ fontSize: 11, color: colors.muted, marginTop: 2 }}>{club.memberIds.length}人が参加</Text></View><IconSymbol name="chevron.right" size={16} color={colors.muted} /></Pressable>)}</View></View> : null}
+
         {/* Chat Shortcut Card */}
-        <Pressable
+        {false ? <Pressable
           onPress={() => router.push("/chat-list" as any)}
           style={({ pressed }) => ({
             marginHorizontal: 16,
@@ -1158,10 +1163,10 @@ export default function ProfileScreen() {
             )}
             <IconSymbol name="chevron.right" size={18} color="rgba(255,255,255,0.8)" />
           </View>
-        </Pressable>
+        </Pressable> : null}
 
         {/* Points Progress */}
-        {!userIsOperator ? <PointsProgressCard points={user.points} rank={user.rank} /> : null}
+        {!userIsOperator ? <PointsProgressCard points={user.points} rank={user.rank} showRank={false} /> : null}
 
         {/* イロタスポイントカード */}
         <View

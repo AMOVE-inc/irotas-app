@@ -705,6 +705,8 @@ export type AccountDeletionRequest = {
   source: "app" | "web";
   requestedAt: string;
   scheduledFor: string;
+  requestType: "pause" | "withdrawal";
+  squareAction: string | null;
 };
 
 export type AdminAccountDeletionRequest = AccountDeletionRequest & {
@@ -787,7 +789,10 @@ export async function getAccountDeletionRequest() {
 
 export async function requestAccountDeletion(input: {
   password: string;
-  understandSubscriptionSeparate: boolean;
+  requestType: "pause" | "withdrawal";
+  reasons: string[];
+  surveyComment: string;
+  understandSquareChange: boolean;
   understandDataHandling: boolean;
   source: "app" | "web";
 }) {

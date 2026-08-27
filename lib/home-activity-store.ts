@@ -12,6 +12,7 @@ export interface HomeActivity {
   createdAt: string;
   route: string;
   params?: Record<string, string>;
+  images?: BoardImage[];
   image?: BoardImage;
 }
 
@@ -35,7 +36,7 @@ export function initialHomeActivities(): HomeActivity[] {
   }));
   const threadActivities = BOARD_THREADS.flatMap((thread): HomeActivity[] => {
     const kind = RELEVANT_BOARD_KINDS[thread.category];
-    return kind ? [{ id: `thread:${thread.id}`, kind, title: thread.title, description: thread.mealReport ? `📍 ${thread.mealReport.areaDisplay ?? formatMealReportArea(thread.mealReport.prefecture)}　${thread.preview}` : thread.preview, createdAt: thread.lastUpdated, route: "/board", params: { category: thread.category, view: "threads" }, image: thread.mealReport ? thread.images?.[0] : undefined }] : [];
+    return kind ? [{ id: `thread:${thread.id}`, kind, title: thread.title, description: thread.mealReport ? `📍 ${thread.mealReport.areaDisplay ?? formatMealReportArea(thread.mealReport.prefecture)}　${thread.preview}` : thread.preview, createdAt: thread.lastUpdated, route: "/board", params: { category: thread.category, view: "threads" }, images: thread.mealReport ? thread.images?.slice(0, 4) : undefined }] : [];
   });
   const contestComments = BOARD_COMMENTS.flatMap((comment): HomeActivity[] => {
     const thread = BOARD_THREADS.find((item) => item.id === comment.threadId && item.category === "gourmet-contest");
@@ -71,5 +72,5 @@ export async function getHomeActivities(): Promise<HomeActivity[]> {
 export function boardActivityForThread(thread: { id: string; category: string; title: string; preview: string; lastUpdated: string; author: { name: string }; images?: BoardImage[]; mealReport?: { prefecture: string; areaDisplay?: string } }): HomeActivity | null {
   const kind = RELEVANT_BOARD_KINDS[thread.category];
   if (!kind) return null;
-  return { id: `thread:${thread.id}`, kind, title: thread.title, description: thread.mealReport ? `📍 ${thread.mealReport.areaDisplay ?? formatMealReportArea(thread.mealReport.prefecture)}　${thread.preview}` : thread.preview, createdAt: thread.lastUpdated, route: "/board", params: { category: thread.category, view: "threads" }, image: thread.mealReport ? thread.images?.[0] : undefined };
+  return { id: `thread:${thread.id}`, kind, title: thread.title, description: thread.mealReport ? `📍 ${thread.mealReport.areaDisplay ?? formatMealReportArea(thread.mealReport.prefecture)}　${thread.preview}` : thread.preview, createdAt: thread.lastUpdated, route: "/board", params: { category: thread.category, view: "threads" }, images: thread.mealReport ? thread.images?.slice(0, 4) : undefined };
 }

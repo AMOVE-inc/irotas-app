@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
   accountDeletionDeadline,
   handleAuthRequest,
@@ -44,6 +44,7 @@ function deletionDatabase(passwordHash: string) {
             organizer_count: 0,
             subscription_started_at: "2024-08-01",
             billing_email: "member@example.com",
+            square_subscription_id: "subscription-21",
             square_status: "ACTIVE",
             access_status: "active",
             paid_until_date: null,
@@ -72,10 +73,12 @@ function deletionDatabase(passwordHash: string) {
         if (statement.__sql.includes("INSERT INTO account_deletion_requests")) {
           pending = {
             id: values[0],
-            status: "pending",
-            source: values[2],
-            requested_at: values[3],
-            scheduled_for: values[4],
+            status: values[2],
+            source: values[3],
+            requested_at: values[4],
+            scheduled_for: values[5],
+            request_type: values[7],
+            square_action: values[9],
           };
         }
         if (statement.__sql.includes("UPDATE account_deletion_requests"))
@@ -123,7 +126,7 @@ describe("account deletion requests", () => {
     const wrongPassword = await handleAuthRequest(
       request("POST", {
         password: "wrong-password",
-        understandSubscriptionSeparate: true,
+        understandSquareChange: true,
         understandDataHandling: true,
       }),
       env,
@@ -137,12 +140,16 @@ describe("account deletion requests", () => {
     const store = deletionDatabase(
       await hashPassword("correct-password", undefined, secret),
     );
-    const env = { DB: store.db, AUTH_SECRET: secret } as SitesEnv;
+    const env = { DB: store.db, AUTH_SECRET: secret, SQUARE_ACCESS_TOKEN: "square-token" } as SitesEnv;
+    const square = vi.spyOn(globalThis, "fetch").mockResolvedValue(Response.json({ subscription: { status: "ACTIVE", charged_through_date: "2026-09-01" } }));
 
     const created = await handleAuthRequest(
       request("POST", {
         password: "correct-password",
-        understandSubscriptionSeparate: true,
+        requestType: "withdrawal",
+        reasons: ["参加する時間が取れない"],
+        surveyComment: "再開予定あり",
+        understandSquareChange: true,
         understandDataHandling: true,
         source: "web",
       }),
@@ -168,6 +175,8 @@ describe("account deletion requests", () => {
         sql.includes("member.account_deletion_requested"),
       ),
     ).toBe(true);
+    expect(square).toHaveBeenCalledWith(expect.stringContaining("/cancel"), expect.objectContaining({ method: "POST" }));
+    square.mockRestore();
     expect(
       store.writes.some((sql) =>
         sql.includes("member.account_deletion_cancelled"),

@@ -14,6 +14,5 @@ export function getPublishedAgeBand(
   ) age -= 1;
   if (age < 0) return null;
 
-  const decade = Math.floor(age / 10) * 10;
-  return `${decade}代${age % 10 < 5 ? "前半" : "後半"}`;
+  return `${age}歳`;
 }

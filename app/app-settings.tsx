@@ -362,7 +362,7 @@ export default function AppSettingsScreen() {
         <SettingRow
           icon="person.crop.circle.badge.minus"
           iconColor="#FF3B30"
-          label="退会・アカウント削除"
+          label="休会・退会手続き"
           sublabel="削除申請と申請状況の確認"
           onPress={() => router.push("/account-deletion" as any)}
           isDestructive

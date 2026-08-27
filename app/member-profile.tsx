@@ -363,7 +363,7 @@ export default function MemberProfileScreen() {
           <View style={{ backgroundColor: colors.surface, borderRadius: 14, padding: 16 }}>
             <View style={{ flexDirection: "row", flexWrap: "wrap", rowGap: 13 }}>
               {[
-                ...(publishedAge !== null ? [{ label: "年代", value: publishedAge }] : []),
+                ...(publishedAge !== null ? [{ label: "年齢", value: publishedAge }] : []),
                 { label: "出身地", value: details.hometown }, { label: "居住地", value: details.residence },
                 { label: "職業", value: details.occupation }, { label: "趣味", value: details.hobbies },
                 { label: "飲酒量", value: details.drinkingLevel }, { label: "好きなお酒", value: details.favoriteAlcohol },
@@ -421,8 +421,8 @@ export default function MemberProfileScreen() {
           </View>
         )}
 
-        {/* Stats */}
-        <View style={{ marginHorizontal: 16 }}>
+        {/* Stats are private to the member's own page. */}
+        {isSelf ? <View style={{ marginHorizontal: 16 }}>
           <Text style={{ fontSize: 14, fontWeight: "700", color: colors.foreground, marginBottom: 8 }}>
             活動状況
           </Text>
@@ -476,7 +476,7 @@ export default function MemberProfileScreen() {
               </View>
             );
           })()}
-        </View>
+        </View> : null}
       </ScrollView>
       <SocialMemberListModal visible={socialList !== null} kind={socialList ?? "followers"} memberId={databaseMember?.id ?? member.id} onClose={() => setSocialList(null)} />
     </ScreenContainer>

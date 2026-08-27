@@ -43,7 +43,7 @@ describe("native distribution readiness", () => {
     expect(settings).toContain('router.push("/account-deletion"');
     expect(layout).toContain('String(segments[0]) === "account-deletion"');
     expect(deletionPage).toContain("ログインして削除申請へ");
-    expect(deletionPage).toContain("Squareの定期決済は別途解約手続き");
+    expect(deletionPage).toContain("Square定期決済も自動で休止または解約予約");
     expect(deletionPage).toContain("requestAccountDeletion");
   });
 });
