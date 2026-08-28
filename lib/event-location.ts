@@ -16,6 +16,17 @@ export const TOKYO_EVENT_AREAS = [
 
 export type TokyoEventAreaKey = (typeof TOKYO_EVENT_AREAS)[number]["key"];
 
+/** Event cards use the most specific neighborhood/station-like name available in the address. */
+export function extractTokyoLocalArea(address: string): string | undefined {
+  const normalized = address.replace(/\s+/g, "");
+  const keyword = TOKYO_EVENT_AREAS
+    .flatMap((area) => area.key === "other" ? [] : area.keywords)
+    .find((candidate) => normalized.includes(candidate));
+  if (keyword) return keyword;
+  const district = normalized.match(/東京都[^区市町村]{1,12}[区市町村]([^0-9０-９丁目番地号-]{1,12})/)?.[1];
+  return district?.replace(/[都道府県区市町村]$/, "") || undefined;
+}
+
 export function extractEventLocation(address: string): { prefecture?: string; tokyoArea?: TokyoEventAreaKey } {
   const prefecture = PREFECTURES.find((item) => address.includes(item));
   if (prefecture !== "東京都") return { prefecture };
@@ -33,7 +44,10 @@ export function formatEventArea(prefecture?: string, tokyoArea?: string, fallbac
   if (!prefecture) return fallback;
   const prefectureLabel = prefecture.replace(/[都府県]$/, "");
   if (prefecture !== "東京都") return prefectureLabel;
+  const localArea = extractTokyoLocalArea(fallback);
+  if (localArea) return localArea;
   const resolvedTokyoArea = tokyoArea ?? extractEventLocation(fallback).tokyoArea;
   const area = TOKYO_EVENT_AREAS.find((item) => item.key === resolvedTokyoArea);
-  return area?.label ?? "その他";
+  if (area && area.key !== "other") return area.keywords[0] ?? area.label;
+  return "東京都内";
 }

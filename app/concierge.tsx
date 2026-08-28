@@ -1,5 +1,5 @@
 import { IconSymbol } from "@/components/ui/icon-symbol";
-import { RESTAURANTS } from "@/constants/mock-data";
+import { restaurantsForConciergeQuery } from "@/lib/concierge-restaurants";
 import { useColors } from "@/hooks/use-colors";
 import { trpc } from "@/lib/trpc";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -31,28 +31,9 @@ const INITIAL_MESSAGE: Message = {
 };
 const CONCIERGE_HISTORY_KEY = "irotas_concierge_history_v1";
 
-const GENRE_ALIASES: Record<string, string[]> = {
-  焼肉: ["焼肉", "焼き肉", "ホルモン"], 寿司: ["寿司", "鮨", "すし"],
-  イタリアン: ["イタリアン", "パスタ", "ピザ"], フレンチ: ["フレンチ", "フランス料理"],
-  和食: ["和食", "日本料理"], 中華: ["中華", "中国料理"], ラーメン: ["ラーメン", "つけ麺"],
-};
-const AREA_WORDS = ["渋谷", "新宿", "恵比寿", "銀座", "六本木", "池袋", "品川", "上野", "浅草", "東京", "横浜", "大阪", "梅田", "難波", "京都", "神戸"];
-
-function restaurantsForQuery(query: string) {
-  const normalized = query.replace(/焼き肉/g, "焼肉").toLowerCase();
-  const area = AREA_WORDS.find((word) => normalized.includes(word.toLowerCase()));
-  const genre = Object.entries(GENRE_ALIASES).find(([, aliases]) => aliases.some((word) => normalized.includes(word.toLowerCase())));
-  return RESTAURANTS.filter((restaurant) => {
-    const haystack = `${restaurant.name} ${restaurant.genre} ${restaurant.address} ${restaurant.description}`.replace(/焼き肉/g, "焼肉").toLowerCase();
-    const areaMatches = !area || haystack.includes(area.toLowerCase());
-    const genreMatches = !genre || genre[1].some((word) => haystack.includes(word.toLowerCase()));
-    return areaMatches && genreMatches;
-  });
-}
-
 // RESTAURANTSデータをAIコンテキスト用にテキスト化
 const buildRestaurantContext = (query: string) => {
-  const candidates = restaurantsForQuery(query);
+  const candidates = restaurantsForConciergeQuery(query);
   return candidates.map(
     (r) =>
       `${r.name}（${r.genre}）: ${r.address} / 評価${r.rating}（${r.reviewCount}件）/ ${r.description}`,
@@ -61,7 +42,7 @@ const buildRestaurantContext = (query: string) => {
 
 function localConciergeReply(query: string) {
   const normalized = query.toLowerCase();
-  const candidates = restaurantsForQuery(query);
+  const candidates = restaurantsForConciergeQuery(query);
   if (!candidates.length) return "指定されたエリアと料理ジャンルの両方に一致する登録店が見つかりませんでした。条件を広げる場合は、エリアかジャンルのどちらを変更するか教えてください。";
   const scored = candidates.map((restaurant) => {
     const haystack = `${restaurant.name} ${restaurant.genre} ${restaurant.address} ${restaurant.description}`.toLowerCase();
@@ -184,6 +165,17 @@ export default function ConciergeScreen() {
     const updatedMessages = [...messages, userMessage];
     setMessages(updatedMessages);
     setInputText("");
+
+    if (!restaurantsForConciergeQuery(userMessage.content).length) {
+      const fallbackMessage: Message = {
+        id: `m${Date.now()}-fallback`,
+        role: "assistant",
+        content: localConciergeReply(userMessage.content),
+        timestamp: new Date(),
+      };
+      setMessages([...updatedMessages, fallbackMessage]);
+      return;
+    }
 
     // AIに送るメッセージ履歴（初期メッセージを除く）
     const apiMessages = updatedMessages

@@ -39,7 +39,7 @@ const conciergeRouter = router({
 - IRO＋メンバーの口コミや評判も参考にした提案をする
 - 回答は簡潔にまとめ、長すぎないようにする（300文字以内を目安）
 
-${input.restaurantContext ? `参考データ：\n${input.restaurantContext}` : ""}`;
+${input.restaurantContext ? `参考データ：\n${input.restaurantContext}` : "参考データ：該当する登録店舗なし。具体的な店舗名を推測や一般知識で補わず、条件に一致する登録店がないと回答してください。"}`;
 
       const result = await invokeLLM({
         messages: [

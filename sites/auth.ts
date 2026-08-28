@@ -934,7 +934,8 @@ async function accountDeletion(
     const requestType = input.requestType === "pause" ? "pause" : "withdrawal";
     const reasons = Array.isArray(input.reasons) ? input.reasons.filter((value: unknown): value is string => typeof value === "string").slice(0, 8) : [];
     const surveyComment = typeof input.surveyComment === "string" ? input.surveyComment.trim().slice(0, 1000) : "";
-    const satisfaction = Math.min(5, Math.max(1, Number(input.satisfaction) || 3));
+    const satisfactionValue = Number(input.satisfaction);
+    const satisfaction = Number.isInteger(satisfactionValue) && satisfactionValue >= 1 && satisfactionValue <= 5 ? satisfactionValue : null;
     const expectationsMet = typeof input.expectationsMet === "string" ? input.expectationsMet.slice(0, 100) : "";
     const valuedFeatures = Array.isArray(input.valuedFeatures) ? input.valuedFeatures.filter((value: unknown): value is string => typeof value === "string").slice(0, 12) : [];
     const continuationCondition = typeof input.continuationCondition === "string" ? input.continuationCondition.trim().slice(0, 1000) : "";

@@ -792,7 +792,7 @@ export async function requestAccountDeletion(input: {
   requestType: "pause" | "withdrawal";
   reasons: string[];
   surveyComment: string;
-  satisfaction: number;
+  satisfaction: number | null;
   expectationsMet: string;
   valuedFeatures: string[];
   continuationCondition: string;

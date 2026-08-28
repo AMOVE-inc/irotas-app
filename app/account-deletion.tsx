@@ -38,11 +38,11 @@ export default function AccountDeletionScreen() {
   );
   const [loading, setLoading] = useState(false);
   const [password, setPassword] = useState("");
-  const [requestType, setRequestType] = useState<"pause" | "withdrawal">("pause");
+  const [requestType, setRequestType] = useState<"pause" | "withdrawal" | null>(null);
   const [reasons, setReasons] = useState<string[]>([]);
   const [surveyComment, setSurveyComment] = useState("");
-  const [satisfaction, setSatisfaction] = useState(3);
-  const [expectationsMet, setExpectationsMet] = useState("だいたい期待通りだった");
+  const [satisfaction, setSatisfaction] = useState<number | null>(null);
+  const [expectationsMet, setExpectationsMet] = useState("");
   const [valuedFeatures, setValuedFeatures] = useState<string[]>([]);
   const [continuationCondition, setContinuationCondition] = useState("");
   const [subscriptionConfirmed, setSubscriptionConfirmed] = useState(false);
@@ -58,10 +58,10 @@ export default function AccountDeletionScreen() {
   }, [isAuthenticated]);
 
   const submit = async () => {
-    if (!password || !subscriptionConfirmed || !dataConfirmed) {
+    if (!requestType || !password || !subscriptionConfirmed || !dataConfirmed) {
       Alert.alert(
         "入力内容を確認してください",
-        "パスワードと2つの確認項目が必要です。",
+        "手続きの種類、パスワード、2つの確認項目を入力してください。",
       );
       return;
     }
@@ -212,6 +212,8 @@ export default function AccountDeletionScreen() {
           >
             ・休会はSquareの定期決済を次回請求周期から休止します。退会は現在の請求期間終了時に解約されます。
             {"\n"}
+            ・休会・退会とも、現在の決済期間が終了するとDiscordへアクセスできなくなります。
+            {"\n"}
             ・プロフィールやログイン情報は削除対象です。法令、会計、不正防止、トラブル対応に必要な取引・監査記録は、必要な期間に限り保持する場合があります。
             {"\n"}
             ・処理完了後はログインできず、元に戻せません。
@@ -290,7 +292,7 @@ export default function AccountDeletionScreen() {
             <Text style={{ fontSize: 14, fontWeight: "900", color: colors.foreground, marginTop: 20 }}>総合満足度</Text>
             <View style={{ flexDirection: "row", gap: 8, marginTop: 10 }}>{[1,2,3,4,5].map((value) => <Pressable key={value} onPress={() => setSatisfaction(value)} style={{ flex: 1, minHeight: 42, borderRadius: 10, alignItems: "center", justifyContent: "center", backgroundColor: satisfaction === value ? "#C94F7C" : colors.surface, borderWidth: 1, borderColor: satisfaction === value ? "#C94F7C" : colors.border }}><Text style={{ fontWeight: "900", color: satisfaction === value ? "#FFF" : colors.foreground }}>{value}</Text></Pressable>)}</View>
             <Text style={{ fontSize: 14, fontWeight: "900", color: colors.foreground, marginTop: 20 }}>良かったサービス（複数選択可）</Text>
-            {['運営主催イベント', 'メンバー主催イベント', '会員限定クーポン', 'プレゼント企画', '共有グルメマップ', 'メンバー間の交流'].map((feature) => <CheckRow key={feature} checked={valuedFeatures.includes(feature)} onPress={() => setValuedFeatures((current) => current.includes(feature) ? current.filter((item) => item !== feature) : [...current, feature])}>{feature}</CheckRow>)}
+            {['運営主催イベント', 'メンバー主催イベント', '部活動', '会員限定クーポン', 'プレゼント企画', '共有グルメマップ', 'メンバー間の交流'].map((feature) => <CheckRow key={feature} checked={valuedFeatures.includes(feature)} onPress={() => setValuedFeatures((current) => current.includes(feature) ? current.filter((item) => item !== feature) : [...current, feature])}>{feature}</CheckRow>)}
             <TextInput value={continuationCondition} onChangeText={setContinuationCondition} multiline placeholder="どのような内容があれば継続・再開を検討しますか？（任意）" placeholderTextColor={colors.muted} style={{ minHeight: 88, marginTop: 14, borderRadius: 13, borderWidth: 1, borderColor: colors.border, padding: 13, color: colors.foreground, textAlignVertical: "top" }} />
             <Text
               style={{
@@ -329,7 +331,7 @@ export default function AccountDeletionScreen() {
               checked={dataConfirmed}
               onPress={() => setDataConfirmed((value) => !value)}
             >
-              {requestType === "pause" ? "休会中は会員機能が停止され、再開には運営への連絡が必要です。" : "退会後は元に戻せず、法令等で必要な記録が一定期間保持される場合があります。"}
+              {requestType === "pause" ? "決済期間終了後はDiscordと会員機能へアクセスできません。再開には運営への連絡が必要です。" : "決済期間終了後はDiscordへアクセスできません。退会後は元に戻せず、必要な記録が一定期間保持される場合があります。"}
             </CheckRow>
             <Pressable
               onPress={() => void submit()}
@@ -338,7 +340,7 @@ export default function AccountDeletionScreen() {
                 marginTop: 22,
                 borderRadius: 14,
                 backgroundColor:
-                  password && subscriptionConfirmed && dataConfirmed
+                  requestType && password && subscriptionConfirmed && dataConfirmed
                     ? "#C94F7C"
                     : "#E8D8DE",
                 alignItems: "center",
@@ -348,7 +350,7 @@ export default function AccountDeletionScreen() {
               <Text
                 style={{ color: "#FFFFFF", fontSize: 16, fontWeight: "900" }}
               >
-                {requestType === "pause" ? "休会を申請する" : "退会を申請する"}
+                {requestType === "pause" ? "休会を申請する" : requestType === "withdrawal" ? "退会を申請する" : "手続きの種類を選択してください"}
               </Text>
             </Pressable>
           </View>

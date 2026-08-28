@@ -14,19 +14,30 @@ function eventTimestamp(event: Event) {
   return Date.parse(`${event.date}T${event.time || "00:00"}:00`);
 }
 
+type EventView = "hosted" | "attending" | "applying" | "past" | "coattendees";
+
+const VIEW_OPTIONS: { key: EventView; title: string; description: string }[] = [
+  { key: "hosted", title: "幹事イベント", description: "これから主催するイベント" },
+  { key: "attending", title: "参加予定", description: "参加が確定しているイベント" },
+  { key: "applying", title: "応募中", description: "参加承認を待っているイベント" },
+  { key: "past", title: "過去の主催／参加", description: "これまで関わったイベント" },
+  { key: "coattendees", title: "同席者と同席回数", description: "過去に一緒に参加したメンバー" },
+];
+
 export default function MyEventsScreen() {
   const colors = useColors();
   const router = useRouter();
   const { user } = useAuthContext();
   const memberId = user?.memberId ?? CURRENT_USER.id;
   const [events, setEvents] = useState<Event[]>(() => getAllEvents(EVENTS));
+  const [selectedView, setSelectedView] = useState<EventView | null>(null);
 
   useEffect(() => {
     if (!user) return;
     void Api.getEvents().then(setEvents).catch(() => {});
   }, [user]);
 
-  const { sections, coAttendees } = useMemo(() => {
+  const { eventLists, coAttendees } = useMemo(() => {
     const now = Date.now();
     const past = (event: Event) => event.status === "ended" || eventTimestamp(event) < now;
     const hosted = events.filter((event) => event.createdBy === memberId);
@@ -43,13 +54,12 @@ export default function MyEventsScreen() {
     });
 
     return {
-      sections: [
-        { title: "幹事のイベント", items: sortUpcoming(hosted.filter((event) => !past(event))) },
-        { title: "参加予定のイベント", items: sortUpcoming(attending.filter((event) => !past(event))) },
-        { title: "応募中のイベント", items: sortUpcoming(applying.filter((event) => !past(event))) },
-        { title: "過去に幹事をしたイベント", items: sortPast(hosted.filter(past)) },
-        { title: "過去に参加したイベント", items: sortPast(attending.filter(past)) },
-      ],
+      eventLists: {
+        hosted: sortUpcoming(hosted.filter((event) => !past(event))),
+        attending: sortUpcoming(attending.filter((event) => !past(event))),
+        applying: sortUpcoming(applying.filter((event) => !past(event))),
+        past: sortPast([...new Map([...hosted.filter(past), ...attending.filter(past)].map((event) => [event.id, event])).values()]),
+      },
       coAttendees: [...counts.entries()]
         .map(([id, count]) => ({ member: getMemberById(id), id, count }))
         .filter((entry) => entry.member)
@@ -57,31 +67,38 @@ export default function MyEventsScreen() {
     };
   }, [events, memberId]);
 
+  const selectedOption = VIEW_OPTIONS.find((option) => option.key === selectedView);
+  const selectedEvents = selectedView && selectedView !== "coattendees" ? eventLists[selectedView] : [];
+  const goBack = () => selectedView ? setSelectedView(null) : router.back();
+
   return (
     <ScreenContainer edges={["top", "left", "right"]}>
       <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 0.5, borderBottomColor: colors.border }}>
-        <Pressable onPress={() => router.back()} hitSlop={12}><IconSymbol name="chevron.left" size={24} color={colors.foreground} /></Pressable>
-        <Text style={{ flex: 1, textAlign: "center", fontSize: 17, fontWeight: "900", color: colors.foreground }}>全てのイベント</Text>
+        <Pressable onPress={goBack} hitSlop={12}><IconSymbol name="chevron.left" size={24} color={colors.foreground} /></Pressable>
+        <Text style={{ flex: 1, textAlign: "center", fontSize: 17, fontWeight: "900", color: colors.foreground }}>{selectedOption?.title ?? "全てのイベント"}</Text>
         <View style={{ width: 24 }} />
       </View>
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
-        {sections.map((section) => (
-          <View key={section.title} style={{ marginBottom: 20 }}>
-            <Text style={{ fontSize: 15, fontWeight: "900", color: colors.foreground, marginBottom: 8 }}>{section.title}</Text>
-            <View style={{ backgroundColor: colors.surface, borderRadius: 16, overflow: "hidden" }}>
-              {section.items.length ? section.items.map((event, index) => (
+        {!selectedView ? (
+          <View style={{ gap: 12 }}>
+            {VIEW_OPTIONS.map((option) => (
+              <Pressable key={option.key} onPress={() => setSelectedView(option.key)} style={{ minHeight: 78, flexDirection: "row", alignItems: "center", padding: 16, borderRadius: 16, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border }}>
+                <View style={{ flex: 1 }}><Text style={{ fontSize: 15, fontWeight: "900", color: colors.foreground }}>{option.title}</Text><Text style={{ marginTop: 4, fontSize: 12, color: colors.muted }}>{option.description}</Text></View>
+                <IconSymbol name="chevron.right" size={18} color={colors.muted} />
+              </Pressable>
+            ))}
+          </View>
+        ) : selectedView !== "coattendees" ? (
+          <View style={{ backgroundColor: colors.surface, borderRadius: 16, overflow: "hidden" }}>
+              {selectedEvents.length ? selectedEvents.map((event, index) => (
                 <Pressable key={event.id} onPress={() => router.push({ pathname: "/event-detail", params: { id: event.id } })} style={{ flexDirection: "row", alignItems: "center", padding: 12, borderTopWidth: index ? 0.5 : 0, borderTopColor: colors.border }}>
                   <Image source={event.image} style={{ width: 50, height: 50, borderRadius: 10 }} contentFit="cover" />
                   <View style={{ flex: 1, marginLeft: 11 }}><Text numberOfLines={2} style={{ fontSize: 13, fontWeight: "800", color: colors.foreground }}>{event.title}</Text><Text style={{ fontSize: 11, color: colors.muted, marginTop: 3 }}>{event.date} {event.time}</Text></View>
                   <IconSymbol name="chevron.right" size={16} color={colors.muted} />
                 </Pressable>
               )) : <Text style={{ padding: 14, fontSize: 12, color: colors.muted }}>該当するイベントはありません。</Text>}
-            </View>
           </View>
-        ))}
-
-        <View style={{ marginBottom: 20 }}>
-          <Text style={{ fontSize: 15, fontWeight: "900", color: colors.foreground, marginBottom: 8 }}>同席者一覧</Text>
+        ) : (
           <View style={{ backgroundColor: colors.surface, borderRadius: 16, overflow: "hidden" }}>
             {coAttendees.length ? coAttendees.map(({ member, id, count }, index) => member && (
               <Pressable key={id} onPress={() => router.push({ pathname: "/member-profile", params: { id } })} style={{ flexDirection: "row", alignItems: "center", padding: 12, borderTopWidth: index ? 0.5 : 0, borderTopColor: colors.border }}>
@@ -91,7 +108,7 @@ export default function MyEventsScreen() {
               </Pressable>
             )) : <Text style={{ padding: 14, fontSize: 12, color: colors.muted }}>過去イベントの同席者情報はありません。</Text>}
           </View>
-        </View>
+        )}
       </ScrollView>
     </ScreenContainer>
   );
