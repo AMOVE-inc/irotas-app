@@ -266,7 +266,7 @@ export default function RootLayout() {
                 />
                 <Stack.Screen
                   name="event-feedback"
-                  options={{ presentation: "card" }}
+                  options={{ presentation: "modal" }}
                 />
                 <Stack.Screen
                   name="my-events"

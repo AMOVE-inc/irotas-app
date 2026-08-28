@@ -212,6 +212,7 @@ export type SharedChatRoom = {
   lastMessage?: string;
   lastMessageAt?: string;
   unreadCount: number;
+  mentionCount: number;
   shared: true;
 };
 

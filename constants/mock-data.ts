@@ -288,6 +288,7 @@ export interface ChatRoom {
   lastMessageAt?: string;
   requiredRank?: MemberRank; // ランクチャット: このランクのメンバーのみ参加可能
   unreadCount?: number;
+  mentionCount?: number;
   /** 共有DBから読み込まれたチャットルーム。 */
   shared?: boolean;
 }

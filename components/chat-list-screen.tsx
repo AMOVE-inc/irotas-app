@@ -21,6 +21,8 @@ function ChatRoomCard({ room }: { room: ChatRoom }) {
     room.requiredRank === "platinum" ? "プラチナ" : room.requiredRank === "gold" ? "ゴールド" : "シルバー"
   ) : "部活動";
   const typeColor = room.type === "event" ? "#E8A0BF" : room.type === "board" ? "#A7C7E7" : isDM ? "#FF9500" : isGroup ? "#5B9BD5" : isRank ? (rankColor[room.requiredRank ?? "silver"] ?? "#8B9DC3") : "#34C759";
+  const unreadCount = room.unreadCount ?? 0;
+  const mentionCount = room.mentionCount ?? 0;
 
   const timeAgo = (dateStr?: string) => {
     if (!dateStr) return "";
@@ -51,7 +53,7 @@ function ChatRoomCard({ room }: { room: ChatRoom }) {
         <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 3 }}>
           <Text style={{ fontSize: 15, fontWeight: "700", color: colors.foreground, flex: 1 }} numberOfLines={1}>{room.name}</Text>
           <Text style={{ fontSize: 11, color: colors.muted }}>{timeAgo(room.lastMessageAt)}</Text>
-          {(room.unreadCount ?? 0) > 0 ? <View style={{ minWidth: 20, height: 20, borderRadius: 10, backgroundColor: "#FF3B30", alignItems: "center", justifyContent: "center", paddingHorizontal: 6, marginLeft: 7 }}><Text style={{ fontSize: 11, fontWeight: "900", color: "#FFF" }}>{Math.min(room.unreadCount ?? 0, 99)}</Text></View> : null}
+          {mentionCount > 0 ? <View style={{ minHeight: 22, borderRadius: 11, backgroundColor: "#ED4245", alignItems: "center", justifyContent: "center", paddingHorizontal: 8, marginLeft: 7 }}><Text style={{ fontSize: 10, fontWeight: "900", color: "#FFF" }}>@ メンション {Math.min(mentionCount, 99)}</Text></View> : unreadCount > 0 ? <View style={{ minHeight: 22, borderRadius: 11, backgroundColor: "#5865F2", alignItems: "center", justifyContent: "center", paddingHorizontal: 8, marginLeft: 7 }}><Text style={{ fontSize: 10, fontWeight: "900", color: "#FFF" }}>新着 {Math.min(unreadCount, 99)}</Text></View> : null}
         </View>
         <View style={{ flexDirection: "row", alignItems: "center" }}>
           <View style={{ backgroundColor: typeColor + "20", borderRadius: 6, paddingHorizontal: 6, paddingVertical: 1, marginRight: 6 }}>

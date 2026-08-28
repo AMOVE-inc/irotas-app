@@ -261,11 +261,18 @@ async function serializeRoom(db: D1Database, room: RoomRow, member: Viewer) {
   const last = await db.prepare(`SELECT content, image_url, created_at FROM chat_messages
     WHERE room_id = ? AND deleted_at IS NULL ORDER BY created_at DESC LIMIT 1`)
     .bind(room.id).first<{ content: string; image_url: string | null; created_at: string }>();
+  const viewerDisplayName = (participantResult.results ?? []).find((item) => item.member_id === member.id)?.display_name ?? "";
   const unread = await db.prepare(`SELECT COUNT(*) AS count FROM chat_messages cm
     LEFT JOIN chat_room_reads crr ON crr.room_id = cm.room_id AND crr.member_id = ?
     WHERE cm.room_id = ? AND cm.deleted_at IS NULL AND cm.sender_member_id != ?
       AND (crr.last_read_at IS NULL OR cm.created_at > crr.last_read_at)`)
     .bind(member.id, room.id, member.id).first<{ count: number }>();
+  const mentions = await db.prepare(`SELECT COUNT(*) AS count FROM chat_messages cm
+    LEFT JOIN chat_room_reads crr ON crr.room_id = cm.room_id AND crr.member_id = ?
+    WHERE cm.room_id = ? AND cm.deleted_at IS NULL AND cm.sender_member_id != ?
+      AND (crr.last_read_at IS NULL OR cm.created_at > crr.last_read_at)
+      AND (cm.content LIKE ? OR cm.content LIKE '%@全員%' OR cm.content LIKE '%@everyone%' OR cm.content LIKE '%@here%')`)
+    .bind(member.id, room.id, member.id, `%@${viewerDisplayName}%`).first<{ count: number }>();
   const creator = room.created_by_member_id
     ? await db.prepare("SELECT public_member_id FROM members WHERE id = ? LIMIT 1")
       .bind(room.created_by_member_id).first<{ public_member_id: string | null }>()
@@ -287,6 +294,7 @@ async function serializeRoom(db: D1Database, room: RoomRow, member: Viewer) {
     lastMessage: last?.content || (last?.image_url ? "画像が送信されました" : ""),
     lastMessageAt: last?.created_at,
     unreadCount: unread?.count ?? 0,
+    mentionCount: mentions?.count ?? 0,
     shared: true,
   };
 }

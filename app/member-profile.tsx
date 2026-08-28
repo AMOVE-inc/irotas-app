@@ -299,25 +299,6 @@ export default function MemberProfileScreen() {
           ].map((stat, index) => <Pressable disabled={!('social' in stat)} onPress={() => 'social' in stat && stat.social ? setSocialList(stat.social) : undefined} key={stat.label} style={{ flex: 1, alignItems: "center", borderLeftWidth: index ? 0.5 : 0, borderLeftColor: colors.border }}><Text style={{ fontSize: 18, fontWeight: "900", color: colors.foreground }}>{stat.value}</Text><Text style={{ fontSize: 10, color: 'social' in stat ? "#C05B88" : colors.muted, marginTop: 3 }}>{stat.label}</Text></Pressable>)}
         </View>
 
-        {!isSelf ? (
-          <View style={{ marginHorizontal: 16, marginBottom: 16 }}>
-            <Text style={{ fontSize: 14, fontWeight: "700", color: colors.foreground, marginBottom: 8 }}>自分だけのメモ</Text>
-            <View style={{ backgroundColor: colors.surface, borderRadius: 14, padding: 14 }}>
-              <Text style={{ fontSize: 11, color: colors.muted, marginBottom: 8 }}>この内容は相手や他のメンバーには表示されません。</Text>
-              <TextInput value={privateNote} onChangeText={setPrivateNote} multiline placeholder="会話した内容や次回話したいことなど" placeholderTextColor={colors.muted} style={{ minHeight: 88, borderRadius: 10, borderWidth: 1, borderColor: colors.border, padding: 11, color: colors.foreground, textAlignVertical: "top" }} />
-              <Pressable onPress={async () => {
-                try {
-                  if (databaseMember) await Api.setPrivateMemberNote(databaseMember.id, privateNote);
-                  else await savePrivateMemberNote(CURRENT_USER.id, member.id, privateNote);
-                  Alert.alert("保存しました", "このメモは自分だけが確認できます。");
-                } catch {
-                  Alert.alert("保存できませんでした", "通信状況を確認して、もう一度お試しください。");
-                }
-              }} style={{ alignSelf: "flex-end", marginTop: 9, borderRadius: 10, backgroundColor: "#5D5C74", paddingHorizontal: 18, paddingVertical: 9 }}><Text style={{ color: "#FFF", fontSize: 13, fontWeight: "800" }}>メモを保存</Text></Pressable>
-            </View>
-          </View>
-        ) : null}
-
         {/* Bio */}
         {(selfBio ?? member.bio) && (
           <View style={{ marginHorizontal: 16, marginBottom: 16 }}>
@@ -478,6 +459,25 @@ export default function MemberProfileScreen() {
             );
           })()}
         </View> : null}
+
+        {!isSelf ? (
+          <View style={{ marginHorizontal: 16, marginTop: 16 }}>
+            <Text style={{ fontSize: 14, fontWeight: "700", color: colors.foreground, marginBottom: 8 }}>自分だけのメモ</Text>
+            <View style={{ backgroundColor: colors.surface, borderRadius: 14, padding: 14 }}>
+              <Text style={{ fontSize: 11, color: colors.muted, marginBottom: 8 }}>この内容は相手や他のメンバーには表示されません。</Text>
+              <TextInput value={privateNote} onChangeText={setPrivateNote} multiline placeholder="会話した内容や次回話したいことなど" placeholderTextColor={colors.muted} style={{ minHeight: 88, borderRadius: 10, borderWidth: 1, borderColor: colors.border, padding: 11, color: colors.foreground, textAlignVertical: "top" }} />
+              <Pressable onPress={async () => {
+                try {
+                  if (databaseMember) await Api.setPrivateMemberNote(databaseMember.id, privateNote);
+                  else await savePrivateMemberNote(CURRENT_USER.id, member.id, privateNote);
+                  Alert.alert("保存しました", "このメモは自分だけが確認できます。");
+                } catch {
+                  Alert.alert("保存できませんでした", "通信状況を確認して、もう一度お試しください。");
+                }
+              }} style={{ alignSelf: "flex-end", marginTop: 9, borderRadius: 10, backgroundColor: "#5D5C74", paddingHorizontal: 18, paddingVertical: 9 }}><Text style={{ color: "#FFF", fontSize: 13, fontWeight: "800" }}>メモを保存</Text></Pressable>
+            </View>
+          </View>
+        ) : null}
       </ScrollView>
       <SocialMemberListModal visible={socialList !== null} kind={socialList ?? "followers"} memberId={databaseMember?.id ?? member.id} onClose={() => setSocialList(null)} />
     </ScreenContainer>

@@ -72,6 +72,7 @@ import { deleteBoardComment, deleteBoardThread, loadBoardCommentEdits, loadDelet
 import { CalendarField } from "@/components/calendar-field";
 import { getBoardRecruitmentStatus, isClubSelfIntroduction, isRecruitmentBoardCategory, isThreadPinned, sortRecruitmentThreads, type BoardRecruitmentStatus } from "@/lib/board-recruitment";
 import { memberFromAuthUser } from "@/lib/auth-member";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const BOARD_MENTION_GROUPS = getMentionGroups(MEMBERS, CLUBS);
 const THREAD_REACTION_EMOJIS = ["👏", "😊", "❤️", "🎉", "😋", "👍", "🔥", "✨", "😂", "😍", "🥰", "🤤", "🍽️", "🍷", "🍺", "🍣", "🍖", "🍰", "🙌", "💯"] as const;
@@ -316,7 +317,7 @@ function SelfIntroductionContent({ thread, compact = false }: { thread: BoardThr
   );
 }
 
-function ThreadCard({ thread, onPress, onEdit, onChangeRecruitment }: { thread: BoardThread; onPress: () => void; onEdit?: () => void; onChangeRecruitment?: () => void }) {
+function ThreadCard({ thread, onPress, onEdit, onChangeRecruitment, unreadCount = 0, mentionCount = 0 }: { thread: BoardThread; onPress: () => void; onEdit?: () => void; onChangeRecruitment?: () => void; unreadCount?: number; mentionCount?: number }) {
   const colors = useColors();
   const router = useRouter();
   const isParticipant = thread.recruitParticipants?.includes(CURRENT_USER.id);
@@ -389,6 +390,7 @@ function ThreadCard({ thread, onPress, onEdit, onChangeRecruitment }: { thread: 
           </View>
         </View>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+          {mentionCount > 0 ? <View style={{ borderRadius: 10, backgroundColor: "#ED4245", paddingHorizontal: 7, paddingVertical: 4 }}><Text style={{ color: "#FFF", fontSize: 9, fontWeight: "900" }}>@ メンション {Math.min(mentionCount, 99)}</Text></View> : unreadCount > 0 ? <View style={{ borderRadius: 10, backgroundColor: "#5865F2", paddingHorizontal: 7, paddingVertical: 4 }}><Text style={{ color: "#FFF", fontSize: 9, fontWeight: "900" }}>新着 {Math.min(unreadCount, 99)}</Text></View> : null}
           <Text style={{ fontSize: 11, color: colors.muted }}>{timeAgo(thread.lastUpdated)}</Text>
           {onEdit && (
             <Pressable
@@ -1712,8 +1714,8 @@ function CreateThreadModal({
   const tabelogUrlValid = !tabelogUrl.trim() || /^https?:\/\/(?:www\.)?tabelog\.com\//i.test(tabelogUrl.trim());
   const mealReportValid =
     restaurantName.trim().length > 0 &&
+    areaDisplay.trim().length > 0 &&
     rating > 0 &&
-    Boolean(googleMapUrl.trim() || tabelogUrl.trim()) &&
     googleMapUrlValid &&
     tabelogUrlValid;
   const adviceValid = adviceTheme.trim().length > 0 && adviceGenres.length > 0 && adviceArea.trim().length > 0 && adviceScene.trim().length > 0 && adviceBudget.length > 0 && adviceComment.trim().length > 0;
@@ -1747,7 +1749,7 @@ function CreateThreadModal({
     const result = await resolveRestaurantLocation({ restaurantName: restaurantName.trim(), googleMapsUrl: googleMapUrl.trim(), tabelogUrl: tabelogUrl.trim() });
     if (!result) return prefecture ? { area: prefecture, areaDisplay } : null;
     setPrefecture(result.area);
-    setAreaDisplay(result.areaDisplay);
+    setAreaDisplay((current) => current.trim() ? current : result.areaDisplay);
     setFormError("");
     return result;
   };
@@ -1762,7 +1764,7 @@ function CreateThreadModal({
       return;
     }
     if (isMealReport && !mealReportValid) {
-      setFormError("店名・評価と、Googleマップまたは食べログの有効なURLを入力してください。");
+      setFormError("店名・エリア・評価を入力し、入力したURLが正しいか確認してください。");
       return;
     }
     if (isGourmetAdvice && !adviceValid) {
@@ -1783,8 +1785,8 @@ function CreateThreadModal({
     }
     if (!isMealReport && !isGourmetAdvice && !isIntroduction && !isGourmetContest && (!title.trim() || !content.trim())) return;
     const detectedLocation = isMealReport ? await detectMealReportArea() : null;
-    const resolvedArea = isMealReport ? (detectedLocation?.area || prefecture || "その他") : prefecture;
-    const resolvedAreaDisplay = detectedLocation?.areaDisplay || areaDisplay;
+    const resolvedAreaDisplay = areaDisplay.trim() || detectedLocation?.areaDisplay || "";
+    const resolvedArea = isMealReport ? (detectedLocation?.area || prefecture || resolvedAreaDisplay) : prefecture;
     const normalizedComment = mealComment.trim();
     const normalizedMenu = recommendedMenu.trim();
     let newThread: BoardThread = {
@@ -1942,6 +1944,7 @@ function CreateThreadModal({
                 <Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground, marginBottom: 6 }}>自己紹介文 <Text style={{ color: colors.error }}>必須</Text></Text>
                 <TextInput ref={introductionInputRef} value={introductionText} selection={introductionSelection} onSelectionChange={(event) => setIntroductionSelection(event.nativeEvent.selection)} onChangeText={(text) => { setIntroductionText(text); setFormError(""); }} placeholder="プロフィール・趣味・職業などを自由に記載してください" placeholderTextColor={colors.muted} multiline textAlignVertical="top" style={{ backgroundColor: colors.surface, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: colors.foreground, minHeight: 130 }} />
               </View>
+
               <View>
                 <Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground, marginBottom: 6 }}>IRO+でやってみたいこと（任意）</Text>
                 <TextInput ref={wantToTryInputRef} value={wantToTry} selection={wantToTrySelection} onSelectionChange={(event) => setWantToTrySelection(event.nativeEvent.selection)} onChangeText={setWantToTry} placeholder="例：気になるお店を巡るグルメ会を企画したい" placeholderTextColor={colors.muted} multiline textAlignVertical="top" style={{ backgroundColor: colors.surface, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: colors.foreground, minHeight: 100 }} />
@@ -1961,6 +1964,13 @@ function CreateThreadModal({
                   placeholderTextColor={colors.muted}
                   style={{ backgroundColor: colors.surface, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: colors.foreground }}
                 />
+              </View>
+
+              <View>
+                <Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground, marginBottom: 6 }}>
+                  エリア <Text style={{ color: colors.error }}>必須</Text>
+                </Text>
+                <TextInput value={areaDisplay} onChangeText={(value) => { setAreaDisplay(value); setFormError(""); }} placeholder="例：恵比寿" placeholderTextColor={colors.muted} style={{ backgroundColor: colors.surface, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: colors.foreground }} />
               </View>
 
               <View>
@@ -2004,7 +2014,7 @@ function CreateThreadModal({
                     </Pressable>
                   ))}
                 </View>
-                <Text style={{ fontSize: 11, lineHeight: 17, color: colors.muted, marginTop: 7 }}>※星4以上の場合は、IRO+のグルメマップに自動登録されます</Text>
+                <Text style={{ fontSize: 11, lineHeight: 17, color: colors.muted, marginTop: 7 }}>※星4以上かつGoogle Mapリンクがある場合は、IRO+のグルメマップに自動登録されます</Text>
               </View>
 
               <View>
@@ -2027,7 +2037,7 @@ function CreateThreadModal({
 
               <View>
                 <Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground, marginBottom: 6 }}>
-                  Google Mapのリンク（食べログとどちらか必須）
+                  Google Mapのリンク（任意）
                 </Text>
                 <TextInput
                   value={googleMapUrl}
@@ -2055,7 +2065,7 @@ function CreateThreadModal({
               </View>
 
               <View>
-                <Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground, marginBottom: 6 }}>食べログのリンク（Google Mapとどちらか必須）</Text>
+                <Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground, marginBottom: 6 }}>食べログのリンク（任意）</Text>
                 <TextInput
                   value={tabelogUrl}
                   onChangeText={setTabelogUrl}
@@ -2292,6 +2302,7 @@ export default function BoardScreen() {
 
   const [dynamicThreads, setDynamicThreads] = useState<BoardThread[]>([]);
   const [importedComments, setImportedComments] = useState<Record<string, BoardComment[]>>({});
+  const [threadReadCounts, setThreadReadCounts] = useState<Record<string, number>>({});
   const [editedThreads, setEditedThreads] = useState<Record<string, BoardThread>>({});
   const [deletedThreadIds, setDeletedThreadIds] = useState<string[]>([]);
   const [editingThread, setEditingThread] = useState<BoardThread | null>(null);
@@ -2299,6 +2310,16 @@ export default function BoardScreen() {
   const isClubIndexView = view === "clubs";
   const viewerMemberId = resolveViewerMemberId(authUser?.memberId, Boolean(authUser), CURRENT_USER.id);
   const viewerMember = memberFromAuthUser(authUser);
+  const boardReadKey = `irotas_board_thread_reads_v1:${viewerMemberId}`;
+  useEffect(() => { void AsyncStorage.getItem(boardReadKey).then((raw) => setThreadReadCounts(raw ? JSON.parse(raw) : {})).catch(() => setThreadReadCounts({})); }, [boardReadKey]);
+  const markThreadRead = useCallback((threadId: string) => {
+    const count = (importedComments[threadId] ?? []).length;
+    setThreadReadCounts((current) => {
+      const next = { ...current, [threadId]: count };
+      void AsyncStorage.setItem(boardReadKey, JSON.stringify(next));
+      return next;
+    });
+  }, [boardReadKey, importedComments]);
 
   const canAccessCategory = useCallback((category: BoardCategory) => {
     if (category.group !== "club" || userIsAdmin) return true;
@@ -2592,12 +2613,19 @@ export default function BoardScreen() {
         data={filteredThreads}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
-          <ThreadCard
+          (() => {
+            const comments = importedComments[item.id] ?? [];
+            const unreadComments = comments.slice(threadReadCounts[item.id] ?? 0).filter((comment) => comment.author.id !== viewerMemberId);
+            const mentionCount = unreadComments.filter((comment) => comment.content.includes(`@${viewerMember.name}`) || /@(全員|everyone|here)/i.test(comment.content)).length;
+            return <ThreadCard
             thread={item}
-            onPress={() => { setSelectedThread(item); router.setParams({ thread: item.id }); }}
+            unreadCount={unreadComments.length}
+            mentionCount={mentionCount}
+            onPress={() => { markThreadRead(item.id); setSelectedThread(item); router.setParams({ thread: item.id }); }}
             onEdit={item.author.id === viewerMemberId || userCanModerateAll ? () => setEditingThread(item) : undefined}
             onChangeRecruitment={canChangeRecruitment(item) || canPinThread(item) ? () => promptRecruitmentStatus(item) : undefined}
-          />
+          />;
+          })()
         )}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#E8A0BF" />
