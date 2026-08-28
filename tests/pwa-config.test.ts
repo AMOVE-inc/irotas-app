@@ -13,7 +13,7 @@ describe("mobile web and home screen configuration", () => {
   it("uses Japanese metadata and iPhone standalone settings", () => {
     expect(html).toContain('<html lang="ja">');
     expect(html).toContain('name="apple-mobile-web-app-capable" content="yes"');
-    expect(html).toContain('name="apple-mobile-web-app-title" content="IRO＋"');
+    expect(html).toContain('name="apple-mobile-web-app-title" content="IRO+"');
     expect(html).toContain('rel="apple-touch-icon" href="/pwa/icon-1024.png"');
     expect(html).toContain("viewport-fit=cover");
   });

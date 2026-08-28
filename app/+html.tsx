@@ -16,21 +16,21 @@ export default function Root({ children }: PropsWithChildren) {
           httpEquiv="Content-Security-Policy"
           content="base-uri 'self'; object-src 'none'; form-action 'self'"
         />
-        <meta name="application-name" content="IRO＋" />
+        <meta name="application-name" content="IRO+" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <meta name="apple-mobile-web-app-title" content="IRO＋" />
+        <meta name="apple-mobile-web-app-title" content="IRO+" />
         <meta property="og:title" content="IRO+｜Gourmet Community" />
-        <meta property="og:description" content="食を通じてつながる、IROTAS会員限定コミュニティアプリ" />
+        <meta property="og:description" content="食を通じてつながる、IRO+会員限定コミュニティアプリ" />
         <meta property="og:type" content="website" />
-        <meta property="og:image" content="https://irotas-app-20260721.k1998915n.chatgpt.site/pwa/icon-1024.png" />
+        <meta property="og:image" content="https://irotas-app-20260721.k1998915n.chatgpt.site/pwa/icon-1024.png?v=198" />
         <meta property="og:image:width" content="1080" />
         <meta property="og:image:height" content="1080" />
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:image" content="https://irotas-app-20260721.k1998915n.chatgpt.site/pwa/icon-1024.png" />
+        <meta name="twitter:image" content="https://irotas-app-20260721.k1998915n.chatgpt.site/pwa/icon-1024.png?v=198" />
         <link rel="manifest" href="/manifest.webmanifest" />
         <link rel="apple-touch-icon" href="/pwa/icon-1024.png" />
-        <title>IRO＋</title>
+        <title>IRO+</title>
         <script
           dangerouslySetInnerHTML={{
             __html:

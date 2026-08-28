@@ -1,7 +1,6 @@
 import { ScreenContainer } from "@/components/screen-container";
 import { NewMemberMark } from "@/components/new-member-mark";
 import { MentionSuggestions, MentionText } from "@/components/mention-ui";
-import { RichTextPreview, TextFormattingToolbar } from "@/components/text-formatting-toolbar";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import {
   BOARD_THREADS,
@@ -35,7 +34,7 @@ import { POINT_ACTIONS } from "@/constants/mock-data";
 import { submitClubApplication as submitClubApplicationToStore, useClubs } from "@/lib/club-store";
 import { getMentionGroups, getMentionQuery, getMentionedMemberIds, insertMention } from "@/lib/mentions";
 import { sendClubApplicationNotification, sendMentionNotification } from "@/lib/notifications";
-import { applyTextFormat, type TextFormat, type TextSelection } from "@/lib/text-formatting";
+import { type TextSelection } from "@/lib/text-formatting";
 import { toggleReactionMember } from "@/lib/chat-reactions";
 import { awardContestWinnerOnce, buildContestEntryContent, createContestAwardComment, getContestWinner, isContestCommentingOpen, isContestEntryValid } from "@/lib/gourmet-contest";
 import { loadImportedGourmetContests } from "@/lib/gourmet-contest-import";
@@ -76,7 +75,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Clipboard from "expo-clipboard";
 
 const BOARD_MENTION_GROUPS = getMentionGroups(MEMBERS, CLUBS);
-const THREAD_REACTION_EMOJIS = ["👏", "😊", "❤️", "🎉", "😋", "👍", "🔥", "✨", "😂", "😍", "🥰", "🤤", "🍽️", "🍷", "🍺", "🍣", "🍖", "🍰", "🙌", "💯"] as const;
+const THREAD_REACTION_EMOJIS = ["😀", "😃", "😄", "😁", "😆", "😅", "😂", "🤣", "😊", "😇", "🙂", "🙃", "😉", "😍", "🥰", "😘", "😋", "😛", "🤪", "🤔", "🫡", "😎", "🥳", "😮", "😢", "😭", "😡", "👍", "👎", "👏", "🙌", "🙏", "💪", "👀", "❤️", "🩷", "🧡", "💛", "💚", "💙", "💜", "🖤", "🤍", "🔥", "✨", "🎉", "💯", "✅", "❌", "💡", "📌", "🍽️", "🍣", "🍖", "🍜", "🍕", "🍰", "☕", "🍺", "🍷"] as const;
 const boardImageSource = (image: BoardImage) => typeof image === "string" ? { uri: image } : image;
 const isDurableBoardImage = (uri: string) => /^https:\/\//i.test(uri) || uri.startsWith("/api/event-images/");
 async function uploadBoardImages(images?: BoardImage[]) {
@@ -391,7 +390,6 @@ function ThreadCard({ thread, onPress, onEdit, onChangeRecruitment, unreadCount 
           </View>
         </View>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-          {mentionCount > 0 ? <View style={{ borderRadius: 10, backgroundColor: "#ED4245", paddingHorizontal: 7, paddingVertical: 4 }}><Text style={{ color: "#FFF", fontSize: 9, fontWeight: "900" }}>@ メンション {Math.min(mentionCount, 99)}</Text></View> : unreadCount > 0 ? <View style={{ borderRadius: 10, backgroundColor: "#5865F2", paddingHorizontal: 7, paddingVertical: 4 }}><Text style={{ color: "#FFF", fontSize: 9, fontWeight: "900" }}>新着 {Math.min(unreadCount, 99)}</Text></View> : null}
           <Text style={{ fontSize: 11, color: colors.muted }}>{timeAgo(thread.lastUpdated)}</Text>
           {onEdit && (
             <Pressable
@@ -494,6 +492,7 @@ function ThreadCard({ thread, onPress, onEdit, onChangeRecruitment, unreadCount 
           <Text style={{ fontSize: 12, color: colors.muted, marginLeft: 4 }}>
             {thread.commentCount}件のコメント
           </Text>
+          {mentionCount > 0 ? <Text style={{ fontSize: 12, fontWeight: "900", color: "#ED4245", marginLeft: 8 }}>メンション {mentionCount}件</Text> : unreadCount > 0 ? <Text style={{ fontSize: 12, fontWeight: "900", color: "#3478C7", marginLeft: 8 }}>{unreadCount}件の新規</Text> : null}
         </View>
         {isParticipant && thread.chatId && (
           <Pressable
@@ -702,6 +701,8 @@ function ThreadDetailModal({
   const [commentPollOptions, setCommentPollOptions] = useState(["", ""]);
   const [commentPollDeadline, setCommentPollDeadline] = useState("");
   const [commentPollAllowMultiple, setCommentPollAllowMultiple] = useState(false);
+  const [commentImages, setCommentImages] = useState<string[]>([]);
+  const [showCommentAttachments, setShowCommentAttachments] = useState(false);
   const commentInputRef = useRef<TextInput>(null);
   const mentionGroups = useMemo(() => BOARD_MENTION_GROUPS, []);
   const [comments, setComments] = useState<BoardComment[]>(
@@ -811,7 +812,7 @@ function ThreadDetailModal({
       author: viewerMember,
       content,
       createdAt: new Date().toISOString(),
-      images: isContest && contestImages.length ? contestImages : undefined,
+      images: isContest && contestImages.length ? contestImages : commentImages.length ? commentImages : undefined,
       poll: pollAllowed && commentPollEnabled ? { question: commentPollQuestion.trim(), deadline: commentPollDeadline, allowMultiple: commentPollAllowMultiple, options: commentPollOptions.filter((option) => option.trim()).map((option, index) => ({ id: `option_${index + 1}`, text: option.trim(), voterIds: [] })) } : undefined,
     };
     if (persistedThread) {
@@ -828,6 +829,8 @@ function ThreadDetailModal({
     setComments([...comments, newComment]);
     if (thread.category === "gourmet-contest") void recordHomeActivity({ id: `comment:${newComment.id}`, kind: "contest_comment", title: `${thread.title}にコメントが追加されました`, description: content, createdAt: newComment.createdAt, route: "/board", params: { category: "gourmet-contest", view: "threads" } });
     setCommentText("");
+    setCommentImages([]);
+    setShowCommentAttachments(false);
     setContestRestaurant("");
     setContestMenu("");
     setContestPitch("");
@@ -860,6 +863,17 @@ function ThreadDetailModal({
       selectionLimit: 5 - contestImages.length,
     });
     if (!result.canceled) setContestImages((current) => [...current, ...result.assets.map((asset) => asset.uri)].slice(0, 5));
+  };
+
+  const handlePickCommentImages = async () => {
+    if (commentImages.length >= 5) return;
+    if (Platform.OS !== "web") {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== "granted") return Alert.alert("権限が必要です", "写真ライブラリへのアクセスを許可してください");
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ["images"], allowsMultipleSelection: true, quality: 0.8, selectionLimit: 5 - commentImages.length });
+    if (!result.canceled) setCommentImages((current) => [...current, ...result.assets.map((asset) => asset.uri)].slice(0, 5));
+    setShowCommentAttachments(false);
   };
 
   const handleSaveCommentEdit = async (commentId: string) => {
@@ -926,13 +940,6 @@ function ThreadDetailModal({
       return next;
     });
     setMentionQuery(null);
-    commentInputRef.current?.focus();
-  };
-
-  const handleCommentFormat = (format: TextFormat) => {
-    const result = applyTextFormat(commentText, commentSelection, format);
-    setCommentText(result.text);
-    setCommentSelection(result.selection);
     commentInputRef.current?.focus();
   };
 
@@ -1179,7 +1186,7 @@ function ThreadDetailModal({
             </Text>
             {comments.map((comment) => (
               <View key={comment.id} style={{ marginBottom: 14 }}>
-                <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 4 }}>
+                <Pressable delayLongPress={350} onLongPress={() => { if (comment.author.id === CURRENT_USER.id || canModerateAll) { setEditingCommentId(comment.id); setEditingCommentText(comment.content); } }} style={{ flexDirection: "row", alignItems: "center", marginBottom: 4 }}>
                   <Image
                     source={comment.author.avatar}
                     style={{ width: 24, height: 24, borderRadius: 12 }}
@@ -1191,8 +1198,7 @@ function ThreadDetailModal({
                   <Text style={{ fontSize: 11, color: colors.muted, marginLeft: 8 }}>
                     {timeAgo(comment.createdAt)}
                   </Text>
-                  {comment.author.id === CURRENT_USER.id || canModerateAll ? <Pressable onPress={() => { setEditingCommentId(comment.id); setEditingCommentText(comment.content); }} style={{ marginLeft: "auto", paddingHorizontal: 8, paddingVertical: 3 }}><Text style={{ fontSize: 11, fontWeight: "800", color: "#3478C7" }}>編集</Text></Pressable> : null}
-                </View>
+                </Pressable>
                 {editingCommentId === comment.id ? <View style={{ marginLeft: 32, gap: 7 }}><TextInput value={editingCommentText} onChangeText={setEditingCommentText} multiline autoFocus style={{ minHeight: 90, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: 10, padding: 10, fontSize: 14, color: colors.foreground }} /><View style={{ flexDirection: "row", gap: 8 }}><Pressable onPress={() => handleSaveCommentEdit(comment.id)} style={{ backgroundColor: "#3478C7", borderRadius: 8, paddingHorizontal: 13, paddingVertical: 7 }}><Text style={{ color: "#FFF", fontSize: 12, fontWeight: "800" }}>保存</Text></Pressable><Pressable onPress={() => handleDeleteComment(comment.id)} style={{ backgroundColor: "#FCE7E7", borderRadius: 8, paddingHorizontal: 13, paddingVertical: 7 }}><Text style={{ color: colors.error, fontSize: 12, fontWeight: "800" }}>削除</Text></Pressable><Pressable onPress={() => setEditingCommentId(null)} style={{ paddingHorizontal: 10, paddingVertical: 7 }}><Text style={{ color: colors.muted, fontSize: 12 }}>キャンセル</Text></Pressable></View></View> : <View style={{ marginLeft: 32 }}>{isContest ? (comment.isSystem ? <MentionText content={comment.content} groups={mentionGroups} /> : <LinkifiedText content={comment.content} />) : <MentionText content={comment.content} groups={mentionGroups} />}</View>}
                 {comment.poll ? <View style={{ marginLeft: 32 }}><PollCard ownerKey={`comment:${comment.id}`} poll={comment.poll} /></View> : null}
                 {comment.images?.length ? (
@@ -1215,8 +1221,8 @@ function ThreadDetailModal({
           </View> : <>
           {mentionQuery !== null ? <MentionSuggestions query={mentionQuery} groups={mentionGroups} members={MEMBERS.filter((member) => member.id !== CURRENT_USER.id)} onSelect={handleCommentMention} /> : null}
           <Text style={{ fontSize: 11, color: colors.muted, paddingHorizontal: 16, paddingTop: 6 }}>@を入力して個人・グループをメンション</Text>
-          {!thread.selfIntroduction ? <View style={{ paddingHorizontal: 16 }}><TextFormattingToolbar onFormat={handleCommentFormat} /></View> : null}
-          {!thread.selfIntroduction ? <View style={{ paddingHorizontal: 16 }}><RichTextPreview content={commentText} groups={mentionGroups} /></View> : null}
+          {showCommentAttachments ? <View style={{ flexDirection: "row", gap: 10, paddingHorizontal: 16, paddingTop: 9 }}><Pressable onPress={() => void handlePickCommentImages()} style={{ flexDirection: "row", alignItems: "center", borderRadius: 10, backgroundColor: "#5865F218", paddingHorizontal: 14, paddingVertical: 10 }}><IconSymbol name="photo.fill" size={17} color="#5865F2" /><Text style={{ color: "#5865F2", fontWeight: "800", marginLeft: 7 }}>写真</Text></Pressable>{pollAllowed ? <Pressable onPress={() => { setCommentPollEnabled(true); setShowCommentAttachments(false); }} style={{ flexDirection: "row", alignItems: "center", borderRadius: 10, backgroundColor: "#5865F218", paddingHorizontal: 14, paddingVertical: 10 }}><IconSymbol name="chart.bar.fill" size={17} color="#5865F2" /><Text style={{ color: "#5865F2", fontWeight: "800", marginLeft: 7 }}>投票</Text></Pressable> : null}</View> : null}
+          {commentImages.length ? <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingHorizontal: 16, paddingTop: 9 }}>{commentImages.map((uri, index) => <Pressable key={`${uri}-${index}`} onPress={() => setCommentImages((items) => items.filter((_, itemIndex) => itemIndex !== index))}><Image source={{ uri }} style={{ width: 64, height: 64, borderRadius: 9 }} contentFit="cover" /></Pressable>)}</ScrollView> : null}
           {pollAllowed ? <View style={{ paddingHorizontal: 16 }}><PollComposer enabled={commentPollEnabled} setEnabled={setCommentPollEnabled} question={commentPollQuestion} setQuestion={setCommentPollQuestion} options={commentPollOptions} setOptions={setCommentPollOptions} deadline={commentPollDeadline} setDeadline={setCommentPollDeadline} allowMultiple={commentPollAllowMultiple} setAllowMultiple={setCommentPollAllowMultiple} /></View> : null}
           <View
           style={{
@@ -1227,6 +1233,7 @@ function ThreadDetailModal({
             paddingBottom: Platform.OS === "ios" ? Math.max(insets.bottom, 10) : 10,
           }}
         >
+          <Pressable accessibilityLabel="写真または投票を追加" onPress={() => setShowCommentAttachments((value) => !value)} style={{ width: 36, height: 36, borderRadius: 18, alignItems: "center", justifyContent: "center", backgroundColor: "#5865F218", marginRight: 8 }}><IconSymbol name="plus" size={20} color="#5865F2" /></Pressable>
           <TextInput
             ref={commentInputRef}
             value={commentText}
@@ -1509,8 +1516,6 @@ function EditThreadModal({
                   minHeight: 120,
                 }}
               />
-              <TextFormattingToolbar onFormat={(format) => { const result = applyTextFormat(content, contentSelection, format); setContent(result.text); setContentSelection(result.selection); contentInputRef.current?.focus(); }} />
-              <RichTextPreview content={content} groups={BOARD_MENTION_GROUPS} />
             </View>}
 
             {/* 写真 */}
@@ -2117,7 +2122,6 @@ function CreateThreadModal({
                 textAlignVertical="top"
                 style={{ backgroundColor: colors.surface, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: colors.foreground, minHeight: 150, marginBottom: 16 }}
               />
-              <TextFormattingToolbar onFormat={(format) => { const result = applyTextFormat(content, contentSelection, format); setContent(result.text); setContentSelection(result.selection); contentInputRef.current?.focus(); }} />
               {mentionQuery !== null ? <MentionSuggestions query={mentionQuery} groups={BOARD_MENTION_GROUPS} members={MEMBERS.filter((member) => member.id !== CURRENT_USER.id)} onSelect={(label) => { setContent((current) => { const next = insertMention(current, label); setContentSelection({ start: next.length, end: next.length }); return next; }); setMentionQuery(null); contentInputRef.current?.focus(); }} /> : null}
               <Text style={{ fontSize: 11, color: colors.muted, marginTop: mentionQuery === null ? -10 : 6, marginBottom: 16 }}>@を入力して個人・グループをメンション</Text>
               {isGourmetContest ? <View style={{ gap: 14, marginBottom: 16 }}>

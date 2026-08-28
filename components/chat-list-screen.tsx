@@ -173,7 +173,10 @@ export default function ChatListScreen() {
     }
     const sharedById = new Map(sharedRooms.map((room) => [room.id, room]));
     const mergedJoined = [...localJoinedRooms.filter((room) => !sharedById.has(room.id)), ...sharedRooms.filter((room) => room.type !== "rank")];
-    const mergedRank = [...localRankRooms.filter((room) => !sharedById.has(room.id)), ...sharedRooms.filter((room) => room.type === "rank")];
+    const mergedRank = viewerRank === "regular" ? [] : [
+      ...localRankRooms.filter((room) => !sharedById.has(room.id)),
+      ...sharedRooms.filter((room) => room.type === "rank" && room.requiredRank === viewerRank),
+    ];
     const [sortedJoined, sortedRank] = await Promise.all([applyReadRoomState(mergedJoined), applyReadRoomState(mergedRank)]);
     setMyRooms(sortedJoined);
     setRankRooms(sortedRank);
