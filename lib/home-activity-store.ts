@@ -14,6 +14,11 @@ export interface HomeActivity {
   params?: Record<string, string>;
   images?: BoardImage[];
   image?: BoardImage;
+  authorId?: string;
+  authorName?: string;
+  authorAvatar?: BoardImage;
+  authorMemberTerm?: string;
+  authorRank?: string;
 }
 
 const STORAGE_KEY = "irotas_home_activities_v1";
@@ -36,7 +41,7 @@ export function initialHomeActivities(): HomeActivity[] {
   }));
   const threadActivities = BOARD_THREADS.flatMap((thread): HomeActivity[] => {
     const kind = RELEVANT_BOARD_KINDS[thread.category];
-    return kind ? [{ id: `thread:${thread.id}`, kind, title: thread.title, description: thread.mealReport ? `📍 ${thread.mealReport.areaDisplay ?? formatMealReportArea(thread.mealReport.prefecture)}　${thread.preview}` : thread.preview, createdAt: thread.lastUpdated, route: "/board", params: { category: thread.category, view: "threads" }, images: thread.mealReport ? thread.images?.slice(0, 4) : undefined }] : [];
+    return kind ? [{ id: `thread:${thread.id}`, kind, title: thread.title, description: thread.mealReport ? `📍 ${thread.mealReport.areaDisplay ?? formatMealReportArea(thread.mealReport.prefecture)}　${thread.preview}` : thread.preview, createdAt: thread.lastUpdated, route: "/board", params: { category: thread.category, view: "threads" }, images: thread.mealReport ? thread.images?.slice(0, 4) : undefined, ...(thread.mealReport ? { authorId: thread.author.id, authorName: thread.author.name, authorAvatar: thread.author.avatar, authorMemberTerm: `${thread.author.generation}期生`, authorRank: thread.author.rank } : {}) }] : [];
   });
   const contestComments = BOARD_COMMENTS.flatMap((comment): HomeActivity[] => {
     const thread = BOARD_THREADS.find((item) => item.id === comment.threadId && item.category === "gourmet-contest");
@@ -69,8 +74,8 @@ export async function getHomeActivities(): Promise<HomeActivity[]> {
   return [...merged.values()].sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));
 }
 
-export function boardActivityForThread(thread: { id: string; category: string; title: string; preview: string; lastUpdated: string; author: { name: string }; images?: BoardImage[]; mealReport?: { prefecture: string; areaDisplay?: string } }): HomeActivity | null {
+export function boardActivityForThread(thread: { id: string; category: string; title: string; preview: string; lastUpdated: string; author: { id: string; name: string; avatar?: BoardImage; generation?: number; rank?: string }; images?: BoardImage[]; mealReport?: { prefecture: string; areaDisplay?: string } }): HomeActivity | null {
   const kind = RELEVANT_BOARD_KINDS[thread.category];
   if (!kind) return null;
-  return { id: `thread:${thread.id}`, kind, title: thread.title, description: thread.mealReport ? `📍 ${thread.mealReport.areaDisplay ?? formatMealReportArea(thread.mealReport.prefecture)}　${thread.preview}` : thread.preview, createdAt: thread.lastUpdated, route: "/board", params: { category: thread.category, view: "threads" }, images: thread.mealReport ? thread.images?.slice(0, 4) : undefined };
+  return { id: `thread:${thread.id}`, kind, title: thread.title, description: thread.mealReport ? `📍 ${thread.mealReport.areaDisplay ?? formatMealReportArea(thread.mealReport.prefecture)}　${thread.preview}` : thread.preview, createdAt: thread.lastUpdated, route: "/board", params: { category: thread.category, view: "threads" }, images: thread.mealReport ? thread.images?.slice(0, 4) : undefined, ...(thread.mealReport ? { authorId: thread.author.id, authorName: thread.author.name, authorAvatar: thread.author.avatar, authorMemberTerm: thread.author.generation ? `${thread.author.generation}期生` : undefined, authorRank: thread.author.rank } : {}) };
 }

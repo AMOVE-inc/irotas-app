@@ -10,6 +10,8 @@ import { handleSquareWebhook } from "./square-webhook";
 import { handleSquareSyncRequest } from "./square-sync";
 import { handleMemberDirectoryRequest } from "./member-directory";
 import { handleEventRequest } from "./events";
+import { handleEventFeedbackRequest } from "./event-feedback";
+import { handleConciergeRequest } from "./concierge";
 import { handleOperatorManagementRequest } from "./operator-management";
 import { handleMemberHistoryImportRequest } from "./member-history-import";
 import { handleClubRequest } from "./clubs";
@@ -295,6 +297,10 @@ async function routeRequest(
   if (boardArchiveResponse) return boardArchiveResponse;
   const eventResponse = await handleEventRequest(request, env);
   if (eventResponse) return eventResponse;
+  const eventFeedbackResponse = await handleEventFeedbackRequest(request, env);
+  if (eventFeedbackResponse) return eventFeedbackResponse;
+  const conciergeResponse = await handleConciergeRequest(request, env);
+  if (conciergeResponse) return conciergeResponse;
   if (pathname === "/api/platform/health" && request.method === "GET") {
     const startedAt = Date.now();
     let database: "ok" | "unavailable" = "unavailable";

@@ -19,6 +19,7 @@ const ICON_MAP: Record<string, { icon: string; color: string }> = {
   event_deadline: { icon: "clock.fill", color: "#FF9500" },
   event_reminder: { icon: "calendar", color: "#5B9BD5" },
   event_cancellation: { icon: "exclamationmark.triangle.fill", color: "#D94C55" },
+  event_feedback: { icon: "star.fill", color: "#D69A14" },
 };
 
 function relativeTime(value: string) {
@@ -119,6 +120,8 @@ export default function NotificationsScreen() {
     }
     if (notification.type === "club_application" || notification.type === "club_approval") {
       router.push("/clubs");
+    } else if (notification.type === "event_feedback" && notification.eventId) {
+      router.push({ pathname: "/event-feedback", params: { id: notification.eventId } });
     } else if (notification.type === "event" || notification.type.startsWith("event_")) {
       router.push(notification.eventId ? { pathname: "/event-detail", params: { id: notification.eventId } } : "/events");
     }

@@ -1,7 +1,7 @@
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { restaurantsForConciergeQuery } from "@/lib/concierge-restaurants";
 import { useColors } from "@/hooks/use-colors";
-import { trpc } from "@/lib/trpc";
+import * as Api from "@/lib/_core/api";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import { useState, useRef, useCallback, useEffect } from "react";
@@ -30,15 +30,6 @@ const INITIAL_MESSAGE: Message = {
   timestamp: new Date(),
 };
 const CONCIERGE_HISTORY_KEY = "irotas_concierge_history_v1";
-
-// RESTAURANTSデータをAIコンテキスト用にテキスト化
-const buildRestaurantContext = (query: string) => {
-  const candidates = restaurantsForConciergeQuery(query);
-  return candidates.map(
-    (r) =>
-      `${r.name}（${r.genre}）: ${r.address} / 評価${r.rating}（${r.reviewCount}件）/ ${r.description}`,
-  ).join("\n");
-};
 
 function localConciergeReply(query: string) {
   const normalized = query.toLowerCase();
@@ -114,6 +105,7 @@ export default function ConciergeScreen() {
   const router = useRouter();
   const [messages, setMessages] = useState<Message[]>([INITIAL_MESSAGE]);
   const [inputText, setInputText] = useState("");
+  const [isSending, setIsSending] = useState(false);
   const flatListRef = useRef<FlatList>(null);
 
   useEffect(() => {
@@ -130,30 +122,8 @@ export default function ConciergeScreen() {
     if (messages.length > 1) void AsyncStorage.setItem(CONCIERGE_HISTORY_KEY, JSON.stringify(messages.slice(-60)));
   }, [messages]);
 
-  const chatMutation = trpc.concierge.chat.useMutation({
-    onSuccess: (data) => {
-      const aiMessage: Message = {
-        id: `m${Date.now()}`,
-        role: "assistant",
-        content: data.reply || "申し訳ありません。回答を生成できませんでした。",
-        timestamp: new Date(),
-      };
-      setMessages((prev) => [...prev, aiMessage]);
-    },
-    onError: (_error, variables) => {
-      const latestQuery = [...variables.messages].reverse().find((message) => message.role === "user")?.content ?? "";
-      const fallbackMessage: Message = {
-        id: `m${Date.now()}`,
-        role: "assistant",
-        content: localConciergeReply(latestQuery),
-        timestamp: new Date(),
-      };
-      setMessages((prev) => [...prev, fallbackMessage]);
-    },
-  });
-
   const sendMessage = useCallback(() => {
-    if (!inputText.trim() || chatMutation.isPending) return;
+    if (!inputText.trim() || isSending) return;
 
     const userMessage: Message = {
       id: `m${Date.now()}`,
@@ -166,29 +136,11 @@ export default function ConciergeScreen() {
     setMessages(updatedMessages);
     setInputText("");
 
-    if (!restaurantsForConciergeQuery(userMessage.content).length) {
-      const fallbackMessage: Message = {
-        id: `m${Date.now()}-fallback`,
-        role: "assistant",
-        content: localConciergeReply(userMessage.content),
-        timestamp: new Date(),
-      };
-      setMessages([...updatedMessages, fallbackMessage]);
-      return;
-    }
+    setIsSending(true);
+    void Api.askConcierge(userMessage.content).then((data) => setMessages((current) => [...current, { id: `m${Date.now()}`, role: "assistant", content: data.reply, timestamp: new Date() }])).catch(() => setMessages((current) => [...current, { id: `m${Date.now()}-fallback`, role: "assistant", content: localConciergeReply(userMessage.content), timestamp: new Date() }])).finally(() => setIsSending(false));
+  }, [inputText, messages, isSending]);
 
-    // AIに送るメッセージ履歴（初期メッセージを除く）
-    const apiMessages = updatedMessages
-      .filter((m) => m.id !== "m0")
-      .map((m) => ({ role: m.role, content: m.content }));
-
-    chatMutation.mutate({
-      messages: apiMessages,
-      restaurantContext: buildRestaurantContext(userMessage.content),
-    });
-  }, [inputText, messages, chatMutation]);
-
-  const isTyping = chatMutation.isPending;
+  const isTyping = isSending;
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>

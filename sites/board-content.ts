@@ -165,7 +165,7 @@ function clubIdFromCategory(category: string) {
 }
 
 function elevated(member: BoardMember) {
-  return member.role === "admin" || member.access_role === "admin" || member.access_role === "operator";
+  return member.role === "admin" || member.role === "operator" || member.access_role === "admin" || member.access_role === "operator";
 }
 
 export async function canAccessBoardCategory(

@@ -145,6 +145,7 @@ export type AppNotification = {
     | "event_deadline"
     | "event_reminder"
     | "event_cancellation"
+    | "event_feedback"
     | "poll_result"
     | "announcement"
     | "event"
@@ -1017,6 +1018,14 @@ export async function getEvent(eventId: string) {
     `/api/events/${encodeURIComponent(eventId)}`,
   );
   return result.event;
+}
+
+export async function saveEventFeedback(input: { eventId: string; overallRating: number; foodRating: number; venueRating: number; communityRating: number; wouldAttendAgain: boolean; goodTags: string[]; improvementTags: string[]; comment: string }) {
+  return apiCall<{ success: true; submittedAt: string }>(`/api/events/${encodeURIComponent(input.eventId)}/feedback`, { method: "PUT", body: JSON.stringify(input) });
+}
+
+export async function askConcierge(query: string) {
+  return apiCall<{ reply: string; places: Array<{ id?: string; name?: string; address?: string; rating?: number; reviewCount?: number; url?: string; genre?: string }> }>("/api/concierge/search", { method: "POST", body: JSON.stringify({ query }) });
 }
 
 export async function uploadEventImage(uri: string) {

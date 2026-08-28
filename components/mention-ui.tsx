@@ -72,7 +72,6 @@ export function MentionSuggestions({ query, groups, members, onSelect }: { query
           <Pressable key={group.id} onPress={() => onSelect(group.label)} style={({ pressed }) => ({ flexDirection: "row", alignItems: "center", paddingHorizontal: 16, paddingVertical: 10, borderBottomWidth: 0.5, borderBottomColor: colors.border, backgroundColor: pressed ? colors.surface : colors.background })}>
             <View style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: "#5B5A73", alignItems: "center", justifyContent: "center", marginRight: 10 }}><Text style={{ fontSize: 15, fontWeight: "900", color: "#FFF" }}>@</Text></View>
             <View style={{ flex: 1 }}><Text style={{ fontSize: 14, fontWeight: "800", color: "#5B5A73" }}>@{group.label}</Text><Text style={{ fontSize: 11, color: colors.muted, marginTop: 1 }}>{group.description}</Text></View>
-            <Text style={{ fontSize: 11, color: colors.muted }}>{group.memberIds.length}人</Text>
           </Pressable>
         ))}
         {filteredMembers.map((member) => (

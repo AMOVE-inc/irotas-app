@@ -134,14 +134,25 @@ export async function runEventAutomation(db: D1Database, now = new Date()) {
 }
 
 async function completePastEvents(db: D1Database, now: Date) {
-  const tokyoToday = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Tokyo", year: "numeric", month: "2-digit", day: "2-digit" }).format(now);
-  const events = await db.prepare(`SELECT id, organizer_member_id FROM events
-    WHERE status IN ('open', 'full') AND event_date < ?`).bind(tokyoToday).all<{ id: string; organizer_member_id: number }>();
+  const events = await db.prepare(`SELECT id, organizer_member_id, event_type, event_date, public_data_json FROM events
+    WHERE status IN ('open', 'full')`).all<EventRow>();
   let completed = 0;
   for (const event of events.results ?? []) {
+    const data = eventData(event);
+    const start = tokyoDateTime(event.event_date, typeof data.time === "string" ? data.time : "00:00");
+    if (!start) continue;
+    const explicitEnd = typeof data.endTime === "string" ? tokyoDateTime(event.event_date, data.endTime) : null;
+    const end = explicitEnd && explicitEnd > start ? explicitEnd : new Date(start.getTime() + 3 * 60 * 60_000);
+    if (now < end) continue;
     const timestamp = now.toISOString();
     await db.prepare("UPDATE events SET status = 'ended', updated_at = ? WHERE id = ? AND status IN ('open', 'full')")
       .bind(timestamp, event.id).run();
+    if (event.event_type === "official") {
+      const participants = await db.prepare("SELECT member_id FROM event_participations WHERE event_id = ? AND status IN ('confirmed','cancel_requested')").bind(event.id).all<{ member_id: number }>();
+      for (const participant of participants.results ?? []) await db.prepare(`INSERT OR IGNORE INTO in_app_notifications
+        (id,target_member_id,type,title,body,event_id,created_at) VALUES (?,?, 'event_feedback','イベント参加アンケート',?, ?, ?)`)
+        .bind(`event-feedback:${event.id}:${participant.member_id}`, participant.member_id, `「${event.title}」はいかがでしたか？簡単なアンケートにご協力ください。`, event.id, timestamp).run();
+    }
     if (await awardCompletedEventHostXp(db, event.id, event.organizer_member_id, timestamp)) completed += 1;
   }
   return completed;
@@ -191,7 +202,8 @@ async function finalizeExpiredBoardPolls(db: D1Database, now: Date) {
 async function homeActivities(db: D1Database) {
   const [events, threads, comments, announcements] = await Promise.all([
     db.prepare(`SELECT id, event_type, title, created_at FROM events WHERE status != 'cancelled' ORDER BY created_at DESC LIMIT 50`).all<Record<string, unknown>>(),
-    db.prepare(`SELECT t.id, t.category, t.title, t.content, t.data_json, t.created_at, m.display_name
+    db.prepare(`SELECT t.id, t.category, t.title, t.content, t.data_json, t.created_at, m.display_name,
+        m.public_member_id, m.member_term, m.member_rank, m.profile_json
       FROM board_threads t JOIN members m ON m.id = t.author_member_id
       WHERE t.deleted_at IS NULL AND t.category IN ('gourmet-contest','meal-report','gourmet-advice','free-chat')
       ORDER BY t.created_at DESC LIMIT 80`).all<Record<string, unknown>>(),
@@ -205,7 +217,7 @@ async function homeActivities(db: D1Database) {
   const kindByCategory: Record<string, string> = { "gourmet-contest": "contest_thread", "meal-report": "meal_report", "gourmet-advice": "gourmet_advice", "free-chat": "free_chat" };
   return [
     ...(events.results ?? []).map((row) => ({ id: `event:${row.id}`, kind: "event", title: row.title, description: row.event_type === "official" ? "新しい公式イベントが公開されました" : row.event_type === "club" ? "新しい部活動イベントが公開されました" : "新しいグルメ会が公開されました", createdAt: row.created_at, route: "/event-detail", params: { id: String(row.id) } })),
-    ...(threads.results ?? []).map((row) => { const data = (() => { try { return JSON.parse(String(row.data_json ?? "{}")) as { images?: string[] }; } catch { return {}; } })(); return { id: `thread:${row.id}`, kind: kindByCategory[String(row.category)], title: row.title, description: String(row.content ?? "").slice(0, 180), createdAt: row.created_at, route: "/board", params: { category: String(row.category), view: "threads", thread: String(row.id) }, images: row.category === "meal-report" ? data.images?.slice(0, 4) : undefined }; }),
+    ...(threads.results ?? []).map((row) => { const data = (() => { try { return JSON.parse(String(row.data_json ?? "{}")) as { images?: string[] }; } catch { return {}; } })(); const profile = (() => { try { return JSON.parse(String(row.profile_json ?? "{}")) as { avatarUrl?: string }; } catch { return {}; } })(); return { id: `thread:${row.id}`, kind: kindByCategory[String(row.category)], title: row.title, description: String(row.content ?? "").slice(0, 180), createdAt: row.created_at, route: "/board", params: { category: String(row.category), view: "threads", thread: String(row.id) }, images: row.category === "meal-report" ? data.images?.slice(0, 4) : undefined, ...(row.category === "meal-report" ? { authorId: row.public_member_id, authorName: row.display_name, authorAvatar: profile.avatarUrl, authorMemberTerm: row.member_term, authorRank: row.member_rank } : {}) }; }),
     ...(comments.results ?? []).map((row) => ({ id: `comment:${row.id}`, kind: "contest_comment", title: `${row.title}にコメントが追加されました`, description: String(row.content ?? "").slice(0, 180), createdAt: row.created_at, route: "/board", params: { category: "gourmet-contest", view: "threads", thread: String(row.thread_id) } })),
     ...(announcements.results ?? []).map((row) => ({ id: `announcement:${row.id}`, kind: "announcement", title: "運営アナウンスが更新されました", description: String(row.content ?? "").slice(0, 180), createdAt: row.created_at, route: "/chat", params: { id: "board-announcement" } })),
   ].sort((a, b) => Date.parse(String(b.createdAt)) - Date.parse(String(a.createdAt))).slice(0, 200);

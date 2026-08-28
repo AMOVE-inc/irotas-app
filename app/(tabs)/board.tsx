@@ -74,7 +74,7 @@ import { getBoardRecruitmentStatus, isClubSelfIntroduction, isRecruitmentBoardCa
 import { memberFromAuthUser } from "@/lib/auth-member";
 
 const BOARD_MENTION_GROUPS = getMentionGroups(MEMBERS, CLUBS);
-const THREAD_REACTION_EMOJIS = ["👏", "😊", "❤️", "🎉", "😋"] as const;
+const THREAD_REACTION_EMOJIS = ["👏", "😊", "❤️", "🎉", "😋", "👍", "🔥", "✨", "😂", "😍", "🥰", "🤤", "🍽️", "🍷", "🍺", "🍣", "🍖", "🍰", "🙌", "💯"] as const;
 const boardImageSource = (image: BoardImage) => typeof image === "string" ? { uri: image } : image;
 const isDurableBoardImage = (uri: string) => /^https:\/\//i.test(uri) || uri.startsWith("/api/event-images/");
 async function uploadBoardImages(images?: BoardImage[]) {
@@ -706,6 +706,7 @@ function ThreadDetailModal({
   );
   const [threadReactions, setThreadReactions] = useState(thread.reactions ?? {});
   const [showThreadEmojiPicker, setShowThreadEmojiPicker] = useState(false);
+  const [commentEmojiPickerId, setCommentEmojiPickerId] = useState<string | null>(null);
   const [contestWinnerName, setContestWinnerName] = useState<string | null>(null);
   const [reactionsHydrated, setReactionsHydrated] = useState(false);
   const contestFinalizedRef = useRef(false);
@@ -1054,17 +1055,17 @@ function ThreadDetailModal({
             </View>
           ) : null}
 
-          {thread.selfIntroduction || thread.mealReport ? (
+          {(
             <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 7, marginBottom: 16 }}>
               {(thread.selfIntroduction ? ["🎉"] : Array.from(new Set(["❤️", ...Object.keys(threadReactions)]))).map((emoji) => {
                 const memberIds = threadReactions[emoji] ?? [];
                 const selected = memberIds.includes(CURRENT_USER.id);
                 return <Pressable key={emoji} onPress={() => handleThreadReaction(emoji)} accessibilityLabel={`${emoji}スタンプ`} style={{ flexDirection: "row", alignItems: "center", backgroundColor: selected ? "#F0E7F7" : colors.surface, borderWidth: 1, borderColor: selected ? "#7D6A92" : colors.border, borderRadius: 16, paddingHorizontal: 10, paddingVertical: 5 }}><Text style={{ fontSize: 17 }}>{emoji}</Text>{memberIds.length > 0 ? <Text style={{ fontSize: 11, fontWeight: "800", color: colors.muted, marginLeft: 4 }}>{memberIds.length}</Text> : null}</Pressable>;
               })}
-              {thread.mealReport ? <Pressable accessibilityLabel="別の絵文字を追加" onPress={() => setShowThreadEmojiPicker((current) => !current)} style={{ width: 34, height: 31, borderRadius: 16, alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface }}><IconSymbol name="plus" size={16} color={colors.muted} /></Pressable> : null}
-              {thread.mealReport && showThreadEmojiPicker ? <View style={{ width: "100%", flexDirection: "row", flexWrap: "wrap", gap: 7, paddingTop: 3 }}>{THREAD_REACTION_EMOJIS.filter((emoji) => emoji !== "❤️").map((emoji) => <Pressable key={emoji} onPress={() => { handleThreadReaction(emoji); setShowThreadEmojiPicker(false); }} style={{ width: 38, height: 34, borderRadius: 17, alignItems: "center", justifyContent: "center", backgroundColor: "#F4F1F3" }}><Text style={{ fontSize: 19 }}>{emoji}</Text></Pressable>)}</View> : null}
+              <Pressable accessibilityLabel="別の絵文字を追加" onPress={() => setShowThreadEmojiPicker((current) => !current)} style={{ width: 34, height: 31, borderRadius: 16, alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface }}><IconSymbol name="plus" size={16} color={colors.muted} /></Pressable>
+              {showThreadEmojiPicker ? <View style={{ width: "100%", flexDirection: "row", flexWrap: "wrap", gap: 7, paddingTop: 3 }}>{THREAD_REACTION_EMOJIS.map((emoji) => <Pressable key={emoji} onPress={() => { handleThreadReaction(emoji); setShowThreadEmojiPicker(false); }} style={{ width: 38, height: 34, borderRadius: 17, alignItems: "center", justifyContent: "center", backgroundColor: "#F4F1F3" }}><Text style={{ fontSize: 19 }}>{emoji}</Text></Pressable>)}</View> : null}
             </View>
-          ) : null}
+          )}
 
           {/* 画像 */}
           {thread.images && thread.images.length > 0 && (
@@ -1198,7 +1199,7 @@ function ThreadDetailModal({
                 ) : null}
                 {comment.videos?.length ? <View style={{ marginLeft: 32, marginTop: 8, gap: 8 }}>{comment.videos.map((uri) => <BoardVideo key={uri} uri={uri} />)}</View> : null}
                 {isContest && !comment.isSystem ? <Pressable onPress={() => handleCommentHeart(comment.id)} disabled={!contestCommentingOpen} style={{ marginLeft: 32, marginTop: 7, flexDirection: "row", alignItems: "center", alignSelf: "flex-start", borderRadius: 14, paddingHorizontal: 9, paddingVertical: 4, backgroundColor: (comment.reactions?.["❤️"] ?? []).includes(CURRENT_USER.id) ? "#FFE4EA" : colors.surface, borderWidth: 1, borderColor: colors.border }}><Text style={{ fontSize: 15 }}>❤️</Text><Text style={{ fontSize: 11, fontWeight: "800", color: colors.muted, marginLeft: 4 }}>{comment.reactions?.["❤️"]?.length ?? 0}</Text></Pressable> : null}
-                {!comment.isSystem && !isContest ? <Pressable onPress={() => handleCommentReaction(comment.id, "👏")} style={{ marginLeft: 32, marginTop: 7, flexDirection: "row", alignItems: "center", alignSelf: "flex-start", borderRadius: 14, paddingHorizontal: 9, paddingVertical: 4, backgroundColor: (comment.reactions?.["👏"] ?? []).includes(CURRENT_USER.id) ? "#F0E7F7" : colors.surface, borderWidth: 1, borderColor: colors.border }}><Text style={{ fontSize: 15 }}>👏</Text>{(comment.reactions?.["👏"]?.length ?? 0) > 0 ? <Text style={{ fontSize: 11, fontWeight: "800", color: colors.muted, marginLeft: 4 }}>{comment.reactions?.["👏"]?.length}</Text> : null}</Pressable> : null}
+                {!comment.isSystem && !isContest ? <View style={{ marginLeft: 32, marginTop: 7, flexDirection: "row", flexWrap: "wrap", gap: 6 }}>{Array.from(new Set(["👏", ...Object.keys(comment.reactions ?? {})])).map((emoji) => { const ids = comment.reactions?.[emoji] ?? []; return <Pressable key={emoji} onPress={() => handleCommentReaction(comment.id, emoji)} style={{ flexDirection: "row", alignItems: "center", borderRadius: 14, paddingHorizontal: 9, paddingVertical: 4, backgroundColor: ids.includes(CURRENT_USER.id) ? "#F0E7F7" : colors.surface, borderWidth: 1, borderColor: colors.border }}><Text style={{ fontSize: 15 }}>{emoji}</Text>{ids.length ? <Text style={{ fontSize: 11, fontWeight: "800", color: colors.muted, marginLeft: 4 }}>{ids.length}</Text> : null}</Pressable>; })}<Pressable accessibilityLabel="別の絵文字を追加" onPress={() => setCommentEmojiPickerId((current) => current === comment.id ? null : comment.id)} style={{ width: 31, height: 29, borderRadius: 15, alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface }}><IconSymbol name="plus" size={14} color={colors.muted} /></Pressable>{commentEmojiPickerId === comment.id ? <View style={{ width: "100%", flexDirection: "row", flexWrap: "wrap", gap: 7, paddingTop: 3 }}>{THREAD_REACTION_EMOJIS.map((emoji) => <Pressable key={emoji} onPress={() => { handleCommentReaction(comment.id, emoji); setCommentEmojiPickerId(null); }} style={{ width: 38, height: 34, borderRadius: 17, alignItems: "center", justifyContent: "center", backgroundColor: "#F4F1F3" }}><Text style={{ fontSize: 19 }}>{emoji}</Text></Pressable>)}</View> : null}</View> : null}
               </View>
             ))}
           </View>
@@ -2276,6 +2277,7 @@ export default function BoardScreen() {
   const { compose, category: categoryParam, view, thread: threadParam } = useLocalSearchParams<{ compose?: string; category?: string; view?: string; thread?: string }>();
   const { user: authUser } = useAuthContext();
   const userIsAdmin = canManageBoardCategories(authUser?.role, authUser?.accessRole);
+  const userCanModerateAll = isOperatorRole(authUser?.role, authUser?.accessRole);
   const userCanManageContests = canManageGourmetContests(authUser?.role, authUser?.accessRole);
   const userCanModerateRecruitment = isOperatorRole(authUser?.role, authUser?.accessRole);
   const clubs = useClubs();
@@ -2593,7 +2595,7 @@ export default function BoardScreen() {
           <ThreadCard
             thread={item}
             onPress={() => { setSelectedThread(item); router.setParams({ thread: item.id }); }}
-            onEdit={item.author.id === viewerMemberId || userIsAdmin ? () => setEditingThread(item) : undefined}
+            onEdit={item.author.id === viewerMemberId || userCanModerateAll ? () => setEditingThread(item) : undefined}
             onChangeRecruitment={canChangeRecruitment(item) || canPinThread(item) ? () => promptRecruitmentStatus(item) : undefined}
           />
         )}
@@ -2634,11 +2636,11 @@ export default function BoardScreen() {
             thread={selectedThread}
             initialComments={importedComments[selectedThread.id] ?? []}
             onClose={() => { setSelectedThread(null); router.setParams({ thread: "" }); }}
-            onEditThread={selectedThread.author.id === viewerMemberId || userIsAdmin ? () => { setEditingThread(selectedThread); setSelectedThread(null); router.setParams({ thread: "" }); } : undefined}
+            onEditThread={selectedThread.author.id === viewerMemberId || userCanModerateAll ? () => { setEditingThread(selectedThread); setSelectedThread(null); router.setParams({ thread: "" }); } : undefined}
             onChangeRecruitment={canChangeRecruitment(selectedThread) || canPinThread(selectedThread) ? () => promptRecruitmentStatus(selectedThread) : undefined}
             canRegisterEvent={selectedThread.category === "free-chat" || Boolean(clubForThread(selectedThread) && canViewerAccessClubContent(clubForThread(selectedThread)!, authUser?.memberId, CURRENT_USER.id, userIsAdmin))}
             applicationClub={applicationClubForThread(selectedThread)}
-            canModerateAll={userIsAdmin}
+            canModerateAll={userCanModerateAll}
           />
         )}
       </Modal>
