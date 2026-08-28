@@ -21,6 +21,7 @@ import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import * as Api from "@/lib/_core/api";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   Alert,
   type AlertButton,
@@ -31,6 +32,7 @@ import {
   ScrollView,
   Switch,
   Text,
+  TextInput,
   View,
 } from "react-native";
 
@@ -62,6 +64,8 @@ export default function EventDetailScreen() {
   const [contactedOrganizer, setContactedOrganizer] = useState(false);
   const [cancellationPolicyConfirmed, setCancellationPolicyConfirmed] = useState(false);
   const [applicationConfirmation, setApplicationConfirmation] = useState<{ title: string; message: string; buttons: AlertButton[] } | null>(null);
+  const [eventComments, setEventComments] = useState<{ id: string; author: string; text: string; createdAt: string }[]>([]);
+  const [eventCommentText, setEventCommentText] = useState("");
   const [, setEventRevision] = useState(0);
   // ボタン連打防止フラグ
   const joiningRef = useRef(false);
@@ -98,6 +102,7 @@ export default function EventDetailScreen() {
     getIrotasPoints(CURRENT_USER.id).then(setIrotasPoints);
   }, []);
   useEffect(() => { if (!event?.id) return; void recordActivityEvent({ userId: CURRENT_USER.id, eventName: "event_viewed", entityType: "event", entityId: event.id, dedupeKey: `${CURRENT_USER.id}:event_viewed:${event.id}:${new Date().toISOString().slice(0, 10)}` }); }, [event?.id]);
+  useEffect(() => { if (!id) return; void AsyncStorage.getItem(`irotas_event_comments_v1:${id}`).then((raw) => setEventComments(raw ? JSON.parse(raw) : [])).catch(() => setEventComments([])); }, [id]);
 
   if (!event) {
     return (
@@ -851,6 +856,8 @@ export default function EventDetailScreen() {
             <Text style={{ fontSize: 14, lineHeight: 21, color: colors.foreground, marginTop: 7 }}>{event.cancellationPolicy}</Text>
           </View>
         ) : null}
+
+        <View style={{ backgroundColor: colors.surface, borderRadius: 14, padding: 16, marginBottom: 16 }}><Text style={{ fontSize: 16, fontWeight: "900", color: colors.foreground }}>イベントへのコメント</Text><Text style={{ fontSize: 11, color: colors.muted, marginTop: 4 }}>参加申込前でも閲覧・コメントできます</Text>{eventComments.map((comment) => <View key={comment.id} style={{ marginTop: 12, paddingTop: 12, borderTopWidth: 0.5, borderTopColor: colors.border }}><Text style={{ fontSize: 12, fontWeight: "900", color: colors.foreground }}>{comment.author}</Text><Text style={{ fontSize: 14, lineHeight: 20, color: colors.foreground, marginTop: 4 }}>{comment.text}</Text></View>)}<View style={{ flexDirection: "row", alignItems: "flex-end", marginTop: 14 }}><TextInput value={eventCommentText} onChangeText={setEventCommentText} placeholder="質問やコメントを入力" placeholderTextColor={colors.muted} multiline style={{ flex: 1, minHeight: 44, maxHeight: 100, borderRadius: 14, backgroundColor: colors.background, borderWidth: 1, borderColor: colors.border, paddingHorizontal: 12, paddingVertical: 10, color: colors.foreground }} /><Pressable disabled={!eventCommentText.trim()} onPress={() => { const next = [...eventComments, { id: `ec_${Date.now()}`, author: authUser?.name ?? CURRENT_USER.name, text: eventCommentText.trim(), createdAt: new Date().toISOString() }]; setEventComments(next); setEventCommentText(""); void AsyncStorage.setItem(`irotas_event_comments_v1:${event.id}`, JSON.stringify(next)); }} style={{ width: 44, height: 44, borderRadius: 22, marginLeft: 8, alignItems: "center", justifyContent: "center", backgroundColor: eventCommentText.trim() ? "#D65E8D" : colors.border }}><IconSymbol name="paperplane.fill" size={19} color="#FFF" /></Pressable></View></View>
 
         {isJoined && !isOrganizer ? (
           <View style={{ backgroundColor: "#FFF4F2", borderRadius: 14, padding: 14, marginBottom: 16, borderWidth: 1, borderColor: "#F3D0CA" }}>

@@ -12,7 +12,7 @@ import { eventCategoryFromPrefecture, extractEventLocation, formatEventArea } fr
 import { useColors } from "@/hooks/use-colors";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useMemo, useState } from "react";
-import { Alert, Modal, Pressable, ScrollView, Text, TextInput, View } from "react-native";
+import { ActivityIndicator, Alert, Modal, Pressable, ScrollView, Text, TextInput, View } from "react-native";
 import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
 import { recordHomeActivity } from "@/lib/home-activity-store";
@@ -96,7 +96,9 @@ function SelectField({ label, value, options, onChange }: { label: string; value
 
 function FieldLabel({ children }: { children: string }) {
   const colors = useColors();
-  return <Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground, marginBottom: 7, marginTop: 16 }}>{children}</Text>;
+  const required = (children.includes("*") && !children.startsWith("写真")) || children.startsWith("キャンセルポリシー");
+  const label = children.replace(/\s*\*\s*/g, "").replace(/[（(](?:任意|複数選択可)[）)]/g, "").trim();
+  return <Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground, marginBottom: 7, marginTop: 16 }}>{label}{required ? <Text style={{ color: colors.error }}> 必須</Text> : null}</Text>;
 }
 
 function MemberPicker({ selectedIds, onChange }: { selectedIds: string[]; onChange: (ids: string[]) => void }) {
@@ -179,8 +181,8 @@ export default function CreateEventScreen() {
   const numericAmount = (value: string) => Number(value.replace(/[^0-9]/g, ""));
   const handleCreate = async () => {
     const clubEvent = eventType === "club";
-    if ((!clubEvent && !restaurantName.trim()) || (clubEvent && (!eventName.trim() || !selectedClubId)) || !date || !time || !reservationCapacity || !recruitCapacity || !budgetMin || (!fixedAmount && !budgetMax) || !decisionDate || !imageUri || !termsAccepted || (!clubEvent && genres.length === 0)) {
-      Alert.alert("入力エラー", "必須項目・写真・規約同意を確認してください"); return;
+    if ((!clubEvent && !restaurantName.trim()) || (clubEvent && (!eventName.trim() || !selectedClubId)) || !date || !time || !reservationCapacity || !recruitCapacity || !budgetMin || (!fixedAmount && !budgetMax) || !decisionDate || !cancellationPolicy.trim() || !termsAccepted || (!clubEvent && genres.length === 0)) {
+      Alert.alert("入力エラー", "必須項目と規約同意を確認してください"); return;
     }
     if (clubEvent && !joinedClubs.some((club) => club.id === selectedClubId)) {
       Alert.alert("部活動を確認してください", "所属している部活動のみイベントを作成できます。"); return;
@@ -201,15 +203,15 @@ export default function CreateEventScreen() {
       : undefined;
     const draftEvent: Event = {
       id: `event_${Date.now()}`, createdAt: new Date().toISOString(), title, restaurantName: restaurantName.trim() || undefined, description: publicNotes.trim() || (finalType === "official" ? "IRO＋公式イベントです。" : finalType === "club" ? `${joinedClubs.find((club) => club.id === selectedClubId)?.name ?? "部活動"}の部員限定イベントです。` : "メンバー主催のグルメ会です。"), date, time,
-      location: address.trim() || "住所未設定", prefecture: extractedLocation.prefecture, tokyoArea: extractedLocation.tokyoArea, image: imageUri, capacity: Number(recruitCapacity), reservationCapacity: Number(reservationCapacity), attendees: 0, applicantIds: [], participants: [], companionIds,
+      location: address.trim() || "住所未設定", prefecture: extractedLocation.prefecture, tokyoArea: extractedLocation.tokyoArea, image: imageUri || require("@/assets/images/irotas-logo-square.png"), capacity: Number(recruitCapacity), reservationCapacity: Number(reservationCapacity), attendees: 0, applicantIds: [], participants: [], companionIds,
       price, priceMin: numericAmount(budgetMin), priceMax: fixedAmount ? numericAmount(budgetMin) : numericAmount(budgetMax), genres, ...(configuredRankPrices && Object.keys(configuredRankPrices).length ? { rankPrices: configuredRankPrices } : {}), category: eventCategoryFromPrefecture(extractedLocation.prefecture), eventType: finalType, clubId: finalType === "club" ? selectedClubId : undefined, status: "open", createdBy: viewerMemberId,
       applicationDeadline: decisionDate, cancellationPolicy: cancellationPolicy.trim() || DEFAULT_CANCELLATION_POLICY, selectionMethod: finalType === "official" ? selectionMethod : "first_come", tabelogUrl: tabelogUrl.trim() || undefined, googleMapsUrl: googleMapsUrl.trim() || undefined, publicNotes: publicNotes.trim() || undefined, privateMemo: privateMemo.trim() || undefined,
     };
     setIsSubmitting(true);
     let newEvent: Event;
     try {
-      const uploaded = await Api.uploadEventImage(imageUri);
-      newEvent = await Api.createEvent({ ...draftEvent, image: uploaded.imageUrl });
+      const uploadedImage = imageUri ? (await Api.uploadEventImage(imageUri)).imageUrl : undefined;
+      newEvent = await Api.createEvent({ ...draftEvent, ...(uploadedImage ? { image: uploadedImage } : {}) });
     } catch (error) {
       setIsSubmitting(false);
       Alert.alert("イベントを作成できませんでした", error instanceof Error ? error.message : "通信状況を確認して、もう一度お試しください。");
@@ -223,6 +225,8 @@ export default function CreateEventScreen() {
         Alert.alert("イベントを作成しました", "XPの反映に時間がかかっています。マイページを再読み込みしてください。");
         router.back();
       });
+    } else {
+      router.back();
     }
     setIsSubmitting(false);
   };
@@ -265,6 +269,7 @@ export default function CreateEventScreen() {
         <View style={{ marginTop: 26, padding: 14, borderRadius: 14, backgroundColor: "#FFF8F0", borderWidth: 1, borderColor: "#EED9BF" }}><Text style={{ fontSize: 15, fontWeight: "900", color: colors.foreground, marginBottom: 10 }}>イベント開催時のルール</Text>{["イベントの日時・人数・場所などに誤りがないことを確認してください", "原則、参加者はIRO+メンバー限定としてください（やむをえず外部の方も参加される場合は、その旨を自由記述欄に記載してください）", "募集期日までに参加者を確定し、専用チャットにて参加確定連絡をお願いします"].map((rule) => <Text key={rule} style={{ fontSize: 12, lineHeight: 19, color: colors.foreground, marginBottom: 5 }}>・{rule}</Text>)}<Pressable onPress={() => setTermsAccepted((value) => !value)} style={{ flexDirection: "row", alignItems: "center", marginTop: 8 }}><View style={{ width: 24, height: 24, borderRadius: 6, backgroundColor: termsAccepted ? "#E8A0BF" : colors.surface, borderWidth: 1, borderColor: termsAccepted ? "#E8A0BF" : colors.border, alignItems: "center", justifyContent: "center" }}>{termsAccepted ? <IconSymbol name="checkmark" size={15} color="#FFF" /> : null}</View><Text style={{ flex: 1, marginLeft: 9, fontSize: 14, fontWeight: "800", color: colors.foreground }}>上記のルールを確認し、同意する <Text style={{ color: colors.error }}>必須</Text></Text></Pressable></View>
         <Pressable disabled={!termsAccepted || isSubmitting} onPress={() => { void handleCreate(); }} style={{ marginTop: 22, minHeight: 56, borderRadius: 16, backgroundColor: termsAccepted && !isSubmitting ? "#18171A" : "#B8B8BD", alignItems: "center", justifyContent: "center", opacity: termsAccepted && !isSubmitting ? 1 : 0.65 }}><Text style={{ fontSize: 17, fontWeight: "900", color: "#FFF" }}>{isSubmitting ? "作成しています…" : "イベントを作成する"}</Text></Pressable>
       </ScrollView>
+      {isSubmitting ? <View pointerEvents="auto" style={{ position: "absolute", inset: 0, backgroundColor: "rgba(255,255,255,0.72)", alignItems: "center", justifyContent: "center" }}><View style={{ minWidth: 170, borderRadius: 18, padding: 22, alignItems: "center", backgroundColor: colors.surface, shadowColor: "#000", shadowOpacity: 0.14, shadowRadius: 14, elevation: 6 }}><ActivityIndicator size="large" color="#D65E8D" /><Text style={{ marginTop: 12, fontSize: 14, fontWeight: "900", color: colors.foreground }}>イベントを作成中です</Text></View></View> : null}
       <XpRewardPopup reward={xpReward} onClose={() => { setXpReward(null); router.back(); }} />
     </ScreenContainer>
   );

@@ -73,6 +73,7 @@ import { CalendarField } from "@/components/calendar-field";
 import { getBoardRecruitmentStatus, isClubSelfIntroduction, isRecruitmentBoardCategory, isThreadPinned, sortRecruitmentThreads, type BoardRecruitmentStatus } from "@/lib/board-recruitment";
 import { memberFromAuthUser } from "@/lib/auth-member";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as Clipboard from "expo-clipboard";
 
 const BOARD_MENTION_GROUPS = getMentionGroups(MEMBERS, CLUBS);
 const THREAD_REACTION_EMOJIS = ["👏", "😊", "❤️", "🎉", "😋", "👍", "🔥", "✨", "😂", "😍", "🥰", "🤤", "🍽️", "🍷", "🍺", "🍣", "🍖", "🍰", "🙌", "💯"] as const;
@@ -355,7 +356,7 @@ function ThreadCard({ thread, onPress, onEdit, onChangeRecruitment, unreadCount 
   return (
     <Pressable
       onPress={onPress}
-      onLongPress={onChangeRecruitment}
+      onLongPress={() => { void Clipboard.setStringAsync(`https://irotas-app-20260721.k1998915n.chatgpt.site/board?category=${encodeURIComponent(thread.category)}&view=threads&thread=${encodeURIComponent(thread.id)}`); Alert.alert("リンクをコピーしました", "このスレへのリンクを共有できます。"); }}
       delayLongPress={450}
       style={{
         backgroundColor: visuallyClosed ? "#F1F1F3" : colors.surface,

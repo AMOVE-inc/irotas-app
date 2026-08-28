@@ -14,12 +14,13 @@ import {
   type ChatRoom,
 } from "@/constants/mock-data";
 import { useAuthContext } from "@/lib/auth-context";
-import { isAdminRole , canPostToChat } from "@/lib/access-control";
+import { isAdminRole, isOperatorRole, canPostToChat } from "@/lib/access-control";
 import { getAllRooms, getRoomById, getMessages, saveMessagesToStorage, loadMessagesFromStorage, loadDynamicRooms, renameRoom, addMemberToRoom, removeMemberFromRoom, toggleMessageReaction } from "@/lib/chat-store";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useColors } from "@/hooks/use-colors";
 import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
+import * as Clipboard from "expo-clipboard";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import {
@@ -50,11 +51,12 @@ import * as Api from "@/lib/_core/api";
 const REACTION_EMOJIS = ["👍", "❤️", "😂", "🎉", "😋", "🙏"] as const;
 const MORE_REACTION_EMOJIS = ["👏", "😊", "😍", "🥳", "😆", "😭", "😮", "🤔", "🙌", "✨", "🔥", "💯", "🍽️", "🍣", "🍷", "☕", "🍺", "🍰", "👌", "💪", "🙏🏻", "👀", "💡", "✅"] as const;
 
-function MessageBubble({ message, isMe, viewerId, myAvatarUri, onReact, mentionGroups, onOpenInternalLink }: { message: ChatMessage; isMe: boolean; viewerId: string; myAvatarUri?: string | null; onReact: (emoji: string) => void; mentionGroups: ReturnType<typeof getMentionGroups>; onOpenInternalLink: (pathname: "/chat" | "/board", params: Record<string, string>) => void }) {
+function MessageBubble({ message, isMe, viewerId, myAvatarUri, onReact, mentionGroups, onOpenInternalLink, canManage, onReply, onEdit, onDelete }: { message: ChatMessage; isMe: boolean; viewerId: string; myAvatarUri?: string | null; onReact: (emoji: string) => void; mentionGroups: ReturnType<typeof getMentionGroups>; onOpenInternalLink: (pathname: "/chat" | "/board", params: Record<string, string>) => void; canManage: boolean; onReply: () => void; onEdit: () => void; onDelete: () => void }) {
   const colors = useColors();
   const sender = getMemberById(message.senderId);
   const [showReactionPicker, setShowReactionPicker] = useState(false);
   const [showMoreReactions, setShowMoreReactions] = useState(false);
+  const [showActions, setShowActions] = useState(false);
 
   const formatTime = (dateStr: string) => {
     const d = new Date(dateStr);
@@ -93,7 +95,7 @@ function MessageBubble({ message, isMe, viewerId, myAvatarUri, onReact, mentionG
             {sender ? <NewMemberMark member={sender} size={11} /> : null}
           </View>
         ) : null}
-        <View
+        <Pressable onLongPress={() => setShowActions(true)} delayLongPress={350}
           style={{
             backgroundColor: isMe ? "#E8A0BF" : "#ECECEF",
             borderWidth: isMe ? 0 : 1,
@@ -121,7 +123,7 @@ function MessageBubble({ message, isMe, viewerId, myAvatarUri, onReact, mentionG
               <MentionText content={message.content} outgoing={isMe} groups={mentionGroups} rooms={getAllRooms()} threads={BOARD_THREADS} onOpenInternalLink={onOpenInternalLink} />
             </View>
           ) : null}
-        </View>
+        </Pressable>
         <Text
           style={{
             fontSize: 10,
@@ -155,6 +157,7 @@ function MessageBubble({ message, isMe, viewerId, myAvatarUri, onReact, mentionG
             {showMoreReactions ? <View style={{ width: "100%", flexDirection: "row", flexWrap: "wrap", marginTop: 4 }}>{MORE_REACTION_EMOJIS.map((emoji) => <Pressable key={emoji} onPress={() => { onReact(emoji); setShowReactionPicker(false); setShowMoreReactions(false); }} style={{ width: 34, height: 32, alignItems: "center", justifyContent: "center" }}><Text style={{ fontSize: 19 }}>{emoji}</Text></Pressable>)}</View> : null}
           </View>
         ) : null}
+        <Modal visible={showActions} transparent animationType="fade" onRequestClose={() => setShowActions(false)}><Pressable onPress={() => setShowActions(false)} style={{ flex: 1, backgroundColor: "rgba(20,18,24,0.48)", justifyContent: "flex-end" }}><Pressable onPress={() => {}} style={{ backgroundColor: colors.background, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 16, paddingBottom: 30 }}><View style={{ flexDirection: "row", justifyContent: "space-around", backgroundColor: colors.surface, borderRadius: 16, padding: 10, marginBottom: 10 }}>{REACTION_EMOJIS.map((emoji) => <Pressable key={emoji} onPress={() => { onReact(emoji); setShowActions(false); }} style={{ padding: 7 }}><Text style={{ fontSize: 24 }}>{emoji}</Text></Pressable>)}</View>{[{ label: "返信", icon: "arrowshape.turn.up.left", action: onReply }, { label: "テキストをコピー", icon: "doc.on.doc", action: () => { void Clipboard.setStringAsync(message.content); } }, ...(canManage ? [{ label: "メッセージを編集", icon: "pencil", action: onEdit }, { label: "メッセージを削除", icon: "trash", action: onDelete }] : []), { label: "メッセージをピン留め", icon: "pin.fill", action: () => Alert.alert("ピン留めしました") }].map((item) => <Pressable key={item.label} onPress={() => { item.action(); setShowActions(false); }} style={{ minHeight: 48, flexDirection: "row", alignItems: "center", paddingHorizontal: 12, borderBottomWidth: 0.5, borderBottomColor: colors.border }}><IconSymbol name={item.icon as any} size={19} color={item.label.includes("削除") ? colors.error : colors.foreground} /><Text style={{ marginLeft: 12, fontSize: 15, fontWeight: "700", color: item.label.includes("削除") ? colors.error : colors.foreground }}>{item.label}</Text></Pressable>)}</Pressable></Pressable></Modal>
       </View>
     </View>
   );
@@ -166,6 +169,7 @@ export default function ChatScreen() {
   const { user: authUser } = useAuthContext();
   const viewerMemberId = authUser?.memberId ?? (authUser?.id ? `member-${authUser.id}` : CURRENT_USER.id);
   const userIsAdmin = isAdminRole(authUser?.role, authUser?.accessRole);
+  const userCanModerate = isOperatorRole(authUser?.role, authUser?.accessRole) || userIsAdmin;
   const { id, unreadCount: unreadCountParam } = useLocalSearchParams<{ id: string; unreadCount?: string }>();
   const [messageText, setMessageText] = useState("");
   const [mentionQuery, setMentionQuery] = useState<string | null>(null);
@@ -270,6 +274,7 @@ export default function ChatScreen() {
 
   const insets = useSafeAreaInsets();
   const [pendingImage, setPendingImage] = useState<string | null>(null);
+  const [showAttachmentMenu, setShowAttachmentMenu] = useState(false);
 
   const handlePickPhoto = useCallback(async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -474,6 +479,10 @@ export default function ChatScreen() {
               onReact={(emoji) => handleReaction(item.id, emoji)}
               mentionGroups={mentionGroups}
               onOpenInternalLink={(pathname, params) => router.push({ pathname, params } as any)}
+              canManage={item.senderId === viewerMemberId || userCanModerate}
+              onReply={() => { const sender = getMemberById(item.senderId); setMessageText(`@${item.externalAuthorName ?? sender?.name ?? "メンバー"} `); inputRef.current?.focus(); }}
+              onEdit={() => { const next = Platform.OS === "web" ? window.prompt("メッセージを編集", item.content) : null; if (typeof next === "string" && next.trim()) { setMessages((current) => current.map((message) => message.id === item.id ? { ...message, content: next.trim() } : message)); void saveMessagesToStorage(id ?? "", [{ ...item, content: next.trim() }]); } }}
+              onDelete={() => { setMessages((current) => current.filter((message) => message.id !== item.id)); }}
             />
           )}
           contentContainerStyle={{ paddingVertical: 16 }}
@@ -578,14 +587,14 @@ export default function ChatScreen() {
               paddingBottom: keyboardVisible ? 10 : (Platform.OS === "ios" ? Math.max(insets.bottom, 10) : 10),
             }}
           >
-            {/* 画像選択ボタン */}
+            {/* 添付メニュー */}
             <TouchableOpacity
-              onPress={handlePickPhoto}
-              style={{ marginRight: 10 }}
+              onPress={() => setShowAttachmentMenu(true)}
+              style={{ marginRight: 10, width: 30, height: 30, borderRadius: 15, backgroundColor: colors.surface, alignItems: "center", justifyContent: "center" }}
             >
               <IconSymbol
-                name="photo.fill"
-                size={26}
+                name="plus"
+                size={22}
                 color={colors.muted}
               />
             </TouchableOpacity>
@@ -622,6 +631,8 @@ export default function ChatScreen() {
           </View>
         </View> : <View style={{ borderTopWidth: 1, borderTopColor: colors.border, backgroundColor: colors.surface, paddingHorizontal: 18, paddingVertical: 14, alignItems: "center" }}><View style={{ flexDirection: "row", alignItems: "center" }}><IconSymbol name="lock.fill" size={15} color={colors.muted} /><Text style={{ marginLeft: 7, fontSize: 13, fontWeight: "800", color: colors.muted }}>運営からのお知らせ専用です</Text></View><Text style={{ marginTop: 4, fontSize: 11, color: colors.muted }}>メンバーから返信することはできません</Text></View>}
       </KeyboardAvoidingView>
+
+      <Modal visible={showAttachmentMenu} transparent animationType="fade" onRequestClose={() => setShowAttachmentMenu(false)}><Pressable onPress={() => setShowAttachmentMenu(false)} style={{ flex: 1, backgroundColor: "rgba(20,18,24,0.38)", justifyContent: "flex-end" }}><Pressable onPress={() => {}} style={{ backgroundColor: colors.background, borderTopLeftRadius: 22, borderTopRightRadius: 22, padding: 18, paddingBottom: 34 }}><Text style={{ fontSize: 16, fontWeight: "900", color: colors.foreground, marginBottom: 10 }}>添付するものを選択</Text>{[{ label: "写真", icon: "photo.fill", action: () => { setShowAttachmentMenu(false); void handlePickPhoto(); } }, { label: "投票", icon: "chart.bar.fill", action: () => { setMessageText("【投票】\n質問：\n1. \n2. "); setShowAttachmentMenu(false); inputRef.current?.focus(); } }, { label: "ファイル", icon: "doc.fill", action: () => { setShowAttachmentMenu(false); Alert.alert("ファイルを選択", "端末のファイル選択画面から添付してください。"); } }].map((item) => <Pressable key={item.label} onPress={item.action} style={{ minHeight: 54, flexDirection: "row", alignItems: "center", borderBottomWidth: 0.5, borderBottomColor: colors.border }}><View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: "#5865F218", alignItems: "center", justifyContent: "center" }}><IconSymbol name={item.icon as any} size={19} color="#5865F2" /></View><Text style={{ marginLeft: 12, fontSize: 15, fontWeight: "800", color: colors.foreground }}>{item.label}</Text></Pressable>)}</Pressable></Pressable></Modal>
 
       {/* ===== 参加者一覧モーダル ===== */}
       <Modal

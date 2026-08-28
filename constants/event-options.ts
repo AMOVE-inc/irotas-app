@@ -27,6 +27,7 @@ export const GOURMET_GENRES = [
   "カフェ・喫茶店",
   "スイーツ",
   "バー",
+  "その他",
 ] as const;
 
 export const EVENT_BUDGET_RANGES = [

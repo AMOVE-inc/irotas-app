@@ -200,17 +200,11 @@ export default function ChatListScreen() {
       </View>
 
       {announcementRoom ? <ChatRoomCard room={announcementRoom} /> : null}
-      {rankRooms.length > 0 ? (
-        <View>
-          <View style={{ paddingHorizontal: 16, paddingVertical: 8, backgroundColor: colors.surface }}><Text style={{ fontSize: 12, fontWeight: "700", color: colors.muted, letterSpacing: 0.5 }}>あなたのランク専用チャット</Text></View>
-          {rankRooms.map((room) => <ChatRoomCard key={room.id} room={room} />)}
-        </View>
-      ) : null}
-      {joinedChatRooms.length > 0 ? <View style={{ paddingHorizontal: 16, paddingVertical: 8, backgroundColor: colors.surface }}><Text style={{ fontSize: 12, fontWeight: "700", color: colors.muted, letterSpacing: 0.5 }}>参加中のチャット</Text></View> : null}
       <FlatList
         data={joinedChatRooms}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => <ChatRoomCard room={item} />}
+        ListHeaderComponent={<>{rankRooms.length > 0 ? <View><View style={{ paddingHorizontal: 16, paddingVertical: 8, backgroundColor: colors.surface }}><Text style={{ fontSize: 12, fontWeight: "700", color: colors.muted, letterSpacing: 0.5 }}>あなたのランク専用チャット</Text></View>{rankRooms.map((room) => <ChatRoomCard key={room.id} room={room} />)}</View> : null}{joinedChatRooms.length > 0 ? <View style={{ paddingHorizontal: 16, paddingVertical: 8, backgroundColor: colors.surface }}><Text style={{ fontSize: 12, fontWeight: "700", color: colors.muted, letterSpacing: 0.5 }}>参加中のチャット</Text></View> : null}</>}
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={<View style={{ alignItems: "center", paddingVertical: 60, paddingHorizontal: 24 }}><IconSymbol name="message.fill" size={48} color={colors.border} /><Text style={{ fontSize: 16, fontWeight: "700", color: colors.foreground, marginTop: 16 }}>参加中のチャットはありません</Text><Text style={{ fontSize: 13, color: colors.muted, marginTop: 6, textAlign: "center", lineHeight: 20 }}>イベントや部活動に参加するか、友達を招待してグループを作成できます</Text></View>}
       />

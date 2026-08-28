@@ -20,7 +20,7 @@ export default function Root({ children }: PropsWithChildren) {
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content="IRO＋" />
-        <meta property="og:title" content="IROTAS｜Gourmet Community" />
+        <meta property="og:title" content="IRO+｜Gourmet Community" />
         <meta property="og:description" content="食を通じてつながる、IROTAS会員限定コミュニティアプリ" />
         <meta property="og:type" content="website" />
         <meta property="og:image" content="https://irotas-app-20260721.k1998915n.chatgpt.site/pwa/icon-1024.png" />

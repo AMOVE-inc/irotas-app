@@ -207,7 +207,7 @@ function RestaurantDetail({
           <View style={{ flexDirection: "row", alignItems: "center" }}>
             <IconSymbol name="person.fill" size={18} color="#E8A0BF" />
             <Text style={{ fontSize: 14, color: colors.foreground, marginLeft: 10 }}>
-              登録者: {restaurant.registeredBy.name}
+              {restaurant.sourceType === "meal_report" ? `登録者: ごちそうさま報告の投稿者` : "登録元: IRO+グルメマップ"}
             </Text>
           </View>
         </View>
@@ -238,7 +238,7 @@ function RestaurantDetail({
             </View>
             <Pressable onPress={onOpenSource} style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: 14, paddingVertical: 13 }}>
               <IconSymbol name="bubble.left.and.bubble.right.fill" size={17} color="#5B5A73" />
-              <Text style={{ color: "#5B5A73", fontSize: 14, fontWeight: "800", marginLeft: 7 }}>元のごちそうさま報告を見る</Text>
+              <Text style={{ color: "#5B5A73", fontSize: 14, fontWeight: "800", marginLeft: 7 }}>過去のごちそうさま報告を見る</Text>
             </Pressable>
             {canManage ? <Pressable onPress={onUnpublish} style={{ alignItems: "center", paddingVertical: 12, marginTop: 6 }}><Text style={{ color: "#C94B55", fontSize: 13, fontWeight: "700" }}>グルメマップへの掲載を解除</Text></Pressable> : null}
           </View>
