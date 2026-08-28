@@ -1181,7 +1181,7 @@ export default function ProfileScreen() {
         </Pressable> : null}
 
         {/* Points Progress */}
-        {!userIsOperator ? <PointsProgressCard points={user.points} rank={user.rank} showRank={false} /> : null}
+        {!userIsOperator ? <PointsProgressCard points={user.points} rank={user.rank} /> : null}
 
         {/* イロタスポイントカード */}
         <View

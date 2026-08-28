@@ -25,6 +25,7 @@ import {
   Alert,
   type AlertButton,
   Linking,
+  Modal,
   Platform,
   Pressable,
   ScrollView,
@@ -32,16 +33,6 @@ import {
   Text,
   View,
 } from "react-native";
-
-function showApplicationConfirmation(title: string, message: string, buttons: AlertButton[]) {
-  if (Platform.OS === "web") {
-    if (window.confirm(`${title}\n\n${message}`)) {
-      buttons.find((button) => button.style !== "cancel")?.onPress?.();
-    }
-    return;
-  }
-  Alert.alert(title, message, buttons);
-}
 
 export default function EventDetailScreen() {
   const colors = useColors();
@@ -70,9 +61,11 @@ export default function EventDetailScreen() {
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [contactedOrganizer, setContactedOrganizer] = useState(false);
   const [cancellationPolicyConfirmed, setCancellationPolicyConfirmed] = useState(false);
+  const [applicationConfirmation, setApplicationConfirmation] = useState<{ title: string; message: string; buttons: AlertButton[] } | null>(null);
   const [, setEventRevision] = useState(0);
   // ボタン連打防止フラグ
   const joiningRef = useRef(false);
+  const usePointsRef = useRef(false);
   const favoriteEventIds = useEventFavorites();
 
   useEffect(() => {
@@ -165,6 +158,7 @@ export default function EventDetailScreen() {
   const pendingCancellationRequests = getPendingCancellationRequests(event);
   const hasPendingCancellationRequest = pendingCancellationRequests.some((request) => request.memberId === viewerMemberId);
   const requiresOrganizerApproval = event.eventType === "gourmet" || event.eventType === "club";
+  const showApplicationConfirmation = (title: string, message: string, buttons: AlertButton[]) => setApplicationConfirmation({ title, message, buttons });
 
   const handleJoin = () => {
     if (event.status === "full") {
@@ -194,9 +188,11 @@ export default function EventDetailScreen() {
             // 連打防止ロック
             if (joiningRef.current) return;
             joiningRef.current = true;
+            const confirmedPointsToUse = usePointsRef.current && isOfficialEvent ? Math.min(irotasPoints, priceNum) : 0;
+            const confirmedFinalPrice = Math.max(0, priceNum - confirmedPointsToUse);
             try {
               if (event.viewerMemberId) {
-                const application = await Api.applyToEvent(event.id, termsAccepted, pointsToUse);
+                const application = await Api.applyToEvent(event.id, termsAccepted, confirmedPointsToUse);
                 const updated = application.event;
                 setEvent(updated);
                 if (application.pointBalance !== null) setIrotasPoints(application.pointBalance);
@@ -234,11 +230,11 @@ export default function EventDetailScreen() {
               }
 
               // イロタスポイントを使用する場合は消費
-              if (usePoints && pointsToUse > 0) {
+              if (confirmedPointsToUse > 0) {
                 const newBalance = await adjustIrotasPoints(
                   CURRENT_USER.id,
                   CURRENT_USER.name,
-                  -pointsToUse,
+                  -confirmedPointsToUse,
                   `イベント「${event.title}」参加費割引`
                 );
                 setIrotasPoints(newBalance);
@@ -258,7 +254,7 @@ export default function EventDetailScreen() {
                 userId: CURRENT_USER.id,
                 userName: CURRENT_USER.name,
                 userRank: CURRENT_USER.rank,
-                amount: finalPrice,
+                amount: confirmedFinalPrice,
               });
 
               // チャットルームに参加（なければ作成）
@@ -819,7 +815,7 @@ export default function EventDetailScreen() {
               </View>
               <Switch
                 value={usePoints}
-                onValueChange={setUsePoints}
+                onValueChange={(value) => { usePointsRef.current = value; setUsePoints(value); }}
                 trackColor={{ false: colors.border, true: "#FF9500" }}
                 thumbColor="#FFF"
               />
@@ -875,7 +871,7 @@ export default function EventDetailScreen() {
           </View>
         ) : null}
 
-        {[{ url: event.tabelogUrl, label: "食べログを開く" }, { url: event.googleMapsUrl, label: "Googleマップを開く" }, { url: !event.tabelogUrl && !event.googleMapsUrl ? event.externalUrl : undefined, label: "店舗・イベントURLを開く" }].map((link) => link.url ? <Pressable key={link.label} onPress={() => Linking.openURL(link.url!)} style={{ flexDirection: "row", alignItems: "center", backgroundColor: "#EAF5FA", borderRadius: 14, padding: 14, marginBottom: 10 }}><IconSymbol name="link" size={18} color="#5B9BD5" /><Text style={{ flex: 1, fontSize: 14, fontWeight: "700", color: "#5B9BD5", marginLeft: 8 }} numberOfLines={1}>{link.label}</Text><IconSymbol name="chevron.right" size={16} color="#5B9BD5" /></Pressable> : null)}
+        {[{ url: event.tabelogUrl, label: "食べログを開く" }, { url: event.googleMapsUrl, label: "Googleマップを開く" }].map((link) => link.url ? <Pressable key={link.label} onPress={() => Linking.openURL(link.url!)} style={{ flexDirection: "row", alignItems: "center", backgroundColor: "#EAF5FA", borderRadius: 14, padding: 14, marginBottom: 10 }}><IconSymbol name="link" size={18} color="#5B9BD5" /><Text style={{ flex: 1, fontSize: 14, fontWeight: "700", color: "#5B9BD5", marginLeft: 8 }} numberOfLines={1}>{link.label}</Text><IconSymbol name="chevron.right" size={16} color="#5B9BD5" /></Pressable> : null)}
 
         {isJoined && new Date(`${event.date}T${event.time}:00`) < new Date() ? <Pressable onPress={() => router.push({ pathname: "/event-feedback" as any, params: { id: event.id } })} style={{ flexDirection: "row", alignItems: "center", backgroundColor: "#FFF4D8", borderRadius: 14, padding: 15, marginBottom: 16, borderWidth: 1, borderColor: "#EFD494" }}><IconSymbol name="star.fill" size={22} color="#D69A14" /><View style={{ flex: 1, marginLeft: 10 }}><Text style={{ fontSize: 14, fontWeight: "900", color: colors.foreground }}>イベントを評価する</Text><Text style={{ fontSize: 11, color: colors.muted, marginTop: 3 }}>次回のイベント改善にご協力ください</Text></View><IconSymbol name="chevron.right" size={17} color="#D69A14" /></Pressable> : null}
 
@@ -911,6 +907,22 @@ export default function EventDetailScreen() {
           </View>
         )}
       </ScrollView>
+
+      <Modal visible={applicationConfirmation !== null} transparent animationType="fade" onRequestClose={() => setApplicationConfirmation(null)}>
+        <View style={{ flex: 1, backgroundColor: "rgba(20,18,24,0.52)", alignItems: "center", justifyContent: "center", padding: 22 }}>
+          <View style={{ width: "100%", maxWidth: 430, borderRadius: 24, backgroundColor: colors.background, overflow: "hidden", shadowColor: "#000", shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.28, shadowRadius: 24, elevation: 12 }}>
+            <View style={{ height: 8, backgroundColor: isOfficialEvent ? "#D65E8D" : "#5B9BD5" }} />
+            <View style={{ padding: 22 }}>
+              <View style={{ width: 52, height: 52, borderRadius: 26, alignSelf: "center", alignItems: "center", justifyContent: "center", backgroundColor: isOfficialEvent ? "#FCEAF2" : "#EAF3FA", marginBottom: 12 }}><IconSymbol name="calendar" size={25} color={isOfficialEvent ? "#D65E8D" : "#5B9BD5"} /></View>
+              <Text style={{ textAlign: "center", fontSize: 20, fontWeight: "900", color: colors.foreground }}>{applicationConfirmation?.title}</Text>
+              <Text style={{ textAlign: "center", fontSize: 15, lineHeight: 22, fontWeight: "800", color: colors.foreground, marginTop: 12 }}>{event.title}</Text>
+              <Text style={{ textAlign: "center", fontSize: 12, lineHeight: 19, color: colors.muted, marginTop: 8 }}>{applicationConfirmation?.message.split("\n").slice(1).join("\n")}</Text>
+              {isOfficialEvent && priceNum > 0 && irotasPoints > 0 ? <View style={{ marginTop: 18, borderRadius: 16, padding: 14, backgroundColor: "#FFF7E8", borderWidth: 1, borderColor: "#F4D89D" }}><View style={{ flexDirection: "row", alignItems: "center" }}><View style={{ flex: 1 }}><Text style={{ fontSize: 14, fontWeight: "900", color: "#A56712" }}>イロタスポイントを使う</Text><Text style={{ fontSize: 11, color: colors.muted, marginTop: 3 }}>保有 {irotasPoints.toLocaleString()}pt</Text></View><Switch value={usePoints} onValueChange={(value) => { usePointsRef.current = value; setUsePoints(value); }} trackColor={{ false: colors.border, true: "#FF9500" }} thumbColor="#FFF" /></View>{usePoints ? <Text style={{ marginTop: 10, fontSize: 13, fontWeight: "900", color: "#2E8B57" }}>{pointsToUse.toLocaleString()}pt利用 → お支払い {finalPrice.toLocaleString()}円</Text> : null}</View> : null}
+              <View style={{ flexDirection: "row", gap: 10, marginTop: 22 }}>{applicationConfirmation?.buttons.map((button) => { const cancel = button.style === "cancel"; return <Pressable key={button.text} onPress={() => { setApplicationConfirmation(null); if (!cancel) button.onPress?.(); }} style={{ flex: 1, minHeight: 50, borderRadius: 14, alignItems: "center", justifyContent: "center", backgroundColor: cancel ? colors.surface : isOfficialEvent ? "#D65E8D" : "#5B9BD5", borderWidth: cancel ? 1 : 0, borderColor: colors.border }}><Text style={{ fontSize: 15, fontWeight: "900", color: cancel ? colors.foreground : "#FFF" }}>{button.text}</Text></Pressable>; })}</View>
+            </View>
+          </View>
+        </View>
+      </Modal>
 
       {/* Bottom CTA */}
       <View

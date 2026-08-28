@@ -1974,7 +1974,7 @@ function CreateThreadModal({
               </View>
 
               <View>
-                <Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground, marginBottom: 6 }}>予算（任意）</Text>
+                <Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground, marginBottom: 6 }}>予算</Text>
                 <Pressable
                   onPress={() => setOptionModal("budget")}
                   style={{ backgroundColor: colors.surface, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 13, flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}
@@ -1987,7 +1987,7 @@ function CreateThreadModal({
               </View>
 
               <View>
-                <Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground, marginBottom: 6 }}>おすすめメニュー（任意）</Text>
+                <Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground, marginBottom: 6 }}>おすすめメニュー</Text>
                 <TextInput
                   value={recommendedMenu}
                   onChangeText={setRecommendedMenu}
@@ -2018,12 +2018,12 @@ function CreateThreadModal({
               </View>
 
               <View>
-                <Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground, marginBottom: 6 }}>タイトル（任意）</Text>
+                <Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground, marginBottom: 6 }}>タイトル</Text>
                 <TextInput value={mealTitle} onChangeText={setMealTitle} placeholder="例：また行きたい、感動の一皿" placeholderTextColor={colors.muted} style={{ backgroundColor: colors.surface, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: colors.foreground }} />
               </View>
 
               <View>
-                <Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground, marginBottom: 6 }}>感想（任意）</Text>
+                <Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground, marginBottom: 6 }}>感想</Text>
                 <TextInput
                   value={mealComment}
                   onChangeText={setMealComment}
@@ -2037,7 +2037,7 @@ function CreateThreadModal({
 
               <View>
                 <Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground, marginBottom: 6 }}>
-                  Google Mapのリンク（任意）
+                  Google Mapのリンク
                 </Text>
                 <TextInput
                   value={googleMapUrl}
@@ -2065,7 +2065,7 @@ function CreateThreadModal({
               </View>
 
               <View>
-                <Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground, marginBottom: 6 }}>食べログのリンク（任意）</Text>
+                <Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground, marginBottom: 6 }}>食べログのリンク</Text>
                 <TextInput
                   value={tabelogUrl}
                   onChangeText={setTabelogUrl}
@@ -2284,7 +2284,7 @@ function CreateThreadModal({
 export default function BoardScreen() {
   const colors = useColors();
   const router = useRouter();
-  const { compose, category: categoryParam, view, thread: threadParam } = useLocalSearchParams<{ compose?: string; category?: string; view?: string; thread?: string }>();
+  const { compose, category: categoryParam, view, thread: threadParam, fromHome } = useLocalSearchParams<{ compose?: string; category?: string; view?: string; thread?: string; fromHome?: string }>();
   const { user: authUser } = useAuthContext();
   const userIsAdmin = canManageBoardCategories(authUser?.role, authUser?.accessRole);
   const userCanModerateAll = isOperatorRole(authUser?.role, authUser?.accessRole);
@@ -2578,7 +2578,7 @@ export default function BoardScreen() {
         }}
       >
         {isThreadView || isClubIndexView ? (
-          <Pressable accessibilityLabel="掲示板トップへ戻る" onPress={() => router.replace("/board")} style={{ flexDirection: "row", alignItems: "center", flex: 1, paddingVertical: 4 }}>
+          <Pressable accessibilityLabel={fromHome === "1" ? "ホームへ戻る" : "掲示板トップへ戻る"} onPress={() => fromHome === "1" ? router.replace("/(tabs)" as any) : router.replace("/board")} style={{ flexDirection: "row", alignItems: "center", flex: 1, paddingVertical: 4 }}>
             <IconSymbol name="chevron.left" size={20} color={colors.foreground} />
             <Text numberOfLines={1} style={{ flex: 1, marginLeft: 8, fontSize: 20, fontWeight: "800", color: colors.foreground }}>
               {isClubIndexView ? "部活動" : activeCategoryLabel}

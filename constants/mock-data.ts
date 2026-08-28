@@ -696,6 +696,7 @@ export const BOARD_THREADS: BoardThread[] = [
       postTitle: "特別な日にまた行きたい一軒",
       restaurantName: "銀座の新しいフレンチレストラン",
       prefecture: "東京都",
+      areaDisplay: "銀座",
       budget: "10,000〜20,000円",
       recommendedMenu: "シェフのおまかせコース",
       rating: 5,
