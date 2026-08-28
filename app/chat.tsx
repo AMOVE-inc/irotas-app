@@ -24,6 +24,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import {
   Alert,
+  ActivityIndicator,
   FlatList,
   KeyboardAvoidingView,
   Keyboard,
@@ -56,6 +57,8 @@ function MessageBubble({ message, isMe, viewerId, myAvatarUri, onReact, mentionG
   const [showReactionPicker, setShowReactionPicker] = useState(false);
   const [showMoreReactions, setShowMoreReactions] = useState(false);
   const [showActions, setShowActions] = useState(false);
+  const pollLines = message.content.startsWith("📊 ") ? message.content.split("\n") : [];
+  const pollChoices = pollLines.filter((line) => line.startsWith("◯ ")).map((line) => line.slice(2));
 
   const formatTime = (dateStr: string) => {
     const d = new Date(dateStr);
@@ -119,7 +122,7 @@ function MessageBubble({ message, isMe, viewerId, myAvatarUri, onReact, mentionG
           ) : null}
           {message.content ? (
             <View style={{ paddingHorizontal: 14, paddingVertical: 10 }}>
-              <MentionText content={message.content} outgoing={isMe} groups={mentionGroups} rooms={getAllRooms()} threads={BOARD_THREADS} onOpenInternalLink={onOpenInternalLink} />
+              {pollChoices.length >= 2 ? <View style={{ minWidth: 220 }}><MentionText content={pollLines[0].replace(/^📊 /, "")} outgoing={isMe} groups={mentionGroups} /><View style={{ gap: 7, marginTop: 10 }}>{pollChoices.map((choice) => { const voteKey = `🗳️${choice}`; const voters = message.reactions?.[voteKey] ?? []; const selected = voters.includes(viewerId); return <Pressable key={choice} onPress={() => onReact(voteKey)} style={{ borderRadius: 8, paddingHorizontal: 10, paddingVertical: 9, borderWidth: 1, borderColor: selected ? "#5865F2" : isMe ? "#FFF8" : colors.border, backgroundColor: selected ? "#5865F228" : "transparent" }}><Text style={{ fontSize: 13, fontWeight: "800", color: isMe ? "#FFF" : colors.foreground }}>{selected ? "●" : "○"} {choice}　{voters.length}</Text></Pressable>; })}</View><Text style={{ fontSize: 10, color: isMe ? "#FFF" : colors.muted, marginTop: 9 }}>{pollLines.find((line) => line.startsWith("⏱"))}</Text></View> : <MentionText content={message.content} outgoing={isMe} groups={mentionGroups} rooms={getAllRooms()} threads={BOARD_THREADS} onOpenInternalLink={onOpenInternalLink} />}
             </View>
           ) : null}
         </Pressable>
@@ -135,7 +138,7 @@ function MessageBubble({ message, isMe, viewerId, myAvatarUri, onReact, mentionG
           {formatTime(message.createdAt)}
         </Text>
         <View style={{ flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 4, marginTop: 3, justifyContent: isMe ? "flex-end" : "flex-start" }}>
-          {Object.entries(message.reactions ?? {}).map(([emoji, memberIds]) => (
+          {Object.entries(message.reactions ?? {}).filter(([emoji]) => !emoji.startsWith("🗳️")).map(([emoji, memberIds]) => (
             <Pressable
               key={emoji}
               onPress={() => onReact(emoji)}
@@ -208,6 +211,8 @@ export default function ChatScreen() {
   // 初回起動時: プロフィール画像と永続化メッセージを読み込む
   useEffect(() => {
     if (!id) return;
+    setIsLoadingRoom(true);
+    const loadingFallback = setTimeout(() => setIsLoadingRoom(false), 8000);
     // プロフィール画像読み込み
     AsyncStorage.getItem("profile_avatar_uri").then((uri) => {
       if (uri) setMyAvatarUri(uri);
@@ -244,9 +249,10 @@ export default function ChatScreen() {
         const normalized = sharedRoom as unknown as ChatRoom;
         setRoom(normalized);
         setRoomParticipants([...normalized.participants]);
-      }).catch(() => {});
+      }).catch(() => {}).finally(() => setIsLoadingRoom(false));
       Api.getMemberDirectory().then(setDirectory).catch(() => {});
-    });
+    }).catch(() => setIsLoadingRoom(false));
+    return () => clearTimeout(loadingFallback);
   }, [id]);
 
   // @入力を検出してメンション候補を表示
@@ -274,6 +280,11 @@ export default function ChatScreen() {
   const insets = useSafeAreaInsets();
   const [pendingImage, setPendingImage] = useState<string | null>(null);
   const [showAttachmentMenu, setShowAttachmentMenu] = useState(false);
+  const [isLoadingRoom, setIsLoadingRoom] = useState(true);
+  const [showPollComposer, setShowPollComposer] = useState(false);
+  const [pollQuestion, setPollQuestion] = useState("");
+  const [pollOptions, setPollOptions] = useState(["", ""]);
+  const [pollDeadline, setPollDeadline] = useState("");
 
   const handlePickPhoto = useCallback(async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -383,7 +394,7 @@ export default function ChatScreen() {
     return (
       <ScreenContainer edges={["top", "left", "right"]}>
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-          <Text style={{ fontSize: 16, color: colors.muted }}>チャットが見つかりません</Text>
+          {isLoadingRoom ? <><ActivityIndicator size="large" color="#E8A0BF" /><Text style={{ fontSize: 14, color: colors.muted, marginTop: 12 }}>チャットを読み込んでいます…</Text></> : <Text style={{ fontSize: 16, color: colors.muted }}>チャットが見つかりません</Text>}
         </View>
       </ScreenContainer>
     );
@@ -630,7 +641,8 @@ export default function ChatScreen() {
         </View> : <View style={{ borderTopWidth: 1, borderTopColor: colors.border, backgroundColor: colors.surface, paddingHorizontal: 18, paddingVertical: 14, alignItems: "center" }}><View style={{ flexDirection: "row", alignItems: "center" }}><IconSymbol name="lock.fill" size={15} color={colors.muted} /><Text style={{ marginLeft: 7, fontSize: 13, fontWeight: "800", color: colors.muted }}>運営からのお知らせ専用です</Text></View><Text style={{ marginTop: 4, fontSize: 11, color: colors.muted }}>メンバーから返信することはできません</Text></View>}
       </KeyboardAvoidingView>
 
-      <Modal visible={showAttachmentMenu} transparent animationType="fade" onRequestClose={() => setShowAttachmentMenu(false)}><Pressable onPress={() => setShowAttachmentMenu(false)} style={{ flex: 1, backgroundColor: "rgba(20,18,24,0.38)", justifyContent: "flex-end" }}><Pressable onPress={() => {}} style={{ backgroundColor: colors.background, borderTopLeftRadius: 22, borderTopRightRadius: 22, padding: 18, paddingBottom: 34 }}><Text style={{ fontSize: 16, fontWeight: "900", color: colors.foreground, marginBottom: 10 }}>添付するものを選択</Text>{[{ label: "写真", icon: "photo.fill", action: () => { setShowAttachmentMenu(false); void handlePickPhoto(); } }, { label: "投票", icon: "chart.bar.fill", action: () => { setMessageText("📊 **投票の質問**\n\n☐ 選択肢1\n☐ 選択肢2"); setShowAttachmentMenu(false); inputRef.current?.focus(); } }].map((item) => <Pressable key={item.label} onPress={item.action} style={{ minHeight: 54, flexDirection: "row", alignItems: "center", borderBottomWidth: 0.5, borderBottomColor: colors.border }}><View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: "#5865F218", alignItems: "center", justifyContent: "center" }}><IconSymbol name={item.icon as any} size={19} color="#5865F2" /></View><Text style={{ marginLeft: 12, fontSize: 15, fontWeight: "800", color: colors.foreground }}>{item.label}</Text></Pressable>)}</Pressable></Pressable></Modal>
+      <Modal visible={showAttachmentMenu} transparent animationType="fade" onRequestClose={() => setShowAttachmentMenu(false)}><Pressable onPress={() => setShowAttachmentMenu(false)} style={{ flex: 1, backgroundColor: "rgba(20,18,24,0.38)", justifyContent: "flex-end" }}><Pressable onPress={() => {}} style={{ backgroundColor: colors.background, borderTopLeftRadius: 22, borderTopRightRadius: 22, padding: 18, paddingBottom: 34 }}><Text style={{ fontSize: 16, fontWeight: "900", color: colors.foreground, marginBottom: 10 }}>添付するものを選択</Text>{[{ label: "写真", icon: "photo.fill", action: () => { setShowAttachmentMenu(false); void handlePickPhoto(); } }, { label: "投票", icon: "chart.bar.fill", action: () => { setShowAttachmentMenu(false); setShowPollComposer(true); } }].map((item) => <Pressable key={item.label} onPress={item.action} style={{ minHeight: 54, flexDirection: "row", alignItems: "center", borderBottomWidth: 0.5, borderBottomColor: colors.border }}><View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: "#5865F218", alignItems: "center", justifyContent: "center" }}><IconSymbol name={item.icon as any} size={19} color="#5865F2" /></View><Text style={{ marginLeft: 12, fontSize: 15, fontWeight: "800", color: colors.foreground }}>{item.label}</Text></Pressable>)}</Pressable></Pressable></Modal>
+      <Modal visible={showPollComposer} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setShowPollComposer(false)}><KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ flex: 1, backgroundColor: colors.background }}><View style={{ flexDirection: "row", alignItems: "center", padding: 16, borderBottomWidth: 1, borderBottomColor: colors.border }}><Pressable onPress={() => setShowPollComposer(false)}><Text style={{ color: colors.muted }}>キャンセル</Text></Pressable><Text style={{ flex: 1, textAlign: "center", fontSize: 18, fontWeight: "900", color: colors.foreground }}>投票を作成</Text><Pressable disabled={!pollQuestion.trim() || pollOptions.filter((v) => v.trim()).length < 2 || !pollDeadline.trim()} onPress={() => { const options = pollOptions.filter((v) => v.trim()); setMessageText(`📊 **${pollQuestion.trim()}**\n${options.map((v) => `◯ ${v.trim()}`).join("\n")}\n⏱ 期限: ${pollDeadline.trim()}`); setShowPollComposer(false); }}><Text style={{ fontWeight: "900", color: pollQuestion.trim() && pollOptions.filter((v) => v.trim()).length >= 2 && pollDeadline.trim() ? "#5865F2" : colors.border }}>作成</Text></Pressable></View><ScrollView contentContainerStyle={{ padding: 18, gap: 12 }} keyboardShouldPersistTaps="handled"><Text style={{ fontSize: 12, fontWeight: "800", color: colors.muted }}>質問</Text><TextInput value={pollQuestion} onChangeText={setPollQuestion} placeholder="質問を入力" placeholderTextColor={colors.muted} style={{ borderRadius: 10, backgroundColor: colors.surface, padding: 13, color: colors.foreground }} /><Text style={{ fontSize: 12, fontWeight: "800", color: colors.muted }}>選択肢</Text>{pollOptions.map((value, index) => <TextInput key={index} value={value} onChangeText={(text) => setPollOptions((items) => items.map((item, i) => i === index ? text : item))} placeholder={`選択肢 ${index + 1}`} placeholderTextColor={colors.muted} style={{ borderRadius: 10, backgroundColor: colors.surface, padding: 13, color: colors.foreground }} />)}{pollOptions.length < 10 ? <Pressable onPress={() => setPollOptions((items) => [...items, ""])}><Text style={{ color: "#5865F2", fontWeight: "800" }}>＋ 選択肢を追加</Text></Pressable> : null}<Text style={{ fontSize: 12, fontWeight: "800", color: colors.muted, marginTop: 8 }}>投票期限</Text><TextInput value={pollDeadline} onChangeText={setPollDeadline} placeholder="例：2026-08-31 21:00" placeholderTextColor={colors.muted} style={{ borderRadius: 10, backgroundColor: colors.surface, padding: 13, color: colors.foreground }} /></ScrollView></KeyboardAvoidingView></Modal>
 
       {/* ===== 参加者一覧モーダル ===== */}
       <Modal

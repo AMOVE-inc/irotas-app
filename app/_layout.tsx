@@ -280,6 +280,7 @@ export default function RootLayout() {
                   name="notifications"
                   options={{ presentation: "card" }}
                 />
+                <Stack.Screen name="search" options={{ presentation: "card" }} />
                 <Stack.Screen
                   name="create-post"
                   options={{ presentation: "modal" }}

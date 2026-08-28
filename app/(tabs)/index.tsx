@@ -647,6 +647,7 @@ export default function HomeScreen() {
       >
         <BrandLogo width={116} compact />
         <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+          <Pressable onPress={() => router.push("/search" as any)} accessibilityLabel="アプリ内を検索" style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: "#EEF6FB", alignItems: "center", justifyContent: "center" }}><IconSymbol name="magnifyingglass" size={21} color={colors.foreground} /></Pressable>
           <Pressable onPress={() => router.push("/notifications")} style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: "#EEF6FB", alignItems: "center", justifyContent: "center" }}>
             <IconSymbol name="bell.fill" size={22} color={colors.foreground} />
             {unreadNotificationCount > 0 ? <View style={{ position: "absolute", top: -4, right: -4, minWidth: 18, height: 18, borderRadius: 9, paddingHorizontal: 4, alignItems: "center", justifyContent: "center", backgroundColor: "#E34E5F", borderWidth: 2, borderColor: colors.background }}><Text style={{ color: "#FFF", fontSize: 9, fontWeight: "900" }}>{unreadNotificationCount > 99 ? "99+" : unreadNotificationCount}</Text></View> : null}
