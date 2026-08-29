@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import rawArchive from "../data/discord-board-2026-08-14.json";
+import rawArchive from "../data/discord-board-2026-08-29.json";
 import { parseDiscordBoardArchive, type RawDiscordBoardArchive } from "../lib/discord-board-import";
 
 describe("Discord board archive", () => {
@@ -35,7 +35,7 @@ describe("Discord board archive", () => {
   it("グルメ相談室の全スレ・コメント・添付画像を保持する", () => {
     const adviceThreads = archive.threads.filter((thread) => thread.category === "gourmet-advice");
     const adviceComments = adviceThreads.flatMap((thread) => archive.comments[thread.id] ?? []);
-    expect(adviceThreads).toHaveLength(47);
+    expect(adviceThreads).toHaveLength(50);
     expect(adviceComments).toHaveLength(375);
     expect(adviceComments.flatMap((comment) => comment.images ?? [])).toHaveLength(62);
   });
@@ -43,14 +43,14 @@ describe("Discord board archive", () => {
   it("部活紹介と活動報告の全スレ・コメント・添付画像を保持する", () => {
     const introductionThreads = archive.threads.filter((thread) => thread.category === "club-introduction");
     const introductionComments = introductionThreads.flatMap((thread) => archive.comments[thread.id] ?? []);
-    expect(introductionThreads).toHaveLength(13);
+    expect(introductionThreads).toHaveLength(15);
     expect(introductionComments).toHaveLength(16);
     expect([...introductionThreads, ...introductionComments].flatMap((item) => item.images ?? [])).toHaveLength(3);
 
     const activityThreads = archive.threads.filter((thread) => thread.category === "club-all");
     const activityComments = activityThreads.flatMap((thread) => archive.comments[thread.id] ?? []);
-    expect(activityThreads).toHaveLength(44);
+    expect(activityThreads).toHaveLength(46);
     expect(activityComments).toHaveLength(61);
-    expect([...activityThreads, ...activityComments].flatMap((item) => item.images ?? [])).toHaveLength(237);
+    expect([...activityThreads, ...activityComments].flatMap((item) => item.images ?? [])).toHaveLength(244);
   });
 });

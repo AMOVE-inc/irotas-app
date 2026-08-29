@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { CLUBS } from "../constants/mock-data";
 import { getClubIntroductionContent, getLatestClubActivityReports } from "../lib/club-introduction";
-import rawArchive from "../data/discord-board-2026-08-14.json";
+import rawArchive from "../data/discord-board-2026-08-29.json";
 import { parseDiscordBoardArchive, type RawDiscordBoardArchive } from "../lib/discord-board-import";
 
 const archiveThreads = parseDiscordBoardArchive(rawArchive as RawDiscordBoardArchive).threads;

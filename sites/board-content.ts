@@ -1,7 +1,7 @@
 import { authenticatedRequestMember } from "./auth";
 import { canMemberAccessClub } from "./clubs";
 import type { D1Database, SitesEnv } from "./platform-types";
-import archive from "../data/discord-board-2026-08-14.json";
+import archive from "../data/discord-board-2026-08-29.json";
 import type { RawDiscordBoardArchive } from "../lib/discord-board-import";
 
 const CONTENT_PATH = "/api/board/content";

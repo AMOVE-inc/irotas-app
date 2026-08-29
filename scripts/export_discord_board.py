@@ -34,6 +34,11 @@ TEXT_CHANNELS = {
 }
 
 FORUM_CHANNELS = {
+    1228983536988586044: ("official-event", "全体イベント"),
+    1332944923166507038: ("branch-event-kanto", "関東支部イベント"),
+    1332959273394638911: ("branch-event-kansai", "関西支部イベント"),
+    1227876549139890226: ("gourmet-board-kanto", "関東グルメ掲示板"),
+    1333062225514201129: ("gourmet-board-kansai", "関西グルメ掲示板"),
     1472183879187042375: ("gourmet-advice", "教えてグルメ相談室"),
     1228614719309352970: ("free-chat", "なんでも掲示板"),
     1485587152493350932: ("club-introduction", "部活紹介・入部申請"),
@@ -42,6 +47,7 @@ FORUM_CHANNELS = {
     1485649683345969182: ("club-club-walk", "散歩部"),
     1485649758918807582: ("club-club-travel", "旅行部"),
     1485649823817400380: ("club-club-sports-watch", "スポーツ観戦部"),
+    1485649894814253147: ("club-club-movies", "映画・ドラマ鑑賞部"),
     1485649954918891671: ("club-club-wine", "ワイン部"),
     1485650029086769333: ("club-club-bread", "パン部"),
     1485650106689523802: ("club-club-sweets", "スイーツ部"),
@@ -50,6 +56,8 @@ FORUM_CHANNELS = {
     1485650300781203596: ("club-club-running", "ランニング部"),
     1487647151063564329: ("club-club-theater", "舞台鑑賞部"),
     1500006780842016879: ("club-club-sports", "スポーツ部"),
+    1538762662245310515: ("club-club-golf", "ゴルフ部"),
+    1538763400010534952: ("club-club-meat", "肉部"),
 }
 
 PREFECTURES = (
@@ -174,6 +182,19 @@ def normalize_discord_mentions(message: discord.Message) -> str:
     return content
 
 
+def message_content(message: discord.Message) -> str:
+    parts = [normalize_discord_mentions(message).strip()]
+    for embed in message.embeds:
+        if embed.title:
+            parts.append(embed.title.strip())
+        if embed.description:
+            parts.append(embed.description.strip())
+        for item in embed.fields:
+            value = str(item.value).strip()
+            parts.append(f"{item.name}: {value}" if item.name else value)
+    return "\n".join(part for part in parts if part)
+
+
 async def save_attachment(attachment: discord.Attachment, asset_root: Path, relative_root: Path) -> tuple[str, bool] | None:
     content_type = (attachment.content_type or "").lower()
     is_image = content_type.startswith("image/")
@@ -185,7 +206,11 @@ async def save_attachment(attachment: discord.Attachment, asset_root: Path, rela
     existing = next(asset_root.glob(f"{attachment.id}.*"), None) if asset_root.exists() else None
     if existing:
         return f"/{(relative_root / existing.name).as_posix()}", existing.suffix.lower() in {".mp4", ".mov", ".webm"}
-    data = await attachment.read(use_cached=True)
+    try:
+        data = await asyncio.wait_for(attachment.read(use_cached=True), timeout=30)
+    except (asyncio.TimeoutError, aiohttp.ClientError):
+        print(f"[スキップ] 添付取得タイムアウト {attachment.id}", flush=True)
+        return None
     base_name = f"{attachment.id}"
     if is_image and content_type != "image/gif":
         try:
@@ -219,7 +244,7 @@ async def message_record(message: discord.Message, asset_root: Path, relative_ro
         "id": str(message.id),
         "authorId": str(message.author.id),
         "authorName": getattr(message.author, "display_name", message.author.name),
-        "content": normalize_discord_mentions(message),
+        "content": message_content(message),
         "createdAt": isoformat(message.created_at),
         "parentMessageId": str(message.reference.message_id) if message.reference and message.reference.message_id else None,
         "images": images,
@@ -268,7 +293,7 @@ async def export_archive(guild: discord.Guild, output_path: Path, asset_root: Pa
         print(f"[取得中] {label}", flush=True)
         messages = [
             message async for message in channel.history(limit=None, oldest_first=True)
-            if not message.author.bot and (message.content or message.attachments)
+            if not message.author.bot and (message.content or message.attachments or message.embeds)
         ]
         records = await records_for_messages(messages, asset_root / str(channel.id), relative_root / str(channel.id))
         records = merge_consecutive(records)
@@ -299,16 +324,40 @@ async def export_archive(guild: discord.Guild, output_path: Path, asset_root: Pa
             continue
         print(f"[取得中] {label}", flush=True)
         threads = {thread.id: thread for thread in channel.threads}
-        async for thread in channel.archived_threads(limit=None):
+        # The repository already contains the historical archive through
+        # 2026-08-14. Fetch the newest archived slice and merge it by Discord
+        # ID so a full unbounded walk does not stall on Discord rate limits.
+        async for thread in channel.archived_threads(limit=0):
             threads[thread.id] = thread
         for thread in sorted(threads.values(), key=lambda item: item.created_at):
+            print(f"  [スレッド] {thread.name}", flush=True)
             messages = [
                 message async for message in thread.history(limit=None, oldest_first=True)
-                if not message.author.bot and (message.content or message.attachments)
+                # Event/forum starter posts are sometimes created by an
+                # integration bot. They are source data, so retain them.
+                if message.content or message.attachments or message.embeds
             ]
+            if not messages:
+                try:
+                    starter_message = await thread.fetch_message(thread.id)
+                except (discord.Forbidden, discord.NotFound, discord.HTTPException):
+                    starter_message = None
+                if starter_message and (starter_message.content or starter_message.attachments or starter_message.embeds):
+                    messages = [starter_message]
             records = await records_for_messages(messages, asset_root / str(channel.id), relative_root / str(channel.id))
             if not records:
-                continue
+                owner = thread.owner
+                records = [{
+                    "id": str(thread.id),
+                    "authorId": str(thread.owner_id or guild.id),
+                    "authorName": getattr(owner, "display_name", "IRO+運営"),
+                    "content": thread.name,
+                    "createdAt": isoformat(thread.created_at),
+                    "parentMessageId": None,
+                    "images": [],
+                    "videos": [],
+                    "reactions": [],
+                }]
             starter, *comments = records
             content = starter["content"].strip()
             template = {"gourmetAdvice": advice_fields(thread.name, content)} if category == "gourmet-advice" else {}
@@ -373,6 +422,8 @@ async def main() -> None:
                     "name": name,
                     "type": channel.__class__.__name__,
                     "category": category,
+                    "canView": channel.permissions_for(guild.me).view_channel,
+                    "canReadHistory": channel.permissions_for(guild.me).read_message_history,
                 })
 
         rows.sort(key=lambda item: (item["category"], item["name"]))
