@@ -41,7 +41,7 @@ describe("event list filtering and sorting", () => {
       { area: "all", eventType: "all", openOnly: false },
       referenceDate,
     );
-    expect(result.map((event) => event.id)).toEqual(["past", "early", "gourmet", "full", "late"]);
+    expect(result.map((event) => event.id)).toEqual(["early", "gourmet", "full", "late", "past"]);
     expect(events[0].id).toBe("late");
   });
 

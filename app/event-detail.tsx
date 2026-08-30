@@ -124,6 +124,7 @@ export default function EventDetailScreen() {
   }
 
   const eventClub = event.eventType === "club" ? clubs.find((club) => club.id === event.clubId) : undefined;
+  const eventEnded = Date.parse(`${event.date}T23:59:59`) < Date.now();
   if (event.eventType === "club" && (!eventClub || !canViewerAccessClubContent(eventClub, authUser?.memberId, CURRENT_USER.id, isAdminRole(authUser?.role, authUser?.accessRole)))) {
     return <ScreenContainer edges={["top", "bottom", "left", "right"]}><View style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: 28 }}><IconSymbol name="lock.fill" size={44} color={colors.muted} /><Text style={{ fontSize: 18, fontWeight: "900", color: colors.foreground, marginTop: 15 }}>部員限定イベントです</Text><Text style={{ fontSize: 13, lineHeight: 20, color: colors.muted, textAlign: "center", marginTop: 7 }}>{eventClub?.name ?? "この部活動"}に入部すると、イベント詳細の確認と参加申込ができます。</Text><Pressable onPress={() => router.replace("/clubs")} style={{ marginTop: 20, borderRadius: 14, backgroundColor: colors.foreground, paddingHorizontal: 20, paddingVertical: 12 }}><Text style={{ color: colors.background, fontWeight: "900" }}>部活動一覧を見る</Text></Pressable></View></ScreenContainer>;
   }
@@ -523,7 +524,9 @@ export default function EventDetailScreen() {
           <View
             style={{
               backgroundColor:
-                event.status === "open"
+                eventEnded
+                  ? "#8E8E93"
+                  : event.status === "open"
                   ? "#34C759"
                   : event.status === "full"
                   ? "#FF9500"
@@ -534,7 +537,7 @@ export default function EventDetailScreen() {
             }}
           >
             <Text style={{ fontSize: 13, fontWeight: "700", color: "#FFF" }}>
-              {event.status === "open" ? "受付中" : event.status === "full" ? "満席" : "終了"}
+              {eventEnded ? "開催終了" : event.status === "open" ? "受付中" : event.status === "full" ? "満席" : "終了"}
             </Text>
           </View>
         </View>
@@ -727,7 +730,7 @@ export default function EventDetailScreen() {
         >
           <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
             <View style={{ flex: 1 }}>
-              <Text style={{ fontSize: 15, fontWeight: "600", color: colors.foreground }}>参加費</Text>
+              <Text style={{ fontSize: 15, fontWeight: "600", color: colors.foreground }}>{event.eventType === "gourmet" ? "予算" : "参加費"}</Text>
               {hasRankPrices && (
                 <Text style={{ fontSize: 11, color: "#E8A0BF", marginTop: 2 }}>
                   ランク別料金適用中（{CURRENT_USER.rank.toUpperCase()}）

@@ -260,6 +260,8 @@ function EventCard({ event, onPress, isFavorite, onToggleFavorite, locked = fals
   const remainingCapacity = Math.max(event.capacity - confirmedCount, 0);
   const reservationCapacity = event.reservationCapacity ?? event.capacity + 1;
   const locationLabel = formatEventArea(event.prefecture, event.tokyoArea, event.location);
+  const isPast = Date.parse(`${event.date}T23:59:59`) < Date.now();
+  const cardMuted = locked || isPast;
 
   const formatDate = (dateStr: string) => {
     const d = new Date(dateStr);
@@ -281,14 +283,14 @@ function EventCard({ event, onPress, isFavorite, onToggleFavorite, locked = fals
         borderColor: colors.border,
         flexDirection: "row",
         minHeight: 142,
-        opacity: locked ? 0.48 : 1,
+        opacity: cardMuted ? 0.56 : 1,
       }}
     >
       <View style={{ width: 142, minHeight: 142, alignSelf: "stretch", overflow: "hidden" }}><EventImage event={event} style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }} />{event.eventType === "official" ? <View style={{ position: "absolute", left: 7, top: 7, width: 54, height: 36, borderRadius: 10, backgroundColor: "#FFFFFFF5", overflow: "hidden", borderWidth: 1.5, borderColor: "#E8A0BF", shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.2, shadowRadius: 4, elevation: 4 }}><Image source={require("@/assets/images/irotas-logo-square.png")} style={{ width: 54, height: 54, marginTop: -9 }} contentFit="cover" accessibilityLabel="IROTAS公式" /></View> : event.eventType === "club" ? <View style={{ position: "absolute", left: 7, top: 7, borderRadius: 9, backgroundColor: "#FFFFFFF2", paddingHorizontal: 8, paddingVertical: 5 }}><Text style={{ fontSize: 10, fontWeight: "900", color: "#4E6756" }}>{clubName ?? "部活動イベント"}</Text></View> : null}{locked ? <View style={{ position: "absolute", inset: 0, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(40,40,40,0.42)" }}><IconSymbol name="lock.fill" size={28} color="#FFF" /><Text style={{ color: "#FFF", fontSize: 11, fontWeight: "900", marginTop: 5 }}>部員限定</Text></View> : null}</View>
       <View style={{ flex: 1, paddingHorizontal: 11, paddingVertical: 9 }}>
         <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 5 }}>
-          <Text style={{ flex: 1, fontSize: 13, fontWeight: "900", color: colors.foreground }}>{formatDate(event.date)}{locked ? "" : ` ${event.time}`}</Text>
-          <View style={{ flexDirection: "row", gap: 4 }}><StatusBadge status={event.status} />{isConfirmed ? <Text style={{ fontSize: 9, fontWeight: "900", color: "#FFF", backgroundColor: "#D94C55", borderRadius: 7, paddingHorizontal: 7, paddingVertical: 4 }}>参加確定</Text> : null}</View>
+          <Text style={{ flex: 1, fontSize: 13, fontWeight: "900", color: isPast ? "#8E8E93" : colors.foreground }}>{formatDate(event.date)}{locked ? "" : ` ${event.time}`}</Text>
+          <View style={{ flexDirection: "row", gap: 4 }}><StatusBadge status={isPast ? "ended" : event.status} />{isConfirmed ? <Text style={{ fontSize: 9, fontWeight: "900", color: "#FFF", backgroundColor: "#D94C55", borderRadius: 7, paddingHorizontal: 7, paddingVertical: 4 }}>参加確定</Text> : null}</View>
         </View>
         <Text style={{ fontSize: 14, lineHeight: 19, fontWeight: "900", color: colors.foreground }}>{event.title}</Text>
         {locked ? <Text style={{ fontSize: 11, lineHeight: 17, fontWeight: "700", color: colors.muted, marginTop: 8 }}>入部後に日時・場所・参加状況などの詳細を確認できます。</Text> : null}

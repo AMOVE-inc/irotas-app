@@ -47,13 +47,7 @@ function externalLinksFrom(thread) {
 }
 
 function completeThread(thread) {
-  const replies = input.comments.filter((comment) => comment.threadId === thread.id);
-  const replyText = replies.map((comment) => comment.content?.trim()).filter(Boolean);
-  return {
-    ...thread,
-    content: [thread.content?.trim(), ...replyText].filter(Boolean).join("\n\n"),
-    images: [...new Set([...(thread.images ?? []), ...replies.flatMap((comment) => comment.images ?? [])])],
-  };
+  return thread;
 }
 
 function cleanDisplayName(value) {
