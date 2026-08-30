@@ -613,7 +613,7 @@ export const EVENTS: Event[] = ([
     genres: ["寿司", "和食"], category: "kanto", eventType: "gourmet", status: "open", createdBy: "u2",
     applicationDeadline: "2026-09-13", selectionMethod: "first_come",
   },
-] as Event[]).filter((event) => !["e1", "e2", "e4"].includes(event.id));
+] as Event[]).filter((event) => !["e1", "e2", "e4", "e6", "e7"].includes(event.id));
 
 export const RESTAURANTS: Restaurant[] = [
   {

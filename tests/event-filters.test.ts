@@ -45,6 +45,14 @@ describe("event list filtering and sorting", () => {
     expect(events[0].id).toBe("late");
   });
 
+  it("keeps future events with an undecided time above past events", () => {
+    const result = filterAndSortEvents([
+      makeEvent({ id: "past", date: "2026-08-20", time: "18:00" }),
+      makeEvent({ id: "autumn-camp", date: "2026-11-07", time: "時間未定" }),
+    ], { area: "all", eventType: "official", openOnly: false }, new Date(2026, 7, 30, 12));
+    expect(result.map((event) => event.id)).toEqual(["autumn-camp", "past"]);
+  });
+
   it("shows only open events when requested", () => {
     const result = filterAndSortEvents(events, { area: "all", eventType: "all", openOnly: true }, referenceDate);
     expect(result.some((event) => event.status !== "open")).toBe(false);

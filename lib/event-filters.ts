@@ -30,7 +30,8 @@ export interface EventFilters {
 }
 
 function eventStart(event: Event): number {
-  const parsed = Date.parse(`${event.date}T${event.time || "00:00"}:00`);
+  const time = /^([01]\d|2[0-3]):[0-5]\d$/.test(event.time || "") ? event.time : "00:00";
+  const parsed = Date.parse(`${event.date}T${time}:00`);
   return Number.isNaN(parsed) ? Number.POSITIVE_INFINITY : parsed;
 }
 
