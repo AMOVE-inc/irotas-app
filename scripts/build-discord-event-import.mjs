@@ -24,7 +24,7 @@ function cleanTitle(value) {
 
 function priceFrom(thread) {
   const lines = thread.content.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
-  const label = /(?:予算|参加費|費用|会費|料金|金額)\s*(?:[：:]|[=＝]|\s)/;
+  const label = /(?:予算|参加費|費用|会費|料金|金額)(?:\s*[：:=＝]\s*|\s+|$)/;
   for (let index = 0; index < lines.length; index += 1) {
     const match = lines[index].match(label);
     if (!match) continue;
@@ -50,7 +50,7 @@ function dateFrom(thread) {
 }
 
 function timeFrom(thread) {
-  const match = `${thread.title}\n${thread.content}`.match(/(?:^|\s)([01]?\d|2[0-3])[:：時]([0-5]\d)?/);
+  const match = `${thread.title}\n${thread.content}`.match(/(?:^|[^0-9])([01]?\d|2[0-3])[:：時]([0-5]\d)?/);
   return match ? `${String(match[1]).padStart(2, "0")}:${match[2] ?? "00"}` : "時間未定";
 }
 

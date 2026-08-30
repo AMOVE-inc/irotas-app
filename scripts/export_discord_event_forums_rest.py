@@ -14,6 +14,9 @@ FORUMS = {
     "1228983536988586044": ("official-event", "全体イベント"),
     "1332944923166507038": ("branch-event-kanto", "関東支部イベント"),
     "1332959273394638911": ("branch-event-kansai", "関西支部イベント"),
+    "1227876549139890226": ("gourmet-board-kanto", "関東グルメ掲示板"),
+    "1333062225514201129": ("gourmet-board-kansai", "関西グルメ掲示板"),
+    "1228614719309352970": ("free-chat", "なんでも掲示板"),
 }
 API = "https://discord.com/api/v10"
 
