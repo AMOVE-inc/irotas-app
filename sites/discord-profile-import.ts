@@ -50,13 +50,16 @@ export async function handleDiscordProfileImportRequest(request: Request, env: S
     const ids = new Map((existing.results ?? []).map((member) => [member.discord_user_id, member.id]));
     const matched = rows.filter((row) => ids.has(row.discordUserId));
     const now = new Date().toISOString();
-    await env.DB.batch(matched.map((row) => env.DB!.prepare(`UPDATE members SET
+    const statements = matched.map((row) => env.DB!.prepare(`UPDATE members SET
       display_name = CASE WHEN ? != '' THEN ? ELSE display_name END,
       member_term = COALESCE(?, member_term), member_rank = ?, discord_roles_json = ?, discord_joined_at = COALESCE(?, discord_joined_at),
       profile_json = json_set(CASE WHEN json_valid(profile_json) THEN profile_json ELSE '{}' END,
         '$.bio', CASE WHEN ? != '' THEN ? ELSE COALESCE(json_extract(CASE WHEN json_valid(profile_json) THEN profile_json ELSE '{}' END, '$.bio'), '') END,
         '$.avatarUrl', CASE WHEN ? != '' THEN ? ELSE COALESCE(json_extract(CASE WHEN json_valid(profile_json) THEN profile_json ELSE '{}' END, '$.avatarUrl'), '') END),
-      updated_at = ? WHERE id = ?`).bind(row.displayName, row.displayName, row.memberTerm, row.memberRank, JSON.stringify(row.discordRoles), row.discordJoinedAt, row.bio, row.bio, row.avatarUrl, row.avatarUrl, now, ids.get(row.discordUserId))));
+      updated_at = ? WHERE id = ?`).bind(row.displayName, row.displayName, row.memberTerm, row.memberRank, JSON.stringify(row.discordRoles), row.discordJoinedAt, row.bio, row.bio, row.avatarUrl, row.avatarUrl, now, ids.get(row.discordUserId)));
+    for (let index = 0; index < statements.length; index += 50) {
+      await env.DB.batch(statements.slice(index, index + 50));
+    }
     await env.DB.prepare(`INSERT INTO club_memberships (club_id, member_id, status, source, applied_at, approved_at, updated_at)
       SELECT c.id, m.id, 'approved', 'discord', ?, ?, ? FROM clubs c JOIN members m CROSS JOIN json_each(CASE WHEN json_valid(m.discord_roles_json) THEN m.discord_roles_json ELSE '[]' END) r
       WHERE CAST(r.value AS TEXT) LIKE '%' || c.name || '%' ON CONFLICT(club_id, member_id) DO UPDATE SET status = 'approved', source = 'discord', updated_at = excluded.updated_at`).bind(now, now, now).run();
