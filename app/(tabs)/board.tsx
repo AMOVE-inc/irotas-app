@@ -2662,13 +2662,21 @@ export default function BoardScreen() {
         visible={!!selectedThread}
         animationType="slide"
         presentationStyle="pageSheet"
-        onRequestClose={() => { setSelectedThread(null); router.setParams({ thread: "" }); }}
+        onRequestClose={() => {
+          setSelectedThread(null);
+          if (fromHome === "1") router.replace("/(tabs)" as any);
+          else router.setParams({ thread: "" });
+        }}
       >
         {selectedThread && (
           <ThreadDetailModal
             thread={selectedThread}
             initialComments={importedComments[selectedThread.id] ?? []}
-            onClose={() => { setSelectedThread(null); router.setParams({ thread: "" }); }}
+            onClose={() => {
+              setSelectedThread(null);
+              if (fromHome === "1") router.replace("/(tabs)" as any);
+              else router.setParams({ thread: "" });
+            }}
             onEditThread={selectedThread.author.id === viewerMemberId || userCanModerateAll ? () => { setEditingThread(selectedThread); setSelectedThread(null); router.setParams({ thread: "" }); } : undefined}
             onChangeRecruitment={canChangeRecruitment(selectedThread) || canPinThread(selectedThread) ? () => promptRecruitmentStatus(selectedThread) : undefined}
             canRegisterEvent={selectedThread.category === "free-chat" || Boolean(clubForThread(selectedThread) && canViewerAccessClubContent(clubForThread(selectedThread)!, authUser?.memberId, CURRENT_USER.id, userIsAdmin))}

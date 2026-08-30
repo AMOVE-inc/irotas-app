@@ -14,6 +14,7 @@ import { handleEventFeedbackRequest } from "./event-feedback";
 import { handleConciergeRequest } from "./concierge";
 import { handleOperatorManagementRequest } from "./operator-management";
 import { handleMemberHistoryImportRequest } from "./member-history-import";
+import { handleDiscordProfileImportRequest } from "./discord-profile-import";
 import { handleClubRequest } from "./clubs";
 import { handleNotificationRequest } from "./notifications";
 import { handleBoardArchiveRequest } from "./board-archive";
@@ -277,6 +278,8 @@ async function routeRequest(
   if (backupReadinessResponse) return backupReadinessResponse;
   const memberHistoryImportResponse = await handleMemberHistoryImportRequest(request, env);
   if (memberHistoryImportResponse) return memberHistoryImportResponse;
+  const discordProfileImportResponse = await handleDiscordProfileImportRequest(request, env);
+  if (discordProfileImportResponse) return discordProfileImportResponse;
   const memberDirectoryResponse = await handleMemberDirectoryRequest(request, env);
   if (memberDirectoryResponse) return memberDirectoryResponse;
   const clubResponse = await handleClubRequest(request, env);

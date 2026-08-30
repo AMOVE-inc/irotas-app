@@ -155,13 +155,14 @@ const publicMemberSelect = `
 
 async function findPublicMember(db: D1Database, key: string) {
   const numericId = /^member-(\d+)$/.exec(key)?.[1] ?? null;
+  const discordId = /^discord-(\d{17,20})$/.exec(key)?.[1] ?? null;
   return db
     .prepare(
       `${publicMemberSelect}
-       AND (m.public_member_id = ? OR m.id = ?)
+       AND (m.public_member_id = ? OR m.id = ? OR m.discord_user_id = ?)
        ORDER BY s.id DESC LIMIT 1`,
     )
-    .bind(key, numericId)
+    .bind(key, numericId, discordId)
     .first<MemberDirectoryRow>();
 }
 

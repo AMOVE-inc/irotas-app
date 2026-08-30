@@ -31,6 +31,7 @@ import {
   View,
   ActivityIndicator,
   Modal,
+  useWindowDimensions,
 } from "react-native";
 import { createCoupon, deleteCoupon, setCouponStatus, updateCoupon, updateCouponUsageType, useCoupons } from "@/lib/coupon-store";
 import { sendRankUpgradeWelcome } from "@/lib/chat-store";
@@ -77,6 +78,8 @@ const EMPTY_COUPON: Coupon = { id: "", title: "", description: "", discount: "",
 export default function AdminDashboardScreen() {
   const colors = useColors();
   const router = useRouter();
+  const { width } = useWindowDimensions();
+  const compactTabs = width < 720;
   const { tab } = useLocalSearchParams<{ tab?: string }>();
   const { user: authUser } = useAuthContext();
   const userIsAdmin = isAdminRole(authUser?.role, authUser?.accessRole);
@@ -572,15 +575,16 @@ export default function AdminDashboardScreen() {
 
       {/* Tabs */}
       <ScrollView
-        horizontal
+        horizontal={!compactTabs}
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={{
           flexDirection: "row",
+          flexWrap: compactTabs ? "wrap" : "nowrap",
           paddingHorizontal: 16,
           paddingVertical: 10,
           gap: 8,
         }}
-        style={{ borderBottomWidth: 0.5, borderBottomColor: colors.border, flexGrow: 0 }}
+        style={{ borderBottomWidth: 0.5, borderBottomColor: colors.border, flexGrow: 0, maxHeight: compactTabs ? 154 : undefined }}
       >
         {(["overview", "monitoring", "backups", "deletions", "review", "operators", "members", "events", "contests", "clubs", "payments", "emails", "announcements", "coupons", "analytics"] as const).map((tab) => {
           const labels = { overview: "概要", monitoring: "監視ログ", backups: "バックアップ", deletions: "退会申請", review: "審査アカウント", operators: "運営メンバー", members: "会員", events: "イベント", contests: "グルメ選手権", clubs: "部活動", payments: "支払管理", emails: "承認メール", announcements: "お知らせ", coupons: "クーポン", analytics: "分析" };
@@ -589,7 +593,7 @@ export default function AdminDashboardScreen() {
               key={tab}
               onPress={() => setActiveTab(tab)}
               style={{
-                paddingHorizontal: 16,
+                paddingHorizontal: compactTabs ? 12 : 16,
                 paddingVertical: 7,
                 borderRadius: 20,
                 backgroundColor: activeTab === tab ? "#E8A0BF" : colors.surface,

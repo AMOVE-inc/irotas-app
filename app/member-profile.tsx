@@ -74,7 +74,7 @@ export default function MemberProfileScreen() {
         level: 1,
         branch: "kanto",
         generation: 0,
-        bio: "Discordから移行したメンバーです。",
+        bio: "",
         interests: [],
         role: "member",
         joinedAt: "2024-01-01",

@@ -389,6 +389,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--output")
     parser.add_argument("--assets")
     parser.add_argument("--contest-output")
+    parser.add_argument("--members-output")
     return parser.parse_args()
 
 
@@ -483,6 +484,22 @@ async def main() -> None:
                     })
             summary.sort(key=lambda item: item["name"])
             print(json.dumps(summary, ensure_ascii=False, indent=2))
+        elif args.members_output:
+            rows = []
+            for member in guild.members:
+                if member.bot:
+                    continue
+                rows.append({
+                    "discordUserId": str(member.id),
+                    "displayName": member.display_name,
+                    "avatarUrl": str(member.display_avatar.replace(size=512, static_format="png").url),
+                    "discordJoinedAt": isoformat(member.joined_at) if member.joined_at else None,
+                    "discordRoles": [role.name for role in member.roles if role.name != "@everyone"],
+                })
+            destination = Path(args.members_output).resolve()
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            destination.write_text(json.dumps(rows, ensure_ascii=False), encoding="utf-8")
+            print(f"[完了] Discordメンバー {len(rows)}件 / {destination}", flush=True)
         elif args.contest_output:
             print("[開始] グルメ選手権を取得します", flush=True)
             channel = guild.get_channel(1363439332819472515)
