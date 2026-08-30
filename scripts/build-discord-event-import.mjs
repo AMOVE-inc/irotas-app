@@ -2,7 +2,6 @@ import fs from "node:fs";
 
 const input = JSON.parse(fs.readFileSync(new URL("../data/discord-board-2026-08-29.json", import.meta.url), "utf8"));
 const categories = new Set(["official-event", "branch-event-kanto", "branch-event-kansai", "gourmet-board-kanto", "gourmet-board-kansai"]);
-const defaultImage = "https://images.unsplash.com/photo-1515003197210-e0cd71810b5f?w=800";
 const profileFlagIndex = process.argv.indexOf("--profiles");
 const profileImportPath = profileFlagIndex >= 0 ? process.argv[profileFlagIndex + 1] : "";
 const profiles = fs.existsSync(profileImportPath)
@@ -38,6 +37,15 @@ function locationFrom(thread) {
   return (at?.[1] ?? labeled?.[1] ?? "詳細をご確認ください").trim();
 }
 
+function externalLinksFrom(thread) {
+  const text = `${thread.title}\n${thread.content}`;
+  const urls = [...text.matchAll(/https?:\/\/[^\s<>\]\[）)]+/g)].map((match) => match[0].replace(/[、。,.]+$/g, ""));
+  return {
+    tabelogUrl: urls.find((url) => /(^|\.)tabelog\.com\//i.test(new URL(url).hostname + "/")),
+    googleMapsUrl: urls.find((url) => /(?:maps\.app\.goo\.gl|goo\.gl\/maps|google\.[^/]+\/maps|maps\.google\.)/i.test(url)),
+  };
+}
+
 const clubEvent = (thread) => thread.category.startsWith("club-club-") && (/募集|開催|交流会|鑑賞会|食事会|ご飯会|飲み会|ツアー|合宿|イベント/.test(thread.title) || /\d{1,2}\s*[\/月]\s*\d{1,2}/.test(thread.title));
 const eventThreads = input.threads.filter((thread) => categories.has(thread.category) || clubEvent(thread));
 const seenTitles = new Set();
@@ -47,6 +55,7 @@ const events = eventThreads.map((thread) => {
   const kansai = thread.category.endsWith("kansai");
   const closed = /募集終了/.test(thread.title);
   const authorProfile = profiles.get(thread.authorId);
+  const links = externalLinksFrom(thread);
   return {
     id: `discord-event-${thread.id.replace(/^discord-board-/, "")}`,
     createdAt: thread.createdAt,
@@ -55,7 +64,8 @@ const events = eventThreads.map((thread) => {
     date: dateFrom(thread),
     time: timeFrom(thread),
     location: locationFrom(thread),
-    image: thread.images?.[0] ?? defaultImage,
+    image: thread.images?.[0] ?? "",
+    ...links,
     capacity: 1,
     attendees: 0,
     participants: [],

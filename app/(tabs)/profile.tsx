@@ -965,7 +965,7 @@ export default function ProfileScreen() {
           ) : null}
 
           {/* Generation and join info */}
-          <View style={{ flexDirection: "row", alignItems: "center", marginTop: 8, gap: 12 }}>
+          {!userIsAdmin ? <View style={{ flexDirection: "row", alignItems: "center", marginTop: 8, gap: 12 }}>
             <View style={{ flexDirection: "row", alignItems: "center" }}>
               <IconSymbol name="person.fill" size={14} color={colors.muted} />
               <Text style={{ fontSize: 13, color: colors.muted, marginLeft: 4 }}>
@@ -978,7 +978,7 @@ export default function ProfileScreen() {
                 {user.joinedAt ? `${new Date(user.joinedAt).getFullYear()}年${new Date(user.joinedAt).getMonth() + 1}月入会` : ""}
               </Text>
             </View>
-          </View>
+          </View> : null}
 
           {/* Member ID */}
           {memberId ? (

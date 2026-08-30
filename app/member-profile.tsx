@@ -263,12 +263,12 @@ export default function MemberProfileScreen() {
                 {RANK_LABELS[member.rank]}会員
               </Text>
             </View>}
-            <Text style={{ fontSize: 14, color: colors.muted }}>
+            {member.role !== "admin" ? <Text style={{ fontSize: 14, color: colors.muted }}>
               {member.branch === "kanto" ? "関東支部" : "関西支部"}
-            </Text>
+            </Text> : null}
           </View>
 
-          <View style={{ flexDirection: "row", alignItems: "center", marginTop: 8, gap: 12 }}>
+          {member.role !== "admin" ? <View style={{ flexDirection: "row", alignItems: "center", marginTop: 8, gap: 12 }}>
             <View style={{ flexDirection: "row", alignItems: "center" }}>
               <IconSymbol name="person.fill" size={14} color={colors.muted} />
               <Text style={{ fontSize: 13, color: colors.muted, marginLeft: 4 }}>
@@ -281,7 +281,7 @@ export default function MemberProfileScreen() {
                 {new Date(member.joinedAt).getFullYear()}年{new Date(member.joinedAt).getMonth() + 1}月入会
               </Text>
             </View>
-          </View>
+          </View> : null}
 
           {databaseMember?.achievementBadges.length ? (
             <View style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "center", gap: 6, marginTop: 10, paddingHorizontal: 16 }}>

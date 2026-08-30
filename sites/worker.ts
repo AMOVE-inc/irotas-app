@@ -30,6 +30,7 @@ import {
 import { handleAccountDeletionAdminRequest } from "./account-deletion-admin";
 import { handleReviewAccountRequest } from "./review-account";
 import { handleBackupReadinessRequest } from "./backup-readiness";
+import { handleLinkPreviewRequest } from "./link-preview";
 
 type CommunitySubmission = {
   reportId: string;
@@ -304,6 +305,8 @@ async function routeRequest(
   if (eventFeedbackResponse) return eventFeedbackResponse;
   const conciergeResponse = await handleConciergeRequest(request, env);
   if (conciergeResponse) return conciergeResponse;
+  const linkPreviewResponse = await handleLinkPreviewRequest(request);
+  if (linkPreviewResponse) return linkPreviewResponse;
   if (pathname === "/api/platform/health" && request.method === "GET") {
     const startedAt = Date.now();
     let database: "ok" | "unavailable" = "unavailable";

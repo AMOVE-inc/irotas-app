@@ -14,6 +14,7 @@ import { toggleEventFavoriteWithNotifications, useEventFavorites } from "@/lib/e
 import { formatEventArea, TOKYO_EVENT_AREAS } from "@/lib/event-location";
 import { useColors } from "@/hooks/use-colors";
 import { Image } from "expo-image";
+import { EventImage } from "@/components/event-image";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useState, useCallback, useMemo } from "react";
 import * as Api from "@/lib/_core/api";
@@ -282,7 +283,7 @@ function EventCard({ event, onPress, isFavorite, onToggleFavorite, locked = fals
         opacity: locked ? 0.48 : 1,
       }}
     >
-      <View style={{ width: 142, minHeight: 142, alignSelf: "stretch", overflow: "hidden" }}><Image source={event.image} style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }} contentFit="cover" contentPosition="center" transition={300} />{event.eventType === "official" ? <View style={{ position: "absolute", left: 7, top: 7, width: 54, height: 36, borderRadius: 10, backgroundColor: "#FFFFFFF5", overflow: "hidden", borderWidth: 1.5, borderColor: "#E8A0BF", shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.2, shadowRadius: 4, elevation: 4 }}><Image source={require("@/assets/images/irotas-logo-square.png")} style={{ width: 54, height: 54, marginTop: -9 }} contentFit="cover" accessibilityLabel="IROTAS公式" /></View> : event.eventType === "club" ? <View style={{ position: "absolute", left: 7, top: 7, borderRadius: 9, backgroundColor: "#FFFFFFF2", paddingHorizontal: 8, paddingVertical: 5 }}><Text style={{ fontSize: 10, fontWeight: "900", color: "#4E6756" }}>{clubName ?? "部活動イベント"}</Text></View> : null}{locked ? <View style={{ position: "absolute", inset: 0, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(40,40,40,0.42)" }}><IconSymbol name="lock.fill" size={28} color="#FFF" /><Text style={{ color: "#FFF", fontSize: 11, fontWeight: "900", marginTop: 5 }}>部員限定</Text></View> : null}</View>
+      <View style={{ width: 142, minHeight: 142, alignSelf: "stretch", overflow: "hidden" }}><EventImage event={event} style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }} />{event.eventType === "official" ? <View style={{ position: "absolute", left: 7, top: 7, width: 54, height: 36, borderRadius: 10, backgroundColor: "#FFFFFFF5", overflow: "hidden", borderWidth: 1.5, borderColor: "#E8A0BF", shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.2, shadowRadius: 4, elevation: 4 }}><Image source={require("@/assets/images/irotas-logo-square.png")} style={{ width: 54, height: 54, marginTop: -9 }} contentFit="cover" accessibilityLabel="IROTAS公式" /></View> : event.eventType === "club" ? <View style={{ position: "absolute", left: 7, top: 7, borderRadius: 9, backgroundColor: "#FFFFFFF2", paddingHorizontal: 8, paddingVertical: 5 }}><Text style={{ fontSize: 10, fontWeight: "900", color: "#4E6756" }}>{clubName ?? "部活動イベント"}</Text></View> : null}{locked ? <View style={{ position: "absolute", inset: 0, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(40,40,40,0.42)" }}><IconSymbol name="lock.fill" size={28} color="#FFF" /><Text style={{ color: "#FFF", fontSize: 11, fontWeight: "900", marginTop: 5 }}>部員限定</Text></View> : null}</View>
       <View style={{ flex: 1, paddingHorizontal: 11, paddingVertical: 9 }}>
         <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 5 }}>
           <Text style={{ flex: 1, fontSize: 13, fontWeight: "900", color: colors.foreground }}>{formatDate(event.date)}{locked ? "" : ` ${event.time}`}</Text>
@@ -302,8 +303,8 @@ function EventCard({ event, onPress, isFavorite, onToggleFavorite, locked = fals
         </View>
         </> : null}
         <View style={{ flexDirection: "row", alignItems: "center", marginTop: 5 }}>
-          {!locked ? <><Image source={event.eventType === "official" ? DEFAULT_AVATAR : (organizer?.avatar ?? event.organizerAvatar ?? DEFAULT_AVATAR)} style={{ width: 18, height: 18, borderRadius: 9 }} contentFit="cover" />
-          <Text style={{ marginLeft: 5, fontSize: 10, fontWeight: "700", color: colors.muted }} numberOfLines={1}>{event.eventType === "official" ? "IRO＋運営" : (organizer?.name ?? event.organizerName ?? "メンバー")}</Text>
+          {!locked ? <><Image source={event.eventType === "official" ? DEFAULT_AVATAR : (event.organizerAvatar ?? organizer?.avatar ?? DEFAULT_AVATAR)} style={{ width: 18, height: 18, borderRadius: 9 }} contentFit="cover" />
+          <Text style={{ marginLeft: 5, fontSize: 10, fontWeight: "700", color: colors.muted }} numberOfLines={1}>{event.eventType === "official" ? "IRO＋運営" : (event.organizerName ?? organizer?.name ?? "メンバー")}</Text>
           {event.eventType !== "official" && organizer ? <NewMemberMark member={organizer} size={11} /> : null}</> : null}
           <View style={{ flex: 1 }} />
           {!locked ? <Pressable onPress={(pressEvent) => { pressEvent.stopPropagation?.(); onToggleFavorite(); }} accessibilityLabel={isFavorite ? "お気に入りから削除" : "お気に入りに追加"} hitSlop={8} style={{ paddingHorizontal: 4, paddingVertical: 2 }}><IconSymbol name={isFavorite ? "heart.fill" : "heart"} size={20} color={isFavorite ? "#D85B86" : colors.muted} /></Pressable> : <Text style={{ fontSize: 9, fontWeight: "800", color: colors.muted }}>入部すると詳細を表示</Text>}

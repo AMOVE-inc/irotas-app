@@ -1,6 +1,10 @@
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
-import { EVENTS, CURRENT_USER, DEFAULT_AVATAR, getMemberById, type Event } from "@/constants/mock-data";
+import { EVENTS, CURRENT_USER, DEFAULT_AVATAR, MEMBERS, getMemberById, type Event } from "@/constants/mock-data";
+import { EventImage } from "@/components/event-image";
+import { PersistentBottomNav } from "@/components/persistent-bottom-nav";
+import { MentionSuggestions, MentionText } from "@/components/mention-ui";
+import { getMentionGroups, getMentionQuery, insertMention } from "@/lib/mentions";
 import { EVENT_TERMS_URL } from "@/constants/external-links";
 import { joinEventChat, removeMemberFromRoom } from "@/lib/chat-store";
 import { getAllEvents } from "@/lib/event-store";
@@ -72,6 +76,8 @@ export default function EventDetailScreen() {
   const joiningRef = useRef(false);
   const usePointsRef = useRef(false);
   const favoriteEventIds = useEventFavorites();
+  const eventMentionGroups = useMemo(() => getMentionGroups(MEMBERS, clubs).filter((group) => group.category === "club" || group.category === "branch"), [clubs]);
+  const eventMentionQuery = getMentionQuery(eventCommentText);
 
   useEffect(() => {
     setEvent(allEvents.find((item) => item.id === id));
@@ -475,7 +481,7 @@ export default function EventDetailScreen() {
   };
 
   const handleOpenMap = () => {
-    if (event.googleMapsUrl) { void Linking.openURL(event.googleMapsUrl); return; }
+    if (event.googleMapsUrl) { void Linking.openURL(/^https?:\/\//i.test(event.googleMapsUrl) ? event.googleMapsUrl : `https://${event.googleMapsUrl}`); return; }
     const query = encodeURIComponent(event.location);
     const url = Platform.OS === "ios"
       ? `maps:?q=${query}`
@@ -536,7 +542,7 @@ export default function EventDetailScreen() {
       </View>
 
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16, paddingBottom: 120 }} keyboardShouldPersistTaps="handled" keyboardDismissMode="interactive">
-        <Image source={event.image} style={{ width: "100%", height: 250, borderRadius: 16, marginBottom: 16 }} contentFit="cover" transition={300} />
+        <EventImage event={event} style={{ width: "100%", height: 250, borderRadius: 16, marginBottom: 16 }} />
         {/* Title */}
         <Text style={{ fontSize: 26, fontWeight: "800", color: colors.foreground, marginBottom: 12 }}>
           {event.title}
@@ -672,8 +678,8 @@ export default function EventDetailScreen() {
         </View>
 
         <Pressable onPress={() => openMemberProfile(event.organizerProfileId ?? event.createdBy)} accessibilityLabel="幹事のプロフィールを表示" style={{ flexDirection: "row", alignItems: "center", backgroundColor: colors.surface, borderRadius: 14, padding: 14, marginBottom: 16 }}>
-          <Image source={event.eventType === "official" ? DEFAULT_AVATAR : (organizer?.avatar ?? event.organizerAvatar ?? DEFAULT_AVATAR)} style={{ width: 42, height: 42, borderRadius: 21 }} contentFit="cover" />
-          <View style={{ flex: 1, marginLeft: 11 }}><Text style={{ fontSize: 11, color: colors.muted }}>幹事</Text><Text style={{ fontSize: 15, fontWeight: "800", color: colors.foreground }}>{event.eventType === "official" ? "IRO＋運営" : (organizer?.name ?? event.organizerName ?? "メンバー")}</Text></View>
+          <Image source={event.eventType === "official" ? DEFAULT_AVATAR : (event.organizerAvatar ?? organizer?.avatar ?? DEFAULT_AVATAR)} style={{ width: 42, height: 42, borderRadius: 21 }} contentFit="cover" />
+          <View style={{ flex: 1, marginLeft: 11 }}><Text style={{ fontSize: 11, color: colors.muted }}>幹事</Text><Text style={{ fontSize: 15, fontWeight: "800", color: colors.foreground }}>{event.eventType === "official" ? "IRO＋運営" : (event.organizerName ?? organizer?.name ?? "メンバー")}</Text></View>
           <IconSymbol name="chevron.right" size={17} color={colors.muted} />
         </Pressable>
 
@@ -853,7 +859,7 @@ export default function EventDetailScreen() {
           </View>
         ) : null}
 
-        <View style={{ backgroundColor: colors.surface, borderRadius: 14, padding: 16, marginBottom: 16 }}><Text style={{ fontSize: 16, fontWeight: "900", color: colors.foreground }}>イベントへのコメント</Text><Text style={{ fontSize: 11, color: colors.muted, marginTop: 4 }}>参加申込前でも閲覧・コメントできます</Text>{eventComments.map((comment) => <View key={comment.id} style={{ marginTop: 12, paddingTop: 12, borderTopWidth: 0.5, borderTopColor: colors.border }}><Text style={{ fontSize: 12, fontWeight: "900", color: colors.foreground }}>{comment.author}</Text><Text style={{ fontSize: 14, lineHeight: 20, color: colors.foreground, marginTop: 4 }}>{comment.text}</Text></View>)}<View style={{ flexDirection: "row", alignItems: "flex-end", marginTop: 14 }}><TextInput value={eventCommentText} onChangeText={setEventCommentText} onFocus={() => setEventCommentFocused(true)} onBlur={() => setEventCommentFocused(false)} placeholder="質問やコメントを入力" placeholderTextColor={colors.muted} multiline style={{ flex: 1, minHeight: 44, maxHeight: 100, borderRadius: 14, backgroundColor: colors.background, borderWidth: 1, borderColor: colors.border, paddingHorizontal: 12, paddingVertical: 10, color: colors.foreground }} /><Pressable disabled={!eventCommentText.trim()} onPress={() => { const next = [...eventComments, { id: `ec_${Date.now()}`, author: authUser?.name ?? CURRENT_USER.name, text: eventCommentText.trim(), createdAt: new Date().toISOString() }]; setEventComments(next); setEventCommentText(""); void AsyncStorage.setItem(`irotas_event_comments_v1:${event.id}`, JSON.stringify(next)); }} style={{ width: 44, height: 44, borderRadius: 22, marginLeft: 8, alignItems: "center", justifyContent: "center", backgroundColor: eventCommentText.trim() ? "#D65E8D" : colors.border }}><IconSymbol name="paperplane.fill" size={19} color="#FFF" /></Pressable></View></View>
+        <View style={{ backgroundColor: colors.surface, borderRadius: 14, padding: 16, marginBottom: 16 }}><Text style={{ fontSize: 16, fontWeight: "900", color: colors.foreground }}>イベントへのコメント</Text><Text style={{ fontSize: 11, color: colors.muted, marginTop: 4 }}>参加申込前でも閲覧・コメントできます。@で部活・支部をメンションできます。</Text>{eventComments.map((comment) => <View key={comment.id} style={{ marginTop: 12, paddingTop: 12, borderTopWidth: 0.5, borderTopColor: colors.border }}><Text style={{ fontSize: 12, fontWeight: "900", color: colors.foreground }}>{comment.author}</Text><MentionText content={comment.text} groups={eventMentionGroups} /></View>)}{eventMentionQuery !== null ? <MentionSuggestions query={eventMentionQuery} groups={eventMentionGroups} members={[]} onSelect={(label) => setEventCommentText((value) => insertMention(value, label))} /> : null}<View style={{ flexDirection: "row", alignItems: "flex-end", marginTop: 14 }}><TextInput value={eventCommentText} onChangeText={(value) => setEventCommentText(value.replace(/@everyone\b/gi, ""))} onFocus={() => setEventCommentFocused(true)} onBlur={() => setEventCommentFocused(false)} placeholder="質問やコメントを入力" placeholderTextColor={colors.muted} multiline style={{ flex: 1, minHeight: 44, maxHeight: 100, borderRadius: 14, backgroundColor: colors.background, borderWidth: 1, borderColor: colors.border, paddingHorizontal: 12, paddingVertical: 10, color: colors.foreground }} /><Pressable disabled={!eventCommentText.trim()} onPress={() => { const next = [...eventComments, { id: `ec_${Date.now()}`, author: authUser?.name ?? CURRENT_USER.name, text: eventCommentText.trim(), createdAt: new Date().toISOString() }]; setEventComments(next); setEventCommentText(""); void AsyncStorage.setItem(`irotas_event_comments_v1:${event.id}`, JSON.stringify(next)); }} style={{ width: 44, height: 44, borderRadius: 22, marginLeft: 8, alignItems: "center", justifyContent: "center", backgroundColor: eventCommentText.trim() ? "#D65E8D" : colors.border }}><IconSymbol name="paperplane.fill" size={19} color="#FFF" /></Pressable></View></View>
 
         {isJoined && !isOrganizer ? (
           <View style={{ backgroundColor: "#FFF4F2", borderRadius: 14, padding: 14, marginBottom: 16, borderWidth: 1, borderColor: "#F3D0CA" }}>
@@ -874,7 +880,7 @@ export default function EventDetailScreen() {
           </View>
         ) : null}
 
-        {[{ url: event.tabelogUrl, label: "食べログを開く" }, { url: event.googleMapsUrl, label: "Googleマップを開く" }].map((link) => link.url ? <Pressable key={link.label} onPress={() => Linking.openURL(link.url!)} style={{ flexDirection: "row", alignItems: "center", backgroundColor: "#EAF5FA", borderRadius: 14, padding: 14, marginBottom: 10 }}><IconSymbol name="link" size={18} color="#5B9BD5" /><Text style={{ flex: 1, fontSize: 14, fontWeight: "700", color: "#5B9BD5", marginLeft: 8 }} numberOfLines={1}>{link.label}</Text><IconSymbol name="chevron.right" size={16} color="#5B9BD5" /></Pressable> : null)}
+        {[{ url: event.tabelogUrl, label: "食べログを開く" }, { url: event.googleMapsUrl, label: "Googleマップを開く" }].map((link) => link.url ? <Pressable key={link.label} onPress={() => Linking.openURL(/^https?:\/\//i.test(link.url!) ? link.url! : `https://${link.url!}`)} style={{ flexDirection: "row", alignItems: "center", backgroundColor: "#EAF5FA", borderRadius: 14, padding: 14, marginBottom: 10 }}><IconSymbol name="link" size={18} color="#5B9BD5" /><Text style={{ flex: 1, fontSize: 14, fontWeight: "700", color: "#5B9BD5", marginLeft: 8 }} numberOfLines={1}>{link.label}</Text><IconSymbol name="chevron.right" size={16} color="#5B9BD5" /></Pressable> : null)}
 
         {isJoined && new Date(`${event.date}T${event.time}:00`) < new Date() ? <Pressable onPress={() => router.push({ pathname: "/event-feedback" as any, params: { id: event.id } })} style={{ flexDirection: "row", alignItems: "center", backgroundColor: "#FFF4D8", borderRadius: 14, padding: 15, marginBottom: 16, borderWidth: 1, borderColor: "#EFD494" }}><IconSymbol name="star.fill" size={22} color="#D69A14" /><View style={{ flex: 1, marginLeft: 10 }}><Text style={{ fontSize: 14, fontWeight: "900", color: colors.foreground }}>イベントを評価する</Text><Text style={{ fontSize: 11, color: colors.muted, marginTop: 3 }}>次回のイベント改善にご協力ください</Text></View><IconSymbol name="chevron.right" size={17} color="#D69A14" /></Pressable> : null}
 
@@ -910,6 +916,7 @@ export default function EventDetailScreen() {
           </View>
         )}
       </ScrollView>
+      <PersistentBottomNav active="/events" />
 
       <Modal visible={applicationConfirmation !== null} transparent animationType="fade" onRequestClose={() => setApplicationConfirmation(null)}>
         <View style={{ flex: 1, backgroundColor: "rgba(20,18,24,0.52)", alignItems: "center", justifyContent: "center", padding: 22 }}>

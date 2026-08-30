@@ -282,7 +282,7 @@ export default function ChatScreen() {
   const insets = useSafeAreaInsets();
   const [pendingImage, setPendingImage] = useState<string | null>(null);
   const [showAttachmentMenu, setShowAttachmentMenu] = useState(false);
-  const [isLoadingRoom, setIsLoadingRoom] = useState(true);
+  const [, setIsLoadingRoom] = useState(true);
   const [showPollComposer, setShowPollComposer] = useState(false);
   const [pollQuestion, setPollQuestion] = useState("");
   const [pollOptions, setPollOptions] = useState(["", ""]);
@@ -396,7 +396,7 @@ export default function ChatScreen() {
     return (
       <ScreenContainer edges={["top", "left", "right"]}>
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-          {isLoadingRoom ? <><ActivityIndicator size="large" color="#E8A0BF" /><Text style={{ fontSize: 14, color: colors.muted, marginTop: 12 }}>チャットを読み込んでいます…</Text></> : <Text style={{ fontSize: 16, color: colors.muted }}>チャットが見つかりません</Text>}
+          <ActivityIndicator size="large" color="#E8A0BF" /><Text style={{ fontSize: 14, color: colors.muted, marginTop: 12 }}>チャットを読み込んでいます…</Text>
         </View>
       </ScreenContainer>
     );
