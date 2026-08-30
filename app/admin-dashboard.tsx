@@ -75,6 +75,26 @@ type PointsHistoryEntry = {
 
 const EMPTY_COUPON: Coupon = { id: "", title: "", description: "", discount: "", expiresAt: "", code: "", requiredRank: "regular", usageType: "single", status: "active" };
 
+function selectJsonFile(): Promise<{ name: string; text: string }> {
+  return new Promise((resolve, reject) => {
+    if (typeof document === "undefined") { reject(new Error("Web版の管理画面から実行してください")); return; }
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "application/json,.json";
+    input.style.position = "fixed";
+    input.style.left = "-9999px";
+    input.setAttribute("aria-label", "DiscordプロフィールJSON");
+    document.body.appendChild(input);
+    input.onchange = async () => {
+      const file = input.files?.[0];
+      input.remove();
+      if (!file) { reject(new Error("ファイルが選択されませんでした")); return; }
+      resolve({ name: file.name, text: await file.text() });
+    };
+    input.click();
+  });
+}
+
 export default function AdminDashboardScreen() {
   const colors = useColors();
   const router = useRouter();
@@ -112,6 +132,8 @@ export default function AdminDashboardScreen() {
   const [newAccessRole, setNewAccessRole] = useState<"member" | "club_leader" | "operator" | "admin">("member");
   const [squareSyncing, setSquareSyncing] = useState(false);
   const [squareSyncProgress, setSquareSyncProgress] = useState<string | null>(null);
+  const [discordProfileImporting, setDiscordProfileImporting] = useState(false);
+  const [discordProfileImportResult, setDiscordProfileImportResult] = useState<string | null>(null);
   const [membershipSummary, setMembershipSummary] = useState<MembershipSummary | null>(null);
   const [memberReconciliation, setMemberReconciliation] = useState<MemberReconciliationReport | null>(null);
   const [membershipSummaryLoading, setMembershipSummaryLoading] = useState(false);
@@ -643,6 +665,33 @@ export default function AdminDashboardScreen() {
             <Text style={{ fontSize: 13, color: colors.foreground, marginTop: 10 }}>グルメマップ：2026年8月1日更新</Text>
             <Text style={{ fontSize: 13, color: colors.foreground, marginTop: 6 }}>Discord移行：2026年8月29日 17:25（日本時間）</Text>
             <Text style={{ fontSize: 11, lineHeight: 17, color: colors.muted, marginTop: 8 }}>CSV取り込みは管理者だけに表示されます。更新時刻はこの管理画面で確認できます。</Text>
+          </View>
+        )}
+        {activeTab === "overview" && (
+          <View style={{ backgroundColor: colors.surface, borderRadius: 14, borderWidth: 1, borderColor: colors.border, padding: 16, marginBottom: 14 }}>
+            <Text style={{ fontSize: 16, fontWeight: "800", color: colors.foreground }}>Discordプロフィール差分取込</Text>
+            <Text style={{ fontSize: 12, lineHeight: 19, color: colors.muted, marginTop: 6 }}>既存会員とDiscord IDが一致する人だけ、表示名・画像・自己紹介・ランク・期・ロール・参加日を更新します。</Text>
+            {discordProfileImportResult ? <Text style={{ fontSize: 12, fontWeight: "700", color: "#237A3B", marginTop: 10 }}>{discordProfileImportResult}</Text> : null}
+            <Pressable disabled={discordProfileImporting} onPress={async () => {
+              setDiscordProfileImporting(true);
+              setDiscordProfileImportResult(null);
+              try {
+                const selected = await selectJsonFile();
+                const payload = JSON.parse(selected.text);
+                const response = await fetch("/api/admin/discord-profile-import/commit", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(payload) });
+                const result = await response.json() as { error?: string; matchedCount?: number; unmatchedCount?: number };
+                if (!response.ok) throw new Error(result.error ?? "取込に失敗しました");
+                const summary = `反映 ${result.matchedCount ?? 0}名／未一致 ${result.unmatchedCount ?? 0}名`;
+                setDiscordProfileImportResult(summary);
+                Alert.alert("取込完了", summary);
+                await loadMembershipSummary();
+              } catch (error) {
+                if (error instanceof SyntaxError) Alert.alert("読込エラー", "JSONファイルの形式を確認してください。");
+                else if (error instanceof Error && error.message !== "ファイルが選択されませんでした") Alert.alert("取込エラー", error.message);
+              } finally { setDiscordProfileImporting(false); }
+            }} style={{ minHeight: 48, borderRadius: 12, backgroundColor: discordProfileImporting ? colors.border : "#5865F2", alignItems: "center", justifyContent: "center", marginTop: 14 }}>
+              {discordProfileImporting ? <ActivityIndicator color="#FFF" /> : <Text style={{ color: "#FFF", fontWeight: "800" }}>DiscordプロフィールJSONを選択して反映</Text>}
+            </Pressable>
           </View>
         )}
         {activeTab === "review" && (

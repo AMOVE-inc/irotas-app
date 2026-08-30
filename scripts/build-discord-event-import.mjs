@@ -3,6 +3,11 @@ import fs from "node:fs";
 const input = JSON.parse(fs.readFileSync(new URL("../data/discord-board-2026-08-29.json", import.meta.url), "utf8"));
 const categories = new Set(["official-event", "branch-event-kanto", "branch-event-kansai", "gourmet-board-kanto", "gourmet-board-kansai"]);
 const defaultImage = "https://images.unsplash.com/photo-1515003197210-e0cd71810b5f?w=800";
+const profileFlagIndex = process.argv.indexOf("--profiles");
+const profileImportPath = profileFlagIndex >= 0 ? process.argv[profileFlagIndex + 1] : "";
+const profiles = fs.existsSync(profileImportPath)
+  ? new Map(JSON.parse(fs.readFileSync(profileImportPath, "utf8")).rows.map((row) => [row.discordUserId, row]))
+  : new Map();
 
 function cleanTitle(value) {
   return value
@@ -41,6 +46,7 @@ const events = eventThreads.map((thread) => {
   const club = thread.category.startsWith("club-club-");
   const kansai = thread.category.endsWith("kansai");
   const closed = /募集終了/.test(thread.title);
+  const authorProfile = profiles.get(thread.authorId);
   return {
     id: `discord-event-${thread.id.replace(/^discord-board-/, "")}`,
     createdAt: thread.createdAt,
@@ -60,6 +66,9 @@ const events = eventThreads.map((thread) => {
     ...(club ? { clubId: thread.category.replace(/^club-/, "") } : {}),
     status: closed ? "full" : "open",
     createdBy: "u1",
+    organizerProfileId: `discord-${thread.authorId}`,
+    organizerName: authorProfile?.displayName || thread.authorName || "メンバー",
+    organizerAvatar: authorProfile?.avatarUrl || undefined,
     sourceThreadId: thread.id,
     sourceLabel: thread.sourceLabel,
   };

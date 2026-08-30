@@ -671,9 +671,9 @@ export default function EventDetailScreen() {
           ))}
         </View>
 
-        <Pressable onPress={() => openMemberProfile(event.createdBy)} accessibilityLabel="幹事のプロフィールを表示" style={{ flexDirection: "row", alignItems: "center", backgroundColor: colors.surface, borderRadius: 14, padding: 14, marginBottom: 16 }}>
-          <Image source={event.eventType === "official" ? DEFAULT_AVATAR : (organizer?.avatar ?? DEFAULT_AVATAR)} style={{ width: 42, height: 42, borderRadius: 21 }} contentFit="cover" />
-          <View style={{ flex: 1, marginLeft: 11 }}><Text style={{ fontSize: 11, color: colors.muted }}>幹事</Text><Text style={{ fontSize: 15, fontWeight: "800", color: colors.foreground }}>{event.eventType === "official" ? "IRO＋運営" : (organizer?.name ?? "メンバー")}</Text></View>
+        <Pressable onPress={() => openMemberProfile(event.organizerProfileId ?? event.createdBy)} accessibilityLabel="幹事のプロフィールを表示" style={{ flexDirection: "row", alignItems: "center", backgroundColor: colors.surface, borderRadius: 14, padding: 14, marginBottom: 16 }}>
+          <Image source={event.eventType === "official" ? DEFAULT_AVATAR : (organizer?.avatar ?? event.organizerAvatar ?? DEFAULT_AVATAR)} style={{ width: 42, height: 42, borderRadius: 21 }} contentFit="cover" />
+          <View style={{ flex: 1, marginLeft: 11 }}><Text style={{ fontSize: 11, color: colors.muted }}>幹事</Text><Text style={{ fontSize: 15, fontWeight: "800", color: colors.foreground }}>{event.eventType === "official" ? "IRO＋運営" : (organizer?.name ?? event.organizerName ?? "メンバー")}</Text></View>
           <IconSymbol name="chevron.right" size={17} color={colors.muted} />
         </Pressable>
 

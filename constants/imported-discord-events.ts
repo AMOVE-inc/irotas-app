@@ -18,6 +18,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "eventType": "gourmet",
     "status": "open",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1467089499543703686",
+    "organizerName": "ariri_00【🥈SILVER 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1467089499543703686/110f0759b206c86f3e72d201bac698d2.png?size=512",
     "sourceThreadId": "discord-board-1543113999640694826",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -39,6 +42,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "eventType": "gourmet",
     "status": "open",
     "createdBy": "u1",
+    "organizerProfileId": "discord-715367038205427715",
+    "organizerName": "しんたろー",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/715367038205427715/5100238c56708accc92ec1aa233bffc9.png?size=512",
     "sourceThreadId": "discord-board-1543085683365781644",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -60,6 +66,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "eventType": "gourmet",
     "status": "open",
     "createdBy": "u1",
+    "organizerProfileId": "discord-696624208532340756",
+    "organizerName": "ゆい【🥇GOLD 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/696624208532340756/b824079889c51ec1cf68e5ba0f03233f.png?size=512",
     "sourceThreadId": "discord-board-1542821346549960766",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -81,6 +90,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "eventType": "gourmet",
     "status": "open",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1457371560670265374",
+    "organizerName": "のんた🐭ディズニー部長【💎PLATINUM 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1457371560670265374/d09179eea94d16710cda2370a546a963.png?size=512",
     "sourceThreadId": "discord-board-1542220402645008404",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -103,6 +115,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "clubId": "club-meat",
     "status": "open",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1530052808651309169",
+    "organizerName": "はぎーちゃん🍖肉部長",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1530052808651309169/18268de99ba9a54fb8f90e9ba3d9acaf.png?size=512",
     "sourceThreadId": "discord-board-1542201410542772425",
     "sourceLabel": "肉部"
   },
@@ -124,6 +139,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "eventType": "gourmet",
     "status": "open",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1223177154397995110",
+    "organizerName": "はばちゃん【🥇GOLD 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1223177154397995110/6b1d27d82aad0e87c3f144ba27e3efbd.png?size=512",
     "sourceThreadId": "discord-board-1542148647565660321",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -145,6 +163,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "eventType": "official",
     "status": "open",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1119606639763390545",
+    "organizerName": "Non【IRO+代表】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1542135969665523762",
     "sourceLabel": "全体イベント"
   },
@@ -166,6 +187,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "eventType": "gourmet",
     "status": "open",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1479840315107184804",
+    "organizerName": "れん【🥇GOLD 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1479840315107184804/b050cd588b38d9d6a6e1b35cdc437c43.png?size=512",
     "sourceThreadId": "discord-board-1542095258953981984",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -187,6 +211,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "eventType": "gourmet",
     "status": "open",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1004342455895855144",
+    "organizerName": "RIHO【🥇GOLD 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1004342455895855144/882feb03f38a2f7fe758b2633f1f5a3b.png?size=512",
     "sourceThreadId": "discord-board-1541845822784807012",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -208,6 +235,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "eventType": "gourmet",
     "status": "full",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1467089499543703686",
+    "organizerName": "ariri_00【🥈SILVER 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1467089499543703686/110f0759b206c86f3e72d201bac698d2.png?size=512",
     "sourceThreadId": "discord-board-1541439315140280453",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -229,6 +259,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "eventType": "gourmet",
     "status": "open",
     "createdBy": "u1",
+    "organizerProfileId": "discord-709705641928949791",
+    "organizerName": "とらお🐯【🥇GOLD 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/709705641928949791/4484684a65f55fb383073219fd406282.png?size=512",
     "sourceThreadId": "discord-board-1541301088597311588",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -250,6 +283,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "eventType": "gourmet",
     "status": "open",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1223177154397995110",
+    "organizerName": "はばちゃん【🥇GOLD 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1223177154397995110/6b1d27d82aad0e87c3f144ba27e3efbd.png?size=512",
     "sourceThreadId": "discord-board-1540344313353867315",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -271,6 +307,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "eventType": "gourmet",
     "status": "full",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1403038939832385683",
+    "organizerName": "かずま🍣🍶🍷【🥈SILVER 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1403038939832385683/8c3e03e761a990c8a8a0712163a8f955.png?size=512",
     "sourceThreadId": "discord-board-1540321358305820682",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -293,6 +332,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "clubId": "club-wine",
     "status": "open",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1460286509285511310",
+    "organizerName": "iori【🥈SILVER 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1460286509285511310/28ea35a9f2c46dc089081301e8212be7.png?size=512",
     "sourceThreadId": "discord-board-1539642830925074502",
     "sourceLabel": "ワイン部"
   },
@@ -314,6 +356,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "eventType": "gourmet",
     "status": "open",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1497178953813721150",
+    "organizerName": "やどかり",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1497178953813721150/2ee18488e0223a723cba540d8cc13752.png?size=512",
     "sourceThreadId": "discord-board-1539583873619333130",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -335,6 +380,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "eventType": "gourmet",
     "status": "open",
     "createdBy": "u1",
+    "organizerProfileId": "discord-766872280302878780",
+    "organizerName": "Taka【🥈SILVER 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/766872280302878780/374ab37e7d9446e08e9d922aede0a057.png?size=512",
     "sourceThreadId": "discord-board-1539154024329117717",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -356,6 +404,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "eventType": "official",
     "status": "full",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1119606639763390545",
+    "organizerName": "Non【IRO+代表】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1538771676081295430",
     "sourceLabel": "関東支部イベント"
   },
@@ -378,6 +429,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "clubId": "club-travel",
     "status": "full",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1353010654189191178",
+    "organizerName": "瑞季✈️旅行部長【🥇GOLD 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1353010654189191178/ad43b05c846c7aacff9e9423c31baa63.png?size=512",
     "sourceThreadId": "discord-board-1538377283406925834",
     "sourceLabel": "旅行部"
   },
@@ -400,6 +454,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "clubId": "club-sweets",
     "status": "full",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1457367058449698988",
+    "organizerName": "MIYU【🥈SILVER 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1457367058449698988/309c5f810c6844b0bd480d16c07ffd01.png?size=512",
     "sourceThreadId": "discord-board-1538100984952389642",
     "sourceLabel": "スイーツ部"
   },
@@ -421,6 +478,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "eventType": "gourmet",
     "status": "open",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1457591200243777589",
+    "organizerName": "つね🪼【🥈SILVER 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1457591200243777589/a787f91f604d35bef48da01f73e9c750.png?size=512",
     "sourceThreadId": "discord-board-1537428383640854660",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -443,6 +503,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "clubId": "club-walk",
     "status": "open",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1457652020164034686",
+    "organizerName": "Monako💃【🥇GOLD 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1457652020164034686/932a1177233bc50fb3421b02bd69eddb.png?size=512",
     "sourceThreadId": "discord-board-1537390278665568327",
     "sourceLabel": "散歩部"
   },
@@ -464,6 +527,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "eventType": "gourmet",
     "status": "full",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1403038939832385683",
+    "organizerName": "かずま🍣🍶🍷【🥈SILVER 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1403038939832385683/8c3e03e761a990c8a8a0712163a8f955.png?size=512",
     "sourceThreadId": "discord-board-1537334496612065280",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -486,6 +552,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "clubId": "club-wine",
     "status": "open",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1446344592214724700",
+    "organizerName": "真妃🍷ワイン部長【🥇GOLD 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1446344592214724700/559a459ef83e54fad1ec64ffc9a3d64a.png?size=512",
     "sourceThreadId": "discord-board-1537306033481846804",
     "sourceLabel": "ワイン部"
   },
@@ -507,6 +576,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "eventType": "gourmet",
     "status": "full",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1403348999557222473",
+    "organizerName": "saori🏀スポーツ部長【🥈SILVER 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1403348999557222473/ce7f2eea11bbe1db6de05d0f1a634202.png?size=512",
     "sourceThreadId": "discord-board-1536708577207521422",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -529,6 +601,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "clubId": "club-walk",
     "status": "open",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1457652020164034686",
+    "organizerName": "Monako💃【🥇GOLD 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1457652020164034686/932a1177233bc50fb3421b02bd69eddb.png?size=512",
     "sourceThreadId": "discord-board-1536636570067800107",
     "sourceLabel": "散歩部"
   },
@@ -551,6 +626,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "clubId": "club-walk",
     "status": "open",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1457652020164034686",
+    "organizerName": "Monako💃【🥇GOLD 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1457652020164034686/932a1177233bc50fb3421b02bd69eddb.png?size=512",
     "sourceThreadId": "discord-board-1536615284809662594",
     "sourceLabel": "散歩部"
   },
@@ -572,6 +650,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "eventType": "gourmet",
     "status": "full",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1223177154397995110",
+    "organizerName": "はばちゃん【🥇GOLD 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1223177154397995110/6b1d27d82aad0e87c3f144ba27e3efbd.png?size=512",
     "sourceThreadId": "discord-board-1536386349085761637",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -594,6 +675,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "clubId": "club-sweets",
     "status": "full",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1457710905109254328",
+    "organizerName": "Asuka【🥈SILVER 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1457710905109254328/93565c5369bddacd5bb4830e7a3f0a82.png?size=512",
     "sourceThreadId": "discord-board-1536328438246285392",
     "sourceLabel": "スイーツ部"
   },
@@ -615,6 +699,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "eventType": "official",
     "status": "full",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1119606639763390545",
+    "organizerName": "Non【IRO+代表】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1536282798539800647",
     "sourceLabel": "関東支部イベント"
   },
@@ -636,6 +723,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "eventType": "gourmet",
     "status": "full",
     "createdBy": "u1",
+    "organizerProfileId": "discord-804712649598042172",
+    "organizerName": "pokohide【🥇GOLD 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/804712649598042172/ffa3b5462506477b220530a9f18571bc.png?size=512",
     "sourceThreadId": "discord-board-1536243051343650866",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -657,6 +747,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "eventType": "gourmet",
     "status": "full",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1533461878104391886",
+    "organizerName": "asumi🥀",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1533461878104391886/7c850cfa96b9fb69dcc9dcca6fd2d895.png?size=512",
     "sourceThreadId": "discord-board-1536017582186823720",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -679,6 +772,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "clubId": "club-day-drinking",
     "status": "open",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1353735645373136926",
+    "organizerName": "みなみ🍺昼飲み部長【🥇GOLD 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1353735645373136926/8466a7d863d8505dff4e2bf28d8d3c70.png?size=512",
     "sourceThreadId": "discord-board-1535666168470184139",
     "sourceLabel": "昼飲み部"
   },
@@ -701,6 +797,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "clubId": "club-wine",
     "status": "full",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1446344592214724700",
+    "organizerName": "真妃🍷ワイン部長【🥇GOLD 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1446344592214724700/559a459ef83e54fad1ec64ffc9a3d64a.png?size=512",
     "sourceThreadId": "discord-board-1535575849523482654",
     "sourceLabel": "ワイン部"
   },
@@ -722,6 +821,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "eventType": "gourmet",
     "status": "full",
     "createdBy": "u1",
+    "organizerProfileId": "discord-413325457182949377",
+    "organizerName": "こん🦊【🥈SILVER 】",
+    "organizerAvatar": "https://cdn.discordapp.com/guilds/1217327152098312245/users/413325457182949377/avatars/9e67f75b9cdd6e708e4df12e08ed0dfb.png?size=512",
     "sourceThreadId": "discord-board-1535301178362040400",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -744,6 +846,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "clubId": "club-travel",
     "status": "open",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1353010654189191178",
+    "organizerName": "瑞季✈️旅行部長【🥇GOLD 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1353010654189191178/ad43b05c846c7aacff9e9423c31baa63.png?size=512",
     "sourceThreadId": "discord-board-1535248052183371816",
     "sourceLabel": "旅行部"
   },
@@ -766,6 +871,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "clubId": "club-disney",
     "status": "open",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1457371560670265374",
+    "organizerName": "のんた🐭ディズニー部長【💎PLATINUM 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1457371560670265374/d09179eea94d16710cda2370a546a963.png?size=512",
     "sourceThreadId": "discord-board-1534436495400894616",
     "sourceLabel": "ディズニー部"
   },
@@ -787,6 +895,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "eventType": "gourmet",
     "status": "open",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1008029940429639794",
+    "organizerName": "KD【🥇GOLD 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1008029940429639794/bf0baa95bc5175e0a4c584f6b46cc950.png?size=512",
     "sourceThreadId": "discord-board-1533806411891347598",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -809,6 +920,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "clubId": "club-sweets",
     "status": "full",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1457652020164034686",
+    "organizerName": "Monako💃【🥇GOLD 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1457652020164034686/932a1177233bc50fb3421b02bd69eddb.png?size=512",
     "sourceThreadId": "discord-board-1533403695713226855",
     "sourceLabel": "スイーツ部"
   },
@@ -831,6 +945,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "clubId": "club-sweets",
     "status": "full",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1459195336991047815",
+    "organizerName": "しょうこ🍰スイーツ部長【🥇GOLD 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1459195336991047815/a596e4658de943f4779c57918376b97d.png?size=512",
     "sourceThreadId": "discord-board-1533326053869748304",
     "sourceLabel": "スイーツ部"
   },
@@ -853,6 +970,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "clubId": "club-cooking-class",
     "status": "full",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1353587486604922921",
+    "organizerName": "みょん🍳料理教室部長【💎PLATINUM 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1353587486604922921/e661b608255cec37aecf95944458b180.png?size=512",
     "sourceThreadId": "discord-board-1533308384835797192",
     "sourceLabel": "料理教室部"
   },
@@ -875,6 +995,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "clubId": "club-sweets",
     "status": "full",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1459195336991047815",
+    "organizerName": "しょうこ🍰スイーツ部長【🥇GOLD 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1459195336991047815/a596e4658de943f4779c57918376b97d.png?size=512",
     "sourceThreadId": "discord-board-1533308368217837640",
     "sourceLabel": "スイーツ部"
   },
@@ -896,6 +1019,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "eventType": "gourmet",
     "status": "full",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1485772766828564581",
+    "organizerName": "🌸まなか🌸【🥈SILVER 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1485772766828564581/c0d87abf9c970cb69a1c8657c557ae98.png?size=512",
     "sourceThreadId": "discord-board-1532973161056964739",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -918,6 +1044,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "clubId": "club-sweets",
     "status": "full",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1004342455895855144",
+    "organizerName": "RIHO【🥇GOLD 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1004342455895855144/882feb03f38a2f7fe758b2633f1f5a3b.png?size=512",
     "sourceThreadId": "discord-board-1532755326862885032",
     "sourceLabel": "スイーツ部"
   },
@@ -939,6 +1068,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "eventType": "official",
     "status": "full",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1404762625077809152",
+    "organizerName": "さな【運営】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1404762625077809152/ca540a9e6c8e7f31f87f4b95ce0ef77d.png?size=512",
     "sourceThreadId": "discord-board-1532018462032003195",
     "sourceLabel": "関東支部イベント"
   },
@@ -961,6 +1093,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "clubId": "club-bread",
     "status": "open",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1228677952334725213",
+    "organizerName": "ami🍞パン部長【🥇GOLD 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1228677952334725213/342ebdafc945abd8be7d4422f51fc9c6.png?size=512",
     "sourceThreadId": "discord-board-1529644745423589517",
     "sourceLabel": "パン部"
   },
@@ -983,6 +1118,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "clubId": "club-disney",
     "status": "open",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1457371560670265374",
+    "organizerName": "のんた🐭ディズニー部長【💎PLATINUM 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1457371560670265374/d09179eea94d16710cda2370a546a963.png?size=512",
     "sourceThreadId": "discord-board-1528592931928150118",
     "sourceLabel": "ディズニー部"
   },
@@ -1005,6 +1143,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "clubId": "club-walk",
     "status": "full",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1457652020164034686",
+    "organizerName": "Monako💃【🥇GOLD 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1457652020164034686/932a1177233bc50fb3421b02bd69eddb.png?size=512",
     "sourceThreadId": "discord-board-1528216161228030002",
     "sourceLabel": "散歩部"
   },
@@ -1027,6 +1168,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "clubId": "club-wine",
     "status": "full",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1216698337147748394",
+    "organizerName": "mioka【🥈SILVER 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1216698337147748394/6c9aaa09b320526b932e1e9b31f928fb.png?size=512",
     "sourceThreadId": "discord-board-1528017115766984847",
     "sourceLabel": "ワイン部"
   },
@@ -1049,6 +1193,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "clubId": "club-theater",
     "status": "full",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1458772421887656090",
+    "organizerName": "Hono🎭舞台鑑賞部長【🥇GOLD 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1458772421887656090/0d3f1ef300f4606ca3aec8324dfe17d0.png?size=512",
     "sourceThreadId": "discord-board-1528010368251592877",
     "sourceLabel": "舞台鑑賞部"
   },
@@ -1071,6 +1218,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "clubId": "club-sports",
     "status": "full",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1403348999557222473",
+    "organizerName": "saori🏀スポーツ部長【🥈SILVER 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1403348999557222473/ce7f2eea11bbe1db6de05d0f1a634202.png?size=512",
     "sourceThreadId": "discord-board-1527318410206384208",
     "sourceLabel": "スポーツ部"
   },
@@ -1093,6 +1243,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "clubId": "club-sports",
     "status": "open",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1403348999557222473",
+    "organizerName": "saori🏀スポーツ部長【🥈SILVER 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1403348999557222473/ce7f2eea11bbe1db6de05d0f1a634202.png?size=512",
     "sourceThreadId": "discord-board-1527315259340226703",
     "sourceLabel": "スポーツ部"
   },
@@ -1115,6 +1268,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "clubId": "club-wine",
     "status": "open",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1446344592214724700",
+    "organizerName": "真妃🍷ワイン部長【🥇GOLD 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1446344592214724700/559a459ef83e54fad1ec64ffc9a3d64a.png?size=512",
     "sourceThreadId": "discord-board-1527234462130110605",
     "sourceLabel": "ワイン部"
   },
@@ -1137,6 +1293,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "clubId": "club-sweets",
     "status": "full",
     "createdBy": "u1",
+    "organizerProfileId": "discord-696624208532340756",
+    "organizerName": "ゆい【🥇GOLD 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/696624208532340756/b824079889c51ec1cf68e5ba0f03233f.png?size=512",
     "sourceThreadId": "discord-board-1526943963737493695",
     "sourceLabel": "スイーツ部"
   },
@@ -1159,6 +1318,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "clubId": "club-wine",
     "status": "full",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1223177154397995110",
+    "organizerName": "はばちゃん【🥇GOLD 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1223177154397995110/6b1d27d82aad0e87c3f144ba27e3efbd.png?size=512",
     "sourceThreadId": "discord-board-1526549162727051314",
     "sourceLabel": "ワイン部"
   },
@@ -1181,6 +1343,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "clubId": "club-movies",
     "status": "full",
     "createdBy": "u1",
+    "organizerProfileId": "discord-959759896037961748",
+    "organizerName": "shimon🎞️映画・ドラマ鑑賞部長【🥇GOLD 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/959759896037961748/f0569afafae367b73b3e52b908114922.png?size=512",
     "sourceThreadId": "discord-board-1526522381277986847",
     "sourceLabel": "映画・ドラマ鑑賞部"
   },
@@ -1203,6 +1368,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "clubId": "club-travel",
     "status": "full",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1353010654189191178",
+    "organizerName": "瑞季✈️旅行部長【🥇GOLD 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1353010654189191178/ad43b05c846c7aacff9e9423c31baa63.png?size=512",
     "sourceThreadId": "discord-board-1526180269621641257",
     "sourceLabel": "旅行部"
   },
@@ -1225,6 +1393,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "clubId": "club-cooking-class",
     "status": "open",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1353587486604922921",
+    "organizerName": "みょん🍳料理教室部長【💎PLATINUM 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1353587486604922921/e661b608255cec37aecf95944458b180.png?size=512",
     "sourceThreadId": "discord-board-1523695831943872572",
     "sourceLabel": "料理教室部"
   },
@@ -1247,6 +1418,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "clubId": "club-day-drinking",
     "status": "full",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1353735645373136926",
+    "organizerName": "みなみ🍺昼飲み部長【🥇GOLD 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1353735645373136926/8466a7d863d8505dff4e2bf28d8d3c70.png?size=512",
     "sourceThreadId": "discord-board-1523695003342344232",
     "sourceLabel": "昼飲み部"
   },
@@ -1269,6 +1443,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "clubId": "club-sweets",
     "status": "full",
     "createdBy": "u1",
+    "organizerProfileId": "discord-696624208532340756",
+    "organizerName": "ゆい【🥇GOLD 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/696624208532340756/b824079889c51ec1cf68e5ba0f03233f.png?size=512",
     "sourceThreadId": "discord-board-1522518501263147109",
     "sourceLabel": "スイーツ部"
   },
@@ -1291,6 +1468,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "clubId": "club-disney",
     "status": "full",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1457371560670265374",
+    "organizerName": "のんた🐭ディズニー部長【💎PLATINUM 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1457371560670265374/d09179eea94d16710cda2370a546a963.png?size=512",
     "sourceThreadId": "discord-board-1522246535285444679",
     "sourceLabel": "ディズニー部"
   },
@@ -1313,6 +1493,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "clubId": "club-theater",
     "status": "full",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1458772421887656090",
+    "organizerName": "Hono🎭舞台鑑賞部長【🥇GOLD 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1458772421887656090/0d3f1ef300f4606ca3aec8324dfe17d0.png?size=512",
     "sourceThreadId": "discord-board-1522206585504403637",
     "sourceLabel": "舞台鑑賞部"
   },
@@ -1335,6 +1518,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "clubId": "club-bread",
     "status": "full",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1228677952334725213",
+    "organizerName": "ami🍞パン部長【🥇GOLD 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1228677952334725213/342ebdafc945abd8be7d4422f51fc9c6.png?size=512",
     "sourceThreadId": "discord-board-1521662617880363028",
     "sourceLabel": "パン部"
   },
@@ -1357,6 +1543,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "clubId": "club-day-drinking",
     "status": "full",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1353735645373136926",
+    "organizerName": "みなみ🍺昼飲み部長【🥇GOLD 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1353735645373136926/8466a7d863d8505dff4e2bf28d8d3c70.png?size=512",
     "sourceThreadId": "discord-board-1521455767385804800",
     "sourceLabel": "昼飲み部"
   },
@@ -1379,6 +1568,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "clubId": "club-wine",
     "status": "full",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1467089499543703686",
+    "organizerName": "ariri_00【🥈SILVER 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1467089499543703686/110f0759b206c86f3e72d201bac698d2.png?size=512",
     "sourceThreadId": "discord-board-1521419161144660029",
     "sourceLabel": "ワイン部"
   },
@@ -1401,6 +1593,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "clubId": "club-cooking-class",
     "status": "open",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1353587486604922921",
+    "organizerName": "みょん🍳料理教室部長【💎PLATINUM 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1353587486604922921/e661b608255cec37aecf95944458b180.png?size=512",
     "sourceThreadId": "discord-board-1521165761681293352",
     "sourceLabel": "料理教室部"
   },
@@ -1423,6 +1618,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "clubId": "club-wine",
     "status": "open",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1460286509285511310",
+    "organizerName": "iori【🥈SILVER 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1460286509285511310/28ea35a9f2c46dc089081301e8212be7.png?size=512",
     "sourceThreadId": "discord-board-1520765679333277777",
     "sourceLabel": "ワイン部"
   },
@@ -1445,6 +1643,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "clubId": "club-disney",
     "status": "full",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1223177154397995110",
+    "organizerName": "はばちゃん【🥇GOLD 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1223177154397995110/6b1d27d82aad0e87c3f144ba27e3efbd.png?size=512",
     "sourceThreadId": "discord-board-1520441375278104658",
     "sourceLabel": "ディズニー部"
   },
@@ -1467,6 +1668,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "clubId": "club-disney",
     "status": "full",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1457371560670265374",
+    "organizerName": "のんた🐭ディズニー部長【💎PLATINUM 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1457371560670265374/d09179eea94d16710cda2370a546a963.png?size=512",
     "sourceThreadId": "discord-board-1519729059817586738",
     "sourceLabel": "ディズニー部"
   },
@@ -1489,6 +1693,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "clubId": "club-travel",
     "status": "full",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1353010654189191178",
+    "organizerName": "瑞季✈️旅行部長【🥇GOLD 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1353010654189191178/ad43b05c846c7aacff9e9423c31baa63.png?size=512",
     "sourceThreadId": "discord-board-1519295551001067660",
     "sourceLabel": "旅行部"
   },
@@ -1511,6 +1718,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "clubId": "club-disney",
     "status": "full",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1008029940429639794",
+    "organizerName": "KD【🥇GOLD 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1008029940429639794/bf0baa95bc5175e0a4c584f6b46cc950.png?size=512",
     "sourceThreadId": "discord-board-1519178914386153543",
     "sourceLabel": "ディズニー部"
   },
@@ -1532,6 +1742,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "eventType": "gourmet",
     "status": "full",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1458057842434244679",
+    "organizerName": "みーこ🧸【🥈SILVER 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1458057842434244679/f68198c8e93aa96927114664d5c064b6.png?size=512",
     "sourceThreadId": "discord-board-1518898239674519744",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -1554,6 +1767,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "clubId": "club-travel",
     "status": "open",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1353010654189191178",
+    "organizerName": "瑞季✈️旅行部長【🥇GOLD 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1353010654189191178/ad43b05c846c7aacff9e9423c31baa63.png?size=512",
     "sourceThreadId": "discord-board-1518214172519829624",
     "sourceLabel": "旅行部"
   },
@@ -1576,6 +1792,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "clubId": "club-theater",
     "status": "full",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1477873334719873097",
+    "organizerName": "miki【🥈SILVER 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1477873334719873097/3ecd4e70f1d66c825cb2c006355411cd.png?size=512",
     "sourceThreadId": "discord-board-1518213106772480061",
     "sourceLabel": "舞台鑑賞部"
   },
@@ -1598,6 +1817,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "clubId": "club-theater",
     "status": "full",
     "createdBy": "u1",
+    "organizerProfileId": "discord-696624208532340756",
+    "organizerName": "ゆい【🥇GOLD 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/696624208532340756/b824079889c51ec1cf68e5ba0f03233f.png?size=512",
     "sourceThreadId": "discord-board-1517834609725935696",
     "sourceLabel": "舞台鑑賞部"
   },
@@ -1619,6 +1841,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "eventType": "gourmet",
     "status": "full",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1446344592214724700",
+    "organizerName": "真妃🍷ワイン部長【🥇GOLD 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1446344592214724700/559a459ef83e54fad1ec64ffc9a3d64a.png?size=512",
     "sourceThreadId": "discord-board-1517743208296087583",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -1641,6 +1866,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "clubId": "club-sweets",
     "status": "full",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1459195336991047815",
+    "organizerName": "しょうこ🍰スイーツ部長【🥇GOLD 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1459195336991047815/a596e4658de943f4779c57918376b97d.png?size=512",
     "sourceThreadId": "discord-board-1516780129609584644",
     "sourceLabel": "スイーツ部"
   },
@@ -1663,6 +1891,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "clubId": "club-sports",
     "status": "full",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1403348999557222473",
+    "organizerName": "saori🏀スポーツ部長【🥈SILVER 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1403348999557222473/ce7f2eea11bbe1db6de05d0f1a634202.png?size=512",
     "sourceThreadId": "discord-board-1515352661434831020",
     "sourceLabel": "スポーツ部"
   },
@@ -1685,6 +1916,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "clubId": "club-walk",
     "status": "full",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1457652020164034686",
+    "organizerName": "Monako💃【🥇GOLD 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1457652020164034686/932a1177233bc50fb3421b02bd69eddb.png?size=512",
     "sourceThreadId": "discord-board-1515176435504124104",
     "sourceLabel": "散歩部"
   },
@@ -1707,6 +1941,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "clubId": "club-bread",
     "status": "full",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1228677952334725213",
+    "organizerName": "ami🍞パン部長【🥇GOLD 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1228677952334725213/342ebdafc945abd8be7d4422f51fc9c6.png?size=512",
     "sourceThreadId": "discord-board-1512691331883995216",
     "sourceLabel": "パン部"
   },
@@ -1729,6 +1966,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "clubId": "club-day-drinking",
     "status": "full",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1353735645373136926",
+    "organizerName": "みなみ🍺昼飲み部長【🥇GOLD 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1353735645373136926/8466a7d863d8505dff4e2bf28d8d3c70.png?size=512",
     "sourceThreadId": "discord-board-1512474420646514911",
     "sourceLabel": "昼飲み部"
   },
@@ -1751,6 +1991,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "clubId": "club-day-drinking",
     "status": "full",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1353735645373136926",
+    "organizerName": "みなみ🍺昼飲み部長【🥇GOLD 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1353735645373136926/8466a7d863d8505dff4e2bf28d8d3c70.png?size=512",
     "sourceThreadId": "discord-board-1512461157607145563",
     "sourceLabel": "昼飲み部"
   },
@@ -1773,6 +2016,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "clubId": "club-sports-watch",
     "status": "full",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1352978791483572326",
+    "organizerName": "もってぃー【運営】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1352978791483572326/aa0f81f03bc22b267fa676eb6bf32402.png?size=512",
     "sourceThreadId": "discord-board-1512449573732221159",
     "sourceLabel": "スポーツ観戦部"
   },
@@ -1795,6 +2041,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "clubId": "club-running",
     "status": "full",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1228678386902372374",
+    "organizerName": "nori🏃ランニング部長【💎PLATINUM 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1228678386902372374/04a71500e3608ede85dd9aef73d334b7.png?size=512",
     "sourceThreadId": "discord-board-1512278725901681001",
     "sourceLabel": "ランニング部"
   },
@@ -1817,6 +2066,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "clubId": "club-wine",
     "status": "full",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1467089499543703686",
+    "organizerName": "ariri_00【🥈SILVER 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1467089499543703686/110f0759b206c86f3e72d201bac698d2.png?size=512",
     "sourceThreadId": "discord-board-1511589898207891466",
     "sourceLabel": "ワイン部"
   },
@@ -1839,6 +2091,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "clubId": "club-walk",
     "status": "full",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1457652020164034686",
+    "organizerName": "Monako💃【🥇GOLD 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1457652020164034686/932a1177233bc50fb3421b02bd69eddb.png?size=512",
     "sourceThreadId": "discord-board-1511019140050190398",
     "sourceLabel": "散歩部"
   },
@@ -1860,6 +2115,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "eventType": "official",
     "status": "open",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1119605898743120044",
+    "organizerName": "IRO+運営",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1119605898743120044/2d550914366cefb1693360eea7d7ebcc.png?size=512",
     "sourceThreadId": "discord-board-1510920586044375070",
     "sourceLabel": "全体イベント"
   },
@@ -1882,6 +2140,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "clubId": "club-walk",
     "status": "open",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1457652020164034686",
+    "organizerName": "Monako💃【🥇GOLD 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1457652020164034686/932a1177233bc50fb3421b02bd69eddb.png?size=512",
     "sourceThreadId": "discord-board-1510840569260150995",
     "sourceLabel": "散歩部"
   },
@@ -1904,6 +2165,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "clubId": "club-cooking-class",
     "status": "open",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1353587486604922921",
+    "organizerName": "みょん🍳料理教室部長【💎PLATINUM 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1353587486604922921/e661b608255cec37aecf95944458b180.png?size=512",
     "sourceThreadId": "discord-board-1510310034658033824",
     "sourceLabel": "料理教室部"
   },
@@ -1926,6 +2190,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "clubId": "club-theater",
     "status": "full",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1458772421887656090",
+    "organizerName": "Hono🎭舞台鑑賞部長【🥇GOLD 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1458772421887656090/0d3f1ef300f4606ca3aec8324dfe17d0.png?size=512",
     "sourceThreadId": "discord-board-1510113575815872673",
     "sourceLabel": "舞台鑑賞部"
   },
@@ -1948,6 +2215,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "clubId": "club-travel",
     "status": "full",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1353010654189191178",
+    "organizerName": "瑞季✈️旅行部長【🥇GOLD 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1353010654189191178/ad43b05c846c7aacff9e9423c31baa63.png?size=512",
     "sourceThreadId": "discord-board-1509919738137022565",
     "sourceLabel": "旅行部"
   },
@@ -1970,6 +2240,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "clubId": "club-wine",
     "status": "full",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1446344592214724700",
+    "organizerName": "真妃🍷ワイン部長【🥇GOLD 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1446344592214724700/559a459ef83e54fad1ec64ffc9a3d64a.png?size=512",
     "sourceThreadId": "discord-board-1509559921837084844",
     "sourceLabel": "ワイン部"
   },
@@ -1992,6 +2265,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "clubId": "club-sweets",
     "status": "full",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1459195336991047815",
+    "organizerName": "しょうこ🍰スイーツ部長【🥇GOLD 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1459195336991047815/a596e4658de943f4779c57918376b97d.png?size=512",
     "sourceThreadId": "discord-board-1508426624960430110",
     "sourceLabel": "スイーツ部"
   },
@@ -2014,6 +2290,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "clubId": "club-sweets",
     "status": "full",
     "createdBy": "u1",
+    "organizerProfileId": "discord-696624208532340756",
+    "organizerName": "ゆい【🥇GOLD 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/696624208532340756/b824079889c51ec1cf68e5ba0f03233f.png?size=512",
     "sourceThreadId": "discord-board-1508414698213605376",
     "sourceLabel": "スイーツ部"
   },
@@ -2036,6 +2315,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "clubId": "club-walk",
     "status": "full",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1457652020164034686",
+    "organizerName": "Monako💃【🥇GOLD 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1457652020164034686/932a1177233bc50fb3421b02bd69eddb.png?size=512",
     "sourceThreadId": "discord-board-1508408589579194398",
     "sourceLabel": "散歩部"
   },
@@ -2058,6 +2340,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "clubId": "club-disney",
     "status": "full",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1457371560670265374",
+    "organizerName": "のんた🐭ディズニー部長【💎PLATINUM 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1457371560670265374/d09179eea94d16710cda2370a546a963.png?size=512",
     "sourceThreadId": "discord-board-1507959099365658644",
     "sourceLabel": "ディズニー部"
   },
@@ -2080,6 +2365,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "clubId": "club-theater",
     "status": "full",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1458772421887656090",
+    "organizerName": "Hono🎭舞台鑑賞部長【🥇GOLD 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1458772421887656090/0d3f1ef300f4606ca3aec8324dfe17d0.png?size=512",
     "sourceThreadId": "discord-board-1507927437659472016",
     "sourceLabel": "舞台鑑賞部"
   },
@@ -2102,6 +2390,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "clubId": "club-walk",
     "status": "full",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1457652020164034686",
+    "organizerName": "Monako💃【🥇GOLD 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1457652020164034686/932a1177233bc50fb3421b02bd69eddb.png?size=512",
     "sourceThreadId": "discord-board-1506857863404978256",
     "sourceLabel": "散歩部"
   },
@@ -2124,6 +2415,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "clubId": "club-wine",
     "status": "open",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1446344592214724700",
+    "organizerName": "真妃🍷ワイン部長【🥇GOLD 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1446344592214724700/559a459ef83e54fad1ec64ffc9a3d64a.png?size=512",
     "sourceThreadId": "discord-board-1506168824255352842",
     "sourceLabel": "ワイン部"
   },
@@ -2146,6 +2440,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "clubId": "club-wine",
     "status": "full",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1446344592214724700",
+    "organizerName": "真妃🍷ワイン部長【🥇GOLD 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1446344592214724700/559a459ef83e54fad1ec64ffc9a3d64a.png?size=512",
     "sourceThreadId": "discord-board-1506166639325089792",
     "sourceLabel": "ワイン部"
   },
@@ -2168,6 +2465,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "clubId": "club-sweets",
     "status": "full",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1459195336991047815",
+    "organizerName": "しょうこ🍰スイーツ部長【🥇GOLD 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1459195336991047815/a596e4658de943f4779c57918376b97d.png?size=512",
     "sourceThreadId": "discord-board-1505742572147183738",
     "sourceLabel": "スイーツ部"
   },
@@ -2190,6 +2490,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "clubId": "club-disney",
     "status": "full",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1457371560670265374",
+    "organizerName": "のんた🐭ディズニー部長【💎PLATINUM 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1457371560670265374/d09179eea94d16710cda2370a546a963.png?size=512",
     "sourceThreadId": "discord-board-1505244854626816221",
     "sourceLabel": "ディズニー部"
   },
@@ -2212,6 +2515,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "clubId": "club-sports",
     "status": "full",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1403348999557222473",
+    "organizerName": "saori🏀スポーツ部長【🥈SILVER 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1403348999557222473/ce7f2eea11bbe1db6de05d0f1a634202.png?size=512",
     "sourceThreadId": "discord-board-1504077853254357035",
     "sourceLabel": "スポーツ部"
   },
@@ -2234,6 +2540,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "clubId": "club-bread",
     "status": "full",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1228677952334725213",
+    "organizerName": "ami🍞パン部長【🥇GOLD 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1228677952334725213/342ebdafc945abd8be7d4422f51fc9c6.png?size=512",
     "sourceThreadId": "discord-board-1504055162875023410",
     "sourceLabel": "パン部"
   },
@@ -2256,6 +2565,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "clubId": "club-disney",
     "status": "full",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1457686620302999699",
+    "organizerName": "ミッチャン【🥈SILVER 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1457686620302999699/c77ad31d87a2143f7fbed8ff0929df0c.png?size=512",
     "sourceThreadId": "discord-board-1501537912171266058",
     "sourceLabel": "ディズニー部"
   },
@@ -2278,6 +2590,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "clubId": "club-disney",
     "status": "full",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1457371560670265374",
+    "organizerName": "のんた🐭ディズニー部長【💎PLATINUM 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1457371560670265374/d09179eea94d16710cda2370a546a963.png?size=512",
     "sourceThreadId": "discord-board-1501471535884669030",
     "sourceLabel": "ディズニー部"
   },
@@ -2300,6 +2615,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "clubId": "club-sweets",
     "status": "open",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1459195336991047815",
+    "organizerName": "しょうこ🍰スイーツ部長【🥇GOLD 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1459195336991047815/a596e4658de943f4779c57918376b97d.png?size=512",
     "sourceThreadId": "discord-board-1501038085121642546",
     "sourceLabel": "スイーツ部"
   },
@@ -2322,6 +2640,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "clubId": "club-sweets",
     "status": "full",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1459195336991047815",
+    "organizerName": "しょうこ🍰スイーツ部長【🥇GOLD 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1459195336991047815/a596e4658de943f4779c57918376b97d.png?size=512",
     "sourceThreadId": "discord-board-1500445599173181581",
     "sourceLabel": "スイーツ部"
   },
@@ -2344,6 +2665,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "clubId": "club-bread",
     "status": "full",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1458298491620163656",
+    "organizerName": "ゆーき【🥈SILVER 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1458298491620163656/5f75f77c465c9865f5f68ff99b3d5fee.png?size=512",
     "sourceThreadId": "discord-board-1499582011822702592",
     "sourceLabel": "パン部"
   },
@@ -2366,6 +2690,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "clubId": "club-walk",
     "status": "open",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1457652020164034686",
+    "organizerName": "Monako💃【🥇GOLD 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1457652020164034686/932a1177233bc50fb3421b02bd69eddb.png?size=512",
     "sourceThreadId": "discord-board-1499413798677643284",
     "sourceLabel": "散歩部"
   },
@@ -2388,6 +2715,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "clubId": "club-day-drinking",
     "status": "full",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1353735645373136926",
+    "organizerName": "みなみ🍺昼飲み部長【🥇GOLD 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1353735645373136926/8466a7d863d8505dff4e2bf28d8d3c70.png?size=512",
     "sourceThreadId": "discord-board-1499327359084400771",
     "sourceLabel": "昼飲み部"
   },
@@ -2410,6 +2740,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "clubId": "club-bread",
     "status": "full",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1228677952334725213",
+    "organizerName": "ami🍞パン部長【🥇GOLD 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1228677952334725213/342ebdafc945abd8be7d4422f51fc9c6.png?size=512",
     "sourceThreadId": "discord-board-1498938278852694046",
     "sourceLabel": "パン部"
   },
@@ -2432,6 +2765,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "clubId": "club-day-drinking",
     "status": "full",
     "createdBy": "u1",
+    "organizerProfileId": "discord-789786995970015242",
+    "organizerName": "たけまる【運営】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/789786995970015242/122846247a2c819c5dd1c7e60af73810.png?size=512",
     "sourceThreadId": "discord-board-1496896380986200114",
     "sourceLabel": "昼飲み部"
   },
@@ -2454,6 +2790,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "clubId": "club-wine",
     "status": "full",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1457741437633564909",
+    "organizerName": "karen【🥈SILVER 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1457741437633564909/c3b6ae0373633eec085d487f2b44a0f4.png?size=512",
     "sourceThreadId": "discord-board-1496394051727917086",
     "sourceLabel": "ワイン部"
   },
@@ -2476,6 +2815,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "clubId": "club-walk",
     "status": "open",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1457652020164034686",
+    "organizerName": "Monako💃【🥇GOLD 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1457652020164034686/932a1177233bc50fb3421b02bd69eddb.png?size=512",
     "sourceThreadId": "discord-board-1496125890503901269",
     "sourceLabel": "散歩部"
   },
@@ -2498,6 +2840,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "clubId": "club-travel",
     "status": "full",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1353010654189191178",
+    "organizerName": "瑞季✈️旅行部長【🥇GOLD 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1353010654189191178/ad43b05c846c7aacff9e9423c31baa63.png?size=512",
     "sourceThreadId": "discord-board-1495016067783987263",
     "sourceLabel": "旅行部"
   },
@@ -2520,6 +2865,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "clubId": "club-theater",
     "status": "full",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1458772421887656090",
+    "organizerName": "Hono🎭舞台鑑賞部長【🥇GOLD 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1458772421887656090/0d3f1ef300f4606ca3aec8324dfe17d0.png?size=512",
     "sourceThreadId": "discord-board-1494328483009138888",
     "sourceLabel": "舞台鑑賞部"
   },
@@ -2542,6 +2890,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "clubId": "club-disney",
     "status": "full",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1404838997100068904",
+    "organizerName": "あかねん【🥇GOLD 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1404838997100068904/656824564f0428586e31fceb697c87dc.png?size=512",
     "sourceThreadId": "discord-board-1493245114590433432",
     "sourceLabel": "ディズニー部"
   },
@@ -2564,6 +2915,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "clubId": "club-sweets",
     "status": "full",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1459195336991047815",
+    "organizerName": "しょうこ🍰スイーツ部長【🥇GOLD 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1459195336991047815/a596e4658de943f4779c57918376b97d.png?size=512",
     "sourceThreadId": "discord-board-1493228799930662962",
     "sourceLabel": "スイーツ部"
   },
@@ -2586,6 +2940,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "clubId": "club-disney",
     "status": "full",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1457371560670265374",
+    "organizerName": "のんた🐭ディズニー部長【💎PLATINUM 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1457371560670265374/d09179eea94d16710cda2370a546a963.png?size=512",
     "sourceThreadId": "discord-board-1492931367816790148",
     "sourceLabel": "ディズニー部"
   },
@@ -2608,6 +2965,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "clubId": "club-bread",
     "status": "full",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1228677952334725213",
+    "organizerName": "ami🍞パン部長【🥇GOLD 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1228677952334725213/342ebdafc945abd8be7d4422f51fc9c6.png?size=512",
     "sourceThreadId": "discord-board-1492723284301578360",
     "sourceLabel": "パン部"
   },
@@ -2630,6 +2990,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "clubId": "club-sweets",
     "status": "full",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1459195336991047815",
+    "organizerName": "しょうこ🍰スイーツ部長【🥇GOLD 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1459195336991047815/a596e4658de943f4779c57918376b97d.png?size=512",
     "sourceThreadId": "discord-board-1492321928919388271",
     "sourceLabel": "スイーツ部"
   },
@@ -2652,6 +3015,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "clubId": "club-running",
     "status": "open",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1228678386902372374",
+    "organizerName": "nori🏃ランニング部長【💎PLATINUM 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1228678386902372374/04a71500e3608ede85dd9aef73d334b7.png?size=512",
     "sourceThreadId": "discord-board-1492156764374700135",
     "sourceLabel": "ランニング部"
   },
@@ -2674,6 +3040,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "clubId": "club-wine",
     "status": "full",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1216698337147748394",
+    "organizerName": "mioka【🥈SILVER 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1216698337147748394/6c9aaa09b320526b932e1e9b31f928fb.png?size=512",
     "sourceThreadId": "discord-board-1491591553972441238",
     "sourceLabel": "ワイン部"
   },
@@ -2696,6 +3065,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "clubId": "club-theater",
     "status": "open",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1458772421887656090",
+    "organizerName": "Hono🎭舞台鑑賞部長【🥇GOLD 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1458772421887656090/0d3f1ef300f4606ca3aec8324dfe17d0.png?size=512",
     "sourceThreadId": "discord-board-1490669471508205639",
     "sourceLabel": "舞台鑑賞部"
   },
@@ -2718,6 +3090,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "clubId": "club-day-drinking",
     "status": "full",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1353735645373136926",
+    "organizerName": "みなみ🍺昼飲み部長【🥇GOLD 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1353735645373136926/8466a7d863d8505dff4e2bf28d8d3c70.png?size=512",
     "sourceThreadId": "discord-board-1490559003976007710",
     "sourceLabel": "昼飲み部"
   },
@@ -2740,6 +3115,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "clubId": "club-travel",
     "status": "full",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1353010654189191178",
+    "organizerName": "瑞季✈️旅行部長【🥇GOLD 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1353010654189191178/ad43b05c846c7aacff9e9423c31baa63.png?size=512",
     "sourceThreadId": "discord-board-1489912580511109191",
     "sourceLabel": "旅行部"
   },
@@ -2762,6 +3140,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "clubId": "club-theater",
     "status": "full",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1458772421887656090",
+    "organizerName": "Hono🎭舞台鑑賞部長【🥇GOLD 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1458772421887656090/0d3f1ef300f4606ca3aec8324dfe17d0.png?size=512",
     "sourceThreadId": "discord-board-1489784542452777121",
     "sourceLabel": "舞台鑑賞部"
   },
@@ -2784,6 +3165,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "clubId": "club-disney",
     "status": "full",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1457371560670265374",
+    "organizerName": "のんた🐭ディズニー部長【💎PLATINUM 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1457371560670265374/d09179eea94d16710cda2370a546a963.png?size=512",
     "sourceThreadId": "discord-board-1489531579561676881",
     "sourceLabel": "ディズニー部"
   },
@@ -2806,6 +3190,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "clubId": "club-disney",
     "status": "full",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1434763296573100186",
+    "organizerName": "Nana",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1434763296573100186/f9f64fb8a244aca6986957cc66873fd3.png?size=512",
     "sourceThreadId": "discord-board-1489432362184867951",
     "sourceLabel": "ディズニー部"
   },
@@ -2828,6 +3215,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "clubId": "club-walk",
     "status": "open",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1457652020164034686",
+    "organizerName": "Monako💃【🥇GOLD 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1457652020164034686/932a1177233bc50fb3421b02bd69eddb.png?size=512",
     "sourceThreadId": "discord-board-1489100846938718239",
     "sourceLabel": "散歩部"
   },
@@ -2850,6 +3240,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "clubId": "club-cooking-class",
     "status": "open",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1353587486604922921",
+    "organizerName": "みょん🍳料理教室部長【💎PLATINUM 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1353587486604922921/e661b608255cec37aecf95944458b180.png?size=512",
     "sourceThreadId": "discord-board-1488901027980771399",
     "sourceLabel": "料理教室部"
   },
@@ -2872,6 +3265,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "clubId": "club-bread",
     "status": "full",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1228677952334725213",
+    "organizerName": "ami🍞パン部長【🥇GOLD 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1228677952334725213/342ebdafc945abd8be7d4422f51fc9c6.png?size=512",
     "sourceThreadId": "discord-board-1488854892968673390",
     "sourceLabel": "パン部"
   },
@@ -2894,6 +3290,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "clubId": "club-sweets",
     "status": "open",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1459195336991047815",
+    "organizerName": "しょうこ🍰スイーツ部長【🥇GOLD 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1459195336991047815/a596e4658de943f4779c57918376b97d.png?size=512",
     "sourceThreadId": "discord-board-1488536773553291475",
     "sourceLabel": "スイーツ部"
   },
@@ -2916,6 +3315,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "clubId": "club-day-drinking",
     "status": "full",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1353735645373136926",
+    "organizerName": "みなみ🍺昼飲み部長【🥇GOLD 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1353735645373136926/8466a7d863d8505dff4e2bf28d8d3c70.png?size=512",
     "sourceThreadId": "discord-board-1488196621219926147",
     "sourceLabel": "昼飲み部"
   },
@@ -2938,6 +3340,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "clubId": "club-running",
     "status": "open",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1228678386902372374",
+    "organizerName": "nori🏃ランニング部長【💎PLATINUM 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1228678386902372374/04a71500e3608ede85dd9aef73d334b7.png?size=512",
     "sourceThreadId": "discord-board-1488191565229723768",
     "sourceLabel": "ランニング部"
   },
@@ -2960,6 +3365,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "clubId": "club-running",
     "status": "open",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1228678386902372374",
+    "organizerName": "nori🏃ランニング部長【💎PLATINUM 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1228678386902372374/04a71500e3608ede85dd9aef73d334b7.png?size=512",
     "sourceThreadId": "discord-board-1488184672969293846",
     "sourceLabel": "ランニング部"
   },
@@ -2982,6 +3390,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "clubId": "club-theater",
     "status": "full",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1458772421887656090",
+    "organizerName": "Hono🎭舞台鑑賞部長【🥇GOLD 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1458772421887656090/0d3f1ef300f4606ca3aec8324dfe17d0.png?size=512",
     "sourceThreadId": "discord-board-1488153151151276322",
     "sourceLabel": "舞台鑑賞部"
   },
@@ -3004,6 +3415,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "clubId": "club-cooking-class",
     "status": "open",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1353587486604922921",
+    "organizerName": "みょん🍳料理教室部長【💎PLATINUM 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1353587486604922921/e661b608255cec37aecf95944458b180.png?size=512",
     "sourceThreadId": "discord-board-1487741615253618818",
     "sourceLabel": "料理教室部"
   },
@@ -3026,6 +3440,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "clubId": "club-bread",
     "status": "full",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1228677952334725213",
+    "organizerName": "ami🍞パン部長【🥇GOLD 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1228677952334725213/342ebdafc945abd8be7d4422f51fc9c6.png?size=512",
     "sourceThreadId": "discord-board-1487298574369816787",
     "sourceLabel": "パン部"
   },
@@ -3048,6 +3465,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "clubId": "club-wine",
     "status": "open",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1446344592214724700",
+    "organizerName": "真妃🍷ワイン部長【🥇GOLD 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1446344592214724700/559a459ef83e54fad1ec64ffc9a3d64a.png?size=512",
     "sourceThreadId": "discord-board-1486960217693491221",
     "sourceLabel": "ワイン部"
   },
@@ -3070,6 +3490,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "clubId": "club-disney",
     "status": "full",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1457371560670265374",
+    "organizerName": "のんた🐭ディズニー部長【💎PLATINUM 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1457371560670265374/d09179eea94d16710cda2370a546a963.png?size=512",
     "sourceThreadId": "discord-board-1486224202548772966",
     "sourceLabel": "ディズニー部"
   },
@@ -3092,6 +3515,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "clubId": "club-disney",
     "status": "full",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1457371560670265374",
+    "organizerName": "のんた🐭ディズニー部長【💎PLATINUM 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1457371560670265374/d09179eea94d16710cda2370a546a963.png?size=512",
     "sourceThreadId": "discord-board-1486221450443751494",
     "sourceLabel": "ディズニー部"
   },
@@ -3114,6 +3540,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "clubId": "club-disney",
     "status": "full",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1457371560670265374",
+    "organizerName": "のんた🐭ディズニー部長【💎PLATINUM 】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1457371560670265374/d09179eea94d16710cda2370a546a963.png?size=512",
     "sourceThreadId": "discord-board-1486021800927428638",
     "sourceLabel": "ディズニー部"
   },
@@ -3135,6 +3564,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "eventType": "official",
     "status": "open",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1119606639763390545",
+    "organizerName": "Non【IRO+代表】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1448884235393040506",
     "sourceLabel": "関東支部イベント"
   },
@@ -3156,6 +3588,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "eventType": "official",
     "status": "open",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1119606639763390545",
+    "organizerName": "Non【IRO+代表】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1441748934287560804",
     "sourceLabel": "全体イベント"
   },
@@ -3177,6 +3612,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "eventType": "gourmet",
     "status": "open",
     "createdBy": "u1",
+    "organizerProfileId": "discord-1334056760863883294",
+    "organizerName": "IRO+運営",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1334056760863883294/2d550914366cefb1693360eea7d7ebcc.png?size=512",
     "sourceThreadId": "discord-board-1372550361063096380",
     "sourceLabel": "関西グルメ掲示板"
   }

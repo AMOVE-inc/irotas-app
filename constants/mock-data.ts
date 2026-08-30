@@ -126,6 +126,9 @@ export interface Event {
   clubId?: string;
   status: "open" | "full" | "ended";
   createdBy: string; // admin member id
+  organizerProfileId?: string;
+  organizerName?: string;
+  organizerAvatar?: string;
   chatId?: string; // private chat id
   applicationDeadline?: string; // 募集期日
   cancellationPolicy?: string; // イベント個別のキャンセルポリシー

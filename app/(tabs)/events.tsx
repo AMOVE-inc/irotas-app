@@ -302,8 +302,8 @@ function EventCard({ event, onPress, isFavorite, onToggleFavorite, locked = fals
         </View>
         </> : null}
         <View style={{ flexDirection: "row", alignItems: "center", marginTop: 5 }}>
-          {!locked ? <><Image source={event.eventType === "official" ? DEFAULT_AVATAR : (organizer?.avatar ?? DEFAULT_AVATAR)} style={{ width: 18, height: 18, borderRadius: 9 }} contentFit="cover" />
-          <Text style={{ marginLeft: 5, fontSize: 10, fontWeight: "700", color: colors.muted }} numberOfLines={1}>{event.eventType === "official" ? "IRO＋運営" : (organizer?.name ?? "メンバー")}</Text>
+          {!locked ? <><Image source={event.eventType === "official" ? DEFAULT_AVATAR : (organizer?.avatar ?? event.organizerAvatar ?? DEFAULT_AVATAR)} style={{ width: 18, height: 18, borderRadius: 9 }} contentFit="cover" />
+          <Text style={{ marginLeft: 5, fontSize: 10, fontWeight: "700", color: colors.muted }} numberOfLines={1}>{event.eventType === "official" ? "IRO＋運営" : (organizer?.name ?? event.organizerName ?? "メンバー")}</Text>
           {event.eventType !== "official" && organizer ? <NewMemberMark member={organizer} size={11} /> : null}</> : null}
           <View style={{ flex: 1 }} />
           {!locked ? <Pressable onPress={(pressEvent) => { pressEvent.stopPropagation?.(); onToggleFavorite(); }} accessibilityLabel={isFavorite ? "お気に入りから削除" : "お気に入りに追加"} hitSlop={8} style={{ paddingHorizontal: 4, paddingVertical: 2 }}><IconSymbol name={isFavorite ? "heart.fill" : "heart"} size={20} color={isFavorite ? "#D85B86" : colors.muted} /></Pressable> : <Text style={{ fontSize: 9, fontWeight: "800", color: colors.muted }}>入部すると詳細を表示</Text>}
