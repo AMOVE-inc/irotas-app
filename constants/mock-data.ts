@@ -7,7 +7,7 @@ export type UserRole = "member" | "operator" | "admin";
 export interface Member {
   id: string;
   name: string;
-  avatar: number;
+  avatar: number | string;
   rank: MemberRank;
   points: number; // XP（旧・累計ポイント）
   level: number; // 後方互換用（pointsから自動計算）

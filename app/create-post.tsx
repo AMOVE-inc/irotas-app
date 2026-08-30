@@ -165,7 +165,7 @@ export default function CreatePostScreen() {
         {/* Author row */}
         <View style={{ flexDirection: "row", alignItems: "center", padding: 16 }}>
           <Image
-            source={CURRENT_USER.avatar}
+            source={typeof CURRENT_USER.avatar === "string" ? { uri: CURRENT_USER.avatar } : CURRENT_USER.avatar}
             style={{ width: 40, height: 40, borderRadius: 20 }}
           />
           <View style={{ marginLeft: 10 }}>

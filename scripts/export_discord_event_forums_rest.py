@@ -17,6 +17,7 @@ FORUMS = {
     "1227876549139890226": ("gourmet-board-kanto", "関東グルメ掲示板"),
     "1333062225514201129": ("gourmet-board-kansai", "関西グルメ掲示板"),
     "1228614719309352970": ("free-chat", "なんでも掲示板"),
+    "1472183879187042375": ("gourmet-advice", "教えてグルメ相談室"),
 }
 API = "https://discord.com/api/v10"
 
@@ -57,6 +58,16 @@ async def archived_threads(session, channel_id):
         before = page["threads"][-1]["thread_metadata"]["archive_timestamp"]
 
 
+def normalized_content(message, role_names):
+    content = message.get("content", "")
+    for member in message.get("mentions", []):
+        label = member.get("global_name") or member.get("username") or "メンバー"
+        content = content.replace(f"<@{member['id']}>", f"@{label}").replace(f"<@!{member['id']}>", f"@{label}")
+    for role_id in message.get("mention_roles", []):
+        content = content.replace(f"<@&{role_id}>", f"@{role_names.get(str(role_id), 'グループ')}")
+    return content
+
+
 async def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", required=True)
@@ -71,6 +82,8 @@ async def main():
     headers = {"Authorization": f"Bot {token}"}
     archive = {"exportedAt": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"), "threads": [], "comments": []}
     async with aiohttp.ClientSession(headers=headers) as session:
+        roles = await discord_get(session, f"/guilds/{guild_id}/roles")
+        role_names = {str(role["id"]): role["name"] for role in roles}
         if args.input:
             source = json.loads(Path(args.input).read_text(encoding="utf-8"))
             selected = [row for row in source["threads"] if not args.thread_id or row["id"].removeprefix("discord-board-") == args.thread_id]
@@ -86,21 +99,23 @@ async def main():
                     continue
                 starter, *comments = messages
                 if starter.get("content", "").strip():
-                    row["content"] = starter["content"].strip()
-                existing_comment_ids = {str(item["id"]) for item in source["comments"] if item["threadId"] == row["id"]}
+                    row["content"] = normalized_content(starter, role_names).strip()
+                existing_comments = {str(item["id"]): item for item in source["comments"] if item["threadId"] == row["id"]}
                 for message in comments:
-                    if str(message["id"]) in existing_comment_ids:
-                        continue
                     message_author = message.get("author", {})
-                    source["comments"].append({
+                    normalized = {
                         "id": str(message["id"]), "threadId": row["id"],
                         "authorId": str(message_author.get("id", "")),
                         "authorName": message.get("member", {}).get("nick") or message_author.get("global_name") or message_author.get("username") or "メンバー",
-                        "content": message.get("content", ""), "createdAt": message.get("timestamp"),
+                        "content": normalized_content(message, role_names), "createdAt": message.get("timestamp"),
                         "images": [item["url"] for item in message.get("attachments", []) if item.get("content_type", "").startswith("image/")],
                         "videos": [item["url"] for item in message.get("attachments", []) if item.get("content_type", "").startswith("video/")],
                         "reactions": {},
-                    })
+                    }
+                    if str(message["id"]) in existing_comments:
+                        existing_comments[str(message["id"])].update(normalized)
+                    else:
+                        source["comments"].append(normalized)
                 print(f"[更新] {row['title']}: 本文1 / コメント{len(comments)}", flush=True)
             source["exportedAt"] = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
             Path(args.output).write_text(json.dumps(source, ensure_ascii=False), encoding="utf-8")
@@ -125,7 +140,7 @@ async def main():
                     "id": f"discord-board-{thread['id']}",
                     "authorId": str(author.get("id", "")),
                     "authorName": starter.get("member", {}).get("nick") or author.get("global_name") or author.get("username") or "IRO+運営",
-                    "content": starter.get("content", "").strip() or thread.get("name", ""),
+                    "content": normalized_content(starter, role_names).strip() or thread.get("name", ""),
                     "createdAt": starter.get("timestamp") or thread.get("thread_metadata", {}).get("archive_timestamp"),
                     "images": [item["url"] for item in starter.get("attachments", []) if item.get("content_type", "").startswith("image/")],
                     "videos": [item["url"] for item in starter.get("attachments", []) if item.get("content_type", "").startswith("video/")],
@@ -141,7 +156,7 @@ async def main():
                         "id": str(message["id"]), "threadId": base["id"],
                         "authorId": str(message_author.get("id", "")),
                         "authorName": message.get("member", {}).get("nick") or message_author.get("global_name") or message_author.get("username") or "メンバー",
-                        "content": message.get("content", ""), "createdAt": message.get("timestamp"),
+                        "content": normalized_content(message, role_names), "createdAt": message.get("timestamp"),
                         "images": [item["url"] for item in message.get("attachments", []) if item.get("content_type", "").startswith("image/")],
                         "videos": [item["url"] for item in message.get("attachments", []) if item.get("content_type", "").startswith("video/")],
                         "reactions": {},

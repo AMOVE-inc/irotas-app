@@ -1,5 +1,6 @@
 import { ScreenContainer } from "@/components/screen-container";
 import { NewMemberMark } from "@/components/new-member-mark";
+import { stripRankFromName } from "@/components/member-rank-badge";
 import { MentionSuggestions, MentionText } from "@/components/mention-ui";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import {
@@ -95,7 +96,13 @@ function mealReportImpression(thread: BoardThread): string | undefined {
   const report = thread.mealReport;
   if (!report) return undefined;
   const source = report.comment?.trim() || thread.preview;
-  const lines = source.split(/\r?\n/);
+  const sourceLines = source.split(/\r?\n/);
+  const previewStart = sourceLines.findIndex((line, index) => {
+    const trimmed = line.trim();
+    const next = sourceLines[index + 1]?.trim() ?? "";
+    return (trimmed.includes(report.restaurantName) && /[（(].+[）)]/.test(trimmed) && /(?:★|☆|■予算)/.test(next)) || /^(?:★|☆){3,}/.test(trimmed);
+  });
+  const lines = previewStart >= 0 ? sourceLines.slice(0, previewStart) : sourceLines;
   const labeledIndex = lines.findIndex((line) => /(?:感想|ひとこと|一言)\s*[：:]/.test(line));
   if (labeledIndex >= 0) {
     const first = lines[labeledIndex].replace(/^.*?(?:感想|ひとこと|一言)\s*[：:]\s*/, "").trim();
@@ -383,7 +390,7 @@ function ThreadCard({ thread, onPress, onEdit, onChangeRecruitment, unreadCount 
         <View style={{ marginLeft: 8, flex: 1 }}>
           <View style={{ flexDirection: "row", alignItems: "center" }}>
             <Text style={{ fontSize: 13, fontWeight: "600", color: colors.foreground }}>
-              {thread.author.name}
+              {stripRankFromName(thread.author.name)}
             </Text>
             <NewMemberMark member={thread.author} size={13} />
             <OperatorOrRankBadge member={thread.author} />
@@ -630,7 +637,7 @@ function SelectMembersModal({
                   />
                   <View style={{ flex: 1, marginLeft: 12 }}>
                     <Text style={{ fontSize: 15, fontWeight: "600", color: colors.foreground }}>
-                      {comment.author.name}
+                      {stripRankFromName(comment.author.name)}
                     </Text>
                     <Text style={{ fontSize: 12, color: colors.muted }} numberOfLines={1}>
                       「{comment.content}」
@@ -1020,13 +1027,13 @@ function ThreadDetailModal({
             <View style={{ marginLeft: 10 }}>
               <View style={{ flexDirection: "row", alignItems: "center" }}>
                 <Text style={{ fontSize: 14, fontWeight: "700", color: colors.foreground }}>
-                  {thread.author.name}
+                  {stripRankFromName(thread.author.name)}
                 </Text>
                 <NewMemberMark member={thread.author} size={13} />
                 <OperatorOrRankBadge member={thread.author} />
               </View>
               <Text style={{ fontSize: 11, color: colors.muted, marginTop: 2 }}>
-                {thread.author.generation}期生
+                {thread.author.generation > 0 ? `${thread.author.generation}期生` : "期設定なし"}
               </Text>
             </View>
           </View>
@@ -1193,8 +1200,9 @@ function ThreadDetailModal({
                     contentFit="cover"
                   />
                   <Text style={{ fontSize: 13, fontWeight: "600", color: colors.foreground, marginLeft: 8 }}>
-                    {comment.author.name}
+                    {stripRankFromName(comment.author.name)}
                   </Text>
+                  <OperatorOrRankBadge member={comment.author} />
                   <Text style={{ fontSize: 11, color: colors.muted, marginLeft: 8 }}>
                     {timeAgo(comment.createdAt)}
                   </Text>
@@ -2357,9 +2365,9 @@ export default function BoardScreen() {
 
   useEffect(() => {
     let active = true;
-    void Api.getBoardArchive("all").then((rawArchive) => {
+    void Promise.all([Api.getBoardArchive("all"), Api.getMemberDirectory().catch(() => [])]).then(([rawArchive, directory]) => {
       if (!active) return;
-      const archive = parseDiscordBoardArchive(rawArchive);
+      const archive = parseDiscordBoardArchive(rawArchive, directory);
       setDynamicThreads((current) => {
         const withoutDiscordArchive = current.filter((thread) => !thread.id.startsWith("discord-board-"));
         return [...archive.threads, ...withoutDiscordArchive];

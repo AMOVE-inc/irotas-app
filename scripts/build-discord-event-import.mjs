@@ -30,10 +30,18 @@ function priceFrom(thread) {
     if (!match) continue;
     const sameLine = lines[index].slice((match.index ?? 0) + match[0].length).replace(/^\*+|\*+$/g, "").trim();
     const value = sameLine || lines[index + 1]?.replace(/^\*+|\*+$/g, "").trim();
-    if (value) return value.slice(0, 100);
+    if (value) return canonicalPrice(value);
   }
   const inline = thread.content.match(/(?:参加費|会費|料金)\s*(?:は)?\s*([¥￥]?\s*[\d,]+(?:\s*[〜~～-]\s*[¥￥]?\s*[\d,]+)?\s*円?(?:前後|程度|ほど)?|無料)/);
-  return inline?.[1]?.trim() || "本文をご確認ください";
+  return inline?.[1] ? canonicalPrice(inline[1]) : "本文をご確認ください";
+}
+
+function canonicalPrice(value) {
+  if (/無料/.test(value)) return "無料";
+  const range = value.match(/[¥￥]?\s*([\d,]+)\s*(?:円)?\s*[〜~～\-–—]\s*[¥￥]?\s*([\d,]+)\s*(?:円)?/);
+  if (range) return `${Number(range[1].replaceAll(",", "")).toLocaleString("ja-JP")}〜${Number(range[2].replaceAll(",", "")).toLocaleString("ja-JP")}円`;
+  const amount = value.match(/[¥￥]?\s*([\d,]+)\s*(?:円)?/);
+  return amount ? `${Number(amount[1].replaceAll(",", "")).toLocaleString("ja-JP")}円` : "本文をご確認ください";
 }
 
 function priceRange(value) {
@@ -70,6 +78,15 @@ function externalLinksFrom(thread) {
   };
 }
 
+function capacityFrom(thread) {
+  const text = `${thread.title}\n${thread.content}`;
+  const labeled = text.match(/(?:募集人数|募集定員|定員)(?:\s*[（(]幹事除く[）)])?\s*[：:=]?\s*(?:抽選で|先着)?\s*(\d+)\s*名/);
+  const capacity = Math.max(1, Number(labeled?.[1] ?? 1));
+  const total = text.match(/(?:私|幹事)(?:を含(?:む|め)|の)?(?:計|合計)?\s*(\d+)\s*名|(?:計|合計)\s*(\d+)\s*名/);
+  const reservationCapacity = Math.max(capacity, Number(total?.[1] ?? total?.[2] ?? capacity + (thread.category.startsWith("gourmet-board-") ? 1 : 0)));
+  return { capacity, reservationCapacity };
+}
+
 function completeThread(thread) {
   const normalizedTitle = thread.title.normalize("NFKC").replace(/\s+/g, "").toLowerCase();
   const normalizedContent = thread.content.normalize("NFKC").replace(/\s+/g, "").toLowerCase();
@@ -97,6 +114,7 @@ const events = eventThreads.map((rawThread) => {
   const authorProfile = profiles.get(thread.authorId);
   const links = externalLinksFrom(thread);
   const price = priceFrom(thread);
+  const capacity = capacityFrom(thread);
   return {
     id: `discord-event-${thread.id.replace(/^discord-board-/, "")}`,
     createdAt: thread.createdAt,
@@ -107,7 +125,7 @@ const events = eventThreads.map((rawThread) => {
     location: locationFrom(thread),
     image: thread.images?.[0] ?? "",
     ...links,
-    capacity: 1,
+    ...capacity,
     attendees: 0,
     participants: [],
     applicantIds: [],

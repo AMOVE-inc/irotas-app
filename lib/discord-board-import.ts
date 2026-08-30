@@ -31,22 +31,40 @@ export interface RawDiscordBoardArchive {
   comments: RawDiscordBoardComment[];
 }
 
-function authorFor(record: RawDiscordBoardRecord): Member {
+export interface DiscordMemberDirectoryRecord {
+  id: string;
+  displayName: string;
+  accessRole: "member" | "club_leader" | "operator" | "admin";
+  branches: string[];
+  memberTerm: string | null;
+  memberRank: string;
+  joinedAt: string;
+  profile: Record<string, unknown>;
+  xp: number;
+}
+
+function authorFor(record: RawDiscordBoardRecord, directory: DiscordMemberDirectoryRecord[] = []): Member {
   const existing = MEMBERS.find((member) => member.id === record.authorId || member.name === record.authorName);
   if (existing) return existing;
+  const discordId = `discord-${record.authorId}`;
+  const databaseMember = directory.find((member) => member.id === discordId || member.id.endsWith(record.authorId) || member.displayName === record.authorName);
+  const profile = databaseMember?.profile ?? {};
+  const avatar = typeof profile.avatarUrl === "string" ? profile.avatarUrl : typeof profile.avatar === "string" ? profile.avatar : MEMBERS[0].avatar;
+  const generation = Number(databaseMember?.memberTerm?.match(/\d+/)?.[0] ?? 0);
+  const rank = (["regular", "silver", "gold", "platinum"].includes(databaseMember?.memberRank ?? "") ? databaseMember!.memberRank : "regular") as Member["rank"];
   return {
-    id: `discord-${record.authorId}`,
-    name: record.authorName || "旧Discordメンバー",
-    avatar: MEMBERS[0].avatar,
-    rank: "regular",
-    points: 0,
+    id: databaseMember?.id ?? discordId,
+    name: databaseMember?.displayName || record.authorName || "旧Discordメンバー",
+    avatar,
+    rank,
+    points: databaseMember?.xp ?? 0,
     level: 1,
-    branch: "kanto",
-    generation: 1,
-    bio: "",
+    branch: databaseMember?.branches.includes("kansai") ? "kansai" : "kanto",
+    generation,
+    bio: typeof profile.bio === "string" ? profile.bio : "",
     interests: [],
-    role: "member",
-    joinedAt: "2024-01-01",
+    role: databaseMember?.accessRole === "admin" ? "admin" : databaseMember?.accessRole === "operator" ? "operator" : "member",
+    joinedAt: databaseMember?.joinedAt ?? "",
   };
 }
 
@@ -63,7 +81,7 @@ export function stripLegacyClubApplicationBlock(content: string): string {
     .trim();
 }
 
-export function parseDiscordBoardArchive(archive: RawDiscordBoardArchive): ImportedDiscordBoard {
+export function parseDiscordBoardArchive(archive: RawDiscordBoardArchive, directory: DiscordMemberDirectoryRecord[] = []): ImportedDiscordBoard {
   const rawThreads = archive.threads.filter((record) => !(
     record.category === "meal-report" &&
     record.mealReport?.rating === 1 &&
@@ -77,7 +95,7 @@ export function parseDiscordBoardArchive(archive: RawDiscordBoardArchive): Impor
     const comment: BoardComment = {
       id: `discord-comment-${record.id}`,
       threadId: record.threadId,
-      author: authorFor(record),
+      author: authorFor(record, directory),
       content: record.content,
       createdAt: record.createdAt,
       images: record.images.length ? record.images : undefined,
@@ -95,7 +113,7 @@ export function parseDiscordBoardArchive(archive: RawDiscordBoardArchive): Impor
     return {
       id: record.id,
       title: cleanDiscordBoardTitle(record.title),
-      author: authorFor(record),
+      author: authorFor(record, directory),
       category: record.category,
       commentCount: threadComments.length,
       lastUpdated: threadComments.at(-1)?.createdAt ?? record.createdAt,
