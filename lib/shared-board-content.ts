@@ -7,6 +7,7 @@ import {
   type Member,
 } from "../constants/mock-data";
 import type { SharedBoardComment, SharedBoardThread } from "./_core/api";
+import { cleanDiscordBoardContent, cleanDiscordBoardTitle } from "./discord-board-normalization";
 
 type ReactionSummary = Record<string, { count: number; reacted: boolean }>;
 
@@ -69,12 +70,12 @@ export function sharedThreadToBoardThread(record: SharedBoardThread, viewerId: s
   const data = record.data as Partial<BoardThread>;
   return {
     id: record.id,
-    title: record.title,
+    title: cleanDiscordBoardTitle(record.title),
     author: memberFor(record.authorId, record.authorName),
     category: record.category,
     commentCount: typeof data.commentCount === "number" ? data.commentCount : 0,
     lastUpdated: record.updatedAt,
-    preview: record.content,
+    preview: cleanDiscordBoardContent(record.title, record.content, record.category),
     isRecruiting: record.status === "open",
     recruitmentStatus: record.status,
     isPinned: record.pinned,

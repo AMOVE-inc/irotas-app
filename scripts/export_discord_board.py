@@ -284,11 +284,11 @@ def merge_consecutive(records: list[dict]) -> list[dict]:
     return merged
 
 
-async def export_archive(guild: discord.Guild, output_path: Path, asset_root: Path) -> None:
+async def export_archive(guild: discord.Guild, output_path: Path, asset_root: Path, event_channels_only: bool = False) -> None:
     archive = {"exportedAt": isoformat(discord.utils.utcnow()), "threads": [], "comments": []}
     relative_root = Path("discord-board")
 
-    for channel_id, (category, label) in TEXT_CHANNELS.items():
+    for channel_id, (category, label) in ({} if event_channels_only else TEXT_CHANNELS).items():
         channel = guild.get_channel(channel_id)
         if not isinstance(channel, discord.TextChannel):
             continue
@@ -320,16 +320,18 @@ async def export_archive(guild: discord.Guild, output_path: Path, asset_root: Pa
                 **template,
             })
 
-    for channel_id, (category, label) in FORUM_CHANNELS.items():
+    selected_forums = ({channel_id: FORUM_CHANNELS[channel_id] for channel_id in (
+        1228983536988586044, 1332944923166507038, 1332959273394638911
+    )} if event_channels_only else FORUM_CHANNELS)
+    for channel_id, (category, label) in selected_forums.items():
         channel = guild.get_channel(channel_id)
         if not isinstance(channel, discord.ForumChannel):
             continue
         print(f"[取得中] {label}", flush=True)
         threads = {thread.id: thread for thread in channel.threads}
-        # The repository already contains the historical archive through
-        # 2026-08-14. Fetch the newest archived slice and merge it by Discord
-        # ID so a full unbounded walk does not stall on Discord rate limits.
-        async for thread in channel.archived_threads(limit=0):
+        # Include every archived thread. This is especially important for the
+        # event-only migration, where historical events are the source data.
+        async for thread in channel.archived_threads(limit=None):
             threads[thread.id] = thread
         for thread in sorted(threads.values(), key=lambda item: item.created_at):
             print(f"  [スレッド] {thread.name}", flush=True)
@@ -390,6 +392,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--assets")
     parser.add_argument("--contest-output")
     parser.add_argument("--members-output")
+    parser.add_argument("--event-channels-only", action="store_true")
     return parser.parse_args()
 
 
@@ -543,7 +546,7 @@ async def main() -> None:
         elif args.output:
             if not args.assets:
                 raise ValueError("--assets is required with --output")
-            await export_archive(guild, Path(args.output), Path(args.assets))
+            await export_archive(guild, Path(args.output), Path(args.assets), args.event_channels_only)
         await client.close()
 
     await client.start(token)

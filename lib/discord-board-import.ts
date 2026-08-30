@@ -1,6 +1,7 @@
 import { MEMBERS, type BoardComment, type BoardThread, type Member } from "../constants/mock-data";
 import { normalizeBoardReactions } from "./board-reactions";
 import { inferImportedRecruitmentStatus } from "./board-recruitment";
+import { cleanDiscordBoardContent, cleanDiscordBoardTitle } from "./discord-board-normalization";
 
 export interface RawDiscordBoardRecord {
   id: string;
@@ -88,11 +89,12 @@ export function parseDiscordBoardArchive(archive: RawDiscordBoardArchive): Impor
 
   const threads = rawThreads.map((record): BoardThread => {
     const threadComments = comments[record.id] ?? [];
-    const preview = record.category === "club-introduction" ? stripLegacyClubApplicationBlock(record.content) : record.content;
+    const normalizedContent = cleanDiscordBoardContent(record.title, record.content, record.category);
+    const preview = record.category === "club-introduction" ? stripLegacyClubApplicationBlock(normalizedContent) : normalizedContent;
     const recruitmentStatus = inferImportedRecruitmentStatus(record.category, record.title, preview);
     return {
       id: record.id,
-      title: record.title,
+      title: cleanDiscordBoardTitle(record.title),
       author: authorFor(record),
       category: record.category,
       commentCount: threadComments.length,

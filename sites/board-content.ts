@@ -2,6 +2,7 @@ import { authenticatedRequestMember } from "./auth";
 import { canMemberAccessClub } from "./clubs";
 import type { D1Database, SitesEnv } from "./platform-types";
 import archive from "../data/discord-board-2026-08-29.json";
+import { cleanDiscordBoardContent, cleanDiscordBoardTitle } from "../lib/discord-board-normalization";
 import type { RawDiscordBoardArchive } from "../lib/discord-board-import";
 
 const CONTENT_PATH = "/api/board/content";
@@ -242,14 +243,16 @@ async function ensureImportedThread(
   if (!raw || !category) return null;
   if (!await canAccessBoardCategory(db, category, member)) return null;
   const now = new Date().toISOString();
+  const normalizedTitle = cleanDiscordBoardTitle(raw.title || "移行済み投稿");
+  const normalizedContent = cleanDiscordBoardContent(raw.title, raw.content || "移行済み投稿", raw.category);
   await db.prepare(`INSERT OR IGNORE INTO board_threads
     (id, author_member_id, category, title, content, status, pinned, data_json, created_at, updated_at)
     VALUES (?, ?, ?, ?, ?, 'none', 0, ?, ?, ?)`).bind(
       id,
       member.id,
       category,
-      raw.title || "移行済み投稿",
-      raw.content || "移行済み投稿",
+      normalizedTitle,
+      normalizedContent,
       JSON.stringify({ archiveShadow: true }),
       raw.createdAt || now,
       now,
@@ -260,8 +263,8 @@ async function ensureImportedThread(
     author_public_member_id: null,
     author_display_name: null,
     category,
-    title: raw.title || "移行済み投稿",
-    content: raw.content || "移行済み投稿",
+    title: normalizedTitle,
+    content: normalizedContent,
     status: "none" as const,
     pinned: 0,
     data_json: JSON.stringify({ archiveShadow: true }),
