@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "createdAt": "2026-08-30T12:23:48.192Z",
+  "sourceEnvironment": "production",
+  "schemaVersion": 23,
+  "d1": {
+    "tableCounts": {
+      "members": 508,
+      "member_subscriptions": 498,
+      "events": 0,
+      "event_participations": 0,
+      "clubs": 12,
+      "club_memberships": 912,
+      "board_threads": 7,
+      "board_comments": 4,
+      "chat_rooms": 4,
+      "chat_messages": 0,
+      "in_app_notifications": 2,
+      "audit_logs": 102,
+      "migration_runs": 28
+    }
+  },
+  "r2": {
+    "objectCount": 8,
+    "totalBytes": 12340260
+  }
+}
