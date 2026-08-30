@@ -2,9 +2,9 @@ import { describe, expect, it } from "vitest";
 import { SEEDED_GOURMET_CONTESTS } from "../constants/imported-gourmet-contests";
 
 describe("seeded Discord gourmet contests", () => {
-  it("publishes all 24 Discord contests, including the active contest", () => {
-    expect(SEEDED_GOURMET_CONTESTS).toHaveLength(24);
-    expect(SEEDED_GOURMET_CONTESTS.at(0)?.thread.title).toBe("第24回 麻辣湯");
+  it("publishes all 25 Discord contests, including the active contest", () => {
+    expect(SEEDED_GOURMET_CONTESTS).toHaveLength(25);
+    expect(SEEDED_GOURMET_CONTESTS.at(0)?.thread.title).toBe("第25回 No.1パエリア");
     expect(SEEDED_GOURMET_CONTESTS.at(-1)?.thread.title).toBe("第1回 初デートにぴったりなお店");
     expect(SEEDED_GOURMET_CONTESTS.reduce((sum, item) => sum + item.comments.length, 0)).toBe(323);
     expect(SEEDED_GOURMET_CONTESTS.at(0)?.thread.gourmetContest?.archived).not.toBe(true);

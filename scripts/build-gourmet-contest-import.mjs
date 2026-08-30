@@ -20,6 +20,7 @@ const isVideo = (file) => /\.(mov|mp4|m4v|webm)$/i.test(file);
 const attachmentJobs = [];
 for (const contest of source) {
   for (const message of contest.messages) {
+    if (Array.isArray(message.localAttachments)) continue;
     message.localAttachments = message.attachments.map((url, index) => {
       const file = `${String(contest.round).padStart(2, "0")}-${message.id}-${index + 1}${extensionFor(url)}`;
       attachmentJobs.push({ url, file });
@@ -58,6 +59,7 @@ const deadlines = {
   13: "2026-03-28", 14: "2026-04-04", 15: "2026-04-11", 16: "2026-05-02",
   17: "2026-05-16", 18: "2026-05-30", 19: "2026-06-12", 20: "2026-07-04",
   21: "2026-07-11", 22: "2026-07-25", 23: "2026-08-08", 24: "2026-08-22",
+  25: "2026-09-05",
 };
 const winners = {
   15: "たけまる【運営】", 16: "mana【🥈SILVER 】", 17: "ななみ【🥇GOLD 】",
@@ -140,7 +142,7 @@ export const SEEDED_GOURMET_CONTESTS: { thread: BoardThread; comments: BoardComm
       videos: threadVideos,
       gourmetContest: {
         commentDeadline: deadlines[contest.round],
-        ...(contest.round === 24 ? { prizePoints: 3000 } : { prizeTitle: contest.round === 1 ? "IRO+イベント割引券 5,000円分" : "IRO+イベントクーポン 3,000円分", prizeDescription: "Discordから移行した過去大会", prizeExpiresAt: deadlines[contest.round], archived: true, winnerName: winners[contest.round] }),
+        ...(contest.round === 25 ? { prizePoints: 3000 } : { prizeTitle: contest.round === 1 ? "IRO+イベント割引券 5,000円分" : "IRO+イベントクーポン 3,000円分", prizeDescription: "Discordから移行した過去大会", prizeExpiresAt: deadlines[contest.round], archived: true, winnerName: winners[contest.round] }),
       },
     };
     return { thread, comments };

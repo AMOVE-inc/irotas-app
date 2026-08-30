@@ -51,7 +51,7 @@ import * as Api from "@/lib/_core/api";
 const REACTION_EMOJIS = ["👍", "❤️", "😂", "🎉", "😋", "🙏"] as const;
 const MORE_REACTION_EMOJIS = ["😀", "😃", "😄", "😁", "😆", "😅", "😂", "🤣", "😊", "😇", "🙂", "🙃", "😉", "😍", "🥰", "😘", "😋", "😛", "🤪", "🤔", "🫡", "😎", "🥳", "😮", "😢", "😭", "😡", "👍", "👎", "👏", "🙌", "🙏", "💪", "👀", "❤️", "🩷", "🧡", "💛", "💚", "💙", "💜", "🖤", "🤍", "🔥", "✨", "🎉", "💯", "✅", "❌", "💡", "📌", "🍽️", "🍣", "🍖", "🍜", "🍕", "🍰", "☕", "🍺", "🍷"] as const;
 
-function MessageBubble({ message, isMe, viewerId, myAvatarUri, onReact, mentionGroups, onOpenInternalLink, canManage, onReply, onEdit, onDelete }: { message: ChatMessage; isMe: boolean; viewerId: string; myAvatarUri?: string | null; onReact: (emoji: string) => void; mentionGroups: ReturnType<typeof getMentionGroups>; onOpenInternalLink: (pathname: "/chat" | "/board", params: Record<string, string>) => void; canManage: boolean; onReply: () => void; onEdit: () => void; onDelete: () => void }) {
+function MessageBubble({ message, isMe, viewerId, myAvatarUri, onReact, mentionGroups, onOpenInternalLink, onOpenProfile, canManage, onReply, onEdit, onDelete }: { message: ChatMessage; isMe: boolean; viewerId: string; myAvatarUri?: string | null; onReact: (emoji: string) => void; mentionGroups: ReturnType<typeof getMentionGroups>; onOpenInternalLink: (pathname: "/chat" | "/board", params: Record<string, string>) => void; onOpenProfile: () => void; canManage: boolean; onReply: () => void; onEdit: () => void; onDelete: () => void }) {
   const colors = useColors();
   const sender = getMemberById(message.senderId);
   const [showReactionPicker, setShowReactionPicker] = useState(false);
@@ -81,14 +81,16 @@ function MessageBubble({ message, isMe, viewerId, myAvatarUri, onReact, mentionG
     >
       {/* 自分のアバターも表示 */}
       {avatarSource && (
-        <Image
-          source={avatarSource}
-          style={[
-            { width: 28, height: 28, borderRadius: 14 },
-            isMe ? { marginLeft: 8 } : { marginRight: 8 },
-          ]}
-          contentFit="cover"
-        />
+        <Pressable onPress={onOpenProfile} accessibilityLabel={`${message.externalAuthorName ?? sender?.name ?? "メンバー"}のプロフィールを表示`}>
+          <Image
+            source={avatarSource}
+            style={[
+              { width: 28, height: 28, borderRadius: 14 },
+              isMe ? { marginLeft: 8 } : { marginRight: 8 },
+            ]}
+            contentFit="cover"
+          />
+        </Pressable>
       )}
       <View style={{ maxWidth: "70%" }}>
         {!isMe && (sender || message.externalAuthorName) ? (
@@ -489,6 +491,10 @@ export default function ChatScreen() {
               onReact={(emoji) => handleReaction(item.id, emoji)}
               mentionGroups={mentionGroups}
               onOpenInternalLink={(pathname, params) => router.push({ pathname, params } as any)}
+              onOpenProfile={() => {
+                const sender = getMemberById(item.senderId);
+                router.push({ pathname: "/member-profile", params: { id: sender?.id ?? `discord-${item.senderId}`, legacyName: item.externalAuthorName ?? sender?.name ?? "旧Discordメンバー" } });
+              }}
               canManage={item.senderId === viewerMemberId || userCanModerate}
               onReply={() => { const sender = getMemberById(item.senderId); setMessageText(`@${item.externalAuthorName ?? sender?.name ?? "メンバー"} `); inputRef.current?.focus(); }}
               onEdit={() => { const next = Platform.OS === "web" ? window.prompt("メッセージを編集", item.content) : null; if (typeof next === "string" && next.trim()) { setMessages((current) => current.map((message) => message.id === item.id ? { ...message, content: next.trim() } : message)); void saveMessagesToStorage(id ?? "", [{ ...item, content: next.trim() }]); } }}

@@ -4332,6 +4332,20 @@ const archive: ArchivedContest[] = [
     ]
   }
 ];
+archive.push({
+  id: "1541165658220527806",
+  round: 25,
+  title: "第25回 No.1パエリア",
+  messages: [{
+    id: "1541165658220527806",
+    author: "IRO+運営",
+    userId: "1334056760863883294",
+    content: "第25回グルメ選手権『No.1パエリア』を開催中です。おすすめのパエリアをコメントで共有してください。Discord現断面から移行しました。",
+    createdAt: "2026-08-23T19:22:06.393Z",
+    reactions: {},
+    localAttachments: [],
+  }],
+});
 const deadlines: Record<number, string> = {
   "1": "2025-04-27",
   "2": "2025-09-09",
@@ -4356,7 +4370,8 @@ const deadlines: Record<number, string> = {
   "21": "2026-07-11",
   "22": "2026-07-25",
   "23": "2026-08-08",
-  "24": "2026-08-22"
+  "24": "2026-08-22",
+  "25": "2026-09-05"
 };
 const winners: Record<number, string> = {
   "15": "たけまる【運営】",
@@ -4413,7 +4428,7 @@ export const SEEDED_GOURMET_CONTESTS: { thread: BoardThread; comments: BoardComm
       videos: threadVideos,
       gourmetContest: {
         commentDeadline: deadlines[contest.round],
-        ...(contest.round === 24 ? { prizePoints: 3000 } : { prizeTitle: contest.round === 1 ? "IRO+イベント割引券 5,000円分" : "IRO+イベントクーポン 3,000円分", prizeDescription: "Discordから移行した過去大会", prizeExpiresAt: deadlines[contest.round], archived: true, winnerName: winners[contest.round] }),
+        ...(contest.round === 25 ? { prizePoints: 3000 } : { prizeTitle: contest.round === 1 ? "IRO+イベント割引券 5,000円分" : "IRO+イベントクーポン 3,000円分", prizeDescription: "Discordから移行した過去大会", prizeExpiresAt: deadlines[contest.round], archived: true, winnerName: winners[contest.round] }),
       },
     };
     return { thread, comments };

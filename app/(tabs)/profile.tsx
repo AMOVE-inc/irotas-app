@@ -1193,7 +1193,7 @@ export default function ProfileScreen() {
             padding: 16,
           }}
         >
-          <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+          <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 8 }}>
             <View>
               <Text style={{ fontSize: 13, color: colors.muted, marginBottom: 2 }}>イロタスポイント</Text>
               <View style={{ flexDirection: "row", alignItems: "baseline" }}>
@@ -1202,18 +1202,6 @@ export default function ProfileScreen() {
                 </Text>
                 <Text style={{ fontSize: 14, fontWeight: "600", color: "#FF9500", marginLeft: 4 }}>pt</Text>
               </View>
-            </View>
-            <View
-              style={{
-                backgroundColor: "#FF950015",
-                borderRadius: 14,
-                paddingHorizontal: 14,
-                paddingVertical: 8,
-                alignItems: "center",
-              }}
-            >
-              <Text style={{ fontSize: 20 }}>★</Text>
-              <Text style={{ fontSize: 11, fontWeight: "700", color: "#FF9500", marginTop: 2 }}>イロタスPT</Text>
             </View>
           </View>
           <Text style={{ fontSize: 12, color: colors.muted, lineHeight: 18 }}>

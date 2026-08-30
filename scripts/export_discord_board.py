@@ -25,6 +25,8 @@ TARGET_HINTS = (
     "相談室",
     "なんでも",
     "フリーチャット",
+    "グルメ選手権",
+    "選手権",
     "部",
 )
 
@@ -386,6 +388,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--summary", action="store_true")
     parser.add_argument("--output")
     parser.add_argument("--assets")
+    parser.add_argument("--contest-output")
     return parser.parse_args()
 
 
@@ -480,6 +483,46 @@ async def main() -> None:
                     })
             summary.sort(key=lambda item: item["name"])
             print(json.dumps(summary, ensure_ascii=False, indent=2))
+        elif args.contest_output:
+            print("[開始] グルメ選手権を取得します", flush=True)
+            channel = guild.get_channel(1363439332819472515)
+            if not isinstance(channel, discord.ForumChannel):
+                raise RuntimeError("グルメ選手権フォーラムが見つかりません")
+            threads = {thread.id: thread for thread in channel.threads}
+            print(f"[取得] 公開中スレ {len(threads)}件", flush=True)
+            print(f"[取得] 全スレ {len(threads)}件", flush=True)
+            contests = []
+            for thread in threads.values():
+                if not thread.me:
+                    await thread.join()
+                messages = [message async for message in thread.history(limit=None, oldest_first=True)]
+                if not messages:
+                    try:
+                        messages = [await thread.fetch_message(thread.id)]
+                    except discord.DiscordException:
+                        messages = []
+                round_match = re.search(r"第\s*(\d+)\s*回", thread.name)
+                if not round_match:
+                    continue
+                contests.append({
+                    "id": str(thread.id),
+                    "round": int(round_match.group(1)),
+                    "title": thread.name,
+                    "messages": [{
+                        "id": str(message.id),
+                        "author": message.author.display_name,
+                        "userId": str(message.author.id),
+                        "content": message.content,
+                        "createdAt": isoformat(message.created_at),
+                        "reactions": {str(reaction.emoji): reaction.count for reaction in message.reactions if reaction.count},
+                        "attachments": [attachment.url for attachment in message.attachments],
+                    } for message in messages],
+                })
+            contests.sort(key=lambda item: item["round"])
+            destination = Path(args.contest_output).resolve()
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            destination.write_text(json.dumps(contests, ensure_ascii=False), encoding="utf-8")
+            print(f"[完了] グルメ選手権 {len(contests)}件 / {destination}", flush=True)
         elif args.output:
             if not args.assets:
                 raise ValueError("--assets is required with --output")

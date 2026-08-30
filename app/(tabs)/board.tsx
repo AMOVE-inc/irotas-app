@@ -370,7 +370,7 @@ function ThreadCard({ thread, onPress, onEdit, onChangeRecruitment, unreadCount 
     >
       {/* Author */}
       <Pressable
-        onPress={() => router.push({ pathname: "/member-profile", params: { id: thread.author.id } })}
+        onPress={() => router.push({ pathname: "/member-profile", params: { id: thread.author.id, legacyName: thread.author.name } })}
         style={{ flexDirection: "row", alignItems: "center", marginBottom: 8 }}
       >
         {pinned ? <View style={{ marginRight: 7, borderRadius: 10, paddingHorizontal: 8, paddingVertical: 6, backgroundColor: "#FFF2C7" }}><Text style={{ fontSize: 11, fontWeight: "900", color: "#8A6512" }}>📌 固定</Text></View> : null}
@@ -2681,7 +2681,10 @@ export default function BoardScreen() {
       {/* Create Thread Modal - 全員投稿可能 */}
       <CreateThreadModal
         visible={showCreateThread}
-        onClose={() => setShowCreateThread(false)}
+        onClose={() => {
+          setShowCreateThread(false);
+          if (fromHome === "1") router.replace("/(tabs)" as any);
+        }}
         category={activeCategory}
         categories={categories}
         canManage={userCanManageContests}

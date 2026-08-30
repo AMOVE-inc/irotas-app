@@ -633,6 +633,14 @@ export default function AdminDashboardScreen() {
             <Text style={{ fontSize: 11, lineHeight: 18, color: colors.muted, marginTop: 14 }}>実バックアップはSites管理画面から取得し、暗号化した限定保管先へ保存します。復元テストは本番とは別の一時D1・R2で行います。</Text>
           </View>
         )}
+        {activeTab === "overview" && (
+          <View style={{ backgroundColor: colors.surface, borderRadius: 14, borderWidth: 1, borderColor: colors.border, padding: 16, marginBottom: 14 }}>
+            <Text style={{ fontSize: 16, fontWeight: "800", color: colors.foreground }}>データ更新状況</Text>
+            <Text style={{ fontSize: 13, color: colors.foreground, marginTop: 10 }}>グルメマップ：2026年8月1日更新</Text>
+            <Text style={{ fontSize: 13, color: colors.foreground, marginTop: 6 }}>Discord移行：2026年8月29日 17:25（日本時間）</Text>
+            <Text style={{ fontSize: 11, lineHeight: 17, color: colors.muted, marginTop: 8 }}>CSV取り込みは管理者だけに表示されます。更新時刻はこの管理画面で確認できます。</Text>
+          </View>
+        )}
         {activeTab === "review" && (
           <View style={{ backgroundColor: colors.surface, borderRadius: 14, borderWidth: 1, borderColor: colors.border, padding: 16 }}>
             <Text style={{ fontSize: 18, fontWeight: "800", color: colors.foreground }}>ストア審査用アカウント</Text>

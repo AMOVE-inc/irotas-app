@@ -1,4 +1,4 @@
-import { Tabs } from "expo-router";
+import { Tabs, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { HapticTab } from "@/components/haptic-tab";
@@ -11,12 +11,13 @@ import { useEffect, useState } from "react";
 
 export default function TabLayout() {
   const colors = useColors();
+  const router = useRouter();
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
   const isMobileWeb = Platform.OS === "web" && width <= 768;
   const bottomPadding = Platform.OS === "web" ? 10 : Math.max(insets.bottom, 8);
   const tabBarHeight = isMobileWeb ? 78 : 62 + bottomPadding;
-  const tabBarBottomMargin = isMobileWeb ? 34 : Platform.OS === "web" ? 10 : 6;
+  const tabBarBottomMargin = isMobileWeb ? 0 : Platform.OS === "web" ? 10 : 6;
   const [unreadTotal, setUnreadTotal] = useState(0);
 
   useEffect(() => {
@@ -78,6 +79,7 @@ export default function TabLayout() {
       />
       <Tabs.Screen
         name="board"
+        listeners={{ tabPress: () => router.replace("/board") }}
         options={{
           title: "掲示板",
           tabBarIcon: ({ color }) => <IconSymbol size={26} name="doc.text.fill" color={color} />,

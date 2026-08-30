@@ -36,7 +36,7 @@ import {
 export default function MemberProfileScreen() {
   const colors = useColors();
   const router = useRouter();
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, legacyName } = useLocalSearchParams<{ id: string; legacyName?: string }>();
   const clubs = useClubs();
   const { user: authUser } = useAuthContext();
 
@@ -63,7 +63,24 @@ export default function MemberProfileScreen() {
   }, [authUser, id]);
 
   const member = useMemo<Member | undefined>(() => {
-    if (!databaseMember) return mockMember;
+    if (!databaseMember) {
+      if (mockMember) return mockMember;
+      if (id?.startsWith("discord-") && legacyName) return {
+        id,
+        name: legacyName,
+        avatar: DEFAULT_AVATAR,
+        rank: "regular",
+        points: 0,
+        level: 1,
+        branch: "kanto",
+        generation: 0,
+        bio: "Discordから移行したメンバーです。",
+        interests: [],
+        role: "member",
+        joinedAt: "2024-01-01",
+      };
+      return undefined;
+    }
     const profile = databaseMember.profile;
     const rank = (["regular", "silver", "gold", "platinum"].includes(databaseMember.memberRank)
       ? databaseMember.memberRank
@@ -93,7 +110,7 @@ export default function MemberProfileScreen() {
       desiredRestaurants: text("desiredRestaurants"), googleLocalGuideLevel: text("googleLocalGuideLevel"),
       participationCount: databaseMember.participationCount, organizerCount: databaseMember.organizerCount,
     };
-  }, [databaseMember, mockMember]);
+  }, [databaseMember, id, legacyName, mockMember]);
 
   useEffect(() => {
     const isCurrentMember = databaseMember ? databaseMember.userId === authUser?.id : member?.id === CURRENT_USER.id;

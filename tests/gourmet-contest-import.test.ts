@@ -31,7 +31,7 @@ describe("mergeWithSeededGourmetContests", () => {
       comments: [],
     };
     const merged = mergeWithSeededGourmetContests([legacy]);
-    expect(merged).toHaveLength(24);
+    expect(merged).toHaveLength(25);
     expect(merged.some((item) => item.thread.id === legacy.thread.id)).toBe(false);
     expect(merged.find((item) => item.thread.title.startsWith("第14回"))?.comments.length).toBeGreaterThan(0);
   });

@@ -397,7 +397,7 @@ export default function GourmetMapScreen() {
   const [selectedRestaurant, setSelectedRestaurant] = useState<Restaurant | null>(null);
   const [showCSVImport, setShowCSVImport] = useState(false);
   const [restaurants, setRestaurants] = useState<Restaurant[]>(SEEDED_RESTAURANTS);
-  const [feedUpdatedAt, setFeedUpdatedAt] = useState<string | null>(null);
+  const [, setFeedUpdatedAt] = useState<string | null>(null);
   const { user: authUser } = useAuthContext();
   const userIsAdmin = isAdminRole(authUser?.role, authUser?.accessRole);
 
@@ -415,11 +415,6 @@ export default function GourmetMapScreen() {
       });
     return () => { active = false; };
   }, []);
-
-  const updateLabel = useMemo(() => {
-    const date = feedUpdatedAt ? new Date(feedUpdatedAt) : new Date("2026-08-01T00:00:00+09:00");
-    return `${date.getFullYear()}年${date.getMonth() + 1}月更新`;
-  }, [feedUpdatedAt]);
 
   const genreCounts = useMemo(() => restaurants.reduce<Record<string, number>>((counts, restaurant) => ({ ...counts, [restaurant.genre]: (counts[restaurant.genre] ?? 0) + 1 }), {}), [restaurants]);
   const genres = useMemo(() => [...new Set(restaurants.map((restaurant) => restaurant.genre))].sort((a, b) => (genreCounts[b] ?? 0) - (genreCounts[a] ?? 0) || a.localeCompare(b, "ja")), [restaurants, genreCounts]);
@@ -516,7 +511,7 @@ export default function GourmetMapScreen() {
         </ScrollView>
         <View style={{ marginHorizontal: 16, marginTop: 10, backgroundColor: "#FFF7E8", borderRadius: 12, padding: 11, flexDirection: "row", alignItems: "center" }}>
           <IconSymbol name="checkmark.circle.fill" size={17} color="#C58A24" />
-          <Text style={{ flex: 1, marginLeft: 8, fontSize: 12, lineHeight: 17, color: colors.foreground }}><Text style={{ fontWeight: "900" }}>{updateLabel}</Text>　{genres.length}ジャンル {restaurants.length}件</Text>
+          <Text style={{ flex: 1, marginLeft: 8, fontSize: 12, lineHeight: 17, color: colors.foreground }}>{genres.length}ジャンル {restaurants.length}件</Text>
         </View>
       </View>
 
