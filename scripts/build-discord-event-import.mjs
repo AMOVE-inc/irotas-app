@@ -24,7 +24,7 @@ function cleanTitle(value) {
 
 function priceFrom(thread) {
   const lines = thread.content.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
-  const label = /(?:予算|参加費|費用|会費|料金|金額)\s*[：:]/;
+  const label = /(?:予算|参加費|費用|会費|料金|金額)\s*(?:[：:]|[=＝]|\s)/;
   for (let index = 0; index < lines.length; index += 1) {
     const match = lines[index].match(label);
     if (!match) continue;
@@ -71,7 +71,14 @@ function externalLinksFrom(thread) {
 }
 
 function completeThread(thread) {
-  return thread;
+  const normalizedTitle = thread.title.normalize("NFKC").replace(/\s+/g, "").toLowerCase();
+  const normalizedContent = thread.content.normalize("NFKC").replace(/\s+/g, "").toLowerCase();
+  if (normalizedContent !== normalizedTitle) return thread;
+  const candidate = input.comments
+    .filter((comment) => comment.threadId === thread.id && comment.content?.trim())
+    .sort((left, right) => Date.parse(left.createdAt) - Date.parse(right.createdAt))
+    .find((comment) => comment.authorId === thread.authorId && (comment.content.includes("\n") || comment.content.length >= 80));
+  return candidate ? { ...thread, content: candidate.content, images: thread.images?.length ? thread.images : candidate.images } : thread;
 }
 
 function cleanDisplayName(value) {

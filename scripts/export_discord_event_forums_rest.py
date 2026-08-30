@@ -29,6 +29,18 @@ async def discord_get(session, path, params=None):
             return await response.json()
 
 
+async def all_messages(session, thread_id):
+    rows, after = [], "0"
+    while True:
+        page = await discord_get(session, f"/channels/{thread_id}/messages", {"limit": 100, "after": after})
+        if not page:
+            return sorted(rows, key=lambda row: int(row["id"]))
+        rows.extend(page)
+        if len(page) < 100:
+            return sorted(rows, key=lambda row: int(row["id"]))
+        after = max(page, key=lambda row: int(row["id"]))["id"]
+
+
 async def archived_threads(session, channel_id):
     rows, before = [], None
     while True:
@@ -46,6 +58,8 @@ async def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", required=True)
     parser.add_argument("--output", required=True)
+    parser.add_argument("--input")
+    parser.add_argument("--thread-id")
     args = parser.parse_args()
     config = yaml.safe_load(Path(args.config).read_text(encoding="utf-8"))
     discord_config = config.get("discord", config)
@@ -54,6 +68,41 @@ async def main():
     headers = {"Authorization": f"Bot {token}"}
     archive = {"exportedAt": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"), "threads": [], "comments": []}
     async with aiohttp.ClientSession(headers=headers) as session:
+        if args.input:
+            source = json.loads(Path(args.input).read_text(encoding="utf-8"))
+            selected = [row for row in source["threads"] if not args.thread_id or row["id"].removeprefix("discord-board-") == args.thread_id]
+            for row in selected:
+                thread_id = row["id"].removeprefix("discord-board-")
+                try:
+                    messages = await all_messages(session, thread_id)
+                except aiohttp.ClientResponseError as error:
+                    if error.status in (403, 404):
+                        continue
+                    raise
+                if not messages:
+                    continue
+                starter, *comments = messages
+                if starter.get("content", "").strip():
+                    row["content"] = starter["content"].strip()
+                existing_comment_ids = {str(item["id"]) for item in source["comments"] if item["threadId"] == row["id"]}
+                for message in comments:
+                    if str(message["id"]) in existing_comment_ids:
+                        continue
+                    message_author = message.get("author", {})
+                    source["comments"].append({
+                        "id": str(message["id"]), "threadId": row["id"],
+                        "authorId": str(message_author.get("id", "")),
+                        "authorName": message.get("member", {}).get("nick") or message_author.get("global_name") or message_author.get("username") or "メンバー",
+                        "content": message.get("content", ""), "createdAt": message.get("timestamp"),
+                        "images": [item["url"] for item in message.get("attachments", []) if item.get("content_type", "").startswith("image/")],
+                        "videos": [item["url"] for item in message.get("attachments", []) if item.get("content_type", "").startswith("video/")],
+                        "reactions": {},
+                    })
+                print(f"[更新] {row['title']}: 本文1 / コメント{len(comments)}", flush=True)
+            source["exportedAt"] = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+            Path(args.output).write_text(json.dumps(source, ensure_ascii=False), encoding="utf-8")
+            print(f"[完了] {len(source['threads'])}スレ / {len(source['comments'])}コメント", flush=True)
+            return
         active = await discord_get(session, f"/guilds/{guild_id}/threads/active")
         active_by_parent = {}
         for thread in active.get("threads", []):
@@ -64,8 +113,7 @@ async def main():
                 threads[str(thread["id"])] = thread
             print(f"[取得] {label}: {len(threads)}スレ", flush=True)
             for thread in sorted(threads.values(), key=lambda row: int(row["id"])):
-                messages = await discord_get(session, f"/channels/{thread['id']}/messages", {"limit": 100, "after": "0"})
-                messages.sort(key=lambda row: int(row["id"]))
+                messages = await all_messages(session, thread["id"])
                 if not messages:
                     continue
                 starter, *comments = messages

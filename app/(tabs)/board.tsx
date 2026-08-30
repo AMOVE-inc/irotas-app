@@ -1367,7 +1367,7 @@ function EditThreadModal({
   thread: BoardThread;
   onClose: () => void;
   onSave: (updated: BoardThread) => void;
-  onDelete: () => void;
+  onDelete: () => void | Promise<void>;
 }) {
   const colors = useColors();
   const insets = useSafeAreaInsets();
@@ -2743,13 +2743,19 @@ export default function BoardScreen() {
             });
             setEditingThread(null);
           }}
-          onDelete={() => {
+          onDelete={async () => {
             const deletingId = editingThread.id;
-            const deletion = editingThread.shared ? Api.deleteSharedBoardThread(deletingId) : deleteBoardThread(deletingId);
-            void deletion.then(() => setDeletedThreadIds((current) => current.includes(deletingId) ? current : [...current, deletingId])).catch((error) => Alert.alert("削除できませんでした", error instanceof Error ? error.message : "もう一度お試しください。"));
-            setSelectedThread(null);
-            setEditingThread(null);
-            router.setParams({ thread: "" });
+            try {
+              if (editingThread.shared) await Api.deleteSharedBoardThread(deletingId);
+              await deleteBoardThread(deletingId);
+              setDeletedThreadIds((current) => current.includes(deletingId) ? current : [...current, deletingId]);
+              setSelectedThread(null);
+              setEditingThread(null);
+              router.setParams({ thread: "" });
+              Alert.alert("投稿を削除しました");
+            } catch (error) {
+              Alert.alert("削除できませんでした", error instanceof Error ? error.message : "もう一度お試しください。");
+            }
           }}
         />
       )}
