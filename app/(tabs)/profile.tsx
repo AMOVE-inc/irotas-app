@@ -1,5 +1,6 @@
 import { ScreenContainer } from "@/components/screen-container";
 import { NewMemberMark } from "@/components/new-member-mark";
+import { MemberRankBadge, stripRankFromName } from "@/components/member-rank-badge";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import {
   CURRENT_USER,
@@ -915,7 +916,8 @@ export default function ProfileScreen() {
             </View> : null}
           </View>
           <View style={{ flexDirection: "row", alignItems: "center", marginTop: 12 }}>
-            <Text style={{ fontSize: 22, fontWeight: "800", color: colors.foreground }}>{profileName}</Text>
+            <Text style={{ fontSize: 22, fontWeight: "800", color: colors.foreground }}>{stripRankFromName(profileName)}</Text>
+            {!userIsOperator ? <MemberRankBadge rank={user.rank} /> : null}
             <NewMemberMark member={user} size={17} />
           </View>
           <View style={{ flexDirection: "row", alignItems: "center", marginTop: 4 }}>
@@ -943,9 +945,9 @@ export default function ProfileScreen() {
                 {RANK_LABELS[user.rank]}会員
               </Text>
             </View>}
-            <Text style={{ fontSize: 14, color: colors.muted, marginLeft: 8 }}>
+            {!userIsAdmin ? <Text style={{ fontSize: 14, color: colors.muted, marginLeft: 8 }}>
               {branchLabel}
-            </Text>
+            </Text> : null}
           </View>
           {accessRoleLabel && !userIsOperator ? (
             <View style={{ marginTop: 7, borderRadius: 12, paddingHorizontal: 10, paddingVertical: 4, backgroundColor: userIsAdmin || authUser?.accessRole === "operator" ? "#FFE6E6" : "#EEF2FF" }}>

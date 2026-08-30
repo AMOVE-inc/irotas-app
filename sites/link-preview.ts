@@ -10,18 +10,40 @@ function metaImage(html: string, baseUrl: string) {
   return null;
 }
 
-export async function handleLinkPreviewRequest(request: Request): Promise<Response | null> {
+type PreviewEnv = { GOOGLE_MAPS_API_KEY?: string };
+
+async function placesImage(query: string, env: PreviewEnv, origin: string) {
+  if (!query || !env.GOOGLE_MAPS_API_KEY) return null;
+  const response = await fetch("https://places.googleapis.com/v1/places:searchText", { method: "POST", headers: { "content-type": "application/json", "x-goog-api-key": env.GOOGLE_MAPS_API_KEY, "x-goog-fieldmask": "places.photos" }, body: JSON.stringify({ textQuery: query, languageCode: "ja", maxResultCount: 1 }) });
+  if (!response.ok) return null;
+  const value = await response.json() as { places?: { photos?: { name?: string }[] }[] };
+  const name = value.places?.[0]?.photos?.[0]?.name;
+  return name ? `${origin}/api/link-preview/image?name=${encodeURIComponent(name)}` : null;
+}
+
+export async function handleLinkPreviewRequest(request: Request, env: PreviewEnv): Promise<Response | null> {
   const requestUrl = new URL(request.url);
-  if (requestUrl.pathname !== "/api/link-preview" || request.method !== "GET") return null;
+  if (!requestUrl.pathname.startsWith("/api/link-preview") || request.method !== "GET") return null;
   try {
+    if (requestUrl.pathname === "/api/link-preview/image") {
+      const name = requestUrl.searchParams.get("name") ?? "";
+      if (!/^places\/[A-Za-z0-9_-]+\/photos\/[A-Za-z0-9_-]+$/.test(name) || !env.GOOGLE_MAPS_API_KEY) return new Response(null, { status: 404 });
+      const photo = await fetch(`https://places.googleapis.com/v1/${name}/media?maxWidthPx=1200&skipHttpRedirect=true`, { headers: { "x-goog-api-key": env.GOOGLE_MAPS_API_KEY } });
+      if (!photo.ok) return new Response(null, { status: 404 });
+      const value = await photo.json() as { photoUri?: string };
+      return value.photoUri ? Response.redirect(value.photoUri, 302) : new Response(null, { status: 404 });
+    }
     const rawUrl = requestUrl.searchParams.get("url");
-    if (!rawUrl) return Response.json({ imageUrl: null }, { status: 400 });
-    const target = new URL(rawUrl);
-    if (target.protocol !== "https:" || !ALLOWED_HOSTS.test(target.hostname)) return Response.json({ imageUrl: null }, { status: 400 });
-    const response = await fetch(target, { redirect: "follow", headers: { accept: "text/html", "user-agent": "Mozilla/5.0 (compatible; IROPlusPreview/1.0)" } });
-    if (!response.ok || !response.headers.get("content-type")?.includes("text/html")) return Response.json({ imageUrl: null });
-    const html = (await response.text()).slice(0, 1_500_000);
-    return Response.json({ imageUrl: metaImage(html, response.url) }, { headers: { "cache-control": "public, max-age=3600" } });
+    let imageUrl: string | null = null;
+    if (rawUrl) {
+      const target = new URL(rawUrl);
+      if (target.protocol === "https:" && ALLOWED_HOSTS.test(target.hostname)) {
+        const response = await fetch(target, { redirect: "follow", headers: { accept: "text/html", "user-agent": "Mozilla/5.0 (compatible; IROPlusPreview/1.0)" } });
+        if (response.ok && response.headers.get("content-type")?.includes("text/html")) imageUrl = metaImage((await response.text()).slice(0, 1_500_000), response.url);
+      }
+    }
+    imageUrl ??= await placesImage(requestUrl.searchParams.get("query") ?? "", env, requestUrl.origin);
+    return Response.json({ imageUrl }, { headers: { "cache-control": "public, max-age=3600" } });
   } catch {
     return Response.json({ imageUrl: null });
   }

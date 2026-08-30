@@ -305,7 +305,7 @@ async function routeRequest(
   if (eventFeedbackResponse) return eventFeedbackResponse;
   const conciergeResponse = await handleConciergeRequest(request, env);
   if (conciergeResponse) return conciergeResponse;
-  const linkPreviewResponse = await handleLinkPreviewRequest(request);
+  const linkPreviewResponse = await handleLinkPreviewRequest(request, env);
   if (linkPreviewResponse) return linkPreviewResponse;
   if (pathname === "/api/platform/health" && request.method === "GET") {
     const startedAt = Date.now();

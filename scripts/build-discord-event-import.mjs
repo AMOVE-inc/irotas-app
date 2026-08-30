@@ -46,10 +46,25 @@ function externalLinksFrom(thread) {
   };
 }
 
+function completeThread(thread) {
+  const replies = input.comments.filter((comment) => comment.threadId === thread.id);
+  const replyText = replies.map((comment) => comment.content?.trim()).filter(Boolean);
+  return {
+    ...thread,
+    content: [thread.content?.trim(), ...replyText].filter(Boolean).join("\n\n"),
+    images: [...new Set([...(thread.images ?? []), ...replies.flatMap((comment) => comment.images ?? [])])],
+  };
+}
+
+function cleanDisplayName(value) {
+  return value.replace(/\s*【\s*(?:🥈\s*)?SILVER\s*】/gi, "").replace(/\s*【\s*(?:🥇\s*)?GOLD\s*】/gi, "").replace(/\s*【\s*(?:💎\s*)?PLATINUM\s*】/gi, "").trim();
+}
+
 const clubEvent = (thread) => thread.category.startsWith("club-club-") && (/募集|開催|交流会|鑑賞会|食事会|ご飯会|飲み会|ツアー|合宿|イベント/.test(thread.title) || /\d{1,2}\s*[\/月]\s*\d{1,2}/.test(thread.title));
 const eventThreads = input.threads.filter((thread) => categories.has(thread.category) || clubEvent(thread));
 const seenTitles = new Set();
-const events = eventThreads.map((thread) => {
+const events = eventThreads.map((rawThread) => {
+  const thread = completeThread(rawThread);
   const official = thread.category === "official-event" || thread.category.startsWith("branch-event-");
   const club = thread.category.startsWith("club-club-");
   const kansai = thread.category.endsWith("kansai");
@@ -77,12 +92,13 @@ const events = eventThreads.map((thread) => {
     status: closed ? "full" : "open",
     createdBy: "u1",
     organizerProfileId: `discord-${thread.authorId}`,
-    organizerName: authorProfile?.displayName || thread.authorName || "メンバー",
+    organizerName: cleanDisplayName(authorProfile?.displayName || thread.authorName || "メンバー"),
     organizerAvatar: authorProfile?.avatarUrl || undefined,
+    organizerRank: authorProfile?.memberRank || undefined,
     sourceThreadId: thread.id,
     sourceLabel: thread.sourceLabel,
   };
-}).filter((event) => {
+}).filter((event) => !["支部イベント🥂年間予定📅", "全体パーティー🎊年間予定📅"].includes(event.title)).filter((event) => {
   const key = `${event.date}:${event.title.normalize("NFKC").replace(/[\s・]/g, "").toLowerCase()}`;
   if (seenTitles.has(key)) return false;
   seenTitles.add(key);

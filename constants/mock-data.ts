@@ -129,6 +129,7 @@ export interface Event {
   organizerProfileId?: string;
   organizerName?: string;
   organizerAvatar?: string;
+  organizerRank?: MemberRank;
   chatId?: string; // private chat id
   applicationDeadline?: string; // 募集期日
   cancellationPolicy?: string; // イベント個別のキャンセルポリシー
@@ -541,7 +542,7 @@ export const TIMELINE_POSTS: TimelinePost[] = [
 
 const today = new Date().toISOString().split("T")[0]; // 今日の日付
 
-export const EVENTS: Event[] = [
+export const EVENTS: Event[] = ([
   ...IMPORTED_DISCORD_EVENTS.map(({ sourceThreadId: _sourceThreadId, sourceLabel: _sourceLabel, ...event }) => event as Event),
   {
     id: "e1", createdAt: "2026-03-20T10:00:00+09:00", title: "第3回 関東支部交流会",
@@ -612,7 +613,7 @@ export const EVENTS: Event[] = [
     genres: ["寿司", "和食"], category: "kanto", eventType: "gourmet", status: "open", createdBy: "u2",
     applicationDeadline: "2026-09-13", selectionMethod: "first_come",
   },
-];
+] as Event[]).filter((event) => !["e1", "e2", "e4"].includes(event.id));
 
 export const RESTAURANTS: Restaurant[] = [
   {

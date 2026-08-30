@@ -3,6 +3,7 @@ import { IconSymbol } from "@/components/ui/icon-symbol";
 import { EVENTS, CURRENT_USER, DEFAULT_AVATAR, MEMBERS, getMemberById, type Event } from "@/constants/mock-data";
 import { EventImage } from "@/components/event-image";
 import { PersistentBottomNav } from "@/components/persistent-bottom-nav";
+import { MemberRankBadge, stripRankFromName } from "@/components/member-rank-badge";
 import { MentionSuggestions, MentionText } from "@/components/mention-ui";
 import { getMentionGroups, getMentionQuery, insertMention } from "@/lib/mentions";
 import { EVENT_TERMS_URL } from "@/constants/external-links";
@@ -83,8 +84,9 @@ export default function EventDetailScreen() {
     setEvent(allEvents.find((item) => item.id === id));
     if (!id || !authUser) return;
     let active = true;
+    const imported = allEvents.find((item) => item.id === id);
     void Api.getEvent(id)
-      .then((value) => { if (active) setEvent(value); })
+      .then((value) => { if (active) setEvent({ ...imported, ...value, description: value.description?.trim() || imported?.description || "", image: value.image || imported?.image || "", tabelogUrl: value.tabelogUrl || imported?.tabelogUrl, googleMapsUrl: value.googleMapsUrl || imported?.googleMapsUrl, organizerName: value.organizerName || imported?.organizerName, organizerAvatar: value.organizerAvatar || imported?.organizerAvatar, organizerRank: value.organizerRank || imported?.organizerRank } as Event); })
       .catch(() => undefined);
     return () => { active = false; };
   }, [allEvents, authUser, id]);
@@ -679,7 +681,7 @@ export default function EventDetailScreen() {
 
         <Pressable onPress={() => openMemberProfile(event.organizerProfileId ?? event.createdBy)} accessibilityLabel="幹事のプロフィールを表示" style={{ flexDirection: "row", alignItems: "center", backgroundColor: colors.surface, borderRadius: 14, padding: 14, marginBottom: 16 }}>
           <Image source={event.eventType === "official" ? DEFAULT_AVATAR : (event.organizerAvatar ?? organizer?.avatar ?? DEFAULT_AVATAR)} style={{ width: 42, height: 42, borderRadius: 21 }} contentFit="cover" />
-          <View style={{ flex: 1, marginLeft: 11 }}><Text style={{ fontSize: 11, color: colors.muted }}>幹事</Text><Text style={{ fontSize: 15, fontWeight: "800", color: colors.foreground }}>{event.eventType === "official" ? "IRO＋運営" : (event.organizerName ?? organizer?.name ?? "メンバー")}</Text></View>
+          <View style={{ flex: 1, marginLeft: 11 }}><Text style={{ fontSize: 11, color: colors.muted }}>幹事</Text><View style={{ flexDirection: "row", alignItems: "center" }}><Text style={{ fontSize: 15, fontWeight: "800", color: colors.foreground }}>{event.eventType === "official" ? "IRO＋運営" : stripRankFromName(event.organizerName ?? organizer?.name ?? "メンバー")}</Text>{event.eventType !== "official" && event.organizerRank ? <MemberRankBadge rank={event.organizerRank} compact /> : null}</View></View>
           <IconSymbol name="chevron.right" size={17} color={colors.muted} />
         </Pressable>
 

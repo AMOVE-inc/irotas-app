@@ -1,5 +1,6 @@
 import { ScreenContainer } from "@/components/screen-container";
 import { NewMemberMark } from "@/components/new-member-mark";
+import { MemberRankBadge, stripRankFromName } from "@/components/member-rank-badge";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import {
   RANK_COLORS,
@@ -240,7 +241,8 @@ export default function MemberProfileScreen() {
           </View>
 
           <View style={{ flexDirection: "row", alignItems: "center", marginTop: 12 }}>
-            <Text style={{ fontSize: 24, fontWeight: "800", color: colors.foreground }}>{selfName ?? member.name}</Text>
+            <Text style={{ fontSize: 24, fontWeight: "800", color: colors.foreground }}>{stripRankFromName(selfName ?? member.name)}</Text>
+            {!elevatedRoleLabel ? <MemberRankBadge rank={member.rank} /> : null}
             <NewMemberMark member={member} size={18} />
           </View>
 

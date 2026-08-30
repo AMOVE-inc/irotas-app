@@ -54,17 +54,12 @@ function priceBounds(event: Event): { min: number; max: number } {
   return { min: values[0], max: values[1] ?? values[0] };
 }
 
-/** Show upcoming events first (nearest date first), followed by past events (newest first). */
+/** 開催日時の昇順で並べる。 */
 export function filterAndSortEvents(
   events: Event[],
   filters: EventFilters,
-  referenceDate = new Date(),
+  _referenceDate = new Date(),
 ): Event[] {
-  const today = new Date(
-    referenceDate.getFullYear(),
-    referenceDate.getMonth(),
-    referenceDate.getDate(),
-  ).getTime();
   const startBoundary = dateBoundary(filters.startDate);
   const endBoundary = dateBoundary(filters.endDate, true);
 
@@ -134,9 +129,6 @@ export function filterAndSortEvents(
       if (!Number.isFinite(aStart)) return Number.isFinite(bStart) ? 1 : 0;
       if (!Number.isFinite(bStart)) return -1;
 
-      const aIsUpcoming = aStart >= today;
-      const bIsUpcoming = bStart >= today;
-      if (aIsUpcoming !== bIsUpcoming) return aIsUpcoming ? -1 : 1;
-      return aIsUpcoming ? aStart - bStart : bStart - aStart;
+      return aStart - bStart;
     });
 }
