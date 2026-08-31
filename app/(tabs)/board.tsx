@@ -127,7 +127,7 @@ function mealReportImpression(thread: BoardThread): string | undefined {
 }
 
 function OperatorOrRankBadge({ member }: { member: typeof CURRENT_USER }) {
-  if (member.name.includes("IRO+代表")) return <View style={{ backgroundColor: "#D93636", borderRadius: 8, paddingHorizontal: 7, paddingVertical: 2, marginLeft: 6 }}><Text style={{ fontSize: 9, fontWeight: "900", color: "#FFF" }}>代表</Text></View>;
+  if (member.name.includes("IRO+代表")) return <View style={{ backgroundColor: "#D93636", borderRadius: 8, paddingHorizontal: 7, paddingVertical: 2, marginLeft: 6 }}><Text style={{ fontSize: 9, fontWeight: "900", color: "#FFF" }}>管理者</Text></View>;
   const operator = isOperatorMember(member);
   const platinum = member.rank === "platinum";
   if (operator) return <View style={{ backgroundColor: "#D93636", borderRadius: 8, paddingHorizontal: 7, paddingVertical: 2, marginLeft: 6 }}><Text style={{ fontSize: 9, fontWeight: "900", color: "#FFF" }}>運営メンバー</Text></View>;

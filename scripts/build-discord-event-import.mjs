@@ -110,6 +110,42 @@ function cleanDisplayName(value) {
   return value.replace(/\s*【\s*(?:🥈\s*)?SILVER\s*】/gi, "").replace(/\s*【\s*(?:🥇\s*)?GOLD\s*】/gi, "").replace(/\s*【\s*(?:💎\s*)?PLATINUM\s*】/gi, "").trim();
 }
 
+function rankFromDisplayName(value = "") {
+  if (/PLATINUM|プラチナ/i.test(value)) return "platinum";
+  if (/GOLD|ゴールド/i.test(value)) return "gold";
+  if (/SILVER|シルバー/i.test(value)) return "silver";
+  return undefined;
+}
+
+function confirmedParticipantsFor(thread) {
+  const comments = input.comments
+    .filter((comment) => comment.threadId === thread.id)
+    .sort((left, right) => Date.parse(left.createdAt) - Date.parse(right.createdAt));
+  let confirmed = [];
+  let chatId;
+  const ambiguousCancellations = [];
+  for (const comment of comments) {
+    const mentions = Array.isArray(comment.mentions) ? comment.mentions.filter((item) => /^\d{17,20}$/.test(item.id)) : [];
+    const isConfirmation = /(?:作成しました|今回は下記|下記(?:の)?(?:皆様|メンバー)|ご一緒(?:できれば|お願いします)|参加者.*確定)/.test(comment.content);
+    if (isConfirmation && mentions.length) {
+      confirmed = mentions.map((item) => `discord-${item.id}`);
+      chatId = comment.content.match(/<#(\d{17,20})>/)?.[1] ?? chatId;
+    }
+    if (/キャンセル/.test(comment.content) && confirmed.length) {
+      if (mentions.length) {
+        const cancelled = new Set(mentions.map((item) => `discord-${item.id}`));
+        confirmed = confirmed.filter((id) => !cancelled.has(id));
+      } else {
+        ambiguousCancellations.push({ createdAt: comment.createdAt, content: comment.content.slice(0, 180) });
+      }
+    }
+  }
+  // A cancellation without a named member cannot be reconciled safely. Leave the
+  // participant list unapplied until an operator confirms the replacement.
+  if (ambiguousCancellations.length) confirmed = [];
+  return { participants: [...new Set(confirmed)], chatId, ambiguousCancellations };
+}
+
 const clubEvent = (thread) => thread.category.startsWith("club-club-") && (/募集|開催|交流会|鑑賞会|食事会|ご飯会|飲み会|ツアー|合宿|イベント/.test(thread.title) || /\d{1,2}\s*[\/月]\s*\d{1,2}/.test(thread.title));
 const eventThreads = input.threads.filter((thread) => categories.has(thread.category) || clubEvent(thread));
 const seenTitles = new Set();
@@ -123,19 +159,27 @@ const events = eventThreads.map((rawThread) => {
   const links = externalLinksFrom(thread);
   const price = priceFrom(thread);
   const capacity = capacityFrom(thread);
+  const date = dateFrom(thread);
+  const confirmation = closed && date >= new Date().toISOString().slice(0, 10)
+    ? confirmedParticipantsFor(thread)
+    : { participants: [], chatId: undefined, ambiguousCancellations: [] };
+  const reconciledCapacity = {
+    capacity: Math.max(capacity.capacity, confirmation.participants.length),
+    reservationCapacity: Math.max(capacity.reservationCapacity, confirmation.participants.length),
+  };
   return {
     id: `discord-event-${thread.id.replace(/^discord-board-/, "")}`,
     createdAt: thread.createdAt,
     title: cleanTitle(thread.title) || thread.sourceLabel || "イベント",
     description: thread.content,
-    date: dateFrom(thread),
+    date,
     time: timeFrom(thread),
     location: locationFrom(thread),
     image: thread.images?.[0] ?? "",
     ...links,
-    ...capacity,
-    attendees: 0,
-    participants: [],
+    ...reconciledCapacity,
+    attendees: confirmation.participants.length,
+    participants: confirmation.participants,
     applicantIds: [],
     price,
     ...priceRange(price),
@@ -147,9 +191,11 @@ const events = eventThreads.map((rawThread) => {
     organizerProfileId: `discord-${thread.authorId}`,
     organizerName: cleanDisplayName(authorProfile?.displayName || thread.authorName || "メンバー"),
     organizerAvatar: authorProfile?.avatarUrl || undefined,
-    organizerRank: authorProfile?.memberRank || undefined,
+    organizerRank: authorProfile?.memberRank || rankFromDisplayName(thread.authorName),
     sourceThreadId: thread.id,
     sourceLabel: thread.sourceLabel,
+    ...(confirmation.chatId ? { chatId: `discord-${confirmation.chatId}` } : {}),
+    ...(confirmation.ambiguousCancellations.length ? { participantImportWarnings: confirmation.ambiguousCancellations } : {}),
   };
 }).filter((event) => !["支部イベント🥂年間予定📅", "全体パーティー🎊年間予定📅"].includes(event.title)).filter((event) => {
   const key = `${event.date}:${event.title.normalize("NFKC").replace(/[\s・]/g, "").toLowerCase()}`;

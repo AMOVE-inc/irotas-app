@@ -245,6 +245,21 @@ async function threadById(db: D1Database, id: string) {
     .bind(id).first<ThreadRow>();
 }
 
+async function restoreDiscordThreadAuthor(db: D1Database, row: ThreadRow): Promise<ThreadRow> {
+  if (!row.id.startsWith("discord-board-")) return row;
+  const raw = (archive as RawDiscordBoardArchive).threads.find((thread) => thread.id === row.id);
+  if (!raw?.authorId) return row;
+  const linked = await db.prepare(`SELECT id, public_member_id, display_name, member_term, member_rank, profile_json
+    FROM members WHERE discord_user_id = ? LIMIT 1`).bind(raw.authorId).first<{
+      id: number; public_member_id: string | null; display_name: string | null; member_term: string | null;
+      member_rank: string | null; profile_json: string | null;
+    }>();
+  if (!linked) return { ...row, author_public_member_id: `discord-${raw.authorId}`, author_display_name: raw.authorName };
+  return { ...row, author_member_id: linked.id, author_public_member_id: linked.public_member_id,
+    author_display_name: linked.display_name, author_member_term: linked.member_term,
+    author_member_rank: linked.member_rank, author_profile_json: linked.profile_json };
+}
+
 async function ensureImportedThread(
   db: D1Database,
   id: string,
@@ -259,11 +274,14 @@ async function ensureImportedThread(
   const now = new Date().toISOString();
   const normalizedTitle = cleanDiscordBoardTitle(raw.title || "移行済み投稿");
   const normalizedContent = cleanDiscordBoardContent(raw.title, raw.content || "移行済み投稿", raw.category);
+  const linkedAuthor = raw.authorId ? await db.prepare("SELECT id FROM members WHERE discord_user_id = ? LIMIT 1")
+    .bind(raw.authorId).first<{ id: number }>() : null;
+  const authorMemberId = linkedAuthor?.id ?? member.id;
   await db.prepare(`INSERT OR IGNORE INTO board_threads
     (id, author_member_id, category, title, content, status, pinned, data_json, created_at, updated_at)
     VALUES (?, ?, ?, ?, ?, 'none', 0, ?, ?, ?)`).bind(
       id,
-      member.id,
+      authorMemberId,
       category,
       normalizedTitle,
       normalizedContent,
@@ -273,7 +291,7 @@ async function ensureImportedThread(
     ).run();
   return {
     id,
-    author_member_id: member.id,
+    author_member_id: authorMemberId,
     author_public_member_id: null,
     author_display_name: null,
     category,
@@ -379,7 +397,7 @@ export async function handleBoardContentRequest(
         FROM board_threads bt JOIN members m ON m.id = bt.author_member_id
         WHERE bt.deleted_at IS NULL AND bt.category NOT LIKE 'club-club-%'
         ORDER BY bt.pinned DESC, bt.created_at DESC LIMIT ?`).bind(limit).all<ThreadRow>();
-    const threads = rows.results ?? [];
+    const threads = await Promise.all((rows.results ?? []).map((row) => restoreDiscordThreadAuthor(db, row)));
     if (!threads.length) return json({ threads: [], comments: [] });
     const placeholders = threads.map(() => "?").join(",");
     const ids = threads.map((item) => item.id);

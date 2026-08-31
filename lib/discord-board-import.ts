@@ -11,6 +11,7 @@ export interface RawDiscordBoardRecord {
   createdAt: string;
   images: string[];
   videos: string[];
+  mentions?: { id: string; name: string }[];
   reactions?: Record<string, string[]> | null;
 }
 

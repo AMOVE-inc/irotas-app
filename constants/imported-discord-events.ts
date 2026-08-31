@@ -31,7 +31,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "id": "discord-event-1543585895804833902",
     "createdAt": "2026-08-30T11:39:15.999000Z",
     "title": "【第2回肉部🍖~焼肉会~】 麻布苑",
-    "description": "@everyone \nこんばんは！部長のはぎーちゃんです🥩\n\n今月オープンした、個人的に気になっているお店です💁🏻‍♂️\n焼肉百名店にも選出されている赤坂の焼肉思食さんの新店！\nご都合の合う方は、ぜひご参加ください☺️\n\n〈概要〉\n📅 開催日時\n10/20(火) 19:30〜\n\n📍 開催場所\n麻布苑（麻布十番駅から徒歩1分）\nhttps://tabelog.com/tokyo/A1307/A130702/13325526/\n\n👥 募集人数\n3名(+部長)\n※人数超過時は、抽選とさせていただきます\n\n💰 予算\n￥10,000〜15,000\n※アラカルト注文になるので、予算高めに設定しています。\n麻布苑 (麻布十番/焼肉)\n■麻布十番駅徒歩1分。芝浦直送の新鮮ホルモンと厳選和牛を堪能できる「焼肉 麻布苑」 ■予算(夜):￥8,000～￥9,999",
+    "description": "@everyone \nこんばんは！部長のはぎーちゃんです🥩\n\n今月オープンした、個人的に気になっているお店です💁🏻‍♂️\n焼肉百名店にも選出されている赤坂の焼肉思食さんの新店！\nご都合の合う方は、ぜひご参加ください☺️\n\n〈概要〉\n📅 開催日時\n10/20(火) 19:30〜\n\n📍 開催場所\n麻布苑（麻布十番駅から徒歩1分）\nhttps://tabelog.com/tokyo/A1307/A130702/13325526/\n\n👥 募集人数\n3名(+部長)\n※人数超過時は、抽選とさせていただきます\n\n💰 予算\n￥10,000〜15,000\n※アラカルト注文になるので、予算高めに設定しています。",
     "date": "2026-10-20",
     "time": "19:30",
     "location": "詳細をご確認ください",
@@ -61,7 +61,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "id": "discord-event-1543532355296428072",
     "createdAt": "2026-08-30T08:06:30.947000Z",
     "title": "シミュレーションゴルフ会⛳",
-    "description": "@ゴルフ部⛳️ \n\nゴルフ部に入部いただきありがとうございます！\nシミュレーションゴルフ交流会を開催します👏\nシミュレーションゴルフは、プロジェクターにゴルフ場の映像を映して本格的なゴルフの雰囲気を楽しめる室内ゴルフです🏌️‍♀️\n\nゴルフ超初心者の方も楽しめます♪\nクラブの握り方から打ち方までわからないことがあれば教えますので安心してご参加ください☺️🔰\n\n\n📅日時:9/18（金）20:00〜\n📍店名: GOLF PARK Faraway 上野店\nhttps://maps.app.goo.gl/CUoNoUXfqjw5Uadg7?g_st=ic\n👥募集人数:制限なし\n💰予算:4400円+ワンオーダー制\n（9Hプレー付き、チャージ料無料）\n\n🏌️‍♀️レンタル品:クラブ（無料）、グローブ（無料）、シューズ（220円）→サンダル、ヒール不可のため、スニーカーまたはヒール無しの靴推奨◎\n\n@つね🪼【🥈SILVER 】 ちゃんと18:45〜上野駅集合でサクッと飲みからのシュミレーションゴルフを考えてます！\n\n飲み会だけの参加も大歓迎です🙌\n参加希望の方はコメントください🎈\nよろしくお願いします！\nGOLF PARK Faraway Ueno · 3.9★(69) · Bar\nJapan, 〒110-0005 Tokyo, Taito City, Ueno, 4 Chome−2−6 上野西田ビル 3F",
+    "description": "@ゴルフ部⛳️ \n\nゴルフ部に入部いただきありがとうございます！\nシミュレーションゴルフ交流会を開催します👏\nシミュレーションゴルフは、プロジェクターにゴルフ場の映像を映して本格的なゴルフの雰囲気を楽しめる室内ゴルフです🏌️‍♀️\n\nゴルフ超初心者の方も楽しめます♪\nクラブの握り方から打ち方までわからないことがあれば教えますので安心してご参加ください☺️🔰\n\n\n📅日時:9/18（金）20:00〜\n📍店名: GOLF PARK Faraway 上野店\nhttps://maps.app.goo.gl/CUoNoUXfqjw5Uadg7?g_st=ic\n👥募集人数:制限なし\n💰予算:4400円+ワンオーダー制\n（9Hプレー付き、チャージ料無料）\n\n🏌️‍♀️レンタル品:クラブ（無料）、グローブ（無料）、シューズ（220円）→サンダル、ヒール不可のため、スニーカーまたはヒール無しの靴推奨◎\n\n@つね🪼 ちゃんと18:45〜上野駅集合でサクッと飲みからのシュミレーションゴルフを考えてます！\n\n飲み会だけの参加も大歓迎です🙌\n参加希望の方はコメントください🎈\nよろしくお願いします！",
     "date": "2026-09-18",
     "time": "20:00",
     "location": "詳細をご確認ください",
@@ -94,10 +94,23 @@ export const IMPORTED_DISCORD_EVENTS = [
     "time": "18:00",
     "location": "詳細をご確認ください",
     "image": "https://cdn.discordapp.com/attachments/1543113999640694826/1543114000030629908/IMG_5453.jpg?ex=6a9501e7&is=6a93b067&hm=5ff158cd1faab46dd9480b60929b2bb64f35e3fa771e847e0e5fdd4a1efa15b2&",
-    "capacity": 1,
-    "reservationCapacity": 2,
-    "attendees": 0,
-    "participants": [],
+    "capacity": 12,
+    "reservationCapacity": 12,
+    "attendees": 12,
+    "participants": [
+      "discord-759084159632277536",
+      "discord-1190229509727846433",
+      "discord-1476255646377578691",
+      "discord-1532009007747960869",
+      "discord-1540341083819741194",
+      "discord-705041013504344145",
+      "discord-1522253038994063410",
+      "discord-837231212283691028",
+      "discord-971320405342171166",
+      "discord-1475703575593353399",
+      "discord-1457343339241148477",
+      "discord-777370228991721502"
+    ],
     "applicantIds": [],
     "price": "本文をご確認ください",
     "category": "kanto",
@@ -109,7 +122,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1467089499543703686/110f0759b206c86f3e72d201bac698d2.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1543113999640694826",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "chatId": "discord-1543539898387275826"
   },
   {
     "id": "discord-event-1543085683365781644",
@@ -200,7 +214,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "id": "discord-event-1542201410542772425",
     "createdAt": "2026-08-26T15:57:48.990000Z",
     "title": "【第1回肉部🍖~焼肉会~】 焼肉木村",
-    "description": "@everyone \nこんばんは！部長のはぎーちゃんです🥩\n\n肉部が発足して少し時間が空いてしまいましたが、待ちに待った第1回の活動です🔥\n\nまた、初回の活動なので、代表のNonさんにも参加いただきます！！\nご都合の合う方は、ぜひご参加ください☺️\n\n〈概要〉\n📅 開催日時\n9/25(金) 19:00〜\n\n📍 開催場所\n焼肉木村\nつくばエクスプレス浅草駅から徒歩2分\nhttps://tabelog.com/tokyo/A1311/A131102/13266173/\n\n👥 募集人数\n6名(+Nonさん、部長)\n※人数超過時は、抽選とさせていただきます\n\n💰 予算\n￥8,000〜9,000\n※アラカルト注文での予約ですが、ある程度事前注文をしています。（酢サガリや平ユッケなど、裏メニューも出てきます🤫）\n※事前注文メニュー以外の追加も可能です。\n焼肉木村 (浅草（つくばＥＸＰ）/焼肉)\n★★★☆☆3.62 ■【一線を画す焼肉を】 ■予算(夜):￥8,000～￥9,999",
+    "description": "@everyone \nこんばんは！部長のはぎーちゃんです🥩\n\n肉部が発足して少し時間が空いてしまいましたが、待ちに待った第1回の活動です🔥\n\nまた、初回の活動なので、代表のNonさんにも参加いただきます！！\nご都合の合う方は、ぜひご参加ください☺️\n\n〈概要〉\n📅 開催日時\n9/25(金) 19:00〜\n\n📍 開催場所\n焼肉木村\nつくばエクスプレス浅草駅から徒歩2分\nhttps://tabelog.com/tokyo/A1311/A131102/13266173/\n\n👥 募集人数\n6名(+Nonさん、部長)\n※人数超過時は、抽選とさせていただきます\n\n💰 予算\n￥8,000〜9,000\n※アラカルト注文での予約ですが、ある程度事前注文をしています。（酢サガリや平ユッケなど、裏メニューも出てきます🤫）\n※事前注文メニュー以外の追加も可能です。",
     "date": "2026-09-25",
     "time": "19:00",
     "location": "詳細をご確認ください",
@@ -320,10 +334,16 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "9/20(日)18時",
     "image": "https://cdn.discordapp.com/attachments/1541845822784807012/1541845823124541480/2026-08-26_011924.jpg?ex=6a950212&is=6a93b092&hm=023462937c64b25e37dd9719140c213daf264f7e54bbe35db0c5ab39392ad3c3&",
     "tabelogUrl": "https://tabelog.com/tokyo/A1317/A131701/13270195/",
-    "capacity": 1,
-    "reservationCapacity": 2,
-    "attendees": 0,
-    "participants": [],
+    "capacity": 5,
+    "reservationCapacity": 5,
+    "attendees": 5,
+    "participants": [
+      "discord-1397813623908204544",
+      "discord-1403348369706848292",
+      "discord-1510218106105106505",
+      "discord-1457508300588453932",
+      "discord-1458225622802239636"
+    ],
     "applicantIds": [],
     "price": "6,000円",
     "priceMin": 6000,
@@ -337,7 +357,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1004342455895855144/882feb03f38a2f7fe758b2633f1f5a3b.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1541845822784807012",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "chatId": "discord-1543615013028237396"
   },
   {
     "id": "discord-event-1541439315140280453",
@@ -363,7 +384,14 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1467089499543703686/110f0759b206c86f3e72d201bac698d2.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1541439315140280453",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "chatId": "discord-1541797470315745280",
+    "participantImportWarnings": [
+      {
+        "createdAt": "2026-08-28T10:47:42.963000+00:00",
+        "content": "【🍁秋のペアリング会｜あと1名募集します🍷】\n\n参加予定の方から1名キャンセルが出たため、あと1名のみ追加で募集させていただきます🙌✨\n\n気になっていた方、ご予定合いましたらぜひご参加ください🍷\n先着1名となりますので、参加希望の方はコメントまたはご連絡いただけると嬉しいです🙇‍♀️"
+      }
+    ]
   },
   {
     "id": "discord-event-1541301088597311588",
@@ -434,8 +462,10 @@ export const IMPORTED_DISCORD_EVENTS = [
     "tabelogUrl": "https://s.tabelog.com/tokyo/A1306/A130603/13240787/",
     "capacity": 1,
     "reservationCapacity": 2,
-    "attendees": 0,
-    "participants": [],
+    "attendees": 1,
+    "participants": [
+      "discord-1533461878104391886"
+    ],
     "applicantIds": [],
     "price": "33,000円",
     "priceMin": 33000,
@@ -449,7 +479,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1403038939832385683/8c3e03e761a990c8a8a0712163a8f955.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1540321358305820682",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "chatId": "discord-1542787092398997595"
   },
   {
     "id": "discord-event-1539931563591082105",
@@ -481,7 +512,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "id": "discord-event-1539642830925074502",
     "createdAt": "2026-08-19T14:30:56.073000Z",
     "title": "W AOYAMA -The Cellar & Grill-🍷",
-    "description": "@ワイン部🍷 \nこんばんは。今回は青山＆西麻布でワイン会を開催いたします！\n\n200種のワインを常備したワインショップとレストランを併設したお店です🍖\n\nみなさんでセラーにあるワインを持ち込み、国産食材を使用した本格的なグリル料理を楽しみましょう！✊🏻\nワインは飲み放題を予定しています🍷\n\n＜概要＞\n日時：9/11(金) 20:00〜\n店：W AOYAMA -The Cellar & Grill-\nhttps://tabelog.com/tokyo/A1306/A130602/13271679/\n最寄り：表参道駅\nhttps://maps.app.goo.gl/6G8mT8BtTUR427Fp9\n募集人数：11（＋僕＝計12）\n募集期日：8/27(木)\n費用：7000~8000円前後（飲み放題込み）\n\nーーーーーーーーーー\n【二次会】\n23:00〜　西麻布\n卓球BAR PINPON by ｢Ｎ｣ 🏓\nhttps://maps.app.goo.gl/k5c4fbFAjvw88mL97\n\n【三次会】\nTBD\nダブリュー青山 ザ セラーアンドグリル (表参道/...\n★★★☆☆3.51 ■お料理と楽しめるワインは200種を常備！セラーアンドグリルをお愉しみください！ ■予算(夜):￥5,000～￥5,999\nW AOYAMA -The Cellar & Grill- · Minato City, Tokyo\n卓球BAR PINPON by ｢Ｎ｣ · Minato City, Tokyo",
+    "description": "@ワイン部🍷 \nこんばんは。今回は青山＆西麻布でワイン会を開催いたします！\n\n200種のワインを常備したワインショップとレストランを併設したお店です🍖\n\nみなさんでセラーにあるワインを持ち込み、国産食材を使用した本格的なグリル料理を楽しみましょう！✊🏻\nワインは飲み放題を予定しています🍷\n\n＜概要＞\n日時：9/11(金) 20:00〜\n店：W AOYAMA -The Cellar & Grill-\nhttps://tabelog.com/tokyo/A1306/A130602/13271679/\n最寄り：表参道駅\nhttps://maps.app.goo.gl/6G8mT8BtTUR427Fp9\n募集人数：11（＋僕＝計12）\n募集期日：8/27(木)\n費用：7000~8000円前後（飲み放題込み）\n\nーーーーーーーーーー\n【二次会】\n23:00〜　西麻布\n卓球BAR PINPON by ｢Ｎ｣ 🏓\nhttps://maps.app.goo.gl/k5c4fbFAjvw88mL97\n\n【三次会】\nTBD",
     "date": "2026-09-11",
     "time": "20:00",
     "location": "詳細をご確認ください",
@@ -541,20 +572,17 @@ export const IMPORTED_DISCORD_EVENTS = [
     "id": "discord-event-1539154024329117717",
     "createdAt": "2026-08-18T06:08:35.499000+00:00",
     "title": "撒椒小酒館 @上野",
-    "description": "@関東支部 \nニッチすぎて集まるか微妙ですが、本格中華のお誘いです。\n日本人に大人気の羊肉串や烤鱼、東北料理の地三鮮など、かなり美味しいので気になる方は是非🍗 \n（辛いの苦手な方でも大丈夫です）\nhttps://maps.app.goo.gl/wCeusKyBX7GwD3b79\n\n📅 日時：9/11(金)19:00-\n📍 店名：撒椒小酒館\n🚃アクセス：上野広小路・上野御徒町駅から徒歩5分\n👥 募集人数：2~4名(+自分含む2名参加予定)\n💰 金額：4000~5000円(食べログ参考)\n✅ 募集期日：8/29(土) \n⚠️ キャンセルポリシー：IRO+ルールに則り1週間前より100%（代理を見つけていただければOK）",
-    "date": "2026-09-11",
+    "description": "@関東支部 \nこちらまだ募集中なのでご興味ある方いれば是非！\n1人いらっしゃるのであと＋2名で開催にしようかと思います",
+    "date": "2026-08-18",
     "time": "19:00",
     "location": "上野",
     "image": "",
-    "googleMapsUrl": "https://maps.app.goo.gl/wCeusKyBX7GwD3b79",
     "capacity": 1,
     "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
-    "price": "4,000〜5,000円",
-    "priceMin": 4000,
-    "priceMax": 5000,
+    "price": "本文をご確認ください",
     "category": "kanto",
     "eventType": "gourmet",
     "status": "open",
@@ -576,10 +604,30 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "ラ・トリプレッタ",
     "image": "https://cdn.discordapp.com/attachments/1538771676081295430/1538771676488147024/20260920_.png?ex=6a9507cc&is=6a93b64c&hm=a1f232a4ebbff98b0264d52b408b650e247062eedbb4cc8f1f0142eeef864991&",
     "tabelogUrl": "https://tabelog.com/tokyo/A1317/A131710/13165472/",
-    "capacity": 1,
+    "capacity": 19,
     "reservationCapacity": 20,
-    "attendees": 0,
-    "participants": [],
+    "attendees": 19,
+    "participants": [
+      "discord-837231212283691028",
+      "discord-805352226428026902",
+      "discord-1538005755712774308",
+      "discord-824654622286938152",
+      "discord-1522253038994063410",
+      "discord-1537625947690242098",
+      "discord-1497178953813721150",
+      "discord-1403675019061755974",
+      "discord-1477873334719873097",
+      "discord-705041013504344145",
+      "discord-1528745249210634322",
+      "discord-1534888874038264019",
+      "discord-1522002897682956372",
+      "discord-1474037455291416670",
+      "discord-1462456162774421606",
+      "discord-724169786946486376",
+      "discord-1519931518674276465",
+      "discord-1008029940429639794",
+      "discord-1378230452300681338"
+    ],
     "applicantIds": [],
     "price": "3,000円",
     "priceMin": 3000,
@@ -593,7 +641,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "organizerRank": "regular",
     "sourceThreadId": "discord-board-1538771676081295430",
-    "sourceLabel": "関東支部イベント"
+    "sourceLabel": "関東支部イベント",
+    "chatId": "discord-1541684792947638352"
   },
   {
     "id": "discord-event-1538377283406925834",
@@ -604,10 +653,18 @@ export const IMPORTED_DISCORD_EVENTS = [
     "time": "時間未定",
     "location": "東京駅",
     "image": "",
-    "capacity": 1,
-    "reservationCapacity": 1,
-    "attendees": 0,
-    "participants": [],
+    "capacity": 7,
+    "reservationCapacity": 7,
+    "attendees": 7,
+    "participants": [
+      "discord-1466360543093985445",
+      "discord-1457401545359622420",
+      "discord-696624208532340756",
+      "discord-1228678386902372374",
+      "discord-811937355392614430",
+      "discord-1514440558217793566",
+      "discord-1353735645373136926"
+    ],
     "applicantIds": [],
     "price": "本文をご確認ください",
     "category": "kanto",
@@ -620,13 +677,14 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1353010654189191178/ad43b05c846c7aacff9e9423c31baa63.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1538377283406925834",
-    "sourceLabel": "旅行部"
+    "sourceLabel": "旅行部",
+    "chatId": "discord-1543490305494360065"
   },
   {
     "id": "discord-event-1538100984952389642",
     "createdAt": "2026-08-15T08:24:11.347000Z",
     "title": "モモブクロの夜パフェ",
-    "description": "@スイーツ部🍰 \n\n【日程近いですが…夜パフェ食べに行きませんか？✨】\n\n桃が大好きな@天ぷら(てつや【🥇GOLD 】 さんとモモブクロの夜パフェを食べに行こうと話しており、せっかくなのでスイーツ部の皆さまともご一緒できればと思い数名募集させていただきます🍑\n\n夜パフェ専門店 モモブクロ\nhttps://tabelog.com/tokyo/A1305/A130501/13235689/\n（桃パフェ以外もあります✨）\n\n📅 開催日時：8/20（木）もしくは8/22（土）19:00〜\n\n📍 開催場所：東京都豊島区西池袋1-40-5 名取ビル B1F\n\n池袋駅　西口より徒歩3分\n\n💰 予算：2,000〜3,000円（注文するパフェによります）\n\n✅募集期日：8月17日（月）19:00\n\n⚠️キャンセルポリシー：ご予約日当日から3日前､2日前のキャンセルの場合は50%、前日､当日のキャンセルの場合は100%のキャンセル料を頂戴することを予めご了承ください。\n夜パフェ専門店 モモブクロ (池袋/フルーツパーラ...\n★★★☆☆3.58 ■池袋駅西口3分。厳選素材とお酒とのマリアージュを楽しむ、「大人のための夜パフェ専門店」 ■予算(夜):￥2,000～￥2,999",
+    "description": "@スイーツ部🍰 \n\n【日程近いですが…夜パフェ食べに行きませんか？✨】\n\n桃が大好きな@天ぷら(てつや さんとモモブクロの夜パフェを食べに行こうと話しており、せっかくなのでスイーツ部の皆さまともご一緒できればと思い数名募集させていただきます🍑\n\n夜パフェ専門店 モモブクロ\nhttps://tabelog.com/tokyo/A1305/A130501/13235689/\n（桃パフェ以外もあります✨）\n\n📅 開催日時：8/20（木）もしくは8/22（土）19:00〜\n\n📍 開催場所：東京都豊島区西池袋1-40-5 名取ビル B1F\n\n池袋駅　西口より徒歩3分\n\n💰 予算：2,000〜3,000円（注文するパフェによります）\n\n✅募集期日：8月17日（月）19:00\n\n⚠️キャンセルポリシー：ご予約日当日から3日前､2日前のキャンセルの場合は50%、前日､当日のキャンセルの場合は100%のキャンセル料を頂戴することを予めご了承ください。",
     "date": "2026-08-20",
     "time": "19:00",
     "location": "東京都豊島区西池袋1-40-5 名取ビル B1F",
@@ -664,8 +722,13 @@ export const IMPORTED_DISCORD_EVENTS = [
     "tabelogUrl": "https://tabelog.com/tokyo/A1301/A130101/13318876/",
     "capacity": 6,
     "reservationCapacity": 8,
-    "attendees": 0,
-    "participants": [],
+    "attendees": 4,
+    "participants": [
+      "discord-1468051665340076248",
+      "discord-1403349152754303046",
+      "discord-741224627589742642",
+      "discord-1223177154397995110"
+    ],
     "applicantIds": [],
     "price": "20,000円",
     "priceMin": 20000,
@@ -889,8 +952,11 @@ export const IMPORTED_DISCORD_EVENTS = [
     "tabelogUrl": "https://tabelog.com/tokyo/A1303/A130302/13295650/",
     "capacity": 2,
     "reservationCapacity": 3,
-    "attendees": 0,
-    "participants": [],
+    "attendees": 2,
+    "participants": [
+      "discord-525718374152536074",
+      "discord-1528745249210634322"
+    ],
     "applicantIds": [],
     "price": "15,000円",
     "priceMin": 15000,
@@ -904,7 +970,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1223177154397995110/6b1d27d82aad0e87c3f144ba27e3efbd.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1536386349085761637",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "chatId": "discord-1541103620399829092"
   },
   {
     "id": "discord-event-1536378194457002024",
@@ -919,8 +986,13 @@ export const IMPORTED_DISCORD_EVENTS = [
     "googleMapsUrl": "https://maps.app.goo.gl/buJYTc3wSWYqvkm39?g_st=ic",
     "capacity": 4,
     "reservationCapacity": 5,
-    "attendees": 0,
-    "participants": [],
+    "attendees": 4,
+    "participants": [
+      "discord-1489160582639779840",
+      "discord-1528745249210634322",
+      "discord-396760147138969612",
+      "discord-764979134228987924"
+    ],
     "applicantIds": [],
     "price": "15,300円",
     "priceMin": 15300,
@@ -934,7 +1006,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1353587486604922921/e661b608255cec37aecf95944458b180.png?size=512",
     "organizerRank": "platinum",
     "sourceThreadId": "discord-board-1536378194457002024",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "chatId": "discord-1540753672756133888"
   },
   {
     "id": "discord-event-1534559448843157704",
@@ -966,7 +1039,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "id": "discord-event-1536328438246285392",
     "createdAt": "2026-08-10T11:00:43.280000Z",
     "title": "9月で日程調整/Mr.CHEESECAKE @銀座SIX",
-    "description": "@スイーツ部🍰 \n\nお疲れ様です！\n先日は別スレでリアクションいただきありがとうございました✨\n想像以上に反応いただけたので開催したいと思います☺️\n参加希望の方は投票をお願いいたします。\n\n\n📅開催日時:9月の土日で調整\n日程調整のため参加希望の方は投票をお願いします。\n人数が1番多い日に予約したいと思います！\n※予約日の2週間前にしか予約が出来ないため現時点では確約は出来ておりません。\nまた、予約枠によっては抽選になる可能性がございます。\n\n📍開催場所: 東京都中央区銀座6-10-1 GINZA SIX B2F\nhttps://tabelog.com/tokyo/A1301/A130101/13307221/\n\n💰予算:6,930円(税込/サービス料込)\n✅締切日:8/16(日)\n⚠️キャンセルポリシー: ご予約日当日から3日前､2日前のキャンセルの場合は50%、前日､当日のキャンセルの場合は100%のキャンセル料を頂戴することを予めご了承ください。\n\nよろしくお願いします*‎ • ·̫ • ა\nMr. CHEESECAKE GINZA SIX店 (銀座/洋菓子)\n★★★☆☆3.36 ■銀座エリア最大の商業施設「GINZA SIX」に構える、Mr. CHEESECAKE初の旗艦店 ■予算(昼):￥2,000～￥2,999",
+    "description": "@スイーツ部🍰 \n\nお疲れ様です！\n先日は別スレでリアクションいただきありがとうございました✨\n想像以上に反応いただけたので開催したいと思います☺️\n参加希望の方は投票をお願いいたします。\n\n\n📅開催日時:9月の土日で調整\n日程調整のため参加希望の方は投票をお願いします。\n人数が1番多い日に予約したいと思います！\n※予約日の2週間前にしか予約が出来ないため現時点では確約は出来ておりません。\nまた、予約枠によっては抽選になる可能性がございます。\n\n📍開催場所: 東京都中央区銀座6-10-1 GINZA SIX B2F\nhttps://tabelog.com/tokyo/A1301/A130101/13307221/\n\n💰予算:6,930円(税込/サービス料込)\n✅締切日:8/16(日)\n⚠️キャンセルポリシー: ご予約日当日から3日前､2日前のキャンセルの場合は50%、前日､当日のキャンセルの場合は100%のキャンセル料を頂戴することを予めご了承ください。\n\nよろしくお願いします*‎ • ·̫ • ა",
     "date": "2026-08-16",
     "time": "時間未定",
     "location": "銀座SIX",
@@ -1019,7 +1092,18 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "organizerRank": "regular",
     "sourceThreadId": "discord-board-1536282798539800647",
-    "sourceLabel": "関東支部イベント"
+    "sourceLabel": "関東支部イベント",
+    "chatId": "discord-1539150239884378154",
+    "participantImportWarnings": [
+      {
+        "createdAt": "2026-08-21T14:03:42.723000+00:00",
+        "content": "こちら1名キャンセルが出ましたので先着で募集します！"
+      },
+      {
+        "createdAt": "2026-08-25T06:21:13.295000+00:00",
+        "content": "@関東支部 こちら1名キャンセルが出ましたので先着で募集します！"
+      }
+    ]
   },
   {
     "id": "discord-event-1536245794905268294",
@@ -1033,8 +1117,12 @@ export const IMPORTED_DISCORD_EVENTS = [
     "tabelogUrl": "https://tabelog.com/tokyo/A1314/A131401/13192172/",
     "capacity": 3,
     "reservationCapacity": 4,
-    "attendees": 0,
-    "participants": [],
+    "attendees": 3,
+    "participants": [
+      "discord-1520656082035540138",
+      "discord-1532009007747960869",
+      "discord-1505883189703344158"
+    ],
     "applicantIds": [],
     "price": "12,000円",
     "priceMin": 12000,
@@ -1048,7 +1136,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/804712649598042172/ffa3b5462506477b220530a9f18571bc.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1536245794905268294",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "chatId": "discord-1539219793096482876"
   },
   {
     "id": "discord-event-1536243051343650866",
@@ -1059,10 +1148,15 @@ export const IMPORTED_DISCORD_EVENTS = [
     "time": "20:30",
     "location": "東銀座",
     "image": "https://cdn.discordapp.com/attachments/1536243051343650866/1536243051549163570/579506568_1550326466704638_5375429145540512798_n.webp?ex=6a950f55&is=6a93bdd5&hm=a8d9e8250722d51c23b1535d159116b5bf129a52ec0c5312c30891e135d9c309&",
-    "capacity": 3,
+    "capacity": 4,
     "reservationCapacity": 4,
-    "attendees": 0,
-    "participants": [],
+    "attendees": 4,
+    "participants": [
+      "discord-1190229509727846433",
+      "discord-1005339413527679123",
+      "discord-1323965226697097228",
+      "discord-1499726864476803084"
+    ],
     "applicantIds": [],
     "price": "13,000円",
     "priceMin": 13000,
@@ -1076,7 +1170,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/804712649598042172/ffa3b5462506477b220530a9f18571bc.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1536243051343650866",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "chatId": "discord-1539229872826753124"
   },
   {
     "id": "discord-event-1536159631028650045",
@@ -1117,10 +1212,16 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "恵比寿",
     "image": "https://cdn.discordapp.com/attachments/1536017844389675029/1536017844771487824/IMG_3358.jpg?ex=6a94e658&is=6a9394d8&hm=d6088f10b30fb78b026ff85d3198d3a03533048ae7a151a443074348360673cc&",
     "tabelogUrl": "https://tabelog.com/tokyo/A1303/A130302/13293299/",
-    "capacity": 3,
-    "reservationCapacity": 4,
-    "attendees": 0,
-    "participants": [],
+    "capacity": 5,
+    "reservationCapacity": 5,
+    "attendees": 5,
+    "participants": [
+      "discord-834626020245372969",
+      "discord-1457365003563831370",
+      "discord-1416668287843958865",
+      "discord-1537625947690242098",
+      "discord-1315589522695917589"
+    ],
     "applicantIds": [],
     "price": "8,800円",
     "priceMin": 8800,
@@ -1134,7 +1235,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1457686620302999699/c77ad31d87a2143f7fbed8ff0929df0c.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1536017844389675029",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "chatId": "discord-1539778091851849778"
   },
   {
     "id": "discord-event-1536017582186823720",
@@ -1232,8 +1334,12 @@ export const IMPORTED_DISCORD_EVENTS = [
     "image": "",
     "capacity": 3,
     "reservationCapacity": 4,
-    "attendees": 0,
-    "participants": [],
+    "attendees": 3,
+    "participants": [
+      "discord-1477873334719873097",
+      "discord-1190229509727846433",
+      "discord-1531806645980762280"
+    ],
     "applicantIds": [],
     "price": "10,000円",
     "priceMin": 10000,
@@ -1247,7 +1353,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1223177154397995110/6b1d27d82aad0e87c3f144ba27e3efbd.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1535596686921965638",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "chatId": "discord-1541041061630320721"
   },
   {
     "id": "discord-event-1535575849523482654",
@@ -1288,10 +1395,13 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "桜新町",
     "image": "",
     "tabelogUrl": "https://tabelog.com/tokyo/A1317/A131707/13288275/",
-    "capacity": 1,
+    "capacity": 2,
     "reservationCapacity": 3,
-    "attendees": 0,
-    "participants": [],
+    "attendees": 2,
+    "participants": [
+      "discord-1271250501068918857",
+      "discord-1479749722297077771"
+    ],
     "applicantIds": [],
     "price": "11,000円",
     "priceMin": 11000,
@@ -1305,7 +1415,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/guilds/1217327152098312245/users/413325457182949377/avatars/9e67f75b9cdd6e708e4df12e08ed0dfb.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1535301178362040400",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "chatId": "discord-1541483121353040043"
   },
   {
     "id": "discord-event-1535248052183371816",
@@ -1346,8 +1457,14 @@ export const IMPORTED_DISCORD_EVENTS = [
     "tabelogUrl": "https://tabelog.com/hyogo/A2801/A280102/28042651/",
     "capacity": 5,
     "reservationCapacity": 6,
-    "attendees": 0,
-    "participants": [],
+    "attendees": 5,
+    "participants": [
+      "discord-1295742939774844931",
+      "discord-1505445336926126212",
+      "discord-1228677104577544362",
+      "discord-817730242516746252",
+      "discord-1077595012004593684"
+    ],
     "applicantIds": [],
     "price": "5,000〜6,000円",
     "priceMin": 5000,
@@ -1361,7 +1478,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "organizerRank": "regular",
     "sourceThreadId": "discord-board-1535210597400977419",
-    "sourceLabel": "関西グルメ掲示板"
+    "sourceLabel": "関西グルメ掲示板",
+    "chatId": "discord-1537701175611105390"
   },
   {
     "id": "discord-event-1535007376720138400",
@@ -1375,8 +1493,12 @@ export const IMPORTED_DISCORD_EVENTS = [
     "tabelogUrl": "https://magazine.tabelog.com/articles/502217",
     "capacity": 3,
     "reservationCapacity": 3,
-    "attendees": 0,
-    "participants": [],
+    "attendees": 3,
+    "participants": [
+      "discord-398776137255485440",
+      "discord-1190229509727846433",
+      "discord-1520656082035540138"
+    ],
     "applicantIds": [],
     "price": "13,200円",
     "priceMin": 13200,
@@ -1390,13 +1512,14 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1403038939832385683/8c3e03e761a990c8a8a0712163a8f955.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1535007376720138400",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "chatId": "discord-1537185698199642132"
   },
   {
     "id": "discord-event-1534436495400894616",
     "createdAt": "2026-08-05T05:42:48.955000Z",
     "title": "🐼関飯店@中野",
-    "description": "@ディズニー部🐭 \n\nめーちゃくちゃ先の募集ですみません🙇🏻‍♀️\n中野の予約困難中華「関飯店」の予約がリピーター枠で取れました！\n夫婦で切り盛りされていて、奥様はジャングルクルーズキャストのようにハイテンションでひたすらしゃべり倒します（要するにほぼディズニーです）\n\nhttps://tabelog.com/tokyo/A1319/A131902/13259475/ \n\n### 〈参加条件〉\n▫️遅刻厳禁のため19:00に必ず来れる方\n▫️6名予約の場合ワインボトル4本ノルマなのでワインが飲める方🍷\n▫️ディズニー部の企画に1回以上参加されたことがある方(9月の交流会参加予定の方もOKです) or わたしと面識のある方\n\n\n📅開催日時：10/28(水)19:00〜\n \n📍開催場所：関飯店\n\n👥募集人数：5名（＋わたし含む6名）\n※希望者が多い場合は抽選\n※集まらなかった場合はディズニー部外で募集\n\n💰予算：8,000〜10,000円（アラカルトのため変動あり）\n\n✅募集期日：9/6(日)23:00まで\n\n⚠️ キャンセルポリシー：1週間前のキャンセル100%（代理が見つかれば不要）\n関飯店 (中野/中華料理)\n★★★☆☆3.59 ■予算(夜):￥8,000～￥9,999",
+    "description": "@ディズニー部🐭 \n\nめーちゃくちゃ先の募集ですみません🙇🏻‍♀️\n中野の予約困難中華「関飯店」の予約がリピーター枠で取れました！\n夫婦で切り盛りされていて、奥様はジャングルクルーズキャストのようにハイテンションでひたすらしゃべり倒します（要するにほぼディズニーです）\n\nhttps://tabelog.com/tokyo/A1319/A131902/13259475/ \n\n### 〈参加条件〉\n▫️遅刻厳禁のため19:00に必ず来れる方\n▫️6名予約の場合ワインボトル4本ノルマなのでワインが飲める方🍷\n▫️ディズニー部の企画に1回以上参加されたことがある方(9月の交流会参加予定の方もOKです) or わたしと面識のある方\n\n\n📅開催日時：10/28(水)19:00〜\n \n📍開催場所：関飯店\n\n👥募集人数：5名（＋わたし含む6名）\n※希望者が多い場合は抽選\n※集まらなかった場合はディズニー部外で募集\n\n💰予算：8,000〜10,000円（アラカルトのため変動あり）\n\n✅募集期日：9/6(日)23:00まで\n\n⚠️ キャンセルポリシー：1週間前のキャンセル100%（代理が見つかれば不要）",
     "date": "2026-10-28",
     "time": "19:00",
     "location": "中野",
@@ -1484,7 +1607,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "id": "discord-event-1533403695713226855",
     "createdAt": "2026-08-02T09:18:50.321000Z",
     "title": "9,10月平日で日程調整🍈喫茶ブリッジ@銀座",
-    "description": "@スイーツ部🍰 \n\n別スレッドで反応いただいた皆様、ありがとうございました☺️\n\n昭和の面影を今に残す、銀座の老舗純喫茶\n「喫茶ブリッヂ」に一緒に行っていただける方を募集します✨\n\n賑わう数寄屋橋の街角から地下へ降りると、そこには、昔ながらの喫茶店らしい静かな時間が流れています☕️\n\n銀座はもちろん、都内でも次第に少なくなってきた、昭和の純喫茶の佇まいをそのまま味わえる一軒です。\n\n📷 Instagram\nhttps://www.instagram.com/bridge_coffee_ginza/\n\n🍽️ 食べログ\nhttps://tabelog.com/tokyo/A1301/A130101/13078422/\n\n⸻\n\n📅 日時\n\n9〜10月の平日 18:30〜\n\n参加希望のみなさんのご都合を伺い、日程を決定します。\n\n⸻\n\n📍 場所\n\n喫茶ブリッヂ\n\n東京都中央区銀座4-1\n西銀座デパート B1F\n\nhttps://maps.app.goo.gl/Nk2Vxih8xstWDmCZ9?g_st=ic\n\n⸻\n\n🍹 メニュー\n\n名物は、メロンを思わせる愛らしい姿の\n「メロンパンケーキ」🍈✨\n\nそのほかにも、\n\n・サンドウィッチなどの軽食\n・コーヒー\n・昔懐かしいメロンソーダ\n・ナチュールワイン\n\nなど、純喫茶らしい定番から、お酒まで幅広く楽しめるようです。\n\n少し早めの夕暮れに、昭和の空気を感じながら、ゆっくりとテーブルを囲めたらと思っています☕️\n\n⸻\n\n💰 予算\n\n2,000〜3,000円程度\n\n※注文内容により前後します\n\n⸻\n\n⚠️ ご案内\n\n・予約は、平日のみ・5名以上で可能です。\n・店内は喫煙可能なため、煙草の匂いが苦手な方はあらかじめご留意ください。\n・キャンセルポリシー: 一週間前以降のキャンセル料100%(金額は確認中です)\n\n⸻\n\n✅ 募集締切\n\n8/9（日）\n\n参加をご希望の方は、コメントをお願いします。\n\n私を含めて5名以上集まりましたら開催とさせていただきます。\n\n銀座の地下に残る、少し懐かしい時間をご一緒できたら嬉しいです🍈☕️\nブリッヂ (銀座/喫茶店)\n★★★☆☆3.60 ■予算(夜):￥1,000～￥1,999\nGinza Bridge · 3.7★(374) · Coffee shop\nJapan, 〒104-0061 Tokyo, Chuo City, Ginza, 4 Chome−1 西銀座デパート B1F",
+    "description": "@スイーツ部🍰 \n\n別スレッドで反応いただいた皆様、ありがとうございました☺️\n\n昭和の面影を今に残す、銀座の老舗純喫茶\n「喫茶ブリッヂ」に一緒に行っていただける方を募集します✨\n\n賑わう数寄屋橋の街角から地下へ降りると、そこには、昔ながらの喫茶店らしい静かな時間が流れています☕️\n\n銀座はもちろん、都内でも次第に少なくなってきた、昭和の純喫茶の佇まいをそのまま味わえる一軒です。\n\n📷 Instagram\nhttps://www.instagram.com/bridge_coffee_ginza/\n\n🍽️ 食べログ\nhttps://tabelog.com/tokyo/A1301/A130101/13078422/\n\n⸻\n\n📅 日時\n\n9〜10月の平日 18:30〜\n\n参加希望のみなさんのご都合を伺い、日程を決定します。\n\n⸻\n\n📍 場所\n\n喫茶ブリッヂ\n\n東京都中央区銀座4-1\n西銀座デパート B1F\n\nhttps://maps.app.goo.gl/Nk2Vxih8xstWDmCZ9?g_st=ic\n\n⸻\n\n🍹 メニュー\n\n名物は、メロンを思わせる愛らしい姿の\n「メロンパンケーキ」🍈✨\n\nそのほかにも、\n\n・サンドウィッチなどの軽食\n・コーヒー\n・昔懐かしいメロンソーダ\n・ナチュールワイン\n\nなど、純喫茶らしい定番から、お酒まで幅広く楽しめるようです。\n\n少し早めの夕暮れに、昭和の空気を感じながら、ゆっくりとテーブルを囲めたらと思っています☕️\n\n⸻\n\n💰 予算\n\n2,000〜3,000円程度\n\n※注文内容により前後します\n\n⸻\n\n⚠️ ご案内\n\n・予約は、平日のみ・5名以上で可能です。\n・店内は喫煙可能なため、煙草の匂いが苦手な方はあらかじめご留意ください。\n・キャンセルポリシー: 一週間前以降のキャンセル料100%(金額は確認中です)\n\n⸻\n\n✅ 募集締切\n\n8/9（日）\n\n参加をご希望の方は、コメントをお願いします。\n\n私を含めて5名以上集まりましたら開催とさせていただきます。\n\n銀座の地下に残る、少し懐かしい時間をご一緒できたら嬉しいです🍈☕️",
     "date": "2026-08-09",
     "time": "18:30",
     "location": "銀座",
@@ -1515,7 +1638,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "id": "discord-event-1533326053869748304",
     "createdAt": "2026-08-02T04:10:19.063000Z",
     "title": "果実と氷 岩澤 麻布十番本店",
-    "description": "@スイーツ部🍰 \n毎日毎日溶けるぐらい暑い、、🫠\nなのでかき氷企画を立ててみました🍧\n\n今回は @Asuka【🥈SILVER 】 さんオススメ\n## 果実と氷岩澤 麻布十番本店 \nに行ってみようと思います👏🏻✨\n\n開催日を決めてしまって申し訳ございませんが、是非ご一緒してくださると嬉しいです❣️\n\n< イベント概要 >\n📅 日時：8/30(日) 14:00〜15:00\n📍 場所：果実と氷 岩澤 麻布十番本店\n東京都港区麻布十番2-21-9 1F\nhttps://tabelog.com/tokyo/A1307/A130702/13302591/\n👥 募集人数：2名(＋私 計3名)※先着順とさせて頂きます。\n💰 予算：1000〜1999円(食べログ参照)\n✅ 募集期日：8/11(火) 21:00\n⚠️ キャンセルポリシー：1週間前\n(上記以降は1,500円、代理が見つかった場合は発生しません。)\n果実と氷 岩澤 麻布十番本店 (麻布十番/かき氷)\n★★★☆☆3.52 ■上質な国産果物をふんだんに使ったふわふわかき氷。個室テーブル席もご用意。 ■予算(夜):￥1,000～￥1,999",
+    "description": "@スイーツ部🍰 \n毎日毎日溶けるぐらい暑い、、🫠\nなのでかき氷企画を立ててみました🍧\n\n今回は @Asuka さんオススメ\n## 果実と氷岩澤 麻布十番本店 \nに行ってみようと思います👏🏻✨\n\n開催日を決めてしまって申し訳ございませんが、是非ご一緒してくださると嬉しいです❣️\n\n< イベント概要 >\n📅 日時：8/30(日) 14:00〜15:00\n📍 場所：果実と氷 岩澤 麻布十番本店\n東京都港区麻布十番2-21-9 1F\nhttps://tabelog.com/tokyo/A1307/A130702/13302591/\n👥 募集人数：2名(＋私 計3名)※先着順とさせて頂きます。\n💰 予算：1000〜1999円(食べログ参照)\n✅ 募集期日：8/11(火) 21:00\n⚠️ キャンセルポリシー：1週間前\n(上記以降は1,500円、代理が見つかった場合は発生しません。)",
     "date": "2026-08-30",
     "time": "14:00",
     "location": "果実と氷 岩澤 麻布十番本店",
@@ -1545,7 +1668,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "id": "discord-event-1533308384835797192",
     "createdAt": "2026-08-02T03:00:06.437000Z",
     "title": "第4回料理教室🍪🍰 @渋谷",
-    "description": "@料理教室部🍳 \n\n皆さんこんにちは！第4回料理教室は、\n**スイーツ部コラボ❣️🍰**\n意外と簡単に始められる！\n**お菓子作り**をテーマにしたいと思います🥰\n今回みちたかさんと日程が合わず、、\nIRO+のちなつさんを特別講師としてお招きします✨️\n(素敵な投稿ばかりなのでぜひちなつさんのInstagramもご覧ください🥰🍰\nhttps://www.instagram.com/chinatsu_mogmogram?igsh=MWZvajU1MWE4aHp1Ng==)\n\nメニューは現在調整中ですが🙇、\n今回は**テーブルコーディネート**もご用意いただく予定です✨️🥹\n\n参加ご希望の方は、**こちらの投稿へのコメントをお待ちしております！🥰**\n※**先着**募集ですのでぜひお早めに！\n※今回は当日買い出し、後日レシピ共有は無し\n\n皆様のご応募お待ちしております❣️\n\n📅 開催日時：9/13(日)18:00-22:00\n📍 開催場所：渋谷区文化総合センター大和田 2階 学習室5(調理室)\n🗾アクセス：JR渋谷駅から徒歩7分\nhttps://maps.app.goo.gl/HgPPVYbmARXUiYh67?g_st=ic\n👥 募集人数：両部合わせて**先着6~8名**(+ちなつさん、 @しょうこ🍰スイーツ部長【🥇GOLD 】 さん、私)\n※両部合わせて募集上限に達した時点で締め切ります！\n💰 予算：約5,000円**※前後する可能性がございますがご留意いただけますと幸いです。後日精算**\n⏱募集期日：先着ですが、一応8/23(日)23:59とします\n⚠️ キャンセルポリシー：1週間前から100%(お店予約や事前集金ではないですが、IRO+全体のキャンセルポリシーに則り、後日集金時には参加者にカウントして請求させていただきますのでご了承ください)、代理見つかればOK",
+    "description": "@料理教室部🍳 \n\n皆さんこんにちは！第4回料理教室は、\n**スイーツ部コラボ❣️🍰**\n意外と簡単に始められる！\n**お菓子作り**をテーマにしたいと思います🥰\n今回みちたかさんと日程が合わず、、\nIRO+のちなつさんを特別講師としてお招きします✨️\n(素敵な投稿ばかりなのでぜひちなつさんのInstagramもご覧ください🥰🍰\nhttps://www.instagram.com/chinatsu_mogmogram?igsh=MWZvajU1MWE4aHp1Ng==)\n\nメニューは現在調整中ですが🙇、\n今回は**テーブルコーディネート**もご用意いただく予定です✨️🥹\n\n参加ご希望の方は、**こちらの投稿へのコメントをお待ちしております！🥰**\n※**先着**募集ですのでぜひお早めに！\n※今回は当日買い出し、後日レシピ共有は無し\n\n皆様のご応募お待ちしております❣️\n\n📅 開催日時：9/13(日)18:00-22:00\n📍 開催場所：渋谷区文化総合センター大和田 2階 学習室5(調理室)\n🗾アクセス：JR渋谷駅から徒歩7分\nhttps://maps.app.goo.gl/HgPPVYbmARXUiYh67?g_st=ic\n👥 募集人数：両部合わせて**先着6~8名**(+ちなつさん、 @しょうこ さん、私)\n※両部合わせて募集上限に達した時点で締め切ります！\n💰 予算：約5,000円**※前後する可能性がございますがご留意いただけますと幸いです。後日精算**\n⏱募集期日：先着ですが、一応8/23(日)23:59とします\n⚠️ キャンセルポリシー：1週間前から100%(お店予約や事前集金ではないですが、IRO+全体のキャンセルポリシーに則り、後日集金時には参加者にカウントして請求させていただきますのでご了承ください)、代理見つかればOK",
     "date": "2026-09-13",
     "time": "18:00",
     "location": "渋谷",
@@ -1569,13 +1692,20 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1353587486604922921/e661b608255cec37aecf95944458b180.png?size=512",
     "organizerRank": "platinum",
     "sourceThreadId": "discord-board-1533308384835797192",
-    "sourceLabel": "料理教室部"
+    "sourceLabel": "料理教室部",
+    "chatId": "discord-1537311498488250479",
+    "participantImportWarnings": [
+      {
+        "createdAt": "2026-08-16T08:49:55.179000+00:00",
+        "content": "@料理教室部🍳 \n2名キャンセルが出たため先着で再募集させていただきます！\nもしよろしければコメント待ってます❣️"
+      }
+    ]
   },
   {
     "id": "discord-event-1533308368217837640",
     "createdAt": "2026-08-02T03:00:02.475000Z",
     "title": "料理教室部×スイーツ部コラボ企画",
-    "description": "@スイーツ部🍰 \n\n**🚨スイーツ部×料理教室部コラボ‼️🍞**\n意外と簡単に始められる！\n**お菓子作り**をテーマにしたいと思います🥰\n今回みちたかさんとご日程が合わず、、\nIRO+の@ちなつさんを特別講師としてお招きします✨️\n(素敵な投稿ばかりなのでぜひちなつさんのInstagramもご覧ください🥰🍰\nhttps://www.instagram.com/chinatsu_mogmogram?igsh=MWZvajU1MWE4aHp1Ng==)\n\nメニューは現在調整中ですが🙇、\n今回は**テーブルコーディネート**もご用意いただく予定です✨️🥹\n\n参加ご希望の方は、**こちらの投稿へのコメントをお待ちしております！🥰**\n※**先着**募集ですのでぜひお早めに！\n※今回は当日買い出し、後日レシピ共有は無し\n\n皆様のご応募お待ちしております❣️\n\n📅 開催日時：9/13(日)18:00-22:00\n📍 開催場所：渋谷区文化総合センター大和田 2階 学習室5(調理室)\n🗾アクセス：JR渋谷駅から徒歩7分\nhttps://maps.app.goo.gl/HgPPVYbmARXUiYh67?g_st=ic\n👥 募集人数：両部合わせて**先着6~8名**(+@ちなつさん、@みょんちゃん、 @しょうこ🍰スイーツ部長【🥇GOLD 】 )\n※両部合わせて募集上限に達した時点で締め切ります！\n💰 予算：約5,000円**※前後する可能性がございますがご留意いただけますと幸いです。後日精算**\n⏱募集期日：先着ですが、一応8/23(日)23:59とします\n⚠️ キャンセルポリシー：1週間前から100%(お店予約や事前集金ではないですが、IRO+全体のキャンセルポリシーに則り、後日集金時には参加者にカウントして請求させていただきますのでご了承ください)、代理見つかればOK",
+    "description": "@スイーツ部🍰 \n\n**🚨スイーツ部×料理教室部コラボ‼️🍞**\n意外と簡単に始められる！\n**お菓子作り**をテーマにしたいと思います🥰\n今回みちたかさんとご日程が合わず、、\nIRO+の@ちなつさんを特別講師としてお招きします✨️\n(素敵な投稿ばかりなのでぜひちなつさんのInstagramもご覧ください🥰🍰\nhttps://www.instagram.com/chinatsu_mogmogram?igsh=MWZvajU1MWE4aHp1Ng==)\n\nメニューは現在調整中ですが🙇、\n今回は**テーブルコーディネート**もご用意いただく予定です✨️🥹\n\n参加ご希望の方は、**こちらの投稿へのコメントをお待ちしております！🥰**\n※**先着**募集ですのでぜひお早めに！\n※今回は当日買い出し、後日レシピ共有は無し\n\n皆様のご応募お待ちしております❣️\n\n📅 開催日時：9/13(日)18:00-22:00\n📍 開催場所：渋谷区文化総合センター大和田 2階 学習室5(調理室)\n🗾アクセス：JR渋谷駅から徒歩7分\nhttps://maps.app.goo.gl/HgPPVYbmARXUiYh67?g_st=ic\n👥 募集人数：両部合わせて**先着6~8名**(+@ちなつさん、@みょんちゃん、 @しょうこ )\n※両部合わせて募集上限に達した時点で締め切ります！\n💰 予算：約5,000円**※前後する可能性がございますがご留意いただけますと幸いです。後日精算**\n⏱募集期日：先着ですが、一応8/23(日)23:59とします\n⚠️ キャンセルポリシー：1週間前から100%(お店予約や事前集金ではないですが、IRO+全体のキャンセルポリシーに則り、後日集金時には参加者にカウントして請求させていただきますのでご了承ください)、代理見つかればOK",
     "date": "2026-09-13",
     "time": "18:00",
     "location": "渋谷区文化総合センター大和田 2階 学習室5(調理室)",
@@ -1613,8 +1743,10 @@ export const IMPORTED_DISCORD_EVENTS = [
     "tabelogUrl": "https://tabelog.com/tokyo/A1308/A130802/13256765/",
     "capacity": 1,
     "reservationCapacity": 2,
-    "attendees": 0,
-    "participants": [],
+    "attendees": 1,
+    "participants": [
+      "discord-1514586989297532969"
+    ],
     "applicantIds": [],
     "price": "15,000円",
     "priceMin": 15000,
@@ -1628,7 +1760,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1403038939832385683/8c3e03e761a990c8a8a0712163a8f955.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1533139101790769344",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "chatId": "discord-1533541587320307732"
   },
   {
     "id": "discord-event-1533133922396012745",
@@ -1642,8 +1775,10 @@ export const IMPORTED_DISCORD_EVENTS = [
     "tabelogUrl": "https://tabelog.com/tokyo/A1313/A131301/13280320/",
     "capacity": 1,
     "reservationCapacity": 2,
-    "attendees": 0,
-    "participants": [],
+    "attendees": 1,
+    "participants": [
+      "discord-1403675019061755974"
+    ],
     "applicantIds": [],
     "price": "19,800円",
     "priceMin": 19800,
@@ -1657,7 +1792,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1403038939832385683/8c3e03e761a990c8a8a0712163a8f955.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1533133922396012745",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "chatId": "discord-1534124834177679422"
   },
   {
     "id": "discord-event-1533114781593243678",
@@ -1669,10 +1805,15 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "神楽坂",
     "image": "",
     "tabelogUrl": "https://tabelog.com/tokyo/A1309/A130905/13132682/",
-    "capacity": 3,
+    "capacity": 4,
     "reservationCapacity": 4,
-    "attendees": 0,
-    "participants": [],
+    "attendees": 4,
+    "participants": [
+      "discord-1485610792866021416",
+      "discord-1522194128379576361",
+      "discord-1248246443383455764",
+      "discord-1485772766828564581"
+    ],
     "applicantIds": [],
     "price": "12,000円",
     "priceMin": 12000,
@@ -1686,7 +1827,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1485772766828564581/c0d87abf9c970cb69a1c8657c557ae98.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1533114781593243678",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "chatId": "discord-1537121214030553178"
   },
   {
     "id": "discord-event-1533078062835695656",
@@ -1700,8 +1842,12 @@ export const IMPORTED_DISCORD_EVENTS = [
     "tabelogUrl": "https://tabelog.com/tokyo/A1309/A130905/13132682/",
     "capacity": 3,
     "reservationCapacity": 4,
-    "attendees": 0,
-    "participants": [],
+    "attendees": 3,
+    "participants": [
+      "discord-741224627589742642",
+      "discord-1404475054569553956",
+      "discord-709705641928949791"
+    ],
     "applicantIds": [],
     "price": "10,000〜15,000円",
     "priceMin": 10000,
@@ -1713,7 +1859,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1457508300588453932",
     "organizerName": "ななみ",
     "sourceThreadId": "discord-board-1533078062835695656",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "chatId": "discord-1535971346625077248"
   },
   {
     "id": "discord-event-1532973161056964739",
@@ -1725,10 +1872,15 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "人形町",
     "image": "https://cdn.discordapp.com/attachments/1532973161056964739/1532973161300099162/IMG_0476.png?ex=6a950782&is=6a93b602&hm=7c238440a13f9c27c5003cfd37823d661445fcc5b16cfe2e569731be8043c0a6&",
     "tabelogUrl": "https://tabelog.com/tokyo/A1302/A130204/13290035/",
-    "capacity": 3,
+    "capacity": 4,
     "reservationCapacity": 4,
-    "attendees": 0,
-    "participants": [],
+    "attendees": 4,
+    "participants": [
+      "discord-1408073158250070089",
+      "discord-1403348999557222473",
+      "discord-1485772766828564581",
+      "discord-709705641928949791"
+    ],
     "applicantIds": [],
     "price": "15,000円",
     "priceMin": 15000,
@@ -1742,7 +1894,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1485772766828564581/c0d87abf9c970cb69a1c8657c557ae98.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1532973161056964739",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "chatId": "discord-1541220427651612793"
   },
   {
     "id": "discord-event-1532755326862885032",
@@ -1785,8 +1938,12 @@ export const IMPORTED_DISCORD_EVENTS = [
     "tabelogUrl": "https://tabelog.com/tokyo/A1318/A131804/13278932/",
     "capacity": 3,
     "reservationCapacity": 4,
-    "attendees": 0,
-    "participants": [],
+    "attendees": 3,
+    "participants": [
+      "discord-1457362274980200473",
+      "discord-1228676952316051458",
+      "discord-1466360543093985445"
+    ],
     "applicantIds": [],
     "price": "8,000〜10,000円",
     "priceMin": 8000,
@@ -1800,7 +1957,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1004342455895855144/882feb03f38a2f7fe758b2633f1f5a3b.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1532749867569516715",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "chatId": "discord-1536715778353528832"
   },
   {
     "id": "discord-event-1532718677688979486",
@@ -1813,8 +1971,11 @@ export const IMPORTED_DISCORD_EVENTS = [
     "image": "",
     "capacity": 2,
     "reservationCapacity": 3,
-    "attendees": 0,
-    "participants": [],
+    "attendees": 2,
+    "participants": [
+      "discord-1505883189703344158",
+      "discord-1459195336991047815"
+    ],
     "applicantIds": [],
     "price": "10,000円",
     "priceMin": 10000,
@@ -1828,7 +1989,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1223177154397995110/6b1d27d82aad0e87c3f144ba27e3efbd.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1532718677688979486",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "chatId": "discord-1535594539237122068"
   },
   {
     "id": "discord-event-1532371330937262152",
@@ -2042,8 +2204,14 @@ export const IMPORTED_DISCORD_EVENTS = [
     "tabelogUrl": "https://tabelog.com/tokyo/A1318/A131802/13279379/",
     "capacity": 5,
     "reservationCapacity": 6,
-    "attendees": 0,
-    "participants": [],
+    "attendees": 5,
+    "participants": [
+      "discord-1404425352150777856",
+      "discord-1522602852999106600",
+      "discord-1479749722297077771",
+      "discord-1404038461874245752",
+      "discord-920285902440398879"
+    ],
     "applicantIds": [],
     "price": "5,000〜7,000円",
     "priceMin": 5000,
@@ -2057,7 +2225,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1353735645373136926/8466a7d863d8505dff4e2bf28d8d3c70.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1530177060583243846",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "chatId": "discord-1536210361861148813"
   },
   {
     "id": "discord-event-1530168131773796374",
@@ -2124,10 +2293,14 @@ export const IMPORTED_DISCORD_EVENTS = [
     "time": "20:00",
     "location": "詳細をご確認ください",
     "image": "https://cdn.discordapp.com/attachments/1530005931633410242/1530005931910500523/IMG_2947.jpg?ex=6a9570d0&is=6a941f50&hm=c9981312c1cac7be1d5caf2e6dea6bcd31134f9398755647bef6fe36773f4d06&",
-    "capacity": 2,
+    "capacity": 3,
     "reservationCapacity": 3,
-    "attendees": 0,
-    "participants": [],
+    "attendees": 3,
+    "participants": [
+      "discord-1520656082035540138",
+      "discord-1457652020164034686",
+      "discord-1334056760863883294"
+    ],
     "applicantIds": [],
     "price": "22,000円",
     "priceMin": 22000,
@@ -2139,7 +2312,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1457526173616705549",
     "organizerName": "ゆうき",
     "sourceThreadId": "discord-board-1530005931633410242",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "chatId": "discord-1532900216926113842"
   },
   {
     "id": "discord-event-1529820078386839552",
@@ -2151,10 +2325,14 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "中目黒",
     "image": "",
     "tabelogUrl": "https://tabelog.com/tokyo/A1317/A131701/13247964/",
-    "capacity": 1,
+    "capacity": 3,
     "reservationCapacity": 4,
-    "attendees": 0,
-    "participants": [],
+    "attendees": 3,
+    "participants": [
+      "discord-1457362274980200473",
+      "discord-1458772421887656090",
+      "discord-1459502509679837186"
+    ],
     "applicantIds": [],
     "price": "8,000〜10,000円",
     "priceMin": 8000,
@@ -2168,7 +2346,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1479840315107184804/b050cd588b38d9d6a6e1b35cdc437c43.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1529820078386839552",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "chatId": "discord-1535827135858475018"
   },
   {
     "id": "discord-event-1529688516374565044",
@@ -2203,7 +2382,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "id": "discord-event-1529644745423589517",
     "createdAt": "2026-07-23T00:22:06.734000Z",
     "title": "部長、副部長募集🍞",
-    "description": "@パン部🍞 \n\nおはようございます🌞\n\n一気に暑くなってきましたが、皆さまいかがお過ごしでしょうか？\n小麦lifeは楽しめていますでしょうか？🥐\n\n私事ですが、仕事の都合により、8月末をもってiro＋を退会することとなりました😔\n\nつきましては、__パン部の新部長・副部長を募集いたします🥖__\n\nパン部は比較的企画を立てやすく、少人数からでも開催できるため、運営しやすい部活だと思います！\nまた、部長には特典として**iro＋の月額会費が無料**となりますので、ぜひご興味のある方は以下フォームよりご応募ください✨\n\nhttps://forms.gle/GNQM7uuMCD8yZeYo9\n\n最後に、何人かの方にはお話ししていましたが、パン部部長としていつか実現したかった「世田谷パン祭り」での食べ比べ企画があります🥐🥯🍞🥖\nもし今後実施する機会があれば、そのときはぜひ私にも声をかけていただけたら嬉しいです🥹♡\n\nあと1か月ほどとなりますが、最後までどうぞよろしくお願いいたします！\nパン部／部長副部長応募フォーム🍞\n部長の後任と新たに副部長を募集いたします",
+    "description": "@パン部🍞 \n\nおはようございます🌞\n\n一気に暑くなってきましたが、皆さまいかがお過ごしでしょうか？\n小麦lifeは楽しめていますでしょうか？🥐\n\n私事ですが、仕事の都合により、8月末をもってiro＋を退会することとなりました😔\n\nつきましては、__パン部の新部長・副部長を募集いたします🥖__\n\nパン部は比較的企画を立てやすく、少人数からでも開催できるため、運営しやすい部活だと思います！\nまた、部長には特典として**iro＋の月額会費が無料**となりますので、ぜひご興味のある方は以下フォームよりご応募ください✨\n\nhttps://forms.gle/GNQM7uuMCD8yZeYo9\n\n最後に、何人かの方にはお話ししていましたが、パン部部長としていつか実現したかった「世田谷パン祭り」での食べ比べ企画があります🥐🥯🍞🥖\nもし今後実施する機会があれば、そのときはぜひ私にも声をかけていただけたら嬉しいです🥹♡\n\nあと1か月ほどとなりますが、最後までどうぞよろしくお願いいたします！",
     "date": "2026-07-23",
     "time": "時間未定",
     "location": "詳細をご確認ください",
@@ -2339,7 +2518,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "id": "discord-event-1528592931928150118",
     "createdAt": "2026-07-20T02:42:34.855000Z",
     "title": "🧜‍♀️劇団四季「リトルマーメイド」",
-    "description": "@ディズニー部🐭 \n今回は舞台鑑賞部とのコラボ企画です！\n（舞台鑑賞部からは6名参加予定です）\n\nフリーチャットで参加表明いただいた4名\n@ミッチャン【🥈SILVER 】 \n@もりりん💪(ミサキ)【🥈SILVER 】 \n@ナツキ🌛【🥇GOLD 】 \n@りょうや \nは確定です！\nチケットはまとめて購入します！\n\nこれ以降参加を希望される方は\nお手数ですが、こちらに参加表明のうえ⬇️からご自身でチケットをご購入ください！\n\nhttps://www.shiki.jp/stage_schedule/?aj=0&rid=0073&ggc=1573",
+    "description": "@ディズニー部🐭 \n今回は舞台鑑賞部とのコラボ企画です！\n（舞台鑑賞部からは6名参加予定です）\n\nフリーチャットで参加表明いただいた4名\n@ミッチャン \n@もりりん💪(ミサキ) \n@ナツキ🌛 \n@りょうや \nは確定です！\nチケットはまとめて購入します！\n\nこれ以降参加を希望される方は\nお手数ですが、こちらに参加表明のうえ⬇️からご自身でチケットをご購入ください！\n\nhttps://www.shiki.jp/stage_schedule/?aj=0&rid=0073&ggc=1573",
     "date": "2026-11-14",
     "time": "17:00",
     "location": "詳細をご確認ください",
@@ -2421,7 +2600,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "id": "discord-event-1528017115766984847",
     "createdAt": "2026-07-18T12:34:29.584000Z",
     "title": "浴衣で船上ビアガーデン🍻",
-    "description": "@ワイン部🍷\n\nこんにちは\n6期のmiokaです🍷\n\n夏が来たので、みんなで浴衣を着て飲みに行きませんか？👘\n\n浴衣着るイベントが欲しい〜！と言っていたら部長がこの船上ビアガーデン提案してくれました⭐️🚢\n\n東京湾の綺麗な夜景を見ながらご飯とお酒を楽しめるプランにしようと思っています！\n座席指定のプランにしようと思っているので、ゆっくりくつろげると思います！(リンク先のレストランプランで予約予定)\n\n浴衣を持っていなくても、当日レンタル+着付けをしてくれるサービスもあるみたいなので、気軽に参加してください！\n\nせっかくの夏、みんなで浴衣を着て乾杯しましょう〜！🍻\n\n※入場時にチケットが必要で、まとめて購入し、みんなに配ってから入場するみたいなので遅刻厳禁でお願いします🙇\n\n\n< イベント概要 >\n📅 日時：8月28日(金) 19:30〜\n※遅刻厳禁\n📍 場所：さるBeer2026 (竹芝客船ターミナル)\n\n👥 募集人数：Max6名＋わたし、まさきくん@真妃🍷ワイン部長【🥇GOLD 】   計Max8名)\n先着で募集します！\n※4名以上で開催\n\n💰 予算：5,500円 フード、飲み放題込み　(レストランプラン)\n(船内で追加でフードを買うことも可能です🍚)\n\n👔 ドレスコード：浴衣👘\n\n ✅ 募集期日：7月24日(金)23:59まで\n\nキャンセル料: 1名様につき予約日の29日前～6日前500円、5日前～4日前30％、3日前～前日50％、当日100％\n※予約した段階から発生するのでお気をつけください！\n(代理が見つかった場合は不要)\n\n以下詳細情報です！\n浴衣レンタルもここから予約できるみたいなので気になる人は見てみてください👘\n\nhttps://www.tokaikisen.co.jp/salbeer/?fbclid=PAQ0xDSwTITNJwZG9mAmV4dG4DYWVtAjEwAHNydGMGYXBwX2lkDzEyNDAyNDU3NDI4NzQxNAABp7uultPV7wmFIrPHFANuX5ia9AJ0hWQt7vMK5nQf072W7XfDl-BMBRcWhm2C_aem_6-qlTaaxEI79eg9VyByt5g",
+    "description": "@ワイン部🍷\n\nこんにちは\n6期のmiokaです🍷\n\n夏が来たので、みんなで浴衣を着て飲みに行きませんか？👘\n\n浴衣着るイベントが欲しい〜！と言っていたら部長がこの船上ビアガーデン提案してくれました⭐️🚢\n\n東京湾の綺麗な夜景を見ながらご飯とお酒を楽しめるプランにしようと思っています！\n座席指定のプランにしようと思っているので、ゆっくりくつろげると思います！(リンク先のレストランプランで予約予定)\n\n浴衣を持っていなくても、当日レンタル+着付けをしてくれるサービスもあるみたいなので、気軽に参加してください！\n\nせっかくの夏、みんなで浴衣を着て乾杯しましょう〜！🍻\n\n※入場時にチケットが必要で、まとめて購入し、みんなに配ってから入場するみたいなので遅刻厳禁でお願いします🙇\n\n\n< イベント概要 >\n📅 日時：8月28日(金) 19:30〜\n※遅刻厳禁\n📍 場所：さるBeer2026 (竹芝客船ターミナル)\n\n👥 募集人数：Max6名＋わたし、まさきくん@真妃   計Max8名)\n先着で募集します！\n※4名以上で開催\n\n💰 予算：5,500円 フード、飲み放題込み　(レストランプラン)\n(船内で追加でフードを買うことも可能です🍚)\n\n👔 ドレスコード：浴衣👘\n\n ✅ 募集期日：7月24日(金)23:59まで\n\nキャンセル料: 1名様につき予約日の29日前～6日前500円、5日前～4日前30％、3日前～前日50％、当日100％\n※予約した段階から発生するのでお気をつけください！\n(代理が見つかった場合は不要)\n\n以下詳細情報です！\n浴衣レンタルもここから予約できるみたいなので気になる人は見てみてください👘\n\nhttps://www.tokaikisen.co.jp/salbeer/?fbclid=PAQ0xDSwTITNJwZG9mAmV4dG4DYWVtAjEwAHNydGMGYXBwX2lkDzEyNDAyNDU3NDI4NzQxNAABp7uultPV7wmFIrPHFANuX5ia9AJ0hWQt7vMK5nQf072W7XfDl-BMBRcWhm2C_aem_6-qlTaaxEI79eg9VyByt5g",
     "date": "2026-08-28",
     "time": "19:30",
     "location": "さるBeer2026 (竹芝客船ターミナル)",
@@ -2455,10 +2634,15 @@ export const IMPORTED_DISCORD_EVENTS = [
     "time": "17:00",
     "location": "舞浜アンフィシアター",
     "image": "",
-    "capacity": 1,
-    "reservationCapacity": 1,
-    "attendees": 0,
-    "participants": [],
+    "capacity": 4,
+    "reservationCapacity": 4,
+    "attendees": 4,
+    "participants": [
+      "discord-1404838997100068904",
+      "discord-1489160582639779840",
+      "discord-1353010654189191178",
+      "discord-1228677952334725213"
+    ],
     "applicantIds": [],
     "price": "5,000円",
     "priceMin": 5000,
@@ -2473,7 +2657,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1458772421887656090/0d3f1ef300f4606ca3aec8324dfe17d0.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1528010368251592877",
-    "sourceLabel": "舞台鑑賞部"
+    "sourceLabel": "舞台鑑賞部",
+    "chatId": "discord-1528911305254113411"
   },
   {
     "id": "discord-event-1527627965540860034",
@@ -2535,7 +2720,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "id": "discord-event-1527318410206384208",
     "createdAt": "2026-07-16T14:18:05.197000Z",
     "title": "ピックルボール@池袋",
-    "description": "@スポーツ部🏀 \n\nこんばんは！\n7/10にオープンしたばかりの\nSansanピックルボールコート池袋🏓\n屋外コートですが2面予約取れたので企画します🤲🏻\n（別企画バレーも参加募集中です💦）\n\n前回のピックルボール開催後、参加してくれた方それ以外からも好評だったので\nまずはここで募集しようと思います❕\n（いなければ知り合いに回します）\n\n参加希望の方は【参加希望】とコメントください✨\n\n日程: 8月29日（土）16:00-17:00\n場所: Sansanピックルボールコート池袋（更衣室あり）\nhttps://sansan-pickleball.com/?utm_source=ig&utm_medium=social&utm_content=link_in_bio\n\n人数: 7名+私（先着順）\n費用: コート代11000円 (参加人数で割ります)\n・パドルレンタル　500円\n・シューズレンタル 500円\n・その他ウェアもレンタル可能\n持ち物:運動できる服、飲み物\n\n7日前～当日 キャンセル料100%\n代理が見つかった場合はかかりません\nSansanピックルボールコート池袋\n池袋駅徒歩圏内、都内最大級のピックルボール施設「Sansanピックルボールコート池袋」。Where New Meets —— これまでにない出会いが、ここから。",
+    "description": "@スポーツ部🏀 \n\nこんばんは！\n7/10にオープンしたばかりの\nSansanピックルボールコート池袋🏓\n屋外コートですが2面予約取れたので企画します🤲🏻\n（別企画バレーも参加募集中です💦）\n\n前回のピックルボール開催後、参加してくれた方それ以外からも好評だったので\nまずはここで募集しようと思います❕\n（いなければ知り合いに回します）\n\n参加希望の方は【参加希望】とコメントください✨\n\n日程: 8月29日（土）16:00-17:00\n場所: Sansanピックルボールコート池袋（更衣室あり）\nhttps://sansan-pickleball.com/?utm_source=ig&utm_medium=social&utm_content=link_in_bio\n\n人数: 7名+私（先着順）\n費用: コート代11000円 (参加人数で割ります)\n・パドルレンタル　500円\n・シューズレンタル 500円\n・その他ウェアもレンタル可能\n持ち物:運動できる服、飲み物\n\n7日前～当日 キャンセル料100%\n代理が見つかった場合はかかりません",
     "date": "2026-08-29",
     "time": "16:00",
     "location": "池袋",
@@ -2735,7 +2920,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "id": "discord-event-1526522381277986847",
     "createdAt": "2026-07-14T09:34:57.111000Z",
     "title": "(火祝) ホラー映画鑑賞会",
-    "description": "@映画・ドラマ鑑賞部🎞️  暑い夏の鑑賞会企画として、ホラー映画鑑賞会を開催します😱 \n\n『ハッピー・デス・デイ』2017 米\n```\nあらすじ 主人公ツリーは、キャンパスの女子寮に暮らすイケてる大学生。遊んでばかりの彼女は、誕生日の朝も\n見知らぬ男のベッドで頭痛とともに目を覚ます。慌ただしくルーティンをこなし、夜になってパーティに繰り出す道すがら、彼女はマスク姿の殺人鬼に刺し殺される。しかし目を覚ますと、またも誕生日の朝、見知らぬ男のベッドの上にいる。そしてまた同じ 1 日を繰り返し、また殺されてしまった。彼女はエンドレスのタイムループにはまりこんでいたのだ！タイムループを止めるには犯人を見つけることだと気づいたツリーは殺されても、殺されても、立ち向かう。しかし、その先には予想もしない衝撃の事実が待ち受けていた……。\n```\nhttps://filmarks.com/movies/74951\n\n\n参加希望の方は\nこのスレッドに返信する形で「**参加希望**」の表明をお願いします！\n\n\n< イベント概要 >\n📅 日時：2026年08月11日(火祝)17:00\n📍 場所：※新宿周辺のレンタルルームを予定 ※最小催行人数(5人)そろった時点で予約\n💰予算：目安1,500円前後 ※人数が多い程、1人あたりの費用は安くなります\n🍿準備物：飲食OKです！お気持ちばかりのパーティーお菓子を1人1つご持参ください\n✅期日：7/21(火)\n👤最小開催人数：5人以上の参加で開催\n⚠️ キャンセルポリシー：開催1週間から当日のキャンセル 1,500円\n映画『ハッピー・デス・デイ』の感想・レビュー[...\nレビュー数：130668件 ／ 平均スコア：★★★★3.8点",
+    "description": "@映画・ドラマ鑑賞部🎞️  暑い夏の鑑賞会企画として、ホラー映画鑑賞会を開催します😱 \n\n『ハッピー・デス・デイ』2017 米\n```\nあらすじ 主人公ツリーは、キャンパスの女子寮に暮らすイケてる大学生。遊んでばかりの彼女は、誕生日の朝も\n見知らぬ男のベッドで頭痛とともに目を覚ます。慌ただしくルーティンをこなし、夜になってパーティに繰り出す道すがら、彼女はマスク姿の殺人鬼に刺し殺される。しかし目を覚ますと、またも誕生日の朝、見知らぬ男のベッドの上にいる。そしてまた同じ 1 日を繰り返し、また殺されてしまった。彼女はエンドレスのタイムループにはまりこんでいたのだ！タイムループを止めるには犯人を見つけることだと気づいたツリーは殺されても、殺されても、立ち向かう。しかし、その先には予想もしない衝撃の事実が待ち受けていた……。\n```\nhttps://filmarks.com/movies/74951\n\n\n参加希望の方は\nこのスレッドに返信する形で「**参加希望**」の表明をお願いします！\n\n\n< イベント概要 >\n📅 日時：2026年08月11日(火祝)17:00\n📍 場所：※新宿周辺のレンタルルームを予定 ※最小催行人数(5人)そろった時点で予約\n💰予算：目安1,500円前後 ※人数が多い程、1人あたりの費用は安くなります\n🍿準備物：飲食OKです！お気持ちばかりのパーティーお菓子を1人1つご持参ください\n✅期日：7/21(火)\n👤最小開催人数：5人以上の参加で開催\n⚠️ キャンセルポリシー：開催1週間から当日のキャンセル 1,500円",
     "date": "2026-08-11",
     "time": "17:00",
     "location": "※新宿周辺のレンタルルームを予定 ※最小催行人数(5人)そろった時点で予約",
@@ -3532,7 +3717,22 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1457371560670265374/d09179eea94d16710cda2370a546a963.png?size=512",
     "organizerRank": "platinum",
     "sourceThreadId": "discord-board-1522246535285444679",
-    "sourceLabel": "ディズニー部"
+    "sourceLabel": "ディズニー部",
+    "chatId": "discord-1526806532988080158",
+    "participantImportWarnings": [
+      {
+        "createdAt": "2026-07-15T04:28:18.223000+00:00",
+        "content": "@ディズニー部🐭 \n予約がMAX20名なので、先着で1名募集します！（キャンセルが出た場合は随時募集します！）\n\n投票いただいたのに希望の日程にならなかった皆さんは、すみませんでした😭 また次の機会に！"
+      },
+      {
+        "createdAt": "2026-08-17T00:11:42.515000+00:00",
+        "content": "@ディズニー部🐭 \nこちら1名キャンセルが出たので、参加したい方がいましたら8/20(木)までにコメントをお願いします！\n※希望者が多い場合は抽選とします"
+      },
+      {
+        "createdAt": "2026-08-23T02:22:00.096000+00:00",
+        "content": "@ディズニー部🐭 \nこちら1名キャンセルが出たので先着で1名募集します！"
+      }
+    ]
   },
   {
     "id": "discord-event-1522234901267611778",
@@ -4021,7 +4221,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "id": "discord-event-1520765679333277777",
     "createdAt": "2026-06-28T12:19:52.413000Z",
     "title": "Bistro Vino 六本木 🍷",
-    "description": "@ワイン部🍷 \n\nこんばんは。今回は普段あまり企画のない六本木エリアでワイン会を開催いたします！\n\n【ワインを愛する者は皆人生を愛する】\nワインと合うグリル料理を中心に楽しめる本格派ビストロのお店です🍖\n手頃な価格のワインも豊富に揃っており、100種類以上あるボトルワインから好きなものを選択可能です。\nせっかくなので飲み放題を予定しています🍷\n\n六本木の喧騒を離れ、みなさんで世界各国のワインを楽しみましょう✊🏻\n\n＜概要＞\n日時：7/10(金) 20:00〜\n店：Bistro Vino 六本木\nhttps://maps.app.goo.gl/zCYgyKnhA6m6CUeN7\n募集人数：7（＋ @真妃🍷ワイン部長【🥇GOLD 】 ＋ @karen【🥈SILVER 】 ＋僕＝10名）\n募集期日：7/2(木)\n費用：6000~8000円前後\nBistro Vino Roppongi · Minato City, Tokyo",
+    "description": "@ワイン部🍷 \n\nこんばんは。今回は普段あまり企画のない六本木エリアでワイン会を開催いたします！\n\n【ワインを愛する者は皆人生を愛する】\nワインと合うグリル料理を中心に楽しめる本格派ビストロのお店です🍖\n手頃な価格のワインも豊富に揃っており、100種類以上あるボトルワインから好きなものを選択可能です。\nせっかくなので飲み放題を予定しています🍷\n\n六本木の喧騒を離れ、みなさんで世界各国のワインを楽しみましょう✊🏻\n\n＜概要＞\n日時：7/10(金) 20:00〜\n店：Bistro Vino 六本木\nhttps://maps.app.goo.gl/zCYgyKnhA6m6CUeN7\n募集人数：7（＋ @真妃 ＋ @karen ＋僕＝10名）\n募集期日：7/2(木)\n費用：6000~8000円前後",
     "date": "2026-07-10",
     "time": "20:00",
     "location": "詳細をご確認ください",
@@ -4216,7 +4416,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "id": "discord-event-1519295551001067660",
     "createdAt": "2026-06-24T10:58:06.505000Z",
     "title": "猿島探索🏝️のご案内",
-    "description": "@旅行部✈️ の皆さま\n\n無人島・猿島🏝️のご案内です！\n\n横須賀・三笠桟橋から船に乗ること、約10分。無人島に上陸！東京湾唯一の自然の島です。\n旧陸海軍が造った要塞が今も残ることから「国史跡」に指定され、さらに「日本遺産」にも登録されています。\n\n\n📅 開催日時：7/18(土)\n12:30出航のフェリーです。(集合時間はそれより前になります)\nフェリーは1時間に1本のペースで出ており、乗船時間は片道約10分です。\n14:40猿島発で2時間程滞在予定です。\n\n📍 集合場所：三笠ターミナル・猿島ビジターセンター\n京急線「横須賀中央駅」から徒歩約15分\n※フェリー乗り場現地集合を予定しております。\n\n★https://sarushima.jp/\n\n👥 人数：最大15名(私＋先着14名)\n\n💰 参加費：猿島公園入場料＋乗船料(往復)で2,500円。その他、別途費用がかかる可能性がございます。\n\n⚠️ キャンセルポリシー：参加確定以降のキャンセル100%\n※予めスケジュールをご調整の上、ご応募いただけますと幸いです。\n※ 天候によりフェリーが欠航となる場合がございます。\n※雨天時決行するかは現在検討中ですが、雨天中止になる可能性も高いです。\n\n👇先着順の募集とさせていただきます！\n参加希望の方は、下記フォームよりお申し込みお待ちしております☺️\n無人島 猿島\n国史跡散策、BBQ、磯遊び。さまざまなレジャーが楽しめる、横須賀から船で10分の東京湾に浮かぶ無人島。",
+    "description": "@旅行部✈️ の皆さま\n\n無人島・猿島🏝️のご案内です！\n\n横須賀・三笠桟橋から船に乗ること、約10分。無人島に上陸！東京湾唯一の自然の島です。\n旧陸海軍が造った要塞が今も残ることから「国史跡」に指定され、さらに「日本遺産」にも登録されています。\n\n\n📅 開催日時：7/18(土)\n12:30出航のフェリーです。(集合時間はそれより前になります)\nフェリーは1時間に1本のペースで出ており、乗船時間は片道約10分です。\n14:40猿島発で2時間程滞在予定です。\n\n📍 集合場所：三笠ターミナル・猿島ビジターセンター\n京急線「横須賀中央駅」から徒歩約15分\n※フェリー乗り場現地集合を予定しております。\n\n★https://sarushima.jp/\n\n👥 人数：最大15名(私＋先着14名)\n\n💰 参加費：猿島公園入場料＋乗船料(往復)で2,500円。その他、別途費用がかかる可能性がございます。\n\n⚠️ キャンセルポリシー：参加確定以降のキャンセル100%\n※予めスケジュールをご調整の上、ご応募いただけますと幸いです。\n※ 天候によりフェリーが欠航となる場合がございます。\n※雨天時決行するかは現在検討中ですが、雨天中止になる可能性も高いです。\n\n👇先着順の募集とさせていただきます！\n参加希望の方は、下記フォームよりお申し込みお待ちしております☺️",
     "date": "2026-07-18",
     "time": "12:30",
     "location": "三笠ターミナル・猿島ビジターセンター",
@@ -4464,7 +4664,14 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1446344592214724700/559a459ef83e54fad1ec64ffc9a3d64a.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1517743208296087583",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "chatId": "discord-1523922495290212483",
+    "participantImportWarnings": [
+      {
+        "createdAt": "2026-08-09T06:50:19.777000+00:00",
+        "content": "@関東支部 キャンセル出たので2名追加募集します！"
+      }
+    ]
   },
   {
     "id": "discord-event-1517531892717588585",
@@ -4580,7 +4787,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "id": "discord-event-1516780129609584644",
     "createdAt": "2026-06-17T12:22:43.311000Z",
     "title": "🍨スイーツ部 × 散歩部 コラボ企画「真夏の夜パフェ散歩🍨🌙」",
-    "description": "皆さんこんばんは\n\n７月イベントは**散歩部とのコラボ企画**です🙌\n\n真夏の夜のお散歩のゴールに目指すのは…\n\n**🍨 夜パフェ専門店！**\n\n@shimon🎞️映画・ドラマ鑑賞部長【🥇GOLD 】 さんよりご提案いただいた、広尾の人気店「夜パフェBAR&VIGO」へ行ってみたいと思います✨\n\n洗練された店内、美しく芸術的なパフェ、そしてペアリングのお酒🥂\n\nお散歩を楽しんだ後のひんやりパフェは、きっと格別です☺️\n\n\n⸻\n\n## 📝 参加方法\n\n本投稿にて、参加希望の旨をコメントください🙆‍♀️\n\n締切後、参加者の方をプライベートチャットへご招待いたします🔒\n\n参加申込締切：7月5日(日) \n\n⸻\n\n## 👥 募集人数について\n\nお店のキャパの関係上、少人数開催となります◎\n\n・募集人数：**2名**\n・定員：6名\n（散歩部2名・スイーツ部2名・各部長の計6名）\n\n※募集締切時点で定員に満たない場合は、開催を見送りとします\n\n※定員に達した場合は、その時点で募集を締め切らせていただきます\n\n⸻\n\n## 🌿 こんな方におすすめ\n\n・散歩部の皆さんと交流したい方✨\n・夜パフェが気になっていた方🍨\n・夏の夜のお散歩を楽しみたい方🌙\n・広尾や白金台エリアが好きな方🌿\n・少人数でゆったりお散歩したい方😌\n\nぜひお気軽にご参加ください🙌\n\n⸻\n\n## 🕰️ 日時\n\n7/26(日) 18:20〜\n\n18:20　集合・自己紹介\n18:30　お散歩スタート🚶‍♀️‍➡️\n19:45頃　広尾到着\n20:00〜　夜パフェタイム🍨✨\n\n⸻\n\n## 📍 集合場所\n\n高輪ゲートウェイ駅（予定）\n\n⸻\n\n## 🚶‍♂️ ルート\n\n高輪ゲートウェイ駅〜八芳園〜広尾駅\n（約3.8km／所要時間 約1h〜1.5h）\n\n高輪ゲートウェイ駅に集合してスタート👣\n\n→近未来的な駅舎が印象的な高輪ゲートウェイを出発✨\n\n→八芳園へ立ち寄り、夜の日本庭園を少しだけ散策🌿\n\n→都会の夜景と緑の両方を楽しみながら広尾へ🚶‍♀️‍➡️\n\n→ゴール後はパフェを食べながら涼みましょう🍨✨\n\nスイーツ部の皆さんとの交流を楽しみつつ、\n夏の夜をゆったり楽しみながら歩けたらと思います🌙\n\n\n⸻\n\n## 🍨 お店について\n\n今回お邪魔するのはこちら🙌\n\n📅 日時：7/26(日) 20:00〜\n\n📍夜パフェBAR&VIGO 広尾店\n東京都渋谷区広尾5-4-16EAT PLAY WORKS 1F\nhttps://tabelog.com/tokyo/A1307/A130703/13314424/\n\n💰予算：¥2,500〜\n✅募集締切：7/5（日）\n⚠️キャンセルポリシー：1週間前以降から キャンセル料¥2,500（代理が見つかれば不要）\n\n芸術作品のような美しいパフェと、お酒とのペアリングも楽しめる人気店です🥂\n\n美味しいパフェはもちろん、洗練された空間も魅力のひとつ✨\n\n夜パフェが初めての方にもおすすめです☺️\n\n⸻\n\n## ⚠️ 参加後の変更について\n\n今回は「お散歩+パフェ」の両方に参加できる方限定とさせていただきます🍨\n\n参加確定後、やむを得ずどちらか片方のみとなる場合は、できるだけ早めにプライベートチャットにてご連絡をお願いします💬\n\n※パフェのキャンセルについては、一週間前以降キャンセル料が発生するのでご注意ください\n\nご協力をお願いいたします🙇‍♀️\n\n⸻\n\n## ☔ 雨天時について\n\n基本的に雨天決行です🌿\n\nただし荒天の場合は、お散歩は中止し、パフェ会のみ開催とします\n\n当日の開催可否は、プライベートチャットにてご連絡いたします📣\n\n⸻\n\n真夏の夜×ひんやりパフェ🍨\n\nいつもより少しだけ贅沢な夏の夜を一緒に過ごしましょう✨\nご一緒できるのを楽しみにしております☺️👣",
+    "description": "皆さんこんばんは\n\n７月イベントは**散歩部とのコラボ企画**です🙌\n\n真夏の夜のお散歩のゴールに目指すのは…\n\n**🍨 夜パフェ専門店！**\n\n@shimon さんよりご提案いただいた、広尾の人気店「夜パフェBAR&VIGO」へ行ってみたいと思います✨\n\n洗練された店内、美しく芸術的なパフェ、そしてペアリングのお酒🥂\n\nお散歩を楽しんだ後のひんやりパフェは、きっと格別です☺️\n\n\n⸻\n\n## 📝 参加方法\n\n本投稿にて、参加希望の旨をコメントください🙆‍♀️\n\n締切後、参加者の方をプライベートチャットへご招待いたします🔒\n\n参加申込締切：7月5日(日) \n\n⸻\n\n## 👥 募集人数について\n\nお店のキャパの関係上、少人数開催となります◎\n\n・募集人数：**2名**\n・定員：6名\n（散歩部2名・スイーツ部2名・各部長の計6名）\n\n※募集締切時点で定員に満たない場合は、開催を見送りとします\n\n※定員に達した場合は、その時点で募集を締め切らせていただきます\n\n⸻\n\n## 🌿 こんな方におすすめ\n\n・散歩部の皆さんと交流したい方✨\n・夜パフェが気になっていた方🍨\n・夏の夜のお散歩を楽しみたい方🌙\n・広尾や白金台エリアが好きな方🌿\n・少人数でゆったりお散歩したい方😌\n\nぜひお気軽にご参加ください🙌\n\n⸻\n\n## 🕰️ 日時\n\n7/26(日) 18:20〜\n\n18:20　集合・自己紹介\n18:30　お散歩スタート🚶‍♀️‍➡️\n19:45頃　広尾到着\n20:00〜　夜パフェタイム🍨✨\n\n⸻\n\n## 📍 集合場所\n\n高輪ゲートウェイ駅（予定）\n\n⸻\n\n## 🚶‍♂️ ルート\n\n高輪ゲートウェイ駅〜八芳園〜広尾駅\n（約3.8km／所要時間 約1h〜1.5h）\n\n高輪ゲートウェイ駅に集合してスタート👣\n\n→近未来的な駅舎が印象的な高輪ゲートウェイを出発✨\n\n→八芳園へ立ち寄り、夜の日本庭園を少しだけ散策🌿\n\n→都会の夜景と緑の両方を楽しみながら広尾へ🚶‍♀️‍➡️\n\n→ゴール後はパフェを食べながら涼みましょう🍨✨\n\nスイーツ部の皆さんとの交流を楽しみつつ、\n夏の夜をゆったり楽しみながら歩けたらと思います🌙\n\n\n⸻\n\n## 🍨 お店について\n\n今回お邪魔するのはこちら🙌\n\n📅 日時：7/26(日) 20:00〜\n\n📍夜パフェBAR&VIGO 広尾店\n東京都渋谷区広尾5-4-16EAT PLAY WORKS 1F\nhttps://tabelog.com/tokyo/A1307/A130703/13314424/\n\n💰予算：¥2,500〜\n✅募集締切：7/5（日）\n⚠️キャンセルポリシー：1週間前以降から キャンセル料¥2,500（代理が見つかれば不要）\n\n芸術作品のような美しいパフェと、お酒とのペアリングも楽しめる人気店です🥂\n\n美味しいパフェはもちろん、洗練された空間も魅力のひとつ✨\n\n夜パフェが初めての方にもおすすめです☺️\n\n⸻\n\n## ⚠️ 参加後の変更について\n\n今回は「お散歩+パフェ」の両方に参加できる方限定とさせていただきます🍨\n\n参加確定後、やむを得ずどちらか片方のみとなる場合は、できるだけ早めにプライベートチャットにてご連絡をお願いします💬\n\n※パフェのキャンセルについては、一週間前以降キャンセル料が発生するのでご注意ください\n\nご協力をお願いいたします🙇‍♀️\n\n⸻\n\n## ☔ 雨天時について\n\n基本的に雨天決行です🌿\n\nただし荒天の場合は、お散歩は中止し、パフェ会のみ開催とします\n\n当日の開催可否は、プライベートチャットにてご連絡いたします📣\n\n⸻\n\n真夏の夜×ひんやりパフェ🍨\n\nいつもより少しだけ贅沢な夏の夜を一緒に過ごしましょう✨\nご一緒できるのを楽しみにしております☺️👣",
     "date": "2026-07-26",
     "time": "18:20",
     "location": "詳細をご確認ください",
@@ -5172,7 +5379,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "id": "discord-event-1512449573732221159",
     "createdAt": "2026-06-05T13:34:38.332000Z",
     "title": "サッカーワールドカップ観戦会　日本VSチュニジア",
-    "description": "@everyone \n皆さま中々動けておらず申し訳ございません🙇‍♀️ \n運営のもってぃーです！\n\nそろそろサッカーワールドカップの時期ということで皆さまでレンスぺを借りて\n観戦会をしようと思います！\n企画が遅くなりすみません。。\n\n@KD【🥇GOLD 】 さんもご提案ありがとうございます！！\n\n現時点日本代表の試合は３試合は確定しておりますが\n２戦目のチュニジア戦は日曜の日本時間13:00キックオフなので参加しやすいのかなと思います！\n\n🗓️ 日時　6/21（日）　12:00~16:00（試合開始時間は13:00です）\n🏟️ 場所　神田のレンタルスペース（詳細はプライベートチャット作成後に伝えます）\n💰 参加費　1,500円～2,000円くらい（参加者によって少し変動する可能性あり）\n募集人数　最大24人\n（部紹介のチャットでも募集しようと思います）\n募集期日　6/14（日）\n→定員になり次第締め切ります\n\n特に飲み物や食べ物は注文してないのでみんなでお菓子やウーバーなどしながら軽く食べるくらいの会にしたいと思います！\n\n予定空いている方、ワールドカップ見たいけどみんなで共有したい方は\nコメントお待ちしております！！\n絶対勝つぞ、日本🇯🇵",
+    "description": "@everyone \n皆さま中々動けておらず申し訳ございません🙇‍♀️ \n運営のもってぃーです！\n\nそろそろサッカーワールドカップの時期ということで皆さまでレンスぺを借りて\n観戦会をしようと思います！\n企画が遅くなりすみません。。\n\n@KD さんもご提案ありがとうございます！！\n\n現時点日本代表の試合は３試合は確定しておりますが\n２戦目のチュニジア戦は日曜の日本時間13:00キックオフなので参加しやすいのかなと思います！\n\n🗓️ 日時　6/21（日）　12:00~16:00（試合開始時間は13:00です）\n🏟️ 場所　神田のレンタルスペース（詳細はプライベートチャット作成後に伝えます）\n💰 参加費　1,500円～2,000円くらい（参加者によって少し変動する可能性あり）\n募集人数　最大24人\n（部紹介のチャットでも募集しようと思います）\n募集期日　6/14（日）\n→定員になり次第締め切ります\n\n特に飲み物や食べ物は注文してないのでみんなでお菓子やウーバーなどしながら軽く食べるくらいの会にしたいと思います！\n\n予定空いている方、ワールドカップ見たいけどみんなで共有したい方は\nコメントお待ちしております！！\n絶対勝つぞ、日本🇯🇵",
     "date": "2026-06-21",
     "time": "13:00",
     "location": "詳細をご確認ください",
@@ -5784,7 +5991,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "id": "discord-event-1510840569260150995",
     "createdAt": "2026-06-01T03:01:01.772000Z",
     "title": "📣 部員自主企画募集スレッド",
-    "description": "@散歩部🚶 \n\n## 📣 部員企画 募集中！\n\nみなさん、こんにちは🌿\n\n散歩部ではこれまで部長が中心となってイベントを企画してきましたが、\n\n今後は部員のみなさんによる自主企画も大歓迎です！🙌\n\n「この公園を歩いてみたい！」\n「この時期のお花を見に行きたい！」\n「この街を散策してみたい！」\n\nなどなど、\n\n「こんな企画があったら楽しそう！」と思ったものがあれば、ぜひお気軽に企画を立ててみてください👣✨\n\n\n⸻\n\n## ✅ 自主企画を立てる際のお願い\n\n**① 運営の主体は企画者にお任せいたします**\n\n参加者への連絡やリマインド、当日の進行などは、企画者が主体となって進めていただくようお願いします🌿\n\n**② プライベートチャットには部長も追加してください**\n\nイベント用のプライベートチャットを作成する場合は、全体の状況把握のため、部長もメンバーに追加をお願いします💬\n\n**③ こちらのスレッドに投稿をお願いします**\n\n部長(@Monako💃【🥇GOLD 】 )をメンションした上で、こちらのスレッドに繋げる形で投稿をお願いします📝\nその形で投稿する限り、部長への事前相談等は基本的に不要です🙆‍♀️\n新規にスレッドを立てたい場合にはご相談いただけると助かります🙇‍♀️\n\n⸻\n\n※補足※\n\n・安全性担保のため、企画者含めなるべく4名以上での活動を推奨します\n・日時やルートが未確定の**「こんなのやりたいんですが興味ある人いますか？」**という相談ベースの投稿も大歓迎です🌟\n\n⸻\n\n\nそれでは、みなさんのおすすめスポットや面白いアイデアを楽しみにしています✨\n\n一緒に散歩部を盛り上げていきましょう🤝",
+    "description": "@散歩部🚶 \n\n## 📣 部員企画 募集中！\n\nみなさん、こんにちは🌿\n\n散歩部ではこれまで部長が中心となってイベントを企画してきましたが、\n\n今後は部員のみなさんによる自主企画も大歓迎です！🙌\n\n「この公園を歩いてみたい！」\n「この時期のお花を見に行きたい！」\n「この街を散策してみたい！」\n\nなどなど、\n\n「こんな企画があったら楽しそう！」と思ったものがあれば、ぜひお気軽に企画を立ててみてください👣✨\n\n\n⸻\n\n## ✅ 自主企画を立てる際のお願い\n\n**① 運営の主体は企画者にお任せいたします**\n\n参加者への連絡やリマインド、当日の進行などは、企画者が主体となって進めていただくようお願いします🌿\n\n**② プライベートチャットには部長も追加してください**\n\nイベント用のプライベートチャットを作成する場合は、全体の状況把握のため、部長もメンバーに追加をお願いします💬\n\n**③ こちらのスレッドに投稿をお願いします**\n\n部長(@Monako )をメンションした上で、こちらのスレッドに繋げる形で投稿をお願いします📝\nその形で投稿する限り、部長への事前相談等は基本的に不要です🙆‍♀️\n新規にスレッドを立てたい場合にはご相談いただけると助かります🙇‍♀️\n\n⸻\n\n※補足※\n\n・安全性担保のため、企画者含めなるべく4名以上での活動を推奨します\n・日時やルートが未確定の**「こんなのやりたいんですが興味ある人いますか？」**という相談ベースの投稿も大歓迎です🌟\n\n⸻\n\n\nそれでは、みなさんのおすすめスポットや面白いアイデアを楽しみにしています✨\n\n一緒に散歩部を盛り上げていきましょう🤝",
     "date": "2026-06-01",
     "time": "時間未定",
     "location": "詳細をご確認ください",
@@ -5929,10 +6136,19 @@ export const IMPORTED_DISCORD_EVENTS = [
     "time": "12:15",
     "location": "TBS赤坂ACTシアター",
     "image": "/discord-board/1487647151063564329/1510113578714271874.webp",
-    "capacity": 1,
-    "reservationCapacity": 1,
-    "attendees": 0,
-    "participants": [],
+    "capacity": 8,
+    "reservationCapacity": 8,
+    "attendees": 8,
+    "participants": [
+      "discord-1459502509679837186",
+      "discord-1485772766828564581",
+      "discord-1477873334719873097",
+      "discord-1095677069700112525",
+      "discord-1493455228887105647",
+      "discord-970247635954991124",
+      "discord-1458772421887656090",
+      "discord-709705641928949791"
+    ],
     "applicantIds": [],
     "price": "12,000円",
     "priceMin": 12000,
@@ -5947,7 +6163,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1458772421887656090/0d3f1ef300f4606ca3aec8324dfe17d0.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1510113575815872673",
-    "sourceLabel": "舞台鑑賞部"
+    "sourceLabel": "舞台鑑賞部",
+    "chatId": "discord-1512652591895548086"
   },
   {
     "id": "discord-event-1509919738137022565",
@@ -8383,7 +8600,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "id": "discord-event-1496394051727917086",
     "createdAt": "2026-04-22T06:15:43.589000Z",
     "title": "テルミニ🍷",
-    "description": "@ワイン部🍷\n\nこんにちは\n6期のかれんです🙇🏼‍♀️\n\n違う募集とお店が被ってしまい大変恐縮なのですが、せっかくなので募集をかけようと思います！🥂\n\nカジュアルイタリアンのお店で、お料理も美味しかったですし、ワインもコスパ良しなものから揃えが沢山あって良かったのでまた行きたいなーと思っていました✊🏻\n\n地下のセラーの雰囲気が探検してるみたいな感じで楽しいので、ぜひ皆さん一緒に散策しに行きましょう🫶🏻\n\n皆さんと楽しく乾杯できたらうれしいです✨️🥂✨️\n\n\n※ワイン飲めない人お断りと掲げているお店で、ドリンクはほぼほぼワインのみです。ビールとかはあるみたいですが、ノンアルメニューがあったか定かでないです🫢\n\n< イベント概要 >\n📅 日時：5月29日(金) 19:00〜\n📍 場所：テルミニ（銀座）\n👥 募集人数：2名＋わたし、まさきくん@真妃🍷ワイン部長【🥇GOLD 】 、いおりん@iori【🥈SILVER 】 (計5名)\n💰 予算：10000円前後\n ✅ 募集期日：5月7日(木)23:59まで\n⚠️ キャンセルポリシー：3日前までのご連絡をお願いします。以降はお店のキャンセルポリシーが不明のため、必要な場合はお支払いを頂きます。(代理が見つかった場合不要)\n\n以下お店の情報です。\nテルミニ\n03-6278-7676\n東京都中央区銀座3-11-6 鈴木ビル1F\nhttps://tabelog.com/tokyo/A1301/A130101/13114703/",
+    "description": "@ワイン部🍷\n\nこんにちは\n6期のかれんです🙇🏼‍♀️\n\n違う募集とお店が被ってしまい大変恐縮なのですが、せっかくなので募集をかけようと思います！🥂\n\nカジュアルイタリアンのお店で、お料理も美味しかったですし、ワインもコスパ良しなものから揃えが沢山あって良かったのでまた行きたいなーと思っていました✊🏻\n\n地下のセラーの雰囲気が探検してるみたいな感じで楽しいので、ぜひ皆さん一緒に散策しに行きましょう🫶🏻\n\n皆さんと楽しく乾杯できたらうれしいです✨️🥂✨️\n\n\n※ワイン飲めない人お断りと掲げているお店で、ドリンクはほぼほぼワインのみです。ビールとかはあるみたいですが、ノンアルメニューがあったか定かでないです🫢\n\n< イベント概要 >\n📅 日時：5月29日(金) 19:00〜\n📍 場所：テルミニ（銀座）\n👥 募集人数：2名＋わたし、まさきくん@真妃 、いおりん@iori (計5名)\n💰 予算：10000円前後\n ✅ 募集期日：5月7日(木)23:59まで\n⚠️ キャンセルポリシー：3日前までのご連絡をお願いします。以降はお店のキャンセルポリシーが不明のため、必要な場合はお支払いを頂きます。(代理が見つかった場合不要)\n\n以下お店の情報です。\nテルミニ\n03-6278-7676\n東京都中央区銀座3-11-6 鈴木ビル1F\nhttps://tabelog.com/tokyo/A1301/A130101/13114703/",
     "date": "2026-05-29",
     "time": "19:00",
     "location": "テルミニ（銀座）",
@@ -8644,7 +8861,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "id": "discord-event-1493228799930662962",
     "createdAt": "2026-04-13T12:38:08.753000Z",
     "title": "5月中にパンケーキ巡りをしょう♪",
-    "description": "@スイーツ部🍰\n\n# パンケーキ巡り第一弾！！！\n \n# crisscross\n南青山の人気のパンケーキ屋さん🥞✨\n興味がある人が多いのでは🤤？\n\n5月中に予定を合わせていきましょう♪\n\nご興味のある方はコメントお待ちしております📝\n\n< イベント概要 >\n📅 日時：5月中で調整しましょう❣️\n📍 場所：crisscross\n050-5596-7255\n東京都港区南青山5-7-28 \nhttps://tabelog.com/tokyo/A1306/A130602/13148003/\n👥 募集人数：5名(5名＋ @ゆーき【🥈SILVER 】 ) \n💰 予算：3000〜4000円\n✅ 募集期日：4/19(日) 23:59\n⚠️ キャンセルポリシー：なし",
+    "description": "@スイーツ部🍰\n\n# パンケーキ巡り第一弾！！！\n \n# crisscross\n南青山の人気のパンケーキ屋さん🥞✨\n興味がある人が多いのでは🤤？\n\n5月中に予定を合わせていきましょう♪\n\nご興味のある方はコメントお待ちしております📝\n\n< イベント概要 >\n📅 日時：5月中で調整しましょう❣️\n📍 場所：crisscross\n050-5596-7255\n東京都港区南青山5-7-28 \nhttps://tabelog.com/tokyo/A1306/A130602/13148003/\n👥 募集人数：5名(5名＋ @ゆーき ) \n💰 予算：3000〜4000円\n✅ 募集期日：4/19(日) 23:59\n⚠️ キャンセルポリシー：なし",
     "date": "2026-04-19",
     "time": "23:59",
     "location": "crisscross",
@@ -8895,7 +9112,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "id": "discord-event-1492321928919388271",
     "createdAt": "2026-04-11T00:34:33.855000Z",
     "title": "顔合わせの会",
-    "description": "@スイーツ部🍰\n \n## カフェ キャラット\n\n大変長らくお待たせしました！！\n記念するべきスイーツ部\n第一回の活動となります👏🏻✨\n\nみんなでランチしてデザートまで楽しみましょう🍰\n\n参加出来る方はお声がけください！\n\n※８名でゆっくり出来そうで尚且つ予約して行けるお店を選定しました！\nもし良さそうなお店が有りましたら教えてください🙌🏻\n\n<イベント概要>\n📅 日時：4/29(水) 13:00〜15:00\n📍 場所：カフェ キャラット\n050-5868-0367\n東京都目黒区上目黒1-18-6 ＮＭビル　Ｂ１Ｆ\nhttps://tabelog.com/tokyo/A1317/A131701/13003429/\n👥 募集人数：１名( 1名＋@ゆい【🥇GOLD 】 @Asuka【🥈SILVER 】 @ゆーき【🥈SILVER 】 @なお @佐藤匠馬 @しょうこ🍰スイーツ部長【🥇GOLD 】 @まなか🐰🤍【🥈SILVER 】 計８名)\n 💰 予算：3000〜4000円前後\n✅ 募集期日：4/15(水)23:59\n⚠️ キャンセルポリシー：4/22(水)迄",
+    "description": "@スイーツ部🍰\n \n## カフェ キャラット\n\n大変長らくお待たせしました！！\n記念するべきスイーツ部\n第一回の活動となります👏🏻✨\n\nみんなでランチしてデザートまで楽しみましょう🍰\n\n参加出来る方はお声がけください！\n\n※８名でゆっくり出来そうで尚且つ予約して行けるお店を選定しました！\nもし良さそうなお店が有りましたら教えてください🙌🏻\n\n<イベント概要>\n📅 日時：4/29(水) 13:00〜15:00\n📍 場所：カフェ キャラット\n050-5868-0367\n東京都目黒区上目黒1-18-6 ＮＭビル　Ｂ１Ｆ\nhttps://tabelog.com/tokyo/A1317/A131701/13003429/\n👥 募集人数：１名( 1名＋@ゆい @Asuka @ゆーき @なお @佐藤匠馬 @しょうこ @まなか🐰🤍 計８名)\n 💰 予算：3000〜4000円前後\n✅ 募集期日：4/15(水)23:59\n⚠️ キャンセルポリシー：4/22(水)迄",
     "date": "2026-04-29",
     "time": "13:00",
     "location": "カフェ キャラット",
@@ -9065,7 +9282,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "id": "discord-event-1490669471508205639",
     "createdAt": "2026-04-06T11:08:17.307000Z",
     "title": "寝そべって聴くオーケストラ(chill classic concert)",
-    "description": "@舞台鑑賞部🎭\n 少し先になるのですが、\n「観に行きたい作品📝」チャネルでも挙げていた\n10月10〜12日開催の「寝そべって聴くオーケストラ」の企画を検討中です💭\nhttps://discord.com/channels/1217327152098312245/1488132491201089648/1488529682231070851\n\nハンモックやクッション、リクライニングチェアに座って(寝転がって)、くつろぎながらオーケストラの生演奏を聴くというチルイベントのようです🎻\n\n参考リンク：https://chill-classic.jp/concert/lp/\n\nインスタ投稿：https://www.instagram.com/reel/DJWR3a2Jf44/?igsh=MWhkZG56czB0Nnk2MQ==\n\n実は先行抽選の受付が4/12(日)までのようなので、可能ならそれまでにどのくらいご参加希望の方がいるかを伺いたいと思っています🥺！\n\n< イベント概要 >\n# CHILL CLASSIC CONCERT 2026\n📅 日時： 2026/10/10(土) ～ 2026/10/12(月)\n📍会場：京王アリーナＴＯＫＹＯ　メインアリーナ(東京都)\n💰料金：A席8,800円〜SS席12,800円\n\nご参加希望の方は、【4月11日（土）】までに以下のアンケートより参加できる日時にご回答いただけますと幸いです。\nよろしくお願いします！\nCHILL CLASSIC CONCERT - 公演情報|CHILL CLASSIC CONCERT-チル...\nCHILL CLASSIC CONCERTについて開催日時・場所、出演者などの情報を記載しています。\n☝️他のデートはこちら\n\n今回は『横浜 唯一無二の新感覚コンサート』をご紹介しました‼️\n参考になったら【保存ボタン】をタップ👆\n\n@sou_dateplan←このアカウントでは、\n都内の駅ごとにデートスポットを発信していくので【フォロー】もぜひお願いしま...",
+    "description": "@舞台鑑賞部🎭\n 少し先になるのですが、\n「観に行きたい作品📝」チャネルでも挙げていた\n10月10〜12日開催の「寝そべって聴くオーケストラ」の企画を検討中です💭\nhttps://discord.com/channels/1217327152098312245/1488132491201089648/1488529682231070851\n\nハンモックやクッション、リクライニングチェアに座って(寝転がって)、くつろぎながらオーケストラの生演奏を聴くというチルイベントのようです🎻\n\n参考リンク：https://chill-classic.jp/concert/lp/\n\nインスタ投稿：https://www.instagram.com/reel/DJWR3a2Jf44/?igsh=MWhkZG56czB0Nnk2MQ==\n\n実は先行抽選の受付が4/12(日)までのようなので、可能ならそれまでにどのくらいご参加希望の方がいるかを伺いたいと思っています🥺！\n\n< イベント概要 >\n# CHILL CLASSIC CONCERT 2026\n📅 日時： 2026/10/10(土) ～ 2026/10/12(月)\n📍会場：京王アリーナＴＯＫＹＯ　メインアリーナ(東京都)\n💰料金：A席8,800円〜SS席12,800円\n\nご参加希望の方は、【4月11日（土）】までに以下のアンケートより参加できる日時にご回答いただけますと幸いです。\nよろしくお願いします！",
     "date": "2026-10-10",
     "time": "時間未定",
     "location": "京王アリーナＴＯＫＹＯ　メインアリーナ(東京都)",
@@ -9875,7 +10092,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "id": "discord-event-1486224202548772966",
     "createdAt": "2026-03-25T04:44:22.598000Z",
     "title": "🍯 くまのプーさん展",
-    "description": "@everyone\n\n@Aki【🥈SILVER 】 さんが自己紹介に書いていらっしゃったのですが、会期が短いので代わりに募集させていただきます！\n参加希望の方がいれば是非🐻\n\n（ @Aki【🥈SILVER 】 さんお手数ですが、可能であればご自身が行ける日程でアンケート作成↓していただければと思います！）\n\nhttps://www.matsuyaginza.com/jp/ginza/events/exhibition/100-shunenkinen-kuma-no-pu-san/20260217?srsltid=AfmBOorByqTwy4PgQtKjUa18VrY1cg8dEXOANnPNPZvjNzLkOTI1qzRL",
+    "description": "@everyone\n\n@Aki🐈‍⬛ さんが自己紹介に書いていらっしゃったのですが、会期が短いので代わりに募集させていただきます！\n参加希望の方がいれば是非🐻\n\n（ @Aki🐈‍⬛ さんお手数ですが、可能であればご自身が行ける日程でアンケート作成↓していただければと思います！）\n\nhttps://www.matsuyaginza.com/jp/ginza/events/exhibition/100-shunenkinen-kuma-no-pu-san/20260217?srsltid=AfmBOorByqTwy4PgQtKjUa18VrY1cg8dEXOANnPNPZvjNzLkOTI1qzRL",
     "date": "2026-04-13",
     "time": "時間未定",
     "location": "詳細をご確認ください",
