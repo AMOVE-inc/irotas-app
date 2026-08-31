@@ -34,6 +34,10 @@ export default function TabLayout() {
         headerShown: false,
         tabBarButton: HapticTab,
         tabBarStyle: {
+          position: "absolute",
+          left: 0,
+          right: 0,
+          bottom: isMobileWeb ? 0 : undefined,
           marginHorizontal: 12,
           marginBottom: tabBarBottomMargin,
           paddingTop: isMobileWeb ? 7 : 8,

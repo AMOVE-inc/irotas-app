@@ -36,7 +36,9 @@ describe("server event automation", () => {
   it("serves the home feed from shared server data", () => {
     expect(automation).toContain('/api/home/activities');
     expect(automation).toContain("FROM board_threads");
-    expect(automation).toContain("FROM chat_messages");
+    expect(automation).toContain("id LIKE 'discord-event-%'");
+    expect(automation).toContain("t.id LIKE 'discord-board-%'");
+    expect(automation).toContain(".slice(0, 10)");
     expect(home).toContain("Api.getHomeActivities()");
   });
 

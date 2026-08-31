@@ -324,7 +324,7 @@ function SelfIntroductionContent({ thread, compact = false }: { thread: BoardThr
   );
 }
 
-function ThreadCard({ thread, onPress, onEdit, onChangeRecruitment, unreadCount = 0, mentionCount = 0 }: { thread: BoardThread; onPress: () => void; onEdit?: () => void; onChangeRecruitment?: () => void; unreadCount?: number; mentionCount?: number }) {
+function ThreadCard({ thread, onPress, onEdit, onDelete, onPin, onChangeRecruitment, unreadCount = 0, mentionCount = 0 }: { thread: BoardThread; onPress: () => void; onEdit?: () => void; onDelete?: () => void; onPin?: () => void; onChangeRecruitment?: () => void; unreadCount?: number; mentionCount?: number }) {
   const colors = useColors();
   const router = useRouter();
   const isParticipant = thread.recruitParticipants?.includes(CURRENT_USER.id);
@@ -362,7 +362,16 @@ function ThreadCard({ thread, onPress, onEdit, onChangeRecruitment, unreadCount 
   return (
     <Pressable
       onPress={onPress}
-      onLongPress={() => { void Clipboard.setStringAsync(`https://irotas-app-20260721.k1998915n.chatgpt.site/board?category=${encodeURIComponent(thread.category)}&view=threads&thread=${encodeURIComponent(thread.id)}`); Alert.alert("リンクをコピーしました", "このスレへのリンクを共有できます。"); }}
+      onLongPress={() => {
+        const copyLink = () => { void Clipboard.setStringAsync(`https://irotas-app-20260721.k1998915n.chatgpt.site/board?category=${encodeURIComponent(thread.category)}&view=threads&thread=${encodeURIComponent(thread.id)}`); };
+        Alert.alert(thread.title, "操作を選択してください", [
+          ...(onEdit ? [{ text: "投稿を編集", onPress: onEdit }] : []),
+          ...(onDelete ? [{ text: "投稿を削除", style: "destructive" as const, onPress: onDelete }] : []),
+          ...(onPin ? [{ text: pinned ? "ピン留めを解除" : "投稿をピン留め", onPress: onPin }] : []),
+          { text: "リンクをコピー", onPress: copyLink },
+          { text: "キャンセル", style: "cancel" },
+        ]);
+      }}
       delayLongPress={450}
       style={{
         backgroundColor: visuallyClosed ? "#F1F1F3" : colors.surface,
@@ -1193,7 +1202,14 @@ function ThreadDetailModal({
             </Text>
             {comments.map((comment) => (
               <View key={comment.id} style={{ marginBottom: 14 }}>
-                <Pressable delayLongPress={350} onLongPress={() => { if (comment.author.id === CURRENT_USER.id || canModerateAll) { setEditingCommentId(comment.id); setEditingCommentText(comment.content); } }} style={{ flexDirection: "row", alignItems: "center", marginBottom: 4 }}>
+                <Pressable delayLongPress={350} onLongPress={() => {
+                  const canManageComment = comment.author.id === viewerMemberId || canModerateAll;
+                  Alert.alert("コメント", "操作を選択してください", [
+                    ...(canManageComment ? [{ text: "投稿を編集", onPress: () => { setEditingCommentId(comment.id); setEditingCommentText(comment.content); } }, { text: "投稿を削除", style: "destructive" as const, onPress: () => handleDeleteComment(comment.id) }] : []),
+                    { text: "テキストをコピー", onPress: () => { void Clipboard.setStringAsync(comment.content); } },
+                    { text: "キャンセル", style: "cancel" },
+                  ]);
+                }} style={{ flexDirection: "row", alignItems: "center", marginBottom: 4 }}>
                   <Image
                     source={comment.author.avatar}
                     style={{ width: 24, height: 24, borderRadius: 12 }}
@@ -2476,6 +2492,18 @@ export default function BoardScreen() {
     setSelectedThread((current) => current?.id === updated.id ? updated : current);
     if (!thread.shared) void saveBoardThreadEdit(updated).catch(() => Alert.alert("保存できませんでした", "通信環境を確認して、もう一度お試しください。"));
   };
+  const deleteThread = async (thread: BoardThread) => {
+    try {
+      if (thread.shared) await Api.deleteSharedBoardThread(thread.id);
+      await deleteBoardThread(thread.id);
+      setDeletedThreadIds((current) => current.includes(thread.id) ? current : [...current, thread.id]);
+      if (selectedThread?.id === thread.id) setSelectedThread(null);
+      router.setParams({ thread: "" });
+      Alert.alert("投稿を削除しました");
+    } catch (error) {
+      Alert.alert("削除できませんでした", error instanceof Error ? error.message : "もう一度お試しください。");
+    }
+  };
   const promptRecruitmentStatus = (thread: BoardThread) => {
     if (!canChangeRecruitment(thread) && !canPinThread(thread)) return;
     Alert.alert("投稿の管理", "変更する項目を選択してください。", [
@@ -2636,6 +2664,8 @@ export default function BoardScreen() {
             mentionCount={mentionCount}
             onPress={() => { markThreadRead(item.id); setSelectedThread(item); router.setParams({ thread: item.id }); }}
             onEdit={item.author.id === viewerMemberId || userCanModerateAll ? () => setEditingThread(item) : undefined}
+            onDelete={item.author.id === viewerMemberId || userCanModerateAll ? () => Alert.alert("投稿を削除しますか？", "削除後は元に戻せません。", [{ text: "キャンセル", style: "cancel" }, { text: "削除", style: "destructive", onPress: () => { void deleteThread(item); } }]) : undefined}
+            onPin={canPinThread(item) || userCanModerateAll ? () => { void updateThreadManagement(item, { isRecruiting: item.isRecruiting, recruitmentStatus: item.recruitmentStatus, isPinned: !item.isPinned }); } : undefined}
             onChangeRecruitment={canChangeRecruitment(item) || canPinThread(item) ? () => promptRecruitmentStatus(item) : undefined}
           />;
           })()
@@ -2687,7 +2717,7 @@ export default function BoardScreen() {
             }}
             onEditThread={selectedThread.author.id === viewerMemberId || userCanModerateAll ? () => { setEditingThread(selectedThread); setSelectedThread(null); router.setParams({ thread: "" }); } : undefined}
             onChangeRecruitment={canChangeRecruitment(selectedThread) || canPinThread(selectedThread) ? () => promptRecruitmentStatus(selectedThread) : undefined}
-            canRegisterEvent={selectedThread.category === "free-chat" || Boolean(clubForThread(selectedThread) && canViewerAccessClubContent(clubForThread(selectedThread)!, authUser?.memberId, CURRENT_USER.id, userIsAdmin))}
+            canRegisterEvent={selectedThread.author.id === viewerMemberId}
             applicationClub={applicationClubForThread(selectedThread)}
             canModerateAll={userCanModerateAll}
           />

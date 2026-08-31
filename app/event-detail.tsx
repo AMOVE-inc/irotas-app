@@ -35,6 +35,7 @@ import {
   Platform,
   Pressable,
   ScrollView,
+  Share,
   Switch,
   Text,
   TextInput,
@@ -557,6 +558,9 @@ export default function EventDetailScreen() {
         </View>
         <Pressable onPress={() => { const favorite = event.isFavorite ?? favoriteEventIds.includes(event.id); if (event.viewerMemberId) { void Api.setEventFavorite(event.id, !favorite).then(() => setEvent({ ...event, isFavorite: !favorite })).catch((error) => Alert.alert("更新できませんでした", error instanceof Error ? error.message : "もう一度お試しください。")); } else { void toggleEventFavoriteWithNotifications(event, CURRENT_USER.id); } if (!favorite) void recordActivityEvent({ userId: CURRENT_USER.id, eventName: "event_favorited", entityType: "event", entityId: event.id }); }} accessibilityLabel={(event.isFavorite ?? favoriteEventIds.includes(event.id)) ? "お気に入りから削除" : "お気に入りに追加"} style={{ position: "absolute", top: 56, right: 16, width: 38, height: 38, borderRadius: 19, backgroundColor: "rgba(0,0,0,0.5)", alignItems: "center", justifyContent: "center" }}>
           <IconSymbol name={(event.isFavorite ?? favoriteEventIds.includes(event.id)) ? "heart.fill" : "heart"} size={20} color={(event.isFavorite ?? favoriteEventIds.includes(event.id)) ? "#F59AB9" : "#FFF"} />
+        </Pressable>
+        <Pressable onPress={() => void Share.share({ title: event.title, message: `${event.title}\nhttps://irotas-app-20260721.k1998915n.chatgpt.site/event-detail?id=${encodeURIComponent(event.id)}` })} accessibilityLabel="イベントリンクをコピー・共有" style={{ position: "absolute", top: 100, right: 16, width: 38, height: 38, borderRadius: 19, backgroundColor: "rgba(0,0,0,0.5)", alignItems: "center", justifyContent: "center" }}>
+          <IconSymbol name="square.and.arrow.up" size={19} color="#FFF" />
         </Pressable>
       </View>
 

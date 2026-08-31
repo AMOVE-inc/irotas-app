@@ -946,7 +946,7 @@ function ClubDetailModal({
   };
 
   // 部員でない場合は申請画面のみ表示
-  if ((!isMember && !canManageMembers) || previewApplication) {
+  if (!isMember || previewApplication) {
     return (
       <View style={{ flex: 1, backgroundColor: colors.background }}>
         <View
@@ -971,7 +971,6 @@ function ClubDetailModal({
           contentContainerStyle={{ alignItems: "center", padding: 24, paddingBottom: 48 }}
           keyboardShouldPersistTaps="handled"
         >
-          {previewApplication ? <View style={{ width: "100%", backgroundColor: "#EAF3FA", borderRadius: 12, padding: 12, marginBottom: 16 }}><Text style={{ fontSize: 12, fontWeight: "800", color: "#3E6F97", textAlign: "center" }}>管理者・部長向けの申請画面プレビューです</Text></View> : null}
           <Text style={{ fontSize: 48, marginBottom: 16 }}>{club.icon}</Text>
           <Text style={{ fontSize: 22, fontWeight: "800", color: colors.foreground, marginBottom: 8 }}>
             {club.name}
@@ -979,6 +978,7 @@ function ClubDetailModal({
           <Text style={{ fontSize: 14, color: colors.muted, textAlign: "center", marginBottom: 8 }}>
             部長: {leader?.name ?? club.leaderName ?? "未設定"} · {club.memberIds.length}人のメンバー
           </Text>
+          {leader ? <Pressable onPress={() => { onClose(); router.push({ pathname: "/member-profile", params: { id: leader.id } }); }} style={{ minHeight: 42, paddingHorizontal: 18, borderRadius: 12, alignItems: "center", justifyContent: "center", backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border }}><Text style={{ fontSize: 13, fontWeight: "800", color: colors.foreground }}>部長を見る</Text></Pressable> : null}
           <Pressable
             onPress={() => setShowClubOverview(true)}
             accessibilityRole="button"

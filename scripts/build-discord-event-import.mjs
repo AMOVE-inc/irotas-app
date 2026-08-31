@@ -53,8 +53,16 @@ function priceRange(value) {
 
 function dateFrom(thread) {
   const text = `${thread.title}\n${thread.content}`;
+  const explicit = text.match(/(?:^|[^0-9])(20\d{2})\s*[年\/-]\s*(\d{1,2})\s*[月\/-]\s*(\d{1,2})(?:\s*日)?/);
+  if (explicit) return `${explicit[1]}-${String(explicit[2]).padStart(2, "0")}-${String(explicit[3]).padStart(2, "0")}`;
   const match = text.match(/(?:^|[^0-9])(\d{1,2})\s*[\/月]\s*(\d{1,2})(?:\s*日)?/);
-  return match ? `2026-${String(match[1]).padStart(2, "0")}-${String(match[2]).padStart(2, "0")}` : thread.createdAt.slice(0, 10);
+  if (!match) return thread.createdAt.slice(0, 10);
+  const created = new Date(thread.createdAt);
+  const month = Number(match[1]);
+  let year = created.getUTCFullYear();
+  // 年末に翌年イベントを告知した場合だけ年を繰り上げる。過去投稿を一律2026年にしない。
+  if (created.getUTCMonth() + 1 - month >= 7) year += 1;
+  return `${year}-${String(month).padStart(2, "0")}-${String(match[2]).padStart(2, "0")}`;
 }
 
 function timeFrom(thread) {

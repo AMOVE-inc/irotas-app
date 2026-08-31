@@ -1,20 +1,21 @@
 import { ScreenContainer } from "@/components/screen-container";
 import { NewMemberMark } from "@/components/new-member-mark";
 import { BrandLogo } from "@/components/brand-logo";
+import { EventImage } from "@/components/event-image";
+import { MemberRankBadge } from "@/components/member-rank-badge";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import {
   ANNOUNCEMENTS,
-  TIMELINE_POSTS,
   RANK_COLORS,
   RANK_LABELS,
   getTodayEvents,
   EVENTS,
   CURRENT_USER,
   DEFAULT_AVATAR,
-  type TimelinePost,
   type Announcement,
   type Event,
   type BoardThread,
+  type TimelinePost,
 } from "@/constants/mock-data";
 import { useColors } from "@/hooks/use-colors";
 import { Image } from "expo-image";
@@ -208,7 +209,7 @@ function ActivityCard({ activity }: { activity: HomeActivity }) {
   const timeLabel = elapsed < 3_600_000 ? "たった今" : elapsed < 86_400_000 ? `${Math.floor(elapsed / 3_600_000)}時間前` : `${Math.floor(elapsed / 86_400_000)}日前`;
   return <Pressable onPress={() => router.push({ pathname: activity.route as any, params: { ...activity.params, ...(activity.kind === "meal_report" ? { fromHome: "1" } : {}) } } as any)} style={{ flexDirection: "row", paddingHorizontal: 16, paddingVertical: 13, borderBottomWidth: 0.5, borderBottomColor: colors.border }}>
     {activity.kind === "meal_report" ? <Image source={activity.authorAvatar ? (typeof activity.authorAvatar === "string" ? { uri: activity.authorAvatar } : activity.authorAvatar) : DEFAULT_AVATAR} style={{ width: 42, height: 42, borderRadius: 21 }} contentFit="cover" /> : <View style={{ width: 42, height: 42, borderRadius: 21, backgroundColor: `${presentation.color}18`, alignItems: "center", justifyContent: "center" }}><IconSymbol name={presentation.icon as any} size={20} color={presentation.color} /></View>}
-    <View style={{ flex: 1, marginLeft: 11 }}><View style={{ flexDirection: "row", alignItems: "center" }}>{activity.kind === "meal_report" ? <Text style={{ flex: 1, fontSize: 12, fontWeight: "900", color: colors.foreground }}>{activity.authorName ?? "メンバー"}<Text style={{ fontSize: 10, fontWeight: "600", color: colors.muted }}>　{[activity.authorMemberTerm, activity.authorRank ? RANK_LABELS[activity.authorRank as keyof typeof RANK_LABELS] ?? activity.authorRank : ""].filter(Boolean).join("・")}</Text></Text> : <Text style={{ flex: 1, fontSize: 11, fontWeight: "800", color: presentation.color }}>{presentation.label}</Text>}<Text style={{ fontSize: 10, color: colors.muted }}>{timeLabel}</Text></View><Text numberOfLines={2} style={{ fontSize: 14, fontWeight: "800", color: colors.foreground, marginTop: 3 }}>{activity.title}</Text><Text numberOfLines={2} style={{ fontSize: 12, lineHeight: 17, color: colors.muted, marginTop: 3 }}>{activity.description}</Text>{activityImages.length ? <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 4, marginTop: 9, overflow: "hidden", borderRadius: 12 }}>{activityImages.slice(0, 4).map((image, index) => <View key={index} style={{ width: activityImages.length === 1 ? "100%" : "49%", height: activityImages.length === 1 ? 190 : 104, position: "relative" }}><Image source={typeof image === "string" ? { uri: image } : image} style={{ width: "100%", height: "100%" }} contentFit="cover" />{index === 3 && activityImages.length > 4 ? <View style={{ position: "absolute", inset: 0, backgroundColor: "rgba(0,0,0,0.42)", alignItems: "center", justifyContent: "center" }}><Text style={{ color: "#FFF", fontSize: 20, fontWeight: "900" }}>+{activityImages.length - 4}</Text></View> : null}</View>)}</View> : null}{activity.kind === "meal_report" ? <View style={{ flexDirection: "row", alignItems: "center", marginTop: 9 }}><IconSymbol name="bubble.left.fill" size={15} color={colors.muted} /><Text style={{ marginLeft: 5, fontSize: 11, fontWeight: "700", color: colors.muted }}>{activity.commentCount ?? 0}</Text></View> : null}</View>
+    <View style={{ flex: 1, marginLeft: 11 }}><View style={{ flexDirection: "row", alignItems: "center" }}>{activity.kind === "meal_report" ? <><Text style={{ fontSize: 12, fontWeight: "900", color: colors.foreground }}>{activity.authorName ?? "メンバー"}</Text>{activity.authorRank ? <MemberRankBadge rank={activity.authorRank as keyof typeof RANK_LABELS} compact /> : null}<Text style={{ flex: 1, fontSize: 10, fontWeight: "600", color: colors.muted }}>　{activity.authorMemberTerm ?? ""}</Text></> : <Text style={{ flex: 1, fontSize: 11, fontWeight: "800", color: presentation.color }}>{presentation.label}</Text>}<Text style={{ fontSize: 10, color: colors.muted }}>{timeLabel}</Text></View><Text numberOfLines={2} style={{ fontSize: 14, fontWeight: "800", color: colors.foreground, marginTop: 3 }}>{activity.title}</Text><Text numberOfLines={2} style={{ fontSize: 12, lineHeight: 17, color: colors.muted, marginTop: 3 }}>{activity.description}</Text>{activityImages.length ? <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 4, marginTop: 9, overflow: "hidden", borderRadius: 12 }}>{activityImages.slice(0, 4).map((image, index) => <View key={index} style={{ width: activityImages.length === 1 ? "100%" : "49%", height: activityImages.length === 1 ? 190 : 104, position: "relative" }}><Image source={typeof image === "string" ? { uri: image } : image} style={{ width: "100%", height: "100%" }} contentFit="cover" />{index === 3 && activityImages.length > 4 ? <View style={{ position: "absolute", inset: 0, backgroundColor: "rgba(0,0,0,0.42)", alignItems: "center", justifyContent: "center" }}><Text style={{ color: "#FFF", fontSize: 20, fontWeight: "900" }}>+{activityImages.length - 4}</Text></View> : null}</View>)}</View> : null}{activity.kind === "meal_report" ? <View style={{ flexDirection: "row", alignItems: "center", marginTop: 9 }}><IconSymbol name="bubble.left.fill" size={15} color={colors.muted} /><Text style={{ marginLeft: 5, fontSize: 11, fontWeight: "700", color: colors.muted }}>{activity.commentCount ?? 0}</Text></View> : null}</View>
     <IconSymbol name="chevron.right" size={15} color={colors.muted} style={{ alignSelf: "center", marginLeft: 5 }} />
   </Pressable>;
 }
@@ -247,12 +248,7 @@ function TodayEventsSection({
               overflow: "hidden",
             }}
           >
-            <Image
-              source={event.image}
-              style={{ width: 220, height: 100 }}
-              contentFit="cover"
-              transition={200}
-            />
+            <EventImage event={event} style={{ width: 220, height: 100 }} />
             <View style={{ padding: 10 }}>
               <Text
                 style={{ fontSize: 13, fontWeight: "700", color: colors.foreground, marginBottom: 4 }}
@@ -355,6 +351,8 @@ function RankBadge({ rank, role }: { rank: string; role?: string }) {
   );
 }
 
+// Kept temporarily for compatibility with locally restored legacy timeline posts.
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function TimelinePostCard({ post }: { post: TimelinePost }) {
   const colors = useColors();
   const router = useRouter();
@@ -608,10 +606,10 @@ export default function HomeScreen() {
     setTimeout(() => setRefreshing(false), 500);
   }, [loadHomeContent]);
 
-  const timelineItems = useMemo(() => [
-    ...activities.map((activity) => ({ type: "activity" as const, id: activity.id, createdAt: activity.createdAt, activity })),
-    ...TIMELINE_POSTS.map((post) => ({ type: "post" as const, id: post.id, createdAt: post.createdAt, post })),
-  ].sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt)), [activities]);
+  const timelineItems = useMemo(() => activities
+    .filter((activity) => activity.id.startsWith("event:discord-event-") || activity.id.startsWith("thread:discord-board-") || activity.id.startsWith("comment:discord-"))
+    .sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt))
+    .slice(0, 10), [activities]);
   const recommendedEvents = useMemo(() => recommendEvents(getAllEvents(EVENTS), preferences, CURRENT_USER.id), [preferences]);
   useEffect(() => { if (!aiConsents.eventRecommendation) return; recommendedEvents.forEach(({ event }) => { void recordActivityEvent({ userId: CURRENT_USER.id, eventName: "recommendation_shown", entityType: "recommendation", entityId: event.id, dedupeKey: `${CURRENT_USER.id}:recommendation_shown:${event.id}:${new Date().toISOString().slice(0, 10)}` }); }); }, [aiConsents.eventRecommendation, recommendedEvents]);
 
@@ -658,7 +656,7 @@ export default function HomeScreen() {
       <FlatList
         data={timelineItems}
         keyExtractor={(item) => item.id}
-        renderItem={({ item }) => item.type === "activity" ? <ActivityCard activity={item.activity} /> : <TimelinePostCard post={item.post} />}
+        renderItem={({ item }) => <ActivityCard activity={item} />}
         ListHeaderComponent={ListHeader}
         refreshControl={
           <RefreshControl

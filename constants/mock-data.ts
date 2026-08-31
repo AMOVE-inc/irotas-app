@@ -504,41 +504,7 @@ export const ANNOUNCEMENTS: Announcement[] = [
   { id: "a3", title: "関西支部イベント年間予定を公開しました", content: "2026年度の関西支部イベントスケジュールをご確認ください。", createdAt: "2026-03-10" },
 ];
 
-export const TIMELINE_POSTS: TimelinePost[] = [
-  {
-    id: "p1", author: MEMBERS[1],
-    content: "昨日行った渋谷の焼肉屋さんが最高でした！A5ランクの和牛が口の中でとろけました🥩✨",
-    images: [
-      "https://images.unsplash.com/photo-1544025162-d76694265947?w=400",
-      "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=400",
-      "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400",
-    ],
-    likes: 24, comments: 8, liked: false, createdAt: "2026-03-23T18:30:00",
-  },
-  {
-    id: "p2", author: MEMBERS[3],
-    content: "今日のランチは銀座のお寿司屋さん。ネタが新鮮で大満足でした🍣",
-    images: ["https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=400"],
-    likes: 18, comments: 5, liked: true, createdAt: "2026-03-23T12:00:00",
-  },
-  {
-    id: "p3", author: MEMBERS[2],
-    content: "大阪の新しいラーメン屋さんを開拓！濃厚な豚骨スープが絶品でした🍜",
-    images: ["https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=400"],
-    likes: 31, comments: 12, liked: false, createdAt: "2026-03-22T20:15:00",
-  },
-  {
-    id: "p4", author: MEMBERS[4],
-    content: "京都の隠れ家カフェでまったり☕ 抹茶パフェが絶品でした。",
-    images: ["https://images.unsplash.com/photo-1563805042-7684c019e1cb?w=400"],
-    likes: 15, comments: 3, liked: false, createdAt: "2026-03-22T15:00:00",
-  },
-  {
-    id: "p5", author: MEMBERS[5],
-    content: "先週のIRO＋ウェルカムパーティー、最高に楽しかった！新メンバーの皆さんよろしくお願いします🎉",
-    images: [], likes: 42, comments: 15, liked: true, createdAt: "2026-03-21T22:00:00",
-  },
-];
+export const TIMELINE_POSTS: TimelinePost[] = [];
 
 const today = new Date().toISOString().split("T")[0]; // 今日の日付
 

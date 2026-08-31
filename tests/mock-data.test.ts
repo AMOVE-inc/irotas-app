@@ -23,16 +23,8 @@ describe("Mock Data Integrity", () => {
     }
   });
 
-  it("should have timeline posts with required fields", () => {
-    expect(TIMELINE_POSTS.length).toBeGreaterThan(0);
-    for (const p of TIMELINE_POSTS) {
-      expect(p.id).toBeDefined();
-      expect(p.author).toBeDefined();
-      expect(p.author.name).toBeDefined();
-      expect(p.content).toBeDefined();
-      expect(p.likes).toBeGreaterThanOrEqual(0);
-      expect(p.comments).toBeGreaterThanOrEqual(0);
-    }
+  it("does not expose timeline fixture posts", () => {
+    expect(TIMELINE_POSTS).toEqual([]);
   });
 
   it("should have events with required fields", () => {
