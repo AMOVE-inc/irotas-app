@@ -1,4 +1,5 @@
 import { ScreenContainer } from "@/components/screen-container";
+import { MemberRankBadge, MemberRoleBadge, stripRankFromName } from "@/components/member-rank-badge";
 import { NewMemberMark } from "@/components/new-member-mark";
 import { MentionSuggestions, MentionText } from "@/components/mention-ui";
 import { IconSymbol } from "@/components/ui/icon-symbol";
@@ -806,17 +807,15 @@ export default function ChatScreen() {
                     style={{ flexDirection: "row", alignItems: "center", flex: 1 }}
                   >
                     <Image
-                      source={member?.avatar ?? DEFAULT_AVATAR}
+                      source={typeof sharedMember?.profile?.avatarUrl === "string" ? { uri: sharedMember.profile.avatarUrl } : member?.avatar ?? DEFAULT_AVATAR}
                       style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: colors.surface }}
                       contentFit="cover"
                     />
                     <View style={{ marginLeft: 12, flex: 1 }}>
-                      <Text style={{ fontSize: 15, fontWeight: "600", color: colors.foreground }}>
-                        {memberName}{isCurrentUser ? " (あなた)" : ""}
-                      </Text>
-                      <Text style={{ fontSize: 12, color: colors.muted, marginTop: 1 }}>
-                        {sharedMember ? (sharedMember.memberTerm ?? "会員") : `${member?.branch} ・ ${member?.role === "admin" ? "管理者" : member?.role === "operator" ? "運営メンバー" : member?.rank}`}
-                      </Text>
+                      <View style={{ flexDirection: "row", alignItems: "center", flexWrap: "wrap" }}><Text style={{ fontSize: 15, fontWeight: "600", color: colors.foreground }}>
+                        {stripRankFromName(memberName)}{isCurrentUser ? " (あなた)" : ""}
+                      </Text><MemberRankBadge rank={(sharedMember?.memberRank ?? member?.rank ?? "regular") as any} name={memberName} compact /><MemberRoleBadge name={memberName} role={sharedMember?.accessRole ?? member?.role} compact /></View>
+                      {sharedMember?.memberTerm ? <Text style={{ fontSize: 12, color: colors.muted, marginTop: 1 }}>{sharedMember.memberTerm}</Text> : null}
                     </View>
                     <IconSymbol name="chevron.right" size={16} color={colors.muted} />
                   </TouchableOpacity>

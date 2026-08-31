@@ -35,6 +35,7 @@ import { Image } from "expo-image";
 import { EventImage } from "@/components/event-image";
 import {
   MemberRankBadge,
+  MemberRoleBadge,
   stripRankFromName,
 } from "@/components/member-rank-badge";
 import { useFocusEffect, useRouter } from "expo-router";
@@ -834,9 +835,8 @@ function EventCard({
                       event.organizerName ?? organizer?.name ?? "メンバー",
                     )}
               </Text>
-              {event.eventType !== "official" && event.organizerRank ? (
-                <MemberRankBadge rank={event.organizerRank} name={event.organizerName} compact />
-              ) : null}
+              {event.eventType !== "official" && event.organizerRank ? <MemberRankBadge rank={event.organizerRank} name={event.organizerName} compact /> : null}
+              <MemberRoleBadge name={event.organizerName} role={event.eventType === "official" ? "operator" : organizer?.role} compact />
               {event.eventType !== "official" && organizer ? (
                 <NewMemberMark member={organizer} size={11} />
               ) : null}
@@ -947,8 +947,12 @@ export default function EventsScreen() {
     try {
       const databaseEvents = await Api.getEvents();
       const databaseIds = new Set(databaseEvents.map((event) => event.id));
+      const importedById = new Map(getAllEvents(EVENTS).map((event) => [event.id, event]));
       setAllEvents([
-        ...databaseEvents,
+        ...databaseEvents.map((event) => {
+          const imported = importedById.get(event.id);
+          return imported ? { ...event, organizerProfileId: event.organizerProfileId || imported.organizerProfileId, organizerName: imported.organizerName || event.organizerName, organizerAvatar: imported.organizerAvatar || event.organizerAvatar, organizerRank: imported.organizerRank || event.organizerRank } : event;
+        }),
         ...getAllEvents(EVENTS).filter((event) => !databaseIds.has(event.id)),
       ]);
     } catch {

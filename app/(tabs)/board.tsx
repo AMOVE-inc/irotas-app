@@ -1,6 +1,6 @@
 import { ScreenContainer } from "@/components/screen-container";
 import { NewMemberMark } from "@/components/new-member-mark";
-import { stripRankFromName } from "@/components/member-rank-badge";
+import { MemberRankBadge, MemberRoleBadge, stripRankFromName } from "@/components/member-rank-badge";
 import { MentionSuggestions, MentionText } from "@/components/mention-ui";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import {
@@ -8,8 +8,6 @@ import {
   BOARD_CATEGORIES,
   BOARD_HOME_ORDER,
   BOARD_COMMENTS,
-  RANK_COLORS,
-  RANK_LABELS,
   CURRENT_USER,
   MEMBERS,
   CLUBS,
@@ -90,7 +88,6 @@ async function uploadBoardImages(images?: BoardImage[]) {
     return uploaded.imageUrl;
   }));
 }
-const isOperatorMember = (member: typeof CURRENT_USER) => member.role === "admin" || member.role === "operator" || /IRO[+＋].*運営|【運営】/.test(member.name);
 const normalizedAdviceValue = (value: string) => /^(未設定|特になし|なし|未選択)$/i.test(value.trim()) ? "指定なし" : value;
 
 function mealReportImpression(thread: BoardThread): string | undefined {
@@ -128,11 +125,7 @@ function mealReportImpression(thread: BoardThread): string | undefined {
 }
 
 function OperatorOrRankBadge({ member }: { member: typeof CURRENT_USER }) {
-  if (member.name.includes("IRO+代表")) return <View style={{ backgroundColor: "#D93636", borderRadius: 8, paddingHorizontal: 7, paddingVertical: 2, marginLeft: 6 }}><Text style={{ fontSize: 9, fontWeight: "900", color: "#FFF" }}>管理者</Text></View>;
-  const operator = isOperatorMember(member);
-  const platinum = member.rank === "platinum";
-  if (operator) return <View style={{ backgroundColor: "#D93636", borderRadius: 8, paddingHorizontal: 7, paddingVertical: 2, marginLeft: 6 }}><Text style={{ fontSize: 9, fontWeight: "900", color: "#FFF" }}>運営メンバー</Text></View>;
-  return <View style={{ backgroundColor: platinum ? "#171717" : `${RANK_COLORS[member.rank]}20`, borderWidth: platinum ? 1 : 0, borderColor: "#D4AF37", borderRadius: 8, paddingHorizontal: 6, paddingVertical: 1, marginLeft: 6 }}><Text style={{ fontSize: 9, fontWeight: "700", color: platinum ? "#D4AF37" : RANK_COLORS[member.rank] }}>{RANK_LABELS[member.rank]}</Text></View>;
+  return <><MemberRankBadge rank={member.rank} name={member.name} compact /><MemberRoleBadge name={member.name} role={member.role} compact /></>;
 }
 
 function PollCard({ ownerKey, poll }: { ownerKey: string; poll: BoardPoll }) {
@@ -175,10 +168,10 @@ function LinkifiedText({ content }: { content: string }) {
   return <MentionText content={content} groups={BOARD_MENTION_GROUPS} />;
 }
 
-function RecruitmentStatusBadge({ status, onLongPress }: { status: BoardRecruitmentStatus; onLongPress?: () => void }) {
+function RecruitmentStatusBadge({ status }: { status: BoardRecruitmentStatus }) {
   if (status === "none") return null;
   const recruiting = status === "open";
-  return <Pressable disabled={!onLongPress} onLongPress={onLongPress} delayLongPress={450} accessibilityLabel={recruiting ? "募集中。長押しで状態を変更" : "募集終了。長押しで状態を変更"} style={{ marginRight: 9, borderRadius: 10, paddingHorizontal: 9, paddingVertical: 6, backgroundColor: recruiting ? "#DDF3E3" : "#DADADD" }}><Text style={{ fontSize: 11, fontWeight: "900", color: recruiting ? "#247A42" : "#66666B" }}>{recruiting ? "募集中" : "募集終了"}</Text></Pressable>;
+  return <View style={{ marginRight: 9, borderRadius: 10, paddingHorizontal: 9, paddingVertical: 6, backgroundColor: recruiting ? "#DDF3E3" : "#DADADD" }}><Text style={{ fontSize: 11, fontWeight: "900", color: recruiting ? "#247A42" : "#66666B" }}>{recruiting ? "募集中" : "募集終了"}</Text></View>;
 }
 
 
@@ -381,7 +374,7 @@ function ThreadCard({ thread, onPress, onEdit, onDelete, onPin, onChangeRecruitm
         style={{ flexDirection: "row", alignItems: "center", marginBottom: 8 }}
       >
         {pinned ? <View style={{ marginRight: 7, borderRadius: 10, paddingHorizontal: 8, paddingVertical: 6, backgroundColor: "#FFF2C7" }}><Text style={{ fontSize: 11, fontWeight: "900", color: "#8A6512" }}>📌 固定</Text></View> : null}
-        {recruitmentManaged ? <RecruitmentStatusBadge status={recruitmentStatus} onLongPress={onChangeRecruitment} /> : thread.gourmetContest ? <View style={{ marginRight: 9, borderRadius: 10, paddingHorizontal: 9, paddingVertical: 6, backgroundColor: contestOpen ? "#DDF3E3" : "#DADADD" }}><Text style={{ fontSize: 11, fontWeight: "900", color: contestOpen ? "#247A42" : "#66666B" }}>{contestOpen ? "開催中" : "開催終了"}</Text></View> : null}
+        {recruitmentManaged ? <RecruitmentStatusBadge status={recruitmentStatus} /> : thread.gourmetContest ? <View style={{ marginRight: 9, borderRadius: 10, paddingHorizontal: 9, paddingVertical: 6, backgroundColor: contestOpen ? "#DDF3E3" : "#DADADD" }}><Text style={{ fontSize: 11, fontWeight: "900", color: contestOpen ? "#247A42" : "#66666B" }}>{contestOpen ? "開催中" : "開催終了"}</Text></View> : null}
         <Image
           source={thread.author.avatar}
           style={{ width: 30, height: 30, borderRadius: 15 }}
@@ -1025,7 +1018,7 @@ function ThreadDetailModal({
           {/* Thread content */}
           <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 12 }}>
             {isThreadPinned(thread) ? <View style={{ marginRight: 7, borderRadius: 10, paddingHorizontal: 8, paddingVertical: 6, backgroundColor: "#FFF2C7" }}><Text style={{ fontSize: 11, fontWeight: "900", color: "#8A6512" }}>📌 固定</Text></View> : null}
-            {recruitmentManaged ? <RecruitmentStatusBadge status={recruitmentStatus} onLongPress={onChangeRecruitment} /> : null}
+            {recruitmentManaged ? <RecruitmentStatusBadge status={recruitmentStatus} /> : null}
             <Image
               source={thread.author.avatar}
               style={{ width: 36, height: 36, borderRadius: 18 }}
@@ -1393,6 +1386,10 @@ function EditThreadModal({
   const insets = useSafeAreaInsets();
   const [title, setTitle] = useState(thread.title);
   const [content, setContent] = useState(thread.preview);
+  const [adviceGenres, setAdviceGenres] = useState<string[]>(thread.gourmetAdvice?.genres ?? ["指定なし"]);
+  const [adviceArea, setAdviceArea] = useState(thread.gourmetAdvice?.area ?? "指定なし");
+  const [adviceScene, setAdviceScene] = useState(thread.gourmetAdvice?.scene ?? "指定なし");
+  const [adviceBudget, setAdviceBudget] = useState(thread.gourmetAdvice?.budget ?? "指定なし");
   const [introductionText, setIntroductionText] = useState(thread.selfIntroduction?.introduction ?? thread.preview);
   const [wantToTry, setWantToTry] = useState(thread.selfIntroduction?.wantToTry ?? "");
   const [contentSelection, setContentSelection] = useState<TextSelection>({ start: 0, end: 0 });
@@ -1401,6 +1398,7 @@ function EditThreadModal({
   const [contestDeadline, setContestDeadline] = useState(thread.gourmetContest?.commentDeadline ?? "");
   const [contestPrizePoints, setContestPrizePoints] = useState(String(thread.gourmetContest?.prizePoints ?? ""));
   const [contestPrizeTitle, setContestPrizeTitle] = useState(thread.gourmetContest?.prizeTitle ?? "");
+  const [recruitmentStatus, setRecruitmentStatus] = useState<BoardRecruitmentStatus>(getBoardRecruitmentStatus(thread));
   const [confirmingDelete, setConfirmingDelete] = useState(false);
 
   const handlePickImage = async () => {
@@ -1431,7 +1429,9 @@ function EditThreadModal({
       title: title.trim(),
       preview: savedContent,
       mealReport: thread.mealReport ? { ...thread.mealReport, comment: savedContent } : undefined,
-      gourmetAdvice: thread.gourmetAdvice ? { ...thread.gourmetAdvice, comment: savedContent } : undefined,
+      gourmetAdvice: thread.gourmetAdvice ? { ...thread.gourmetAdvice, theme: title.trim(), genres: adviceGenres, area: adviceArea.trim() || "指定なし", scene: adviceScene.trim() || "指定なし", budget: adviceBudget.trim() || "指定なし", comment: savedContent } : undefined,
+      recruitmentStatus: isRecruitmentBoardCategory(thread.category) && !isClubSelfIntroduction(thread) ? recruitmentStatus : thread.recruitmentStatus,
+      isRecruiting: isRecruitmentBoardCategory(thread.category) && !isClubSelfIntroduction(thread) ? recruitmentStatus === "open" : thread.isRecruiting,
       selfIntroduction: thread.selfIntroduction ? { introduction: introductionText.trim(), wantToTry: wantToTry.trim() || undefined } : undefined,
       images: images.length > 0 ? images : undefined,
       gourmetContest: thread.gourmetContest ? {
@@ -1503,6 +1503,8 @@ function EditThreadModal({
               />
             </View> : null}
 
+            {isRecruitmentBoardCategory(thread.category) && !isClubSelfIntroduction(thread) ? <View><Text style={{ fontSize: 13, fontWeight: "700", color: colors.muted, marginBottom: 7 }}>募集ステータス</Text><View style={{ flexDirection: "row", gap: 8 }}>{([ ["open", "募集中"], ["closed", "募集終了"], ["none", "なし"] ] as [BoardRecruitmentStatus, string][]).map(([status, label]) => <Pressable key={status} onPress={() => setRecruitmentStatus(status)} style={{ flex: 1, alignItems: "center", borderRadius: 10, paddingVertical: 10, backgroundColor: recruitmentStatus === status ? (status === "open" ? "#DDF3E3" : status === "closed" ? "#E3E3E6" : "#EEEAF2") : colors.surface, borderWidth: 1, borderColor: recruitmentStatus === status ? "#6D5B85" : colors.border }}><Text style={{ fontSize: 12, fontWeight: "900", color: colors.foreground }}>{label}</Text></Pressable>)}</View></View> : null}
+
             {thread.gourmetContest ? <View style={{ gap: 12 }}>
               <Text style={{ fontSize: 15, fontWeight: "900", color: colors.foreground }}>大会設定</Text>
               <View><Text style={{ fontSize: 13, fontWeight: "700", color: colors.muted, marginBottom: 6 }}>コメント募集締切</Text><TextInput value={contestDeadline} onChangeText={setContestDeadline} placeholder="YYYY-MM-DD" placeholderTextColor={colors.muted} style={{ backgroundColor: colors.surface, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: colors.foreground }} /></View>
@@ -1512,6 +1514,8 @@ function EditThreadModal({
                 <View><Text style={{ fontSize: 13, fontWeight: "700", color: colors.muted, marginBottom: 6 }}>景品（IRO+ポイント）</Text><TextInput value={contestPrizePoints} onChangeText={(value) => setContestPrizePoints(value.replace(/[^0-9]/g, ""))} keyboardType="number-pad" placeholder="例：500" placeholderTextColor={colors.muted} style={{ backgroundColor: colors.surface, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: colors.foreground }} /></View>
               )}
             </View> : null}
+
+            {thread.gourmetAdvice ? <View style={{ gap: 12 }}><Text style={{ fontSize: 15, fontWeight: "900", color: colors.foreground }}>相談内容</Text><View><Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground, marginBottom: 7 }}>料理カテゴリ</Text><View style={{ flexDirection: "row", flexWrap: "wrap", gap: 7 }}>{["指定なし", ...GOURMET_GENRES].map((genre) => { const selected = adviceGenres.includes(genre); return <Pressable key={genre} onPress={() => setAdviceGenres((current) => { if (genre === "指定なし") return ["指定なし"]; const next = current.filter((item) => item !== "指定なし" && item !== genre); return selected ? (next.length ? next : ["指定なし"]) : [...next, genre]; })} style={{ borderRadius: 17, paddingHorizontal: 10, paddingVertical: 7, backgroundColor: selected ? "#5D5C74" : colors.surface, borderWidth: 1, borderColor: selected ? "#5D5C74" : colors.border }}><Text style={{ fontSize: 12, fontWeight: "700", color: selected ? "#FFF" : colors.foreground }}>{genre}</Text></Pressable>; })}</View></View><View><Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground, marginBottom: 6 }}>エリア</Text><TextInput value={adviceArea} onChangeText={setAdviceArea} placeholder="例：渋谷、都内" placeholderTextColor={colors.muted} style={{ backgroundColor: colors.surface, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, color: colors.foreground }} /></View><View><Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground, marginBottom: 6 }}>利用シーン</Text><TextInput value={adviceScene} onChangeText={setAdviceScene} placeholder="例：デート、友人との食事" placeholderTextColor={colors.muted} style={{ backgroundColor: colors.surface, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, color: colors.foreground }} /></View><View><Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground, marginBottom: 6 }}>予算</Text><TextInput value={adviceBudget} onChangeText={setAdviceBudget} placeholder="例：5,000〜8,000円" placeholderTextColor={colors.muted} style={{ backgroundColor: colors.surface, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, color: colors.foreground }} /></View></View> : null}
 
             {/* 本文 */}
             {thread.selfIntroduction ? <View style={{ gap: 14 }}><View><Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground, marginBottom: 6 }}>自己紹介文 <Text style={{ color: colors.error }}>必須</Text></Text><TextInput value={introductionText} onChangeText={setIntroductionText} multiline textAlignVertical="top" placeholder="お名前、好きなグルメ、活動エリアなどを入力" placeholderTextColor={colors.muted} style={{ minHeight: 150, backgroundColor: colors.surface, borderRadius: 12, padding: 14, fontSize: 14, lineHeight: 21, color: colors.foreground }} /></View><View><Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground, marginBottom: 6 }}>IRO＋でやってみたいこと</Text><TextInput value={wantToTry} onChangeText={setWantToTry} multiline textAlignVertical="top" placeholder="参加したいイベント、企画したいことなど" placeholderTextColor={colors.muted} style={{ minHeight: 100, backgroundColor: colors.surface, borderRadius: 12, padding: 14, fontSize: 14, lineHeight: 21, color: colors.foreground }} /></View></View> : <View>
