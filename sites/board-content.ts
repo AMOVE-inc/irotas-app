@@ -82,10 +82,10 @@ const discordAuthorFallbacks = new Map<string, { displayName?: string; avatarUrl
 for (const record of [...(archive as RawDiscordBoardArchive).threads, ...(archive as RawDiscordBoardArchive).comments]) {
   if (!record.authorId) continue;
   const current = discordAuthorFallbacks.get(record.authorId) ?? {};
-  const rank = /PLATINUM|プラチナ/i.test(record.authorName) ? "platinum"
+  const rank = record.authorRank || (/PLATINUM|プラチナ/i.test(record.authorName) ? "platinum"
     : /GOLD|ゴールド/i.test(record.authorName) ? "gold"
       : /SILVER|シルバー/i.test(record.authorName) ? "silver"
-        : undefined;
+        : undefined);
   discordAuthorFallbacks.set(record.authorId, {
     displayName: current.displayName || record.authorName.replace(/\s*【[^】]*(?:SILVER|GOLD|PLATINUM)[^】]*】/gi, "").trim(),
     avatarUrl: current.avatarUrl || record.authorAvatarUrl || undefined,

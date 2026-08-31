@@ -83,6 +83,7 @@ async def main():
     parser.add_argument("--output", required=True)
     parser.add_argument("--input")
     parser.add_argument("--thread-id")
+    parser.add_argument("--enrich-authors", action="store_true")
     args = parser.parse_args()
     config = yaml.safe_load(Path(args.config).read_text(encoding="utf-8"))
     discord_config = config.get("discord", config)
@@ -95,6 +96,31 @@ async def main():
         role_names = {str(role["id"]): role["name"] for role in roles}
         if args.input:
             source = json.loads(Path(args.input).read_text(encoding="utf-8"))
+            if args.enrich_authors:
+                records = [*source.get("threads", []), *source.get("comments", [])]
+                author_ids = sorted({str(row.get("authorId", "")) for row in records if row.get("authorId")})
+                members = {}
+                for index, author_id in enumerate(author_ids, 1):
+                    try:
+                        members[author_id] = await discord_get(session, f"/guilds/{guild_id}/members/{author_id}")
+                    except aiohttp.ClientResponseError as error:
+                        if error.status not in (403, 404):
+                            raise
+                    if index % 100 == 0:
+                        print(f"[投稿者照合] {index}/{len(author_ids)}", flush=True)
+                for row in records:
+                    member_row = members.get(str(row.get("authorId", "")))
+                    if not member_row:
+                        continue
+                    user = member_row.get("user", {})
+                    row["authorName"] = member_row.get("nick") or user.get("global_name") or user.get("username") or row.get("authorName") or "メンバー"
+                    row["authorAvatarUrl"] = avatar_url(user) or row.get("authorAvatarUrl")
+                    member_role_names = [role_names.get(str(role_id), "") for role_id in member_row.get("roles", [])]
+                    row["authorRank"] = "platinum" if any("PLATINUM" in name.upper() or "プラチナ" in name for name in member_role_names) else "gold" if any("GOLD" in name.upper() or "ゴールド" in name for name in member_role_names) else "silver" if any("SILVER" in name.upper() or "シルバー" in name for name in member_role_names) else "regular"
+                source["exportedAt"] = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+                Path(args.output).write_text(json.dumps(source, ensure_ascii=False), encoding="utf-8")
+                print(f"[完了] 投稿者{len(author_ids)}人 / {len(source['threads'])}スレ / {len(source['comments'])}コメント", flush=True)
+                return
             selected = [row for row in source["threads"] if not args.thread_id or row["id"].removeprefix("discord-board-") == args.thread_id]
             for row in selected:
                 thread_id = row["id"].removeprefix("discord-board-")
@@ -171,6 +197,7 @@ async def main():
                         "id": str(message["id"]), "threadId": base["id"],
                         "authorId": str(message_author.get("id", "")),
                         "authorName": message.get("member", {}).get("nick") or message_author.get("global_name") or message_author.get("username") or "メンバー",
+                        "authorAvatarUrl": avatar_url(message_author),
                         "content": normalized_content(message, role_names), "createdAt": message.get("timestamp"),
                         "mentions": [{"id": str(item.get("id", "")), "name": item.get("global_name") or item.get("username") or "メンバー"} for item in message.get("mentions", [])],
                         "images": [item["url"] for item in message.get("attachments", []) if item.get("content_type", "").startswith("image/")],

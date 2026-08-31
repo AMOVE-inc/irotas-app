@@ -8,6 +8,7 @@ export interface RawDiscordBoardRecord {
   authorId: string;
   authorName: string;
   authorAvatarUrl?: string | null;
+  authorRank?: Member["rank"] | null;
   content: string;
   createdAt: string;
   images: string[];
@@ -65,7 +66,7 @@ function authorFor(record: RawDiscordBoardRecord, directory: DiscordMemberDirect
   const fallback = fallbacks.get(record.authorId);
   const avatar = typeof profile.avatarUrl === "string" ? profile.avatarUrl : typeof profile.avatar === "string" ? profile.avatar : record.authorAvatarUrl || fallback?.avatarUrl || MEMBERS[0].avatar;
   const generation = Number(databaseMember?.memberTerm?.match(/\d+/)?.[0] ?? 0);
-  const rank = (["regular", "silver", "gold", "platinum"].includes(databaseMember?.memberRank ?? "") ? databaseMember!.memberRank : fallback?.rank || rankFromDiscordName(record.authorName) || "regular") as Member["rank"];
+  const rank = (["regular", "silver", "gold", "platinum"].includes(databaseMember?.memberRank ?? "") ? databaseMember!.memberRank : record.authorRank || fallback?.rank || rankFromDiscordName(record.authorName) || "regular") as Member["rank"];
   return {
     id: databaseMember?.id ?? discordId,
     name: databaseMember?.displayName || cleanDiscordMemberName(record.authorName) || "旧Discordメンバー",
@@ -101,7 +102,7 @@ export function parseDiscordBoardArchive(archive: RawDiscordBoardArchive, direct
     const current = authorFallbacks.get(record.authorId) ?? {};
     authorFallbacks.set(record.authorId, {
       avatarUrl: current.avatarUrl || record.authorAvatarUrl || undefined,
-      rank: current.rank || rankFromDiscordName(record.authorName),
+      rank: current.rank || record.authorRank || rankFromDiscordName(record.authorName),
     });
   }
   const rawThreads = archive.threads.filter((record) => !(

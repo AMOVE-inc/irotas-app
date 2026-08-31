@@ -1401,6 +1401,7 @@ function EditThreadModal({
   const [contestDeadline, setContestDeadline] = useState(thread.gourmetContest?.commentDeadline ?? "");
   const [contestPrizePoints, setContestPrizePoints] = useState(String(thread.gourmetContest?.prizePoints ?? ""));
   const [contestPrizeTitle, setContestPrizeTitle] = useState(thread.gourmetContest?.prizeTitle ?? "");
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
 
   const handlePickImage = async () => {
     if (Platform.OS !== "web") {
@@ -1591,13 +1592,14 @@ function EditThreadModal({
               </View>
             </View>
             <Pressable
-              onPress={() => Alert.alert("投稿を削除しますか？", "削除した投稿は一覧に表示されなくなります。", [{ text: "キャンセル", style: "cancel" }, { text: "削除", style: "destructive", onPress: onDelete }])}
+              onPress={() => setConfirmingDelete(true)}
               style={{ marginTop: 8, borderRadius: 12, paddingVertical: 13, alignItems: "center", borderWidth: 1, borderColor: colors.error }}
             >
               <Text style={{ fontSize: 14, fontWeight: "800", color: colors.error }}>投稿を削除</Text>
             </Pressable>
           </ScrollView>
         </KeyboardAvoidingView>
+        {confirmingDelete ? <View style={{ position: "absolute", inset: 0, backgroundColor: "rgba(20,18,24,0.46)", alignItems: "center", justifyContent: "center", padding: 22 }}><View style={{ width: "100%", maxWidth: 390, borderRadius: 18, padding: 20, backgroundColor: colors.background }}><Text style={{ fontSize: 18, fontWeight: "900", color: colors.foreground }}>投稿を削除しますか？</Text><Text style={{ marginTop: 8, fontSize: 13, lineHeight: 20, color: colors.muted }}>削除した投稿は一覧に表示されなくなります。</Text><View style={{ flexDirection: "row", gap: 10, marginTop: 20 }}><Pressable onPress={() => setConfirmingDelete(false)} style={{ flex: 1, borderRadius: 11, paddingVertical: 13, alignItems: "center", backgroundColor: colors.surface }}><Text style={{ fontWeight: "800", color: colors.foreground }}>キャンセル</Text></Pressable><Pressable onPress={async () => { setConfirmingDelete(false); await onDelete(); }} style={{ flex: 1, borderRadius: 11, paddingVertical: 13, alignItems: "center", backgroundColor: colors.error }}><Text style={{ fontWeight: "900", color: "#FFF" }}>削除する</Text></Pressable></View></View></View> : null}
       </View>
     </Modal>
   );
@@ -2494,7 +2496,7 @@ export default function BoardScreen() {
   const deleteThread = async (thread: BoardThread) => {
     try {
       if (thread.shared) await Api.deleteSharedBoardThread(thread.id);
-      await deleteBoardThread(thread.id);
+      try { await deleteBoardThread(thread.id); } catch { /* shared deletion is authoritative */ }
       setDeletedThreadIds((current) => current.includes(thread.id) ? current : [...current, thread.id]);
       if (selectedThread?.id === thread.id) setSelectedThread(null);
       router.setParams({ thread: "" });

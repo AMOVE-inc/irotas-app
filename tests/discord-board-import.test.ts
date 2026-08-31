@@ -26,6 +26,15 @@ describe("Discord board archive", () => {
     expect(archive.threads.some((thread) => thread.images?.length)).toBe(true);
   });
 
+  it("DiscordユーザーID単位で投稿者のアバターとロールを全投稿へ反映する", () => {
+    const pokohide = archive.threads.find((thread) => thread.author.name === "pokohide");
+    const nori = archive.threads.find((thread) => thread.author.name.startsWith("nori"));
+    expect(pokohide?.author.rank).toBe("gold");
+    expect(pokohide?.author.avatar).toContain("cdn.discordapp.com/avatars/804712649598042172/");
+    expect(nori?.author.rank).toBe("platinum");
+    expect(nori?.author.avatar).toContain("cdn.discordapp.com/avatars/1228678386902372374/");
+  });
+
   it("自己紹介・ごちそうさま・相談室を新テンプレへ変換する", () => {
     expect(archive.threads.find((thread) => thread.category === "introduction")?.selfIntroduction).toBeTruthy();
     expect(archive.threads.find((thread) => thread.category === "meal-report")?.mealReport).toBeTruthy();
