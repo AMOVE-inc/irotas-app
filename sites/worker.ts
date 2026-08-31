@@ -10,6 +10,7 @@ import { handleSquareWebhook } from "./square-webhook";
 import { handleSquareSyncRequest } from "./square-sync";
 import { handleMemberDirectoryRequest } from "./member-directory";
 import { handleEventRequest } from "./events";
+import { handleEventImportRequest } from "./event-import";
 import { handleEventFeedbackRequest } from "./event-feedback";
 import { handleConciergeRequest } from "./concierge";
 import { handleOperatorManagementRequest } from "./operator-management";
@@ -21,6 +22,7 @@ import { handleBoardArchiveRequest } from "./board-archive";
 import { handleBoardContentRequest } from "./board-content";
 import { handleChatContentRequest } from "./chat-content";
 import { handleBenefitsRequest } from "./benefits";
+import { handleCampaignRequest } from "./campaigns";
 import { handleHomeAutomationRequest, runEventAutomation } from "./home-automation";
 import { handleXpRequest } from "./xp";
 import {
@@ -30,6 +32,7 @@ import {
 import { handleAccountDeletionAdminRequest } from "./account-deletion-admin";
 import { handleReviewAccountRequest } from "./review-account";
 import { handleBackupReadinessRequest } from "./backup-readiness";
+import { handleBackupRequest } from "./backups";
 import { handleLinkPreviewRequest } from "./link-preview";
 
 type CommunitySubmission = {
@@ -277,6 +280,8 @@ async function routeRequest(
   if (reviewAccountResponse) return reviewAccountResponse;
   const backupReadinessResponse = await handleBackupReadinessRequest(request, env);
   if (backupReadinessResponse) return backupReadinessResponse;
+  const backupResponse = await handleBackupRequest(request, env);
+  if (backupResponse) return backupResponse;
   const memberHistoryImportResponse = await handleMemberHistoryImportRequest(request, env);
   if (memberHistoryImportResponse) return memberHistoryImportResponse;
   const discordProfileImportResponse = await handleDiscordProfileImportRequest(request, env);
@@ -293,12 +298,16 @@ async function routeRequest(
   if (chatContentResponse) return chatContentResponse;
   const benefitsResponse = await handleBenefitsRequest(request, env);
   if (benefitsResponse) return benefitsResponse;
+  const campaignResponse = await handleCampaignRequest(request, env);
+  if (campaignResponse) return campaignResponse;
   const xpResponse = await handleXpRequest(request, env);
   if (xpResponse) return xpResponse;
   const homeAutomationResponse = await handleHomeAutomationRequest(request, env);
   if (homeAutomationResponse) return homeAutomationResponse;
   const boardArchiveResponse = await handleBoardArchiveRequest(request, env);
   if (boardArchiveResponse) return boardArchiveResponse;
+  const eventImportResponse = await handleEventImportRequest(request, env);
+  if (eventImportResponse) return eventImportResponse;
   const eventResponse = await handleEventRequest(request, env);
   if (eventResponse) return eventResponse;
   const eventFeedbackResponse = await handleEventFeedbackRequest(request, env);

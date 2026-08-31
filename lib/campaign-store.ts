@@ -1,5 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useEffect, useSyncExternalStore } from "react";
+import { deleteSharedCampaign, getSharedCampaigns, saveSharedCampaign } from "./campaign-api";
 
 export interface Campaign {
   id: string;
@@ -32,6 +33,14 @@ async function hydrate() {
   if (raw) campaigns = JSON.parse(raw) as Campaign[];
   hydrated = true;
   emit();
+  try {
+    const shared = await getSharedCampaigns();
+    campaigns = shared.campaigns;
+    emit();
+    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(campaigns));
+  } catch {
+    // The device cache remains available during a temporary network outage.
+  }
 }
 
 async function save(next: Campaign[]) {
@@ -45,7 +54,7 @@ export function useCampaigns() {
   return useSyncExternalStore(subscribe, snapshot, snapshot);
 }
 
-export async function createCampaign(campaign: Campaign) { await hydrate(); await save([campaign, ...campaigns]); }
-export async function updateCampaign(campaign: Campaign) { await hydrate(); await save(campaigns.map((item) => item.id === campaign.id ? campaign : item)); }
-export async function setCampaignStatus(id: string, status: Campaign["status"]) { await hydrate(); await save(campaigns.map((item) => item.id === id ? { ...item, status } : item)); }
-export async function deleteCampaign(id: string) { await hydrate(); await save(campaigns.filter((item) => item.id !== id)); }
+export async function createCampaign(campaign: Campaign) { await hydrate(); await saveSharedCampaign(campaign); await save([campaign, ...campaigns.filter((item) => item.id !== campaign.id)]); }
+export async function updateCampaign(campaign: Campaign) { await hydrate(); await saveSharedCampaign(campaign); await save(campaigns.map((item) => item.id === campaign.id ? campaign : item)); }
+export async function setCampaignStatus(id: string, status: Campaign["status"]) { await hydrate(); const campaign = campaigns.find((item) => item.id === id); if (!campaign) return; const updated = { ...campaign, status }; await saveSharedCampaign(updated); await save(campaigns.map((item) => item.id === id ? updated : item)); }
+export async function deleteCampaign(id: string) { await hydrate(); await deleteSharedCampaign(id); await save(campaigns.filter((item) => item.id !== id)); }

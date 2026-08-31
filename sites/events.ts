@@ -410,6 +410,8 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
       const now = new Date().toISOString();
       await env.DB.batch([
         env.DB.prepare("UPDATE events SET title = ?, public_data_json = ?, updated_at = ? WHERE id = ?").bind(title, JSON.stringify(data), now, id),
+        ...["title", "description", "manualParticipantIds"].map((field) => env.DB!.prepare(`INSERT INTO event_import_field_edits (event_id, field_name, edited_at, actor_member_id)
+          VALUES (?, ?, ?, ?) ON CONFLICT(event_id, field_name) DO UPDATE SET edited_at = excluded.edited_at, actor_member_id = excluded.actor_member_id`).bind(id, field, now, member.id)),
         env.DB.prepare(`INSERT INTO audit_logs (actor_user_id, action, entity_type, entity_id, metadata_json, created_at)
           VALUES (?, 'event.edited', 'event', ?, ?, ?)`).bind(String(member.id), id, JSON.stringify({ participants: participants.length }), now),
       ]);
