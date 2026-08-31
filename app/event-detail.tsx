@@ -1,6 +1,6 @@
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
-import { EVENTS, CURRENT_USER, DEFAULT_AVATAR, MEMBERS, getMemberById, type Event } from "@/constants/mock-data";
+import { EVENTS, CURRENT_USER, DEFAULT_AVATAR, MEMBERS, getMemberById, type Event, type MemberRank } from "@/constants/mock-data";
 import { EventImage } from "@/components/event-image";
 import { PersistentBottomNav } from "@/components/persistent-bottom-nav";
 import { MemberRankBadge, stripRankFromName } from "@/components/member-rank-badge";
@@ -923,21 +923,28 @@ export default function EventDetailScreen() {
             <Text style={{ fontSize: 15, fontWeight: "700", color: colors.foreground, marginBottom: 10 }}>
               参加確定者 ({confirmedIds.length}人)
             </Text>
-            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 12 }}>
+            <View style={{ borderRadius: 14, backgroundColor: colors.surface, overflow: "hidden" }}>
               {confirmedIds.map((uid) => {
                 const directoryMember = memberDirectory.find((item) => item.id === uid);
                 const member = getMemberById(uid);
                 const discordAuthor = getDiscordAuthorById(uid);
                 const memberName = directoryMember?.displayName ?? member?.name ?? discordAuthor?.name ?? "メンバー";
                 const directoryAvatar = typeof directoryMember?.profile?.avatarUrl === "string" ? directoryMember.profile.avatarUrl : undefined;
+                const rawRank = directoryMember?.memberRank ?? member?.rank ?? discordAuthor?.rank ?? "regular";
+                const memberRank = (["regular", "silver", "gold", "platinum"].includes(rawRank) ? rawRank : "regular") as MemberRank;
                 return (
                   <Pressable
                     key={uid}
                     onPress={() => openMemberProfile(uid)}
                     accessibilityLabel={`${memberName}のプロフィールを表示`}
                     style={{
+                      flexDirection: "row",
                       alignItems: "center",
-                      width: 62,
+                      minHeight: 64,
+                      paddingHorizontal: 14,
+                      paddingVertical: 10,
+                      borderTopWidth: uid === confirmedIds[0] ? 0 : 0.5,
+                      borderTopColor: colors.border,
                     }}
                   >
                     <Image
@@ -945,7 +952,11 @@ export default function EventDetailScreen() {
                       style={{ width: 44, height: 44, borderRadius: 22, borderWidth: uid === CURRENT_USER.id ? 2 : 0, borderColor: "#E8A0BF" }}
                       contentFit="cover"
                     />
-                    <Text style={{ fontSize: 11, color: colors.foreground, marginTop: 5, textAlign: "center" }} numberOfLines={1}>{stripRankFromName(memberName)}</Text>
+                    <View style={{ flex: 1, flexDirection: "row", alignItems: "center", marginLeft: 11 }}>
+                      <Text style={{ fontSize: 14, fontWeight: "800", color: colors.foreground }} numberOfLines={1}>{stripRankFromName(memberName)}</Text>
+                      <MemberRankBadge rank={memberRank} name={memberName} compact />
+                    </View>
+                    <IconSymbol name="chevron.right" size={16} color={colors.muted} />
                   </Pressable>
                 );
               })}
