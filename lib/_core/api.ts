@@ -177,6 +177,7 @@ export type SharedBoardThread = {
   data: Record<string, unknown>;
   createdAt: string;
   updatedAt: string;
+  lastActivityAt?: string;
   reactions: Record<string, { count: number; reacted: boolean }>;
 };
 
@@ -1149,7 +1150,23 @@ export async function cancelEvent(eventId: string, confirmedParticipantNotified 
   );
 }
 
-export async function updateEventDetails(eventId: string, input: { title: string; description: string; participants: string[] }) {
+export async function updateEventDetails(eventId: string, input: {
+  title: string;
+  description: string;
+  participants: string[];
+  date?: string;
+  time?: string;
+  location?: string;
+  capacity?: number;
+  reservationCapacity?: number;
+  price?: string;
+  priceMin?: number;
+  priceMax?: number;
+  applicationDeadline?: string;
+  cancellationPolicy?: string;
+  tabelogUrl?: string;
+  googleMapsUrl?: string;
+}) {
   const result = await apiCall<{ event: Event }>(`/api/events/${encodeURIComponent(eventId)}`, {
     method: "PATCH",
     body: JSON.stringify({ action: "edit", ...input }),

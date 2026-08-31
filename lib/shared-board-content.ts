@@ -78,7 +78,8 @@ export function sharedThreadToBoardThread(record: SharedBoardThread, viewerId: s
     author: memberFor(record.authorId, record.authorName, { avatarUrl: record.authorAvatarUrl, memberTerm: record.authorMemberTerm, rank: record.authorRank }),
     category: record.category,
     commentCount: typeof data.commentCount === "number" ? data.commentCount : 0,
-    lastUpdated: record.updatedAt,
+    // 本文を管理側で補正しても投稿日時は変えず、コメントがあればその最新日時を表示する。
+    lastUpdated: record.lastActivityAt ?? record.createdAt,
     preview: cleanDiscordBoardContent(record.title, record.content, record.category),
     isRecruiting: record.status === "open",
     recruitmentStatus: record.status,

@@ -309,7 +309,7 @@ function GourmetAdviceContent({ thread, compact = false }: { thread: BoardThread
       {[{ label: "料理ジャンル", value: genres.join("・") }, { label: "エリア", value: normalizedAdviceValue(advice.area) }, { label: "利用シーン", value: normalizedAdviceValue(advice.scene) }, { label: "予算", value: normalizedAdviceValue(advice.budget) }].map((item) => (
         <View key={item.label} style={{ flexDirection: "row", marginBottom: 5 }}><Text style={{ width: 74, fontSize: 12, fontWeight: "900", color: "#9A6A12" }}>{item.label}</Text><Text style={{ flex: 1, fontSize: 13, color: colors.foreground }} numberOfLines={compact ? 1 : undefined}>{item.value}</Text></View>
       ))}
-      {!compact ? <Text style={{ fontSize: 14, lineHeight: 21, color: colors.foreground, marginTop: 7 }}><Text style={{ fontWeight: "900" }}>一言　</Text>{advice.comment}</Text> : null}
+      {!compact ? <Text style={{ fontSize: 14, lineHeight: 21, color: colors.foreground, marginTop: 7 }}><Text style={{ fontWeight: "900" }}>一言　</Text>{advice.comment?.trim() || thread.preview}</Text> : null}
     </View>
   );
 }

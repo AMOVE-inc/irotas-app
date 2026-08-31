@@ -455,9 +455,15 @@ export async function handleBoardContentRequest(
            ))`).bind(...ids, ...ids).all<ReactionRow>(),
     ]);
     const reactions = reactionResult.results ?? [];
+    const comments = commentResult.results ?? [];
+    const latestCommentAt = new Map<string, string>();
+    comments.forEach((comment) => {
+      const current = latestCommentAt.get(comment.thread_id);
+      if (!current || comment.created_at > current) latestCommentAt.set(comment.thread_id, comment.created_at);
+    });
     return json({
-      threads: threads.map((item) => serializeThread(item, member.id, reactions)),
-      comments: (commentResult.results ?? []).map((item) => serializeComment(item, member.id, reactions)),
+      threads: threads.map((item) => ({ ...serializeThread(item, member.id, reactions), lastActivityAt: latestCommentAt.get(item.id) ?? item.created_at })),
+      comments: comments.map((item) => serializeComment(item, member.id, reactions)),
     });
   }
 

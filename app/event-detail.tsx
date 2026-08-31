@@ -28,6 +28,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import * as Api from "@/lib/_core/api";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as Clipboard from "expo-clipboard";
 import {
   Alert,
   type AlertButton,
@@ -36,7 +37,6 @@ import {
   Platform,
   Pressable,
   ScrollView,
-  Share,
   Switch,
   Text,
   TextInput,
@@ -78,6 +78,17 @@ export default function EventDetailScreen() {
   const [adminTitle, setAdminTitle] = useState(event?.title ?? "");
   const [adminDescription, setAdminDescription] = useState(event?.description ?? "");
   const [adminParticipants, setAdminParticipants] = useState((event?.participants ?? []).join("\n"));
+  const [adminDate, setAdminDate] = useState(event?.date ?? "");
+  const [adminTime, setAdminTime] = useState(event?.time ?? "");
+  const [adminLocation, setAdminLocation] = useState(event?.location ?? "");
+  const [adminCapacity, setAdminCapacity] = useState(String(event?.capacity ?? ""));
+  const [adminReservationCapacity, setAdminReservationCapacity] = useState(String(event?.reservationCapacity ?? event?.capacity ?? ""));
+  const [adminPrice, setAdminPrice] = useState(event?.price ?? "");
+  const [adminDeadline, setAdminDeadline] = useState(event?.applicationDeadline ?? "");
+  const [adminCancellationPolicy, setAdminCancellationPolicy] = useState(event?.cancellationPolicy ?? "");
+  const [adminTabelogUrl, setAdminTabelogUrl] = useState(event?.tabelogUrl ?? "");
+  const [adminGoogleMapsUrl, setAdminGoogleMapsUrl] = useState(event?.googleMapsUrl ?? "");
+  const [participantSearch, setParticipantSearch] = useState("");
   const [memberDirectory, setMemberDirectory] = useState<Api.PublicMember[]>([]);
   const [, setEventRevision] = useState(0);
   // ボタン連打防止フラグ
@@ -99,6 +110,15 @@ export default function EventDetailScreen() {
   }, [allEvents, authUser, id]);
 
   useEffect(() => { void Api.getMemberDirectory().then(setMemberDirectory).catch(() => setMemberDirectory([])); }, []);
+
+  useEffect(() => {
+    if (!event || showAdminEdit) return;
+    setAdminTitle(event.title); setAdminDescription(event.description); setAdminParticipants((event.participants ?? []).join("\n"));
+    setAdminDate(event.date); setAdminTime(event.time); setAdminLocation(event.location); setAdminCapacity(String(event.capacity));
+    setAdminReservationCapacity(String(event.reservationCapacity ?? event.capacity)); setAdminPrice(event.price ?? "");
+    setAdminDeadline(event.applicationDeadline ?? ""); setAdminCancellationPolicy(event.cancellationPolicy ?? "");
+    setAdminTabelogUrl(event.tabelogUrl ?? ""); setAdminGoogleMapsUrl(event.googleMapsUrl ?? "");
+  }, [event, showAdminEdit]);
 
   useEffect(() => {
     if (!event) return;
@@ -174,6 +194,9 @@ export default function EventDetailScreen() {
   const pointsToUse = usePoints && isOfficialEvent ? Math.min(irotasPoints, priceNum) : 0;
   const finalPrice = Math.max(0, priceNum - pointsToUse);
   const confirmedIds = [...new Set([...(event.participants ?? []), ...(event.companionIds ?? [])])];
+  const confirmedDisplayIds = event.createdBy
+    ? [event.createdBy, ...confirmedIds.filter((memberId) => memberId !== event.createdBy)]
+    : confirmedIds;
   const applicantCount = event.applicantIds?.length ?? event.attendees;
   const organizer = getMemberById(event.createdBy);
   const viewerMemberId = event.viewerMemberId ?? authenticatedViewerMemberId;
@@ -181,7 +204,7 @@ export default function EventDetailScreen() {
   const pendingApplicantIds = getPendingGourmetApplicants(event);
   const pendingCancellationRequests = getPendingCancellationRequests(event);
   const hasPendingCancellationRequest = pendingCancellationRequests.some((request) => request.memberId === viewerMemberId);
-  const requiresOrganizerApproval = event.eventType === "gourmet" || event.eventType === "club";
+  const requiresOrganizerApproval = true;
   const canAdminEdit = isAdminRole(authUser?.role, authUser?.accessRole);
   const canManageEvent = canAdminEdit || isOrganizer;
   const showApplicationConfirmation = (title: string, message: string, buttons: AlertButton[]) => setApplicationConfirmation({ title, message, buttons });
@@ -573,12 +596,12 @@ export default function EventDetailScreen() {
         <Pressable onPress={() => { const favorite = event.isFavorite ?? favoriteEventIds.includes(event.id); if (event.viewerMemberId) { void Api.setEventFavorite(event.id, !favorite).then(() => setEvent({ ...event, isFavorite: !favorite })).catch((error) => Alert.alert("更新できませんでした", error instanceof Error ? error.message : "もう一度お試しください。")); } else { void toggleEventFavoriteWithNotifications(event, CURRENT_USER.id); } if (!favorite) void recordActivityEvent({ userId: CURRENT_USER.id, eventName: "event_favorited", entityType: "event", entityId: event.id }); }} accessibilityLabel={(event.isFavorite ?? favoriteEventIds.includes(event.id)) ? "お気に入りから削除" : "お気に入りに追加"} style={{ position: "absolute", top: 56, right: 16, width: 38, height: 38, borderRadius: 19, backgroundColor: "rgba(0,0,0,0.5)", alignItems: "center", justifyContent: "center" }}>
           <IconSymbol name={(event.isFavorite ?? favoriteEventIds.includes(event.id)) ? "heart.fill" : "heart"} size={20} color={(event.isFavorite ?? favoriteEventIds.includes(event.id)) ? "#F59AB9" : "#FFF"} />
         </Pressable>
-        <Pressable onPress={() => void Share.share({ title: event.title, message: `${event.title}\nhttps://irotas-app-20260721.k1998915n.chatgpt.site/event-detail?id=${encodeURIComponent(event.id)}` })} accessibilityLabel="イベントリンクをコピー・共有" style={{ position: "absolute", top: 100, right: 16, width: 38, height: 38, borderRadius: 19, backgroundColor: "rgba(0,0,0,0.5)", alignItems: "center", justifyContent: "center" }}>
+        <Pressable onPress={() => { void Clipboard.setStringAsync(`https://irotas-app-20260721.k1998915n.chatgpt.site/event-detail?id=${encodeURIComponent(event.id)}`); Alert.alert("イベントリンクをコピーしました"); }} accessibilityLabel="イベントリンクをコピー" style={{ position: "absolute", top: 100, right: 16, width: 38, height: 38, borderRadius: 19, backgroundColor: "rgba(0,0,0,0.5)", alignItems: "center", justifyContent: "center" }}>
           <IconSymbol name="square.and.arrow.up" size={19} color="#FFF" />
         </Pressable>
       </View>
 
-      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16, paddingBottom: 120 }} keyboardShouldPersistTaps="handled" keyboardDismissMode="interactive">
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16, paddingBottom: 236 }} keyboardShouldPersistTaps="handled" keyboardDismissMode="interactive">
         <EventImage event={event} style={{ width: "100%", height: 250, borderRadius: 16, marginBottom: 16 }} />
         {/* Title */}
         <Text style={{ fontSize: 26, fontWeight: "800", color: colors.foreground, marginBottom: 12 }}>
@@ -654,7 +677,8 @@ export default function EventDetailScreen() {
           </View>
 
           <Pressable
-            onPress={handleOpenMap}
+            disabled={!event.googleMapsUrl}
+            onPress={event.googleMapsUrl ? handleOpenMap : undefined}
             style={{ flexDirection: "row", alignItems: "center", marginBottom: 14 }}
           >
             <View
@@ -673,7 +697,7 @@ export default function EventDetailScreen() {
               <Text style={{ fontSize: 15, fontWeight: "600", color: colors.foreground }}>
                 {event.location}
               </Text>
-              <Text style={{ fontSize: 13, color: "#A7C7E7" }}>タップして地図を開く ↗</Text>
+              <Text style={{ fontSize: 13, color: event.googleMapsUrl ? "#A7C7E7" : colors.muted }}>{event.googleMapsUrl ? "タップして地図を開く ↗" : "ー"}</Text>
             </View>
           </Pressable>
 
@@ -699,6 +723,7 @@ export default function EventDetailScreen() {
               </Text>
             </View>
           </View>
+          {event.tabelogUrl ? <Pressable onPress={() => Linking.openURL(/^https?:\/\//i.test(event.tabelogUrl!) ? event.tabelogUrl! : `https://${event.tabelogUrl!}`)} style={{ flexDirection: "row", alignItems: "center", marginTop: 14, paddingTop: 14, borderTopWidth: 0.5, borderTopColor: colors.border }}><View style={{ width: 40, height: 40, borderRadius: 12, backgroundColor: "#FFF1E8", alignItems: "center", justifyContent: "center" }}><IconSymbol name="link" size={19} color="#E67A31" /></View><View style={{ flex: 1, marginLeft: 12 }}><Text style={{ fontSize: 15, fontWeight: "700", color: colors.foreground }}>食べログ</Text><Text style={{ fontSize: 13, color: "#E67A31" }}>タップして食べログを開く ↗</Text></View><IconSymbol name="chevron.right" size={16} color="#E67A31" /></Pressable> : null}
           <View style={{ flexDirection: "row", gap: 8, marginTop: 16, paddingTop: 14, borderTopWidth: 0.5, borderTopColor: colors.border }}>
             <Pressable onPress={() => Linking.openURL(getGoogleCalendarUrl(event))} style={{ flex: 1, minHeight: 42, borderRadius: 10, backgroundColor: "#F4F6F8", alignItems: "center", justifyContent: "center", flexDirection: "row" }}><IconSymbol name="calendar" size={16} color="#4285F4" /><Text style={{ marginLeft: 6, fontSize: 12, fontWeight: "800", color: colors.foreground }}>Googleカレンダー</Text></Pressable>
             <Pressable onPress={() => Linking.openURL(getOutlookCalendarUrl(event))} style={{ flex: 1, minHeight: 42, borderRadius: 10, backgroundColor: "#F4F6F8", alignItems: "center", justifyContent: "center", flexDirection: "row" }}><IconSymbol name="calendar" size={16} color="#0078D4" /><Text style={{ marginLeft: 6, fontSize: 12, fontWeight: "800", color: colors.foreground }}>Outlook</Text></Pressable>
@@ -919,8 +944,6 @@ export default function EventDetailScreen() {
           </View>
         ) : null}
 
-        {[{ url: event.tabelogUrl, label: "食べログを開く" }, { url: event.googleMapsUrl, label: "Googleマップを開く" }].map((link) => link.url ? <Pressable key={link.label} onPress={() => Linking.openURL(/^https?:\/\//i.test(link.url!) ? link.url! : `https://${link.url!}`)} style={{ flexDirection: "row", alignItems: "center", backgroundColor: "#EAF5FA", borderRadius: 14, padding: 14, marginBottom: 10 }}><IconSymbol name="link" size={18} color="#5B9BD5" /><Text style={{ flex: 1, fontSize: 14, fontWeight: "700", color: "#5B9BD5", marginLeft: 8 }} numberOfLines={1}>{link.label}</Text><IconSymbol name="chevron.right" size={16} color="#5B9BD5" /></Pressable> : null)}
-
         {isJoined && new Date(`${event.date}T${event.time}:00`) < new Date() ? <Pressable onPress={() => router.push({ pathname: "/event-feedback" as any, params: { id: event.id } })} style={{ flexDirection: "row", alignItems: "center", backgroundColor: "#FFF4D8", borderRadius: 14, padding: 15, marginBottom: 16, borderWidth: 1, borderColor: "#EFD494" }}><IconSymbol name="star.fill" size={22} color="#D69A14" /><View style={{ flex: 1, marginLeft: 10 }}><Text style={{ fontSize: 14, fontWeight: "900", color: colors.foreground }}>イベントを評価する</Text><Text style={{ fontSize: 11, color: colors.muted, marginTop: 3 }}>次回のイベント改善にご協力ください</Text></View><IconSymbol name="chevron.right" size={17} color="#D69A14" /></Pressable> : null}
 
         {/* 参加確定者一覧 */}
@@ -930,7 +953,7 @@ export default function EventDetailScreen() {
               参加確定者 ({confirmedIds.length}人)
             </Text>
             <View style={{ borderRadius: 14, backgroundColor: colors.surface, overflow: "hidden" }}>
-              {confirmedIds.map((uid) => {
+              {confirmedDisplayIds.map((uid) => {
                 const directoryMember = memberDirectory.find((item) => item.id === uid);
                 const member = getMemberById(uid);
                 const discordAuthor = getDiscordAuthorById(uid);
@@ -949,7 +972,7 @@ export default function EventDetailScreen() {
                       minHeight: 64,
                       paddingHorizontal: 14,
                       paddingVertical: 10,
-                      borderTopWidth: uid === confirmedIds[0] ? 0 : 0.5,
+                      borderTopWidth: uid === confirmedDisplayIds[0] ? 0 : 0.5,
                       borderTopColor: colors.border,
                     }}
                   >
@@ -961,6 +984,7 @@ export default function EventDetailScreen() {
                     <View style={{ flex: 1, flexDirection: "row", alignItems: "center", marginLeft: 11 }}>
                       <Text style={{ fontSize: 14, fontWeight: "800", color: colors.foreground }} numberOfLines={1}>{stripRankFromName(memberName)}</Text>
                       <MemberRankBadge rank={memberRank} name={memberName} compact />
+                      {uid === event.createdBy ? <View style={{ marginLeft: 6, borderRadius: 8, backgroundColor: "#D93636", paddingHorizontal: 7, paddingVertical: 3 }}><Text style={{ fontSize: 10, fontWeight: "900", color: "#FFF" }}>幹事</Text></View> : null}
                     </View>
                     <IconSymbol name="chevron.right" size={16} color={colors.muted} />
                   </Pressable>
@@ -974,15 +998,21 @@ export default function EventDetailScreen() {
 
       <Modal visible={showAdminEdit} transparent animationType="slide" onRequestClose={() => setShowAdminEdit(false)}>
         <View style={{ flex: 1, justifyContent: "center", padding: 20, backgroundColor: "rgba(20,18,24,0.5)" }}>
-          <View style={{ borderRadius: 20, padding: 18, backgroundColor: colors.background }}>
-            <Text style={{ fontSize: 19, fontWeight: "900", color: colors.foreground }}>イベント情報を編集</Text>
-            <Text style={{ marginTop: 14, fontSize: 12, fontWeight: "800", color: colors.muted }}>タイトル</Text>
-            <TextInput value={adminTitle} onChangeText={setAdminTitle} style={{ marginTop: 5, borderWidth: 1, borderColor: colors.border, borderRadius: 10, padding: 11, color: colors.foreground }} />
-            <Text style={{ marginTop: 12, fontSize: 12, fontWeight: "800", color: colors.muted }}>詳細</Text>
-            <TextInput value={adminDescription} onChangeText={setAdminDescription} multiline style={{ marginTop: 5, minHeight: 120, borderWidth: 1, borderColor: colors.border, borderRadius: 10, padding: 11, color: colors.foreground, textAlignVertical: "top" }} />
-            <Text style={{ marginTop: 12, fontSize: 12, fontWeight: "800", color: colors.muted }}>参加確定者ID（1行に1人）</Text>
-            <TextInput value={adminParticipants} onChangeText={setAdminParticipants} multiline style={{ marginTop: 5, minHeight: 80, borderWidth: 1, borderColor: colors.border, borderRadius: 10, padding: 11, color: colors.foreground, textAlignVertical: "top" }} />
-            <View style={{ flexDirection: "row", gap: 10, marginTop: 16 }}><Pressable onPress={() => setShowAdminEdit(false)} style={{ flex: 1, paddingVertical: 13, alignItems: "center", borderRadius: 11, backgroundColor: colors.surface }}><Text style={{ fontWeight: "800", color: colors.foreground }}>キャンセル</Text></Pressable><Pressable onPress={async () => { try { const updated = await Api.updateEventDetails(event.id, { title: adminTitle.trim(), description: adminDescription.trim(), participants: adminParticipants.split(/[\n,、]/).map((value) => value.trim()).filter(Boolean) }); setEvent(updated); setShowAdminEdit(false); Alert.alert("更新しました"); } catch (error) { Alert.alert("更新できませんでした", error instanceof Error ? error.message : "もう一度お試しください。"); } }} style={{ flex: 1, paddingVertical: 13, alignItems: "center", borderRadius: 11, backgroundColor: "#B42318" }}><Text style={{ fontWeight: "900", color: "#FFF" }}>保存</Text></Pressable></View>
+          <View style={{ maxHeight: "90%", borderRadius: 20, backgroundColor: colors.background, overflow: "hidden" }}>
+            <ScrollView contentContainerStyle={{ padding: 18 }} keyboardShouldPersistTaps="handled">
+              <Text style={{ fontSize: 19, fontWeight: "900", color: colors.foreground }}>イベント情報を編集</Text>
+              {[
+                ["タイトル", adminTitle, setAdminTitle], ["開催日（YYYY-MM-DD）", adminDate, setAdminDate], ["開始時刻（HH:MM）", adminTime, setAdminTime], ["場所", adminLocation, setAdminLocation],
+                ["募集人数（幹事除く）", adminCapacity, setAdminCapacity], ["予約人数", adminReservationCapacity, setAdminReservationCapacity], [event.eventType === "gourmet" || event.eventType === "club" ? "予算" : "参加費", adminPrice, setAdminPrice],
+                ["募集締切（YYYY-MM-DD）", adminDeadline, setAdminDeadline], ["食べログURL", adminTabelogUrl, setAdminTabelogUrl], ["GoogleマップURL", adminGoogleMapsUrl, setAdminGoogleMapsUrl], ["キャンセルポリシー", adminCancellationPolicy, setAdminCancellationPolicy],
+              ].map(([label, value, setter]) => <View key={String(label)}><Text style={{ marginTop: 12, fontSize: 12, fontWeight: "800", color: colors.muted }}>{String(label)}</Text><TextInput value={String(value)} onChangeText={setter as (value: string) => void} multiline={String(label) === "キャンセルポリシー"} style={{ marginTop: 5, minHeight: String(label) === "キャンセルポリシー" ? 70 : undefined, borderWidth: 1, borderColor: colors.border, borderRadius: 10, padding: 11, color: colors.foreground, textAlignVertical: "top" }} /></View>)}
+              <Text style={{ marginTop: 12, fontSize: 12, fontWeight: "800", color: colors.muted }}>詳細</Text><TextInput value={adminDescription} onChangeText={setAdminDescription} multiline style={{ marginTop: 5, minHeight: 120, borderWidth: 1, borderColor: colors.border, borderRadius: 10, padding: 11, color: colors.foreground, textAlignVertical: "top" }} />
+              <Text style={{ marginTop: 12, fontSize: 12, fontWeight: "800", color: colors.muted }}>参加確定者（名前またはIDで検索）</Text>
+              <TextInput value={participantSearch} onChangeText={setParticipantSearch} placeholder="名前またはIDを入力" placeholderTextColor={colors.muted} style={{ marginTop: 5, borderWidth: 1, borderColor: colors.border, borderRadius: 10, padding: 11, color: colors.foreground }} />
+              {participantSearch.trim() ? memberDirectory.filter((member) => `${member.id} ${member.displayName}`.toLowerCase().includes(participantSearch.trim().toLowerCase())).slice(0, 8).map((member) => <Pressable key={member.id} onPress={() => { const ids = adminParticipants.split(/[\n,、]/).map((value) => value.trim()).filter(Boolean); if (!ids.includes(member.id)) setAdminParticipants([...ids, member.id].join("\n")); setParticipantSearch(""); }} style={{ paddingVertical: 8, borderBottomWidth: 0.5, borderBottomColor: colors.border }}><Text style={{ fontSize: 13, color: colors.foreground }}>{member.displayName}　{member.memberTerm ?? ""}</Text></Pressable>) : null}
+              <TextInput value={adminParticipants} onChangeText={setAdminParticipants} multiline placeholder="参加確定者ID（1行に1人）" placeholderTextColor={colors.muted} style={{ marginTop: 7, minHeight: 80, borderWidth: 1, borderColor: colors.border, borderRadius: 10, padding: 11, color: colors.foreground, textAlignVertical: "top" }} />
+              <View style={{ flexDirection: "row", gap: 10, marginTop: 16 }}><Pressable onPress={() => setShowAdminEdit(false)} style={{ flex: 1, paddingVertical: 13, alignItems: "center", borderRadius: 11, backgroundColor: colors.surface }}><Text style={{ fontWeight: "800", color: colors.foreground }}>キャンセル</Text></Pressable><Pressable onPress={async () => { try { const updated = await Api.updateEventDetails(event.id, { title: adminTitle.trim(), description: adminDescription.trim(), participants: adminParticipants.split(/[\n,、]/).map((value) => value.trim()).filter(Boolean), date: adminDate.trim(), time: adminTime.trim(), location: adminLocation.trim(), capacity: Number(adminCapacity), reservationCapacity: Number(adminReservationCapacity), price: adminPrice.trim(), applicationDeadline: adminDeadline.trim(), cancellationPolicy: adminCancellationPolicy.trim(), tabelogUrl: adminTabelogUrl.trim(), googleMapsUrl: adminGoogleMapsUrl.trim() }); setEvent(updated); setShowAdminEdit(false); Alert.alert("更新しました"); } catch (error) { Alert.alert("更新できませんでした", error instanceof Error ? error.message : "もう一度お試しください。"); } }} style={{ flex: 1, paddingVertical: 13, alignItems: "center", borderRadius: 11, backgroundColor: "#B42318" }}><Text style={{ fontWeight: "900", color: "#FFF" }}>保存</Text></Pressable></View>
+            </ScrollView>
           </View>
         </View>
       </Modal>
@@ -1054,11 +1084,13 @@ export default function EventDetailScreen() {
               ? "#5B9BD5"
               : event.status !== "open"
               ? colors.muted
+              : !termsAccepted
+              ? "#B8B8BD"
               : "#E8A0BF",
             borderRadius: 14,
             paddingVertical: 16,
             alignItems: "center",
-            opacity: requiresOrganizerApproval && !termsAccepted && !hasApplied && !isJoined && !isOrganizer ? 0.45 : pressed && !isJoined && !hasApplied ? 0.8 : 1,
+            opacity: requiresOrganizerApproval && !termsAccepted && !hasApplied && !isJoined && !isOrganizer ? 1 : pressed && !isJoined && !hasApplied ? 0.8 : 1,
           })}
         >
           <Text style={{ fontSize: 17, fontWeight: "700", color: "#FFF" }}>

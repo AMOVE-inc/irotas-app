@@ -165,10 +165,12 @@ def meal_fields(content: str) -> dict:
 def advice_fields(title: str, content: str) -> dict:
     return {
         "theme": field(content, ("タイトル", "テーマ")) or title,
+        "genres": [value for value in re.split(r"[、,・/]", field(content, ("料理ジャンル", "ジャンル", "料理")) or "") if value.strip()],
         "area": field(content, ("エリア", "場所")) or "未設定",
         "scene": field(content, ("利用シーン", "シーン")) or "未設定",
         "budget": field(content, ("予算",)) or "未設定",
-        "comment": multiline_field(content, ("一言メッセージ", "一言", "相談内容")) or "",
+        # テンプレートに沿わない相談も、本文全体を一言として確実に引き継ぐ。
+        "comment": multiline_field(content, ("一言メッセージ", "一言", "相談内容")) or content.strip(),
     }
 
 

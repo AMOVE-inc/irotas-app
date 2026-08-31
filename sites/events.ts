@@ -436,14 +436,40 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
       const title = text(input.title, 160, true);
       const description = text(input.description, 5000);
       const participants = stringArray(input.participants, 100, 80) ?? [];
+      const date = input.date === undefined ? undefined : text(input.date, 10, true);
+      const time = input.time === undefined ? undefined : text(input.time, 5, true);
+      const location = input.location === undefined ? undefined : text(input.location, 500, true);
+      const capacity = input.capacity === undefined ? undefined : number(input.capacity, 1, 100);
+      const reservationCapacity = input.reservationCapacity === undefined ? undefined : number(input.reservationCapacity, 1, 101);
+      const price = input.price === undefined ? undefined : text(input.price, 80);
+      const priceMin = input.priceMin === undefined ? undefined : number(input.priceMin, 0, 300_000);
+      const priceMax = input.priceMax === undefined ? undefined : number(input.priceMax, 0, 300_000);
+      const applicationDeadline = input.applicationDeadline === undefined ? undefined : text(input.applicationDeadline, 10);
+      const cancellationPolicy = input.cancellationPolicy === undefined ? undefined : text(input.cancellationPolicy, 2000);
+      const tabelogUrl = input.tabelogUrl === undefined ? undefined : text(input.tabelogUrl, 500);
+      const googleMapsUrl = input.googleMapsUrl === undefined ? undefined : text(input.googleMapsUrl, 500);
+      if (!title || description === null || (date !== undefined && (typeof date !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(date))) || (time !== undefined && (typeof time !== "string" || !/^([01]\d|2[0-3]):(00|15|30|45)$/.test(time))) || location === null || capacity === null || reservationCapacity === null || price === null || priceMin === null || priceMax === null || applicationDeadline === null || cancellationPolicy === null || tabelogUrl === null || googleMapsUrl === null)
+        return responseJson({ error: "変更内容が不正です" }, 400);
+      if (priceMin !== undefined && priceMax !== undefined && priceMin > priceMax) return responseJson({ error: "予算の範囲が不正です" }, 400);
       let data: Record<string, unknown> = {};
       try { data = JSON.parse(row.public_data_json) as Record<string, unknown>; } catch {}
       data.description = description;
       data.manualParticipantIds = participants;
+      if (time !== undefined) data.time = time;
+      if (location !== undefined) data.location = location;
+      if (capacity !== undefined) data.capacity = capacity;
+      if (reservationCapacity !== undefined) data.reservationCapacity = reservationCapacity;
+      if (price !== undefined) data.price = price;
+      if (priceMin !== undefined) data.priceMin = priceMin;
+      if (priceMax !== undefined) data.priceMax = priceMax;
+      if (applicationDeadline !== undefined) data.applicationDeadline = applicationDeadline;
+      if (cancellationPolicy !== undefined) data.cancellationPolicy = cancellationPolicy;
+      if (tabelogUrl !== undefined) data.tabelogUrl = tabelogUrl || undefined;
+      if (googleMapsUrl !== undefined) data.googleMapsUrl = googleMapsUrl || undefined;
       const now = new Date().toISOString();
       await env.DB.batch([
-        env.DB.prepare("UPDATE events SET title = ?, public_data_json = ?, updated_at = ? WHERE id = ?").bind(title, JSON.stringify(data), now, id),
-        ...["title", "description", "manualParticipantIds"].map((field) => env.DB!.prepare(`INSERT INTO event_import_field_edits (event_id, field_name, edited_at, actor_member_id)
+        env.DB.prepare("UPDATE events SET title = ?, event_date = ?, public_data_json = ?, updated_at = ? WHERE id = ?").bind(title, date ?? row.event_date, JSON.stringify(data), now, id),
+        ...["title", "description", "event_date", "time", "location", "capacity", "reservationCapacity", "price", "priceMin", "priceMax", "applicationDeadline", "cancellationPolicy", "tabelogUrl", "googleMapsUrl", "manualParticipantIds"].map((field) => env.DB!.prepare(`INSERT INTO event_import_field_edits (event_id, field_name, edited_at, actor_member_id)
           VALUES (?, ?, ?, ?) ON CONFLICT(event_id, field_name) DO UPDATE SET edited_at = excluded.edited_at, actor_member_id = excluded.actor_member_id`).bind(id, field, now, member.id)),
         env.DB.prepare(`INSERT INTO audit_logs (actor_user_id, action, entity_type, entity_id, metadata_json, created_at)
           VALUES (?, 'event.edited', 'event', ?, ?, ?)`).bind(String(member.id), id, JSON.stringify({ participants: participants.length }), now),
