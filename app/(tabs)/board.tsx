@@ -169,9 +169,8 @@ function LinkifiedText({ content }: { content: string }) {
 }
 
 function RecruitmentStatusBadge({ status }: { status: BoardRecruitmentStatus }) {
-  if (status === "none") return null;
-  const recruiting = status === "open";
-  return <View style={{ marginRight: 9, borderRadius: 10, paddingHorizontal: 9, paddingVertical: 6, backgroundColor: recruiting ? "#DDF3E3" : "#DADADD" }}><Text style={{ fontSize: 11, fontWeight: "900", color: recruiting ? "#247A42" : "#66666B" }}>{recruiting ? "募集中" : "募集終了"}</Text></View>;
+  if (status !== "open") return null;
+  return <View style={{ marginRight: 9, borderRadius: 10, paddingHorizontal: 9, paddingVertical: 6, backgroundColor: "#DDF3E3" }}><Text style={{ fontSize: 11, fontWeight: "900", color: "#247A42" }}>募集中</Text></View>;
 }
 
 
@@ -302,7 +301,7 @@ function GourmetAdviceContent({ thread, compact = false }: { thread: BoardThread
       {[{ label: "料理ジャンル", value: genres.join("・") }, { label: "エリア", value: normalizedAdviceValue(advice.area) }, { label: "利用シーン", value: normalizedAdviceValue(advice.scene) }, { label: "予算", value: normalizedAdviceValue(advice.budget) }].map((item) => (
         <View key={item.label} style={{ flexDirection: "row", marginBottom: 5 }}><Text style={{ width: 74, fontSize: 12, fontWeight: "900", color: "#9A6A12" }}>{item.label}</Text><Text style={{ flex: 1, fontSize: 13, color: colors.foreground }} numberOfLines={compact ? 1 : undefined}>{item.value}</Text></View>
       ))}
-      {!compact ? <Text style={{ fontSize: 14, lineHeight: 21, color: colors.foreground, marginTop: 7 }}><Text style={{ fontWeight: "900" }}>一言　</Text>{advice.comment?.trim() || thread.preview}</Text> : null}
+      {!compact ? <View style={{ flexDirection: "row", marginTop: 7 }}><Text style={{ width: 74, fontSize: 12, fontWeight: "900", color: "#9A6A12" }}>一言</Text><Text style={{ flex: 1, fontSize: 13, lineHeight: 20, color: colors.foreground }}>{advice.comment?.trim() || thread.preview}</Text></View> : null}
     </View>
   );
 }
@@ -1440,7 +1439,7 @@ function EditThreadModal({
         prizePoints: Number(contestPrizePoints) || thread.gourmetContest.prizePoints,
         prizeTitle: contestPrizeTitle.trim() || thread.gourmetContest.prizeTitle,
       } : undefined,
-      lastUpdated: new Date().toISOString(),
+      lastUpdated: thread.lastUpdated,
     });
     onClose();
   };
@@ -1503,7 +1502,7 @@ function EditThreadModal({
               />
             </View> : null}
 
-            {isRecruitmentBoardCategory(thread.category) && !isClubSelfIntroduction(thread) ? <View><Text style={{ fontSize: 13, fontWeight: "700", color: colors.muted, marginBottom: 7 }}>募集ステータス</Text><View style={{ flexDirection: "row", gap: 8 }}>{([ ["open", "募集中"], ["closed", "募集終了"], ["none", "なし"] ] as [BoardRecruitmentStatus, string][]).map(([status, label]) => <Pressable key={status} onPress={() => setRecruitmentStatus(status)} style={{ flex: 1, alignItems: "center", borderRadius: 10, paddingVertical: 10, backgroundColor: recruitmentStatus === status ? (status === "open" ? "#DDF3E3" : status === "closed" ? "#E3E3E6" : "#EEEAF2") : colors.surface, borderWidth: 1, borderColor: recruitmentStatus === status ? "#6D5B85" : colors.border }}><Text style={{ fontSize: 12, fontWeight: "900", color: colors.foreground }}>{label}</Text></Pressable>)}</View></View> : null}
+            {isRecruitmentBoardCategory(thread.category) && !isClubSelfIntroduction(thread) ? <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", borderRadius: 12, padding: 13, backgroundColor: "#F6FAF7", borderWidth: 1, borderColor: "#D8EADA" }}><View><Text style={{ fontSize: 14, fontWeight: "900", color: colors.foreground }}>募集中ステータスをオンにする</Text><Text style={{ fontSize: 11, color: colors.muted, marginTop: 3 }}>オンの投稿だけ一覧に「募集中」と表示されます。</Text></View><Pressable onPress={() => setRecruitmentStatus((current) => current === "open" ? "none" : "open")} accessibilityRole="switch" accessibilityState={{ checked: recruitmentStatus === "open" }} style={{ width: 48, height: 28, borderRadius: 14, backgroundColor: recruitmentStatus === "open" ? "#34C759" : "#C7C7CC", padding: 3, justifyContent: recruitmentStatus === "open" ? "flex-end" : "flex-start" }}><View style={{ width: 22, height: 22, borderRadius: 11, backgroundColor: "#FFF" }} /></Pressable></View> : null}
 
             {thread.gourmetContest ? <View style={{ gap: 12 }}>
               <Text style={{ fontSize: 15, fontWeight: "900", color: colors.foreground }}>大会設定</Text>
@@ -2484,7 +2483,7 @@ export default function BoardScreen() {
   };
   const canPinThread = (thread: BoardThread) => thread.category.startsWith("club-club-") && !isClubSelfIntroduction(thread) && (thread.author.id === viewerMemberId || Boolean(clubForThread(thread) && getClubViewerAccess(clubForThread(thread)!, authUser?.memberId, CURRENT_USER.id).isLeader) || userCanModerateRecruitment);
   const updateThreadManagement = async (thread: BoardThread, changes: Pick<BoardThread, "isRecruiting" | "isPinned" | "recruitmentStatus">) => {
-    const updated = { ...thread, ...changes, lastUpdated: new Date().toISOString() };
+    const updated = { ...thread, ...changes, lastUpdated: thread.lastUpdated };
     if (thread.shared) {
       try {
         await Api.updateSharedBoardThread(thread.id, { status: changes.recruitmentStatus ?? "none", pinned: Boolean(changes.isPinned), data: boardThreadData(updated) });

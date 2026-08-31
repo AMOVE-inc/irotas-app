@@ -11,9 +11,9 @@ export function stripRankFromName(name: string) {
 
 export function MemberRoleBadge({ name, role, compact = false }: { name?: string; role?: string; compact?: boolean }) {
   const normalized = name ?? "";
-  const admin = /IRO\+代表|管理者|\badmin\b/i.test(normalized) || role === "admin";
+  const admin = /IRO\+代表/.test(normalized) || role === "admin";
   const operator = /IRO[+＋]運営|【運営(?:メンバー)?】|運営メンバー/.test(normalized) || role === "operator";
-  const leader = normalized.match(/([ぁ-んァ-ン一-龯A-Za-z]+部長)/u)?.[1];
+  const leader = normalized.match(/([🍖⛳💃🎭🏀🍷✈️🍳🍞🐭🍺]\s*[ぁ-んァ-ン一-龯A-Za-z]+部長)/u)?.[1] ?? normalized.match(/([ぁ-んァ-ン一-龯A-Za-z]+部長)/u)?.[1];
   const paddingHorizontal = compact ? 6 : 9;
   const paddingVertical = compact ? 2 : 3;
   const fontSize = compact ? 8 : 11;
@@ -22,8 +22,7 @@ export function MemberRoleBadge({ name, role, compact = false }: { name?: string
   return null;
 }
 
-export function MemberRankBadge({ rank, compact = false, name }: { rank: MemberRank; compact?: boolean; name?: string }) {
-  if (name?.includes("IRO+代表")) return <View style={{ marginLeft: 5, borderRadius: 8, paddingHorizontal: compact ? 6 : 9, paddingVertical: compact ? 2 : 3, backgroundColor: "#D93636" }}><Text style={{ fontSize: compact ? 8 : 11, fontWeight: "900", color: "#FFF" }}>管理者</Text></View>;
+export function MemberRankBadge({ rank, compact = false }: { rank: MemberRank; compact?: boolean; name?: string }) {
   if (rank === "regular") return null;
   const platinum = rank === "platinum";
   const color = platinum ? "#D4AF37" : RANK_COLORS[rank];

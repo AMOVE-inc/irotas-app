@@ -89,6 +89,7 @@ export default function EventDetailScreen() {
   const [adminTabelogUrl, setAdminTabelogUrl] = useState(event?.tabelogUrl ?? "");
   const [adminGoogleMapsUrl, setAdminGoogleMapsUrl] = useState(event?.googleMapsUrl ?? "");
   const [participantSearch, setParticipantSearch] = useState("");
+  const [linkCopied, setLinkCopied] = useState(false);
   const [memberDirectory, setMemberDirectory] = useState<Api.PublicMember[]>([]);
   const [, setEventRevision] = useState(0);
   // ボタン連打防止フラグ
@@ -596,9 +597,10 @@ export default function EventDetailScreen() {
         <Pressable onPress={() => { const favorite = event.isFavorite ?? favoriteEventIds.includes(event.id); if (event.viewerMemberId) { void Api.setEventFavorite(event.id, !favorite).then(() => setEvent({ ...event, isFavorite: !favorite })).catch((error) => Alert.alert("更新できませんでした", error instanceof Error ? error.message : "もう一度お試しください。")); } else { void toggleEventFavoriteWithNotifications(event, CURRENT_USER.id); } if (!favorite) void recordActivityEvent({ userId: CURRENT_USER.id, eventName: "event_favorited", entityType: "event", entityId: event.id }); }} accessibilityLabel={(event.isFavorite ?? favoriteEventIds.includes(event.id)) ? "お気に入りから削除" : "お気に入りに追加"} style={{ position: "absolute", top: 56, right: 16, width: 38, height: 38, borderRadius: 19, backgroundColor: "rgba(0,0,0,0.5)", alignItems: "center", justifyContent: "center" }}>
           <IconSymbol name={(event.isFavorite ?? favoriteEventIds.includes(event.id)) ? "heart.fill" : "heart"} size={20} color={(event.isFavorite ?? favoriteEventIds.includes(event.id)) ? "#F59AB9" : "#FFF"} />
         </Pressable>
-        <Pressable onPress={() => { void Clipboard.setStringAsync(`https://irotas-app-20260721.k1998915n.chatgpt.site/event-detail?id=${encodeURIComponent(event.id)}`).then(() => Alert.alert("リンクをコピーしました", "イベントへのリンクをコピーしました。")); }} accessibilityLabel="イベントリンクをコピー" style={{ position: "absolute", top: 100, right: 16, width: 38, height: 38, borderRadius: 19, backgroundColor: "rgba(0,0,0,0.5)", alignItems: "center", justifyContent: "center" }}>
+        <Pressable onPress={() => { void Clipboard.setStringAsync(`https://irotas-app-20260721.k1998915n.chatgpt.site/event-detail?id=${encodeURIComponent(event.id)}`).finally(() => { setLinkCopied(true); setTimeout(() => setLinkCopied(false), 2200); }); }} accessibilityLabel="イベントリンクをコピー" style={{ position: "absolute", top: 100, right: 16, width: 38, height: 38, borderRadius: 19, backgroundColor: "rgba(0,0,0,0.5)", alignItems: "center", justifyContent: "center" }}>
           <IconSymbol name="square.and.arrow.up" size={19} color="#FFF" />
         </Pressable>
+        {linkCopied ? <View style={{ position: "absolute", top: 146, right: 16, borderRadius: 10, backgroundColor: "rgba(25,25,28,0.92)", paddingHorizontal: 12, paddingVertical: 9 }}><Text style={{ color: "#FFF", fontSize: 12, fontWeight: "800" }}>リンクをコピーしました</Text></View> : null}
       </View>
 
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16, paddingBottom: 236 }} keyboardShouldPersistTaps="handled" keyboardDismissMode="interactive">
@@ -741,7 +743,7 @@ export default function EventDetailScreen() {
 
         <Pressable onPress={() => openMemberProfile(event.organizerProfileId ?? event.createdBy)} accessibilityLabel="幹事のプロフィールを表示" style={{ flexDirection: "row", alignItems: "center", backgroundColor: colors.surface, borderRadius: 14, padding: 14, marginBottom: 16 }}>
           <Image source={event.eventType === "official" ? DEFAULT_AVATAR : (event.organizerAvatar ?? organizer?.avatar ?? DEFAULT_AVATAR)} style={{ width: 42, height: 42, borderRadius: 21 }} contentFit="cover" />
-          <View style={{ flex: 1, marginLeft: 11 }}><Text style={{ fontSize: 11, color: colors.muted }}>幹事</Text><View style={{ flexDirection: "row", alignItems: "center" }}><Text style={{ fontSize: 15, fontWeight: "800", color: colors.foreground }}>{event.eventType === "official" ? "IRO＋運営" : stripRankFromName(event.organizerName ?? organizer?.name ?? "メンバー")}</Text>{event.eventType !== "official" && event.organizerRank ? <MemberRankBadge rank={event.organizerRank} name={event.organizerName} compact /> : null}<MemberRoleBadge name={event.organizerName} role={event.eventType === "official" ? "operator" : organizer?.role} compact /></View></View>
+          <View style={{ flex: 1, marginLeft: 11 }}><Text style={{ fontSize: 11, color: colors.muted }}>幹事</Text><View style={{ flexDirection: "row", alignItems: "center" }}><Text style={{ fontSize: 15, fontWeight: "800", color: colors.foreground }}>{event.eventType === "official" ? "IRO＋運営" : stripRankFromName(event.organizerName ?? organizer?.name ?? "メンバー")}</Text>{event.eventType !== "official" && event.organizerRank ? <MemberRankBadge rank={event.organizerRank} name={event.organizerName} compact /> : null}<MemberRoleBadge name={event.organizerName} role={event.eventType === "official" ? "operator" : undefined} compact /></View></View>
           <IconSymbol name="chevron.right" size={17} color={colors.muted} />
         </Pressable>
 

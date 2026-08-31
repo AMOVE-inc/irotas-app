@@ -836,7 +836,7 @@ function EventCard({
                     )}
               </Text>
               {event.eventType !== "official" && event.organizerRank ? <MemberRankBadge rank={event.organizerRank} name={event.organizerName} compact /> : null}
-              <MemberRoleBadge name={event.organizerName} role={event.eventType === "official" ? "operator" : organizer?.role} compact />
+              <MemberRoleBadge name={event.organizerName} role={event.eventType === "official" ? "operator" : undefined} compact />
               {event.eventType !== "official" && organizer ? (
                 <NewMemberMark member={organizer} size={11} />
               ) : null}
@@ -951,7 +951,7 @@ export default function EventsScreen() {
       setAllEvents([
         ...databaseEvents.map((event) => {
           const imported = importedById.get(event.id);
-          return imported ? { ...event, organizerProfileId: event.organizerProfileId || imported.organizerProfileId, organizerName: imported.organizerName || event.organizerName, organizerAvatar: imported.organizerAvatar || event.organizerAvatar, organizerRank: imported.organizerRank || event.organizerRank } : event;
+          return imported ? { ...event, organizerProfileId: imported.organizerProfileId || event.organizerProfileId, organizerName: imported.organizerName || event.organizerName, organizerAvatar: imported.organizerAvatar || event.organizerAvatar, organizerRank: imported.organizerRank || event.organizerRank } : event;
         }),
         ...getAllEvents(EVENTS).filter((event) => !databaseIds.has(event.id)),
       ]);
