@@ -306,6 +306,8 @@ async function ensureImportedThread(
   member: BoardMember,
 ) {
   const existing = await threadById(db, id);
+  // Discord断面の再取得時も、同じスレッドIDがアプリDBに存在する場合は
+  // アプリ側で編集された募集ステータス・固定状態・本文を一切上書きしない。
   if (existing) return existing;
   const raw = (archive as RawDiscordBoardArchive).threads.find((thread) => thread.id === id);
   const category = raw ? validCategory(raw.category) : null;
@@ -325,7 +327,14 @@ async function ensureImportedThread(
       category,
       normalizedTitle,
       normalizedContent,
-      JSON.stringify({ archiveShadow: true }),
+      JSON.stringify({
+        archiveShadow: true,
+        sourceThreadId: id,
+        migrationPolicy: {
+          preserveAppManagedFields: ["status", "pinned", "title", "content", "data_json"],
+          appendOnlyFields: ["comments"],
+        },
+      }),
       raw.createdAt || now,
       now,
     ).run();
@@ -339,7 +348,14 @@ async function ensureImportedThread(
     content: normalizedContent,
     status: "none" as const,
     pinned: 0,
-    data_json: JSON.stringify({ archiveShadow: true }),
+    data_json: JSON.stringify({
+      archiveShadow: true,
+      sourceThreadId: id,
+      migrationPolicy: {
+        preserveAppManagedFields: ["status", "pinned", "title", "content", "data_json"],
+        appendOnlyFields: ["comments"],
+      },
+    }),
     created_at: raw.createdAt || now,
     updated_at: now,
   };
