@@ -55,5 +55,9 @@ export async function handleBackupRequest(request: Request, env: SitesEnv): Prom
   }
   if (request.method !== "POST") return json({ error: "method_not_allowed" }, 405);
   try { return json({ success: true, backup: await createBackup(env.DB, env.UPLOADS, viewer.id) }, 201); }
-  catch { return json({ error: "DBバックアップを作成できませんでした" }, 503); }
+  catch (error) {
+    // This is deliberately limited to a server-side diagnostic: the client keeps a generic error.
+    console.error("backup.create.failed", error instanceof Error ? error.message : "unknown_error");
+    return json({ error: "DBバックアップを作成できませんでした" }, 503);
+  }
 }
