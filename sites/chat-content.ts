@@ -141,7 +141,7 @@ async function canAccessRoom(db: D1Database, room: RoomRow, member: Viewer) {
     return canMemberAccessClub(db, room.source_id, member.id, elevated(member));
   if (room.room_type === "event" && room.source_id) {
     const event = await db.prepare(`SELECT event_type, club_id, organizer_member_id
-      FROM events WHERE id = ? AND status != 'cancelled' LIMIT 1`).bind(room.source_id)
+      FROM events WHERE id = ? LIMIT 1`).bind(room.source_id)
       .first<{ event_type: string; club_id: string | null; organizer_member_id: number }>();
     if (!event) return false;
     const admin = member.role === "admin" || member.access_role === "admin";

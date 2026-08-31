@@ -298,6 +298,39 @@ async function notifyEventCancellation(
     .bind(crypto.randomUUID(), targetMemberId, title, body, eventId, new Date().toISOString()).run();
 }
 
+async function postEventCancellationToConfirmedChat(
+  db: D1Database,
+  row: EventRow,
+  actorMemberId: number,
+  now: string,
+) {
+  const confirmed = await db.prepare(`SELECT member_id FROM event_participations
+    WHERE event_id = ? AND status IN ('confirmed', 'cancel_requested')`).bind(row.id).all<{ member_id: number }>();
+  if (!(confirmed.results ?? []).length) return;
+  let data: Record<string, unknown> = {};
+  try { data = JSON.parse(row.public_data_json) as Record<string, unknown>; } catch {}
+  const chatId = typeof data.chatId === "string" && data.chatId ? data.chatId : eventChatId(row.id);
+  const body = `【イベント中止のお知らせ】「${row.title}」は中止となりました。参加確定者へのご案内は完了しています。`;
+  await db.batch([
+    db.prepare(`INSERT OR IGNORE INTO chat_rooms (id, name, room_type, source_id, created_by_member_id, created_at, updated_at)
+      VALUES (?, ?, 'event', ?, ?, ?, ?)`).bind(chatId, row.title, row.id, row.organizer_member_id, now, now),
+    db.prepare(`INSERT INTO chat_room_members (room_id, member_id, member_role, joined_at, left_at)
+      VALUES (?, ?, 'owner', ?, NULL)
+      ON CONFLICT(room_id, member_id) DO UPDATE SET member_role = 'owner', left_at = NULL`)
+      .bind(chatId, row.organizer_member_id, now),
+    ...(confirmed.results ?? []).map((participant) => db.prepare(`INSERT INTO chat_room_members
+      (room_id, member_id, member_role, joined_at, left_at) VALUES (?, ?, 'member', ?, NULL)
+      ON CONFLICT(room_id, member_id) DO UPDATE SET left_at = NULL`)
+      .bind(chatId, participant.member_id, now)),
+    db.prepare(`INSERT INTO chat_messages (id, room_id, sender_member_id, content, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?)`)
+      .bind(`event_cancel_${crypto.randomUUID()}`, chatId, actorMemberId, body, now, now),
+  ]);
+  for (const participant of confirmed.results ?? []) {
+    await notifyEventCancellation(db, participant.member_id, row.id, "イベントが中止されました", body);
+  }
+}
+
 async function createEvent(request: Request, db: D1Database, member: Awaited<ReturnType<typeof authenticatedRequestMember>>) {
   if (!member) return responseJson({ error: "ログインが必要です" }, 401);
   const raw = await request.text();
@@ -399,7 +432,7 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
     if (!row) return responseJson({ error: "イベントが見つかりません" }, 404);
     const input = await readBody(request);
     if (input?.action === "edit") {
-      if (!admin) return responseJson({ error: "管理者のみイベント情報を編集できます" }, 403);
+      if (!(admin || row.organizer_member_id === member.id)) return responseJson({ error: "イベント作成者または管理者のみイベント情報を編集できます" }, 403);
       const title = text(input.title, 160, true);
       const description = text(input.description, 5000);
       const participants = stringArray(input.participants, 100, 80) ?? [];
@@ -418,8 +451,9 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
       const updated = await eventRow(env.DB, id);
       return responseJson({ event: await hydratedEvent(env.DB, updated!, member.id, elevated, memberPublicId) });
     }
-    if (!(elevated || row.organizer_member_id === member.id)) return responseJson({ error: "幹事または運営メンバーのみ操作できます" }, 403);
+    if (!(admin || row.organizer_member_id === member.id)) return responseJson({ error: "イベント作成者または管理者のみ操作できます" }, 403);
     if (input?.action !== "cancel") return responseJson({ error: "操作を選択してください" }, 400);
+    if (input?.confirmedParticipantNotified !== true) return responseJson({ error: "参加確定者への事前連絡の確認が必要です" }, 400);
     if (row.status === "cancelled") return responseJson({ success: true, cancelled: true });
     const now = new Date().toISOString();
     await reverseCancelledEventHostXp(env.DB, id, now);
@@ -431,6 +465,7 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
       env.DB.prepare(`INSERT INTO audit_logs (actor_user_id, action, entity_type, entity_id, metadata_json, created_at)
         VALUES (?, 'event.cancelled', 'event', ?, '{}', ?)`).bind(String(member.id), id, now),
     ]);
+    await postEventCancellationToConfirmedChat(env.DB, row, member.id, now);
     return responseJson({ success: true, cancelled: true });
   }
   if (favoriteMatch && request.method === "PUT") {

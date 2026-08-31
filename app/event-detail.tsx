@@ -183,6 +183,7 @@ export default function EventDetailScreen() {
   const hasPendingCancellationRequest = pendingCancellationRequests.some((request) => request.memberId === viewerMemberId);
   const requiresOrganizerApproval = event.eventType === "gourmet" || event.eventType === "club";
   const canAdminEdit = isAdminRole(authUser?.role, authUser?.accessRole);
+  const canManageEvent = canAdminEdit || isOrganizer;
   const showApplicationConfirmation = (title: string, message: string, buttons: AlertButton[]) => setApplicationConfirmation({ title, message, buttons });
 
   const handleEventComment = () => {
@@ -406,16 +407,19 @@ export default function EventDetailScreen() {
   };
 
   const handleCancelEvent = () => {
-    Alert.alert("イベントを中止", "イベントを中止すると一覧から非表示になり、開催後に付与済みの幹事XPも取り消されます。中止しますか？", [
+    Alert.alert("事前連絡の確認", "参加確定者に事前連絡を入れましたか？", [
       { text: "戻る", style: "cancel" },
-      { text: "中止する", style: "destructive", onPress: async () => {
-        try {
-          await Api.cancelEvent(event.id);
-          Alert.alert("イベントを中止しました", "イベント一覧へ戻ります。", [{ text: "OK", onPress: () => router.replace("/events") }]);
-        } catch (error) {
-          Alert.alert("中止できませんでした", error instanceof Error ? error.message : "もう一度お試しください。");
-        }
-      } },
+      { text: "連絡済み", style: "destructive", onPress: () => Alert.alert("イベントを中止", "中止後、参加確定者チャットへキャンセル完了の連絡を自動投稿します。中止しますか？", [
+        { text: "戻る", style: "cancel" },
+        { text: "中止する", style: "destructive", onPress: async () => {
+          try {
+            await Api.cancelEvent(event.id, true);
+            Alert.alert("イベントを中止しました", "参加確定者チャットへキャンセル完了の連絡を投稿しました。", [{ text: "OK", onPress: () => router.replace("/events") }]);
+          } catch (error) {
+            Alert.alert("中止できませんでした", error instanceof Error ? error.message : "もう一度お試しください。");
+          }
+        } },
+      ]) },
     ]);
   };
 
@@ -716,7 +720,7 @@ export default function EventDetailScreen() {
           <IconSymbol name="chevron.right" size={17} color={colors.muted} />
         </Pressable>
 
-        {canAdminEdit ? <Pressable onPress={() => { setAdminTitle(event.title); setAdminDescription(event.description); setAdminParticipants((event.participants ?? []).join("\n")); setShowAdminEdit(true); }} style={{ marginBottom: 16, borderRadius: 12, paddingVertical: 12, alignItems: "center", backgroundColor: "#B42318" }}><Text style={{ color: "#FFF", fontSize: 14, fontWeight: "900" }}>管理者：イベント情報を編集</Text></Pressable> : null}
+        {canManageEvent ? <Pressable onPress={() => { setAdminTitle(event.title); setAdminDescription(event.description); setAdminParticipants((event.participants ?? []).join("\n")); setShowAdminEdit(true); }} style={{ marginBottom: 16, borderRadius: 12, paddingVertical: 12, alignItems: "center", backgroundColor: "#B42318" }}><Text style={{ color: "#FFF", fontSize: 14, fontWeight: "900" }}>{canAdminEdit ? "管理者：イベント情報を編集" : "イベント情報を編集"}</Text></Pressable> : null}
 
         {isOrganizer ? (
           <View style={{ backgroundColor: "#F5F8FC", borderRadius: 14, padding: 14, marginBottom: 16, borderWidth: 1, borderColor: "#DCE7F2" }}>
@@ -741,6 +745,8 @@ export default function EventDetailScreen() {
             <Pressable onPress={handleCancelEvent} style={{ marginTop: 10, borderRadius: 11, borderWidth: 1, borderColor: "#D94C55", paddingVertical: 11, alignItems: "center" }}><Text style={{ fontSize: 14, fontWeight: "900", color: "#D94C55" }}>イベントを中止</Text></Pressable>
           </View>
         ) : null}
+
+        {canManageEvent && !isOrganizer ? <Pressable onPress={handleCancelEvent} style={{ marginTop: -6, marginBottom: 16, borderRadius: 11, borderWidth: 1, borderColor: "#D94C55", paddingVertical: 11, alignItems: "center" }}><Text style={{ fontSize: 14, fontWeight: "900", color: "#D94C55" }}>イベントを中止</Text></Pressable> : null}
 
         {event.genres?.length ? (
           <View style={{ marginBottom: 16 }}>

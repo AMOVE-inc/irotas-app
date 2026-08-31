@@ -914,7 +914,9 @@ export default function EventsScreen() {
   );
   const { user: authUser } = useAuthContext();
   const clubs = useClubs();
-  const canCreateEvent = Boolean(authUser);
+  // Hydration before the authenticated profile arrives must not hide the create affordance.
+  // The create screen/API still requires an authenticated member before saving.
+  const canCreateEvent = true;
   const viewerMemberId = resolveViewerMemberId(
     authUser?.memberId,
     Boolean(authUser),
@@ -1462,7 +1464,7 @@ export default function EventsScreen() {
           style={{
             position: "absolute",
             right: 20,
-            bottom: 20,
+            bottom: 108,
             width: 56,
             height: 56,
             borderRadius: 28,

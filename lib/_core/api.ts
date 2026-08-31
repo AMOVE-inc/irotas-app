@@ -1142,10 +1142,10 @@ export async function finalizeEventParticipants(eventId: string) {
   return result.event;
 }
 
-export async function cancelEvent(eventId: string) {
+export async function cancelEvent(eventId: string, confirmedParticipantNotified = false) {
   return apiCall<{ success: boolean; cancelled: boolean }>(
     `/api/events/${encodeURIComponent(eventId)}`,
-    { method: "PATCH", body: JSON.stringify({ action: "cancel" }) },
+    { method: "PATCH", body: JSON.stringify({ action: "cancel", confirmedParticipantNotified }) },
   );
 }
 
