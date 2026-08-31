@@ -73,6 +73,10 @@ export default function EventDetailScreen() {
   const [eventComments, setEventComments] = useState<{ id: string; author: string; text: string; createdAt: string }[]>([]);
   const [eventCommentText, setEventCommentText] = useState("");
   const [eventCommentFocused, setEventCommentFocused] = useState(false);
+  const [showAdminEdit, setShowAdminEdit] = useState(false);
+  const [adminTitle, setAdminTitle] = useState(event?.title ?? "");
+  const [adminDescription, setAdminDescription] = useState(event?.description ?? "");
+  const [adminParticipants, setAdminParticipants] = useState((event?.participants ?? []).join("\n"));
   const [, setEventRevision] = useState(0);
   // ボタン連打防止フラグ
   const joiningRef = useRef(false);
@@ -174,6 +178,7 @@ export default function EventDetailScreen() {
   const pendingCancellationRequests = getPendingCancellationRequests(event);
   const hasPendingCancellationRequest = pendingCancellationRequests.some((request) => request.memberId === viewerMemberId);
   const requiresOrganizerApproval = event.eventType === "gourmet" || event.eventType === "club";
+  const canAdminEdit = isAdminRole(authUser?.role, authUser?.accessRole);
   const showApplicationConfirmation = (title: string, message: string, buttons: AlertButton[]) => setApplicationConfirmation({ title, message, buttons });
 
   const handleEventComment = () => {
@@ -706,6 +711,8 @@ export default function EventDetailScreen() {
           <IconSymbol name="chevron.right" size={17} color={colors.muted} />
         </Pressable>
 
+        {canAdminEdit ? <Pressable onPress={() => { setAdminTitle(event.title); setAdminDescription(event.description); setAdminParticipants((event.participants ?? []).join("\n")); setShowAdminEdit(true); }} style={{ marginBottom: 16, borderRadius: 12, paddingVertical: 12, alignItems: "center", backgroundColor: "#B42318" }}><Text style={{ color: "#FFF", fontSize: 14, fontWeight: "900" }}>管理者：イベント情報を編集</Text></Pressable> : null}
+
         {isOrganizer ? (
           <View style={{ backgroundColor: "#F5F8FC", borderRadius: 14, padding: 14, marginBottom: 16, borderWidth: 1, borderColor: "#DCE7F2" }}>
             <Text style={{ fontSize: 16, fontWeight: "900", color: colors.foreground }}>幹事メニュー</Text>
@@ -891,7 +898,7 @@ export default function EventDetailScreen() {
           </View>
         ) : null}
 
-        {!isJoined && !hasApplied && !isOrganizer ? (
+        {!isJoined && !hasApplied && !isOrganizer && event.status === "open" ? (
           <View style={{ backgroundColor: "#FFF8F0", borderRadius: 14, padding: 14, marginBottom: 16, borderWidth: 1, borderColor: "#EED9BF" }}>
             <Pressable onPress={() => setTermsAccepted((value) => !value)} style={{ flexDirection: "row", alignItems: "center" }}>
               <View style={{ width: 24, height: 24, borderRadius: 6, backgroundColor: termsAccepted ? "#E8A0BF" : colors.surface, borderWidth: 1, borderColor: termsAccepted ? "#E8A0BF" : colors.border, alignItems: "center", justifyContent: "center" }}>{termsAccepted ? <IconSymbol name="checkmark" size={15} color="#FFF" /> : null}</View>
@@ -939,6 +946,21 @@ export default function EventDetailScreen() {
       </ScrollView>
       <PersistentBottomNav active="/events" />
 
+      <Modal visible={showAdminEdit} transparent animationType="slide" onRequestClose={() => setShowAdminEdit(false)}>
+        <View style={{ flex: 1, justifyContent: "center", padding: 20, backgroundColor: "rgba(20,18,24,0.5)" }}>
+          <View style={{ borderRadius: 20, padding: 18, backgroundColor: colors.background }}>
+            <Text style={{ fontSize: 19, fontWeight: "900", color: colors.foreground }}>イベント情報を編集</Text>
+            <Text style={{ marginTop: 14, fontSize: 12, fontWeight: "800", color: colors.muted }}>タイトル</Text>
+            <TextInput value={adminTitle} onChangeText={setAdminTitle} style={{ marginTop: 5, borderWidth: 1, borderColor: colors.border, borderRadius: 10, padding: 11, color: colors.foreground }} />
+            <Text style={{ marginTop: 12, fontSize: 12, fontWeight: "800", color: colors.muted }}>詳細</Text>
+            <TextInput value={adminDescription} onChangeText={setAdminDescription} multiline style={{ marginTop: 5, minHeight: 120, borderWidth: 1, borderColor: colors.border, borderRadius: 10, padding: 11, color: colors.foreground, textAlignVertical: "top" }} />
+            <Text style={{ marginTop: 12, fontSize: 12, fontWeight: "800", color: colors.muted }}>参加確定者ID（1行に1人）</Text>
+            <TextInput value={adminParticipants} onChangeText={setAdminParticipants} multiline style={{ marginTop: 5, minHeight: 80, borderWidth: 1, borderColor: colors.border, borderRadius: 10, padding: 11, color: colors.foreground, textAlignVertical: "top" }} />
+            <View style={{ flexDirection: "row", gap: 10, marginTop: 16 }}><Pressable onPress={() => setShowAdminEdit(false)} style={{ flex: 1, paddingVertical: 13, alignItems: "center", borderRadius: 11, backgroundColor: colors.surface }}><Text style={{ fontWeight: "800", color: colors.foreground }}>キャンセル</Text></Pressable><Pressable onPress={async () => { try { const updated = await Api.updateEventDetails(event.id, { title: adminTitle.trim(), description: adminDescription.trim(), participants: adminParticipants.split(/[\n,、]/).map((value) => value.trim()).filter(Boolean) }); setEvent(updated); setShowAdminEdit(false); Alert.alert("更新しました"); } catch (error) { Alert.alert("更新できませんでした", error instanceof Error ? error.message : "もう一度お試しください。"); } }} style={{ flex: 1, paddingVertical: 13, alignItems: "center", borderRadius: 11, backgroundColor: "#B42318" }}><Text style={{ fontWeight: "900", color: "#FFF" }}>保存</Text></Pressable></View>
+          </View>
+        </View>
+      </Modal>
+
       <Modal visible={applicationConfirmation !== null} transparent animationType="fade" onRequestClose={() => setApplicationConfirmation(null)}>
         <View style={{ flex: 1, backgroundColor: "rgba(20,18,24,0.52)", alignItems: "center", justifyContent: "center", padding: 22 }}>
           <View style={{ width: "100%", maxWidth: 430, borderRadius: 24, backgroundColor: colors.background, overflow: "hidden", shadowColor: "#000", shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.28, shadowRadius: 24, elevation: 12 }}>
@@ -960,7 +982,7 @@ export default function EventDetailScreen() {
       {!eventCommentFocused ? <View
         style={{
           position: "absolute",
-          bottom: 0,
+          bottom: Platform.OS === "web" ? 72 : 82,
           left: 0,
           right: 0,
           backgroundColor: colors.background,
@@ -997,13 +1019,14 @@ export default function EventDetailScreen() {
 
         {/* 参加ボタン */}
         <Pressable
-          onPress={isJoined || hasApplied || isOrganizer || (requiresOrganizerApproval && !termsAccepted) ? undefined : handleJoin}
+          disabled={isJoined || hasApplied || isOrganizer || event.status !== "open" || (requiresOrganizerApproval && !termsAccepted)}
+          onPress={isJoined || hasApplied || isOrganizer || event.status !== "open" || (requiresOrganizerApproval && !termsAccepted) ? undefined : handleJoin}
           style={({ pressed }) => ({
             backgroundColor: isJoined
               ? "#34C759"
               : hasApplied
               ? "#5B9BD5"
-              : event.status === "full"
+              : event.status !== "open"
               ? colors.muted
               : "#E8A0BF",
             borderRadius: 14,
@@ -1013,7 +1036,7 @@ export default function EventDetailScreen() {
           })}
         >
           <Text style={{ fontSize: 17, fontWeight: "700", color: "#FFF" }}>
-            {isOrganizer ? "幹事メニューで申込を管理" : isJoined ? "✓ 参加確定" : hasApplied ? "✓ 申込済み（幹事の承認待ち）" : event.status === "full" ? "満席" : requiresOrganizerApproval && !termsAccepted ? "規約に同意して申し込む" : event.selectionMethod === "lottery" ? "抽選に申し込む" : "参加を申し込む"}
+            {isOrganizer ? "幹事メニューで申込を管理" : isJoined ? "✓ 参加確定" : hasApplied ? "✓ 申込済み（幹事の承認待ち）" : event.status !== "open" ? "募集終了" : requiresOrganizerApproval && !termsAccepted ? "規約に同意して申し込む" : event.selectionMethod === "lottery" ? "抽選に申し込む" : "参加を申し込む"}
           </Text>
         </Pressable>
       </View> : null}

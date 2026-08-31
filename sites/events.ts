@@ -150,6 +150,10 @@ function publicEvent(
   try { data = JSON.parse(row.public_data_json) as Record<string, unknown>; } catch {}
   const active = participations.filter((item) => item.status === "applied" || item.status === "confirmed" || item.status === "cancel_requested");
   const confirmed = active.filter((item) => item.status === "confirmed" || item.status === "cancel_requested");
+  const manualParticipantIds = Array.isArray(data.manualParticipantIds)
+    ? data.manualParticipantIds.filter((value): value is string => typeof value === "string" && Boolean(value.trim()))
+    : [];
+  const participantIds = [...new Set([...confirmed.map(publicId), ...manualParticipantIds])];
   const viewerParticipation = active.find((item) => item.member_id === viewerId)?.status ?? null;
   return {
     ...data,
@@ -162,8 +166,8 @@ function publicEvent(
     title: row.title,
     createdBy: row.public_member_id ?? `member-${row.organizer_member_id}`,
     applicantIds: active.map(publicId),
-    participants: confirmed.map(publicId),
-    attendees: active.length,
+    participants: participantIds,
+    attendees: Math.max(active.length, participantIds.length),
     cancellationRequests: cancellations.map((item) => ({
       memberId: publicId(item),
       requestedAt: item.requested_at,
@@ -390,8 +394,26 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
     const id = decodeURIComponent(eventMatch[1]);
     const row = await eventRow(env.DB, id);
     if (!row) return responseJson({ error: "イベントが見つかりません" }, 404);
-    if (!(elevated || row.organizer_member_id === member.id)) return responseJson({ error: "幹事または運営メンバーのみ操作できます" }, 403);
     const input = await readBody(request);
+    if (input?.action === "edit") {
+      if (!admin) return responseJson({ error: "管理者のみイベント情報を編集できます" }, 403);
+      const title = text(input.title, 160, true);
+      const description = text(input.description, 5000);
+      const participants = stringArray(input.participants, 100, 80) ?? [];
+      let data: Record<string, unknown> = {};
+      try { data = JSON.parse(row.public_data_json) as Record<string, unknown>; } catch {}
+      data.description = description;
+      data.manualParticipantIds = participants;
+      const now = new Date().toISOString();
+      await env.DB.batch([
+        env.DB.prepare("UPDATE events SET title = ?, public_data_json = ?, updated_at = ? WHERE id = ?").bind(title, JSON.stringify(data), now, id),
+        env.DB.prepare(`INSERT INTO audit_logs (actor_user_id, action, entity_type, entity_id, metadata_json, created_at)
+          VALUES (?, 'event.edited', 'event', ?, ?, ?)`).bind(String(member.id), id, JSON.stringify({ participants: participants.length }), now),
+      ]);
+      const updated = await eventRow(env.DB, id);
+      return responseJson({ event: await hydratedEvent(env.DB, updated!, member.id, elevated, memberPublicId) });
+    }
+    if (!(elevated || row.organizer_member_id === member.id)) return responseJson({ error: "幹事または運営メンバーのみ操作できます" }, 403);
     if (input?.action !== "cancel") return responseJson({ error: "操作を選択してください" }, 400);
     if (row.status === "cancelled") return responseJson({ success: true, cancelled: true });
     const now = new Date().toISOString();

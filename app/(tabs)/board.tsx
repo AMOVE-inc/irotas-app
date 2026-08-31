@@ -51,6 +51,7 @@ import * as ImagePicker from "expo-image-picker";
 import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import {
   Alert,
+  ActivityIndicator,
   FlatList,
   KeyboardAvoidingView,
   Linking,
@@ -2319,6 +2320,8 @@ export default function BoardScreen() {
   const [activeGroup, setActiveGroup] = useState<BoardCategory["group"]>("all");
   const [activeCategory, setActiveCategory] = useState<string>(BOARD_CATEGORIES[0].key);
   const [refreshing, setRefreshing] = useState(false);
+  const [archiveLoading, setArchiveLoading] = useState(true);
+  const [sharedLoading, setSharedLoading] = useState(true);
   const [selectedThread, setSelectedThread] = useState<BoardThread | null>(null);
   const [showCreateThread, setShowCreateThread] = useState(false);
   const [showAddCategory, setShowAddCategory] = useState(false);
@@ -2386,7 +2389,7 @@ export default function BoardScreen() {
       setImportedComments((current) => ({ ...current, ...archive.comments }));
     }).catch(() => {
       // 認証または通信に失敗した場合は、移行済みデータを表示しない（fail closed）。
-    });
+    }).finally(() => { if (active) setArchiveLoading(false); });
     return () => { active = false; };
   }, []);
 
@@ -2419,7 +2422,7 @@ export default function BoardScreen() {
   useEffect(() => {
     void loadSharedBoardContent().catch(() => {
       // 既存の移行データは表示を続け、共有DBの再取得は更新操作時に再試行する。
-    });
+    }).finally(() => setSharedLoading(false));
   }, [loadSharedBoardContent]);
 
   useEffect(() => {
@@ -2462,9 +2465,10 @@ export default function BoardScreen() {
     setActiveCategory(selectedCategory.key);
   }, [canAccessCategory, categories, categoryParam, isThreadView, router]);
   const allThreads = useMemo(
-    () => applyBoardThreadEdits([...dynamicThreads, ...BOARD_THREADS], editedThreads).filter((thread) => !deletedThreadIds.includes(thread.id)),
-    [dynamicThreads, editedThreads, deletedThreadIds],
+    () => applyBoardThreadEdits(authUser ? dynamicThreads : [...dynamicThreads, ...BOARD_THREADS], editedThreads).filter((thread) => !deletedThreadIds.includes(thread.id)),
+    [authUser, dynamicThreads, editedThreads, deletedThreadIds],
   );
+  const boardLoading = Boolean(authUser) && (archiveLoading || sharedLoading);
   const filteredThreads = sortRecruitmentThreads(allThreads.filter((t) => t.category === activeCategory));
   const clubForThread = (thread: BoardThread) => clubs.find((club) => `club-${club.id}` === thread.category);
   const canChangeRecruitment = (thread: BoardThread) => {
@@ -2645,7 +2649,9 @@ export default function BoardScreen() {
 
       {isClubIndexView ? <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}><Text style={{ color: colors.muted }}>部活動ページを開いています…</Text></View> : null}
 
-      {isThreadView ? <FlatList
+      {isThreadView && boardLoading ? <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}><ActivityIndicator size="large" color="#E8A0BF" /><Text style={{ marginTop: 12, color: colors.muted }}>掲示板を読み込んでいます…</Text></View> : null}
+
+      {isThreadView && !boardLoading ? <FlatList
         data={filteredThreads}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
@@ -2781,7 +2787,7 @@ export default function BoardScreen() {
             const deletingId = editingThread.id;
             try {
               if (editingThread.shared) await Api.deleteSharedBoardThread(deletingId);
-              await deleteBoardThread(deletingId);
+              try { await deleteBoardThread(deletingId); } catch { /* server deletion already succeeded */ }
               setDeletedThreadIds((current) => current.includes(deletingId) ? current : [...current, deletingId]);
               setSelectedThread(null);
               setEditingThread(null);

@@ -69,7 +69,7 @@ type ReactionRow = {
 type PollOption = { id: string; text: string; voterIds: string[] };
 type BoardPollData = { question: string; options: PollOption[]; deadline: string; allowMultiple?: boolean };
 
-const discordAuthorFallbacks = new Map(
+const discordAuthorFallbacks = new Map<string, { displayName?: string; avatarUrl?: string; memberRank?: string }>(
   IMPORTED_DISCORD_EVENTS.flatMap((event) => {
     const discordId = event.organizerProfileId?.match(/^discord-(\d{17,20})$/)?.[1];
     return discordId ? [[discordId, {
@@ -79,6 +79,19 @@ const discordAuthorFallbacks = new Map(
     }] as const] : [];
   }),
 );
+for (const record of [...(archive as RawDiscordBoardArchive).threads, ...(archive as RawDiscordBoardArchive).comments]) {
+  if (!record.authorId) continue;
+  const current = discordAuthorFallbacks.get(record.authorId) ?? {};
+  const rank = /PLATINUM|プラチナ/i.test(record.authorName) ? "platinum"
+    : /GOLD|ゴールド/i.test(record.authorName) ? "gold"
+      : /SILVER|シルバー/i.test(record.authorName) ? "silver"
+        : undefined;
+  discordAuthorFallbacks.set(record.authorId, {
+    displayName: current.displayName || record.authorName.replace(/\s*【[^】]*(?:SILVER|GOLD|PLATINUM)[^】]*】/gi, "").trim(),
+    avatarUrl: current.avatarUrl || record.authorAvatarUrl || undefined,
+    memberRank: current.memberRank || rank,
+  });
+}
 
 export function discordAuthorFallbackFor(discordUserId: string) {
   return discordAuthorFallbacks.get(discordUserId);

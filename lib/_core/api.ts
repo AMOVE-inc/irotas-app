@@ -1,4 +1,5 @@
 import { Platform } from "react-native";
+import { beginApiLoading, endApiLoading } from "@/lib/api-loading";
 import { getApiBaseUrl } from "@/constants/oauth";
 import * as Auth from "./auth";
 import { logger } from "./logger";
@@ -236,6 +237,9 @@ export async function apiCall<T>(
   endpoint: string,
   options: RequestInit = {},
 ): Promise<T> {
+  const method = String(options.method ?? "GET").toUpperCase();
+  const showsGlobalLoading = method !== "GET" && method !== "HEAD";
+  if (showsGlobalLoading) beginApiLoading();
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
     ...((options.headers as Record<string, string>) || {}),
@@ -297,6 +301,8 @@ export async function apiCall<T>(
       throw error;
     }
     throw new Error("Unknown error occurred");
+  } finally {
+    if (showsGlobalLoading) endApiLoading();
   }
 }
 
@@ -1124,6 +1130,14 @@ export async function cancelEvent(eventId: string) {
     `/api/events/${encodeURIComponent(eventId)}`,
     { method: "PATCH", body: JSON.stringify({ action: "cancel" }) },
   );
+}
+
+export async function updateEventDetails(eventId: string, input: { title: string; description: string; participants: string[] }) {
+  const result = await apiCall<{ event: Event }>(`/api/events/${encodeURIComponent(eventId)}`, {
+    method: "PATCH",
+    body: JSON.stringify({ action: "edit", ...input }),
+  });
+  return result.event;
 }
 
 export async function requestEventCancellation(

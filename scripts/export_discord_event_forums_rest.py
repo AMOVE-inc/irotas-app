@@ -68,6 +68,15 @@ def normalized_content(message, role_names):
     return content
 
 
+def avatar_url(author):
+    user_id = str(author.get("id", ""))
+    avatar = author.get("avatar")
+    if not user_id or not avatar:
+        return None
+    extension = "gif" if str(avatar).startswith("a_") else "png"
+    return f"https://cdn.discordapp.com/avatars/{user_id}/{avatar}.{extension}?size=512"
+
+
 async def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", required=True)
@@ -98,6 +107,8 @@ async def main():
                 if not messages:
                     continue
                 starter, *comments = messages
+                starter_author = starter.get("author", {})
+                row["authorAvatarUrl"] = avatar_url(starter_author)
                 if starter.get("content", "").strip():
                     row["content"] = normalized_content(starter, role_names).strip()
                 existing_comments = {str(item["id"]): item for item in source["comments"] if item["threadId"] == row["id"]}
@@ -107,6 +118,7 @@ async def main():
                         "id": str(message["id"]), "threadId": row["id"],
                         "authorId": str(message_author.get("id", "")),
                         "authorName": message.get("member", {}).get("nick") or message_author.get("global_name") or message_author.get("username") or "メンバー",
+                        "authorAvatarUrl": avatar_url(message_author),
                         "content": normalized_content(message, role_names), "createdAt": message.get("timestamp"),
                         "mentions": [{"id": str(item.get("id", "")), "name": item.get("global_name") or item.get("username") or "メンバー"} for item in message.get("mentions", [])],
                         "images": [item["url"] for item in message.get("attachments", []) if item.get("content_type", "").startswith("image/")],
@@ -141,6 +153,7 @@ async def main():
                     "id": f"discord-board-{thread['id']}",
                     "authorId": str(author.get("id", "")),
                     "authorName": starter.get("member", {}).get("nick") or author.get("global_name") or author.get("username") or "IRO+運営",
+                    "authorAvatarUrl": avatar_url(author),
                     "content": normalized_content(starter, role_names).strip() or thread.get("name", ""),
                     "mentions": [{"id": str(item.get("id", "")), "name": item.get("global_name") or item.get("username") or "メンバー"} for item in starter.get("mentions", [])],
                     "createdAt": starter.get("timestamp") or thread.get("thread_metadata", {}).get("archive_timestamp"),
