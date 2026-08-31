@@ -585,8 +585,10 @@ export default function HomeScreen() {
     void Api.getNotifications()
       .then((items) => setUnreadNotificationCount(items.filter((item) => !item.read).length))
       .catch(() => setUnreadNotificationCount(0));
-    void Promise.all([Api.getHomeActivities().catch(() => getHomeActivities()), getGiftCampaigns(), loadMemberPreferences(CURRENT_USER.id, { residence: CURRENT_USER.residence, favoriteCuisines: CURRENT_USER.favoriteCuisines }), loadMemberAiConsents(CURRENT_USER.id)]).then(([nextActivities, gifts, nextPreferences, nextConsents]) => {
-      setActivities(nextActivities);
+    void Promise.all([Api.getHomeActivities().catch(() => []), getHomeActivities(), getGiftCampaigns(), loadMemberPreferences(CURRENT_USER.id, { residence: CURRENT_USER.residence, favoriteCuisines: CURRENT_USER.favoriteCuisines }), loadMemberAiConsents(CURRENT_USER.id)]).then(([remoteActivities, fallbackActivities, gifts, nextPreferences, nextConsents]) => {
+      const mergedActivities = new Map(fallbackActivities.map((activity) => [activity.id, activity]));
+      remoteActivities.forEach((activity) => mergedActivities.set(activity.id, activity));
+      setActivities([...mergedActivities.values()]);
       setPreferences(nextPreferences); setAiConsents(nextConsents);
       const today = new Date().toISOString().slice(0, 10);
       setGiftCampaigns(gifts.filter((gift) => gift.status === "open" && gift.deadline >= today).sort((a, b) => a.deadline.localeCompare(b.deadline)));

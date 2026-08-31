@@ -975,10 +975,8 @@ function ClubDetailModal({
           <Text style={{ fontSize: 22, fontWeight: "800", color: colors.foreground, marginBottom: 8 }}>
             {club.name}
           </Text>
-          <Text style={{ fontSize: 14, color: colors.muted, textAlign: "center", marginBottom: 8 }}>
-            部長: {leader?.name ?? club.leaderName ?? "未設定"} · {club.memberIds.length}人のメンバー
-          </Text>
-          {leader ? <Pressable onPress={() => { onClose(); router.push({ pathname: "/member-profile", params: { id: leader.id } }); }} style={{ minHeight: 42, paddingHorizontal: 18, borderRadius: 12, alignItems: "center", justifyContent: "center", backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border }}><Text style={{ fontSize: 13, fontWeight: "800", color: colors.foreground }}>部長を見る</Text></Pressable> : null}
+          {leader ? <Pressable onPress={() => { onClose(); router.push({ pathname: "/member-profile", params: { id: leader.id } }); }} style={{ flexDirection: "row", alignItems: "center", minHeight: 52, paddingHorizontal: 16, borderRadius: 14, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border }}><Image source={leader.avatar} style={{ width: 36, height: 36, borderRadius: 18 }} contentFit="cover" /><View style={{ marginLeft: 10 }}><Text style={{ fontSize: 11, color: colors.muted }}>部長</Text><Text style={{ fontSize: 14, fontWeight: "800", color: colors.foreground }}>{leader.name}</Text></View><IconSymbol name="chevron.right" size={16} color={colors.muted} style={{ marginLeft: 12 }} /></Pressable> : <Text style={{ fontSize: 14, color: colors.muted }}>部長 未設定</Text>}
+          <Text style={{ fontSize: 13, fontWeight: "700", color: colors.muted, textAlign: "center", marginTop: 9 }}>{club.memberIds.length}人のメンバー</Text>
           <Pressable
             onPress={() => setShowClubOverview(true)}
             accessibilityRole="button"

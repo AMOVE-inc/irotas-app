@@ -33,6 +33,9 @@ type ThreadRow = {
   author_member_id: number;
   author_public_member_id: string | null;
   author_display_name: string | null;
+  author_member_term: string | null;
+  author_member_rank: string | null;
+  author_profile_json: string | null;
   category: string;
   title: string;
   content: string;
@@ -48,6 +51,9 @@ type CommentRow = {
   author_member_id: number;
   author_public_member_id: string | null;
   author_display_name: string | null;
+  author_member_term: string | null;
+  author_member_rank: string | null;
+  author_profile_json: string | null;
   content: string;
   data_json: string;
   created_at: string;
@@ -180,10 +186,14 @@ export async function canAccessBoardCategory(
 }
 
 function serializeThread(row: ThreadRow, viewerId: number, reactions: ReactionRow[]) {
+  const profile = parseData(row.author_profile_json ?? "{}");
   return {
     id: row.id,
     authorId: row.author_public_member_id ?? `member-${row.author_member_id}`,
     authorName: row.author_display_name?.trim() || "メンバー",
+    authorAvatarUrl: typeof profile.avatarUrl === "string" ? profile.avatarUrl : undefined,
+    authorMemberTerm: row.author_member_term ?? undefined,
+    authorRank: row.author_member_rank ?? "regular",
     category: row.category,
     title: row.title,
     content: row.content,
@@ -204,11 +214,15 @@ function serializeThread(row: ThreadRow, viewerId: number, reactions: ReactionRo
 }
 
 function serializeComment(row: CommentRow, viewerId: number, reactions: ReactionRow[]) {
+  const profile = parseData(row.author_profile_json ?? "{}");
   return {
     id: row.id,
     threadId: row.thread_id,
     authorId: row.author_public_member_id ?? `member-${row.author_member_id}`,
     authorName: row.author_display_name?.trim() || "メンバー",
+    authorAvatarUrl: typeof profile.avatarUrl === "string" ? profile.avatarUrl : undefined,
+    authorMemberTerm: row.author_member_term ?? undefined,
+    authorRank: row.author_member_rank ?? "regular",
     content: row.content,
     data: parseData(row.data_json),
     createdAt: row.created_at,
@@ -354,12 +368,14 @@ export async function handleBoardContentRequest(
     const limit = Math.min(Math.max(Number(url.searchParams.get("limit")) || 100, 1), 200);
     const rows = category
       ? await db.prepare(`SELECT bt.*, m.public_member_id AS author_public_member_id,
-          m.display_name AS author_display_name
+          m.display_name AS author_display_name, m.member_term AS author_member_term,
+          m.member_rank AS author_member_rank, m.profile_json AS author_profile_json
         FROM board_threads bt JOIN members m ON m.id = bt.author_member_id
         WHERE bt.category = ? AND bt.deleted_at IS NULL
         ORDER BY bt.pinned DESC, bt.created_at DESC LIMIT ?`).bind(category, limit).all<ThreadRow>()
       : await db.prepare(`SELECT bt.*, m.public_member_id AS author_public_member_id,
-          m.display_name AS author_display_name
+          m.display_name AS author_display_name, m.member_term AS author_member_term,
+          m.member_rank AS author_member_rank, m.profile_json AS author_profile_json
         FROM board_threads bt JOIN members m ON m.id = bt.author_member_id
         WHERE bt.deleted_at IS NULL AND bt.category NOT LIKE 'club-club-%'
         ORDER BY bt.pinned DESC, bt.created_at DESC LIMIT ?`).bind(limit).all<ThreadRow>();
@@ -369,7 +385,8 @@ export async function handleBoardContentRequest(
     const ids = threads.map((item) => item.id);
     const [commentResult, reactionResult] = await Promise.all([
       db.prepare(`SELECT bc.*, m.public_member_id AS author_public_member_id,
-          m.display_name AS author_display_name
+          m.display_name AS author_display_name, m.member_term AS author_member_term,
+          m.member_rank AS author_member_rank, m.profile_json AS author_profile_json
         FROM board_comments bc JOIN members m ON m.id = bc.author_member_id
         WHERE bc.thread_id IN (${placeholders}) AND bc.deleted_at IS NULL
         ORDER BY bc.created_at ASC`).bind(...ids).all<CommentRow>(),

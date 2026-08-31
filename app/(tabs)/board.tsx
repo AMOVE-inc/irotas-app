@@ -362,17 +362,6 @@ function ThreadCard({ thread, onPress, onEdit, onDelete, onPin, onChangeRecruitm
   return (
     <Pressable
       onPress={onPress}
-      onLongPress={() => {
-        const copyLink = () => { void Clipboard.setStringAsync(`https://irotas-app-20260721.k1998915n.chatgpt.site/board?category=${encodeURIComponent(thread.category)}&view=threads&thread=${encodeURIComponent(thread.id)}`); };
-        Alert.alert(thread.title, "操作を選択してください", [
-          ...(onEdit ? [{ text: "投稿を編集", onPress: onEdit }] : []),
-          ...(onDelete ? [{ text: "投稿を削除", style: "destructive" as const, onPress: onDelete }] : []),
-          ...(onPin ? [{ text: pinned ? "ピン留めを解除" : "投稿をピン留め", onPress: onPin }] : []),
-          { text: "リンクをコピー", onPress: copyLink },
-          { text: "キャンセル", style: "cancel" },
-        ]);
-      }}
-      delayLongPress={450}
       style={{
         backgroundColor: visuallyClosed ? "#F1F1F3" : colors.surface,
         borderRadius: 14,
@@ -407,14 +396,21 @@ function ThreadCard({ thread, onPress, onEdit, onDelete, onPin, onChangeRecruitm
         </View>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
           <Text style={{ fontSize: 11, color: colors.muted }}>{timeAgo(thread.lastUpdated)}</Text>
-          {onEdit && (
-            <Pressable
-              onPress={(e) => { e.stopPropagation?.(); onEdit(); }}
+          <Pressable
+              accessibilityLabel="投稿メニュー"
+              onPress={(e) => {
+                e.stopPropagation?.();
+                Alert.alert(thread.title, "操作を選択してください", [
+                  ...(onEdit ? [{ text: "投稿を編集", onPress: onEdit }] : []),
+                  ...(onDelete ? [{ text: "投稿を削除", style: "destructive" as const, onPress: onDelete }] : []),
+                  { text: "リンクをコピー", onPress: () => { void Clipboard.setStringAsync(`https://irotas-app-20260721.k1998915n.chatgpt.site/board?category=${encodeURIComponent(thread.category)}&view=threads&thread=${encodeURIComponent(thread.id)}`); } },
+                  { text: "キャンセル", style: "cancel" },
+                ]);
+              }}
               style={{ padding: 4 }}
             >
               <IconSymbol name="ellipsis" size={16} color={colors.muted} />
             </Pressable>
-          )}
         </View>
       </Pressable>
 
@@ -1202,14 +1198,7 @@ function ThreadDetailModal({
             </Text>
             {comments.map((comment) => (
               <View key={comment.id} style={{ marginBottom: 14 }}>
-                <Pressable delayLongPress={350} onLongPress={() => {
-                  const canManageComment = comment.author.id === viewerMemberId || canModerateAll;
-                  Alert.alert("コメント", "操作を選択してください", [
-                    ...(canManageComment ? [{ text: "投稿を編集", onPress: () => { setEditingCommentId(comment.id); setEditingCommentText(comment.content); } }, { text: "投稿を削除", style: "destructive" as const, onPress: () => handleDeleteComment(comment.id) }] : []),
-                    { text: "テキストをコピー", onPress: () => { void Clipboard.setStringAsync(comment.content); } },
-                    { text: "キャンセル", style: "cancel" },
-                  ]);
-                }} style={{ flexDirection: "row", alignItems: "center", marginBottom: 4 }}>
+                <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 4 }}>
                   <Image
                     source={comment.author.avatar}
                     style={{ width: 24, height: 24, borderRadius: 12 }}
@@ -1222,7 +1211,12 @@ function ThreadDetailModal({
                   <Text style={{ fontSize: 11, color: colors.muted, marginLeft: 8 }}>
                     {timeAgo(comment.createdAt)}
                   </Text>
-                </Pressable>
+                  {(comment.author.id === viewerMemberId || canModerateAll) ? <Pressable accessibilityLabel="コメントメニュー" onPress={() => Alert.alert("コメント", "操作を選択してください", [
+                    { text: "投稿を編集", onPress: () => { setEditingCommentId(comment.id); setEditingCommentText(comment.content); } },
+                    { text: "投稿を削除", style: "destructive", onPress: () => handleDeleteComment(comment.id) },
+                    { text: "キャンセル", style: "cancel" },
+                  ])} style={{ marginLeft: "auto", padding: 5 }}><IconSymbol name="ellipsis" size={17} color={colors.muted} /></Pressable> : null}
+                </View>
                 {editingCommentId === comment.id ? <View style={{ marginLeft: 32, gap: 7 }}><TextInput value={editingCommentText} onChangeText={setEditingCommentText} multiline autoFocus style={{ minHeight: 90, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: 10, padding: 10, fontSize: 14, color: colors.foreground }} /><View style={{ flexDirection: "row", gap: 8 }}><Pressable onPress={() => handleSaveCommentEdit(comment.id)} style={{ backgroundColor: "#3478C7", borderRadius: 8, paddingHorizontal: 13, paddingVertical: 7 }}><Text style={{ color: "#FFF", fontSize: 12, fontWeight: "800" }}>保存</Text></Pressable><Pressable onPress={() => handleDeleteComment(comment.id)} style={{ backgroundColor: "#FCE7E7", borderRadius: 8, paddingHorizontal: 13, paddingVertical: 7 }}><Text style={{ color: colors.error, fontSize: 12, fontWeight: "800" }}>削除</Text></Pressable><Pressable onPress={() => setEditingCommentId(null)} style={{ paddingHorizontal: 10, paddingVertical: 7 }}><Text style={{ color: colors.muted, fontSize: 12 }}>キャンセル</Text></Pressable></View></View> : <View style={{ marginLeft: 32 }}>{isContest ? (comment.isSystem ? <MentionText content={comment.content} groups={mentionGroups} /> : <LinkifiedText content={comment.content} />) : <MentionText content={comment.content} groups={mentionGroups} />}</View>}
                 {comment.poll ? <View style={{ marginLeft: 32 }}><PollCard ownerKey={`comment:${comment.id}`} poll={comment.poll} /></View> : null}
                 {comment.images?.length ? (
@@ -2689,7 +2683,7 @@ export default function BoardScreen() {
         <Pressable
           accessibilityLabel={`${categories.find((category) => category.key === activeCategory)?.label ?? "掲示板"}に投稿`}
           onPress={() => setShowCreateThread(true)}
-          style={{ position: "absolute", right: 20, bottom: 20, width: 56, height: 56, borderRadius: 28, backgroundColor: "#18171A", alignItems: "center", justifyContent: "center", shadowColor: "#000", shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.22, shadowRadius: 8, elevation: 6 }}
+          style={{ position: "absolute", right: 20, bottom: 92, width: 56, height: 56, borderRadius: 28, backgroundColor: "#18171A", alignItems: "center", justifyContent: "center", shadowColor: "#000", shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.22, shadowRadius: 8, elevation: 6 }}
         >
           <IconSymbol name="plus" size={27} color="#FFF" />
         </Pressable>

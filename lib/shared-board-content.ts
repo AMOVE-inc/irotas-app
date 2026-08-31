@@ -17,14 +17,18 @@ const durableImages = (images?: BoardImage[]) => images?.filter((image) =>
   (typeof image === "object" && durableUri(image.uri)),
 );
 
-function memberFor(id: string, name: string): Member {
-  return MEMBERS.find((member) => member.id === id) ?? {
+function memberFor(id: string, name: string, profile?: { avatarUrl?: string; memberTerm?: string; rank?: string }): Member {
+  const known = MEMBERS.find((member) => member.id === id);
+  if (known) return known;
+  const generation = Number(profile?.memberTerm?.match(/\d+/)?.[0] ?? 0);
+  const rank = ["regular", "silver", "gold", "platinum"].includes(profile?.rank ?? "") ? profile!.rank as Member["rank"] : "regular";
+  return {
     id,
     name,
-    avatar: DEFAULT_AVATAR,
-    rank: "regular",
+    avatar: profile?.avatarUrl || DEFAULT_AVATAR,
+    rank,
     branch: "kanto",
-    generation: 0,
+    generation,
     bio: "",
     interests: [],
     role: "member",
@@ -71,7 +75,7 @@ export function sharedThreadToBoardThread(record: SharedBoardThread, viewerId: s
   return {
     id: record.id,
     title: cleanDiscordBoardTitle(record.title),
-    author: memberFor(record.authorId, record.authorName),
+    author: memberFor(record.authorId, record.authorName, { avatarUrl: record.authorAvatarUrl, memberTerm: record.authorMemberTerm, rank: record.authorRank }),
     category: record.category,
     commentCount: typeof data.commentCount === "number" ? data.commentCount : 0,
     lastUpdated: record.updatedAt,
@@ -111,7 +115,7 @@ export function sharedCommentToBoardComment(record: SharedBoardComment, viewerId
   return {
     id: record.id,
     threadId: record.threadId,
-    author: memberFor(record.authorId, record.authorName),
+    author: memberFor(record.authorId, record.authorName, { avatarUrl: record.authorAvatarUrl, memberTerm: record.authorMemberTerm, rank: record.authorRank }),
     content: record.content,
     createdAt: record.createdAt,
     images: data.images,

@@ -165,6 +165,9 @@ export type SharedBoardThread = {
   id: string;
   authorId: string;
   authorName: string;
+  authorAvatarUrl?: string;
+  authorMemberTerm?: string;
+  authorRank?: string;
   category: string;
   title: string;
   content: string;
@@ -181,6 +184,9 @@ export type SharedBoardComment = {
   threadId: string;
   authorId: string;
   authorName: string;
+  authorAvatarUrl?: string;
+  authorMemberTerm?: string;
+  authorRank?: string;
   content: string;
   data: Record<string, unknown>;
   createdAt: string;

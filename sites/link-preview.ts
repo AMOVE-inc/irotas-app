@@ -43,7 +43,7 @@ export async function handleLinkPreviewRequest(request: Request, env: PreviewEnv
       }
     }
     imageUrl ??= await placesImage(requestUrl.searchParams.get("query") ?? "", env, requestUrl.origin);
-    return Response.json({ imageUrl }, { headers: { "cache-control": "public, max-age=3600" } });
+    return Response.json({ imageUrl }, { headers: { "cache-control": imageUrl ? "public, max-age=3600" : "public, max-age=300" } });
   } catch {
     return Response.json({ imageUrl: null });
   }
