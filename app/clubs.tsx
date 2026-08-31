@@ -745,7 +745,7 @@ function ClubDetailModal({
   const router = useRouter();
   const { user: authUser } = useAuthContext();
   const userIsAdmin = isAdminRole(authUser?.role, authUser?.accessRole);
-  const leader = getMemberById(club.leaderId);
+  const leader = getMemberById(club.leaderId) ?? (club.leaderName && club.leaderId ? { ...CURRENT_USER, id: club.leaderId, name: club.leaderName, avatar: DEFAULT_AVATAR } : undefined);
   const [memberIds, setMemberIds] = useState(club.memberIds);
   const [applicantIds, setApplicantIds] = useState(club.applicantIds);
   const [applications, setApplications] = useState<ClubApplication[]>(club.applications);

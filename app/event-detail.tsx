@@ -702,7 +702,7 @@ export default function EventDetailScreen() {
 
         <Pressable onPress={() => openMemberProfile(event.organizerProfileId ?? event.createdBy)} accessibilityLabel="幹事のプロフィールを表示" style={{ flexDirection: "row", alignItems: "center", backgroundColor: colors.surface, borderRadius: 14, padding: 14, marginBottom: 16 }}>
           <Image source={event.eventType === "official" ? DEFAULT_AVATAR : (event.organizerAvatar ?? organizer?.avatar ?? DEFAULT_AVATAR)} style={{ width: 42, height: 42, borderRadius: 21 }} contentFit="cover" />
-          <View style={{ flex: 1, marginLeft: 11 }}><Text style={{ fontSize: 11, color: colors.muted }}>幹事</Text><View style={{ flexDirection: "row", alignItems: "center" }}><Text style={{ fontSize: 15, fontWeight: "800", color: colors.foreground }}>{event.eventType === "official" ? "IRO＋運営" : stripRankFromName(event.organizerName ?? organizer?.name ?? "メンバー")}</Text>{event.eventType !== "official" && event.organizerRank ? <MemberRankBadge rank={event.organizerRank} compact /> : null}</View></View>
+          <View style={{ flex: 1, marginLeft: 11 }}><Text style={{ fontSize: 11, color: colors.muted }}>幹事</Text><View style={{ flexDirection: "row", alignItems: "center" }}><Text style={{ fontSize: 15, fontWeight: "800", color: colors.foreground }}>{event.eventType === "official" ? "IRO＋運営" : stripRankFromName(event.organizerName ?? organizer?.name ?? "メンバー")}</Text>{event.eventType !== "official" && event.organizerRank ? <MemberRankBadge rank={event.organizerRank} name={event.organizerName} compact /> : null}</View></View>
           <IconSymbol name="chevron.right" size={17} color={colors.muted} />
         </Pressable>
 

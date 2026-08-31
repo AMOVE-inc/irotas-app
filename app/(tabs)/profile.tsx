@@ -917,7 +917,7 @@ export default function ProfileScreen() {
           </View>
           <View style={{ flexDirection: "row", alignItems: "center", marginTop: 12 }}>
             <Text style={{ fontSize: 22, fontWeight: "800", color: colors.foreground }}>{stripRankFromName(profileName)}</Text>
-            {!userIsOperator ? <MemberRankBadge rank={user.rank} /> : null}
+            {!userIsOperator ? <MemberRankBadge rank={user.rank} name={user.name} /> : null}
             <NewMemberMark member={user} size={17} />
           </View>
           <View style={{ flexDirection: "row", alignItems: "center", marginTop: 4 }}>

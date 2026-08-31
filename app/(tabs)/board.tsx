@@ -127,6 +127,7 @@ function mealReportImpression(thread: BoardThread): string | undefined {
 }
 
 function OperatorOrRankBadge({ member }: { member: typeof CURRENT_USER }) {
+  if (member.name.includes("IRO+代表")) return <View style={{ backgroundColor: "#D93636", borderRadius: 8, paddingHorizontal: 7, paddingVertical: 2, marginLeft: 6 }}><Text style={{ fontSize: 9, fontWeight: "900", color: "#FFF" }}>代表</Text></View>;
   const operator = isOperatorMember(member);
   const platinum = member.rank === "platinum";
   if (operator) return <View style={{ backgroundColor: "#D93636", borderRadius: 8, paddingHorizontal: 7, paddingVertical: 2, marginLeft: 6 }}><Text style={{ fontSize: 9, fontWeight: "900", color: "#FFF" }}>運営メンバー</Text></View>;
@@ -324,7 +325,7 @@ function SelfIntroductionContent({ thread, compact = false }: { thread: BoardThr
   );
 }
 
-function ThreadCard({ thread, onPress, onEdit, onDelete, onPin, onChangeRecruitment, unreadCount = 0, mentionCount = 0 }: { thread: BoardThread; onPress: () => void; onEdit?: () => void; onDelete?: () => void; onPin?: () => void; onChangeRecruitment?: () => void; unreadCount?: number; mentionCount?: number }) {
+function ThreadCard({ thread, onPress, onEdit, onDelete, onPin, onChangeRecruitment, unreadCount = 0, mentionCount = 0, showMenu = true }: { thread: BoardThread; onPress: () => void; onEdit?: () => void; onDelete?: () => void; onPin?: () => void; onChangeRecruitment?: () => void; unreadCount?: number; mentionCount?: number; showMenu?: boolean }) {
   const colors = useColors();
   const router = useRouter();
   const isParticipant = thread.recruitParticipants?.includes(CURRENT_USER.id);
@@ -396,7 +397,7 @@ function ThreadCard({ thread, onPress, onEdit, onDelete, onPin, onChangeRecruitm
         </View>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
           <Text style={{ fontSize: 11, color: colors.muted }}>{timeAgo(thread.lastUpdated)}</Text>
-          <Pressable
+          {showMenu ? <Pressable
               accessibilityLabel="投稿メニュー"
               onPress={(e) => {
                 e.stopPropagation?.();
@@ -410,7 +411,7 @@ function ThreadCard({ thread, onPress, onEdit, onDelete, onPin, onChangeRecruitm
               style={{ padding: 4 }}
             >
               <IconSymbol name="ellipsis" size={16} color={colors.muted} />
-            </Pressable>
+            </Pressable> : null}
         </View>
       </Pressable>
 
@@ -2654,6 +2655,7 @@ export default function BoardScreen() {
             const mentionCount = unreadComments.filter((comment) => comment.content.includes(`@${viewerMember.name}`) || /@(全員|everyone|here)/i.test(comment.content)).length;
             return <ThreadCard
             thread={item}
+            showMenu={item.category !== "introduction"}
             unreadCount={unreadComments.length}
             mentionCount={mentionCount}
             onPress={() => { markThreadRead(item.id); setSelectedThread(item); router.setParams({ thread: item.id }); }}

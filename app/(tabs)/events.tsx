@@ -835,7 +835,7 @@ function EventCard({
                     )}
               </Text>
               {event.eventType !== "official" && event.organizerRank ? (
-                <MemberRankBadge rank={event.organizerRank} compact />
+                <MemberRankBadge rank={event.organizerRank} name={event.organizerName} compact />
               ) : null}
               {event.eventType !== "official" && organizer ? (
                 <NewMemberMark member={organizer} size={11} />

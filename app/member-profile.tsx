@@ -242,7 +242,7 @@ export default function MemberProfileScreen() {
 
           <View style={{ flexDirection: "row", alignItems: "center", marginTop: 12 }}>
             <Text style={{ fontSize: 24, fontWeight: "800", color: colors.foreground }}>{stripRankFromName(selfName ?? member.name)}</Text>
-            {!elevatedRoleLabel ? <MemberRankBadge rank={member.rank} /> : null}
+            {!elevatedRoleLabel ? <MemberRankBadge rank={member.rank} name={member.name} /> : null}
             <NewMemberMark member={member} size={18} />
           </View>
 

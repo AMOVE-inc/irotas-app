@@ -39,6 +39,10 @@ export function initialHomeActivities(): HomeActivity[] {
         ? "新しい部活動イベントが公開されました"
         : "新しいグルメ会が公開されました",
     createdAt: event.createdAt ?? `${event.date}T${event.time}:00+09:00`, route: "/event-detail", params: { id: event.id },
+    authorId: event.organizerProfileId ?? event.createdBy,
+    authorName: event.organizerName,
+    authorAvatar: event.organizerAvatar,
+    authorRank: event.organizerRank,
   }));
   const threadActivities = BOARD_THREADS.flatMap((thread): HomeActivity[] => {
     const kind = RELEVANT_BOARD_KINDS[thread.category];
