@@ -52,6 +52,7 @@ import {
   configureReviewAccount,
   suspendReviewAccount,
   getBackupReadiness,
+  createBackupSnapshot,
   syncSquareSubscriptions,
   updateOperatorMemberTerm,
   type MembershipSummary,
@@ -62,6 +63,7 @@ import {
   type AdminAccountDeletionRequest,
   type ReviewAccountStatus,
   type BackupReadinessManifest,
+  type BackupSnapshot,
 } from "@/lib/_core/api";
 
 type PointsHistoryEntry = {
@@ -153,6 +155,7 @@ export default function AdminDashboardScreen() {
   const [reviewSaving, setReviewSaving] = useState(false);
   const [backupManifest, setBackupManifest] = useState<BackupReadinessManifest | null>(null);
   const [backupLoading, setBackupLoading] = useState(false);
+  const [backupSnapshot, setBackupSnapshot] = useState<BackupSnapshot | null>(null);
   const loadMembershipSummary = async () => {
     setMembershipSummaryLoading(true);
     try {
@@ -214,6 +217,19 @@ export default function AdminDashboardScreen() {
       setBackupManifest(result.manifest);
     } catch (error) {
       Alert.alert("確認できませんでした", error instanceof Error ? error.message : "時間をおいて再度お試しください");
+    } finally {
+      setBackupLoading(false);
+    }
+  };
+  const createProductionBackup = async () => {
+    setBackupLoading(true);
+    try {
+      const snapshot = await createBackupSnapshot();
+      setBackupSnapshot(snapshot);
+      await loadBackupReadiness();
+      Alert.alert("バックアップ完了", `スナップショットを限定保管先へ保存しました。\nSHA-256: ${snapshot.sha256.slice(0, 16)}…`);
+    } catch (error) {
+      Alert.alert("バックアップできませんでした", error instanceof Error ? error.message : "時間をおいて再度お試しください");
     } finally {
       setBackupLoading(false);
     }
@@ -656,7 +672,11 @@ export default function AdminDashboardScreen() {
             <Pressable disabled={backupLoading} onPress={() => void loadBackupReadiness()} style={{ minHeight: 46, borderRadius: 12, borderWidth: 1, borderColor: colors.border, alignItems: "center", justifyContent: "center", marginTop: 10 }}>
               <Text style={{ color: colors.foreground, fontWeight: "700" }}>準備状況を再集計</Text>
             </Pressable>
-            <Text style={{ fontSize: 11, lineHeight: 18, color: colors.muted, marginTop: 14 }}>実バックアップはSites管理画面から取得し、暗号化した限定保管先へ保存します。復元テストは本番とは別の一時D1・R2で行います。</Text>
+            <Pressable disabled={backupLoading} onPress={() => void createProductionBackup()} style={{ minHeight: 48, borderRadius: 12, backgroundColor: backupLoading ? colors.border : "#D65E8D", alignItems: "center", justifyContent: "center", marginTop: 10 }}>
+              <Text style={{ color: "#FFF", fontWeight: "800" }}>開始直前DBバックアップを取得</Text>
+            </Pressable>
+            {backupSnapshot ? <Text style={{ fontSize: 10, lineHeight: 16, color: colors.muted, marginTop: 8 }}>最新スナップショット: {new Date(backupSnapshot.createdAt).toLocaleString("ja-JP")} ／ {(backupSnapshot.byteSize / 1024 / 1024).toFixed(1)} MB ／ SHA-256 {backupSnapshot.sha256.slice(0, 16)}…</Text> : null}
+            <Text style={{ fontSize: 11, lineHeight: 18, color: colors.muted, marginTop: 14 }}>実バックアップは個人情報を画面へ表示せず、private R2の限定保管先へ保存します。復元テストは本番とは別の一時D1・R2で行います。</Text>
           </View>
         )}
         {activeTab === "overview" && (

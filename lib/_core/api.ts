@@ -795,6 +795,23 @@ export async function getBackupReadiness() {
   );
 }
 
+export type BackupSnapshot = {
+  id: string;
+  createdAt: string;
+  schemaVersion: number;
+  byteSize: number;
+  sha256: string;
+  tableCounts: Record<string, number>;
+};
+
+export async function createBackupSnapshot() {
+  const result = await apiCall<{ success: true; backup: BackupSnapshot }>(
+    "/api/admin/backups",
+    { method: "POST", body: "{}" },
+  );
+  return result.backup;
+}
+
 export async function getAccountDeletionRequest() {
   return apiCall<{ request: AccountDeletionRequest | null }>(
     "/api/auth/account-deletion",
