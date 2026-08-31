@@ -520,7 +520,7 @@ function EventCard({
   clubName?: string;
 }) {
   const colors = useColors();
-  const organizer = getMemberById(event.createdBy);
+  const organizer = getMemberById(event.organizerProfileId ?? event.createdBy) ?? getMemberById(event.createdBy);
   const confirmedCount = new Set([
     ...(event.participants ?? []),
     ...(event.companionIds ?? []),

@@ -195,13 +195,14 @@ export default function EventDetailScreen() {
   const pointsToUse = usePoints && isOfficialEvent ? Math.min(irotasPoints, priceNum) : 0;
   const finalPrice = Math.max(0, priceNum - pointsToUse);
   const confirmedIds = [...new Set([...(event.participants ?? []), ...(event.companionIds ?? [])])];
-  const confirmedDisplayIds = event.createdBy
-    ? [event.createdBy, ...confirmedIds.filter((memberId) => memberId !== event.createdBy)]
+  const organizerId = event.organizerProfileId ?? event.createdBy;
+  const confirmedDisplayIds = confirmedIds.length && organizerId
+    ? [organizerId, ...confirmedIds.filter((memberId) => memberId !== organizerId)]
     : confirmedIds;
   const applicantCount = event.applicantIds?.length ?? event.attendees;
-  const organizer = getMemberById(event.createdBy);
+  const organizer = getMemberById(organizerId) ?? getMemberById(event.createdBy);
   const viewerMemberId = event.viewerMemberId ?? authenticatedViewerMemberId;
-  const isOrganizer = event.isOrganizer ?? event.createdBy === viewerMemberId;
+  const isOrganizer = event.isOrganizer ?? organizerId === viewerMemberId;
   const pendingApplicantIds = getPendingGourmetApplicants(event);
   const pendingCancellationRequests = getPendingCancellationRequests(event);
   const hasPendingCancellationRequest = pendingCancellationRequests.some((request) => request.memberId === viewerMemberId);
@@ -949,12 +950,11 @@ export default function EventDetailScreen() {
         {isJoined && new Date(`${event.date}T${event.time}:00`) < new Date() ? <Pressable onPress={() => router.push({ pathname: "/event-feedback" as any, params: { id: event.id } })} style={{ flexDirection: "row", alignItems: "center", backgroundColor: "#FFF4D8", borderRadius: 14, padding: 15, marginBottom: 16, borderWidth: 1, borderColor: "#EFD494" }}><IconSymbol name="star.fill" size={22} color="#D69A14" /><View style={{ flex: 1, marginLeft: 10 }}><Text style={{ fontSize: 14, fontWeight: "900", color: colors.foreground }}>イベントを評価する</Text><Text style={{ fontSize: 11, color: colors.muted, marginTop: 3 }}>次回のイベント改善にご協力ください</Text></View><IconSymbol name="chevron.right" size={17} color="#D69A14" /></Pressable> : null}
 
         {/* 参加確定者一覧 */}
-        {confirmedIds.length > 0 && (
-          <View style={{ marginBottom: 16 }}>
+        <View style={{ marginBottom: 16 }}>
             <Text style={{ fontSize: 15, fontWeight: "700", color: colors.foreground, marginBottom: 10 }}>
               参加確定者 ({confirmedIds.length}人)
             </Text>
-            <View style={{ borderRadius: 14, backgroundColor: colors.surface, overflow: "hidden" }}>
+            {confirmedDisplayIds.length ? <View style={{ borderRadius: 14, backgroundColor: colors.surface, overflow: "hidden" }}>
               {confirmedDisplayIds.map((uid) => {
                 const directoryMember = memberDirectory.find((item) => item.id === uid);
                 const member = getMemberById(uid);
@@ -987,15 +987,14 @@ export default function EventDetailScreen() {
                       <Text style={{ fontSize: 14, fontWeight: "800", color: colors.foreground }} numberOfLines={1}>{stripRankFromName(memberName)}</Text>
                       <MemberRankBadge rank={memberRank} name={memberName} compact />
                       <MemberRoleBadge name={memberName} compact />
-                      {uid === event.createdBy ? <View style={{ marginLeft: 6, borderRadius: 8, backgroundColor: "#D93636", paddingHorizontal: 7, paddingVertical: 3 }}><Text style={{ fontSize: 10, fontWeight: "900", color: "#FFF" }}>幹事</Text></View> : null}
+                      {uid === organizerId ? <View style={{ marginLeft: 6, borderRadius: 8, backgroundColor: "#838087", paddingHorizontal: 7, paddingVertical: 3 }}><Text style={{ fontSize: 10, fontWeight: "900", color: "#FFF" }}>幹事</Text></View> : null}
                     </View>
                     <IconSymbol name="chevron.right" size={16} color={colors.muted} />
                   </Pressable>
                 );
               })}
-            </View>
+            </View> : <Text style={{ fontSize: 13, color: colors.muted, marginBottom: 4 }}>参加者確定待ち</Text>}
           </View>
-        )}
       </ScrollView>
       <PersistentBottomNav active="/events" />
 
