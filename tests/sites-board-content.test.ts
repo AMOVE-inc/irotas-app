@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   canAccessBoardCategory,
+  discordAuthorFallbackFor,
   handleBoardContentRequest,
 } from "../sites/board-content";
 import type {
@@ -91,6 +92,14 @@ function request(path: string, method: string, body?: unknown) {
 }
 
 describe("shared board content API", () => {
+  it("restores a Discord board author's rank and avatar when no linked member row exists", () => {
+    expect(discordAuthorFallbackFor("696624208532340756")).toMatchObject({
+      displayName: "ゆい",
+      memberRank: "gold",
+      avatarUrl: expect.stringContaining("696624208532340756"),
+    });
+  });
+
   it("requires an authenticated member", async () => {
     const { db } = testDatabase({ id: 1, role: "user", access_role: "member", account_status: "active" });
     const response = await handleBoardContentRequest(

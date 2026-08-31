@@ -2,6 +2,7 @@ import { authenticatedRequestMember } from "./auth";
 import { canMemberAccessClub } from "./clubs";
 import type { D1Database, SitesEnv } from "./platform-types";
 import archive from "../data/discord-board-2026-08-29.json";
+import { IMPORTED_DISCORD_EVENTS } from "../constants/imported-discord-events";
 import { cleanDiscordBoardContent, cleanDiscordBoardTitle } from "../lib/discord-board-normalization";
 import type { RawDiscordBoardArchive } from "../lib/discord-board-import";
 
@@ -67,6 +68,21 @@ type ReactionRow = {
 };
 type PollOption = { id: string; text: string; voterIds: string[] };
 type BoardPollData = { question: string; options: PollOption[]; deadline: string; allowMultiple?: boolean };
+
+const discordAuthorFallbacks = new Map(
+  IMPORTED_DISCORD_EVENTS.flatMap((event) => {
+    const discordId = event.organizerProfileId?.match(/^discord-(\d{17,20})$/)?.[1];
+    return discordId ? [[discordId, {
+      displayName: event.organizerName,
+      avatarUrl: event.organizerAvatar,
+      memberRank: event.organizerRank,
+    }] as const] : [];
+  }),
+);
+
+export function discordAuthorFallbackFor(discordUserId: string) {
+  return discordAuthorFallbacks.get(discordUserId);
+}
 
 function json(body: unknown, status = 200) {
   return Response.json(body, {
@@ -254,7 +270,18 @@ async function restoreDiscordThreadAuthor(db: D1Database, row: ThreadRow): Promi
       id: number; public_member_id: string | null; display_name: string | null; member_term: string | null;
       member_rank: string | null; profile_json: string | null;
     }>();
-  if (!linked) return { ...row, author_public_member_id: `discord-${raw.authorId}`, author_display_name: raw.authorName };
+  if (!linked) {
+    const fallback = discordAuthorFallbackFor(raw.authorId);
+    return {
+      ...row,
+      author_public_member_id: `discord-${raw.authorId}`,
+      author_display_name: fallback?.displayName || raw.authorName,
+      author_member_rank: fallback?.memberRank || row.author_member_rank,
+      author_profile_json: fallback?.avatarUrl
+        ? JSON.stringify({ ...parseData(row.author_profile_json ?? "{}"), avatarUrl: fallback.avatarUrl })
+        : row.author_profile_json,
+    };
+  }
   return { ...row, author_member_id: linked.id, author_public_member_id: linked.public_member_id,
     author_display_name: linked.display_name, author_member_term: linked.member_term,
     author_member_rank: linked.member_rank, author_profile_json: linked.profile_json };
