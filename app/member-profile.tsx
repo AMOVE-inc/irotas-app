@@ -9,6 +9,7 @@ import {
   DEFAULT_AVATAR,
   getMemberById,
   getNextRankInfo,
+  type Event,
   type Member,
   type MemberRank,
 } from "@/constants/mock-data";
@@ -24,6 +25,7 @@ import { SocialMemberListModal } from "@/components/social-member-list-modal";
 import { useEffect, useMemo, useState } from "react";
 import { useAuthContext } from "@/lib/auth-context";
 import * as Api from "@/lib/_core/api";
+import { getDiscordAuthorById } from "@/lib/discord-author-directory";
 import {
   Alert,
   Linking,
@@ -51,6 +53,8 @@ export default function MemberProfileScreen() {
   const [privateNote, setPrivateNote] = useState("");
   const [socialList, setSocialList] = useState<"followers" | "following" | null>(null);
   const [followSaving, setFollowSaving] = useState(false);
+  const [confirmedEvents, setConfirmedEvents] = useState<Event[]>([]);
+  const discordAuthor = getDiscordAuthorById(id);
 
   useEffect(() => {
     if (!id || !authUser) { setDatabaseMember(null); setDatabaseLookupComplete(true); return; }
@@ -63,14 +67,23 @@ export default function MemberProfileScreen() {
     return () => { active = false; };
   }, [authUser, id]);
 
+  useEffect(() => {
+    if (!authUser || !id) { setConfirmedEvents([]); return; }
+    let active = true;
+    void Api.getEvents()
+      .then((events) => { if (active) setConfirmedEvents(events.filter((event) => event.participants?.includes(id))); })
+      .catch(() => { if (active) setConfirmedEvents([]); });
+    return () => { active = false; };
+  }, [authUser, id]);
+
   const member = useMemo<Member | undefined>(() => {
     if (!databaseMember) {
       if (mockMember) return mockMember;
-      if (id?.startsWith("discord-") && legacyName) return {
+      if (id?.startsWith("discord-") && (discordAuthor || legacyName)) return {
         id,
-        name: legacyName,
-        avatar: DEFAULT_AVATAR,
-        rank: "regular",
+        name: discordAuthor?.name ?? legacyName!,
+        avatar: discordAuthor?.avatarUrl ? { uri: discordAuthor.avatarUrl } : DEFAULT_AVATAR,
+        rank: (["regular", "silver", "gold", "platinum"].includes(discordAuthor?.rank ?? "") ? discordAuthor?.rank : "regular") as MemberRank,
         points: 0,
         level: 1,
         branch: "kanto",
@@ -111,7 +124,7 @@ export default function MemberProfileScreen() {
       desiredRestaurants: text("desiredRestaurants"), googleLocalGuideLevel: text("googleLocalGuideLevel"),
       participationCount: databaseMember.participationCount, organizerCount: databaseMember.organizerCount,
     };
-  }, [databaseMember, id, legacyName, mockMember]);
+  }, [databaseMember, discordAuthor, id, legacyName, mockMember]);
 
   useEffect(() => {
     const isCurrentMember = databaseMember ? databaseMember.userId === authUser?.id : member?.id === CURRENT_USER.id;
@@ -420,6 +433,23 @@ export default function MemberProfileScreen() {
             </View>
           </View>
         )}
+
+        {!isSelf && confirmedEvents.length > 0 ? (
+          <View style={{ marginHorizontal: 16, marginBottom: 16 }}>
+            <Text style={{ fontSize: 14, fontWeight: "700", color: colors.foreground, marginBottom: 8 }}>参加確定しているイベント</Text>
+            <View style={{ backgroundColor: colors.surface, borderRadius: 14, overflow: "hidden" }}>
+              {confirmedEvents.sort((a, b) => a.date.localeCompare(b.date)).map((confirmedEvent, index) => (
+                <Pressable key={confirmedEvent.id} onPress={() => router.push({ pathname: "/event-detail", params: { id: confirmedEvent.id } })} style={{ flexDirection: "row", alignItems: "center", padding: 14, borderTopWidth: index ? 0.5 : 0, borderTopColor: colors.border }}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ fontSize: 14, fontWeight: "800", color: colors.foreground }} numberOfLines={2}>{confirmedEvent.title}</Text>
+                    <Text style={{ fontSize: 12, color: colors.muted, marginTop: 4 }}>{confirmedEvent.date} {confirmedEvent.time}</Text>
+                  </View>
+                  <IconSymbol name="chevron.right" size={16} color={colors.muted} />
+                </Pressable>
+              ))}
+            </View>
+          </View>
+        ) : null}
 
         {/* Stats are private to the member's own page. */}
         {isSelf ? <View style={{ marginHorizontal: 16 }}>

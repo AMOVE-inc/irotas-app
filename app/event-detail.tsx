@@ -22,6 +22,7 @@ import { useClubs } from "@/lib/club-store";
 import { isAdminRole } from "@/lib/access-control";
 import { canViewerAccessClubContent, resolveViewerMemberId } from "@/lib/club-viewer-access";
 import { recordActivityEvent } from "@/lib/ai-data-store";
+import { getDiscordAuthorById, getDiscordAuthorByName } from "@/lib/discord-author-directory";
 import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -503,7 +504,8 @@ export default function EventDetailScreen() {
   };
 
   const openMemberProfile = (memberId: string) => {
-    router.push({ pathname: "/member-profile", params: { id: memberId } });
+    const discordAuthor = getDiscordAuthorById(memberId);
+    router.push({ pathname: "/member-profile", params: { id: memberId, ...(discordAuthor ? { legacyName: discordAuthor.name } : {}) } });
   };
 
   const handleOpenMap = () => {
@@ -873,7 +875,7 @@ export default function EventDetailScreen() {
           <Text style={{ fontSize: 18, fontWeight: "700", color: colors.foreground, marginBottom: 8 }}>
             イベント詳細
           </Text>
-          <MentionText content={event.description} groups={eventMentionGroups} onMentionPress={(label) => { const normalized = stripRankFromName(label); const target = memberDirectory.find((member) => stripRankFromName(member.displayName) === normalized) ?? MEMBERS.find((member) => stripRankFromName(member.name) === normalized); if (target) router.push({ pathname: "/member-profile", params: { id: target.id } }); }} />
+          <MentionText content={event.description} groups={eventMentionGroups} onMentionPress={(label) => { const normalized = stripRankFromName(label); const target = memberDirectory.find((member) => stripRankFromName(member.displayName) === normalized) ?? MEMBERS.find((member) => stripRankFromName(member.name) === normalized) ?? getDiscordAuthorByName(normalized); if (target) openMemberProfile(target.id); }} />
         </View>
 
         {event.applicationDeadline ? (
@@ -925,7 +927,8 @@ export default function EventDetailScreen() {
               {confirmedIds.map((uid) => {
                 const directoryMember = memberDirectory.find((item) => item.id === uid);
                 const member = getMemberById(uid);
-                const memberName = directoryMember?.displayName ?? member?.name ?? "メンバー";
+                const discordAuthor = getDiscordAuthorById(uid);
+                const memberName = directoryMember?.displayName ?? member?.name ?? discordAuthor?.name ?? "メンバー";
                 const directoryAvatar = typeof directoryMember?.profile?.avatarUrl === "string" ? directoryMember.profile.avatarUrl : undefined;
                 return (
                   <Pressable
@@ -938,7 +941,7 @@ export default function EventDetailScreen() {
                     }}
                   >
                     <Image
-                      source={directoryAvatar ? { uri: directoryAvatar } : member?.avatar ?? DEFAULT_AVATAR}
+                      source={directoryAvatar ? { uri: directoryAvatar } : member?.avatar ?? (discordAuthor?.avatarUrl ? { uri: discordAuthor.avatarUrl } : DEFAULT_AVATAR)}
                       style={{ width: 44, height: 44, borderRadius: 22, borderWidth: uid === CURRENT_USER.id ? 2 : 0, borderColor: "#E8A0BF" }}
                       contentFit="cover"
                     />

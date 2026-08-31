@@ -15,6 +15,7 @@ const EVENT_CANCELLATION_REVIEW_PATH = /^\/api\/events\/([^/]+)\/cancellation-re
 const EVENT_IMAGE_PATH = /^\/api\/event-images\/([^/]+)$/;
 const MAX_EVENT_BODY_BYTES = 96 * 1024;
 const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
+const DELETED_EVENT_IDS = new Set(["discord-event-1504772980851478548"]);
 
 type EventRow = {
   id: string;
@@ -376,7 +377,7 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
     return createEvent(request, env.DB, member);
   if (pathname === EVENTS_ENDPOINT && request.method === "GET") {
     const rows = await env.DB.prepare(`${selectEvents} WHERE e.status != 'cancelled' ORDER BY e.event_date, e.created_at DESC`).all<EventRow>();
-    const events = await Promise.all((rows.results ?? []).map(async (row) => {
+    const events = await Promise.all((rows.results ?? []).filter((row) => !DELETED_EVENT_IDS.has(row.id)).map(async (row) => {
       if (row.event_type === "club" && row.club_id && !await canMemberAccessClub(env.DB!, row.club_id, member.id, admin))
         return lockedClubEventPreview(row);
       return hydratedEvent(env.DB!, row, member.id, elevated, memberPublicId);
@@ -384,7 +385,9 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
     return responseJson({ events });
   }
   if (eventMatch && request.method === "GET") {
-    const row = await eventRow(env.DB, decodeURIComponent(eventMatch[1]));
+    const requestedEventId = decodeURIComponent(eventMatch[1]);
+    if (DELETED_EVENT_IDS.has(requestedEventId)) return responseJson({ error: "イベントが見つかりません" }, 404);
+    const row = await eventRow(env.DB, requestedEventId);
     if (!row || row.status === "cancelled") return responseJson({ error: "イベントが見つかりません" }, 404);
     if (row.event_type === "club" && row.club_id && !await canMemberAccessClub(env.DB, row.club_id, member.id, admin))
       return responseJson({ error: "この部活の部員のみ詳細を閲覧できます" }, 403);

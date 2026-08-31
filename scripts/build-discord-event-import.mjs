@@ -190,14 +190,14 @@ const events = eventThreads.map((rawThread) => {
     createdBy: "u1",
     organizerProfileId: `discord-${thread.authorId}`,
     organizerName: cleanDisplayName(authorProfile?.displayName || thread.authorName || "メンバー"),
-    organizerAvatar: authorProfile?.avatarUrl || undefined,
+    organizerAvatar: authorProfile?.avatarUrl || thread.authorAvatarUrl || "",
     organizerRank: authorProfile?.memberRank || rankFromDisplayName(thread.authorName),
     sourceThreadId: thread.id,
     sourceLabel: thread.sourceLabel,
     ...(confirmation.chatId ? { chatId: `discord-${confirmation.chatId}` } : {}),
     ...(confirmation.ambiguousCancellations.length ? { participantImportWarnings: confirmation.ambiguousCancellations } : {}),
   };
-}).filter((event) => !["支部イベント🥂年間予定📅", "全体パーティー🎊年間予定📅"].includes(event.title)).filter((event) => {
+}).filter((event) => !["支部イベント🥂年間予定📅", "全体パーティー🎊年間予定📅", "秋合宿 運営メンバー募集🍁✨"].includes(event.title)).filter((event) => {
   const key = `${event.date}:${event.title.normalize("NFKC").replace(/[\s・]/g, "").toLowerCase()}`;
   if (seenTitles.has(key)) return false;
   seenTitles.add(key);

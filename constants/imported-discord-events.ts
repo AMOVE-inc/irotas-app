@@ -24,6 +24,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1522194128379576361",
     "organizerName": "yuka",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1522194128379576361/e1cd28a89946aabf7f5334a020474bbd.png?size=512",
     "sourceThreadId": "discord-board-1543599911507861514",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -53,7 +54,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1530052808651309169",
     "organizerName": "はぎーちゃん🍖肉部長",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1530052808651309169/18268de99ba9a54fb8f90e9ba3d9acaf.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1543585895804833902",
     "sourceLabel": "肉部"
   },
@@ -82,6 +82,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1507605842629890231",
     "organizerName": "まりこ⛳ゴルフ部長",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1507605842629890231/ef848135e53446e51f2f38680aa1eb70.png?size=512",
     "sourceThreadId": "discord-board-1543532355296428072",
     "sourceLabel": "ゴルフ部"
   },
@@ -149,7 +150,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-715367038205427715",
     "organizerName": "しんたろー",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/715367038205427715/5100238c56708accc92ec1aa233bffc9.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1543085683365781644",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -236,7 +236,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1530052808651309169",
     "organizerName": "はぎーちゃん🍖肉部長",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1530052808651309169/18268de99ba9a54fb8f90e9ba3d9acaf.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1542201410542772425",
     "sourceLabel": "肉部"
   },
@@ -291,7 +290,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1542135969665523762",
     "sourceLabel": "全体イベント"
   },
@@ -505,6 +503,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1190229509727846433",
     "organizerName": "たかひろ",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1190229509727846433/1bfb2c64cce8c079892fcc8d70b6967e.png?size=512",
+    "organizerRank": "silver",
     "sourceThreadId": "discord-board-1539931563591082105",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -534,7 +534,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1460286509285511310",
     "organizerName": "iori",
-    "organizerAvatar": "https://cdn.discordapp.com/avatars/1460286509285511310/28ea35a9f2c46dc089081301e8212be7.png?size=512",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1460286509285511310/750139709e8b397ca717135363b32a74.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1539642830925074502",
     "sourceLabel": "ワイン部"
@@ -564,7 +564,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1497178953813721150",
     "organizerName": "やどかり",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1497178953813721150/2ee18488e0223a723cba540d8cc13752.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1539583873619333130",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -639,7 +638,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1538771676081295430",
     "sourceLabel": "関東支部イベント",
     "chatId": "discord-1541684792947638352"
@@ -851,6 +849,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1460776090736922707",
     "organizerName": "Anri",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1460776090736922707/911ccbfa03d0db7521cec63824b34ffe.png?size=512",
+    "organizerRank": "silver",
     "sourceThreadId": "discord-board-1537013556807999509",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -1031,7 +1031,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1404762625077809152",
     "organizerName": "さな【運営】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1404762625077809152/ca540a9e6c8e7f31f87f4b95ce0ef77d.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1534559448843157704",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -1090,7 +1089,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1536282798539800647",
     "sourceLabel": "関東支部イベント",
     "chatId": "discord-1539150239884378154",
@@ -1198,7 +1196,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1352978791483572326",
     "organizerName": "もってぃー【運営】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1352978791483572326/aa0f81f03bc22b267fa676eb6bf32402.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1536159631028650045",
     "sourceLabel": "関東支部イベント"
   },
@@ -1263,7 +1260,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1533461878104391886",
     "organizerName": "asumi🥀",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1533461878104391886/7c850cfa96b9fb69dcc9dcca6fd2d895.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1536017582186823720",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -1412,7 +1408,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-413325457182949377",
     "organizerName": "こん🦊",
-    "organizerAvatar": "https://cdn.discordapp.com/guilds/1217327152098312245/users/413325457182949377/avatars/9e67f75b9cdd6e708e4df12e08ed0dfb.png?size=512",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/413325457182949377/3b15096bac22c054818edd00ecf9a56e.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1535301178362040400",
     "sourceLabel": "関東グルメ掲示板",
@@ -1476,7 +1472,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1535210597400977419",
     "sourceLabel": "関西グルメ掲示板",
     "chatId": "discord-1537701175611105390"
@@ -1599,7 +1594,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-715367038205427715",
     "organizerName": "しんたろー",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/715367038205427715/5100238c56708accc92ec1aa233bffc9.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1533793050059477052",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -1858,6 +1852,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1457508300588453932",
     "organizerName": "ななみ",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1457508300588453932/5278f4112aced688e599ecee747cb9ba.png?size=512",
+    "organizerRank": "gold",
     "sourceThreadId": "discord-board-1533078062835695656",
     "sourceLabel": "関東グルメ掲示板",
     "chatId": "discord-1535971346625077248"
@@ -2103,6 +2099,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1457508300588453932",
     "organizerName": "ななみ",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1457508300588453932/5278f4112aced688e599ecee747cb9ba.png?size=512",
+    "organizerRank": "gold",
     "sourceThreadId": "discord-board-1532220658296029365",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -2129,7 +2127,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1404762625077809152",
     "organizerName": "さな【運営】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1404762625077809152/ca540a9e6c8e7f31f87f4b95ce0ef77d.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1532018462032003195",
     "sourceLabel": "関東支部イベント"
   },
@@ -2252,6 +2249,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1167690730383356039",
     "organizerName": "ふっくい",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1167690730383356039/f06c4e787bbdb98e6b9e914909ba6637.png?size=512",
     "sourceThreadId": "discord-board-1530168131773796374",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -2280,7 +2278,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1530148115267715163",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -2311,6 +2308,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1457526173616705549",
     "organizerName": "ゆうき",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1457526173616705549/1fc6273adfe90cc49907612c466a8a42.png?size=512",
+    "organizerRank": "silver",
     "sourceThreadId": "discord-board-1530005931633410242",
     "sourceLabel": "関東グルメ掲示板",
     "chatId": "discord-1532900216926113842"
@@ -2428,7 +2427,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "status": "full",
     "createdBy": "u1",
     "organizerProfileId": "discord-908363306140573706",
-    "organizerName": "pesogisoo",
+    "organizerName": "たいき",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/908363306140573706/ae7b56e0679c96a89ce857a81a6df908.png?size=512",
+    "organizerRank": "gold",
     "sourceThreadId": "discord-board-1529504908242325565",
     "sourceLabel": "関西グルメ掲示板"
   },
@@ -2482,6 +2483,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-812624829991747605",
     "organizerName": "てるき",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/812624829991747605/1eaf5e03abcc3704528be61d3754f9d9.png?size=512",
     "sourceThreadId": "discord-board-1529127687585529998",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -2593,6 +2595,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1256219953191977113",
     "organizerName": "八木下修平/八木下農園",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1256219953191977113/95b251b3d94382a33fdb0eb02dd38a66.png?size=512",
     "sourceThreadId": "discord-board-1528063063729639584",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -2713,6 +2716,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1452174899438288918",
     "organizerName": "Hazuki",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1452174899438288918/d6d0cfefd9e0dfd5492fbc4575c1b421.png?size=512",
     "sourceThreadId": "discord-board-1527362713951408308",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -2797,7 +2801,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "status": "full",
     "createdBy": "u1",
     "organizerProfileId": "discord-525718374152536074",
-    "organizerName": "さ",
+    "organizerName": "おさや",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/525718374152536074/09849f7b7fde14fd39dfb44c6f73479a.png?size=512",
+    "organizerRank": "silver",
     "sourceThreadId": "discord-board-1527300114522046506",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -2969,6 +2975,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1059373969590984764",
     "organizerName": "天ぷら(てつや",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1059373969590984764/857b85adf11b840e1cacf44276528eda.png?size=512",
+    "organizerRank": "gold",
     "sourceThreadId": "discord-board-1526427287870898187",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -3022,6 +3030,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-812624829991747605",
     "organizerName": "てるき",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/812624829991747605/1eaf5e03abcc3704528be61d3754f9d9.png?size=512",
     "sourceThreadId": "discord-board-1526393786324877454",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -3048,6 +3057,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1404609719477207152",
     "organizerName": "こーすけ",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1404609719477207152/70b8b8e2dcce90ca5e7257b102c9deb6.png?size=512",
+    "organizerRank": "silver",
     "sourceThreadId": "discord-board-1526289484990251049",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -3104,6 +3115,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1341394331063550014",
     "organizerName": "つばさ",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1341394331063550014/3f852c68137d5d8de86fbd5b0e14d645.png?size=512",
+    "organizerRank": "silver",
     "sourceThreadId": "discord-board-1526159855268659232",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -3131,6 +3144,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1167690730383356039",
     "organizerName": "ふっくい",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1167690730383356039/f06c4e787bbdb98e6b9e914909ba6637.png?size=512",
     "sourceThreadId": "discord-board-1525853822499684402",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -3186,6 +3200,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-390423883095998464",
     "organizerName": "shusuke",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/390423883095998464/994f8a675afaeea8260b024448b68346.png?size=512",
     "sourceThreadId": "discord-board-1525437100516839474",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -3212,6 +3227,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-711884076340215831",
     "organizerName": "けんと",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/711884076340215831/6d1215e63e0ab68e2d27902cb847e50e.png?size=512",
+    "organizerRank": "silver",
     "sourceThreadId": "discord-board-1525386599775342692",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -3297,6 +3314,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1403675019061755974",
     "organizerName": "Takahiro.",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1403675019061755974/919d31b9725037185c103aced0a1bd3e.png?size=512",
+    "organizerRank": "gold",
     "sourceThreadId": "discord-board-1525108593899208836",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -3350,7 +3369,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "status": "full",
     "createdBy": "u1",
     "organizerProfileId": "discord-1228677950401151139",
-    "organizerName": "かずま🌏運営",
+    "organizerName": "かずま【運営】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1228677950401151139/8fe93f8b9cd2f84ec1711f01ae0dbdfc.png?size=512",
     "sourceThreadId": "discord-board-1524755468541628578",
     "sourceLabel": "関東支部イベント"
   },
@@ -3378,6 +3398,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1167690730383356039",
     "organizerName": "ふっくい",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1167690730383356039/f06c4e787bbdb98e6b9e914909ba6637.png?size=512",
     "sourceThreadId": "discord-board-1524596695332294767",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -3460,7 +3481,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119605898743120044",
     "organizerName": "IRO+運営",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119605898743120044/2d550914366cefb1693360eea7d7ebcc.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1524340447286136952",
     "sourceLabel": "全体イベント"
   },
@@ -3574,7 +3594,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1523518652937146431",
     "sourceLabel": "関東支部イベント"
   },
@@ -3659,7 +3678,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1522542144408260670",
     "sourceLabel": "関東支部イベント"
   },
@@ -3844,6 +3862,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1353307711130828841",
     "organizerName": "yukie",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1353307711130828841/2a106d968b021c0277e464d4af283e25.png?size=512",
+    "organizerRank": "gold",
     "sourceThreadId": "discord-board-1522081200116862996",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -3900,6 +3920,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1353053734174982197",
     "organizerName": "えりこ",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1353053734174982197/50785deafe13c7658095ad5529a2bc2c.png?size=512",
+    "organizerRank": "silver",
     "sourceThreadId": "discord-board-1521885490100572160",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -3927,6 +3949,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1404038461874245752",
     "organizerName": "まる",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1404038461874245752/3b0b81177331b41c1a488521fb22c3da.png?size=512",
+    "organizerRank": "gold",
     "sourceThreadId": "discord-board-1521748227471446046",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -3985,7 +4009,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-789786995970015242",
     "organizerName": "たけまる【運営】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/789786995970015242/122846247a2c819c5dd1c7e60af73810.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1521549952596316180",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -4131,6 +4154,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1458225622802239636",
     "organizerName": "のぞみ",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1458225622802239636/39b220fc75e7158a2dcf921c17a8db55.png?size=512",
+    "organizerRank": "silver",
     "sourceThreadId": "discord-board-1521115947027533955",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -4187,6 +4212,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-885869465739337738",
     "organizerName": "Hitoshi",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/885869465739337738/6ed3d86b5a8abcaaeb61cb29cdf9e7ed.png?size=512",
+    "organizerRank": "silver",
     "sourceThreadId": "discord-board-1520808042168324338",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -4214,6 +4241,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1457701236936671439",
     "organizerName": "kou",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1457701236936671439/7169ea71d19917ec77be40e97847ce7b.png?size=512",
+    "organizerRank": "silver",
     "sourceThreadId": "discord-board-1520770677706330162",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -4242,7 +4271,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1460286509285511310",
     "organizerName": "iori",
-    "organizerAvatar": "https://cdn.discordapp.com/avatars/1460286509285511310/28ea35a9f2c46dc089081301e8212be7.png?size=512",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1460286509285511310/750139709e8b397ca717135363b32a74.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1520765679333277777",
     "sourceLabel": "ワイン部"
@@ -4270,6 +4299,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1404609719477207152",
     "organizerName": "こーすけ",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1404609719477207152/70b8b8e2dcce90ca5e7257b102c9deb6.png?size=512",
+    "organizerRank": "silver",
     "sourceThreadId": "discord-board-1520694168735973387",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -4354,7 +4385,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1520041586145103942",
     "sourceLabel": "全体イベント"
   },
@@ -4409,6 +4439,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-839097642105176094",
     "organizerName": "Hiroto",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/839097642105176094/429d1bf3dd22a0dd8b8b364e44f8e8d4.png?size=512",
+    "organizerRank": "silver",
     "sourceThreadId": "discord-board-1519334570678419456",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -4466,7 +4498,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119605898743120044",
     "organizerName": "IRO+運営",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119605898743120044/2d550914366cefb1693360eea7d7ebcc.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1519259608126849055",
     "sourceLabel": "全体イベント"
   },
@@ -4550,6 +4581,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-888402229051142215",
     "organizerName": "さく",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/888402229051142215/6c2fd9df87b7e0211134c8252e9a3a19.png?size=512",
     "sourceThreadId": "discord-board-1518553815752642623",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -4697,6 +4729,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-885869465739337738",
     "organizerName": "Hitoshi",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/885869465739337738/6ed3d86b5a8abcaaeb61cb29cdf9e7ed.png?size=512",
+    "organizerRank": "silver",
     "sourceThreadId": "discord-board-1517531892717588585",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -4723,7 +4757,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1517027816925827102",
     "sourceLabel": "全体イベント"
   },
@@ -4751,6 +4784,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-812624829991747605",
     "organizerName": "てるき",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/812624829991747605/1eaf5e03abcc3704528be61d3754f9d9.png?size=512",
     "sourceThreadId": "discord-board-1516993800973713569",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -4838,7 +4872,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1516698678876962816",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -4863,6 +4896,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1457362274980200473",
     "organizerName": "ナツキ🌛",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1457362274980200473/4273079b45b88481652ee21e2cf05ef9.png?size=512",
+    "organizerRank": "gold",
     "sourceThreadId": "discord-board-1516274501447323750",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -4947,6 +4982,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1457362274980200473",
     "organizerName": "ナツキ🌛",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1457362274980200473/4273079b45b88481652ee21e2cf05ef9.png?size=512",
+    "organizerRank": "gold",
     "sourceThreadId": "discord-board-1515557214302109776",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -5003,6 +5040,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1452174899438288918",
     "organizerName": "Hazuki",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1452174899438288918/d6d0cfefd9e0dfd5492fbc4575c1b421.png?size=512",
     "sourceThreadId": "discord-board-1515232683939336313",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -5112,6 +5150,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1457526173616705549",
     "organizerName": "ゆうき",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1457526173616705549/1fc6273adfe90cc49907612c466a8a42.png?size=512",
+    "organizerRank": "silver",
     "sourceThreadId": "discord-board-1514134268496842863",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -5139,6 +5179,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1452174899438288918",
     "organizerName": "Hazuki",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1452174899438288918/d6d0cfefd9e0dfd5492fbc4575c1b421.png?size=512",
     "sourceThreadId": "discord-board-1514099524891705395",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -5342,6 +5383,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1457362274980200473",
     "organizerName": "ナツキ🌛",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1457362274980200473/4273079b45b88481652ee21e2cf05ef9.png?size=512",
+    "organizerRank": "gold",
     "sourceThreadId": "discord-board-1512467613341712394",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -5400,7 +5443,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1352978791483572326",
     "organizerName": "もってぃー【運営】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1352978791483572326/aa0f81f03bc22b267fa676eb6bf32402.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1512449573732221159",
     "sourceLabel": "スポーツ観戦部"
   },
@@ -5428,6 +5470,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1457508300588453932",
     "organizerName": "ななみ",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1457508300588453932/5278f4112aced688e599ecee747cb9ba.png?size=512",
+    "organizerRank": "gold",
     "sourceThreadId": "discord-board-1512369013647347785",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -5512,6 +5556,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-982887161357561906",
     "organizerName": "Ema",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/982887161357561906/641fbc2a86b82250e5eff22b1d08a9d2.png?size=512",
+    "organizerRank": "silver",
     "sourceThreadId": "discord-board-1512055065861423244",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -5539,7 +5585,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1352978791483572326",
     "organizerName": "もってぃー【運営】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1352978791483572326/aa0f81f03bc22b267fa676eb6bf32402.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1512032943541846199",
     "sourceLabel": "関東支部イベント"
   },
@@ -5712,6 +5757,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1059373969590984764",
     "organizerName": "天ぷら(てつや",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1059373969590984764/857b85adf11b840e1cacf44276528eda.png?size=512",
+    "organizerRank": "gold",
     "sourceThreadId": "discord-board-1511589527880339566",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -5739,7 +5786,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-413325457182949377",
     "organizerName": "こん🦊",
-    "organizerAvatar": "https://cdn.discordapp.com/guilds/1217327152098312245/users/413325457182949377/avatars/9e67f75b9cdd6e708e4df12e08ed0dfb.png?size=512",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/413325457182949377/3b15096bac22c054818edd00ecf9a56e.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1511365499538378883",
     "sourceLabel": "関東グルメ掲示板"
@@ -5768,6 +5815,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1457701236936671439",
     "organizerName": "kou",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1457701236936671439/7169ea71d19917ec77be40e97847ce7b.png?size=512",
+    "organizerRank": "silver",
     "sourceThreadId": "discord-board-1511345788490350634",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -5822,6 +5871,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1327670901373931661",
     "organizerName": "takuto",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1327670901373931661/031bcf501f0b7e7d76ab56a51bdb926d.png?size=512",
+    "organizerRank": "silver",
     "sourceThreadId": "discord-board-1511037006480806039",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -5878,6 +5929,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1424767385176379442",
     "organizerName": "KENTO",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1424767385176379442/0a27321f0ce9b004d792eee5fc87f129.png?size=512",
     "sourceThreadId": "discord-board-1511010985123643552",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -5904,7 +5956,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "status": "full",
     "createdBy": "u1",
     "organizerProfileId": "discord-1228712639903961190",
-    "organizerName": "Nana🌎運営",
+    "organizerName": "Nana【運営】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1228712639903961190/ec0618fb90198159eda44242b7db2bd6.png?size=512",
     "sourceThreadId": "discord-board-1510964574873194537",
     "sourceLabel": "関東支部イベント"
   },
@@ -5958,6 +6011,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1459502509679837186",
     "organizerName": "きょうこ",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1459502509679837186/8c816e24707c133c24625fdb8998096c.png?size=512",
+    "organizerRank": "silver",
     "sourceThreadId": "discord-board-1510939081176125501",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -5983,7 +6038,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119605898743120044",
     "organizerName": "IRO+運営",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119605898743120044/2d550914366cefb1693360eea7d7ebcc.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1510920586044375070",
     "sourceLabel": "全体イベント"
   },
@@ -6124,6 +6178,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1492822899726225488",
     "organizerName": "りょうや",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1492822899726225488/9798627eb379efcdc745aa1297d1ce9d.png?size=512",
     "sourceThreadId": "discord-board-1510138559124865064",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -6271,7 +6326,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "status": "open",
     "createdBy": "u1",
     "organizerProfileId": "discord-1228680202952118416",
-    "organizerName": "ごりごり",
+    "organizerName": "ごりごりぐるめ",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1228680202952118416/79db0a0052562728670a00bc8807c4d8.png?size=512",
+    "organizerRank": "silver",
     "sourceThreadId": "discord-board-1509711805826727978",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -6299,6 +6356,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1341394331063550014",
     "organizerName": "つばさ",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1341394331063550014/3f852c68137d5d8de86fbd5b0e14d645.png?size=512",
+    "organizerRank": "silver",
     "sourceThreadId": "discord-board-1509561434487390248",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -6471,6 +6530,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1459502509679837186",
     "organizerName": "きょうこ",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1459502509679837186/8c816e24707c133c24625fdb8998096c.png?size=512",
+    "organizerRank": "silver",
     "sourceThreadId": "discord-board-1508412055806410782",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -6525,6 +6586,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1457362274980200473",
     "organizerName": "ナツキ🌛",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1457362274980200473/4273079b45b88481652ee21e2cf05ef9.png?size=512",
+    "organizerRank": "gold",
     "sourceThreadId": "discord-board-1508262606618497125",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -6804,7 +6867,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119605898743120044",
     "organizerName": "IRO+運営",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119605898743120044/2d550914366cefb1693360eea7d7ebcc.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1505836435498995793",
     "sourceLabel": "全体イベント"
   },
@@ -6916,6 +6978,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1457508300588453932",
     "organizerName": "ななみ",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1457508300588453932/5278f4112aced688e599ecee747cb9ba.png?size=512",
+    "organizerRank": "gold",
     "sourceThreadId": "discord-board-1505228631998206063",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -6943,6 +7007,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1327670901373931661",
     "organizerName": "takuto",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1327670901373931661/031bcf501f0b7e7d76ab56a51bdb926d.png?size=512",
+    "organizerRank": "silver",
     "sourceThreadId": "discord-board-1505207705961496907",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -6974,32 +7040,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1504833943395111033",
     "sourceLabel": "関東グルメ掲示板"
-  },
-  {
-    "id": "discord-event-1504772980851478548",
-    "createdAt": "2026-05-15T09:10:35.965000+00:00",
-    "title": "秋合宿 運営メンバー募集🍁✨",
-    "description": "@everyone\n\nみなさん、お待たせしました！\n昨年大盛り上がりだった**IRO+の秋合宿が、今年もパワーアップして帰ってきます！✨**\n合宿のテーマは、**「大人の青春をもう一度！食も遊びも本気の2日間」🔥**\n\n日頃のあれこれを全部忘れて、学生時代に戻ったみたいに全力で動いて、全力で食べて、朝まで楽しみ尽くす2日間にしませんか？\n初参加の方も、お一人での参加も大歓迎！すぐに馴染める仕掛けをたくさん用意しています🤝\n\n募集は追ってご案内いたしますので、興味のある方はご予定のほどよろしくお願いします😊\n\n-----------\n\n**🕒 日程**\n11月7日（土）〜 11月8日（日）［1泊2日］\n\n**📍 場所**\n千葉県の合宿施設\n\n**💰 予算**\n25,000円\n（宿泊費・食費・アクティビティ費など、全て込み）\n\n**👥 募集人数**\n30〜40名程度\n\n**📝 コンテンツ内容**（一部変更の可能性あり）\n\n🏃‍♂️‍➡️ 【昼】本気の運動会！\n大人になってから全力疾走、していますか？\nチーム対抗で、心地よい汗を流しながら大笑いしましょう！運動が苦手な方も楽しめるレクも用意しています。\n\n🍖 【夕方】豪華食材で大満足BBQ！\nグルメコミュニティIRO+の名に懸けて、今年も食には妥協しません！\n美味しいお肉や新鮮な食材を、みんなでワイワイ焼きながら乾杯しましょう🍻\n\n🍻 【夜】深夜のレク ＆ 大宴会！\n運動会とBBQで仲良くなった後は、夜の宴会スタート！\n楽しいゲームやトークで、朝までノンストップで盛り上がりましょう👏🏻\n\n**🙋‍♀️ こんな人は全員集合！**\n* 最高の仲間と「大人の青春」を味わいたい方\n* 美味しいBBQとお酒で、日々のリフレッシュをしたい方\n* IRO+のメンバーともっと仲良くなりたい、繋がりを作りたい方\n\n昨年参加してくれた方はもちろん、「最近IRO+に入ったばかり」「合宿は初参加だから緊張する…」という方も大歓迎です！ \nスタッフをはじめ、温かいメンバーが全力であなたを巻き込みますので安心して飛び込んできてください！\n\n**👇昨年の合宿の様子はこちら**\nhttps://www.instagram.com/p/DSmpncMk76h/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA==",
-    "date": "2026-11-07",
-    "time": "時間未定",
-    "location": "詳細をご確認ください",
-    "image": "",
-    "capacity": 1,
-    "reservationCapacity": 1,
-    "attendees": 0,
-    "participants": [],
-    "applicantIds": [],
-    "price": "本文をご確認ください",
-    "category": "all",
-    "eventType": "official",
-    "status": "full",
-    "createdBy": "u1",
-    "organizerProfileId": "discord-1119606639763390545",
-    "organizerName": "Non【IRO+代表】",
-    "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
-    "sourceThreadId": "discord-board-1504772980851478548",
-    "sourceLabel": "全体イベント"
   },
   {
     "id": "discord-event-1504502630561485011",
@@ -7053,7 +7093,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "status": "full",
     "createdBy": "u1",
     "organizerProfileId": "discord-1000320588843339826",
-    "organizerName": "mana🍞",
+    "organizerName": "mana",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1000320588843339826/fad9c8ef4b8848f8f7b07d006248f2e0.png?size=512",
+    "organizerRank": "silver",
     "sourceThreadId": "discord-board-1504466132298502166",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -7081,6 +7123,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-777370228991721502",
     "organizerName": "みや🥁",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/777370228991721502/e7abb1bc690f504749b41539767109b5.png?size=512",
     "sourceThreadId": "discord-board-1504463363189772360",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -7108,6 +7151,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1327670901373931661",
     "organizerName": "takuto",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1327670901373931661/031bcf501f0b7e7d76ab56a51bdb926d.png?size=512",
+    "organizerRank": "silver",
     "sourceThreadId": "discord-board-1504149802730913792",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -7220,7 +7265,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1503200166088278077",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -7306,6 +7350,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1457642692816408692",
     "organizerName": "ゆうか",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1457642692816408692/a8482b48654ee7aa85a129d51cd4d201.png?size=512",
     "sourceThreadId": "discord-board-1502626521125224538",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -7359,6 +7404,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1472215869282320599",
     "organizerName": "さえこ🐿️",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1472215869282320599/d2cf543b98c1fa92704fc8b535fee756.png?size=512",
     "sourceThreadId": "discord-board-1502607571138252983",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -7444,6 +7490,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1497924091032899704",
     "organizerName": "ayano",
+    "organizerAvatar": "",
     "sourceThreadId": "discord-board-1502571809113899168",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -7529,6 +7576,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1404038461874245752",
     "organizerName": "まる",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1404038461874245752/3b0b81177331b41c1a488521fb22c3da.png?size=512",
+    "organizerRank": "gold",
     "sourceThreadId": "discord-board-1501958855251329114",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -7583,6 +7632,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1457362274980200473",
     "organizerName": "ナツキ🌛",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1457362274980200473/4273079b45b88481652ee21e2cf05ef9.png?size=512",
+    "organizerRank": "gold",
     "sourceThreadId": "discord-board-1501516003916644352",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -7610,6 +7661,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1403675019061755974",
     "organizerName": "Takahiro.",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1403675019061755974/919d31b9725037185c103aced0a1bd3e.png?size=512",
+    "organizerRank": "gold",
     "sourceThreadId": "discord-board-1501488922335772692",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -7695,6 +7748,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1490368348566065183",
     "organizerName": "kent",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1490368348566065183/ab144c8e4f682727d28b984075ef81d4.png?size=512",
     "sourceThreadId": "discord-board-1501233642519658626",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -7898,7 +7952,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1352978791483572326",
     "organizerName": "もってぃー【運営】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1352978791483572326/aa0f81f03bc22b267fa676eb6bf32402.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1500118099251298375",
     "sourceLabel": "関東支部イベント"
   },
@@ -7927,7 +7980,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1404762625077809152",
     "organizerName": "さな【運営】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1404762625077809152/ca540a9e6c8e7f31f87f4b95ce0ef77d.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1499916730582171768",
     "sourceLabel": "関東支部イベント"
   },
@@ -7979,7 +8031,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1499663259496611921",
     "sourceLabel": "関東支部イベント"
   },
@@ -8007,6 +8058,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1353307711130828841",
     "organizerName": "yukie",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1353307711130828841/2a106d968b021c0277e464d4af283e25.png?size=512",
+    "organizerRank": "gold",
     "sourceThreadId": "discord-board-1499625603857649734",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -8031,7 +8084,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "status": "full",
     "createdBy": "u1",
     "organizerProfileId": "discord-1228680202952118416",
-    "organizerName": "ごりごり",
+    "organizerName": "ごりごりぐるめ",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1228680202952118416/79db0a0052562728670a00bc8807c4d8.png?size=512",
+    "organizerRank": "silver",
     "sourceThreadId": "discord-board-1499621299968938055",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -8089,6 +8144,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1485530671249362967",
     "organizerName": "りつ",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1485530671249362967/936a5767c4b7d55c331e0f5687412e2e.png?size=512",
+    "organizerRank": "silver",
     "sourceThreadId": "discord-board-1499575165208756354",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -8315,6 +8372,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1353053734174982197",
     "organizerName": "えりこ",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1353053734174982197/50785deafe13c7658095ad5529a2bc2c.png?size=512",
+    "organizerRank": "silver",
     "sourceThreadId": "discord-board-1498709620145782825",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -8342,6 +8401,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1452174899438288918",
     "organizerName": "Hazuki",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1452174899438288918/d6d0cfefd9e0dfd5492fbc4575c1b421.png?size=512",
     "sourceThreadId": "discord-board-1498188507896746055",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -8395,7 +8455,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1498160526814089267",
     "sourceLabel": "全体イベント"
   },
@@ -8422,7 +8481,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1498157865968603328",
     "sourceLabel": "全体イベント"
   },
@@ -8479,6 +8537,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1475703575593353399",
     "organizerName": "naru",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1475703575593353399/d723fb867657073e7e7c2d32bead3fba.png?size=512",
+    "organizerRank": "silver",
     "sourceThreadId": "discord-board-1497803913594802288",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -8534,7 +8594,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-789786995970015242",
     "organizerName": "たけまる【運営】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/789786995970015242/122846247a2c819c5dd1c7e60af73810.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1496896380986200114",
     "sourceLabel": "昼飲み部"
   },
@@ -8650,7 +8709,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119605898743120044",
     "organizerName": "IRO+運営",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119605898743120044/2d550914366cefb1693360eea7d7ebcc.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1496345353090498590",
     "sourceLabel": "全体イベント"
   },
@@ -8796,6 +8854,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1457508300588453932",
     "organizerName": "ななみ",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1457508300588453932/5278f4112aced688e599ecee747cb9ba.png?size=512",
+    "organizerRank": "gold",
     "sourceThreadId": "discord-board-1494152982630105318",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -8910,6 +8970,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1330030467264544789",
     "organizerName": "さち",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1330030467264544789/94df5206d6955744940fb015c41fa06f.png?size=512",
     "sourceThreadId": "discord-board-1493224082517397635",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -8933,7 +8994,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "status": "open",
     "createdBy": "u1",
     "organizerProfileId": "discord-1228677950401151139",
-    "organizerName": "かずま🌏運営",
+    "organizerName": "かずま【運営】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1228677950401151139/8fe93f8b9cd2f84ec1711f01ae0dbdfc.png?size=512",
     "sourceThreadId": "discord-board-1493091438227882067",
     "sourceLabel": "関東支部イベント"
   },
@@ -8989,7 +9051,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119605898743120044",
     "organizerName": "IRO+運営",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119605898743120044/2d550914366cefb1693360eea7d7ebcc.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1492791107648618526",
     "sourceLabel": "全体イベント"
   },
@@ -9017,6 +9078,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1459402456403411005",
     "organizerName": "みか",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1459402456403411005/5a8a5ce7b6194575b5d4be320677a64f.png?size=512",
     "sourceThreadId": "discord-board-1492726301356855346",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -9075,7 +9137,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1492448236156358736",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -9104,7 +9165,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1492446665532116992",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -9218,7 +9278,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "status": "full",
     "createdBy": "u1",
     "organizerProfileId": "discord-1228712639903961190",
-    "organizerName": "Nana🌎運営",
+    "organizerName": "Nana【運営】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1228712639903961190/ec0618fb90198159eda44242b7db2bd6.png?size=512",
     "sourceThreadId": "discord-board-1491382163495714816",
     "sourceLabel": "関東支部イベント"
   },
@@ -9246,6 +9307,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1457526173616705549",
     "organizerName": "ゆうき",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1457526173616705549/1fc6273adfe90cc49907612c466a8a42.png?size=512",
+    "organizerRank": "silver",
     "sourceThreadId": "discord-board-1490931093543587921",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -9358,6 +9421,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1466360543093985445",
     "organizerName": "きえ",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1466360543093985445/a245ebecfba91af330310e8417ab5a8a.png?size=512",
+    "organizerRank": "silver",
     "sourceThreadId": "discord-board-1490362399780241549",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -9385,6 +9450,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1485530671249362967",
     "organizerName": "りつ",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1485530671249362967/936a5767c4b7d55c331e0f5687412e2e.png?size=512",
+    "organizerRank": "silver",
     "sourceThreadId": "discord-board-1490343496782188705",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -9412,6 +9479,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1457508300588453932",
     "organizerName": "ななみ",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1457508300588453932/5278f4112aced688e599ecee747cb9ba.png?size=512",
+    "organizerRank": "gold",
     "sourceThreadId": "discord-board-1490300251020722367",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -9494,7 +9563,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "status": "full",
     "createdBy": "u1",
     "organizerProfileId": "discord-1228712639903961190",
-    "organizerName": "Nana🌎運営",
+    "organizerName": "Nana【運営】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1228712639903961190/ec0618fb90198159eda44242b7db2bd6.png?size=512",
     "sourceThreadId": "discord-board-1489555282232344697",
     "sourceLabel": "関東支部イベント"
   },
@@ -9605,7 +9675,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1434763296573100186",
     "organizerName": "Nana",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1434763296573100186/f9f64fb8a244aca6986957cc66873fd3.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1489432362184867951",
     "sourceLabel": "ディズニー部"
   },
@@ -9833,6 +9902,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1353307711130828841",
     "organizerName": "yukie",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1353307711130828841/2a106d968b021c0277e464d4af283e25.png?size=512",
+    "organizerRank": "gold",
     "sourceThreadId": "discord-board-1488192222896717898",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -9968,6 +10039,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-575692700280684549",
     "organizerName": "Takuto",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/575692700280684549/4233350cd483b083d505cc47ad7768e9.png?size=512",
+    "organizerRank": "silver",
     "sourceThreadId": "discord-board-1487445425182081194",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -10193,7 +10266,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1352978791483572326",
     "organizerName": "もってぃー【運営】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1352978791483572326/aa0f81f03bc22b267fa676eb6bf32402.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1485948408450515096",
     "sourceLabel": "関東支部イベント"
   },
@@ -10250,7 +10322,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1334056760863883294",
     "organizerName": "IRO+運営",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1334056760863883294/2d550914366cefb1693360eea7d7ebcc.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1485542118729453689",
     "sourceLabel": "全体イベント"
   },
@@ -10279,7 +10350,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1485215690242789476",
     "sourceLabel": "全体イベント"
   },
@@ -10307,6 +10377,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1457356796237709465",
     "organizerName": "Nana",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1457356796237709465/6f35c1ead44a85e20a328c358362e25a.png?size=512",
     "sourceThreadId": "discord-board-1483813267183767782",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -10334,6 +10405,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1404038461874245752",
     "organizerName": "まる",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1404038461874245752/3b0b81177331b41c1a488521fb22c3da.png?size=512",
+    "organizerRank": "gold",
     "sourceThreadId": "discord-board-1483750947023880292",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -10361,6 +10434,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1457716275814862880",
     "organizerName": "まよ",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1457716275814862880/648935b29efdefec2798df39902d7809.png?size=512",
     "sourceThreadId": "discord-board-1483729298853724200",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -10389,7 +10463,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1352978791483572326",
     "organizerName": "もってぃー【運営】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1352978791483572326/aa0f81f03bc22b267fa676eb6bf32402.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1483447408389132392",
     "sourceLabel": "関東支部イベント"
   },
@@ -10471,7 +10544,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "status": "open",
     "createdBy": "u1",
     "organizerProfileId": "discord-817730242516746252",
-    "organizerName": "ユウ🌏運営",
+    "organizerName": "ユウ【運営】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/817730242516746252/cda00c1c2a58a4d6462c54c2b5bb7ea0.png?size=512",
     "sourceThreadId": "discord-board-1482558925260984461",
     "sourceLabel": "関西支部イベント"
   },
@@ -10499,6 +10573,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1457508300588453932",
     "organizerName": "ななみ",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1457508300588453932/5278f4112aced688e599ecee747cb9ba.png?size=512",
+    "organizerRank": "gold",
     "sourceThreadId": "discord-board-1481983099179896843",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -10526,6 +10602,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1459402456403411005",
     "organizerName": "みか",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1459402456403411005/5a8a5ce7b6194575b5d4be320677a64f.png?size=512",
     "sourceThreadId": "discord-board-1481921494140325990",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -10551,7 +10628,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "status": "full",
     "createdBy": "u1",
     "organizerProfileId": "discord-525718374152536074",
-    "organizerName": "さ",
+    "organizerName": "おさや",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/525718374152536074/09849f7b7fde14fd39dfb44c6f73479a.png?size=512",
+    "organizerRank": "silver",
     "sourceThreadId": "discord-board-1481626410245160970",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -10579,6 +10658,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-432375662347550736",
     "organizerName": "kanade",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/432375662347550736/1c5ff29a19b6ad23fd7eb1d44b1d11be.png?size=512",
     "sourceThreadId": "discord-board-1481609561679855687",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -10606,6 +10686,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1457701236936671439",
     "organizerName": "kou",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1457701236936671439/7169ea71d19917ec77be40e97847ce7b.png?size=512",
+    "organizerRank": "silver",
     "sourceThreadId": "discord-board-1481252692465815624",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -10634,7 +10716,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1352978791483572326",
     "organizerName": "もってぃー【運営】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1352978791483572326/aa0f81f03bc22b267fa676eb6bf32402.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1481250807621095476",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -10662,6 +10743,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1353192432291811438",
     "organizerName": "りあ🍤",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1353192432291811438/499e9d98545b93bbba5c3db8ce69dbcd.png?size=512",
+    "organizerRank": "silver",
     "sourceThreadId": "discord-board-1481214408419053639",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -10717,6 +10800,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1457701236936671439",
     "organizerName": "kou",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1457701236936671439/7169ea71d19917ec77be40e97847ce7b.png?size=512",
+    "organizerRank": "silver",
     "sourceThreadId": "discord-board-1480901533213130763",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -10829,7 +10914,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1480102998284963901",
     "sourceLabel": "全体イベント"
   },
@@ -10858,7 +10942,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1479749777989042245",
     "sourceLabel": "関東支部イベント"
   },
@@ -10886,6 +10969,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1180072700316749854",
     "organizerName": "きよ",
+    "organizerAvatar": "",
     "sourceThreadId": "discord-board-1479635124348784811",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -10912,7 +10996,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "status": "full",
     "createdBy": "u1",
     "organizerProfileId": "discord-1450406520394354689",
-    "organizerName": "AYURI",
+    "organizerName": "あゆり",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1450406520394354689/98332f2f3fa7b9910b46f9704ce30eb2.png?size=512",
     "sourceThreadId": "discord-board-1479468198863569038",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -10996,6 +11081,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-711884076340215831",
     "organizerName": "けんと",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/711884076340215831/6d1215e63e0ab68e2d27902cb847e50e.png?size=512",
+    "organizerRank": "silver",
     "sourceThreadId": "discord-board-1478381830943277237",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -11051,6 +11138,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1477541469291155497",
     "organizerName": "NANA",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1477541469291155497/bd76cebf84c829cf95f68af4ea5b385c.png?size=512",
     "sourceThreadId": "discord-board-1478225512487981219",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -11078,6 +11166,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1353192432291811438",
     "organizerName": "りあ🍤",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1353192432291811438/499e9d98545b93bbba5c3db8ce69dbcd.png?size=512",
+    "organizerRank": "silver",
     "sourceThreadId": "discord-board-1478215679768395846",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -11104,6 +11194,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-922024990067548190",
     "organizerName": "Kosuke",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/922024990067548190/f2b5a319885643395cce0e8a2e903b69.png?size=512",
     "sourceThreadId": "discord-board-1478016775508590715",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -11130,6 +11221,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1457526173616705549",
     "organizerName": "ゆうき",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1457526173616705549/1fc6273adfe90cc49907612c466a8a42.png?size=512",
+    "organizerRank": "silver",
     "sourceThreadId": "discord-board-1477803582240849961",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -11157,6 +11250,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1353307711130828841",
     "organizerName": "yukie",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1353307711130828841/2a106d968b021c0277e464d4af283e25.png?size=512",
+    "organizerRank": "gold",
     "sourceThreadId": "discord-board-1477620110444466236",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -11184,6 +11279,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1353307711130828841",
     "organizerName": "yukie",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1353307711130828841/2a106d968b021c0277e464d4af283e25.png?size=512",
+    "organizerRank": "gold",
     "sourceThreadId": "discord-board-1477602555423883428",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -11212,7 +11309,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1477596200222851113",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -11241,7 +11337,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1477592770880471091",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -11268,6 +11363,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-896044735611953172",
     "organizerName": "Toshi",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/896044735611953172/f5787af3f69ec2e78401a2af06f3570c.png?size=512",
+    "organizerRank": "silver",
     "sourceThreadId": "discord-board-1477236109024169994",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -11382,6 +11479,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1353192432291811438",
     "organizerName": "りあ🍤",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1353192432291811438/499e9d98545b93bbba5c3db8ce69dbcd.png?size=512",
+    "organizerRank": "silver",
     "sourceThreadId": "discord-board-1475795287044919411",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -11438,6 +11537,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1452174899438288918",
     "organizerName": "Hazuki",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1452174899438288918/d6d0cfefd9e0dfd5492fbc4575c1b421.png?size=512",
     "sourceThreadId": "discord-board-1474782920643182642",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -11465,6 +11565,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1457701236936671439",
     "organizerName": "kou",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1457701236936671439/7169ea71d19917ec77be40e97847ce7b.png?size=512",
+    "organizerRank": "silver",
     "sourceThreadId": "discord-board-1474703793676488796",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -11519,7 +11621,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "status": "full",
     "createdBy": "u1",
     "organizerProfileId": "discord-794072900029251595",
-    "organizerName": "おーちゃん",
+    "organizerName": "あおい",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/794072900029251595/9306ed66ea0b447bb7c287a74ab0b9e4.png?size=512",
     "sourceThreadId": "discord-board-1474678893163053097",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -11548,7 +11651,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1474661001675800707",
     "sourceLabel": "全体イベント"
   },
@@ -11577,7 +11679,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1474628619631333406",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -11605,6 +11706,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1248246861576540302",
     "organizerName": "こだま",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1248246861576540302/d2b1d749c7f59abc7841bc7075d77167.png?size=512",
     "sourceThreadId": "discord-board-1474364262779453554",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -11629,6 +11731,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1452174899438288918",
     "organizerName": "Hazuki",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1452174899438288918/d6d0cfefd9e0dfd5492fbc4575c1b421.png?size=512",
     "sourceThreadId": "discord-board-1473098380681941143",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -11653,7 +11756,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "status": "open",
     "createdBy": "u1",
     "organizerProfileId": "discord-1228681600594743387",
-    "organizerName": "nonoka🌎運営",
+    "organizerName": "nonoka【運営】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1228681600594743387/0e4067e11bbc4dd53c30e9aad23ef1e0.png?size=512",
     "sourceThreadId": "discord-board-1474213216270815313",
     "sourceLabel": "関西支部イベント"
   },
@@ -11681,6 +11785,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1341394331063550014",
     "organizerName": "つばさ",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1341394331063550014/3f852c68137d5d8de86fbd5b0e14d645.png?size=512",
+    "organizerRank": "silver",
     "sourceThreadId": "discord-board-1474034588883095786",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -11737,6 +11843,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1457716275814862880",
     "organizerName": "まよ",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1457716275814862880/648935b29efdefec2798df39902d7809.png?size=512",
     "sourceThreadId": "discord-board-1473335512562667630",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -11764,6 +11871,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1353053734174982197",
     "organizerName": "えりこ",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1353053734174982197/50785deafe13c7658095ad5529a2bc2c.png?size=512",
+    "organizerRank": "silver",
     "sourceThreadId": "discord-board-1473048256006328340",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -11790,6 +11899,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-896044735611953172",
     "organizerName": "Toshi",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/896044735611953172/f5787af3f69ec2e78401a2af06f3570c.png?size=512",
+    "organizerRank": "silver",
     "sourceThreadId": "discord-board-1472947800546213911",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -11817,7 +11928,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1334056760863883294",
     "organizerName": "IRO+運営",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1334056760863883294/2d550914366cefb1693360eea7d7ebcc.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1472566107377373299",
     "sourceLabel": "全体イベント"
   },
@@ -11845,6 +11955,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1457362274980200473",
     "organizerName": "ナツキ🌛",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1457362274980200473/4273079b45b88481652ee21e2cf05ef9.png?size=512",
+    "organizerRank": "gold",
     "sourceThreadId": "discord-board-1472459406196080812",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -11870,7 +11982,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1472168960228200489",
     "sourceLabel": "全体イベント"
   },
@@ -11898,6 +12009,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1404038461874245752",
     "organizerName": "まる",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1404038461874245752/3b0b81177331b41c1a488521fb22c3da.png?size=512",
+    "organizerRank": "gold",
     "sourceThreadId": "discord-board-1471941503453757460",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -11924,6 +12037,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1246014118390005861",
     "organizerName": "ザッキー",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1246014118390005861/d5bba723d100b51a401f77aa930796f8.png?size=512",
+    "organizerRank": "silver",
     "sourceThreadId": "discord-board-1471136580805591123",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -12008,6 +12123,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1353192432291811438",
     "organizerName": "りあ🍤",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1353192432291811438/499e9d98545b93bbba5c3db8ce69dbcd.png?size=512",
+    "organizerRank": "silver",
     "sourceThreadId": "discord-board-1470386049808072800",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -12036,7 +12153,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1470263735590453388",
     "sourceLabel": "関東支部イベント"
   },
@@ -12065,6 +12181,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-390423883095998464",
     "organizerName": "shusuke",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/390423883095998464/994f8a675afaeea8260b024448b68346.png?size=512",
     "sourceThreadId": "discord-board-1470001905303293985",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -12091,6 +12208,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-916635788366708767",
     "organizerName": "Ryo🍨",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/916635788366708767/11baaa6ec57e4979d10c39a757558267.png?size=512",
     "sourceThreadId": "discord-board-1469938541365821542",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -12118,6 +12236,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1404425352150777856",
     "organizerName": "さい",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1404425352150777856/81e575c385cbb8e5ec074b6829657df3.png?size=512",
+    "organizerRank": "silver",
     "sourceThreadId": "discord-board-1469705863320178698",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -12146,7 +12266,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1404762625077809152",
     "organizerName": "さな【運営】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1404762625077809152/ca540a9e6c8e7f31f87f4b95ce0ef77d.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1469570831758917763",
     "sourceLabel": "関東支部イベント"
   },
@@ -12202,6 +12321,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1457701236936671439",
     "organizerName": "kou",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1457701236936671439/7169ea71d19917ec77be40e97847ce7b.png?size=512",
+    "organizerRank": "silver",
     "sourceThreadId": "discord-board-1468910934146945056",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -12229,6 +12350,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-432375662347550736",
     "organizerName": "kanade",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/432375662347550736/1c5ff29a19b6ad23fd7eb1d44b1d11be.png?size=512",
     "sourceThreadId": "discord-board-1468897684504182982",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -12256,6 +12378,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1294635051438309550",
     "organizerName": "NAOTO",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1294635051438309550/21ad5521b1e73e2236e9c127cb631567.png?size=512",
+    "organizerRank": "silver",
     "sourceThreadId": "discord-board-1468632320159387648",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -12311,6 +12435,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1248246861576540302",
     "organizerName": "こだま",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1248246861576540302/d2b1d749c7f59abc7841bc7075d77167.png?size=512",
     "sourceThreadId": "discord-board-1468200286937026642",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -12339,6 +12464,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-390423883095998464",
     "organizerName": "shusuke",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/390423883095998464/994f8a675afaeea8260b024448b68346.png?size=512",
     "sourceThreadId": "discord-board-1467839344957067318",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -12367,7 +12493,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1467775706800066622",
     "sourceLabel": "関東支部イベント"
   },
@@ -12452,7 +12577,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1352978791483572326",
     "organizerName": "もってぃー【運営】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1352978791483572326/aa0f81f03bc22b267fa676eb6bf32402.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1467077523849347165",
     "sourceLabel": "関東支部イベント"
   },
@@ -12537,6 +12661,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-432375662347550736",
     "organizerName": "kanade",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/432375662347550736/1c5ff29a19b6ad23fd7eb1d44b1d11be.png?size=512",
     "sourceThreadId": "discord-board-1465953052564394078",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -12563,6 +12688,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1294635051438309550",
     "organizerName": "NAOTO",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1294635051438309550/21ad5521b1e73e2236e9c127cb631567.png?size=512",
+    "organizerRank": "silver",
     "sourceThreadId": "discord-board-1465673698768978146",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -12589,6 +12716,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1353307711130828841",
     "organizerName": "yukie",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1353307711130828841/2a106d968b021c0277e464d4af283e25.png?size=512",
+    "organizerRank": "gold",
     "sourceThreadId": "discord-board-1464949374365733130",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -12617,7 +12746,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1464901061042245677",
     "sourceLabel": "関東支部イベント"
   },
@@ -12643,7 +12771,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1334056760863883294",
     "organizerName": "IRO+運営",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1334056760863883294/2d550914366cefb1693360eea7d7ebcc.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1464505832006750334",
     "sourceLabel": "全体イベント"
   },
@@ -12671,6 +12798,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1327670901373931661",
     "organizerName": "takuto",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1327670901373931661/031bcf501f0b7e7d76ab56a51bdb926d.png?size=512",
+    "organizerRank": "silver",
     "sourceThreadId": "discord-board-1464258580537540753",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -12698,6 +12827,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1457596781272633369",
     "organizerName": "すけ",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1457596781272633369/c35a55d8ed1e0dd326ea584b8dd5a0fd.png?size=512",
+    "organizerRank": "silver",
     "sourceThreadId": "discord-board-1464047292926529578",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -12839,6 +12970,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-432375662347550736",
     "organizerName": "kanade",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/432375662347550736/1c5ff29a19b6ad23fd7eb1d44b1d11be.png?size=512",
     "sourceThreadId": "discord-board-1463514190823166045",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -12896,7 +13028,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1463131755895853211",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -12924,6 +13055,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1077595012004593684",
     "organizerName": "平田祐基",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1077595012004593684/da9f7e0d148108651369df9c42d6f207.png?size=512",
     "sourceThreadId": "discord-board-1463029361136369716",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -12950,7 +13082,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "status": "full",
     "createdBy": "u1",
     "organizerProfileId": "discord-1228712639903961190",
-    "organizerName": "Nana🌎運営",
+    "organizerName": "Nana【運営】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1228712639903961190/ec0618fb90198159eda44242b7db2bd6.png?size=512",
     "sourceThreadId": "discord-board-1462633236915032095",
     "sourceLabel": "関東支部イベント"
   },
@@ -12978,6 +13111,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1457716275814862880",
     "organizerName": "まよ",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1457716275814862880/648935b29efdefec2798df39902d7809.png?size=512",
     "sourceThreadId": "discord-board-1462369844920844328",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -13005,6 +13139,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1457508300588453932",
     "organizerName": "ななみ",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1457508300588453932/5278f4112aced688e599ecee747cb9ba.png?size=512",
+    "organizerRank": "gold",
     "sourceThreadId": "discord-board-1462221349152882863",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -13033,7 +13169,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1352978791483572326",
     "organizerName": "もってぃー【運営】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1352978791483572326/aa0f81f03bc22b267fa676eb6bf32402.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1461705748818956473",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -13061,6 +13196,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1353192432291811438",
     "organizerName": "りあ🍤",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1353192432291811438/499e9d98545b93bbba5c3db8ce69dbcd.png?size=512",
+    "organizerRank": "silver",
     "sourceThreadId": "discord-board-1461548050819580019",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -13117,6 +13254,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1228677207522541648",
     "organizerName": "すず",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1228677207522541648/51b7a7b731b54bad382bb91b03570259.png?size=512",
     "sourceThreadId": "discord-board-1460503732365295658",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -13143,6 +13281,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1077595012004593684",
     "organizerName": "平田祐基",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1077595012004593684/da9f7e0d148108651369df9c42d6f207.png?size=512",
     "sourceThreadId": "discord-board-1460423048422494249",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -13198,6 +13337,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1457701236936671439",
     "organizerName": "kou",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1457701236936671439/7169ea71d19917ec77be40e97847ce7b.png?size=512",
+    "organizerRank": "silver",
     "sourceThreadId": "discord-board-1459802437241143448",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -13253,6 +13394,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1341374143932923986",
     "organizerName": "かなみ",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1341374143932923986/20b569103030f86e652fc3be12e180e2.png?size=512",
     "sourceThreadId": "discord-board-1459560150170865807",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -13281,7 +13423,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1404762625077809152",
     "organizerName": "さな【運営】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1404762625077809152/ca540a9e6c8e7f31f87f4b95ce0ef77d.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1459516806891831388",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -13308,7 +13449,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "status": "full",
     "createdBy": "u1",
     "organizerProfileId": "discord-1228712639903961190",
-    "organizerName": "Nana🌎運営",
+    "organizerName": "Nana【運営】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1228712639903961190/ec0618fb90198159eda44242b7db2bd6.png?size=512",
     "sourceThreadId": "discord-board-1459494529529938104",
     "sourceLabel": "関東支部イベント"
   },
@@ -13396,7 +13538,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1352978791483572326",
     "organizerName": "もってぃー【運営】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1352978791483572326/aa0f81f03bc22b267fa676eb6bf32402.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1459126067234340986",
     "sourceLabel": "関東支部イベント"
   },
@@ -13424,6 +13565,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-916635788366708767",
     "organizerName": "Ryo🍨",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/916635788366708767/11baaa6ec57e4979d10c39a757558267.png?size=512",
     "sourceThreadId": "discord-board-1458786496214732882",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -13450,6 +13592,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1457526173616705549",
     "organizerName": "ゆうき",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1457526173616705549/1fc6273adfe90cc49907612c466a8a42.png?size=512",
+    "organizerRank": "silver",
     "sourceThreadId": "discord-board-1458626813130571859",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -13475,7 +13619,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "status": "open",
     "createdBy": "u1",
     "organizerProfileId": "discord-1228677104577544362",
-    "organizerName": "723 🌎 運営",
+    "organizerName": "723【運営】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1228677104577544362/78fd98fa03f458894bc3b5b09eb80066.png?size=512",
     "sourceThreadId": "discord-board-1458456445866475531",
     "sourceLabel": "関西支部イベント"
   },
@@ -13503,6 +13648,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-916635788366708767",
     "organizerName": "Ryo🍨",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/916635788366708767/11baaa6ec57e4979d10c39a757558267.png?size=512",
     "sourceThreadId": "discord-board-1458428162294677577",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -13530,6 +13676,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1404038461874245752",
     "organizerName": "まる",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1404038461874245752/3b0b81177331b41c1a488521fb22c3da.png?size=512",
+    "organizerRank": "gold",
     "sourceThreadId": "discord-board-1458400703235096616",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -13557,6 +13705,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1457596781272633369",
     "organizerName": "すけ",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1457596781272633369/c35a55d8ed1e0dd326ea584b8dd5a0fd.png?size=512",
+    "organizerRank": "silver",
     "sourceThreadId": "discord-board-1458097360302379182",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -13584,6 +13734,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-432375662347550736",
     "organizerName": "kanade",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/432375662347550736/1c5ff29a19b6ad23fd7eb1d44b1d11be.png?size=512",
     "sourceThreadId": "discord-board-1458089665411420212",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -13638,7 +13789,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1352978791483572326",
     "organizerName": "もってぃー【運営】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1352978791483572326/aa0f81f03bc22b267fa676eb6bf32402.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1458048791323213961",
     "sourceLabel": "関東支部イベント"
   },
@@ -13664,7 +13814,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "status": "full",
     "createdBy": "u1",
     "organizerProfileId": "discord-1228677950401151139",
-    "organizerName": "かずま🌏運営",
+    "organizerName": "かずま【運営】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1228677950401151139/8fe93f8b9cd2f84ec1711f01ae0dbdfc.png?size=512",
     "sourceThreadId": "discord-board-1457974401973883085",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -13693,7 +13844,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1457306459275788319",
     "sourceLabel": "全体イベント"
   },
@@ -13721,6 +13871,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1228677045454639119",
     "organizerName": "🦊",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1228677045454639119/5e2f2f8fbc7d4f7167220ca2498796b4.png?size=512",
     "sourceThreadId": "discord-board-1456679088780480575",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -13744,7 +13895,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "status": "full",
     "createdBy": "u1",
     "organizerProfileId": "discord-1228677950401151139",
-    "organizerName": "かずま🌏運営",
+    "organizerName": "かずま【運営】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1228677950401151139/8fe93f8b9cd2f84ec1711f01ae0dbdfc.png?size=512",
     "sourceThreadId": "discord-board-1453572035304358039",
     "sourceLabel": "関東支部イベント"
   },
@@ -13772,6 +13924,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1353307711130828841",
     "organizerName": "yukie",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1353307711130828841/2a106d968b021c0277e464d4af283e25.png?size=512",
+    "organizerRank": "gold",
     "sourceThreadId": "discord-board-1453358235158577172",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -13799,6 +13953,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1353307711130828841",
     "organizerName": "yukie",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1353307711130828841/2a106d968b021c0277e464d4af283e25.png?size=512",
+    "organizerRank": "gold",
     "sourceThreadId": "discord-board-1453319015224053871",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -13881,7 +14037,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "status": "full",
     "createdBy": "u1",
     "organizerProfileId": "discord-1228677950401151139",
-    "organizerName": "かずま🌏運営",
+    "organizerName": "かずま【運営】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1228677950401151139/8fe93f8b9cd2f84ec1711f01ae0dbdfc.png?size=512",
     "sourceThreadId": "discord-board-1450862433093550130",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -13910,7 +14067,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1352978791483572326",
     "organizerName": "もってぃー【運営】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1352978791483572326/aa0f81f03bc22b267fa676eb6bf32402.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1449402018732183743",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -13938,6 +14094,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1228677466499977346",
     "organizerName": "Ayana",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1228677466499977346/95c33aa4e744943cb57d3e669ded5bd3.png?size=512",
     "sourceThreadId": "discord-board-1449325266911363082",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -14138,6 +14295,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-236286898174164993",
     "organizerName": "ふじ",
+    "organizerAvatar": "",
     "sourceThreadId": "discord-board-1441044750609154190",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -14166,7 +14324,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1352978791483572326",
     "organizerName": "もってぃー【運営】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1352978791483572326/aa0f81f03bc22b267fa676eb6bf32402.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1440641031593922591",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -14194,7 +14351,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1440319675387871242",
     "sourceLabel": "関東支部イベント"
   },
@@ -14308,6 +14464,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-711884076340215831",
     "organizerName": "けんと",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/711884076340215831/6d1215e63e0ab68e2d27902cb847e50e.png?size=512",
+    "organizerRank": "silver",
     "sourceThreadId": "discord-board-1436677323016503369",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -14336,7 +14494,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1435933257236611092",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -14364,6 +14521,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1353307711130828841",
     "organizerName": "yukie",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1353307711130828841/2a106d968b021c0277e464d4af283e25.png?size=512",
+    "organizerRank": "gold",
     "sourceThreadId": "discord-board-1433372134184583208",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -14390,6 +14549,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-711884076340215831",
     "organizerName": "けんと",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/711884076340215831/6d1215e63e0ab68e2d27902cb847e50e.png?size=512",
+    "organizerRank": "silver",
     "sourceThreadId": "discord-board-1431998814385864775",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -14418,7 +14579,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1431574752060772372",
     "sourceLabel": "関東支部イベント"
   },
@@ -14474,6 +14634,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1294635051438309550",
     "organizerName": "NAOTO",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1294635051438309550/21ad5521b1e73e2236e9c127cb631567.png?size=512",
+    "organizerRank": "silver",
     "sourceThreadId": "discord-board-1430934955113840753",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -14502,7 +14664,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1429450172592554015",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -14558,6 +14719,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1248246861576540302",
     "organizerName": "こだま",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1248246861576540302/d2b1d749c7f59abc7841bc7075d77167.png?size=512",
     "sourceThreadId": "discord-board-1428352308466679890",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -14585,6 +14747,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-989475654707839006",
     "organizerName": "のぶ",
+    "organizerAvatar": "",
     "sourceThreadId": "discord-board-1428304424488538172",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -14608,7 +14771,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "status": "full",
     "createdBy": "u1",
     "organizerProfileId": "discord-1228677104577544362",
-    "organizerName": "723 🌎 運営",
+    "organizerName": "723【運営】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1228677104577544362/78fd98fa03f458894bc3b5b09eb80066.png?size=512",
     "sourceThreadId": "discord-board-1427245742116048916",
     "sourceLabel": "関西グルメ掲示板"
   },
@@ -14724,7 +14888,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1352978791483572326",
     "organizerName": "もってぃー【運営】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1352978791483572326/aa0f81f03bc22b267fa676eb6bf32402.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1424690351654047775",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -14751,7 +14914,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "status": "full",
     "createdBy": "u1",
     "organizerProfileId": "discord-1228712639903961190",
-    "organizerName": "Nana🌎運営",
+    "organizerName": "Nana【運営】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1228712639903961190/ec0618fb90198159eda44242b7db2bd6.png?size=512",
     "sourceThreadId": "discord-board-1424681102106431638",
     "sourceLabel": "関東支部イベント"
   },
@@ -14780,7 +14944,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1424278374649561149",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -14808,6 +14971,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-719521905287364654",
     "organizerName": "Yuta",
+    "organizerAvatar": "",
     "sourceThreadId": "discord-board-1422915877803921498",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -14836,7 +15000,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1422888499513786388",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -14864,6 +15027,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1353192432291811438",
     "organizerName": "りあ🍤",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1353192432291811438/499e9d98545b93bbba5c3db8ce69dbcd.png?size=512",
+    "organizerRank": "silver",
     "sourceThreadId": "discord-board-1422064424105148547",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -14891,6 +15056,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1341374143932923986",
     "organizerName": "かなみ",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1341374143932923986/20b569103030f86e652fc3be12e180e2.png?size=512",
     "sourceThreadId": "discord-board-1422057164700123149",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -14918,6 +15084,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-989475654707839006",
     "organizerName": "のぶ",
+    "organizerAvatar": "",
     "sourceThreadId": "discord-board-1421147497644036229",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -14945,6 +15112,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1271250501068918857",
     "organizerName": "Aoi",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1271250501068918857/6446f0795805d8b8508d495e772d13a2.png?size=512",
+    "organizerRank": "gold",
     "sourceThreadId": "discord-board-1420639687818612817",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -14971,7 +15140,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "status": "full",
     "createdBy": "u1",
     "organizerProfileId": "discord-1228712639903961190",
-    "organizerName": "Nana🌎運営",
+    "organizerName": "Nana【運営】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1228712639903961190/ec0618fb90198159eda44242b7db2bd6.png?size=512",
     "sourceThreadId": "discord-board-1420569340515844207",
     "sourceLabel": "関東支部イベント"
   },
@@ -15029,7 +15199,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1415668630900969593",
     "sourceLabel": "関東支部イベント"
   },
@@ -15086,6 +15255,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1299934485541814284",
     "organizerName": "moeko",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1299934485541814284/7e31ab8b7ac0ac56aeb96d1c3de740a0.png?size=512",
     "sourceThreadId": "discord-board-1415123308357353665",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -15141,7 +15311,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "status": "full",
     "createdBy": "u1",
     "organizerProfileId": "discord-1228677950401151139",
-    "organizerName": "かずま🌏運営",
+    "organizerName": "かずま【運営】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1228677950401151139/8fe93f8b9cd2f84ec1711f01ae0dbdfc.png?size=512",
     "sourceThreadId": "discord-board-1413206252258857081",
     "sourceLabel": "関東支部イベント"
   },
@@ -15170,7 +15341,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1412425863378501782",
     "sourceLabel": "全体イベント"
   },
@@ -15199,7 +15369,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-789786995970015242",
     "organizerName": "たけまる【運営】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/789786995970015242/122846247a2c819c5dd1c7e60af73810.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1412283609578213447",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -15255,6 +15424,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1248246861576540302",
     "organizerName": "こだま",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1248246861576540302/d2b1d749c7f59abc7841bc7075d77167.png?size=512",
     "sourceThreadId": "discord-board-1410975756586188910",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -15310,6 +15480,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1294635051438309550",
     "organizerName": "NAOTO",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1294635051438309550/21ad5521b1e73e2236e9c127cb631567.png?size=512",
+    "organizerRank": "silver",
     "sourceThreadId": "discord-board-1409184811255332964",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -15337,6 +15509,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-719521905287364654",
     "organizerName": "Yuta",
+    "organizerAvatar": "",
     "sourceThreadId": "discord-board-1409148158767792288",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -15364,6 +15537,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1341374143932923986",
     "organizerName": "かなみ",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1341374143932923986/20b569103030f86e652fc3be12e180e2.png?size=512",
     "sourceThreadId": "discord-board-1409120488462221352",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -15391,6 +15565,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1353307711130828841",
     "organizerName": "yukie",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1353307711130828841/2a106d968b021c0277e464d4af283e25.png?size=512",
+    "organizerRank": "gold",
     "sourceThreadId": "discord-board-1408321726697312286",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -15418,6 +15594,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-711884076340215831",
     "organizerName": "けんと",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/711884076340215831/6d1215e63e0ab68e2d27902cb847e50e.png?size=512",
+    "organizerRank": "silver",
     "sourceThreadId": "discord-board-1408077050782154905",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -15446,7 +15624,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-789786995970015242",
     "organizerName": "たけまる【運営】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/789786995970015242/122846247a2c819c5dd1c7e60af73810.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1407710813908766853",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -15475,7 +15652,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1407658118447366154",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -15503,6 +15679,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-989475654707839006",
     "organizerName": "のぶ",
+    "organizerAvatar": "",
     "sourceThreadId": "discord-board-1406985211295825952",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -15529,7 +15706,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "status": "full",
     "createdBy": "u1",
     "organizerProfileId": "discord-1228712639903961190",
-    "organizerName": "Nana🌎運営",
+    "organizerName": "Nana【運営】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1228712639903961190/ec0618fb90198159eda44242b7db2bd6.png?size=512",
     "sourceThreadId": "discord-board-1406833845600387284",
     "sourceLabel": "関東支部イベント"
   },
@@ -15558,7 +15736,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1352978791483572326",
     "organizerName": "もってぃー【運営】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1352978791483572326/aa0f81f03bc22b267fa676eb6bf32402.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1406127452216098867",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -15587,7 +15764,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1406113711260827710",
     "sourceLabel": "関東支部イベント"
   },
@@ -15616,7 +15792,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1405869693939744921",
     "sourceLabel": "関東支部イベント"
   },
@@ -15645,7 +15820,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1405479904413225020",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -15674,7 +15848,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1405476377427316786",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -15700,7 +15873,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1405124381008728145",
     "sourceLabel": "関東支部イベント"
   },
@@ -15727,6 +15899,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1248246861576540302",
     "organizerName": "こだま",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1248246861576540302/d2b1d749c7f59abc7841bc7075d77167.png?size=512",
     "sourceThreadId": "discord-board-1405036442861703168",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -15754,6 +15927,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1228677207522541648",
     "organizerName": "すず",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1228677207522541648/51b7a7b731b54bad382bb91b03570259.png?size=512",
     "sourceThreadId": "discord-board-1401933744000073809",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -15868,7 +16042,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1400407753821913243",
     "sourceLabel": "全体イベント"
   },
@@ -15895,6 +16068,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1248246861576540302",
     "organizerName": "こだま",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1248246861576540302/d2b1d749c7f59abc7841bc7075d77167.png?size=512",
     "sourceThreadId": "discord-board-1398236293917446266",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -15923,7 +16097,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-789786995970015242",
     "organizerName": "たけまる【運営】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/789786995970015242/122846247a2c819c5dd1c7e60af73810.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1397869543128567919",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -15951,6 +16124,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1228677466499977346",
     "organizerName": "Ayana",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1228677466499977346/95c33aa4e744943cb57d3e669ded5bd3.png?size=512",
     "sourceThreadId": "discord-board-1394614915062562908",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -16002,7 +16176,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "status": "full",
     "createdBy": "u1",
     "organizerProfileId": "discord-1228677104577544362",
-    "organizerName": "723 🌎 運営",
+    "organizerName": "723【運営】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1228677104577544362/78fd98fa03f458894bc3b5b09eb80066.png?size=512",
     "sourceThreadId": "discord-board-1393520708084174939",
     "sourceLabel": "関西支部イベント"
   },
@@ -16028,7 +16203,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1393461526748332125",
     "sourceLabel": "関東支部イベント"
   },
@@ -16057,7 +16231,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1393459468397973654",
     "sourceLabel": "関東支部イベント"
   },
@@ -16085,6 +16258,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1228677207522541648",
     "organizerName": "すず",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1228677207522541648/51b7a7b731b54bad382bb91b03570259.png?size=512",
     "sourceThreadId": "discord-board-1390310303149064237",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -16110,6 +16284,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1228677045454639119",
     "organizerName": "🦊",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1228677045454639119/5e2f2f8fbc7d4f7167220ca2498796b4.png?size=512",
     "sourceThreadId": "discord-board-1390167145610219610",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -16167,7 +16342,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1389870070091747338",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -16193,7 +16367,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "status": "full",
     "createdBy": "u1",
     "organizerProfileId": "discord-1228677950401151139",
-    "organizerName": "かずま🌏運営",
+    "organizerName": "かずま【運営】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1228677950401151139/8fe93f8b9cd2f84ec1711f01ae0dbdfc.png?size=512",
     "sourceThreadId": "discord-board-1387080988580122674",
     "sourceLabel": "関東支部イベント"
   },
@@ -16222,7 +16397,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1386928922045972581",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -16248,7 +16422,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "status": "full",
     "createdBy": "u1",
     "organizerProfileId": "discord-817730242516746252",
-    "organizerName": "ユウ🌏運営",
+    "organizerName": "ユウ【運営】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/817730242516746252/cda00c1c2a58a4d6462c54c2b5bb7ea0.png?size=512",
     "sourceThreadId": "discord-board-1386673521924636713",
     "sourceLabel": "関西支部イベント"
   },
@@ -16276,7 +16451,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1384147686411997246",
     "sourceLabel": "関東支部イベント"
   },
@@ -16331,6 +16505,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-989475654707839006",
     "organizerName": "のぶ",
+    "organizerAvatar": "",
     "sourceThreadId": "discord-board-1382562564893835314",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -16357,7 +16532,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1382319164496154674",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -16384,7 +16558,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-789786995970015242",
     "organizerName": "たけまる【運営】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/789786995970015242/122846247a2c819c5dd1c7e60af73810.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1380836330384392232",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -16413,7 +16586,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1380762642204852244",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -16440,7 +16612,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1378674516598853652",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -16467,7 +16638,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1378307931308822558",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -16495,7 +16665,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1376138439661191290",
     "sourceLabel": "関西支部イベント"
   },
@@ -16523,6 +16692,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-989475654707839006",
     "organizerName": "のぶ",
+    "organizerAvatar": "",
     "sourceThreadId": "discord-board-1374935678290497686",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -16580,7 +16750,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1374348278975692911",
     "sourceLabel": "関東支部イベント"
   },
@@ -16606,7 +16775,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1334056760863883294",
     "organizerName": "IRO+運営",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1334056760863883294/2d550914366cefb1693360eea7d7ebcc.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1372550361063096380",
     "sourceLabel": "関西グルメ掲示板"
   },
@@ -16632,7 +16800,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1334056760863883294",
     "organizerName": "IRO+運営",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1334056760863883294/2d550914366cefb1693360eea7d7ebcc.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1372550217223901185",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -16661,7 +16828,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1352978791483572326",
     "organizerName": "もってぃー【運営】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1352978791483572326/aa0f81f03bc22b267fa676eb6bf32402.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1371128536102080532",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -16689,7 +16855,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1334056760863883294",
     "organizerName": "IRO+運営",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1334056760863883294/2d550914366cefb1693360eea7d7ebcc.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1365955158160183317",
     "sourceLabel": "全体イベント"
   },
@@ -16717,7 +16882,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1334056760863883294",
     "organizerName": "IRO+運営",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1334056760863883294/2d550914366cefb1693360eea7d7ebcc.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1365954425654349875",
     "sourceLabel": "全体イベント"
   },
@@ -16746,7 +16910,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-789786995970015242",
     "organizerName": "たけまる【運営】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/789786995970015242/122846247a2c819c5dd1c7e60af73810.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1362444252487094405",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -16831,6 +16994,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1294635051438309550",
     "organizerName": "NAOTO",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1294635051438309550/21ad5521b1e73e2236e9c127cb631567.png?size=512",
+    "organizerRank": "silver",
     "sourceThreadId": "discord-board-1359206861076828452",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -16858,6 +17023,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1059373969590984764",
     "organizerName": "天ぷら(てつや",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1059373969590984764/857b85adf11b840e1cacf44276528eda.png?size=512",
+    "organizerRank": "gold",
     "sourceThreadId": "discord-board-1359139902280958165",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -16885,6 +17052,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-989475654707839006",
     "organizerName": "のぶ",
+    "organizerAvatar": "",
     "sourceThreadId": "discord-board-1358375003724447904",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -16912,6 +17080,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1228680700455157851",
     "organizerName": "Hideto",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1228680700455157851/91f01b8f5468af1db9f98223b4145728.png?size=512",
+    "organizerRank": "silver",
     "sourceThreadId": "discord-board-1356265979155447909",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -16938,6 +17108,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-989475654707839006",
     "organizerName": "のぶ",
+    "organizerAvatar": "",
     "sourceThreadId": "discord-board-1356207216943824928",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -16966,7 +17137,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1334056760863883294",
     "organizerName": "IRO+運営",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1334056760863883294/2d550914366cefb1693360eea7d7ebcc.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1354048688929898577",
     "sourceLabel": "全体イベント"
   },
@@ -16995,7 +17165,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1334056760863883294",
     "organizerName": "IRO+運営",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1334056760863883294/2d550914366cefb1693360eea7d7ebcc.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1354047981396951121",
     "sourceLabel": "全体イベント"
   },
@@ -17024,7 +17193,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1353340666783993856",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -17052,6 +17220,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1228677466499977346",
     "organizerName": "Ayana",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1228677466499977346/95c33aa4e744943cb57d3e669ded5bd3.png?size=512",
     "sourceThreadId": "discord-board-1351878323747426436",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -17078,7 +17247,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "status": "full",
     "createdBy": "u1",
     "organizerProfileId": "discord-863786104033509418",
-    "organizerName": "サニーブュッフェ🌏運営",
+    "organizerName": "サニービュッフェ【運営】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/863786104033509418/06d975096333cef6beb2a4d8314f6e0e.png?size=512",
     "sourceThreadId": "discord-board-1351509236428963863",
     "sourceLabel": "関西グルメ掲示板"
   },
@@ -17106,6 +17276,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1059373969590984764",
     "organizerName": "天ぷら(てつや",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1059373969590984764/857b85adf11b840e1cacf44276528eda.png?size=512",
+    "organizerRank": "gold",
     "sourceThreadId": "discord-board-1350856722239062136",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -17131,7 +17303,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "status": "full",
     "createdBy": "u1",
     "organizerProfileId": "discord-863786104033509418",
-    "organizerName": "サニーブュッフェ🌏運営",
+    "organizerName": "サニービュッフェ【運営】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/863786104033509418/06d975096333cef6beb2a4d8314f6e0e.png?size=512",
     "sourceThreadId": "discord-board-1347538257503588362",
     "sourceLabel": "関西支部イベント"
   },
@@ -17155,7 +17328,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "status": "full",
     "createdBy": "u1",
     "organizerProfileId": "discord-1228681600594743387",
-    "organizerName": "nonoka🌎運営",
+    "organizerName": "nonoka【運営】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1228681600594743387/0e4067e11bbc4dd53c30e9aad23ef1e0.png?size=512",
     "sourceThreadId": "discord-board-1345697613923749971",
     "sourceLabel": "関西グルメ掲示板"
   },
@@ -17182,7 +17356,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1344284760222203956",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -17209,7 +17382,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1344281550644318218",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -17237,7 +17409,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1343144866993143808",
     "sourceLabel": "関西支部イベント"
   },
@@ -17265,7 +17436,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1343143233789628516",
     "sourceLabel": "関東支部イベント"
   },
@@ -17289,7 +17459,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "status": "full",
     "createdBy": "u1",
     "organizerProfileId": "discord-1228677104577544362",
-    "organizerName": "723 🌎 運営",
+    "organizerName": "723【運営】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1228677104577544362/78fd98fa03f458894bc3b5b09eb80066.png?size=512",
     "sourceThreadId": "discord-board-1340661028148740134",
     "sourceLabel": "関西グルメ掲示板"
   },
@@ -17316,7 +17487,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "status": "full",
     "createdBy": "u1",
     "organizerProfileId": "discord-1228712639903961190",
-    "organizerName": "Nana🌎運営",
+    "organizerName": "Nana【運営】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1228712639903961190/ec0618fb90198159eda44242b7db2bd6.png?size=512",
     "sourceThreadId": "discord-board-1339542429732438106",
     "sourceLabel": "関東支部イベント"
   },
@@ -17371,7 +17543,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-789786995970015242",
     "organizerName": "たけまる【運営】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/789786995970015242/122846247a2c819c5dd1c7e60af73810.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1335563973856329768",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -17396,6 +17567,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1228677045454639119",
     "organizerName": "🦊",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1228677045454639119/5e2f2f8fbc7d4f7167220ca2498796b4.png?size=512",
     "sourceThreadId": "discord-board-1335058860045504522",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -17423,7 +17595,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1333775381475495946",
     "sourceLabel": "関東支部イベント"
   },
@@ -17449,7 +17620,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1333415003394670723",
     "sourceLabel": "関西グルメ掲示板"
   },
@@ -17478,7 +17648,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1332975170918289481",
     "sourceLabel": "関西支部イベント"
   },
@@ -17504,7 +17673,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1332974963652558881",
     "sourceLabel": "関西支部イベント"
   },
@@ -17530,7 +17698,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1332974739735576607",
     "sourceLabel": "関西支部イベント"
   },
@@ -17556,7 +17723,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1332974172837642370",
     "sourceLabel": "関西支部イベント"
   },
@@ -17582,7 +17748,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1332973936455192606",
     "sourceLabel": "関西支部イベント"
   },
@@ -17608,7 +17773,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1332973660662665339",
     "sourceLabel": "関西支部イベント"
   },
@@ -17634,7 +17798,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1332973457385848832",
     "sourceLabel": "関西支部イベント"
   },
@@ -17660,7 +17823,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1332972733016965142",
     "sourceLabel": "関西支部イベント"
   },
@@ -17686,7 +17848,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1332972236654641182",
     "sourceLabel": "関西支部イベント"
   },
@@ -17712,7 +17873,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1332971018263855224",
     "sourceLabel": "関西支部イベント"
   },
@@ -17738,7 +17898,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1332970617221414962",
     "sourceLabel": "関西支部イベント"
   },
@@ -17764,7 +17923,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1332969852817899551",
     "sourceLabel": "関西支部イベント"
   },
@@ -17790,7 +17948,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1332969153388089384",
     "sourceLabel": "関西支部イベント"
   },
@@ -17816,7 +17973,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1332968219614646363",
     "sourceLabel": "関西支部イベント"
   },
@@ -17842,7 +17998,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1332968023102849034",
     "sourceLabel": "関西支部イベント"
   },
@@ -17868,7 +18023,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1332967920258646057",
     "sourceLabel": "関西支部イベント"
   },
@@ -17894,7 +18048,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1332967825567907940",
     "sourceLabel": "関西支部イベント"
   },
@@ -17920,7 +18073,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1332967651277799426",
     "sourceLabel": "関西支部イベント"
   },
@@ -17946,7 +18098,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1332967100532129863",
     "sourceLabel": "関西支部イベント"
   },
@@ -17972,7 +18123,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1332966882424393810",
     "sourceLabel": "関西支部イベント"
   },
@@ -17998,7 +18148,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1332966734461927450",
     "sourceLabel": "関西支部イベント"
   },
@@ -18024,7 +18173,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1332965738427715605",
     "sourceLabel": "関西支部イベント"
   },
@@ -18050,7 +18198,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1332965164529483837",
     "sourceLabel": "関西支部イベント"
   },
@@ -18076,7 +18223,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1332964579952693359",
     "sourceLabel": "関西支部イベント"
   },
@@ -18102,7 +18248,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1332963923292323951",
     "sourceLabel": "関西支部イベント"
   },
@@ -18128,7 +18273,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1332959045488742460",
     "sourceLabel": "関東支部イベント"
   },
@@ -18154,7 +18298,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1332957860828680323",
     "sourceLabel": "関東支部イベント"
   },
@@ -18180,7 +18323,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1332957617378558045",
     "sourceLabel": "関東支部イベント"
   },
@@ -18206,7 +18348,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1332957278810411050",
     "sourceLabel": "関東支部イベント"
   },
@@ -18232,7 +18373,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1332957132236132384",
     "sourceLabel": "関東支部イベント"
   },
@@ -18258,7 +18398,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1332956839964311553",
     "sourceLabel": "関東支部イベント"
   },
@@ -18284,7 +18423,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1332956710662312028",
     "sourceLabel": "関東支部イベント"
   },
@@ -18310,7 +18448,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1332956509356687391",
     "sourceLabel": "関東支部イベント"
   },
@@ -18336,7 +18473,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1332955842059702305",
     "sourceLabel": "関東支部イベント"
   },
@@ -18362,7 +18498,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1332955505970385016",
     "sourceLabel": "関東支部イベント"
   },
@@ -18388,7 +18523,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1332955254131654739",
     "sourceLabel": "関東支部イベント"
   },
@@ -18414,7 +18548,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1332955079858454568",
     "sourceLabel": "関東支部イベント"
   },
@@ -18440,7 +18573,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1332954879106351156",
     "sourceLabel": "関東支部イベント"
   },
@@ -18466,7 +18598,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1332954096604545024",
     "sourceLabel": "関東支部イベント"
   },
@@ -18492,7 +18623,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1332953546131247104",
     "sourceLabel": "関東支部イベント"
   },
@@ -18518,7 +18648,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1332952633765269524",
     "sourceLabel": "関東支部イベント"
   },
@@ -18544,7 +18673,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1332951557356130345",
     "sourceLabel": "関東支部イベント"
   },
@@ -18570,7 +18698,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1332951426107703398",
     "sourceLabel": "関東支部イベント"
   },
@@ -18596,7 +18723,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1332951311167131711",
     "sourceLabel": "関東支部イベント"
   },
@@ -18622,7 +18748,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1332951155998982154",
     "sourceLabel": "関東支部イベント"
   },
@@ -18648,7 +18773,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1332950208077893683",
     "sourceLabel": "関東支部イベント"
   },
@@ -18674,7 +18798,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-789786995970015242",
     "organizerName": "たけまる【運営】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/789786995970015242/122846247a2c819c5dd1c7e60af73810.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1331603302852333568",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -18702,6 +18825,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1228677045454639119",
     "organizerName": "🦊",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1228677045454639119/5e2f2f8fbc7d4f7167220ca2498796b4.png?size=512",
     "sourceThreadId": "discord-board-1330899941391859825",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -18729,7 +18853,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1329043819534094396",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -18755,6 +18878,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-989475654707839006",
     "organizerName": "のぶ",
+    "organizerAvatar": "",
     "sourceThreadId": "discord-board-1328620379337527337",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -18809,7 +18933,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1315686896893952052",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -18838,7 +18961,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1313087281204170766",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -18865,7 +18987,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1313085355896864842",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -18891,6 +19012,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1248246861576540302",
     "organizerName": "こだま",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1248246861576540302/d2b1d749c7f59abc7841bc7075d77167.png?size=512",
     "sourceThreadId": "discord-board-1312538589158047834",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -18919,7 +19041,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1308724475847774228",
     "sourceLabel": "全体イベント"
   },
@@ -18948,7 +19069,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1308724263632506973",
     "sourceLabel": "全体イベント"
   },
@@ -18977,7 +19097,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1302942810722271264",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -19031,7 +19150,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1299346516023971913",
     "sourceLabel": "全体イベント"
   },
@@ -19056,7 +19174,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "status": "full",
     "createdBy": "u1",
     "organizerProfileId": "discord-1228677950401151139",
-    "organizerName": "かずま🌏運営",
+    "organizerName": "かずま【運営】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1228677950401151139/8fe93f8b9cd2f84ec1711f01ae0dbdfc.png?size=512",
     "sourceThreadId": "discord-board-1298928331085058058",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -19085,7 +19204,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1296829234396004422",
     "sourceLabel": "全体イベント"
   },
@@ -19114,7 +19232,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1295326855393443965",
     "sourceLabel": "全体イベント"
   },
@@ -19143,7 +19260,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1295326315788107836",
     "sourceLabel": "全体イベント"
   },
@@ -19169,6 +19285,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1248246861576540302",
     "organizerName": "こだま",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1248246861576540302/d2b1d749c7f59abc7841bc7075d77167.png?size=512",
     "sourceThreadId": "discord-board-1294911069558542346",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -19197,7 +19314,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1292799704031301673",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -19223,6 +19339,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1228755489446166528",
     "organizerName": "yurie",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1228755489446166528/ddf30284f6e3dacf9c3889c752861779.png?size=512",
     "sourceThreadId": "discord-board-1284064727613308969",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -19247,7 +19364,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "status": "open",
     "createdBy": "u1",
     "organizerProfileId": "discord-1228680202952118416",
-    "organizerName": "ごりごり",
+    "organizerName": "ごりごりぐるめ",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1228680202952118416/79db0a0052562728670a00bc8807c4d8.png?size=512",
+    "organizerRank": "silver",
     "sourceThreadId": "discord-board-1281069072187916328",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -19303,7 +19422,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1276126965232963595",
     "sourceLabel": "全体イベント"
   },
@@ -19329,6 +19447,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-456226577798135808",
     "organizerName": "Deleted User",
+    "organizerAvatar": "",
     "sourceThreadId": "discord-board-1260978029388107899",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -19356,6 +19475,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-456226577798135808",
     "organizerName": "Deleted User",
+    "organizerAvatar": "",
     "sourceThreadId": "discord-board-1260614949202432002",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -19383,6 +19503,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-989475654707839006",
     "organizerName": "のぶ",
+    "organizerAvatar": "",
     "sourceThreadId": "discord-board-1259525982981718026",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -19411,7 +19532,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1257278396694794291",
     "sourceLabel": "全体イベント"
   },
@@ -19464,6 +19584,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-1228676964391587923",
     "organizerName": "kaeko 🌎 京都支部長",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1228676964391587923/70ea667af947f18b467f41988fd876dd.png?size=512",
     "sourceThreadId": "discord-board-1255873670702960650",
     "sourceLabel": "全体イベント"
   },
@@ -19488,7 +19609,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "status": "full",
     "createdBy": "u1",
     "organizerProfileId": "discord-1228677950401151139",
-    "organizerName": "かずま🌏運営",
+    "organizerName": "かずま【運営】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1228677950401151139/8fe93f8b9cd2f84ec1711f01ae0dbdfc.png?size=512",
     "sourceThreadId": "discord-board-1255705222886723676",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -19513,7 +19635,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "status": "full",
     "createdBy": "u1",
     "organizerProfileId": "discord-1228677950401151139",
-    "organizerName": "かずま🌏運営",
+    "organizerName": "かずま【運営】",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1228677950401151139/8fe93f8b9cd2f84ec1711f01ae0dbdfc.png?size=512",
     "sourceThreadId": "discord-board-1255443707340132403",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -19539,6 +19662,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-456226577798135808",
     "organizerName": "Deleted User",
+    "organizerAvatar": "",
     "sourceThreadId": "discord-board-1253246110009659442",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -19565,6 +19689,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "createdBy": "u1",
     "organizerProfileId": "discord-456226577798135808",
     "organizerName": "Deleted User",
+    "organizerAvatar": "",
     "sourceThreadId": "discord-board-1253211260586033235",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -19592,7 +19717,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119605898743120044",
     "organizerName": "IRO+運営",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119605898743120044/2d550914366cefb1693360eea7d7ebcc.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1246303880216576050",
     "sourceLabel": "全体イベント"
   },
@@ -19620,7 +19744,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119605898743120044",
     "organizerName": "IRO+運営",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119605898743120044/2d550914366cefb1693360eea7d7ebcc.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1246303435633197128",
     "sourceLabel": "全体イベント"
   },
@@ -19648,7 +19771,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1244668461834043413",
     "sourceLabel": "全体イベント"
   },
@@ -19677,7 +19799,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1242089908324008077",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -19705,7 +19826,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1239951125067595816",
     "sourceLabel": "全体イベント"
   },
@@ -19732,7 +19852,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "status": "open",
     "createdBy": "u1",
     "organizerProfileId": "discord-1228680202952118416",
-    "organizerName": "ごりごり",
+    "organizerName": "ごりごりぐるめ",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1228680202952118416/79db0a0052562728670a00bc8807c4d8.png?size=512",
+    "organizerRank": "silver",
     "sourceThreadId": "discord-board-1235218256998957066",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -19759,7 +19881,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "status": "open",
     "createdBy": "u1",
     "organizerProfileId": "discord-1228680202952118416",
-    "organizerName": "ごりごり",
+    "organizerName": "ごりごりぐるめ",
+    "organizerAvatar": "https://cdn.discordapp.com/avatars/1228680202952118416/79db0a0052562728670a00bc8807c4d8.png?size=512",
+    "organizerRank": "silver",
     "sourceThreadId": "discord-board-1235216776006992002",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -19785,7 +19909,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1234480761411731456",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -19811,7 +19934,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119606639763390545",
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1233385703564513373",
     "sourceLabel": "関東グルメ掲示板"
   },
@@ -19840,7 +19962,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119605898743120044",
     "organizerName": "IRO+運営",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119605898743120044/2d550914366cefb1693360eea7d7ebcc.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1229028282436030494",
     "sourceLabel": "全体イベント"
   },
@@ -19869,7 +19990,6 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerProfileId": "discord-1119605898743120044",
     "organizerName": "IRO+運営",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119605898743120044/2d550914366cefb1693360eea7d7ebcc.png?size=512",
-    "organizerRank": "regular",
     "sourceThreadId": "discord-board-1229027049419571220",
     "sourceLabel": "全体イベント"
   }
