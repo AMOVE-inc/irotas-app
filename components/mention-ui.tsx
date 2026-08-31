@@ -9,7 +9,7 @@ import { getAllRooms } from "@/lib/chat-store";
 import { useRouter } from "expo-router";
 import { parseDiscordHeading, tokenizeRichTextLinks } from "@/lib/discord-rich-text";
 
-export function MentionText({ content, outgoing = false, groups, rooms = getAllRooms(), threads = BOARD_THREADS, onOpenInternalLink }: { content: string; outgoing?: boolean; groups: MentionGroup[]; rooms?: ChatRoom[]; threads?: BoardThread[]; onOpenInternalLink?: (pathname: "/chat" | "/board", params: Record<string, string>) => void }) {
+export function MentionText({ content, outgoing = false, groups, rooms = getAllRooms(), threads = BOARD_THREADS, onOpenInternalLink, onMentionPress }: { content: string; outgoing?: boolean; groups: MentionGroup[]; rooms?: ChatRoom[]; threads?: BoardThread[]; onOpenInternalLink?: (pathname: "/chat" | "/board", params: Record<string, string>) => void; onMentionPress?: (label: string) => void }) {
   const colors = useColors();
   const router = useRouter();
   const openInternalLink = onOpenInternalLink ?? ((pathname: "/chat" | "/board", params: Record<string, string>) => router.push({ pathname, params } as any));
@@ -17,7 +17,7 @@ export function MentionText({ content, outgoing = false, groups, rooms = getAllR
     if (!part.startsWith("@")) return <Text key={`${keyPrefix}-${index}`}>{part}</Text>;
     const [label] = extractMentionLabels(part);
     const grouped = Boolean(label && isGroupMention(label, groups));
-    return <Text key={`${keyPrefix}-${index}`} style={{ fontWeight: "800", color: grouped ? (outgoing ? "#FFF3B0" : "#9A6A12") : (outgoing ? "#FFE0F0" : "#C05B88"), backgroundColor: grouped ? (outgoing ? "rgba(255,210,70,0.22)" : "#FFF2C7") : "transparent" }}>{part}</Text>;
+    return <Text key={`${keyPrefix}-${index}`} accessibilityRole={!grouped && onMentionPress ? "link" : undefined} onPress={!grouped && label && onMentionPress ? () => onMentionPress(label) : undefined} style={{ fontWeight: "800", color: grouped ? (outgoing ? "#FFF3B0" : "#9A6A12") : (outgoing ? "#FFE0F0" : "#C05B88"), backgroundColor: grouped ? (outgoing ? "rgba(255,210,70,0.22)" : "#FFF2C7") : "transparent", textDecorationLine: !grouped && onMentionPress ? "underline" : "none" }}>{part}</Text>;
   });
 
   const renderPlain = (value: string, keyPrefix: string) => tokenizeRichTextLinks(value).map((token, index) => {

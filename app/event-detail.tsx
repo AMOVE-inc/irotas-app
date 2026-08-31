@@ -77,6 +77,7 @@ export default function EventDetailScreen() {
   const [adminTitle, setAdminTitle] = useState(event?.title ?? "");
   const [adminDescription, setAdminDescription] = useState(event?.description ?? "");
   const [adminParticipants, setAdminParticipants] = useState((event?.participants ?? []).join("\n"));
+  const [memberDirectory, setMemberDirectory] = useState<Api.PublicMember[]>([]);
   const [, setEventRevision] = useState(0);
   // ボタン連打防止フラグ
   const joiningRef = useRef(false);
@@ -95,6 +96,8 @@ export default function EventDetailScreen() {
       .catch(() => undefined);
     return () => { active = false; };
   }, [allEvents, authUser, id]);
+
+  useEffect(() => { void Api.getMemberDirectory().then(setMemberDirectory).catch(() => setMemberDirectory([])); }, []);
 
   useEffect(() => {
     if (!event) return;
@@ -870,7 +873,7 @@ export default function EventDetailScreen() {
           <Text style={{ fontSize: 18, fontWeight: "700", color: colors.foreground, marginBottom: 8 }}>
             イベント詳細
           </Text>
-          <MentionText content={event.description} groups={eventMentionGroups} />
+          <MentionText content={event.description} groups={eventMentionGroups} onMentionPress={(label) => { const normalized = stripRankFromName(label); const target = memberDirectory.find((member) => stripRankFromName(member.displayName) === normalized) ?? MEMBERS.find((member) => stripRankFromName(member.name) === normalized); if (target) router.push({ pathname: "/member-profile", params: { id: target.id } }); }} />
         </View>
 
         {event.applicationDeadline ? (
@@ -920,23 +923,26 @@ export default function EventDetailScreen() {
             </Text>
             <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 12 }}>
               {confirmedIds.map((uid) => {
+                const directoryMember = memberDirectory.find((item) => item.id === uid);
                 const member = getMemberById(uid);
+                const memberName = directoryMember?.displayName ?? member?.name ?? "メンバー";
+                const directoryAvatar = typeof directoryMember?.profile?.avatarUrl === "string" ? directoryMember.profile.avatarUrl : undefined;
                 return (
                   <Pressable
                     key={uid}
                     onPress={() => openMemberProfile(uid)}
-                    accessibilityLabel={`${member?.name ?? "メンバー"}のプロフィールを表示`}
+                    accessibilityLabel={`${memberName}のプロフィールを表示`}
                     style={{
                       alignItems: "center",
                       width: 62,
                     }}
                   >
                     <Image
-                      source={member?.avatar ?? DEFAULT_AVATAR}
+                      source={directoryAvatar ? { uri: directoryAvatar } : member?.avatar ?? DEFAULT_AVATAR}
                       style={{ width: 44, height: 44, borderRadius: 22, borderWidth: uid === CURRENT_USER.id ? 2 : 0, borderColor: "#E8A0BF" }}
                       contentFit="cover"
                     />
-                    <Text style={{ fontSize: 11, color: colors.foreground, marginTop: 5, textAlign: "center" }} numberOfLines={1}>{member?.name ?? "メンバー"}</Text>
+                    <Text style={{ fontSize: 11, color: colors.foreground, marginTop: 5, textAlign: "center" }} numberOfLines={1}>{stripRankFromName(memberName)}</Text>
                   </Pressable>
                 );
               })}
