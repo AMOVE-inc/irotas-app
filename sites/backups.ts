@@ -24,7 +24,10 @@ async function createBackup(db: D1Database, bucket: NonNullable<SitesEnv["UPLOAD
     db.prepare("SELECT type, name, tbl_name, sql FROM sqlite_master WHERE sql IS NOT NULL ORDER BY type, name").all<Record<string, unknown>>(),
     db.prepare("SELECT value FROM system_metadata WHERE key = 'platform_schema_version'").first<{ value: string }>(),
   ]);
-  const tables = (tablesResult.results ?? []).map((row) => row.name).filter((name) => /^[A-Za-z0-9_]+$/.test(name) && name !== "backup_snapshots");
+  // Cloudflare adds protected internal tables such as `_cf_KV`; they cannot be read
+  // through D1 and are not application data, so never include underscore-prefixed tables.
+  const tables = (tablesResult.results ?? []).map((row) => row.name)
+    .filter((name) => /^[A-Za-z0-9_]+$/.test(name) && !name.startsWith("_") && name !== "backup_snapshots");
   const data: Record<string, Record<string, unknown>[]> = {};
   const counts: Record<string, number> = {};
   for (const table of tables) { data[table] = await exportTable(db, table); counts[table] = data[table].length; }
