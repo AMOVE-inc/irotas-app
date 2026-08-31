@@ -196,37 +196,35 @@ describe("Board Threads", () => {
 describe("Points-based Rank System", () => {
   it("getRankFromPoints should return correct ranks at thresholds", () => {
     expect(getRankFromPoints(0)).toBe("regular");
-    expect(getRankFromPoints(50)).toBe("regular");
-    expect(getRankFromPoints(99)).toBe("regular");
-    expect(getRankFromPoints(100)).toBe("silver");
-    expect(getRankFromPoints(499)).toBe("silver");
-    expect(getRankFromPoints(500)).toBe("gold");
-    expect(getRankFromPoints(999)).toBe("gold");
-    expect(getRankFromPoints(1000)).toBe("platinum");
-    expect(getRankFromPoints(5000)).toBe("platinum");
+    expect(getRankFromPoints(1499)).toBe("regular");
+    expect(getRankFromPoints(1500)).toBe("silver");
+    expect(getRankFromPoints(5499)).toBe("silver");
+    expect(getRankFromPoints(5500)).toBe("gold");
+    expect(getRankFromPoints(11999)).toBe("gold");
+    expect(getRankFromPoints(12000)).toBe("platinum");
   });
 
   it("getNextRankInfo should return correct next rank info", () => {
-    const regularInfo = getNextRankInfo(50);
+    const regularInfo = getNextRankInfo(750);
     expect(regularInfo).not.toBeNull();
     expect(regularInfo!.nextRank).toBe("silver");
-    expect(regularInfo!.pointsNeeded).toBe(50);
+    expect(regularInfo!.pointsNeeded).toBe(750);
     expect(regularInfo!.progress).toBeCloseTo(0.5);
 
-    const silverInfo = getNextRankInfo(300);
+    const silverInfo = getNextRankInfo(3000);
     expect(silverInfo).not.toBeNull();
     expect(silverInfo!.nextRank).toBe("gold");
-    expect(silverInfo!.pointsNeeded).toBe(200);
+    expect(silverInfo!.pointsNeeded).toBe(2500);
 
-    const goldInfo = getNextRankInfo(750);
+    const goldInfo = getNextRankInfo(8000);
     expect(goldInfo).not.toBeNull();
     expect(goldInfo!.nextRank).toBe("platinum");
-    expect(goldInfo!.pointsNeeded).toBe(250);
+    expect(goldInfo!.pointsNeeded).toBe(4000);
   });
 
   it("getNextRankInfo should return null for platinum (max rank)", () => {
-    expect(getNextRankInfo(1000)).toBeNull();
-    expect(getNextRankInfo(2000)).toBeNull();
+    expect(getNextRankInfo(12000)).toBeNull();
+    expect(getNextRankInfo(20000)).toBeNull();
   });
 
   it("POINT_ACTIONS should have all defined actions", () => {
@@ -243,17 +241,17 @@ describe("Points-based Rank System", () => {
   it("RANK_THRESHOLDS_POINTS should have correct thresholds", () => {
     expect(RANK_THRESHOLDS_POINTS).toHaveLength(4);
     expect(RANK_THRESHOLDS_POINTS[0].minPoints).toBe(0);
-    expect(RANK_THRESHOLDS_POINTS[1].minPoints).toBe(100);
-    expect(RANK_THRESHOLDS_POINTS[2].minPoints).toBe(500);
-    expect(RANK_THRESHOLDS_POINTS[3].minPoints).toBe(1000);
+    expect(RANK_THRESHOLDS_POINTS[1].minPoints).toBe(1500);
+    expect(RANK_THRESHOLDS_POINTS[2].minPoints).toBe(5500);
+    expect(RANK_THRESHOLDS_POINTS[3].minPoints).toBe(12000);
   });
 
-  it("platinum threshold should be 1000 (会費無料)", () => {
+  it("platinum threshold should be 12000", () => {
     const platinumThreshold = RANK_THRESHOLDS_POINTS.find(
       (t) => t.rank === "platinum",
     );
     expect(platinumThreshold).toBeDefined();
-    expect(platinumThreshold!.minPoints).toBe(1000);
+    expect(platinumThreshold!.minPoints).toBe(12000);
   });
 });
 

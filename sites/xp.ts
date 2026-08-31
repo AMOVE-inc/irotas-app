@@ -1,6 +1,7 @@
 import { authenticatedRequestMember } from "./auth";
 import type { D1Database, SitesEnv } from "./platform-types";
 import { rankUpPointAwardStatements, readNewRankUpPointAward } from "./rank-up-points";
+import { rankFromXp as rankFromXpCurve } from "../lib/xp-levels";
 
 const XP_AWARD_ENDPOINT = "/api/xp/award";
 const REWARDS = {
@@ -17,10 +18,7 @@ function json(body: unknown, status = 200) {
 }
 
 export function rankFromXp(xp: number) {
-  if (xp >= 1000) return "platinum";
-  if (xp >= 500) return "gold";
-  if (xp >= 100) return "silver";
-  return "regular";
+  return rankFromXpCurve(xp);
 }
 
 async function validSource(db: D1Database, viewer: Viewer, action: XpAction, sourceId: string) {
@@ -68,15 +66,12 @@ async function award(request: Request, db: D1Database, viewer: Viewer) {
     db.prepare(`INSERT OR IGNORE INTO xp_operation_requests
       (idempotency_key, member_id, action, source_id, amount, reason, xp_before, rank_before, created_at)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`).bind(idempotencyKey, viewer.id, action, sourceId, reward.amount, reward.reason, previousXp, previousRank, now),
-    db.prepare(`UPDATE members SET xp = COALESCE(xp, 0) + ?, member_rank = CASE
-      WHEN COALESCE(xp, 0) + ? >= 1000 THEN 'platinum' WHEN COALESCE(xp, 0) + ? >= 500 THEN 'gold'
-      WHEN COALESCE(xp, 0) + ? >= 100 THEN 'silver' ELSE 'regular' END, updated_at = ?
+    db.prepare(`UPDATE members SET xp = COALESCE(xp, 0) + ?, member_rank = ?, updated_at = ?
       WHERE id = ? AND EXISTS (SELECT 1 FROM xp_operation_requests WHERE idempotency_key = ? AND status = 'pending')`)
-      .bind(reward.amount, reward.amount, reward.amount, reward.amount, now, viewer.id, idempotencyKey),
+      .bind(reward.amount, nextRank, now, viewer.id, idempotencyKey),
     db.prepare(`UPDATE xp_operation_requests SET status = 'applied', xp_after = xp_before + amount,
-      rank_after = CASE WHEN xp_before + amount >= 1000 THEN 'platinum' WHEN xp_before + amount >= 500 THEN 'gold'
-      WHEN xp_before + amount >= 100 THEN 'silver' ELSE 'regular' END, completed_at = ?
-      WHERE idempotency_key = ? AND status = 'pending'`).bind(now, idempotencyKey),
+      rank_after = ?, completed_at = ?
+      WHERE idempotency_key = ? AND status = 'pending'`).bind(nextRank, now, idempotencyKey),
     ...rankUpPointAwardStatements(db, { memberId: viewer.id, previousRank, nextRank, now }),
   ]);
 

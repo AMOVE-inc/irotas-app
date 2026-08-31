@@ -7,11 +7,11 @@ import {
   RANK_COLORS,
   RANK_LABELS,
   POINT_ACTIONS,
-  getNextRankInfo,
   EVENTS,
   type Event,
   type MemberRank,
 } from "@/constants/mock-data";
+import { getNextLevelInfo, levelFromXp } from "@/lib/xp-levels";
 import { useColors } from "@/hooks/use-colors";
 import { useClubs } from "@/lib/club-store";
 import { getMyRooms } from "@/lib/chat-store";
@@ -86,7 +86,8 @@ function ProfileSelectField({ label, value, options, onChange }: { label: string
 function PointsProgressCard({ points, rank, showRank = true }: { points: number; rank: MemberRank; showRank?: boolean }) {
   const colors = useColors();
   const rankColor = RANK_COLORS[rank];
-  const nextInfo = getNextRankInfo(points);
+  const nextInfo = getNextLevelInfo(points);
+  const level = levelFromXp(points);
 
   return (
     <View
@@ -101,7 +102,7 @@ function PointsProgressCard({ points, rank, showRank = true }: { points: number;
       {/* Points display */}
       <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
         <View>
-          <Text style={{ fontSize: 13, color: colors.muted, marginBottom: 2 }}>XP</Text>
+          <Text style={{ fontSize: 13, color: colors.muted, marginBottom: 2 }}>Lv.{level}・XP</Text>
           <View style={{ flexDirection: "row", alignItems: "baseline" }}>
             <Text style={{ fontSize: 32, fontWeight: "900", color: rankColor }}>
               {points.toLocaleString()}
@@ -126,11 +127,11 @@ function PointsProgressCard({ points, rank, showRank = true }: { points: number;
       </View>
 
       {/* Progress bar */}
-      {showRank && nextInfo ? (
+      {showRank ? (
         <View>
           <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 6 }}>
             <Text style={{ fontSize: 12, color: colors.muted }}>
-              次のランク: {RANK_LABELS[nextInfo.nextRank]}
+              次のレベル: Lv.{nextInfo.nextLevel}
             </Text>
             <Text style={{ fontSize: 12, fontWeight: "600", color: rankColor }}>
               あと {nextInfo.pointsNeeded.toLocaleString()} XP
@@ -155,18 +156,12 @@ function PointsProgressCard({ points, rank, showRank = true }: { points: number;
           </View>
           <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 4 }}>
             <Text style={{ fontSize: 10, color: colors.muted }}>
-              {RANK_LABELS[rank]}
+              Lv.{nextInfo.currentLevel}
             </Text>
             <Text style={{ fontSize: 10, color: colors.muted }}>
-              {RANK_LABELS[nextInfo.nextRank]}
+              Lv.{nextInfo.nextLevel}
             </Text>
           </View>
-        </View>
-      ) : showRank ? (
-        <View style={{ alignItems: "center", paddingVertical: 4 }}>
-          <Text style={{ fontSize: 13, fontWeight: "600", color: rankColor }}>
-            最高ランク達成！会費無料特典適用中
-          </Text>
         </View>
       ) : null}
     </View>

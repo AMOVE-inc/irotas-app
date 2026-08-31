@@ -58,23 +58,21 @@ export function getOrganizerPointAdjustment(outcome: "completed" | "cancelled"):
 
 export const RANK_THRESHOLDS_POINTS = [
   { rank: "regular" as MemberRank, minPoints: 0, label: "レギュラー" },
-  { rank: "silver" as MemberRank, minPoints: 100, label: "シルバー" },
-  { rank: "gold" as MemberRank, minPoints: 500, label: "ゴールド" },
-  { rank: "platinum" as MemberRank, minPoints: 1000, label: "プラチナ" },
+  { rank: "silver" as MemberRank, minPoints: 1500, label: "シルバー" },
+  { rank: "gold" as MemberRank, minPoints: 5500, label: "ゴールド" },
+  { rank: "platinum" as MemberRank, minPoints: 12000, label: "プラチナ" },
 ];
 
 export function getRankFromPoints(points: number): MemberRank {
-  if (points >= 1000) return "platinum";
-  if (points >= 500) return "gold";
-  if (points >= 100) return "silver";
-  return "regular";
+  const level = Math.max(0, Math.floor((Math.sqrt(1 + Math.max(0, points) / 12.5) - 1) / 2));
+  return getRankFromLevel(level);
 }
 
 export function getNextRankInfo(points: number): { nextRank: MemberRank; pointsNeeded: number; progress: number } | null {
-  if (points >= 1000) return null; // プラチナは最高ランク
-  const thresholds = [100, 500, 1000];
+  if (points >= 12000) return null; // プラチナは最高ランク
+  const thresholds = [1500, 5500, 12000];
   const ranks: MemberRank[] = ["silver", "gold", "platinum"];
-  const currentThresholds = [0, 100, 500, 1000];
+  const currentThresholds = [0, 1500, 5500, 12000];
   for (let i = 0; i < thresholds.length; i++) {
     if (points < thresholds[i]) {
       const prevThreshold = currentThresholds[i];
@@ -402,7 +400,7 @@ export const CURRENT_USER: Member = {
   name: "かずま",
   avatar: DEFAULT_AVATAR,
   rank: "gold",
-  points: 620,
+  points: 7800,
   level: 12,
   branch: "kanto",
   generation: 1,
@@ -424,7 +422,7 @@ export const MEMBERS: Member[] = [
   {
     id: "u2", name: "さくら",
     avatar: DEFAULT_AVATAR,
-    rank: "platinum", points: 1050, level: 18, branch: "kanto", generation: 1,
+    rank: "platinum", points: 17100, level: 18, branch: "kanto", generation: 1,
     bio: "小べ歩きが趣味です。特にフレンチとイタリアンが好き。IRO＋のイベントには毎回参加しています！",
     interests: ["フレンチ", "イタリアン", "ワイン"],
     role: "member", joinedAt: "2024-04-15", gender: "female",
@@ -433,7 +431,7 @@ export const MEMBERS: Member[] = [
   {
     id: "u3", name: "たくみ",
     avatar: DEFAULT_AVATAR,
-    rank: "silver", points: 180, level: 7, branch: "kansai", generation: 2,
+    rank: "silver", points: 2800, level: 7, branch: "kansai", generation: 2,
     bio: "大阪在住のラーメン好き。関西の美味しいお店を開拓中です。",
     interests: ["ラーメン", "たこ焼き", "お好み焼き"],
     role: "member", joinedAt: "2024-07-01", gender: "male",
@@ -442,7 +440,7 @@ export const MEMBERS: Member[] = [
   {
     id: "u4", name: "ゆうき",
     avatar: DEFAULT_AVATAR,
-    rank: "gold", points: 530, level: 11, branch: "kanto", generation: 1,
+    rank: "gold", points: 6600, level: 11, branch: "kanto", generation: 1,
     bio: "銀座のお寿司屋さん巡りが週末の楽しみ。ワインも好きです。",
     interests: ["寿司", "ワイン", "フレンチ"],
     role: "member", joinedAt: "2024-05-01", gender: "male",
@@ -451,7 +449,7 @@ export const MEMBERS: Member[] = [
   {
     id: "u5", name: "あおい",
     avatar: DEFAULT_AVATAR,
-    rank: "regular", points: 45, level: 3, branch: "kansai", generation: 3,
+    rank: "regular", points: 600, level: 3, branch: "kansai", generation: 3,
     bio: "京都のカフェ巡りが好きです。最近IRO＋に入会しました！",
     interests: ["カフェ", "和食", "スイーツ"],
     role: "member", joinedAt: "2025-01-15", gender: "female",
@@ -460,7 +458,7 @@ export const MEMBERS: Member[] = [
   {
     id: "u6", name: "りょう",
     avatar: DEFAULT_AVATAR,
-    rank: "gold", points: 510, level: 10, branch: "kanto", generation: 1,
+    rank: "gold", points: 5500, level: 10, branch: "kanto", generation: 1,
     bio: "居酒屋とバーが好き。IRO＋のイベント企画もよくやっています。",
     interests: ["居酒屋", "バー", "クラフトビール"],
     role: "member", joinedAt: "2024-04-20", gender: "male",
@@ -469,7 +467,7 @@ export const MEMBERS: Member[] = [
   {
     id: "u7", name: "みさき",
     avatar: DEFAULT_AVATAR,
-    rank: "silver", points: 150, level: 6, branch: "kansai", generation: 2,
+    rank: "silver", points: 2100, level: 6, branch: "kansai", generation: 2,
     bio: "大阪で料理教室に通っています。手作り料理の写真もよく投稿します。",
     interests: ["和食", "イタリアン", "パン"],
     role: "member", joinedAt: "2024-08-01", gender: "female",
@@ -478,7 +476,7 @@ export const MEMBERS: Member[] = [
   {
     id: "u8", name: "けんた",
     avatar: DEFAULT_AVATAR,
-    rank: "regular", points: 20, level: 2, branch: "kanto", generation: 4,
+    rank: "regular", points: 300, level: 2, branch: "kanto", generation: 4,
     bio: "新メンバーです。よろしくお願いします！",
     interests: [],
     role: "member", joinedAt: "2026-07-10", gender: "male",
@@ -898,9 +896,9 @@ export const RANK_ICONS: Record<MemberRank, string> = {
 
 export const RANK_THRESHOLDS = [
   { rank: "regular" as MemberRank, minPoints: 0, label: "0pt以上" },
-  { rank: "silver" as MemberRank, minPoints: 100, label: "100pt以上" },
-  { rank: "gold" as MemberRank, minPoints: 500, label: "500pt以上" },
-  { rank: "platinum" as MemberRank, minPoints: 1000, label: "1,000pt以上" },
+  { rank: "silver" as MemberRank, minPoints: 1500, label: "1,500pt以上" },
+  { rank: "gold" as MemberRank, minPoints: 5500, label: "5,500pt以上" },
+  { rank: "platinum" as MemberRank, minPoints: 12000, label: "12,000pt以上" },
 ];
 
 export const BOARD_CATEGORIES: BoardCategory[] = [

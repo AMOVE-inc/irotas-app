@@ -6,6 +6,7 @@ import {
   type Member,
   type MemberRank,
 } from "@/constants/mock-data";
+import { levelFromXp } from "@/lib/xp-levels";
 
 const MEMBER_RANKS = new Set<MemberRank>(["regular", "silver", "gold", "platinum"]);
 
@@ -35,7 +36,7 @@ export function memberFromAuthUser(user: AuthUser | null | undefined): Member {
     avatar: DEFAULT_AVATAR,
     rank,
     points: xp,
-    level: Math.floor(xp / 100) + 1,
+    level: levelFromXp(xp),
     branch: user.branch === "kansai" ? "kansai" : "kanto",
     generation: generationMatch ? Number(generationMatch[0]) : 0,
     bio: typeof profile.bio === "string" ? profile.bio : "",

@@ -2,13 +2,20 @@ import { describe, expect, it } from "vitest";
 import fs from "node:fs";
 import path from "node:path";
 import { rankFromXp } from "../sites/xp";
+import { getNextLevelInfo, levelFromXp, totalXpForLevel, xpForMee6LevelMigration } from "../lib/xp-levels";
 
 describe("shared XP", () => {
-  it("uses the agreed rank thresholds", () => {
+  it("uses the agreed level curve and rank thresholds", () => {
     expect(rankFromXp(0)).toBe("regular");
-    expect(rankFromXp(100)).toBe("silver");
-    expect(rankFromXp(500)).toBe("gold");
-    expect(rankFromXp(1000)).toBe("platinum");
+    expect(totalXpForLevel(5)).toBe(1500);
+    expect(totalXpForLevel(10)).toBe(5500);
+    expect(totalXpForLevel(15)).toBe(12000);
+    expect(levelFromXp(1499)).toBe(4);
+    expect(rankFromXp(1500)).toBe("silver");
+    expect(rankFromXp(5500)).toBe("gold");
+    expect(rankFromXp(12000)).toBe("platinum");
+    expect(getNextLevelInfo(1500)).toMatchObject({ currentLevel: 5, nextLevel: 6, pointsNeeded: 600 });
+    expect(xpForMee6LevelMigration(10)).toBe(5500);
   });
 
   it("persists idempotent XP operations in schema 18", () => {
