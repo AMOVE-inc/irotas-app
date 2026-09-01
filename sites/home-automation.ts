@@ -1,5 +1,4 @@
 import { authenticatedRequestMember } from "./auth";
-import { awardCompletedEventHostXp } from "./event-host-xp";
 import type { D1Database, SitesEnv } from "./platform-types";
 import boardArchive from "../data/discord-board-2026-08-29.json";
 import { IMPORTED_DISCORD_EVENTS } from "../constants/imported-discord-events";
@@ -159,7 +158,7 @@ async function completePastEvents(db: D1Database, now: Date) {
         (id,target_member_id,type,title,body,event_id,created_at) VALUES (?,?, 'event_feedback','イベント参加アンケート',?, ?, ?)`)
         .bind(`event-feedback:${event.id}:${participant.member_id}`, participant.member_id, `「${event.title}」はいかがでしたか？簡単なアンケートにご協力ください。`, event.id, timestamp).run();
     }
-    if (await awardCompletedEventHostXp(db, event.id, event.organizer_member_id, timestamp)) completed += 1;
+    // XPは幹事が実出欠を確定した時点でのみ付与する。
   }
   return completed;
 }

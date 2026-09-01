@@ -43,7 +43,7 @@ export interface Member {
 // --- XP制ランクシステム ---
 
 export const POINT_ACTIONS = {
-  eventCreate: { points: 5, label: "イベントの新規作成" },
+  eventCreate: { points: 10, label: "イベントの新規作成" },
   eventJoin: { points: 10, label: "イベント参加" },
   boardPost: { points: 5, label: "掲示板投稿" },
   comment: { points: 2, label: "コメント投稿" },

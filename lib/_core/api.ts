@@ -1143,6 +1143,32 @@ export async function finalizeEventParticipants(eventId: string) {
   return result.event;
 }
 
+export type EventAttendanceParticipant = {
+  memberId: string;
+  name: string;
+  rank: string;
+  status: "attended" | "absent";
+};
+
+export async function getEventAttendance(eventId: string) {
+  return apiCall<{ finalized: boolean; finalizedAt: string | null; actualAttendeeCount: number | null; canCorrect: boolean; participants: EventAttendanceParticipant[] }>(
+    `/api/events/${encodeURIComponent(eventId)}/attendance`,
+  );
+}
+
+export async function finalizeEventAttendance(eventId: string, absentMemberIds: string[]) {
+  return apiCall<{ success: true; corrected: boolean; actualAttendeeCount: number }>(
+    `/api/events/${encodeURIComponent(eventId)}/attendance`,
+    { method: "PUT", body: JSON.stringify({ absentMemberIds }) },
+  );
+}
+
+export async function getEventCancellationPenaltyPreview(eventId: string) {
+  return apiCall<{ applies: boolean; cutoffAt: string; activePoints: number; pointsAfterCancellation: number; earliestExpiry: string | null; restrictionUntil: string | null }>(
+    `/api/events/${encodeURIComponent(eventId)}/cancellation-penalty-preview`,
+  );
+}
+
 export async function cancelEvent(eventId: string, confirmedParticipantNotified = false) {
   return apiCall<{ success: boolean; cancelled: boolean }>(
     `/api/events/${encodeURIComponent(eventId)}`,

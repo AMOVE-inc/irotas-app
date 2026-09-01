@@ -91,6 +91,8 @@ export default function EventDetailScreen() {
   const [participantSearch, setParticipantSearch] = useState("");
   const [linkCopied, setLinkCopied] = useState(false);
   const [memberDirectory, setMemberDirectory] = useState<Api.PublicMember[]>([]);
+  const [attendanceSheet, setAttendanceSheet] = useState<{ participants: Api.EventAttendanceParticipant[]; absentMemberIds: string[]; correcting: boolean } | null>(null);
+  const [attendanceLoading, setAttendanceLoading] = useState(false);
   const [, setEventRevision] = useState(0);
   // ボタン連打防止フラグ
   const joiningRef = useRef(false);
@@ -479,29 +481,50 @@ export default function EventDetailScreen() {
     Alert.alert("追加募集を開始しました", "イベント一覧に「空席あり」として表示されます。");
   };
 
+  const submitCancellationRequest = async () => {
+    if (event.viewerMemberId) {
+      try {
+        setEvent(await Api.requestEventCancellation(event.id, contactedOrganizer, cancellationPolicyConfirmed));
+        Alert.alert("申請しました", "幹事にキャンセル申請を送りました。確定連絡をお待ちください。");
+      } catch (error) {
+        Alert.alert("申請できませんでした", error instanceof Error ? error.message : "もう一度お試しください。");
+      }
+      return;
+    }
+    submitEventCancellationRequest(event, CURRENT_USER.id);
+    await notifyEventCancellationRequest(event, CURRENT_USER.id);
+    setEventRevision((value) => value + 1);
+    Alert.alert("申請しました", "幹事に通知しました。キャンセルの確定連絡をお待ちください。");
+  };
+
   const handleCancellationRequest = () => {
     if (!contactedOrganizer || !cancellationPolicyConfirmed) {
       Alert.alert("確認が必要です", "幹事への事前連絡とキャンセルポリシーの確認にチェックしてください。");
       return;
     }
-    Alert.alert("キャンセル申請", "幹事へキャンセル申請を送りますか？", [
-      { text: "戻る", style: "cancel" },
-      { text: "申請する", style: "destructive", onPress: async () => {
-        if (event.viewerMemberId) {
-          try {
-            setEvent(await Api.requestEventCancellation(event.id, contactedOrganizer, cancellationPolicyConfirmed));
-            Alert.alert("申請しました", "幹事にキャンセル申請を送りました。確定連絡をお待ちください。");
-          } catch (error) {
-            Alert.alert("申請できませんでした", error instanceof Error ? error.message : "もう一度お試しください。");
-          }
-          return;
-        }
-        submitEventCancellationRequest(event, CURRENT_USER.id);
-        await notifyEventCancellationRequest(event, CURRENT_USER.id);
-        setEventRevision((value) => value + 1);
-        Alert.alert("申請しました", "幹事に通知しました。キャンセルの確定連絡をお待ちください。");
-      } },
-    ]);
+    if (!event.viewerMemberId) { void submitCancellationRequest(); return; }
+    void Api.getEventCancellationPenaltyPreview(event.id).then((preview) => {
+      const cutoff = new Date(preview.cutoffAt).toLocaleString("ja-JP", { timeZone: "Asia/Tokyo", month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit", hour12: false });
+      const warning = preview.applies
+        ? `前日0:00（JST）以降のキャンセルはペナルティ1ポイントの対象です（今回の基準：${cutoff}）。確定後は${preview.pointsAfterCancellation}点になります。${preview.restrictionUntil ? ` 3点到達のため${preview.restrictionUntil.replace("T", " ").slice(0, 16)}まで新規申込・参加ができなくなります。` : ""}`
+        : "このキャンセルはペナルティポイントの対象外です。";
+      Alert.alert("キャンセル申請", `${warning}\n\n幹事へキャンセル申請を送りますか？`, [
+        { text: "戻る", style: "cancel" },
+        { text: "申請する", style: "destructive", onPress: () => { void submitCancellationRequest(); } },
+      ]);
+    }).catch(() => Alert.alert("キャンセル申請", "幹事へキャンセル申請を送りますか？", [{ text: "戻る", style: "cancel" }, { text: "申請する", style: "destructive", onPress: () => { void submitCancellationRequest(); } }]));
+  };
+
+  const handleFinalizeAttendance = () => {
+    setAttendanceLoading(true);
+    void Api.getEventAttendance(event.id).then((result) => {
+      if (result.finalized && !result.canCorrect) {
+        Alert.alert("開催結果は確定済みです", `実参加人数は${result.actualAttendeeCount ?? 0}人です。`);
+        return;
+      }
+      setAttendanceSheet({ participants: result.participants, absentMemberIds: result.participants.filter((item) => item.status === "absent").map((item) => item.memberId), correcting: result.finalized });
+    }).catch((error) => Alert.alert("取得できませんでした", error instanceof Error ? error.message : "もう一度お試しください。"))
+      .finally(() => setAttendanceLoading(false));
   };
 
   const handleApproveCancellation = (memberId: string) => {
@@ -770,6 +793,7 @@ export default function EventDetailScreen() {
             })}
             {event.status !== "open" && (event.participants ?? []).length < event.capacity ? <Pressable onPress={handleReopenGourmetRecruitment} style={{ marginTop: 12, borderRadius: 11, backgroundColor: "#E8A0BF", paddingVertical: 11, alignItems: "center" }}><Text style={{ fontSize: 14, fontWeight: "900", color: "#FFF" }}>追加募集を開始</Text></Pressable> : null}
             <Pressable disabled={Boolean(event.participantsFinalizedAt)} onPress={handleFinalizeParticipants} style={{ marginTop: 12, borderRadius: 11, backgroundColor: event.participantsFinalizedAt ? "#93C9A0" : "#34A853", paddingVertical: 11, alignItems: "center" }}><Text style={{ fontSize: 14, fontWeight: "900", color: "#FFF" }}>{event.participantsFinalizedAt ? "参加者確定済み" : "参加者確定を完了"}</Text></Pressable>
+            {new Date(`${event.date}T${event.time}:00+09:00`) <= new Date() ? <Pressable disabled={attendanceLoading} onPress={handleFinalizeAttendance} style={{ marginTop: 10, borderRadius: 11, backgroundColor: attendanceLoading ? "#9CBFDF" : "#5B9BD5", paddingVertical: 11, alignItems: "center" }}><Text style={{ fontSize: 14, fontWeight: "900", color: "#FFF" }}>{attendanceLoading ? "出欠を読み込み中…" : "開催結果（実出欠）を確定"}</Text></Pressable> : null}
             <Pressable onPress={handleCancelEvent} style={{ marginTop: 10, borderRadius: 11, borderWidth: 1, borderColor: "#D94C55", paddingVertical: 11, alignItems: "center" }}><Text style={{ fontSize: 14, fontWeight: "900", color: "#D94C55" }}>イベントを中止</Text></Pressable>
           </View>
         ) : null}
@@ -997,6 +1021,27 @@ export default function EventDetailScreen() {
           </View>
       </ScrollView>
       <PersistentBottomNav active="/events" />
+
+      <Modal visible={attendanceSheet !== null} transparent animationType="slide" onRequestClose={() => setAttendanceSheet(null)}>
+        <View style={{ flex: 1, justifyContent: "flex-end", backgroundColor: "rgba(20,18,24,0.5)" }}>
+          <View style={{ maxHeight: "86%", borderTopLeftRadius: 24, borderTopRightRadius: 24, backgroundColor: colors.background, padding: 20 }}>
+            <Text style={{ fontSize: 20, fontWeight: "900", color: colors.foreground }}>{attendanceSheet?.correcting ? "開催結果（実出欠）を訂正" : "開催結果（実出欠）を確定"}</Text>
+            <Text style={{ fontSize: 12, lineHeight: 18, color: colors.muted, marginTop: 6 }}>{attendanceSheet?.correcting ? "管理者による訂正です。実参加人数に合わせて出欠と関連XPを再計算します。" : "初期状態では全員を出席にしています。欠席者だけ「欠席」に変更してから確定してください。確定後に実参加人数に応じてXPが反映されます。"}</Text>
+            <ScrollView style={{ marginTop: 14 }} contentContainerStyle={{ paddingBottom: 8 }}>
+              {attendanceSheet?.participants.map((participant) => {
+                const absent = attendanceSheet.absentMemberIds.includes(participant.memberId);
+                const directoryMember = getMemberById(participant.memberId);
+                return <Pressable key={participant.memberId} onPress={() => setAttendanceSheet((current) => !current ? current : { ...current, absentMemberIds: absent ? current.absentMemberIds.filter((id) => id !== participant.memberId) : [...current.absentMemberIds, participant.memberId] })} style={{ minHeight: 58, flexDirection: "row", alignItems: "center", borderBottomWidth: 0.5, borderBottomColor: colors.border }}>
+                  <Image source={directoryMember?.avatar ?? DEFAULT_AVATAR} style={{ width: 38, height: 38, borderRadius: 19 }} contentFit="cover" />
+                  <View style={{ flex: 1, marginLeft: 10 }}><Text style={{ fontSize: 14, fontWeight: "800", color: colors.foreground }}>{participant.name}</Text><Text style={{ marginTop: 2, fontSize: 11, color: absent ? "#D94C55" : "#2E8B57" }}>{absent ? "欠席" : "出席"}</Text></View>
+                  <View style={{ width: 44, height: 28, borderRadius: 14, backgroundColor: absent ? "#FDE6E8" : "#DCF5E3", alignItems: "center", justifyContent: "center" }}><Text style={{ fontSize: 11, fontWeight: "900", color: absent ? "#C33B45" : "#278545" }}>{absent ? "欠席" : "出席"}</Text></View>
+                </Pressable>;
+              })}
+            </ScrollView>
+            <View style={{ flexDirection: "row", gap: 10, marginTop: 14 }}><Pressable onPress={() => setAttendanceSheet(null)} style={{ flex: 1, minHeight: 50, borderRadius: 13, backgroundColor: colors.surface, alignItems: "center", justifyContent: "center" }}><Text style={{ fontWeight: "800", color: colors.foreground }}>キャンセル</Text></Pressable><Pressable onPress={() => { const absentIds = attendanceSheet?.absentMemberIds ?? []; const correcting = attendanceSheet?.correcting; void Api.finalizeEventAttendance(event.id, absentIds).then((result) => { setAttendanceSheet(null); Alert.alert(correcting ? "開催結果を訂正しました" : "開催結果を確定しました", `実参加人数は${result.actualAttendeeCount}人です。XPを反映しました。`); }).catch((error) => Alert.alert("確定できませんでした", error instanceof Error ? error.message : "もう一度お試しください。")); }} style={{ flex: 1.35, minHeight: 50, borderRadius: 13, backgroundColor: "#5B9BD5", alignItems: "center", justifyContent: "center" }}><Text style={{ fontWeight: "900", color: "#FFF" }}>{attendanceSheet?.correcting ? "実出欠を訂正" : "実出欠を確定"}</Text></Pressable></View>
+          </View>
+        </View>
+      </Modal>
 
       <Modal visible={showAdminEdit} transparent animationType="slide" onRequestClose={() => setShowAdminEdit(false)}>
         <View style={{ flex: 1, justifyContent: "center", padding: 20, backgroundColor: "rgba(20,18,24,0.5)" }}>

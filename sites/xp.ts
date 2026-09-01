@@ -5,7 +5,7 @@ import { rankFromXp as rankFromXpCurve } from "../lib/xp-levels";
 
 const XP_AWARD_ENDPOINT = "/api/xp/award";
 const REWARDS = {
-  event_create: { amount: 5, reason: "イベントの新規作成" },
+  event_create: { amount: 10, reason: "イベントの新規作成" },
   board_post: { amount: 5, reason: "掲示板投稿" },
   meal_report_post: { amount: 8, reason: "ごちそうさま報告投稿" },
 } as const;
@@ -49,6 +49,10 @@ async function award(request: Request, db: D1Database, viewer: Viewer) {
   const sourceId = typeof input?.sourceId === "string" ? input.sourceId.trim() : "";
   if (!Object.prototype.hasOwnProperty.call(REWARDS, action) || !sourceId || sourceId.length > 200)
     return json({ error: "XP付与内容を確認してください" }, 400);
+  // イベント作成XPはイベント作成APIで原子的に処理する。旧クライアントからの
+  // 二重付与を防ぐため、この汎用エンドポイントでは受け付けない。
+  if (action === "event_create")
+    return json({ error: "イベント作成XPはイベント作成時に自動反映されます" }, 409);
   if (!await validSource(db, viewer, action, sourceId))
     return json({ error: "XP付与対象を確認できません" }, 403);
 

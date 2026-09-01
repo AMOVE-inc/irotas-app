@@ -2,6 +2,7 @@ import { authenticatedRequestMember } from "./auth";
 import { canMemberAccessClub } from "./clubs";
 import { reverseCancelledEventHostXp } from "./event-host-xp";
 import { applyEventPointDiscount, refundEventPointDiscount } from "./event-points";
+import { EVENT_XP, awardEventReward, reverseEventRewards } from "./event-rewards";
 import type { D1Database, SitesEnv } from "./platform-types";
 
 const EVENTS_ENDPOINT = "/api/events";
@@ -12,6 +13,8 @@ const EVENT_FINALIZE_PATH = /^\/api\/events\/([^/]+)\/finalize$/;
 const EVENT_PARTICIPANT_PATH = /^\/api\/events\/([^/]+)\/participants\/([^/]+)$/;
 const EVENT_CANCELLATION_PATH = /^\/api\/events\/([^/]+)\/cancellation-requests$/;
 const EVENT_CANCELLATION_REVIEW_PATH = /^\/api\/events\/([^/]+)\/cancellation-requests\/([^/]+)$/;
+const EVENT_ATTENDANCE_PATH = /^\/api\/events\/([^/]+)\/attendance$/;
+const EVENT_CANCELLATION_PREVIEW_PATH = /^\/api\/events\/([^/]+)\/cancellation-penalty-preview$/;
 const EVENT_IMAGE_PATH = /^\/api\/event-images\/([^/]+)$/;
 const MAX_EVENT_BODY_BYTES = 96 * 1024;
 const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
@@ -47,6 +50,83 @@ type CancellationRow = {
   policy_confirmed: number;
   status: "pending" | "approved" | "rejected";
 };
+
+function eventStart(row: EventRow) {
+  let data: Record<string, unknown> = {};
+  try { data = JSON.parse(row.public_data_json) as Record<string, unknown>; } catch {}
+  const time = typeof data.time === "string" && /^\d{2}:\d{2}$/.test(data.time) ? data.time : "00:00";
+  const value = new Date(`${row.event_date}T${time}:00+09:00`);
+  return Number.isNaN(value.getTime()) ? null : value;
+}
+
+function lateCancellationCutoff(row: EventRow) {
+  // Policy is calendar-based in JST: 00:00 on the previous calendar day, not "24 hours before".
+  const localCutoff = new Date(`${row.event_date}T00:00:00+09:00`);
+  localCutoff.setUTCDate(localCutoff.getUTCDate() - 1);
+  return localCutoff;
+}
+
+function isLateCancellation(row: EventRow, requestedAt: Date) {
+  const start = eventStart(row);
+  if (!start) return false;
+  const cutoff = lateCancellationCutoff(row);
+  return requestedAt.getTime() >= cutoff.getTime() && requestedAt.getTime() <= start.getTime();
+}
+
+async function activePenaltySummary(db: D1Database, memberId: number, now: string) {
+  const result = await db.prepare(`SELECT COUNT(*) AS count, MIN(expires_at) AS earliest
+    FROM event_cancellation_penalties WHERE member_id = ? AND revoked_at IS NULL AND expires_at > ?`)
+    .bind(memberId, now).first<{ count: number; earliest: string | null }>();
+  return { activePoints: Number(result?.count ?? 0), earliestExpiry: result?.earliest ?? null };
+}
+
+async function currentRestriction(db: D1Database, memberId: number, now: string) {
+  return db.prepare(`SELECT ends_at FROM event_participation_restrictions
+    WHERE member_id = ? AND revoked_at IS NULL AND ends_at > ? ORDER BY ends_at DESC LIMIT 1`)
+    .bind(memberId, now).first<{ ends_at: string }>();
+}
+
+function addTokyoMonths(iso: string, monthsToAdd: number) {
+  const date = new Date(iso);
+  const formatter = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Tokyo", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit", hourCycle: "h23" });
+  const values = Object.fromEntries(formatter.formatToParts(date).filter((part) => part.type !== "literal").map((part) => [part.type, part.value]));
+  const year = Number(values.year), month = Number(values.month), day = Number(values.day);
+  const targetIndex = (year * 12 + (month - 1)) + monthsToAdd;
+  const targetYear = Math.floor(targetIndex / 12);
+  const targetMonth = (targetIndex % 12) + 1;
+  const lastDay = new Date(Date.UTC(targetYear, targetMonth, 0)).getUTCDate();
+  return new Date(`${targetYear}-${String(targetMonth).padStart(2, "0")}-${String(Math.min(day, lastDay)).padStart(2, "0")}T${values.hour}:${values.minute}:${values.second}+09:00`).toISOString();
+}
+
+function nextMonthSameTokyoTime(iso: string) {
+  return addTokyoMonths(iso, 1);
+}
+
+async function applyLateCancellationPenalty(db: D1Database, input: { eventId: string; memberId: number; assignedBy: number; assignedAt: string; title: string }) {
+  const exists = await db.prepare("SELECT id FROM event_cancellation_penalties WHERE event_id = ? AND member_id = ? LIMIT 1")
+    .bind(input.eventId, input.memberId).first<{ id: string }>();
+  if (exists) return { ...(await activePenaltySummary(db, input.memberId, input.assignedAt)), restrictionUntil: (await currentRestriction(db, input.memberId, input.assignedAt))?.ends_at ?? null, duplicate: true };
+  const expiresAt = addTokyoMonths(input.assignedAt, 3);
+  const penaltyId = `penalty_${crypto.randomUUID()}`;
+  await db.prepare(`INSERT INTO event_cancellation_penalties
+    (id,event_id,member_id,points,assigned_at,expires_at,assigned_by_member_id,reason)
+    VALUES (?,?,?,?,?,?,?,?)`).bind(penaltyId, input.eventId, input.memberId, 1, input.assignedAt, expiresAt, input.assignedBy, "前日・当日のキャンセル").run();
+  const summary = await activePenaltySummary(db, input.memberId, input.assignedAt);
+  let restrictionUntil = (await currentRestriction(db, input.memberId, input.assignedAt))?.ends_at ?? null;
+  if (summary.activePoints >= 3 && !restrictionUntil) {
+    restrictionUntil = nextMonthSameTokyoTime(input.assignedAt);
+    await db.prepare(`INSERT INTO event_participation_restrictions
+      (id,member_id,starts_at,ends_at,trigger_penalty_id,created_at) VALUES (?,?,?,?,?,?)`)
+      .bind(`restriction_${crypto.randomUUID()}`, input.memberId, input.assignedAt, restrictionUntil, penaltyId, input.assignedAt).run();
+  }
+  const body = restrictionUntil
+    ? `「${input.title}」のキャンセルによりペナルティポイントが1点付与されました。現在${summary.activePoints}点のため、${restrictionUntil.replace("T", " ").slice(0, 16)}まで新規申込・参加はできません。すでに参加確定しているイベントは取り消されません。`
+    : `「${input.title}」のキャンセルによりペナルティポイントが1点付与されました。現在${summary.activePoints}点です。ポイントは付与日から3か月で失効します。`;
+  await db.prepare(`INSERT OR IGNORE INTO in_app_notifications
+    (id,target_member_id,type,title,body,event_id,created_at) VALUES (?,?,?,?,?,?,?)`)
+    .bind(`late-cancellation:${input.eventId}:${input.memberId}`, input.memberId, "event_cancellation", "キャンセルとペナルティポイントについて", body, input.eventId, input.assignedAt).run();
+  return { ...summary, restrictionUntil, duplicate: false };
+}
 
 function responseJson(body: unknown, status = 200) {
   return Response.json(body, { status, headers: { "cache-control": "no-store" } });
@@ -358,6 +438,17 @@ async function createEvent(request: Request, db: D1Database, member: Awaited<Ret
       VALUES (?, 'event.created', 'event', ?, ?, ?)`)
       .bind(String(member.id), id, JSON.stringify({ eventType: event.eventType }), now),
   ]);
+  // 公式イベントの主担当は対象外。その他のイベントは作成時に一度だけ付与する。
+  // サーバー側で確定し、画面遷移・通信の再試行で重複しないようにする。
+  if (event.eventType !== "official") {
+    await awardEventReward(db, {
+      eventId: id,
+      memberId: member.id,
+      action: "event_created",
+      amount: EVENT_XP.created,
+      now,
+    });
+  }
   const row = await db.prepare(`${selectEvents} WHERE e.id = ?`).bind(id).first<EventRow>();
   return responseJson({ event: await hydratedEvent(db, row!, member.id, elevated) }, 201);
 }
@@ -388,7 +479,9 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
   const cancellationMatch = EVENT_CANCELLATION_PATH.exec(pathname);
   const cancellationReviewMatch = EVENT_CANCELLATION_REVIEW_PATH.exec(pathname);
   const imageMatch = EVENT_IMAGE_PATH.exec(pathname);
-  if (pathname !== EVENTS_ENDPOINT && !eventMatch && !favoriteMatch && !applicationMatch && !finalizeMatch && !participantMatch && !cancellationMatch && !cancellationReviewMatch && !imageMatch && pathname !== "/api/event-images") return null;
+  const attendanceMatch = EVENT_ATTENDANCE_PATH.exec(pathname);
+  const cancellationPreviewMatch = EVENT_CANCELLATION_PREVIEW_PATH.exec(pathname);
+  if (pathname !== EVENTS_ENDPOINT && !eventMatch && !favoriteMatch && !applicationMatch && !finalizeMatch && !participantMatch && !cancellationMatch && !cancellationReviewMatch && !attendanceMatch && !cancellationPreviewMatch && !imageMatch && pathname !== "/api/event-images") return null;
   if (!env.DB) return responseJson({ error: "データベースに接続できません" }, 503);
   const member = await authenticatedRequestMember(request, env);
   if (!member) return responseJson({ error: "ログインが必要です" }, 401);
@@ -483,6 +576,7 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
     if (row.status === "cancelled") return responseJson({ success: true, cancelled: true });
     const now = new Date().toISOString();
     await reverseCancelledEventHostXp(env.DB, id, now);
+    await reverseEventRewards(env.DB, id, now);
     const pointUsers = await env.DB.prepare("SELECT member_id FROM event_point_usages WHERE event_id = ? AND status = 'applied'")
       .bind(id).all<{ member_id: number }>();
     for (const pointUser of pointUsers.results ?? []) await refundEventPointDiscount(env.DB, id, pointUser.member_id, row.title, now);
@@ -517,6 +611,8 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
     if (row.event_type === "club" && row.club_id && !await canMemberAccessClub(env.DB, row.club_id, member.id, admin))
       return responseJson({ error: "この部活の部員のみ参加申込できます" }, 403);
     if (row.organizer_member_id === member.id) return responseJson({ error: "幹事は参加申込できません" }, 409);
+    const restricted = await currentRestriction(env.DB, member.id, new Date().toISOString());
+    if (restricted) return responseJson({ error: `ペナルティにより${restricted.ends_at.replace("T", " ").slice(0, 16)}まで新規申込はできません` }, 403);
     const input = await readBody(request);
     if (input?.termsAccepted !== true) return responseJson({ error: "イベント参加規約への同意が必要です" }, 400);
     let data: Record<string, unknown> = {};
@@ -642,6 +738,64 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
     const updated = await eventRow(env.DB, id);
     return responseJson({ event: await hydratedEvent(env.DB, updated!, member.id, elevated, memberPublicId) });
   }
+  if (attendanceMatch) {
+    const id = decodeURIComponent(attendanceMatch[1]);
+    const row = await eventRow(env.DB, id);
+    if (!row) return responseJson({ error: "イベントが見つかりません" }, 404);
+    if (!(elevated || row.organizer_member_id === member.id)) return responseJson({ error: "幹事または運営メンバーのみ操作できます" }, 403);
+    const start = eventStart(row);
+    if (!start || Date.now() < start.getTime()) return responseJson({ error: "開催後に実出欠を確定できます" }, 409);
+    const participants = await env.DB.prepare(`SELECT p.member_id, m.public_member_id, m.display_name, m.member_rank
+      FROM event_participations p JOIN members m ON m.id = p.member_id
+      WHERE p.event_id = ? AND p.status = 'confirmed' ORDER BY p.confirmed_at, p.member_id`).bind(id).all<{ member_id: number; public_member_id: string | null; display_name: string | null; member_rank: string | null }>();
+    const finalized = await env.DB.prepare("SELECT finalized_at, actual_attendee_count FROM event_attendance_finalizations WHERE event_id = ?")
+      .bind(id).first<{ finalized_at: string; actual_attendee_count: number }>();
+    const attendance = await env.DB.prepare("SELECT member_id, status FROM event_attendance_confirmations WHERE event_id = ?")
+      .bind(id).all<{ member_id: number; status: "attended" | "absent" }>();
+    const attendanceByMember = new Map((attendance.results ?? []).map((item) => [item.member_id, item.status]));
+    if (request.method === "GET") return responseJson({ finalized: Boolean(finalized), finalizedAt: finalized?.finalized_at ?? null, actualAttendeeCount: finalized?.actual_attendee_count ?? null, canCorrect: Boolean(finalized && elevated), participants: (participants.results ?? []).map((participant) => ({ memberId: participant.public_member_id ?? `member-${participant.member_id}`, name: participant.display_name ?? "メンバー", rank: participant.member_rank ?? "regular", status: attendanceByMember.get(participant.member_id) ?? "attended" })) });
+    if (request.method !== "PUT") return responseJson({ error: "method_not_allowed" }, 405);
+    const input = await readBody(request);
+    const correcting = Boolean(finalized);
+    if (correcting && !elevated) return responseJson({ error: "実出欠は確定済みです。訂正は管理者のみ行えます" }, 409);
+    const absentIds = new Set(stringArray(input?.absentMemberIds, 100, 100) ?? []);
+    const actual = (participants.results ?? []).filter((participant) => !absentIds.has(participant.public_member_id ?? `member-${participant.member_id}`));
+    const now = new Date().toISOString();
+    if (correcting) {
+      await reverseEventRewards(env.DB, id, now, ["event_completed_host", "event_attendance_bonus", "event_attendance", "event_feedback"]);
+      await env.DB.batch([
+        env.DB.prepare("DELETE FROM event_attendance_confirmations WHERE event_id = ?").bind(id),
+        env.DB.prepare("DELETE FROM event_attendance_finalizations WHERE event_id = ?").bind(id),
+      ]);
+    }
+    await env.DB.batch([
+      ...(participants.results ?? []).map((participant) => env.DB!.prepare(`INSERT INTO event_attendance_confirmations
+        (event_id,member_id,status,confirmed_by_member_id,confirmed_at,updated_at) VALUES (?,?,?,?,?,?)`)
+        .bind(id, participant.member_id, absentIds.has(participant.public_member_id ?? `member-${participant.member_id}`) ? "absent" : "attended", member.id, now, now)),
+      env.DB.prepare(`INSERT INTO event_attendance_finalizations (event_id,finalized_by_member_id,finalized_at,actual_attendee_count,corrected_at,corrected_by_member_id)
+        VALUES (?,?,?,?,?,?)`).bind(id, member.id, now, actual.length, correcting ? now : null, correcting ? member.id : null),
+    ]);
+    if (row.event_type !== "official") {
+      await awardEventReward(env.DB, { eventId: id, memberId: row.organizer_member_id, action: "event_completed_host", amount: EVENT_XP.completedHost, now });
+      const bonus = actual.length >= 8 ? EVENT_XP.attendanceBonus8 : actual.length >= 4 ? EVENT_XP.attendanceBonus4 : 0;
+      if (bonus) await awardEventReward(env.DB, { eventId: id, memberId: row.organizer_member_id, action: "event_attendance_bonus", amount: bonus, now });
+    }
+    for (const participant of actual) {
+      if (participant.member_id !== row.organizer_member_id) await awardEventReward(env.DB, { eventId: id, memberId: participant.member_id, action: "event_attendance", amount: EVENT_XP.attendance, now });
+    }
+    await audit(env.DB, member.id, correcting ? "event.attendance_corrected" : "event.attendance_finalized", id, { actualAttendeeCount: actual.length, absentMemberIds: [...absentIds] });
+    return responseJson({ success: true, corrected: correcting, actualAttendeeCount: actual.length });
+  }
+  if (cancellationPreviewMatch && request.method === "GET") {
+    const id = decodeURIComponent(cancellationPreviewMatch[1]);
+    const row = await eventRow(env.DB, id);
+    if (!row) return responseJson({ error: "イベントが見つかりません" }, 404);
+    const now = new Date().toISOString();
+    const summary = await activePenaltySummary(env.DB, member.id, now);
+    const restriction = await currentRestriction(env.DB, member.id, now);
+    const applies = isLateCancellation(row, new Date(now));
+    return responseJson({ applies, cutoffAt: lateCancellationCutoff(row).toISOString(), activePoints: summary.activePoints, pointsAfterCancellation: summary.activePoints + (applies ? 1 : 0), earliestExpiry: summary.earliestExpiry, restrictionUntil: restriction?.ends_at ?? (applies && summary.activePoints + 1 >= 3 ? nextMonthSameTokyoTime(now) : null) });
+  }
   if (cancellationMatch && request.method === "POST") {
     const id = decodeURIComponent(cancellationMatch[1]);
     const row = await eventRow(env.DB, id);
@@ -656,8 +810,8 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
     const now = new Date().toISOString();
     await env.DB.batch([
       env.DB.prepare(`INSERT INTO event_cancellation_requests
-        (id, event_id, member_id, contacted_organizer, policy_confirmed, status, requested_at)
-        VALUES (?, ?, ?, 1, 1, 'pending', ?)`).bind(`cancel_${crypto.randomUUID()}`, id, member.id, now),
+        (id, event_id, member_id, contacted_organizer, policy_confirmed, status, requested_at, late_cancellation_at)
+        VALUES (?, ?, ?, 1, 1, 'pending', ?, ?)`).bind(`cancel_${crypto.randomUUID()}`, id, member.id, now, isLateCancellation(row, new Date(now)) ? now : null),
       env.DB.prepare("UPDATE event_participations SET status = 'cancel_requested', updated_at = ? WHERE event_id = ? AND member_id = ?").bind(now, id, member.id),
     ]);
     await audit(env.DB, member.id, "event.cancellation_requested", id);
@@ -680,8 +834,8 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
     const input = await readBody(request);
     if (!targetId || (input?.action !== "approve" && input?.action !== "reject")) return responseJson({ error: "入力内容を確認してください" }, 400);
     const now = new Date().toISOString();
-    const requestRow = await env.DB.prepare(`SELECT id FROM event_cancellation_requests
-      WHERE event_id = ? AND member_id = ? AND status = 'pending' ORDER BY requested_at DESC LIMIT 1`).bind(id, targetId).first<{ id: string }>();
+    const requestRow = await env.DB.prepare(`SELECT id, late_cancellation_at FROM event_cancellation_requests
+      WHERE event_id = ? AND member_id = ? AND status = 'pending' ORDER BY requested_at DESC LIMIT 1`).bind(id, targetId).first<{ id: string; late_cancellation_at: string | null }>();
     if (!requestRow) return responseJson({ error: "キャンセル申請が見つかりません" }, 404);
     const approved = input.action === "approve";
     const statements = [
@@ -695,6 +849,9 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
     );
     await env.DB.batch(statements);
     if (approved) await refundEventPointDiscount(env.DB, id, targetId, row.title, now);
+    if (approved && requestRow?.late_cancellation_at) {
+      await applyLateCancellationPenalty(env.DB, { eventId: id, memberId: targetId, assignedBy: member.id, assignedAt: now, title: row.title });
+    }
     await audit(env.DB, member.id, approved ? "event.cancellation_approved" : "event.cancellation_rejected", id, { targetId });
     await notifyEventCancellation(
       env.DB,

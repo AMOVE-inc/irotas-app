@@ -16,9 +16,6 @@ import { ActivityIndicator, Alert, Modal, Pressable, ScrollView, Text, TextInput
 import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
 import { recordHomeActivity } from "@/lib/home-activity-store";
-import { XpRewardPopup } from "@/components/xp-reward-popup";
-import { awardXp, type XpReward } from "@/lib/xp-store";
-import { POINT_ACTIONS } from "@/constants/mock-data";
 import * as Api from "@/lib/_core/api";
 
 const WEEKDAYS = ["日", "月", "火", "水", "木", "金", "土"];
@@ -159,7 +156,6 @@ export default function CreateEventScreen() {
   const [rankPrices, setRankPrices] = useState<Record<"regular" | "silver" | "gold" | "platinum", string>>({ regular: "", silver: "", gold: "", platinum: "" });
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [genres, setGenres] = useState<string[]>([]);
-  const [xpReward, setXpReward] = useState<XpReward | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const extractedLocation = useMemo(() => extractEventLocation(address), [address]);
 
@@ -220,14 +216,8 @@ export default function CreateEventScreen() {
     pendingEvents.unshift(newEvent);
     void recordHomeActivity({ id: `event:${newEvent.id}`, kind: "event", title: newEvent.title, description: finalType === "official" ? "新しい公式イベントが公開されました" : finalType === "club" ? "新しい部活動イベントが公開されました" : "新しいグルメ会が公開されました", createdAt: newEvent.createdAt!, route: "/event-detail", params: { id: newEvent.id } });
     void scheduleOrganizerDeadlineNotification(newEvent);
-    if (!userIsOperator) {
-      void awardXp(authUser?.xp ?? CURRENT_USER.points, POINT_ACTIONS.eventCreate.points, POINT_ACTIONS.eventCreate.label, () => Api.awardSharedXp("event_create", newEvent.id)).then(setXpReward).catch(() => {
-        Alert.alert("イベントを作成しました", "XPの反映に時間がかかっています。マイページを再読み込みしてください。");
-        router.back();
-      });
-    } else {
-      router.back();
-    }
+    // 作成XPはイベント作成APIがサーバー側で一意に付与する。
+    router.back();
     setIsSubmitting(false);
   };
 
@@ -270,7 +260,6 @@ export default function CreateEventScreen() {
         <Pressable disabled={!termsAccepted || isSubmitting} onPress={() => { void handleCreate(); }} style={{ marginTop: 22, minHeight: 56, borderRadius: 16, backgroundColor: termsAccepted && !isSubmitting ? "#18171A" : "#B8B8BD", alignItems: "center", justifyContent: "center", opacity: termsAccepted && !isSubmitting ? 1 : 0.65 }}><Text style={{ fontSize: 17, fontWeight: "900", color: "#FFF" }}>{isSubmitting ? "作成しています…" : "イベントを作成する"}</Text></Pressable>
       </ScrollView>
       {isSubmitting ? <View pointerEvents="auto" style={{ position: "absolute", inset: 0, backgroundColor: "rgba(255,255,255,0.72)", alignItems: "center", justifyContent: "center" }}><View style={{ minWidth: 170, borderRadius: 18, padding: 22, alignItems: "center", backgroundColor: colors.surface, shadowColor: "#000", shadowOpacity: 0.14, shadowRadius: 14, elevation: 6 }}><ActivityIndicator size="large" color="#D65E8D" /><Text style={{ marginTop: 12, fontSize: 14, fontWeight: "900", color: colors.foreground }}>イベントを作成中です</Text></View></View> : null}
-      <XpRewardPopup reward={xpReward} onClose={() => { setXpReward(null); router.back(); }} />
     </ScreenContainer>
   );
 }
