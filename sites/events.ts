@@ -744,7 +744,9 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
     if (!row) return responseJson({ error: "イベントが見つかりません" }, 404);
     if (!(elevated || row.organizer_member_id === member.id)) return responseJson({ error: "幹事または運営メンバーのみ操作できます" }, 403);
     const start = eventStart(row);
-    if (!start || Date.now() < start.getTime()) return responseJson({ error: "開催後に実出欠を確定できます" }, 409);
+    const attendanceAvailableAt = start ? start.getTime() + 3 * 60 * 60 * 1000 : null;
+    if (!attendanceAvailableAt || Date.now() < attendanceAvailableAt)
+      return responseJson({ error: "開始日時の3時間後から実出欠を確定できます" }, 409);
     const participants = await env.DB.prepare(`SELECT p.member_id, m.public_member_id, m.display_name, m.member_rank
       FROM event_participations p JOIN members m ON m.id = p.member_id
       WHERE p.event_id = ? AND p.status = 'confirmed' ORDER BY p.confirmed_at, p.member_id`).bind(id).all<{ member_id: number; public_member_id: string | null; display_name: string | null; member_rank: string | null }>();
