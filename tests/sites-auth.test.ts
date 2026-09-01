@@ -7,6 +7,7 @@ import {
   normalizeEmail,
   isTrustedBrowserOrigin,
   isBootstrapAdminEmail,
+  hasDiscordStaffRole,
   normalizeBranchSelection,
   cleanMemberDisplayName,
   effectiveMemberRank,
@@ -214,6 +215,19 @@ describe("Sites production authentication", () => {
         account_status: "active",
       }),
     ).toBe(true);
+  });
+
+  it("lets imported Discord operations roles sign in without a Square subscription", () => {
+    expect(hasDiscordStaffRole('["🥇GOLD会員", "運営メンバー"]')).toBe(true);
+    expect(
+      membershipAllowsAccess(null, {
+        role: "user",
+        access_role: "member",
+        account_status: "active",
+        discord_roles_json: '["運営メンバー"]',
+      }),
+    ).toBe(true);
+    expect(hasDiscordStaffRole('["🥇GOLD会員", "肉部長"]')).toBe(false);
   });
 
   it("produces the Square HMAC signature format", async () => {

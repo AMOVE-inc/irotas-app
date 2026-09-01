@@ -14,7 +14,9 @@ describe("Discord profile import", () => {
   };
 
   it("accepts an exact confirmed Discord-ID update", () => {
-    expect(validateDiscordProfileImport({ confirmation: "IMPORT_DISCORD_PROFILES_1", rows: [row] })).toEqual([row]);
+    expect(validateDiscordProfileImport({ confirmation: "IMPORT_DISCORD_PROFILES_1", rows: [row] })).toEqual([
+      { ...row, hasProfileBio: false },
+    ]);
   });
 
   it("rejects duplicate IDs and non-Discord avatar hosts", () => {

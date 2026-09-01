@@ -205,14 +205,19 @@ function endOfDate(value: string) {
 
 export function membershipAllowsAccess(
   subscription: SubscriptionRow | null,
-  member: Pick<MemberRow, "role" | "access_role" | "account_status">,
+  member: Pick<
+    MemberRow,
+    "role" | "access_role" | "account_status"
+  > &
+    Partial<Pick<MemberRow, "discord_roles_json">>,
   now = new Date(),
 ) {
   if (member.account_status !== "active") return false;
   if (
     member.role === "admin" ||
     member.role === "operator" ||
-    ["admin", "operator", "club_leader"].includes(member.access_role)
+    ["admin", "operator", "club_leader"].includes(member.access_role) ||
+    hasDiscordStaffRole(member.discord_roles_json)
   )
     return true;
   if (
@@ -231,6 +236,35 @@ export function membershipAllowsAccess(
     (!subscription.paid_until_date ||
       now.getTime() <= endOfDate(subscription.paid_until_date))
   );
+}
+
+/**
+ * Discordの運営ロールは、Squareのサブスクリプションとは独立して
+ * アプリへのアクセスを許可する。ロール照合テーブルの反映前でも
+ * 初回ログインで弾かれないよう、インポート済みのロール名を補助的に使う。
+ */
+export function hasDiscordStaffRole(value: string | null | undefined) {
+  if (!value) return false;
+  try {
+    const roles = JSON.parse(value);
+    if (!Array.isArray(roles)) return false;
+    return roles.some((role) => {
+      if (typeof role !== "string") return false;
+      const normalized = role
+        .normalize("NFKC")
+        .replace(/[\s　]/g, "")
+        .toLowerCase();
+      return [
+        "運営",
+        "運営メンバー",
+        "iro+運営",
+        "iro+運営メンバー",
+        "管理者",
+      ].includes(normalized);
+    });
+  } catch {
+    return false;
+  }
 }
 
 export function extractSessionToken(request: Request) {
@@ -677,11 +711,34 @@ async function register(request: Request, env: SitesEnv, db: D1Database) {
   const subscription = await findSubscription(db, email);
   if (!member || !membershipAllowsAccess(subscription, member))
     return responseJson({ error: "有効な会員資格を確認できません" }, 403);
-  if (member.password_hash)
+  // A previous setup can have stored the password successfully but failed
+  // while issuing the session. Treat the exact same password as a safe,
+  // idempotent retry instead of showing an error to the member.
+  if (member.password_hash) {
+    if (await verifyPassword(password, member.password_hash, env.AUTH_SECRET)) {
+      const now = new Date().toISOString();
+      await db
+        .prepare(
+          "UPDATE members SET last_signed_in_at = ?, updated_at = ? WHERE id = ?",
+        )
+        .bind(now, now, member.id)
+        .run();
+      const session = await createSession(db, member.id);
+      return responseJson(
+        {
+          success: true,
+          sessionToken: session.token,
+          user: memberPayload({ ...member, last_signed_in_at: now }),
+        },
+        200,
+        { "set-cookie": sessionCookie(session.token, session.expires) },
+      );
+    }
     return responseJson(
       { error: "初回設定済みです。ログインしてください" },
       409,
     );
+  }
   const verification = await db
     .prepare(
       "SELECT id, code_hash, expires_at, failed_attempts FROM email_verification_codes WHERE email = ? AND purpose = 'initial_setup' AND consumed_at IS NULL ORDER BY created_at DESC LIMIT 1",

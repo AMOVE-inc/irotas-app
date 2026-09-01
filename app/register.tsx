@@ -153,7 +153,7 @@ export default function RegisterScreen() {
                   lineHeight: 20,
                 }}
               >
-                Square決済時のメールアドレスを入力してください。有効な会員資格を確認して登録します。
+                Square決済時、または運営・部長として登録されたメールアドレスを入力してください。会員資格を確認して登録します。
               </Text>
             </View>
 
@@ -305,7 +305,7 @@ export default function RegisterScreen() {
                     textAlign: "center",
                   }}
                 >
-                  決済メールへ送信しました。有効期限は10分です。
+                  登録済みのメールアドレスへ送信しました。有効期限は10分です。
                 </Text>
               ) : null}
             </View>
