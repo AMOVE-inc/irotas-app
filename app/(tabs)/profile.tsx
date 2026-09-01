@@ -13,7 +13,7 @@ import {
 } from "@/constants/mock-data";
 import { getNextLevelInfo, levelFromXp } from "@/lib/xp-levels";
 import { useColors } from "@/hooks/use-colors";
-import { useClubs } from "@/lib/club-store";
+import { refreshClubs, useClubs } from "@/lib/club-store";
 import { getMyRooms } from "@/lib/chat-store";
 import { getAllEvents } from "@/lib/event-store";
 import { getEventParticipationStatus } from "@/lib/event-participation";
@@ -832,6 +832,9 @@ export default function ProfileScreen() {
 
   useFocusEffect(
     useCallback(() => {
+      // Covers direct navigation and restores. Login preloads this too, so the
+      // club-leader badge is available on the first profile render.
+      void refreshClubs();
       setMyRooms(getMyRooms(user.id));
       setParticipatingEvents(isRealMember ? [] : getAllEvents(EVENTS)
         .filter((event) => getEventParticipationStatus(event, user.id) !== null)
@@ -881,6 +884,12 @@ export default function ProfileScreen() {
   const joinedClubs = clubs.filter((club) => club.viewerIsLeader || club.viewerMembershipStatus === "approved" || (club.viewerMemberId ? club.memberIds.includes(club.viewerMemberId) : club.memberIds.includes(user.id)));
   const leaderClub = joinedClubs.find((club) => club.viewerIsLeader);
   const leaderLabel = leaderClub ? clubLeaderBadgeForClub(leaderClub.name) : null;
+  // Server-backed values are rendered directly rather than waiting for the
+  // AsyncStorage hydration effect that also supports preview profiles.
+  const displayedAvatarUri = isRealMember
+    ? profileString(serverProfile, "avatarUrl") || avatarUri
+    : avatarUri;
+  const displayedProfileName = isRealMember ? user.name : profileName || user.name;
 
   return (
     <ScreenContainer>
@@ -889,7 +898,7 @@ export default function ProfileScreen() {
         <View style={{ alignItems: "center", paddingVertical: 24 }}>
           <View style={{ position: "relative" }}>
             <Image
-              source={avatarUri ? { uri: avatarUri } : user.avatar}
+              source={displayedAvatarUri ? { uri: displayedAvatarUri } : user.avatar}
               style={{ width: 80, height: 80, borderRadius: 40 }}
               contentFit="cover"
             />
@@ -912,12 +921,12 @@ export default function ProfileScreen() {
             </View> : null}
           </View>
           <View style={{ flexDirection: "row", alignItems: "center", marginTop: 12 }}>
-            <Text style={{ fontSize: 22, fontWeight: "800", color: colors.foreground }}>{stripRankFromName(profileName)}</Text>
+            <Text style={{ fontSize: 22, fontWeight: "800", color: colors.foreground }}>{stripRankFromName(displayedProfileName)}</Text>
             <NewMemberMark member={user} size={17} />
           </View>
           <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", flexWrap: "wrap", marginTop: 4 }}>
             <MemberRankBadge rank={user.rank} />
-            <MemberRoleBadge name={profileName || user.name} role={authUser?.accessRole} leaderLabel={leaderLabel} />
+            <MemberRoleBadge name={displayedProfileName} role={authUser?.accessRole} leaderLabel={leaderLabel} />
           </View>
 
           {achievementBadges.length > 0 ? (

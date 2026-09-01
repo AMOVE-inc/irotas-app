@@ -2,6 +2,7 @@ import { ScreenContainer } from "@/components/screen-container";
 import { useColors } from "@/hooks/use-colors";
 import * as Auth from "@/lib/_core/auth";
 import * as Api from "@/lib/_core/api";
+import { refreshClubs } from "@/lib/club-store";
 import { logger } from "@/lib/_core/logger";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
@@ -86,7 +87,7 @@ export default function LoginScreen() {
         }
         // Cache user info
         if (result.user) {
-          await Auth.setUserInfo({
+          const authenticatedUser: Auth.User = {
             id: result.user.id,
             openId: result.user.openId,
             name: result.user.name,
@@ -100,28 +101,25 @@ export default function LoginScreen() {
               result.user.branches,
               result.user.branch,
             ),
-          });
+            memberId: result.user.memberId,
+            memberTerm: result.user.memberTerm,
+            memberRank: result.user.memberRank,
+            joinedAt: result.user.joinedAt,
+            achievementBadges: result.user.achievementBadges,
+            profile: result.user.profile,
+            xp: result.user.xp,
+            participationCount: result.user.participationCount,
+            organizerCount: result.user.organizerCount,
+          };
+          await Auth.setUserInfo(authenticatedUser);
+          // Populate the screen from the complete login response before routing.
+          // Previously this contained only the account name, so avatars and leader
+          // badges appeared only after the background session refresh completed.
+          setUser(authenticatedUser);
         }
-        // Update auth context and navigate
-        if (result.user) {
-          setUser({
-            id: result.user.id,
-            openId: result.user.openId,
-            name: result.user.name,
-            email: result.user.email,
-            loginMethod: result.user.loginMethod,
-            lastSignedIn: new Date(result.user.lastSignedIn),
-            role: Auth.normalizeUserRole(result.user.role),
-            accessRole: Auth.normalizeAccessRole(result.user.accessRole),
-            branch: Auth.normalizeBranchRole(result.user.branch),
-            branches: Auth.normalizeBranchRoles(
-              result.user.branches,
-              result.user.branch,
-            ),
-          });
-        } else {
-          await refresh();
-        }
+        // Finish the authoritative session and club-role fetch before showing the
+        // first member screen, preventing a delayed avatar/club-leader badge.
+        await Promise.all([refresh(), refreshClubs()]);
         router.replace("/(tabs)");
       }
     } catch (err: any) {

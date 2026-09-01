@@ -3,7 +3,7 @@ import type { SitesEnv } from "./platform-types";
 
 const ENDPOINT = "/api/admin/discord-profile-import/commit";
 type Rank = "regular" | "silver" | "gold" | "platinum";
-type ImportRow = { discordUserId: string; displayName: string; avatarUrl: string; bio: string; discordJoinedAt: string | null; discordRoles: string[]; memberTerm: string | null; memberRank: Rank };
+type ImportRow = { discordUserId: string; displayName: string; avatarUrl: string; bio: string; hasProfileBio: boolean; discordJoinedAt: string | null; discordRoles: string[]; memberTerm: string | null; memberRank: Rank };
 const json = (body: unknown, status = 200) => Response.json(body, { status, headers: { "cache-control": "no-store" } });
 
 export function validateDiscordProfileImport(body: unknown): ImportRow[] {
@@ -29,6 +29,7 @@ export function validateDiscordProfileImport(body: unknown): ImportRow[] {
       displayName: typeof row.displayName === "string" ? row.displayName.trim().slice(0, 120) : "",
       avatarUrl,
       bio: typeof row.bio === "string" ? row.bio.trim().slice(0, 4000) : "",
+      hasProfileBio: row.hasProfileBio === true,
       discordJoinedAt,
       discordRoles: Array.isArray(row.discordRoles) ? row.discordRoles.filter((item): item is string => typeof item === "string").map((item) => item.slice(0, 120)).slice(0, 150) : [],
       memberTerm: /^第?\d+期$/.test(rawTerm) ? rawTerm.replace(/^(?!第)/, "第") : null,
@@ -54,9 +55,9 @@ export async function handleDiscordProfileImportRequest(request: Request, env: S
       display_name = CASE WHEN ? != '' THEN ? ELSE display_name END,
       member_term = COALESCE(?, member_term), member_rank = ?, discord_roles_json = ?, discord_joined_at = COALESCE(?, discord_joined_at),
       profile_json = json_set(CASE WHEN json_valid(profile_json) THEN profile_json ELSE '{}' END,
-        '$.bio', CASE WHEN ? != '' THEN ? ELSE COALESCE(json_extract(CASE WHEN json_valid(profile_json) THEN profile_json ELSE '{}' END, '$.bio'), '') END,
+        '$.bio', CASE WHEN ? THEN ? ELSE COALESCE(json_extract(CASE WHEN json_valid(profile_json) THEN profile_json ELSE '{}' END, '$.bio'), '') END,
         '$.avatarUrl', CASE WHEN ? != '' THEN ? ELSE COALESCE(json_extract(CASE WHEN json_valid(profile_json) THEN profile_json ELSE '{}' END, '$.avatarUrl'), '') END),
-      updated_at = ? WHERE id = ?`).bind(row.displayName, row.displayName, row.memberTerm, row.memberRank, JSON.stringify(row.discordRoles), row.discordJoinedAt, row.bio, row.bio, row.avatarUrl, row.avatarUrl, now, ids.get(row.discordUserId)));
+      updated_at = ? WHERE id = ?`).bind(row.displayName, row.displayName, row.memberTerm, row.memberRank, JSON.stringify(row.discordRoles), row.discordJoinedAt, row.hasProfileBio ? 1 : 0, row.bio, row.avatarUrl, row.avatarUrl, now, ids.get(row.discordUserId)));
     for (let index = 0; index < statements.length; index += 50) {
       await env.DB.batch(statements.slice(index, index + 50));
     }

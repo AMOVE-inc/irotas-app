@@ -2,6 +2,7 @@ import { ScreenContainer } from "@/components/screen-container";
 import { useColors } from "@/hooks/use-colors";
 import * as Auth from "@/lib/_core/auth";
 import * as Api from "@/lib/_core/api";
+import { refreshClubs } from "@/lib/club-store";
 import { logger } from "@/lib/_core/logger";
 import { useRouter } from "expo-router";
 import { useState } from "react";
@@ -72,7 +73,7 @@ export default function RegisterScreen() {
         }
         // Cache user info
         if (result.user) {
-          await Auth.setUserInfo({
+          const authenticatedUser: Auth.User = {
             id: result.user.id,
             openId: result.user.openId,
             name: result.user.name,
@@ -86,28 +87,20 @@ export default function RegisterScreen() {
               result.user.branches,
               result.user.branch,
             ),
-          });
+            memberId: result.user.memberId,
+            memberTerm: result.user.memberTerm,
+            memberRank: result.user.memberRank,
+            joinedAt: result.user.joinedAt,
+            achievementBadges: result.user.achievementBadges,
+            profile: result.user.profile,
+            xp: result.user.xp,
+            participationCount: result.user.participationCount,
+            organizerCount: result.user.organizerCount,
+          };
+          await Auth.setUserInfo(authenticatedUser);
+          setUser(authenticatedUser);
         }
-        // Update auth context and navigate
-        if (result.user) {
-          setUser({
-            id: result.user.id,
-            openId: result.user.openId,
-            name: result.user.name,
-            email: result.user.email,
-            loginMethod: result.user.loginMethod,
-            lastSignedIn: new Date(result.user.lastSignedIn),
-            role: Auth.normalizeUserRole(result.user.role),
-            accessRole: Auth.normalizeAccessRole(result.user.accessRole),
-            branch: Auth.normalizeBranchRole(result.user.branch),
-            branches: Auth.normalizeBranchRoles(
-              result.user.branches,
-              result.user.branch,
-            ),
-          });
-        } else {
-          await refresh();
-        }
+        await Promise.all([refresh(), refreshClubs()]);
         router.replace("/(tabs)");
       }
     } catch (err: any) {
