@@ -918,9 +918,6 @@ export default function ProfileScreen() {
           <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", flexWrap: "wrap", marginTop: 4 }}>
             <MemberRankBadge rank={user.rank} />
             <MemberRoleBadge name={profileName || user.name} role={authUser?.accessRole} leaderLabel={leaderLabel} />
-            {!userIsAdmin ? <Text style={{ fontSize: 14, color: colors.muted, marginLeft: 8 }}>
-              {branchLabel}
-            </Text> : null}
           </View>
 
           {achievementBadges.length > 0 ? (
@@ -936,16 +933,19 @@ export default function ProfileScreen() {
 
           {/* Generation and join info */}
           {!userIsAdmin ? <View style={{ flexDirection: "row", alignItems: "center", marginTop: 8, gap: 12 }}>
+            <Text style={{ fontSize: 13, color: colors.muted }}>{branchLabel}</Text>
             <View style={{ flexDirection: "row", alignItems: "center" }}>
               <IconSymbol name="person.fill" size={14} color={colors.muted} />
               <Text style={{ fontSize: 13, color: colors.muted, marginLeft: 4 }}>
                 {user.generation > 0 ? `${user.generation}期生` : "期設定なし"}
               </Text>
             </View>
+          </View> : null}
+          {!userIsAdmin && user.joinedAt ? <View style={{ flexDirection: "row", alignItems: "center", marginTop: 6 }}>
             <View style={{ flexDirection: "row", alignItems: "center" }}>
               <IconSymbol name="calendar" size={14} color={colors.muted} />
               <Text style={{ fontSize: 13, color: colors.muted, marginLeft: 4 }}>
-                {user.joinedAt ? `${new Date(user.joinedAt).getFullYear()}年${new Date(user.joinedAt).getMonth() + 1}月入会` : ""}
+                {`${new Date(user.joinedAt).getFullYear()}年${new Date(user.joinedAt).getMonth() + 1}月入会`}
               </Text>
             </View>
           </View> : null}

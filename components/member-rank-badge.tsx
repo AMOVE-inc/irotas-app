@@ -45,15 +45,16 @@ export function MemberRoleBadge({ name, role, compact = false, leaderLabel }: { 
   const operator = /IRO[+＋]運営|【運営(?:メンバー)?】|運営メンバー/.test(normalized) || role === "operator";
   const leader = leaderLabel ?? clubLeaderBadge(normalized)?.label;
   const paddingHorizontal = compact ? 6 : 9;
-  const paddingVertical = compact ? 2 : 3;
   const fontSize = compact ? 8 : 11;
-  if (admin || operator) return <View style={{ marginLeft: 5, borderRadius: 8, paddingHorizontal, paddingVertical, backgroundColor: "#D93636" }}><Text style={{ fontSize, fontWeight: "900", color: "#FFF" }}>{admin ? "管理者" : "運営メンバー"}</Text></View>;
-  if (leader) return <View style={{ marginLeft: 5, borderRadius: 8, paddingHorizontal, paddingVertical, backgroundColor: "#FFF", borderWidth: 1, borderColor: "#D93636" }}><Text style={{ fontSize, fontWeight: "900", color: "#D93636" }}>{leader}</Text></View>;
+  const badgeHeight = compact ? 19 : 24;
+  if (admin || operator) return <View style={{ marginLeft: 5, borderRadius: 8, paddingHorizontal, height: badgeHeight, justifyContent: "center", backgroundColor: "#D93636" }}><Text style={{ fontSize, fontWeight: "900", color: "#FFF" }}>{admin ? "管理者" : "運営メンバー"}</Text></View>;
+  if (leader) return <View style={{ marginLeft: 5, borderRadius: 8, paddingHorizontal, height: badgeHeight, justifyContent: "center", backgroundColor: "#FFF", borderWidth: 1, borderColor: "#D93636" }}><Text style={{ fontSize, fontWeight: "900", color: "#D93636" }}>{leader}</Text></View>;
   return null;
 }
 
 export function MemberRankBadge({ rank, compact = false }: { rank: MemberRank; compact?: boolean; name?: string }) {
   const platinum = rank === "platinum";
   const color = platinum ? "#D4AF37" : RANK_COLORS[rank];
-  return <View style={{ marginLeft: 5, borderRadius: 8, paddingHorizontal: compact ? 5 : 8, paddingVertical: compact ? 2 : 3, backgroundColor: platinum ? "#171717" : `${color}20`, borderWidth: 1, borderColor: color }}><Text style={{ fontSize: compact ? 8 : 11, fontWeight: "900", color }}>{RANK_LABELS[rank]}会員</Text></View>;
+  const badgeHeight = compact ? 19 : 24;
+  return <View style={{ marginLeft: 5, borderRadius: 8, paddingHorizontal: compact ? 5 : 8, height: badgeHeight, justifyContent: "center", backgroundColor: platinum ? "#171717" : `${color}20`, borderWidth: 1, borderColor: color }}><Text style={{ fontSize: compact ? 8 : 11, fontWeight: "900", color }}>{RANK_LABELS[rank]}会員</Text></View>;
 }

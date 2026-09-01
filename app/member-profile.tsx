@@ -263,18 +263,18 @@ export default function MemberProfileScreen() {
           <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", flexWrap: "wrap", marginTop: 6 }}>
             <MemberRankBadge rank={member.rank} />
             <MemberRoleBadge name={selfName ?? member.name} role={databaseMember?.accessRole ?? member.role} leaderLabel={leaderLabel} />
-            {member.role !== "admin" ? <Text style={{ fontSize: 14, color: colors.muted }}>
-              {member.branch === "kanto" ? "関東支部" : "関西支部"}
-            </Text> : null}
           </View>
 
           {member.role !== "admin" ? <View style={{ flexDirection: "row", alignItems: "center", marginTop: 8, gap: 12 }}>
+            <Text style={{ fontSize: 13, color: colors.muted }}>{member.branch === "kanto" ? "関東支部" : "関西支部"}</Text>
             <View style={{ flexDirection: "row", alignItems: "center" }}>
               <IconSymbol name="person.fill" size={14} color={colors.muted} />
               <Text style={{ fontSize: 13, color: colors.muted, marginLeft: 4 }}>
                 {member.generation > 0 ? `${member.generation}期生` : "期設定なし"}
               </Text>
             </View>
+          </View> : null}
+          {member.role !== "admin" && member.joinedAt ? <View style={{ flexDirection: "row", alignItems: "center", marginTop: 6 }}>
             <View style={{ flexDirection: "row", alignItems: "center" }}>
               <IconSymbol name="calendar" size={14} color={colors.muted} />
               <Text style={{ fontSize: 13, color: colors.muted, marginLeft: 4 }}>
