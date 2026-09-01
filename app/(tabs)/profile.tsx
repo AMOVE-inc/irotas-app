@@ -1,6 +1,6 @@
 import { ScreenContainer } from "@/components/screen-container";
 import { NewMemberMark } from "@/components/new-member-mark";
-import { MemberRankBadge, stripRankFromName } from "@/components/member-rank-badge";
+import { MemberRankBadge, MemberRoleBadge, clubLeaderBadgeForClub, stripRankFromName } from "@/components/member-rank-badge";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import {
   CURRENT_USER,
@@ -806,7 +806,6 @@ export default function ProfileScreen() {
   // DBから取得したroleで管理者判定（モックデータのCURRENT_USERではなく実際のログインユーザーを使用）
   const userIsAdmin = isAdminRole(authUser?.role, authUser?.accessRole);
   const userIsOperator = isOperatorRole(authUser?.role, authUser?.accessRole);
-  const accessRoleLabel = userIsAdmin ? "管理者" : authUser?.accessRole === "operator" ? "運営メンバー" : authUser?.accessRole === "club_leader" ? "部長" : null;
   const [myRooms, setMyRooms] = useState(() => getMyRooms(user.id));
   const [participatingEvents, setParticipatingEvents] = useState<Event[]>([]);
   const [avatarUri, setAvatarUri] = useState<string | null>(null);
@@ -880,6 +879,8 @@ export default function ProfileScreen() {
 
   const publishedAge = getPublishedAgeBand(profileDetails.birthDate, profileDetails.showAge);
   const joinedClubs = clubs.filter((club) => club.viewerIsLeader || club.viewerMembershipStatus === "approved" || (club.viewerMemberId ? club.memberIds.includes(club.viewerMemberId) : club.memberIds.includes(user.id)));
+  const leaderClub = joinedClubs.find((club) => club.viewerIsLeader);
+  const leaderLabel = leaderClub ? clubLeaderBadgeForClub(leaderClub.name) : null;
 
   return (
     <ScreenContainer>
@@ -912,43 +913,15 @@ export default function ProfileScreen() {
           </View>
           <View style={{ flexDirection: "row", alignItems: "center", marginTop: 12 }}>
             <Text style={{ fontSize: 22, fontWeight: "800", color: colors.foreground }}>{stripRankFromName(profileName)}</Text>
-            {!userIsOperator ? <MemberRankBadge rank={user.rank} name={user.name} /> : null}
             <NewMemberMark member={user} size={17} />
           </View>
-          <View style={{ flexDirection: "row", alignItems: "center", marginTop: 4 }}>
-            {userIsOperator ? (
-              <View style={{ backgroundColor: "#D93636", borderRadius: 12, paddingHorizontal: 12, paddingVertical: 4 }}>
-                <Text style={{ fontSize: 12, fontWeight: "900", color: "#FFF" }}>{userIsAdmin ? "管理者" : "運営メンバー"}</Text>
-              </View>
-            ) : <View
-              style={{
-                backgroundColor: RANK_COLORS[user.rank] + "20",
-                borderColor: RANK_COLORS[user.rank],
-                borderWidth: 1,
-                borderRadius: 12,
-                paddingHorizontal: 12,
-                paddingVertical: 3,
-              }}
-            >
-              <Text
-                style={{
-                  fontSize: 13,
-                  fontWeight: "700",
-                  color: RANK_COLORS[user.rank],
-                }}
-              >
-                {RANK_LABELS[user.rank]}会員
-              </Text>
-            </View>}
+          <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", flexWrap: "wrap", marginTop: 4 }}>
+            <MemberRankBadge rank={user.rank} />
+            <MemberRoleBadge name={profileName || user.name} role={authUser?.accessRole} leaderLabel={leaderLabel} />
             {!userIsAdmin ? <Text style={{ fontSize: 14, color: colors.muted, marginLeft: 8 }}>
               {branchLabel}
             </Text> : null}
           </View>
-          {accessRoleLabel && !userIsOperator ? (
-            <View style={{ marginTop: 7, borderRadius: 12, paddingHorizontal: 10, paddingVertical: 4, backgroundColor: userIsAdmin || authUser?.accessRole === "operator" ? "#FFE6E6" : "#EEF2FF" }}>
-              <Text style={{ fontSize: 11, fontWeight: "800", color: userIsAdmin || authUser?.accessRole === "operator" ? "#C83D4D" : "#4C5F9E" }}>{accessRoleLabel}</Text>
-            </View>
-          ) : null}
 
           {achievementBadges.length > 0 ? (
             <View style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "center", gap: 6, marginTop: 9, paddingHorizontal: 24 }}>

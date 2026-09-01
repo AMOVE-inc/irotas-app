@@ -1,6 +1,6 @@
 import { ScreenContainer } from "@/components/screen-container";
 import { NewMemberMark } from "@/components/new-member-mark";
-import { stripRankFromName } from "@/components/member-rank-badge";
+import { MemberRankBadge, MemberRoleBadge, clubLeaderBadgeForClub, stripRankFromName } from "@/components/member-rank-badge";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import {
   RANK_COLORS,
@@ -165,6 +165,8 @@ export default function MemberProfileScreen() {
   }
 
   const memberClubs = clubs.filter((club) => club.memberIds.includes(member.id));
+  const ledClub = clubs.find((club) => club.leaderId === member.id);
+  const leaderLabel = ledClub ? clubLeaderBadgeForClub(ledClub.name) : null;
   const rankColor = RANK_COLORS[member.rank];
   const elevatedRoleLabel = member.role === "admin" ? "管理者" : member.role === "operator" ? "運営メンバー" : null;
   const isSelf = databaseMember ? databaseMember.userId === authUser?.id : member.id === CURRENT_USER.id;
@@ -258,25 +260,9 @@ export default function MemberProfileScreen() {
             <NewMemberMark member={member} size={18} />
           </View>
 
-          <View style={{ flexDirection: "row", alignItems: "center", marginTop: 6, gap: 8 }}>
-            {elevatedRoleLabel ? (
-              <View style={{ backgroundColor: "#D93636", borderRadius: 12, paddingHorizontal: 12, paddingVertical: 4 }}>
-                <Text style={{ fontSize: 12, fontWeight: "900", color: "#FFF" }}>{elevatedRoleLabel}</Text>
-              </View>
-            ) : <View
-              style={{
-                backgroundColor: rankColor + "20",
-                borderColor: rankColor,
-                borderWidth: 1,
-                borderRadius: 12,
-                paddingHorizontal: 12,
-                paddingVertical: 3,
-              }}
-            >
-              <Text style={{ fontSize: 13, fontWeight: "700", color: rankColor }}>
-                {RANK_LABELS[member.rank]}会員
-              </Text>
-            </View>}
+          <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", flexWrap: "wrap", marginTop: 6 }}>
+            <MemberRankBadge rank={member.rank} />
+            <MemberRoleBadge name={selfName ?? member.name} role={databaseMember?.accessRole ?? member.role} leaderLabel={leaderLabel} />
             {member.role !== "admin" ? <Text style={{ fontSize: 14, color: colors.muted }}>
               {member.branch === "kanto" ? "関東支部" : "関西支部"}
             </Text> : null}

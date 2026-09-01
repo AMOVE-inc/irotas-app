@@ -456,6 +456,7 @@ function refreshClubLeaders(db: D1Database, now: string) {
         WHEN 'club-theater' THEN '1458772421887656090'
         WHEN 'club-running' THEN '1228678386902372374'
         WHEN 'club-sports' THEN '1403348999557222473'
+        WHEN 'club-meat' THEN '1530052808651309169'
       END
     ), updated_at = ?
     WHERE status = 'active' AND EXISTS (
@@ -472,6 +473,7 @@ function refreshClubLeaders(db: D1Database, now: string) {
         WHEN 'club-theater' THEN '1458772421887656090'
         WHEN 'club-running' THEN '1228678386902372374'
         WHEN 'club-sports' THEN '1403348999557222473'
+        WHEN 'club-meat' THEN '1530052808651309169'
       END
     )`).bind(now);
 }
