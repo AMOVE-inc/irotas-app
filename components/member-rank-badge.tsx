@@ -29,6 +29,29 @@ export function clubLeaderBadgeForClub(clubName: string) {
     ?? `${clubName}長`;
 }
 
+/** Return every club-leader label represented by imported Discord roles. */
+export function clubLeaderBadgesForRoles(roles?: readonly string[] | null) {
+  if (!roles?.length) return [];
+  return CLUB_LEADER_BADGES
+    .filter(({ term }) => roles.some((role) => role.includes(term)))
+    .map(({ label }) => label);
+}
+
+export function MemberClubLeaderBadges({ roles, compact = false }: { roles?: readonly string[] | null; compact?: boolean }) {
+  const labels = clubLeaderBadgesForRoles(roles);
+  if (!labels.length) return null;
+  const paddingHorizontal = compact ? 6 : 9;
+  const fontSize = compact ? 8 : 11;
+  const badgeHeight = compact ? 19 : 24;
+  return <>
+    {labels.map((label) => (
+      <View key={label} style={{ marginLeft: 5, borderRadius: 8, paddingHorizontal, height: badgeHeight, justifyContent: "center", backgroundColor: "#FFF", borderWidth: 1, borderColor: "#D93636" }}>
+        <Text style={{ fontSize, fontWeight: "900", color: "#D93636" }}>{label}</Text>
+      </View>
+    ))}
+  </>;
+}
+
 export function stripRankFromName(name: string) {
   let normalized = name
     .replace(/\s*[【[(（]\s*(?:🥈|🥇|💎)?\s*(?:SILVER|GOLD|PLATINUM|シルバー|ゴールド|プラチナ)(?:会員)?\s*[】\])）]/gi, "")

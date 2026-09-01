@@ -53,8 +53,13 @@ function memberTerm(planName = "") {
 }
 
 function memberRank(roleNames) {
-  const rank = roleNames.find((name) => /プラチナ|ゴールド|シルバー|レギュラー/i.test(name));
-  return rank?.replace(/会員/g, "").trim() ?? "レギュラー";
+  // The CSV importer accepts canonical English values only.  Returning the
+  // whole Discord role (which includes a role ID/emoji) made every imported
+  // member fall back to regular, even when they had a Gold/Platinum role.
+  if (roleNames.some((name) => /プラチナ|platinum|💎/i.test(name))) return "platinum";
+  if (roleNames.some((name) => /ゴールド|gold|🥇/i.test(name))) return "gold";
+  if (roleNames.some((name) => /シルバー|silver|🥈/i.test(name))) return "silver";
+  return "regular";
 }
 
 async function load(path) {

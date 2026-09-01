@@ -1,4 +1,4 @@
-import { authenticatedRequestMember } from "./auth";
+import { authenticatedRequestMember, effectiveMemberRank } from "./auth";
 import type { D1Database, SitesEnv } from "./platform-types";
 
 const DIRECTORY_ENDPOINT = "/api/members";
@@ -74,6 +74,7 @@ type MemberDirectoryRow = {
   branches_json: string;
   member_term: string | null;
   member_rank: string;
+  discord_roles_json?: string | null;
   achievement_badges_json: string;
   discord_joined_at: string | null;
   profile_json: string;
@@ -116,7 +117,8 @@ export function publicMemberFromRow(row: MemberDirectoryRow, relationship: { isF
     accessRole: row.access_role,
     branches: jsonArray(row.branches_json),
     memberTerm: row.member_term,
-    memberRank: row.member_rank,
+    memberRank: effectiveMemberRank(row.member_rank, row.discord_roles_json),
+    discordRoles: jsonArray(row.discord_roles_json ?? "[]"),
     achievementBadges: jsonArray(row.achievement_badges_json),
     joinedAt:
       row.subscription_started_at ?? row.discord_joined_at ?? row.created_at,
@@ -141,7 +143,7 @@ function responseJson(body: unknown, status = 200) {
 
 const publicMemberSelect = `
   SELECT m.id, m.public_member_id, m.display_name, m.access_role, m.branches_json,
-         m.member_term, m.member_rank, m.achievement_badges_json,
+         m.member_term, m.member_rank, m.discord_roles_json, m.achievement_badges_json,
          m.discord_joined_at, m.profile_json, m.xp, m.participation_count,
          m.organizer_count, m.created_at, s.subscription_started_at,
          (SELECT COUNT(*) FROM member_follows mf WHERE mf.followed_member_id = m.id) AS follower_count,

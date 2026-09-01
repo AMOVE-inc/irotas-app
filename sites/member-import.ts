@@ -250,11 +250,28 @@ function pipeSeparatedJson(value: unknown) {
   );
 }
 
-function memberRank(value: unknown): ValidatedMemberImport["memberRank"] {
-  const normalized = String(value ?? "").toLowerCase();
-  if (["silver", "gold", "platinum"].includes(normalized))
-    return normalized as ValidatedMemberImport["memberRank"];
+function rankScore(rank: ValidatedMemberImport["memberRank"]) {
+  return { regular: 0, silver: 1, gold: 2, platinum: 3 }[rank];
+}
+
+function rankFromText(value: unknown): ValidatedMemberImport["memberRank"] {
+  const normalized = String(value ?? "").normalize("NFKC").toLowerCase();
+  if (/platinum|プラチナ|💎/.test(normalized)) return "platinum";
+  if (/gold|ゴールド|🥇/.test(normalized)) return "gold";
+  if (/silver|シルバー|🥈/.test(normalized)) return "silver";
   return "regular";
+}
+
+function memberRank(
+  value: unknown,
+  discordRoles: unknown,
+): ValidatedMemberImport["memberRank"] {
+  // The membership export may contain an old normalized rank while Discord has
+  // the current MEE6 rank role. Retain the higher of the two so a stale CSV
+  // never turns an existing Gold/Platinum member back into Regular.
+  const csvRank = rankFromText(value);
+  const discordRank = rankFromText(discordRoles);
+  return rankScore(discordRank) > rankScore(csvRank) ? discordRank : csvRank;
 }
 
 export function validateMemberImportRequest(body: ImportBody): {
@@ -333,7 +350,7 @@ export function validateMemberImportRequest(body: ImportBody): {
       subscriptionStartedAt: dateOnly(row.subscription_created_at),
       branchesJson: branches(row.discord_roles),
       memberTerm: optionalText(row.member_term, 32),
-      memberRank: memberRank(row.member_rank),
+      memberRank: memberRank(row.member_rank, row.discord_roles),
       discordRolesJson: pipeSeparatedJson(row.discord_roles),
       achievementBadgesJson: pipeSeparatedJson(row.achievement_badges),
       discordJoinedAt: dateOnly(row.discord_joined_at),

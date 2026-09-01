@@ -29,11 +29,14 @@ export function memberFromAuthUser(user: AuthUser | null | undefined): Member {
   const xp = Math.max(0, user.xp ?? 0);
   const generationMatch = user.memberTerm?.match(/\d+/);
   const fallbackName = user.email?.split("@")[0] || "未設定";
+  const avatarUrl = typeof profile.avatarUrl === "string" ? profile.avatarUrl.trim() : "";
 
   return {
     id: user.memberId || `auth-${user.id}`,
     name: user.name?.trim() || fallbackName,
-    avatar: DEFAULT_AVATAR,
+    // Keep the already-imported Discord/profile image during the first
+    // authenticated render instead of waiting for a later directory refresh.
+    avatar: avatarUrl ? { uri: avatarUrl } : DEFAULT_AVATAR,
     rank,
     points: xp,
     level: levelFromXp(xp),

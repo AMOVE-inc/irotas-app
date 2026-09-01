@@ -41,6 +41,7 @@ export type PublicMember = {
   branches: string[];
   memberTerm: string | null;
   memberRank: string;
+  discordRoles: string[];
   achievementBadges: string[];
   joinedAt: string;
   profile: Record<string, unknown>;

@@ -1,7 +1,8 @@
 import { ScreenContainer } from "@/components/screen-container";
 import { NewMemberMark } from "@/components/new-member-mark";
+import { MemberClubLeaderBadges, MemberRankBadge, MemberRoleBadge, stripRankFromName } from "@/components/member-rank-badge";
 import { IconSymbol } from "@/components/ui/icon-symbol";
-import { MEMBERS, CURRENT_USER, DEFAULT_AVATAR, RANK_COLORS, RANK_LABELS, type MemberRank } from "@/constants/mock-data";
+import { MEMBERS, CURRENT_USER, DEFAULT_AVATAR, RANK_COLORS, type MemberRank } from "@/constants/mock-data";
 import { useColors } from "@/hooks/use-colors";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
@@ -38,16 +39,18 @@ export default function MembersScreen() {
 
   const searchableMembers = useMemo(() => directory !== null ? directory.map((member) => ({
     id: member.id,
-    name: member.displayName,
+    name: stripRankFromName(member.displayName),
+    rawName: member.displayName,
     rank: normalizeRank(member.memberRank),
     accessRole: member.accessRole,
+    discordRoles: member.discordRoles,
     generation: Number(member.memberTerm?.match(/\d+/)?.[0] ?? 0),
     avatar: typeof member.profile.avatarUrl === "string" ? { uri: member.profile.avatarUrl } : DEFAULT_AVATAR,
     bio: typeof member.profile.bio === "string" ? member.profile.bio : "",
     joinedAt: member.joinedAt,
     isCurrentUser: member.userId === authUser?.id,
     isDatabaseMember: true,
-  })) : MEMBERS.map((member) => ({ ...member, accessRole: member.role, isCurrentUser: member.id === CURRENT_USER.id, isDatabaseMember: false })), [authUser?.id, directory]);
+  })) : MEMBERS.map((member) => ({ ...member, name: stripRankFromName(member.name), rawName: member.name, accessRole: member.role, discordRoles: [], isCurrentUser: member.id === CURRENT_USER.id, isDatabaseMember: false })), [authUser?.id, directory]);
 
   const filteredMembers = useMemo(() => {
     return searchableMembers.filter((member) => matchesAllSearchWords(searchText, [member.name, member.id]));
@@ -166,18 +169,9 @@ export default function MembersScreen() {
                       <Text style={{ fontSize: 10, fontWeight: "700", color: "#E8A0BF" }}>自分</Text>
                     </View>
                   )}
-                  <View
-                    style={{
-                      backgroundColor: elevatedRoleLabel ? "#D93636" : rankColor + "20",
-                      borderRadius: 8,
-                      paddingHorizontal: 6,
-                      paddingVertical: 1,
-                    }}
-                  >
-                    <Text style={{ fontSize: 10, fontWeight: elevatedRoleLabel ? "900" : "700", color: elevatedRoleLabel ? "#FFF" : rankColor }}>
-                      {elevatedRoleLabel ?? RANK_LABELS[item.rank]}
-                    </Text>
-                  </View>
+                  <MemberRankBadge rank={item.rank} compact />
+                  <MemberRoleBadge name={item.accessRole === "club_leader" ? "" : item.rawName} role={item.accessRole} compact />
+                  <MemberClubLeaderBadges roles={item.discordRoles} compact />
                 </View>
                 <Text style={{ fontSize: 12, color: colors.muted, marginTop: 2 }}>
                   ID: {item.id}{item.generation > 0 ? ` · ${item.generation}期生` : ""}

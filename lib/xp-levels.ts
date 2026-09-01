@@ -30,6 +30,20 @@ export function rankFromXp(xp: number): MemberRank {
   return rankFromLevel(levelFromXp(xp));
 }
 
+/**
+ * Temporary floor used while the one-time MEE6 cutover is pending.  A member
+ * who already holds a membership rank must never appear as Lv.0 / 0 XP just
+ * because their MEE6 total has not been imported yet.
+ */
+export function minimumXpForRank(rank: MemberRank | string | null | undefined): number {
+  switch (rank) {
+    case "platinum": return totalXpForLevel(15);
+    case "gold": return totalXpForLevel(10);
+    case "silver": return totalXpForLevel(5);
+    default: return 0;
+  }
+}
+
 export function getNextLevelInfo(xp: number) {
   const normalizedXp = Math.max(0, Math.floor(xp));
   const currentLevel = levelFromXp(normalizedXp);
