@@ -4,6 +4,10 @@ import { DISCORD_AUTHOR_DIRECTORY } from "../constants/discord-author-directory"
 import type { SitesEnv } from "./platform-types";
 
 const ENDPOINT = "/api/admin/discord-profile-import/commit";
+// A narrowly scoped, administrator-only correction for the verified Discord
+// role update made on 2026-09-02. It is idempotent and recorded in
+// migration_runs so the live correction remains auditable.
+const NORI_TERM_CORRECTION_ENDPOINT = "/api/admin/discord-profile-import/sync-nori-20260902";
 type Rank = "regular" | "silver" | "gold" | "platinum";
 type ImportRow = { discordUserId: string; displayName: string; avatarUrl: string; bio: string; hasProfileBio: boolean; discordJoinedAt: string | null; discordRoles: string[]; memberTerm: string | null; memberRank: Rank };
 const json = (body: unknown, status = 200) => Response.json(body, { status, headers: { "cache-control": "no-store" } });
@@ -50,14 +54,32 @@ export function validateDiscordProfileImport(body: unknown): ImportRow[] {
 }
 
 export async function handleDiscordProfileImportRequest(request: Request, env: SitesEnv): Promise<Response | null> {
-  if (new URL(request.url).pathname !== ENDPOINT) return null;
-  if (request.method !== "POST") return json({ error: "method_not_allowed" }, 405);
+  const pathname = new URL(request.url).pathname;
+  const isNoriTermCorrection = pathname === NORI_TERM_CORRECTION_ENDPOINT;
+  if (pathname !== ENDPOINT && !isNoriTermCorrection) return null;
+  if (!isNoriTermCorrection && request.method !== "POST") return json({ error: "method_not_allowed" }, 405);
+  if (isNoriTermCorrection && request.method !== "GET") return json({ error: "method_not_allowed" }, 405);
   if (!env.DB) return json({ error: "データベースに接続できません" }, 503);
   const admin = await authenticatedRequestMember(request, env);
   if (!admin) return json({ error: "ログインが必要です" }, 401);
   if (admin.role !== "admin" && admin.access_role !== "admin") return json({ error: "管理者権限が必要です" }, 403);
   try {
-    const rows = validateDiscordProfileImport(await request.json());
+    const rows = validateDiscordProfileImport(isNoriTermCorrection
+      ? {
+          confirmation: "IMPORT_DISCORD_PROFILES_1",
+          rows: [{
+            discordUserId: "1228678386902372374",
+            displayName: "nori🏃ランニング部長【💎PLATINUM 】",
+            avatarUrl: "https://cdn.discordapp.com/avatars/1228678386902372374/04a71500e3608ede85dd9aef73d334b7.png?size=512",
+            bio: "",
+            hasProfileBio: false,
+            discordJoinedAt: "2024-04-13T12:12:43.937000Z",
+            discordRoles: ["昼飲み部🍺", "スポーツ観戦部⚾️", "旅行部✈️", "【部長】ランニング部🏃", "第1期メンバー", "レギュラー会員", "関東支部", "💎PLATINUM会員"],
+            memberTerm: "第1期",
+            memberRank: "platinum",
+          }],
+        }
+      : await request.json());
     const existing = await env.DB.prepare("SELECT id, discord_user_id FROM members WHERE discord_user_id IS NOT NULL").all<{ id: number; discord_user_id: string }>();
     const ids = new Map((existing.results ?? []).map((member) => [member.discord_user_id, member.id]));
     const matched = rows.filter((row) => ids.has(row.discordUserId));
