@@ -9,6 +9,7 @@ import type { D1Database, SitesEnv } from "./platform-types";
 const COMMIT_ENDPOINT = "/api/admin/member-import/commit";
 const READINESS_ENDPOINT = "/api/admin/member-import/readiness";
 const RECONCILIATION_ENDPOINT = "/api/admin/member-import/reconciliation";
+const RECONCILIATION_DETAILS_ENDPOINT = "/api/admin/member-import/reconciliation/details";
 const MAX_BATCH_SIZE = 25;
 const MAX_REQUEST_BYTES = 256 * 1024;
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -180,6 +181,26 @@ export async function getMemberReconciliationReport(db: D1Database) {
     duplicates: rest.slice(0, 5) as CountRow[],
     lastImport: rest[5] as Record<string, unknown> | null,
   });
+}
+
+/** Admin-only: identifies active accounts that still need Discord linking. */
+export async function getDiscordUnlinkedActiveMembers(db: D1Database) {
+  const result = await db.prepare(
+    `SELECT public_member_id, display_name, email
+       FROM members
+      WHERE account_status = 'active'
+        AND COALESCE(json_extract(profile_json, '$.isTestAccount'), 0) <> 1
+        AND (discord_user_id IS NULL OR TRIM(discord_user_id) = '')
+      ORDER BY LOWER(TRIM(display_name)), id`,
+  ).all<{ public_member_id: string | null; display_name: string | null; email: string }>();
+  return {
+    count: result.results?.length ?? 0,
+    members: (result.results ?? []).map((member) => ({
+      memberId: member.public_member_id,
+      name: member.display_name || "（名前未設定）",
+      email: member.email,
+    })),
+  };
 }
 
 export function memberImportConfiguration(env: SitesEnv) {
@@ -653,9 +674,9 @@ export async function handleMemberImportRequest(
   env: SitesEnv,
 ): Promise<Response | null> {
   const pathname = new URL(request.url).pathname;
-  if (![COMMIT_ENDPOINT, READINESS_ENDPOINT, RECONCILIATION_ENDPOINT].includes(pathname)) return null;
+  if (![COMMIT_ENDPOINT, READINESS_ENDPOINT, RECONCILIATION_ENDPOINT, RECONCILIATION_DETAILS_ENDPOINT].includes(pathname)) return null;
   if (
-    ([READINESS_ENDPOINT, RECONCILIATION_ENDPOINT].includes(pathname) && request.method !== "GET") ||
+    ([READINESS_ENDPOINT, RECONCILIATION_ENDPOINT, RECONCILIATION_DETAILS_ENDPOINT].includes(pathname) && request.method !== "GET") ||
     (pathname === COMMIT_ENDPOINT && request.method !== "POST")
   )
     return responseJson({ error: "method_not_allowed" }, 405);
@@ -671,6 +692,8 @@ export async function handleMemberImportRequest(
   if (pathname === READINESS_ENDPOINT) return responseJson({ configuration });
   if (pathname === RECONCILIATION_ENDPOINT)
     return responseJson(await getMemberReconciliationReport(env.DB));
+  if (pathname === RECONCILIATION_DETAILS_ENDPOINT)
+    return responseJson(await getDiscordUnlinkedActiveMembers(env.DB));
   if (!configuration.ready)
     return responseJson(
       { error: "メール認証とSquare連携の設定が完了していません" },

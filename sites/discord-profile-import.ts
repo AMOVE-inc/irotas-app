@@ -64,16 +64,18 @@ export async function handleDiscordProfileImportRequest(request: Request, env: S
     const now = new Date().toISOString();
     const statements = matched.map((row) => env.DB!.prepare(`UPDATE members SET
       display_name = CASE WHEN ? != '' THEN ? ELSE display_name END,
-      -- Square/member import is authoritative for the admission term. Discord
-      -- roles can change later and must only fill a genuinely missing term.
-      member_term = CASE WHEN COALESCE(member_term, '') = '' THEN ? ELSE member_term END,
+      -- A confirmed Discord term-role correction is authoritative.  We only
+      -- receive this endpoint from an administrator, and it lets a corrected
+      -- role (for example 第6期 -> 第1期) reach the app without changing
+      -- app-authored profile fields.
+      member_term = CASE WHEN ? IS NOT NULL AND ? <> '' THEN ? ELSE member_term END,
       member_rank = ?, discord_roles_json = ?, discord_joined_at = COALESCE(?, discord_joined_at),
       xp = CASE WHEN COALESCE(xp, 0) <= 0 THEN ? ELSE xp END,
       profile_json = json_set(CASE WHEN json_valid(profile_json) THEN profile_json ELSE '{}' END,
         '$.bio', CASE WHEN ? THEN ? ELSE COALESCE(json_extract(CASE WHEN json_valid(profile_json) THEN profile_json ELSE '{}' END, '$.bio'), '') END,
         -- An app-set avatar wins; Discord only fills gaps left by migration.
         '$.avatarUrl', CASE WHEN COALESCE(json_extract(CASE WHEN json_valid(profile_json) THEN profile_json ELSE '{}' END, '$.avatarUrl'), '') = '' AND ? != '' THEN ? ELSE COALESCE(json_extract(CASE WHEN json_valid(profile_json) THEN profile_json ELSE '{}' END, '$.avatarUrl'), '') END),
-      updated_at = ? WHERE id = ?`).bind(row.displayName, row.displayName, row.memberTerm, row.memberRank, JSON.stringify(row.discordRoles), row.discordJoinedAt, minimumXpForRank(row.memberRank), row.hasProfileBio ? 1 : 0, row.bio, row.avatarUrl, row.avatarUrl, now, ids.get(row.discordUserId)));
+      updated_at = ? WHERE id = ?`).bind(row.displayName, row.displayName, row.memberTerm, row.memberTerm, row.memberTerm, row.memberRank, JSON.stringify(row.discordRoles), row.discordJoinedAt, minimumXpForRank(row.memberRank), row.hasProfileBio ? 1 : 0, row.bio, row.avatarUrl, row.avatarUrl, now, ids.get(row.discordUserId)));
     for (let index = 0; index < statements.length; index += 50) {
       await env.DB.batch(statements.slice(index, index + 50));
     }
