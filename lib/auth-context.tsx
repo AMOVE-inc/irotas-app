@@ -76,7 +76,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         } else if (
           previewLoginEnabled &&
           ["localhost", "127.0.0.1"].includes(window.location.hostname) &&
-          ["/admin-dashboard", "/csv-import", "/campaign-manager", "/gift-campaign-manager"].some((path) =>
+          ["/admin-dashboard", "/coupon-manager", "/csv-import", "/campaign-manager", "/gift-campaign-manager"].some((path) =>
             window.location.pathname.startsWith(path),
           )
         ) {

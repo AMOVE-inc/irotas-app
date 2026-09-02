@@ -685,8 +685,13 @@ export async function handleMemberImportRequest(
 
   const member = await authenticatedRequestMember(request, env);
   if (!member) return responseJson({ error: "ログインが必要です" }, 401);
-  if (member.role !== "admin" && member.access_role !== "admin")
-    return responseJson({ error: "管理者権限が必要です" }, 403);
+  const canOperate =
+    member.role === "admin" ||
+    member.role === "operator" ||
+    member.access_role === "admin" ||
+    member.access_role === "operator";
+  if (!canOperate)
+    return responseJson({ error: "運営権限が必要です" }, 403);
 
   const configuration = memberImportConfiguration(env);
   if (pathname === READINESS_ENDPOINT) return responseJson({ configuration });

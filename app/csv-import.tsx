@@ -3,6 +3,7 @@ import { IconSymbol } from "@/components/ui/icon-symbol";
 import { useColors } from "@/hooks/use-colors";
 import { apiCall } from "@/lib/_core/api";
 import { useAuthContext } from "@/lib/auth-context";
+import { isOperatorRole } from "@/lib/access-control";
 import { trpc } from "@/lib/trpc";
 import { GOURMET_CONTEST_IMPORT_COLUMNS, parseGourmetContestImport, saveImportedGourmetContests } from "@/lib/gourmet-contest-import";
 import {
@@ -96,6 +97,7 @@ export default function CsvImportScreen() {
   const colors = useColors();
   const router = useRouter();
   const { user: authUser } = useAuthContext();
+  const userCanImport = isOperatorRole(authUser?.role, authUser?.accessRole);
   const [history, setHistory] = useState<ImportRecord[]>(IMPORT_HISTORY);
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
   const [memberSources, setMemberSources] = useState<Partial<Record<"subscriptions" | "discord" | "customers", { name: string; csv: string }>>>({});
@@ -117,7 +119,7 @@ export default function CsvImportScreen() {
   const importMutation = trpc.migration.importCsv.useMutation();
 
   useEffect(() => {
-    if (authUser?.role !== "admin") return;
+    if (!userCanImport) return;
     let active = true;
     setReadinessLoading(true);
     apiCall<{ configuration: ImportReadiness }>("/api/admin/member-import/readiness")
@@ -127,7 +129,7 @@ export default function CsvImportScreen() {
     return () => {
       active = false;
     };
-  }, [authUser?.role]);
+  }, [userCanImport]);
 
   useEffect(() => {
     if (!Object.keys(memberSources).length) return;
@@ -138,11 +140,11 @@ export default function CsvImportScreen() {
     return () => clearTimeout(timeout);
   }, [memberSources]);
 
-  if (authUser?.role !== "admin") {
+  if (!userCanImport) {
     return (
       <ScreenContainer className="p-6">
         <Text style={{ fontSize: 16, color: colors.muted, textAlign: "center", marginTop: 40 }}>
-          管理者のみアクセスできます
+          管理者または運営メンバーのみアクセスできます
         </Text>
       </ScreenContainer>
     );

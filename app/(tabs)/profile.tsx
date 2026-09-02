@@ -1209,33 +1209,19 @@ export default function ProfileScreen() {
                 color: "#FF9500",
                 onPress: () => router.push("/admin-dashboard" as any),
               },
-              { icon: "ticket.fill", label: "クーポン管理", color: "#FF9500", onPress: () => router.push({ pathname: "/admin-dashboard", params: { tab: "coupons" } }) },
-              {
-                icon: "megaphone.fill",
-                label: "キャンペーン管理",
-                color: "#FF9500",
-                onPress: () => router.push("/campaign-manager" as any),
-              },
-              {
-                icon: "gift.fill",
-                label: "プレゼント企画管理",
-                color: "#FF9500",
-                onPress: () => router.push("/gift-campaign-manager" as any),
-              },
-              {
-                icon: "square.and.arrow.down",
-                label: "CSV取り込み",
-                color: "#FF9500",
-                onPress: () => router.push("/csv-import" as any),
-              },
             ]}
           />
         )}
 
-        {userIsOperator && !userIsAdmin && (
+        {userIsOperator && (
           <MenuSection
             title="運営メニュー"
-            items={[{ icon: "megaphone.fill", label: "キャンペーン管理", color: "#FF9500", onPress: () => router.push("/campaign-manager" as any) }, { icon: "gift.fill", label: "プレゼント企画管理", color: "#FF9500", onPress: () => router.push("/gift-campaign-manager" as any) }]}
+            items={[
+              { icon: "ticket.fill", label: "クーポン管理", color: "#FF9500", onPress: () => router.push("/coupon-manager" as any) },
+              { icon: "megaphone.fill", label: "キャンペーン管理", color: "#FF9500", onPress: () => router.push("/campaign-manager" as any) },
+              { icon: "gift.fill", label: "プレゼント企画管理", color: "#FF9500", onPress: () => router.push("/gift-campaign-manager" as any) },
+              { icon: "square.and.arrow.down", label: "CSV取り込み", color: "#FF9500", onPress: () => router.push("/csv-import" as any) },
+            ]}
           />
         )}
 

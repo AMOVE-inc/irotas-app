@@ -2,11 +2,19 @@ export type UserRole = "user" | "operator" | "admin";
 export type AccessRole = "member" | "club_leader" | "operator" | "admin";
 export type BranchRole = "kanto" | "kansai";
 
-const ADMIN_ROUTE_NAMES = new Set([
-  "admin-dashboard",
+/** 集計・会員情報まで横断して扱うダッシュボードは管理者だけに限定する。 */
+const ADMIN_ROUTE_NAMES = new Set(["admin-dashboard"]);
+
+/**
+ * 日常運用の管理画面は、管理者と運営メンバーに個別に開放する。
+ * ダッシュボードを経由しなくても各画面へ安全にアクセスできるようにする。
+ */
+const OPERATOR_ROUTE_NAMES = new Set([
+  "coupon-manager",
+  "campaign-manager",
+  "gift-campaign-manager",
   "csv-import",
 ]);
-const OPERATOR_ROUTE_NAMES = new Set(["campaign-manager", "gift-campaign-manager"]);
 
 /** Unknown or missing role values must always fail closed. */
 export function normalizeUserRole(role: unknown): UserRole {

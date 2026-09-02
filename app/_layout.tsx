@@ -313,6 +313,10 @@ export default function RootLayout() {
                   options={{ presentation: "card" }}
                 />
                 <Stack.Screen
+                  name="coupon-manager"
+                  options={{ presentation: "card" }}
+                />
+                <Stack.Screen
                   name="gift-campaign"
                   options={{ presentation: "card" }}
                 />

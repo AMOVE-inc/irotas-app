@@ -214,7 +214,7 @@ export async function handleBenefitsRequest(request: Request, env: SitesEnv): Pr
   if (couponActionMatch) return request.method === 'POST' ? couponAction(env.DB, viewer, decodeURIComponent(couponActionMatch[1]), couponActionMatch[2]) : json({ error: 'method_not_allowed' }, 405);
   if (giftActionMatch) return request.method === 'POST' ? (giftActionMatch[2] === 'apply' ? applyGift(env.DB, viewer, decodeURIComponent(giftActionMatch[1])) : runLottery(env.DB, viewer, decodeURIComponent(giftActionMatch[1]))) : json({ error: 'method_not_allowed' }, 405);
   if (couponItemMatch) {
-    if (!admin(viewer)) return json({ error: "管理者権限が必要です" }, 403);
+    if (!elevated(viewer)) return json({ error: "運営権限が必要です" }, 403);
     const id = decodeURIComponent(couponItemMatch[1]);
     if (request.method === 'DELETE') { await env.DB.prepare("UPDATE coupons SET deleted_at = ?, updated_at = ? WHERE id = ?").bind(new Date().toISOString(), new Date().toISOString(), id).run(); return json({ success: true }); }
     if (!['PUT', 'PATCH'].includes(request.method)) return json({ error: 'method_not_allowed' }, 405);

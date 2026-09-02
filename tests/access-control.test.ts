@@ -53,7 +53,7 @@ describe("access control", () => {
     expect(normalizeBranchRoles(["kanto", "kanto"])).toEqual(["kanto"]);
   });
 
-  it.each(["admin-dashboard", "csv-import"])(
+  it.each(["admin-dashboard"])(
     "marks %s as an admin-only route",
     (route) => {
       expect(isAdminRoute(route)).toBe(true);
@@ -63,8 +63,11 @@ describe("access control", () => {
   it("allows campaign management through the operator route", () => {
     expect(isOperatorRoute("campaign-manager")).toBe(true);
     expect(isOperatorRoute("gift-campaign-manager")).toBe(true);
+    expect(isOperatorRoute("coupon-manager")).toBe(true);
+    expect(isOperatorRoute("csv-import")).toBe(true);
     expect(isOperatorRoute("admin-dashboard")).toBe(false);
     expect(isAdminRoute("campaign-manager")).toBe(false);
+    expect(isAdminRoute("csv-import")).toBe(false);
   });
 
   it("keeps member routes outside the admin-only set", () => {

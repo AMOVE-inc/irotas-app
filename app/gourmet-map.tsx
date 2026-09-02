@@ -6,7 +6,7 @@ import {
 } from "@/constants/mock-data";
 import { GOURMET_MAP_SEED } from "@/constants/gourmet-map-seed";
 import { useAuthContext } from "@/lib/auth-context";
-import { isAdminRole } from "@/lib/access-control";
+import { isOperatorRole } from "@/lib/access-control";
 import { mergeGourmetMapRestaurants, previewGourmetMapCsv, type GourmetMapImportPreview } from "@/lib/gourmet-map-csv";
 import { fetchGourmetMapFeed, mergeGourmetMapFeed } from "@/lib/gourmet-map-feed";
 import { setCommunityRestaurantPublished } from "@/lib/gourmet-map-community";
@@ -399,7 +399,7 @@ export default function GourmetMapScreen() {
   const [restaurants, setRestaurants] = useState<Restaurant[]>(SEEDED_RESTAURANTS);
   const [, setFeedUpdatedAt] = useState<string | null>(null);
   const { user: authUser } = useAuthContext();
-  const userIsAdmin = isAdminRole(authUser?.role, authUser?.accessRole);
+  const userCanImport = isOperatorRole(authUser?.role, authUser?.accessRole);
 
   useEffect(() => {
     if (Platform.OS !== "web") return;
@@ -454,7 +454,7 @@ export default function GourmetMapScreen() {
             グルメマップ
           </Text>
         </View>
-        {userIsAdmin && (
+        {userCanImport && (
           <Pressable
             onPress={() => setShowCSVImport(true)}
             style={{
@@ -626,7 +626,7 @@ export default function GourmetMapScreen() {
           <RestaurantDetail
             restaurant={selectedRestaurant}
             onClose={() => setSelectedRestaurant(null)}
-            canManage={userIsAdmin}
+            canManage={userCanImport}
             onOpenSource={() => {
               setSelectedRestaurant(null);
               router.push({ pathname: "/board", params: { category: "meal-report", view: "threads" } });
