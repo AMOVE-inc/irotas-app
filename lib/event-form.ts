@@ -41,6 +41,11 @@ export function numericEventAmount(value: string) {
   return Number(value.replace(/[^0-9]/g, ""));
 }
 
+/** 幹事・同席者・募集枠を収容するために必要な最小予約人数。 */
+export function minimumReservationCapacity(recruitCapacity: string, companionIds: readonly string[]) {
+  return 1 + companionIds.length + Number(recruitCapacity || 0);
+}
+
 function amountOption(value: number) {
   return value > 0 ? `${value.toLocaleString()}円` : "";
 }
@@ -81,15 +86,15 @@ export function eventFormValuesFromEvent(event: Event): EventFormValues {
   };
 }
 
-export function validateEventForm(values: EventFormValues, options: { requireImage: boolean; requireTerms?: boolean; termsAccepted?: boolean; allowedClubIds?: string[] }) {
+export function validateEventForm(values: EventFormValues, options: { requireImage: boolean; requireTerms?: boolean; termsAccepted?: boolean; allowedClubIds?: string[]; allowEmptyGenres?: boolean }) {
   const clubEvent = values.eventType === "club";
-  if ((!clubEvent && !values.restaurantName.trim()) || (clubEvent && (!values.eventName.trim() || !values.clubId)) || !values.date || !values.time || !values.reservationCapacity || !values.recruitCapacity || !values.budgetMin || (!values.fixedAmount && !values.budgetMax) || !values.decisionDate || !values.cancellationPolicy.trim() || (!clubEvent && values.genres.length === 0) || (options.requireImage && !values.image) || (options.requireTerms && !options.termsAccepted)) return "必須項目と規約同意を確認してください";
+  if ((!clubEvent && !values.restaurantName.trim()) || (clubEvent && (!values.eventName.trim() || !values.clubId)) || !values.date || !values.time || !values.reservationCapacity || !values.recruitCapacity || !values.budgetMin || (!values.fixedAmount && !values.budgetMax) || !values.decisionDate || !values.cancellationPolicy.trim() || (!clubEvent && !options.allowEmptyGenres && values.genres.length === 0) || (options.requireImage && !values.image) || (options.requireTerms && !options.termsAccepted)) return "必須項目と規約同意を確認してください";
   if (clubEvent && options.allowedClubIds && !options.allowedClubIds.includes(values.clubId)) return "所属している部活動のみイベントを作成・編集できます。";
   const extracted = extractEventLocation(values.address);
   if (values.address.trim() && !extracted.prefecture) return "住所を入力する場合は都道府県名を含めてください";
   if (values.decisionDate > values.date) return "参加者決定予定日は開催日以前を選択してください";
   if (!values.fixedAmount && numericEventAmount(values.budgetMin) > numericEventAmount(values.budgetMax)) return "下限金額は上限金額以下にしてください";
-  if (1 + values.companionIds.length + Number(values.recruitCapacity) > Number(values.reservationCapacity)) return "予約人数には、自分・同席者・募集人数の全員が収まるよう設定してください";
+  if (minimumReservationCapacity(values.recruitCapacity, values.companionIds) > Number(values.reservationCapacity)) return "予約人数には、自分・同席者・募集人数の全員が収まるよう設定してください";
   if ([values.tabelogUrl, values.googleMapsUrl].some((url) => url && !/^https?:\/\//i.test(url))) return "URLは http:// または https:// から入力してください";
   if (values.eventType === "official" && values.useRankPrices && EVENT_RANKS.some((rank) => !values.rankPrices[rank])) return "ランク別料金を設定する場合は、すべてのランクの料金を選択してください";
   return null;

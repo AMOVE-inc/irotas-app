@@ -581,7 +581,6 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
         return responseJson({ error: "変更内容が不正です" }, 400);
       if (eventType === "official" && !elevated) return responseJson({ error: "公式イベントは運営メンバーのみ設定できます" }, 403);
       if (eventType === "club" && (!clubId || !await canMemberAccessClub(env.DB, clubId, member.id, admin))) return responseJson({ error: "所属している部活動のみ設定できます" }, 403);
-      if (eventType !== "club" && genres !== undefined && genres.length === 0) return responseJson({ error: "グルメジャンルを1つ以上選択してください" }, 400);
       if (priceMin !== undefined && priceMax !== undefined && priceMin > priceMax) return responseJson({ error: "予算の範囲が不正です" }, 400);
       let data: Record<string, unknown> = {};
       try { data = JSON.parse(row.public_data_json) as Record<string, unknown>; } catch {}
