@@ -20,10 +20,13 @@ describe("shared board polls", () => {
     expect(board).toContain("canAccessBoardCategory");
   });
 
-  it("finalizes expired polls once and notifies voters", () => {
+  it("finalizes expired board polls and posts chat poll results idempotently", () => {
     expect(automation).toContain("finalizeExpiredBoardPolls");
     expect(automation).toContain("poll-result:${key}:${target}");
     expect(automation).toContain("status = 'delivered'");
+    expect(automation).toContain("finalizeExpiredChatPolls");
+    expect(automation).toContain("chat-poll-result:${row.id}");
+    expect(automation).toContain("【投票結果】");
   });
 
   it("uses shared polls in the UI with a local archive fallback", () => {

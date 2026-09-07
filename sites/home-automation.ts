@@ -135,6 +135,7 @@ export async function runEventAutomation(db: D1Database, now = new Date()) {
   for (const reminder of await pendingReminders(db, now)) if (await deliverReminder(db, reminder, now)) delivered += 1;
   delivered += await completePastEvents(db, now);
   delivered += await finalizeExpiredBoardPolls(db, now);
+  delivered += await finalizeExpiredChatPolls(db, now);
   return delivered;
 }
 
@@ -199,6 +200,46 @@ async function finalizeExpiredBoardPolls(db: D1Database, now: Date) {
       (id, target_member_id, type, title, body, created_at) VALUES (?, ?, 'poll_result', '投票結果が確定しました', ?, ?)`).bind(`poll-result:${key}:${target}`, target, `${poll.question}：${result}`, now.toISOString()).run();
     await db.prepare("UPDATE board_poll_finalizations SET status = 'delivered', result_json = ?, finalized_at = ? WHERE owner_type = ? AND owner_id = ?")
       .bind(JSON.stringify({ question: poll.question, result, counts }), now.toISOString(), owner.owner_type, owner.owner_id).run();
+    finalized += 1;
+  }
+  return finalized;
+}
+
+type ChatPollRow = { id: string; room_id: string; sender_member_id: number; content: string };
+
+function chatPollFromContent(content: string) {
+  if (!content.startsWith("📊 ")) return null;
+  const lines = content.split("\n");
+  const question = lines[0].replace(/^📊\s+\*\*?|\*\*?$/g, "").trim();
+  const options = lines.filter((line) => line.startsWith("◯ ")).map((line) => line.slice(2).trim()).filter(Boolean);
+  const deadline = lines.find((line) => line.startsWith("⏱ 期限:"))?.replace("⏱ 期限:", "").trim();
+  if (!question || options.length < 2 || !deadline || !/^\d{4}-\d{2}-\d{2}$/.test(deadline)) return null;
+  return { question, options, deadline };
+}
+
+/** Posts one deterministic result message, so every scheduled run remains idempotent. */
+async function finalizeExpiredChatPolls(db: D1Database, now: Date) {
+  const rows = await db.prepare(`SELECT id, room_id, sender_member_id, content FROM chat_messages
+    WHERE deleted_at IS NULL AND content LIKE '📊%' AND content LIKE '%⏱ 期限:%'`).all<ChatPollRow>();
+  let finalized = 0;
+  for (const row of rows.results ?? []) {
+    const poll = chatPollFromContent(row.content);
+    if (!poll || now.getTime() <= new Date(`${poll.deadline}T23:59:59+09:00`).getTime()) continue;
+    const resultId = `chat-poll-result:${row.id}`;
+    const existing = await db.prepare("SELECT id FROM chat_messages WHERE id = ? LIMIT 1").bind(resultId).first<{ id: string }>();
+    if (existing) continue;
+    const votes = await db.prepare("SELECT emoji, member_id FROM chat_message_reactions WHERE message_id = ?")
+      .bind(row.id).all<{ emoji: string; member_id: number }>();
+    const counts = Object.fromEntries(poll.options.map((option) => [option, (votes.results ?? []).filter((vote) => vote.emoji === `🗳️${option}`).length]));
+    const highest = Math.max(0, ...Object.values(counts));
+    const winners = highest ? poll.options.filter((option) => counts[option] === highest) : [];
+    const result = highest ? `${winners.join("・")}（${highest}票）` : "投票はありませんでした";
+    const timestamp = now.toISOString();
+    await db.batch([
+      db.prepare(`INSERT OR IGNORE INTO chat_messages (id, room_id, sender_member_id, content, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?)`).bind(resultId, row.room_id, row.sender_member_id, `【投票結果】${poll.question}\n${result}`, timestamp, timestamp),
+      db.prepare("UPDATE chat_rooms SET updated_at = ? WHERE id = ?").bind(timestamp, row.room_id),
+    ]);
     finalized += 1;
   }
   return finalized;

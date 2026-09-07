@@ -1,5 +1,5 @@
 import { ScreenContainer } from "@/components/screen-container";
-import { MemberRankBadge, MemberRoleBadge, stripRankFromName } from "@/components/member-rank-badge";
+import { MemberClubLeaderBadges, MemberRankBadge, MemberRoleBadge, stripRankFromName } from "@/components/member-rank-badge";
 import { NewMemberMark } from "@/components/new-member-mark";
 import { MentionSuggestions, MentionText } from "@/components/mention-ui";
 import { IconSymbol } from "@/components/ui/icon-symbol";
@@ -53,7 +53,7 @@ import * as Api from "@/lib/_core/api";
 const REACTION_EMOJIS = ["👍", "❤️", "😂", "🎉", "😋", "🙏"] as const;
 const MORE_REACTION_EMOJIS = ["😀", "😃", "😄", "😁", "😆", "😅", "😂", "🤣", "😊", "😇", "🙂", "🙃", "😉", "😍", "🥰", "😘", "😋", "😛", "🤪", "🤔", "🫡", "😎", "🥳", "😮", "😢", "😭", "😡", "👍", "👎", "👏", "🙌", "🙏", "💪", "👀", "❤️", "🩷", "🧡", "💛", "💚", "💙", "💜", "🖤", "🤍", "🔥", "✨", "🎉", "💯", "✅", "❌", "💡", "📌", "🍽️", "🍣", "🍖", "🍜", "🍕", "🍰", "☕", "🍺", "🍷"] as const;
 
-function MessageBubble({ message, isMe, viewerId, myAvatarUri, onReact, mentionGroups, onOpenInternalLink, onOpenProfile, canManage, onReply, onEdit, onDelete }: { message: ChatMessage; isMe: boolean; viewerId: string; myAvatarUri?: string | null; onReact: (emoji: string, pollChoices?: string[], allowMultiple?: boolean) => void; mentionGroups: ReturnType<typeof getMentionGroups>; onOpenInternalLink: (pathname: "/chat" | "/board", params: Record<string, string>) => void; onOpenProfile: () => void; canManage: boolean; onReply: () => void; onEdit: () => void; onDelete: () => void }) {
+function MessageBubble({ message, isMe, viewerId, myAvatarUri, senderMember, onReact, mentionGroups, onOpenInternalLink, onOpenProfile, canManage, onReply, onEdit, onDelete }: { message: ChatMessage; isMe: boolean; viewerId: string; myAvatarUri?: string | null; senderMember?: Api.PublicMember; onReact: (emoji: string, pollChoices?: string[], allowMultiple?: boolean) => void; mentionGroups: ReturnType<typeof getMentionGroups>; onOpenInternalLink: (pathname: "/chat" | "/board", params: Record<string, string>) => void; onOpenProfile: () => void; canManage: boolean; onReply: () => void; onEdit: () => void; onDelete: () => void }) {
   const colors = useColors();
   const sender = getMemberById(message.senderId);
   const [showReactionPicker, setShowReactionPicker] = useState(false);
@@ -98,8 +98,11 @@ function MessageBubble({ message, isMe, viewerId, myAvatarUri, onReact, mentionG
       <View style={{ maxWidth: "70%" }}>
         {!isMe && (sender || message.externalAuthorName) ? (
           <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 2, marginLeft: 2 }}>
-            <Text style={{ fontSize: 11, color: colors.muted }}>{message.externalAuthorName ?? sender?.name}</Text>
+            <Text style={{ fontSize: 11, color: colors.muted }}>{stripRankFromName(senderMember?.displayName ?? message.externalAuthorName ?? sender?.name ?? "メンバー")}</Text>
             {sender ? <NewMemberMark member={sender} size={11} /> : null}
+            <MemberRankBadge rank={(senderMember?.memberRank ?? sender?.rank ?? "regular") as any} name={senderMember?.displayName ?? message.externalAuthorName} role={senderMember?.accessRole} compact />
+            <MemberRoleBadge name={senderMember?.displayName ?? message.externalAuthorName} role={senderMember?.accessRole ?? sender?.role} compact />
+            <MemberClubLeaderBadges roles={senderMember?.discordRoles} compact />
           </View>
         ) : null}
         <Pressable onLongPress={() => setShowActions(true)} delayLongPress={350}
@@ -291,6 +294,7 @@ export default function ChatScreen() {
   const [pollOptions, setPollOptions] = useState(["", ""]);
   const [pollDeadline, setPollDeadline] = useState("");
   const [pollAllowMultiple, setPollAllowMultiple] = useState(false);
+  const [pollSending, setPollSending] = useState(false);
 
   const handlePickPhoto = useCallback(async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -383,6 +387,22 @@ export default function ChatScreen() {
     const updated = await toggleMessageReaction(id, messageId, emoji, viewerMemberId);
     if (updated) setMessages((current) => current.map((message) => message.id === updated.id ? updated : message));
   }, [id, messages, viewerMemberId]);
+
+  const createPoll = useCallback(async () => {
+    if (!id || pollSending || !pollQuestion.trim() || pollOptions.filter((value) => value.trim()).length < 2 || !pollDeadline.trim()) return;
+    const content = `📊 **${pollQuestion.trim()}**\n${pollOptions.filter((value) => value.trim()).map((value) => `◯ ${value.trim()}`).join("\n")}\n⏱ 期限: ${pollDeadline.trim()}\n${pollAllowMultiple ? "🔢 複数回答可" : ""}`.trim();
+    setPollSending(true);
+    try {
+      const message = await Api.createSharedChatMessage(id, { content });
+      setMessages((current) => [...current.filter((item) => item.id !== message.id), message]);
+      setShowPollComposer(false);
+      setPollQuestion(""); setPollOptions(["", ""]); setPollDeadline(""); setPollAllowMultiple(false);
+    } catch (error) {
+      Alert.alert("投票を作成できませんでした", error instanceof Error ? error.message : "もう一度お試しください。");
+    } finally {
+      setPollSending(false);
+    }
+  }, [id, pollAllowMultiple, pollDeadline, pollOptions, pollQuestion, pollSending]);
 
   useEffect(() => {
     if (messages.length > 0) {
@@ -503,6 +523,7 @@ export default function ChatScreen() {
               isMe={item.senderId === viewerMemberId}
               viewerId={viewerMemberId}
               myAvatarUri={myAvatarUri}
+              senderMember={directory.find((member) => member.id === item.senderId)}
               onReact={(emoji) => handleReaction(item.id, emoji)}
               mentionGroups={mentionGroups}
               onOpenInternalLink={(pathname, params) => router.push({ pathname, params } as any)}
@@ -663,7 +684,7 @@ export default function ChatScreen() {
       </KeyboardAvoidingView>
 
       <Modal visible={showAttachmentMenu} transparent animationType="fade" onRequestClose={() => setShowAttachmentMenu(false)}><Pressable onPress={() => setShowAttachmentMenu(false)} style={{ flex: 1, backgroundColor: "rgba(20,18,24,0.38)", justifyContent: "flex-end" }}><Pressable onPress={() => {}} style={{ backgroundColor: colors.background, borderTopLeftRadius: 22, borderTopRightRadius: 22, padding: 18, paddingBottom: 34 }}><Text style={{ fontSize: 16, fontWeight: "900", color: colors.foreground, marginBottom: 10 }}>添付するものを選択</Text>{[{ label: "写真", icon: "photo.fill", action: () => { setShowAttachmentMenu(false); void handlePickPhoto(); } }, { label: "投票", icon: "chart.bar.fill", action: () => { setShowAttachmentMenu(false); setShowPollComposer(true); } }].map((item) => <Pressable key={item.label} onPress={item.action} style={{ minHeight: 54, flexDirection: "row", alignItems: "center", borderBottomWidth: 0.5, borderBottomColor: colors.border }}><View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: "#5865F218", alignItems: "center", justifyContent: "center" }}><IconSymbol name={item.icon as any} size={19} color="#5865F2" /></View><Text style={{ marginLeft: 12, fontSize: 15, fontWeight: "800", color: colors.foreground }}>{item.label}</Text></Pressable>)}</Pressable></Pressable></Modal>
-      <Modal visible={showPollComposer} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setShowPollComposer(false)}><KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ flex: 1, backgroundColor: colors.background }}><View style={{ flexDirection: "row", alignItems: "center", padding: 16, borderBottomWidth: 1, borderBottomColor: colors.border }}><Pressable onPress={() => setShowPollComposer(false)}><Text style={{ color: colors.muted }}>キャンセル</Text></Pressable><Text style={{ flex: 1, textAlign: "center", fontSize: 18, fontWeight: "900", color: colors.foreground }}>投票を作成</Text><Pressable disabled={!pollQuestion.trim() || pollOptions.filter((v) => v.trim()).length < 2 || !pollDeadline.trim()} onPress={() => { const options = pollOptions.filter((v) => v.trim()); setMessageText(`📊 **${pollQuestion.trim()}**\n${options.map((v) => `◯ ${v.trim()}`).join("\n")}\n⏱ 期限: ${pollDeadline.trim()}\n${pollAllowMultiple ? "🔢 複数回答可" : ""}`.trim()); setShowPollComposer(false); }}><Text style={{ fontWeight: "900", color: pollQuestion.trim() && pollOptions.filter((v) => v.trim()).length >= 2 && pollDeadline.trim() ? "#5865F2" : colors.border }}>作成</Text></Pressable></View><ScrollView contentContainerStyle={{ padding: 18, gap: 12 }} keyboardShouldPersistTaps="handled"><Text style={{ fontSize: 12, fontWeight: "800", color: colors.muted }}>質問</Text><TextInput value={pollQuestion} onChangeText={setPollQuestion} placeholder="質問を入力" placeholderTextColor={colors.muted} style={{ borderRadius: 10, backgroundColor: colors.surface, padding: 13, color: colors.foreground }} /><Text style={{ fontSize: 12, fontWeight: "800", color: colors.muted }}>選択肢</Text>{pollOptions.map((value, index) => <TextInput key={index} value={value} onChangeText={(text) => setPollOptions((items) => items.map((item, i) => i === index ? text : item))} placeholder={`選択肢 ${index + 1}`} placeholderTextColor={colors.muted} style={{ borderRadius: 10, backgroundColor: colors.surface, padding: 13, color: colors.foreground }} />)}{pollOptions.length < 10 ? <Pressable onPress={() => setPollOptions((items) => [...items, ""])}><Text style={{ color: "#5865F2", fontWeight: "800" }}>＋ 選択肢を追加</Text></Pressable> : null}<Text style={{ fontSize: 12, fontWeight: "800", color: colors.muted, marginTop: 8 }}>投票期限</Text><CalendarField label="投票期限" value={pollDeadline} onChange={setPollDeadline} /><Pressable accessibilityRole="checkbox" accessibilityState={{ checked: pollAllowMultiple }} onPress={() => setPollAllowMultiple((value) => !value)} style={{ flexDirection: "row", alignItems: "center", paddingVertical: 7 }}><View style={{ width: 21, height: 21, borderRadius: 5, borderWidth: 1.5, borderColor: pollAllowMultiple ? "#5865F2" : colors.border, backgroundColor: pollAllowMultiple ? "#5865F2" : colors.surface, alignItems: "center", justifyContent: "center" }}>{pollAllowMultiple ? <IconSymbol name="checkmark" size={14} color="#FFF" /> : null}</View><Text style={{ marginLeft: 8, fontSize: 13, fontWeight: "700", color: colors.foreground }}>複数回答を許可する</Text></Pressable></ScrollView></KeyboardAvoidingView></Modal>
+      <Modal visible={showPollComposer} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setShowPollComposer(false)}><KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ flex: 1, backgroundColor: colors.background }}><View style={{ flexDirection: "row", alignItems: "center", padding: 16, borderBottomWidth: 1, borderBottomColor: colors.border }}><Pressable onPress={() => setShowPollComposer(false)}><Text style={{ color: colors.muted }}>キャンセル</Text></Pressable><Text style={{ flex: 1, textAlign: "center", fontSize: 18, fontWeight: "900", color: colors.foreground }}>投票を作成</Text><Pressable disabled={pollSending || !pollQuestion.trim() || pollOptions.filter((v) => v.trim()).length < 2 || !pollDeadline.trim()} onPress={() => void createPoll()}><Text style={{ fontWeight: "900", color: pollQuestion.trim() && pollOptions.filter((v) => v.trim()).length >= 2 && pollDeadline.trim() ? "#5865F2" : colors.border }}>{pollSending ? "送信中…" : "作成"}</Text></Pressable></View><ScrollView contentContainerStyle={{ padding: 18, gap: 12 }} keyboardShouldPersistTaps="handled"><Text style={{ fontSize: 12, fontWeight: "800", color: colors.muted }}>質問</Text><TextInput value={pollQuestion} onChangeText={setPollQuestion} placeholder="質問を入力" placeholderTextColor={colors.muted} style={{ borderRadius: 10, backgroundColor: colors.surface, padding: 13, color: colors.foreground }} /><Text style={{ fontSize: 12, fontWeight: "800", color: colors.muted }}>選択肢</Text>{pollOptions.map((value, index) => <TextInput key={index} value={value} onChangeText={(text) => setPollOptions((items) => items.map((item, i) => i === index ? text : item))} placeholder={`選択肢 ${index + 1}`} placeholderTextColor={colors.muted} style={{ borderRadius: 10, backgroundColor: colors.surface, padding: 13, color: colors.foreground }} />)}{pollOptions.length < 10 ? <Pressable onPress={() => setPollOptions((items) => [...items, ""])}><Text style={{ color: "#5865F2", fontWeight: "800" }}>＋ 選択肢を追加</Text></Pressable> : null}<Text style={{ fontSize: 12, fontWeight: "800", color: colors.muted, marginTop: 8 }}>投票期限</Text><CalendarField label="投票期限" value={pollDeadline} onChange={setPollDeadline} /><Pressable accessibilityRole="checkbox" accessibilityState={{ checked: pollAllowMultiple }} onPress={() => setPollAllowMultiple((value) => !value)} style={{ flexDirection: "row", alignItems: "center", paddingVertical: 7 }}><View style={{ width: 21, height: 21, borderRadius: 5, borderWidth: 1.5, borderColor: pollAllowMultiple ? "#5865F2" : colors.border, backgroundColor: pollAllowMultiple ? "#5865F2" : colors.surface, alignItems: "center", justifyContent: "center" }}>{pollAllowMultiple ? <IconSymbol name="checkmark" size={14} color="#FFF" /> : null}</View><Text style={{ marginLeft: 8, fontSize: 13, fontWeight: "700", color: colors.foreground }}>複数回答を許可する</Text></Pressable></ScrollView></KeyboardAvoidingView></Modal>
 
       {/* ===== 参加者一覧モーダル ===== */}
       <Modal
@@ -828,7 +849,7 @@ export default function ChatScreen() {
                     <View style={{ marginLeft: 12, flex: 1 }}>
                       <View style={{ flexDirection: "row", alignItems: "center", flexWrap: "wrap" }}><Text style={{ fontSize: 15, fontWeight: "600", color: colors.foreground }}>
                         {stripRankFromName(memberName)}{isCurrentUser ? " (あなた)" : ""}
-                      </Text><MemberRankBadge rank={(sharedMember?.memberRank ?? member?.rank ?? "regular") as any} name={memberName} compact /><MemberRoleBadge name={memberName} role={sharedMember?.accessRole ?? member?.role} compact /></View>
+                      </Text><MemberRankBadge rank={(sharedMember?.memberRank ?? member?.rank ?? "regular") as any} name={memberName} compact /><MemberRoleBadge name={memberName} role={sharedMember?.accessRole ?? member?.role} compact /><MemberClubLeaderBadges roles={sharedMember?.discordRoles} compact /></View>
                       {sharedMember?.memberTerm ? <Text style={{ fontSize: 12, color: colors.muted, marginTop: 1 }}>{sharedMember.memberTerm}</Text> : null}
                     </View>
                     <IconSymbol name="chevron.right" size={16} color={colors.muted} />
