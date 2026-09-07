@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { readFileSync } from "node:fs";
 import type { Event } from "../constants/mock-data";
 import { approveGourmetApplication, cancelGourmetParticipation, getPendingGourmetApplicants, reopenGourmetRecruitment, submitGourmetApplication } from "../lib/gourmet-event";
 
@@ -30,5 +31,12 @@ describe("gourmet event approval workflow", () => {
     expect(event.applicantIds).toEqual(["host"]);
     expect(reopenGourmetRecruitment(event)).toBe(true);
     expect(event.status).toBe("open");
+  });
+
+  it("submits approval directly from the organizer control on web", () => {
+    const detailScreen = readFileSync("app/event-detail.tsx", "utf8");
+    expect(detailScreen).toContain('const approveApplicant = async (memberId: string)');
+    expect(detailScreen).toContain('await Api.reviewEventApplicant(event.id, memberId, "approve")');
+    expect(detailScreen).not.toContain('Alert.alert("参加申込を承認"');
   });
 });

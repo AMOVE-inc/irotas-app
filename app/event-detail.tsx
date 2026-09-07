@@ -451,38 +451,33 @@ export default function EventDetailScreen() {
     );
   };
 
-  const approveApplicant = (memberId: string) => {
+  const approveApplicant = async (memberId: string) => {
     const member = displayMember(memberId);
-    Alert.alert("参加申込を承認", `${member.name}さんの参加を確定しますか？`, [
-      { text: "キャンセル", style: "cancel" },
-      { text: "承認する", onPress: async () => {
-        if (authUser) {
-          try {
-            setApprovingMemberId(memberId);
-            const updated = await Api.reviewEventApplicant(event.id, memberId, "approve");
-            if (updated.chatId) {
-              joinEventChat(updated.id, updated.title, updated.chatId, updated.createdBy);
-              joinEventChat(updated.id, updated.title, updated.chatId, memberId);
-            }
-            setEvent(updated);
-            Alert.alert("承認完了", `${member?.name ?? "メンバー"}さんの参加を確定し、参加者専用チャットへ追加しました。`);
-          } catch (error) {
-            Alert.alert("承認できませんでした", error instanceof Error ? error.message : "もう一度お試しください。");
-          } finally {
-            setApprovingMemberId(null);
-          }
-          return;
+    if (authUser) {
+      try {
+        setApprovingMemberId(memberId);
+        const updated = await Api.reviewEventApplicant(event.id, memberId, "approve");
+        if (updated.chatId) {
+          joinEventChat(updated.id, updated.title, updated.chatId, updated.createdBy);
+          joinEventChat(updated.id, updated.title, updated.chatId, memberId);
         }
-        approveGourmetApplication(event, memberId);
-        const room = joinEventChat(event.id, event.title, event.chatId, event.createdBy);
-        joinEventChat(event.id, event.title, room.id, memberId);
-        event.chatId = room.id;
-        await notifyEventConfirmation(event, memberId, room.id);
-        await scheduleEventReminders(event, memberId, room.id);
-        setEventRevision((value) => value + 1);
-        Alert.alert("承認完了", `${member?.name ?? "メンバー"}さんの参加を確定し、参加者チャットへ追加しました。`);
-      } },
-    ]);
+        setEvent(updated);
+        Alert.alert("承認完了", `${member?.name ?? "メンバー"}さんの参加を確定し、参加者専用チャットへ追加しました。`);
+      } catch (error) {
+        Alert.alert("承認できませんでした", error instanceof Error ? error.message : "もう一度お試しください。");
+      } finally {
+        setApprovingMemberId(null);
+      }
+      return;
+    }
+    approveGourmetApplication(event, memberId);
+    const room = joinEventChat(event.id, event.title, event.chatId, event.createdBy);
+    joinEventChat(event.id, event.title, room.id, memberId);
+    event.chatId = room.id;
+    await notifyEventConfirmation(event, memberId, room.id);
+    await scheduleEventReminders(event, memberId, room.id);
+    setEventRevision((value) => value + 1);
+    Alert.alert("承認完了", `${member?.name ?? "メンバー"}さんの参加を確定し、参加者チャットへ追加しました。`);
   };
 
   const handleFinalizeParticipants = () => {
