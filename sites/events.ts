@@ -24,6 +24,9 @@ type EventRow = {
   id: string;
   organizer_member_id: number;
   public_member_id: string | null;
+  organizer_display_name?: string | null;
+  organizer_member_rank?: string | null;
+  organizer_profile_json?: string | null;
   event_type: "official" | "gourmet" | "club";
   club_id: string | null;
   event_date: string;
@@ -218,6 +221,15 @@ function publicId(row: { member_id: number; public_member_id: string | null }) {
   return row.public_member_id ?? `member-${row.member_id}`;
 }
 
+function organizerProfile(row: EventRow) {
+  try {
+    const value = JSON.parse(row.organizer_profile_json ?? "{}") as Record<string, unknown>;
+    return typeof value.avatarUrl === "string" ? value.avatarUrl : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 function publicEvent(
   row: EventRow,
   viewerId: number,
@@ -246,6 +258,10 @@ function publicEvent(
     status: row.status === "cancelled" ? "ended" : row.status,
     title: row.title,
     createdBy: row.public_member_id ?? `member-${row.organizer_member_id}`,
+    organizerProfileId: row.public_member_id ?? `member-${row.organizer_member_id}`,
+    organizerName: row.organizer_display_name?.trim() || "メンバー",
+    organizerAvatar: organizerProfile(row),
+    organizerRank: row.organizer_member_rank ?? undefined,
     applicantIds: active.map(publicId),
     participants: participantIds,
     attendees: Math.max(active.length, participantIds.length),
@@ -277,6 +293,10 @@ export function lockedClubEventPreview(row: EventRow) {
     title: row.title,
     image: typeof data.image === "string" && data.image.startsWith("/api/event-images/") ? data.image : "",
     createdBy: row.public_member_id ?? `member-${row.organizer_member_id}`,
+    organizerProfileId: row.public_member_id ?? `member-${row.organizer_member_id}`,
+    organizerName: row.organizer_display_name?.trim() || "メンバー",
+    organizerAvatar: organizerProfile(row),
+    organizerRank: row.organizer_member_rank ?? undefined,
     description: "",
     time: "",
     location: "部員限定",
@@ -295,7 +315,10 @@ export function lockedClubEventPreview(row: EventRow) {
   };
 }
 
-const selectEvents = `SELECT e.*, m.public_member_id
+const selectEvents = `SELECT e.*, m.public_member_id,
+  m.display_name AS organizer_display_name,
+  m.member_rank AS organizer_member_rank,
+  m.profile_json AS organizer_profile_json
   FROM events e JOIN members m ON m.id = e.organizer_member_id`;
 
 function isElevated(member: NonNullable<Awaited<ReturnType<typeof authenticatedRequestMember>>>) {
