@@ -1,6 +1,8 @@
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
-import { CURRENT_USER, MEMBERS, type Event } from "@/constants/mock-data";
+import { CURRENT_USER, DEFAULT_AVATAR, getRankFromPoints, type Event } from "@/constants/mock-data";
+import { XpRewardPopup } from "@/components/xp-reward-popup";
+import type { XpReward } from "@/lib/xp-store";
 import { GOURMET_GENRES } from "@/constants/event-options";
 import { useAuthContext } from "@/lib/auth-context";
 import { isOperatorRole } from "@/lib/access-control";
@@ -12,7 +14,7 @@ import { extractEventLocation, formatEventArea } from "@/lib/event-location";
 import { DEFAULT_CANCELLATION_POLICY, EVENT_AMOUNT_OPTIONS, EVENT_CAPACITY_OPTIONS, EVENT_RANKS, EVENT_TIME_OPTIONS, eventFormSaveFields, validateEventForm } from "@/lib/event-form";
 import { useColors } from "@/hooks/use-colors";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, Alert, Modal, Pressable, ScrollView, Text, TextInput, View } from "react-native";
 import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
@@ -95,22 +97,22 @@ function FieldLabel({ children }: { children: string }) {
   return <Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground, marginBottom: 7, marginTop: 16 }}>{label}{required ? <Text style={{ color: colors.error }}> 必須</Text> : null}</Text>;
 }
 
-function MemberPicker({ selectedIds, onChange }: { selectedIds: string[]; onChange: (ids: string[]) => void }) {
+function MemberPicker({ selectedIds, onChange, members, viewerMemberId, loading }: { selectedIds: string[]; onChange: (ids: string[]) => void; members: Api.PublicMember[]; viewerMemberId: string; loading: boolean }) {
   const colors = useColors();
   const [visible, setVisible] = useState(false);
   const [query, setQuery] = useState("");
-  const candidates = MEMBERS.filter((member) => member.id !== CURRENT_USER.id && (`${member.name} ${member.id}`).toLowerCase().includes(query.toLowerCase()));
+  const candidates = members.filter((member) => member.id !== viewerMemberId && (`${member.displayName} ${member.id}`).toLowerCase().includes(query.toLowerCase()));
   return (
     <>
       <Pressable onPress={() => setVisible(true)} style={{ minHeight: 48, borderRadius: 12, backgroundColor: colors.surface, padding: 12, borderWidth: 1, borderColor: colors.border }}>
         <Text style={{ fontSize: 14, color: selectedIds.length ? colors.foreground : colors.muted }}>{selectedIds.length ? `${selectedIds.length}人を選択中` : "名前・会員IDから選択"}</Text>
       </Pressable>
-      {selectedIds.length > 0 ? <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 7, marginTop: 8 }}>{selectedIds.map((id) => { const member = MEMBERS.find((item) => item.id === id); return member ? <View key={id} style={{ flexDirection: "row", alignItems: "center", backgroundColor: "#E8A0BF18", borderRadius: 16, paddingHorizontal: 9, paddingVertical: 5 }}><Text style={{ fontSize: 12, color: colors.foreground }}>{member.name}</Text><Pressable onPress={() => onChange(selectedIds.filter((value) => value !== id))} style={{ marginLeft: 5 }}><IconSymbol name="xmark" size={12} color={colors.muted} /></Pressable></View> : null; })}</View> : null}
+      {selectedIds.length > 0 ? <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 7, marginTop: 8 }}>{selectedIds.map((id) => { const member = members.find((item) => item.id === id); return member ? <View key={id} style={{ flexDirection: "row", alignItems: "center", backgroundColor: "#E8A0BF18", borderRadius: 16, paddingHorizontal: 9, paddingVertical: 5 }}><Text style={{ fontSize: 12, color: colors.foreground }}>{member.displayName}</Text><Pressable onPress={() => onChange(selectedIds.filter((value) => value !== id))} style={{ marginLeft: 5 }}><IconSymbol name="xmark" size={12} color={colors.muted} /></Pressable></View> : null; })}</View> : null}
       <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setVisible(false)}>
         <View style={{ flex: 1, backgroundColor: colors.background }}>
           <View style={{ flexDirection: "row", alignItems: "center", padding: 16, borderBottomWidth: 0.5, borderBottomColor: colors.border }}><Text style={{ flex: 1, fontSize: 18, fontWeight: "800", color: colors.foreground }}>同席者を選択</Text><Pressable onPress={() => setVisible(false)}><Text style={{ color: "#E8A0BF", fontWeight: "800" }}>完了</Text></Pressable></View>
           <TextInput value={query} onChangeText={setQuery} placeholder="名前または会員IDで検索" placeholderTextColor={colors.muted} style={{ margin: 16, backgroundColor: colors.surface, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, color: colors.foreground }} />
-          <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 30 }}>{candidates.map((member) => { const selected = selectedIds.includes(member.id); return <Pressable key={member.id} onPress={() => onChange(selected ? selectedIds.filter((id) => id !== member.id) : [...selectedIds, member.id])} style={{ flexDirection: "row", alignItems: "center", paddingVertical: 11, borderBottomWidth: 0.5, borderBottomColor: colors.border }}><Image source={member.avatar} style={{ width: 40, height: 40, borderRadius: 20 }} /><View style={{ flex: 1, marginLeft: 10 }}><Text style={{ fontSize: 15, fontWeight: "700", color: colors.foreground }}>{member.name}</Text><Text style={{ fontSize: 12, color: colors.muted }}>ID: {member.id}・{member.generation}期生</Text></View><View style={{ width: 24, height: 24, borderRadius: 12, backgroundColor: selected ? "#E8A0BF" : colors.surface, borderWidth: 1, borderColor: selected ? "#E8A0BF" : colors.border, alignItems: "center", justifyContent: "center" }}>{selected ? <IconSymbol name="checkmark" size={14} color="#FFF" /> : null}</View></Pressable>; })}</ScrollView>
+          <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 30 }}>{loading ? <Text style={{ paddingVertical: 18, color: colors.muted }}>会員情報を読み込み中…</Text> : candidates.length ? candidates.map((member) => { const selected = selectedIds.includes(member.id); const avatar = typeof member.profile.avatarUrl === "string" ? member.profile.avatarUrl : DEFAULT_AVATAR; return <Pressable key={member.id} onPress={() => onChange(selected ? selectedIds.filter((id) => id !== member.id) : [...selectedIds, member.id])} style={{ flexDirection: "row", alignItems: "center", paddingVertical: 11, borderBottomWidth: 0.5, borderBottomColor: colors.border }}><Image source={avatar} style={{ width: 40, height: 40, borderRadius: 20 }} /><View style={{ flex: 1, marginLeft: 10 }}><Text style={{ fontSize: 15, fontWeight: "700", color: colors.foreground }}>{member.displayName}</Text><Text style={{ fontSize: 12, color: colors.muted }}>ID: {member.id}・{member.memberTerm ?? "期未設定"}</Text></View><View style={{ width: 24, height: 24, borderRadius: 12, backgroundColor: selected ? "#E8A0BF" : colors.surface, borderWidth: 1, borderColor: selected ? "#E8A0BF" : colors.border, alignItems: "center", justifyContent: "center" }}>{selected ? <IconSymbol name="checkmark" size={14} color="#FFF" /> : null}</View></Pressable>; }) : <Text style={{ paddingVertical: 18, color: colors.muted }}>一致する有効会員はいません。</Text>}</ScrollView>
         </View>
       </Modal>
     </>
@@ -154,7 +156,13 @@ export default function CreateEventScreen() {
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [genres, setGenres] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [memberDirectory, setMemberDirectory] = useState<Api.PublicMember[]>([]);
+  const [memberDirectoryLoading, setMemberDirectoryLoading] = useState(true);
+  const [xpReward, setXpReward] = useState<XpReward | null>(null);
+  const [createdEventId, setCreatedEventId] = useState<string | null>(null);
   const extractedLocation = useMemo(() => extractEventLocation(address), [address]);
+
+  useEffect(() => { void Api.getMemberDirectory().then(setMemberDirectory).catch(() => setMemberDirectory([])).finally(() => setMemberDirectoryLoading(false)); }, []);
 
   if (!authUser) return <ScreenContainer edges={["top", "left", "right"]}><View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}><IconSymbol name="lock.fill" size={44} color={colors.border} /><Text style={{ marginTop: 12, color: colors.muted }}>メンバーのみ作成できます</Text></View></ScreenContainer>;
 
@@ -194,9 +202,15 @@ export default function CreateEventScreen() {
     pendingEvents.unshift(newEvent);
     void recordHomeActivity({ id: `event:${newEvent.id}`, kind: "event", title: newEvent.title, description: finalType === "official" ? "新しい公式イベントが公開されました" : finalType === "club" ? "新しい部活動イベントが公開されました" : "新しいグルメ会が公開されました", createdAt: newEvent.createdAt!, route: "/event-detail", params: { id: newEvent.id } });
     void scheduleOrganizerDeadlineNotification(newEvent);
-    // 作成XPはイベント作成APIがサーバー側で一意に付与する。
-    router.back();
     setIsSubmitting(false);
+    // 作成XPはイベント作成APIで一意に付与済み。画面遷移前に獲得通知を表示する。
+    if (finalType !== "official" && !userIsOperator) {
+      const previousXp = memberDirectory.find((member) => member.id === viewerMemberId)?.xp ?? 0;
+      setCreatedEventId(newEvent.id);
+      setXpReward({ amount: 10, reason: "イベントの新規作成", previousXp, nextXp: previousXp + 10, previousLevel: Math.max(1, Math.floor(previousXp / 50) + 1), nextLevel: Math.max(1, Math.floor((previousXp + 10) / 50) + 1), previousRank: getRankFromPoints(previousXp), nextRank: getRankFromPoints(previousXp + 10) });
+      return;
+    }
+    router.replace({ pathname: "/event-detail", params: { id: newEvent.id } });
   };
 
   const inputStyle = { backgroundColor: colors.surface, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: colors.foreground, borderWidth: 1, borderColor: colors.border } as const;
@@ -228,7 +242,7 @@ export default function CreateEventScreen() {
 
         {eventType === "official" ? <><FieldLabel>ランク別料金</FieldLabel><Pressable onPress={() => setUseRankPrices((value) => !value)} style={{ flexDirection: "row", alignItems: "center" }}><View style={{ width: 22, height: 22, borderRadius: 6, backgroundColor: useRankPrices ? "#E8A0BF" : colors.surface, borderWidth: 1, borderColor: useRankPrices ? "#E8A0BF" : colors.border, alignItems: "center", justifyContent: "center" }}>{useRankPrices ? <IconSymbol name="checkmark" size={14} color="#FFF" /> : null}</View><Text style={{ marginLeft: 8, color: colors.foreground, fontSize: 13 }}>ランク別料金を設定する</Text></Pressable>{useRankPrices ? <View style={{ gap: 8, marginTop: 10 }}>{EVENT_RANKS.map((rank) => <View key={rank} style={{ flexDirection: "row", alignItems: "center" }}><Text style={{ width: 82, fontSize: 12, fontWeight: "700", color: colors.foreground }}>{rank === "regular" ? "レギュラー" : rank === "silver" ? "シルバー" : rank === "gold" ? "ゴールド" : "プラチナ"}</Text><View style={{ flex: 1 }}><SelectField label={`${rank}料金`} value={rankPrices[rank]} options={EVENT_AMOUNT_OPTIONS} onChange={(value) => setRankPrices((current) => ({ ...current, [rank]: value }))} /></View></View>)}</View> : null}</> : null}
 
-        <FieldLabel>同席者</FieldLabel><MemberPicker selectedIds={companionIds} onChange={setCompanionIds} />
+        <FieldLabel>同席者</FieldLabel><MemberPicker selectedIds={companionIds} onChange={setCompanionIds} members={memberDirectory} viewerMemberId={viewerMemberId} loading={memberDirectoryLoading} />
         <FieldLabel>写真 *</FieldLabel><Pressable onPress={handlePickImage} style={{ height: 150, borderRadius: 14, overflow: "hidden", backgroundColor: colors.surface, borderWidth: 1, borderStyle: imageUri ? "solid" : "dashed", borderColor: colors.border, alignItems: "center", justifyContent: "center" }}>{imageUri ? <Image source={{ uri: imageUri }} style={{ width: "100%", height: "100%" }} contentFit="cover" /> : <><IconSymbol name="photo.fill" size={30} color={colors.muted} /><Text style={{ marginTop: 7, color: colors.muted, fontSize: 13 }}>写真を選択</Text></>}</Pressable>
         <FieldLabel>参加者決定の予定期日 *</FieldLabel><CalendarField label="参加者決定予定日" value={decisionDate} onChange={setDecisionDate} />
         <FieldLabel>キャンセルポリシー</FieldLabel><TextInput value={cancellationPolicy} onChangeText={setCancellationPolicy} multiline textAlignVertical="top" style={[inputStyle, { minHeight: 88 }]} />
@@ -237,6 +251,7 @@ export default function CreateEventScreen() {
         <View style={{ marginTop: 26, padding: 14, borderRadius: 14, backgroundColor: "#FFF8F0", borderWidth: 1, borderColor: "#EED9BF" }}><Text style={{ fontSize: 15, fontWeight: "900", color: colors.foreground, marginBottom: 10 }}>イベント開催時のルール</Text>{["イベントの日時・人数・場所などに誤りがないことを確認してください", "原則、参加者はIRO+メンバー限定としてください（やむをえず外部の方も参加される場合は、その旨を自由記述欄に記載してください）", "募集期日までに参加者を確定し、専用チャットにて参加確定連絡をお願いします"].map((rule) => <Text key={rule} style={{ fontSize: 12, lineHeight: 19, color: colors.foreground, marginBottom: 5 }}>・{rule}</Text>)}<Pressable onPress={() => setTermsAccepted((value) => !value)} style={{ flexDirection: "row", alignItems: "center", marginTop: 8 }}><View style={{ width: 24, height: 24, borderRadius: 6, backgroundColor: termsAccepted ? "#E8A0BF" : colors.surface, borderWidth: 1, borderColor: termsAccepted ? "#E8A0BF" : colors.border, alignItems: "center", justifyContent: "center" }}>{termsAccepted ? <IconSymbol name="checkmark" size={15} color="#FFF" /> : null}</View><Text style={{ flex: 1, marginLeft: 9, fontSize: 14, fontWeight: "800", color: colors.foreground }}>上記のルールを確認し、同意する <Text style={{ color: colors.error }}>必須</Text></Text></Pressable></View>
         <Pressable disabled={!termsAccepted || isSubmitting} onPress={() => { void handleCreate(); }} style={{ marginTop: 22, minHeight: 56, borderRadius: 16, backgroundColor: termsAccepted && !isSubmitting ? "#18171A" : "#B8B8BD", alignItems: "center", justifyContent: "center", opacity: termsAccepted && !isSubmitting ? 1 : 0.65 }}><Text style={{ fontSize: 17, fontWeight: "900", color: "#FFF" }}>{isSubmitting ? "作成しています…" : "イベントを作成する"}</Text></Pressable>
       </ScrollView>
+      <XpRewardPopup reward={xpReward} onClose={() => { setXpReward(null); if (createdEventId) router.replace({ pathname: "/event-detail", params: { id: createdEventId } }); }} />
       {isSubmitting ? <View pointerEvents="auto" style={{ position: "absolute", inset: 0, backgroundColor: "rgba(255,255,255,0.72)", alignItems: "center", justifyContent: "center" }}><View style={{ minWidth: 170, borderRadius: 18, padding: 22, alignItems: "center", backgroundColor: colors.surface, shadowColor: "#000", shadowOpacity: 0.14, shadowRadius: 14, elevation: 6 }}><ActivityIndicator size="large" color="#D65E8D" /><Text style={{ marginTop: 12, fontSize: 14, fontWeight: "900", color: colors.foreground }}>イベントを作成中です</Text></View></View> : null}
     </ScreenContainer>
   );

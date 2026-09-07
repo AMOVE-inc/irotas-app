@@ -700,6 +700,10 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
     if ((pending?.count ?? 0) > 0) return responseJson({ error: "承認待ちの参加申込をすべて確認してください" }, 409);
     let data: Record<string, unknown> = {};
     try { data = JSON.parse(row.public_data_json) as Record<string, unknown>; } catch {}
+    const capacity = typeof data.capacity === "number" ? data.capacity : 0;
+    const confirmedCount = await env.DB.prepare("SELECT COUNT(*) AS count FROM event_participations WHERE event_id = ? AND status IN ('confirmed','cancel_requested')").bind(id).first<{ count: number }>();
+    if (capacity < 1 || (confirmedCount?.count ?? 0) < capacity)
+      return responseJson({ error: "募集人数に達してから参加者確定を完了してください" }, 409);
     if (typeof data.participantsFinalizedAt === "string" && data.participantsFinalizedAt) {
       return responseJson({ event: await hydratedEvent(env.DB, row, member.id, elevated, memberPublicId) });
     }
