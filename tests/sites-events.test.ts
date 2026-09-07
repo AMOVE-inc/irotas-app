@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { readFileSync } from "node:fs";
 import { lockedClubEventPreview, sanitizeEvent } from "../sites/events";
 
 function validEvent(overrides: Record<string, unknown> = {}) {
@@ -88,5 +89,12 @@ describe("production event validation", () => {
     expect(preview).not.toHaveProperty("tabelogUrl");
     expect(preview).not.toHaveProperty("googleMapsUrl");
     expect(preview).not.toHaveProperty("privateMemo");
+  });
+
+  it("has a narrow companion update action that does not require resubmitting legacy event fields", () => {
+    const source = readFileSync("sites/events.ts", "utf8");
+    expect(source).toContain('input?.action === "update_companions"');
+    expect(source).toContain("data.companionIds = companionIds");
+    expect(source).toContain("event.companions_edited");
   });
 });

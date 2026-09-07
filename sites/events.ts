@@ -547,6 +547,24 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
     const row = await eventRow(env.DB, id);
     if (!row) return responseJson({ error: "イベントが見つかりません" }, 404);
     const input = await readBody(request);
+    if (input?.action === "update_companions") {
+      if (!(admin || row.organizer_member_id === member.id)) return responseJson({ error: "イベント作成者または管理者のみ同席者を変更できます" }, 403);
+      const companionIds = stringArray(input.companionIds, 100, 40);
+      if (companionIds === null) return responseJson({ error: "同席者の内容が不正です" }, 400);
+      let data: Record<string, unknown> = {};
+      try { data = JSON.parse(row.public_data_json) as Record<string, unknown>; } catch {}
+      data.companionIds = companionIds;
+      const now = new Date().toISOString();
+      await env.DB.batch([
+        env.DB.prepare("UPDATE events SET public_data_json = ?, updated_at = ? WHERE id = ?").bind(JSON.stringify(data), now, id),
+        env.DB.prepare(`INSERT INTO event_import_field_edits (event_id, field_name, edited_at, actor_member_id)
+          VALUES (?, 'companionIds', ?, ?) ON CONFLICT(event_id, field_name) DO UPDATE SET edited_at = excluded.edited_at, actor_member_id = excluded.actor_member_id`).bind(id, now, member.id),
+        env.DB.prepare(`INSERT INTO audit_logs (actor_user_id, action, entity_type, entity_id, metadata_json, created_at)
+          VALUES (?, 'event.companions_edited', 'event', ?, ?, ?)`).bind(String(member.id), id, JSON.stringify({ companionCount: companionIds.length }), now),
+      ]);
+      const updated = await eventRow(env.DB, id);
+      return responseJson({ event: await hydratedEvent(env.DB, updated!, member.id, elevated, memberPublicId) });
+    }
     if (input?.action === "edit") {
       if (!(admin || row.organizer_member_id === member.id)) return responseJson({ error: "イベント作成者または管理者のみイベント情報を編集できます" }, 403);
       const title = text(input.title, 160, true);

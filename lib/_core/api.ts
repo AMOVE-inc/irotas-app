@@ -1214,6 +1214,18 @@ export async function updateEventDetails(eventId: string, input: {
   return result.event;
 }
 
+/**
+ * Persists the companion picker independently of the full event editor.
+ * This keeps legacy event fields from blocking a companion-only edit.
+ */
+export async function updateEventCompanions(eventId: string, companionIds: string[]) {
+  const result = await apiCall<{ event: Event }>(`/api/events/${encodeURIComponent(eventId)}`, {
+    method: "PATCH",
+    body: JSON.stringify({ action: "update_companions", companionIds }),
+  });
+  return result.event;
+}
+
 export async function requestEventCancellation(
   eventId: string,
   contactedOrganizer: boolean,

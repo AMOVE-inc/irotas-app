@@ -46,6 +46,13 @@ export function minimumReservationCapacity(recruitCapacity: string, companionIds
   return 1 + companionIds.length + Number(recruitCapacity || 0);
 }
 
+/** True when the editor has changed only the companion selection. */
+export function hasOnlyCompanionChanges(before: EventFormValues, after: EventFormValues) {
+  const withoutCompanions = (values: EventFormValues) => ({ ...values, companionIds: [] as string[] });
+  return JSON.stringify(withoutCompanions(before)) === JSON.stringify(withoutCompanions(after))
+    && JSON.stringify(before.companionIds) !== JSON.stringify(after.companionIds);
+}
+
 function amountOption(value: number) {
   return value > 0 ? `${value.toLocaleString()}円` : "";
 }
