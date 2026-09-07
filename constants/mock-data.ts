@@ -305,6 +305,8 @@ export interface ChatMessage {
   attachmentUrls?: string[];
   externalMessageId?: string;
   externalAuthorName?: string;
+  /** 共有チャットでサーバーから取得する送信者のプロフィール画像。 */
+  senderAvatar?: string;
   reactions?: Record<string, string[]>; // emoji -> member ids（通知なしリアクション）
   createdAt: string;
   /** 端末保存ではなく共有DBに保存されたメッセージ。 */

@@ -26,6 +26,7 @@ type MessageRow = {
   sender_member_id: number;
   sender_public_member_id: string | null;
   sender_display_name: string | null;
+  sender_profile_json: string | null;
   content: string;
   image_url: string | null;
   created_at: string;
@@ -198,11 +199,17 @@ function reactionsFor(messageId: string, rows: ReactionRow[]) {
 }
 
 function serializeMessage(row: MessageRow, reactions: ReactionRow[]) {
+  let senderAvatar: string | undefined;
+  try {
+    const profile = JSON.parse(row.sender_profile_json ?? "{}") as { avatarUrl?: unknown };
+    if (typeof profile.avatarUrl === "string" && profile.avatarUrl.trim()) senderAvatar = profile.avatarUrl;
+  } catch {}
   return {
     id: row.id,
     chatId: row.room_id,
     senderId: publicMemberId(row.sender_member_id, row.sender_public_member_id),
     externalAuthorName: row.sender_display_name?.trim() || "メンバー",
+    senderAvatar,
     content: row.content,
     imageUri: row.image_url || undefined,
     reactions: reactionsFor(row.id, reactions),
@@ -214,7 +221,7 @@ function serializeMessage(row: MessageRow, reactions: ReactionRow[]) {
 
 async function messageRows(db: D1Database, roomId: string) {
   const result = await db.prepare(`SELECT cm.id, cm.room_id, cm.sender_member_id,
-      m.public_member_id AS sender_public_member_id, m.display_name AS sender_display_name,
+      m.public_member_id AS sender_public_member_id, m.display_name AS sender_display_name, m.profile_json AS sender_profile_json,
       cm.content, cm.image_url, cm.created_at, cm.updated_at
     FROM chat_messages cm JOIN members m ON m.id = cm.sender_member_id
     WHERE cm.room_id = ? AND cm.deleted_at IS NULL

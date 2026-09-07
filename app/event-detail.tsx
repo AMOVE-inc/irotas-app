@@ -572,7 +572,7 @@ export default function EventDetailScreen() {
     if (event.viewerMemberId) {
       try {
         setEvent(await Api.requestEventCancellation(event.id, contactedOrganizer, cancellationPolicyConfirmed));
-        Alert.alert("申請しました", "幹事にキャンセル申請を送りました。確定連絡をお待ちください。");
+        Alert.alert(isJoined ? "申請しました" : "申込を取り消しました", isJoined ? "幹事にキャンセル申請を送りました。確定連絡をお待ちください。" : "イベントへの参加申込を取り消しました。");
       } catch (error) {
         Alert.alert("申請できませんでした", error instanceof Error ? error.message : "もう一度お試しください。");
       }
@@ -585,6 +585,14 @@ export default function EventDetailScreen() {
   };
 
   const handleCancellationRequest = () => {
+    if (hasApplied && !isJoined) {
+      setApplicationConfirmation({
+        title: "申込を取り消しますか？",
+        message: "参加確定前のため、幹事への連絡は不要です。\n参加申込を取り消すと元に戻せません。",
+        buttons: [{ text: "戻る", style: "cancel" }, { text: "取り消す", style: "destructive", onPress: () => { void submitCancellationRequest(); } }],
+      });
+      return;
+    }
     if (!contactedOrganizer || !cancellationPolicyConfirmed) {
       Alert.alert("確認が必要です", "幹事への事前連絡とキャンセルポリシーの確認にチェックしてください。");
       return;
@@ -595,11 +603,8 @@ export default function EventDetailScreen() {
       const warning = preview.applies
         ? `前日0:00（JST）以降のキャンセルはペナルティ1ポイントの対象です（今回の基準：${cutoff}）。確定後は${preview.pointsAfterCancellation}点になります。${preview.restrictionUntil ? ` 3点到達のため${preview.restrictionUntil.replace("T", " ").slice(0, 16)}まで新規申込・参加ができなくなります。` : ""}`
         : "このキャンセルはペナルティポイントの対象外です。";
-      Alert.alert("キャンセル申請", `${warning}\n\n幹事へキャンセル申請を送りますか？`, [
-        { text: "戻る", style: "cancel" },
-        { text: "申請する", style: "destructive", onPress: () => { void submitCancellationRequest(); } },
-      ]);
-    }).catch(() => Alert.alert("キャンセル申請", "幹事へキャンセル申請を送りますか？", [{ text: "戻る", style: "cancel" }, { text: "申請する", style: "destructive", onPress: () => { void submitCancellationRequest(); } }]));
+      setApplicationConfirmation({ title: "キャンセル申請", message: `${warning}\n\n幹事へキャンセル申請を送りますか？`, buttons: [{ text: "戻る", style: "cancel" }, { text: "申請する", style: "destructive", onPress: () => { void submitCancellationRequest(); } }] });
+    }).catch(() => setApplicationConfirmation({ title: "キャンセル申請", message: "幹事へキャンセル申請を送りますか？", buttons: [{ text: "戻る", style: "cancel" }, { text: "申請する", style: "destructive", onPress: () => { void submitCancellationRequest(); } }] }));
   };
 
   const handleFinalizeAttendance = () => {
@@ -1035,12 +1040,11 @@ export default function EventDetailScreen() {
 
         <View style={{ backgroundColor: colors.surface, borderRadius: 14, padding: 16, marginBottom: 16 }}><Text style={{ fontSize: 16, fontWeight: "900", color: colors.foreground }}>イベントへのコメント</Text><Text style={{ fontSize: 11, color: colors.muted, marginTop: 4 }}>参加申込前でも閲覧・コメントできます。@で部活・支部をメンションできます。</Text>{eventComments.map((comment) => <View key={comment.id} style={{ marginTop: 12, paddingTop: 12, borderTopWidth: 0.5, borderTopColor: colors.border }}><Text style={{ fontSize: 12, fontWeight: "900", color: colors.foreground }}>{comment.author}</Text><MentionText content={comment.text} groups={eventMentionGroups} /></View>)}{eventMentionQuery !== null ? <MentionSuggestions query={eventMentionQuery} groups={eventMentionGroups} members={[]} onSelect={(label) => setEventCommentText((value) => insertMention(value, label))} /> : null}<View style={{ flexDirection: "row", alignItems: "flex-end", marginTop: 14 }}><TextInput value={eventCommentText} onChangeText={(value) => setEventCommentText(value.replace(/@everyone\b/gi, ""))} onFocus={() => setEventCommentFocused(true)} onBlur={() => setEventCommentFocused(false)} placeholder="質問やコメントを入力" placeholderTextColor={colors.muted} multiline style={{ flex: 1, minHeight: 44, maxHeight: 100, borderRadius: 14, backgroundColor: colors.background, borderWidth: 1, borderColor: colors.border, paddingHorizontal: 12, paddingVertical: 10, color: colors.foreground }} /><Pressable disabled={!eventCommentText.trim()} onPress={handleEventComment} style={{ width: 44, height: 44, borderRadius: 22, marginLeft: 8, alignItems: "center", justifyContent: "center", backgroundColor: eventCommentText.trim() ? "#D65E8D" : colors.border }}><IconSymbol name="paperplane.fill" size={19} color="#FFF" /></Pressable></View></View>
 
-        {isJoined && !isOrganizer ? (
+        {(isJoined || hasApplied) && !isOrganizer ? (
           <View style={{ backgroundColor: "#FFF4F2", borderRadius: 14, padding: 14, marginBottom: 16, borderWidth: 1, borderColor: "#F3D0CA" }}>
             <Text style={{ fontSize: 14, fontWeight: "900", color: colors.error }}>イベントをキャンセルする場合</Text>
-            <Text style={{ fontSize: 12, lineHeight: 18, color: colors.foreground, marginTop: 5 }}>先に参加者チャットで幹事へ連絡してから申請してください。幹事の承認後、空席が再募集されます。</Text>
-            {[{ label: "事前に幹事へ連絡しました", value: contactedOrganizer, set: setContactedOrganizer }, { label: "キャンセルポリシーを確認しました", value: cancellationPolicyConfirmed, set: setCancellationPolicyConfirmed }].map((item) => <Pressable key={item.label} onPress={() => item.set(!item.value)} style={{ flexDirection: "row", alignItems: "center", marginTop: 10 }}><View style={{ width: 22, height: 22, borderRadius: 6, backgroundColor: item.value ? "#D94C55" : colors.surface, borderWidth: 1, borderColor: item.value ? "#D94C55" : colors.border, alignItems: "center", justifyContent: "center" }}>{item.value ? <IconSymbol name="checkmark" size={14} color="#FFF" /> : null}</View><Text style={{ marginLeft: 8, fontSize: 13, fontWeight: "700", color: colors.foreground }}>{item.label}</Text></Pressable>)}
-            <Pressable disabled={hasPendingCancellationRequest || !contactedOrganizer || !cancellationPolicyConfirmed} onPress={handleCancellationRequest} style={{ marginTop: 12, borderRadius: 11, paddingVertical: 11, alignItems: "center", backgroundColor: hasPendingCancellationRequest ? "#B8B8BD" : "#D94C55", opacity: !hasPendingCancellationRequest && (!contactedOrganizer || !cancellationPolicyConfirmed) ? 0.45 : 1 }}><Text style={{ color: "#FFF", fontSize: 14, fontWeight: "900" }}>{hasPendingCancellationRequest ? "キャンセル申請中" : "キャンセル申請する"}</Text></Pressable>
+            {isJoined ? <><Text style={{ fontSize: 12, lineHeight: 18, color: colors.foreground, marginTop: 5 }}>先に参加者チャットで幹事へ連絡してから申請してください。幹事の承認後、空席が再募集されます。</Text>{[{ label: "事前に幹事へ連絡しました", value: contactedOrganizer, set: setContactedOrganizer }, { label: "キャンセルポリシーを確認しました", value: cancellationPolicyConfirmed, set: setCancellationPolicyConfirmed }].map((item) => <Pressable key={item.label} onPress={() => item.set(!item.value)} style={{ flexDirection: "row", alignItems: "center", marginTop: 10 }}><View style={{ width: 22, height: 22, borderRadius: 6, backgroundColor: item.value ? "#D94C55" : colors.surface, borderWidth: 1, borderColor: item.value ? "#D94C55" : colors.border, alignItems: "center", justifyContent: "center" }}>{item.value ? <IconSymbol name="checkmark" size={14} color="#FFF" /> : null}</View><Text style={{ marginLeft: 8, fontSize: 13, fontWeight: "700", color: colors.foreground }}>{item.label}</Text></Pressable>)}</> : <Text style={{ fontSize: 12, lineHeight: 18, color: colors.foreground, marginTop: 5 }}>参加確定前は、幹事への連絡なしで参加申込を取り消せます。</Text>}
+            <Pressable disabled={hasPendingCancellationRequest || (isJoined && (!contactedOrganizer || !cancellationPolicyConfirmed))} onPress={handleCancellationRequest} style={{ marginTop: 12, borderRadius: 11, paddingVertical: 11, alignItems: "center", backgroundColor: hasPendingCancellationRequest ? "#B8B8BD" : "#D94C55", opacity: !hasPendingCancellationRequest && isJoined && (!contactedOrganizer || !cancellationPolicyConfirmed) ? 0.45 : 1 }}><Text style={{ color: "#FFF", fontSize: 14, fontWeight: "900" }}>{hasPendingCancellationRequest ? "キャンセル申請中" : isJoined ? "キャンセル申請する" : "参加申込を取り消す"}</Text></Pressable>
           </View>
         ) : null}
 

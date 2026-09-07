@@ -10,7 +10,14 @@ import { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, FlatList, Modal, Pressable, ScrollView, Text, TextInput, View } from "react-native";
 import * as Api from "@/lib/_core/api";
 
-function ChatRoomCard({ room }: { room: ChatRoom }) {
+function formatEventStart(event: { date: string; time: string }) {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(event.date);
+  if (!match) return [event.date, event.time].filter(Boolean).join(" ");
+  const day = new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3])).getDay();
+  return `${Number(match[2])}/${Number(match[3])}(${["日", "月", "火", "水", "木", "金", "土"][day]})${event.time ? ` ${event.time}` : ""}`;
+}
+
+function ChatRoomCard({ room, eventStarts }: { room: ChatRoom; eventStarts: Record<string, string> }) {
   const colors = useColors();
   const router = useRouter();
   const isDM = room.type === "dm";
@@ -51,7 +58,7 @@ function ChatRoomCard({ room }: { room: ChatRoom }) {
       </View>
       <View style={{ flex: 1, marginLeft: 12 }}>
         <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 3 }}>
-          <Text style={{ fontSize: 15, fontWeight: "700", color: colors.foreground, flex: 1 }} numberOfLines={1}>{room.name}</Text>
+          <Text style={{ fontSize: 15, fontWeight: "700", color: colors.foreground, flex: 1 }} numberOfLines={1}>{room.type === "event" && eventStarts[room.sourceId] ? `${eventStarts[room.sourceId]} ${room.name}` : room.name}</Text>
           <Text style={{ fontSize: 11, color: colors.muted }}>{timeAgo(room.lastMessageAt)}</Text>
           {mentionCount > 0 ? <View style={{ minHeight: 22, borderRadius: 11, backgroundColor: "#ED4245", alignItems: "center", justifyContent: "center", paddingHorizontal: 8, marginLeft: 7 }}><Text style={{ fontSize: 10, fontWeight: "900", color: "#FFF" }}>@ メンション {Math.min(mentionCount, 99)}</Text></View> : unreadCount > 0 ? <View style={{ minHeight: 22, borderRadius: 11, backgroundColor: "#5865F2", alignItems: "center", justifyContent: "center", paddingHorizontal: 8, marginLeft: 7 }}><Text style={{ fontSize: 10, fontWeight: "900", color: "#FFF" }}>新着 {Math.min(unreadCount, 99)}</Text></View> : null}
         </View>
@@ -161,13 +168,16 @@ export default function ChatListScreen() {
   const [showCreateGroup, setShowCreateGroup] = useState(false);
   const [myRooms, setMyRooms] = useState<ChatRoom[]>([]);
   const [rankRooms, setRankRooms] = useState<ChatRoom[]>([]);
+  const [eventStarts, setEventStarts] = useState<Record<string, string>>({});
 
   const refreshRooms = useCallback(async () => {
     const localJoinedRooms = userIsAdmin ? getAllRooms().filter((room) => room.type !== "rank") : getMyRooms(viewerMemberId).filter((room) => room.type !== "rank");
     const localRankRooms = getRankRoomsForUser(viewerRank);
     let sharedRooms: ChatRoom[] = [];
     try {
-      sharedRooms = (await Api.getSharedChatRooms()).map((room) => ({ ...room, requiredRank: room.requiredRank as ChatRoom["requiredRank"] }));
+      const [rooms, events] = await Promise.all([Api.getSharedChatRooms(), Api.getEvents().catch(() => [])]);
+      sharedRooms = rooms.map((room) => ({ ...room, requiredRank: room.requiredRank as ChatRoom["requiredRank"] }));
+      setEventStarts(Object.fromEntries(events.map((event) => [event.id, formatEventStart(event)])));
     } catch {
       // オフライン時も端末内の移行済みチャット一覧は利用できる。
     }
@@ -202,12 +212,12 @@ export default function ChatListScreen() {
         </Pressable>
       </View>
 
-      {announcementRoom ? <ChatRoomCard room={announcementRoom} /> : null}
+      {announcementRoom ? <ChatRoomCard room={announcementRoom} eventStarts={eventStarts} /> : null}
       <FlatList
         data={joinedChatRooms}
         keyExtractor={(item) => item.id}
-        renderItem={({ item }) => <ChatRoomCard room={item} />}
-        ListHeaderComponent={<>{rankRooms.length > 0 ? <View><View style={{ paddingHorizontal: 16, paddingVertical: 8, backgroundColor: colors.surface }}><Text style={{ fontSize: 12, fontWeight: "700", color: colors.muted, letterSpacing: 0.5 }}>あなたのランク専用チャット</Text></View>{rankRooms.map((room) => <ChatRoomCard key={room.id} room={room} />)}</View> : null}{joinedChatRooms.length > 0 ? <View style={{ paddingHorizontal: 16, paddingVertical: 8, backgroundColor: colors.surface }}><Text style={{ fontSize: 12, fontWeight: "700", color: colors.muted, letterSpacing: 0.5 }}>参加中のチャット</Text></View> : null}</>}
+        renderItem={({ item }) => <ChatRoomCard room={item} eventStarts={eventStarts} />}
+        ListHeaderComponent={<>{rankRooms.length > 0 ? <View><View style={{ paddingHorizontal: 16, paddingVertical: 8, backgroundColor: colors.surface }}><Text style={{ fontSize: 12, fontWeight: "700", color: colors.muted, letterSpacing: 0.5 }}>あなたのランク専用チャット</Text></View>{rankRooms.map((room) => <ChatRoomCard key={room.id} room={room} eventStarts={eventStarts} />)}</View> : null}{joinedChatRooms.length > 0 ? <View style={{ paddingHorizontal: 16, paddingVertical: 8, backgroundColor: colors.surface }}><Text style={{ fontSize: 12, fontWeight: "700", color: colors.muted, letterSpacing: 0.5 }}>参加中のチャット</Text></View> : null}</>}
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={<View style={{ alignItems: "center", paddingVertical: 60, paddingHorizontal: 24 }}><ActivityIndicator size="large" color="#E8A0BF" /><Text style={{ fontSize: 14, color: colors.muted, marginTop: 12 }}>チャットを読み込んでいます…</Text></View>}
       />

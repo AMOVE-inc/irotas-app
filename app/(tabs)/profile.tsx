@@ -836,9 +836,14 @@ export default function ProfileScreen() {
       // club-leader badge is available on the first profile render.
       void refreshClubs();
       setMyRooms(getMyRooms(user.id));
-      setParticipatingEvents(isRealMember ? [] : getAllEvents(EVENTS)
-        .filter((event) => getEventParticipationStatus(event, user.id) !== null)
-        .sort((a, b) => Date.parse(`${a.date}T${a.time}:00`) - Date.parse(`${b.date}T${b.time}:00`)));
+      const sortParticipating = (items: Event[]) => items
+        .filter((event) => getEventParticipationStatus(event, isRealMember ? (authUser?.memberId ?? memberIdentity?.memberId ?? user.id) : user.id) !== null)
+        .sort((a, b) => Date.parse(`${a.date}T${a.time}:00`) - Date.parse(`${b.date}T${b.time}:00`));
+      if (isRealMember) {
+        void Api.getEvents().then((items) => setParticipatingEvents(sortParticipating(items))).catch(() => setParticipatingEvents([]));
+      } else {
+        setParticipatingEvents(sortParticipating(getAllEvents(EVENTS)));
+      }
       // AsyncStorageから保存済みデータを読み込む
       import("@react-native-async-storage/async-storage").then(({ default: AsyncStorage }) => {
         Promise.all([

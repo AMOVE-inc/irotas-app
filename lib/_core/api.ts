@@ -202,6 +202,7 @@ export type SharedChatMessage = {
   chatId: string;
   senderId: string;
   externalAuthorName: string;
+  senderAvatar?: string;
   content: string;
   imageUri?: string;
   reactions: Record<string, string[]>;
@@ -237,14 +238,15 @@ export class ApiError extends Error {
 
 export async function apiCall<T>(
   endpoint: string,
-  options: RequestInit = {},
+  options: RequestInit & { suppressGlobalLoading?: boolean } = {},
 ): Promise<T> {
-  const method = String(options.method ?? "GET").toUpperCase();
-  const showsGlobalLoading = method !== "GET" && method !== "HEAD";
+  const { suppressGlobalLoading = false, ...requestOptions } = options;
+  const method = String(requestOptions.method ?? "GET").toUpperCase();
+  const showsGlobalLoading = !suppressGlobalLoading && method !== "GET" && method !== "HEAD";
   if (showsGlobalLoading) beginApiLoading();
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
-    ...((options.headers as Record<string, string>) || {}),
+    ...((requestOptions.headers as Record<string, string>) || {}),
   };
 
   // Determine the auth method:
@@ -266,7 +268,7 @@ export async function apiCall<T>(
 
   try {
     const response = await fetch(url, {
-      ...options,
+      ...requestOptions,
       headers,
       credentials: "include",
     });
@@ -638,7 +640,7 @@ export async function createSharedChatMessage(
 ) {
   const result = await apiCall<{ message: SharedChatMessage }>(
     `/api/chats/${encodeURIComponent(roomId)}/messages`,
-    { method: "POST", body: JSON.stringify(input) },
+    { method: "POST", body: JSON.stringify(input), suppressGlobalLoading: true },
   );
   return result.message;
 }

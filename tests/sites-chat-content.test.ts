@@ -16,6 +16,7 @@ type Message = {
   sender_member_id: number;
   sender_public_member_id: string;
   sender_display_name: string;
+  sender_profile_json?: string;
   content: string;
   image_url: string | null;
   created_at: string;
@@ -107,6 +108,7 @@ class ChatDatabase implements D1Database {
           this.messages.push({
             id: String(values[0]), room_id: String(values[1]), sender_member_id: Number(values[2]),
             sender_public_member_id: "IRO0099", sender_display_name: "運営テスト",
+            sender_profile_json: JSON.stringify({ avatarUrl: "https://cdn.example/operator.png" }),
             content: String(values[3]), image_url: values[4] ? String(values[4]) : null,
             created_at: String(values[5]), updated_at: String(values[6]),
           });
@@ -153,7 +155,7 @@ describe("shared chat content API", () => {
     const allowed = await handleChatContentRequest(request("/api/chats/board-announcement/messages", "POST", { content: "運営からのお知らせ" }), env);
     expect(allowed?.status).toBe(201);
     const body = await allowed?.json() as { message: Record<string, unknown> };
-    expect(body.message).toMatchObject({ content: "運営からのお知らせ", senderId: "IRO0099", shared: true });
+    expect(body.message).toMatchObject({ content: "運営からのお知らせ", senderId: "IRO0099", senderAvatar: "https://cdn.example/operator.png", shared: true });
     expect(db.writes.some((sql) => sql.includes("INSERT INTO audit_logs"))).toBe(true);
   });
 

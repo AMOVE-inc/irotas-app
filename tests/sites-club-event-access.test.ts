@@ -88,6 +88,7 @@ class EventAccessDatabase implements D1Database {
         if (sql.includes("UPDATE event_cancellation_requests SET status")) db.cancellationPending = false;
         if (sql.includes("UPDATE event_participations SET status = ?")) db.participationStatus = String(values[0]);
         if (sql.includes("UPDATE event_participations SET status = 'cancel_requested'")) db.participationStatus = "cancel_requested";
+        if (sql.includes("UPDATE event_participations SET status = 'cancelled'")) db.participationStatus = "cancelled";
         if (sql.includes("INSERT INTO in_app_notifications")) {
           const type = sql.includes("'event_cancellation'") ? "event_cancellation" : "event_confirmed";
           db.notifications.push({ targetMemberId: Number(values[1]), type, eventId: String(values[4]) });
@@ -241,5 +242,20 @@ describe("club event access", () => {
     }), env);
     expect(reviewResponse?.status).toBe(200);
     expect(db.notifications).toContainEqual({ targetMemberId: 10, type: "event_cancellation", eventId: "event-club-1" });
+  });
+
+  it("lets an applicant withdraw before confirmation without notifying the organizer", async () => {
+    canMemberAccessClub.mockResolvedValue(true);
+    db.participationStatus = "applied";
+    authenticatedRequestMember.mockResolvedValue({ id: 10, role: "user", access_role: "member" });
+
+    const response = await handleEventRequest(new Request("https://app.example/api/events/event-club-1/cancellation-requests", {
+      method: "POST",
+      body: JSON.stringify({}),
+    }), env);
+
+    expect(response?.status).toBe(201);
+    expect(db.participationStatus).toBe("cancelled");
+    expect(db.notifications).toHaveLength(0);
   });
 });
