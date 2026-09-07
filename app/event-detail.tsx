@@ -521,20 +521,21 @@ export default function EventDetailScreen() {
   };
 
   const handleCancelEvent = () => {
-    Alert.alert("事前連絡の確認", "参加確定者に事前連絡を入れましたか？", [
-      { text: "戻る", style: "cancel" },
-      { text: "連絡済み", style: "destructive", onPress: () => Alert.alert("イベントを中止", "中止後、参加確定者チャットへキャンセル完了の連絡を自動投稿します。中止しますか？", [
+    setApplicationConfirmation({
+      title: "イベントを中止しますか？",
+      message: "すでに参加者が確定している場合は、事前に参加者へご連絡をお願いします。\n本当にキャンセルしますか？",
+      buttons: [
         { text: "戻る", style: "cancel" },
-        { text: "中止する", style: "destructive", onPress: async () => {
+        { text: "キャンセル", style: "destructive", onPress: async () => {
           try {
             await Api.cancelEvent(event.id, true);
-            Alert.alert("イベントを中止しました", "参加確定者チャットへキャンセル完了の連絡を投稿しました。", [{ text: "OK", onPress: () => router.replace("/events") }]);
+            Alert.alert("イベントを中止しました", "参加申込者・参加確定者へ通知し、参加者チャットにもお知らせを投稿しました。", [{ text: "OK", onPress: () => router.replace("/events") }]);
           } catch (error) {
             Alert.alert("中止できませんでした", error instanceof Error ? error.message : "もう一度お試しください。");
           }
         } },
-      ]) },
-    ]);
+      ],
+    });
   };
 
   const cancelGourmetParticipant = (memberId: string) => {
@@ -1164,7 +1165,7 @@ export default function EventDetailScreen() {
               <Text style={{ textAlign: "center", fontSize: 20, fontWeight: "900", color: colors.foreground }}>{applicationConfirmation?.title}</Text>
               <Text style={{ textAlign: "center", fontSize: 15, lineHeight: 22, fontWeight: "800", color: colors.foreground, marginTop: 12 }}>{event.title}</Text>
               <Text style={{ textAlign: "center", fontSize: 13, fontWeight: "800", color: "#5865F2", marginTop: 8 }}>{event.date}　{event.time}</Text>
-              <Text style={{ textAlign: "center", fontSize: 12, lineHeight: 19, color: colors.muted, marginTop: 8 }}>{applicationConfirmation?.message.split("\n").slice(1).join("\n")}</Text>
+              <Text style={{ textAlign: "center", fontSize: 12, lineHeight: 19, color: colors.muted, marginTop: 8 }}>{applicationConfirmation?.message}</Text>
               {isOfficialEvent && priceNum > 0 && irotasPoints > 0 ? <View style={{ marginTop: 18, borderRadius: 16, padding: 14, backgroundColor: "#FFF7E8", borderWidth: 1, borderColor: "#F4D89D" }}><View style={{ flexDirection: "row", alignItems: "center" }}><View style={{ flex: 1 }}><Text style={{ fontSize: 14, fontWeight: "900", color: "#A56712" }}>イロタスポイントを使う</Text><Text style={{ fontSize: 11, color: colors.muted, marginTop: 3 }}>保有 {irotasPoints.toLocaleString()}pt</Text></View><Switch value={usePoints} onValueChange={(value) => { usePointsRef.current = value; setUsePoints(value); }} trackColor={{ false: colors.border, true: "#FF9500" }} thumbColor="#FFF" /></View>{usePoints ? <Text style={{ marginTop: 10, fontSize: 13, fontWeight: "900", color: "#2E8B57" }}>{pointsToUse.toLocaleString()}pt利用 → お支払い {finalPrice.toLocaleString()}円</Text> : null}</View> : null}
               <View style={{ flexDirection: "row", gap: 10, marginTop: 22 }}>{applicationConfirmation?.buttons.map((button) => { const cancel = button.style === "cancel"; return <Pressable key={button.text} onPress={() => { setApplicationConfirmation(null); if (!cancel) button.onPress?.(); }} style={{ flex: 1, minHeight: 50, borderRadius: 14, alignItems: "center", justifyContent: "center", backgroundColor: cancel ? colors.surface : isOfficialEvent ? "#D65E8D" : "#5B9BD5", borderWidth: cancel ? 1 : 0, borderColor: colors.border }}><Text style={{ fontSize: 15, fontWeight: "900", color: cancel ? colors.foreground : "#FFF" }}>{button.text}</Text></Pressable>; })}</View>
             </View>

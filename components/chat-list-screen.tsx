@@ -9,6 +9,7 @@ import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, FlatList, Modal, Pressable, ScrollView, Text, TextInput, View } from "react-native";
 import * as Api from "@/lib/_core/api";
+import { stripRankFromName } from "@/components/member-rank-badge";
 
 function formatEventStart(event: { date: string; time: string }) {
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(event.date);
@@ -17,7 +18,13 @@ function formatEventStart(event: { date: string; time: string }) {
   return `${Number(match[2])}/${Number(match[3])}(${["日", "月", "火", "水", "木", "金", "土"][day]})${event.time ? ` ${event.time}` : ""}`;
 }
 
-function ChatRoomCard({ room, eventStarts }: { room: ChatRoom; eventStarts: Record<string, string> }) {
+function ChatRoomCard({ room, eventStarts, eventImages, memberAvatars, viewerMemberId }: {
+  room: ChatRoom;
+  eventStarts: Record<string, string>;
+  eventImages: Record<string, string>;
+  memberAvatars: Record<string, string>;
+  viewerMemberId: string;
+}) {
   const colors = useColors();
   const router = useRouter();
   const isDM = room.type === "dm";
@@ -30,6 +37,11 @@ function ChatRoomCard({ room, eventStarts }: { room: ChatRoom; eventStarts: Reco
   const typeColor = room.type === "event" ? "#E8A0BF" : room.type === "board" ? "#A7C7E7" : isDM ? "#FF9500" : isGroup ? "#5B9BD5" : isRank ? (rankColor[room.requiredRank ?? "silver"] ?? "#8B9DC3") : "#34C759";
   const unreadCount = room.unreadCount ?? 0;
   const mentionCount = room.mentionCount ?? 0;
+  const dmPartnerId = isDM ? room.participants.find((memberId) => memberId !== viewerMemberId) : undefined;
+  const imageUri = room.type === "event" ? eventImages[room.sourceId] : dmPartnerId ? memberAvatars[dmPartnerId] : undefined;
+  const displayName = room.type === "event" && eventStarts[room.sourceId]
+    ? `${eventStarts[room.sourceId]} ${stripRankFromName(room.name)}`
+    : stripRankFromName(room.name);
 
   const timeAgo = (dateStr?: string) => {
     if (!dateStr) return "";
@@ -49,16 +61,18 @@ function ChatRoomCard({ room, eventStarts }: { room: ChatRoom; eventStarts: Reco
       }}
       style={({ pressed }) => ({ flexDirection: "row", alignItems: "center", paddingHorizontal: 16, paddingVertical: 14, borderBottomWidth: 0.5, borderBottomColor: colors.border, opacity: pressed ? 0.7 : 1 })}
     >
-      <View style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: typeColor + "20", alignItems: "center", justifyContent: "center" }}>
-        <IconSymbol
-          name={room.type === "event" ? "calendar" : room.type === "board" ? "bubble.left.and.bubble.right.fill" : isDM ? "message.fill" : isRank ? "crown.fill" : "person.3.fill"}
-          size={22}
-          color={typeColor}
-        />
-      </View>
+      {imageUri ? <Image source={{ uri: imageUri }} style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: typeColor + "20" }} contentFit="cover" /> : (
+        <View style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: typeColor + "20", alignItems: "center", justifyContent: "center" }}>
+          <IconSymbol
+            name={room.type === "event" ? "calendar" : room.type === "board" ? "bubble.left.and.bubble.right.fill" : isDM ? "message.fill" : isRank ? "crown.fill" : "person.3.fill"}
+            size={22}
+            color={typeColor}
+          />
+        </View>
+      )}
       <View style={{ flex: 1, marginLeft: 12 }}>
         <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 3 }}>
-          <Text style={{ fontSize: 15, fontWeight: "700", color: colors.foreground, flex: 1 }} numberOfLines={1}>{room.type === "event" && eventStarts[room.sourceId] ? `${eventStarts[room.sourceId]} ${room.name}` : room.name}</Text>
+          <Text style={{ fontSize: 15, fontWeight: "700", color: colors.foreground, flex: 1 }} numberOfLines={1}>{displayName}</Text>
           <Text style={{ fontSize: 11, color: colors.muted }}>{timeAgo(room.lastMessageAt)}</Text>
           {mentionCount > 0 ? <View style={{ minHeight: 22, borderRadius: 11, backgroundColor: "#ED4245", alignItems: "center", justifyContent: "center", paddingHorizontal: 8, marginLeft: 7 }}><Text style={{ fontSize: 10, fontWeight: "900", color: "#FFF" }}>@ メンション {Math.min(mentionCount, 99)}</Text></View> : unreadCount > 0 ? <View style={{ minHeight: 22, borderRadius: 11, backgroundColor: "#5865F2", alignItems: "center", justifyContent: "center", paddingHorizontal: 8, marginLeft: 7 }}><Text style={{ fontSize: 10, fontWeight: "900", color: "#FFF" }}>新着 {Math.min(unreadCount, 99)}</Text></View> : null}
         </View>
@@ -169,15 +183,26 @@ export default function ChatListScreen() {
   const [myRooms, setMyRooms] = useState<ChatRoom[]>([]);
   const [rankRooms, setRankRooms] = useState<ChatRoom[]>([]);
   const [eventStarts, setEventStarts] = useState<Record<string, string>>({});
+  const [eventImages, setEventImages] = useState<Record<string, string>>({});
+  const [memberAvatars, setMemberAvatars] = useState<Record<string, string>>({});
 
   const refreshRooms = useCallback(async () => {
     const localJoinedRooms = userIsAdmin ? getAllRooms().filter((room) => room.type !== "rank") : getMyRooms(viewerMemberId).filter((room) => room.type !== "rank");
     const localRankRooms = getRankRoomsForUser(viewerRank);
     let sharedRooms: ChatRoom[] = [];
     try {
-      const [rooms, events] = await Promise.all([Api.getSharedChatRooms(), Api.getEvents().catch(() => [])]);
+      const [rooms, events, members] = await Promise.all([
+        Api.getSharedChatRooms(),
+        Api.getEvents().catch(() => []),
+        Api.getMemberDirectory().catch(() => []),
+      ]);
       sharedRooms = rooms.map((room) => ({ ...room, requiredRank: room.requiredRank as ChatRoom["requiredRank"] }));
       setEventStarts(Object.fromEntries(events.map((event) => [event.id, formatEventStart(event)])));
+      setEventImages(Object.fromEntries(events.flatMap((event) => typeof event.image === "string" && event.image ? [[event.id, event.image]] : [])));
+      setMemberAvatars(Object.fromEntries(members.flatMap((member) => {
+        const avatar = member.profile.avatarUrl;
+        return typeof avatar === "string" && avatar ? [[member.id, avatar]] : [];
+      })));
     } catch {
       // オフライン時も端末内の移行済みチャット一覧は利用できる。
     }
@@ -212,12 +237,12 @@ export default function ChatListScreen() {
         </Pressable>
       </View>
 
-      {announcementRoom ? <ChatRoomCard room={announcementRoom} eventStarts={eventStarts} /> : null}
+      {announcementRoom ? <ChatRoomCard room={announcementRoom} eventStarts={eventStarts} eventImages={eventImages} memberAvatars={memberAvatars} viewerMemberId={viewerMemberId} /> : null}
       <FlatList
         data={joinedChatRooms}
         keyExtractor={(item) => item.id}
-        renderItem={({ item }) => <ChatRoomCard room={item} eventStarts={eventStarts} />}
-        ListHeaderComponent={<>{rankRooms.length > 0 ? <View><View style={{ paddingHorizontal: 16, paddingVertical: 8, backgroundColor: colors.surface }}><Text style={{ fontSize: 12, fontWeight: "700", color: colors.muted, letterSpacing: 0.5 }}>あなたのランク専用チャット</Text></View>{rankRooms.map((room) => <ChatRoomCard key={room.id} room={room} eventStarts={eventStarts} />)}</View> : null}{joinedChatRooms.length > 0 ? <View style={{ paddingHorizontal: 16, paddingVertical: 8, backgroundColor: colors.surface }}><Text style={{ fontSize: 12, fontWeight: "700", color: colors.muted, letterSpacing: 0.5 }}>参加中のチャット</Text></View> : null}</>}
+        renderItem={({ item }) => <ChatRoomCard room={item} eventStarts={eventStarts} eventImages={eventImages} memberAvatars={memberAvatars} viewerMemberId={viewerMemberId} />}
+        ListHeaderComponent={<>{rankRooms.length > 0 ? <View><View style={{ paddingHorizontal: 16, paddingVertical: 8, backgroundColor: colors.surface }}><Text style={{ fontSize: 12, fontWeight: "700", color: colors.muted, letterSpacing: 0.5 }}>あなたのランク専用チャット</Text></View>{rankRooms.map((room) => <ChatRoomCard key={room.id} room={room} eventStarts={eventStarts} eventImages={eventImages} memberAvatars={memberAvatars} viewerMemberId={viewerMemberId} />)}</View> : null}{joinedChatRooms.length > 0 ? <View style={{ paddingHorizontal: 16, paddingVertical: 8, backgroundColor: colors.surface }}><Text style={{ fontSize: 12, fontWeight: "700", color: colors.muted, letterSpacing: 0.5 }}>参加中のチャット</Text></View> : null}</>}
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={<View style={{ alignItems: "center", paddingVertical: 60, paddingHorizontal: 24 }}><ActivityIndicator size="large" color="#E8A0BF" /><Text style={{ fontSize: 14, color: colors.muted, marginTop: 12 }}>チャットを読み込んでいます…</Text></View>}
       />

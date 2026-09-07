@@ -407,13 +407,17 @@ async function postEventCancellationToConfirmedChat(
   actorMemberId: number,
   now: string,
 ) {
-  const confirmed = await db.prepare(`SELECT member_id FROM event_participations
-    WHERE event_id = ? AND status IN ('confirmed', 'cancel_requested')`).bind(row.id).all<{ member_id: number }>();
-  if (!(confirmed.results ?? []).length) return;
+  const participations = await db.prepare(`SELECT member_id, status FROM event_participations
+    WHERE event_id = ? AND status IN ('applied', 'confirmed', 'cancel_requested')`).bind(row.id).all<{ member_id: number; status: string }>();
+  const confirmed = (participations.results ?? []).filter((participant) => participant.status === "confirmed" || participant.status === "cancel_requested");
+  const body = `【イベント中止のお知らせ】「${row.title}」は中止となりました。`;
+  for (const participant of participations.results ?? []) {
+    await notifyEventCancellation(db, participant.member_id, row.id, "イベントが中止されました", body);
+  }
+  if (!confirmed.length) return;
   let data: Record<string, unknown> = {};
   try { data = JSON.parse(row.public_data_json) as Record<string, unknown>; } catch {}
   const chatId = typeof data.chatId === "string" && data.chatId ? data.chatId : eventChatId(row.id);
-  const body = `【イベント中止のお知らせ】「${row.title}」は中止となりました。参加確定者へのご案内は完了しています。`;
   await db.batch([
     db.prepare(`INSERT OR IGNORE INTO chat_rooms (id, name, room_type, source_id, created_by_member_id, created_at, updated_at)
       VALUES (?, ?, 'event', ?, ?, ?, ?)`).bind(chatId, row.title, row.id, row.organizer_member_id, now, now),
@@ -421,7 +425,7 @@ async function postEventCancellationToConfirmedChat(
       VALUES (?, ?, 'owner', ?, NULL)
       ON CONFLICT(room_id, member_id) DO UPDATE SET member_role = 'owner', left_at = NULL`)
       .bind(chatId, row.organizer_member_id, now),
-    ...(confirmed.results ?? []).map((participant) => db.prepare(`INSERT INTO chat_room_members
+    ...confirmed.map((participant) => db.prepare(`INSERT INTO chat_room_members
       (room_id, member_id, member_role, joined_at, left_at) VALUES (?, ?, 'member', ?, NULL)
       ON CONFLICT(room_id, member_id) DO UPDATE SET left_at = NULL`)
       .bind(chatId, participant.member_id, now)),
@@ -429,9 +433,6 @@ async function postEventCancellationToConfirmedChat(
       VALUES (?, ?, ?, ?, ?, ?)`)
       .bind(`event_cancel_${crypto.randomUUID()}`, chatId, actorMemberId, body, now, now),
   ]);
-  for (const participant of confirmed.results ?? []) {
-    await notifyEventCancellation(db, participant.member_id, row.id, "イベントが中止されました", body);
-  }
 }
 
 async function createEvent(request: Request, db: D1Database, member: Awaited<ReturnType<typeof authenticatedRequestMember>>) {
