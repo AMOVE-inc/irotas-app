@@ -2,6 +2,7 @@ import { ScreenContainer } from "@/components/screen-container";
 import { NewMemberMark } from "@/components/new-member-mark";
 import { BrandLogo } from "@/components/brand-logo";
 import { EventImage } from "@/components/event-image";
+import { hasEventImageSource } from "@/lib/event-image-source";
 import { MemberRankBadge, MemberRoleBadge, stripRankFromName } from "@/components/member-rank-badge";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import {
@@ -253,7 +254,7 @@ function TodayEventsSection({
               overflow: "hidden",
             }}
           >
-            {event.image ? <EventImage event={event} style={{ width: 220, height: 100 }} /> : null}
+            {hasEventImageSource(event) ? <EventImage event={event} style={{ width: 220, height: 100 }} /> : null}
             <View style={{ padding: 10 }}>
               <Text
                 style={{ fontSize: 13, fontWeight: "700", color: colors.foreground, marginBottom: 4 }}

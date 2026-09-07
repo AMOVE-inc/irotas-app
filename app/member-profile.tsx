@@ -261,7 +261,7 @@ export default function MemberProfileScreen() {
           </View>
 
           <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", flexWrap: "wrap", marginTop: 6 }}>
-            <MemberRankBadge rank={member.rank} />
+            <MemberRankBadge rank={member.rank} name={member.name} role={member.role} />
             <MemberRoleBadge name={selfName ?? member.name} role={databaseMember?.accessRole ?? member.role} leaderLabel={leaderLabel} />
           </View>
 

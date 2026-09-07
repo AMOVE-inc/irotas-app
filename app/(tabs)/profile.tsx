@@ -925,7 +925,7 @@ export default function ProfileScreen() {
             <NewMemberMark member={user} size={17} />
           </View>
           <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", flexWrap: "wrap", marginTop: 4 }}>
-            <MemberRankBadge rank={user.rank} />
+            <MemberRankBadge rank={user.rank} name={user.name} role={user.role} />
             <MemberRoleBadge name={displayedProfileName} role={authUser?.accessRole} leaderLabel={leaderLabel} />
           </View>
 

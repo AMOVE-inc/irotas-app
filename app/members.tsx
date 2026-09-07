@@ -169,7 +169,7 @@ export default function MembersScreen() {
                       <Text style={{ fontSize: 10, fontWeight: "700", color: "#E8A0BF" }}>自分</Text>
                     </View>
                   )}
-                  <MemberRankBadge rank={item.rank} compact />
+                  <MemberRankBadge rank={item.rank} name={item.name} role={item.accessRole} compact />
                   <MemberRoleBadge name={item.accessRole === "club_leader" ? "" : item.rawName} role={item.accessRole} compact />
                   <MemberClubLeaderBadges roles={item.discordRoles} compact />
                 </View>

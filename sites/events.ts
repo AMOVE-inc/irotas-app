@@ -541,8 +541,24 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
       const cancellationPolicy = input.cancellationPolicy === undefined ? undefined : text(input.cancellationPolicy, 2000);
       const tabelogUrl = input.tabelogUrl === undefined ? undefined : text(input.tabelogUrl, 500);
       const googleMapsUrl = input.googleMapsUrl === undefined ? undefined : text(input.googleMapsUrl, 500);
-      if (!title || description === null || (date !== undefined && (typeof date !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(date))) || (time !== undefined && (typeof time !== "string" || !/^([01]\d|2[0-3]):(00|15|30|45)$/.test(time))) || location === null || capacity === null || reservationCapacity === null || price === null || priceMin === null || priceMax === null || applicationDeadline === null || cancellationPolicy === null || tabelogUrl === null || googleMapsUrl === null)
+      const eventType = input.eventType === undefined ? row.event_type : ["official", "gourmet", "club"].includes(String(input.eventType)) ? String(input.eventType) as EventRow["event_type"] : null;
+      const clubId = input.clubId === undefined ? row.club_id : text(input.clubId, 80);
+      const restaurantName = input.restaurantName === undefined ? undefined : text(input.restaurantName, 160);
+      const image = input.image === undefined ? undefined : text(input.image, 500, true);
+      const genres = input.genres === undefined ? undefined : stringArray(input.genres, 20);
+      const companionIds = input.companionIds === undefined ? undefined : stringArray(input.companionIds, 100, 40);
+      const rankPrices = input.rankPrices === undefined ? undefined : input.rankPrices && typeof input.rankPrices === "object" ? input.rankPrices : null;
+      const selectionMethod = input.selectionMethod === undefined ? undefined : input.selectionMethod === "lottery" ? "lottery" : input.selectionMethod === "first_come" ? "first_come" : null;
+      const category = input.category === undefined ? undefined : ["all", "kanto", "kansai"].includes(String(input.category)) ? input.category : null;
+      const prefecture = input.prefecture === undefined ? undefined : text(input.prefecture, 16);
+      const tokyoArea = input.tokyoArea === undefined ? undefined : text(input.tokyoArea, 80);
+      const publicNotes = input.publicNotes === undefined ? undefined : text(input.publicNotes, 5000);
+      const privateMemo = input.privateMemo === undefined ? undefined : text(input.privateMemo, 5000);
+      if (!title || description === null || (date !== undefined && (typeof date !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(date))) || (time !== undefined && (typeof time !== "string" || !/^([01]\d|2[0-3]):(00|15|30|45)$/.test(time))) || location === null || capacity === null || reservationCapacity === null || price === null || priceMin === null || priceMax === null || applicationDeadline === null || cancellationPolicy === null || tabelogUrl === null || googleMapsUrl === null || !eventType || clubId === null || restaurantName === null || (image !== undefined && (!image || !image.startsWith("/api/event-images/"))) || genres === null || companionIds === null || rankPrices === null || selectionMethod === null || category === null || prefecture === null || tokyoArea === null || publicNotes === null || privateMemo === null)
         return responseJson({ error: "変更内容が不正です" }, 400);
+      if (eventType === "official" && !elevated) return responseJson({ error: "公式イベントは運営メンバーのみ設定できます" }, 403);
+      if (eventType === "club" && (!clubId || !await canMemberAccessClub(env.DB, clubId, member.id, admin))) return responseJson({ error: "所属している部活動のみ設定できます" }, 403);
+      if (eventType !== "club" && genres !== undefined && genres.length === 0) return responseJson({ error: "グルメジャンルを1つ以上選択してください" }, 400);
       if (priceMin !== undefined && priceMax !== undefined && priceMin > priceMax) return responseJson({ error: "予算の範囲が不正です" }, 400);
       let data: Record<string, unknown> = {};
       try { data = JSON.parse(row.public_data_json) as Record<string, unknown>; } catch {}
@@ -559,10 +575,20 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
       if (cancellationPolicy !== undefined) data.cancellationPolicy = cancellationPolicy;
       if (tabelogUrl !== undefined) data.tabelogUrl = tabelogUrl || undefined;
       if (googleMapsUrl !== undefined) data.googleMapsUrl = googleMapsUrl || undefined;
+      if (restaurantName !== undefined) data.restaurantName = restaurantName || undefined;
+      if (image !== undefined) data.image = image;
+      if (genres !== undefined) data.genres = genres;
+      if (companionIds !== undefined) data.companionIds = companionIds;
+      if (rankPrices !== undefined) data.rankPrices = rankPrices;
+      if (selectionMethod !== undefined) data.selectionMethod = selectionMethod;
+      if (category !== undefined) data.category = category;
+      if (prefecture !== undefined) data.prefecture = prefecture || undefined;
+      if (tokyoArea !== undefined) data.tokyoArea = tokyoArea || undefined;
+      if (publicNotes !== undefined) data.publicNotes = publicNotes || undefined;
       const now = new Date().toISOString();
       await env.DB.batch([
-        env.DB.prepare("UPDATE events SET title = ?, event_date = ?, public_data_json = ?, updated_at = ? WHERE id = ?").bind(title, date ?? row.event_date, JSON.stringify(data), now, id),
-        ...["title", "description", "event_date", "time", "location", "capacity", "reservationCapacity", "price", "priceMin", "priceMax", "applicationDeadline", "cancellationPolicy", "tabelogUrl", "googleMapsUrl", "manualParticipantIds"].map((field) => env.DB!.prepare(`INSERT INTO event_import_field_edits (event_id, field_name, edited_at, actor_member_id)
+        env.DB.prepare("UPDATE events SET title = ?, event_type = ?, club_id = ?, event_date = ?, public_data_json = ?, private_memo = COALESCE(?, private_memo), updated_at = ? WHERE id = ?").bind(title, eventType, eventType === "club" ? clubId : null, date ?? row.event_date, JSON.stringify(data), privateMemo, now, id),
+        ...["title", "description", "eventType", "clubId", "restaurantName", "image", "genres", "companionIds", "rankPrices", "selectionMethod", "category", "prefecture", "tokyoArea", "publicNotes", "privateMemo", "event_date", "time", "location", "capacity", "reservationCapacity", "price", "priceMin", "priceMax", "applicationDeadline", "cancellationPolicy", "tabelogUrl", "googleMapsUrl", "manualParticipantIds"].map((field) => env.DB!.prepare(`INSERT INTO event_import_field_edits (event_id, field_name, edited_at, actor_member_id)
           VALUES (?, ?, ?, ?) ON CONFLICT(event_id, field_name) DO UPDATE SET edited_at = excluded.edited_at, actor_member_id = excluded.actor_member_id`).bind(id, field, now, member.id)),
         env.DB.prepare(`INSERT INTO audit_logs (actor_user_id, action, entity_type, entity_id, metadata_json, created_at)
           VALUES (?, 'event.edited', 'event', ?, ?, ?)`).bind(String(member.id), id, JSON.stringify({ participants: participants.length }), now),

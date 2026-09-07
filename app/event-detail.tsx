@@ -19,11 +19,16 @@ import { approveEventCancellationRequest, getPendingCancellationRequests, submit
 import { useColors } from "@/hooks/use-colors";
 import { useAuthContext } from "@/lib/auth-context";
 import { useClubs } from "@/lib/club-store";
-import { isAdminRole } from "@/lib/access-control";
+import { isAdminRole, isOperatorRole } from "@/lib/access-control";
 import { canViewerAccessClubContent, resolveViewerMemberId } from "@/lib/club-viewer-access";
 import { recordActivityEvent } from "@/lib/ai-data-store";
 import { getDiscordAuthorById, getDiscordAuthorByName } from "@/lib/discord-author-directory";
+import { findMentionedClub, findMentionedMemberId } from "@/lib/mention-targets";
+import { getConfirmedParticipantDisplayIds } from "@/lib/event-confirmed-participants";
+import { EVENT_AMOUNT_OPTIONS, EVENT_CAPACITY_OPTIONS, EVENT_RANKS, EVENT_TIME_OPTIONS, eventFormSaveFields, eventFormValuesFromEvent, type EventFormValues, validateEventForm } from "@/lib/event-form";
+import { GOURMET_GENRES } from "@/constants/event-options";
 import { Image } from "expo-image";
+import * as ImagePicker from "expo-image-picker";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import * as Api from "@/lib/_core/api";
@@ -42,6 +47,12 @@ import {
   TextInput,
   View,
 } from "react-native";
+
+function SharedEventSelectField({ label, value, options, onChange }: { label: string; value: string; options: string[]; onChange: (value: string) => void }) {
+  const colors = useColors();
+  const [visible, setVisible] = useState(false);
+  return <><Pressable onPress={() => setVisible(true)} style={{ marginTop: 5, minHeight: 44, borderWidth: 1, borderColor: colors.border, borderRadius: 10, paddingHorizontal: 11, justifyContent: "center" }}><Text style={{ color: value ? colors.foreground : colors.muted }}>{value || "選択してください"}</Text></Pressable><Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setVisible(false)}><View style={{ flex: 1, backgroundColor: colors.background }}><View style={{ flexDirection: "row", alignItems: "center", padding: 16, borderBottomWidth: 0.5, borderColor: colors.border }}><Text style={{ flex: 1, color: colors.foreground, fontSize: 18, fontWeight: "900" }}>{label}</Text><Pressable onPress={() => setVisible(false)}><Text style={{ color: "#D65E8D", fontWeight: "800" }}>閉じる</Text></Pressable></View><ScrollView>{options.map((option) => <Pressable key={option} onPress={() => { onChange(option); setVisible(false); }} style={{ padding: 15, borderBottomWidth: 0.5, borderColor: colors.border }}><Text style={{ color: colors.foreground, fontWeight: value === option ? "900" : "500" }}>{value === option ? "✓ " : ""}{option}</Text></Pressable>)}</ScrollView></View></Modal></>;
+}
 
 export default function EventDetailScreen() {
   const colors = useColors();
@@ -76,18 +87,32 @@ export default function EventDetailScreen() {
   const [eventCommentFocused, setEventCommentFocused] = useState(false);
   const [showAdminEdit, setShowAdminEdit] = useState(false);
   const [adminTitle, setAdminTitle] = useState(event?.title ?? "");
-  const [adminDescription, setAdminDescription] = useState(event?.description ?? "");
   const [adminParticipants, setAdminParticipants] = useState((event?.participants ?? []).join("\n"));
   const [adminDate, setAdminDate] = useState(event?.date ?? "");
   const [adminTime, setAdminTime] = useState(event?.time ?? "");
   const [adminLocation, setAdminLocation] = useState(event?.location ?? "");
   const [adminCapacity, setAdminCapacity] = useState(String(event?.capacity ?? ""));
   const [adminReservationCapacity, setAdminReservationCapacity] = useState(String(event?.reservationCapacity ?? event?.capacity ?? ""));
-  const [adminPrice, setAdminPrice] = useState(event?.price ?? "");
   const [adminDeadline, setAdminDeadline] = useState(event?.applicationDeadline ?? "");
   const [adminCancellationPolicy, setAdminCancellationPolicy] = useState(event?.cancellationPolicy ?? "");
   const [adminTabelogUrl, setAdminTabelogUrl] = useState(event?.tabelogUrl ?? "");
   const [adminGoogleMapsUrl, setAdminGoogleMapsUrl] = useState(event?.googleMapsUrl ?? "");
+  const [adminEventType, setAdminEventType] = useState<Event["eventType"]>(event?.eventType ?? "gourmet");
+  const [adminClubId, setAdminClubId] = useState(event?.clubId ?? "");
+  const [adminRestaurantName, setAdminRestaurantName] = useState(event?.restaurantName ?? "");
+  const [adminFixedAmount, setAdminFixedAmount] = useState(true);
+  const [adminBudgetMin, setAdminBudgetMin] = useState("");
+  const [adminBudgetMax, setAdminBudgetMax] = useState("");
+  const [adminCompanionIds, setAdminCompanionIds] = useState<string[]>(event?.companionIds ?? []);
+  const [adminImage, setAdminImage] = useState(typeof event?.image === "string" ? event.image : "");
+  const [adminImageChanged, setAdminImageChanged] = useState(false);
+  const [adminPublicNotes, setAdminPublicNotes] = useState(event?.publicNotes ?? event?.description ?? "");
+  const [adminPrivateMemo, setAdminPrivateMemo] = useState(event?.privateMemo ?? "");
+  const [adminSelectionMethod, setAdminSelectionMethod] = useState<"first_come" | "lottery">(event?.selectionMethod === "lottery" ? "lottery" : "first_come");
+  const [adminUseRankPrices, setAdminUseRankPrices] = useState(Boolean(event?.rankPrices));
+  const [adminRankPrices, setAdminRankPrices] = useState<EventFormValues["rankPrices"]>({ regular: "", silver: "", gold: "", platinum: "" });
+  const [adminGenres, setAdminGenres] = useState<string[]>(event?.genres ?? []);
+  const [adminSaving, setAdminSaving] = useState(false);
   const [participantSearch, setParticipantSearch] = useState("");
   const [linkCopied, setLinkCopied] = useState(false);
   const [memberDirectory, setMemberDirectory] = useState<Api.PublicMember[]>([]);
@@ -116,11 +141,13 @@ export default function EventDetailScreen() {
 
   useEffect(() => {
     if (!event || showAdminEdit) return;
-    setAdminTitle(event.title); setAdminDescription(event.description); setAdminParticipants((event.participants ?? []).join("\n"));
+    const form = eventFormValuesFromEvent(event);
+    setAdminTitle(event.title); setAdminParticipants((event.participants ?? []).join("\n"));
     setAdminDate(event.date); setAdminTime(event.time); setAdminLocation(event.location); setAdminCapacity(String(event.capacity));
-    setAdminReservationCapacity(String(event.reservationCapacity ?? event.capacity)); setAdminPrice(event.price ?? "");
+    setAdminReservationCapacity(String(event.reservationCapacity ?? event.capacity));
     setAdminDeadline(event.applicationDeadline ?? ""); setAdminCancellationPolicy(event.cancellationPolicy ?? "");
     setAdminTabelogUrl(event.tabelogUrl ?? ""); setAdminGoogleMapsUrl(event.googleMapsUrl ?? "");
+    setAdminEventType(form.eventType); setAdminClubId(form.clubId); setAdminRestaurantName(form.restaurantName); setAdminFixedAmount(form.fixedAmount); setAdminBudgetMin(form.budgetMin); setAdminBudgetMax(form.budgetMax); setAdminCompanionIds(form.companionIds); setAdminImage(form.image); setAdminImageChanged(false); setAdminPublicNotes(form.publicNotes); setAdminPrivateMemo(form.privateMemo); setAdminSelectionMethod(form.selectionMethod); setAdminUseRankPrices(form.useRankPrices); setAdminRankPrices(form.rankPrices); setAdminGenres(form.genres);
   }, [event, showAdminEdit]);
 
   useEffect(() => {
@@ -196,11 +223,8 @@ export default function EventDetailScreen() {
   const isOfficialEvent = event.eventType === "official";
   const pointsToUse = usePoints && isOfficialEvent ? Math.min(irotasPoints, priceNum) : 0;
   const finalPrice = Math.max(0, priceNum - pointsToUse);
-  const confirmedIds = [...new Set([...(event.participants ?? []), ...(event.companionIds ?? [])])];
   const organizerId = event.organizerProfileId ?? event.createdBy;
-  const confirmedDisplayIds = confirmedIds.length && organizerId
-    ? [organizerId, ...confirmedIds.filter((memberId) => memberId !== organizerId)]
-    : confirmedIds;
+  const confirmedDisplayIds = getConfirmedParticipantDisplayIds(event.participants, event.companionIds, organizerId);
   const applicantCount = event.applicantIds?.length ?? event.attendees;
   const organizer = getMemberById(organizerId) ?? getMemberById(event.createdBy);
   const viewerMemberId = event.viewerMemberId ?? authenticatedViewerMemberId;
@@ -210,6 +234,8 @@ export default function EventDetailScreen() {
   const hasPendingCancellationRequest = pendingCancellationRequests.some((request) => request.memberId === viewerMemberId);
   const requiresOrganizerApproval = true;
   const canAdminEdit = isAdminRole(authUser?.role, authUser?.accessRole);
+  const userIsOperator = isOperatorRole(authUser?.role, authUser?.accessRole);
+  const editableClubs = clubs.filter((club) => canViewerAccessClubContent(club, authUser?.memberId, CURRENT_USER.id, canAdminEdit));
   const canManageEvent = canAdminEdit || isOrganizer;
   const showApplicationConfirmation = (title: string, message: string, buttons: AlertButton[]) => setApplicationConfirmation({ title, message, buttons });
 
@@ -757,7 +783,7 @@ export default function EventDetailScreen() {
         </View>
 
         <View style={{ flexDirection: "row", gap: 8, marginBottom: 16 }}>
-          {[{ label: "現在の参加申込", value: applicantCount, color: "#5B9BD5" }, { label: "募集定員", value: event.capacity, color: "#E8A0BF" }, { label: "参加確定", value: confirmedIds.length, color: "#34C759" }].map((item) => (
+          {[{ label: "現在の参加申込", value: applicantCount, color: "#5B9BD5" }, { label: "募集定員", value: event.capacity, color: "#E8A0BF" }, { label: "参加確定", value: confirmedDisplayIds.length, color: "#34C759" }].map((item) => (
             <View key={item.label} style={{ flex: 1, backgroundColor: colors.surface, borderRadius: 12, paddingVertical: 12, alignItems: "center", borderTopWidth: 3, borderTopColor: item.color }}>
               <Text style={{ fontSize: 10, color: colors.muted, textAlign: "center" }}>{item.label}</Text>
               <Text style={{ fontSize: 22, fontWeight: "900", color: item.color, marginTop: 3 }}>{item.value}<Text style={{ fontSize: 11 }}>人</Text></Text>
@@ -771,7 +797,7 @@ export default function EventDetailScreen() {
           <IconSymbol name="chevron.right" size={17} color={colors.muted} />
         </Pressable>
 
-        {canManageEvent ? <Pressable onPress={() => { setAdminTitle(event.title); setAdminDescription(event.description); setAdminParticipants((event.participants ?? []).join("\n")); setShowAdminEdit(true); }} style={{ marginBottom: 16, borderRadius: 12, paddingVertical: 12, alignItems: "center", backgroundColor: "#B42318" }}><Text style={{ color: "#FFF", fontSize: 14, fontWeight: "900" }}>{canAdminEdit ? "管理者：イベント情報を編集" : "イベント情報を編集"}</Text></Pressable> : null}
+        {canManageEvent ? <Pressable onPress={() => { const form = eventFormValuesFromEvent(event); setAdminTitle(form.eventName); setAdminParticipants((event.participants ?? []).join("\n")); setAdminDate(form.date); setAdminTime(form.time); setAdminLocation(form.address); setAdminCapacity(form.recruitCapacity); setAdminReservationCapacity(form.reservationCapacity); setAdminEventType(form.eventType); setAdminClubId(form.clubId); setAdminRestaurantName(form.restaurantName); setAdminFixedAmount(form.fixedAmount); setAdminBudgetMin(form.budgetMin); setAdminBudgetMax(form.budgetMax); setAdminCompanionIds(form.companionIds); setAdminImage(form.image); setAdminImageChanged(false); setAdminPublicNotes(form.publicNotes); setAdminPrivateMemo(form.privateMemo); setAdminSelectionMethod(form.selectionMethod); setAdminUseRankPrices(form.useRankPrices); setAdminRankPrices(form.rankPrices); setAdminGenres(form.genres); setShowAdminEdit(true); }} style={{ marginBottom: 16, borderRadius: 12, paddingVertical: 12, alignItems: "center", backgroundColor: "#B42318" }}><Text style={{ color: "#FFF", fontSize: 14, fontWeight: "900" }}>{canAdminEdit ? "管理者：イベント情報を編集" : "イベント情報を編集"}</Text></Pressable> : null}
 
         {isOrganizer ? (
           <View style={{ backgroundColor: "#F5F8FC", borderRadius: 14, padding: 14, marginBottom: 16, borderWidth: 1, borderColor: "#DCE7F2" }}>
@@ -921,11 +947,6 @@ export default function EventDetailScreen() {
               />
             </View>
           )}
-          {!isOfficialEvent && priceNum > 0 && (
-            <Text style={{ marginTop: 12, fontSize: 12, color: colors.muted }}>
-              イロタスポイントは公式イベントの参加費にのみ利用できます。
-            </Text>
-          )}
         </View>
 
         {/* Description */}
@@ -933,7 +954,7 @@ export default function EventDetailScreen() {
           <Text style={{ fontSize: 18, fontWeight: "700", color: colors.foreground, marginBottom: 8 }}>
             イベント詳細
           </Text>
-          <MentionText content={event.description} groups={eventMentionGroups} onMentionPress={(label) => { const normalized = stripRankFromName(label); const target = memberDirectory.find((member) => stripRankFromName(member.displayName) === normalized) ?? MEMBERS.find((member) => stripRankFromName(member.name) === normalized) ?? getDiscordAuthorByName(normalized); if (target) openMemberProfile(target.id); }} />
+          <MentionText content={event.description} groups={eventMentionGroups} onClubMentionPress={(group) => { const club = findMentionedClub(group.label, clubs); if (!club) return; if (canViewerAccessClubContent(club, authUser?.memberId, CURRENT_USER.id, isAdminRole(authUser?.role, authUser?.accessRole))) { router.push({ pathname: "/board", params: { category: `club-${club.id}`, view: "threads" } }); return; } router.push({ pathname: "/clubs", params: { clubId: club.id } }); }} onMentionPress={(label) => { const normalized = stripRankFromName(label); const targetId = findMentionedMemberId(normalized, [...memberDirectory.map((member) => ({ id: member.id, displayName: stripRankFromName(member.displayName) })), ...MEMBERS.map((member) => ({ id: member.id, name: stripRankFromName(member.name) }))]) ?? getDiscordAuthorByName(normalized)?.id; if (targetId) openMemberProfile(targetId); }} />
         </View>
 
         {event.applicationDeadline ? (
@@ -976,14 +997,14 @@ export default function EventDetailScreen() {
         {/* 参加確定者一覧 */}
         <View style={{ marginBottom: 16 }}>
             <Text style={{ fontSize: 15, fontWeight: "700", color: colors.foreground, marginBottom: 10 }}>
-              参加確定者 ({confirmedIds.length}人)
+              参加確定者 ({confirmedDisplayIds.length}人)
             </Text>
             {confirmedDisplayIds.length ? <View style={{ borderRadius: 14, backgroundColor: colors.surface, overflow: "hidden" }}>
               {confirmedDisplayIds.map((uid) => {
                 const directoryMember = memberDirectory.find((item) => item.id === uid);
                 const member = getMemberById(uid);
                 const discordAuthor = getDiscordAuthorById(uid);
-                const memberName = directoryMember?.displayName ?? member?.name ?? discordAuthor?.name ?? "メンバー";
+                const memberName = directoryMember?.displayName ?? member?.name ?? discordAuthor?.name ?? `会員ID ${uid}`;
                 const directoryAvatar = typeof directoryMember?.profile?.avatarUrl === "string" ? directoryMember.profile.avatarUrl : undefined;
                 const rawRank = directoryMember?.memberRank ?? member?.rank ?? discordAuthor?.rank ?? "regular";
                 const memberRank = (["regular", "silver", "gold", "platinum"].includes(rawRank) ? rawRank : "regular") as MemberRank;
@@ -1009,8 +1030,8 @@ export default function EventDetailScreen() {
                     />
                     <View style={{ flex: 1, flexDirection: "row", alignItems: "center", marginLeft: 11 }}>
                       <Text style={{ fontSize: 14, fontWeight: "800", color: colors.foreground }} numberOfLines={1}>{stripRankFromName(memberName)}</Text>
-                      <MemberRankBadge rank={memberRank} name={memberName} compact />
-                      <MemberRoleBadge name={memberName} compact />
+                      <MemberRankBadge rank={memberRank} name={memberName} role={directoryMember?.accessRole ?? member?.role} compact />
+                      <MemberRoleBadge name={memberName} role={directoryMember?.accessRole ?? member?.role} compact />
                       {uid === organizerId ? <View style={{ marginLeft: 6, borderRadius: 8, backgroundColor: "#838087", paddingHorizontal: 7, paddingVertical: 3 }}><Text style={{ fontSize: 10, fontWeight: "900", color: "#FFF" }}>幹事</Text></View> : null}
                     </View>
                     <IconSymbol name="chevron.right" size={16} color={colors.muted} />
@@ -1048,17 +1069,25 @@ export default function EventDetailScreen() {
           <View style={{ maxHeight: "90%", borderRadius: 20, backgroundColor: colors.background, overflow: "hidden" }}>
             <ScrollView contentContainerStyle={{ padding: 18 }} keyboardShouldPersistTaps="handled">
               <Text style={{ fontSize: 19, fontWeight: "900", color: colors.foreground }}>イベント情報を編集</Text>
-              {[
-                ["タイトル", adminTitle, setAdminTitle], ["開催日（YYYY-MM-DD）", adminDate, setAdminDate], ["開始時刻（HH:MM）", adminTime, setAdminTime], ["場所", adminLocation, setAdminLocation],
-                ["募集人数（幹事除く）", adminCapacity, setAdminCapacity], ["予約人数", adminReservationCapacity, setAdminReservationCapacity], [event.eventType === "gourmet" || event.eventType === "club" ? "予算" : "参加費", adminPrice, setAdminPrice],
-                ["募集締切（YYYY-MM-DD）", adminDeadline, setAdminDeadline], ["食べログURL", adminTabelogUrl, setAdminTabelogUrl], ["GoogleマップURL", adminGoogleMapsUrl, setAdminGoogleMapsUrl], ["キャンセルポリシー", adminCancellationPolicy, setAdminCancellationPolicy],
-              ].map(([label, value, setter]) => <View key={String(label)}><Text style={{ marginTop: 12, fontSize: 12, fontWeight: "800", color: colors.muted }}>{String(label)}</Text><TextInput value={String(value)} onChangeText={setter as (value: string) => void} multiline={String(label) === "キャンセルポリシー"} style={{ marginTop: 5, minHeight: String(label) === "キャンセルポリシー" ? 70 : undefined, borderWidth: 1, borderColor: colors.border, borderRadius: 10, padding: 11, color: colors.foreground, textAlignVertical: "top" }} /></View>)}
-              <Text style={{ marginTop: 12, fontSize: 12, fontWeight: "800", color: colors.muted }}>詳細</Text><TextInput value={adminDescription} onChangeText={setAdminDescription} multiline style={{ marginTop: 5, minHeight: 120, borderWidth: 1, borderColor: colors.border, borderRadius: 10, padding: 11, color: colors.foreground, textAlignVertical: "top" }} />
+              <Text style={{ marginTop: 12, fontSize: 12, fontWeight: "800", color: colors.muted }}>イベント種別</Text><View style={{ flexDirection: "row", gap: 7, marginTop: 5 }}>{([...(userIsOperator ? ["official"] as const : []), "gourmet", ...(editableClubs.length ? ["club"] as const : [])] as Event["eventType"][]).map((type) => <Pressable key={type} onPress={() => { setAdminEventType(type); if (type !== "official") setAdminUseRankPrices(false); if (type === "club" && !adminClubId) setAdminClubId(editableClubs[0]?.id ?? ""); }} style={{ flex: 1, padding: 10, borderRadius: 10, backgroundColor: adminEventType === type ? "#5B9BD5" : colors.surface }}><Text style={{ textAlign: "center", fontSize: 12, fontWeight: "800", color: adminEventType === type ? "#FFF" : colors.foreground }}>{type === "official" ? "公式" : type === "club" ? "部活動" : "グルメ会"}</Text></Pressable>)}</View>
+              {adminEventType === "club" ? <><Text style={{ marginTop: 12, fontSize: 12, fontWeight: "800", color: colors.muted }}>開催する部活動</Text><View style={{ flexDirection: "row", flexWrap: "wrap", gap: 7, marginTop: 5 }}>{editableClubs.map((club) => <Pressable key={club.id} onPress={() => setAdminClubId(club.id)} style={{ paddingHorizontal: 10, paddingVertical: 7, borderRadius: 16, backgroundColor: adminClubId === club.id ? "#4E6756" : colors.surface }}><Text style={{ fontSize: 12, fontWeight: "800", color: adminClubId === club.id ? "#FFF" : colors.foreground }}>{club.icon} {club.name}</Text></Pressable>)}</View></> : null}
+              {adminEventType === "official" ? <><Text style={{ marginTop: 12, fontSize: 12, fontWeight: "800", color: colors.muted }}>参加者の決め方</Text><View style={{ flexDirection: "row", gap: 7, marginTop: 5 }}>{(["first_come", "lottery"] as const).map((method) => <Pressable key={method} onPress={() => setAdminSelectionMethod(method)} style={{ flex: 1, padding: 10, borderRadius: 10, backgroundColor: adminSelectionMethod === method ? "#E8A0BF" : colors.surface }}><Text style={{ textAlign: "center", fontSize: 12, fontWeight: "800", color: adminSelectionMethod === method ? "#FFF" : colors.foreground }}>{method === "first_come" ? "先着順" : "抽選"}</Text></Pressable>)}</View></> : null}
+              {[[adminEventType === "club" ? "店名・会場名" : "店名", adminRestaurantName, setAdminRestaurantName], ["イベント名", adminTitle, setAdminTitle], ["開催日（YYYY-MM-DD）", adminDate, setAdminDate], ["住所", adminLocation, setAdminLocation], ["募集締切（YYYY-MM-DD）", adminDeadline, setAdminDeadline], ["食べログURL", adminTabelogUrl, setAdminTabelogUrl], ["GoogleマップURL", adminGoogleMapsUrl, setAdminGoogleMapsUrl], ["キャンセルポリシー", adminCancellationPolicy, setAdminCancellationPolicy]].map(([label, value, setter]) => <View key={String(label)}><Text style={{ marginTop: 12, fontSize: 12, fontWeight: "800", color: colors.muted }}>{String(label)}</Text><TextInput value={String(value)} onChangeText={setter as (value: string) => void} multiline={String(label) === "キャンセルポリシー"} style={{ marginTop: 5, minHeight: String(label) === "キャンセルポリシー" ? 70 : undefined, borderWidth: 1, borderColor: colors.border, borderRadius: 10, padding: 11, color: colors.foreground, textAlignVertical: "top" }} /></View>)}
+              <Text style={{ marginTop: 12, fontSize: 12, fontWeight: "800", color: colors.muted }}>開始時刻（15分単位）</Text><SharedEventSelectField label="開始時刻" value={adminTime} options={EVENT_TIME_OPTIONS} onChange={setAdminTime} />
+              <Text style={{ marginTop: 12, fontSize: 12, fontWeight: "800", color: colors.muted }}>募集人数（幹事除く）</Text><SharedEventSelectField label="募集人数" value={adminCapacity} options={EVENT_CAPACITY_OPTIONS} onChange={setAdminCapacity} />
+              <Text style={{ marginTop: 12, fontSize: 12, fontWeight: "800", color: colors.muted }}>予約人数</Text><SharedEventSelectField label="予約人数" value={adminReservationCapacity} options={EVENT_CAPACITY_OPTIONS} onChange={setAdminReservationCapacity} />
+              {adminEventType !== "club" ? <><Text style={{ marginTop: 12, fontSize: 12, fontWeight: "800", color: colors.muted }}>グルメジャンル（複数選択）</Text><View style={{ flexDirection: "row", flexWrap: "wrap", gap: 7, marginTop: 5 }}>{GOURMET_GENRES.map((genre) => { const selected = adminGenres.includes(genre); return <Pressable key={genre} onPress={() => setAdminGenres((current) => selected ? current.filter((item) => item !== genre) : [...current, genre])} style={{ borderRadius: 16, paddingHorizontal: 10, paddingVertical: 7, backgroundColor: selected ? "#5D5C74" : colors.surface }}><Text style={{ fontSize: 12, fontWeight: "800", color: selected ? "#FFF" : colors.foreground }}>{genre}</Text></Pressable>; })}</View></> : null}
+              <Text style={{ marginTop: 12, fontSize: 12, fontWeight: "800", color: colors.muted }}>{adminEventType === "official" ? "参加費" : "予算"}</Text><Pressable onPress={() => { setAdminFixedAmount((value) => !value); setAdminBudgetMin(""); setAdminBudgetMax(""); }} style={{ marginTop: 6 }}><Text style={{ color: "#D65E8D", fontWeight: "800" }}>{adminFixedAmount ? "✓ 固定金額で設定" : "範囲で設定"}</Text></Pressable>{adminFixedAmount ? <TextInput value={adminBudgetMin} onChangeText={(value) => setAdminBudgetMin(value.replace(/[^0-9]/g, ""))} placeholder="例：8000" keyboardType="number-pad" style={{ marginTop: 6, borderWidth: 1, borderColor: colors.border, borderRadius: 10, padding: 11, color: colors.foreground }} /> : <View style={{ gap: 8, marginTop: 6 }}><SharedEventSelectField label="予算下限" value={adminBudgetMin} options={EVENT_AMOUNT_OPTIONS} onChange={setAdminBudgetMin} /><SharedEventSelectField label="予算上限" value={adminBudgetMax} options={EVENT_AMOUNT_OPTIONS} onChange={setAdminBudgetMax} /></View>}
+              {adminEventType === "official" ? <><Pressable onPress={() => setAdminUseRankPrices((value) => !value)} style={{ marginTop: 12 }}><Text style={{ color: "#D65E8D", fontWeight: "800" }}>{adminUseRankPrices ? "✓ ランク別料金を設定" : "ランク別料金を設定する"}</Text></Pressable>{adminUseRankPrices ? EVENT_RANKS.map((rank) => <View key={rank}><Text style={{ marginTop: 8, fontSize: 12, color: colors.muted }}>{rank}</Text><SharedEventSelectField label={`${rank}料金`} value={adminRankPrices[rank]} options={EVENT_AMOUNT_OPTIONS} onChange={(value) => setAdminRankPrices((current) => ({ ...current, [rank]: value }))} /></View>) : null}</> : null}
+              <Text style={{ marginTop: 12, fontSize: 12, fontWeight: "800", color: colors.muted }}>同席者（会員IDを改行またはカンマ区切り）</Text><TextInput value={adminCompanionIds.join("\n")} onChangeText={(value) => setAdminCompanionIds(value.split(/[\n,、]/).map((item) => item.trim()).filter(Boolean))} multiline placeholder="同席者ID" placeholderTextColor={colors.muted} style={{ marginTop: 5, minHeight: 64, borderWidth: 1, borderColor: colors.border, borderRadius: 10, padding: 11, color: colors.foreground }} />
+              <Text style={{ marginTop: 12, fontSize: 12, fontWeight: "800", color: colors.muted }}>写真</Text><Pressable onPress={async () => { const permission = await ImagePicker.requestMediaLibraryPermissionsAsync(); if (!permission.granted) { Alert.alert("権限が必要です", "写真を選ぶには写真ライブラリへのアクセスを許可してください"); return; } const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images, quality: 0.8 }); if (!result.canceled && result.assets[0]) { setAdminImage(result.assets[0].uri); setAdminImageChanged(true); } }} style={{ marginTop: 5, height: 120, borderRadius: 10, overflow: "hidden", backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, alignItems: "center", justifyContent: "center" }}>{adminImage ? <Image source={{ uri: adminImage }} style={{ width: "100%", height: "100%" }} contentFit="cover" /> : <Text style={{ color: colors.muted }}>写真を選択</Text>}</Pressable>
+              <Text style={{ marginTop: 12, fontSize: 12, fontWeight: "800", color: colors.muted }}>自由記述欄</Text><TextInput value={adminPublicNotes} onChangeText={setAdminPublicNotes} multiline style={{ marginTop: 5, minHeight: 100, borderWidth: 1, borderColor: colors.border, borderRadius: 10, padding: 11, color: colors.foreground, textAlignVertical: "top" }} />
+              <Text style={{ marginTop: 12, fontSize: 12, fontWeight: "800", color: colors.muted }}>自分用メモ</Text><TextInput value={adminPrivateMemo} onChangeText={setAdminPrivateMemo} multiline style={{ marginTop: 5, minHeight: 80, borderWidth: 1, borderColor: colors.border, borderRadius: 10, padding: 11, color: colors.foreground, textAlignVertical: "top" }} />
               <Text style={{ marginTop: 12, fontSize: 12, fontWeight: "800", color: colors.muted }}>参加確定者（名前またはIDで検索）</Text>
               <TextInput value={participantSearch} onChangeText={setParticipantSearch} placeholder="名前またはIDを入力" placeholderTextColor={colors.muted} style={{ marginTop: 5, borderWidth: 1, borderColor: colors.border, borderRadius: 10, padding: 11, color: colors.foreground }} />
               {participantSearch.trim() ? memberDirectory.filter((member) => `${member.id} ${member.displayName}`.toLowerCase().includes(participantSearch.trim().toLowerCase())).slice(0, 8).map((member) => <Pressable key={member.id} onPress={() => { const ids = adminParticipants.split(/[\n,、]/).map((value) => value.trim()).filter(Boolean); if (!ids.includes(member.id)) setAdminParticipants([...ids, member.id].join("\n")); setParticipantSearch(""); }} style={{ paddingVertical: 8, borderBottomWidth: 0.5, borderBottomColor: colors.border }}><Text style={{ fontSize: 13, color: colors.foreground }}>{member.displayName}　{member.memberTerm ?? ""}</Text></Pressable>) : null}
               <TextInput value={adminParticipants} onChangeText={setAdminParticipants} multiline placeholder="参加確定者ID（1行に1人）" placeholderTextColor={colors.muted} style={{ marginTop: 7, minHeight: 80, borderWidth: 1, borderColor: colors.border, borderRadius: 10, padding: 11, color: colors.foreground, textAlignVertical: "top" }} />
-              <View style={{ flexDirection: "row", gap: 10, marginTop: 16 }}><Pressable onPress={() => setShowAdminEdit(false)} style={{ flex: 1, paddingVertical: 13, alignItems: "center", borderRadius: 11, backgroundColor: colors.surface }}><Text style={{ fontWeight: "800", color: colors.foreground }}>キャンセル</Text></Pressable><Pressable onPress={async () => { try { const updated = await Api.updateEventDetails(event.id, { title: adminTitle.trim(), description: adminDescription.trim(), participants: adminParticipants.split(/[\n,、]/).map((value) => value.trim()).filter(Boolean), date: adminDate.trim(), time: adminTime.trim(), location: adminLocation.trim(), capacity: Number(adminCapacity), reservationCapacity: Number(adminReservationCapacity), price: adminPrice.trim(), applicationDeadline: adminDeadline.trim(), cancellationPolicy: adminCancellationPolicy.trim(), tabelogUrl: adminTabelogUrl.trim(), googleMapsUrl: adminGoogleMapsUrl.trim() }); setEvent(updated); setShowAdminEdit(false); Alert.alert("更新しました"); } catch (error) { Alert.alert("更新できませんでした", error instanceof Error ? error.message : "もう一度お試しください。"); } }} style={{ flex: 1, paddingVertical: 13, alignItems: "center", borderRadius: 11, backgroundColor: "#B42318" }}><Text style={{ fontWeight: "900", color: "#FFF" }}>保存</Text></Pressable></View>
+              <View style={{ flexDirection: "row", gap: 10, marginTop: 16 }}><Pressable onPress={() => setShowAdminEdit(false)} style={{ flex: 1, paddingVertical: 13, alignItems: "center", borderRadius: 11, backgroundColor: colors.surface }}><Text style={{ fontWeight: "800", color: colors.foreground }}>キャンセル</Text></Pressable><Pressable disabled={adminSaving} onPress={async () => { const form: EventFormValues = { eventType: adminEventType, clubId: adminClubId, restaurantName: adminRestaurantName, eventName: adminTitle, date: adminDate, time: adminTime, address: adminLocation, reservationCapacity: adminReservationCapacity, recruitCapacity: adminCapacity, fixedAmount: adminFixedAmount, budgetMin: adminBudgetMin, budgetMax: adminBudgetMax, tabelogUrl: adminTabelogUrl, googleMapsUrl: adminGoogleMapsUrl, companionIds: adminCompanionIds, image: adminImage, decisionDate: adminDeadline, publicNotes: adminPublicNotes, privateMemo: adminPrivateMemo, cancellationPolicy: adminCancellationPolicy, selectionMethod: adminSelectionMethod, useRankPrices: adminUseRankPrices, rankPrices: adminRankPrices, genres: adminGenres }; const validationError = validateEventForm(form, { requireImage: false, allowedClubIds: editableClubs.map((club) => club.id) }); if (validationError) { Alert.alert("入力エラー", validationError); return; } setAdminSaving(true); try { const fields = eventFormSaveFields(form); const uploadedImage = adminImageChanged ? (await Api.uploadEventImage(adminImage)).imageUrl : undefined; const updated = await Api.updateEventDetails(event.id, { ...fields, image: uploadedImage, title: fields.title, description: fields.description, participants: adminParticipants.split(/[\n,、]/).map((value) => value.trim()).filter(Boolean) }); setEvent(updated); setShowAdminEdit(false); Alert.alert("更新しました"); } catch (error) { Alert.alert("更新できませんでした", error instanceof Error ? error.message : "もう一度お試しください。"); } finally { setAdminSaving(false); } }} style={{ flex: 1, paddingVertical: 13, alignItems: "center", borderRadius: 11, backgroundColor: "#B42318", opacity: adminSaving ? 0.6 : 1 }}><Text style={{ fontWeight: "900", color: "#FFF" }}>{adminSaving ? "保存中…" : "保存"}</Text></Pressable></View>
             </ScrollView>
           </View>
         </View>

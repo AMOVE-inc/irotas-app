@@ -17,7 +17,7 @@ import { useColors } from "@/hooks/use-colors";
 import { createBoardChat } from "@/lib/chat-store";
 import { canCreateClub, isAdminRole } from "@/lib/access-control";
 import { Image } from "expo-image";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import * as Api from "@/lib/_core/api";
 import {
@@ -53,6 +53,7 @@ import { getClubIntroductionContent, getLatestClubActivityReports } from "@/lib/
 import { parseDiscordBoardArchive } from "@/lib/discord-board-import";
 import { MentionText } from "@/components/mention-ui";
 import { getMentionGroups } from "@/lib/mentions";
+import { formatClubLeaderName, formatClubName } from "@/lib/club-display";
 
 const CLUB_OVERVIEW_MENTION_GROUPS = getMentionGroups(MEMBERS, CLUBS);
 
@@ -105,7 +106,7 @@ function ClubCard({ club, onPress, previewAsMember = false }: { club: Club; onPr
       onPress={onPress}
       disabled={!onPress}
       accessibilityRole="button"
-      accessibilityLabel={`${club.name} ${actionLabel}`}
+      accessibilityLabel={`${formatClubName(club.name)} ${actionLabel}`}
       style={({ pressed }) => ({
         backgroundColor: colors.surface,
         borderRadius: 16,
@@ -133,7 +134,7 @@ function ClubCard({ club, onPress, previewAsMember = false }: { club: Club; onPr
         <View style={{ flex: 1, marginLeft: 12 }}>
           <View style={{ flexDirection: "row", alignItems: "center", flexWrap: "wrap", gap: 6 }}>
             <Text style={{ fontSize: 17, fontWeight: "700", color: colors.foreground }}>
-              {club.name}
+              {formatClubName(club.name)}
             </Text>
             {previewAsMember ? (
               <View style={{ backgroundColor: "#FFF0F6", borderRadius: 8, paddingHorizontal: 8, paddingVertical: 2 }}>
@@ -146,7 +147,7 @@ function ClubCard({ club, onPress, previewAsMember = false }: { club: Club; onPr
             )}
           </View>
           <Text style={{ fontSize: 12, color: colors.muted, marginTop: 2 }}>
-            部長: {leader?.name ?? club.leaderName ?? "未設定"} · {club.memberIds.length}人
+            部長: {formatClubLeaderName(leader?.name ?? club.leaderName)} · {club.memberIds.length}人
           </Text>
         </View>
       </View>
@@ -745,7 +746,13 @@ function ClubDetailModal({
   const router = useRouter();
   const { user: authUser } = useAuthContext();
   const userIsAdmin = isAdminRole(authUser?.role, authUser?.accessRole);
-  const leader = getMemberById(club.leaderId) ?? (club.leaderName && club.leaderId ? { ...CURRENT_USER, id: club.leaderId, name: club.leaderName, avatar: DEFAULT_AVATAR } : undefined);
+  const [memberDirectory, setMemberDirectory] = useState<Api.PublicMember[]>([]);
+  const staticLeader = getMemberById(club.leaderId);
+  const directoryLeader = memberDirectory.find((member) => member.id === club.leaderId);
+  const leaderProfileId = directoryLeader?.id ?? staticLeader?.id;
+  const leaderName = formatClubLeaderName(directoryLeader?.displayName ?? staticLeader?.name ?? club.leaderName);
+  const leaderAvatar = typeof directoryLeader?.profile.avatarUrl === "string" ? directoryLeader.profile.avatarUrl : staticLeader?.avatar ?? DEFAULT_AVATAR;
+  useEffect(() => { void Api.getMemberDirectory().then(setMemberDirectory).catch(() => setMemberDirectory([])); }, []);
   const [memberIds, setMemberIds] = useState(club.memberIds);
   const [applicantIds, setApplicantIds] = useState(club.applicantIds);
   const [applications, setApplications] = useState<ClubApplication[]>(club.applications);
@@ -964,7 +971,7 @@ function ClubDetailModal({
             <IconSymbol name="xmark" size={22} color={colors.foreground} />
           </Pressable>
           <Text style={{ flex: 1, fontSize: 17, fontWeight: "700", color: colors.foreground, marginLeft: 12 }}>
-            {club.name}
+            {formatClubName(club.name)}
           </Text>
         </View>
         <ScrollView
@@ -973,9 +980,9 @@ function ClubDetailModal({
         >
           <Text style={{ fontSize: 48, marginBottom: 16 }}>{club.icon}</Text>
           <Text style={{ fontSize: 22, fontWeight: "800", color: colors.foreground, marginBottom: 8 }}>
-            {club.name}
+            {formatClubName(club.name)}
           </Text>
-          {leader ? <Pressable onPress={() => router.push({ pathname: "/member-profile", params: { id: leader.id } })} style={{ flexDirection: "row", alignItems: "center", minHeight: 52, paddingHorizontal: 16, borderRadius: 14, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border }}><Image source={leader.avatar} style={{ width: 36, height: 36, borderRadius: 18 }} contentFit="cover" /><View style={{ marginLeft: 10 }}><Text style={{ fontSize: 11, color: colors.muted }}>部長</Text><Text style={{ fontSize: 14, fontWeight: "800", color: colors.foreground }}>{leader.name}</Text></View><IconSymbol name="chevron.right" size={16} color={colors.muted} style={{ marginLeft: 12 }} /></Pressable> : <Text style={{ fontSize: 14, color: colors.muted }}>部長 未設定</Text>}
+          {leaderProfileId ? <Pressable onPress={() => { onClose(); router.push({ pathname: "/member-profile", params: { id: leaderProfileId } }); }} style={{ flexDirection: "row", alignItems: "center", minHeight: 52, paddingHorizontal: 16, borderRadius: 14, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border }}><Image source={leaderAvatar} style={{ width: 36, height: 36, borderRadius: 18 }} contentFit="cover" /><View style={{ marginLeft: 10 }}><Text style={{ fontSize: 11, color: colors.muted }}>部長</Text><Text style={{ fontSize: 14, fontWeight: "800", color: colors.foreground }}>{leaderName}</Text></View><IconSymbol name="chevron.right" size={16} color={colors.muted} style={{ marginLeft: 12 }} /></Pressable> : <Text style={{ fontSize: 14, color: colors.muted }}>部長 {leaderName}</Text>}
           <Text style={{ fontSize: 13, fontWeight: "700", color: colors.muted, textAlign: "center", marginTop: 9 }}>{club.memberIds.length}人のメンバー</Text>
           <Pressable
             onPress={() => setShowClubOverview(true)}
@@ -1156,7 +1163,7 @@ function ClubDetailModal({
         {/* Club info */}
         <View style={{ alignItems: "center", marginBottom: 20 }}>
           <Text style={{ fontSize: 40, marginBottom: 8 }}>{club.icon}</Text>
-          <Text style={{ fontSize: 22, fontWeight: "800", color: colors.foreground }}>{club.name}</Text>
+          <Text style={{ fontSize: 22, fontWeight: "800", color: colors.foreground }}>{formatClubName(club.name)}</Text>
           <Text style={{ fontSize: 13, color: colors.muted, marginTop: 4 }}>{memberIds.length}人のメンバー</Text>
         </View>
 
@@ -1168,10 +1175,14 @@ function ClubDetailModal({
         {/* 部長 */}
         <Text style={{ fontSize: 14, fontWeight: "700", color: colors.foreground, marginBottom: 10 }}>部長</Text>
         {(() => {
-          const currentLeader = getMemberById(currentLeaderId);
-          return currentLeaderId ? (
+          const currentDirectoryLeader = memberDirectory.find((member) => member.id === currentLeaderId);
+          const currentStaticLeader = getMemberById(currentLeaderId);
+          const currentLeaderProfileId = currentDirectoryLeader?.id ?? currentStaticLeader?.id;
+          const currentLeaderName = formatClubLeaderName(currentDirectoryLeader?.displayName ?? currentStaticLeader?.name ?? club.leaderName);
+          const currentLeaderAvatar = typeof currentDirectoryLeader?.profile.avatarUrl === "string" ? currentDirectoryLeader.profile.avatarUrl : currentStaticLeader?.avatar ?? DEFAULT_AVATAR;
+          return currentLeaderProfileId ? (
             <Pressable
-              onPress={() => { onClose(); router.push({ pathname: "/member-profile", params: { id: currentLeaderId } }); }}
+              onPress={() => { onClose(); router.push({ pathname: "/member-profile", params: { id: currentLeaderProfileId } }); }}
               style={{
                 flexDirection: "row",
                 alignItems: "center",
@@ -1181,17 +1192,17 @@ function ClubDetailModal({
                 marginBottom: 16,
               }}
             >
-              <Image source={currentLeader?.avatar ?? DEFAULT_AVATAR} style={{ width: 40, height: 40, borderRadius: 20 }} contentFit="cover" />
+              <Image source={currentLeaderAvatar} style={{ width: 40, height: 40, borderRadius: 20 }} contentFit="cover" />
               <View style={{ marginLeft: 12, flex: 1 }}>
-                <Text style={{ fontSize: 15, fontWeight: "600", color: colors.foreground }}>{currentLeader?.name ?? club.leaderName ?? "部長"}</Text>
-                {currentLeader ? <Text style={{ fontSize: 12, color: colors.muted }}>{currentLeader.generation}期生 · {currentLeader.branch}支部</Text> : null}
+                <Text style={{ fontSize: 15, fontWeight: "600", color: colors.foreground }}>{currentLeaderName}</Text>
+                {currentStaticLeader ? <Text style={{ fontSize: 12, color: colors.muted }}>{currentStaticLeader.generation}期生 · {currentStaticLeader.branch}支部</Text> : null}
               </View>
               <View style={{ backgroundColor: "#FFD70020", borderRadius: 8, paddingHorizontal: 8, paddingVertical: 2, marginRight: 8 }}>
                 <Text style={{ fontSize: 10, fontWeight: "700", color: "#FFD700" }}>部長</Text>
               </View>
               <IconSymbol name="chevron.right" size={16} color={colors.muted} />
             </Pressable>
-          ) : null;
+          ) : <Text style={{ fontSize: 14, color: colors.muted, marginBottom: 16 }}>部長 {formatClubLeaderName(club.leaderName)}</Text>;
         })()}
 
         {/* 入部申請管理（部長・管理者のみ） */}
@@ -1738,6 +1749,7 @@ function AddClubModal({
 export default function ClubsScreen() {
   const colors = useColors();
   const router = useRouter();
+  const { clubId } = useLocalSearchParams<{ clubId?: string }>();
   const { user: authUser } = useAuthContext();
   const userIsAdmin = canCreateClub(authUser?.role, authUser?.accessRole);
   const clubs = useClubs();
@@ -1771,6 +1783,14 @@ export default function ClubsScreen() {
   const joinedClubPreview = joinedClubs.length === 0
     ? clubs.find((club) => club.name === "スイーツ部")
     : undefined;
+
+  useEffect(() => {
+    if (!clubId) return;
+    const requestedClub = clubs.find((club) => club.id === clubId);
+    if (!requestedClub) return;
+    const access = getClubViewerAccess(requestedClub, authUser?.memberId, CURRENT_USER.id);
+    if (!access.isMember) setSelectedClub(requestedClub);
+  }, [authUser?.memberId, clubId, clubs]);
 
   const handleApply = async (clubId: string, application: ClubApplication) => {
     const updated = await submitClubApplicationToStore(clubId, application.wantsToDo, application.messageToLeader);

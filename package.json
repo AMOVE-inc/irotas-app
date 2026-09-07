@@ -21,7 +21,8 @@
     "ios": "expo start --ios",
     "qr": "node scripts/generate_qr.mjs",
     "backup:verify": "node scripts/verify-backup-manifest.mjs",
-    "smoke:production": "node scripts/production-smoke.mjs"
+    "smoke:production": "node scripts/production-smoke.mjs",
+    "verify:production-env": "node scripts/validate-production-env.mjs"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",

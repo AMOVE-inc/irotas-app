@@ -1,6 +1,15 @@
 // Load environment variables with proper priority (system > .env)
 import "./scripts/load-env.js";
+import { validateProductionEnvironment } from "./scripts/validate-production-env.mjs";
 import type { ExpoConfig } from "expo/config";
+
+const isProductionBuild =
+  process.env.EAS_BUILD_PROFILE === "production" ||
+  process.env.EXPO_PUBLIC_BUILD_PROFILE === "production";
+
+if (isProductionBuild) {
+  validateProductionEnvironment();
+}
 
 // Store identifiers must remain unchanged after the first App Store / Play Store release.
 // Override only before the first store record is created.

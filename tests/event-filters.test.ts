@@ -195,4 +195,10 @@ describe("event list filtering and sorting", () => {
     }, referenceDate);
     expect(tokyoAreaResult.map((event) => event.id)).toEqual(["tokyo"]);
   });
+
+  it("derives an imported event's Tokyo area and gourmet genre from its content", () => {
+    const imported = makeEvent({ id: "imported", title: "恵比寿の鮨会", description: "恵比寿駅近くで江戸前鮨を楽しみます。", location: "鮨店（恵比寿駅徒歩3分）", genres: [] });
+    const result = filterAndSortEvents([imported], { area: "all", eventType: "all", openOnly: false, areas: ["tokyo:ebisu-daikanyama-nakameguro"], genres: ["寿司"] }, referenceDate);
+    expect(result.map((event) => event.id)).toEqual(["imported"]);
+  });
 });

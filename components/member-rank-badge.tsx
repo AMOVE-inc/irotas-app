@@ -1,4 +1,5 @@
 import { RANK_COLORS, RANK_LABELS, type MemberRank } from "@/constants/mock-data";
+import { getMemberStaffRole, shouldShowMemberRank } from "@/lib/member-staff-role";
 import { Text, View } from "react-native";
 
 const CLUB_LEADER_BADGES = [
@@ -64,8 +65,9 @@ export function stripRankFromName(name: string) {
 
 export function MemberRoleBadge({ name, role, compact = false, leaderLabel }: { name?: string; role?: string; compact?: boolean; leaderLabel?: string | null }) {
   const normalized = name ?? "";
-  const admin = /IRO\+代表/.test(normalized) || role === "admin";
-  const operator = /IRO[+＋]運営|【運営(?:メンバー)?】|運営メンバー/.test(normalized) || role === "operator";
+  const staffRole = getMemberStaffRole(normalized, role);
+  const admin = staffRole === "admin";
+  const operator = staffRole === "operator";
   const leader = leaderLabel ?? clubLeaderBadge(normalized)?.label;
   const paddingHorizontal = compact ? 6 : 9;
   const fontSize = compact ? 8 : 11;
@@ -75,7 +77,8 @@ export function MemberRoleBadge({ name, role, compact = false, leaderLabel }: { 
   return null;
 }
 
-export function MemberRankBadge({ rank, compact = false }: { rank: MemberRank; compact?: boolean; name?: string }) {
+export function MemberRankBadge({ rank, compact = false, name, role }: { rank: MemberRank; compact?: boolean; name?: string; role?: string }) {
+  if (!shouldShowMemberRank(name, role)) return null;
   const platinum = rank === "platinum";
   const color = platinum ? "#D4AF37" : RANK_COLORS[rank];
   const badgeHeight = compact ? 19 : 24;

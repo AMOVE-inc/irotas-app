@@ -1,6 +1,6 @@
 import type { Event } from "../constants/mock-data";
 import { PREFECTURE_TO_REGION } from "../constants/event-areas";
-import { extractEventLocation } from "./event-location";
+import { getEventSearchText, resolveEventGenres, resolveEventLocation } from "./event-metadata";
 
 export type EventAreaFilter = "all" | "kanto" | "kansai";
 export type EventTypeFilter = "all" | Event["eventType"];
@@ -90,10 +90,10 @@ export function filterAndSortEvents(
       return event.participants.includes(memberId) || event.applicantIds?.includes(memberId) || event.companionIds?.includes(memberId);
     })
     .filter((event) => !filters.favoriteOnly || Boolean(filters.favoriteEventIds?.includes(event.id)))
-    .filter((event) => !filters.genres?.length || filters.genres.some((genre) => event.genres?.includes(genre)))
+    .filter((event) => !filters.genres?.length || filters.genres.some((genre) => resolveEventGenres(event).includes(genre)))
     .filter((event) => {
       if (!filters.areas?.length) return true;
-      const derived = extractEventLocation(event.location);
+      const derived = resolveEventLocation(event);
       const prefecture = event.prefecture ?? derived.prefecture ?? "";
       const tokyoArea = event.tokyoArea ?? derived.tokyoArea;
       return filters.areas.some((area) => {
@@ -108,7 +108,7 @@ export function filterAndSortEvents(
     .filter((event) => {
       const keyword = filters.keyword?.trim().toLowerCase();
       if (!keyword) return true;
-      return [event.title, event.restaurantName, event.description, event.location, event.prefecture, event.tokyoArea, ...(event.genres ?? [])]
+      return [getEventSearchText(event), event.prefecture, event.tokyoArea, ...resolveEventGenres(event)]
         .filter(Boolean).some((value) => String(value).toLowerCase().includes(keyword));
     })
     .filter((event) => {

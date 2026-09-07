@@ -28,10 +28,11 @@ export function extractTokyoLocalArea(address: string): string | undefined {
 }
 
 export function extractEventLocation(address: string): { prefecture?: string; tokyoArea?: TokyoEventAreaKey } {
-  const prefecture = PREFECTURES.find((item) => address.includes(item));
-  if (prefecture !== "東京都") return { prefecture };
-  const area = TOKYO_EVENT_AREAS.find((item) => item.key !== "other" && item.keywords.some((keyword) => address.includes(keyword)));
-  return { prefecture, tokyoArea: area?.key ?? "other" };
+  const normalized = address.replace(/\s+/g, "");
+  const prefecture = PREFECTURES.find((item) => normalized.includes(item));
+  const area = TOKYO_EVENT_AREAS.find((item) => item.key !== "other" && item.keywords.some((keyword) => normalized.includes(keyword)));
+  if (prefecture === "東京都" || (!prefecture && area)) return { prefecture: "東京都", tokyoArea: area?.key ?? "other" };
+  return { prefecture };
 }
 
 export function eventCategoryFromPrefecture(prefecture?: string): "all" | "kanto" | "kansai" {
