@@ -45,7 +45,7 @@ export async function handleNotificationRequest(request: Request, env: SitesEnv)
 
   if (pathname === NOTIFICATIONS_PATH && request.method === "GET") {
     const rows = await env.DB.prepare(`SELECT id, type, title, body, club_id, event_id, chat_room_id, read_at, created_at
-      FROM in_app_notifications WHERE target_member_id = ?
+      FROM in_app_notifications WHERE target_member_id = ? AND type != 'system_error'
       ORDER BY created_at DESC LIMIT 100`).bind(member.id).all<NotificationRow>();
     return json({ notifications: (rows.results ?? []).map(serialize) });
   }

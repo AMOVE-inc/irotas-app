@@ -77,26 +77,7 @@ export async function recordApplicationError(
       details.message,
       createdAt,
     ).run();
-    await db.prepare(
-      `INSERT INTO in_app_notifications
-       (id, target_member_id, type, title, body, created_at)
-       SELECT ? || '-' || CAST(m.id AS TEXT), m.id, 'system_error',
-              'アプリでエラーを検知しました', ?, ?
-       FROM members m
-       WHERE m.account_status = 'active'
-         AND (m.access_role = 'admin' OR m.role = 'admin')
-         AND NOT EXISTS (
-           SELECT 1 FROM in_app_notifications n
-           WHERE n.target_member_id = m.id AND n.type = 'system_error'
-             AND n.body LIKE ? AND n.created_at >= ?
-         )`,
-    ).bind(
-      `system-error-${requestId}`,
-      `${method} ${path} でエラーを検知しました。確認ID: ${requestId}`,
-      createdAt,
-      `${method} ${path}%`,
-      new Date(Date.now() - 15 * 60_000).toISOString(),
-    ).run();
+    // エラーは運営用の監視ログにのみ記録し、会員向けのアプリ内通知は作成しない。
   } catch {
     // Monitoring must never replace the original application response.
   }

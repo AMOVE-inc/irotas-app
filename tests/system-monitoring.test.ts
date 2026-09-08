@@ -35,8 +35,8 @@ describe("system monitoring", () => {
     expect(serialized).toContain("Authorization=[REDACTED]");
     expect(serialized).toContain("[EMAIL_REDACTED]");
     expect(serialized).toContain("[NUMBER_REDACTED]");
-    expect(serialized).toContain("system_error");
-    expect(serialized).toContain("NOT EXISTS");
+    expect(serialized).not.toContain("system_error");
+    expect(serialized).not.toContain("アプリでエラーを検知しました");
   });
 
   it("never exposes query strings and bounds untrusted errors", () => {
