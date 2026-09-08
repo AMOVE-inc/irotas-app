@@ -605,6 +605,8 @@ export default function EventDetailScreen() {
         { text: "中止する", style: "destructive", onPress: async () => {
           try {
             await Api.cancelEvent(event.id, true);
+            // 確認ダイアログを閉じた直後から、幹事画面の下部も中止済みにする。
+            setEvent((current) => current ? { ...current, status: "ended", isCancelled: true } : current);
             Alert.alert("イベントを中止しました", "参加申込者・参加確定者へ通知し、参加者チャットにもお知らせを投稿しました。", [{ text: "OK", onPress: () => router.replace("/events") }]);
           } catch (error) {
             Alert.alert("中止できませんでした", error instanceof Error ? error.message : "もう一度お試しください。");

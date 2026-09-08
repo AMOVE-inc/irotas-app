@@ -545,7 +545,8 @@ async function uploadImage(request: Request, env: SitesEnv, memberId: number) {
 }
 
 export async function handleEventRequest(request: Request, env: SitesEnv): Promise<Response | null> {
-  const pathname = new URL(request.url).pathname;
+  const url = new URL(request.url);
+  const pathname = url.pathname;
   const eventMatch = EVENT_PATH.exec(pathname);
   const favoriteMatch = EVENT_FAVORITE_PATH.exec(pathname);
   const applicationMatch = EVENT_APPLICATION_PATH.exec(pathname);
@@ -577,7 +578,8 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
   if (pathname === EVENTS_ENDPOINT && request.method === "POST")
     return createEvent(request, env.DB, member);
   if (pathname === EVENTS_ENDPOINT && request.method === "GET") {
-    const rows = await env.DB.prepare(`${selectEvents} WHERE e.status != 'cancelled' ORDER BY e.event_date, e.created_at DESC`).all<EventRow>();
+    const includeCancelled = url.searchParams.get("includeCancelled") === "1";
+    const rows = await env.DB.prepare(`${selectEvents} ${includeCancelled ? "" : "WHERE e.status != 'cancelled'"} ORDER BY e.event_date, e.created_at DESC`).all<EventRow>();
     const events = await Promise.all((rows.results ?? []).filter((row) => !DELETED_EVENT_IDS.has(row.id)).map(async (row) => {
       if (row.event_type === "club" && row.club_id && !await canMemberAccessClub(env.DB!, row.club_id, member.id, admin))
         return lockedClubEventPreview(row);

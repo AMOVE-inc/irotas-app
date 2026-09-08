@@ -15,13 +15,14 @@ function eventTimestamp(event: Event) {
   return Date.parse(`${event.date}T${event.time || "00:00"}:00`);
 }
 
-type EventView = "hosted" | "attending" | "applying" | "past" | "coattendees";
+type EventView = "hosted" | "attending" | "applying" | "past" | "cancelled" | "coattendees";
 
 const VIEW_OPTIONS: { key: EventView; title: string; description: string }[] = [
   { key: "hosted", title: "自分が幹事のイベント", description: "これから幹事を務めるイベント" },
   { key: "attending", title: "参加予定のイベント", description: "参加が確定しているイベント" },
   { key: "applying", title: "応募中のイベント", description: "参加承認を待っているイベント" },
   { key: "past", title: "過去のイベント", description: "これまで幹事を務めたイベント／参加したイベント" },
+  { key: "cancelled", title: "キャンセル済みのイベント", description: "過去に中止となったイベント" },
   { key: "coattendees", title: "同席者と同席回数", description: "過去に一緒に参加したメンバー" },
 ];
 
@@ -35,15 +36,16 @@ export default function MyEventsScreen() {
 
   useEffect(() => {
     if (!user) return;
-    void Api.getEvents().then(setEvents).catch(() => {});
+    void Api.getEvents({ includeCancelled: true }).then(setEvents).catch(() => {});
   }, [user]);
 
   const { eventLists, coAttendees } = useMemo(() => {
     const now = Date.now();
     const past = (event: Event) => event.status === "ended" || isPastEventDate(event, new Date(now));
-    const hosted = events.filter((event) => isEventOrganizer(event, memberId));
-    const attending = events.filter((event) => getEventParticipationStatus(event, memberId) === "confirmed");
-    const applying = events.filter((event) => getEventParticipationStatus(event, memberId) === "applied");
+    const cancelled = events.filter((event) => event.isCancelled);
+    const hosted = events.filter((event) => !event.isCancelled && isEventOrganizer(event, memberId));
+    const attending = events.filter((event) => !event.isCancelled && getEventParticipationStatus(event, memberId) === "confirmed");
+    const applying = events.filter((event) => !event.isCancelled && getEventParticipationStatus(event, memberId) === "applied");
     const sortUpcoming = (items: Event[]) => [...items].sort((a, b) => eventTimestamp(a) - eventTimestamp(b));
     const sortPast = (items: Event[]) => [...items].sort((a, b) => eventTimestamp(b) - eventTimestamp(a));
 
@@ -60,6 +62,7 @@ export default function MyEventsScreen() {
         attending: sortUpcoming(attending.filter((event) => !past(event))),
         applying: sortUpcoming(applying.filter((event) => !past(event))),
         past: sortPast([...new Map([...hosted.filter(past), ...attending.filter(past)].map((event) => [event.id, event])).values()]),
+        cancelled: sortPast(cancelled),
       },
       coAttendees: [...counts.entries()]
         .map(([id, count]) => ({ member: getMemberById(id), id, count }))

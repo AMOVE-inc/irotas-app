@@ -1042,8 +1042,8 @@ export async function setPrivateMemberNote(memberId: string, note: string) {
   );
 }
 
-export async function getEvents() {
-  const result = await apiCall<{ events: Event[] }>("/api/events");
+export async function getEvents(options?: { includeCancelled?: boolean }) {
+  const result = await apiCall<{ events: Event[] }>(`/api/events${options?.includeCancelled ? "?includeCancelled=1" : ""}`);
   return result.events;
 }
 
