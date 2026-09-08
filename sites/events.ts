@@ -381,7 +381,10 @@ function eventChatSystemContent(message: string) {
 async function eventChatMemberName(db: D1Database, memberId: number) {
   const member = await db.prepare("SELECT display_name FROM members WHERE id = ? LIMIT 1")
     .bind(memberId).first<{ display_name: string | null }>();
-  return member?.display_name?.trim() || "メンバー";
+  return (member?.display_name ?? "")
+    .replace(/【[^】]*(?:REGULAR|SILVER|GOLD|PLATINUM|レギュラー|シルバー|ゴールド|プラチナ)[^】]*】/gi, "")
+    .replace(/(?:[\p{Extended_Pictographic}\uFE0F]\s*)?(?:[^\s【】]{1,20}部長|運営)$/u, "")
+    .trim() || "メンバー";
 }
 
 async function notifyEventConfirmation(db: D1Database, targetMemberId: number, eventId: string, eventTitle: string) {

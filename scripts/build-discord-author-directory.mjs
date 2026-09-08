@@ -1,6 +1,7 @@
 import fs from "node:fs";
 
-const archive = JSON.parse(fs.readFileSync(new URL("../data/discord-board-2026-08-29.json", import.meta.url), "utf8"));
+const archives = ["../data/discord-board-2026-08-14.json", "../data/discord-board-2026-08-29.json"]
+  .map((path) => JSON.parse(fs.readFileSync(new URL(path, import.meta.url), "utf8")));
 const authors = new Map();
 
 function remember(record) {
@@ -15,9 +16,11 @@ function remember(record) {
   });
 }
 
-for (const thread of archive.threads ?? []) {
-  remember(thread);
-  for (const comment of thread.comments ?? []) remember(comment);
+for (const archive of archives) {
+  for (const thread of archive.threads ?? []) {
+    remember(thread);
+    for (const comment of thread.comments ?? []) remember(comment);
+  }
 }
 
 const directory = [...authors.values()].sort((a, b) => a.id.localeCompare(b.id));

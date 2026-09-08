@@ -54,9 +54,11 @@ const REACTION_EMOJIS = ["👍", "❤️", "😂", "🎉", "😋", "🙏"] as co
 const MORE_REACTION_EMOJIS = ["😀", "😃", "😄", "😁", "😆", "😅", "😂", "🤣", "😊", "😇", "🙂", "🙃", "😉", "😍", "🥰", "😘", "😋", "😛", "🤪", "🤔", "🫡", "😎", "🥳", "😮", "😢", "😭", "😡", "👍", "👎", "👏", "🙌", "🙏", "💪", "👀", "❤️", "🩷", "🧡", "💛", "💚", "💙", "💜", "🖤", "🤍", "🔥", "✨", "🎉", "💯", "✅", "❌", "💡", "📌", "🍽️", "🍣", "🍖", "🍜", "🍕", "🍰", "☕", "🍺", "🍷"] as const;
 
 function systemMessageText(content: string): string {
-  const text = content.replace(/^【IRO\+ システム】\s*/, "");
+  const text = content.replace(/^【IRO\+\s*システム】\s*/, "");
   const legacyWelcome = text.match(/^「(.+)」の参加者専用チャットへようこそ！$/);
-  return legacyWelcome ? `「${legacyWelcome[1]}」の参加者専用グループが作成されました` : text;
+  if (legacyWelcome) return `「${legacyWelcome[1]}」の参加者専用グループが作成されました`;
+  const joined = text.match(/^(.+?)がチャットに参加しました$/);
+  return joined ? `${stripRankFromName(joined[1])}がチャットに参加しました` : text;
 }
 
 function MessageBubble({ message, isMe, viewerId, myAvatarUri, senderMember, onReact, mentionGroups, onOpenInternalLink, onOpenProfile, canManage, onReply, onEdit, onDelete }: { message: ChatMessage; isMe: boolean; viewerId: string; myAvatarUri?: string | null; senderMember?: Api.PublicMember; onReact: (emoji: string, pollChoices?: string[], allowMultiple?: boolean) => void; mentionGroups: ReturnType<typeof getMentionGroups>; onOpenInternalLink: (pathname: "/chat" | "/board", params: Record<string, string>) => void; onOpenProfile: () => void; canManage: boolean; onReply: () => void; onEdit: () => void; onDelete: () => void }) {
@@ -86,7 +88,10 @@ function MessageBubble({ message, isMe, viewerId, myAvatarUri, senderMember, onR
   };
 
   // アバター画像の決定: 自分はプロフィール画像、他者はモックデータのアバター
-  const avatarSource = isMe
+  const isOfficialAccount = /IRO[+＋](?:運営|\s*サポート)/.test(message.externalAuthorName ?? sender?.name ?? "");
+  const avatarSource = isOfficialAccount
+    ? require("@/assets/images/irotas-logo-square.png")
+    : isMe
     ? (myAvatarUri ? { uri: myAvatarUri } : (sender?.avatar ?? DEFAULT_AVATAR))
     : (message.senderAvatar ? { uri: message.senderAvatar } : (sender?.avatar ?? DEFAULT_AVATAR));
 

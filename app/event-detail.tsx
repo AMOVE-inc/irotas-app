@@ -304,6 +304,7 @@ export default function EventDetailScreen() {
   const confirmedParticipantIds = confirmedDisplayIds.filter((memberId) => memberId !== organizerId && !companionIds.includes(memberId));
   const applicantCount = event.applicantIds?.length ?? event.attendees;
   const organizer = getMemberById(organizerId) ?? getMemberById(event.createdBy);
+  const organizerDirectoryMember = memberDirectory.find((member) => member.id === organizerId);
   const viewerMemberId = event.viewerMemberId ?? authenticatedViewerMemberId;
   const isOrganizer = isEventOrganizer(event, viewerMemberId);
   const pendingApplicantIds = getPendingGourmetApplicants(event);
@@ -312,11 +313,12 @@ export default function EventDetailScreen() {
   const displayMember = (memberId: string) => {
     const directoryMember = memberDirectory.find((member) => member.id === memberId);
     const staticMember = getMemberById(memberId);
+    const discordAuthor = getDiscordAuthorById(memberId);
     return {
-      name: stripRankFromName(directoryMember?.displayName ?? staticMember?.name ?? "メンバー"),
-      badgeName: directoryMember?.displayName ?? staticMember?.name ?? "",
-      avatar: typeof directoryMember?.profile.avatarUrl === "string" ? directoryMember.profile.avatarUrl : staticMember?.avatar ?? DEFAULT_AVATAR,
-      rank: (directoryMember?.memberRank ?? staticMember?.rank) as MemberRank | undefined,
+      name: stripRankFromName(directoryMember?.displayName ?? staticMember?.name ?? discordAuthor?.name ?? `会員ID ${memberId}`),
+      badgeName: directoryMember?.displayName ?? staticMember?.name ?? discordAuthor?.name ?? "",
+      avatar: typeof directoryMember?.profile.avatarUrl === "string" ? directoryMember.profile.avatarUrl : staticMember?.avatar ?? discordAuthor?.avatarUrl ?? DEFAULT_AVATAR,
+      rank: (directoryMember?.memberRank ?? staticMember?.rank ?? discordAuthor?.rank) as MemberRank | undefined,
       role: directoryMember?.accessRole,
       roles: directoryMember?.discordRoles,
     };
@@ -872,8 +874,8 @@ export default function EventDetailScreen() {
         </View>
 
         <Pressable onPress={() => openMemberProfile(event.organizerProfileId ?? event.createdBy)} accessibilityLabel="幹事のプロフィールを表示" style={{ flexDirection: "row", alignItems: "center", backgroundColor: colors.surface, borderRadius: 14, padding: 14, marginBottom: 16 }}>
-          <Image source={event.eventType === "official" ? DEFAULT_AVATAR : (event.organizerAvatar ?? organizer?.avatar ?? DEFAULT_AVATAR)} style={{ width: 42, height: 42, borderRadius: 21 }} contentFit="cover" />
-          <View style={{ flex: 1, marginLeft: 11 }}><Text style={{ fontSize: 11, color: colors.muted }}>幹事</Text><View style={{ flexDirection: "row", alignItems: "center" }}><Text style={{ fontSize: 15, fontWeight: "800", color: colors.foreground }}>{event.eventType === "official" ? "IRO＋運営" : stripRankFromName(event.organizerName ?? organizer?.name ?? "メンバー")}</Text>{event.eventType !== "official" && event.organizerRank ? <MemberRankBadge rank={event.organizerRank} name={event.organizerName} compact /> : null}<MemberRoleBadge name={event.organizerName} role={event.eventType === "official" ? "operator" : undefined} compact /></View></View>
+          <Image source={event.organizerAvatar ?? (typeof organizerDirectoryMember?.profile.avatarUrl === "string" ? organizerDirectoryMember.profile.avatarUrl : organizer?.avatar ?? DEFAULT_AVATAR)} style={{ width: 42, height: 42, borderRadius: 21 }} contentFit="cover" />
+          <View style={{ flex: 1, marginLeft: 11 }}><Text style={{ fontSize: 11, color: colors.muted }}>幹事</Text><View style={{ flexDirection: "row", alignItems: "center", flexWrap: "wrap" }}><Text style={{ fontSize: 15, fontWeight: "800", color: colors.foreground }}>{stripRankFromName(event.organizerName ?? organizerDirectoryMember?.displayName ?? organizer?.name ?? "メンバー")}</Text>{event.organizerRank ? <MemberRankBadge rank={event.organizerRank} name={event.organizerName} compact /> : null}<MemberClubLeaderBadges roles={organizerDirectoryMember?.discordRoles} name={event.organizerName} compact /><MemberRoleBadge name="" role={organizerDirectoryMember?.accessRole ?? (event.eventType === "official" ? "operator" : undefined)} compact /></View></View>
           <IconSymbol name="chevron.right" size={17} color={colors.muted} />
         </Pressable>
 
@@ -899,7 +901,7 @@ export default function EventDetailScreen() {
             }) : <Text style={{ fontSize: 13, color: colors.muted, paddingVertical: 8 }}>現在、承認待ちの申込はありません。</Text>}
 
             <Text style={{ fontSize: 13, fontWeight: "800", color: colors.foreground, marginTop: 14, marginBottom: 7 }}>キャンセル申請（{pendingCancellationRequests.length}件）</Text>
-            {pendingCancellationRequests.length ? pendingCancellationRequests.map((request) => { const member = getMemberById(request.memberId); return <View key={request.memberId} style={{ flexDirection: "row", alignItems: "center", paddingVertical: 8, borderTopWidth: 0.5, borderTopColor: colors.border }}><Pressable onPress={() => openMemberProfile(request.memberId)} style={{ flex: 1, flexDirection: "row", alignItems: "center" }}><Image source={member?.avatar ?? DEFAULT_AVATAR} style={{ width: 34, height: 34, borderRadius: 17 }} contentFit="cover" /><View style={{ flex: 1, marginLeft: 9 }}><Text style={{ fontSize: 14, fontWeight: "700", color: colors.foreground }}>{member?.name ?? "メンバー"}</Text><Text style={{ fontSize: 10, color: colors.muted }}>事前連絡・ポリシー確認済み</Text></View></Pressable><Pressable onPress={() => handleApproveCancellation(request.memberId)} style={{ borderRadius: 9, backgroundColor: "#D94C55", paddingHorizontal: 10, paddingVertical: 7 }}><Text style={{ color: "#FFF", fontSize: 11, fontWeight: "800" }}>承認・再募集</Text></Pressable></View>; }) : <Text style={{ fontSize: 13, color: colors.muted, paddingVertical: 8 }}>現在、キャンセル申請はありません。</Text>}
+            {pendingCancellationRequests.length ? pendingCancellationRequests.map((request) => { const member = displayMember(request.memberId); return <View key={request.memberId} style={{ flexDirection: "row", alignItems: "center", paddingVertical: 8, borderTopWidth: 0.5, borderTopColor: colors.border }}><Pressable onPress={() => openMemberProfile(request.memberId)} style={{ flex: 1, flexDirection: "row", alignItems: "center" }}><Image source={member.avatar} style={{ width: 34, height: 34, borderRadius: 17 }} contentFit="cover" /><View style={{ flex: 1, marginLeft: 9, flexDirection: "row", alignItems: "center", flexWrap: "wrap" }}><Text style={{ fontSize: 14, fontWeight: "700", color: colors.foreground }}>{member.name}</Text>{member.rank ? <MemberRankBadge rank={member.rank} name={member.badgeName} role={member.role} compact /> : null}<MemberClubLeaderBadges roles={member.roles} name={member.badgeName} compact /><MemberRoleBadge name="" role={member.role} compact /></View></Pressable><Pressable onPress={() => handleApproveCancellation(request.memberId)} style={{ borderRadius: 9, backgroundColor: "#D94C55", paddingHorizontal: 10, paddingVertical: 7 }}><Text style={{ color: "#FFF", fontSize: 11, fontWeight: "800" }}>承認・再募集</Text></Pressable></View>; }) : <Text style={{ fontSize: 13, color: colors.muted, paddingVertical: 8 }}>現在、キャンセル申請はありません。</Text>}
 
             <Text style={{ fontSize: 13, fontWeight: "800", color: colors.foreground, marginTop: 14, marginBottom: 7 }}>参加確定者</Text>
             {(event.participants ?? []).map((memberId) => {

@@ -18,7 +18,7 @@ export function getMentionGroups(members: Member[], clubs: Club[]): MentionGroup
     { id: "admins", label: "運営", description: "運営メンバー", memberIds: members.filter((member) => member.role === "admin" || member.role === "operator").map((member) => member.id), category: "admin" },
   ];
 
-  const generations = [...new Set(members.map((member) => member.generation))].sort((a, b) => a - b);
+  const generations = [...new Set(members.map((member) => member.generation).filter((generation) => generation > 0))].sort((a, b) => a - b);
   groups.push(...generations.map((generation) => ({
     id: `generation-${generation}`,
     label: `第${generation}期メンバー`,

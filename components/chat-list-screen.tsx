@@ -43,7 +43,11 @@ function ChatRoomCard({ room, eventStarts, eventImages, memberAvatars, viewerMem
   const displayName = room.type === "event" && eventStarts[room.sourceId]
     ? `${eventStarts[room.sourceId]} ${stripRankFromName(room.name)}`
     : stripRankFromName(room.name);
-  const previewText = (room.lastMessage ?? "").replace(/^【IRO\+\s*システム】\s*/, "");
+  const previewText = (() => {
+    const text = (room.lastMessage ?? "").replace(/^【IRO\+\s*システム】\s*/, "");
+    const joined = text.match(/^(.+?)がチャットに参加しました$/);
+    return joined ? `${stripRankFromName(joined[1])}がチャットに参加しました` : text;
+  })();
 
   const timeAgo = (dateStr?: string) => {
     if (!dateStr) return "";
