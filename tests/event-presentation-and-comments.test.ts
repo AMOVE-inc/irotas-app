@@ -67,8 +67,8 @@ describe("event presentation and comments", () => {
     const myEvents = source("app/my-events.tsx");
     expect(profile).toContain("自分が幹事のイベント");
     expect(profile).toContain("!isPastEventDate(event)");
-    expect(myEvents).toContain('title: "自分が幹事"');
-    expect(myEvents).toContain('title: "過去の幹事／参加"');
+    expect(myEvents).toContain('title: "自分が幹事のイベント"');
+    expect(myEvents).toContain('title: "過去のイベント"');
     expect(myEvents).toContain("isPastEventDate(event");
   });
 

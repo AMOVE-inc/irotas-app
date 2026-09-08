@@ -6,7 +6,10 @@ const authorsById = new Map<string, DiscordAuthor>(DISCORD_AUTHOR_DIRECTORY.map(
 const authorsByName = new Map<string, DiscordAuthor>();
 
 function normalizedName(value: string) {
-  return value.normalize("NFKC").replace(/【[^】]+】|\([^)]*(?:regular|silver|gold|platinum|レギュラー|シルバー|ゴールド|プラチナ)[^)]*\)/gi, "").trim();
+  return value.normalize("NFKC")
+    .replace(/【[^】]+】|\([^)]*(?:regular|silver|gold|platinum|レギュラー|シルバー|ゴールド|プラチナ)[^)]*\)/gi, "")
+    .replace(/(?:[\p{Extended_Pictographic}\uFE0F]\s*)?(?:[^\s【】]{1,20}部長|運営)$/u, "")
+    .trim();
 }
 
 for (const author of DISCORD_AUTHOR_DIRECTORY) authorsByName.set(normalizedName(author.name), author);

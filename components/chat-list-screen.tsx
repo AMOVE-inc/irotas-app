@@ -10,6 +10,7 @@ import { useCallback, useEffect, useState } from "react";
 import { FlatList, Modal, Pressable, ScrollView, Text, TextInput, View } from "react-native";
 import * as Api from "@/lib/_core/api";
 import { stripRankFromName } from "@/components/member-rank-badge";
+import { getDiscordAuthorById } from "@/lib/discord-author-directory";
 
 function formatEventStart(event: { date: string; time: string }) {
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(event.date);
@@ -38,7 +39,7 @@ function ChatRoomCard({ room, eventStarts, eventImages, memberAvatars, viewerMem
   const unreadCount = room.unreadCount ?? 0;
   const mentionCount = room.mentionCount ?? 0;
   const dmPartnerId = isDM ? room.participants.find((memberId) => memberId !== viewerMemberId) : undefined;
-  const imageUri = room.type === "event" ? eventImages[room.sourceId] : dmPartnerId ? memberAvatars[dmPartnerId] : undefined;
+  const imageUri = room.type === "event" ? eventImages[room.sourceId] : dmPartnerId ? memberAvatars[dmPartnerId] ?? getDiscordAuthorById(dmPartnerId)?.avatarUrl : undefined;
   const announcementIcon = room.id === "board-announcement";
   const displayName = room.type === "event" && eventStarts[room.sourceId]
     ? `${eventStarts[room.sourceId]} ${stripRankFromName(room.name)}`
@@ -67,7 +68,7 @@ function ChatRoomCard({ room, eventStarts, eventImages, memberAvatars, viewerMem
       }}
       style={({ pressed }) => ({ flexDirection: "row", alignItems: "center", paddingHorizontal: 16, paddingVertical: 14, borderBottomWidth: 0.5, borderBottomColor: colors.border, opacity: pressed ? 0.7 : 1 })}
     >
-      {announcementIcon ? <Image source={require("@/assets/images/irotas-logo-square.png")} style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: typeColor + "20" }} contentFit="cover" /> : imageUri ? <Image source={{ uri: imageUri }} style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: typeColor + "20" }} contentFit="cover" /> : (
+      {announcementIcon ? <Image source={require("@/assets/images/irotas-logo-square.png")} style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: typeColor + "20" }} contentFit="cover" /> : imageUri ? <Image source={{ uri: imageUri }} style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: typeColor + "20" }} contentFit="cover" /> : isDM ? <Image source={DEFAULT_AVATAR} style={{ width: 48, height: 48, borderRadius: 24 }} contentFit="cover" /> : (
         <View style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: typeColor + "20", alignItems: "center", justifyContent: "center" }}>
           <IconSymbol
             name={room.type === "event" ? "calendar" : room.type === "board" ? "bubble.left.and.bubble.right.fill" : isDM ? "message.fill" : isRank ? "crown.fill" : "person.3.fill"}

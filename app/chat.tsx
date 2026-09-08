@@ -573,9 +573,12 @@ export default function ChatScreen() {
                 onOpenProfile={() => {
                   const sender = getMemberById(item.senderId);
                   const legacyName = item.externalAuthorName ?? sender?.name ?? "旧Discordメンバー";
+                  const discordAuthor = getDiscordAuthorByName(legacyName);
                   const matchedMember = directory.find((member) => stripRankFromName(member.displayName) === stripRankFromName(legacyName));
                   const openProfile = (memberId: string) => router.push({ pathname: "/member-profile", params: { id: memberId, legacyName } });
-                  if (matchedMember) {
+                  if (discordAuthor) {
+                    openProfile(discordAuthor.id);
+                  } else if (matchedMember) {
                     openProfile(matchedMember.id);
                   } else if (item.externalAuthorName) {
                     // 表示直後でも実際の会員名簿を確認してからプロフィールを開く。

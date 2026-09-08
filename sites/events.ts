@@ -456,7 +456,8 @@ async function notifyOrganizerParticipantCancellation(
   actorMemberId: number,
   now: string,
 ) {
-  const body = `【参加取消のお知らせ】「${row.title}」の参加は幹事により取り消されました。`;
+  const targetName = await eventChatMemberName(db, targetMemberId);
+  const body = eventChatSystemContent(`${targetName}の参加がキャンセルされました`);
   await notifyEventCancellation(db, targetMemberId, row.id, "イベント参加が取り消されました", body);
   let data: Record<string, unknown> = {};
   try { data = JSON.parse(row.public_data_json) as Record<string, unknown>; } catch {}
@@ -1015,6 +1016,7 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
     );
     await env.DB.batch(statements);
     if (approved) await refundEventPointDiscount(env.DB, id, targetId, row.title, now);
+    if (approved) await notifyOrganizerParticipantCancellation(env.DB, row, targetId, member.id, now);
     if (approved && requestRow?.late_cancellation_at) {
       await applyLateCancellationPenalty(env.DB, { eventId: id, memberId: targetId, assignedBy: member.id, assignedAt: now, title: row.title });
     }

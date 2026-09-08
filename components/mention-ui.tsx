@@ -10,6 +10,12 @@ import { useRouter } from "expo-router";
 import { parseDiscordHeading, tokenizeRichTextLinks } from "@/lib/discord-rich-text";
 import * as Api from "@/lib/_core/api";
 import { useEffect, useState } from "react";
+import { stripRankFromName } from "@/components/member-rank-badge";
+
+/** Mentions should show just a member name, never their rank or club-leader title. */
+export function mentionDisplayName(label: string) {
+  return stripRankFromName(label.replace(/^@/, "").replace(/[、。！？!?.,，．]+$/g, ""));
+}
 
 export function MentionText({ content, outgoing = false, groups, rooms = getAllRooms(), threads = BOARD_THREADS, onOpenInternalLink, onMentionPress, onClubMentionPress }: { content: string; outgoing?: boolean; groups: MentionGroup[]; rooms?: ChatRoom[]; threads?: BoardThread[]; onOpenInternalLink?: (pathname: "/chat" | "/board", params: Record<string, string>) => void; onMentionPress?: (label: string) => void; onClubMentionPress?: (group: MentionGroup) => void }) {
   const colors = useColors();
@@ -17,7 +23,8 @@ export function MentionText({ content, outgoing = false, groups, rooms = getAllR
   const openInternalLink = onOpenInternalLink ?? ((pathname: "/chat" | "/board", params: Record<string, string>) => router.push({ pathname, params } as any));
   const renderMentions = (value: string, keyPrefix: string) => value.split(/(@[^\s@]+)/g).map((part, index) => {
     if (!part.startsWith("@")) return <Text key={`${keyPrefix}-${index}`}>{part}</Text>;
-    const [label] = extractMentionLabels(part);
+    const [rawLabel] = extractMentionLabels(part);
+    const label = rawLabel ? mentionDisplayName(rawLabel) : undefined;
     const group = label ? groups.find((item) => item.label === label) : undefined;
     const grouped = Boolean(group && isGroupMention(label!, groups));
     const onPress = group?.category === "club" && onClubMentionPress
@@ -25,7 +32,7 @@ export function MentionText({ content, outgoing = false, groups, rooms = getAllR
       : !grouped && label && onMentionPress
         ? () => onMentionPress(label)
         : undefined;
-    return <Text key={`${keyPrefix}-${index}`} accessibilityRole={onPress ? "link" : undefined} onPress={onPress} style={{ fontWeight: "800", color: grouped ? (outgoing ? "#FFF3B0" : "#9A6A12") : (outgoing ? "#FFE0F0" : "#C05B88"), backgroundColor: grouped ? (outgoing ? "rgba(255,210,70,0.22)" : "#FFF2C7") : "transparent", textDecorationLine: onPress ? "underline" : "none" }}>{part}</Text>;
+    return <Text key={`${keyPrefix}-${index}`} accessibilityRole={onPress ? "link" : undefined} onPress={onPress} style={{ fontWeight: "800", color: grouped ? (outgoing ? "#FFF3B0" : "#9A6A12") : (outgoing ? "#FFE0F0" : "#C05B88"), backgroundColor: grouped ? (outgoing ? "rgba(255,210,70,0.22)" : "#FFF2C7") : "transparent", textDecorationLine: onPress ? "underline" : "none" }}>{grouped ? part : `@${label ?? rawLabel ?? ""}`}</Text>;
   });
 
   const renderPlain = (value: string, keyPrefix: string) => tokenizeRichTextLinks(value).map((token, index) => {
@@ -95,9 +102,9 @@ export function MentionSuggestions({ query, groups, members: _members, memberIds
         {filteredMembers.map((member) => {
           const avatarUrl = typeof member.profile.avatarUrl === "string" ? member.profile.avatarUrl : undefined;
           return (
-          <Pressable key={member.id} onPress={() => onSelect(member.displayName)} style={({ pressed }) => ({ flexDirection: "row", alignItems: "center", paddingHorizontal: 16, paddingVertical: 10, borderBottomWidth: 0.5, borderBottomColor: colors.border, backgroundColor: pressed ? colors.surface : colors.background })}>
+          <Pressable key={member.id} onPress={() => onSelect(mentionDisplayName(member.displayName))} style={({ pressed }) => ({ flexDirection: "row", alignItems: "center", paddingHorizontal: 16, paddingVertical: 10, borderBottomWidth: 0.5, borderBottomColor: colors.border, backgroundColor: pressed ? colors.surface : colors.background })}>
             <Image source={avatarUrl ? { uri: avatarUrl } : require("@/assets/images/irotas-logo-square.png")} style={{ width: 32, height: 32, borderRadius: 16, marginRight: 10 }} contentFit="cover" />
-            <View style={{ flex: 1 }}><Text style={{ fontSize: 14, fontWeight: "700", color: colors.foreground }}>@{member.displayName}</Text><Text style={{ fontSize: 11, color: colors.muted }}>{member.id}{member.memberTerm ? `・${formatMemberTerm(member.memberTerm)}` : ""}</Text></View>
+            <View style={{ flex: 1 }}><Text style={{ fontSize: 14, fontWeight: "700", color: colors.foreground }}>@{mentionDisplayName(member.displayName)}</Text><Text style={{ fontSize: 11, color: colors.muted }}>{member.id}{member.memberTerm ? `・${formatMemberTerm(member.memberTerm)}` : ""}</Text></View>
           </Pressable>
           );
         })}

@@ -18,10 +18,10 @@ function eventTimestamp(event: Event) {
 type EventView = "hosted" | "attending" | "applying" | "past" | "coattendees";
 
 const VIEW_OPTIONS: { key: EventView; title: string; description: string }[] = [
-  { key: "hosted", title: "自分が幹事", description: "これから幹事を務めるイベント" },
-  { key: "attending", title: "参加予定", description: "参加が確定しているイベント" },
-  { key: "applying", title: "応募中", description: "参加承認を待っているイベント" },
-  { key: "past", title: "過去の幹事／参加", description: "これまで関わったイベント" },
+  { key: "hosted", title: "自分が幹事のイベント", description: "これから幹事を務めるイベント" },
+  { key: "attending", title: "参加予定のイベント", description: "参加が確定しているイベント" },
+  { key: "applying", title: "応募中のイベント", description: "参加承認を待っているイベント" },
+  { key: "past", title: "過去のイベント", description: "これまで関わったイベント" },
   { key: "coattendees", title: "同席者と同席回数", description: "過去に一緒に参加したメンバー" },
 ];
 

@@ -4,7 +4,7 @@ import { EVENTS, CURRENT_USER, DEFAULT_AVATAR, MEMBERS, getMemberById, type Even
 import { EventImage } from "@/components/event-image";
 import { PersistentBottomNav } from "@/components/persistent-bottom-nav";
 import { MemberClubLeaderBadges, MemberRankBadge, MemberRoleBadge, stripRankFromName } from "@/components/member-rank-badge";
-import { MentionSuggestions, MentionText } from "@/components/mention-ui";
+import { MentionSuggestions, MentionText, mentionDisplayName } from "@/components/mention-ui";
 import { extractMentionLabels, getMentionGroups, getMentionQuery, getMentionedMemberIds, insertMention } from "@/lib/mentions";
 import { EVENT_TERMS_URL } from "@/constants/external-links";
 import { joinEventChat, removeMemberFromRoom } from "@/lib/chat-store";
@@ -607,7 +607,6 @@ export default function EventDetailScreen() {
           return;
         }
         cancelGourmetParticipation(event, memberId);
-        if (event.chatId) await removeMemberFromRoom(event.chatId, memberId);
         setEventRevision((value) => value + 1);
         Alert.alert("キャンセル完了", "必要に応じて「追加募集を開始」から募集を再開できます。");
       } },
@@ -680,7 +679,6 @@ export default function EventDetailScreen() {
       if (event.viewerMemberId) setEvent(await Api.reviewEventCancellation(event.id, memberId, "approve"));
       else {
         approveEventCancellationRequest(event, memberId);
-        if (event.chatId) await removeMemberFromRoom(event.chatId, memberId);
         setEventRevision((value) => value + 1);
       }
       Alert.alert("再募集を開始しました", "キャンセル分の空席をイベント一覧へ反映しました。イベントは募集中になり、再び申し込めます。");
@@ -1068,7 +1066,7 @@ export default function EventDetailScreen() {
                   <MemberClubLeaderBadges roles={author.roles} name={author.badgeName} compact />
                   <MemberRoleBadge name="" role={author.role} compact />
                 </View>
-                <MentionText content={comment.text} groups={eventMentionGroups} onMentionPress={(label) => { const normalized = stripRankFromName(label); const targetId = memberDirectory.find((member) => stripRankFromName(member.displayName) === normalized)?.id ?? findMentionedMemberId(normalized, MEMBERS); if (targetId) openMemberProfile(targetId); }} />
+                <MentionText content={comment.text} groups={eventMentionGroups} onMentionPress={(label) => { const normalized = mentionDisplayName(label); const targetId = memberDirectory.find((member) => mentionDisplayName(member.displayName) === normalized)?.id ?? findMentionedMemberId(normalized, MEMBERS) ?? getDiscordAuthorByName(normalized)?.id; if (targetId) openMemberProfile(targetId); }} />
               </View>
             </View>;
           })}
