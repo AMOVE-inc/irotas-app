@@ -20,6 +20,15 @@ describe("event presentation and comments", () => {
     expect(detail).toContain("members={MEMBERS}");
     expect(detail).toContain("memberDirectory.find");
     expect(detail).toContain("@で会員・部活・支部をメンションできます。");
+    expect(detail).toContain("displayCommentAuthor");
+    expect(detail).toContain("<MemberClubLeaderBadges roles={author.roles} compact />");
+  });
+
+  it("uses the complete badge set for confirmed participants", () => {
+    const detail = source("app/event-detail.tsx");
+    expect(detail).toContain("<MemberRankBadge rank={member.rank} name={member.name} role={member.role} compact />");
+    expect(detail).toContain("<MemberClubLeaderBadges roles={member.roles} compact />");
+    expect(detail).toContain("<MemberRoleBadge name={member.name} role={member.role} compact />");
   });
 
   it("keeps the detail screen in a loading state until its event lookup resolves", () => {
