@@ -241,6 +241,7 @@ function publicEvent(
 ) {
   let data: Record<string, unknown> = {};
   try { data = JSON.parse(row.public_data_json) as Record<string, unknown>; } catch {}
+  const participantsFinalized = typeof data.participantsFinalizedAt === "string" && data.participantsFinalizedAt.length > 0;
   const active = participations.filter((item) => item.status === "applied" || item.status === "confirmed" || item.status === "cancel_requested");
   const confirmed = active.filter((item) => item.status === "confirmed" || item.status === "cancel_requested");
   const manualParticipantIds = Array.isArray(data.manualParticipantIds)
@@ -255,7 +256,8 @@ function publicEvent(
     eventType: row.event_type,
     clubId: row.club_id ?? undefined,
     date: row.event_date,
-    status: row.status === "cancelled" ? "ended" : row.status,
+    // 定員に達していても、幹事が参加者を確定するまでは受付を継続する。
+    status: row.status === "cancelled" ? "ended" : row.status === "full" && !participantsFinalized ? "open" : row.status,
     title: row.title,
     createdBy: row.public_member_id ?? `member-${row.organizer_member_id}`,
     organizerProfileId: row.public_member_id ?? `member-${row.organizer_member_id}`,
@@ -718,7 +720,11 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
   if (applicationMatch && request.method === "POST") {
     const id = decodeURIComponent(applicationMatch[1]);
     const row = await eventRow(env.DB, id);
-    if (!row || row.status !== "open") return responseJson({ error: "現在、このイベントには申し込めません" }, 409);
+    if (!row) return responseJson({ error: "現在、このイベントには申し込めません" }, 409);
+    let existingData: Record<string, unknown> = {};
+    try { existingData = JSON.parse(row.public_data_json) as Record<string, unknown>; } catch {}
+    const recruitmentFinalized = typeof existingData.participantsFinalizedAt === "string" && existingData.participantsFinalizedAt.length > 0;
+    if (row.status !== "open" && recruitmentFinalized) return responseJson({ error: "現在、このイベントには申し込めません" }, 409);
     if (row.event_type === "club" && row.club_id && !await canMemberAccessClub(env.DB, row.club_id, member.id, admin))
       return responseJson({ error: "この部活の部員のみ参加申込できます" }, 403);
     if (row.organizer_member_id === member.id) return responseJson({ error: "幹事は参加申込できません" }, 409);
@@ -726,8 +732,7 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
     if (restricted) return responseJson({ error: `ペナルティにより${restricted.ends_at.replace("T", " ").slice(0, 16)}まで新規申込はできません` }, 403);
     const input = await readBody(request);
     if (input?.termsAccepted !== true) return responseJson({ error: "イベント参加規約への同意が必要です" }, 400);
-    let data: Record<string, unknown> = {};
-    try { data = JSON.parse(row.public_data_json) as Record<string, unknown>; } catch {}
+    let data: Record<string, unknown> = existingData;
     const deadline = typeof data.applicationDeadline === "string" ? data.applicationDeadline : "";
     const today = new Date().toISOString().slice(0, 10);
     if (deadline && deadline < today) return responseJson({ error: "参加申込の受付期間は終了しました" }, 409);
@@ -770,8 +775,6 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
         .bind(JSON.stringify(data), now, id).run();
       await notifyEventConfirmation(env.DB, member.id, id, row.title);
     }
-    if (immediate && (count?.count ?? 0) + 1 >= capacity)
-      await env.DB.prepare("UPDATE events SET status = 'full', updated_at = ? WHERE id = ?").bind(now, id).run();
     await audit(env.DB, member.id, "event.application_submitted", id, { status });
     const updated = await eventRow(env.DB, id);
     return responseJson({ event: await hydratedEvent(env.DB, updated!, member.id, elevated, memberPublicId), pointBalance: pointResult?.balance ?? null, pointsUsed: pointResult?.amount ?? 0 }, 201);
@@ -881,7 +884,6 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
           .bind(`event-chat-join:${id}:${targetId}`, chatId, row.organizer_member_id, eventChatSystemContent(`${targetName}がチャットに参加しました`), now, now),
       ]);
       await notifyEventConfirmation(env.DB, targetId, id, row.title);
-      if ((count?.count ?? 0) + 1 >= capacity) await env.DB.prepare("UPDATE events SET status = 'full', updated_at = ? WHERE id = ?").bind(now, id).run();
     } else {
       await env.DB.prepare(`UPDATE event_participations SET status = 'cancelled', cancelled_at = ?, updated_at = ?
         WHERE event_id = ? AND member_id = ?`).bind(now, now, id, targetId).run();

@@ -17,7 +17,8 @@ export function approveGourmetApplication(event: Event, memberId: string): void 
   const participants = [...(event.participants ?? [])];
   if (!participants.includes(memberId)) participants.push(memberId);
   event.participants = participants;
-  event.status = participants.length >= event.capacity ? "full" : "open";
+  // 募集の締め切りは幹事が「参加者確定を完了」した時だけ行う。
+  event.status = "open";
 }
 
 export function cancelGourmetParticipation(event: Event, memberId: string): void {

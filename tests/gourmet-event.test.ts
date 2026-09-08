@@ -19,7 +19,7 @@ describe("gourmet event approval workflow", () => {
 
     approveGourmetApplication(event, "member");
     expect(event.participants).toEqual(["host", "member"]);
-    expect(event.status).toBe("full");
+    expect(event.status).toBe("open");
     expect(getPendingGourmetApplicants(event)).toEqual([]);
   });
 
