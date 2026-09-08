@@ -189,7 +189,7 @@ export default function CreateEventScreen() {
     const savedFields = eventFormSaveFields({ ...form, eventType: finalType });
     const draftEvent: Event = {
       id: `event_${Date.now()}`, createdAt: new Date().toISOString(), ...savedFields,
-      description: savedFields.description, image: imageUri || require("@/assets/images/irotas-logo-square.png"), attendees: 0, applicantIds: [], participants: [], status: "open", createdBy: viewerMemberId,
+      description: savedFields.description, image: imageUri, attendees: 0, applicantIds: [], participants: [], status: "open", createdBy: viewerMemberId,
     };
     setIsSubmitting(true);
     let newEvent: Event;

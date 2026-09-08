@@ -176,8 +176,8 @@ export function sanitizeEvent(value: unknown) {
     return null;
   const clubId = text(input.clubId, 80);
   if (eventType === "club" && !clubId) return null;
-  const image = text(input.image, 500, true);
-  if (!image || !image.startsWith("/api/event-images/")) return null;
+  const image = text(input.image, 500);
+  if (image && !image.startsWith("/api/event-images/")) return null;
   const applicationDeadline = text(input.applicationDeadline, 10, true);
   if (!applicationDeadline || !/^\d{4}-\d{2}-\d{2}$/.test(applicationDeadline) || applicationDeadline > date) return null;
   const priceMin = number(input.priceMin, 0, 300_000);
@@ -195,7 +195,7 @@ export function sanitizeEvent(value: unknown) {
     location: text(input.location, 500) || "住所未設定",
     prefecture: text(input.prefecture, 16) || undefined,
     tokyoArea: text(input.tokyoArea, 80) || undefined,
-    image,
+    image: image || "",
     capacity,
     reservationCapacity,
     attendees: 0,
