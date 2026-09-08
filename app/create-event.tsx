@@ -156,6 +156,7 @@ export default function CreateEventScreen() {
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [genres, setGenres] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formError, setFormError] = useState("");
   const [memberDirectory, setMemberDirectory] = useState<Api.PublicMember[]>([]);
   const [memberDirectoryLoading, setMemberDirectoryLoading] = useState(true);
   const [xpReward, setXpReward] = useState<XpReward | null>(null);
@@ -181,13 +182,14 @@ export default function CreateEventScreen() {
   };
   const handleCreate = async () => {
     const form = { eventType, clubId: selectedClubId, restaurantName, eventName, date, time, address, reservationCapacity, recruitCapacity, fixedAmount, budgetMin, budgetMax, tabelogUrl, googleMapsUrl, companionIds, image: imageUri, decisionDate, publicNotes, privateMemo, cancellationPolicy, selectionMethod, useRankPrices, rankPrices, genres };
-    const validationError = validateEventForm(form, { requireImage: false, requireTerms: true, termsAccepted, allowedClubIds: joinedClubs.map((club) => club.id) });
-    if (validationError) { Alert.alert("入力エラー", validationError); return; }
+    const validationError = validateEventForm(form, { requireImage: true, requireTerms: true, termsAccepted, allowedClubIds: joinedClubs.map((club) => club.id) });
+    if (validationError) { setFormError(validationError); return; }
+    setFormError("");
     const finalType: Event["eventType"] = eventType === "official" && !userIsOperator ? "gourmet" : eventType;
     const savedFields = eventFormSaveFields({ ...form, eventType: finalType });
     const draftEvent: Event = {
       id: `event_${Date.now()}`, createdAt: new Date().toISOString(), ...savedFields,
-      description: savedFields.description || (finalType === "official" ? "IRO＋公式イベントです。" : finalType === "club" ? `${joinedClubs.find((club) => club.id === selectedClubId)?.name ?? "部活動"}の部員限定イベントです。` : "メンバー主催のグルメ会です。"), image: imageUri || require("@/assets/images/irotas-logo-square.png"), attendees: 0, applicantIds: [], participants: [], status: "open", createdBy: viewerMemberId,
+      description: savedFields.description, image: imageUri || require("@/assets/images/irotas-logo-square.png"), attendees: 0, applicantIds: [], participants: [], status: "open", createdBy: viewerMemberId,
     };
     setIsSubmitting(true);
     let newEvent: Event;
@@ -249,7 +251,8 @@ export default function CreateEventScreen() {
         <FieldLabel>自由記述欄</FieldLabel><TextInput value={publicNotes} onChangeText={setPublicNotes} placeholder="参加者に伝えたい内容" placeholderTextColor={colors.muted} multiline textAlignVertical="top" style={[inputStyle, { minHeight: 100 }]} />
         <FieldLabel>自分用メモ</FieldLabel><TextInput value={privateMemo} onChangeText={setPrivateMemo} placeholder="他の人には公開されません" placeholderTextColor={colors.muted} multiline textAlignVertical="top" style={[inputStyle, { minHeight: 90 }]} />
         <View style={{ marginTop: 26, padding: 14, borderRadius: 14, backgroundColor: "#FFF8F0", borderWidth: 1, borderColor: "#EED9BF" }}><Text style={{ fontSize: 15, fontWeight: "900", color: colors.foreground, marginBottom: 10 }}>イベント開催時のルール</Text>{["イベントの日時・人数・場所などに誤りがないことを確認してください", "原則、参加者はIRO+メンバー限定としてください（やむをえず外部の方も参加される場合は、その旨を自由記述欄に記載してください）", "募集期日までに参加者を確定し、専用チャットにて参加確定連絡をお願いします"].map((rule) => <Text key={rule} style={{ fontSize: 12, lineHeight: 19, color: colors.foreground, marginBottom: 5 }}>・{rule}</Text>)}<Pressable onPress={() => setTermsAccepted((value) => !value)} style={{ flexDirection: "row", alignItems: "center", marginTop: 8 }}><View style={{ width: 24, height: 24, borderRadius: 6, backgroundColor: termsAccepted ? "#E8A0BF" : colors.surface, borderWidth: 1, borderColor: termsAccepted ? "#E8A0BF" : colors.border, alignItems: "center", justifyContent: "center" }}>{termsAccepted ? <IconSymbol name="checkmark" size={15} color="#FFF" /> : null}</View><Text style={{ flex: 1, marginLeft: 9, fontSize: 14, fontWeight: "800", color: colors.foreground }}>上記のルールを確認し、同意する <Text style={{ color: colors.error }}>必須</Text></Text></Pressable></View>
-        <Pressable disabled={!termsAccepted || isSubmitting} onPress={() => { void handleCreate(); }} style={{ marginTop: 22, minHeight: 56, borderRadius: 16, backgroundColor: termsAccepted && !isSubmitting ? "#18171A" : "#B8B8BD", alignItems: "center", justifyContent: "center", opacity: termsAccepted && !isSubmitting ? 1 : 0.65 }}><Text style={{ fontSize: 17, fontWeight: "900", color: "#FFF" }}>{isSubmitting ? "作成しています…" : "イベントを作成する"}</Text></Pressable>
+        {formError ? <Text accessibilityRole="alert" style={{ marginTop: 16, color: colors.error, fontSize: 13, fontWeight: "800" }}>{formError}</Text> : null}
+        <Pressable disabled={isSubmitting} onPress={() => { void handleCreate(); }} style={{ marginTop: 22, minHeight: 56, borderRadius: 16, backgroundColor: termsAccepted && !isSubmitting ? "#18171A" : "#B8B8BD", alignItems: "center", justifyContent: "center", opacity: isSubmitting ? 0.65 : 1 }}><Text style={{ fontSize: 17, fontWeight: "900", color: "#FFF" }}>{isSubmitting ? "作成しています…" : "イベントを作成する"}</Text></Pressable>
       </ScrollView>
       <XpRewardPopup reward={xpReward} onClose={() => { setXpReward(null); if (createdEventId) router.replace({ pathname: "/event-detail", params: { id: createdEventId } }); }} />
       {isSubmitting ? <View pointerEvents="auto" style={{ position: "absolute", inset: 0, backgroundColor: "rgba(255,255,255,0.72)", alignItems: "center", justifyContent: "center" }}><View style={{ minWidth: 170, borderRadius: 18, padding: 22, alignItems: "center", backgroundColor: colors.surface, shadowColor: "#000", shadowOpacity: 0.14, shadowRadius: 14, elevation: 6 }}><ActivityIndicator size="large" color="#D65E8D" /><Text style={{ marginTop: 12, fontSize: 14, fontWeight: "900", color: colors.foreground }}>イベントを作成中です</Text></View></View> : null}

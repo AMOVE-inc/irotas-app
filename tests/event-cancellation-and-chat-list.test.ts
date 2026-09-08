@@ -22,6 +22,20 @@ describe("event cancellation lifecycle", () => {
     expect(detail).toContain("すでに参加者が確定している場合は、事前に参加者へご連絡をお願いします。");
     expect(detail).toContain("await Api.cancelEvent(event.id, true)");
   });
+
+  it("notifies an organizer-cancelled participant in Home and the event chat", () => {
+    const events = source("sites/events.ts");
+    expect(events).toContain("notifyOrganizerParticipantCancellation");
+    expect(events).toContain("イベント参加が取り消されました");
+    expect(events).toContain("event_participant_cancel_${crypto.randomUUID()}");
+    expect(events).toContain("await notifyOrganizerParticipantCancellation(env.DB, row, targetId, member.id, now)");
+  });
+
+  it("uses the app confirmation dialog for organizer participant cancellation", () => {
+    const detail = source("app/event-detail.tsx");
+    expect(detail).toContain('title: "参加をキャンセルしますか？"');
+    expect(detail).toContain("本当にキャンセルしますか？");
+  });
 });
 
 describe("chat list identity presentation", () => {

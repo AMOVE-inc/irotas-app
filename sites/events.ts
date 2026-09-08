@@ -435,6 +435,36 @@ async function postEventCancellationToConfirmedChat(
   ]);
 }
 
+/** Keeps an organizer cancellation visible in both the participant chat and Home notifications. */
+async function notifyOrganizerParticipantCancellation(
+  db: D1Database,
+  row: EventRow,
+  targetMemberId: number,
+  actorMemberId: number,
+  now: string,
+) {
+  const body = `【参加取消のお知らせ】「${row.title}」の参加は幹事により取り消されました。`;
+  await notifyEventCancellation(db, targetMemberId, row.id, "イベント参加が取り消されました", body);
+  let data: Record<string, unknown> = {};
+  try { data = JSON.parse(row.public_data_json) as Record<string, unknown>; } catch {}
+  const chatId = typeof data.chatId === "string" && data.chatId ? data.chatId : eventChatId(row.id);
+  await db.batch([
+    db.prepare(`INSERT OR IGNORE INTO chat_rooms (id, name, room_type, source_id, created_by_member_id, created_at, updated_at)
+      VALUES (?, ?, 'event', ?, ?, ?, ?)`).bind(chatId, row.title, row.id, row.organizer_member_id, now, now),
+    db.prepare(`INSERT INTO chat_room_members (room_id, member_id, member_role, joined_at, left_at)
+      VALUES (?, ?, 'owner', ?, NULL)
+      ON CONFLICT(room_id, member_id) DO UPDATE SET member_role = 'owner', left_at = NULL`)
+      .bind(chatId, row.organizer_member_id, now),
+    db.prepare(`INSERT INTO chat_room_members (room_id, member_id, member_role, joined_at, left_at)
+      VALUES (?, ?, 'member', ?, NULL)
+      ON CONFLICT(room_id, member_id) DO UPDATE SET left_at = NULL`)
+      .bind(chatId, targetMemberId, now),
+    db.prepare(`INSERT INTO chat_messages (id, room_id, sender_member_id, content, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?)`)
+      .bind(`event_participant_cancel_${crypto.randomUUID()}`, chatId, actorMemberId, body, now, now),
+  ]);
+}
+
 async function createEvent(request: Request, db: D1Database, member: Awaited<ReturnType<typeof authenticatedRequestMember>>) {
   if (!member) return responseJson({ error: "ログインが必要です" }, 401);
   const raw = await request.text();
@@ -813,6 +843,7 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
         WHERE event_id = ? AND member_id = ?`).bind(now, now, id, targetId).run();
       await env.DB.prepare("UPDATE events SET status = 'open', updated_at = ? WHERE id = ? AND status = 'full'").bind(now, id).run();
       await refundEventPointDiscount(env.DB, id, targetId, row.title, now);
+      await notifyOrganizerParticipantCancellation(env.DB, row, targetId, member.id, now);
     }
     await audit(env.DB, member.id, input.action === "approve" ? "event.participant_confirmed" : "event.participant_cancelled", id, { targetId });
     const updated = await eventRow(env.DB, id);

@@ -775,7 +775,7 @@ function EventCard({
                 marginTop: 5,
               }}
             >
-              {event.selectionMethod ? (
+              {event.eventType === "official" && event.selectionMethod ? (
                 <Text
                   style={{
                     fontSize: 9,

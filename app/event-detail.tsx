@@ -173,7 +173,8 @@ export default function EventDetailScreen() {
   const joiningRef = useRef(false);
   const usePointsRef = useRef(false);
   const favoriteEventIds = useEventFavorites();
-  const eventMentionGroups = useMemo(() => getMentionGroups(MEMBERS, clubs).filter((group) => group.category === "club" || group.category === "branch"), [clubs]);
+  // Event comments support the same club, branch, and member mentions as other composers.
+  const eventMentionGroups = useMemo(() => getMentionGroups(MEMBERS, clubs), [clubs]);
   const eventMentionQuery = getMentionQuery(eventCommentText);
 
   useEffect(() => {
@@ -182,7 +183,7 @@ export default function EventDetailScreen() {
     let active = true;
     const imported = allEvents.find((item) => item.id === id);
     void Api.getEvent(id)
-      .then((value) => { if (active) setEvent({ ...imported, ...value, description: value.description?.trim() || imported?.description || "", image: value.image || imported?.image || "", tabelogUrl: value.tabelogUrl || imported?.tabelogUrl, googleMapsUrl: value.googleMapsUrl || imported?.googleMapsUrl, organizerProfileId: value.organizerProfileId || imported?.organizerProfileId, organizerName: value.organizerName || imported?.organizerName, organizerAvatar: value.organizerAvatar || imported?.organizerAvatar, organizerRank: value.organizerRank || imported?.organizerRank } as Event); })
+      .then((value) => { if (active) setEvent({ ...imported, ...value, description: value.description?.trim() ?? "", image: value.image || imported?.image || "", tabelogUrl: value.tabelogUrl || imported?.tabelogUrl, googleMapsUrl: value.googleMapsUrl || imported?.googleMapsUrl, organizerProfileId: value.organizerProfileId || imported?.organizerProfileId, organizerName: value.organizerName || imported?.organizerName, organizerAvatar: value.organizerAvatar || imported?.organizerAvatar, organizerRank: value.organizerRank || imported?.organizerRank } as Event); })
       .catch(() => undefined);
     return () => { active = false; };
   }, [allEvents, authUser, id]);
@@ -207,7 +208,7 @@ export default function EventDetailScreen() {
     setIsJoined(status ? status === "confirmed" || status === "cancel_requested" : event.participants.includes(viewerId));
     setHasApplied(status ? status === "applied" || status === "confirmed" || status === "cancel_requested" : Boolean(event.applicantIds?.includes(viewerId)));
     if (!event.viewerMemberId || !event.chatId) return;
-    if (event.isOrganizer || status === "confirmed" || status === "cancel_requested") {
+    if (isEventOrganizer(event, viewerId) || status === "confirmed" || status === "cancel_requested") {
       const room = joinEventChat(event.id, event.title, event.chatId, viewerId);
       setChatRoomId(room.id);
     } else {
@@ -255,13 +256,17 @@ export default function EventDetailScreen() {
   };
 
   // ユーザーのランクに応じた料金を取得
+  const eventHasRankPrices = (evt: Event) => {
+    const rankPrices = evt.rankPrices;
+    return evt.eventType === "official" && Boolean(rankPrices && EVENT_RANKS.some((rank) => Boolean(rankPrices[rank])));
+  };
   const getRankPrice = (evt: Event): string => {
-    if (!evt.rankPrices) return evt.price;
+    if (!eventHasRankPrices(evt)) return evt.price;
     const rank = (authUser?.memberRank ?? CURRENT_USER.rank) as "regular" | "silver" | "gold" | "platinum";
-    return evt.rankPrices[rank] ?? evt.price;
+    return evt.rankPrices?.[rank] ?? evt.price;
   };
   const effectivePrice = getRankPrice(event);
-  const hasRankPrices = !!event.rankPrices;
+  const hasRankPrices = eventHasRankPrices(event);
 
   // 参加費の数値を取得（「3,000円」→ 3000）
   const parsePriceNumber = (priceStr: string): number => {
@@ -540,10 +545,13 @@ export default function EventDetailScreen() {
   };
 
   const cancelGourmetParticipant = (memberId: string) => {
-    const member = getMemberById(memberId);
-    Alert.alert("参加をキャンセル", `${member?.name ?? "メンバー"}さんの参加を幹事側でキャンセルしますか？`, [
+    const member = displayMember(memberId);
+    setApplicationConfirmation({
+      title: "参加をキャンセルしますか？",
+      message: `${member.name}さんの参加を取り消します。本当にキャンセルしますか？`,
+      buttons: [
       { text: "戻る", style: "cancel" },
-      { text: "キャンセルする", style: "destructive", onPress: async () => {
+      { text: "キャンセル", style: "destructive", onPress: async () => {
         if (event.viewerMemberId) {
           try {
             setEvent(await Api.reviewEventApplicant(event.id, memberId, "cancel"));
@@ -558,7 +566,8 @@ export default function EventDetailScreen() {
         setEventRevision((value) => value + 1);
         Alert.alert("キャンセル完了", "必要に応じて「追加募集を開始」から募集を再開できます。");
       } },
-    ]);
+    ],
+    });
   };
 
   const handleReopenGourmetRecruitment = () => {
@@ -1040,7 +1049,7 @@ export default function EventDetailScreen() {
           </View>
         ) : null}
 
-        <View style={{ backgroundColor: colors.surface, borderRadius: 14, padding: 16, marginBottom: 16 }}><Text style={{ fontSize: 16, fontWeight: "900", color: colors.foreground }}>イベントへのコメント</Text><Text style={{ fontSize: 11, color: colors.muted, marginTop: 4 }}>参加申込前でも閲覧・コメントできます。@で部活・支部をメンションできます。</Text>{eventComments.map((comment) => <View key={comment.id} style={{ marginTop: 12, paddingTop: 12, borderTopWidth: 0.5, borderTopColor: colors.border }}><Text style={{ fontSize: 12, fontWeight: "900", color: colors.foreground }}>{comment.author}</Text><MentionText content={comment.text} groups={eventMentionGroups} /></View>)}{eventMentionQuery !== null ? <MentionSuggestions query={eventMentionQuery} groups={eventMentionGroups} members={[]} onSelect={(label) => setEventCommentText((value) => insertMention(value, label))} /> : null}<View style={{ flexDirection: "row", alignItems: "flex-end", marginTop: 14 }}><TextInput value={eventCommentText} onChangeText={(value) => setEventCommentText(value.replace(/@everyone\b/gi, ""))} onFocus={() => setEventCommentFocused(true)} onBlur={() => setEventCommentFocused(false)} placeholder="質問やコメントを入力" placeholderTextColor={colors.muted} multiline style={{ flex: 1, minHeight: 44, maxHeight: 100, borderRadius: 14, backgroundColor: colors.background, borderWidth: 1, borderColor: colors.border, paddingHorizontal: 12, paddingVertical: 10, color: colors.foreground }} /><Pressable disabled={!eventCommentText.trim()} onPress={handleEventComment} style={{ width: 44, height: 44, borderRadius: 22, marginLeft: 8, alignItems: "center", justifyContent: "center", backgroundColor: eventCommentText.trim() ? "#D65E8D" : colors.border }}><IconSymbol name="paperplane.fill" size={19} color="#FFF" /></Pressable></View></View>
+        <View style={{ backgroundColor: colors.surface, borderRadius: 14, padding: 16, marginBottom: 16 }}><Text style={{ fontSize: 16, fontWeight: "900", color: colors.foreground }}>イベントへのコメント</Text><Text style={{ fontSize: 11, color: colors.muted, marginTop: 4 }}>参加申込前でも閲覧・コメントできます。@で会員・部活・支部をメンションできます。</Text>{eventComments.map((comment) => <View key={comment.id} style={{ marginTop: 12, paddingTop: 12, borderTopWidth: 0.5, borderTopColor: colors.border }}><Text style={{ fontSize: 12, fontWeight: "900", color: colors.foreground }}>{comment.author}</Text><MentionText content={comment.text} groups={eventMentionGroups} onMentionPress={(label) => { const targetId = findMentionedMemberId(label, MEMBERS); if (targetId) openMemberProfile(targetId); }} /></View>)}{eventMentionQuery !== null ? <MentionSuggestions query={eventMentionQuery} groups={eventMentionGroups} members={MEMBERS} onSelect={(label) => setEventCommentText((value) => insertMention(value, label))} /> : null}<View style={{ flexDirection: "row", alignItems: "flex-end", marginTop: 14 }}><TextInput value={eventCommentText} onChangeText={(value) => setEventCommentText(value.replace(/@everyone\b/gi, ""))} onFocus={() => setEventCommentFocused(true)} onBlur={() => setEventCommentFocused(false)} placeholder="質問やコメントを入力" placeholderTextColor={colors.muted} multiline style={{ flex: 1, minHeight: 44, maxHeight: 100, borderRadius: 14, backgroundColor: colors.background, borderWidth: 1, borderColor: colors.border, paddingHorizontal: 12, paddingVertical: 10, color: colors.foreground }} /><Pressable disabled={!eventCommentText.trim()} onPress={handleEventComment} style={{ width: 44, height: 44, borderRadius: 22, marginLeft: 8, alignItems: "center", justifyContent: "center", backgroundColor: eventCommentText.trim() ? "#D65E8D" : colors.border }}><IconSymbol name="paperplane.fill" size={19} color="#FFF" /></Pressable></View></View>
 
         {(isJoined || hasApplied) && !isOrganizer ? (
           <View style={{ backgroundColor: "#FFF4F2", borderRadius: 14, padding: 14, marginBottom: 16, borderWidth: 1, borderColor: "#F3D0CA" }}>
@@ -1191,7 +1200,7 @@ export default function EventDetailScreen() {
         }}
       >
         {/* チャットボタン（参加済みの場合） */}
-        {isJoined && chatRoomId && (
+        {(isJoined || isOrganizer) && chatRoomId && (
           <Pressable
             onPress={handleOpenChat}
             style={({ pressed }) => ({
@@ -1218,7 +1227,9 @@ export default function EventDetailScreen() {
           disabled={isJoined || hasApplied || isOrganizer || event.status !== "open" || (requiresOrganizerApproval && !termsAccepted)}
           onPress={isJoined || hasApplied || isOrganizer || event.status !== "open" || (requiresOrganizerApproval && !termsAccepted) ? undefined : handleJoin}
           style={({ pressed }) => ({
-            backgroundColor: isJoined
+            backgroundColor: isOrganizer
+              ? (event.participantsFinalizedAt ? "#34C759" : "#B42318")
+              : isJoined
               ? "#34C759"
               : hasApplied
               ? "#5B9BD5"
@@ -1234,7 +1245,7 @@ export default function EventDetailScreen() {
           })}
         >
           <Text style={{ fontSize: 17, fontWeight: "700", color: "#FFF" }}>
-            {isOrganizer ? "幹事メニューで申込を管理" : isJoined ? "✓ 参加確定" : hasApplied ? "✓ 申込済み（幹事の承認待ち）" : event.status !== "open" ? "募集終了" : requiresOrganizerApproval && !termsAccepted ? "規約に同意して申し込む" : event.selectionMethod === "lottery" ? "抽選に申し込む" : "参加を申し込む"}
+            {isOrganizer ? (event.participantsFinalizedAt ? "幹事イベント（参加者確定済み）" : "幹事イベント（参加者募集中）") : isJoined ? "✓ 参加確定" : hasApplied ? "✓ 申込済み（幹事の承認待ち）" : event.status !== "open" ? "募集終了" : requiresOrganizerApproval && !termsAccepted ? "規約に同意して申し込む" : event.selectionMethod === "lottery" ? "抽選に申し込む" : "参加を申し込む"}
           </Text>
         </Pressable>
       </View> : null}
