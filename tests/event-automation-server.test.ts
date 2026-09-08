@@ -50,6 +50,7 @@ describe("server event automation", () => {
     expect(events).toContain("ON CONFLICT(room_id, member_id) DO UPDATE");
     expect(events).toContain("event-chat-join:");
     expect(events).toContain("がチャットに参加しました");
+    expect(events).toContain("参加者専用グループが作成されました");
     expect(events).toContain("【IRO+ システム】");
   });
 });

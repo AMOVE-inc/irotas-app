@@ -813,7 +813,7 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
         .bind(chatId, memberId, now)),
       env.DB.prepare(`INSERT OR IGNORE INTO chat_messages (id, room_id, sender_member_id, content, created_at, updated_at)
         VALUES (?, ?, ?, ?, ?, ?)`)
-        .bind(`event-chat-welcome:${id}`, chatId, row.organizer_member_id, eventChatSystemContent(`「${row.title}」の参加者専用チャットへようこそ！`), now, now),
+        .bind(`event-chat-welcome:${id}`, chatId, row.organizer_member_id, eventChatSystemContent(`「${row.title}」の参加者専用グループが作成されました`), now, now),
       ...chatMemberNames.map(({ memberId, name }) => env.DB!.prepare(`INSERT OR IGNORE INTO chat_messages (id, room_id, sender_member_id, content, created_at, updated_at)
         VALUES (?, ?, ?, ?, ?, ?)`)
         .bind(`event-chat-join:${id}:${memberId}`, chatId, row.organizer_member_id, eventChatSystemContent(`${name}がチャットに参加しました`), now, now)),
@@ -875,7 +875,7 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
           .bind(chatId, targetId, now),
         env.DB.prepare(`INSERT OR IGNORE INTO chat_messages (id, room_id, sender_member_id, content, created_at, updated_at)
           VALUES (?, ?, ?, ?, ?, ?)`)
-          .bind(`event-chat-welcome:${id}`, chatId, row.organizer_member_id, eventChatSystemContent(`「${row.title}」の参加者専用チャットへようこそ！`), now, now),
+          .bind(`event-chat-welcome:${id}`, chatId, row.organizer_member_id, eventChatSystemContent(`「${row.title}」の参加者専用グループが作成されました`), now, now),
         env.DB.prepare(`INSERT OR IGNORE INTO chat_messages (id, room_id, sender_member_id, content, created_at, updated_at)
           VALUES (?, ?, ?, ?, ?, ?)`)
           .bind(`event-chat-join:${id}:${targetId}`, chatId, row.organizer_member_id, eventChatSystemContent(`${targetName}がチャットに参加しました`), now, now),

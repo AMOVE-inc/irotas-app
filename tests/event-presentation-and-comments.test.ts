@@ -58,12 +58,22 @@ describe("event presentation and comments", () => {
     expect(events).toContain("getConfirmedRecruitParticipantCount(event)");
   });
 
-  it("renders official system notices, day separators, and no avatar on outgoing chat messages", () => {
+  it("renders event system notices as centered text, with day separators and no avatar on outgoing messages", () => {
     const chat = source("app/chat.tsx");
     expect(chat).toContain('message.content.startsWith("【IRO+ システム】")');
-    expect(chat).toContain('require("@/assets/images/irotas-logo-square.png")');
+    expect(chat).toContain("function systemMessageText");
+    expect(chat).toContain("参加者専用グループが作成されました");
+    expect(chat).toContain("if (isSystemMessage)");
     expect(chat).toContain("!isMe && avatarSource");
     expect(chat).toContain("toLocaleDateString(\"ja-JP\"");
+  });
+
+  it("keeps only the lower participant-chat CTA and labels confirmed profile events", () => {
+    const detail = source("app/event-detail.tsx");
+    const profile = source("app/(tabs)/profile.tsx");
+    expect(detail).not.toContain("参加済みチャットバナー");
+    expect(detail).toContain("参加者チャットを開く");
+    expect(profile).toContain('confirmed ? "参加確定" : "参加申込中"');
   });
 
   it("shows inline validation feedback and does not fill an omitted public note", () => {

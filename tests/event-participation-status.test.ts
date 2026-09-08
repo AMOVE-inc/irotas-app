@@ -9,8 +9,8 @@ const event = (overrides: Partial<Event> = {}): Event => ({
 });
 
 describe("event participation status", () => {
-  it("uses the API viewer status before a stale participant list", () => {
-    expect(getEventParticipationStatus(event({ viewerMemberId: "IRO0002", viewerParticipationStatus: "confirmed" }), "IRO0002")).toBe("confirmed");
+  it("uses the API viewer status before a stale participant list or local member identifier", () => {
+    expect(getEventParticipationStatus(event({ viewerMemberId: "IRO0002", viewerParticipationStatus: "confirmed" }), "member-2")).toBe("confirmed");
   });
 
   it("keeps a cancel request in the confirmed presentation state", () => {

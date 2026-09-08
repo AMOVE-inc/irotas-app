@@ -19,7 +19,7 @@ export function isEventOrganizer(event: Event, memberId: string): boolean {
 export function getEventParticipationStatus(event: Event, memberId: string): EventParticipationStatus {
   // Events returned by the API carry a viewer-specific status.  It is the
   // source of truth while a participant list can be stale during refreshes.
-  if (event.viewerMemberId === memberId && event.viewerParticipationStatus) {
+  if (event.viewerParticipationStatus) {
     return event.viewerParticipationStatus === "cancel_requested"
       ? "confirmed"
       : event.viewerParticipationStatus;

@@ -760,46 +760,6 @@ export default function EventDetailScreen() {
           </Text>
         ) : null}
 
-        {/* 参加済みチャットバナー */}
-        {isJoined && chatRoomId && (
-          <Pressable
-            onPress={handleOpenChat}
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              backgroundColor: "#34C75915",
-              borderRadius: 14,
-              padding: 14,
-              marginBottom: 16,
-              borderWidth: 1,
-              borderColor: "#34C75930",
-            }}
-          >
-            <View
-              style={{
-                width: 36,
-                height: 36,
-                borderRadius: 18,
-                backgroundColor: "#34C75920",
-                alignItems: "center",
-                justifyContent: "center",
-                marginRight: 12,
-              }}
-            >
-              <IconSymbol name="message.fill" size={18} color="#34C759" />
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={{ fontSize: 14, fontWeight: "700", color: "#34C759" }}>
-                参加者専用チャット
-              </Text>
-              <Text style={{ fontSize: 12, color: colors.muted }}>
-                タップしてチャットを開く →
-              </Text>
-            </View>
-            <IconSymbol name="chevron.right" size={16} color="#34C759" />
-          </Pressable>
-        )}
-
         {/* Info cards */}
         <View style={{ backgroundColor: colors.surface, borderRadius: 14, padding: 16, marginBottom: 16 }}>
           <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 14 }}>

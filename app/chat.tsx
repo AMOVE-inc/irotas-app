@@ -53,6 +53,12 @@ import * as Api from "@/lib/_core/api";
 const REACTION_EMOJIS = ["👍", "❤️", "😂", "🎉", "😋", "🙏"] as const;
 const MORE_REACTION_EMOJIS = ["😀", "😃", "😄", "😁", "😆", "😅", "😂", "🤣", "😊", "😇", "🙂", "🙃", "😉", "😍", "🥰", "😘", "😋", "😛", "🤪", "🤔", "🫡", "😎", "🥳", "😮", "😢", "😭", "😡", "👍", "👎", "👏", "🙌", "🙏", "💪", "👀", "❤️", "🩷", "🧡", "💛", "💚", "💙", "💜", "🖤", "🤍", "🔥", "✨", "🎉", "💯", "✅", "❌", "💡", "📌", "🍽️", "🍣", "🍖", "🍜", "🍕", "🍰", "☕", "🍺", "🍷"] as const;
 
+function systemMessageText(content: string): string {
+  const text = content.replace(/^【IRO\+ システム】\s*/, "");
+  const legacyWelcome = text.match(/^「(.+)」の参加者専用チャットへようこそ！$/);
+  return legacyWelcome ? `「${legacyWelcome[1]}」の参加者専用グループが作成されました` : text;
+}
+
 function MessageBubble({ message, isMe, viewerId, myAvatarUri, senderMember, onReact, mentionGroups, onOpenInternalLink, onOpenProfile, canManage, onReply, onEdit, onDelete }: { message: ChatMessage; isMe: boolean; viewerId: string; myAvatarUri?: string | null; senderMember?: Api.PublicMember; onReact: (emoji: string, pollChoices?: string[], allowMultiple?: boolean) => void; mentionGroups: ReturnType<typeof getMentionGroups>; onOpenInternalLink: (pathname: "/chat" | "/board", params: Record<string, string>) => void; onOpenProfile: () => void; canManage: boolean; onReply: () => void; onEdit: () => void; onDelete: () => void }) {
   const colors = useColors();
   const sender = getMemberById(message.senderId);
@@ -64,15 +70,23 @@ function MessageBubble({ message, isMe, viewerId, myAvatarUri, senderMember, onR
   const pollAllowsMultiple = pollLines.includes("🔢 複数回答可");
   const isSystemMessage = message.content.startsWith("【IRO+ システム】");
 
+  if (isSystemMessage) {
+    return (
+      <View style={{ alignItems: "center", marginVertical: 10, paddingHorizontal: 32 }}>
+        <Text style={{ fontSize: 11, fontWeight: "700", color: colors.muted, textAlign: "center" }}>
+          {systemMessageText(message.content)}
+        </Text>
+      </View>
+    );
+  }
+
   const formatTime = (dateStr: string) => {
     const d = new Date(dateStr);
     return `${d.getHours()}:${String(d.getMinutes()).padStart(2, "0")}`;
   };
 
   // アバター画像の決定: 自分はプロフィール画像、他者はモックデータのアバター
-  const avatarSource = isSystemMessage
-    ? require("@/assets/images/irotas-logo-square.png")
-    : isMe
+  const avatarSource = isMe
     ? (myAvatarUri ? { uri: myAvatarUri } : (sender?.avatar ?? DEFAULT_AVATAR))
     : (message.senderAvatar ? { uri: message.senderAvatar } : (sender?.avatar ?? DEFAULT_AVATAR));
 
@@ -87,7 +101,7 @@ function MessageBubble({ message, isMe, viewerId, myAvatarUri, senderMember, onR
     >
       {/* 自分のアバターは表示せず、相手と公式システム通知だけに表示する。 */}
       {!isMe && avatarSource && (
-        <Pressable disabled={isSystemMessage} onPress={onOpenProfile} accessibilityLabel={isSystemMessage ? "IRO+からのお知らせ" : `${message.externalAuthorName ?? sender?.name ?? "メンバー"}のプロフィールを表示`}>
+        <Pressable onPress={onOpenProfile} accessibilityLabel={`${message.externalAuthorName ?? sender?.name ?? "メンバー"}のプロフィールを表示`}>
           <Image
             source={avatarSource}
             style={[
