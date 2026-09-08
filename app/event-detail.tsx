@@ -536,39 +536,36 @@ export default function EventDetailScreen() {
       Alert.alert("承認待ちがあります", "すべての申込を確認してから参加者確定を完了してください。");
       return;
     }
-    Alert.alert("参加者を確定", "現在の参加確定者で専用チャットを作成し、参加者へ通知しますか？", [
-      { text: "戻る", style: "cancel" },
-      { text: "確定する", onPress: async () => {
-        if (event.viewerMemberId) {
-          try {
-            const updated = await Api.finalizeEventParticipants(event.id);
-            setEvent(updated);
-            if (updated.chatId) {
-              const room = joinEventChat(updated.id, updated.title, updated.chatId, updated.createdBy);
-              setChatRoomId(room.id);
-            }
-            Alert.alert("参加者を確定しました", "確定した参加者を専用チャットへ追加し、通知しました。");
-          } catch (error) {
-            Alert.alert("確定できませんでした", error instanceof Error ? error.message : "もう一度お試しください。");
+    void (async () => {
+      if (event.viewerMemberId) {
+        try {
+          const updated = await Api.finalizeEventParticipants(event.id);
+          setEvent(updated);
+          if (updated.chatId) {
+            const room = joinEventChat(updated.id, updated.title, updated.chatId, updated.createdBy);
+            setChatRoomId(room.id);
           }
-          return;
+          Alert.alert("参加者を確定しました", "確定した参加者を専用チャットへ追加し、通知しました。");
+        } catch (error) {
+          Alert.alert("確定できませんでした", error instanceof Error ? error.message : "もう一度お試しください。");
         }
-        const room = joinEventChat(event.id, event.title, event.chatId, event.createdBy);
-        event.chatId = room.id;
-        for (const memberId of [...new Set([...(event.participants ?? []), ...companionIds])]) {
-          const alreadyJoined = room.participants.includes(memberId);
-          joinEventChat(event.id, event.title, room.id, memberId);
-          if (!alreadyJoined) {
-            await notifyEventConfirmation(event, memberId, room.id);
-            await scheduleEventReminders(event, memberId, room.id);
-          }
+        return;
+      }
+      const room = joinEventChat(event.id, event.title, event.chatId, event.createdBy);
+      event.chatId = room.id;
+      for (const memberId of [...new Set([...(event.participants ?? []), ...companionIds])]) {
+        const alreadyJoined = room.participants.includes(memberId);
+        joinEventChat(event.id, event.title, room.id, memberId);
+        if (!alreadyJoined) {
+          await notifyEventConfirmation(event, memberId, room.id);
+          await scheduleEventReminders(event, memberId, room.id);
         }
-        event.participantsFinalizedAt = new Date().toISOString();
-        await cancelOrganizerDeadlineNotifications(event.id);
-        setEventRevision((value) => value + 1);
-        Alert.alert("参加者を確定しました", "確定した参加者を専用チャットへ追加し、通知しました。");
-      } },
-    ]);
+      }
+      event.participantsFinalizedAt = new Date().toISOString();
+      await cancelOrganizerDeadlineNotifications(event.id);
+      setEventRevision((value) => value + 1);
+      Alert.alert("参加者を確定しました", "確定した参加者を専用チャットへ追加し、通知しました。");
+    })();
   };
 
   const handleCancelEvent = () => {
