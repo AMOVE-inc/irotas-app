@@ -25,6 +25,7 @@ import { recordActivityEvent } from "@/lib/ai-data-store";
 import { getDiscordAuthorById, getDiscordAuthorByName } from "@/lib/discord-author-directory";
 import { findMentionedClub, findMentionedMemberId } from "@/lib/mention-targets";
 import { getConfirmedParticipantDisplayIds } from "@/lib/event-confirmed-participants";
+import { isEventOrganizer } from "@/lib/event-participation";
 import { EVENT_AMOUNT_OPTIONS, EVENT_CAPACITY_OPTIONS, EVENT_RANKS, EVENT_TIME_OPTIONS, eventFormSaveFields, eventFormValuesFromEvent, hasOnlyCompanionChanges, minimumReservationCapacity, type EventFormValues, validateEventForm } from "@/lib/event-form";
 import { GOURMET_GENRES } from "@/constants/event-options";
 import { Image } from "expo-image";
@@ -278,7 +279,7 @@ export default function EventDetailScreen() {
   const applicantCount = event.applicantIds?.length ?? event.attendees;
   const organizer = getMemberById(organizerId) ?? getMemberById(event.createdBy);
   const viewerMemberId = event.viewerMemberId ?? authenticatedViewerMemberId;
-  const isOrganizer = event.isOrganizer ?? organizerId === viewerMemberId;
+  const isOrganizer = isEventOrganizer(event, viewerMemberId);
   const pendingApplicantIds = getPendingGourmetApplicants(event);
   const confirmedParticipantCount = (event.participants ?? []).length;
   const canFinalizeParticipants = !event.participantsFinalizedAt && pendingApplicantIds.length === 0 && confirmedParticipantCount >= event.capacity;

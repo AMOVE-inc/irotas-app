@@ -16,7 +16,7 @@ import { useColors } from "@/hooks/use-colors";
 import { refreshClubs, useClubs } from "@/lib/club-store";
 import { getMyRooms } from "@/lib/chat-store";
 import { getAllEvents } from "@/lib/event-store";
-import { getEventParticipationStatus } from "@/lib/event-participation";
+import { getEventParticipationStatus, isEventOrganizer } from "@/lib/event-participation";
 import { getIrotasPoints } from "@/lib/irotas-points-store";
 import { Image } from "expo-image";
 import { useFocusEffect, useRouter } from "expo-router";
@@ -836,8 +836,9 @@ export default function ProfileScreen() {
       // club-leader badge is available on the first profile render.
       void refreshClubs();
       setMyRooms(getMyRooms(user.id));
+      const viewerMemberId = isRealMember ? (authUser?.memberId ?? memberIdentity?.memberId ?? user.id) : user.id;
       const sortParticipating = (items: Event[]) => items
-        .filter((event) => getEventParticipationStatus(event, isRealMember ? (authUser?.memberId ?? memberIdentity?.memberId ?? user.id) : user.id) !== null)
+        .filter((event) => isEventOrganizer(event, viewerMemberId) || getEventParticipationStatus(event, viewerMemberId) !== null)
         .sort((a, b) => Date.parse(`${a.date}T${a.time}:00`) - Date.parse(`${b.date}T${b.time}:00`));
       if (isRealMember) {
         void Api.getEvents().then((items) => setParticipatingEvents(sortParticipating(items))).catch(() => setParticipatingEvents([]));
@@ -1060,17 +1061,18 @@ export default function ProfileScreen() {
         </View>
 
         <View style={{ marginHorizontal: 16, marginBottom: 16 }}>
-          <Text style={{ fontSize: 14, fontWeight: "800", color: colors.foreground, marginBottom: 9 }}>参加申込中／参加確定済みのイベント</Text>
+          <Text style={{ fontSize: 14, fontWeight: "800", color: colors.foreground, marginBottom: 9 }}>参加申込中／参加確定済み／幹事のイベント</Text>
           <View style={{ backgroundColor: colors.surface, borderRadius: 16, overflow: "hidden" }}>
             {participatingEvents.length ? participatingEvents.map((event, index) => {
               const status = getEventParticipationStatus(event, user.id);
+              const organizer = isEventOrganizer(event, user.id);
               const confirmed = status === "confirmed";
               return <Pressable key={event.id} onPress={() => router.push({ pathname: "/event-detail", params: { id: event.id } })} style={{ flexDirection: "row", alignItems: "center", padding: 12, borderTopWidth: index ? 0.5 : 0, borderTopColor: colors.border }}>
                 <Image source={event.image} style={{ width: 52, height: 52, borderRadius: 10 }} contentFit="cover" />
                 <View style={{ flex: 1, marginLeft: 11 }}><Text style={{ fontSize: 13, fontWeight: "800", color: colors.foreground }} numberOfLines={2}>{event.title}</Text><Text style={{ fontSize: 11, color: colors.muted, marginTop: 3 }}>{event.date} {event.time}</Text></View>
-                <View style={{ borderRadius: 8, backgroundColor: confirmed ? "#E6F6EA" : "#E8F2FA", paddingHorizontal: 7, paddingVertical: 4 }}><Text style={{ fontSize: 10, fontWeight: "800", color: confirmed ? "#237A3B" : "#3E78A1" }}>{confirmed ? "参加確定済み" : "参加申込中"}</Text></View>
+                <View style={{ borderRadius: 8, backgroundColor: organizer ? "#FFF0E4" : confirmed ? "#E6F6EA" : "#E8F2FA", paddingHorizontal: 7, paddingVertical: 4 }}><Text style={{ fontSize: 10, fontWeight: "800", color: organizer ? "#C66B16" : confirmed ? "#237A3B" : "#3E78A1" }}>{organizer ? "幹事" : confirmed ? "参加確定済み" : "参加申込中"}</Text></View>
               </Pressable>;
-            }) : <Text style={{ padding: 16, fontSize: 13, color: colors.muted }}>参加申込中・参加確定済みのイベントはありません。</Text>}
+            }) : <Text style={{ padding: 16, fontSize: 13, color: colors.muted }}>参加申込中・参加確定済み・幹事のイベントはありません。</Text>}
           </View>
           <Pressable
             onPress={() => router.push("/my-events" as any)}

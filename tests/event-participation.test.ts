@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Event } from "../constants/mock-data";
-import { getEventParticipationStatus } from "../lib/event-participation";
+import { getEventParticipationStatus, isEventOrganizer } from "../lib/event-participation";
 
 const event: Event = { id: "e", title: "会", description: "", date: "2026-08-01", time: "18:00", location: "東京", image: "", capacity: 5, attendees: 3, participants: ["confirmed"], applicantIds: ["confirmed", "applied"], companionIds: ["companion"], price: "5,000円", category: "kanto", eventType: "gourmet", status: "open", createdBy: "host" };
 
@@ -10,5 +10,12 @@ describe("event participation labels", () => {
     expect(getEventParticipationStatus(event, "confirmed")).toBe("confirmed");
     expect(getEventParticipationStatus(event, "companion")).toBe("confirmed");
     expect(getEventParticipationStatus(event, "other")).toBeNull();
+  });
+
+  it("identifies the organizer even before a refreshed event includes the server flag", () => {
+    expect(isEventOrganizer(event, "host")).toBe(true);
+    expect(isEventOrganizer({ ...event, organizerProfileId: "organizer", isOrganizer: false }, "organizer")).toBe(true);
+    expect(isEventOrganizer({ ...event, isOrganizer: true }, "other")).toBe(true);
+    expect(isEventOrganizer(event, "other")).toBe(false);
   });
 });
