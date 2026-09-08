@@ -1872,7 +1872,7 @@ export default function AdminDashboardScreen() {
                         color: event.status === "open" ? "#34C759" : event.status === "full" ? "#FF9500" : "#8E8E93",
                       }}
                     >
-                      {event.status === "open" ? "受付中" : event.status === "full" ? "満席" : "終了"}
+                      {event.status === "open" ? "受付中" : event.status === "full" ? (event.participantsFinalizedAt ? "募集終了" : "満席") : "終了"}
                     </Text>
                   </View>
                 </View>

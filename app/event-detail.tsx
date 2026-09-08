@@ -542,7 +542,7 @@ export default function EventDetailScreen() {
           const room = joinEventChat(updated.id, updated.title, updated.chatId, updated.createdBy);
           setChatRoomId(room.id);
         }
-        Alert.alert("参加者を確定しました", "確定した参加者を専用チャットへ追加し、通知しました。");
+        Alert.alert("参加者を確定しました", "参加者を確定し、イベントの募集を締め切りました。");
         return;
       }
       const room = joinEventChat(event.id, event.title, event.chatId, event.createdBy);
@@ -558,7 +558,7 @@ export default function EventDetailScreen() {
       event.participantsFinalizedAt = new Date().toISOString();
       await cancelOrganizerDeadlineNotifications(event.id);
       setEventRevision((value) => value + 1);
-      Alert.alert("参加者を確定しました", "確定した参加者を専用チャットへ追加し、通知しました。");
+      Alert.alert("参加者を確定しました", "参加者を確定し、イベントの募集を締め切りました。");
     } catch (error) {
       Alert.alert("確定できませんでした", error instanceof Error ? error.message : "もう一度お試しください。");
     } finally {
@@ -573,7 +573,7 @@ export default function EventDetailScreen() {
     }
     setApplicationConfirmation({
       title: "参加者を確定しますか？",
-      message: "現在の参加確定者で専用チャットを作成し、参加者へ通知します。",
+      message: "参加者を確定し、イベントの募集を締め切ります。",
       buttons: [
         { text: "戻る", style: "cancel" },
         { text: "確定する", onPress: () => { void finalizeParticipants(); } },
@@ -762,7 +762,7 @@ export default function EventDetailScreen() {
             }}
           >
             <Text style={{ fontSize: 13, fontWeight: "700", color: "#FFF" }}>
-              {eventEnded ? "開催終了" : event.status === "open" ? "受付中" : event.status === "full" ? "満席" : "終了"}
+              {eventEnded ? "開催終了" : event.status === "open" ? "受付中" : event.status === "full" ? (event.participantsFinalizedAt ? "募集終了" : "満席") : "終了"}
             </Text>
           </View>
         </View>
@@ -908,7 +908,7 @@ export default function EventDetailScreen() {
               const member = displayMember(memberId);
               return <View key={memberId} style={{ flexDirection: "row", alignItems: "center", paddingVertical: 8, borderTopWidth: 0.5, borderTopColor: colors.border }}><Pressable onPress={() => openMemberProfile(memberId)} style={{ flex: 1, flexDirection: "row", alignItems: "center" }}><Image source={member.avatar} style={{ width: 34, height: 34, borderRadius: 17 }} contentFit="cover" /><View style={{ flex: 1, marginLeft: 9, flexDirection: "row", alignItems: "center", flexWrap: "wrap" }}><Text style={{ fontSize: 14, fontWeight: "700", color: colors.foreground }}>{member.name}</Text>{member.rank ? <MemberRankBadge rank={member.rank} name={member.badgeName} role={member.role} compact /> : null}<MemberClubLeaderBadges roles={member.roles} name={member.badgeName} compact /><MemberRoleBadge name="" role={member.role} compact /></View></Pressable>{memberId !== event.createdBy ? <Pressable onPress={() => cancelGourmetParticipant(memberId)} style={{ borderRadius: 9, borderWidth: 1, borderColor: colors.error, paddingHorizontal: 10, paddingVertical: 6 }}><Text style={{ color: colors.error, fontSize: 11, fontWeight: "800" }}>幹事キャンセル</Text></Pressable> : null}</View>;
             })}
-            {event.status !== "open" && (event.participants ?? []).length < event.capacity ? <Pressable onPress={handleReopenGourmetRecruitment} style={{ marginTop: 12, borderRadius: 11, backgroundColor: "#E8A0BF", paddingVertical: 11, alignItems: "center" }}><Text style={{ fontSize: 14, fontWeight: "900", color: "#FFF" }}>追加募集を開始</Text></Pressable> : null}
+            {event.status !== "open" && !event.participantsFinalizedAt && (event.participants ?? []).length < event.capacity ? <Pressable onPress={handleReopenGourmetRecruitment} style={{ marginTop: 12, borderRadius: 11, backgroundColor: "#E8A0BF", paddingVertical: 11, alignItems: "center" }}><Text style={{ fontSize: 14, fontWeight: "900", color: "#FFF" }}>追加募集を開始</Text></Pressable> : null}
             <Pressable disabled={!canFinalizeParticipants || finalizingParticipants} onPress={handleFinalizeParticipants} style={{ marginTop: 12, borderRadius: 11, backgroundColor: canFinalizeParticipants && !finalizingParticipants ? "#34A853" : "#AEB6B0", paddingVertical: 11, alignItems: "center" }}><Text style={{ fontSize: 14, fontWeight: "900", color: "#FFF" }}>{event.participantsFinalizedAt ? "参加者確定済み" : finalizingParticipants ? "参加者を確定中…" : canFinalizeParticipants ? "参加者確定を完了" : "参加確定者がいません"}</Text></Pressable>
             {new Date(`${event.date}T${event.time}:00+09:00`).getTime() + 3 * 60 * 60 * 1000 <= Date.now() ? <Pressable disabled={attendanceLoading} onPress={handleFinalizeAttendance} style={{ marginTop: 10, borderRadius: 11, backgroundColor: attendanceLoading ? "#9CBFDF" : "#5B9BD5", paddingVertical: 11, alignItems: "center" }}><Text style={{ fontSize: 14, fontWeight: "900", color: "#FFF" }}>{attendanceLoading ? "出欠を読み込み中…" : "開催結果（実出欠）を確定"}</Text></Pressable> : null}
             <Pressable onPress={handleCancelEvent} style={{ marginTop: 10, borderRadius: 11, borderWidth: 1, borderColor: "#D94C55", paddingVertical: 11, alignItems: "center" }}><Text style={{ fontSize: 14, fontWeight: "900", color: "#D94C55" }}>イベントを中止</Text></Pressable>

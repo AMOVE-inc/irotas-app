@@ -801,7 +801,7 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
     const chatMemberNames = await Promise.all([...chatMemberIds].map(async (memberId) => ({ memberId, name: await eventChatMemberName(env.DB!, memberId) })));
     const pendingApplicants = await env.DB.prepare("SELECT member_id FROM event_participations WHERE event_id = ? AND status = 'applied'").bind(id).all<{ member_id: number }>();
     await env.DB.batch([
-      env.DB.prepare("UPDATE events SET public_data_json = ?, updated_at = ? WHERE id = ?").bind(JSON.stringify(data), now, id),
+      env.DB.prepare("UPDATE events SET public_data_json = ?, status = 'full', updated_at = ? WHERE id = ?").bind(JSON.stringify(data), now, id),
       env.DB.prepare("UPDATE event_participations SET status = 'rejected', cancelled_at = ?, updated_at = ? WHERE event_id = ? AND status = 'applied'").bind(now, now, id),
       env.DB.prepare(`INSERT OR IGNORE INTO chat_rooms (id, name, room_type, source_id, created_by_member_id, created_at, updated_at)
         VALUES (?, ?, 'event', ?, ?, ?, ?)`).bind(chatId, row.title, id, row.organizer_member_id, now, now),
@@ -885,7 +885,7 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
     } else {
       await env.DB.prepare(`UPDATE event_participations SET status = 'cancelled', cancelled_at = ?, updated_at = ?
         WHERE event_id = ? AND member_id = ?`).bind(now, now, id, targetId).run();
-      await env.DB.prepare("UPDATE events SET status = 'open', updated_at = ? WHERE id = ? AND status = 'full'").bind(now, id).run();
+      await env.DB.prepare("UPDATE events SET status = 'open', updated_at = ? WHERE id = ? AND status = 'full' AND COALESCE(json_extract(public_data_json, '$.participantsFinalizedAt'), '') = ''").bind(now, id).run();
       await refundEventPointDiscount(env.DB, id, targetId, row.title, now);
       await notifyOrganizerParticipantCancellation(env.DB, row, targetId, member.id, now);
     }
@@ -1008,7 +1008,7 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
         .bind(approved ? "cancelled" : "confirmed", approved ? now : null, now, id, targetId),
     ];
     if (approved) statements.push(
-      env.DB.prepare("UPDATE events SET status = 'open', updated_at = ? WHERE id = ? AND status = 'full'").bind(now, id),
+      env.DB.prepare("UPDATE events SET status = 'open', updated_at = ? WHERE id = ? AND status = 'full' AND COALESCE(json_extract(public_data_json, '$.participantsFinalizedAt'), '') = ''").bind(now, id),
     );
     await env.DB.batch(statements);
     if (approved) await refundEventPointDiscount(env.DB, id, targetId, row.title, now);

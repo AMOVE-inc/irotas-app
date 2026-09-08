@@ -290,7 +290,7 @@ function TodayEventsSection({
                       color: event.status === "full" ? colors.error : "#E8A0BF",
                     }}
                   >
-                    {event.status === "full" ? "満席" : `${event.attendees}/${event.capacity}名`}
+                    {event.status === "full" ? (event.participantsFinalizedAt ? "募集終了" : "満席") : `${event.attendees}/${event.capacity}名`}
                   </Text>
                 </View>
               </View>

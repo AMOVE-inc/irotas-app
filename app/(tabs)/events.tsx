@@ -481,10 +481,10 @@ function CalendarDateField({
   );
 }
 
-function StatusBadge({ status }: { status: Event["status"] }) {
+function StatusBadge({ status, participantsFinalizedAt }: { status: Event["status"]; participantsFinalizedAt?: string }) {
   const config = {
     open: { bg: "#34C75920", color: "#34C759", label: "受付中" },
-    full: { bg: "#FF950020", color: "#FF9500", label: "満席" },
+    full: { bg: "#FF950020", color: "#FF9500", label: participantsFinalizedAt ? "募集終了" : "満席" },
     ended: { bg: "#8E8E9320", color: "#8E8E93", label: "終了" },
   };
   const c = config[status];
@@ -683,7 +683,7 @@ function EventCard({
             {locked ? "" : ` ${event.time}`}
           </Text>
           <View style={{ flexDirection: "row", gap: 4 }}>
-            <StatusBadge status={isPast ? "ended" : event.status} />
+            <StatusBadge status={isPast ? "ended" : event.status} participantsFinalizedAt={event.participantsFinalizedAt} />
             {isConfirmed ? (
               <Text
                 style={{
