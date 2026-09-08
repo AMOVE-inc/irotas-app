@@ -50,6 +50,12 @@ export const DISCORD_AUTHOR_DIRECTORY: DiscordAuthorRecord[] = [
     "rank": "regular"
   },
   {
+    "id": "discord-1030413771132379200",
+    "name": "yamada",
+    "avatarUrl": "https://cdn.discordapp.com/avatars/1030413771132379200/b9a612869a72e831b602007ea7336d02.png?size=512",
+    "rank": "regular"
+  },
+  {
     "id": "discord-1031051059705167992",
     "name": "ひで",
     "avatarUrl": "https://cdn.discordapp.com/avatars/1031051059705167992/d0b5265ffd7beac273f467df1b9f6428.png?size=512",
@@ -60,6 +66,12 @@ export const DISCORD_AUTHOR_DIRECTORY: DiscordAuthorRecord[] = [
     "name": "Lily_nasu【🥈SILVER 】",
     "avatarUrl": "https://cdn.discordapp.com/avatars/1034705038314053693/367118709559adace13d3682e71779bf.png?size=512",
     "rank": "silver"
+  },
+  {
+    "id": "discord-1042684588604014655",
+    "name": "lu",
+    "avatarUrl": "https://cdn.discordapp.com/avatars/1042684588604014655/8d2f4c019f1ef0bbd3b2b64fb46c3cf9.png?size=512",
+    "rank": "regular"
   },
   {
     "id": "discord-1043120095880298536",
@@ -86,6 +98,12 @@ export const DISCORD_AUTHOR_DIRECTORY: DiscordAuthorRecord[] = [
     "rank": "regular"
   },
   {
+    "id": "discord-1053454169593368698",
+    "name": "Motohiro",
+    "avatarUrl": "https://cdn.discordapp.com/avatars/1053454169593368698/cd646c72d62ae0036874b191200a3c45.png?size=512",
+    "rank": "regular"
+  },
+  {
     "id": "discord-1059373969590984764",
     "name": "天ぷら(てつや【🥇GOLD 】",
     "avatarUrl": "https://cdn.discordapp.com/avatars/1059373969590984764/857b85adf11b840e1cacf44276528eda.png?size=512",
@@ -98,9 +116,21 @@ export const DISCORD_AUTHOR_DIRECTORY: DiscordAuthorRecord[] = [
     "rank": "regular"
   },
   {
+    "id": "discord-1072111251175522344",
+    "name": "mrng9",
+    "avatarUrl": "https://cdn.discordapp.com/avatars/1072111251175522344/aa2e492df0f4b5346e41c28248ba7772.png?size=512",
+    "rank": "regular"
+  },
+  {
     "id": "discord-1076017539320123492",
     "name": "takuma",
     "avatarUrl": "https://cdn.discordapp.com/avatars/1076017539320123492/3ab9485d5ced59648447a28c96aa30a7.png?size=512",
+    "rank": "regular"
+  },
+  {
+    "id": "discord-1077454971232059475",
+    "name": "shinjiro",
+    "avatarUrl": "https://cdn.discordapp.com/avatars/1077454971232059475/98402c1e610af81b56d528e46edaa339.png?size=512",
     "rank": "regular"
   },
   {
@@ -116,8 +146,26 @@ export const DISCORD_AUTHOR_DIRECTORY: DiscordAuthorRecord[] = [
     "rank": "regular"
   },
   {
+    "id": "discord-1079240518191550585",
+    "name": "kiyora",
+    "avatarUrl": "https://cdn.discordapp.com/avatars/1079240518191550585/1a1b65e3bc7b915d6c20588dc3a1324c.png?size=512",
+    "rank": "regular"
+  },
+  {
+    "id": "discord-1081163233597067264",
+    "name": "村上 陽一",
+    "avatarUrl": "https://cdn.discordapp.com/avatars/1081163233597067264/cd9c8d544933f3b16dece5e69a32922a.png?size=512",
+    "rank": "regular"
+  },
+  {
     "id": "discord-1085354155989798992",
     "name": "ウィンストン",
+    "avatarUrl": "",
+    "rank": "regular"
+  },
+  {
+    "id": "discord-1086464861506109520",
+    "name": "ryo",
     "avatarUrl": "",
     "rank": "regular"
   },
@@ -131,6 +179,18 @@ export const DISCORD_AUTHOR_DIRECTORY: DiscordAuthorRecord[] = [
     "id": "discord-1094471744825327646",
     "name": "あゆみ",
     "avatarUrl": "https://cdn.discordapp.com/avatars/1094471744825327646/f25db1d964a4590384d913983922eecc.png?size=512",
+    "rank": "regular"
+  },
+  {
+    "id": "discord-1095677069700112525",
+    "name": "ヨシキ",
+    "avatarUrl": "",
+    "rank": "regular"
+  },
+  {
+    "id": "discord-1102545726795419658",
+    "name": "こうよう@kouyou_jp",
+    "avatarUrl": "https://cdn.discordapp.com/avatars/1102545726795419658/fd46ec81c14a4ea2e014b31db9b3f10a.png?size=512",
     "rank": "regular"
   },
   {
@@ -290,6 +350,12 @@ export const DISCORD_AUTHOR_DIRECTORY: DiscordAuthorRecord[] = [
     "rank": "silver"
   },
   {
+    "id": "discord-1212734750536638514",
+    "name": "misaki",
+    "avatarUrl": "https://cdn.discordapp.com/avatars/1212734750536638514/20a13ae55ba3c51845c48e7524090a36.png?size=512",
+    "rank": "regular"
+  },
+  {
     "id": "discord-1216698337147748394",
     "name": "mioka【🥈SILVER 】",
     "avatarUrl": "https://cdn.discordapp.com/avatars/1216698337147748394/6c9aaa09b320526b932e1e9b31f928fb.png?size=512",
@@ -306,6 +372,12 @@ export const DISCORD_AUTHOR_DIRECTORY: DiscordAuthorRecord[] = [
     "name": "はばちゃん【🥇GOLD 】",
     "avatarUrl": "https://cdn.discordapp.com/avatars/1223177154397995110/6b1d27d82aad0e87c3f144ba27e3efbd.png?size=512",
     "rank": "gold"
+  },
+  {
+    "id": "discord-1223692916619477072",
+    "name": "IRO+ サポート",
+    "avatarUrl": "https://cdn.discordapp.com/avatars/1223692916619477072/9e970a36172e7e4b1a828ea9498324a8.png?size=512",
+    "rank": "regular"
   },
   {
     "id": "discord-1225807516114354187",
@@ -632,6 +704,18 @@ export const DISCORD_AUTHOR_DIRECTORY: DiscordAuthorRecord[] = [
     "rank": "regular"
   },
   {
+    "id": "discord-1228695103669928009",
+    "name": "あやか",
+    "avatarUrl": "https://cdn.discordapp.com/avatars/1228695103669928009/866c3be9dc258574586609ca3e773e45.png?size=512",
+    "rank": "regular"
+  },
+  {
+    "id": "discord-1228698093663555615",
+    "name": "ソウ",
+    "avatarUrl": "https://cdn.discordapp.com/avatars/1228698093663555615/5445ffd7ffb201a98393cbdf684ea4b1.png?size=512",
+    "rank": "regular"
+  },
+  {
     "id": "discord-1228699552379441192",
     "name": "mai",
     "avatarUrl": "https://cdn.discordapp.com/avatars/1228699552379441192/c8f39ae1ef941ce4f1c86b12f76f0502.png?size=512",
@@ -824,6 +908,12 @@ export const DISCORD_AUTHOR_DIRECTORY: DiscordAuthorRecord[] = [
     "rank": "regular"
   },
   {
+    "id": "discord-1248245575401340948",
+    "name": "Mhy",
+    "avatarUrl": "",
+    "rank": "regular"
+  },
+  {
     "id": "discord-1248245653331775581",
     "name": "ほのか【🥈SILVER 】",
     "avatarUrl": "https://cdn.discordapp.com/avatars/1248245653331775581/29f23e49748e6104057f879f33324222.png?size=512",
@@ -852,6 +942,18 @@ export const DISCORD_AUTHOR_DIRECTORY: DiscordAuthorRecord[] = [
     "name": "こと",
     "avatarUrl": "https://cdn.discordapp.com/avatars/1248246101463662668/a0d15ffb061139f06635d713d4800444.png?size=512",
     "rank": "regular"
+  },
+  {
+    "id": "discord-1248246253771558989",
+    "name": "___misaki",
+    "avatarUrl": "https://cdn.discordapp.com/avatars/1248246253771558989/2b2904abba15107971082a851071fc8d.png?size=512",
+    "rank": "regular"
+  },
+  {
+    "id": "discord-1248246443383455764",
+    "name": "seina【🥈SILVER 】",
+    "avatarUrl": "https://cdn.discordapp.com/avatars/1248246443383455764/4d7b9e30cbf017e57634282d0313bd36.png?size=512",
+    "rank": "silver"
   },
   {
     "id": "discord-1248246861576540302",
@@ -932,6 +1034,12 @@ export const DISCORD_AUTHOR_DIRECTORY: DiscordAuthorRecord[] = [
     "rank": "silver"
   },
   {
+    "id": "discord-1267868378367000618",
+    "name": "Ken",
+    "avatarUrl": "https://cdn.discordapp.com/avatars/1267868378367000618/7e2b23d7f09fef2538f1fc772610cd00.png?size=512",
+    "rank": "regular"
+  },
+  {
     "id": "discord-1271250501068918857",
     "name": "Aoi【🥇GOLD 】",
     "avatarUrl": "https://cdn.discordapp.com/avatars/1271250501068918857/6446f0795805d8b8508d495e772d13a2.png?size=512",
@@ -953,6 +1061,12 @@ export const DISCORD_AUTHOR_DIRECTORY: DiscordAuthorRecord[] = [
     "id": "discord-1282721556627460106",
     "name": "かめ",
     "avatarUrl": "",
+    "rank": "regular"
+  },
+  {
+    "id": "discord-1286878081595736076",
+    "name": "Riku",
+    "avatarUrl": "https://cdn.discordapp.com/avatars/1286878081595736076/6c30482a27ac67f19cb3a126bf6a5d2b.png?size=512",
     "rank": "regular"
   },
   {
@@ -1172,6 +1286,12 @@ export const DISCORD_AUTHOR_DIRECTORY: DiscordAuthorRecord[] = [
     "rank": "regular"
   },
   {
+    "id": "discord-1315589522695917589",
+    "name": "yui",
+    "avatarUrl": "https://cdn.discordapp.com/avatars/1315589522695917589/4adcf4e9cd73d8928a695400ad86cb24.png?size=512",
+    "rank": "regular"
+  },
+  {
     "id": "discord-1318032575058677921",
     "name": "Taiyo",
     "avatarUrl": "https://cdn.discordapp.com/avatars/1318032575058677921/e07e5cb6d77f1c1bac50df76801d8b96.png?size=512",
@@ -1181,6 +1301,12 @@ export const DISCORD_AUTHOR_DIRECTORY: DiscordAuthorRecord[] = [
     "id": "discord-1322261993272377376",
     "name": "ラン",
     "avatarUrl": "",
+    "rank": "regular"
+  },
+  {
+    "id": "discord-1323965226697097228",
+    "name": "marika♡",
+    "avatarUrl": "https://cdn.discordapp.com/avatars/1323965226697097228/502fc2b38f6f8299e162c903ea75a57d.png?size=512",
     "rank": "regular"
   },
   {
@@ -1242,6 +1368,12 @@ export const DISCORD_AUTHOR_DIRECTORY: DiscordAuthorRecord[] = [
     "name": "つばさ【🥈SILVER 】",
     "avatarUrl": "https://cdn.discordapp.com/avatars/1341394331063550014/3f852c68137d5d8de86fbd5b0e14d645.png?size=512",
     "rank": "silver"
+  },
+  {
+    "id": "discord-1342349019594100736",
+    "name": "だいすけ",
+    "avatarUrl": "https://cdn.discordapp.com/avatars/1342349019594100736/ffe843453ece4a46e5cd588dc9bead1e.png?size=512",
+    "rank": "regular"
   },
   {
     "id": "discord-1346864620505399349",
@@ -1400,6 +1532,12 @@ export const DISCORD_AUTHOR_DIRECTORY: DiscordAuthorRecord[] = [
     "rank": "platinum"
   },
   {
+    "id": "discord-1353624657701371955",
+    "name": "risa",
+    "avatarUrl": "https://cdn.discordapp.com/avatars/1353624657701371955/6177be9c348a40281c5e3d4316e776a8.png?size=512",
+    "rank": "regular"
+  },
+  {
     "id": "discord-1353712244210536498",
     "name": "RENA",
     "avatarUrl": "https://cdn.discordapp.com/avatars/1353712244210536498/70229441efd4baba86e15bdb470d7680.png?size=512",
@@ -1409,6 +1547,12 @@ export const DISCORD_AUTHOR_DIRECTORY: DiscordAuthorRecord[] = [
     "id": "discord-1353728834918158346",
     "name": "しほ",
     "avatarUrl": "https://cdn.discordapp.com/avatars/1353728834918158346/2a90d3c9ca043243e456bb9a5bf9b3a9.png?size=512",
+    "rank": "regular"
+  },
+  {
+    "id": "discord-1353730999711694960",
+    "name": "Akari",
+    "avatarUrl": "",
     "rank": "regular"
   },
   {
@@ -1424,9 +1568,33 @@ export const DISCORD_AUTHOR_DIRECTORY: DiscordAuthorRecord[] = [
     "rank": "regular"
   },
   {
+    "id": "discord-1354008761274077277",
+    "name": "ちひろ",
+    "avatarUrl": "https://cdn.discordapp.com/avatars/1354008761274077277/e3ac33683527b8d982d7f72e11e51ee6.png?size=512",
+    "rank": "regular"
+  },
+  {
+    "id": "discord-1355594773863465034",
+    "name": "RIKAKO",
+    "avatarUrl": "",
+    "rank": "regular"
+  },
+  {
+    "id": "discord-1357210007372042251",
+    "name": "さおり",
+    "avatarUrl": "https://cdn.discordapp.com/avatars/1357210007372042251/6436e76aa87cf597e3baca6d482a5830.png?size=512",
+    "rank": "regular"
+  },
+  {
     "id": "discord-1358090219282497548",
     "name": "かずま",
     "avatarUrl": "https://cdn.discordapp.com/avatars/1358090219282497548/ddea3982d4588e3c56adc222ea293379.png?size=512",
+    "rank": "regular"
+  },
+  {
+    "id": "discord-1358447822663581927",
+    "name": "hiro",
+    "avatarUrl": "https://cdn.discordapp.com/avatars/1358447822663581927/465328e8226d14bc5fcf47d1f22d62c3.png?size=512",
     "rank": "regular"
   },
   {
@@ -1445,6 +1613,12 @@ export const DISCORD_AUTHOR_DIRECTORY: DiscordAuthorRecord[] = [
     "id": "discord-1371768777217151018",
     "name": "Tomoka",
     "avatarUrl": "https://cdn.discordapp.com/avatars/1371768777217151018/de59970ac710668bf1fa005483b89263.png?size=512",
+    "rank": "regular"
+  },
+  {
+    "id": "discord-1376541401361154128",
+    "name": "さりお",
+    "avatarUrl": "https://cdn.discordapp.com/avatars/1376541401361154128/06061161845f42d56c5a1684447a15c0.png?size=512",
     "rank": "regular"
   },
   {
@@ -1534,6 +1708,12 @@ export const DISCORD_AUTHOR_DIRECTORY: DiscordAuthorRecord[] = [
   {
     "id": "discord-1403350469115646033",
     "name": "みく",
+    "avatarUrl": "",
+    "rank": "regular"
+  },
+  {
+    "id": "discord-1403350790357258320",
+    "name": "ran",
     "avatarUrl": "",
     "rank": "regular"
   },
@@ -1736,6 +1916,12 @@ export const DISCORD_AUTHOR_DIRECTORY: DiscordAuthorRecord[] = [
     "rank": "regular"
   },
   {
+    "id": "discord-1404475054569553956",
+    "name": "こころ",
+    "avatarUrl": "https://cdn.discordapp.com/avatars/1404475054569553956/774f25101072216fb2d19866b4739fc0.png?size=512",
+    "rank": "silver"
+  },
+  {
     "id": "discord-1404609719477207152",
     "name": "こーすけ【🥈SILVER 】",
     "avatarUrl": "https://cdn.discordapp.com/avatars/1404609719477207152/70b8b8e2dcce90ca5e7257b102c9deb6.png?size=512",
@@ -1745,6 +1931,18 @@ export const DISCORD_AUTHOR_DIRECTORY: DiscordAuthorRecord[] = [
     "id": "discord-1404670392463003812",
     "name": "まーくん",
     "avatarUrl": "https://cdn.discordapp.com/avatars/1404670392463003812/5f6e2fa4ce634a03b81b836b189a1339.png?size=512",
+    "rank": "regular"
+  },
+  {
+    "id": "discord-1404693067847696386",
+    "name": "り",
+    "avatarUrl": "https://cdn.discordapp.com/avatars/1404693067847696386/8569adcbd36c70a7578c017bf5604ea5.png?size=512",
+    "rank": "regular"
+  },
+  {
+    "id": "discord-1404693092057088124",
+    "name": "haruna",
+    "avatarUrl": "https://cdn.discordapp.com/avatars/1404693092057088124/dc77f2171f9d4ff73e6ab4eea9d22b20.png?size=512",
     "rank": "regular"
   },
   {
@@ -1862,10 +2060,22 @@ export const DISCORD_AUTHOR_DIRECTORY: DiscordAuthorRecord[] = [
     "rank": "regular"
   },
   {
+    "id": "discord-1414579599773536387",
+    "name": "いぶき",
+    "avatarUrl": "https://cdn.discordapp.com/avatars/1414579599773536387/31bc3dfc9001df1db694d10373852c54.png?size=512",
+    "rank": "regular"
+  },
+  {
     "id": "discord-1415726726419578960",
     "name": "李り嘉傑",
     "avatarUrl": "https://cdn.discordapp.com/avatars/1415726726419578960/411aa055b057752266a27127c8c68f4e.png?size=512",
     "rank": "regular"
+  },
+  {
+    "id": "discord-1416668287843958865",
+    "name": "りょう【🥈SILVER 】",
+    "avatarUrl": "https://cdn.discordapp.com/avatars/1416668287843958865/2bf1c4418d2cfbe77f7c1fdcca40e9ef.png?size=512",
+    "rank": "silver"
   },
   {
     "id": "discord-1417476266398978078",
@@ -1898,6 +2108,12 @@ export const DISCORD_AUTHOR_DIRECTORY: DiscordAuthorRecord[] = [
     "rank": "regular"
   },
   {
+    "id": "discord-1426809108421677216",
+    "name": "kii",
+    "avatarUrl": "https://cdn.discordapp.com/avatars/1426809108421677216/8208b649f474854b4f922f048d918349.png?size=512",
+    "rank": "regular"
+  },
+  {
     "id": "discord-1427637538268381225",
     "name": "なな",
     "avatarUrl": "https://cdn.discordapp.com/avatars/1427637538268381225/38192cd475bacc6ad860fcc87532f6bd.png?size=512",
@@ -1913,6 +2129,12 @@ export const DISCORD_AUTHOR_DIRECTORY: DiscordAuthorRecord[] = [
     "id": "discord-1430703542208823417",
     "name": "アヤカ🌺",
     "avatarUrl": "https://cdn.discordapp.com/avatars/1430703542208823417/217a85c90df4cc69985d350f969e9f04.png?size=512",
+    "rank": "regular"
+  },
+  {
+    "id": "discord-1432341295677968494",
+    "name": "Chihiro",
+    "avatarUrl": "https://cdn.discordapp.com/avatars/1432341295677968494/a708f99ce808f99b0392370f843e4ad9.png?size=512",
     "rank": "regular"
   },
   {
@@ -2180,6 +2402,12 @@ export const DISCORD_AUTHOR_DIRECTORY: DiscordAuthorRecord[] = [
     "rank": "silver"
   },
   {
+    "id": "discord-1457637987809755219",
+    "name": "Anne",
+    "avatarUrl": "https://cdn.discordapp.com/avatars/1457637987809755219/c4d1b1c3c3a7a2ef453740beb1e5be5c.png?size=512",
+    "rank": "regular"
+  },
+  {
     "id": "discord-1457642692816408692",
     "name": "ゆうか",
     "avatarUrl": "https://cdn.discordapp.com/avatars/1457642692816408692/a8482b48654ee7aa85a129d51cd4d201.png?size=512",
@@ -2200,7 +2428,7 @@ export const DISCORD_AUTHOR_DIRECTORY: DiscordAuthorRecord[] = [
   {
     "id": "discord-1457677289851719764",
     "name": "あみ",
-    "avatarUrl": "",
+    "avatarUrl": "https://cdn.discordapp.com/avatars/1457677289851719764/6c270fbb2b91a83dd4a93a56a24621f1.png?size=512",
     "rank": "regular"
   },
   {
@@ -2231,6 +2459,12 @@ export const DISCORD_AUTHOR_DIRECTORY: DiscordAuthorRecord[] = [
     "id": "discord-1457708712969109587",
     "name": "ゆうこ",
     "avatarUrl": "https://cdn.discordapp.com/avatars/1457708712969109587/47851082e0b59f40797d80394b00d418.png?size=512",
+    "rank": "regular"
+  },
+  {
+    "id": "discord-1457710668529537047",
+    "name": "しゅう",
+    "avatarUrl": "https://cdn.discordapp.com/avatars/1457710668529537047/5067528e9b05935b07b60ad6fe668cbb.png?size=512",
     "rank": "regular"
   },
   {
@@ -2291,6 +2525,12 @@ export const DISCORD_AUTHOR_DIRECTORY: DiscordAuthorRecord[] = [
     "id": "discord-1457720319035969539",
     "name": "とも",
     "avatarUrl": "https://cdn.discordapp.com/avatars/1457720319035969539/5250564c09f3efbe7a31a66201228d7d.png?size=512",
+    "rank": "regular"
+  },
+  {
+    "id": "discord-1457721553453187266",
+    "name": "IRO+",
+    "avatarUrl": "https://cdn.discordapp.com/avatars/1457721553453187266/19589c9baa6e82f8df6704e708c40c62.png?size=512",
     "rank": "regular"
   },
   {
@@ -2426,6 +2666,12 @@ export const DISCORD_AUTHOR_DIRECTORY: DiscordAuthorRecord[] = [
     "rank": "silver"
   },
   {
+    "id": "discord-1458396241393356844",
+    "name": "たか",
+    "avatarUrl": "https://cdn.discordapp.com/avatars/1458396241393356844/edba394234987a17643a70f738d6d759.png?size=512",
+    "rank": "regular"
+  },
+  {
     "id": "discord-1458396778939289786",
     "name": "sasrs_discod",
     "avatarUrl": "",
@@ -2444,10 +2690,22 @@ export const DISCORD_AUTHOR_DIRECTORY: DiscordAuthorRecord[] = [
     "rank": "silver"
   },
   {
+    "id": "discord-1458669499711488172",
+    "name": "ﾘﾎ【🥈SILVER 】",
+    "avatarUrl": "https://cdn.discordapp.com/avatars/1458669499711488172/e9a790cc3264a57429ffe4ce7a7f576a.png?size=512",
+    "rank": "silver"
+  },
+  {
     "id": "discord-1458772421887656090",
     "name": "Hono🎭舞台鑑賞部長【🥇GOLD 】",
     "avatarUrl": "https://cdn.discordapp.com/avatars/1458772421887656090/0d3f1ef300f4606ca3aec8324dfe17d0.png?size=512",
     "rank": "gold"
+  },
+  {
+    "id": "discord-1458834610632003811",
+    "name": "hina",
+    "avatarUrl": "https://cdn.discordapp.com/avatars/1458834610632003811/761b39b0096011027ce28c0095b427c5.png?size=512",
+    "rank": "regular"
   },
   {
     "id": "discord-1459150707147149338",
@@ -2472,6 +2730,12 @@ export const DISCORD_AUTHOR_DIRECTORY: DiscordAuthorRecord[] = [
     "name": "きょうこ【🥈SILVER 】",
     "avatarUrl": "https://cdn.discordapp.com/avatars/1459502509679837186/8c816e24707c133c24625fdb8998096c.png?size=512",
     "rank": "silver"
+  },
+  {
+    "id": "discord-1460167315835322545",
+    "name": "はる",
+    "avatarUrl": "https://cdn.discordapp.com/avatars/1460167315835322545/a2a85c198a98fe641c9a17731d89855f.png?size=512",
+    "rank": "regular"
   },
   {
     "id": "discord-1460247965623910580",
@@ -2528,6 +2792,18 @@ export const DISCORD_AUTHOR_DIRECTORY: DiscordAuthorRecord[] = [
     "rank": "regular"
   },
   {
+    "id": "discord-1466755412261867642",
+    "name": "mika",
+    "avatarUrl": "https://cdn.discordapp.com/avatars/1466755412261867642/d5b7ad58b5ab857ece4d883c8b3d7fb7.png?size=512",
+    "rank": "regular"
+  },
+  {
+    "id": "discord-1467067929861558303",
+    "name": "ゆうた",
+    "avatarUrl": "https://cdn.discordapp.com/avatars/1467067929861558303/c4af50e64359ca94aee50fb0ab5c88ca.png?size=512",
+    "rank": "regular"
+  },
+  {
     "id": "discord-1467089499543703686",
     "name": "ariri_00【🥈SILVER 】",
     "avatarUrl": "https://cdn.discordapp.com/avatars/1467089499543703686/110f0759b206c86f3e72d201bac698d2.png?size=512",
@@ -2570,6 +2846,12 @@ export const DISCORD_AUTHOR_DIRECTORY: DiscordAuthorRecord[] = [
     "rank": "regular"
   },
   {
+    "id": "discord-1469842567821660326",
+    "name": "向口 優歩",
+    "avatarUrl": "",
+    "rank": "regular"
+  },
+  {
     "id": "discord-1470724789961359473",
     "name": "まさし",
     "avatarUrl": "https://cdn.discordapp.com/avatars/1470724789961359473/f4a1b045ac8bbc5a5f3853425cef850d.png?size=512",
@@ -2594,6 +2876,18 @@ export const DISCORD_AUTHOR_DIRECTORY: DiscordAuthorRecord[] = [
     "rank": "silver"
   },
   {
+    "id": "discord-1472402507719512278",
+    "name": "aki",
+    "avatarUrl": "https://cdn.discordapp.com/avatars/1472402507719512278/8569adcbd36c70a7578c017bf5604ea5.png?size=512",
+    "rank": "regular"
+  },
+  {
+    "id": "discord-1473299990192324806",
+    "name": "みう",
+    "avatarUrl": "https://cdn.discordapp.com/avatars/1473299990192324806/493b7d7d0b61eaff74305963d9e4803d.png?size=512",
+    "rank": "regular"
+  },
+  {
     "id": "discord-1473339452809285822",
     "name": "HALCA",
     "avatarUrl": "https://cdn.discordapp.com/avatars/1473339452809285822/ce2c7a6e081c2536b1c9a54475ee17fa.png?size=512",
@@ -2609,6 +2903,12 @@ export const DISCORD_AUTHOR_DIRECTORY: DiscordAuthorRecord[] = [
     "id": "discord-1474037455291416670",
     "name": "小森正太",
     "avatarUrl": "https://cdn.discordapp.com/avatars/1474037455291416670/dd3eb1966ff81ac063f3c4b2caa65e67.png?size=512",
+    "rank": "regular"
+  },
+  {
+    "id": "discord-1474340500352929853",
+    "name": "SK",
+    "avatarUrl": "https://cdn.discordapp.com/avatars/1474340500352929853/4b4949375c84d0cd0922e54239a9f75a.png?size=512",
     "rank": "regular"
   },
   {
@@ -2672,6 +2972,18 @@ export const DISCORD_AUTHOR_DIRECTORY: DiscordAuthorRecord[] = [
     "rank": "silver"
   },
   {
+    "id": "discord-1478031850566975661",
+    "name": "Nana",
+    "avatarUrl": "https://cdn.discordapp.com/avatars/1478031850566975661/8f6a6e48ca9b8556fc051e98b87f0fcf.png?size=512",
+    "rank": "regular"
+  },
+  {
+    "id": "discord-1478035821943586837",
+    "name": "よゆう",
+    "avatarUrl": "https://cdn.discordapp.com/avatars/1478035821943586837/c82b3fa769ed6e6ffdea579381ed5f5c.png?size=512",
+    "rank": "regular"
+  },
+  {
     "id": "discord-1478252149979877436",
     "name": "ちのすーた",
     "avatarUrl": "",
@@ -2726,6 +3038,12 @@ export const DISCORD_AUTHOR_DIRECTORY: DiscordAuthorRecord[] = [
     "rank": "regular"
   },
   {
+    "id": "discord-1480561031884570694",
+    "name": "Jenny",
+    "avatarUrl": "https://cdn.discordapp.com/avatars/1480561031884570694/1628fc11e7961d85181295493426b775.png?size=512",
+    "rank": "regular"
+  },
+  {
     "id": "discord-1481201737254830233",
     "name": "みう",
     "avatarUrl": "https://cdn.discordapp.com/avatars/1481201737254830233/5443fa60890dbf2a7e962d0effcc9670.png?size=512",
@@ -2759,6 +3077,12 @@ export const DISCORD_AUTHOR_DIRECTORY: DiscordAuthorRecord[] = [
     "id": "discord-1483079404891410432",
     "name": "あまね",
     "avatarUrl": "https://cdn.discordapp.com/avatars/1483079404891410432/7029c1307aee832ef25c64339ebefa68.png?size=512",
+    "rank": "regular"
+  },
+  {
+    "id": "discord-1483835969554616460",
+    "name": "なお",
+    "avatarUrl": "",
     "rank": "regular"
   },
   {
@@ -2810,6 +3134,12 @@ export const DISCORD_AUTHOR_DIRECTORY: DiscordAuthorRecord[] = [
     "rank": "silver"
   },
   {
+    "id": "discord-1486649021513863178",
+    "name": "のぞみ",
+    "avatarUrl": "",
+    "rank": "regular"
+  },
+  {
     "id": "discord-1487089702845550703",
     "name": "彩女",
     "avatarUrl": "https://cdn.discordapp.com/avatars/1487089702845550703/f19d7eeb235f566bef3f6d0a929f858a.png?size=512",
@@ -2825,6 +3155,18 @@ export const DISCORD_AUTHOR_DIRECTORY: DiscordAuthorRecord[] = [
     "id": "discord-1487649787086901278",
     "name": "nao",
     "avatarUrl": "https://cdn.discordapp.com/avatars/1487649787086901278/81e823ec533e6cdc0650713e892486ca.png?size=512",
+    "rank": "regular"
+  },
+  {
+    "id": "discord-1488171294393634987",
+    "name": "moe",
+    "avatarUrl": "https://cdn.discordapp.com/avatars/1488171294393634987/9bf2b8a99a0d1b96bb863d98c1dd67dc.png?size=512",
+    "rank": "regular"
+  },
+  {
+    "id": "discord-1488188864756715542",
+    "name": "あいこ",
+    "avatarUrl": "https://cdn.discordapp.com/avatars/1488188864756715542/f0bc8149ef6481995cfed15c48aee759.png?size=512",
     "rank": "regular"
   },
   {
@@ -2864,6 +3206,12 @@ export const DISCORD_AUTHOR_DIRECTORY: DiscordAuthorRecord[] = [
     "rank": "regular"
   },
   {
+    "id": "discord-1489589260842438756",
+    "name": "かい",
+    "avatarUrl": "",
+    "rank": "regular"
+  },
+  {
     "id": "discord-1489620947680886937",
     "name": "Kousuke",
     "avatarUrl": "",
@@ -2879,6 +3227,12 @@ export const DISCORD_AUTHOR_DIRECTORY: DiscordAuthorRecord[] = [
     "id": "discord-1490216163383312415",
     "name": "sayu",
     "avatarUrl": "https://cdn.discordapp.com/avatars/1490216163383312415/e66d565f61a3ab13fde6546589509b1e.png?size=512",
+    "rank": "regular"
+  },
+  {
+    "id": "discord-1490281933450645697",
+    "name": "ひろ",
+    "avatarUrl": "https://cdn.discordapp.com/avatars/1490281933450645697/d3d8c9e9b61e2378a967f743034796c1.png?size=512",
     "rank": "regular"
   },
   {
@@ -2912,6 +3266,12 @@ export const DISCORD_AUTHOR_DIRECTORY: DiscordAuthorRecord[] = [
     "rank": "regular"
   },
   {
+    "id": "discord-1492451314184224769",
+    "name": "け",
+    "avatarUrl": "https://cdn.discordapp.com/avatars/1492451314184224769/5e0e23d472e3a2d7658259308cf2fb78.png?size=512",
+    "rank": "regular"
+  },
+  {
     "id": "discord-1492649103220539412",
     "name": "はる",
     "avatarUrl": "https://cdn.discordapp.com/avatars/1492649103220539412/d8846ecab2d80965718a361c840f9289.png?size=512",
@@ -2930,9 +3290,21 @@ export const DISCORD_AUTHOR_DIRECTORY: DiscordAuthorRecord[] = [
     "rank": "regular"
   },
   {
+    "id": "discord-1493450532659138721",
+    "name": "よしき",
+    "avatarUrl": "https://cdn.discordapp.com/avatars/1493450532659138721/3da84fe783251fed09276324fff6c43e.png?size=512",
+    "rank": "regular"
+  },
+  {
     "id": "discord-1493455228887105647",
     "name": "ゆりこ",
     "avatarUrl": "https://cdn.discordapp.com/avatars/1493455228887105647/5d82ad43d1b31d4b59c35601227a95f9.png?size=512",
+    "rank": "regular"
+  },
+  {
+    "id": "discord-1493966347720327311",
+    "name": "みゆき",
+    "avatarUrl": "https://cdn.discordapp.com/avatars/1493966347720327311/5565ddf8e62488a7cc11cd31fc0bbcdf.png?size=512",
     "rank": "regular"
   },
   {
@@ -2945,6 +3317,12 @@ export const DISCORD_AUTHOR_DIRECTORY: DiscordAuthorRecord[] = [
     "id": "discord-1494333630430974080",
     "name": "あや",
     "avatarUrl": "https://cdn.discordapp.com/avatars/1494333630430974080/fef58167fbfb49b7dd8f7bd5a048f672.png?size=512",
+    "rank": "regular"
+  },
+  {
+    "id": "discord-1495193878007910481",
+    "name": "みゆ",
+    "avatarUrl": "https://cdn.discordapp.com/avatars/1495193878007910481/68425c4dda75fd9d510f33173bf6345c.png?size=512",
     "rank": "regular"
   },
   {
@@ -3020,6 +3398,12 @@ export const DISCORD_AUTHOR_DIRECTORY: DiscordAuthorRecord[] = [
     "rank": "regular"
   },
   {
+    "id": "discord-1499726864476803084",
+    "name": "nanami",
+    "avatarUrl": "https://cdn.discordapp.com/avatars/1499726864476803084/42858a720d376707f5a676a335c3511c.png?size=512",
+    "rank": "regular"
+  },
+  {
     "id": "discord-1501092041097220208",
     "name": "りょうき",
     "avatarUrl": "https://cdn.discordapp.com/avatars/1501092041097220208/10b9c4085f3e221e32ab70474958e130.png?size=512",
@@ -3053,6 +3437,12 @@ export const DISCORD_AUTHOR_DIRECTORY: DiscordAuthorRecord[] = [
     "id": "discord-1504496924399505438",
     "name": "りゅうま",
     "avatarUrl": "https://cdn.discordapp.com/avatars/1504496924399505438/3262c9069eb7292d200af38427b4005d.png?size=512",
+    "rank": "regular"
+  },
+  {
+    "id": "discord-1504671675516715079",
+    "name": "あい",
+    "avatarUrl": "https://cdn.discordapp.com/avatars/1504671675516715079/24905ae29f5efaf4b905a5fa772ded1a.png?size=512",
     "rank": "regular"
   },
   {
@@ -3134,6 +3524,12 @@ export const DISCORD_AUTHOR_DIRECTORY: DiscordAuthorRecord[] = [
     "rank": "regular"
   },
   {
+    "id": "discord-1510218106105106505",
+    "name": "Akari",
+    "avatarUrl": "https://cdn.discordapp.com/avatars/1510218106105106505/acb9e11868be10d3e12f0ed33e884802.png?size=512",
+    "rank": "regular"
+  },
+  {
     "id": "discord-1510638806661857360",
     "name": "hitomi",
     "avatarUrl": "https://cdn.discordapp.com/avatars/1510638806661857360/26bd7e4ce5742f3c7a4ce286004f5b9a.png?size=512",
@@ -3155,6 +3551,12 @@ export const DISCORD_AUTHOR_DIRECTORY: DiscordAuthorRecord[] = [
     "id": "discord-1511736441821204581",
     "name": "kyomi",
     "avatarUrl": "https://cdn.discordapp.com/avatars/1511736441821204581/3495a71ba1582507656380c69318e070.png?size=512",
+    "rank": "regular"
+  },
+  {
+    "id": "discord-1512301684213420302",
+    "name": "lisa",
+    "avatarUrl": "https://cdn.discordapp.com/avatars/1512301684213420302/8fc5e8cc006bb582681557cac284ef11.png?size=512",
     "rank": "regular"
   },
   {
@@ -3197,6 +3599,12 @@ export const DISCORD_AUTHOR_DIRECTORY: DiscordAuthorRecord[] = [
     "id": "discord-1514586989297532969",
     "name": "あやこ",
     "avatarUrl": "https://cdn.discordapp.com/avatars/1514586989297532969/3367b81ac810344f04c762acc8f3d6da.png?size=512",
+    "rank": "regular"
+  },
+  {
+    "id": "discord-1514790972301508611",
+    "name": "Kiku",
+    "avatarUrl": "https://cdn.discordapp.com/avatars/1514790972301508611/576c0e99671537e1161383f34d49ce25.png?size=512",
     "rank": "regular"
   },
   {
@@ -3284,6 +3692,12 @@ export const DISCORD_AUTHOR_DIRECTORY: DiscordAuthorRecord[] = [
     "rank": "regular"
   },
   {
+    "id": "discord-1522253038994063410",
+    "name": "りか",
+    "avatarUrl": "https://cdn.discordapp.com/avatars/1522253038994063410/b9bdbdf9aebd406d71500245a9fb7eb4.png?size=512",
+    "rank": "regular"
+  },
+  {
     "id": "discord-1522602852999106600",
     "name": "Shoko",
     "avatarUrl": "https://cdn.discordapp.com/avatars/1522602852999106600/4dd453f3f9fcf22ff7467404bc331fe9.png?size=512",
@@ -3320,15 +3734,33 @@ export const DISCORD_AUTHOR_DIRECTORY: DiscordAuthorRecord[] = [
     "rank": "regular"
   },
   {
+    "id": "discord-1523312037793366270",
+    "name": "Suzu",
+    "avatarUrl": "https://cdn.discordapp.com/avatars/1523312037793366270/cb53ff19be3bc9728be18f2cd8f79a31.png?size=512",
+    "rank": "regular"
+  },
+  {
     "id": "discord-1523327105025310790",
     "name": "みれい",
     "avatarUrl": "https://cdn.discordapp.com/avatars/1523327105025310790/249dbb4f157083b157caa2204605d9f5.png?size=512",
     "rank": "regular"
   },
   {
+    "id": "discord-1523603272617689177",
+    "name": "tk",
+    "avatarUrl": "",
+    "rank": "regular"
+  },
+  {
     "id": "discord-1523617662507421816",
     "name": "かほ",
     "avatarUrl": "https://cdn.discordapp.com/avatars/1523617662507421816/609fd25d6038b2dd562d145126a1abe2.png?size=512",
+    "rank": "regular"
+  },
+  {
+    "id": "discord-1524996595198988288",
+    "name": "たくま",
+    "avatarUrl": "https://cdn.discordapp.com/avatars/1524996595198988288/271a04971d6788846e7aa47282b55964.png?size=512",
     "rank": "regular"
   },
   {
@@ -3404,6 +3836,12 @@ export const DISCORD_AUTHOR_DIRECTORY: DiscordAuthorRecord[] = [
     "rank": "regular"
   },
   {
+    "id": "discord-1532009007747960869",
+    "name": "tk",
+    "avatarUrl": "https://cdn.discordapp.com/avatars/1532009007747960869/08f71d6c9f01496e36f2e2c3b2d36d97.png?size=512",
+    "rank": "regular"
+  },
+  {
     "id": "discord-1532714538611507262",
     "name": "Takahisa",
     "avatarUrl": "https://cdn.discordapp.com/avatars/1532714538611507262/a60ad791a4be857ff922964c2cded042.png?size=512",
@@ -3428,9 +3866,21 @@ export const DISCORD_AUTHOR_DIRECTORY: DiscordAuthorRecord[] = [
     "rank": "regular"
   },
   {
+    "id": "discord-1533786287977398393",
+    "name": "K",
+    "avatarUrl": "https://cdn.discordapp.com/avatars/1533786287977398393/7262287c009266ebdf5f626d755b491d.png?size=512",
+    "rank": "regular"
+  },
+  {
     "id": "discord-1534112312959696949",
     "name": "asuka",
     "avatarUrl": "https://cdn.discordapp.com/avatars/1534112312959696949/d67bc0afeb89b5984281a5c580d37ce7.png?size=512",
+    "rank": "regular"
+  },
+  {
+    "id": "discord-1534544239416053781",
+    "name": "れん",
+    "avatarUrl": "https://cdn.discordapp.com/avatars/1534544239416053781/319245fbc7f9e3362c77c326616db366.png?size=512",
     "rank": "regular"
   },
   {
@@ -3536,6 +3986,12 @@ export const DISCORD_AUTHOR_DIRECTORY: DiscordAuthorRecord[] = [
     "rank": "regular"
   },
   {
+    "id": "discord-386179205697634306",
+    "name": "Jiro",
+    "avatarUrl": "",
+    "rank": "regular"
+  },
+  {
     "id": "discord-390423883095998464",
     "name": "shusuke",
     "avatarUrl": "https://cdn.discordapp.com/avatars/390423883095998464/994f8a675afaeea8260b024448b68346.png?size=512",
@@ -3558,6 +4014,12 @@ export const DISCORD_AUTHOR_DIRECTORY: DiscordAuthorRecord[] = [
     "name": "よし",
     "avatarUrl": "https://cdn.discordapp.com/avatars/401272869948227597/aac88bd45cb7211d2dcbf16258de637e.png?size=512",
     "rank": "regular"
+  },
+  {
+    "id": "discord-408073128955215882",
+    "name": "裕真【🥈SILVER 】",
+    "avatarUrl": "https://cdn.discordapp.com/avatars/408073128955215882/e49489ec00cf6d366a8b4a9f412a73da.png?size=512",
+    "rank": "silver"
   },
   {
     "id": "discord-413325457182949377",
@@ -3596,6 +4058,18 @@ export const DISCORD_AUTHOR_DIRECTORY: DiscordAuthorRecord[] = [
     "rank": "regular"
   },
   {
+    "id": "discord-477290181007900675",
+    "name": "としき",
+    "avatarUrl": "https://cdn.discordapp.com/avatars/477290181007900675/eb39455a222c2009308876746d9382c5.png?size=512",
+    "rank": "regular"
+  },
+  {
+    "id": "discord-487424772360241163",
+    "name": "Kay",
+    "avatarUrl": "https://cdn.discordapp.com/avatars/487424772360241163/095ef1989cf46e8b280ecaf3e4887b98.png?size=512",
+    "rank": "regular"
+  },
+  {
     "id": "discord-521868235893768192",
     "name": "山岸 翔一朗",
     "avatarUrl": "",
@@ -3611,6 +4085,12 @@ export const DISCORD_AUTHOR_DIRECTORY: DiscordAuthorRecord[] = [
     "id": "discord-526419533682966559",
     "name": "吉田　瞬",
     "avatarUrl": "",
+    "rank": "regular"
+  },
+  {
+    "id": "discord-532527009973403649",
+    "name": "つじちゃん",
+    "avatarUrl": "https://cdn.discordapp.com/avatars/532527009973403649/865fded1c6639e47b1cb57ceb86d5367.png?size=512",
     "rank": "regular"
   },
   {
@@ -3680,6 +4160,12 @@ export const DISCORD_AUTHOR_DIRECTORY: DiscordAuthorRecord[] = [
     "rank": "gold"
   },
   {
+    "id": "discord-697672215188996108",
+    "name": "teru",
+    "avatarUrl": "https://cdn.discordapp.com/avatars/697672215188996108/1477d65aee43c7469457fd3d920b2580.png?size=512",
+    "rank": "regular"
+  },
+  {
     "id": "discord-698086292453458011",
     "name": "rika【🥈SILVER 】",
     "avatarUrl": "https://cdn.discordapp.com/avatars/698086292453458011/ab14a66973da9891f16221af48a7d040.png?size=512",
@@ -3725,6 +4211,12 @@ export const DISCORD_AUTHOR_DIRECTORY: DiscordAuthorRecord[] = [
     "id": "discord-715367038205427715",
     "name": "しんたろー",
     "avatarUrl": "https://cdn.discordapp.com/avatars/715367038205427715/5100238c56708accc92ec1aa233bffc9.png?size=512",
+    "rank": "regular"
+  },
+  {
+    "id": "discord-717228195161571459",
+    "name": "Atsushi",
+    "avatarUrl": "",
     "rank": "regular"
   },
   {
@@ -4022,6 +4514,12 @@ export const DISCORD_AUTHOR_DIRECTORY: DiscordAuthorRecord[] = [
     "rank": "regular"
   },
   {
+    "id": "discord-873515660674756639",
+    "name": "reminder-bot",
+    "avatarUrl": "https://cdn.discordapp.com/avatars/873515660674756639/dc0a260cfa5ce312af7d487fb81510a5.png?size=512",
+    "rank": "regular"
+  },
+  {
     "id": "discord-877564086081183774",
     "name": "Koichiro",
     "avatarUrl": "",
@@ -4070,6 +4568,12 @@ export const DISCORD_AUTHOR_DIRECTORY: DiscordAuthorRecord[] = [
     "rank": "regular"
   },
   {
+    "id": "discord-905827697224187925",
+    "name": "mayu",
+    "avatarUrl": "https://cdn.discordapp.com/avatars/905827697224187925/cbb4d3bc5a2c4a68a7a1f415f3d1fab5.png?size=512",
+    "rank": "regular"
+  },
+  {
     "id": "discord-908363306140573706",
     "name": "たいき【🥇GOLD 】",
     "avatarUrl": "https://cdn.discordapp.com/avatars/908363306140573706/ae7b56e0679c96a89ce857a81a6df908.png?size=512",
@@ -4100,6 +4604,12 @@ export const DISCORD_AUTHOR_DIRECTORY: DiscordAuthorRecord[] = [
     "rank": "regular"
   },
   {
+    "id": "discord-923359207472898078",
+    "name": "yui_____7777",
+    "avatarUrl": "https://cdn.discordapp.com/avatars/923359207472898078/12b7e1693f5e42e279c1c322e057cfe1.png?size=512",
+    "rank": "regular"
+  },
+  {
     "id": "discord-936559392994758678",
     "name": "まさと",
     "avatarUrl": "https://cdn.discordapp.com/avatars/936559392994758678/674ccf9b4fc64a00df2723b46f1968a7.png?size=512",
@@ -4109,6 +4619,12 @@ export const DISCORD_AUTHOR_DIRECTORY: DiscordAuthorRecord[] = [
     "id": "discord-939736531566985216",
     "name": "ねお",
     "avatarUrl": "https://cdn.discordapp.com/avatars/939736531566985216/e29bb4f115140e9577ec011fa2f36e81.png?size=512",
+    "rank": "regular"
+  },
+  {
+    "id": "discord-943844326826471494",
+    "name": "けんご",
+    "avatarUrl": "",
     "rank": "regular"
   },
   {

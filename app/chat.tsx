@@ -49,9 +49,12 @@ import { getFriends } from "@/lib/friendship";
 import { getMentionGroups, getMentionQuery, getMentionedMemberIds, insertMention } from "@/lib/mentions";
 import { type TextSelection } from "@/lib/text-formatting";
 import * as Api from "@/lib/_core/api";
+import { getDiscordAuthorByName } from "@/lib/discord-author-directory";
 
 const REACTION_EMOJIS = ["👍", "❤️", "😂", "🎉", "😋", "🙏"] as const;
 const MORE_REACTION_EMOJIS = ["😀", "😃", "😄", "😁", "😆", "😅", "😂", "🤣", "😊", "😇", "🙂", "🙃", "😉", "😍", "🥰", "😘", "😋", "😛", "🤪", "🤔", "🫡", "😎", "🥳", "😮", "😢", "😭", "😡", "👍", "👎", "👏", "🙌", "🙏", "💪", "👀", "❤️", "🩷", "🧡", "💛", "💚", "💙", "💜", "🖤", "🤍", "🔥", "✨", "🎉", "💯", "✅", "❌", "💡", "📌", "🍽️", "🍣", "🍖", "🍜", "🍕", "🍰", "☕", "🍺", "🍷"] as const;
+const RETIRED_ANNOUNCEMENT = "IRO+運営からのお知らせをお届けします。最新情報はこちらでご確認ください。";
+const isRetiredAnnouncement = (message: ChatMessage) => message.chatId === "board-announcement" && message.content === RETIRED_ANNOUNCEMENT;
 
 function systemMessageText(content: string): string {
   const text = content.replace(/^【IRO\+\s*システム】\s*/, "");
@@ -89,11 +92,12 @@ function MessageBubble({ message, isMe, viewerId, myAvatarUri, senderMember, onR
 
   // アバター画像の決定: 自分はプロフィール画像、他者はモックデータのアバター
   const isOfficialAccount = /IRO[+＋](?:運営|\s*サポート)/.test(message.externalAuthorName ?? sender?.name ?? "");
+  const discordAuthor = getDiscordAuthorByName(message.externalAuthorName ?? sender?.name ?? "");
   const avatarSource = isOfficialAccount
     ? require("@/assets/images/irotas-logo-square.png")
     : isMe
     ? (myAvatarUri ? { uri: myAvatarUri } : (sender?.avatar ?? DEFAULT_AVATAR))
-    : (message.senderAvatar ? { uri: message.senderAvatar } : (sender?.avatar ?? DEFAULT_AVATAR));
+    : (message.senderAvatar ? { uri: message.senderAvatar } : (discordAuthor?.avatarUrl ? { uri: discordAuthor.avatarUrl } : (sender?.avatar ?? DEFAULT_AVATAR)));
 
   return (
     <View
@@ -245,7 +249,7 @@ export default function ChatScreen() {
     : MEMBERS, [directory]);
   const mentionGroups = useMemo(() => getMentionGroups(mentionMembers, CLUBS), [mentionMembers]);
   const [messages, setMessages] = useState<ChatMessage[]>(() =>
-    id ? getMessages(id) : [],
+    id ? getMessages(id).filter((message) => !isRetiredAnnouncement(message)) : [],
   );
   // 自分のプロフィール画像（AsyncStorageから読み込み）
   const [myAvatarUri, setMyAvatarUri] = useState<string | null>(null);
@@ -271,8 +275,8 @@ export default function ChatScreen() {
           setMessages((prev) => {
             const storedById = new Map(stored.map((message) => [message.id, message]));
             const existingIds = new Set(prev.map((message) => message.id));
-            const merged = [...prev.map((message) => storedById.get(message.id) ?? message), ...stored.filter((message) => !existingIds.has(message.id))];
-            return merged.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+          const merged = [...prev.map((message) => storedById.get(message.id) ?? message), ...stored.filter((message) => !existingIds.has(message.id))];
+          return merged.filter((message) => !isRetiredAnnouncement(message)).sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
           });
         }
       });
@@ -280,7 +284,7 @@ export default function ChatScreen() {
         setMessages((previous) => {
           const byId = new Map(previous.map((message) => [message.id, message]));
           for (const message of shared) byId.set(message.id, message);
-          return [...byId.values()].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+          return [...byId.values()].filter((message) => !isRetiredAnnouncement(message)).sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
         });
       }).catch(() => {
         // 旧移行チャットは共有DBへの切替対象外でも、既存履歴を引き続き表示する。
@@ -485,7 +489,7 @@ export default function ChatScreen() {
     );
   }
 
-  const typeLabel = room.type === "event" ? "イベント" : room.type === "board" ? "掲示板" : room.type === "rank" ? "ランク専用" : room.type === "group" ? "友達グループ" : room.type === "dm" ? "DM" : "部活動";
+  const typeLabel = room.id === "board-announcement" ? "お知らせ" : room.type === "event" ? "イベント" : room.type === "board" ? "掲示板" : room.type === "rank" ? "ランク専用" : room.type === "group" ? "友達グループ" : room.type === "dm" ? "DM" : "部活動";
   const typeColor = room.type === "event" ? "#E8A0BF" : room.type === "board" ? "#A7C7E7" : room.type === "rank" ? "#F59E0B" : room.type === "group" ? "#5B9BD5" : room.type === "dm" ? "#FF9500" : "#34C759";
   const canManageRoom = userIsAdmin || room.createdBy === viewerMemberId;
   const canInviteMembers = canManageRoom && room.type !== "rank" && room.type !== "event" && room.type !== "dm";

@@ -44,6 +44,7 @@ import { getPublishedAgeBand } from "@/lib/member-age";
 import { trpc } from "@/lib/trpc";
 import { SocialMemberListModal } from "@/components/social-member-list-modal";
 import * as Api from "@/lib/_core/api";
+import { getDiscordAuthorById } from "@/lib/discord-author-directory";
 
 const GENDER_OPTIONS = ["男性", "女性", "その他"] as const;
 const genderLabel = (gender: "male" | "female" | "other" | "unset") => ({ male: "男性", female: "女性", other: "その他", unset: "" })[gender];
@@ -892,8 +893,9 @@ export default function ProfileScreen() {
   const leaderLabel = leaderClub ? clubLeaderBadgeForClub(leaderClub.name) : null;
   // Server-backed values are rendered directly rather than waiting for the
   // AsyncStorage hydration effect that also supports preview profiles.
+  const discordAvatar = getDiscordAuthorById(authUser?.memberId ?? undefined);
   const displayedAvatarUri = isRealMember
-    ? profileString(serverProfile, "avatarUrl") || avatarUri
+    ? profileString(serverProfile, "avatarUrl") || avatarUri || discordAvatar?.avatarUrl
     : avatarUri;
   const displayedProfileName = isRealMember ? user.name : profileName || user.name;
 

@@ -148,6 +148,13 @@ async function viewerRank(db: D1Database, memberId: number) {
 }
 
 async function canAccessRoom(db: D1Database, room: RoomRow, member: Viewer) {
+  // 個人間DMは運営・管理者であっても当事者以外は閲覧できない。
+  if (room.room_type === "dm") {
+    const membership = await db.prepare(`SELECT 1 AS allowed FROM chat_room_members
+      WHERE room_id = ? AND member_id = ? AND left_at IS NULL LIMIT 1`)
+      .bind(room.id, member.id).first<{ allowed: number }>();
+    return Boolean(membership);
+  }
   if (elevated(member)) return true;
   if (room.room_type === "announcement") return true;
   if (room.room_type === "rank")

@@ -2,7 +2,7 @@ import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { CURRENT_USER, DEFAULT_AVATAR, type ChatRoom } from "@/constants/mock-data";
 import { useAuthContext } from "@/lib/auth-context";
-import { applyReadRoomState, getAllMessages, getAllRooms, getMyRooms, getRankRoomsForUser, loadDynamicRooms, markRoomRead } from "@/lib/chat-store";
+import { applyReadRoomState, getAllMessages, getMyRooms, getRankRoomsForUser, loadDynamicRooms, markRoomRead } from "@/lib/chat-store";
 import { useColors } from "@/hooks/use-colors";
 import { Image } from "expo-image";
 import { useFocusEffect, useRouter } from "expo-router";
@@ -182,7 +182,6 @@ export default function ChatListScreen() {
   const colors = useColors();
   const router = useRouter();
   const { user: authUser } = useAuthContext();
-  const userIsAdmin = authUser?.role === "admin";
   const viewerMemberId = authUser?.memberId ?? (authUser?.id ? `member-${authUser.id}` : CURRENT_USER.id);
   const viewerRank = authUser?.memberRank ?? CURRENT_USER.rank;
   const [showCreateGroup, setShowCreateGroup] = useState(false);
@@ -195,7 +194,7 @@ export default function ChatListScreen() {
   const refreshRooms = useCallback(async () => {
     // 旧プロトタイプ用の chat1〜chat4 は、保存済みの実際の会話ではないため一覧に出さない。
     const isFixtureRoom = (room: ChatRoom) => /^chat\d+$/.test(room.id);
-    const localJoinedRooms = (userIsAdmin ? getAllRooms() : getMyRooms(viewerMemberId))
+    const localJoinedRooms = getMyRooms(viewerMemberId)
       .filter((room) => room.type !== "rank" && !isFixtureRoom(room));
     const localRankRooms = getRankRoomsForUser(viewerRank);
     let sharedRooms: ChatRoom[] = [];
@@ -232,7 +231,7 @@ export default function ChatListScreen() {
     const [sortedJoined, sortedRank] = await Promise.all([applyReadRoomState(mergedJoined), applyReadRoomState(mergedRank)]);
     setMyRooms(sortedJoined);
     setRankRooms(sortedRank);
-  }, [userIsAdmin, viewerMemberId, viewerRank]);
+  }, [viewerMemberId, viewerRank]);
 
   useFocusEffect(useCallback(() => {
     let active = true;

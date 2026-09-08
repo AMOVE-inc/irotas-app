@@ -17,6 +17,7 @@ function remember(record) {
 }
 
 for (const archive of archives) {
+  for (const comment of archive.comments ?? []) remember(comment);
   for (const thread of archive.threads ?? []) {
     remember(thread);
     for (const comment of thread.comments ?? []) remember(comment);

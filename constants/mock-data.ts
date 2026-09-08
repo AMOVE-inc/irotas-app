@@ -737,7 +737,7 @@ export const CHAT_ROOMS: ChatRoom[] = [
   {
     id: "board-announcement", name: "運営アナウンス", type: "board", sourceId: "announcement",
     participants: MEMBERS.map((member) => member.id), createdBy: "system",
-    lastMessage: "IRO+運営からのお知らせをお届けします。", lastMessageAt: "2026-03-24T09:00:00", unreadCount: 1,
+    lastMessage: "", lastMessageAt: undefined, unreadCount: 1,
   },
   {
     id: "chat1", name: "第3回 関東支部交流会", type: "event", sourceId: "e1",
@@ -787,7 +787,6 @@ export const CHAT_ROOMS: ChatRoom[] = [
 ];
 
 export const CHAT_MESSAGES: ChatMessage[] = [
-  { id: "ba1", chatId: "board-announcement", senderId: "u1", content: "IRO+運営からのお知らせをお届けします。最新情報はこちらでご確認ください。", createdAt: "2026-03-24T09:00:00" },
   {
     id: "discord-announcement-1536285603661086823",
     chatId: "board-announcement",

@@ -675,26 +675,18 @@ export default function EventDetailScreen() {
       .finally(() => setAttendanceLoading(false));
   };
 
-  const handleApproveCancellation = (memberId: string) => {
-    const member = getMemberById(memberId);
-    Alert.alert("キャンセルを承認", `${member?.name ?? "メンバー"}さんを参加者から外し、1枠を再募集しますか？`, [
-      { text: "戻る", style: "cancel" },
-      { text: "承認して再募集", onPress: async () => {
-        if (event.viewerMemberId) {
-          try {
-            setEvent(await Api.reviewEventCancellation(event.id, memberId, "approve"));
-            Alert.alert("再募集を開始しました", "キャンセル分の空席をイベント一覧へ反映しました。");
-          } catch (error) {
-            Alert.alert("承認できませんでした", error instanceof Error ? error.message : "もう一度お試しください。");
-          }
-          return;
-        }
+  const handleApproveCancellation = async (memberId: string) => {
+    try {
+      if (event.viewerMemberId) setEvent(await Api.reviewEventCancellation(event.id, memberId, "approve"));
+      else {
         approveEventCancellationRequest(event, memberId);
         if (event.chatId) await removeMemberFromRoom(event.chatId, memberId);
         setEventRevision((value) => value + 1);
-        Alert.alert("再募集を開始しました", "キャンセル分の空席をイベント一覧へ反映しました。");
-      } },
-    ]);
+      }
+      Alert.alert("再募集を開始しました", "キャンセル分の空席をイベント一覧へ反映しました。イベントは募集中になり、再び申し込めます。");
+    } catch (error) {
+      Alert.alert("承認できませんでした", error instanceof Error ? error.message : "もう一度お試しください。");
+    }
   };
 
   const handleOpenChat = () => {
@@ -901,7 +893,7 @@ export default function EventDetailScreen() {
             }) : <Text style={{ fontSize: 13, color: colors.muted, paddingVertical: 8 }}>現在、承認待ちの申込はありません。</Text>}
 
             <Text style={{ fontSize: 13, fontWeight: "800", color: colors.foreground, marginTop: 14, marginBottom: 7 }}>キャンセル申請（{pendingCancellationRequests.length}件）</Text>
-            {pendingCancellationRequests.length ? pendingCancellationRequests.map((request) => { const member = displayMember(request.memberId); return <View key={request.memberId} style={{ flexDirection: "row", alignItems: "center", paddingVertical: 8, borderTopWidth: 0.5, borderTopColor: colors.border }}><Pressable onPress={() => openMemberProfile(request.memberId)} style={{ flex: 1, flexDirection: "row", alignItems: "center" }}><Image source={member.avatar} style={{ width: 34, height: 34, borderRadius: 17 }} contentFit="cover" /><View style={{ flex: 1, marginLeft: 9, flexDirection: "row", alignItems: "center", flexWrap: "wrap" }}><Text style={{ fontSize: 14, fontWeight: "700", color: colors.foreground }}>{member.name}</Text>{member.rank ? <MemberRankBadge rank={member.rank} name={member.badgeName} role={member.role} compact /> : null}<MemberClubLeaderBadges roles={member.roles} name={member.badgeName} compact /><MemberRoleBadge name="" role={member.role} compact /></View></Pressable><Pressable onPress={() => handleApproveCancellation(request.memberId)} style={{ borderRadius: 9, backgroundColor: "#D94C55", paddingHorizontal: 10, paddingVertical: 7 }}><Text style={{ color: "#FFF", fontSize: 11, fontWeight: "800" }}>承認・再募集</Text></Pressable></View>; }) : <Text style={{ fontSize: 13, color: colors.muted, paddingVertical: 8 }}>現在、キャンセル申請はありません。</Text>}
+            {pendingCancellationRequests.length ? pendingCancellationRequests.map((request) => { const member = displayMember(request.memberId); return <View key={request.memberId} style={{ flexDirection: "row", alignItems: "center", paddingVertical: 8, borderTopWidth: 0.5, borderTopColor: colors.border }}><Pressable onPress={() => openMemberProfile(request.memberId)} style={{ flex: 1, flexDirection: "row", alignItems: "center" }}><Image source={member.avatar} style={{ width: 34, height: 34, borderRadius: 17 }} contentFit="cover" /><View style={{ flex: 1, marginLeft: 9, flexDirection: "row", alignItems: "center", flexWrap: "wrap" }}><Text style={{ fontSize: 14, fontWeight: "700", color: colors.foreground }}>{member.name}</Text>{member.rank ? <MemberRankBadge rank={member.rank} name={member.badgeName} role={member.role} compact /> : null}<MemberClubLeaderBadges roles={member.roles} name={member.badgeName} compact /><MemberRoleBadge name="" role={member.role} compact /></View></Pressable><Pressable onPress={() => void handleApproveCancellation(request.memberId)} style={{ borderRadius: 9, backgroundColor: "#D94C55", paddingHorizontal: 10, paddingVertical: 7 }}><Text style={{ color: "#FFF", fontSize: 11, fontWeight: "800" }}>承認・再募集</Text></Pressable></View>; }) : <Text style={{ fontSize: 13, color: colors.muted, paddingVertical: 8 }}>現在、キャンセル申請はありません。</Text>}
 
             <Text style={{ fontSize: 13, fontWeight: "800", color: colors.foreground, marginTop: 14, marginBottom: 7 }}>参加確定者</Text>
             {(event.participants ?? []).map((memberId) => {
