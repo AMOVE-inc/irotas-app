@@ -288,8 +288,10 @@ export default function EventDetailScreen() {
   const pointsToUse = usePoints && isOfficialEvent ? Math.min(irotasPoints, priceNum) : 0;
   const finalPrice = Math.max(0, priceNum - pointsToUse);
   const organizerId = event.organizerProfileId ?? event.createdBy;
-  const confirmedDisplayIds = getConfirmedParticipantDisplayIds(event.participants, event.companionIds, organizerId);
-  const confirmedParticipantIds = confirmedDisplayIds.filter((memberId) => memberId !== organizerId);
+  const companionIds = [...new Set(event.companionIds ?? [])].filter((memberId) => memberId !== organizerId);
+  // Companions join the event chat, but are not applicants and therefore do not consume or count toward the recruiting capacity.
+  const confirmedDisplayIds = getConfirmedParticipantDisplayIds(event.participants, undefined, organizerId);
+  const confirmedParticipantIds = confirmedDisplayIds.filter((memberId) => memberId !== organizerId && !companionIds.includes(memberId));
   const applicantCount = event.applicantIds?.length ?? event.attendees;
   const organizer = getMemberById(organizerId) ?? getMemberById(event.createdBy);
   const viewerMemberId = event.viewerMemberId ?? authenticatedViewerMemberId;
@@ -526,7 +528,7 @@ export default function EventDetailScreen() {
         }
         const room = joinEventChat(event.id, event.title, event.chatId, event.createdBy);
         event.chatId = room.id;
-        for (const memberId of event.participants ?? []) {
+        for (const memberId of [...new Set([...(event.participants ?? []), ...companionIds])]) {
           const alreadyJoined = room.participants.includes(memberId);
           joinEventChat(event.id, event.title, room.id, memberId);
           if (!alreadyJoined) {
@@ -889,6 +891,14 @@ export default function EventDetailScreen() {
           <View style={{ flex: 1, marginLeft: 11 }}><Text style={{ fontSize: 11, color: colors.muted }}>幹事</Text><View style={{ flexDirection: "row", alignItems: "center" }}><Text style={{ fontSize: 15, fontWeight: "800", color: colors.foreground }}>{event.eventType === "official" ? "IRO＋運営" : stripRankFromName(event.organizerName ?? organizer?.name ?? "メンバー")}</Text>{event.eventType !== "official" && event.organizerRank ? <MemberRankBadge rank={event.organizerRank} name={event.organizerName} compact /> : null}<MemberRoleBadge name={event.organizerName} role={event.eventType === "official" ? "operator" : undefined} compact /></View></View>
           <IconSymbol name="chevron.right" size={17} color={colors.muted} />
         </Pressable>
+
+        {companionIds.length ? <View style={{ backgroundColor: colors.surface, borderRadius: 14, padding: 14, marginTop: -8, marginBottom: 16 }}>
+          <Text style={{ fontSize: 11, color: colors.muted, marginBottom: 8 }}>同席者</Text>
+          {companionIds.map((memberId) => {
+            const member = displayMember(memberId);
+            return <Pressable key={memberId} onPress={() => openMemberProfile(memberId)} accessibilityLabel={`${member.name}のプロフィールを表示`} style={{ flexDirection: "row", alignItems: "center", minHeight: 44, paddingVertical: 5 }}><Image source={member.avatar} style={{ width: 34, height: 34, borderRadius: 17 }} contentFit="cover" /><View style={{ flex: 1, flexDirection: "row", flexWrap: "wrap", alignItems: "center", marginLeft: 9 }}><Text style={{ fontSize: 14, fontWeight: "800", color: colors.foreground }}>{member.name}</Text>{member.rank ? <MemberRankBadge rank={member.rank} name={member.name} role={member.role} compact /> : null}<MemberClubLeaderBadges roles={member.roles} compact /><MemberRoleBadge name={member.name} role={member.role} compact /></View><IconSymbol name="chevron.right" size={16} color={colors.muted} /></Pressable>;
+          })}
+        </View> : null}
 
         {canManageEvent ? <Pressable onPress={() => { const form = eventFormValuesFromEvent(event); setAdminInitialForm(form); setAdminTitle(form.eventName); setAdminParticipants((event.participants ?? []).join("\n")); setAdminDate(form.date); setAdminTime(form.time); setAdminLocation(form.address); setAdminCapacity(form.recruitCapacity); setAdminReservationCapacity(form.reservationCapacity); setAdminEventType(form.eventType); setAdminClubId(form.clubId); setAdminRestaurantName(form.restaurantName); setAdminFixedAmount(form.fixedAmount); setAdminBudgetMin(form.budgetMin); setAdminBudgetMax(form.budgetMax); setAdminCompanionIds(form.companionIds); setAdminImage(form.image); setAdminImageChanged(false); setAdminPublicNotes(form.publicNotes); setAdminPrivateMemo(form.privateMemo); setAdminSelectionMethod(form.selectionMethod); setAdminUseRankPrices(form.useRankPrices); setAdminRankPrices(form.rankPrices); setAdminGenres(form.genres); setShowAdminEdit(true); }} style={{ marginBottom: 16, borderRadius: 12, paddingVertical: 12, alignItems: "center", backgroundColor: "#B42318" }}><Text style={{ color: "#FFF", fontSize: 14, fontWeight: "900" }}>{canAdminEdit ? "管理者：イベント情報を編集" : "イベント情報を編集"}</Text></Pressable> : null}
 

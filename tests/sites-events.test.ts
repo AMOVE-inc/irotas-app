@@ -97,4 +97,11 @@ describe("production event validation", () => {
     expect(source).toContain("data.companionIds = companionIds");
     expect(source).toContain("event.companions_edited");
   });
+
+  it("adds event companions to the finalized participant chat without adding them to the confirmed count", () => {
+    const source = readFileSync("sites/events.ts", "utf8");
+    expect(source).toContain("const companionMemberIds = new Set<number>()");
+    expect(source).toContain("const chatMemberIds = new Set");
+    expect(source).toContain("companionCount: companionMemberIds.size");
+  });
 });

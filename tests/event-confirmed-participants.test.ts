@@ -7,4 +7,11 @@ describe("confirmed participant presentation", () => {
     expect(displayIds).toEqual(["host", "member", "companion"]);
     expect(displayIds).toHaveLength(3);
   });
+
+  it("keeps companions separate when calculating the confirmed applicant count", () => {
+    const companions = new Set(["companion"]);
+    const confirmedApplicants = getConfirmedParticipantDisplayIds(["host", "member", "companion"], undefined, "host")
+      .filter((memberId) => memberId !== "host" && !companions.has(memberId));
+    expect(confirmedApplicants).toEqual(["member"]);
+  });
 });

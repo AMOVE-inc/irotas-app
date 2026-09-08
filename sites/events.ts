@@ -781,6 +781,13 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
     data.chatId = chatId;
     data.participantsFinalizedAt = now;
     const confirmed = await env.DB.prepare("SELECT member_id FROM event_participations WHERE event_id = ? AND status IN ('confirmed','cancel_requested')").bind(id).all<{ member_id: number }>();
+    const companionPublicIds = stringArray(data.companionIds, 100, 40) ?? [];
+    const companionMemberIds = new Set<number>();
+    for (const companionPublicId of companionPublicIds) {
+      const companionMemberId = await memberIdFromPublicId(env.DB, companionPublicId);
+      if (companionMemberId && companionMemberId !== row.organizer_member_id) companionMemberIds.add(companionMemberId);
+    }
+    const chatMemberIds = new Set([...(confirmed.results ?? []).map((participant) => participant.member_id), ...companionMemberIds]);
     const pendingApplicants = await env.DB.prepare("SELECT member_id FROM event_participations WHERE event_id = ? AND status = 'applied'").bind(id).all<{ member_id: number }>();
     await env.DB.batch([
       env.DB.prepare("UPDATE events SET public_data_json = ?, updated_at = ? WHERE id = ?").bind(JSON.stringify(data), now, id),
@@ -790,13 +797,14 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
       env.DB.prepare(`INSERT INTO chat_room_members (room_id, member_id, member_role, joined_at, left_at) VALUES (?, ?, 'owner', ?, NULL)
         ON CONFLICT(room_id, member_id) DO UPDATE SET member_role = 'owner', left_at = NULL`)
         .bind(chatId, row.organizer_member_id, now),
-      ...(confirmed.results ?? []).map((participant) => env.DB!.prepare(`INSERT INTO chat_room_members (room_id, member_id, member_role, joined_at, left_at) VALUES (?, ?, 'member', ?, NULL)
+      ...[...chatMemberIds].map((memberId) => env.DB!.prepare(`INSERT INTO chat_room_members (room_id, member_id, member_role, joined_at, left_at) VALUES (?, ?, 'member', ?, NULL)
         ON CONFLICT(room_id, member_id) DO UPDATE SET left_at = NULL`)
-        .bind(chatId, participant.member_id, now)),
+        .bind(chatId, memberId, now)),
       env.DB.prepare(`INSERT INTO audit_logs (actor_user_id, action, entity_type, entity_id, metadata_json, created_at)
-        VALUES (?, 'event.participants_finalized', 'event', ?, ?, ?)`).bind(String(member.id), id, JSON.stringify({ chatId, count: confirmed.results?.length ?? 0 }), now),
+        VALUES (?, 'event.participants_finalized', 'event', ?, ?, ?)`).bind(String(member.id), id, JSON.stringify({ chatId, count: confirmed.results?.length ?? 0, companionCount: companionMemberIds.size }), now),
     ]);
     for (const participant of confirmed.results ?? []) await notifyEventConfirmation(env.DB, participant.member_id, id, row.title);
+    for (const companionMemberId of companionMemberIds) await notifyEventConfirmation(env.DB, companionMemberId, id, row.title);
     const start = new Date(`${row.event_date}T${String(data.time ?? "00:00")}:00`);
     const startLabel = Number.isNaN(start.getTime()) ? `${row.event_date} ${String(data.time ?? "")}` : `${start.getMonth() + 1}月${start.getDate()}日 ${String(data.time ?? "")}`;
     for (const applicant of pendingApplicants.results ?? []) await notifyEventCancellation(
