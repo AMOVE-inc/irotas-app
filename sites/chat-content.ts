@@ -93,10 +93,10 @@ async function mutualFriends(db: D1Database, memberId: number, targetId: number)
 }
 
 async function ensureEventRoom(db: D1Database, roomId: string) {
-  const event = await db.prepare(`SELECT id, title, organizer_member_id
+  const event = await db.prepare(`SELECT id, title, organizer_member_id, public_data_json
     FROM events
     WHERE json_extract(public_data_json, '$.chatId') = ?
-    LIMIT 1`).bind(roomId).first<{ id: string; title: string; organizer_member_id: number }>();
+    LIMIT 1`).bind(roomId).first<{ id: string; title: string; organizer_member_id: number; public_data_json: string }>();
   if (!event) return null;
   const now = new Date().toISOString();
   await db.prepare(`INSERT OR IGNORE INTO chat_rooms
@@ -116,6 +116,20 @@ async function ensureEventRoom(db: D1Database, roomId: string) {
       VALUES (?, ?, 'member', ?, NULL)
       ON CONFLICT(room_id, member_id) DO UPDATE SET left_at = NULL`)
       .bind(roomId, item.member_id, now)));
+  }
+  let data: { companionIds?: unknown } = {};
+  try { data = JSON.parse(event.public_data_json) as { companionIds?: unknown }; } catch {}
+  const companionIds = Array.isArray(data.companionIds)
+    ? data.companionIds.filter((value): value is string => typeof value === "string")
+    : [];
+  for (const companionId of companionIds) {
+    const companion = await memberByPublicId(db, companionId);
+    if (!companion || companion.id === event.organizer_member_id) continue;
+    await db.prepare(`INSERT INTO chat_room_members
+      (room_id, member_id, member_role, joined_at, left_at)
+      VALUES (?, ?, 'member', ?, NULL)
+      ON CONFLICT(room_id, member_id) DO UPDATE SET left_at = NULL`)
+      .bind(roomId, companion.id, now).run();
   }
   return roomById(db, roomId);
 }
@@ -149,6 +163,10 @@ async function canAccessRoom(db: D1Database, room: RoomRow, member: Viewer) {
     if (event.event_type === "club" && event.club_id &&
       !await canMemberAccessClub(db, event.club_id, member.id, admin)) return false;
     if (event.organizer_member_id === member.id || elevated(member)) return true;
+    const chatMembership = await db.prepare(`SELECT 1 AS allowed FROM chat_room_members
+      WHERE room_id = ? AND member_id = ? AND left_at IS NULL LIMIT 1`)
+      .bind(room.id, member.id).first<{ allowed: number }>();
+    if (chatMembership) return true;
     const participation = await db.prepare(`SELECT 1 AS allowed FROM event_participations
       WHERE event_id = ? AND member_id = ? AND status IN ('confirmed', 'cancel_requested') LIMIT 1`)
       .bind(room.source_id, member.id).first<{ allowed: number }>();

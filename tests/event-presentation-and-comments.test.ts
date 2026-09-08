@@ -43,6 +43,14 @@ describe("event presentation and comments", () => {
     expect(detail).toContain("幹事イベント（参加者確定済み）");
   });
 
+  it("renders official system notices, day separators, and no avatar on outgoing chat messages", () => {
+    const chat = source("app/chat.tsx");
+    expect(chat).toContain('message.content.startsWith("【IRO+ システム】")');
+    expect(chat).toContain('require("@/assets/images/irotas-logo-square.png")');
+    expect(chat).toContain("!isMe && avatarSource");
+    expect(chat).toContain("toLocaleDateString(\"ja-JP\"");
+  });
+
   it("shows inline validation feedback and does not fill an omitted public note", () => {
     const create = source("app/create-event.tsx");
     expect(create).toContain("const [formError, setFormError]");

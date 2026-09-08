@@ -187,7 +187,7 @@ export function joinEventChat(
     id: `msg_welcome_${newRoom.id}`,
     chatId: newRoom.id,
     senderId: "system",
-    content: `「${eventTitle}」の参加者専用チャットへようこそ！`,
+    content: `【IRO+ システム】「${eventTitle}」の参加者専用チャットへようこそ！`,
     createdAt: new Date().toISOString(),
   };
   dynamicMessages.push(welcomeMsg);

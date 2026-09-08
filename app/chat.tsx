@@ -62,6 +62,7 @@ function MessageBubble({ message, isMe, viewerId, myAvatarUri, senderMember, onR
   const pollLines = message.content.startsWith("📊 ") ? message.content.split("\n") : [];
   const pollChoices = pollLines.filter((line) => line.startsWith("◯ ")).map((line) => line.slice(2));
   const pollAllowsMultiple = pollLines.includes("🔢 複数回答可");
+  const isSystemMessage = message.content.startsWith("【IRO+ システム】");
 
   const formatTime = (dateStr: string) => {
     const d = new Date(dateStr);
@@ -69,7 +70,9 @@ function MessageBubble({ message, isMe, viewerId, myAvatarUri, senderMember, onR
   };
 
   // アバター画像の決定: 自分はプロフィール画像、他者はモックデータのアバター
-  const avatarSource = isMe
+  const avatarSource = isSystemMessage
+    ? require("@/assets/images/irotas-logo-square.png")
+    : isMe
     ? (myAvatarUri ? { uri: myAvatarUri } : (sender?.avatar ?? DEFAULT_AVATAR))
     : (message.senderAvatar ? { uri: message.senderAvatar } : (sender?.avatar ?? DEFAULT_AVATAR));
 
@@ -82,9 +85,9 @@ function MessageBubble({ message, isMe, viewerId, myAvatarUri, senderMember, onR
         paddingHorizontal: 16,
       }}
     >
-      {/* 自分のアバターも表示 */}
-      {avatarSource && (
-        <Pressable onPress={onOpenProfile} accessibilityLabel={`${message.externalAuthorName ?? sender?.name ?? "メンバー"}のプロフィールを表示`}>
+      {/* 自分のアバターは表示せず、相手と公式システム通知だけに表示する。 */}
+      {!isMe && avatarSource && (
+        <Pressable disabled={isSystemMessage} onPress={onOpenProfile} accessibilityLabel={isSystemMessage ? "IRO+からのお知らせ" : `${message.externalAuthorName ?? sender?.name ?? "メンバー"}のプロフィールを表示`}>
           <Image
             source={avatarSource}
             style={[
@@ -96,7 +99,7 @@ function MessageBubble({ message, isMe, viewerId, myAvatarUri, senderMember, onR
         </Pressable>
       )}
       <View style={{ maxWidth: "70%" }}>
-        {!isMe && (sender || message.externalAuthorName) ? (
+        {!isMe && !isSystemMessage && (sender || message.externalAuthorName) ? (
           <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 2, marginLeft: 2 }}>
             <Text style={{ fontSize: 11, color: colors.muted }}>{stripRankFromName(senderMember?.displayName ?? message.externalAuthorName ?? sender?.name ?? "メンバー")}</Text>
             {sender ? <NewMemberMark member={sender} size={11} /> : null}
@@ -517,26 +520,32 @@ export default function ChatScreen() {
           ref={flatListRef}
           data={messages}
           keyExtractor={(item) => item.id}
-          renderItem={({ item }) => (
-            <MessageBubble
-              message={item}
-              isMe={item.senderId === viewerMemberId}
-              viewerId={viewerMemberId}
-              myAvatarUri={myAvatarUri}
-              senderMember={directory.find((member) => member.id === item.senderId)}
-              onReact={(emoji) => handleReaction(item.id, emoji)}
-              mentionGroups={mentionGroups}
-              onOpenInternalLink={(pathname, params) => router.push({ pathname, params } as any)}
-              onOpenProfile={() => {
-                const sender = getMemberById(item.senderId);
-                router.push({ pathname: "/member-profile", params: { id: item.senderId || sender?.id || "", legacyName: item.externalAuthorName ?? sender?.name ?? "旧Discordメンバー" } });
-              }}
-              canManage={item.senderId === viewerMemberId || userCanModerate}
-              onReply={() => { const sender = getMemberById(item.senderId); setMessageText(`@${item.externalAuthorName ?? sender?.name ?? "メンバー"} `); inputRef.current?.focus(); }}
-              onEdit={() => { const next = Platform.OS === "web" ? window.prompt("メッセージを編集", item.content) : null; if (typeof next === "string" && next.trim()) { setMessages((current) => current.map((message) => message.id === item.id ? { ...message, content: next.trim() } : message)); void saveMessagesToStorage(id ?? "", [{ ...item, content: next.trim() }]); } }}
-              onDelete={() => { setMessages((current) => current.filter((message) => message.id !== item.id)); }}
-            />
-          )}
+          renderItem={({ item, index }) => {
+            const previous = index > 0 ? messages[index - 1] : undefined;
+            const day = new Date(item.createdAt).toLocaleDateString("ja-JP", { year: "numeric", month: "long", day: "numeric", weekday: "short" });
+            const previousDay = previous && new Date(previous.createdAt).toLocaleDateString("ja-JP", { year: "numeric", month: "long", day: "numeric", weekday: "short" });
+            return <>
+              {day !== previousDay ? <View style={{ alignItems: "center", marginVertical: 10 }}><View style={{ borderRadius: 12, backgroundColor: colors.surface, paddingHorizontal: 11, paddingVertical: 4 }}><Text style={{ fontSize: 11, fontWeight: "700", color: colors.muted }}>{day}</Text></View></View> : null}
+              <MessageBubble
+                message={item}
+                isMe={item.senderId === viewerMemberId}
+                viewerId={viewerMemberId}
+                myAvatarUri={myAvatarUri}
+                senderMember={directory.find((member) => member.id === item.senderId)}
+                onReact={(emoji) => handleReaction(item.id, emoji)}
+                mentionGroups={mentionGroups}
+                onOpenInternalLink={(pathname, params) => router.push({ pathname, params } as any)}
+                onOpenProfile={() => {
+                  const sender = getMemberById(item.senderId);
+                  router.push({ pathname: "/member-profile", params: { id: item.senderId || sender?.id || "", legacyName: item.externalAuthorName ?? sender?.name ?? "旧Discordメンバー" } });
+                }}
+                canManage={item.senderId === viewerMemberId || userCanModerate}
+                onReply={() => { const sender = getMemberById(item.senderId); setMessageText(`@${item.externalAuthorName ?? sender?.name ?? "メンバー"} `); inputRef.current?.focus(); }}
+                onEdit={() => { const next = Platform.OS === "web" ? window.prompt("メッセージを編集", item.content) : null; if (typeof next === "string" && next.trim()) { setMessages((current) => current.map((message) => message.id === item.id ? { ...message, content: next.trim() } : message)); void saveMessagesToStorage(id ?? "", [{ ...item, content: next.trim() }]); } }}
+                onDelete={() => { setMessages((current) => current.filter((message) => message.id !== item.id)); }}
+              />
+            </>;
+          }}
           contentContainerStyle={{ paddingVertical: 16 }}
           showsVerticalScrollIndicator={false}
           onScroll={(event) => {

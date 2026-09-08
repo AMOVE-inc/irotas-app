@@ -48,5 +48,8 @@ describe("server event automation", () => {
     expect(events).toContain("participantsFinalizedAt");
     expect(events).toContain("INSERT INTO chat_room_members");
     expect(events).toContain("ON CONFLICT(room_id, member_id) DO UPDATE");
+    expect(events).toContain("event-chat-join:");
+    expect(events).toContain("がチャットに参加しました");
+    expect(events).toContain("【IRO+ システム】");
   });
 });
