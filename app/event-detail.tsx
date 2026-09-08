@@ -5,7 +5,7 @@ import { EventImage } from "@/components/event-image";
 import { PersistentBottomNav } from "@/components/persistent-bottom-nav";
 import { MemberClubLeaderBadges, MemberRankBadge, MemberRoleBadge, stripRankFromName } from "@/components/member-rank-badge";
 import { MentionSuggestions, MentionText } from "@/components/mention-ui";
-import { getMentionGroups, getMentionQuery, getMentionedMemberIds, insertMention } from "@/lib/mentions";
+import { extractMentionLabels, getMentionGroups, getMentionQuery, getMentionedMemberIds, insertMention } from "@/lib/mentions";
 import { EVENT_TERMS_URL } from "@/constants/external-links";
 import { joinEventChat, removeMemberFromRoom } from "@/lib/chat-store";
 import { getAllEvents } from "@/lib/event-store";
@@ -107,7 +107,7 @@ export default function EventDetailScreen() {
   const colors = useColors();
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { user: authUser } = useAuthContext();
+  const { user: authUser, loading: authLoading } = useAuthContext();
   const clubs = useClubs();
   const authenticatedViewerMemberId = resolveViewerMemberId(authUser?.memberId, Boolean(authUser), CURRENT_USER.id);
 
@@ -115,6 +115,8 @@ export default function EventDetailScreen() {
   const allEvents = useMemo(() => getAllEvents(EVENTS), []);
   const initialEvent = allEvents.find((e) => e.id === id);
   const [event, setEvent] = useState<Event | undefined>(initialEvent);
+  const [eventLoading, setEventLoading] = useState(!initialEvent);
+  const [eventResolved, setEventResolved] = useState(Boolean(initialEvent));
 
   const [isJoined, setIsJoined] = useState(() => {
     // 既に参加済かチェック
@@ -178,15 +180,18 @@ export default function EventDetailScreen() {
   const eventMentionQuery = getMentionQuery(eventCommentText);
 
   useEffect(() => {
-    setEvent(allEvents.find((item) => item.id === id));
-    if (!id || !authUser) return;
-    let active = true;
     const imported = allEvents.find((item) => item.id === id);
+    if (imported) { setEvent(imported); setEventLoading(false); setEventResolved(true); }
+    if (!id) { setEvent(undefined); setEventLoading(false); setEventResolved(true); return; }
+    if (authLoading) { setEventLoading(!imported); return; }
+    let active = true;
+    if (!imported) setEventLoading(true);
     void Api.getEvent(id)
       .then((value) => { if (active) setEvent({ ...imported, ...value, description: value.description?.trim() ?? "", image: value.image || imported?.image || "", tabelogUrl: value.tabelogUrl || imported?.tabelogUrl, googleMapsUrl: value.googleMapsUrl || imported?.googleMapsUrl, organizerProfileId: value.organizerProfileId || imported?.organizerProfileId, organizerName: value.organizerName || imported?.organizerName, organizerAvatar: value.organizerAvatar || imported?.organizerAvatar, organizerRank: value.organizerRank || imported?.organizerRank } as Event); })
-      .catch(() => undefined);
+      .catch(() => { if (active && !imported) setEvent(undefined); })
+      .finally(() => { if (active) { setEventLoading(false); setEventResolved(true); } });
     return () => { active = false; };
-  }, [allEvents, authUser, id]);
+  }, [allEvents, authLoading, id]);
 
   useEffect(() => { void Api.getMemberDirectory().then(setMemberDirectory).catch(() => setMemberDirectory([])); }, []);
 
@@ -222,6 +227,10 @@ export default function EventDetailScreen() {
   }, []);
   useEffect(() => { if (!event?.id) return; void recordActivityEvent({ userId: CURRENT_USER.id, eventName: "event_viewed", entityType: "event", entityId: event.id, dedupeKey: `${CURRENT_USER.id}:event_viewed:${event.id}:${new Date().toISOString().slice(0, 10)}` }); }, [event?.id]);
   useEffect(() => { if (!id) return; void AsyncStorage.getItem(`irotas_event_comments_v1:${id}`).then((raw) => setEventComments(raw ? JSON.parse(raw) : [])).catch(() => setEventComments([])); }, [id]);
+
+  if (!event && (eventLoading || !eventResolved)) {
+    return <ScreenContainer edges={["top", "bottom", "left", "right"]} className="p-6"><Text style={{ fontSize: 16, color: colors.muted, textAlign: "center", marginTop: 40 }}>読み込み中…</Text></ScreenContainer>;
+  }
 
   if (!event) {
     return (
@@ -316,9 +325,16 @@ export default function EventDetailScreen() {
     setEventCommentText("");
     void AsyncStorage.setItem(`irotas_event_comments_v1:${event.id}`, JSON.stringify(next));
     const preview = content.length > 50 ? `${content.slice(0, 50)}...` : content;
-    for (const memberId of getMentionedMemberIds(content, MEMBERS, eventMentionGroups).filter((targetId) => targetId !== viewerMemberId)) {
+    const mentionedMemberIds = new Set(getMentionedMemberIds(content, MEMBERS, eventMentionGroups));
+    for (const label of extractMentionLabels(content)) {
+      const directoryMember = memberDirectory.find((member) => stripRankFromName(member.displayName) === stripRankFromName(label));
+      if (directoryMember) mentionedMemberIds.add(directoryMember.id);
+    }
+    for (const memberId of mentionedMemberIds) {
+      if (memberId === viewerMemberId) continue;
+      const directoryMember = memberDirectory.find((member) => member.id === memberId);
       const member = getMemberById(memberId);
-      if (member) void sendMentionNotification(member.name, authUser?.name ?? CURRENT_USER.name, event.title, preview);
+      if (directoryMember || member) void sendMentionNotification(directoryMember?.displayName ?? member?.name ?? "会員", authUser?.name ?? CURRENT_USER.name, event.title, preview);
     }
   };
 
@@ -1049,7 +1065,7 @@ export default function EventDetailScreen() {
           </View>
         ) : null}
 
-        <View style={{ backgroundColor: colors.surface, borderRadius: 14, padding: 16, marginBottom: 16 }}><Text style={{ fontSize: 16, fontWeight: "900", color: colors.foreground }}>イベントへのコメント</Text><Text style={{ fontSize: 11, color: colors.muted, marginTop: 4 }}>参加申込前でも閲覧・コメントできます。@で会員・部活・支部をメンションできます。</Text>{eventComments.map((comment) => <View key={comment.id} style={{ marginTop: 12, paddingTop: 12, borderTopWidth: 0.5, borderTopColor: colors.border }}><Text style={{ fontSize: 12, fontWeight: "900", color: colors.foreground }}>{comment.author}</Text><MentionText content={comment.text} groups={eventMentionGroups} onMentionPress={(label) => { const targetId = findMentionedMemberId(label, MEMBERS); if (targetId) openMemberProfile(targetId); }} /></View>)}{eventMentionQuery !== null ? <MentionSuggestions query={eventMentionQuery} groups={eventMentionGroups} members={MEMBERS} onSelect={(label) => setEventCommentText((value) => insertMention(value, label))} /> : null}<View style={{ flexDirection: "row", alignItems: "flex-end", marginTop: 14 }}><TextInput value={eventCommentText} onChangeText={(value) => setEventCommentText(value.replace(/@everyone\b/gi, ""))} onFocus={() => setEventCommentFocused(true)} onBlur={() => setEventCommentFocused(false)} placeholder="質問やコメントを入力" placeholderTextColor={colors.muted} multiline style={{ flex: 1, minHeight: 44, maxHeight: 100, borderRadius: 14, backgroundColor: colors.background, borderWidth: 1, borderColor: colors.border, paddingHorizontal: 12, paddingVertical: 10, color: colors.foreground }} /><Pressable disabled={!eventCommentText.trim()} onPress={handleEventComment} style={{ width: 44, height: 44, borderRadius: 22, marginLeft: 8, alignItems: "center", justifyContent: "center", backgroundColor: eventCommentText.trim() ? "#D65E8D" : colors.border }}><IconSymbol name="paperplane.fill" size={19} color="#FFF" /></Pressable></View></View>
+        <View style={{ backgroundColor: colors.surface, borderRadius: 14, padding: 16, marginBottom: 16 }}><Text style={{ fontSize: 16, fontWeight: "900", color: colors.foreground }}>イベントへのコメント</Text><Text style={{ fontSize: 11, color: colors.muted, marginTop: 4 }}>参加申込前でも閲覧・コメントできます。@で会員・部活・支部をメンションできます。</Text>{eventComments.map((comment) => <View key={comment.id} style={{ marginTop: 12, paddingTop: 12, borderTopWidth: 0.5, borderTopColor: colors.border }}><Text style={{ fontSize: 12, fontWeight: "900", color: colors.foreground }}>{comment.author}</Text><MentionText content={comment.text} groups={eventMentionGroups} onMentionPress={(label) => { const normalized = stripRankFromName(label); const targetId = memberDirectory.find((member) => stripRankFromName(member.displayName) === normalized)?.id ?? findMentionedMemberId(normalized, MEMBERS); if (targetId) openMemberProfile(targetId); }} /></View>)}{eventMentionQuery !== null ? <MentionSuggestions query={eventMentionQuery} groups={eventMentionGroups} members={MEMBERS} onSelect={(label) => setEventCommentText((value) => insertMention(value, label))} /> : null}<View style={{ flexDirection: "row", alignItems: "flex-end", marginTop: 14 }}><TextInput value={eventCommentText} onChangeText={(value) => setEventCommentText(value.replace(/@everyone\b/gi, ""))} onFocus={() => setEventCommentFocused(true)} onBlur={() => setEventCommentFocused(false)} placeholder="質問やコメントを入力" placeholderTextColor={colors.muted} multiline style={{ flex: 1, minHeight: 44, maxHeight: 100, borderRadius: 14, backgroundColor: colors.background, borderWidth: 1, borderColor: colors.border, paddingHorizontal: 12, paddingVertical: 10, color: colors.foreground }} /><Pressable disabled={!eventCommentText.trim()} onPress={handleEventComment} style={{ width: 44, height: 44, borderRadius: 22, marginLeft: 8, alignItems: "center", justifyContent: "center", backgroundColor: eventCommentText.trim() ? "#D65E8D" : colors.border }}><IconSymbol name="paperplane.fill" size={19} color="#FFF" /></Pressable></View></View>
 
         {(isJoined || hasApplied) && !isOrganizer ? (
           <View style={{ backgroundColor: "#FFF4F2", borderRadius: 14, padding: 14, marginBottom: 16, borderWidth: 1, borderColor: "#F3D0CA" }}>

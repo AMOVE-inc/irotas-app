@@ -575,6 +575,7 @@ export default function ChatScreen() {
             query={mentionQuery}
             groups={mentionGroups}
             members={MEMBERS.filter((member) => member.id !== CURRENT_USER.id && room.participants.includes(member.id))}
+            memberIds={roomParticipants.filter((memberId) => memberId !== viewerMemberId)}
             onSelect={handleSelectMention}
           />
         )}

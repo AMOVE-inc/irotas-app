@@ -8,6 +8,8 @@ import { parseInternalLink } from "@/lib/internal-links";
 import { getAllRooms } from "@/lib/chat-store";
 import { useRouter } from "expo-router";
 import { parseDiscordHeading, tokenizeRichTextLinks } from "@/lib/discord-rich-text";
+import * as Api from "@/lib/_core/api";
+import { useEffect, useState } from "react";
 
 export function MentionText({ content, outgoing = false, groups, rooms = getAllRooms(), threads = BOARD_THREADS, onOpenInternalLink, onMentionPress, onClubMentionPress }: { content: string; outgoing?: boolean; groups: MentionGroup[]; rooms?: ChatRoom[]; threads?: BoardThread[]; onOpenInternalLink?: (pathname: "/chat" | "/board", params: Record<string, string>) => void; onMentionPress?: (label: string) => void; onClubMentionPress?: (group: MentionGroup) => void }) {
   const colors = useColors();
@@ -64,11 +66,21 @@ export function MentionText({ content, outgoing = false, groups, rooms = getAllR
   );
 }
 
-export function MentionSuggestions({ query, groups, members, onSelect }: { query: string; groups: MentionGroup[]; members: Member[]; onSelect: (label: string) => void }) {
+export function MentionSuggestions({ query, groups, members: _members, memberIds, onSelect }: { query: string; groups: MentionGroup[]; members: Member[]; memberIds?: readonly string[]; onSelect: (label: string) => void }) {
   const colors = useColors();
+  const [directory, setDirectory] = useState<Api.PublicMember[] | null>(null);
+  useEffect(() => {
+    let active = true;
+    void Api.getMemberDirectory().then((items) => { if (active) setDirectory(items); }).catch(() => { if (active) setDirectory([]); });
+    return () => { active = false; };
+  }, []);
   const normalized = query.toLowerCase();
   const filteredGroups = groups.filter((group) => !query || group.label.toLowerCase().includes(normalized) || group.description.includes(query));
-  const filteredMembers = members.filter((member) => !query || member.name.toLowerCase().includes(normalized) || member.id.toLowerCase().includes(normalized)).slice(0, 8);
+  const allowedMemberIds = memberIds ? new Set(memberIds) : null;
+  const filteredMembers = (directory ?? [])
+    .filter((member) => !allowedMemberIds || allowedMemberIds.has(member.id))
+    .filter((member) => !query || member.displayName.toLowerCase().includes(normalized) || member.id.toLowerCase().includes(normalized))
+    .slice(0, 8);
   if (!filteredGroups.length && !filteredMembers.length) return null;
 
   return (
@@ -80,12 +92,15 @@ export function MentionSuggestions({ query, groups, members, onSelect }: { query
             <View style={{ flex: 1 }}><Text style={{ fontSize: 14, fontWeight: "800", color: "#5B5A73" }}>@{group.label}</Text><Text style={{ fontSize: 11, color: colors.muted, marginTop: 1 }}>{group.description}</Text></View>
           </Pressable>
         ))}
-        {filteredMembers.map((member) => (
-          <Pressable key={member.id} onPress={() => onSelect(member.name)} style={({ pressed }) => ({ flexDirection: "row", alignItems: "center", paddingHorizontal: 16, paddingVertical: 10, borderBottomWidth: 0.5, borderBottomColor: colors.border, backgroundColor: pressed ? colors.surface : colors.background })}>
-            <Image source={member.avatar} style={{ width: 32, height: 32, borderRadius: 16, marginRight: 10 }} contentFit="cover" />
-            <View style={{ flex: 1 }}><Text style={{ fontSize: 14, fontWeight: "700", color: colors.foreground }}>@{member.name}</Text><Text style={{ fontSize: 11, color: colors.muted }}>{member.id}・第{member.generation}期</Text></View>
+        {filteredMembers.map((member) => {
+          const avatarUrl = typeof member.profile.avatarUrl === "string" ? member.profile.avatarUrl : undefined;
+          return (
+          <Pressable key={member.id} onPress={() => onSelect(member.displayName)} style={({ pressed }) => ({ flexDirection: "row", alignItems: "center", paddingHorizontal: 16, paddingVertical: 10, borderBottomWidth: 0.5, borderBottomColor: colors.border, backgroundColor: pressed ? colors.surface : colors.background })}>
+            <Image source={avatarUrl ? { uri: avatarUrl } : require("@/assets/images/irotas-logo-square.png")} style={{ width: 32, height: 32, borderRadius: 16, marginRight: 10 }} contentFit="cover" />
+            <View style={{ flex: 1 }}><Text style={{ fontSize: 14, fontWeight: "700", color: colors.foreground }}>@{member.displayName}</Text><Text style={{ fontSize: 11, color: colors.muted }}>{member.id}{member.memberTerm ? `・${member.memberTerm}期生` : ""}</Text></View>
           </Pressable>
-        ))}
+          );
+        })}
       </ScrollView>
     </View>
   );

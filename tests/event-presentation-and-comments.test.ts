@@ -18,8 +18,22 @@ describe("event presentation and comments", () => {
   it("allows event comments to select and open individual member mentions", () => {
     const detail = source("app/event-detail.tsx");
     expect(detail).toContain("members={MEMBERS}");
-    expect(detail).toContain("findMentionedMemberId(label, MEMBERS)");
+    expect(detail).toContain("memberDirectory.find");
     expect(detail).toContain("@で会員・部活・支部をメンションできます。");
+  });
+
+  it("keeps the detail screen in a loading state until its event lookup resolves", () => {
+    const detail = source("app/event-detail.tsx");
+    expect(detail).toContain("const [eventLoading, setEventLoading]");
+    expect(detail).toContain("読み込み中…");
+    expect(detail).toContain("setEventResolved(true)");
+  });
+
+  it("loads real member records for mention suggestions rather than rendering fixture members", () => {
+    const mentionUi = source("components/mention-ui.tsx");
+    expect(mentionUi).toContain("Api.getMemberDirectory()");
+    expect(mentionUi).toContain("member.displayName");
+    expect(mentionUi).toContain("memberIds?: readonly string[]");
   });
 
   it("gives organizers a stateful participant-chat CTA", () => {
