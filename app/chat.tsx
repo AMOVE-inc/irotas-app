@@ -97,7 +97,7 @@ function MessageBubble({ message, isMe, viewerId, myAvatarUri, senderMember, onR
     ? require("@/assets/images/irotas-logo-square.png")
     : isMe
     ? (myAvatarUri ? { uri: myAvatarUri } : (sender?.avatar ?? DEFAULT_AVATAR))
-    : (message.senderAvatar ? { uri: message.senderAvatar } : (discordAuthor?.avatarUrl ? { uri: discordAuthor.avatarUrl } : (sender?.avatar ?? DEFAULT_AVATAR)));
+    : (discordAuthor?.avatarUrl ? { uri: discordAuthor.avatarUrl } : (message.senderAvatar ? { uri: message.senderAvatar } : (sender?.avatar ?? DEFAULT_AVATAR)));
 
   return (
     <View

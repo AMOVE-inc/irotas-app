@@ -383,7 +383,7 @@ async function eventChatMemberName(db: D1Database, memberId: number) {
     .bind(memberId).first<{ display_name: string | null }>();
   return (member?.display_name ?? "")
     .replace(/【[^】]*(?:REGULAR|SILVER|GOLD|PLATINUM|レギュラー|シルバー|ゴールド|プラチナ)[^】]*】/gi, "")
-    .replace(/(?:[\p{Extended_Pictographic}\uFE0F]\s*)?(?:[^\s【】]{1,20}部長|運営)$/u, "")
+    .replace(/[\p{Extended_Pictographic}\uFE0F]\s*[^\s【】]{1,20}部長$/u, "")
     .trim() || "メンバー";
 }
 
@@ -783,10 +783,6 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
     if (!(elevated || row.organizer_member_id === member.id)) return responseJson({ error: "幹事または運営メンバーのみ操作できます" }, 403);
     let data: Record<string, unknown> = {};
     try { data = JSON.parse(row.public_data_json) as Record<string, unknown>; } catch {}
-    const capacity = typeof data.capacity === "number" ? data.capacity : 0;
-    const confirmedCount = await env.DB.prepare("SELECT COUNT(*) AS count FROM event_participations WHERE event_id = ? AND status IN ('confirmed','cancel_requested')").bind(id).first<{ count: number }>();
-    if (capacity < 1 || (confirmedCount?.count ?? 0) < capacity)
-      return responseJson({ error: "募集人数に達してから参加者確定を完了してください" }, 409);
     if (typeof data.participantsFinalizedAt === "string" && data.participantsFinalizedAt) {
       return responseJson({ event: await hydratedEvent(env.DB, row, member.id, elevated, memberPublicId) });
     }

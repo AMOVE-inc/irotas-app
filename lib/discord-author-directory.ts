@@ -8,7 +8,7 @@ const authorsByName = new Map<string, DiscordAuthor>();
 function normalizedName(value: string) {
   return value.normalize("NFKC")
     .replace(/【[^】]+】|\([^)]*(?:regular|silver|gold|platinum|レギュラー|シルバー|ゴールド|プラチナ)[^)]*\)/gi, "")
-    .replace(/(?:[\p{Extended_Pictographic}\uFE0F]\s*)?(?:[^\s【】]{1,20}部長|運営)$/u, "")
+    .replace(/[\p{Extended_Pictographic}\uFE0F]\s*[^\s【】]{1,20}部長$/u, "")
     .trim();
 }
 
