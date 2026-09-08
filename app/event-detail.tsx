@@ -1270,7 +1270,13 @@ export default function EventDetailScreen() {
           </Pressable>
         )}
 
-        {/* 参加ボタン */}
+        {/* 中止済み表示。参加者は上のボタンからチャットを引き続き確認できる。 */}
+        {event.isCancelled ? (
+          <View style={{ backgroundColor: "#D94C55", borderRadius: 14, paddingVertical: 16, alignItems: "center" }}>
+            <Text style={{ fontSize: 17, fontWeight: "700", color: "#FFF" }}>キャンセル済み</Text>
+          </View>
+        ) : (
+        /* 参加ボタン */
         <Pressable
           disabled={isJoined || hasApplied || isOrganizer || event.status !== "open" || (requiresOrganizerApproval && !termsAccepted)}
           onPress={isJoined || hasApplied || isOrganizer || event.status !== "open" || (requiresOrganizerApproval && !termsAccepted) ? undefined : handleJoin}
@@ -1296,6 +1302,7 @@ export default function EventDetailScreen() {
             {isOrganizer ? (event.participantsFinalizedAt ? "幹事イベント（参加者確定済み）" : "幹事イベント（参加者募集中）") : isJoined ? "✓ 参加確定" : hasApplied ? "✓ 申込済み（幹事の承認待ち）" : event.status !== "open" ? "募集終了" : requiresOrganizerApproval && !termsAccepted ? "規約に同意して申し込む" : event.selectionMethod === "lottery" ? "抽選に申し込む" : "参加を申し込む"}
           </Text>
         </Pressable>
+        )}
       </View> : null}
     </View>
   );

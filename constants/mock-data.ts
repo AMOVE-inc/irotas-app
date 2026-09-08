@@ -159,6 +159,8 @@ export interface Event {
   viewerParticipationStatus?: "applied" | "confirmed" | "cancel_requested" | null;
   isFavorite?: boolean;
   isOrganizer?: boolean;
+  /** イベントが幹事により中止された場合も、通知から詳細と参加者チャットを確認できる。 */
+  isCancelled?: boolean;
   /** 未入部者向けに詳細を除いた部活動イベントの一覧プレビュー。 */
   lockedClubEvent?: boolean;
   priceMax?: number;

@@ -259,6 +259,7 @@ function publicEvent(
     date: row.event_date,
     // 定員に達していても、幹事が参加者を確定するまでは受付を継続する。
     status: row.status === "cancelled" ? "ended" : row.status === "full" && !participantsFinalized ? "open" : row.status,
+    isCancelled: row.status === "cancelled",
     title: row.title,
     createdBy: row.public_member_id ?? `member-${row.organizer_member_id}`,
     organizerProfileId: row.public_member_id ?? `member-${row.organizer_member_id}`,
@@ -438,7 +439,8 @@ async function postEventCancellationToConfirmedChat(
   const chatId = typeof data.chatId === "string" && data.chatId ? data.chatId : eventChatId(row.id);
   await db.batch([
     db.prepare(`INSERT OR IGNORE INTO chat_rooms (id, name, room_type, source_id, created_by_member_id, created_at, updated_at)
-      VALUES (?, ?, 'event', ?, ?, ?, ?)`).bind(chatId, row.title, row.id, row.organizer_member_id, now, now),
+      VALUES (?, ?, 'event', ?, ?, ?, ?)`).bind(chatId, `【開催中止】${row.title}`, row.id, row.organizer_member_id, now, now),
+    db.prepare("UPDATE chat_rooms SET name = ?, updated_at = ? WHERE id = ?").bind(`【開催中止】${row.title}`, now, chatId),
     db.prepare(`INSERT INTO chat_room_members (room_id, member_id, member_role, joined_at, left_at)
       VALUES (?, ?, 'owner', ?, NULL)
       ON CONFLICT(room_id, member_id) DO UPDATE SET member_role = 'owner', left_at = NULL`)
@@ -587,7 +589,7 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
     const requestedEventId = decodeURIComponent(eventMatch[1]);
     if (DELETED_EVENT_IDS.has(requestedEventId)) return responseJson({ error: "イベントが見つかりません" }, 404);
     const row = await eventRow(env.DB, requestedEventId);
-    if (!row || row.status === "cancelled") return responseJson({ error: "イベントが見つかりません" }, 404);
+    if (!row) return responseJson({ error: "イベントが見つかりません" }, 404);
     if (row.event_type === "club" && row.club_id && !await canMemberAccessClub(env.DB, row.club_id, member.id, admin))
       return responseJson({ error: "この部活の部員のみ詳細を閲覧できます" }, 403);
     return responseJson({ event: await hydratedEvent(env.DB, row, member.id, elevated, memberPublicId) });

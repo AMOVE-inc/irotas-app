@@ -823,7 +823,7 @@ function EventCard({
                 {stripRankFromName(event.organizerName ?? organizer?.name ?? "メンバー")}
               </Text>
               {event.organizerRank ? <MemberRankBadge rank={event.organizerRank} name={event.organizerName} compact /> : null}
-              <MemberRoleBadge name="" role={event.organizerAccessRole} compact />
+              <MemberRoleBadge name={event.organizerName} role={event.organizerAccessRole} compact />
               {organizer ? (
                 <NewMemberMark member={organizer} size={11} />
               ) : null}

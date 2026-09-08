@@ -313,9 +313,12 @@ async function serializeRoom(db: D1Database, room: RoomRow, member: Viewer) {
   const dmPartner = room.room_type === "dm"
     ? participants.find((item) => item.member_id !== member.id)
     : null;
+  const cancelledEvent = room.room_type === "event" && room.source_id
+    ? await db.prepare("SELECT title FROM events WHERE id = ? AND status = 'cancelled' LIMIT 1").bind(room.source_id).first<{ title: string }>()
+    : null;
   return {
     id: room.id,
-    name: dmPartner?.display_name || room.name,
+    name: dmPartner?.display_name || (cancelledEvent ? `【開催中止】${cancelledEvent.title}` : room.name),
     type: room.room_type === "announcement" ? "board" : room.room_type,
     sourceId: room.source_id ?? room.id,
     participants: participants.map((item) => publicMemberId(item.member_id, item.public_member_id)),
