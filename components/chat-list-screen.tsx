@@ -7,7 +7,7 @@ import { useColors } from "@/hooks/use-colors";
 import { Image } from "expo-image";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, FlatList, Modal, Pressable, ScrollView, Text, TextInput, View } from "react-native";
+import { FlatList, Modal, Pressable, ScrollView, Text, TextInput, View } from "react-native";
 import * as Api from "@/lib/_core/api";
 import { stripRankFromName } from "@/components/member-rank-badge";
 
@@ -39,9 +39,11 @@ function ChatRoomCard({ room, eventStarts, eventImages, memberAvatars, viewerMem
   const mentionCount = room.mentionCount ?? 0;
   const dmPartnerId = isDM ? room.participants.find((memberId) => memberId !== viewerMemberId) : undefined;
   const imageUri = room.type === "event" ? eventImages[room.sourceId] : dmPartnerId ? memberAvatars[dmPartnerId] : undefined;
+  const announcementIcon = room.id === "board-announcement";
   const displayName = room.type === "event" && eventStarts[room.sourceId]
     ? `${eventStarts[room.sourceId]} ${stripRankFromName(room.name)}`
     : stripRankFromName(room.name);
+  const previewText = (room.lastMessage ?? "").replace(/^【IRO\+\s*システム】\s*/, "");
 
   const timeAgo = (dateStr?: string) => {
     if (!dateStr) return "";
@@ -61,7 +63,7 @@ function ChatRoomCard({ room, eventStarts, eventImages, memberAvatars, viewerMem
       }}
       style={({ pressed }) => ({ flexDirection: "row", alignItems: "center", paddingHorizontal: 16, paddingVertical: 14, borderBottomWidth: 0.5, borderBottomColor: colors.border, opacity: pressed ? 0.7 : 1 })}
     >
-      {imageUri ? <Image source={{ uri: imageUri }} style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: typeColor + "20" }} contentFit="cover" /> : (
+      {announcementIcon ? <Image source={require("@/assets/images/irotas-logo-square.png")} style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: typeColor + "20" }} contentFit="cover" /> : imageUri ? <Image source={{ uri: imageUri }} style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: typeColor + "20" }} contentFit="cover" /> : (
         <View style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: typeColor + "20", alignItems: "center", justifyContent: "center" }}>
           <IconSymbol
             name={room.type === "event" ? "calendar" : room.type === "board" ? "bubble.left.and.bubble.right.fill" : isDM ? "message.fill" : isRank ? "crown.fill" : "person.3.fill"}
@@ -80,7 +82,7 @@ function ChatRoomCard({ room, eventStarts, eventImages, memberAvatars, viewerMem
           <View style={{ backgroundColor: typeColor + "20", borderRadius: 6, paddingHorizontal: 6, paddingVertical: 1, marginRight: 6 }}>
             <Text style={{ fontSize: 10, fontWeight: "600", color: typeColor }}>{typeLabel}</Text>
           </View>
-          <Text style={{ fontSize: 13, color: colors.muted, flex: 1 }} numberOfLines={1}>{room.lastMessage || "メッセージはまだありません"}</Text>
+          <Text style={{ fontSize: 13, color: colors.muted, flex: 1 }} numberOfLines={1}>{previewText || "メッセージはまだありません"}</Text>
         </View>
       </View>
     </Pressable>
@@ -217,7 +219,7 @@ export default function ChatListScreen() {
     const announcementPreview = latestAnnouncement ?? localAnnouncement;
     const mergedJoined = [...localJoinedRooms.filter((room) => !sharedById.has(room.id)), ...sharedRooms.filter((room) => room.type !== "rank" && !isFixtureRoom(room))]
       .map((room) => room.id === "board-announcement" && announcementPreview
-        ? { ...room, lastMessage: announcementPreview.content.replace(/\s+/g, " ").trim(), lastMessageAt: announcementPreview.createdAt }
+        ? { ...room, lastMessage: announcementPreview.content.replace(/^【IRO\+\s*システム】\s*/, "").replace(/\s+/g, " ").trim(), lastMessageAt: announcementPreview.createdAt }
         : room);
     const mergedRank = viewerRank === "regular" ? [] : [
       ...localRankRooms.filter((room) => !sharedById.has(room.id)),
@@ -257,7 +259,7 @@ export default function ChatListScreen() {
         showsVerticalScrollIndicator={false}
         style={{ flex: 1 }}
         contentContainerStyle={{ paddingBottom: 112, flexGrow: 1 }}
-        ListEmptyComponent={<View style={{ alignItems: "center", paddingVertical: 60, paddingHorizontal: 24 }}><ActivityIndicator size="large" color="#E8A0BF" /><Text style={{ fontSize: 14, color: colors.muted, marginTop: 12 }}>チャットを読み込んでいます…</Text></View>}
+        ListEmptyComponent={<View />}
       />
       <CreateFriendGroupModal visible={showCreateGroup} onClose={() => setShowCreateGroup(false)} onCreated={(room) => { void refreshRooms(); router.push({ pathname: "/chat", params: { id: room.id } }); }} />
     </ScreenContainer>

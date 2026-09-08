@@ -596,11 +596,8 @@ export default function ChatScreen() {
           ListEmptyComponent={
             <View style={{ alignItems: "center", paddingVertical: 40 }}>
               <IconSymbol name="message.fill" size={36} color={colors.border} />
-              <Text style={{ fontSize: 14, color: colors.muted, marginTop: 8 }}>
+          <Text style={{ fontSize: 14, color: colors.muted, marginTop: 8 }}>
                 まだメッセージはありません
-              </Text>
-              <Text style={{ fontSize: 12, color: colors.muted, marginTop: 4 }}>
-                最初のメッセージを送りましょう
               </Text>
             </View>
           }

@@ -807,13 +807,7 @@ function EventCard({
           {!locked ? (
             <>
               <Image
-                source={
-                  event.eventType === "official"
-                    ? DEFAULT_AVATAR
-                    : (event.organizerAvatar ??
-                      organizer?.avatar ??
-                      DEFAULT_AVATAR)
-                }
+                source={event.organizerAvatar ?? organizer?.avatar ?? DEFAULT_AVATAR}
                 style={{ width: 18, height: 18, borderRadius: 9 }}
                 contentFit="cover"
               />
@@ -826,15 +820,11 @@ function EventCard({
                 }}
                 numberOfLines={1}
               >
-                {event.eventType === "official"
-                  ? "IRO＋運営"
-                  : stripRankFromName(
-                      event.organizerName ?? organizer?.name ?? "メンバー",
-                    )}
+                {stripRankFromName(event.organizerName ?? organizer?.name ?? "メンバー")}
               </Text>
-              {event.eventType !== "official" && event.organizerRank ? <MemberRankBadge rank={event.organizerRank} name={event.organizerName} compact /> : null}
-              <MemberRoleBadge name={event.organizerName} role={event.eventType === "official" ? "operator" : undefined} compact />
-              {event.eventType !== "official" && organizer ? (
+              {event.organizerRank ? <MemberRankBadge rank={event.organizerRank} name={event.organizerName} compact /> : null}
+              <MemberRoleBadge name={event.organizerName} role={organizer?.role} compact />
+              {organizer ? (
                 <NewMemberMark member={organizer} size={11} />
               ) : null}
             </>
@@ -1018,12 +1008,13 @@ export default function EventsScreen() {
       viewerMemberId,
     ],
   );
+  // 公式イベントの開催済み分は通常のイベント一覧には表示しない。管理画面・DBには残す。
+  const visibleEvents = useMemo(() => filteredEvents.filter((event) =>
+    event.eventType !== "official" || Date.parse(`${event.date}T23:59:59`) >= Date.now(),
+  ), [filteredEvents]);
   const firstPastEventIndex = useMemo(
-    () =>
-      filteredEvents.findIndex(
-        (event) => Date.parse(`${event.date}T23:59:59`) < Date.now(),
-      ),
-    [filteredEvents],
+    () => visibleEvents.findIndex((event) => Date.parse(`${event.date}T23:59:59`) < Date.now()),
+    [visibleEvents],
   );
 
   const eventTypeLabel =
@@ -1092,7 +1083,7 @@ export default function EventsScreen() {
       </View>
 
       <FlatList
-        data={filteredEvents}
+        data={visibleEvents}
         keyExtractor={(item) => item.id}
         renderItem={({ item, index }) => (
           <View>
@@ -1431,7 +1422,7 @@ export default function EventsScreen() {
                   marginLeft: 10,
                 }}
               >
-                全{filteredEvents.length}件
+                全{visibleEvents.length}件
               </Text>
             </View>
           </View>

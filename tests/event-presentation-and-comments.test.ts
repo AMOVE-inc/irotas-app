@@ -9,6 +9,12 @@ describe("event presentation and comments", () => {
     expect(source("app/(tabs)/events.tsx")).toContain('const [openOnly, setOpenOnly] = useState(true)');
   });
 
+  it("keeps past official events out of the public event list while retaining their data", () => {
+    const events = source("app/(tabs)/events.tsx");
+    expect(events).toContain('event.eventType !== "official" || Date.parse');
+    expect(events).toContain("data={visibleEvents}");
+  });
+
   it("shows selection method only for official event cards", () => {
     expect(source("app/(tabs)/events.tsx")).toContain('event.eventType === "official" && event.selectionMethod');
   });

@@ -7,6 +7,7 @@ export function getMemberStaffRole(name?: string, role?: string): MemberStaffRol
   return null;
 }
 
-export function shouldShowMemberRank(name?: string, role?: string): boolean {
-  return getMemberStaffRole(name, role) === null;
+export function shouldShowMemberRank(rank?: string, name?: string, role?: string): boolean {
+  // レギュラー会員はバッジを出さず、ランクアップ後だけを視覚的に示す。
+  return rank !== "regular" && getMemberStaffRole(name, role) === null;
 }

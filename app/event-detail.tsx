@@ -176,7 +176,17 @@ export default function EventDetailScreen() {
   const usePointsRef = useRef(false);
   const favoriteEventIds = useEventFavorites();
   // Event comments support the same club, branch, and member mentions as other composers.
-  const eventMentionGroups = useMemo(() => getMentionGroups(MEMBERS, clubs), [clubs]);
+  const eventMentionMembers = useMemo(() => memberDirectory.length > 0
+    ? memberDirectory.map((member) => ({
+      id: member.id,
+      name: member.displayName,
+      branch: member.branches.includes("kansai") ? "kansai" : "kanto",
+      generation: Number(member.memberTerm?.match(/\d+/)?.[0] ?? 0),
+      rank: member.memberRank,
+      role: member.accessRole === "admin" ? "admin" : member.accessRole === "operator" ? "operator" : "member",
+    })) as unknown as typeof MEMBERS
+    : MEMBERS, [memberDirectory]);
+  const eventMentionGroups = useMemo(() => getMentionGroups(eventMentionMembers, clubs), [eventMentionMembers, clubs]);
   const eventMentionQuery = getMentionQuery(eventCommentText);
 
   useEffect(() => {

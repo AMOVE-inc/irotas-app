@@ -4194,5 +4194,11 @@ export const DISCORD_AUTHOR_DIRECTORY: DiscordAuthorRecord[] = [
     "name": "mari",
     "avatarUrl": "https://cdn.discordapp.com/avatars/992370591862624356/2c990b3a6926ae64e5b00f8c43a2a479.png?size=512",
     "rank": "regular"
+  },
+  {
+    "id": "discord-1248246443383455764",
+    "name": "seina【🥈SILVER 】",
+    "avatarUrl": "https://cdn.discordapp.com/avatars/1248246443383455764/4d7b9e30cbf017e57634282d0313bd36.png?size=512",
+    "rank": "silver"
   }
 ];

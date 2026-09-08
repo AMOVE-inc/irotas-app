@@ -78,7 +78,7 @@ export function MemberRoleBadge({ name, role, compact = false, leaderLabel }: { 
 }
 
 export function MemberRankBadge({ rank, compact = false, name, role }: { rank: MemberRank; compact?: boolean; name?: string; role?: string }) {
-  if (!shouldShowMemberRank(name, role)) return null;
+  if (!shouldShowMemberRank(rank, name, role)) return null;
   const platinum = rank === "platinum";
   const color = platinum ? "#D4AF37" : RANK_COLORS[rank];
   const badgeHeight = compact ? 19 : 24;
