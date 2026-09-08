@@ -10,7 +10,7 @@ import { useCallback, useEffect, useState } from "react";
 import { FlatList, Modal, Pressable, ScrollView, Text, TextInput, View } from "react-native";
 import * as Api from "@/lib/_core/api";
 import { stripRankFromName } from "@/components/member-rank-badge";
-import { getDiscordAuthorById } from "@/lib/discord-author-directory";
+import { getDiscordAuthorById, getDiscordAuthorByName } from "@/lib/discord-author-directory";
 
 function formatEventStart(event: { date: string; time: string }) {
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(event.date);
@@ -39,7 +39,7 @@ function ChatRoomCard({ room, eventStarts, eventImages, memberAvatars, viewerMem
   const unreadCount = room.unreadCount ?? 0;
   const mentionCount = room.mentionCount ?? 0;
   const dmPartnerId = isDM ? room.participants.find((memberId) => memberId !== viewerMemberId) : undefined;
-  const imageUri = room.type === "event" ? eventImages[room.sourceId] : dmPartnerId ? memberAvatars[dmPartnerId] ?? getDiscordAuthorById(dmPartnerId)?.avatarUrl : undefined;
+  const imageUri = room.type === "event" ? eventImages[room.sourceId] : dmPartnerId ? memberAvatars[dmPartnerId] ?? getDiscordAuthorById(dmPartnerId)?.avatarUrl ?? getDiscordAuthorByName(room.name)?.avatarUrl : undefined;
   const announcementIcon = room.id === "board-announcement";
   const displayName = room.type === "event" && eventStarts[room.sourceId]
     ? `${eventStarts[room.sourceId]} ${stripRankFromName(room.name)}`
@@ -191,8 +191,10 @@ export default function ChatListScreen() {
   const [eventStarts, setEventStarts] = useState<Record<string, string>>({});
   const [eventImages, setEventImages] = useState<Record<string, string>>({});
   const [memberAvatars, setMemberAvatars] = useState<Record<string, string>>({});
+  const [roomsLoading, setRoomsLoading] = useState(true);
 
   const refreshRooms = useCallback(async () => {
+    setRoomsLoading(true);
     // 旧プロトタイプ用の chat1〜chat4 は、保存済みの実際の会話ではないため一覧に出さない。
     const isFixtureRoom = (room: ChatRoom) => /^chat\d+$/.test(room.id);
     const localJoinedRooms = getMyRooms(viewerMemberId)
@@ -232,6 +234,7 @@ export default function ChatListScreen() {
     const [sortedJoined, sortedRank] = await Promise.all([applyReadRoomState(mergedJoined), applyReadRoomState(mergedRank)]);
     setMyRooms(sortedJoined);
     setRankRooms(sortedRank);
+    setRoomsLoading(false);
   }, [viewerMemberId, viewerRank]);
 
   useFocusEffect(useCallback(() => {
@@ -263,7 +266,7 @@ export default function ChatListScreen() {
         showsVerticalScrollIndicator={false}
         style={{ flex: 1 }}
         contentContainerStyle={{ paddingBottom: 112, flexGrow: 1 }}
-        ListEmptyComponent={<View />}
+        ListEmptyComponent={<View style={{ flex: 1, alignItems: "center", justifyContent: "center", paddingVertical: 80 }}><Text style={{ fontSize: 14, color: colors.muted }}>{roomsLoading ? "読み込み中…" : "参加中のチャットはありません"}</Text></View>}
       />
       <CreateFriendGroupModal visible={showCreateGroup} onClose={() => setShowCreateGroup(false)} onCreated={(room) => { void refreshRooms(); router.push({ pathname: "/chat", params: { id: room.id } }); }} />
     </ScreenContainer>

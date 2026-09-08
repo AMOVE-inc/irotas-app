@@ -910,23 +910,6 @@ export default function ProfileScreen() {
               style={{ width: 80, height: 80, borderRadius: 40 }}
               contentFit="cover"
             />
-            {!userIsOperator ? <View
-              style={{
-                position: "absolute",
-                bottom: -2,
-                right: -2,
-                backgroundColor: RANK_COLORS[user.rank],
-                borderRadius: 12,
-                width: 24,
-                height: 24,
-                alignItems: "center",
-                justifyContent: "center",
-                borderWidth: 2,
-                borderColor: colors.background,
-              }}
-            >
-              <IconSymbol name="crown.fill" size={12} color="#FFF" />
-            </View> : null}
           </View>
           <View style={{ flexDirection: "row", alignItems: "center", marginTop: 12 }}>
             <Text style={{ fontSize: 22, fontWeight: "800", color: colors.foreground }}>{stripRankFromName(displayedProfileName)}</Text>

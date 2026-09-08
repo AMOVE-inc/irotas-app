@@ -1035,7 +1035,7 @@ export default function EventDetailScreen() {
           <Text style={{ fontSize: 18, fontWeight: "700", color: colors.foreground, marginBottom: 8 }}>
             イベント詳細
           </Text>
-          <MentionText content={event.description} groups={eventMentionGroups} onClubMentionPress={(group) => { const club = findMentionedClub(group.label, clubs); if (!club) return; if (canViewerAccessClubContent(club, authUser?.memberId, CURRENT_USER.id, isAdminRole(authUser?.role, authUser?.accessRole))) { router.push({ pathname: "/board", params: { category: `club-${club.id}`, view: "threads" } }); return; } router.push({ pathname: "/clubs", params: { clubId: club.id } }); }} onMentionPress={(label) => { const normalized = stripRankFromName(label); const targetId = findMentionedMemberId(normalized, [...memberDirectory.map((member) => ({ id: member.id, displayName: stripRankFromName(member.displayName) })), ...MEMBERS.map((member) => ({ id: member.id, name: stripRankFromName(member.name) }))]) ?? getDiscordAuthorByName(normalized)?.id; if (targetId) openMemberProfile(targetId); }} />
+          <MentionText content={event.description} groups={eventMentionGroups} onClubMentionPress={(group) => { const club = findMentionedClub(group.label, clubs); if (!club) return; if (canViewerAccessClubContent(club, authUser?.memberId, CURRENT_USER.id, isAdminRole(authUser?.role, authUser?.accessRole))) { router.push({ pathname: "/board", params: { category: `club-${club.id}`, view: "threads" } }); return; } router.push({ pathname: "/clubs", params: { clubId: club.id } }); }} onMentionPress={(label) => { const normalized = mentionDisplayName(label); const targetId = getDiscordAuthorByName(normalized)?.id ?? findMentionedMemberId(normalized, [...memberDirectory.map((member) => ({ id: member.id, displayName: mentionDisplayName(member.displayName) })), ...MEMBERS.map((member) => ({ id: member.id, name: mentionDisplayName(member.name) }))]); if (targetId) openMemberProfile(targetId); }} />
         </View>
 
         {event.applicationDeadline ? (
@@ -1066,7 +1066,7 @@ export default function EventDetailScreen() {
                   <MemberClubLeaderBadges roles={author.roles} name={author.badgeName} compact />
                   <MemberRoleBadge name="" role={author.role} compact />
                 </View>
-                <MentionText content={comment.text} groups={eventMentionGroups} onMentionPress={(label) => { const normalized = mentionDisplayName(label); const targetId = memberDirectory.find((member) => mentionDisplayName(member.displayName) === normalized)?.id ?? findMentionedMemberId(normalized, MEMBERS) ?? getDiscordAuthorByName(normalized)?.id; if (targetId) openMemberProfile(targetId); }} />
+                <MentionText content={comment.text} groups={eventMentionGroups} onMentionPress={(label) => { const normalized = mentionDisplayName(label); const targetId = getDiscordAuthorByName(normalized)?.id ?? memberDirectory.find((member) => mentionDisplayName(member.displayName) === normalized)?.id ?? findMentionedMemberId(normalized, MEMBERS); if (targetId) openMemberProfile(targetId); }} />
               </View>
             </View>;
           })}

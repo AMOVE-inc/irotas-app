@@ -17,6 +17,11 @@ export function mentionDisplayName(label: string) {
   return stripRankFromName(label.replace(/^@/, "").replace(/[、。！？!?.,，．]+$/g, ""));
 }
 
+/** Imported Discord mentions occasionally put a space before the leader/rank suffix. */
+function normalizeRenderedMentions(content: string) {
+  return content.replace(/(@[^\s@]+)(?:\s*(?:[🍖⛳🏃🚶⚾💃🎭🏀🍷✈️🍳🍞🐭🍺]\s*)?[^\s【】]{1,20}部長)?(?:\s*[【[(（]\s*(?:🥈|🥇|💎)?\s*(?:SILVER|GOLD|PLATINUM|シルバー|ゴールド|プラチナ)(?:会員)?\s*[】\])）])?/giu, (_whole, mention: string) => `@${mentionDisplayName(mention)}`);
+}
+
 export function MentionText({ content, outgoing = false, groups, rooms = getAllRooms(), threads = BOARD_THREADS, onOpenInternalLink, onMentionPress, onClubMentionPress }: { content: string; outgoing?: boolean; groups: MentionGroup[]; rooms?: ChatRoom[]; threads?: BoardThread[]; onOpenInternalLink?: (pathname: "/chat" | "/board", params: Record<string, string>) => void; onMentionPress?: (label: string) => void; onClubMentionPress?: (group: MentionGroup) => void }) {
   const colors = useColors();
   const router = useRouter();
@@ -60,7 +65,7 @@ export function MentionText({ content, outgoing = false, groups, rooms = getAllR
   };
   return (
     <Text style={{ fontSize: 14, lineHeight: 20, color: outgoing ? "#FFF" : colors.foreground }}>
-      {content.split("\n").map((line, index, lines) => {
+      {normalizeRenderedMentions(content).split("\n").map((line, index, lines) => {
         const heading = parseDiscordHeading(line);
         const headingStyle: TextStyle = heading.level === 1
           ? { fontSize: 22, lineHeight: 30, fontWeight: "900" }

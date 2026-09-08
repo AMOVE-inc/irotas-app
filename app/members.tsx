@@ -2,7 +2,7 @@ import { ScreenContainer } from "@/components/screen-container";
 import { NewMemberMark } from "@/components/new-member-mark";
 import { MemberClubLeaderBadges, MemberRankBadge, MemberRoleBadge, stripRankFromName } from "@/components/member-rank-badge";
 import { IconSymbol } from "@/components/ui/icon-symbol";
-import { MEMBERS, CURRENT_USER, DEFAULT_AVATAR, RANK_COLORS, type MemberRank } from "@/constants/mock-data";
+import { MEMBERS, CURRENT_USER, DEFAULT_AVATAR, type MemberRank } from "@/constants/mock-data";
 import { useColors } from "@/hooks/use-colors";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
@@ -111,9 +111,7 @@ export default function MembersScreen() {
         data={filteredMembers}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => {
-          const rankColor = RANK_COLORS[item.rank];
           const isMe = item.isCurrentUser;
-          const elevatedRoleLabel = item.accessRole === "admin" ? "管理者" : item.accessRole === "operator" ? "運営メンバー" : null;
           return (
             <Pressable
               onPress={() => router.push({ pathname: "/member-profile", params: { id: item.id } })}
@@ -133,23 +131,6 @@ export default function MembersScreen() {
                   style={{ width: 48, height: 48, borderRadius: 24 }}
                   contentFit="cover"
                 />
-                {!elevatedRoleLabel ? <View
-                  style={{
-                    position: "absolute",
-                    bottom: -2,
-                    right: -2,
-                    backgroundColor: rankColor,
-                    borderRadius: 8,
-                    width: 16,
-                    height: 16,
-                    alignItems: "center",
-                    justifyContent: "center",
-                    borderWidth: 1.5,
-                    borderColor: colors.background,
-                  }}
-                >
-                  <IconSymbol name="crown.fill" size={8} color="#FFF" />
-                </View> : null}
               </View>
               <View style={{ flex: 1, marginLeft: 12 }}>
                 <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>

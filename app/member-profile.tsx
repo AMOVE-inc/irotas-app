@@ -168,7 +168,6 @@ export default function MemberProfileScreen() {
   const ledClub = clubs.find((club) => club.leaderId === member.id);
   const leaderLabel = ledClub ? clubLeaderBadgeForClub(ledClub.name) : null;
   const rankColor = RANK_COLORS[member.rank];
-  const elevatedRoleLabel = member.role === "admin" ? "管理者" : member.role === "operator" ? "運営メンバー" : null;
   const isSelf = databaseMember ? databaseMember.userId === authUser?.id : member.id === CURRENT_USER.id;
   const details: Partial<ProfileDetails> = selfDetails ?? {
     birthDate: member.birthDate, showAge: member.showAge, hometown: member.hometown, residence: member.residence,
@@ -236,23 +235,6 @@ export default function MemberProfileScreen() {
               style={{ width: 90, height: 90, borderRadius: 45 }}
               contentFit="cover"
             />
-            {!elevatedRoleLabel ? <View
-              style={{
-                position: "absolute",
-                bottom: -2,
-                right: -2,
-                backgroundColor: rankColor,
-                borderRadius: 12,
-                width: 24,
-                height: 24,
-                alignItems: "center",
-                justifyContent: "center",
-                borderWidth: 2,
-                borderColor: colors.background,
-              }}
-            >
-              <IconSymbol name="crown.fill" size={12} color="#FFF" />
-            </View> : null}
           </View>
 
           <View style={{ flexDirection: "row", alignItems: "center", marginTop: 12 }}>
