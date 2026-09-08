@@ -97,11 +97,15 @@ export function MentionSuggestions({ query, groups, members: _members, memberIds
           return (
           <Pressable key={member.id} onPress={() => onSelect(member.displayName)} style={({ pressed }) => ({ flexDirection: "row", alignItems: "center", paddingHorizontal: 16, paddingVertical: 10, borderBottomWidth: 0.5, borderBottomColor: colors.border, backgroundColor: pressed ? colors.surface : colors.background })}>
             <Image source={avatarUrl ? { uri: avatarUrl } : require("@/assets/images/irotas-logo-square.png")} style={{ width: 32, height: 32, borderRadius: 16, marginRight: 10 }} contentFit="cover" />
-            <View style={{ flex: 1 }}><Text style={{ fontSize: 14, fontWeight: "700", color: colors.foreground }}>@{member.displayName}</Text><Text style={{ fontSize: 11, color: colors.muted }}>{member.id}{member.memberTerm ? `・${member.memberTerm}期生` : ""}</Text></View>
+            <View style={{ flex: 1 }}><Text style={{ fontSize: 14, fontWeight: "700", color: colors.foreground }}>@{member.displayName}</Text><Text style={{ fontSize: 11, color: colors.muted }}>{member.id}{member.memberTerm ? `・${formatMemberTerm(member.memberTerm)}` : ""}</Text></View>
           </Pressable>
           );
         })}
       </ScrollView>
     </View>
   );
+}
+function formatMemberTerm(memberTerm: string): string {
+  const termNumber = memberTerm.match(/\d+/)?.[0];
+  return termNumber ? `第${termNumber}期生` : memberTerm;
 }

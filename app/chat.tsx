@@ -94,7 +94,7 @@ function MessageBubble({ message, isMe, viewerId, myAvatarUri, senderMember, onR
     <View
       style={{
         flexDirection: isMe ? "row-reverse" : "row",
-        alignItems: "flex-end",
+        alignItems: "flex-start",
         marginBottom: 10,
         paddingHorizontal: 16,
       }}

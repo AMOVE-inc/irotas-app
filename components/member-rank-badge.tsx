@@ -38,8 +38,8 @@ export function clubLeaderBadgesForRoles(roles?: readonly string[] | null) {
     .map(({ label }) => label);
 }
 
-export function MemberClubLeaderBadges({ roles, compact = false }: { roles?: readonly string[] | null; compact?: boolean }) {
-  const labels = clubLeaderBadgesForRoles(roles);
+export function MemberClubLeaderBadges({ roles, name, compact = false }: { roles?: readonly string[] | null; name?: string; compact?: boolean }) {
+  const labels = [...new Set([...clubLeaderBadgesForRoles(roles), ...(name ? [clubLeaderBadge(name)?.label].filter((label): label is string => Boolean(label)) : [])])];
   if (!labels.length) return null;
   const paddingHorizontal = compact ? 6 : 9;
   const fontSize = compact ? 8 : 11;

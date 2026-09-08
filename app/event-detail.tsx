@@ -304,6 +304,7 @@ export default function EventDetailScreen() {
     const staticMember = getMemberById(memberId);
     return {
       name: stripRankFromName(directoryMember?.displayName ?? staticMember?.name ?? "メンバー"),
+      badgeName: directoryMember?.displayName ?? staticMember?.name ?? "",
       avatar: typeof directoryMember?.profile.avatarUrl === "string" ? directoryMember.profile.avatarUrl : staticMember?.avatar ?? DEFAULT_AVATAR,
       rank: (directoryMember?.memberRank ?? staticMember?.rank) as MemberRank | undefined,
       role: directoryMember?.accessRole,
@@ -317,6 +318,7 @@ export default function EventDetailScreen() {
     const staticMember = comment.authorId ? getMemberById(comment.authorId) : getMemberById(comment.author);
     return {
       name: stripRankFromName(directoryMember?.displayName ?? staticMember?.name ?? comment.author),
+      badgeName: directoryMember?.displayName ?? staticMember?.name ?? comment.author,
       avatar: typeof directoryMember?.profile.avatarUrl === "string" ? directoryMember.profile.avatarUrl : staticMember?.avatar ?? DEFAULT_AVATAR,
       rank: (directoryMember?.memberRank ?? staticMember?.rank) as MemberRank | undefined,
       role: directoryMember?.accessRole ?? staticMember?.role,
@@ -869,7 +871,7 @@ export default function EventDetailScreen() {
           <Text style={{ fontSize: 11, color: colors.muted, marginBottom: 8 }}>同席者</Text>
           {companionIds.map((memberId) => {
             const member = displayMember(memberId);
-            return <Pressable key={memberId} onPress={() => openMemberProfile(memberId)} accessibilityLabel={`${member.name}のプロフィールを表示`} style={{ flexDirection: "row", alignItems: "center", minHeight: 44, paddingVertical: 5 }}><Image source={member.avatar} style={{ width: 34, height: 34, borderRadius: 17 }} contentFit="cover" /><View style={{ flex: 1, flexDirection: "row", flexWrap: "wrap", alignItems: "center", marginLeft: 9 }}><Text style={{ fontSize: 14, fontWeight: "800", color: colors.foreground }}>{member.name}</Text>{member.rank ? <MemberRankBadge rank={member.rank} name={member.name} role={member.role} compact /> : null}<MemberClubLeaderBadges roles={member.roles} compact /><MemberRoleBadge name={member.name} role={member.role} compact /></View><IconSymbol name="chevron.right" size={16} color={colors.muted} /></Pressable>;
+            return <Pressable key={memberId} onPress={() => openMemberProfile(memberId)} accessibilityLabel={`${member.name}のプロフィールを表示`} style={{ flexDirection: "row", alignItems: "center", minHeight: 44, paddingVertical: 5 }}><Image source={member.avatar} style={{ width: 34, height: 34, borderRadius: 17 }} contentFit="cover" /><View style={{ flex: 1, flexDirection: "row", flexWrap: "wrap", alignItems: "center", marginLeft: 9 }}><Text style={{ fontSize: 14, fontWeight: "800", color: colors.foreground }}>{member.name}</Text>{member.rank ? <MemberRankBadge rank={member.rank} name={member.badgeName} role={member.role} compact /> : null}<MemberClubLeaderBadges roles={member.roles} name={member.badgeName} compact /><MemberRoleBadge name="" role={member.role} compact /></View><IconSymbol name="chevron.right" size={16} color={colors.muted} /></Pressable>;
           })}
         </View> : null}
 
@@ -883,7 +885,7 @@ export default function EventDetailScreen() {
             {pendingApplicantIds.length ? pendingApplicantIds.map((memberId) => {
               const member = displayMember(memberId);
               const approving = approvingMemberId === memberId;
-              return <View key={memberId} style={{ flexDirection: "row", alignItems: "center", paddingVertical: 8, borderTopWidth: 0.5, borderTopColor: colors.border }}><Pressable onPress={() => openMemberProfile(memberId)} style={{ flex: 1, flexDirection: "row", alignItems: "center" }}><Image source={member.avatar} style={{ width: 34, height: 34, borderRadius: 17 }} contentFit="cover" /><View style={{ flex: 1, marginLeft: 9, flexDirection: "row", alignItems: "center", flexWrap: "wrap" }}><Text style={{ fontSize: 14, fontWeight: "700", color: colors.foreground }}>{member.name}</Text>{member.rank ? <MemberRankBadge rank={member.rank} name={member.name} role={member.role} compact /> : null}<MemberClubLeaderBadges roles={member.roles} compact /><MemberRoleBadge name={member.name} role={member.role} compact /></View></Pressable><Pressable disabled={approving} onPress={() => approveApplicant(memberId)} style={{ borderRadius: 9, backgroundColor: "#34C759", paddingHorizontal: 12, paddingVertical: 7, opacity: approving ? 0.6 : 1 }}><Text style={{ color: "#FFF", fontSize: 12, fontWeight: "800" }}>{approving ? "承認中…" : "承認"}</Text></Pressable></View>;
+              return <View key={memberId} style={{ flexDirection: "row", alignItems: "center", paddingVertical: 8, borderTopWidth: 0.5, borderTopColor: colors.border }}><Pressable onPress={() => openMemberProfile(memberId)} style={{ flex: 1, flexDirection: "row", alignItems: "center" }}><Image source={member.avatar} style={{ width: 34, height: 34, borderRadius: 17 }} contentFit="cover" /><View style={{ flex: 1, marginLeft: 9, flexDirection: "row", alignItems: "center", flexWrap: "wrap" }}><Text style={{ fontSize: 14, fontWeight: "700", color: colors.foreground }}>{member.name}</Text>{member.rank ? <MemberRankBadge rank={member.rank} name={member.badgeName} role={member.role} compact /> : null}<MemberClubLeaderBadges roles={member.roles} name={member.badgeName} compact /><MemberRoleBadge name="" role={member.role} compact /></View></Pressable><Pressable disabled={approving} onPress={() => approveApplicant(memberId)} style={{ borderRadius: 9, backgroundColor: "#34C759", paddingHorizontal: 12, paddingVertical: 7, opacity: approving ? 0.6 : 1 }}><Text style={{ color: "#FFF", fontSize: 12, fontWeight: "800" }}>{approving ? "承認中…" : "承認"}</Text></Pressable></View>;
             }) : <Text style={{ fontSize: 13, color: colors.muted, paddingVertical: 8 }}>現在、承認待ちの申込はありません。</Text>}
 
             <Text style={{ fontSize: 13, fontWeight: "800", color: colors.foreground, marginTop: 14, marginBottom: 7 }}>キャンセル申請（{pendingCancellationRequests.length}件）</Text>
@@ -892,7 +894,7 @@ export default function EventDetailScreen() {
             <Text style={{ fontSize: 13, fontWeight: "800", color: colors.foreground, marginTop: 14, marginBottom: 7 }}>参加確定者</Text>
             {(event.participants ?? []).map((memberId) => {
               const member = displayMember(memberId);
-              return <View key={memberId} style={{ flexDirection: "row", alignItems: "center", paddingVertical: 8, borderTopWidth: 0.5, borderTopColor: colors.border }}><Pressable onPress={() => openMemberProfile(memberId)} style={{ flex: 1, flexDirection: "row", alignItems: "center" }}><Image source={member.avatar} style={{ width: 34, height: 34, borderRadius: 17 }} contentFit="cover" /><View style={{ flex: 1, marginLeft: 9, flexDirection: "row", alignItems: "center", flexWrap: "wrap" }}><Text style={{ fontSize: 14, fontWeight: "700", color: colors.foreground }}>{member.name}</Text>{member.rank ? <MemberRankBadge rank={member.rank} name={member.name} role={member.role} compact /> : null}<MemberClubLeaderBadges roles={member.roles} compact /><MemberRoleBadge name={member.name} role={member.role} compact /></View></Pressable>{memberId !== event.createdBy ? <Pressable onPress={() => cancelGourmetParticipant(memberId)} style={{ borderRadius: 9, borderWidth: 1, borderColor: colors.error, paddingHorizontal: 10, paddingVertical: 6 }}><Text style={{ color: colors.error, fontSize: 11, fontWeight: "800" }}>幹事キャンセル</Text></Pressable> : null}</View>;
+              return <View key={memberId} style={{ flexDirection: "row", alignItems: "center", paddingVertical: 8, borderTopWidth: 0.5, borderTopColor: colors.border }}><Pressable onPress={() => openMemberProfile(memberId)} style={{ flex: 1, flexDirection: "row", alignItems: "center" }}><Image source={member.avatar} style={{ width: 34, height: 34, borderRadius: 17 }} contentFit="cover" /><View style={{ flex: 1, marginLeft: 9, flexDirection: "row", alignItems: "center", flexWrap: "wrap" }}><Text style={{ fontSize: 14, fontWeight: "700", color: colors.foreground }}>{member.name}</Text>{member.rank ? <MemberRankBadge rank={member.rank} name={member.badgeName} role={member.role} compact /> : null}<MemberClubLeaderBadges roles={member.roles} name={member.badgeName} compact /><MemberRoleBadge name="" role={member.role} compact /></View></Pressable>{memberId !== event.createdBy ? <Pressable onPress={() => cancelGourmetParticipant(memberId)} style={{ borderRadius: 9, borderWidth: 1, borderColor: colors.error, paddingHorizontal: 10, paddingVertical: 6 }}><Text style={{ color: colors.error, fontSize: 11, fontWeight: "800" }}>幹事キャンセル</Text></Pressable> : null}</View>;
             })}
             {event.status !== "open" && (event.participants ?? []).length < event.capacity ? <Pressable onPress={handleReopenGourmetRecruitment} style={{ marginTop: 12, borderRadius: 11, backgroundColor: "#E8A0BF", paddingVertical: 11, alignItems: "center" }}><Text style={{ fontSize: 14, fontWeight: "900", color: "#FFF" }}>追加募集を開始</Text></Pressable> : null}
             <Pressable disabled={!canFinalizeParticipants} onPress={handleFinalizeParticipants} style={{ marginTop: 12, borderRadius: 11, backgroundColor: canFinalizeParticipants ? "#34A853" : "#AEB6B0", paddingVertical: 11, alignItems: "center" }}><Text style={{ fontSize: 14, fontWeight: "900", color: "#FFF" }}>{event.participantsFinalizedAt ? "参加者確定済み" : canFinalizeParticipants ? "参加者確定を完了" : `募集人数まであと${Math.max(event.capacity - confirmedParticipantCount, 0)}人`}</Text></Pressable>
@@ -1058,9 +1060,9 @@ export default function EventDetailScreen() {
               <View style={{ flex: 1 }}>
                 <View style={{ flexDirection: "row", alignItems: "center", flexWrap: "wrap", marginBottom: 3 }}>
                   <Text style={{ fontSize: 12, fontWeight: "900", color: colors.foreground }}>{author.name}</Text>
-                  {author.rank ? <MemberRankBadge rank={author.rank} name={author.name} role={author.role} compact /> : null}
-                  <MemberClubLeaderBadges roles={author.roles} compact />
-                  <MemberRoleBadge name={author.name} role={author.role} compact />
+                  {author.rank ? <MemberRankBadge rank={author.rank} name={author.badgeName} role={author.role} compact /> : null}
+                  <MemberClubLeaderBadges roles={author.roles} name={author.badgeName} compact />
+                  <MemberRoleBadge name="" role={author.role} compact />
                 </View>
                 <MentionText content={comment.text} groups={eventMentionGroups} onMentionPress={(label) => { const normalized = stripRankFromName(label); const targetId = memberDirectory.find((member) => stripRankFromName(member.displayName) === normalized)?.id ?? findMentionedMemberId(normalized, MEMBERS); if (targetId) openMemberProfile(targetId); }} />
               </View>
