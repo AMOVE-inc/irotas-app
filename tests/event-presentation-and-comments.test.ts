@@ -53,6 +53,11 @@ describe("event presentation and comments", () => {
     expect(myEvents).toContain("isPastEventDate(event");
   });
 
+  it("uses the recruited-member count, excluding companions, for event-card availability", () => {
+    const events = source("app/(tabs)/events.tsx");
+    expect(events).toContain("getConfirmedRecruitParticipantCount(event)");
+  });
+
   it("renders official system notices, day separators, and no avatar on outgoing chat messages", () => {
     const chat = source("app/chat.tsx");
     expect(chat).toContain('message.content.startsWith("【IRO+ システム】")');

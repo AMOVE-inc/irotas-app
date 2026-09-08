@@ -24,7 +24,7 @@ import {
   type EventSortOrder,
   type EventTypeFilter,
 } from "@/lib/event-filters";
-import { getEventParticipationStatus } from "@/lib/event-participation";
+import { getConfirmedRecruitParticipantCount, getEventParticipationStatus } from "@/lib/event-participation";
 import {
   toggleEventFavoriteWithNotifications,
   useEventFavorites,
@@ -521,10 +521,7 @@ function EventCard({
 }) {
   const colors = useColors();
   const organizer = getMemberById(event.organizerProfileId ?? event.createdBy) ?? getMemberById(event.createdBy);
-  const confirmedCount = new Set([
-    ...(event.participants ?? []),
-    ...(event.companionIds ?? []),
-  ]).size;
+  const confirmedCount = getConfirmedRecruitParticipantCount(event);
   const participationStatus =
     event.viewerParticipationStatus === "cancel_requested"
       ? "confirmed"

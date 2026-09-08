@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Event } from "../constants/mock-data";
-import { getEventParticipationStatus, isEventOrganizer, isPastEventDate } from "../lib/event-participation";
+import { getConfirmedRecruitParticipantCount, getEventParticipationStatus, isEventOrganizer, isPastEventDate } from "../lib/event-participation";
 
 const event: Event = { id: "e", title: "会", description: "", date: "2026-08-01", time: "18:00", location: "東京", image: "", capacity: 5, attendees: 3, participants: ["confirmed"], applicantIds: ["confirmed", "applied"], companionIds: ["companion"], price: "5,000円", category: "kanto", eventType: "gourmet", status: "open", createdBy: "host" };
 
@@ -23,5 +23,9 @@ describe("event participation labels", () => {
     const now = new Date("2026-09-08T00:30:00.000Z"); // 09:30 in Japan
     expect(isPastEventDate({ ...event, date: "2026-09-07" }, now)).toBe(true);
     expect(isPastEventDate({ ...event, date: "2026-09-08" }, now)).toBe(false);
+  });
+
+  it("does not count the organizer or companions against the recruiting capacity", () => {
+    expect(getConfirmedRecruitParticipantCount({ ...event, participants: ["host", "confirmed", "companion", "second"], companionIds: ["companion"] })).toBe(2);
   });
 });

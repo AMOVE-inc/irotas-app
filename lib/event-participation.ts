@@ -28,3 +28,11 @@ export function getEventParticipationStatus(event: Event, memberId: string): Eve
   if (event.applicantIds?.includes(memberId)) return "applied";
   return null;
 }
+
+/** Counts only confirmed recruited members; the organizer and companions do not consume recruit slots. */
+export function getConfirmedRecruitParticipantCount(event: Event): number {
+  const organizerId = event.organizerProfileId ?? event.createdBy;
+  const companionIds = new Set(event.companionIds ?? []);
+  return [...new Set(event.participants ?? [])]
+    .filter((memberId) => memberId !== organizerId && !companionIds.has(memberId)).length;
+}
