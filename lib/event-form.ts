@@ -95,14 +95,30 @@ export function eventFormValuesFromEvent(event: Event): EventFormValues {
 
 export function validateEventForm(values: EventFormValues, options: { requireImage: boolean; requireTerms?: boolean; termsAccepted?: boolean; allowedClubIds?: string[]; allowEmptyGenres?: boolean }) {
   const clubEvent = values.eventType === "club";
-  if ((!clubEvent && !values.restaurantName.trim()) || (clubEvent && (!values.eventName.trim() || !values.clubId)) || !values.date || !values.time || !values.reservationCapacity || !values.recruitCapacity || !values.budgetMin || (!values.fixedAmount && !values.budgetMax) || !values.decisionDate || !values.cancellationPolicy.trim() || (!clubEvent && !options.allowEmptyGenres && values.genres.length === 0) || (options.requireImage && !values.image) || (options.requireTerms && !options.termsAccepted)) return "必須項目と規約同意を確認してください";
+  const missing: string[] = [];
+  if (!clubEvent && !values.restaurantName.trim()) missing.push("店名");
+  if (clubEvent && !values.eventName.trim()) missing.push("イベント名");
+  if (clubEvent && !values.clubId) missing.push("開催する部活動");
+  if (!values.date) missing.push("開催日");
+  if (!values.time) missing.push("開始時間");
+  if (!values.reservationCapacity) missing.push("予約人数");
+  if (!values.recruitCapacity) missing.push("募集人数");
+  if (!values.budgetMin) missing.push(values.eventType === "official" ? "参加費" : "予算");
+  if (!values.fixedAmount && !values.budgetMax) missing.push("予算の上限");
+  if (!values.decisionDate) missing.push("参加者決定予定日");
+  if (!values.cancellationPolicy.trim()) missing.push("キャンセルポリシー");
+  if (!clubEvent && !options.allowEmptyGenres && values.genres.length === 0) missing.push("グルメジャンル");
+  if (options.requireImage && !values.image) missing.push("写真");
+  if (options.requireTerms && !options.termsAccepted) missing.push("イベント開催時のルールへの同意");
+  if (missing.length) return `次の項目を設定してください：${missing.join("、")}`;
   if (clubEvent && options.allowedClubIds && !options.allowedClubIds.includes(values.clubId)) return "所属している部活動のみイベントを作成・編集できます。";
   const extracted = extractEventLocation(values.address);
   if (values.address.trim() && !extracted.prefecture) return "住所を入力する場合は都道府県名を含めてください";
   if (values.decisionDate > values.date) return "参加者決定予定日は開催日以前を選択してください";
   if (!values.fixedAmount && numericEventAmount(values.budgetMin) > numericEventAmount(values.budgetMax)) return "下限金額は上限金額以下にしてください";
   if (minimumReservationCapacity(values.recruitCapacity, values.companionIds) > Number(values.reservationCapacity)) return "予約人数には、自分・同席者・募集人数の全員が収まるよう設定してください";
-  if ([values.tabelogUrl, values.googleMapsUrl].some((url) => url && !/^https?:\/\//i.test(url))) return "URLは http:// または https:// から入力してください";
+  if (values.tabelogUrl && !/^https?:\/\//i.test(values.tabelogUrl)) return "食べログURLは http:// または https:// から入力してください";
+  if (values.googleMapsUrl && !/^https?:\/\//i.test(values.googleMapsUrl)) return "GoogleマップURLは http:// または https:// から入力してください";
   if (values.eventType === "official" && values.useRankPrices && EVENT_RANKS.some((rank) => !values.rankPrices[rank])) return "ランク別料金を設定する場合は、すべてのランクの料金を選択してください";
   return null;
 }
