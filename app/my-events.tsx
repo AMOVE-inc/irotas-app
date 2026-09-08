@@ -5,6 +5,7 @@ import { useColors } from "@/hooks/use-colors";
 import * as Api from "@/lib/_core/api";
 import { useAuthContext } from "@/lib/auth-context";
 import { getAllEvents } from "@/lib/event-store";
+import { getEventParticipationStatus, isEventOrganizer, isPastEventDate } from "@/lib/event-participation";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
@@ -17,10 +18,10 @@ function eventTimestamp(event: Event) {
 type EventView = "hosted" | "attending" | "applying" | "past" | "coattendees";
 
 const VIEW_OPTIONS: { key: EventView; title: string; description: string }[] = [
-  { key: "hosted", title: "幹事イベント", description: "これから主催するイベント" },
+  { key: "hosted", title: "自分が幹事", description: "これから幹事を務めるイベント" },
   { key: "attending", title: "参加予定", description: "参加が確定しているイベント" },
   { key: "applying", title: "応募中", description: "参加承認を待っているイベント" },
-  { key: "past", title: "過去の主催／参加", description: "これまで関わったイベント" },
+  { key: "past", title: "過去の幹事／参加", description: "これまで関わったイベント" },
   { key: "coattendees", title: "同席者と同席回数", description: "過去に一緒に参加したメンバー" },
 ];
 
@@ -39,10 +40,10 @@ export default function MyEventsScreen() {
 
   const { eventLists, coAttendees } = useMemo(() => {
     const now = Date.now();
-    const past = (event: Event) => event.status === "ended" || eventTimestamp(event) < now;
-    const hosted = events.filter((event) => event.createdBy === memberId);
-    const attending = events.filter((event) => event.participants.includes(memberId) || event.companionIds?.includes(memberId));
-    const applying = events.filter((event) => event.applicantIds?.includes(memberId) && !event.participants.includes(memberId));
+    const past = (event: Event) => event.status === "ended" || isPastEventDate(event, new Date(now));
+    const hosted = events.filter((event) => isEventOrganizer(event, memberId));
+    const attending = events.filter((event) => getEventParticipationStatus(event, memberId) === "confirmed");
+    const applying = events.filter((event) => getEventParticipationStatus(event, memberId) === "applied");
     const sortUpcoming = (items: Event[]) => [...items].sort((a, b) => eventTimestamp(a) - eventTimestamp(b));
     const sortPast = (items: Event[]) => [...items].sort((a, b) => eventTimestamp(b) - eventTimestamp(a));
 

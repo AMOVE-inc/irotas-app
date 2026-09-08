@@ -43,6 +43,16 @@ describe("event presentation and comments", () => {
     expect(detail).toContain("幹事イベント（参加者確定済み）");
   });
 
+  it("labels upcoming organizer events clearly and keeps past dates in the history view", () => {
+    const profile = source("app/(tabs)/profile.tsx");
+    const myEvents = source("app/my-events.tsx");
+    expect(profile).toContain("自分が幹事のイベント");
+    expect(profile).toContain("!isPastEventDate(event)");
+    expect(myEvents).toContain('title: "自分が幹事"');
+    expect(myEvents).toContain('title: "過去の幹事／参加"');
+    expect(myEvents).toContain("isPastEventDate(event");
+  });
+
   it("renders official system notices, day separators, and no avatar on outgoing chat messages", () => {
     const chat = source("app/chat.tsx");
     expect(chat).toContain('message.content.startsWith("【IRO+ システム】")');
