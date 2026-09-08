@@ -129,7 +129,9 @@ function MessageBubble({ message, isMe, viewerId, myAvatarUri, senderMember, onR
             borderColor: isMe ? "transparent" : "#D4D4D8",
             borderRadius: 16,
             borderBottomRightRadius: isMe ? 4 : 16,
-            borderBottomLeftRadius: isMe ? 16 : 4,
+            // 相手の吹き出しはアイコン側（左上）から伸びるようにする。
+            borderTopLeftRadius: isMe ? 16 : 4,
+            borderBottomLeftRadius: 16,
             overflow: "hidden",
           }}
         >
@@ -201,7 +203,6 @@ export default function ChatScreen() {
   const [messageText, setMessageText] = useState("");
   const [mentionQuery, setMentionQuery] = useState<string | null>(null);
   const [messageSelection, setMessageSelection] = useState<TextSelection>({ start: 0, end: 0 });
-  const mentionGroups = useMemo(() => getMentionGroups(MEMBERS, CLUBS), []);
   const flatListRef = useRef<FlatList>(null);
   const didInitialScrollRef = useRef(false);
   const inputRef = useRef<TextInput>(null);
@@ -227,6 +228,17 @@ export default function ChatScreen() {
     () => getRoomById(id ?? "")?.participants ?? []
   );
   const [directory, setDirectory] = useState<Api.PublicMember[]>([]);
+  const mentionMembers = useMemo(() => directory.length > 0
+    ? directory.map((member) => ({
+      id: member.id,
+      name: member.displayName,
+      branch: member.branches.includes("kansai") ? "kansai" : "kanto",
+      generation: Number(member.memberTerm?.match(/\d+/)?.[0] ?? 0),
+      rank: member.memberRank,
+      role: member.accessRole === "admin" ? "admin" : member.accessRole === "operator" ? "operator" : "member",
+    })) as unknown as typeof MEMBERS
+    : MEMBERS, [directory]);
+  const mentionGroups = useMemo(() => getMentionGroups(mentionMembers, CLUBS), [mentionMembers]);
   const [messages, setMessages] = useState<ChatMessage[]>(() =>
     id ? getMessages(id) : [],
   );
@@ -551,7 +563,19 @@ export default function ChatScreen() {
                 onOpenInternalLink={(pathname, params) => router.push({ pathname, params } as any)}
                 onOpenProfile={() => {
                   const sender = getMemberById(item.senderId);
-                  router.push({ pathname: "/member-profile", params: { id: item.senderId || sender?.id || "", legacyName: item.externalAuthorName ?? sender?.name ?? "旧Discordメンバー" } });
+                  const legacyName = item.externalAuthorName ?? sender?.name ?? "旧Discordメンバー";
+                  const matchedMember = directory.find((member) => stripRankFromName(member.displayName) === stripRankFromName(legacyName));
+                  const openProfile = (memberId: string) => router.push({ pathname: "/member-profile", params: { id: memberId, legacyName } });
+                  if (matchedMember) {
+                    openProfile(matchedMember.id);
+                  } else if (item.externalAuthorName) {
+                    // 表示直後でも実際の会員名簿を確認してからプロフィールを開く。
+                    void Api.getMemberDirectory().then((members) => {
+                      openProfile(members.find((member) => stripRankFromName(member.displayName) === stripRankFromName(legacyName))?.id ?? item.senderId ?? sender?.id ?? "");
+                    }).catch(() => openProfile(item.senderId ?? sender?.id ?? ""));
+                  } else {
+                    openProfile(item.senderId ?? sender?.id ?? "");
+                  }
                 }}
                 canManage={item.senderId === viewerMemberId || userCanModerate}
                 onReply={() => { const sender = getMemberById(item.senderId); setMessageText(`@${item.externalAuthorName ?? sender?.name ?? "メンバー"} `); inputRef.current?.focus(); }}
@@ -560,7 +584,8 @@ export default function ChatScreen() {
               />
             </>;
           }}
-          contentContainerStyle={{ paddingVertical: 16 }}
+          style={{ flex: 1 }}
+          contentContainerStyle={{ paddingVertical: 16, paddingBottom: 120, flexGrow: 1 }}
           showsVerticalScrollIndicator={false}
           onScroll={(event) => {
             const { contentOffset, contentSize, layoutMeasurement } = event.nativeEvent;

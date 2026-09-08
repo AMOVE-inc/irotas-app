@@ -2,7 +2,7 @@ import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { CURRENT_USER, DEFAULT_AVATAR, type ChatRoom } from "@/constants/mock-data";
 import { useAuthContext } from "@/lib/auth-context";
-import { applyReadRoomState, getAllRooms, getMyRooms, getRankRoomsForUser, loadDynamicRooms, markRoomRead } from "@/lib/chat-store";
+import { applyReadRoomState, getAllMessages, getAllRooms, getMyRooms, getRankRoomsForUser, loadDynamicRooms, markRoomRead } from "@/lib/chat-store";
 import { useColors } from "@/hooks/use-colors";
 import { Image } from "expo-image";
 import { useFocusEffect, useRouter } from "expo-router";
@@ -31,7 +31,7 @@ function ChatRoomCard({ room, eventStarts, eventImages, memberAvatars, viewerMem
   const isGroup = room.type === "group";
   const isRank = room.type === "rank";
   const rankColor: Record<string, string> = { silver: "#8B9DC3", gold: "#F59E0B", platinum: "#8B5CF6" };
-  const typeLabel = room.type === "event" ? "イベント" : room.type === "board" ? "掲示板" : isDM ? "DM" : isGroup ? "友達グループ" : isRank ? (
+  const typeLabel = room.id === "board-announcement" ? "お知らせ" : room.type === "event" ? "イベント" : room.type === "board" ? "掲示板" : isDM ? "DM" : isGroup ? "友達グループ" : isRank ? (
     room.requiredRank === "platinum" ? "プラチナ" : room.requiredRank === "gold" ? "ゴールド" : "シルバー"
   ) : "部活動";
   const typeColor = room.type === "event" ? "#E8A0BF" : room.type === "board" ? "#A7C7E7" : isDM ? "#FF9500" : isGroup ? "#5B9BD5" : isRank ? (rankColor[room.requiredRank ?? "silver"] ?? "#8B9DC3") : "#34C759";
@@ -187,16 +187,22 @@ export default function ChatListScreen() {
   const [memberAvatars, setMemberAvatars] = useState<Record<string, string>>({});
 
   const refreshRooms = useCallback(async () => {
-    const localJoinedRooms = userIsAdmin ? getAllRooms().filter((room) => room.type !== "rank") : getMyRooms(viewerMemberId).filter((room) => room.type !== "rank");
+    // 旧プロトタイプ用の chat1〜chat4 は、保存済みの実際の会話ではないため一覧に出さない。
+    const isFixtureRoom = (room: ChatRoom) => /^chat\d+$/.test(room.id);
+    const localJoinedRooms = (userIsAdmin ? getAllRooms() : getMyRooms(viewerMemberId))
+      .filter((room) => room.type !== "rank" && !isFixtureRoom(room));
     const localRankRooms = getRankRoomsForUser(viewerRank);
     let sharedRooms: ChatRoom[] = [];
+    let latestAnnouncement: { content: string; createdAt: string } | undefined;
     try {
-      const [rooms, events, members] = await Promise.all([
+      const [rooms, events, members, announcementMessages] = await Promise.all([
         Api.getSharedChatRooms(),
         Api.getEvents().catch(() => []),
         Api.getMemberDirectory().catch(() => []),
+        Api.getSharedChatMessages("board-announcement").catch(() => []),
       ]);
       sharedRooms = rooms.map((room) => ({ ...room, requiredRank: room.requiredRank as ChatRoom["requiredRank"] }));
+      latestAnnouncement = announcementMessages.at(-1);
       setEventStarts(Object.fromEntries(events.map((event) => [event.id, formatEventStart(event)])));
       setEventImages(Object.fromEntries(events.flatMap((event) => typeof event.image === "string" && event.image ? [[event.id, event.image]] : [])));
       setMemberAvatars(Object.fromEntries(members.flatMap((member) => {
@@ -207,7 +213,12 @@ export default function ChatListScreen() {
       // オフライン時も端末内の移行済みチャット一覧は利用できる。
     }
     const sharedById = new Map(sharedRooms.map((room) => [room.id, room]));
-    const mergedJoined = [...localJoinedRooms.filter((room) => !sharedById.has(room.id)), ...sharedRooms.filter((room) => room.type !== "rank")];
+    const localAnnouncement = getAllMessages().filter((message) => message.chatId === "board-announcement").at(-1);
+    const announcementPreview = latestAnnouncement ?? localAnnouncement;
+    const mergedJoined = [...localJoinedRooms.filter((room) => !sharedById.has(room.id)), ...sharedRooms.filter((room) => room.type !== "rank" && !isFixtureRoom(room))]
+      .map((room) => room.id === "board-announcement" && announcementPreview
+        ? { ...room, lastMessage: announcementPreview.content.replace(/\s+/g, " ").trim(), lastMessageAt: announcementPreview.createdAt }
+        : room);
     const mergedRank = viewerRank === "regular" ? [] : [
       ...localRankRooms.filter((room) => !sharedById.has(room.id)),
       ...sharedRooms.filter((room) => room.type === "rank" && room.requiredRank === viewerRank),
@@ -227,7 +238,7 @@ export default function ChatListScreen() {
   const joinedChatRooms = myRooms.filter((room) => room.id !== "board-announcement");
 
   return (
-    <ScreenContainer edges={["top", "left", "right"]}>
+    <ScreenContainer edges={["top", "left", "right", "bottom"]}>
       <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 16, paddingVertical: 10, borderBottomWidth: 0.5, borderBottomColor: colors.border }}>
         <Text style={{ fontSize: 20, fontWeight: "800", color: colors.foreground }}>チャット</Text>
         <View style={{ flex: 1 }} />
@@ -244,6 +255,8 @@ export default function ChatListScreen() {
         renderItem={({ item }) => <ChatRoomCard room={item} eventStarts={eventStarts} eventImages={eventImages} memberAvatars={memberAvatars} viewerMemberId={viewerMemberId} />}
         ListHeaderComponent={<>{rankRooms.length > 0 ? <View><View style={{ paddingHorizontal: 16, paddingVertical: 8, backgroundColor: colors.surface }}><Text style={{ fontSize: 12, fontWeight: "700", color: colors.muted, letterSpacing: 0.5 }}>あなたのランク専用チャット</Text></View>{rankRooms.map((room) => <ChatRoomCard key={room.id} room={room} eventStarts={eventStarts} eventImages={eventImages} memberAvatars={memberAvatars} viewerMemberId={viewerMemberId} />)}</View> : null}{joinedChatRooms.length > 0 ? <View style={{ paddingHorizontal: 16, paddingVertical: 8, backgroundColor: colors.surface }}><Text style={{ fontSize: 12, fontWeight: "700", color: colors.muted, letterSpacing: 0.5 }}>参加中のチャット</Text></View> : null}</>}
         showsVerticalScrollIndicator={false}
+        style={{ flex: 1 }}
+        contentContainerStyle={{ paddingBottom: 112, flexGrow: 1 }}
         ListEmptyComponent={<View style={{ alignItems: "center", paddingVertical: 60, paddingHorizontal: 24 }}><ActivityIndicator size="large" color="#E8A0BF" /><Text style={{ fontSize: 14, color: colors.muted, marginTop: 12 }}>チャットを読み込んでいます…</Text></View>}
       />
       <CreateFriendGroupModal visible={showCreateGroup} onClose={() => setShowCreateGroup(false)} onCreated={(room) => { void refreshRooms(); router.push({ pathname: "/chat", params: { id: room.id } }); }} />

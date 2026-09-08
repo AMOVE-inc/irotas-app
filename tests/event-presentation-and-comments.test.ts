@@ -5,6 +5,10 @@ import path from "node:path";
 const source = (file: string) => fs.readFileSync(path.join(process.cwd(), file), "utf8");
 
 describe("event presentation and comments", () => {
+  it("filters the event list to events with availability by default", () => {
+    expect(source("app/(tabs)/events.tsx")).toContain('const [openOnly, setOpenOnly] = useState(true)');
+  });
+
   it("shows selection method only for official event cards", () => {
     expect(source("app/(tabs)/events.tsx")).toContain('event.eventType === "official" && event.selectionMethod');
   });

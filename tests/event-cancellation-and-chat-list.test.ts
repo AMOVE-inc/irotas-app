@@ -39,6 +39,14 @@ describe("event cancellation lifecycle", () => {
 });
 
 describe("chat list identity presentation", () => {
+  it("excludes legacy fixture rooms and previews the latest announcement", () => {
+    const chatList = source("components/chat-list-screen.tsx");
+    expect(chatList).toContain("/^chat\\d+$/.test(room.id)");
+    expect(chatList).toContain('room.id === "board-announcement" ? "お知らせ"');
+    expect(chatList).toContain('Api.getSharedChatMessages("board-announcement")');
+    expect(chatList).toContain("contentContainerStyle={{ paddingBottom: 112, flexGrow: 1 }}");
+  });
+
   it("uses member and event images when available and removes imported role suffixes", () => {
     const chatList = source("components/chat-list-screen.tsx");
     expect(chatList).toContain("stripRankFromName(room.name)");
