@@ -198,7 +198,14 @@ export default function EventDetailScreen() {
     let active = true;
     if (!imported) setEventLoading(true);
     void Api.getEvent(id)
-      .then((value) => { if (active) setEvent({ ...imported, ...value, description: value.description?.trim() ?? "", image: value.image || imported?.image || "", tabelogUrl: value.tabelogUrl || imported?.tabelogUrl, googleMapsUrl: value.googleMapsUrl || imported?.googleMapsUrl, organizerProfileId: value.organizerProfileId || imported?.organizerProfileId, organizerName: value.organizerName || imported?.organizerName, organizerAvatar: value.organizerAvatar || imported?.organizerAvatar, organizerRank: value.organizerRank || imported?.organizerRank } as Event); })
+      .then((value) => { if (active) {
+        // Discord移行イベントは、アーカイブから再照合した人数・コメントを優先する。
+        // 参加操作で変動する通常イベントの値には影響させない。
+        const importedDiscordData = imported?.id.startsWith("discord-event-")
+          ? { capacity: imported.capacity, reservationCapacity: imported.reservationCapacity, participants: imported.participants, applicantIds: imported.applicantIds, attendees: imported.attendees, importedComments: imported.importedComments }
+          : {};
+        setEvent({ ...imported, ...value, ...importedDiscordData, description: value.description?.trim() ?? "", image: value.image || imported?.image || "", tabelogUrl: value.tabelogUrl || imported?.tabelogUrl, googleMapsUrl: value.googleMapsUrl || imported?.googleMapsUrl, organizerProfileId: value.organizerProfileId || imported?.organizerProfileId, organizerName: value.organizerName || imported?.organizerName, organizerAvatar: value.organizerAvatar || imported?.organizerAvatar, organizerRank: value.organizerRank || imported?.organizerRank } as Event);
+      } })
       .catch(() => { if (active && !imported) setEvent(undefined); })
       .finally(() => { if (active) { setEventLoading(false); setEventResolved(true); } });
     return () => { active = false; };
@@ -237,7 +244,14 @@ export default function EventDetailScreen() {
     getIrotasPoints(CURRENT_USER.id).then(setIrotasPoints);
   }, []);
   useEffect(() => { if (!event?.id) return; void recordActivityEvent({ userId: CURRENT_USER.id, eventName: "event_viewed", entityType: "event", entityId: event.id, dedupeKey: `${CURRENT_USER.id}:event_viewed:${event.id}:${new Date().toISOString().slice(0, 10)}` }); }, [event?.id]);
-  useEffect(() => { if (!id) return; void AsyncStorage.getItem(`irotas_event_comments_v1:${id}`).then((raw) => setEventComments(raw ? JSON.parse(raw) : [])).catch(() => setEventComments([])); }, [id]);
+  useEffect(() => {
+    if (!id) return;
+    void AsyncStorage.getItem(`irotas_event_comments_v1:${id}`).then((raw) => {
+      const local = raw ? JSON.parse(raw) : [];
+      const merged = [...(event?.importedComments ?? []), ...local];
+      setEventComments([...new Map(merged.map((comment) => [comment.id, comment])).values()].sort((a, b) => Date.parse(a.createdAt) - Date.parse(b.createdAt)));
+    }).catch(() => setEventComments(event?.importedComments ?? []));
+  }, [id, event?.id, event?.importedComments]);
 
   if (!event && (eventLoading || !eventResolved)) {
     return <ScreenContainer edges={["top", "bottom", "left", "right"]} className="p-6"><Text style={{ fontSize: 16, color: colors.muted, textAlign: "center", marginTop: 40 }}>読み込み中…</Text></ScreenContainer>;
@@ -329,11 +343,12 @@ export default function EventDetailScreen() {
       ? memberDirectory.find((member) => member.id === comment.authorId)
       : memberDirectory.find((member) => stripRankFromName(member.displayName) === stripRankFromName(comment.author));
     const staticMember = comment.authorId ? getMemberById(comment.authorId) : getMemberById(comment.author);
+    const discordAuthor = comment.authorId ? getDiscordAuthorById(comment.authorId) : getDiscordAuthorByName(comment.author);
     return {
-      name: stripRankFromName(directoryMember?.displayName ?? staticMember?.name ?? comment.author),
-      badgeName: directoryMember?.displayName ?? staticMember?.name ?? comment.author,
-      avatar: typeof directoryMember?.profile.avatarUrl === "string" ? directoryMember.profile.avatarUrl : staticMember?.avatar ?? DEFAULT_AVATAR,
-      rank: (directoryMember?.memberRank ?? staticMember?.rank) as MemberRank | undefined,
+      name: stripRankFromName(directoryMember?.displayName ?? staticMember?.name ?? discordAuthor?.name ?? comment.author),
+      badgeName: directoryMember?.displayName ?? staticMember?.name ?? discordAuthor?.name ?? comment.author,
+      avatar: typeof directoryMember?.profile.avatarUrl === "string" ? directoryMember.profile.avatarUrl : staticMember?.avatar ?? discordAuthor?.avatarUrl ?? DEFAULT_AVATAR,
+      rank: (directoryMember?.memberRank ?? staticMember?.rank ?? discordAuthor?.rank) as MemberRank | undefined,
       role: directoryMember?.accessRole ?? staticMember?.role,
       roles: directoryMember?.discordRoles,
     };
@@ -587,7 +602,7 @@ export default function EventDetailScreen() {
       message: "すでに参加者が確定している場合は、事前に参加者へご連絡をお願いします。\n本当にキャンセルしますか？",
       buttons: [
         { text: "戻る", style: "cancel" },
-        { text: "キャンセル", style: "destructive", onPress: async () => {
+        { text: "中止する", style: "destructive", onPress: async () => {
           try {
             await Api.cancelEvent(event.id, true);
             Alert.alert("イベントを中止しました", "参加申込者・参加確定者へ通知し、参加者チャットにもお知らせを投稿しました。", [{ text: "OK", onPress: () => router.replace("/events") }]);
@@ -1210,7 +1225,7 @@ export default function EventDetailScreen() {
               <Text style={{ textAlign: "center", fontSize: 13, fontWeight: "800", color: "#5865F2", marginTop: 8 }}>{event.date}　{event.time}</Text>
               <Text style={{ textAlign: "center", fontSize: 12, lineHeight: 19, color: colors.muted, marginTop: 8 }}>{applicationConfirmation?.message}</Text>
               {isOfficialEvent && priceNum > 0 && irotasPoints > 0 ? <View style={{ marginTop: 18, borderRadius: 16, padding: 14, backgroundColor: "#FFF7E8", borderWidth: 1, borderColor: "#F4D89D" }}><View style={{ flexDirection: "row", alignItems: "center" }}><View style={{ flex: 1 }}><Text style={{ fontSize: 14, fontWeight: "900", color: "#A56712" }}>イロタスポイントを使う</Text><Text style={{ fontSize: 11, color: colors.muted, marginTop: 3 }}>保有 {irotasPoints.toLocaleString()}pt</Text></View><Switch value={usePoints} onValueChange={(value) => { usePointsRef.current = value; setUsePoints(value); }} trackColor={{ false: colors.border, true: "#FF9500" }} thumbColor="#FFF" /></View>{usePoints ? <Text style={{ marginTop: 10, fontSize: 13, fontWeight: "900", color: "#2E8B57" }}>{pointsToUse.toLocaleString()}pt利用 → お支払い {finalPrice.toLocaleString()}円</Text> : null}</View> : null}
-              <View style={{ flexDirection: "row", gap: 10, marginTop: 22 }}>{applicationConfirmation?.buttons.map((button) => { const cancel = button.style === "cancel"; return <Pressable key={button.text} onPress={() => { setApplicationConfirmation(null); if (!cancel) button.onPress?.(); }} style={{ flex: 1, minHeight: 50, borderRadius: 14, alignItems: "center", justifyContent: "center", backgroundColor: cancel ? colors.surface : isOfficialEvent ? "#D65E8D" : "#5B9BD5", borderWidth: cancel ? 1 : 0, borderColor: colors.border }}><Text style={{ fontSize: 15, fontWeight: "900", color: cancel ? colors.foreground : "#FFF" }}>{button.text}</Text></Pressable>; })}</View>
+              <View style={{ flexDirection: "row", gap: 10, marginTop: 22 }}>{applicationConfirmation?.buttons.map((button) => { const cancel = button.style === "cancel"; const destructive = button.style === "destructive"; return <Pressable key={button.text} onPress={() => { setApplicationConfirmation(null); if (!cancel) button.onPress?.(); }} style={{ flex: 1, minHeight: 50, borderRadius: 14, alignItems: "center", justifyContent: "center", backgroundColor: cancel ? colors.surface : destructive ? "#D94C55" : isOfficialEvent ? "#D65E8D" : "#5B9BD5", borderWidth: cancel ? 1 : 0, borderColor: colors.border }}><Text style={{ fontSize: 15, fontWeight: "900", color: cancel ? colors.foreground : "#FFF" }}>{button.text}</Text></Pressable>; })}</View>
             </View>
           </View>
         </View>

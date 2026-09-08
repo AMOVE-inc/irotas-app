@@ -520,7 +520,7 @@ function EventCard({
   clubName?: string;
 }) {
   const colors = useColors();
-  const organizer = getMemberById(event.organizerProfileId ?? event.createdBy) ?? getMemberById(event.createdBy);
+  const organizer = getMemberById(event.organizerProfileId ?? event.createdBy);
   const confirmedCount = getConfirmedRecruitParticipantCount(event);
   const participationStatus =
     event.viewerParticipationStatus === "cancel_requested"
@@ -823,7 +823,7 @@ function EventCard({
                 {stripRankFromName(event.organizerName ?? organizer?.name ?? "メンバー")}
               </Text>
               {event.organizerRank ? <MemberRankBadge rank={event.organizerRank} name={event.organizerName} compact /> : null}
-              <MemberRoleBadge name={event.organizerName} role={organizer?.role} compact />
+              <MemberRoleBadge name="" role={event.organizerAccessRole} compact />
               {organizer ? (
                 <NewMemberMark member={organizer} size={11} />
               ) : null}

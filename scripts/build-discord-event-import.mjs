@@ -91,7 +91,10 @@ function capacityFrom(thread) {
   const labeled = text.match(/(?:募集人数|募集定員|定員)(?:\s*[（(]幹事除く[）)])?\s*[：:=]?\s*(?:抽選で|先着)?\s*(\d+)\s*名/);
   const capacity = Math.max(1, Number(labeled?.[1] ?? 1));
   const total = text.match(/(?:私|幹事)(?:を含(?:む|め)|の)?(?:計|合計)?\s*(\d+)\s*名|(?:計|合計)\s*(\d+)\s*名/);
-  const reservationCapacity = Math.max(capacity, Number(total?.[1] ?? total?.[2] ?? capacity + (thread.category.startsWith("gourmet-board-") ? 1 : 0)));
+  // 募集人数は常に「幹事を除く人数」。予約人数（店舗の総人数）は幹事を
+  // 含むため、Discord本文に総数の明記がなければ必ず +1 として扱う。
+  const statedTotal = Number(total?.[1] ?? total?.[2] ?? 0);
+  const reservationCapacity = Math.max(capacity + 1, statedTotal || capacity + 1);
   return { capacity, reservationCapacity };
 }
 
@@ -128,7 +131,10 @@ function confirmedParticipantsFor(thread) {
     const mentions = Array.isArray(comment.mentions) ? comment.mentions.filter((item) => /^\d{17,20}$/.test(item.id)) : [];
     const isConfirmation = /(?:作成しました|今回は下記|下記(?:の)?(?:皆様|メンバー)|ご一緒(?:できれば|お願いします)|参加者.*確定)/.test(comment.content);
     if (isConfirmation && mentions.length) {
-      confirmed = mentions.map((item) => `discord-${item.id}`);
+      // 参加者チャット作成時のメンションには幹事自身も含まれる。募集人数・
+      // 確定人数には含めないため、スレッド作成者は必ず除外する。
+      const mentionedParticipants = mentions.filter((item) => item.id !== thread.authorId).map((item) => `discord-${item.id}`);
+      if (mentionedParticipants.length) confirmed = mentionedParticipants;
       chatId = comment.content.match(/<#(\d{17,20})>/)?.[1] ?? chatId;
     }
     if (/キャンセル/.test(comment.content) && confirmed.length) {
@@ -144,6 +150,22 @@ function confirmedParticipantsFor(thread) {
   // participant list unapplied until an operator confirms the replacement.
   if (ambiguousCancellations.length) confirmed = [];
   return { participants: [...new Set(confirmed)], chatId, ambiguousCancellations };
+}
+
+function importedCommentsFor(thread, date) {
+  if (date < "2026-09-08") return [];
+  const sourceText = thread.content.trim().normalize("NFKC").replace(/\s+/g, " ");
+  return input.comments
+    .filter((comment) => comment.threadId === thread.id && comment.content?.trim())
+    .sort((left, right) => Date.parse(left.createdAt) - Date.parse(right.createdAt))
+    .filter((comment) => comment.content.trim().normalize("NFKC").replace(/\s+/g, " ") !== sourceText)
+    .map((comment) => ({
+      id: `discord-event-comment-${comment.id}`,
+      author: cleanDisplayName(comment.authorName || "メンバー"),
+      authorId: comment.authorId ? `discord-${comment.authorId}` : undefined,
+      text: comment.content.trim(),
+      createdAt: comment.createdAt,
+    }));
 }
 
 const clubEvent = (thread) => thread.category.startsWith("club-club-") && (/募集|開催|交流会|鑑賞会|食事会|ご飯会|飲み会|ツアー|合宿|イベント/.test(thread.title) || /\d{1,2}\s*[\/月]\s*\d{1,2}/.test(thread.title));
@@ -165,7 +187,7 @@ const events = eventThreads.map((rawThread) => {
     : { participants: [], chatId: undefined, ambiguousCancellations: [] };
   const reconciledCapacity = {
     capacity: Math.max(capacity.capacity, confirmation.participants.length),
-    reservationCapacity: Math.max(capacity.reservationCapacity, confirmation.participants.length),
+    reservationCapacity: Math.max(capacity.reservationCapacity, confirmation.participants.length + 1),
   };
   return {
     id: `discord-event-${thread.id.replace(/^discord-board-/, "")}`,
@@ -180,7 +202,8 @@ const events = eventThreads.map((rawThread) => {
     ...reconciledCapacity,
     attendees: confirmation.participants.length,
     participants: confirmation.participants,
-    applicantIds: [],
+    // Discord移行済みの確定者は申込者でもある。0件と表示されないよう保持する。
+    applicantIds: confirmation.participants,
     price,
     ...priceRange(price),
     category: kansai ? "kansai" : official && thread.category === "official-event" ? "all" : "kanto",
@@ -194,6 +217,7 @@ const events = eventThreads.map((rawThread) => {
     organizerRank: authorProfile?.memberRank || rankFromDisplayName(thread.authorName),
     sourceThreadId: thread.id,
     sourceLabel: thread.sourceLabel,
+    importedComments: importedCommentsFor(thread, date),
     ...(confirmation.chatId ? { chatId: `discord-${confirmation.chatId}` } : {}),
     ...(confirmation.ambiguousCancellations.length ? { participantImportWarnings: confirmation.ambiguousCancellations } : {}),
   };

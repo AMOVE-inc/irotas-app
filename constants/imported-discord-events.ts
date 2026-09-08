@@ -26,7 +26,65 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "yuka",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1522194128379576361/e1cd28a89946aabf7f5334a020474bbd.png?size=512",
     "sourceThreadId": "discord-board-1543599911507861514",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": [
+      {
+        "id": "discord-event-comment-1543606942134702111",
+        "author": "はばちゃん",
+        "authorId": "discord-1223177154397995110",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-30T13:02:53.835000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1543614649277092064",
+        "author": "yuta",
+        "authorId": "discord-764979134228987924",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-30T13:33:31.361000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1543615241726722170",
+        "author": "🌸まなか🌸",
+        "authorId": "discord-1485772766828564581",
+        "text": "参加希望です！🍖",
+        "createdAt": "2026-08-30T13:35:52.612000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1543646469834416139",
+        "author": "shimizu",
+        "authorId": "discord-343450526177820683",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-30T15:39:57.973000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1543667763376291840",
+        "author": "anna",
+        "authorId": "discord-1505883189703344158",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-30T17:04:34.749000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1543819172499292171",
+        "author": "marika♡",
+        "authorId": "discord-1323965226697097228",
+        "text": "参加希望です🩷",
+        "createdAt": "2026-08-31T03:06:13.497000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1543833177594925086",
+        "author": "Toshi",
+        "authorId": "discord-1521648017864790178",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-31T04:01:52.572000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1543834221749997588",
+        "author": "kou",
+        "authorId": "discord-1457701236936671439",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-31T04:06:01.518000+00:00"
+      }
+    ]
   },
   {
     "id": "discord-event-1543585895804833902",
@@ -39,7 +97,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "image": "",
     "tabelogUrl": "https://tabelog.com/tokyo/A1307/A130702/13325526/",
     "capacity": 3,
-    "reservationCapacity": 3,
+    "reservationCapacity": 4,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -55,7 +113,44 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "はぎーちゃん🍖肉部長",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1530052808651309169/18268de99ba9a54fb8f90e9ba3d9acaf.png?size=512",
     "sourceThreadId": "discord-board-1543585895804833902",
-    "sourceLabel": "肉部"
+    "sourceLabel": "肉部",
+    "importedComments": [
+      {
+        "id": "discord-event-comment-1543588730818920612",
+        "author": "とらお🐯",
+        "authorId": "discord-709705641928949791",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-30T11:50:31.919000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1543602307353022605",
+        "author": "naru",
+        "authorId": "discord-1475703575593353399",
+        "text": "参加希望です！✨",
+        "createdAt": "2026-08-30T12:44:28.817000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1543614956367519804",
+        "author": "🌸まなか🌸",
+        "authorId": "discord-1485772766828564581",
+        "text": "参加希望です！🍖",
+        "createdAt": "2026-08-30T13:34:44.577000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1543635533614555146",
+        "author": "misato",
+        "authorId": "discord-1403349152754303046",
+        "text": "参加希望です🫶",
+        "createdAt": "2026-08-30T14:56:30.575000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1543748926824513658",
+        "author": "よし",
+        "authorId": "discord-401272869948227597",
+        "text": "美味しそう！参加希望です🥩",
+        "createdAt": "2026-08-30T22:27:05.623000+00:00"
+      }
+    ]
   },
   {
     "id": "discord-event-1543532355296428072",
@@ -68,7 +163,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "image": "",
     "googleMapsUrl": "https://maps.app.goo.gl/CUoNoUXfqjw5Uadg7?g_st=ic",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -84,7 +179,23 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "まりこ⛳ゴルフ部長",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1507605842629890231/ef848135e53446e51f2f38680aa1eb70.png?size=512",
     "sourceThreadId": "discord-board-1543532355296428072",
-    "sourceLabel": "ゴルフ部"
+    "sourceLabel": "ゴルフ部",
+    "importedComments": [
+      {
+        "id": "discord-event-comment-1543770936086626314",
+        "author": "Ayami",
+        "authorId": "discord-1479109976231379077",
+        "text": "@まりこ \nぜひ参加したかったのですが、日程合わずです😭\n次回ぜひ参加させていただきます🥹🙏🏼",
+        "createdAt": "2026-08-30T23:54:33.040000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1543821765728276512",
+        "author": "kii",
+        "authorId": "discord-1426809108421677216",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-31T03:16:31.771000+00:00"
+      }
+    ]
   },
   {
     "id": "discord-event-1543113999640694826",
@@ -96,7 +207,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "詳細をご確認ください",
     "image": "https://cdn.discordapp.com/attachments/1543113999640694826/1543114000030629908/IMG_5453.jpg?ex=6a9501e7&is=6a93b067&hm=5ff158cd1faab46dd9480b60929b2bb64f35e3fa771e847e0e5fdd4a1efa15b2&",
     "capacity": 12,
-    "reservationCapacity": 12,
+    "reservationCapacity": 13,
     "attendees": 12,
     "participants": [
       "discord-759084159632277536",
@@ -112,7 +223,20 @@ export const IMPORTED_DISCORD_EVENTS = [
       "discord-1457343339241148477",
       "discord-777370228991721502"
     ],
-    "applicantIds": [],
+    "applicantIds": [
+      "discord-759084159632277536",
+      "discord-1190229509727846433",
+      "discord-1476255646377578691",
+      "discord-1532009007747960869",
+      "discord-1540341083819741194",
+      "discord-705041013504344145",
+      "discord-1522253038994063410",
+      "discord-837231212283691028",
+      "discord-971320405342171166",
+      "discord-1475703575593353399",
+      "discord-1457343339241148477",
+      "discord-777370228991721502"
+    ],
     "price": "本文をご確認ください",
     "category": "kanto",
     "eventType": "gourmet",
@@ -124,6 +248,134 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1543113999640694826",
     "sourceLabel": "関東グルメ掲示板",
+    "importedComments": [
+      {
+        "id": "discord-event-comment-1543120187463704627",
+        "author": "Miyako",
+        "authorId": "discord-1540341083819741194",
+        "text": "ぜひ参加したいです！",
+        "createdAt": "2026-08-29T04:48:42.478000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1543127663873368214",
+        "author": "やま",
+        "authorId": "discord-1457343339241148477",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-29T05:18:24.993000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1543133166808596573",
+        "author": "いっぺい",
+        "authorId": "discord-705041013504344145",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-29T05:40:16.995000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1543136144311582841",
+        "author": "たかひろ",
+        "authorId": "discord-1190229509727846433",
+        "text": "参加希望です 🙏",
+        "createdAt": "2026-08-29T05:52:06.887000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1543148690594599065",
+        "author": "ryuji",
+        "authorId": "discord-759084159632277536",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-29T06:41:58.154000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1543163796619661342",
+        "author": "naru",
+        "authorId": "discord-1475703575593353399",
+        "text": "参加希望です！🍷",
+        "createdAt": "2026-08-29T07:41:59.711000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1543175450405240915",
+        "author": "tk",
+        "authorId": "discord-1532009007747960869",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-29T08:28:18.190000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1543184758501023744",
+        "author": "ゆいと",
+        "authorId": "discord-1476255646377578691",
+        "text": "参加希望です",
+        "createdAt": "2026-08-29T09:05:17.413000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1543185339953188905",
+        "author": "サら",
+        "authorId": "discord-971320405342171166",
+        "text": "参加希望いたします🧚‍♂️",
+        "createdAt": "2026-08-29T09:07:36.042000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1543186996254740530",
+        "author": "みや🥁",
+        "authorId": "discord-777370228991721502",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-29T09:14:10.935000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1543196092844474430",
+        "author": "ariri_00",
+        "authorId": "discord-1467089499543703686",
+        "text": "【募集中あと1名】10/25（日）18:00-VINOMONDOで味わう、白と赤の6種比較テイスティング ― 香り・樽・品種の違いを楽しむ夜 ―",
+        "createdAt": "2026-08-29T09:50:19.731000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1543198125676695553",
+        "author": "Tasuku",
+        "authorId": "discord-837231212283691028",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-29T09:58:24.396000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1543198707787239434",
+        "author": "ariri_00",
+        "authorId": "discord-1467089499543703686",
+        "text": "【募集終了】10/25（日）18:00-VINOMONDOで味わう、白と赤の6種比較テイスティング ― 香り・樽・品種の違いを楽しむ夜 ―",
+        "createdAt": "2026-08-29T10:00:43.182000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1543232413755506688",
+        "author": "ariri_00",
+        "authorId": "discord-1467089499543703686",
+        "text": "【募集中あと1名🍷】10/25（日）18:00-VINOMONDOで味わう、白と赤の6種比較テイスティング ― 香り・樽・品種の違いを楽しむ夜 ―",
+        "createdAt": "2026-08-29T12:14:39.311000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1543232530667540560",
+        "author": "ariri_00",
+        "authorId": "discord-1467089499543703686",
+        "text": "もう１名枠確保できました🙋‍♀️",
+        "createdAt": "2026-08-29T12:15:07.185000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1543351086163959940",
+        "author": "りか",
+        "authorId": "discord-1522253038994063410",
+        "text": "参加希望です🙌！",
+        "createdAt": "2026-08-29T20:06:13.018000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1543407272607223914",
+        "author": "ariri_00",
+        "authorId": "discord-1467089499543703686",
+        "text": "【募集終了】10/25（日）18:00-VINOMONDOで味わう、白と赤の6種比較テイスティング ― 香り・樽・品種の違いを楽しむ夜 ―",
+        "createdAt": "2026-08-29T23:49:28.910000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1543539895996387409",
+        "author": "IRO+ サポート",
+        "authorId": "discord-1223692916619477072",
+        "text": ":white_check_mark: <#1543539898387275826>を作成しました\n下記の皆様はご確認をお願いいたします！\n@りか @Tasuku @みや🥁 @サら @ゆいと @tk @naru @ryuji @たかひろ @いっぺい @やま @Miyako",
+        "createdAt": "2026-08-30T08:36:28.790000+00:00"
+      }
+    ],
     "chatId": "discord-1543539898387275826"
   },
   {
@@ -151,7 +403,23 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "しんたろー",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/715367038205427715/5100238c56708accc92ec1aa233bffc9.png?size=512",
     "sourceThreadId": "discord-board-1543085683365781644",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": [
+      {
+        "id": "discord-event-comment-1543199390502752407",
+        "author": "たかひろ",
+        "authorId": "discord-1190229509727846433",
+        "text": "参加希望します！",
+        "createdAt": "2026-08-29T10:03:25.954000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1543510370520662097",
+        "author": "Sho",
+        "authorId": "discord-336865912672223234",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-30T06:39:09.368000+00:00"
+      }
+    ]
   },
   {
     "id": "discord-event-1542821346549960766",
@@ -179,7 +447,58 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/696624208532340756/b824079889c51ec1cf68e5ba0f03233f.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1542821346549960766",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": [
+      {
+        "id": "discord-event-comment-1542843891940724736",
+        "author": "kyomi",
+        "authorId": "discord-1511736441821204581",
+        "text": "参加希望です！🫶",
+        "createdAt": "2026-08-28T10:30:48.492000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1542882673733800047",
+        "author": "りさ",
+        "authorId": "discord-1534888874038264019",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-28T13:04:54.792000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1542888750529515520",
+        "author": "はる",
+        "authorId": "discord-1539304691869950037",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-28T13:29:03.613000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1543196683549155420",
+        "author": "Tasuku",
+        "authorId": "discord-837231212283691028",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-29T09:52:40.566000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1543198179728691270",
+        "author": "さわ",
+        "authorId": "discord-1489828055106191470",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-29T09:58:37.283000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1543201692496039978",
+        "author": "くるみ",
+        "authorId": "discord-1508435542948184084",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-29T10:12:34.792000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1543480871611408414",
+        "author": "ながね",
+        "authorId": "discord-824654622286938152",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-30T04:41:56.280000+00:00"
+      }
+    ]
   },
   {
     "id": "discord-event-1542220402645008404",
@@ -208,7 +527,30 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1457371560670265374/d09179eea94d16710cda2370a546a963.png?size=512",
     "organizerRank": "platinum",
     "sourceThreadId": "discord-board-1542220402645008404",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": [
+      {
+        "id": "discord-event-comment-1542345790259855381",
+        "author": "たかひろ",
+        "authorId": "discord-1190229509727846433",
+        "text": "パン呑み大好きです！\n参加希望です🙋🏻‍♂️",
+        "createdAt": "2026-08-27T01:31:31.797000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1542369382859284512",
+        "author": "のぞみ",
+        "authorId": "discord-1458225622802239636",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-27T03:05:16.711000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1542887439159533718",
+        "author": "tk",
+        "authorId": "discord-1532009007747960869",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-28T13:23:50.958000+00:00"
+      }
+    ]
   },
   {
     "id": "discord-event-1542201410542772425",
@@ -221,7 +563,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "image": "",
     "tabelogUrl": "https://tabelog.com/tokyo/A1311/A131102/13266173/",
     "capacity": 6,
-    "reservationCapacity": 6,
+    "reservationCapacity": 7,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -237,7 +579,72 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "はぎーちゃん🍖肉部長",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1530052808651309169/18268de99ba9a54fb8f90e9ba3d9acaf.png?size=512",
     "sourceThreadId": "discord-board-1542201410542772425",
-    "sourceLabel": "肉部"
+    "sourceLabel": "肉部",
+    "importedComments": [
+      {
+        "id": "discord-event-comment-1542305574815924284",
+        "author": "🌸まなか🌸",
+        "authorId": "discord-1485772766828564581",
+        "text": "注文済みかもですが裏メニュー(？)のタンしゃぶもおすすめです‪🫶\n旅行中で行けないですが楽しんでください〜🍖",
+        "createdAt": "2026-08-26T22:51:43.688000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1543126172857270314",
+        "author": "こころ",
+        "authorId": "discord-1404475054569553956",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-29T05:12:29.507000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1543149531628048435",
+        "author": "ryuji",
+        "authorId": "discord-759084159632277536",
+        "text": "参加希望です１",
+        "createdAt": "2026-08-29T06:45:18.672000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1543230200534532229",
+        "author": "Non【IRO+代表】",
+        "authorId": "discord-1119606639763390545",
+        "text": "@肉部🍖 こちら興味ある方是非🤤めちゃくちゃ美味しいです！",
+        "createdAt": "2026-08-29T12:05:51.638000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1543237316741701816",
+        "author": "つね🪼",
+        "authorId": "discord-1457591200243777589",
+        "text": "気になってたお店です‪🫶参加希望です！",
+        "createdAt": "2026-08-29T12:34:08.274000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1543238513594474537",
+        "author": "みや🥁",
+        "authorId": "discord-777370228991721502",
+        "text": "行きたいです！",
+        "createdAt": "2026-08-29T12:38:53.626000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1543247773673984081",
+        "author": "さわ",
+        "authorId": "discord-1489828055106191470",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-29T13:15:41.401000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1543495046072893581",
+        "author": "shio",
+        "authorId": "discord-1458658308004249632",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-30T05:38:15.735000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1543581236059045939",
+        "author": "はぎーちゃん🍖肉部長",
+        "authorId": "discord-1530052808651309169",
+        "text": "9/4(金)23:59に締め切りますので、ぜひコメントお待ちしてます🙌",
+        "createdAt": "2026-08-30T11:20:45.029000+00:00"
+      }
+    ]
   },
   {
     "id": "discord-event-1542148647565660321",
@@ -266,7 +673,23 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1223177154397995110/6b1d27d82aad0e87c3f144ba27e3efbd.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1542148647565660321",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": [
+      {
+        "id": "discord-event-comment-1543269187093536921",
+        "author": "kanazawa",
+        "authorId": "discord-398776137255485440",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-29T14:40:46.758000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1543449183401283645",
+        "author": "はる",
+        "authorId": "discord-1539304691869950037",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-30T02:36:01.222000+00:00"
+      }
+    ]
   },
   {
     "id": "discord-event-1542135969665523762",
@@ -278,7 +701,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "新御茶ノ水駅から徒歩1分のレンタルスペース",
     "image": "https://cdn.discordapp.com/attachments/1542135969665523762/1542135970080497724/BBQ_Instagram_2.png?ex=6a95678a&is=6a94160a&hm=4f27188c6a66fc084ff0b2e58f0338f57d0e4e4001aa62a0c0a9487334a184ed&",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -291,7 +714,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1542135969665523762",
-    "sourceLabel": "全体イベント"
+    "sourceLabel": "全体イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1542095258953981984",
@@ -320,7 +744,79 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1479840315107184804/b050cd588b38d9d6a6e1b35cdc437c43.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1542095258953981984",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": [
+      {
+        "id": "discord-event-comment-1542095379141492756",
+        "author": "れん",
+        "authorId": "discord-1479840315107184804",
+        "text": "【募集中】9/25(金)19:00〜🍣初音鮨@蒲田",
+        "createdAt": "2026-08-26T08:56:29.134000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1542105395458351174",
+        "author": "かずま🍣🍶🍷",
+        "authorId": "discord-1403038939832385683",
+        "text": "参加希望です🍣",
+        "createdAt": "2026-08-26T09:36:17.210000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1542112823138717786",
+        "author": "naru",
+        "authorId": "discord-1475703575593353399",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-26T10:05:48.107000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1542127501394968656",
+        "author": "Natchan",
+        "authorId": "discord-1457517890424143903",
+        "text": "参加希望です！🍣",
+        "createdAt": "2026-08-26T11:04:07.676000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1542145760492265522",
+        "author": "kanazawa",
+        "authorId": "discord-398776137255485440",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-26T12:16:40.984000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1542154282051313795",
+        "author": "ﾘﾎ",
+        "authorId": "discord-1458669499711488172",
+        "text": "参加希望です🍣",
+        "createdAt": "2026-08-26T12:50:32.682000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1542162454585417769",
+        "author": "asumi🥀",
+        "authorId": "discord-1533461878104391886",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-26T13:23:01.166000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1542174804759547995",
+        "author": "yui",
+        "authorId": "discord-1315589522695917589",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-26T14:12:05.677000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1542191801845153853",
+        "author": "Sho",
+        "authorId": "discord-336865912672223234",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-26T15:19:38.098000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1542811420750520330",
+        "author": "さき",
+        "authorId": "discord-1496168937581318238",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-28T08:21:46.757000+00:00"
+      }
+    ]
   },
   {
     "id": "discord-event-1541845822784807012",
@@ -333,7 +829,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "image": "https://cdn.discordapp.com/attachments/1541845822784807012/1541845823124541480/2026-08-26_011924.jpg?ex=6a950212&is=6a93b092&hm=023462937c64b25e37dd9719140c213daf264f7e54bbe35db0c5ab39392ad3c3&",
     "tabelogUrl": "https://tabelog.com/tokyo/A1317/A131701/13270195/",
     "capacity": 5,
-    "reservationCapacity": 5,
+    "reservationCapacity": 6,
     "attendees": 5,
     "participants": [
       "discord-1397813623908204544",
@@ -342,7 +838,13 @@ export const IMPORTED_DISCORD_EVENTS = [
       "discord-1457508300588453932",
       "discord-1458225622802239636"
     ],
-    "applicantIds": [],
+    "applicantIds": [
+      "discord-1397813623908204544",
+      "discord-1403348369706848292",
+      "discord-1510218106105106505",
+      "discord-1457508300588453932",
+      "discord-1458225622802239636"
+    ],
     "price": "6,000円",
     "priceMin": 6000,
     "priceMax": 6000,
@@ -356,6 +858,134 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1541845822784807012",
     "sourceLabel": "関東グルメ掲示板",
+    "importedComments": [
+      {
+        "id": "discord-event-comment-1541847341999591425",
+        "author": "Sho",
+        "authorId": "discord-336865912672223234",
+        "text": "ずっと行ってみたかったとこです✨️\n参加希望です！",
+        "createdAt": "2026-08-25T16:30:52.471000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1541923764571471982",
+        "author": "Asuka",
+        "authorId": "discord-1457710905109254328",
+        "text": "参加希望です🫶🏻💕",
+        "createdAt": "2026-08-25T21:34:33.032000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1541946951829033000",
+        "author": "ゆうき",
+        "authorId": "discord-1539976109805011026",
+        "text": "参加希望です🥂",
+        "createdAt": "2026-08-25T23:06:41.305000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1542007995838373918",
+        "author": "れん",
+        "authorId": "discord-1479840315107184804",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-26T03:09:15.331000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1542070721470267453",
+        "author": "Akari",
+        "authorId": "discord-1510218106105106505",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-26T07:18:30.287000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1542084514820653128",
+        "author": "ななみ",
+        "authorId": "discord-1457508300588453932",
+        "text": "ずーっと気になってたところです！\n参加希望です！🌾",
+        "createdAt": "2026-08-26T08:13:18.878000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1542106763246051399",
+        "author": "hitomi",
+        "authorId": "discord-1510638806661857360",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-26T09:41:43.316000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1542125242795950201",
+        "author": "ひより",
+        "authorId": "discord-1403348369706848292",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-26T10:55:09.184000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1542132418046328843",
+        "author": "Natchan",
+        "authorId": "discord-1457517890424143903",
+        "text": "参加希望です✨",
+        "createdAt": "2026-08-26T11:23:39.897000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1542144183421116567",
+        "author": "Hiroto",
+        "authorId": "discord-839097642105176094",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-26T12:10:24.981000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1542187384098263042",
+        "author": "のぞみ",
+        "authorId": "discord-1458225622802239636",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-26T15:02:04.825000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1542187961662177410",
+        "author": "Hisashi",
+        "authorId": "discord-980111773740974121",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-26T15:04:22.527000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1542207062908600392",
+        "author": "ゆり",
+        "authorId": "discord-1538936590662115380",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-26T16:20:16.619000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1542516436981907596",
+        "author": "いっぺい",
+        "authorId": "discord-705041013504344145",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-27T12:49:37.146000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1543082014956069006",
+        "author": "Anri",
+        "authorId": "discord-1460776090736922707",
+        "text": "参加希望です！！",
+        "createdAt": "2026-08-29T02:17:01.443000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1543303153254924318",
+        "author": "RIHO",
+        "authorId": "discord-1004342455895855144",
+        "text": "【募集終了】祐天寺 Bob＠9/20(日)18時",
+        "createdAt": "2026-08-29T16:55:44.922000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1543611270211698749",
+        "author": "RIHO",
+        "authorId": "discord-1004342455895855144",
+        "text": "MAXで予約できたのが6名でした🙏\n今回は下記皆さまご一緒お願いします！！\n@ほ \n@Akari \n@ななみ \n@ひより \n@のぞみ \n\nまた企画するので、次回ご一緒できた時はよろしくお願いいたします🫶",
+        "createdAt": "2026-08-30T13:20:05.729000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1543615010314657913",
+        "author": "IRO+ サポート",
+        "authorId": "discord-1223692916619477072",
+        "text": ":white_check_mark: <#1543615013028237396>を作成しました\n下記の皆様はご確認をお願いいたします！\n@ほ @Akari @ななみ @ひより @のぞみ",
+        "createdAt": "2026-08-30T13:34:57.439000+00:00"
+      }
+    ],
     "chatId": "discord-1543615013028237396"
   },
   {
@@ -383,6 +1013,225 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1541439315140280453",
     "sourceLabel": "関東グルメ掲示板",
+    "importedComments": [
+      {
+        "id": "discord-event-comment-1541440504342904882",
+        "author": "ariri_00",
+        "authorId": "discord-1467089499543703686",
+        "text": "【募集中/7期の方もご参加お待ちしてます🙋‍♀️】🍁第二弾｜秋の魚介×ワイン ペアリング会🍷",
+        "createdAt": "2026-08-24T13:34:14.815000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1541442278143299705",
+        "author": "ariri_00",
+        "authorId": "discord-1467089499543703686",
+        "text": "前回の会です🙋‍♀️\nこんな感じで開催致します🐟",
+        "createdAt": "2026-08-24T13:41:17.722000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1541443145965899858",
+        "author": "ariri_00",
+        "authorId": "discord-1467089499543703686",
+        "text": "【募集中/7期の方も🙋‍♀️】10/3 13:00-15:00🍁第二弾｜秋の魚介×ワイン ペアリング会🍷",
+        "createdAt": "2026-08-24T13:44:44.627000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1541444085796180049",
+        "author": "mioka",
+        "authorId": "discord-1216698337147748394",
+        "text": "参加希望です🍷",
+        "createdAt": "2026-08-24T13:48:28.700000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1541450792584880268",
+        "author": "りか",
+        "authorId": "discord-1522253038994063410",
+        "text": "参加希望です🍷",
+        "createdAt": "2026-08-24T14:15:07.723000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1541451381368561815",
+        "author": "naru",
+        "authorId": "discord-1475703575593353399",
+        "text": "参加希望です🍷",
+        "createdAt": "2026-08-24T14:17:28.100000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1541454153757499484",
+        "author": "みほ",
+        "authorId": "discord-1489160582639779840",
+        "text": "参加希望です🍷",
+        "createdAt": "2026-08-24T14:28:29.089000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1541456308136443988",
+        "author": "まゆこ",
+        "authorId": "discord-1457542687950377000",
+        "text": "参加希望です🍷",
+        "createdAt": "2026-08-24T14:37:02.733000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1541456907317809224",
+        "author": "mayu",
+        "authorId": "discord-905827697224187925",
+        "text": "参加希望です！🍷",
+        "createdAt": "2026-08-24T14:39:25.589000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1541457228974919780",
+        "author": "ariri_00",
+        "authorId": "discord-1467089499543703686",
+        "text": "【募集中/あと2名】10/3 13:00-15:00🍁第二弾｜秋の魚介×ワイン ペアリング会🍷",
+        "createdAt": "2026-08-24T14:40:42.278000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1541462132510564373",
+        "author": "やま",
+        "authorId": "discord-1457343339241148477",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-24T15:00:11.372000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1541462585835257959",
+        "author": "misato",
+        "authorId": "discord-1403349152754303046",
+        "text": "参加希望です✨",
+        "createdAt": "2026-08-24T15:01:59.453000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1541462668420845630",
+        "author": "ariri_00",
+        "authorId": "discord-1467089499543703686",
+        "text": "【募集中/あと1名】10/3 13:00-15:00🍁第二弾｜秋の魚介×ワイン ペアリング会🍷",
+        "createdAt": "2026-08-24T15:02:19.143000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1541462851326058556",
+        "author": "ariri_00",
+        "authorId": "discord-1467089499543703686",
+        "text": "【一旦募集終了】10/3 13:00-15:00🍁第二弾｜秋の魚介×ワイン ペアリング会🍷",
+        "createdAt": "2026-08-24T15:03:02.751000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1541742874536841307",
+        "author": "ariri_00",
+        "authorId": "discord-1467089499543703686",
+        "text": "【募集中/あと3名ほど】10/3 13:00-15:00🍁第二弾｜秋の魚介×ワイン ペアリング会🍷",
+        "createdAt": "2026-08-25T09:35:45.487000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1541743394605375498",
+        "author": "つばさ",
+        "authorId": "discord-1341394331063550014",
+        "text": "参加希望です🍷",
+        "createdAt": "2026-08-25T09:37:49.481000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1541744130965639199",
+        "author": "ariri_00",
+        "authorId": "discord-1467089499543703686",
+        "text": "【募集中/あと2名ほど】10/3 13:00-15:00🍁第二弾｜秋の魚介×ワイン ペアリング会🍷",
+        "createdAt": "2026-08-25T09:40:45.043000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1541744249261924363",
+        "author": "ariri_00",
+        "authorId": "discord-1467089499543703686",
+        "text": "【追記🍁 あと2名ほど募集します！】\n\nありがたいことに、現在17名ほどご参加予定となりました🥹✨\n\nお店の方とご相談し、今回は一部座れる席を残した半立食スタイルで開催する予定です🍷\n\n着席形式よりも少しゆとりを持ってご案内できるため、あと少し参加人数を増やせそうとのことで、追加で3名ほど募集させていただくことになりました🙌\n\nお席を固定しすぎず、皆さんで自由にお話ししながら、秋のお料理とワインのペアリングを楽しめる会にできたらと思っています😌🍂\n\n残り2名ほどとなります✨\n初参加の方も大歓迎です☺️\n\n📅 10/3（土）13:00〜15:00頃\n💰 ¥8,000 / 人\n📍 Teppen BY THE SEA\n\n気になっていた方、ご予定合いましたらぜひご一緒しましょう🍷✨\n参加希望の方は、こちらにコメントまたはご連絡ください🙌",
+        "createdAt": "2026-08-25T09:41:13.247000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1541756820962541638",
+        "author": "yuto",
+        "authorId": "discord-1191222758760259616",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-25T10:31:10.574000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1541761308620496896",
+        "author": "ariri_00",
+        "authorId": "discord-1467089499543703686",
+        "text": "【募集中/あと1名】10/3 13:00-15:00🍁第二弾｜秋の魚介×ワイン ペアリング会🍷",
+        "createdAt": "2026-08-25T10:49:00.515000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1541768640230334464",
+        "author": "pokohide",
+        "authorId": "discord-804712649598042172",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-25T11:18:08.507000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1541771919123025990",
+        "author": "ariri_00",
+        "authorId": "discord-1467089499543703686",
+        "text": "【募集終了】10/3 13:00-15:00🍁第二弾｜秋の魚介×ワイン ペアリング会🍷",
+        "createdAt": "2026-08-25T11:31:10.256000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1541772587020066938",
+        "author": "ariri_00",
+        "authorId": "discord-1467089499543703686",
+        "text": "後ほど、\nプライベートチャット💬作成させていただきますので\nよろしくお願い致します🙇",
+        "createdAt": "2026-08-25T11:33:49.495000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1541797465408278650",
+        "author": "IRO+ サポート",
+        "authorId": "discord-1223692916619477072",
+        "text": ":white_check_mark: <#1541797470315745280>を作成しました\n下記の皆様はご確認をお願いいたします！\n@pokohide @yuto @つばさ @misato @やま @mayu @まゆこ @mayu @misato @みほ @naru @karen @takuto @Monako @真妃 @いい   ねい(本名です) @Lily_nasu @SAOTOME @ほ",
+        "createdAt": "2026-08-25T13:12:40.965000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1541799520742932621",
+        "author": "ariri_00",
+        "authorId": "discord-1467089499543703686",
+        "text": "プライベートチャット抜けている方いたら教えてください🙇",
+        "createdAt": "2026-08-25T13:20:50.995000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1542840940811784232",
+        "author": "ariri_00",
+        "authorId": "discord-1467089499543703686",
+        "text": "【あと1名！】10/3 13:00-15:00🍁第二弾｜秋の魚介×ワイン ペアリング会🍷",
+        "createdAt": "2026-08-28T10:19:04.888000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1542848146940493894",
+        "author": "ariri_00",
+        "authorId": "discord-1467089499543703686",
+        "text": "【🍁秋のペアリング会｜あと1名募集します🍷】\n\n参加予定の方から1名キャンセルが出たため、あと1名のみ追加で募集させていただきます🙌✨\n\n気になっていた方、ご予定合いましたらぜひご参加ください🍷\n先着1名となりますので、参加希望の方はコメントまたはご連絡いただけると嬉しいです🙇‍♀️",
+        "createdAt": "2026-08-28T10:47:42.963000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1542869562758799363",
+        "author": "はるか🍵",
+        "authorId": "discord-1467445141412516063",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-28T12:12:48.892000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1542869956214136903",
+        "author": "ariri_00",
+        "authorId": "discord-1467089499543703686",
+        "text": "ありがとうございます😊",
+        "createdAt": "2026-08-28T12:14:22.699000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1542870114464956506",
+        "author": "ariri_00",
+        "authorId": "discord-1467089499543703686",
+        "text": "【募集終了】10/3 13:00-15:00🍁第二弾｜秋の魚介×ワイン ペアリング会🍷",
+        "createdAt": "2026-08-28T12:15:00.429000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1542870426995138723",
+        "author": "ariri_00",
+        "authorId": "discord-1467089499543703686",
+        "text": "プライベートチャットにて詳細ご確認よろしくお願いします🙇",
+        "createdAt": "2026-08-28T12:16:14.942000+00:00"
+      }
+    ],
     "chatId": "discord-1541797470315745280",
     "participantImportWarnings": [
       {
@@ -418,7 +1267,79 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/709705641928949791/4484684a65f55fb383073219fd406282.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1541301088597311588",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": [
+      {
+        "id": "discord-event-comment-1541334144393420882",
+        "author": "かずま🍣🍶🍷",
+        "authorId": "discord-1403038939832385683",
+        "text": "参加希望です🇪🇸",
+        "createdAt": "2026-08-24T06:31:36.627000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1541348235992633454",
+        "author": "みほ",
+        "authorId": "discord-1489160582639779840",
+        "text": "参加希望です🍷🥘",
+        "createdAt": "2026-08-24T07:27:36.326000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1541360975964536913",
+        "author": "のぞみ",
+        "authorId": "discord-1458225622802239636",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-24T08:18:13.772000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1541362371941892126",
+        "author": "もりりん💪(ミサキ)",
+        "authorId": "discord-1353378156882558976",
+        "text": "参加希望です！！",
+        "createdAt": "2026-08-24T08:23:46.599000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1541629610595319818",
+        "author": "みや🥁",
+        "authorId": "discord-777370228991721502",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-25T02:05:41.259000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1541642692268924999",
+        "author": "やま",
+        "authorId": "discord-1457343339241148477",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-25T02:57:40.173000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1541829400130097174",
+        "author": "ゆりこ",
+        "authorId": "discord-1493455228887105647",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-25T15:19:34.796000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1541836440084807790",
+        "author": "Sho",
+        "authorId": "discord-336865912672223234",
+        "text": "参加希望です！！",
+        "createdAt": "2026-08-25T15:47:33.252000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1543596662247788654",
+        "author": "とらお🐯",
+        "authorId": "discord-709705641928949791",
+        "text": "こちら募集多数いただいているので、9月2日(水)で締め切ります！",
+        "createdAt": "2026-08-30T12:22:02.919000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1543643614037680148",
+        "author": "Taka",
+        "authorId": "discord-766872280302878780",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-30T15:28:37.098000+00:00"
+      }
+    ]
   },
   {
     "id": "discord-event-1540344313353867315",
@@ -446,7 +1367,121 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1223177154397995110/6b1d27d82aad0e87c3f144ba27e3efbd.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1540344313353867315",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": [
+      {
+        "id": "discord-event-comment-1540378899006099466",
+        "author": "しょうこ🍰スイーツ部長",
+        "authorId": "discord-1459195336991047815",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-21T15:15:48.379000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1540384225633767494",
+        "author": "shimizu",
+        "authorId": "discord-343450526177820683",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-21T15:36:58.346000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1540393912634576937",
+        "author": "あやか",
+        "authorId": "discord-1492174548794216648",
+        "text": "行きたいです！！🥩",
+        "createdAt": "2026-08-21T16:15:27.907000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1540511078566338600",
+        "author": "ザッキー",
+        "authorId": "discord-1246014118390005861",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-22T00:01:02.442000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1540570157137797151",
+        "author": "Rika",
+        "authorId": "discord-1531806645980762280",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-22T03:55:47.871000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1540624686914871296",
+        "author": "りさこ",
+        "authorId": "discord-1528745249210634322",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-22T07:32:28.783000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1540630394309836881",
+        "author": "ナナ",
+        "authorId": "discord-1314123704300474480",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-22T07:55:09.532000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1540633570274705429",
+        "author": "yuta",
+        "authorId": "discord-764979134228987924",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-22T08:07:46.741000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1540668180715016283",
+        "author": "はる",
+        "authorId": "discord-1539304691869950037",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-22T10:25:18.513000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1540701010581000234",
+        "author": "おさや",
+        "authorId": "discord-525718374152536074",
+        "text": "参加希望です🥩",
+        "createdAt": "2026-08-22T12:35:45.763000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1540721350098948151",
+        "author": "yui",
+        "authorId": "discord-1315589522695917589",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-22T13:56:35.082000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1540960548705796236",
+        "author": "ゆうき🐬",
+        "authorId": "discord-1520656082035540138",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-23T05:47:04.474000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1541385874783342603",
+        "author": "kii",
+        "authorId": "discord-1426809108421677216",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-24T09:57:10.113000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1541387513678012466",
+        "author": "Tomoka",
+        "authorId": "discord-1371768777217151018",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-24T10:03:40.856000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1541848312167141376",
+        "author": "Sho",
+        "authorId": "discord-336865912672223234",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-25T16:34:43.777000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1543600109575733268",
+        "author": "Aki",
+        "authorId": "discord-1457711181308498067",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-30T12:35:44.826000+00:00"
+      }
+    ]
   },
   {
     "id": "discord-event-1540321358305820682",
@@ -464,7 +1499,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "participants": [
       "discord-1533461878104391886"
     ],
-    "applicantIds": [],
+    "applicantIds": [
+      "discord-1533461878104391886"
+    ],
     "price": "33,000円",
     "priceMin": 33000,
     "priceMax": 33000,
@@ -478,6 +1515,36 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1540321358305820682",
     "sourceLabel": "関東グルメ掲示板",
+    "importedComments": [
+      {
+        "id": "discord-event-comment-1542164220010041465",
+        "author": "asumi🥀",
+        "authorId": "discord-1533461878104391886",
+        "text": "満を持しての参加希望です…！🍣",
+        "createdAt": "2026-08-26T13:30:02.076000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1542786754401280081",
+        "author": "かずま🍣🍶🍷",
+        "authorId": "discord-1403038939832385683",
+        "text": "@asumi🥀 ご応募ありがとうございます😂\n参加確定させていただきます",
+        "createdAt": "2026-08-28T06:43:45.841000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1542787090205511700",
+        "author": "IRO+ サポート",
+        "authorId": "discord-1223692916619477072",
+        "text": ":white_check_mark: <#1542787092398997595>を作成しました\n下記の皆様はご確認をお願いいたします！\n@asumi🥀",
+        "createdAt": "2026-08-28T06:45:05.903000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1542787557279137842",
+        "author": "かずま🍣🍶🍷",
+        "authorId": "discord-1403038939832385683",
+        "text": "【募集終了】10/17（土）20:30~鮨龍次郎🍣 @南青山",
+        "createdAt": "2026-08-28T06:46:57.262000+00:00"
+      }
+    ],
     "chatId": "discord-1542787092398997595"
   },
   {
@@ -506,7 +1573,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1190229509727846433/1bfb2c64cce8c079892fcc8d70b6967e.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1539931563591082105",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1539642830925074502",
@@ -520,7 +1588,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "tabelogUrl": "https://tabelog.com/tokyo/A1306/A130602/13271679/",
     "googleMapsUrl": "https://maps.app.goo.gl/6G8mT8BtTUR427Fp9",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -537,7 +1605,114 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1460286509285511310/750139709e8b397ca717135363b32a74.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1539642830925074502",
-    "sourceLabel": "ワイン部"
+    "sourceLabel": "ワイン部",
+    "importedComments": [
+      {
+        "id": "discord-event-comment-1539644845579047022",
+        "author": "真妃🍷ワイン部長",
+        "authorId": "discord-1446344592214724700",
+        "text": "@iori 参加！卓球の宣伝もして！！",
+        "createdAt": "2026-08-19T14:38:56.404000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1539674616618811402",
+        "author": "みほ",
+        "authorId": "discord-1489160582639779840",
+        "text": "参加します🍷",
+        "createdAt": "2026-08-19T16:37:14.373000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1539682652381122611",
+        "author": "mayu",
+        "authorId": "discord-905827697224187925",
+        "text": "参加希望です！🍷",
+        "createdAt": "2026-08-19T17:09:10.248000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1539773826710249492",
+        "author": "naru",
+        "authorId": "discord-1475703575593353399",
+        "text": "参加希望です！🍷",
+        "createdAt": "2026-08-19T23:11:27.902000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1539780172574629968",
+        "author": "Momoko",
+        "authorId": "discord-1353124630986227742",
+        "text": "参加希望🍾",
+        "createdAt": "2026-08-19T23:36:40.874000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1539874596986167387",
+        "author": "まりこ⛳ゴルフ部長",
+        "authorId": "discord-1507605842629890231",
+        "text": "参加希望です！🍷",
+        "createdAt": "2026-08-20T05:51:53.408000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1539881169259331674",
+        "author": "やま",
+        "authorId": "discord-1457343339241148477",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-20T06:18:00.360000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1539916049242128394",
+        "author": "Monako💃",
+        "authorId": "discord-1457652020164034686",
+        "text": "まってこのお店大好き！！\n参加希望です",
+        "createdAt": "2026-08-20T08:36:36.396000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1539953237938143283",
+        "author": "ほ",
+        "authorId": "discord-1397813623908204544",
+        "text": "参加希望です！🏓",
+        "createdAt": "2026-08-20T11:04:22.872000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1540286729594863686",
+        "author": "ザッキー",
+        "authorId": "discord-1246014118390005861",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-21T09:09:33.479000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1540287310472683561",
+        "author": "すけ",
+        "authorId": "discord-1457596781272633369",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-21T09:11:51.971000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1540641164393451632",
+        "author": "いい   ねい(本名です)",
+        "authorId": "discord-1474011170938552364",
+        "text": "さんかします！",
+        "createdAt": "2026-08-22T08:37:57.320000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1542196697332056135",
+        "author": "真妃🍷ワイン部長",
+        "authorId": "discord-1446344592214724700",
+        "text": "@iori そろそろ締切ろう",
+        "createdAt": "2026-08-26T15:39:05.273000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1542203330980478986",
+        "author": "IRO+ サポート",
+        "authorId": "discord-1223692916619477072",
+        "text": ":white_check_mark: <#1542203342263165100>を作成しました\n下記の皆様はご確認をお願いいたします！\n@真妃 @みほ @mayu @naru @Momoko @まりこ @やま @Monako @ほ @ザッキー @すけ @いい   ねい(本名です)",
+        "createdAt": "2026-08-26T16:05:26.858000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1542569599764140132",
+        "author": "ながね",
+        "authorId": "discord-824654622286938152",
+        "text": "@真妃🍷ワイン部長【🥇GOLD 】 @iori【🥈SILVER 】\nご連絡が遅くなってしまい、申し訳ございません。\n\nこちら参加できることになりまして、\n締切後のご連絡となり大変恐縮ですが、追加で参加させていただくことは可能でしょうか。\n\nお手数おかけいたしますが、ご確認よろしくお願い致します。",
+        "createdAt": "2026-08-27T16:20:52.141000Z"
+      }
+    ]
   },
   {
     "id": "discord-event-1539583873619333130",
@@ -565,7 +1740,93 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "やどかり",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1497178953813721150/2ee18488e0223a723cba540d8cc13752.png?size=512",
     "sourceThreadId": "discord-board-1539583873619333130",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": [
+      {
+        "id": "discord-event-comment-1539586329380266014",
+        "author": "まる",
+        "authorId": "discord-1404038461874245752",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-19T10:46:25.055000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1539613619593936896",
+        "author": "おさや",
+        "authorId": "discord-525718374152536074",
+        "text": "参加希望です🍖",
+        "createdAt": "2026-08-19T12:34:51.549000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1541374635487010816",
+        "author": "mioka",
+        "authorId": "discord-1216698337147748394",
+        "text": "参加希望です",
+        "createdAt": "2026-08-24T09:12:30.456000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1541385685003542638",
+        "author": "Kouhei",
+        "authorId": "discord-1455102446367019084",
+        "text": "参加希望です",
+        "createdAt": "2026-08-24T09:56:24.866000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1542224831142039674",
+        "author": "れん",
+        "authorId": "discord-1479840315107184804",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-26T17:30:52.896000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1542805122709463170",
+        "author": "まる",
+        "authorId": "discord-1404038461874245752",
+        "text": "@まる \n申し訳ございません。。。\n外せない用事と被ってしまい行けなくなったので、抽選から外していただければと思います🙇‍♀️",
+        "createdAt": "2026-08-28T07:56:45.187000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1542863840117653525",
+        "author": "やどかり",
+        "authorId": "discord-1497178953813721150",
+        "text": "コメントありがとうございます👐\n抽選の件、把握しました！\nまたの機会にご一緒できたらと思います👐",
+        "createdAt": "2026-08-28T11:50:04.508000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1543187579434831892",
+        "author": "やどかり",
+        "authorId": "discord-1497178953813721150",
+        "text": "【募集中】09/21(月,祝日) 20:30 クラッシュ @駒込",
+        "createdAt": "2026-08-29T09:16:29.976000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1543222092562956378",
+        "author": "れん",
+        "authorId": "discord-1479840315107184804",
+        "text": "@やどかり \nすみません！\n予定が入ってしまい抽選はずしていただけたらと思います、、🙇",
+        "createdAt": "2026-08-29T11:33:38.547000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1543233349731229776",
+        "author": "mioka",
+        "authorId": "discord-1216698337147748394",
+        "text": "@やどかり すみません、私も別件入ってしまい抽選から外していただきたいです！\nお手数おかけしますがお願いいたします",
+        "createdAt": "2026-08-29T12:18:22.465000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1543278117181980742",
+        "author": "やどかり",
+        "authorId": "discord-1497178953813721150",
+        "text": "把握しました！\nまたの機会にお願いします👐",
+        "createdAt": "2026-08-29T15:16:15.857000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1543278148756701245",
+        "author": "やどかり",
+        "authorId": "discord-1497178953813721150",
+        "text": "把握しました！\nまたの機会にお願いします",
+        "createdAt": "2026-08-29T15:16:23.385000+00:00"
+      }
+    ]
   },
   {
     "id": "discord-event-1539154024329117717",
@@ -591,7 +1852,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/766872280302878780/374ab37e7d9446e08e9d922aede0a057.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1539154024329117717",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1538771676081295430",
@@ -627,7 +1889,27 @@ export const IMPORTED_DISCORD_EVENTS = [
       "discord-1008029940429639794",
       "discord-1378230452300681338"
     ],
-    "applicantIds": [],
+    "applicantIds": [
+      "discord-837231212283691028",
+      "discord-805352226428026902",
+      "discord-1538005755712774308",
+      "discord-824654622286938152",
+      "discord-1522253038994063410",
+      "discord-1537625947690242098",
+      "discord-1497178953813721150",
+      "discord-1403675019061755974",
+      "discord-1477873334719873097",
+      "discord-705041013504344145",
+      "discord-1528745249210634322",
+      "discord-1534888874038264019",
+      "discord-1522002897682956372",
+      "discord-1474037455291416670",
+      "discord-1462456162774421606",
+      "discord-724169786946486376",
+      "discord-1519931518674276465",
+      "discord-1008029940429639794",
+      "discord-1378230452300681338"
+    ],
     "price": "3,000円",
     "priceMin": 3000,
     "priceMax": 3000,
@@ -640,6 +1922,162 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1538771676081295430",
     "sourceLabel": "関東支部イベント",
+    "importedComments": [
+      {
+        "id": "discord-event-comment-1538778819316416653",
+        "author": "しょーご",
+        "authorId": "discord-1522002897682956372",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-17T05:17:39.653000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1538790925377998928",
+        "author": "Masamichi",
+        "authorId": "discord-724169786946486376",
+        "text": "参加希望です",
+        "createdAt": "2026-08-17T06:05:45.963000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1538805610089414825",
+        "author": "ゆうと(新矢 悠人)",
+        "authorId": "discord-805352226428026902",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-17T07:04:07.071000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1538822876046696458",
+        "author": "Takahiro.",
+        "authorId": "discord-1403675019061755974",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-17T08:12:43.596000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1538833182978215976",
+        "author": "まさゆき",
+        "authorId": "discord-1538005755712774308",
+        "text": "参加希望します！",
+        "createdAt": "2026-08-17T08:53:40.960000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1538865531719778304",
+        "author": "ながね",
+        "authorId": "discord-824654622286938152",
+        "text": "参加希望です！よろしくお願い致します。",
+        "createdAt": "2026-08-17T11:02:13.501000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1538866549560189039",
+        "author": "ゆうか",
+        "authorId": "discord-1462456162774421606",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-17T11:06:16.173000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1538868447872557167",
+        "author": "ふみ",
+        "authorId": "discord-1537625947690242098",
+        "text": "参加希望です",
+        "createdAt": "2026-08-17T11:13:48.766000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1538875100890140692",
+        "author": "小森正太",
+        "authorId": "discord-1474037455291416670",
+        "text": "参加したいです！",
+        "createdAt": "2026-08-17T11:40:14.969000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1538878613091516500",
+        "author": "りさこ",
+        "authorId": "discord-1528745249210634322",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-17T11:54:12.343000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1538880275172425748",
+        "author": "あやな",
+        "authorId": "discord-1519931518674276465",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-17T12:00:48.614000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1538885585723326555",
+        "author": "Tasuku",
+        "authorId": "discord-837231212283691028",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-17T12:21:54.748000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1538890836740284476",
+        "author": "いっぺい",
+        "authorId": "discord-705041013504344145",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-17T12:42:46.688000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1538894917634367568",
+        "author": "やどかり",
+        "authorId": "discord-1497178953813721150",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-17T12:58:59.649000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1538918130548473876",
+        "author": "りか",
+        "authorId": "discord-1522253038994063410",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-17T14:31:14.039000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1539302106127667200",
+        "author": "KD",
+        "authorId": "discord-1008029940429639794",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-18T15:57:00.951000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1539406267972587562",
+        "author": "けんたろう",
+        "authorId": "discord-1378230452300681338",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-18T22:50:55.070000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1539455359008251965",
+        "author": "Non【IRO+代表】",
+        "authorId": "discord-1119606639763390545",
+        "text": "## 残り2名で締め切ります！",
+        "createdAt": "2026-08-19T02:05:59.285000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1539475275853733978",
+        "author": "miki",
+        "authorId": "discord-1477873334719873097",
+        "text": "参加希望です",
+        "createdAt": "2026-08-19T03:25:07.831000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1539789495589798018",
+        "author": "りさ",
+        "authorId": "discord-1534888874038264019",
+        "text": "参加希望です",
+        "createdAt": "2026-08-20T00:13:43.654000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1540205334696689745",
+        "author": "Non【IRO+代表】",
+        "authorId": "discord-1119606639763390545",
+        "text": "【募集終了】9/20(日)支部ランチ交流会🍕in武蔵小山",
+        "createdAt": "2026-08-21T03:46:07.423000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1541684790133260288",
+        "author": "IRO+ サポート",
+        "authorId": "discord-1223692916619477072",
+        "text": ":white_check_mark: <#1541684792947638352>を作成しました\n下記の皆様はご確認をお願いいたします！\n@しょーご @Masamichi @ゆうと(新矢 悠人) @Takahiro. @まさゆき @ながね @ゆうか @ふみ @小森正太 @りさこ @あやな @Tasuku @いっぺい @やどかり @りか @KD @けんたろう @miki @りさ",
+        "createdAt": "2026-08-25T05:44:57.086000+00:00"
+      }
+    ],
     "chatId": "discord-1541684792947638352"
   },
   {
@@ -652,7 +2090,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "東京駅",
     "image": "",
     "capacity": 7,
-    "reservationCapacity": 7,
+    "reservationCapacity": 8,
     "attendees": 7,
     "participants": [
       "discord-1466360543093985445",
@@ -663,7 +2101,15 @@ export const IMPORTED_DISCORD_EVENTS = [
       "discord-1514440558217793566",
       "discord-1353735645373136926"
     ],
-    "applicantIds": [],
+    "applicantIds": [
+      "discord-1466360543093985445",
+      "discord-1457401545359622420",
+      "discord-696624208532340756",
+      "discord-1228678386902372374",
+      "discord-811937355392614430",
+      "discord-1514440558217793566",
+      "discord-1353735645373136926"
+    ],
     "price": "本文をご確認ください",
     "category": "kanto",
     "eventType": "club",
@@ -676,6 +2122,71 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1538377283406925834",
     "sourceLabel": "旅行部",
+    "importedComments": [
+      {
+        "id": "discord-event-comment-1538377380190621756",
+        "author": "瑞季✈️旅行部長",
+        "authorId": "discord-1353010654189191178",
+        "text": "https://docs.google.com/forms/d/e/1FAIpQLSffv1CZ3f8yo3nfmLYzZnzEnv25BmjfbpSXl4-wMwvCmPU8ew/viewform?usp=publish-editor",
+        "createdAt": "2026-08-16T02:42:29.107000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1539471351784538203",
+        "author": "美咲",
+        "authorId": "discord-1405235190170914938",
+        "text": "@瑞季✈️旅行部長【🥇GOLD 】 \nすみません、こちらおそらく抽選になっているかとは思いますが、参加できるかできないかはいつ頃分かりますか？",
+        "createdAt": "2026-08-19T03:09:32.260000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1539613681690742874",
+        "author": "瑞季✈️旅行部長",
+        "authorId": "discord-1353010654189191178",
+        "text": "@美咲 \nご確認ありがとうございます！\nこちら来週内(月内中)に応募締め切り&確定させていただきます！🙏",
+        "createdAt": "2026-08-19T12:35:06.354000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1539627189287391352",
+        "author": "美咲",
+        "authorId": "discord-1405235190170914938",
+        "text": "分かりました、ありがとうございます🙇‍♀️",
+        "createdAt": "2026-08-19T13:28:46.816000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1540623647692029992",
+        "author": "瑞季✈️旅行部長",
+        "authorId": "discord-1353010654189191178",
+        "text": "@旅行部✈️ \nこちら27日(木)で締め切りとさせていただきます！🙇‍♀️",
+        "createdAt": "2026-08-22T07:28:21.013000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1542193963979636748",
+        "author": "瑞季✈️旅行部長",
+        "authorId": "discord-1353010654189191178",
+        "text": "こちら27日木(本日)締め切りとさせていただきます！\n気になってくださっている方はラストぜひ🥰",
+        "createdAt": "2026-08-26T15:28:13.591000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1542550454939164745",
+        "author": "瑞季✈️旅行部長",
+        "authorId": "discord-1353010654189191178",
+        "text": "【募集終了】9/13(日) 日帰りドライブのご案内~房総エリアの旅🚗~",
+        "createdAt": "2026-08-27T15:04:47.659000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1543488611490467870",
+        "author": "瑞季✈️旅行部長",
+        "authorId": "discord-1353010654189191178",
+        "text": "皆さま\n\nたくさんのご応募ありがとうございました🙇‍♀️\n今回は下記メンバーでご一緒できればと思います！\n(運営メンバーを除く)\n\n今回ご応募いただいた他の皆さまとも、また別のイベントでお会いできたら嬉しいです☺️\n\n@nori \n@ゆい \n@イチカワアツキ \n@よっち🍫 \n@きえ \n@みなみ \n@みのり",
+        "createdAt": "2026-08-30T05:12:41.611000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1543490302600552568",
+        "author": "IRO+ サポート",
+        "authorId": "discord-1223692916619477072",
+        "text": ":white_check_mark: <#1543490305494360065>を作成しました\n下記の皆様はご確認をお願いいたします！\n@nori @ゆい @イチカワアツキ @よっち🍫 @きえ @みなみ @みのり",
+        "createdAt": "2026-08-30T05:19:24.803000+00:00"
+      }
+    ],
     "chatId": "discord-1543490305494360065"
   },
   {
@@ -689,7 +2200,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "image": "",
     "tabelogUrl": "https://tabelog.com/tokyo/A1305/A130501/13235689/",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -706,7 +2217,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1457367058449698988/309c5f810c6844b0bd480d16c07ffd01.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1538100984952389642",
-    "sourceLabel": "スイーツ部"
+    "sourceLabel": "スイーツ部",
+    "importedComments": []
   },
   {
     "id": "discord-event-1537428383640854660",
@@ -727,7 +2239,12 @@ export const IMPORTED_DISCORD_EVENTS = [
       "discord-741224627589742642",
       "discord-1223177154397995110"
     ],
-    "applicantIds": [],
+    "applicantIds": [
+      "discord-1468051665340076248",
+      "discord-1403349152754303046",
+      "discord-741224627589742642",
+      "discord-1223177154397995110"
+    ],
     "price": "20,000円",
     "priceMin": 20000,
     "priceMax": 20000,
@@ -740,7 +2257,93 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1457591200243777589/a787f91f604d35bef48da01f73e9c750.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1537428383640854660",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": [
+      {
+        "id": "discord-event-comment-1537460962540658768",
+        "author": "はばちゃん",
+        "authorId": "discord-1223177154397995110",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-13T14:00:58.113000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1537470110455832596",
+        "author": "misato",
+        "authorId": "discord-1403349152754303046",
+        "text": "参加希望です🍖",
+        "createdAt": "2026-08-13T14:37:19.146000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1537981549956300800",
+        "author": "Harune",
+        "authorId": "discord-741224627589742642",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-15T00:29:35.825000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1538764922765185034",
+        "author": "よし",
+        "authorId": "discord-401272869948227597",
+        "text": "参加希望です🙋",
+        "createdAt": "2026-08-17T04:22:26.457000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1539657097703067720",
+        "author": "miki",
+        "authorId": "discord-1468051665340076248",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-19T15:27:37.538000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1539960675013632001",
+        "author": "shimizu",
+        "authorId": "discord-343450526177820683",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-20T11:33:56.009000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1539996716659380364",
+        "author": "ゆいと",
+        "authorId": "discord-1476255646377578691",
+        "text": "参加希望です",
+        "createdAt": "2026-08-20T13:57:09.007000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1543181567671799829",
+        "author": "よし",
+        "authorId": "discord-401272869948227597",
+        "text": "希望していましたが、参加難しくなってしまいました。すみません🙇‍♂️",
+        "createdAt": "2026-08-29T08:52:36.660000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1543182802428895323",
+        "author": "つね🪼",
+        "authorId": "discord-1457591200243777589",
+        "text": "承知しました！ご連絡ありがとうございます！",
+        "createdAt": "2026-08-29T08:57:31.049000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1543184215531720704",
+        "author": "つね🪼",
+        "authorId": "discord-1457591200243777589",
+        "text": "@関東支部 \nこちら予定通り8/30の17時頃に募集締め切ります！🤲",
+        "createdAt": "2026-08-29T09:03:07.959000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1543530745195139155",
+        "author": "つね🪼",
+        "authorId": "discord-1457591200243777589",
+        "text": "【募集終了】9/27(日)18:00時以降 Smith & Wollensky GINZA@銀座",
+        "createdAt": "2026-08-30T08:00:07.069000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1543566910535508078",
+        "author": "つね🪼",
+        "authorId": "discord-1457591200243777589",
+        "text": "すみません🙇‍♀️\n当日の予約はメンバー確定後に取る予定でしたが、確認したところ8名でのお店の夜の予約枠が9/27のみピンポイントで埋まってしまっていたため、募集人数を6名→4名に変更させていただきました。\n\n今回は下記4名の方とご一緒できれば幸いです✨\n\n@はばちゃん さん\n@misato さん\n@Harune さん\n@miki さん\n\nご参加いただく皆さまには、後ほどプライベートチャットを作成させていただきます🙌\n\nせっかく参加希望をいただいた中、ご一緒できなかった方には申し訳ありません🙇‍♀️また別の機会にご一緒できましたら嬉しいです。\n\nよろしくお願いいたします！",
+        "createdAt": "2026-08-30T10:23:49.558000+00:00"
+      }
+    ]
   },
   {
     "id": "discord-event-1537390278665568327",
@@ -752,7 +2355,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "詳細をご確認ください",
     "image": "/discord-board/1485649683345969182/1537390283589689478.webp",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -767,7 +2370,93 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1457652020164034686/932a1177233bc50fb3421b02bd69eddb.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1537390278665568327",
-    "sourceLabel": "散歩部"
+    "sourceLabel": "散歩部",
+    "importedComments": [
+      {
+        "id": "discord-event-comment-1537390950194741368",
+        "author": "Yukako",
+        "authorId": "discord-1404824055911022814",
+        "text": "参加希望です！どちらの日程でも大丈夫です🙆🏻‍♀️",
+        "createdAt": "2026-08-13T09:22:45.869000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1537476259125133342",
+        "author": "タクヤ",
+        "authorId": "discord-1520013956566093925",
+        "text": "素敵な企画ありがとうございます✨参加希望します！9/22であれば参加出来ます👍",
+        "createdAt": "2026-08-13T15:01:45.103000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1537592670887878726",
+        "author": "Monako💃",
+        "authorId": "discord-1457652020164034686",
+        "text": "@散歩部🚶 \n9/22に参加可能な方、あと1名いらっしゃいませんか？！💓",
+        "createdAt": "2026-08-13T22:44:19.830000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1537594085219762356",
+        "author": "はるき",
+        "authorId": "discord-1533783215880273990",
+        "text": "ステキな機会をありがとうございます💌9/22参加させていただきたいです🤍",
+        "createdAt": "2026-08-13T22:49:57.033000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1537594516687552583",
+        "author": "Monako💃",
+        "authorId": "discord-1457652020164034686",
+        "text": "@Yukako @タクヤ @はるき \nありがとうございます💖\n9/22で参加確定でお願いします！\n後ほどプライベートチャット作成します。",
+        "createdAt": "2026-08-13T22:51:39.903000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1537594791674642463",
+        "author": "Monako💃",
+        "authorId": "discord-1457652020164034686",
+        "text": "@散歩部🚶 \n他に参加希望の方いらっしゃれば、本日中にご連絡ください🙌",
+        "createdAt": "2026-08-13T22:52:45.465000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1537594959039828070",
+        "author": "Monako💃",
+        "authorId": "discord-1457652020164034686",
+        "text": "【募集中】9/22(火)🏛️🌙赤坂迎賓館ナイトウォーク(シルバーウィーク特別企画）",
+        "createdAt": "2026-08-13T22:53:25.368000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1537596270129184829",
+        "author": "Akari",
+        "authorId": "discord-1457365003563831370",
+        "text": "参加希望します",
+        "createdAt": "2026-08-13T22:58:37.956000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1537640409864478750",
+        "author": "Masamichi",
+        "authorId": "discord-724169786946486376",
+        "text": "参加希望します",
+        "createdAt": "2026-08-14T01:54:01.689000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1537700005312340078",
+        "author": "Takahiro.",
+        "authorId": "discord-1403675019061755974",
+        "text": "まだ間に合うようでしたら、\n参加希望します！\n(両日参加可能です)",
+        "createdAt": "2026-08-14T05:50:50.351000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1537980551489916988",
+        "author": "Monako💃",
+        "authorId": "discord-1457652020164034686",
+        "text": "【募集終了】9/22(火)🏛️🌙赤坂迎賓館ナイトウォーク(シルバーウィーク特別企画）",
+        "createdAt": "2026-08-15T00:25:37.772000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1537981031875870851",
+        "author": "IRO+ サポート",
+        "authorId": "discord-1223692916619477072",
+        "text": ":white_check_mark: <#1537981038117265458>を作成しました\n下記の皆様はご確認をお願いいたします！\n@Yukako @タクヤ @はるき @Akari @Masamichi @Takahiro.",
+        "createdAt": "2026-08-15T00:27:32.305000+00:00"
+      }
+    ]
   },
   {
     "id": "discord-event-1537334496612065280",
@@ -796,7 +2485,16 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1403038939832385683/8c3e03e761a990c8a8a0712163a8f955.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1537334496612065280",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": [
+      {
+        "id": "discord-event-comment-1538376360458846218",
+        "author": "かずま🍣🍶🍷",
+        "authorId": "discord-1403038939832385683",
+        "text": "【募集終了】9/15（火）20:30~焼鳥空🐓 @南青山",
+        "createdAt": "2026-08-16T02:38:25.984000+00:00"
+      }
+    ]
   },
   {
     "id": "discord-event-1537306033481846804",
@@ -808,7 +2506,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "詳細をご確認ください",
     "image": "/discord-board/1485649954918891671/1537306038733246575.webp",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -823,7 +2521,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1446344592214724700/559a459ef83e54fad1ec64ffc9a3d64a.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1537306033481846804",
-    "sourceLabel": "ワイン部"
+    "sourceLabel": "ワイン部",
+    "importedComments": []
   },
   {
     "id": "discord-event-1537013556807999509",
@@ -852,7 +2551,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1460776090736922707/911ccbfa03d0db7521cec63824b34ffe.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1537013556807999509",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1536708577207521422",
@@ -881,7 +2581,163 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1403348999557222473/ce7f2eea11bbe1db6de05d0f1a634202.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1536708577207521422",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": [
+      {
+        "id": "discord-event-comment-1536710223602127029",
+        "author": "asumi🥀",
+        "authorId": "discord-1533461878104391886",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-11T12:17:48.002000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1536710238181269637",
+        "author": "きょうこ",
+        "authorId": "discord-1459502509679837186",
+        "text": "参加希望です！！",
+        "createdAt": "2026-08-11T12:17:51.478000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1536718319644844093",
+        "author": "はるか🍵",
+        "authorId": "discord-1467445141412516063",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-11T12:49:58.249000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1536733816679432242",
+        "author": "ゆいと",
+        "authorId": "discord-1476255646377578691",
+        "text": "参加希望です",
+        "createdAt": "2026-08-11T13:51:33.030000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1536739360920309821",
+        "author": "ゆか",
+        "authorId": "discord-1403376854085406771",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-11T14:13:34.880000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1536739519406014585",
+        "author": "Tasuku",
+        "authorId": "discord-837231212283691028",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-11T14:14:12.666000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1537041156242673684",
+        "author": "くるみ",
+        "authorId": "discord-1508435542948184084",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-12T10:12:48.492000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1537054231432003646",
+        "author": "ゆーき",
+        "authorId": "discord-1458298491620163656",
+        "text": "参加希望です🍷",
+        "createdAt": "2026-08-12T11:04:45.860000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1537082643575996496",
+        "author": "さき",
+        "authorId": "discord-1496168937581318238",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-12T12:57:39.843000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1537249870992121986",
+        "author": "りさこ",
+        "authorId": "discord-1528745249210634322",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-13T00:02:09.966000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1538138172339523584",
+        "author": "たくや🐧",
+        "authorId": "discord-396760147138969612",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-15T10:51:57.511000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1538138293261049856",
+        "author": "KD",
+        "authorId": "discord-1008029940429639794",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-15T10:52:26.341000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1538840923319046245",
+        "author": "ももこ",
+        "authorId": "discord-1205532162414350426",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-17T09:24:26.401000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1538858181655011368",
+        "author": "Hono🎭舞台鑑賞部長",
+        "authorId": "discord-1458772421887656090",
+        "text": "参加希望です！🍷",
+        "createdAt": "2026-08-17T10:33:01.109000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1540908215372353567",
+        "author": "mana",
+        "authorId": "discord-1517883839731601489",
+        "text": "参加希望です！！",
+        "createdAt": "2026-08-23T02:19:07.235000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1540911203453509683",
+        "author": "ﾘﾎ",
+        "authorId": "discord-1458669499711488172",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-23T02:30:59.649000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1541082940899860513",
+        "author": "きえ",
+        "authorId": "discord-1466360543093985445",
+        "text": "参加希望です！🍷",
+        "createdAt": "2026-08-23T13:53:25.047000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1541127802009428020",
+        "author": "Sho",
+        "authorId": "discord-336865912672223234",
+        "text": "参加希望です✨️\nよろしくお願いします！",
+        "createdAt": "2026-08-23T16:51:40.769000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1541357951095148625",
+        "author": "kanazawa",
+        "authorId": "discord-398776137255485440",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-24T08:06:12.587000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1541366590472462346",
+        "author": "さな【運営】",
+        "authorId": "discord-1404762625077809152",
+        "text": "@saori 募集ありがとうございます！こちら希望者が募集人数を上回っておりますので、早めに締め切っていただけると助かります🙇",
+        "createdAt": "2026-08-24T08:40:32.375000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1541786629453381752",
+        "author": "saori🏀スポーツ部長",
+        "authorId": "discord-1403348999557222473",
+        "text": "@関東支部 \n8/27（木）23:59に締め切ります！\n引き続き参加希望の方はコメントお願いします🤲🏻",
+        "createdAt": "2026-08-25T12:29:37.472000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1543036336842215485",
+        "author": "saori🏀スポーツ部長",
+        "authorId": "discord-1403348999557222473",
+        "text": "【募集終了】 9/26（土） 12:00- nacol @浅草",
+        "createdAt": "2026-08-28T23:15:30.932000+00:00"
+      }
+    ]
   },
   {
     "id": "discord-event-1536636570067800107",
@@ -894,7 +2750,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "image": "/discord-board/1485649683345969182/1536636576925356133.webp",
     "tabelogUrl": "https://tabelog.com/tokyo/A1317/A131715/13217016/",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -911,7 +2767,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1457652020164034686/932a1177233bc50fb3421b02bd69eddb.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1536636570067800107",
-    "sourceLabel": "散歩部"
+    "sourceLabel": "散歩部",
+    "importedComments": []
   },
   {
     "id": "discord-event-1536615284809662594",
@@ -923,7 +2780,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "詳細をご確認ください",
     "image": "",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -938,7 +2795,37 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1457652020164034686/932a1177233bc50fb3421b02bd69eddb.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1536615284809662594",
-    "sourceLabel": "散歩部"
+    "sourceLabel": "散歩部",
+    "importedComments": [
+      {
+        "id": "discord-event-comment-1536615446755938335",
+        "author": "Monako💃",
+        "authorId": "discord-1457652020164034686",
+        "text": "**【ルート詳細】**\n**🚶 DAY1｜東京 → 高田馬場**\n\n**約20km／所要時間：約7時間〜**\n\n東京（START）\n→ 神田\n→ 秋葉原\n→ 御徒町\n→ 上野\n→ 鶯谷\n→ 日暮里\n→ 西日暮里\n→ 田端\n→ 駒込\n→ 巣鴨\n→ 大塚\n→ 池袋\n→ 目白\n→ **高田馬場（GOAL）**\n\n⸻\n\n**🚶 DAY2｜高田馬場 → 東京**\n\n**約20km／所要時間：約7時間〜**\n\n高田馬場（START）\n→ 新大久保\n→ 新宿\n→ 代々木\n→ 原宿\n→ 渋谷\n→ 恵比寿\n→ 目黒\n→ 五反田\n→ 大崎\n→ 品川\n→ 高輪ゲートウェイ\n→ 田町\n→ 浜松町\n→ 新橋\n→ 有楽町\n→ **東京（GOAL）**",
+        "createdAt": "2026-08-11T06:01:11.441000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1537040103971491840",
+        "author": "Monako💃",
+        "authorId": "discord-1457652020164034686",
+        "text": "@散歩部🚶 \n早速のリアクションありがとうございます！\n開催できそうな方向ですね🤝\n他にご興味のある方いらっしゃれば明日くらいまでにリアクションください〜",
+        "createdAt": "2026-08-12T10:08:37.611000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1537368973534957621",
+        "author": "Monako💃",
+        "authorId": "discord-1457652020164034686",
+        "text": "@散歩部🚶 \n\nたくさんの反応ありがとうございました！\n\n**【11/21(土)・22(日)】で開催決定します🔥**\n\n今後のスケジュールは以下を予定しています。\n\n* 9月上旬　参加者募集開始\n* 9月中旬〜11月中旬　下見会\n* 9月末　参加者募集締め切り\n\n参加希望者が定員を上回った場合は、散歩部のイベントや下見会への参加回数が多い方を優先させていただく予定です。\n\n参加を希望される方は、ぜひ今のうちからイベントにたくさん参加していただけると嬉しいです🤝\n\nみなさんのご参加お待ちしています！",
+        "createdAt": "2026-08-13T07:55:26.225000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1537372608750686249",
+        "author": "you",
+        "authorId": "discord-1530442700476649533",
+        "text": "@Monako \n参加します🔥\n企画を進めてくださり、ありがとうございます！",
+        "createdAt": "2026-08-13T08:09:52.928000+00:00"
+      }
+    ]
   },
   {
     "id": "discord-event-1536386349085761637",
@@ -957,7 +2844,10 @@ export const IMPORTED_DISCORD_EVENTS = [
       "discord-525718374152536074",
       "discord-1528745249210634322"
     ],
-    "applicantIds": [],
+    "applicantIds": [
+      "discord-525718374152536074",
+      "discord-1528745249210634322"
+    ],
     "price": "15,000円",
     "priceMin": 15000,
     "priceMax": 15000,
@@ -971,6 +2861,50 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1536386349085761637",
     "sourceLabel": "関東グルメ掲示板",
+    "importedComments": [
+      {
+        "id": "discord-event-comment-1536391406157828227",
+        "author": "おさや",
+        "authorId": "discord-525718374152536074",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-10T15:10:56+00:00"
+      },
+      {
+        "id": "discord-event-comment-1536510054088310874",
+        "author": "kanazawa",
+        "authorId": "discord-398776137255485440",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-10T23:02:23.871000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1537249983835799685",
+        "author": "りさこ",
+        "authorId": "discord-1528745249210634322",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-13T00:02:36.870000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1541102575053709364",
+        "author": "はばちゃん",
+        "authorId": "discord-1223177154397995110",
+        "text": "【募集終了】9/26(土) 19:30-鮨はつめ@恵比寿",
+        "createdAt": "2026-08-23T15:11:26.194000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1541103068509245510",
+        "author": "はばちゃん",
+        "authorId": "discord-1223177154397995110",
+        "text": "今回は@さ @りさこ \nお願いいたします！\n@oishiiudon また別の機会にご一緒できたらと思います！\n\n後ほどプライベートチャット作成します。",
+        "createdAt": "2026-08-23T15:13:23.843000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1541103617845629128",
+        "author": "IRO+ サポート",
+        "authorId": "discord-1223692916619477072",
+        "text": ":white_check_mark: <#1541103620399829092>を作成しました\n下記の皆様はご確認をお願いいたします！\n@りさこ @さ",
+        "createdAt": "2026-08-23T15:15:34.815000+00:00"
+      }
+    ],
     "chatId": "discord-1541103620399829092"
   },
   {
@@ -993,7 +2927,12 @@ export const IMPORTED_DISCORD_EVENTS = [
       "discord-396760147138969612",
       "discord-764979134228987924"
     ],
-    "applicantIds": [],
+    "applicantIds": [
+      "discord-1489160582639779840",
+      "discord-1528745249210634322",
+      "discord-396760147138969612",
+      "discord-764979134228987924"
+    ],
     "price": "15,300円",
     "priceMin": 15300,
     "priceMax": 15300,
@@ -1007,6 +2946,155 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerRank": "platinum",
     "sourceThreadId": "discord-board-1536378194457002024",
     "sourceLabel": "関東グルメ掲示板",
+    "importedComments": [
+      {
+        "id": "discord-event-comment-1536392587135422557",
+        "author": "ななみ",
+        "authorId": "discord-1457508300588453932",
+        "text": "参加希望です！🍝",
+        "createdAt": "2026-08-10T15:15:37.567000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1536409881244995614",
+        "author": "Takahiro.",
+        "authorId": "discord-1403675019061755974",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-10T16:24:20.804000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1536515655254286419",
+        "author": "ﾘﾎ",
+        "authorId": "discord-1458669499711488172",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-10T23:24:39.293000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1537015704321134613",
+        "author": "やま",
+        "authorId": "discord-1457343339241148477",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-12T08:31:40.281000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1537250122000240740",
+        "author": "りさこ",
+        "authorId": "discord-1528745249210634322",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-13T00:03:09.811000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1537763459725529140",
+        "author": "hitomi",
+        "authorId": "discord-1510638806661857360",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-14T10:02:59.062000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1537772374005518427",
+        "author": "Rika",
+        "authorId": "discord-1531806645980762280",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-14T10:38:24.392000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1537896741611765830",
+        "author": "かずま🍣🍶🍷",
+        "authorId": "discord-1403038939832385683",
+        "text": "参加希望です🥹",
+        "createdAt": "2026-08-14T18:52:35.940000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1538075218877227008",
+        "author": "まさゆき",
+        "authorId": "discord-1538005755712774308",
+        "text": "参加希望します！",
+        "createdAt": "2026-08-15T06:41:48.236000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1538483177503596574",
+        "author": "yuta",
+        "authorId": "discord-764979134228987924",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-16T09:42:53.152000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1538526839700721844",
+        "author": "みょん🍳料理教室部長",
+        "authorId": "discord-1353587486604922921",
+        "text": "@関東支部 \nありがたく募集人数超えているので、募集期日を**8/22(土)**に短縮させていただきます！🙇",
+        "createdAt": "2026-08-16T12:36:23.031000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1538581624109924463",
+        "author": "たくや🐧",
+        "authorId": "discord-396760147138969612",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-16T16:14:04.652000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1539004319112765441",
+        "author": "かずま🍣🍶🍷",
+        "authorId": "discord-1403038939832385683",
+        "text": "すみません、予定が入ってしまったので参加辞退させていただけますでしょうか🙇",
+        "createdAt": "2026-08-17T20:13:42.994000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1539062126616776744",
+        "author": "みょん🍳料理教室部長",
+        "authorId": "discord-1353587486604922921",
+        "text": "承知いたしました！",
+        "createdAt": "2026-08-18T00:03:25.377000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1539183373065392208",
+        "author": "ゆいと",
+        "authorId": "discord-1476255646377578691",
+        "text": "参加希望です",
+        "createdAt": "2026-08-18T08:05:12.783000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1539207059667685457",
+        "author": "みほ",
+        "authorId": "discord-1489160582639779840",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-18T09:39:20.109000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1539214372918927451",
+        "author": "mioka",
+        "authorId": "discord-1216698337147748394",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-18T10:08:23.724000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1539603908585070652",
+        "author": "はる",
+        "authorId": "discord-1539304691869950037",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-19T11:56:16.264000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1540723927909933066",
+        "author": "みょん🍳料理教室部長",
+        "authorId": "discord-1353587486604922921",
+        "text": "【募集終了】10/24(土)19:00-トレヴィーテ🍷🍝@代々木",
+        "createdAt": "2026-08-22T14:06:49.680000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1540753488290779186",
+        "author": "みょん🍳料理教室部長",
+        "authorId": "discord-1353587486604922921",
+        "text": "皆様、ご応募ありがとうございました✨️\n今回はこちらの4名でお願いいたします🙇\n@りさこ @yuta @みほ @たくや🐧 \n\n他の皆様も、他の企画や部活でご一緒できればと思いますので、またよろしくお願いいたします😣",
+        "createdAt": "2026-08-22T16:04:17.424000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1540753670189355168",
+        "author": "IRO+ サポート",
+        "authorId": "discord-1223692916619477072",
+        "text": ":white_check_mark: <#1540753672756133888>を作成しました\n下記の皆様はご確認をお願いいたします！\n@りさこ @yuta @みほ @たくや🐧",
+        "createdAt": "2026-08-22T16:05:00.792000+00:00"
+      }
+    ],
     "chatId": "discord-1540753672756133888"
   },
   {
@@ -1032,7 +3120,16 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "さな【運営】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1404762625077809152/ca540a9e6c8e7f31f87f4b95ce0ef77d.png?size=512",
     "sourceThreadId": "discord-board-1534559448843157704",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": [
+      {
+        "id": "discord-event-comment-1536380278631571567",
+        "author": "よし",
+        "authorId": "discord-401272869948227597",
+        "text": "【募集中】9/12(土)18:00Bistro Un Coeur@野毛 （桜木町近辺）",
+        "createdAt": "2026-08-10T14:26:42.991000+00:00"
+      }
+    ]
   },
   {
     "id": "discord-event-1536328438246285392",
@@ -1045,7 +3142,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "image": "",
     "tabelogUrl": "https://tabelog.com/tokyo/A1301/A130101/13307221/",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -1062,7 +3159,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1457710905109254328/93565c5369bddacd5bb4830e7a3f0a82.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1536328438246285392",
-    "sourceLabel": "スイーツ部"
+    "sourceLabel": "スイーツ部",
+    "importedComments": []
   },
   {
     "id": "discord-event-1536282798539800647",
@@ -1091,6 +3189,246 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1536282798539800647",
     "sourceLabel": "関東支部イベント",
+    "importedComments": [
+      {
+        "id": "discord-event-comment-1536322437690695732",
+        "author": "ナナ",
+        "authorId": "discord-1314123704300474480",
+        "text": "参加希望です!",
+        "createdAt": "2026-08-10T10:36:52.636000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1536344467232129075",
+        "author": "mrng9",
+        "authorId": "discord-1072111251175522344",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-10T12:04:24.888000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1536346725764300852",
+        "author": "たくま",
+        "authorId": "discord-1524996595198988288",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-10T12:13:23.364000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1536603412815151124",
+        "author": "Yukako",
+        "authorId": "discord-1404824055911022814",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-11T05:13:22.326000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1536660451709157427",
+        "author": "さおり",
+        "authorId": "discord-1357210007372042251",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-11T09:00:01.458000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1536697266994286645",
+        "author": "asumi🥀",
+        "authorId": "discord-1533461878104391886",
+        "text": "参加者希望です🍖",
+        "createdAt": "2026-08-11T11:26:18.906000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1536957454817169459",
+        "author": "えーよ",
+        "authorId": "discord-770533624361385985",
+        "text": "参加希望です🍖",
+        "createdAt": "2026-08-12T04:40:12.517000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1537061094642688030",
+        "author": "天ぷら(てつや",
+        "authorId": "discord-1059373969590984764",
+        "text": "参加したいですー",
+        "createdAt": "2026-08-12T11:32:02.177000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1537106267846348892",
+        "author": "しょうこ🍰スイーツ部長",
+        "authorId": "discord-1459195336991047815",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-12T14:31:32.308000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1537108034445246505",
+        "author": "Aki",
+        "authorId": "discord-1457711181308498067",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-12T14:38:33.498000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1537881045826011146",
+        "author": "anna",
+        "authorId": "discord-1505883189703344158",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-14T17:50:13.773000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1538090782060449862",
+        "author": "りか",
+        "authorId": "discord-1522253038994063410",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-15T07:43:38.788000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1538165932562849835",
+        "author": "しょーご",
+        "authorId": "discord-1522002897682956372",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-15T12:42:16.064000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1538340257270075432",
+        "author": "Takahisa",
+        "authorId": "discord-1532714538611507262",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-16T00:14:58.313000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1538473586371727360",
+        "author": "Hideto",
+        "authorId": "discord-1228680700455157851",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-16T09:04:46.448000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1538603282983948298",
+        "author": "りょう",
+        "authorId": "discord-1416668287843958865",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-16T17:40:08.530000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1538767877472256100",
+        "author": "Non【IRO+代表】",
+        "authorId": "discord-1119606639763390545",
+        "text": "## 残り2名で締め切ります！",
+        "createdAt": "2026-08-17T04:34:10.914000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1538801759156174858",
+        "author": "Rika",
+        "authorId": "discord-1531806645980762280",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-17T06:48:48.937000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1538812740418805760",
+        "author": "よし",
+        "authorId": "discord-401272869948227597",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-17T07:32:27.074000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1539150236646252574",
+        "author": "IRO+ サポート",
+        "authorId": "discord-1223692916619477072",
+        "text": ":white_check_mark: <#1539150239884378154>を作成しました\n下記の皆様はご確認をお願いいたします！\n@nate @mrng9 @たくま @Yukako @さおり @asumi🥀 @えーよ @天ぷら(てつや @しょうこ @Aki🐈‍⬛ @anna @りか @しょーご @Hideto @りょう @Rika @Takahisa @よし",
+        "createdAt": "2026-08-18T05:53:32.445000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1539151345158848586",
+        "author": "Non【IRO+代表】",
+        "authorId": "discord-1119606639763390545",
+        "text": "【募集終了】9/9(水)ビアガーデン🍺in六本木",
+        "createdAt": "2026-08-18T05:57:56.735000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1540360713825030236",
+        "author": "Non【IRO+代表】",
+        "authorId": "discord-1119606639763390545",
+        "text": "【1名募集】9/9(水)ビアガーデン🍺in六本木",
+        "createdAt": "2026-08-21T14:03:32.694000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1540360755889704970",
+        "author": "Non【IRO+代表】",
+        "authorId": "discord-1119606639763390545",
+        "text": "こちら1名キャンセルが出ましたので先着で募集します！",
+        "createdAt": "2026-08-21T14:03:42.723000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1540447306875146270",
+        "author": "shimizu",
+        "authorId": "discord-343450526177820683",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-21T19:47:38.086000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1540922174657789953",
+        "author": "Non【IRO+代表】",
+        "authorId": "discord-1119606639763390545",
+        "text": "@shimi000 ありがとうございます！追加します！",
+        "createdAt": "2026-08-23T03:14:35.388000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1540922213379612793",
+        "author": "Non【IRO+代表】",
+        "authorId": "discord-1119606639763390545",
+        "text": "【募集終了】9/9(水)ビアガーデン🍺in六本木",
+        "createdAt": "2026-08-23T03:14:44.620000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1541693866028306522",
+        "author": "Non【IRO+代表】",
+        "authorId": "discord-1119606639763390545",
+        "text": "【1名追加募集】9/9(水)ビアガーデン🍺in六本木",
+        "createdAt": "2026-08-25T06:21:00.948000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1541693917815377950",
+        "author": "Non【IRO+代表】",
+        "authorId": "discord-1119606639763390545",
+        "text": "@関東支部 こちら1名キャンセルが出ましたので先着で募集します！",
+        "createdAt": "2026-08-25T06:21:13.295000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1541716083042689024",
+        "author": "Hisashi",
+        "authorId": "discord-980111773740974121",
+        "text": "はじめまして！こちら参加希望です！",
+        "createdAt": "2026-08-25T07:49:17.897000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1542042109488664676",
+        "author": "Non【IRO+代表】",
+        "authorId": "discord-1119606639763390545",
+        "text": "@Hisashi ありがとうございます！チャット追加させていただきました！https://discord.com/channels/1217327152098312245/1539150239884378154",
+        "createdAt": "2026-08-26T05:24:48.659000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1542042193253105694",
+        "author": "Non【IRO+代表】",
+        "authorId": "discord-1119606639763390545",
+        "text": "@everyone \n## こちらもう1名追加募集中です！先着でコメントお待ちしております🙏🏻",
+        "createdAt": "2026-08-26T05:25:08.630000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1542049248009519115",
+        "author": "Miyako",
+        "authorId": "discord-1540341083819741194",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-26T05:53:10.615000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1542062275165298738",
+        "author": "Non【IRO+代表】",
+        "authorId": "discord-1119606639763390545",
+        "text": "@Miyako ありがとうございます！チャット追加させていただきました！⁠🙏🏻\nhttps://discord.com/channels/1217327152098312245/1539150239884378154",
+        "createdAt": "2026-08-26T06:44:56.531000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1542062317913641001",
+        "author": "Non【IRO+代表】",
+        "authorId": "discord-1119606639763390545",
+        "text": "【募集終了】9/9(水)ビアガーデン🍺in六本木",
+        "createdAt": "2026-08-26T06:45:06.723000+00:00"
+      }
+    ],
     "chatId": "discord-1539150239884378154",
     "participantImportWarnings": [
       {
@@ -1121,7 +3459,11 @@ export const IMPORTED_DISCORD_EVENTS = [
       "discord-1532009007747960869",
       "discord-1505883189703344158"
     ],
-    "applicantIds": [],
+    "applicantIds": [
+      "discord-1520656082035540138",
+      "discord-1532009007747960869",
+      "discord-1505883189703344158"
+    ],
     "price": "12,000円",
     "priceMin": 12000,
     "priceMax": 12000,
@@ -1135,6 +3477,57 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1536245794905268294",
     "sourceLabel": "関東グルメ掲示板",
+    "importedComments": [
+      {
+        "id": "discord-event-comment-1537045525705261137",
+        "author": "ゆうき🐬",
+        "authorId": "discord-1520656082035540138",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-12T10:30:10.253000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1538534767778336828",
+        "author": "anna",
+        "authorId": "discord-1505883189703344158",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-16T13:07:53.232000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1538759308383100938",
+        "author": "このみ",
+        "authorId": "discord-1005339413527679123",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-17T04:00:07.884000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1538836953321963640",
+        "author": "tk",
+        "authorId": "discord-1532009007747960869",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-17T09:08:39.880000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1539219552435568700",
+        "author": "pokohide",
+        "authorId": "discord-804712649598042172",
+        "text": "結果遅れて申し訳ありません！\n今回は @tk @anna @ゆうき🐬 の3名でよろしくお願いします！\nこの後プライベートチャンネルを作成します！",
+        "createdAt": "2026-08-18T10:28:58.617000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1539219790563115028",
+        "author": "IRO+ サポート",
+        "authorId": "discord-1223692916619477072",
+        "text": ":white_check_mark: <#1539219793096482876>を作成しました\n下記の皆様はご確認をお願いいたします！\n@tk @anna @ゆうき🐬",
+        "createdAt": "2026-08-18T10:29:55.391000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1539219892484444251",
+        "author": "pokohide",
+        "authorId": "discord-804712649598042172",
+        "text": "【募集終了】 9/17(木) 19:00Les Jardin des dodine🍷大門",
+        "createdAt": "2026-08-18T10:30:19.691000+00:00"
+      }
+    ],
     "chatId": "discord-1539219793096482876"
   },
   {
@@ -1147,7 +3540,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "東銀座",
     "image": "https://cdn.discordapp.com/attachments/1536243051343650866/1536243051549163570/579506568_1550326466704638_5375429145540512798_n.webp?ex=6a950f55&is=6a93bdd5&hm=a8d9e8250722d51c23b1535d159116b5bf129a52ec0c5312c30891e135d9c309&",
     "capacity": 4,
-    "reservationCapacity": 4,
+    "reservationCapacity": 5,
     "attendees": 4,
     "participants": [
       "discord-1190229509727846433",
@@ -1155,7 +3548,12 @@ export const IMPORTED_DISCORD_EVENTS = [
       "discord-1323965226697097228",
       "discord-1499726864476803084"
     ],
-    "applicantIds": [],
+    "applicantIds": [
+      "discord-1190229509727846433",
+      "discord-1005339413527679123",
+      "discord-1323965226697097228",
+      "discord-1499726864476803084"
+    ],
     "price": "13,000円",
     "priceMin": 13000,
     "priceMax": 13000,
@@ -1169,6 +3567,113 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1536243051343650866",
     "sourceLabel": "関東グルメ掲示板",
+    "importedComments": [
+      {
+        "id": "discord-event-comment-1536263396746334268",
+        "author": "Rika",
+        "authorId": "discord-1531806645980762280",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-10T06:42:16.178000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1536560968480329789",
+        "author": "このみ",
+        "authorId": "discord-1005339413527679123",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-11T02:24:42.808000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1536670002285912124",
+        "author": "nanami",
+        "authorId": "discord-1499726864476803084",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-11T09:37:58.493000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1536739306960453732",
+        "author": "アヤカ🌺",
+        "authorId": "discord-1430703542208823417",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-11T14:13:22.015000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1536739702680453230",
+        "author": "ゆか",
+        "authorId": "discord-1403376854085406771",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-11T14:14:56.362000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1537186877004849272",
+        "author": "たかひろ",
+        "authorId": "discord-1190229509727846433",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-12T19:51:51.029000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1537259470080577566",
+        "author": "tk",
+        "authorId": "discord-1532009007747960869",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-13T00:40:18.567000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1537588172089983047",
+        "author": "marika♡",
+        "authorId": "discord-1323965226697097228",
+        "text": "参加希望です♡",
+        "createdAt": "2026-08-13T22:26:27.233000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1537717605081677824",
+        "author": "アヤカ🌺",
+        "authorId": "discord-1430703542208823417",
+        "text": "@pokohide ごめんなさい、仕事で外せない用事が入ってしまったので今回は取り下げさせてください🙏🏻",
+        "createdAt": "2026-08-14T07:00:46.463000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1537786857444745296",
+        "author": "shimizu",
+        "authorId": "discord-343450526177820683",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-14T11:35:57.513000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1537796485993726052",
+        "author": "やどかり",
+        "authorId": "discord-1497178953813721150",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-14T12:14:13.138000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1538926400311005214",
+        "author": "pokohide",
+        "authorId": "discord-804712649598042172",
+        "text": "明日予約人数を6人に変更できないか確認するため結果はもう少しお待ちください 🙏",
+        "createdAt": "2026-08-17T15:04:05.704000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1539229700113825844",
+        "author": "pokohide",
+        "authorId": "discord-804712649598042172",
+        "text": "予約枠を5名に変更したので、以下の4名の方当日よろしくお願いします！\n@marika♡ @nanami @たかひろ @このみ \nこの後プライベートチャンネルを作成します！",
+        "createdAt": "2026-08-18T11:09:18.012000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1539229870469685268",
+        "author": "IRO+ サポート",
+        "authorId": "discord-1223692916619477072",
+        "text": ":white_check_mark: <#1539229872826753124>を作成しました\n下記の皆様はご確認をお願いいたします！\n@marika♡ @たかひろ @このみ @nanami",
+        "createdAt": "2026-08-18T11:09:58.628000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1541365432361947178",
+        "author": "さな【運営】",
+        "authorId": "discord-1404762625077809152",
+        "text": "【募集終了】9/11(金) 20:30 ~ 一心不乱@東銀座",
+        "createdAt": "2026-08-24T08:35:56.260000+00:00"
+      }
+    ],
     "chatId": "discord-1539229872826753124"
   },
   {
@@ -1197,7 +3702,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "もってぃー【運営】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1352978791483572326/aa0f81f03bc22b267fa676eb6bf32402.png?size=512",
     "sourceThreadId": "discord-board-1536159631028650045",
-    "sourceLabel": "関東支部イベント"
+    "sourceLabel": "関東支部イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1536017844389675029",
@@ -1210,7 +3716,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "image": "https://cdn.discordapp.com/attachments/1536017844389675029/1536017844771487824/IMG_3358.jpg?ex=6a94e658&is=6a9394d8&hm=d6088f10b30fb78b026ff85d3198d3a03533048ae7a151a443074348360673cc&",
     "tabelogUrl": "https://tabelog.com/tokyo/A1303/A130302/13293299/",
     "capacity": 5,
-    "reservationCapacity": 5,
+    "reservationCapacity": 6,
     "attendees": 5,
     "participants": [
       "discord-834626020245372969",
@@ -1219,7 +3725,13 @@ export const IMPORTED_DISCORD_EVENTS = [
       "discord-1537625947690242098",
       "discord-1315589522695917589"
     ],
-    "applicantIds": [],
+    "applicantIds": [
+      "discord-834626020245372969",
+      "discord-1457365003563831370",
+      "discord-1416668287843958865",
+      "discord-1537625947690242098",
+      "discord-1315589522695917589"
+    ],
     "price": "8,800円",
     "priceMin": 8800,
     "priceMax": 8800,
@@ -1233,6 +3745,141 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1536017844389675029",
     "sourceLabel": "関東グルメ掲示板",
+    "importedComments": [
+      {
+        "id": "discord-event-comment-1536019101745545227",
+        "author": "ミッチャン",
+        "authorId": "discord-1457686620302999699",
+        "text": "【募集中】9/20 (土) 18:30🍕PICICA PICICA PIZZA & PASTA@恵比寿",
+        "createdAt": "2026-08-09T14:31:31.711000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1536151329557192714",
+        "author": "Akari",
+        "authorId": "discord-1457365003563831370",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-09T23:16:57.278000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1536273540217831425",
+        "author": "いっぺい",
+        "authorId": "discord-705041013504344145",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-10T07:22:34.570000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1536305182231765093",
+        "author": "やどかり",
+        "authorId": "discord-1497178953813721150",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-10T09:28:18.614000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1536316361519927388",
+        "author": "Asuka",
+        "authorId": "discord-1457710905109254328",
+        "text": "参加希望です❣️",
+        "createdAt": "2026-08-10T10:12:43.964000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1536316957207298129",
+        "author": "エマ",
+        "authorId": "discord-798452186354024478",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-10T10:15:05.987000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1536384444653641739",
+        "author": "りょう",
+        "authorId": "discord-1416668287843958865",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-10T14:43:16.248000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1536906152942501909",
+        "author": "Takahiro.",
+        "authorId": "discord-1403675019061755974",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-12T01:16:21.197000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1538030656456630273",
+        "author": "ミッチャン",
+        "authorId": "discord-1457686620302999699",
+        "text": "@関東支部 \nこちら募集人数を超えていますので、募集期日を8/19(水)23:00に前倒しさせていただきます！引き続き参加希望お待ちしております🙂‍↕️",
+        "createdAt": "2026-08-15T03:44:43.727000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1538155366955745291",
+        "author": "ふみ",
+        "authorId": "discord-1537625947690242098",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-15T12:00:17.027000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1538377508578263070",
+        "author": "Hiro🇺🇸",
+        "authorId": "discord-834626020245372969",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-16T02:42:59.717000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1538405817999433819",
+        "author": "yui",
+        "authorId": "discord-1315589522695917589",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-16T04:35:29.209000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1538413054654685194",
+        "author": "りさ",
+        "authorId": "discord-1534888874038264019",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-16T05:04:14.562000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1538740358715019357",
+        "author": "裕真",
+        "authorId": "discord-408073128955215882",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-17T02:44:49.931000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1538766869886935150",
+        "author": "hitomi",
+        "authorId": "discord-1510638806661857360",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-17T04:30:10.687000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1539183755414216765",
+        "author": "ゆいと",
+        "authorId": "discord-1476255646377578691",
+        "text": "参加希望です",
+        "createdAt": "2026-08-18T08:06:43.942000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1539777157809840208",
+        "author": "ミッチャン",
+        "authorId": "discord-1457686620302999699",
+        "text": "コメントくださった方、ありがとうございました！\n予約人数を4名→6名に変更できたので、今回は下記5名の方とご一緒したいと思います🍕\n@Akari @りょう @ふみ @Hiro🇺🇸 @yui \n\nプライベートチャットを作成しますので、ご確認お願いします🙂‍↕️\n今回ご一緒叶わなかった方々もまたの機会によろしくお願いします🙇🏻‍♀️",
+        "createdAt": "2026-08-19T23:24:42.098000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1539778089058574336",
+        "author": "IRO+ サポート",
+        "authorId": "discord-1223692916619477072",
+        "text": ":white_check_mark: <#1539778091851849778>を作成しました\n下記の皆様はご確認をお願いいたします！\n@りょう @ふみ @Hiro🇺🇸 @yui @Akari",
+        "createdAt": "2026-08-19T23:28:24.125000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1539778209959383050",
+        "author": "ミッチャン",
+        "authorId": "discord-1457686620302999699",
+        "text": "【募集終了】9/20 (土) 18:30🍕PICICA PICICA PIZZA & PASTA@恵比寿",
+        "createdAt": "2026-08-19T23:28:52.950000+00:00"
+      }
+    ],
     "chatId": "discord-1539778091851849778"
   },
   {
@@ -1261,7 +3908,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "asumi🥀",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1533461878104391886/7c850cfa96b9fb69dcc9dcca6fd2d895.png?size=512",
     "sourceThreadId": "discord-board-1536017582186823720",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1535962397020262520",
@@ -1290,7 +3938,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/696624208532340756/b824079889c51ec1cf68e5ba0f03233f.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1535962397020262520",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1535666168470184139",
@@ -1302,7 +3951,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "中野ハシゴ酒",
     "image": "",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -1317,7 +3966,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1353735645373136926/8466a7d863d8505dff4e2bf28d8d3c70.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1535666168470184139",
-    "sourceLabel": "昼飲み部"
+    "sourceLabel": "昼飲み部",
+    "importedComments": []
   },
   {
     "id": "discord-event-1535596686921965638",
@@ -1336,7 +3986,11 @@ export const IMPORTED_DISCORD_EVENTS = [
       "discord-1190229509727846433",
       "discord-1531806645980762280"
     ],
-    "applicantIds": [],
+    "applicantIds": [
+      "discord-1477873334719873097",
+      "discord-1190229509727846433",
+      "discord-1531806645980762280"
+    ],
     "price": "10,000円",
     "priceMin": 10000,
     "priceMax": 10000,
@@ -1350,6 +4004,57 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1535596686921965638",
     "sourceLabel": "関東グルメ掲示板",
+    "importedComments": [
+      {
+        "id": "discord-event-comment-1535618023334092840",
+        "author": "Rika",
+        "authorId": "discord-1531806645980762280",
+        "text": "参加希望です🙋🏻‍♀️",
+        "createdAt": "2026-08-08T11:57:47.166000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1535637197498224641",
+        "author": "miki",
+        "authorId": "discord-1477873334719873097",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-08T13:13:58.643000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1535719447506059384",
+        "author": "たかひろ",
+        "authorId": "discord-1190229509727846433",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-08T18:40:48.573000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1536386538307452948",
+        "author": "はばちゃん",
+        "authorId": "discord-1223177154397995110",
+        "text": "【募集中】9/25(金) 19:30-ゆか亭@小伝馬町",
+        "createdAt": "2026-08-10T14:51:35.414000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1540941143695691907",
+        "author": "はばちゃん",
+        "authorId": "discord-1223177154397995110",
+        "text": "【募集終了】9/25(金) 19:30-ゆか亭@小伝馬町",
+        "createdAt": "2026-08-23T04:29:57.959000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1540943275920203786",
+        "author": "はばちゃん",
+        "authorId": "discord-1223177154397995110",
+        "text": "@Rika \n@miki \n@たかひろ \nちょうど3名なので皆さんと行けたらと思います！\n後ほどプライベートチャット作成します。",
+        "createdAt": "2026-08-23T04:38:26.321000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1541041059193294879",
+        "author": "IRO+ サポート",
+        "authorId": "discord-1223692916619477072",
+        "text": ":white_check_mark: <#1541041061630320721>を作成しました\n下記の皆様はご確認をお願いいたします！\n@Rika @miki @たかひろ",
+        "createdAt": "2026-08-23T11:06:59.670000+00:00"
+      }
+    ],
     "chatId": "discord-1541041061630320721"
   },
   {
@@ -1362,7 +4067,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "詳細をご確認ください",
     "image": "",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -1379,7 +4084,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1446344592214724700/559a459ef83e54fad1ec64ffc9a3d64a.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1535575849523482654",
-    "sourceLabel": "ワイン部"
+    "sourceLabel": "ワイン部",
+    "importedComments": []
   },
   {
     "id": "discord-event-1535301178362040400",
@@ -1398,7 +4104,10 @@ export const IMPORTED_DISCORD_EVENTS = [
       "discord-1271250501068918857",
       "discord-1479749722297077771"
     ],
-    "applicantIds": [],
+    "applicantIds": [
+      "discord-1271250501068918857",
+      "discord-1479749722297077771"
+    ],
     "price": "11,000円",
     "priceMin": 11000,
     "priceMax": 11000,
@@ -1412,6 +4121,225 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1535301178362040400",
     "sourceLabel": "関東グルメ掲示板",
+    "importedComments": [
+      {
+        "id": "discord-event-comment-1535303175408586832",
+        "author": "Marina",
+        "authorId": "discord-1267485210547720367",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-07T15:06:41.571000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1535306010561093692",
+        "author": "misato",
+        "authorId": "discord-1403349152754303046",
+        "text": "参加希望です🫶",
+        "createdAt": "2026-08-07T15:17:57.524000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1535306825153646602",
+        "author": "asumi🥀",
+        "authorId": "discord-1533461878104391886",
+        "text": "参加希望です🍣",
+        "createdAt": "2026-08-07T15:21:11.738000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1535309122080079953",
+        "author": "りょう",
+        "authorId": "discord-1416668287843958865",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-07T15:30:19.368000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1535323982784499863",
+        "author": "anna",
+        "authorId": "discord-1505883189703344158",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-07T16:29:22.436000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1535336200867553351",
+        "author": "Non【IRO+代表】",
+        "authorId": "discord-1119606639763390545",
+        "text": "いいなーここ行ってみたい😭",
+        "createdAt": "2026-08-07T17:17:55.454000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1535339492167389254",
+        "author": "かやね",
+        "authorId": "discord-868864651826446387",
+        "text": "参加希望です！🙏🏻",
+        "createdAt": "2026-08-07T17:31:00.161000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1535351058199486556",
+        "author": "ほしこ",
+        "authorId": "discord-1043120095880298536",
+        "text": "参加希望です！！🍣",
+        "createdAt": "2026-08-07T18:16:57.718000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1535390833677832335",
+        "author": "とらお🐯",
+        "authorId": "discord-709705641928949791",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-07T20:55:00.931000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1535443681862094889",
+        "author": "ゆうき",
+        "authorId": "discord-1457526173616705549",
+        "text": "参加希望です！🍣",
+        "createdAt": "2026-08-08T00:25:00.920000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1535459069786329200",
+        "author": "みょん🍳料理教室部長",
+        "authorId": "discord-1353587486604922921",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-08T01:26:09.687000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1535463842241454262",
+        "author": "ゆうき🐬",
+        "authorId": "discord-1520656082035540138",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-08T01:45:07.529000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1535509274778800148",
+        "author": "🌸まなか🌸",
+        "authorId": "discord-1485772766828564581",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-08T04:45:39.490000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1535510139887550474",
+        "author": "おさや",
+        "authorId": "discord-525718374152536074",
+        "text": "参加希望です🍣",
+        "createdAt": "2026-08-08T04:49:05.748000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1535514787184648192",
+        "author": "yuka",
+        "authorId": "discord-1522194128379576361",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-08T05:07:33.750000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1535647004435161138",
+        "author": "nami",
+        "authorId": "discord-1294648563867062274",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-08T13:52:56.799000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1535870734084349992",
+        "author": "Aoi",
+        "authorId": "discord-1271250501068918857",
+        "text": "参加希望です✨",
+        "createdAt": "2026-08-09T04:41:58.104000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1535873731585507358",
+        "author": "yuta",
+        "authorId": "discord-764979134228987924",
+        "text": "参加希望です！🍣",
+        "createdAt": "2026-08-09T04:53:52.764000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1536040454024601721",
+        "author": "ゆいと",
+        "authorId": "discord-1476255646377578691",
+        "text": "参加希望です",
+        "createdAt": "2026-08-09T15:56:22.491000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1536682501370679346",
+        "author": "こん🦊",
+        "authorId": "discord-413325457182949377",
+        "text": "多くの皆さんにコメント頂けているため、募集期日早めます🙇‍♂️\n9月7日(月)→8月24日(月)\n\n（奇跡的に空くこと願ってキャンセル待ちしております…枠確保できたら募集人数増やします🥺）",
+        "createdAt": "2026-08-11T10:27:38.507000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1536878748409004032",
+        "author": "kanazawa",
+        "authorId": "discord-398776137255485440",
+        "text": "参加希望です🍣",
+        "createdAt": "2026-08-11T23:27:27.447000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1538557377287295038",
+        "author": "kyomi",
+        "authorId": "discord-1511736441821204581",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-16T14:37:43.759000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1538682671285272657",
+        "author": "あやか",
+        "authorId": "discord-1492174548794216648",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-16T22:55:36.176000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1538890193426456657",
+        "author": "まる",
+        "authorId": "discord-1404038461874245752",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-17T12:40:13.310000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1540558656402227230",
+        "author": "ひな",
+        "authorId": "discord-1518123690573693075",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-22T03:10:05.882000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1541028707500560455",
+        "author": "りつ",
+        "authorId": "discord-1485530671249362967",
+        "text": "めちゃくちゃ行きたいです😭\n去年まで桜新町住んでたんですけど行けなかった😭",
+        "createdAt": "2026-08-23T10:17:54.797000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1541385023037505586",
+        "author": "kii",
+        "authorId": "discord-1426809108421677216",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-24T09:53:47.041000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1541457198947897345",
+        "author": "mayu",
+        "authorId": "discord-905827697224187925",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-24T14:40:35.119000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1541470561232748694",
+        "author": "こん🦊",
+        "authorId": "discord-413325457182949377",
+        "text": "【募集終了】 10/07(水) 19:00 鮨 はし本@桜新町",
+        "createdAt": "2026-08-24T15:33:40.936000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1541480122698301460",
+        "author": "こん🦊",
+        "authorId": "discord-413325457182949377",
+        "text": "@Aoi さん\nご一緒できればと思います🙂‍↕️\n後ほどプライベートチャット作成します🙇‍♂️\n\n今回ご縁がなかった方とも、また別の機会にお会いできると嬉しいです！\n11月枠も取れたら改めて募集します🍣",
+        "createdAt": "2026-08-24T16:11:40.567000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1541483116382650428",
+        "author": "IRO+ サポート",
+        "authorId": "discord-1223692916619477072",
+        "text": ":white_check_mark: <#1541483121353040043>を作成しました\n下記の皆様はご確認をお願いいたします！\n@ゆうか @Aoi",
+        "createdAt": "2026-08-24T16:23:34.317000+00:00"
+      }
+    ],
     "chatId": "discord-1541483121353040043"
   },
   {
@@ -1424,7 +4352,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "詳細をご確認ください",
     "image": "",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -1439,7 +4367,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1353010654189191178/ad43b05c846c7aacff9e9423c31baa63.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1535248052183371816",
-    "sourceLabel": "旅行部"
+    "sourceLabel": "旅行部",
+    "importedComments": []
   },
   {
     "id": "discord-event-1535210597400977419",
@@ -1453,14 +4382,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "tabelogUrl": "https://tabelog.com/hyogo/A2801/A280102/28042651/",
     "capacity": 5,
     "reservationCapacity": 6,
-    "attendees": 5,
-    "participants": [
-      "discord-1295742939774844931",
-      "discord-1505445336926126212",
-      "discord-1228677104577544362",
-      "discord-817730242516746252",
-      "discord-1077595012004593684"
-    ],
+    "attendees": 0,
+    "participants": [],
     "applicantIds": [],
     "price": "5,000〜6,000円",
     "priceMin": 5000,
@@ -1474,7 +4397,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1535210597400977419",
     "sourceLabel": "関西グルメ掲示板",
-    "chatId": "discord-1537701175611105390"
+    "importedComments": []
   },
   {
     "id": "discord-event-1535007376720138400",
@@ -1487,14 +4410,18 @@ export const IMPORTED_DISCORD_EVENTS = [
     "image": "",
     "tabelogUrl": "https://magazine.tabelog.com/articles/502217",
     "capacity": 3,
-    "reservationCapacity": 3,
+    "reservationCapacity": 4,
     "attendees": 3,
     "participants": [
       "discord-398776137255485440",
       "discord-1190229509727846433",
       "discord-1520656082035540138"
     ],
-    "applicantIds": [],
+    "applicantIds": [
+      "discord-398776137255485440",
+      "discord-1190229509727846433",
+      "discord-1520656082035540138"
+    ],
     "price": "13,200円",
     "priceMin": 13200,
     "priceMax": 13200,
@@ -1508,6 +4435,78 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1535007376720138400",
     "sourceLabel": "関東グルメ掲示板",
+    "importedComments": [
+      {
+        "id": "discord-event-comment-1535197077930385458",
+        "author": "たかひろ",
+        "authorId": "discord-1190229509727846433",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-07T08:05:05.961000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1535228909962928141",
+        "author": "kanazawa",
+        "authorId": "discord-398776137255485440",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-07T10:11:35.309000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1535260326424223775",
+        "author": "ゆうき🐬",
+        "authorId": "discord-1520656082035540138",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-07T12:16:25.577000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1535467430397345814",
+        "author": "しょうこ🍰スイーツ部長",
+        "authorId": "discord-1459195336991047815",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-08T01:59:23.012000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1535472702251597845",
+        "author": "みゆき",
+        "authorId": "discord-1493966347720327311",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-08T02:20:19.920000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1536344116030611567",
+        "author": "しょうこ🍰スイーツ部長",
+        "authorId": "discord-1459195336991047815",
+        "text": "ごめんなさい！予定が入ってしまったので、抽選から外して下さい🙇🏻‍♀️",
+        "createdAt": "2026-08-10T12:03:01.155000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1537185295844376597",
+        "author": "かずま🍣🍶🍷",
+        "authorId": "discord-1403038939832385683",
+        "text": "下記の皆さま参加確定でよろしくお願いします！\n@たかひろ @oishiiudon @ゆうき🐬",
+        "createdAt": "2026-08-12T19:45:34.051000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1537185357605376100",
+        "author": "かずま🍣🍶🍷",
+        "authorId": "discord-1403038939832385683",
+        "text": "その他の方は折角ご応募いただいたところ申し訳ありません。またの機会にご一緒できたら嬉しいです🙇",
+        "createdAt": "2026-08-12T19:45:48.776000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1537185694848655501",
+        "author": "IRO+ サポート",
+        "authorId": "discord-1223692916619477072",
+        "text": ":white_check_mark: <#1537185698199642132>を作成しました\n下記の皆様はご確認をお願いいたします！\n@たかひろ @oishiiudon @ゆうき🐬",
+        "createdAt": "2026-08-12T19:47:09.181000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1537185851786928158",
+        "author": "かずま🍣🍶🍷",
+        "authorId": "discord-1403038939832385683",
+        "text": "【募集終了】9/22（火）19:00~ 無境 🍶 @神泉",
+        "createdAt": "2026-08-12T19:47:46.598000+00:00"
+      }
+    ],
     "chatId": "discord-1537185698199642132"
   },
   {
@@ -1521,7 +4520,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "image": "/discord-board/1485649608620113971/1534436500018565232.webp",
     "tabelogUrl": "https://tabelog.com/tokyo/A1319/A131902/13259475/",
     "capacity": 5,
-    "reservationCapacity": 5,
+    "reservationCapacity": 6,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -1538,7 +4537,51 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1457371560670265374/d09179eea94d16710cda2370a546a963.png?size=512",
     "organizerRank": "platinum",
     "sourceThreadId": "discord-board-1534436495400894616",
-    "sourceLabel": "ディズニー部"
+    "sourceLabel": "ディズニー部",
+    "importedComments": [
+      {
+        "id": "discord-event-comment-1534456283309281341",
+        "author": "つね🪼",
+        "authorId": "discord-1457591200243777589",
+        "text": "参加希望です🙆‍♀️",
+        "createdAt": "2026-08-05T07:01:26.760000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1534456944738177034",
+        "author": "ナツキ🌛",
+        "authorId": "discord-1457362274980200473",
+        "text": "参加希望です😽",
+        "createdAt": "2026-08-05T07:04:04.457000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1534463557679190067",
+        "author": "いい   ねい(本名です)",
+        "authorId": "discord-1474011170938552364",
+        "text": "参加希望です！(9月交流会参加予定です🙇‍♂️)",
+        "createdAt": "2026-08-05T07:30:21.105000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1534467312286040147",
+        "author": "ももこ",
+        "authorId": "discord-1205532162414350426",
+        "text": "参加希望です🥰",
+        "createdAt": "2026-08-05T07:45:16.273000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1542520436871401603",
+        "author": "Hono🎭舞台鑑賞部長",
+        "authorId": "discord-1458772421887656090",
+        "text": "参加希望です🥂",
+        "createdAt": "2026-08-27T13:05:30.794000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1543564509321367624",
+        "author": "のんた🐭ディズニー部長",
+        "authorId": "discord-1457371560670265374",
+        "text": "@ディズニー部🐭 \nこちら来週締め切ります！",
+        "createdAt": "2026-08-30T10:14:17.064000+00:00"
+      }
+    ]
   },
   {
     "id": "discord-event-1533806411891347598",
@@ -1567,7 +4610,100 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1008029940429639794/bf0baa95bc5175e0a4c584f6b46cc950.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1533806411891347598",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": [
+      {
+        "id": "discord-event-comment-1533806575150567534",
+        "author": "KD",
+        "authorId": "discord-1008029940429639794",
+        "text": "【募集中】9/21(月) 18:00 🥩塩ホルモンやけん@学芸大学",
+        "createdAt": "2026-08-03T11:59:44.264000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1534017460624298036",
+        "author": "ﾘﾎ",
+        "authorId": "discord-1458669499711488172",
+        "text": "@KD やけんのゆずホルモンめちゃめちゃ美味しいので是非行かれたら食べてみてくださーい！\nあと〆の冷麺とカレーがおすすめです🍛",
+        "createdAt": "2026-08-04T01:57:43.279000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1534197809404842054",
+        "author": "Momoko",
+        "authorId": "discord-1353124630986227742",
+        "text": "参加希望です🥰",
+        "createdAt": "2026-08-04T13:54:21.779000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1534966935459201135",
+        "author": "KD",
+        "authorId": "discord-1008029940429639794",
+        "text": "おおー！行かれたことあるんですね！そんな美味しいなら俄然楽しみです！情報ありがとうございます☺️",
+        "createdAt": "2026-08-06T16:50:35.720000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1535260690841993267",
+        "author": "ゆうき🐬",
+        "authorId": "discord-1520656082035540138",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-07T12:17:52.461000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1539560296337907773",
+        "author": "KD",
+        "authorId": "discord-1008029940429639794",
+        "text": "@everyone \nこちら寝かせており失礼しました！\nあと数名いかがでしょうか！",
+        "createdAt": "2026-08-19T09:02:58.294000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1541738341605838879",
+        "author": "ナナ",
+        "authorId": "discord-1457750164642205797",
+        "text": "まだ間に合うようでしたら参加希望です！",
+        "createdAt": "2026-08-25T09:17:44.752000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1542071108465860690",
+        "author": "Akari",
+        "authorId": "discord-1510218106105106505",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-26T07:20:02.554000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1542192766191145101",
+        "author": "Sho",
+        "authorId": "discord-336865912672223234",
+        "text": "少し予定が不透明なのですが、一旦参加希望とさせてください！",
+        "createdAt": "2026-08-26T15:23:28.016000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1542376491231485993",
+        "author": "いっぺい",
+        "authorId": "discord-705041013504344145",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-27T03:33:31.479000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1542495695829733446",
+        "author": "hitomi",
+        "authorId": "discord-1510638806661857360",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-27T11:27:12.070000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1543114631210471484",
+        "author": "KD",
+        "authorId": "discord-1008029940429639794",
+        "text": "みなさんありがとうございますー！\nこちら人数超過を防ぐために明日で締め切ります！",
+        "createdAt": "2026-08-29T04:26:37.764000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1543118264471650314",
+        "author": "naru",
+        "authorId": "discord-1475703575593353399",
+        "text": "参加希望です！🍖",
+        "createdAt": "2026-08-29T04:41:04.001000+00:00"
+      }
+    ]
   },
   {
     "id": "discord-event-1533793050059477052",
@@ -1595,7 +4731,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "しんたろー",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/715367038205427715/5100238c56708accc92ec1aa233bffc9.png?size=512",
     "sourceThreadId": "discord-board-1533793050059477052",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1533403695713226855",
@@ -1609,7 +4746,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "tabelogUrl": "https://tabelog.com/tokyo/A1301/A130101/13078422/",
     "googleMapsUrl": "https://maps.app.goo.gl/Nk2Vxih8xstWDmCZ9?g_st=ic",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -1626,7 +4763,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1457652020164034686/932a1177233bc50fb3421b02bd69eddb.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1533403695713226855",
-    "sourceLabel": "スイーツ部"
+    "sourceLabel": "スイーツ部",
+    "importedComments": []
   },
   {
     "id": "discord-event-1533326053869748304",
@@ -1656,7 +4794,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1459195336991047815/a596e4658de943f4779c57918376b97d.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1533326053869748304",
-    "sourceLabel": "スイーツ部"
+    "sourceLabel": "スイーツ部",
+    "importedComments": []
   },
   {
     "id": "discord-event-1533308384835797192",
@@ -1669,7 +4808,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "image": "",
     "googleMapsUrl": "https://maps.app.goo.gl/HgPPVYbmARXUiYh67?g_st=ic",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -1687,6 +4826,134 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerRank": "platinum",
     "sourceThreadId": "discord-board-1533308384835797192",
     "sourceLabel": "料理教室部",
+    "importedComments": [
+      {
+        "id": "discord-event-comment-1534133202652893326",
+        "author": "みょん🍳料理教室部長",
+        "authorId": "discord-1353587486604922921",
+        "text": "@料理教室部🍳 \nこちら、調理メニューには入りませんがご飯ものもご用意する予定ですので、\n甘いものだけは厳しいかも…と思われる方がいらっしゃいましたらご安心くださいね❣️",
+        "createdAt": "2026-08-04T09:37:38.329000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1534184677097734194",
+        "author": "かいせい",
+        "authorId": "discord-1235540473846698056",
+        "text": "参加したいです！",
+        "createdAt": "2026-08-04T13:02:10.793000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1534552951689969804",
+        "author": "Muu",
+        "authorId": "discord-1335251245312507994",
+        "text": "参加したいです！☺️",
+        "createdAt": "2026-08-05T13:25:34.298000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1535625915579637880",
+        "author": "りか",
+        "authorId": "discord-1522253038994063410",
+        "text": "ぜひ参加したいです✨！",
+        "createdAt": "2026-08-08T12:29:08.824000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1535638023570464858",
+        "author": "naru",
+        "authorId": "discord-1475703575593353399",
+        "text": "参加希望です！✨",
+        "createdAt": "2026-08-08T13:17:15.594000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1536587984676061294",
+        "author": "みょん🍳料理教室部長",
+        "authorId": "discord-1353587486604922921",
+        "text": "@料理教室部🍳\nこちら、参加者の皆さんの自己紹介や入部フォームの内容を参考にして、皆さんに楽しんでいただけるメニューを今回講師のちなつさんと考え中です！(ご多忙なためメニュー確定が8月末になってしまいます🙇‍♀️)\nあと1~3名募集中ですので、もしよければ❣️\n▶︎集まりました(8/11(火)21:45)",
+        "createdAt": "2026-08-11T04:12:03.971000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1536622117498519602",
+        "author": "taketo",
+        "authorId": "discord-368698441108422656",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-11T06:27:41.870000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1536645295843184691",
+        "author": "Kanami🕊️",
+        "authorId": "discord-1472380704540332216",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-11T07:59:48.018000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1536716167052394656",
+        "author": "Misato",
+        "authorId": "discord-1519111372284231979",
+        "text": "参加希望します！",
+        "createdAt": "2026-08-11T12:41:25.031000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1536717487247462492",
+        "author": "みょん🍳料理教室部長",
+        "authorId": "discord-1353587486604922921",
+        "text": "【募集終了】第4回料理教室🍪🍰9/13(土)18:00-22:00@渋谷",
+        "createdAt": "2026-08-11T12:46:39.790000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1537311494591610930",
+        "author": "IRO+ サポート",
+        "authorId": "discord-1223692916619477072",
+        "text": ":white_check_mark: <#1537311498488250479>を作成しました\n下記の皆様はご確認をお願いいたします！\n@かいせい @Muu @りか @naru @taketo @Kanami🕊️ @Misato",
+        "createdAt": "2026-08-13T04:07:02.177000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1538458818902626345",
+        "author": "みょん🍳料理教室部長",
+        "authorId": "discord-1353587486604922921",
+        "text": "【1名募集中】第4回料理教室🍪🍰9/13(土)18:00-22:00@渋谷",
+        "createdAt": "2026-08-16T08:06:05.609000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1538469716367118366",
+        "author": "みょん🍳料理教室部長",
+        "authorId": "discord-1353587486604922921",
+        "text": "【2名再募集中】第4回料理教室🍪🍰9/13(土)18:00-22:00@渋谷",
+        "createdAt": "2026-08-16T08:49:23.767000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1538469848118722611",
+        "author": "みょん🍳料理教室部長",
+        "authorId": "discord-1353587486604922921",
+        "text": "@料理教室部🍳 \n2名キャンセルが出たため先着で再募集させていただきます！\nもしよろしければコメント待ってます❣️",
+        "createdAt": "2026-08-16T08:49:55.179000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1538730763082661998",
+        "author": "みょん🍳料理教室部長",
+        "authorId": "discord-1353587486604922921",
+        "text": "【1名再募集中】第4回料理教室🍪🍰9/13(土)18:00-22:00@渋谷",
+        "createdAt": "2026-08-17T02:06:42.154000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1538730861397151864",
+        "author": "みょん🍳料理教室部長",
+        "authorId": "discord-1353587486604922921",
+        "text": "スイーツ部で1名応募がありましたため残り1名です！",
+        "createdAt": "2026-08-17T02:07:05.594000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1538802818536841286",
+        "author": "えーよ",
+        "authorId": "discord-770533624361385985",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-17T06:53:01.513000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1538806991273857167",
+        "author": "みょん🍳料理教室部長",
+        "authorId": "discord-1353587486604922921",
+        "text": "【募集終了】第4回料理教室🍪🍰9/13(土)18:00-22:00@渋谷",
+        "createdAt": "2026-08-17T07:09:36.371000+00:00"
+      }
+    ],
     "chatId": "discord-1537311498488250479",
     "participantImportWarnings": [
       {
@@ -1706,7 +4973,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "image": "",
     "googleMapsUrl": "https://maps.app.goo.gl/HgPPVYbmARXUiYh67?g_st=ic",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -1723,7 +4990,72 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1459195336991047815/a596e4658de943f4779c57918376b97d.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1533308368217837640",
-    "sourceLabel": "スイーツ部"
+    "sourceLabel": "スイーツ部",
+    "importedComments": [
+      {
+        "id": "discord-event-comment-1533308520815136908",
+        "author": "天ぷら(てつや",
+        "authorId": "discord-1059373969590984764",
+        "text": "参加したいですー",
+        "createdAt": "2026-08-02T03:00:38.857000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1533308746665689270",
+        "author": "しょうこ🍰スイーツ部長",
+        "authorId": "discord-1459195336991047815",
+        "text": "早すぎです！流石です🤣",
+        "createdAt": "2026-08-02T03:01:32.704000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1533373955619033269",
+        "author": "shimon🎞️映画・ドラマ鑑賞部長",
+        "authorId": "discord-959759896037961748",
+        "text": "12:00に募集開始して\n12:00に参加希望だせるなんてどういう瞬発力ですか笑笑",
+        "createdAt": "2026-08-02T07:20:39.730000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1536230771717574666",
+        "author": "しょうこ🍰スイーツ部長",
+        "authorId": "discord-1459195336991047815",
+        "text": "@スイーツ部🍰 \n料理教室部では4名の方が参加希望者してくれています♪\n是非スイーツ部の皆さんも参加してみてください🥰",
+        "createdAt": "2026-08-10T04:32:37.765000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1536720960122785833",
+        "author": "しょうこ🍰スイーツ部長",
+        "authorId": "discord-1459195336991047815",
+        "text": "【募集終了】9/13(日)18:00~22:00料理教室部×スイーツ部コラボ企画",
+        "createdAt": "2026-08-11T13:00:27.788000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1538443455892819978",
+        "author": "しょうこ🍰スイーツ部長",
+        "authorId": "discord-1459195336991047815",
+        "text": "【募集中】9/13(日)18:00~22:00料理教室部×スイーツ部コラボ企画",
+        "createdAt": "2026-08-16T07:05:02.782000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1538443732481740821",
+        "author": "しょうこ🍰スイーツ部長",
+        "authorId": "discord-1459195336991047815",
+        "text": "@スイーツ部🍰 \nこちら2名キャンセル出ましたので、参加してみたい方は是非お声がけください♪",
+        "createdAt": "2026-08-16T07:06:08.726000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1538566569708355665",
+        "author": "たくや🐧",
+        "authorId": "discord-396760147138969612",
+        "text": "参加しまーす！🍪",
+        "createdAt": "2026-08-16T15:14:15.403000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1538820130178605146",
+        "author": "しょうこ🍰スイーツ部長",
+        "authorId": "discord-1459195336991047815",
+        "text": "【募集終了】9/13(日)18:00~22:00料理教室部×スイーツ部コラボ企画",
+        "createdAt": "2026-08-17T08:01:48.930000+00:00"
+      }
+    ]
   },
   {
     "id": "discord-event-1533139101790769344",
@@ -1741,7 +5073,9 @@ export const IMPORTED_DISCORD_EVENTS = [
     "participants": [
       "discord-1514586989297532969"
     ],
-    "applicantIds": [],
+    "applicantIds": [
+      "discord-1514586989297532969"
+    ],
     "price": "15,000円",
     "priceMin": 15000,
     "priceMax": 15000,
@@ -1755,6 +5089,106 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1533139101790769344",
     "sourceLabel": "関東グルメ掲示板",
+    "importedComments": [
+      {
+        "id": "discord-event-comment-1533139377964716253",
+        "author": "Non【IRO+代表】",
+        "authorId": "discord-1119606639763390545",
+        "text": "すごい！行きたいです！",
+        "createdAt": "2026-08-01T15:48:32.059000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1533147571143573524",
+        "author": "あやこ",
+        "authorId": "discord-1514586989297532969",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-01T16:21:05.465000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1533157210333511690",
+        "author": "naru",
+        "authorId": "discord-1475703575593353399",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-01T16:59:23.627000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1533195400427602031",
+        "author": "yukie",
+        "authorId": "discord-1353307711130828841",
+        "text": "すごいー！\n行ってみたいです🍽️",
+        "createdAt": "2026-08-01T19:31:08.855000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1533307713176473610",
+        "author": "Takahiro.",
+        "authorId": "discord-1403675019061755974",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-02T02:57:26.301000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1533314533874204702",
+        "author": "たかひろ",
+        "authorId": "discord-1190229509727846433",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-02T03:24:32.482000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1533388306207735858",
+        "author": "Anri",
+        "authorId": "discord-1460776090736922707",
+        "text": "参加希望です！！",
+        "createdAt": "2026-08-02T08:17:41.177000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1533449301525528647",
+        "author": "kanazawa",
+        "authorId": "discord-398776137255485440",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-02T12:20:03.594000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1533462269940469931",
+        "author": "ゆいと",
+        "authorId": "discord-1476255646377578691",
+        "text": "参加希望です",
+        "createdAt": "2026-08-02T13:11:35.505000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1533521034865803325",
+        "author": "みゆき",
+        "authorId": "discord-1493966347720327311",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-02T17:05:06.155000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1533540872937930862",
+        "author": "かずま🍣🍶🍷",
+        "authorId": "discord-1403038939832385683",
+        "text": "【募集終了】9/19（土）20:00~ 虎ノ門とだか",
+        "createdAt": "2026-08-02T18:23:55.920000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1533541145005523155",
+        "author": "かずま🍣🍶🍷",
+        "authorId": "discord-1403038939832385683",
+        "text": "抽選の結果@あやこ さん参加確定でお願いします！",
+        "createdAt": "2026-08-02T18:25:00.786000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1533541303894409407",
+        "author": "かずま🍣🍶🍷",
+        "authorId": "discord-1403038939832385683",
+        "text": "その他のみなさま折角ご応募いただいたところ申し訳ありません。またの機会にご一緒できたら嬉しいです🙇",
+        "createdAt": "2026-08-02T18:25:38.668000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1533541584380100719",
+        "author": "IRO+ サポート",
+        "authorId": "discord-1223692916619477072",
+        "text": ":white_check_mark: <#1533541587320307732>を作成しました\n下記の皆様はご確認をお願いいたします！\n@あやこ",
+        "createdAt": "2026-08-02T18:26:45.541000+00:00"
+      }
+    ],
     "chatId": "discord-1533541587320307732"
   },
   {
@@ -1769,10 +5203,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "tabelogUrl": "https://tabelog.com/tokyo/A1313/A131301/13280320/",
     "capacity": 1,
     "reservationCapacity": 2,
-    "attendees": 1,
-    "participants": [
-      "discord-1403675019061755974"
-    ],
+    "attendees": 0,
+    "participants": [],
     "applicantIds": [],
     "price": "19,800円",
     "priceMin": 19800,
@@ -1787,7 +5219,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1533133922396012745",
     "sourceLabel": "関東グルメ掲示板",
-    "chatId": "discord-1534124834177679422"
+    "importedComments": []
   },
   {
     "id": "discord-event-1533114781593243678",
@@ -1799,16 +5231,19 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "神楽坂",
     "image": "",
     "tabelogUrl": "https://tabelog.com/tokyo/A1309/A130905/13132682/",
-    "capacity": 4,
+    "capacity": 3,
     "reservationCapacity": 4,
-    "attendees": 4,
+    "attendees": 3,
     "participants": [
       "discord-1485610792866021416",
       "discord-1522194128379576361",
-      "discord-1248246443383455764",
-      "discord-1485772766828564581"
+      "discord-1248246443383455764"
     ],
-    "applicantIds": [],
+    "applicantIds": [
+      "discord-1485610792866021416",
+      "discord-1522194128379576361",
+      "discord-1248246443383455764"
+    ],
     "price": "12,000円",
     "priceMin": 12000,
     "priceMax": 12000,
@@ -1822,6 +5257,197 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1533114781593243678",
     "sourceLabel": "関東グルメ掲示板",
+    "importedComments": [
+      {
+        "id": "discord-event-comment-1533115891137642596",
+        "author": "anna",
+        "authorId": "discord-1505883189703344158",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-01T14:15:12.363000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1533119037188608170",
+        "author": "Misa",
+        "authorId": "discord-1485610792866021416",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-01T14:27:42.440000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1533138369717080224",
+        "author": "ゆーき",
+        "authorId": "discord-1458298491620163656",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-01T15:44:31.674000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1533157294399815731",
+        "author": "naru",
+        "authorId": "discord-1475703575593353399",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-01T16:59:43.670000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1533306599534235829",
+        "author": "さい",
+        "authorId": "discord-1404425352150777856",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-02T02:53:00.788000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1533327217747300543",
+        "author": "れん",
+        "authorId": "discord-1479840315107184804",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-02T04:14:56.553000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1533352719962869942",
+        "author": "yuka",
+        "authorId": "discord-1522194128379576361",
+        "text": "参加希望です🍷",
+        "createdAt": "2026-08-02T05:56:16.755000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1533364314352648314",
+        "author": "hitomi",
+        "authorId": "discord-1510638806661857360",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-02T06:42:21.073000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1533366639037251624",
+        "author": "すけ",
+        "authorId": "discord-1457596781272633369",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-02T06:51:35.321000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1533619578842910811",
+        "author": "asumi🥀",
+        "authorId": "discord-1533461878104391886",
+        "text": "参加希望です🍷",
+        "createdAt": "2026-08-02T23:36:40.870000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1534180134397939772",
+        "author": "りょうき",
+        "authorId": "discord-1501092041097220208",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-04T12:44:07.729000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1535232587830796349",
+        "author": "mrng9",
+        "authorId": "discord-1072111251175522344",
+        "text": "参加希望です！！",
+        "createdAt": "2026-08-07T10:26:12.181000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1535704973478723594",
+        "author": "とらお🐯",
+        "authorId": "discord-709705641928949791",
+        "text": "参加希望です！→辞退させていただきます🙇",
+        "createdAt": "2026-08-08T17:43:17.696000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1535987504824717324",
+        "author": "RENA",
+        "authorId": "discord-1353712244210536498",
+        "text": "参加希望です！🍷✨\n1人で1本余裕で空けれます👍🏻♡",
+        "createdAt": "2026-08-09T12:25:58.418000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1535998025992896592",
+        "author": "みゆき",
+        "authorId": "discord-1493966347720327311",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-09T13:07:46.860000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1536004211307843676",
+        "author": "Tasuku",
+        "authorId": "discord-837231212283691028",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-09T13:32:21.554000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1536024383233990758",
+        "author": "ゆか",
+        "authorId": "discord-1403376854085406771",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-09T14:52:30.916000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1536375313196515439",
+        "author": "さな【運営】",
+        "authorId": "discord-1404762625077809152",
+        "text": "@🌸まなか🌸 募集ありがとうございます！応募者が募集人数を上回っておりますので、早めに締め切って頂けると助かります🙇",
+        "createdAt": "2026-08-10T14:06:59.139000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1536376895594037309",
+        "author": "🌸まなか🌸",
+        "authorId": "discord-1485772766828564581",
+        "text": "@関東支部 \n8/19(水)→8/12(水)に締め切ります！",
+        "createdAt": "2026-08-10T14:13:16.412000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1536387653707239474",
+        "author": "nozomi",
+        "authorId": "discord-1479454852965990627",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-10T14:56:01.346000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1536388170860732476",
+        "author": "seina",
+        "authorId": "discord-1248246443383455764",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-10T14:58:04.645000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1536666693626241095",
+        "author": "mayu",
+        "authorId": "discord-905827697224187925",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-11T09:24:49.647000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1537024261427040336",
+        "author": "とらお🐯",
+        "authorId": "discord-709705641928949791",
+        "text": "@🌸まなか🌸 \n別の募集で同じお店に行く機会を得れたので、辞退させていただきます！\nまたよろしくお願いします！",
+        "createdAt": "2026-08-12T09:05:40.454000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1537025590001934409",
+        "author": "🌸まなか🌸",
+        "authorId": "discord-1485772766828564581",
+        "text": "@とらお🐯 さん\nわざわざご連絡ありがとうございます！\nまたの機会に🙇‍♀️",
+        "createdAt": "2026-08-12T09:10:57.211000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1537119516444729394",
+        "author": "🌸まなか🌸",
+        "authorId": "discord-1485772766828564581",
+        "text": "【募集終了】9/8(火)Enoteca Vita🍷@神楽坂",
+        "createdAt": "2026-08-12T15:24:11.020000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1537120504253775892",
+        "author": "🌸まなか🌸",
+        "authorId": "discord-1485772766828564581",
+        "text": "今回は\n@seina さん　@yuka さん @Misa さんとご一緒させてください〜！\n\n他のみなさんもご応募ありがとうございました！\nまたの機会によろしくお願いします🙇‍♀️",
+        "createdAt": "2026-08-12T15:28:06.532000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1537121210062733352",
+        "author": "IRO+ サポート",
+        "authorId": "discord-1223692916619477072",
+        "text": ":white_check_mark: <#1537121214030553178>を作成しました\n下記の皆様はご確認をお願いいたします！\n@seina @yuka @Misa @🌸まなか🌸",
+        "createdAt": "2026-08-12T15:30:54.810000+00:00"
+      }
+    ],
     "chatId": "discord-1537121214030553178"
   },
   {
@@ -1842,7 +5468,11 @@ export const IMPORTED_DISCORD_EVENTS = [
       "discord-1404475054569553956",
       "discord-709705641928949791"
     ],
-    "applicantIds": [],
+    "applicantIds": [
+      "discord-741224627589742642",
+      "discord-1404475054569553956",
+      "discord-709705641928949791"
+    ],
     "price": "10,000〜15,000円",
     "priceMin": 10000,
     "priceMax": 15000,
@@ -1856,6 +5486,162 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1533078062835695656",
     "sourceLabel": "関東グルメ掲示板",
+    "importedComments": [
+      {
+        "id": "discord-event-comment-1533107467775381535",
+        "author": "おさや",
+        "authorId": "discord-525718374152536074",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-01T13:41:44.077000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1533113934222200832",
+        "author": "seina",
+        "authorId": "discord-1248246443383455764",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-01T14:07:25.798000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1533117456858484920",
+        "author": "ゆいと",
+        "authorId": "discord-1476255646377578691",
+        "text": "参加希望です",
+        "createdAt": "2026-08-01T14:21:25.660000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1533157395528683664",
+        "author": "naru",
+        "authorId": "discord-1475703575593353399",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-01T17:00:07.781000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1533352656527949845",
+        "author": "ゆうき🐬",
+        "authorId": "discord-1520656082035540138",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-02T05:56:01.631000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1533396731247464448",
+        "author": "のぞみ",
+        "authorId": "discord-1458225622802239636",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-02T08:51:09.863000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1533445853992190032",
+        "author": "まゆこ",
+        "authorId": "discord-1457542687950377000",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-02T12:06:21.638000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1533995459163717714",
+        "author": "mioka",
+        "authorId": "discord-1216698337147748394",
+        "text": "参加希望です！！",
+        "createdAt": "2026-08-04T00:30:17.722000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1534121070615859303",
+        "author": "りさこ",
+        "authorId": "discord-1528745249210634322",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-04T08:49:25.826000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1534199875162607627",
+        "author": "Harune",
+        "authorId": "discord-741224627589742642",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-04T14:02:34.294000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1534229200859566260",
+        "author": "こころ",
+        "authorId": "discord-1404475054569553956",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-04T15:59:06.085000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1534517055716458658",
+        "author": "Lily(ゆい)",
+        "authorId": "discord-1068204108722470972",
+        "text": "ワイン1本飲めます…！🍾\n参加希望です！",
+        "createdAt": "2026-08-05T11:02:56.031000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1535351491840311407",
+        "author": "ほしこ",
+        "authorId": "discord-1043120095880298536",
+        "text": "参加希望です！！🍷",
+        "createdAt": "2026-08-07T18:18:41.106000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1535465755569684520",
+        "author": "みゆき",
+        "authorId": "discord-1493966347720327311",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-08T01:52:43.702000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1535469785272418325",
+        "author": "まりこ⛳ゴルフ部長",
+        "authorId": "discord-1507605842629890231",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-08T02:08:44.458000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1535505563469881375",
+        "author": "ななみ",
+        "authorId": "discord-1457508300588453932",
+        "text": "@関東支部 \nこちら募集人数を超えていますので、募集期日を8/9(日) 18:00に前倒しさせていただきます！引き続き参加希望お待ちしております:head_shaking_vertically:",
+        "createdAt": "2026-08-08T04:30:54.645000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1535704783787270174",
+        "author": "とらお🐯",
+        "authorId": "discord-709705641928949791",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-08T17:42:32.470000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1535913871007678576",
+        "author": "はぎーちゃん🍖肉部長",
+        "authorId": "discord-1530052808651309169",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-09T07:33:22.748000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1535967682342424576",
+        "author": "ななみ",
+        "authorId": "discord-1457508300588453932",
+        "text": "【募集終了】9/30(水)19:00〜Enoteca Vita@神楽坂",
+        "createdAt": "2026-08-09T11:07:12.370000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1535970679449460736",
+        "author": "ななみ",
+        "authorId": "discord-1457508300588453932",
+        "text": "みなさんコメントありがとうございました🥲\n今回は下記の3名の方にご一緒していただければと思います！！\n@Harune @こころ @とらお🐯",
+        "createdAt": "2026-08-09T11:19:06.936000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1535971344343371796",
+        "author": "IRO+ サポート",
+        "authorId": "discord-1223692916619477072",
+        "text": ":white_check_mark: <#1535971346625077248>を作成しました\n下記の皆様はご確認をお願いいたします！\n@Harune @こころ @とらお🐯",
+        "createdAt": "2026-08-09T11:21:45.459000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1535972148546379877",
+        "author": "ななみ",
+        "authorId": "discord-1457508300588453932",
+        "text": "⬆️プライベートチャットのご確認をお願いします！🙇‍♂️",
+        "createdAt": "2026-08-09T11:24:57.196000+00:00"
+      }
+    ],
     "chatId": "discord-1535971346625077248"
   },
   {
@@ -1868,15 +5654,10 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "人形町",
     "image": "https://cdn.discordapp.com/attachments/1532973161056964739/1532973161300099162/IMG_0476.png?ex=6a950782&is=6a93b602&hm=7c238440a13f9c27c5003cfd37823d661445fcc5b16cfe2e569731be8043c0a6&",
     "tabelogUrl": "https://tabelog.com/tokyo/A1302/A130204/13290035/",
-    "capacity": 4,
+    "capacity": 3,
     "reservationCapacity": 4,
-    "attendees": 4,
-    "participants": [
-      "discord-1408073158250070089",
-      "discord-1403348999557222473",
-      "discord-1485772766828564581",
-      "discord-709705641928949791"
-    ],
+    "attendees": 0,
+    "participants": [],
     "applicantIds": [],
     "price": "15,000円",
     "priceMin": 15000,
@@ -1891,7 +5672,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1532973161056964739",
     "sourceLabel": "関東グルメ掲示板",
-    "chatId": "discord-1541220427651612793"
+    "importedComments": []
   },
   {
     "id": "discord-event-1532755326862885032",
@@ -1903,7 +5684,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "恵比寿",
     "image": "/discord-board/1485650106689523802/1532755332831379566.webp",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -1920,7 +5701,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1004342455895855144/882feb03f38a2f7fe758b2633f1f5a3b.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1532755326862885032",
-    "sourceLabel": "スイーツ部"
+    "sourceLabel": "スイーツ部",
+    "importedComments": []
   },
   {
     "id": "discord-event-1532749867569516715",
@@ -1940,7 +5722,11 @@ export const IMPORTED_DISCORD_EVENTS = [
       "discord-1228676952316051458",
       "discord-1466360543093985445"
     ],
-    "applicantIds": [],
+    "applicantIds": [
+      "discord-1457362274980200473",
+      "discord-1228676952316051458",
+      "discord-1466360543093985445"
+    ],
     "price": "8,000〜10,000円",
     "priceMin": 8000,
     "priceMax": 10000,
@@ -1954,6 +5740,225 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1532749867569516715",
     "sourceLabel": "関東グルメ掲示板",
+    "importedComments": [
+      {
+        "id": "discord-event-comment-1532750672200728787",
+        "author": "ゆいと",
+        "authorId": "discord-1476255646377578691",
+        "text": "参加希望です",
+        "createdAt": "2026-07-31T14:03:57.383000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1532759961883508866",
+        "author": "りあ🍤",
+        "authorId": "discord-1353192432291811438",
+        "text": "@RIHO 募集の時投稿使ってくれて嬉しいす…🫪",
+        "createdAt": "2026-07-31T14:40:52.216000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1532761614204276787",
+        "author": "RIHO",
+        "authorId": "discord-1004342455895855144",
+        "text": "りあぐらむさまさま🤤🙏",
+        "createdAt": "2026-07-31T14:47:26.160000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1532774291739902024",
+        "author": "あやか",
+        "authorId": "discord-1492174548794216648",
+        "text": "参加希望です🌿",
+        "createdAt": "2026-07-31T15:37:48.720000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1532863696999682149",
+        "author": "アヤカ🌺",
+        "authorId": "discord-1430703542208823417",
+        "text": "参加希望です！",
+        "createdAt": "2026-07-31T21:33:04.595000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1532943218545529024",
+        "author": "kanazawa",
+        "authorId": "discord-398776137255485440",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-01T02:49:04.009000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1532964011530780682",
+        "author": "ひで",
+        "authorId": "discord-1031051059705167992",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-01T04:11:41.443000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1532972510390386839",
+        "author": "こん🦊",
+        "authorId": "discord-413325457182949377",
+        "text": "参加希望です！🍝",
+        "createdAt": "2026-08-01T04:45:27.729000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1533190760466350080",
+        "author": "れん",
+        "authorId": "discord-1479840315107184804",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-01T19:12:42.602000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1533256197161877584",
+        "author": "天ぷら(てつや",
+        "authorId": "discord-1059373969590984764",
+        "text": "参加希望ですー",
+        "createdAt": "2026-08-01T23:32:43.926000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1533266618942099586",
+        "author": "ナツキ🌛",
+        "authorId": "discord-1457362274980200473",
+        "text": "参加希望です！🍨",
+        "createdAt": "2026-08-02T00:14:08.672000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1533366258140053614",
+        "author": "ミッチャン",
+        "authorId": "discord-1457686620302999699",
+        "text": "参加希望です！🍃",
+        "createdAt": "2026-08-02T06:50:04.508000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1533430510116929667",
+        "author": "Shogo",
+        "authorId": "discord-1457374443059019906",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-02T11:05:23.373000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1533606655684640849",
+        "author": "Takahiro.",
+        "authorId": "discord-1403675019061755974",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-02T22:45:19.749000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1533779059991908394",
+        "author": "ucchy",
+        "authorId": "discord-692991208636678184",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-03T10:10:24.139000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1534343846450823371",
+        "author": "Anri",
+        "authorId": "discord-1460776090736922707",
+        "text": "参加希望です！！",
+        "createdAt": "2026-08-04T23:34:39.724000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1534425930146254880",
+        "author": "りょう",
+        "authorId": "discord-1416668287843958865",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-05T05:00:50.002000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1534559266302726195",
+        "author": "きえ",
+        "authorId": "discord-1466360543093985445",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-05T13:50:39.819000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1534884257712046150",
+        "author": "あやか",
+        "authorId": "discord-1492174548794216648",
+        "text": "@RIHO \nすいません、こちら予定が入ってしまったので取下がでお願いします😣💦",
+        "createdAt": "2026-08-06T11:22:03.809000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1535289499465289798",
+        "author": "やどかり",
+        "authorId": "discord-1497178953813721150",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-07T14:12:20.972000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1535842177475805335",
+        "author": "しょうこ🍰スイーツ部長",
+        "authorId": "discord-1459195336991047815",
+        "text": "ここのお店気になっていました！参加希望です！",
+        "createdAt": "2026-08-09T02:48:29.678000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1535861035209195591",
+        "author": "kii",
+        "authorId": "discord-1426809108421677216",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-09T04:03:25.712000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1535887326335729674",
+        "author": "marika♡",
+        "authorId": "discord-1323965226697097228",
+        "text": "参加希望です😍✨",
+        "createdAt": "2026-08-09T05:47:54.005000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1535899265535184957",
+        "author": "しほ",
+        "authorId": "discord-1228676952316051458",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-09T06:35:20.532000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1535971365792776192",
+        "author": "Natchan",
+        "authorId": "discord-1457517890424143903",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-09T11:21:50.573000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1536004949614395493",
+        "author": "Tasuku",
+        "authorId": "discord-837231212283691028",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-09T13:35:17.580000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1536377312008732822",
+        "author": "さな【運営】",
+        "authorId": "discord-1404762625077809152",
+        "text": "@RIHO お忙しいところ恐縮ですが、こちら募集締め切り及び参加者の確定をお願いいたします！🙇",
+        "createdAt": "2026-08-10T14:14:55.693000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1536394768693731502",
+        "author": "RIHO",
+        "authorId": "discord-1004342455895855144",
+        "text": "あやかちゃん連絡ありがとう🥺またご飯いこうね〜！",
+        "createdAt": "2026-08-10T15:24:17.691000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1536394909827858543",
+        "author": "RIHO",
+        "authorId": "discord-1004342455895855144",
+        "text": "【募集終了】9/12(土)17時～古民家イタリアン「スポルカチョーネ」＠明大前",
+        "createdAt": "2026-08-10T15:24:51.340000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1536715191809609778",
+        "author": "RIHO",
+        "authorId": "discord-1004342455895855144",
+        "text": "今回は下記3名の皆様ご一緒お願いします！\n@ナツキ🌛 \n@きえ \n@しほ\n\nみなさんコメントありがとうございました！！\nまた企画するのでよろしくお願いいたします🥺🙏",
+        "createdAt": "2026-08-11T12:37:32.515000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1536715775539421204",
+        "author": "IRO+ サポート",
+        "authorId": "discord-1223692916619477072",
+        "text": ":white_check_mark: <#1536715778353528832>を作成しました\n下記の皆様はご確認をお願いいたします！\n@ナツキ🌛 @きえ @しほ",
+        "createdAt": "2026-08-11T12:39:51.687000+00:00"
+      }
+    ],
     "chatId": "discord-1536715778353528832"
   },
   {
@@ -1967,11 +5972,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "image": "",
     "capacity": 2,
     "reservationCapacity": 3,
-    "attendees": 2,
-    "participants": [
-      "discord-1505883189703344158",
-      "discord-1459195336991047815"
-    ],
+    "attendees": 0,
+    "participants": [],
     "applicantIds": [],
     "price": "10,000円",
     "priceMin": 10000,
@@ -1986,7 +5988,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1532718677688979486",
     "sourceLabel": "関東グルメ掲示板",
-    "chatId": "discord-1535594539237122068"
+    "importedComments": []
   },
   {
     "id": "discord-event-1532371330937262152",
@@ -2015,7 +6017,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/709705641928949791/4484684a65f55fb383073219fd406282.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1532371330937262152",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1532370042564382770",
@@ -2044,7 +6047,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1485772766828564581/c0d87abf9c970cb69a1c8657c557ae98.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1532370042564382770",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1532309363853889636",
@@ -2073,7 +6077,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1457741437633564909/c3b6ae0373633eec085d487f2b44a0f4.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1532309363853889636",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1532220658296029365",
@@ -2102,7 +6107,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1457508300588453932/5278f4112aced688e599ecee747cb9ba.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1532220658296029365",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1532018462032003195",
@@ -2115,7 +6121,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "image": "https://cdn.discordapp.com/attachments/1532018462032003195/1532018462644244722/IMG_3219.png?ex=6a9582e1&is=6a943161&hm=bc62a2f975a7a96570c29b855bd63ae6ab5268e76edef9deaa3d059c73d3b820&",
     "googleMapsUrl": "https://maps.app.goo.gl/aKFhHodf3Y4bTLys7?g_st=ic",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -2128,7 +6134,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "さな【運営】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1404762625077809152/ca540a9e6c8e7f31f87f4b95ce0ef77d.png?size=512",
     "sourceThreadId": "discord-board-1532018462032003195",
-    "sourceLabel": "関東支部イベント"
+    "sourceLabel": "関東支部イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1531229735282151564",
@@ -2157,7 +6164,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1479840315107184804/b050cd588b38d9d6a6e1b35cdc437c43.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1531229735282151564",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1530420040112017528",
@@ -2187,7 +6195,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1403038939832385683/8c3e03e761a990c8a8a0712163a8f955.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1530420040112017528",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1530177060583243846",
@@ -2201,14 +6210,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "tabelogUrl": "https://tabelog.com/tokyo/A1318/A131802/13279379/",
     "capacity": 5,
     "reservationCapacity": 6,
-    "attendees": 5,
-    "participants": [
-      "discord-1404425352150777856",
-      "discord-1522602852999106600",
-      "discord-1479749722297077771",
-      "discord-1404038461874245752",
-      "discord-920285902440398879"
-    ],
+    "attendees": 0,
+    "participants": [],
     "applicantIds": [],
     "price": "5,000〜7,000円",
     "priceMin": 5000,
@@ -2223,7 +6226,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1530177060583243846",
     "sourceLabel": "関東グルメ掲示板",
-    "chatId": "discord-1536210361861148813"
+    "importedComments": []
   },
   {
     "id": "discord-event-1530168131773796374",
@@ -2251,7 +6254,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "ふっくい",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1167690730383356039/f06c4e787bbdb98e6b9e914909ba6637.png?size=512",
     "sourceThreadId": "discord-board-1530168131773796374",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1530148115267715163",
@@ -2279,7 +6283,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1530148115267715163",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1530005931633410242",
@@ -2290,14 +6295,10 @@ export const IMPORTED_DISCORD_EVENTS = [
     "time": "20:00",
     "location": "詳細をご確認ください",
     "image": "https://cdn.discordapp.com/attachments/1530005931633410242/1530005931910500523/IMG_2947.jpg?ex=6a9570d0&is=6a941f50&hm=c9981312c1cac7be1d5caf2e6dea6bcd31134f9398755647bef6fe36773f4d06&",
-    "capacity": 3,
+    "capacity": 2,
     "reservationCapacity": 3,
-    "attendees": 3,
-    "participants": [
-      "discord-1520656082035540138",
-      "discord-1457652020164034686",
-      "discord-1334056760863883294"
-    ],
+    "attendees": 0,
+    "participants": [],
     "applicantIds": [],
     "price": "22,000円",
     "priceMin": 22000,
@@ -2312,7 +6313,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1530005931633410242",
     "sourceLabel": "関東グルメ掲示板",
-    "chatId": "discord-1532900216926113842"
+    "importedComments": []
   },
   {
     "id": "discord-event-1529820078386839552",
@@ -2324,14 +6325,10 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "中目黒",
     "image": "",
     "tabelogUrl": "https://tabelog.com/tokyo/A1317/A131701/13247964/",
-    "capacity": 3,
+    "capacity": 1,
     "reservationCapacity": 4,
-    "attendees": 3,
-    "participants": [
-      "discord-1457362274980200473",
-      "discord-1458772421887656090",
-      "discord-1459502509679837186"
-    ],
+    "attendees": 0,
+    "participants": [],
     "applicantIds": [],
     "price": "8,000〜10,000円",
     "priceMin": 8000,
@@ -2346,7 +6343,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1529820078386839552",
     "sourceLabel": "関東グルメ掲示板",
-    "chatId": "discord-1535827135858475018"
+    "importedComments": []
   },
   {
     "id": "discord-event-1529688516374565044",
@@ -2375,7 +6372,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1223177154397995110/6b1d27d82aad0e87c3f144ba27e3efbd.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1529688516374565044",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1529644745423589517",
@@ -2387,7 +6385,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "詳細をご確認ください",
     "image": "",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -2402,7 +6400,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1228677952334725213/342ebdafc945abd8be7d4422f51fc9c6.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1529644745423589517",
-    "sourceLabel": "パン部"
+    "sourceLabel": "パン部",
+    "importedComments": []
   },
   {
     "id": "discord-event-1529504908242325565",
@@ -2431,7 +6430,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/908363306140573706/ae7b56e0679c96a89ce857a81a6df908.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1529504908242325565",
-    "sourceLabel": "関西グルメ掲示板"
+    "sourceLabel": "関西グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1529440845776818276",
@@ -2460,7 +6460,51 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1404838997100068904/656824564f0428586e31fceb697c87dc.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1529440845776818276",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": [
+      {
+        "id": "discord-event-comment-1529468782618218506",
+        "author": "ゆい",
+        "authorId": "discord-696624208532340756",
+        "text": "予定ありました涙\n行きたかった、、",
+        "createdAt": "2026-07-22T12:42:53.932000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1529470852628877372",
+        "author": "miki",
+        "authorId": "discord-1477873334719873097",
+        "text": "行ける日だ！参加希望です😇🙌🏻",
+        "createdAt": "2026-07-22T12:51:07.461000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1529478827171123200",
+        "author": "あかねん",
+        "authorId": "discord-1404838997100068904",
+        "text": "そうやん…呼ぶべきやった、、、また行こう…🖐🏻",
+        "createdAt": "2026-07-22T13:22:48.740000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1529494069187969195",
+        "author": "ゆい",
+        "authorId": "discord-696624208532340756",
+        "text": "と思ったけど遠くてどのみち難しかったかもです笑笑",
+        "createdAt": "2026-07-22T14:23:22.720000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1531801926553964544",
+        "author": "あかねん",
+        "authorId": "discord-1404838997100068904",
+        "text": "@miki \nmikiさんすみません！この日私の仕事の都合が付かなくなっちゃってリスケすることになりました😭😭\nまた募集の際はよろしくお願いします🙇🏻‍♀️🙇🏻‍♀️",
+        "createdAt": "2026-07-28T23:13:58.794000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1531801996267491378",
+        "author": "あかねん",
+        "authorId": "discord-1404838997100068904",
+        "text": "【募集終了】8/18（火）19:00〜焼肉 圭🥩",
+        "createdAt": "2026-07-28T23:14:15.415000+00:00"
+      }
+    ]
   },
   {
     "id": "discord-event-1529127687585529998",
@@ -2485,7 +6529,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "てるき",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/812624829991747605/1eaf5e03abcc3704528be61d3754f9d9.png?size=512",
     "sourceThreadId": "discord-board-1529127687585529998",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1528730748457062541",
@@ -2514,7 +6559,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/766872280302878780/374ab37e7d9446e08e9d922aede0a057.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1528730748457062541",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1528592931928150118",
@@ -2526,7 +6572,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "詳細をご確認ください",
     "image": "/discord-board/1485649608620113971/1528592941063340184.webp",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -2541,7 +6587,16 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1457371560670265374/d09179eea94d16710cda2370a546a963.png?size=512",
     "organizerRank": "platinum",
     "sourceThreadId": "discord-board-1528592931928150118",
-    "sourceLabel": "ディズニー部"
+    "sourceLabel": "ディズニー部",
+    "importedComments": [
+      {
+        "id": "discord-event-comment-1528593304747249767",
+        "author": "IRO+ サポート",
+        "authorId": "discord-1223692916619477072",
+        "text": ":white_check_mark: <#1528593307662553178>を作成しました\n下記の皆様はご確認をお願いいたします！\n@ミッチャン @もりりん💪(ミサキ) @ナツキ🌛 @りょうや",
+        "createdAt": "2026-07-20T02:44:03.742000+00:00"
+      }
+    ]
   },
   {
     "id": "discord-event-1528216161228030002",
@@ -2554,7 +6609,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "image": "",
     "googleMapsUrl": "https://maps.app.goo.gl/PgFVkBSHXSvfBx1X7?g_st=ic",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -2569,7 +6624,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1457652020164034686/932a1177233bc50fb3421b02bd69eddb.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1528216161228030002",
-    "sourceLabel": "散歩部"
+    "sourceLabel": "散歩部",
+    "importedComments": []
   },
   {
     "id": "discord-event-1528063063729639584",
@@ -2582,7 +6638,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "image": "",
     "tabelogUrl": "https://tabelog.com/tokyo/A1310/A131002/13190137/",
     "capacity": 8,
-    "reservationCapacity": 8,
+    "reservationCapacity": 9,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -2597,7 +6653,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "八木下修平/八木下農園",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1256219953191977113/95b251b3d94382a33fdb0eb02dd38a66.png?size=512",
     "sourceThreadId": "discord-board-1528063063729639584",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1528017115766984847",
@@ -2609,7 +6666,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "さるBeer2026 (竹芝客船ターミナル)",
     "image": "",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -2626,7 +6683,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1216698337147748394/6c9aaa09b320526b932e1e9b31f928fb.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1528017115766984847",
-    "sourceLabel": "ワイン部"
+    "sourceLabel": "ワイン部",
+    "importedComments": []
   },
   {
     "id": "discord-event-1528010368251592877",
@@ -2638,7 +6696,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "舞浜アンフィシアター",
     "image": "",
     "capacity": 4,
-    "reservationCapacity": 4,
+    "reservationCapacity": 5,
     "attendees": 4,
     "participants": [
       "discord-1404838997100068904",
@@ -2646,7 +6704,12 @@ export const IMPORTED_DISCORD_EVENTS = [
       "discord-1353010654189191178",
       "discord-1228677952334725213"
     ],
-    "applicantIds": [],
+    "applicantIds": [
+      "discord-1404838997100068904",
+      "discord-1489160582639779840",
+      "discord-1353010654189191178",
+      "discord-1228677952334725213"
+    ],
     "price": "5,000円",
     "priceMin": 5000,
     "priceMax": 5000,
@@ -2661,6 +6724,120 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1528010368251592877",
     "sourceLabel": "舞台鑑賞部",
+    "importedComments": [
+      {
+        "id": "discord-event-comment-1528027739725107271",
+        "author": "あかねん",
+        "authorId": "discord-1404838997100068904",
+        "text": "行く！万が一集まらんかったら1人でも行く！笑",
+        "createdAt": "2026-07-18T13:16:42.533000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1528032694452224160",
+        "author": "Hono🎭舞台鑑賞部長",
+        "authorId": "discord-1458772421887656090",
+        "text": "ありがとう！私も行く！！🥹(のんたんも！)",
+        "createdAt": "2026-07-18T13:36:23.832000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1528683206638043146",
+        "author": "Hono🎭舞台鑑賞部長",
+        "authorId": "discord-1458772421887656090",
+        "text": "@あかねん @ami @瑞季✈️旅行部長【🥇GOLD 】 @みほ @ゆい \nスタンプありがとうございます！\nこのメンバーでご一緒できればと思います！\n\nチケットなのですが、現状の空きが添付のとおりとなっています🙇‍♀️\nこれをふまえて、席種希望お伺いさせてください！\nSでもA・Bとブロックが変わらず1〜3列前になるのみのため、チケット代を考慮して安い方でもいい！というご意見あればそちら優先します！",
+        "createdAt": "2026-07-20T08:41:18.023000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1528685053419192420",
+        "author": "Hono🎭舞台鑑賞部長",
+        "authorId": "discord-1458772421887656090",
+        "text": "それぞれの席種選択イメージ🪑\n順にS→S→A→B",
+        "createdAt": "2026-07-20T08:48:38.330000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1528688278188851281",
+        "author": "ゆい",
+        "authorId": "discord-696624208532340756",
+        "text": "@Hono🥨 \nごめんなさい～～\nこの日別の公演の予定入ってました、、不参加でお願いします🥲🥲",
+        "createdAt": "2026-07-20T09:01:27.175000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1528688481964920832",
+        "author": "Hono🎭舞台鑑賞部長",
+        "authorId": "discord-1458772421887656090",
+        "text": "了解です！またの機会に…！🥺",
+        "createdAt": "2026-07-20T09:02:15.759000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1528689128844169388",
+        "author": "Hono🎭舞台鑑賞部長",
+        "authorId": "discord-1458772421887656090",
+        "text": "@あかねん @瑞季✈️旅行部長【🥇GOLD 】 @ami @みほ \n5人になったので、B席でもJブロック取れそうです🙇‍♀️！",
+        "createdAt": "2026-07-20T09:04:49.987000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1528709439996297217",
+        "author": "あかねん",
+        "authorId": "discord-1404838997100068904",
+        "text": "遠くても楽しめるのでBで良きです🫶🏻！",
+        "createdAt": "2026-07-20T10:25:32.543000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1528710286175899699",
+        "author": "Hono🎭舞台鑑賞部長",
+        "authorId": "discord-1458772421887656090",
+        "text": "@瑞季✈️旅行部長【🥇GOLD 】 現時点でB席多数になったのでこちらで取るね！🥺",
+        "createdAt": "2026-07-20T10:28:54.288000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1528739590574309559",
+        "author": "瑞季✈️旅行部長",
+        "authorId": "discord-1353010654189191178",
+        "text": "ほのちゃん確認遅くなってごめん😭\n外出してて、Discord見てなかった！\n\nB席で大丈夫です🙆‍♀️\n調整ありがとう！！！",
+        "createdAt": "2026-07-20T12:25:21.001000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1528739896766894310",
+        "author": "瑞季✈️旅行部長",
+        "authorId": "discord-1353010654189191178",
+        "text": "劇団四季はB席でも観やすいよね〜🧜‍♀️",
+        "createdAt": "2026-07-20T12:26:34.003000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1528740407020880004",
+        "author": "Hono🎭舞台鑑賞部長",
+        "authorId": "discord-1458772421887656090",
+        "text": "ううん！とんでもない！こちらこそ休日にバタバタとごめんね！ありがとう〜！＾＾\n(GOLDになってる！おめでとう🎉🥇)",
+        "createdAt": "2026-07-20T12:28:35.657000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1528740765956833300",
+        "author": "Hono🎭舞台鑑賞部長",
+        "authorId": "discord-1458772421887656090",
+        "text": "チケット詳細はプライベートチャットで連絡します！\n(プライベートチャット少々お待ちください〜！🙇‍♀️)",
+        "createdAt": "2026-07-20T12:30:01.234000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1528748746886746133",
+        "author": "あかねん",
+        "authorId": "discord-1404838997100068904",
+        "text": "たまたまやけど舞台鑑賞部からの参加者全員97では！？💗\nうれぴすぎる",
+        "createdAt": "2026-07-20T13:01:44.036000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1528911301676503181",
+        "author": "IRO+ サポート",
+        "authorId": "discord-1223692916619477072",
+        "text": ":white_check_mark: <#1528911305254113411>を作成しました\n下記の皆様はご確認をお願いいたします！\n@あかねん @瑞季✈️旅行部長【🥇GOLD 】 @ami @みほ",
+        "createdAt": "2026-07-20T23:47:40.118000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1528911455603261461",
+        "author": "Hono🎭舞台鑑賞部長",
+        "authorId": "discord-1458772421887656090",
+        "text": "【募集終了】11/14(土)17:00劇団四季「リトルマーメイド」🧜🏻‍♀️",
+        "createdAt": "2026-07-20T23:48:16.817000+00:00"
+      }
+    ],
     "chatId": "discord-1528911305254113411"
   },
   {
@@ -2690,7 +6867,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1353587486604922921/e661b608255cec37aecf95944458b180.png?size=512",
     "organizerRank": "platinum",
     "sourceThreadId": "discord-board-1527627965540860034",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1527362713951408308",
@@ -2718,7 +6896,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Hazuki",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1452174899438288918/d6d0cfefd9e0dfd5492fbc4575c1b421.png?size=512",
     "sourceThreadId": "discord-board-1527362713951408308",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1527318410206384208",
@@ -2730,7 +6909,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "池袋",
     "image": "",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -2747,7 +6926,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1403348999557222473/ce7f2eea11bbe1db6de05d0f1a634202.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1527318410206384208",
-    "sourceLabel": "スポーツ部"
+    "sourceLabel": "スポーツ部",
+    "importedComments": []
   },
   {
     "id": "discord-event-1527315259340226703",
@@ -2759,7 +6939,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "八重洲スクエア",
     "image": "",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -2776,7 +6956,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1403348999557222473/ce7f2eea11bbe1db6de05d0f1a634202.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1527315259340226703",
-    "sourceLabel": "スポーツ部"
+    "sourceLabel": "スポーツ部",
+    "importedComments": []
   },
   {
     "id": "discord-event-1527300114522046506",
@@ -2805,7 +6986,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/525718374152536074/09849f7b7fde14fd39dfb44c6f73479a.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1527300114522046506",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1527234462130110605",
@@ -2817,7 +6999,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "詳細をご確認ください",
     "image": "/discord-board/1485649954918891671/1527234473295613992.webp",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -2832,7 +7014,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1446344592214724700/559a459ef83e54fad1ec64ffc9a3d64a.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1527234462130110605",
-    "sourceLabel": "ワイン部"
+    "sourceLabel": "ワイン部",
+    "importedComments": []
   },
   {
     "id": "discord-event-1526943963737493695",
@@ -2844,7 +7027,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "京橋",
     "image": "/discord-board/1485650106689523802/1526943968208879636.webp",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -2861,7 +7044,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/696624208532340756/b824079889c51ec1cf68e5ba0f03233f.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1526943963737493695",
-    "sourceLabel": "スイーツ部"
+    "sourceLabel": "スイーツ部",
+    "importedComments": []
   },
   {
     "id": "discord-event-1526931833726697644",
@@ -2890,7 +7074,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1403038939832385683/8c3e03e761a990c8a8a0712163a8f955.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1526931833726697644",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1526549162727051314",
@@ -2903,7 +7088,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "image": "",
     "tabelogUrl": "https://tabelog.com/tokyo/A1301/A130101/13287592/",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -2920,7 +7105,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1223177154397995110/6b1d27d82aad0e87c3f144ba27e3efbd.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1526549162727051314",
-    "sourceLabel": "ワイン部"
+    "sourceLabel": "ワイン部",
+    "importedComments": []
   },
   {
     "id": "discord-event-1526522381277986847",
@@ -2932,7 +7118,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "※新宿周辺のレンタルルームを予定 ※最小催行人数(5人)そろった時点で予約",
     "image": "/discord-board/1485649894814253147/1526522606935609354.webp",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -2949,7 +7135,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/959759896037961748/f0569afafae367b73b3e52b908114922.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1526522381277986847",
-    "sourceLabel": "映画・ドラマ鑑賞部"
+    "sourceLabel": "映画・ドラマ鑑賞部",
+    "importedComments": []
   },
   {
     "id": "discord-event-1526427287870898187",
@@ -2978,7 +7165,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1059373969590984764/857b85adf11b840e1cacf44276528eda.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1526427287870898187",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1526405530594316480",
@@ -3007,7 +7195,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1457741437633564909/c3b6ae0373633eec085d487f2b44a0f4.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1526405530594316480",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1526393786324877454",
@@ -3032,7 +7221,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "てるき",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/812624829991747605/1eaf5e03abcc3704528be61d3754f9d9.png?size=512",
     "sourceThreadId": "discord-board-1526393786324877454",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1526289484990251049",
@@ -3060,7 +7250,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1404609719477207152/70b8b8e2dcce90ca5e7257b102c9deb6.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1526289484990251049",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1526180269621641257",
@@ -3072,7 +7263,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "Artbar キャットストリート原宿",
     "image": "",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -3089,7 +7280,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1353010654189191178/ad43b05c846c7aacff9e9423c31baa63.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1526180269621641257",
-    "sourceLabel": "旅行部"
+    "sourceLabel": "旅行部",
+    "importedComments": []
   },
   {
     "id": "discord-event-1526159855268659232",
@@ -3118,7 +7310,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1341394331063550014/3f852c68137d5d8de86fbd5b0e14d645.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1526159855268659232",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1525853822499684402",
@@ -3146,7 +7339,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "ふっくい",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1167690730383356039/f06c4e787bbdb98e6b9e914909ba6637.png?size=512",
     "sourceThreadId": "discord-board-1525853822499684402",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1525680335474524180",
@@ -3174,7 +7368,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1223177154397995110/6b1d27d82aad0e87c3f144ba27e3efbd.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1525680335474524180",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1525437100516839474",
@@ -3202,7 +7397,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "shusuke",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/390423883095998464/994f8a675afaeea8260b024448b68346.png?size=512",
     "sourceThreadId": "discord-board-1525437100516839474",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1525386599775342692",
@@ -3230,7 +7426,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/711884076340215831/6d1215e63e0ab68e2d27902cb847e50e.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1525386599775342692",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1525173875611013130",
@@ -3259,7 +7456,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/709705641928949791/4484684a65f55fb383073219fd406282.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1525173875611013130",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1525139063743447191",
@@ -3288,7 +7486,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/696624208532340756/b824079889c51ec1cf68e5ba0f03233f.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1525139063743447191",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1525108593899208836",
@@ -3317,7 +7516,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1403675019061755974/919d31b9725037185c103aced0a1bd3e.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1525108593899208836",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1525023159189901322",
@@ -3346,7 +7546,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1446344592214724700/559a459ef83e54fad1ec64ffc9a3d64a.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1525023159189901322",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1524755468541628578",
@@ -3359,7 +7560,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "image": "",
     "tabelogUrl": "https://tabelog.com/tokyo/A1301/A130102/13117852/",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -3372,7 +7573,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "かずま【運営】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1228677950401151139/8fe93f8b9cd2f84ec1711f01ae0dbdfc.png?size=512",
     "sourceThreadId": "discord-board-1524755468541628578",
-    "sourceLabel": "関東支部イベント"
+    "sourceLabel": "関東支部イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1524596695332294767",
@@ -3400,7 +7602,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "ふっくい",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1167690730383356039/f06c4e787bbdb98e6b9e914909ba6637.png?size=512",
     "sourceThreadId": "discord-board-1524596695332294767",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1524414183037337791",
@@ -3429,7 +7632,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1216698337147748394/6c9aaa09b320526b932e1e9b31f928fb.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1524414183037337791",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1524397932533518367",
@@ -3457,7 +7661,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1223177154397995110/6b1d27d82aad0e87c3f144ba27e3efbd.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1524397932533518367",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1524340447286136952",
@@ -3469,7 +7674,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "詳細をご確認ください",
     "image": "https://cdn.discordapp.com/attachments/1524340447286136952/1524340447936385044/Blue_and_White_Vintage_Cocktail_Party_Instagram_Post.png?ex=6a9543ab&is=6a93f22b&hm=8aa16a4c30b305c862cd8db17bfc1f6d35a297a183094d72485ad9d460bd0489&",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -3482,7 +7687,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "IRO+運営",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119605898743120044/2d550914366cefb1693360eea7d7ebcc.png?size=512",
     "sourceThreadId": "discord-board-1524340447286136952",
-    "sourceLabel": "全体イベント"
+    "sourceLabel": "全体イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1523290666455535716",
@@ -3508,7 +7714,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1223177154397995110/6b1d27d82aad0e87c3f144ba27e3efbd.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1523290666455535716",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1523695831943872572",
@@ -3521,7 +7728,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "image": "/discord-board/1485650174666866698/1523695840185684059.webp",
     "googleMapsUrl": "https://maps.app.goo.gl/Wv8drUnYQLJUb6Mw5?g_st=ic",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -3538,7 +7745,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1353587486604922921/e661b608255cec37aecf95944458b180.png?size=512",
     "organizerRank": "platinum",
     "sourceThreadId": "discord-board-1523695831943872572",
-    "sourceLabel": "料理教室部"
+    "sourceLabel": "料理教室部",
+    "importedComments": []
   },
   {
     "id": "discord-event-1523695003342344232",
@@ -3550,7 +7758,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "レンスペ飲み(大久保)",
     "image": "/discord-board/1485650237807792251/1523695013219930173.webp",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -3567,7 +7775,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1353735645373136926/8466a7d863d8505dff4e2bf28d8d3c70.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1523695003342344232",
-    "sourceLabel": "昼飲み部"
+    "sourceLabel": "昼飲み部",
+    "importedComments": []
   },
   {
     "id": "discord-event-1523518652937146431",
@@ -3580,7 +7789,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "image": "https://cdn.discordapp.com/attachments/1523518652937146431/1523518653314765070/IMG_8983.png?ex=6a94e950&is=6a9397d0&hm=e030d04635995328f87a002e17d260646df0b561791addbdd2070c4dc6ae11f7&",
     "tabelogUrl": "https://tabelog.com/tokyo/A1309/A130905/13150770/",
     "capacity": 25,
-    "reservationCapacity": 25,
+    "reservationCapacity": 26,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -3595,7 +7804,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1523518652937146431",
-    "sourceLabel": "関東支部イベント"
+    "sourceLabel": "関東支部イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1523328103072665641",
@@ -3624,7 +7834,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1004342455895855144/882feb03f38a2f7fe758b2633f1f5a3b.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1523328103072665641",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1523322329739034716",
@@ -3653,7 +7864,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1485772766828564581/c0d87abf9c970cb69a1c8657c557ae98.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1523322329739034716",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1522542144408260670",
@@ -3666,7 +7878,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "image": "",
     "tabelogUrl": "https://tabelog.com/tokyo/A1303/A130301/13322151/",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -3679,7 +7891,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1522542144408260670",
-    "sourceLabel": "関東支部イベント"
+    "sourceLabel": "関東支部イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1522518501263147109",
@@ -3708,7 +7921,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/696624208532340756/b824079889c51ec1cf68e5ba0f03233f.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1522518501263147109",
-    "sourceLabel": "スイーツ部"
+    "sourceLabel": "スイーツ部",
+    "importedComments": []
   },
   {
     "id": "discord-event-1522246535285444679",
@@ -3720,7 +7934,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "詳細をご確認ください",
     "image": "/discord-board/1485649608620113971/1522246541182767205.webp",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -3736,21 +7950,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerRank": "platinum",
     "sourceThreadId": "discord-board-1522246535285444679",
     "sourceLabel": "ディズニー部",
-    "chatId": "discord-1526806532988080158",
-    "participantImportWarnings": [
-      {
-        "createdAt": "2026-07-15T04:28:18.223000+00:00",
-        "content": "@ディズニー部🐭 \n予約がMAX20名なので、先着で1名募集します！（キャンセルが出た場合は随時募集します！）\n\n投票いただいたのに希望の日程にならなかった皆さんは、すみませんでした😭 また次の機会に！"
-      },
-      {
-        "createdAt": "2026-08-17T00:11:42.515000+00:00",
-        "content": "@ディズニー部🐭 \nこちら1名キャンセルが出たので、参加したい方がいましたら8/20(木)までにコメントをお願いします！\n※希望者が多い場合は抽選とします"
-      },
-      {
-        "createdAt": "2026-08-23T02:22:00.096000+00:00",
-        "content": "@ディズニー部🐭 \nこちら1名キャンセルが出たので先着で1名募集します！"
-      }
-    ]
+    "importedComments": []
   },
   {
     "id": "discord-event-1522234901267611778",
@@ -3778,7 +7978,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1223177154397995110/6b1d27d82aad0e87c3f144ba27e3efbd.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1522234901267611778",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1522206585504403637",
@@ -3790,7 +7991,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "La Scène（ラ・セヌ） / メルキュール東京日比谷",
     "image": "/discord-board/1487647151063564329/1522206590403612672.webp",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -3807,7 +8008,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1458772421887656090/0d3f1ef300f4606ca3aec8324dfe17d0.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1522206585504403637",
-    "sourceLabel": "舞台鑑賞部"
+    "sourceLabel": "舞台鑑賞部",
+    "importedComments": []
   },
   {
     "id": "discord-event-1522180848923967589",
@@ -3836,7 +8038,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/696624208532340756/b824079889c51ec1cf68e5ba0f03233f.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1522180848923967589",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1522081200116862996",
@@ -3865,7 +8068,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1353307711130828841/2a106d968b021c0277e464d4af283e25.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1522081200116862996",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1522061496094425119",
@@ -3894,7 +8098,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/709705641928949791/4484684a65f55fb383073219fd406282.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1522061496094425119",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1521885490100572160",
@@ -3923,7 +8128,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1353053734174982197/50785deafe13c7658095ad5529a2bc2c.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1521885490100572160",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1521748227471446046",
@@ -3952,7 +8158,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1404038461874245752/3b0b81177331b41c1a488521fb22c3da.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1521748227471446046",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1521662617880363028",
@@ -3965,7 +8172,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "image": "",
     "googleMapsUrl": "https://maps.app.goo.gl/HgPPVYbmARXUiYh67?g_st=ic",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -3982,7 +8189,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1228677952334725213/342ebdafc945abd8be7d4422f51fc9c6.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1521662617880363028",
-    "sourceLabel": "パン部"
+    "sourceLabel": "パン部",
+    "importedComments": []
   },
   {
     "id": "discord-event-1521549952596316180",
@@ -4010,7 +8218,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "たけまる【運営】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/789786995970015242/122846247a2c819c5dd1c7e60af73810.png?size=512",
     "sourceThreadId": "discord-board-1521549952596316180",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1521455767385804800",
@@ -4040,7 +8249,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1353735645373136926/8466a7d863d8505dff4e2bf28d8d3c70.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1521455767385804800",
-    "sourceLabel": "昼飲み部"
+    "sourceLabel": "昼飲み部",
+    "importedComments": []
   },
   {
     "id": "discord-event-1521419161144660029",
@@ -4052,7 +8262,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "詳細をご確認ください",
     "image": "/discord-board/1485649954918891671/1521419161765412884.webp",
     "capacity": 6,
-    "reservationCapacity": 6,
+    "reservationCapacity": 7,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -4069,7 +8279,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1467089499543703686/110f0759b206c86f3e72d201bac698d2.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1521419161144660029",
-    "sourceLabel": "ワイン部"
+    "sourceLabel": "ワイン部",
+    "importedComments": []
   },
   {
     "id": "discord-event-1521382804057882653",
@@ -4098,7 +8309,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1446344592214724700/559a459ef83e54fad1ec64ffc9a3d64a.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1521382804057882653",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1521165761681293352",
@@ -4111,7 +8323,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "image": "",
     "googleMapsUrl": "https://maps.app.goo.gl/HgPPVYbmARXUiYh67?g_st=ic",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -4128,7 +8340,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1353587486604922921/e661b608255cec37aecf95944458b180.png?size=512",
     "organizerRank": "platinum",
     "sourceThreadId": "discord-board-1521165761681293352",
-    "sourceLabel": "料理教室部"
+    "sourceLabel": "料理教室部",
+    "importedComments": []
   },
   {
     "id": "discord-event-1521115947027533955",
@@ -4157,7 +8370,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1458225622802239636/39b220fc75e7158a2dcf921c17a8db55.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1521115947027533955",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1520956727993045044",
@@ -4186,7 +8400,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/766872280302878780/374ab37e7d9446e08e9d922aede0a057.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1520956727993045044",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1520808042168324338",
@@ -4215,7 +8430,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/885869465739337738/6ed3d86b5a8abcaaeb61cb29cdf9e7ed.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1520808042168324338",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1520770677706330162",
@@ -4244,7 +8460,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1457701236936671439/7169ea71d19917ec77be40e97847ce7b.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1520770677706330162",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1520765679333277777",
@@ -4257,7 +8474,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "image": "",
     "googleMapsUrl": "https://maps.app.goo.gl/zCYgyKnhA6m6CUeN7",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -4274,7 +8491,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1460286509285511310/750139709e8b397ca717135363b32a74.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1520765679333277777",
-    "sourceLabel": "ワイン部"
+    "sourceLabel": "ワイン部",
+    "importedComments": []
   },
   {
     "id": "discord-event-1520694168735973387",
@@ -4302,7 +8520,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1404609719477207152/70b8b8e2dcce90ca5e7257b102c9deb6.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1520694168735973387",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1520675207491358950",
@@ -4331,7 +8550,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1223177154397995110/6b1d27d82aad0e87c3f144ba27e3efbd.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1520675207491358950",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1520441375278104658",
@@ -4343,7 +8563,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "詳細をご確認ください",
     "image": "",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -4358,7 +8578,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1223177154397995110/6b1d27d82aad0e87c3f144ba27e3efbd.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1520441375278104658",
-    "sourceLabel": "ディズニー部"
+    "sourceLabel": "ディズニー部",
+    "importedComments": []
   },
   {
     "id": "discord-event-1520041586145103942",
@@ -4371,7 +8592,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "image": "https://cdn.discordapp.com/attachments/1520041586145103942/1520041586514460723/20260715_.png?ex=6a95720b&is=6a94208b&hm=87bdcee7bd76339ed8216b935f7b67152bbb6f4e80927320a558ff3d6ce6b8e9&",
     "tabelogUrl": "https://tabelog.com/tokyo/A1307/A130701/13283501/",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -4386,7 +8607,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1520041586145103942",
-    "sourceLabel": "全体イベント"
+    "sourceLabel": "全体イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1519729059817586738",
@@ -4398,7 +8620,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "詳細をご確認ください",
     "image": "/discord-board/1485649608620113971/1519729065496547548.webp",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -4413,7 +8635,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1457371560670265374/d09179eea94d16710cda2370a546a963.png?size=512",
     "organizerRank": "platinum",
     "sourceThreadId": "discord-board-1519729059817586738",
-    "sourceLabel": "ディズニー部"
+    "sourceLabel": "ディズニー部",
+    "importedComments": []
   },
   {
     "id": "discord-event-1519334570678419456",
@@ -4442,7 +8665,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/839097642105176094/429d1bf3dd22a0dd8b8b364e44f8e8d4.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1519334570678419456",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1519295551001067660",
@@ -4454,7 +8678,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "三笠ターミナル・猿島ビジターセンター",
     "image": "",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -4471,7 +8695,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1353010654189191178/ad43b05c846c7aacff9e9423c31baa63.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1519295551001067660",
-    "sourceLabel": "旅行部"
+    "sourceLabel": "旅行部",
+    "importedComments": []
   },
   {
     "id": "discord-event-1519259608126849055",
@@ -4484,7 +8709,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "image": "https://cdn.discordapp.com/attachments/1519259608126849055/1519259608781295626/v2.png?ex=6a953cc5&is=6a93eb45&hm=61a7f506db06fc14d91b59296abfa5a54628c52e5df5bcc413621e05fba41c9d&",
     "googleMapsUrl": "https://maps.app.goo.gl/FgvW4Km9it5JdEDg9",
     "capacity": 20,
-    "reservationCapacity": 20,
+    "reservationCapacity": 21,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -4499,7 +8724,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "IRO+運営",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119605898743120044/2d550914366cefb1693360eea7d7ebcc.png?size=512",
     "sourceThreadId": "discord-board-1519259608126849055",
-    "sourceLabel": "全体イベント"
+    "sourceLabel": "全体イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1519178914386153543",
@@ -4511,7 +8737,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "詳細をご確認ください",
     "image": "",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -4526,7 +8752,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1008029940429639794/bf0baa95bc5175e0a4c584f6b46cc950.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1519178914386153543",
-    "sourceLabel": "ディズニー部"
+    "sourceLabel": "ディズニー部",
+    "importedComments": []
   },
   {
     "id": "discord-event-1518898239674519744",
@@ -4555,7 +8782,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1458057842434244679/f68198c8e93aa96927114664d5c064b6.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1518898239674519744",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1518553815752642623",
@@ -4583,7 +8811,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "さく",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/888402229051142215/6c2fd9df87b7e0211134c8252e9a3a19.png?size=512",
     "sourceThreadId": "discord-board-1518553815752642623",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1518214172519829624",
@@ -4595,7 +8824,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "詳細をご確認ください",
     "image": "",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -4610,7 +8839,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1353010654189191178/ad43b05c846c7aacff9e9423c31baa63.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1518214172519829624",
-    "sourceLabel": "旅行部"
+    "sourceLabel": "旅行部",
+    "importedComments": []
   },
   {
     "id": "discord-event-1518213106772480061",
@@ -4622,7 +8852,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "新橋演舞場",
     "image": "/discord-board/1487647151063564329/1518213111025373264.webp",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -4639,7 +8869,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1477873334719873097/3ecd4e70f1d66c825cb2c006355411cd.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1518213106772480061",
-    "sourceLabel": "舞台鑑賞部"
+    "sourceLabel": "舞台鑑賞部",
+    "importedComments": []
   },
   {
     "id": "discord-event-1517834609725935696",
@@ -4651,7 +8882,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "銀座",
     "image": "",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -4668,7 +8899,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/696624208532340756/b824079889c51ec1cf68e5ba0f03233f.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1517834609725935696",
-    "sourceLabel": "舞台鑑賞部"
+    "sourceLabel": "舞台鑑賞部",
+    "importedComments": []
   },
   {
     "id": "discord-event-1517743208296087583",
@@ -4697,6 +8929,344 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1517743208296087583",
     "sourceLabel": "関東グルメ掲示板",
+    "importedComments": [
+      {
+        "id": "discord-event-comment-1517745855350837331",
+        "author": "真妃🍷ワイン部長",
+        "authorId": "discord-1446344592214724700",
+        "text": "【募集中】7.8月参加者で調整　貸切横浜クルージングディナー",
+        "createdAt": "2026-06-20T04:20:10.270000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1517780796898021407",
+        "author": "monica",
+        "authorId": "discord-704614661466619995",
+        "text": "参加してみたいです！",
+        "createdAt": "2026-06-20T06:39:00.984000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1517784464388784158",
+        "author": "ゆい",
+        "authorId": "discord-696624208532340756",
+        "text": "参加したいです！🍷",
+        "createdAt": "2026-06-20T06:53:35.382000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1517846780547436636",
+        "author": "まなか🐰🤍",
+        "authorId": "discord-1408073158250070089",
+        "text": "参加したいです〜！",
+        "createdAt": "2026-06-20T11:01:12.712000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1517848645020418048",
+        "author": "とらお🐯",
+        "authorId": "discord-709705641928949791",
+        "text": "参加希望です🍷",
+        "createdAt": "2026-06-20T11:08:37.237000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1518034584292429954",
+        "author": "anna",
+        "authorId": "discord-1505883189703344158",
+        "text": "参加希望です！",
+        "createdAt": "2026-06-20T23:27:28.614000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1518072216535695522",
+        "author": "ザッキー",
+        "authorId": "discord-1246014118390005861",
+        "text": "参加希望です！",
+        "createdAt": "2026-06-21T01:57:00.840000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1518080719379890238",
+        "author": "たくや🐧",
+        "authorId": "discord-396760147138969612",
+        "text": "参加希望です！",
+        "createdAt": "2026-06-21T02:30:48.076000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1518240941088047164",
+        "author": "ひとみ",
+        "authorId": "discord-1482560339873894665",
+        "text": "参加希望です🚢",
+        "createdAt": "2026-06-21T13:07:27.908000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1518434775369646251",
+        "author": "mioka",
+        "authorId": "discord-1216698337147748394",
+        "text": "日程あえば参加希望です！",
+        "createdAt": "2026-06-22T01:57:41.602000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1518516248173088790",
+        "author": "りゅうま",
+        "authorId": "discord-1504496924399505438",
+        "text": "日程合えば参加希望です！",
+        "createdAt": "2026-06-22T07:21:26.232000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1518529449232957522",
+        "author": "ゆうか",
+        "authorId": "discord-1479749722297077771",
+        "text": "日程合えば参加希望です！",
+        "createdAt": "2026-06-22T08:13:53.610000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1518585341064384542",
+        "author": "みほ",
+        "authorId": "discord-1489160582639779840",
+        "text": "日程が合えば参加希望です🙋‍♀️",
+        "createdAt": "2026-06-22T11:55:59.261000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1518623636855062668",
+        "author": "ほしこ",
+        "authorId": "discord-1043120095880298536",
+        "text": "日程合えば参加希望です！🍷",
+        "createdAt": "2026-06-22T14:28:09.689000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1518790533496180736",
+        "author": "はるか",
+        "authorId": "discord-958743636605034556",
+        "text": "参加希望です🙇‍♀️",
+        "createdAt": "2026-06-23T01:31:20.949000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1518956194755252264",
+        "author": "しゅう",
+        "authorId": "discord-1457710668529537047",
+        "text": "日程合えばぜひ参加したいです！🍷",
+        "createdAt": "2026-06-23T12:29:37.671000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1518989041268424755",
+        "author": "はるか🍵",
+        "authorId": "discord-1467445141412516063",
+        "text": "日程合えば参加希望です！",
+        "createdAt": "2026-06-23T14:40:08.890000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1519162809169219714",
+        "author": "yukie",
+        "authorId": "discord-1353307711130828841",
+        "text": "日程次第でいきたいです🍷",
+        "createdAt": "2026-06-24T02:10:38.386000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1519326236843966514",
+        "author": "iori",
+        "authorId": "discord-1460286509285511310",
+        "text": "参加希望です^^",
+        "createdAt": "2026-06-24T13:00:02.580000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1519366546982703246",
+        "author": "いい   ねい(本名です)",
+        "authorId": "discord-1474011170938552364",
+        "text": "参加希望ですです🍷",
+        "createdAt": "2026-06-24T15:40:13.266000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1519648201517301790",
+        "author": "ひより",
+        "authorId": "discord-1403348369706848292",
+        "text": "参加希望です！",
+        "createdAt": "2026-06-25T10:19:24.940000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1519691853404962877",
+        "author": "riko",
+        "authorId": "discord-1403372806510612551",
+        "text": "参加希望です！",
+        "createdAt": "2026-06-25T13:12:52.361000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1519693376595689582",
+        "author": "ももこ",
+        "authorId": "discord-1205532162414350426",
+        "text": "参加希望です！",
+        "createdAt": "2026-06-25T13:18:55.518000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1520287036093759538",
+        "author": "真妃🍷ワイン部長",
+        "authorId": "discord-1446344592214724700",
+        "text": "たくさんの参加希望ありがとうございます。6/30に締め切ります。",
+        "createdAt": "2026-06-27T04:37:54.972000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1520429610234286180",
+        "author": "Yuna",
+        "authorId": "discord-1512693278074736694",
+        "text": "参加希望です！",
+        "createdAt": "2026-06-27T14:04:27.296000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1520681665234731079",
+        "author": "なかち",
+        "authorId": "discord-1403349549292191754",
+        "text": "予定が合えば参加希望です！",
+        "createdAt": "2026-06-28T06:46:01.891000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1520777544524107927",
+        "author": "Takahiro.",
+        "authorId": "discord-1403675019061755974",
+        "text": "日程合えば参加したいです！",
+        "createdAt": "2026-06-28T13:07:01.295000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1521133013981859940",
+        "author": "まーくん",
+        "authorId": "discord-1404670392463003812",
+        "text": "参加希望です！",
+        "createdAt": "2026-06-29T12:39:31.818000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1521272890618806413",
+        "author": "kyosuke",
+        "authorId": "discord-1350118452462878790",
+        "text": "参加希望です！",
+        "createdAt": "2026-06-29T21:55:21.007000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1521300968527102143",
+        "author": "なおき",
+        "authorId": "discord-1485518452168069262",
+        "text": "参加希望です！",
+        "createdAt": "2026-06-29T23:46:55.302000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1521503914279698515",
+        "author": "りこ",
+        "authorId": "discord-1514257455234940929",
+        "text": "参加してみたいです💭",
+        "createdAt": "2026-06-30T13:13:21.340000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1521922687910285412",
+        "author": "りょうき",
+        "authorId": "discord-1501092041097220208",
+        "text": "参加希望です！",
+        "createdAt": "2026-07-01T16:57:24.754000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1522501002132193320",
+        "author": "ゆいと",
+        "authorId": "discord-1476255646377578691",
+        "text": "日程が合えば参加したいです！",
+        "createdAt": "2026-07-03T07:15:25.609000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1523656826716033104",
+        "author": "さな【運営】",
+        "authorId": "discord-1404762625077809152",
+        "text": "@真妃 お忙しいところ恐縮ですが、こちら募集締め切り及び参加者の確定をお願いいたします！🙇",
+        "createdAt": "2026-07-06T11:48:15.664000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1523922492824227941",
+        "author": "IRO+ サポート",
+        "authorId": "discord-1223692916619477072",
+        "text": ":white_check_mark: <#1523922495290212483>を作成しました\n下記の皆様はご確認をお願いいたします！\n@いい   ねい(本名です) @ゆい @ザッキー @みほ @iori @Monako @mioka @まなか🐰🤍 @ひとみ",
+        "createdAt": "2026-07-07T05:23:55.400000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1523922615121481738",
+        "author": "真妃🍷ワイン部長",
+        "authorId": "discord-1446344592214724700",
+        "text": "【募集終了】7.8月参加者で調整　貸切横浜クルージングディナー",
+        "createdAt": "2026-07-07T05:24:24.558000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1535902841947033723",
+        "author": "真妃🍷ワイン部長",
+        "authorId": "discord-1446344592214724700",
+        "text": "【募集中】10/10 19:00~　貸切横浜クルージングディナー",
+        "createdAt": "2026-08-09T06:49:33.215000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1535903037242081400",
+        "author": "真妃🍷ワイン部長",
+        "authorId": "discord-1446344592214724700",
+        "text": "@関東支部 キャンセル出たので2名追加募集します！",
+        "createdAt": "2026-08-09T06:50:19.777000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1535903409624981575",
+        "author": "ゆいと",
+        "authorId": "discord-1476255646377578691",
+        "text": "参加希望です",
+        "createdAt": "2026-08-09T06:51:48.560000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1535907466334699580",
+        "author": "りか",
+        "authorId": "discord-1522253038994063410",
+        "text": "間に合えば、ぜひ参加したいです🙏！",
+        "createdAt": "2026-08-09T07:07:55.755000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1536908996361986109",
+        "author": "Takahiro.",
+        "authorId": "discord-1403675019061755974",
+        "text": "まだ間に合うようでしたら参加希望します！",
+        "createdAt": "2026-08-12T01:27:39.121000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1539227760264876182",
+        "author": "まりこ⛳ゴルフ部長",
+        "authorId": "discord-1507605842629890231",
+        "text": "間に合えば参加希望したいです🙌",
+        "createdAt": "2026-08-18T11:01:35.516000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1539624137008353330",
+        "author": "takuto",
+        "authorId": "discord-1327670901373931661",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-19T13:16:39.096000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1541365780182999101",
+        "author": "さな【運営】",
+        "authorId": "discord-1404762625077809152",
+        "text": "@真妃 お忙しいところ恐縮ですが、こちら参加者の確定をお願いいたします！🙇",
+        "createdAt": "2026-08-24T08:37:19.187000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1541403321041035354",
+        "author": "🌸まなか🌸",
+        "authorId": "discord-1485772766828564581",
+        "text": "参加希望です！",
+        "createdAt": "2026-08-24T11:06:29.625000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1541479846901846117",
+        "author": "kii",
+        "authorId": "discord-1426809108421677216",
+        "text": "まだ間に合うよでしたら、参加希望です！",
+        "createdAt": "2026-08-24T16:10:34.812000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1541643517607288832",
+        "author": "真妃🍷ワイン部長",
+        "authorId": "discord-1446344592214724700",
+        "text": "今回は@takuto @まりこ 参加をお願いします！グループチャット招待します。",
+        "createdAt": "2026-08-25T03:00:56.949000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1541643589690466354",
+        "author": "真妃🍷ワイン部長",
+        "authorId": "discord-1446344592214724700",
+        "text": "【募集終了】10/10 19:00~　貸切横浜クルージングディナー",
+        "createdAt": "2026-08-25T03:01:14.135000+00:00"
+      }
+    ],
     "chatId": "discord-1523922495290212483",
     "participantImportWarnings": [
       {
@@ -4732,7 +9302,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/885869465739337738/6ed3d86b5a8abcaaeb61cb29cdf9e7ed.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1517531892717588585",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1517027816925827102",
@@ -4745,7 +9316,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "image": "https://cdn.discordapp.com/attachments/1517027816925827102/1517027817773334538/20260624_IROBAR.png?ex=6a950740&is=6a93b5c0&hm=9e3d44693f5d9687caf5823e69a12c9ff6796df71507bb935b8afb3fdab842f8&",
     "googleMapsUrl": "https://maps.app.goo.gl/TR7bjgcjJ4zdpF3J9",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -4758,7 +9329,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1517027816925827102",
-    "sourceLabel": "全体イベント"
+    "sourceLabel": "全体イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1516993800973713569",
@@ -4786,7 +9358,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "てるき",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/812624829991747605/1eaf5e03abcc3704528be61d3754f9d9.png?size=512",
     "sourceThreadId": "discord-board-1516993800973713569",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1516802073902059681",
@@ -4815,7 +9388,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1004342455895855144/882feb03f38a2f7fe758b2633f1f5a3b.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1516802073902059681",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1516780129609584644",
@@ -4828,7 +9402,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "image": "/discord-board/1485650106689523802/1516780491867422991.webp",
     "tabelogUrl": "https://tabelog.com/tokyo/A1307/A130703/13314424/",
     "capacity": 6,
-    "reservationCapacity": 6,
+    "reservationCapacity": 7,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -4845,7 +9419,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1459195336991047815/a596e4658de943f4779c57918376b97d.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1516780129609584644",
-    "sourceLabel": "スイーツ部"
+    "sourceLabel": "スイーツ部",
+    "importedComments": []
   },
   {
     "id": "discord-event-1516698678876962816",
@@ -4873,7 +9448,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1516698678876962816",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1516274501447323750",
@@ -4899,7 +9475,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1457362274980200473/4273079b45b88481652ee21e2cf05ef9.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1516274501447323750",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1515791986349838366",
@@ -4928,7 +9505,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1403038939832385683/8c3e03e761a990c8a8a0712163a8f955.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1515791986349838366",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1515659198858526800",
@@ -4956,7 +9534,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1223177154397995110/6b1d27d82aad0e87c3f144ba27e3efbd.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1515659198858526800",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1515557214302109776",
@@ -4985,7 +9564,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1457362274980200473/4273079b45b88481652ee21e2cf05ef9.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1515557214302109776",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1515352661434831020",
@@ -4997,7 +9577,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "東京タワーピックルボールコート1面",
     "image": "",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -5014,7 +9594,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1403348999557222473/ce7f2eea11bbe1db6de05d0f1a634202.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1515352661434831020",
-    "sourceLabel": "スポーツ部"
+    "sourceLabel": "スポーツ部",
+    "importedComments": []
   },
   {
     "id": "discord-event-1515232683939336313",
@@ -5042,7 +9623,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Hazuki",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1452174899438288918/d6d0cfefd9e0dfd5492fbc4575c1b421.png?size=512",
     "sourceThreadId": "discord-board-1515232683939336313",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1515176435504124104",
@@ -5054,7 +9636,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "詳細をご確認ください",
     "image": "/discord-board/1485649683345969182/1515176443750121532.webp",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -5071,7 +9653,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1457652020164034686/932a1177233bc50fb3421b02bd69eddb.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1515176435504124104",
-    "sourceLabel": "散歩部"
+    "sourceLabel": "散歩部",
+    "importedComments": []
   },
   {
     "id": "discord-event-1514449831949504652",
@@ -5097,7 +9680,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1228677952334725213/342ebdafc945abd8be7d4422f51fc9c6.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1514449831949504652",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1514254150827901070",
@@ -5125,7 +9709,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/696624208532340756/b824079889c51ec1cf68e5ba0f03233f.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1514254150827901070",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1514134268496842863",
@@ -5153,7 +9738,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1457526173616705549/1fc6273adfe90cc49907612c466a8a42.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1514134268496842863",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1514099524891705395",
@@ -5181,7 +9767,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Hazuki",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1452174899438288918/d6d0cfefd9e0dfd5492fbc4575c1b421.png?size=512",
     "sourceThreadId": "discord-board-1514099524891705395",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1513876983790964746",
@@ -5210,7 +9797,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1458057842434244679/f68198c8e93aa96927114664d5c064b6.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1513876983790964746",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1513425347687878676",
@@ -5239,7 +9827,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1228678386902372374/04a71500e3608ede85dd9aef73d334b7.png?size=512",
     "organizerRank": "platinum",
     "sourceThreadId": "discord-board-1513425347687878676",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1513019299126579230",
@@ -5268,7 +9857,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/709705641928949791/4484684a65f55fb383073219fd406282.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1513019299126579230",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1513011285003079760",
@@ -5297,7 +9887,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1457710905109254328/93565c5369bddacd5bb4830e7a3f0a82.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1513011285003079760",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1512691331883995216",
@@ -5310,7 +9901,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "image": "/discord-board/1485650029086769333/1512691338041229424.webp",
     "googleMapsUrl": "https://maps.app.goo.gl/me85vvhxXd8Bzij19?g_st=ic",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -5327,7 +9918,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1228677952334725213/342ebdafc945abd8be7d4422f51fc9c6.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1512691331883995216",
-    "sourceLabel": "パン部"
+    "sourceLabel": "パン部",
+    "importedComments": []
   },
   {
     "id": "discord-event-1512474420646514911",
@@ -5357,7 +9949,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1353735645373136926/8466a7d863d8505dff4e2bf28d8d3c70.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1512474420646514911",
-    "sourceLabel": "昼飲み部"
+    "sourceLabel": "昼飲み部",
+    "importedComments": []
   },
   {
     "id": "discord-event-1512467613341712394",
@@ -5386,7 +9979,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1457362274980200473/4273079b45b88481652ee21e2cf05ef9.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1512467613341712394",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1512461157607145563",
@@ -5416,7 +10010,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1353735645373136926/8466a7d863d8505dff4e2bf28d8d3c70.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1512461157607145563",
-    "sourceLabel": "昼飲み部"
+    "sourceLabel": "昼飲み部",
+    "importedComments": []
   },
   {
     "id": "discord-event-1512449573732221159",
@@ -5428,7 +10023,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "詳細をご確認ください",
     "image": "",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -5444,7 +10039,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "もってぃー【運営】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1352978791483572326/aa0f81f03bc22b267fa676eb6bf32402.png?size=512",
     "sourceThreadId": "discord-board-1512449573732221159",
-    "sourceLabel": "スポーツ観戦部"
+    "sourceLabel": "スポーツ観戦部",
+    "importedComments": []
   },
   {
     "id": "discord-event-1512369013647347785",
@@ -5473,7 +10069,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1457508300588453932/5278f4112aced688e599ecee747cb9ba.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1512369013647347785",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1512348085798572123",
@@ -5502,7 +10099,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1228678386902372374/04a71500e3608ede85dd9aef73d334b7.png?size=512",
     "organizerRank": "platinum",
     "sourceThreadId": "discord-board-1512348085798572123",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1512278725901681001",
@@ -5515,7 +10113,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "image": "",
     "googleMapsUrl": "https://maps.app.goo.gl/ATwsoBLJKe1j1oHz5?g_st=ic",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -5530,7 +10128,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1228678386902372374/04a71500e3608ede85dd9aef73d334b7.png?size=512",
     "organizerRank": "platinum",
     "sourceThreadId": "discord-board-1512278725901681001",
-    "sourceLabel": "ランニング部"
+    "sourceLabel": "ランニング部",
+    "importedComments": []
   },
   {
     "id": "discord-event-1512055065861423244",
@@ -5559,7 +10158,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/982887161357561906/641fbc2a86b82250e5eff22b1d08a9d2.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1512055065861423244",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1512032943541846199",
@@ -5571,7 +10171,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "葛西駅 地下鉄博物館改札",
     "image": "https://cdn.discordapp.com/attachments/1512032943541846199/1512034673516085340/IMG_6731.jpg?ex=6a955206&is=6a940086&hm=7cc5dcd276f4eb2573b555dd39a583936cf22cdee301de16cb2937e8a229d4e2&",
     "capacity": 28,
-    "reservationCapacity": 28,
+    "reservationCapacity": 29,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -5586,7 +10186,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "もってぃー【運営】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1352978791483572326/aa0f81f03bc22b267fa676eb6bf32402.png?size=512",
     "sourceThreadId": "discord-board-1512032943541846199",
-    "sourceLabel": "関東支部イベント"
+    "sourceLabel": "関東支部イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1511935347477712988",
@@ -5615,7 +10216,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/709705641928949791/4484684a65f55fb383073219fd406282.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1511935347477712988",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1511934223878062090",
@@ -5644,7 +10246,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1223177154397995110/6b1d27d82aad0e87c3f144ba27e3efbd.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1511934223878062090",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1511810311894863952",
@@ -5673,7 +10276,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1403038939832385683/8c3e03e761a990c8a8a0712163a8f955.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1511810311894863952",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1511647806367076503",
@@ -5702,7 +10306,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1457741437633564909/c3b6ae0373633eec085d487f2b44a0f4.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1511647806367076503",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1511589898207891466",
@@ -5714,7 +10319,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "詳細をご確認ください",
     "image": "/discord-board/1485649954918891671/1511589898493362186.webp",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -5731,7 +10336,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1467089499543703686/110f0759b206c86f3e72d201bac698d2.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1511589898207891466",
-    "sourceLabel": "ワイン部"
+    "sourceLabel": "ワイン部",
+    "importedComments": []
   },
   {
     "id": "discord-event-1511589527880339566",
@@ -5760,7 +10366,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1059373969590984764/857b85adf11b840e1cacf44276528eda.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1511589527880339566",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1511365499538378883",
@@ -5789,7 +10396,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/413325457182949377/3b15096bac22c054818edd00ecf9a56e.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1511365499538378883",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1511345788490350634",
@@ -5818,7 +10426,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1457701236936671439/7169ea71d19917ec77be40e97847ce7b.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1511345788490350634",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1511206281157804093",
@@ -5845,7 +10454,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1403038939832385683/8c3e03e761a990c8a8a0712163a8f955.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1511206281157804093",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1511037006480806039",
@@ -5874,7 +10484,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1327670901373931661/031bcf501f0b7e7d76ab56a51bdb926d.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1511037006480806039",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1511019140050190398",
@@ -5886,7 +10497,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "詳細をご確認ください",
     "image": "/discord-board/1485649683345969182/1511019150259130398.webp",
     "capacity": 5,
-    "reservationCapacity": 5,
+    "reservationCapacity": 6,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -5903,7 +10514,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1457652020164034686/932a1177233bc50fb3421b02bd69eddb.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1511019140050190398",
-    "sourceLabel": "散歩部"
+    "sourceLabel": "散歩部",
+    "importedComments": []
   },
   {
     "id": "discord-event-1511010985123643552",
@@ -5931,7 +10543,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "KENTO",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1424767385176379442/0a27321f0ce9b004d792eee5fc87f129.png?size=512",
     "sourceThreadId": "discord-board-1511010985123643552",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1510964574873194537",
@@ -5944,7 +10557,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "image": "",
     "googleMapsUrl": "https://maps.app.goo.gl/31gbdiXR56TM5Z8UA?g_st=ic",
     "capacity": 40,
-    "reservationCapacity": 40,
+    "reservationCapacity": 41,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -5959,7 +10572,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Nana【運営】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1228712639903961190/ec0618fb90198159eda44242b7db2bd6.png?size=512",
     "sourceThreadId": "discord-board-1510964574873194537",
-    "sourceLabel": "関東支部イベント"
+    "sourceLabel": "関東支部イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1509847057324707930",
@@ -5985,7 +10599,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/804712649598042172/ffa3b5462506477b220530a9f18571bc.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1509847057324707930",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1510939081176125501",
@@ -6014,7 +10629,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1459502509679837186/8c816e24707c133c24625fdb8998096c.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1510939081176125501",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1510920586044375070",
@@ -6026,7 +10642,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "詳細をご確認ください",
     "image": "https://cdn.discordapp.com/attachments/1510920586044375070/1510920587026108416/4f6353a399069ec7.PNG?ex=6a9538f3&is=6a93e773&hm=615c5beaeec2152eb34aeb8758a58907a43ef13b825d392b9d234bd977003cac&",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -6039,7 +10655,30 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "IRO+運営",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119605898743120044/2d550914366cefb1693360eea7d7ebcc.png?size=512",
     "sourceThreadId": "discord-board-1510920586044375070",
-    "sourceLabel": "全体イベント"
+    "sourceLabel": "全体イベント",
+    "importedComments": [
+      {
+        "id": "discord-event-comment-1510920948193169508",
+        "author": "IRO+運営",
+        "authorId": "discord-1119605898743120044",
+        "text": "## 合宿運営メンバーもあと数名募集中です！\nご興味ある方いたらぜひ立候補お待ちしております😊\nhttps://discord.com/channels/1217327152098312245/1504772980851478548/1505135433783316540",
+        "createdAt": "2026-06-01T08:20:25.603000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1517019967239884832",
+        "author": "Non【IRO+代表】",
+        "authorId": "discord-1119606639763390545",
+        "text": "@everyone\n## 秋合宿の参加メンバー引き続き募集中です！🔥\n\nすでにお申し込みいただいた方ありがとうございます！😊順次下記チャットに追加させていただいておりますので、ご確認のほどよろしくお願いいたします🙏🏻\n\nhttps://discord.com/channels/1217327152098312245/1517019271266435252",
+        "createdAt": "2026-06-18T04:15:45.058000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1522091682646982737",
+        "author": "IRO+運営",
+        "authorId": "discord-1119605898743120044",
+        "text": "@everyone\n## 秋合宿について7月末まで参加者募集中です！🍁\nまだ人数増やせますので迷っている方もぜひお待ちしております😊",
+        "createdAt": "2026-07-02T04:08:56.239000+00:00"
+      }
+    ]
   },
   {
     "id": "discord-event-1510840569260150995",
@@ -6051,7 +10690,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "詳細をご確認ください",
     "image": "",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -6066,7 +10705,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1457652020164034686/932a1177233bc50fb3421b02bd69eddb.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1510840569260150995",
-    "sourceLabel": "散歩部"
+    "sourceLabel": "散歩部",
+    "importedComments": []
   },
   {
     "id": "discord-event-1510666640143028395",
@@ -6095,7 +10735,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1004342455895855144/882feb03f38a2f7fe758b2633f1f5a3b.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1510666640143028395",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1510651260251013160",
@@ -6124,7 +10765,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1223177154397995110/6b1d27d82aad0e87c3f144ba27e3efbd.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1510651260251013160",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1510310034658033824",
@@ -6137,7 +10779,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "image": "",
     "googleMapsUrl": "https://maps.app.goo.gl/HgPPVYbmARXUiYh67?g_st=ic",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -6154,7 +10796,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1353587486604922921/e661b608255cec37aecf95944458b180.png?size=512",
     "organizerRank": "platinum",
     "sourceThreadId": "discord-board-1510310034658033824",
-    "sourceLabel": "料理教室部"
+    "sourceLabel": "料理教室部",
+    "importedComments": []
   },
   {
     "id": "discord-event-1510138559124865064",
@@ -6180,7 +10823,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "りょうや",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1492822899726225488/9798627eb379efcdc745aa1297d1ce9d.png?size=512",
     "sourceThreadId": "discord-board-1510138559124865064",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1510113575815872673",
@@ -6191,19 +10835,10 @@ export const IMPORTED_DISCORD_EVENTS = [
     "time": "12:15",
     "location": "TBS赤坂ACTシアター",
     "image": "/discord-board/1487647151063564329/1510113578714271874.webp",
-    "capacity": 8,
-    "reservationCapacity": 8,
-    "attendees": 8,
-    "participants": [
-      "discord-1459502509679837186",
-      "discord-1485772766828564581",
-      "discord-1477873334719873097",
-      "discord-1095677069700112525",
-      "discord-1493455228887105647",
-      "discord-970247635954991124",
-      "discord-1458772421887656090",
-      "discord-709705641928949791"
-    ],
+    "capacity": 1,
+    "reservationCapacity": 2,
+    "attendees": 0,
+    "participants": [],
     "applicantIds": [],
     "price": "12,000円",
     "priceMin": 12000,
@@ -6219,7 +10854,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1510113575815872673",
     "sourceLabel": "舞台鑑賞部",
-    "chatId": "discord-1512652591895548086"
+    "importedComments": []
   },
   {
     "id": "discord-event-1509919738137022565",
@@ -6231,7 +10866,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "大手町 天空のビアガーデンTerrasse(テラッセ)",
     "image": "",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -6248,7 +10883,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1353010654189191178/ad43b05c846c7aacff9e9423c31baa63.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1509919738137022565",
-    "sourceLabel": "旅行部"
+    "sourceLabel": "旅行部",
+    "importedComments": []
   },
   {
     "id": "discord-event-1509871670750609508",
@@ -6277,7 +10913,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1223177154397995110/6b1d27d82aad0e87c3f144ba27e3efbd.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1509871670750609508",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1509824598915682335",
@@ -6303,7 +10940,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1485772766828564581/c0d87abf9c970cb69a1c8657c557ae98.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1509824598915682335",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1509711805826727978",
@@ -6330,7 +10968,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1228680202952118416/79db0a0052562728670a00bc8807c4d8.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1509711805826727978",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1509561434487390248",
@@ -6359,7 +10998,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1341394331063550014/3f852c68137d5d8de86fbd5b0e14d645.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1509561434487390248",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1509559921837084844",
@@ -6371,7 +11011,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "詳細をご確認ください",
     "image": "/discord-board/1485649954918891671/1509559928157769798.webp",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -6388,7 +11028,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1446344592214724700/559a459ef83e54fad1ec64ffc9a3d64a.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1509559921837084844",
-    "sourceLabel": "ワイン部"
+    "sourceLabel": "ワイン部",
+    "importedComments": []
   },
   {
     "id": "discord-event-1509448052971274240",
@@ -6417,7 +11058,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1479840315107184804/b050cd588b38d9d6a6e1b35cdc437c43.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1509448052971274240",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1508430786217381889",
@@ -6445,7 +11087,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1004342455895855144/882feb03f38a2f7fe758b2633f1f5a3b.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1508430786217381889",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1508426624960430110",
@@ -6458,7 +11101,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "image": "",
     "tabelogUrl": "https://tabelog.com/tokyo/A1309/A130905/13298421/",
     "capacity": 3,
-    "reservationCapacity": 3,
+    "reservationCapacity": 4,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -6475,7 +11118,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1459195336991047815/a596e4658de943f4779c57918376b97d.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1508426624960430110",
-    "sourceLabel": "スイーツ部"
+    "sourceLabel": "スイーツ部",
+    "importedComments": []
   },
   {
     "id": "discord-event-1508414698213605376",
@@ -6487,7 +11131,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "虎の門",
     "image": "/discord-board/1485650106689523802/1508415148963004528.webp",
     "capacity": 3,
-    "reservationCapacity": 3,
+    "reservationCapacity": 4,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -6504,7 +11148,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/696624208532340756/b824079889c51ec1cf68e5ba0f03233f.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1508414698213605376",
-    "sourceLabel": "スイーツ部"
+    "sourceLabel": "スイーツ部",
+    "importedComments": []
   },
   {
     "id": "discord-event-1508412055806410782",
@@ -6533,7 +11178,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1459502509679837186/8c816e24707c133c24625fdb8998096c.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1508412055806410782",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1508408589579194398",
@@ -6545,7 +11191,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "詳細をご確認ください",
     "image": "/discord-board/1485649683345969182/1508412784940027915.webp",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -6560,7 +11206,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1457652020164034686/932a1177233bc50fb3421b02bd69eddb.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1508408589579194398",
-    "sourceLabel": "散歩部"
+    "sourceLabel": "散歩部",
+    "importedComments": []
   },
   {
     "id": "discord-event-1508262606618497125",
@@ -6589,7 +11236,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1457362274980200473/4273079b45b88481652ee21e2cf05ef9.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1508262606618497125",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1508141319795511498",
@@ -6618,7 +11266,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1446344592214724700/559a459ef83e54fad1ec64ffc9a3d64a.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1508141319795511498",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1507959099365658644",
@@ -6630,7 +11279,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "詳細をご確認ください",
     "image": "/discord-board/1485649608620113971/1507959102641537165.webp",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -6645,7 +11294,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1457371560670265374/d09179eea94d16710cda2370a546a963.png?size=512",
     "organizerRank": "platinum",
     "sourceThreadId": "discord-board-1507959099365658644",
-    "sourceLabel": "ディズニー部"
+    "sourceLabel": "ディズニー部",
+    "importedComments": []
   },
   {
     "id": "discord-event-1507927437659472016",
@@ -6657,7 +11307,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "詳細をご確認ください",
     "image": "",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -6672,7 +11322,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1458772421887656090/0d3f1ef300f4606ca3aec8324dfe17d0.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1507927437659472016",
-    "sourceLabel": "舞台鑑賞部"
+    "sourceLabel": "舞台鑑賞部",
+    "importedComments": []
   },
   {
     "id": "discord-event-1506950846099755028",
@@ -6701,7 +11352,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1457741437633564909/c3b6ae0373633eec085d487f2b44a0f4.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1506950846099755028",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1506867075291807826",
@@ -6730,7 +11382,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/959759896037961748/f0569afafae367b73b3e52b908114922.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1506867075291807826",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1506857863404978256",
@@ -6743,7 +11396,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "image": "/discord-board/1485649683345969182/1506857869264289873.webp",
     "googleMapsUrl": "https://maps.app.goo.gl/w3iK7eVbWySjcHAP7?g_st=ic",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -6758,7 +11411,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1457652020164034686/932a1177233bc50fb3421b02bd69eddb.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1506857863404978256",
-    "sourceLabel": "散歩部"
+    "sourceLabel": "散歩部",
+    "importedComments": []
   },
   {
     "id": "discord-event-1506168824255352842",
@@ -6770,7 +11424,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "詳細をご確認ください",
     "image": "/discord-board/1485649954918891671/1506168828273492018.webp",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -6785,7 +11439,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1446344592214724700/559a459ef83e54fad1ec64ffc9a3d64a.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1506168824255352842",
-    "sourceLabel": "ワイン部"
+    "sourceLabel": "ワイン部",
+    "importedComments": []
   },
   {
     "id": "discord-event-1506166639325089792",
@@ -6797,7 +11452,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "詳細をご確認ください",
     "image": "/discord-board/1485649954918891671/1506166644710440970.webp",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -6812,7 +11467,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1446344592214724700/559a459ef83e54fad1ec64ffc9a3d64a.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1506166639325089792",
-    "sourceLabel": "ワイン部"
+    "sourceLabel": "ワイン部",
+    "importedComments": []
   },
   {
     "id": "discord-event-1505850727145406494",
@@ -6841,7 +11497,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1216698337147748394/6c9aaa09b320526b932e1e9b31f928fb.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1505850727145406494",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1505836435498995793",
@@ -6853,7 +11510,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "白金ザ・スカイ　スカイラウンジ",
     "image": "https://cdn.discordapp.com/attachments/1505836435498995793/1505836436073746432/IROParty_.png?ex=6a952ef7&is=6a93dd77&hm=5a2d41f54caa7484fa5a148cf328b6f2b67ed85828d7d2828e845036f7c63c99&",
     "capacity": 20,
-    "reservationCapacity": 20,
+    "reservationCapacity": 21,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -6868,7 +11525,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "IRO+運営",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119605898743120044/2d550914366cefb1693360eea7d7ebcc.png?size=512",
     "sourceThreadId": "discord-board-1505836435498995793",
-    "sourceLabel": "全体イベント"
+    "sourceLabel": "全体イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1505772219714899998",
@@ -6896,7 +11554,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1446344592214724700/559a459ef83e54fad1ec64ffc9a3d64a.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1505772219714899998",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1505742572147183738",
@@ -6908,7 +11567,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "恵比寿・中目黒付近",
     "image": "",
     "capacity": 4,
-    "reservationCapacity": 4,
+    "reservationCapacity": 5,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -6925,7 +11584,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1459195336991047815/a596e4658de943f4779c57918376b97d.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1505742572147183738",
-    "sourceLabel": "スイーツ部"
+    "sourceLabel": "スイーツ部",
+    "importedComments": []
   },
   {
     "id": "discord-event-1505244854626816221",
@@ -6937,7 +11597,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "詳細をご確認ください",
     "image": "/discord-board/1485649608620113971/1505244858129055754.webp",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -6952,7 +11612,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1457371560670265374/d09179eea94d16710cda2370a546a963.png?size=512",
     "organizerRank": "platinum",
     "sourceThreadId": "discord-board-1505244854626816221",
-    "sourceLabel": "ディズニー部"
+    "sourceLabel": "ディズニー部",
+    "importedComments": []
   },
   {
     "id": "discord-event-1505228631998206063",
@@ -6981,7 +11642,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1457508300588453932/5278f4112aced688e599ecee747cb9ba.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1505228631998206063",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1505207705961496907",
@@ -7010,7 +11672,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1327670901373931661/031bcf501f0b7e7d76ab56a51bdb926d.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1505207705961496907",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1504833943395111033",
@@ -7039,7 +11702,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1223177154397995110/6b1d27d82aad0e87c3f144ba27e3efbd.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1504833943395111033",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1504502630561485011",
@@ -7068,7 +11732,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1485772766828564581/c0d87abf9c970cb69a1c8657c557ae98.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1504502630561485011",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1504466132298502166",
@@ -7097,7 +11762,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1000320588843339826/fad9c8ef4b8848f8f7b07d006248f2e0.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1504466132298502166",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1504463363189772360",
@@ -7125,7 +11791,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "みや🥁",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/777370228991721502/e7abb1bc690f504749b41539767109b5.png?size=512",
     "sourceThreadId": "discord-board-1504463363189772360",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1504149802730913792",
@@ -7154,7 +11821,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1327670901373931661/031bcf501f0b7e7d76ab56a51bdb926d.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1504149802730913792",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1504077853254357035",
@@ -7166,7 +11834,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "詳細をご確認ください",
     "image": "",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -7181,7 +11849,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1403348999557222473/ce7f2eea11bbe1db6de05d0f1a634202.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1504077853254357035",
-    "sourceLabel": "スポーツ部"
+    "sourceLabel": "スポーツ部",
+    "importedComments": []
   },
   {
     "id": "discord-event-1504055162875023410",
@@ -7193,7 +11862,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "詳細をご確認ください",
     "image": "",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -7208,7 +11877,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1228677952334725213/342ebdafc945abd8be7d4422f51fc9c6.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1504055162875023410",
-    "sourceLabel": "パン部"
+    "sourceLabel": "パン部",
+    "importedComments": []
   },
   {
     "id": "discord-event-1503975655858110534",
@@ -7238,7 +11908,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1008029940429639794/bf0baa95bc5175e0a4c584f6b46cc950.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1503975655858110534",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1503200166088278077",
@@ -7266,7 +11937,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1503200166088278077",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1502935696887775302",
@@ -7295,7 +11967,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1457741437633564909/c3b6ae0373633eec085d487f2b44a0f4.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1502935696887775302",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1502868445128036362",
@@ -7323,7 +11996,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1446344592214724700/559a459ef83e54fad1ec64ffc9a3d64a.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1502868445128036362",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1502626521125224538",
@@ -7352,7 +12026,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "ゆうか",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1457642692816408692/a8482b48654ee7aa85a129d51cd4d201.png?size=512",
     "sourceThreadId": "discord-board-1502626521125224538",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1502609746639720590",
@@ -7381,7 +12056,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1223177154397995110/6b1d27d82aad0e87c3f144ba27e3efbd.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1502609746639720590",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1502607571138252983",
@@ -7406,7 +12082,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "さえこ🐿️",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1472215869282320599/d2cf543b98c1fa92704fc8b535fee756.png?size=512",
     "sourceThreadId": "discord-board-1502607571138252983",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1502601717282508942",
@@ -7435,7 +12112,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/804712649598042172/ffa3b5462506477b220530a9f18571bc.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1502601717282508942",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1502599463632371875",
@@ -7464,7 +12142,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/804712649598042172/ffa3b5462506477b220530a9f18571bc.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1502599463632371875",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1502571809113899168",
@@ -7492,7 +12171,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "ayano",
     "organizerAvatar": "",
     "sourceThreadId": "discord-board-1502571809113899168",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1502155411913048084",
@@ -7521,7 +12201,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1008029940429639794/bf0baa95bc5175e0a4c584f6b46cc950.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1502155411913048084",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1501961030644007002",
@@ -7550,7 +12231,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1008029940429639794/bf0baa95bc5175e0a4c584f6b46cc950.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1501961030644007002",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1501958855251329114",
@@ -7579,7 +12261,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1404038461874245752/3b0b81177331b41c1a488521fb22c3da.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1501958855251329114",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1501537912171266058",
@@ -7591,7 +12274,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "詳細をご確認ください",
     "image": "",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -7606,7 +12289,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1457686620302999699/c77ad31d87a2143f7fbed8ff0929df0c.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1501537912171266058",
-    "sourceLabel": "ディズニー部"
+    "sourceLabel": "ディズニー部",
+    "importedComments": []
   },
   {
     "id": "discord-event-1501516003916644352",
@@ -7635,7 +12319,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1457362274980200473/4273079b45b88481652ee21e2cf05ef9.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1501516003916644352",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1501488922335772692",
@@ -7664,7 +12349,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1403675019061755974/919d31b9725037185c103aced0a1bd3e.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1501488922335772692",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1501471535884669030",
@@ -7677,7 +12363,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "image": "/discord-board/1485649608620113971/1501471536274608168.webp",
     "tabelogUrl": "https://tabelog.com/chiba/A1202/A120203/12000167/",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -7694,7 +12380,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1457371560670265374/d09179eea94d16710cda2370a546a963.png?size=512",
     "organizerRank": "platinum",
     "sourceThreadId": "discord-board-1501471535884669030",
-    "sourceLabel": "ディズニー部"
+    "sourceLabel": "ディズニー部",
+    "importedComments": []
   },
   {
     "id": "discord-event-1501387045652791307",
@@ -7723,7 +12410,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1353735645373136926/8466a7d863d8505dff4e2bf28d8d3c70.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1501387045652791307",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1501233642519658626",
@@ -7750,7 +12438,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "kent",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1490368348566065183/ab144c8e4f682727d28b984075ef81d4.png?size=512",
     "sourceThreadId": "discord-board-1501233642519658626",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1501212730965753939",
@@ -7779,7 +12468,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/766872280302878780/374ab37e7d9446e08e9d922aede0a057.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1501212730965753939",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1501038085121642546",
@@ -7809,7 +12499,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1459195336991047815/a596e4658de943f4779c57918376b97d.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1501038085121642546",
-    "sourceLabel": "スイーツ部"
+    "sourceLabel": "スイーツ部",
+    "importedComments": []
   },
   {
     "id": "discord-event-1500497731880485047",
@@ -7838,7 +12529,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1353735645373136926/8466a7d863d8505dff4e2bf28d8d3c70.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1500497731880485047",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1500465674034610226",
@@ -7867,7 +12559,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1459195336991047815/a596e4658de943f4779c57918376b97d.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1500465674034610226",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1500445599173181581",
@@ -7896,7 +12589,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1459195336991047815/a596e4658de943f4779c57918376b97d.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1500445599173181581",
-    "sourceLabel": "スイーツ部"
+    "sourceLabel": "スイーツ部",
+    "importedComments": []
   },
   {
     "id": "discord-event-1500138796065357974",
@@ -7925,7 +12619,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1457371560670265374/d09179eea94d16710cda2370a546a963.png?size=512",
     "organizerRank": "platinum",
     "sourceThreadId": "discord-board-1500138796065357974",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1500118099251298375",
@@ -7953,7 +12648,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "もってぃー【運営】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1352978791483572326/aa0f81f03bc22b267fa676eb6bf32402.png?size=512",
     "sourceThreadId": "discord-board-1500118099251298375",
-    "sourceLabel": "関東支部イベント"
+    "sourceLabel": "関東支部イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1499916730582171768",
@@ -7966,7 +12662,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "image": "",
     "tabelogUrl": "https://tabelog.com/tokyo/A1303/A130302/13097510/",
     "capacity": 28,
-    "reservationCapacity": 28,
+    "reservationCapacity": 29,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -7981,7 +12677,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "さな【運営】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1404762625077809152/ca540a9e6c8e7f31f87f4b95ce0ef77d.png?size=512",
     "sourceThreadId": "discord-board-1499916730582171768",
-    "sourceLabel": "関東支部イベント"
+    "sourceLabel": "関東支部イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1499760209185214615",
@@ -8007,7 +12704,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/696624208532340756/b824079889c51ec1cf68e5ba0f03233f.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1499760209185214615",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1499663259496611921",
@@ -8019,7 +12717,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "詳細をご確認ください",
     "image": "",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -8032,7 +12730,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1499663259496611921",
-    "sourceLabel": "関東支部イベント"
+    "sourceLabel": "関東支部イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1499625603857649734",
@@ -8061,7 +12760,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1353307711130828841/2a106d968b021c0277e464d4af283e25.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1499625603857649734",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1499621299968938055",
@@ -8088,7 +12788,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1228680202952118416/79db0a0052562728670a00bc8807c4d8.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1499621299968938055",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1499582011822702592",
@@ -8101,7 +12802,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "image": "",
     "tabelogUrl": "https://tabelog.com/tokyo/A1303/A130302/13294106/",
     "capacity": 3,
-    "reservationCapacity": 3,
+    "reservationCapacity": 4,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -8118,7 +12819,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1458298491620163656/5f75f77c465c9865f5f68ff99b3d5fee.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1499582011822702592",
-    "sourceLabel": "パン部"
+    "sourceLabel": "パン部",
+    "importedComments": []
   },
   {
     "id": "discord-event-1499575165208756354",
@@ -8147,7 +12849,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1485530671249362967/936a5767c4b7d55c331e0f5687412e2e.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1499575165208756354",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1499413798677643284",
@@ -8159,7 +12862,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "詳細をご確認ください",
     "image": "/discord-board/1485649683345969182/1499413804491079740.webp",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -8174,7 +12877,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1457652020164034686/932a1177233bc50fb3421b02bd69eddb.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1499413798677643284",
-    "sourceLabel": "散歩部"
+    "sourceLabel": "散歩部",
+    "importedComments": []
   },
   {
     "id": "discord-event-1499409306066485349",
@@ -8203,7 +12907,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1404838997100068904/656824564f0428586e31fceb697c87dc.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1499409306066485349",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1499327359084400771",
@@ -8215,7 +12920,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "上野ハシゴ酒",
     "image": "",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -8230,7 +12935,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1353735645373136926/8466a7d863d8505dff4e2bf28d8d3c70.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1499327359084400771",
-    "sourceLabel": "昼飲み部"
+    "sourceLabel": "昼飲み部",
+    "importedComments": []
   },
   {
     "id": "discord-event-1499249706822275262",
@@ -8259,7 +12965,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1446344592214724700/559a459ef83e54fad1ec64ffc9a3d64a.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1499249706822275262",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1499245070111608843",
@@ -8288,7 +12995,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1223177154397995110/6b1d27d82aad0e87c3f144ba27e3efbd.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1499245070111608843",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1498940217279909889",
@@ -8316,7 +13024,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1477873334719873097/3ecd4e70f1d66c825cb2c006355411cd.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1498940217279909889",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1498938278852694046",
@@ -8329,7 +13038,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "image": "",
     "tabelogUrl": "https://s.tabelog.com/tokyo/A1317/A131701/13269899/",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -8346,7 +13055,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1228677952334725213/342ebdafc945abd8be7d4422f51fc9c6.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1498938278852694046",
-    "sourceLabel": "パン部"
+    "sourceLabel": "パン部",
+    "importedComments": []
   },
   {
     "id": "discord-event-1498709620145782825",
@@ -8375,7 +13085,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1353053734174982197/50785deafe13c7658095ad5529a2bc2c.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1498709620145782825",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1498188507896746055",
@@ -8403,7 +13114,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Hazuki",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1452174899438288918/d6d0cfefd9e0dfd5492fbc4575c1b421.png?size=512",
     "sourceThreadId": "discord-board-1498188507896746055",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1498174304083509392",
@@ -8430,7 +13142,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1467089499543703686/110f0759b206c86f3e72d201bac698d2.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1498174304083509392",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1498160526814089267",
@@ -8443,7 +13156,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "image": "https://cdn.discordapp.com/attachments/1498160526814089267/1498160527191445665/20260527_IROBAR.png?ex=6a94f1b8&is=6a93a038&hm=c69f112c2e7cce2e973a40dfefa9b8dfcdf8257ca8778560d1277eeefc965a4a&",
     "googleMapsUrl": "https://maps.app.goo.gl/TR7bjgcjJ4zdpF3J9",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -8456,7 +13169,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1498160526814089267",
-    "sourceLabel": "全体イベント"
+    "sourceLabel": "全体イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1498157865968603328",
@@ -8469,7 +13183,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "image": "https://cdn.discordapp.com/attachments/1498157865968603328/1498157866480304148/20260513_IRO.png?ex=6a94ef3d&is=6a939dbd&hm=42ae3f7c89faea06291997f3ff7b9997fca42ab019222cb50a564d84f74c50f3&",
     "googleMapsUrl": "https://maps.app.goo.gl/TR7bjgcjJ4zdpF3J9",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -8482,7 +13196,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1498157865968603328",
-    "sourceLabel": "全体イベント"
+    "sourceLabel": "全体イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1497838382196457524",
@@ -8511,7 +13226,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1446344592214724700/559a459ef83e54fad1ec64ffc9a3d64a.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1497838382196457524",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1497803913594802288",
@@ -8540,7 +13256,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1475703575593353399/d723fb867657073e7e7c2d32bead3fba.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1497803913594802288",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1497367834005737673",
@@ -8569,7 +13286,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1457710905109254328/93565c5369bddacd5bb4830e7a3f0a82.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1497367834005737673",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1496896380986200114",
@@ -8581,7 +13299,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "渋谷横丁（RAYARD MIYASHITA PARK内）",
     "image": "",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -8595,7 +13313,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "たけまる【運営】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/789786995970015242/122846247a2c819c5dd1c7e60af73810.png?size=512",
     "sourceThreadId": "discord-board-1496896380986200114",
-    "sourceLabel": "昼飲み部"
+    "sourceLabel": "昼飲み部",
+    "importedComments": []
   },
   {
     "id": "discord-event-1496814523888435341",
@@ -8624,7 +13343,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1479840315107184804/b050cd588b38d9d6a6e1b35cdc437c43.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1496814523888435341",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1496769279868272710",
@@ -8653,7 +13373,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1457371560670265374/d09179eea94d16710cda2370a546a963.png?size=512",
     "organizerRank": "platinum",
     "sourceThreadId": "discord-board-1496769279868272710",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1496394051727917086",
@@ -8683,7 +13404,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1457741437633564909/c3b6ae0373633eec085d487f2b44a0f4.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1496394051727917086",
-    "sourceLabel": "ワイン部"
+    "sourceLabel": "ワイン部",
+    "importedComments": []
   },
   {
     "id": "discord-event-1496345353090498590",
@@ -8695,7 +13417,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "eragu Aoyama（最寄駅：表参道）",
     "image": "https://cdn.discordapp.com/attachments/1496345353090498590/1496345353409003593/20260605_FP.PNG?ex=6a94eeb5&is=6a939d35&hm=0f1df46b99463bd9e152ecbe596977f9a6b80ad98345855a0beed3915e515bf6&",
     "capacity": 60,
-    "reservationCapacity": 60,
+    "reservationCapacity": 61,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -8710,7 +13432,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "IRO+運営",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119605898743120044/2d550914366cefb1693360eea7d7ebcc.png?size=512",
     "sourceThreadId": "discord-board-1496345353090498590",
-    "sourceLabel": "全体イベント"
+    "sourceLabel": "全体イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1496144308242219202",
@@ -8740,7 +13463,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1353587486604922921/e661b608255cec37aecf95944458b180.png?size=512",
     "organizerRank": "platinum",
     "sourceThreadId": "discord-board-1496144308242219202",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1496125890503901269",
@@ -8753,7 +13477,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "image": "/discord-board/1485649683345969182/1496125898888446022.webp",
     "googleMapsUrl": "https://maps.app.goo.gl/4zdFZZs4npAkgdE98?g_st=ic",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -8770,7 +13494,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1457652020164034686/932a1177233bc50fb3421b02bd69eddb.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1496125890503901269",
-    "sourceLabel": "散歩部"
+    "sourceLabel": "散歩部",
+    "importedComments": []
   },
   {
     "id": "discord-event-1495016067783987263",
@@ -8799,7 +13524,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1353010654189191178/ad43b05c846c7aacff9e9423c31baa63.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1495016067783987263",
-    "sourceLabel": "旅行部"
+    "sourceLabel": "旅行部",
+    "importedComments": []
   },
   {
     "id": "discord-event-1494328483009138888",
@@ -8811,7 +13537,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "コニカミノルタプラネタリアTOKYO(DOME1)／有楽町",
     "image": "/discord-board/1487647151063564329/1494328485597024398.webp",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -8828,7 +13554,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1458772421887656090/0d3f1ef300f4606ca3aec8324dfe17d0.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1494328483009138888",
-    "sourceLabel": "舞台鑑賞部"
+    "sourceLabel": "舞台鑑賞部",
+    "importedComments": []
   },
   {
     "id": "discord-event-1494152982630105318",
@@ -8857,7 +13584,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1457508300588453932/5278f4112aced688e599ecee747cb9ba.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1494152982630105318",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1493566009540612176",
@@ -8886,7 +13614,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1223177154397995110/6b1d27d82aad0e87c3f144ba27e3efbd.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1493566009540612176",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1493245114590433432",
@@ -8898,7 +13627,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "OH MY CAFE表参道ヒルズ",
     "image": "/discord-board/1485649608620113971/1493245115551191130.webp",
     "capacity": 3,
-    "reservationCapacity": 3,
+    "reservationCapacity": 4,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -8915,7 +13644,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1404838997100068904/656824564f0428586e31fceb697c87dc.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1493245114590433432",
-    "sourceLabel": "ディズニー部"
+    "sourceLabel": "ディズニー部",
+    "importedComments": []
   },
   {
     "id": "discord-event-1493228799930662962",
@@ -8928,7 +13658,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "image": "",
     "tabelogUrl": "https://tabelog.com/tokyo/A1306/A130602/13148003/",
     "capacity": 5,
-    "reservationCapacity": 5,
+    "reservationCapacity": 6,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -8945,7 +13675,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1459195336991047815/a596e4658de943f4779c57918376b97d.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1493228799930662962",
-    "sourceLabel": "スイーツ部"
+    "sourceLabel": "スイーツ部",
+    "importedComments": []
   },
   {
     "id": "discord-event-1493224082517397635",
@@ -8972,7 +13703,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "さち",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1330030467264544789/94df5206d6955744940fb015c41fa06f.png?size=512",
     "sourceThreadId": "discord-board-1493224082517397635",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1493091438227882067",
@@ -8984,7 +13716,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "日比谷公園",
     "image": "",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -8997,7 +13729,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "かずま【運営】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1228677950401151139/8fe93f8b9cd2f84ec1711f01ae0dbdfc.png?size=512",
     "sourceThreadId": "discord-board-1493091438227882067",
-    "sourceLabel": "関東支部イベント"
+    "sourceLabel": "関東支部イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1492931367816790148",
@@ -9009,7 +13742,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "渋谷",
     "image": "/discord-board/1485649608620113971/1492931375198900274.webp",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -9024,7 +13757,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1457371560670265374/d09179eea94d16710cda2370a546a963.png?size=512",
     "organizerRank": "platinum",
     "sourceThreadId": "discord-board-1492931367816790148",
-    "sourceLabel": "ディズニー部"
+    "sourceLabel": "ディズニー部",
+    "importedComments": []
   },
   {
     "id": "discord-event-1492791107648618526",
@@ -9037,7 +13771,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "image": "https://cdn.discordapp.com/attachments/1492791107648618526/1492791108009459742/2_.png?ex=6a952f8e&is=6a93de0e&hm=efa89f61a7b1cefd7a6c4705f208297ffacadab07f9a55666e2a8de13154f6d3&",
     "googleMapsUrl": "https://maps.app.goo.gl/Q1TDBQjYDsEB9djK6",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -9052,7 +13786,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "IRO+運営",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119605898743120044/2d550914366cefb1693360eea7d7ebcc.png?size=512",
     "sourceThreadId": "discord-board-1492791107648618526",
-    "sourceLabel": "全体イベント"
+    "sourceLabel": "全体イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1492726301356855346",
@@ -9080,7 +13815,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "みか",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1459402456403411005/5a8a5ce7b6194575b5d4be320677a64f.png?size=512",
     "sourceThreadId": "discord-board-1492726301356855346",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1492723284301578360",
@@ -9093,7 +13829,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "image": "/discord-board/1485650029086769333/1492723697004445817.webp",
     "googleMapsUrl": "https://maps.app.goo.gl/V5jUTF2JqLQ34npV7?g_st=ic",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -9110,7 +13846,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1228677952334725213/342ebdafc945abd8be7d4422f51fc9c6.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1492723284301578360",
-    "sourceLabel": "パン部"
+    "sourceLabel": "パン部",
+    "importedComments": []
   },
   {
     "id": "discord-event-1492448236156358736",
@@ -9138,7 +13875,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1492448236156358736",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1492446665532116992",
@@ -9166,7 +13904,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1492446665532116992",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1492321928919388271",
@@ -9179,7 +13918,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "image": "",
     "tabelogUrl": "https://tabelog.com/tokyo/A1317/A131701/13003429/",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -9196,7 +13935,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1459195336991047815/a596e4658de943f4779c57918376b97d.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1492321928919388271",
-    "sourceLabel": "スイーツ部"
+    "sourceLabel": "スイーツ部",
+    "importedComments": []
   },
   {
     "id": "discord-event-1492156764374700135",
@@ -9208,7 +13948,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "詳細をご確認ください",
     "image": "",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -9223,7 +13963,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1228678386902372374/04a71500e3608ede85dd9aef73d334b7.png?size=512",
     "organizerRank": "platinum",
     "sourceThreadId": "discord-board-1492156764374700135",
-    "sourceLabel": "ランニング部"
+    "sourceLabel": "ランニング部",
+    "importedComments": []
   },
   {
     "id": "discord-event-1491591553972441238",
@@ -9253,7 +13994,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1216698337147748394/6c9aaa09b320526b932e1e9b31f928fb.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1491591553972441238",
-    "sourceLabel": "ワイン部"
+    "sourceLabel": "ワイン部",
+    "importedComments": []
   },
   {
     "id": "discord-event-1491382163495714816",
@@ -9266,7 +14008,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "image": "",
     "tabelogUrl": "https://tabelog.com/tokyo/A1310/A131003/13165724/",
     "capacity": 19,
-    "reservationCapacity": 19,
+    "reservationCapacity": 20,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -9281,7 +14023,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Nana【運営】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1228712639903961190/ec0618fb90198159eda44242b7db2bd6.png?size=512",
     "sourceThreadId": "discord-board-1491382163495714816",
-    "sourceLabel": "関東支部イベント"
+    "sourceLabel": "関東支部イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1490931093543587921",
@@ -9310,7 +14053,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1457526173616705549/1fc6273adfe90cc49907612c466a8a42.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1490931093543587921",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1490883793937240094",
@@ -9339,7 +14083,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1223177154397995110/6b1d27d82aad0e87c3f144ba27e3efbd.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1490883793937240094",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1490669471508205639",
@@ -9351,7 +14096,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "京王アリーナＴＯＫＹＯ　メインアリーナ(東京都)",
     "image": "/discord-board/1487647151063564329/1490669472707772546.webp",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -9368,7 +14113,142 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1458772421887656090/0d3f1ef300f4606ca3aec8324dfe17d0.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1490669471508205639",
-    "sourceLabel": "舞台鑑賞部"
+    "sourceLabel": "舞台鑑賞部",
+    "importedComments": [
+      {
+        "id": "discord-event-comment-1491759571142840381",
+        "author": "Hono🎭舞台鑑賞部長",
+        "authorId": "discord-1458772421887656090",
+        "text": "@舞台鑑賞部🎭 \n参加希望日程にご回答いただいたみなさま、ありがとうございます☺️\n4/12までに申込したいため、並行して希望の席(チケット)もお伺いできるでしょうか…！🥺🙏\nよろしくお願いいたします！",
+        "createdAt": "2026-04-09T11:19:57.313000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1492515639854764073",
+        "author": "Hono🎭舞台鑑賞部長",
+        "authorId": "discord-1458772421887656090",
+        "text": "@舞台鑑賞部🎭 \nこちらのご参加日程希望の受付も本日までとしております！",
+        "createdAt": "2026-04-11T13:24:18.141000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1492701532263682058",
+        "author": "Hono🎭舞台鑑賞部長",
+        "authorId": "discord-1458772421887656090",
+        "text": "投票ありがとうございました！\n10/11(日)12:00〜開催とさせていただきたく思います！\n\n@shimon @ami @karen @Lilika🌹 @佐藤匠馬 \nご一緒できればと思いますがご都合問題ないでしょうか？\n(問題なければスタンプいただけますと幸いです)\n\n本日中に申し込みしたいと思っておりまして、席は「SS席ビーズクッション」で考えております！もしご懸念等ございましたらお知らせください！\nなお、こちら抽選申込のため抽選に落ちる可能性は十分にあります…🥲当たりますように、、",
+        "createdAt": "2026-04-12T01:42:58.345000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1492708450457751552",
+        "author": "shimon🎞️映画・ドラマ鑑賞部長",
+        "authorId": "discord-959759896037961748",
+        "text": "10/11(日)昼公演 SS席ビーズクッションで大丈夫です👌\n取りまとめで応募いただきありがとうございます☺︎︎︎︎\n当たるといいですね〜笑",
+        "createdAt": "2026-04-12T02:10:27.771000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1492730720945438781",
+        "author": "ami🍞パン部長",
+        "authorId": "discord-1228677952334725213",
+        "text": "ほのさん、すみません10/11付近で旅行の予定が入りそうなので私抜きでご応募お願いします🙇",
+        "createdAt": "2026-04-12T03:38:57.469000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1492734063201747174",
+        "author": "Hono🎭舞台鑑賞部長",
+        "authorId": "discord-1458772421887656090",
+        "text": "承知しました！また別の機会によろしくお願いします🥺",
+        "createdAt": "2026-04-12T03:52:14.325000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1492882435963355166",
+        "author": "Hono🎭舞台鑑賞部長",
+        "authorId": "discord-1458772421887656090",
+        "text": "@karen @Lilika🌹 @佐藤匠馬 \n恐れ入りますが本日エントリー受付締めのため、申し込みをさせていただきます🙇‍♀️\n申し込みと同時に決済となってしまうため、こちらで確定とさせていただけますと幸いです🥺\n第一希望SS席ビーズクッション、第二希望A席で取りたいと思います！\nよろしくお願いします！\n@shimon",
+        "createdAt": "2026-04-12T13:41:49.148000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1493106093348360223",
+        "author": "Hono🎭舞台鑑賞部長",
+        "authorId": "discord-1458772421887656090",
+        "text": "【募集終了】10/11(日)寝そべって聴くオーケストラ(chill classic concert)",
+        "createdAt": "2026-04-13T04:30:33.224000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1494323806041411688",
+        "author": "Hono🎭舞台鑑賞部長",
+        "authorId": "discord-1458772421887656090",
+        "text": "@shimon @karen @Lilika🌹 @佐藤匠馬 \n10/11(日)12時の回、SSビーズクッション席で当選しました！\nプライベートチャット作成させていただきますので、よろしくお願いします✨",
+        "createdAt": "2026-04-16T13:09:18.554000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1494324572479291412",
+        "author": "IRO+ サポート",
+        "authorId": "discord-1223692916619477072",
+        "text": ":white_check_mark: <#1494324579563475024>を作成しました\n下記の皆様はご確認をお願いいたします！\n@Hono🥨 @shimon @karen @Lilika🌹 @佐藤匠馬",
+        "createdAt": "2026-04-16T13:12:21.287000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1494516075969122487",
+        "author": "きょうこ",
+        "authorId": "discord-1459502509679837186",
+        "text": "個人的に10/10申し込んでいたのですが落選でした😭\n感想お待ちしてます…",
+        "createdAt": "2026-04-17T01:53:19.277000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1494531614938759250",
+        "author": "Hono🎭舞台鑑賞部長",
+        "authorId": "discord-1458772421887656090",
+        "text": "なんと…！😭活動報告上げるのでぜひ見てください🥺",
+        "createdAt": "2026-04-17T02:55:04.056000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1508425813987557479",
+        "author": "Hono🎭舞台鑑賞部長",
+        "authorId": "discord-1458772421887656090",
+        "text": "@舞台鑑賞部🎭 \nこちら1名追加募集します！\nもし行ける方いればお知らせください☺️\n5/31(日)まで募集します！(先なので先着ではなく抽選にしますっ)\n\n📅 日時：10月11日(日)12:00\n📍 場所：京王アリーナTOKYO\n🎫価格：SS席ビーズクッション＋手数料12, 790円\n詳細：https://chill-classic.jp/concert/lp/\n募集投稿はこちら👇\nhttps://discord.com/channels/1217327152098312245/1490669471508205639/1490669471508205639",
+        "createdAt": "2026-05-25T11:05:39.251000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1508427399920881715",
+        "author": "まつ",
+        "authorId": "discord-1002189375637041322",
+        "text": "気になってました！\n寝っ転がりたいです!!",
+        "createdAt": "2026-05-25T11:11:57.367000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1508430173522104330",
+        "author": "Hono🎭舞台鑑賞部長",
+        "authorId": "discord-1458772421887656090",
+        "text": "【1名追加募集】10/11(日)寝そべって聴くオーケストラ(chill classic concert)",
+        "createdAt": "2026-05-25T11:22:58.645000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1510638435990376578",
+        "author": "Hono🎭舞台鑑賞部長",
+        "authorId": "discord-1458772421887656090",
+        "text": "@まつ さん、ご参加希望ありがとうございました！\nプライベートチャットに招待させていただきますね！＾＾",
+        "createdAt": "2026-05-31T13:37:49.445000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1510638531704524840",
+        "author": "Hono🎭舞台鑑賞部長",
+        "authorId": "discord-1458772421887656090",
+        "text": "【募集終了】10/11(日)寝そべって聴くオーケストラ(chill classic concert)",
+        "createdAt": "2026-05-31T13:38:12.265000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1542025265973043220",
+        "author": "Hono🎭舞台鑑賞部長",
+        "authorId": "discord-1458772421887656090",
+        "text": "【1名追加募集】10/11(日)寝そべって聴くオーケストラ(chill classic concert)",
+        "createdAt": "2026-08-26T04:17:52.852000+00:00"
+      },
+      {
+        "id": "discord-event-comment-1542025717884133396",
+        "author": "Hono🎭舞台鑑賞部長",
+        "authorId": "discord-1458772421887656090",
+        "text": "@舞台鑑賞部🎭 \nこちら1名追加募集します！\nもし行ける方いればお知らせください🙇‍♀️！\n\n📅 日時：10月11日(日)12:00\n📍 場所：京王アリーナTOKYO\n🎫価格：SS席ビーズクッション＋手数料12, 790円\n詳細：https://chill-classic.jp/concert/lp/\n募集投稿はこちら👇\nhttps://discord.com/channels/1217327152098312245/1490669471508205639/1490669471508205639",
+        "createdAt": "2026-08-26T04:19:40.596000+00:00"
+      }
+    ]
   },
   {
     "id": "discord-event-1490559003976007710",
@@ -9380,7 +14260,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "浅草ホッピー通りハシゴ酒",
     "image": "",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -9395,7 +14275,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1353735645373136926/8466a7d863d8505dff4e2bf28d8d3c70.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1490559003976007710",
-    "sourceLabel": "昼飲み部"
+    "sourceLabel": "昼飲み部",
+    "importedComments": []
   },
   {
     "id": "discord-event-1490362399780241549",
@@ -9424,7 +14305,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1466360543093985445/a245ebecfba91af330310e8417ab5a8a.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1490362399780241549",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1490343496782188705",
@@ -9453,7 +14335,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1485530671249362967/936a5767c4b7d55c331e0f5687412e2e.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1490343496782188705",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1490300251020722367",
@@ -9482,7 +14365,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1457508300588453932/5278f4112aced688e599ecee747cb9ba.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1490300251020722367",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1489912580511109191",
@@ -9494,7 +14378,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "未定ですが、なるべく皆さまがアクセスしやすい場所、複数路線通っている駅などを予定しています！(例：新宿、渋谷、新橋など)",
     "image": "",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -9509,7 +14393,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1353010654189191178/ad43b05c846c7aacff9e9423c31baa63.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1489912580511109191",
-    "sourceLabel": "旅行部"
+    "sourceLabel": "旅行部",
+    "importedComments": []
   },
   {
     "id": "discord-event-1489784542452777121",
@@ -9521,7 +14406,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "有明四季劇場",
     "image": "/discord-board/1487647151063564329/1489784546378649630.webp",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -9538,7 +14423,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1458772421887656090/0d3f1ef300f4606ca3aec8324dfe17d0.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1489784542452777121",
-    "sourceLabel": "舞台鑑賞部"
+    "sourceLabel": "舞台鑑賞部",
+    "importedComments": []
   },
   {
     "id": "discord-event-1489555282232344697",
@@ -9566,7 +14452,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Nana【運営】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1228712639903961190/ec0618fb90198159eda44242b7db2bd6.png?size=512",
     "sourceThreadId": "discord-board-1489555282232344697",
-    "sourceLabel": "関東支部イベント"
+    "sourceLabel": "関東支部イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1489543204100640809",
@@ -9595,7 +14482,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/766872280302878780/374ab37e7d9446e08e9d922aede0a057.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1489543204100640809",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1489531579561676881",
@@ -9607,7 +14495,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "詳細をご確認ください",
     "image": "/discord-board/1485649608620113971/1489531582481039471.webp",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -9622,7 +14510,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1457371560670265374/d09179eea94d16710cda2370a546a963.png?size=512",
     "organizerRank": "platinum",
     "sourceThreadId": "discord-board-1489531579561676881",
-    "sourceLabel": "ディズニー部"
+    "sourceLabel": "ディズニー部",
+    "importedComments": []
   },
   {
     "id": "discord-event-1489483423532978316",
@@ -9650,7 +14539,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1446344592214724700/559a459ef83e54fad1ec64ffc9a3d64a.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1489483423532978316",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1489432362184867951",
@@ -9662,7 +14552,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "詳細をご確認ください",
     "image": "/discord-board/1485649608620113971/1489432362516353215.webp",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -9676,7 +14566,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Nana",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1434763296573100186/f9f64fb8a244aca6986957cc66873fd3.png?size=512",
     "sourceThreadId": "discord-board-1489432362184867951",
-    "sourceLabel": "ディズニー部"
+    "sourceLabel": "ディズニー部",
+    "importedComments": []
   },
   {
     "id": "discord-event-1489100846938718239",
@@ -9690,7 +14581,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "tabelogUrl": "https://tabelog.com/tokyo/A1313/A131302/13219260/",
     "googleMapsUrl": "https://maps.app.goo.gl/a8PafPavw4bjjk7g8?g_st=ic",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -9707,7 +14598,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1457652020164034686/932a1177233bc50fb3421b02bd69eddb.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1489100846938718239",
-    "sourceLabel": "散歩部"
+    "sourceLabel": "散歩部",
+    "importedComments": []
   },
   {
     "id": "discord-event-1488901027980771399",
@@ -9720,7 +14612,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "image": "",
     "googleMapsUrl": "https://maps.app.goo.gl/HgPPVYbmARXUiYh67?g_st=ic",
     "capacity": 14,
-    "reservationCapacity": 14,
+    "reservationCapacity": 15,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -9737,7 +14629,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1353587486604922921/e661b608255cec37aecf95944458b180.png?size=512",
     "organizerRank": "platinum",
     "sourceThreadId": "discord-board-1488901027980771399",
-    "sourceLabel": "料理教室部"
+    "sourceLabel": "料理教室部",
+    "importedComments": []
   },
   {
     "id": "discord-event-1488868324090577006",
@@ -9765,7 +14658,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1457591200243777589/a787f91f604d35bef48da01f73e9c750.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1488868324090577006",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1488854892968673390",
@@ -9778,7 +14672,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "image": "",
     "tabelogUrl": "https://tabelog.com/tokyo/A1310/A131002/13250300/",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -9795,7 +14689,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1228677952334725213/342ebdafc945abd8be7d4422f51fc9c6.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1488854892968673390",
-    "sourceLabel": "パン部"
+    "sourceLabel": "パン部",
+    "importedComments": []
   },
   {
     "id": "discord-event-1488823769064538132",
@@ -9823,7 +14718,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/696624208532340756/b824079889c51ec1cf68e5ba0f03233f.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1488823769064538132",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1488536773553291475",
@@ -9835,7 +14731,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "詳細をご確認ください",
     "image": "",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -9850,7 +14746,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1459195336991047815/a596e4658de943f4779c57918376b97d.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1488536773553291475",
-    "sourceLabel": "スイーツ部"
+    "sourceLabel": "スイーツ部",
+    "importedComments": []
   },
   {
     "id": "discord-event-1488196621219926147",
@@ -9862,7 +14759,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "渋谷横丁ハシゴ酒",
     "image": "",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -9877,7 +14774,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1353735645373136926/8466a7d863d8505dff4e2bf28d8d3c70.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1488196621219926147",
-    "sourceLabel": "昼飲み部"
+    "sourceLabel": "昼飲み部",
+    "importedComments": []
   },
   {
     "id": "discord-event-1488192222896717898",
@@ -9905,7 +14803,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1353307711130828841/2a106d968b021c0277e464d4af283e25.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1488192222896717898",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1488191565229723768",
@@ -9917,7 +14816,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "詳細をご確認ください",
     "image": "",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -9932,7 +14831,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1228678386902372374/04a71500e3608ede85dd9aef73d334b7.png?size=512",
     "organizerRank": "platinum",
     "sourceThreadId": "discord-board-1488191565229723768",
-    "sourceLabel": "ランニング部"
+    "sourceLabel": "ランニング部",
+    "importedComments": []
   },
   {
     "id": "discord-event-1488184672969293846",
@@ -9944,7 +14844,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "詳細をご確認ください",
     "image": "",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -9959,7 +14859,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1228678386902372374/04a71500e3608ede85dd9aef73d334b7.png?size=512",
     "organizerRank": "platinum",
     "sourceThreadId": "discord-board-1488184672969293846",
-    "sourceLabel": "ランニング部"
+    "sourceLabel": "ランニング部",
+    "importedComments": []
   },
   {
     "id": "discord-event-1488153151151276322",
@@ -9971,7 +14872,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "詳細をご確認ください",
     "image": "",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -9986,7 +14887,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1458772421887656090/0d3f1ef300f4606ca3aec8324dfe17d0.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1488153151151276322",
-    "sourceLabel": "舞台鑑賞部"
+    "sourceLabel": "舞台鑑賞部",
+    "importedComments": []
   },
   {
     "id": "discord-event-1487741615253618818",
@@ -9998,7 +14900,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "新橋・24(金)@渋谷",
     "image": "",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -10013,7 +14915,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1353587486604922921/e661b608255cec37aecf95944458b180.png?size=512",
     "organizerRank": "platinum",
     "sourceThreadId": "discord-board-1487741615253618818",
-    "sourceLabel": "料理教室部"
+    "sourceLabel": "料理教室部",
+    "importedComments": []
   },
   {
     "id": "discord-event-1487445425182081194",
@@ -10042,7 +14945,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/575692700280684549/4233350cd483b083d505cc47ad7768e9.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1487445425182081194",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1487339072476282882",
@@ -10071,7 +14975,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1457371560670265374/d09179eea94d16710cda2370a546a963.png?size=512",
     "organizerRank": "platinum",
     "sourceThreadId": "discord-board-1487339072476282882",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1487298574369816787",
@@ -10084,7 +14989,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "image": "",
     "tabelogUrl": "https://s.tabelog.com/tokyo/A1318/A131813/13290954/",
     "capacity": 6,
-    "reservationCapacity": 6,
+    "reservationCapacity": 7,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -10101,7 +15006,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1228677952334725213/342ebdafc945abd8be7d4422f51fc9c6.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1487298574369816787",
-    "sourceLabel": "パン部"
+    "sourceLabel": "パン部",
+    "importedComments": []
   },
   {
     "id": "discord-event-1486960217693491221",
@@ -10113,7 +15019,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "都内",
     "image": "",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -10130,7 +15036,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1446344592214724700/559a459ef83e54fad1ec64ffc9a3d64a.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1486960217693491221",
-    "sourceLabel": "ワイン部"
+    "sourceLabel": "ワイン部",
+    "importedComments": []
   },
   {
     "id": "discord-event-1486726696106197123",
@@ -10159,7 +15066,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1479840315107184804/b050cd588b38d9d6a6e1b35cdc437c43.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1486726696106197123",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1486224202548772966",
@@ -10171,7 +15079,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "詳細をご確認ください",
     "image": "/discord-board/1485649608620113971/1486224203572318308.webp",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -10186,7 +15094,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1457371560670265374/d09179eea94d16710cda2370a546a963.png?size=512",
     "organizerRank": "platinum",
     "sourceThreadId": "discord-board-1486224202548772966",
-    "sourceLabel": "ディズニー部"
+    "sourceLabel": "ディズニー部",
+    "importedComments": []
   },
   {
     "id": "discord-event-1486221450443751494",
@@ -10198,7 +15107,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "詳細をご確認ください",
     "image": "/discord-board/1485649608620113971/1486221450636693604.webp",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -10213,7 +15122,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1457371560670265374/d09179eea94d16710cda2370a546a963.png?size=512",
     "organizerRank": "platinum",
     "sourceThreadId": "discord-board-1486221450443751494",
-    "sourceLabel": "ディズニー部"
+    "sourceLabel": "ディズニー部",
+    "importedComments": []
   },
   {
     "id": "discord-event-1486021800927428638",
@@ -10225,7 +15135,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "詳細をご確認ください",
     "image": "/discord-board/1485649608620113971/1486021801313173716.webp",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -10240,7 +15150,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1457371560670265374/d09179eea94d16710cda2370a546a963.png?size=512",
     "organizerRank": "platinum",
     "sourceThreadId": "discord-board-1486021800927428638",
-    "sourceLabel": "ディズニー部"
+    "sourceLabel": "ディズニー部",
+    "importedComments": []
   },
   {
     "id": "discord-event-1485948408450515096",
@@ -10252,7 +15163,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "渋谷付近のレンタルスペース",
     "image": "https://cdn.discordapp.com/attachments/1485948408450515096/1485948408811491388/IMG_4113.png?ex=6a95574c&is=6a9405cc&hm=9276e49fb52e3a829b9e669a5df5d745b0349f063e72b843f2122c92310b9c79&",
     "capacity": 26,
-    "reservationCapacity": 26,
+    "reservationCapacity": 27,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -10267,7 +15178,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "もってぃー【運営】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1352978791483572326/aa0f81f03bc22b267fa676eb6bf32402.png?size=512",
     "sourceThreadId": "discord-board-1485948408450515096",
-    "sourceLabel": "関東支部イベント"
+    "sourceLabel": "関東支部イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1485936688500047992",
@@ -10296,7 +15208,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1353735645373136926/8466a7d863d8505dff4e2bf28d8d3c70.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1485936688500047992",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1485542118729453689",
@@ -10308,7 +15221,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "** 白金ザ・スカイ　スカイラウンジ（貸切）",
     "image": "https://cdn.discordapp.com/attachments/1485542118729453689/1485542119375503360/20260415_Sweets_Party.png?ex=6a952e69&is=6a93dce9&hm=8efec8a25bf802479090810860bd8a47c5eba4396aece6a5f5d00b7222f485e1&",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -10323,7 +15236,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "IRO+運営",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1334056760863883294/2d550914366cefb1693360eea7d7ebcc.png?size=512",
     "sourceThreadId": "discord-board-1485542118729453689",
-    "sourceLabel": "全体イベント"
+    "sourceLabel": "全体イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1485215690242789476",
@@ -10336,7 +15250,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "image": "https://cdn.discordapp.com/attachments/1485215690242789476/1485215691496882176/Cream_and_Red_Modern_Retro_Burger_Instagram_Post.png?ex=6a954fe6&is=6a93fe66&hm=bf8d9cf371d0c4befa5687b932fe43c8f884ba84d35deb09f22a58ec0966ebc4&",
     "tabelogUrl": "https://tabelog.com/tokyo/A1318/A131802/13239658/",
     "capacity": 30,
-    "reservationCapacity": 30,
+    "reservationCapacity": 31,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -10351,7 +15265,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1485215690242789476",
-    "sourceLabel": "全体イベント"
+    "sourceLabel": "全体イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1483813267183767782",
@@ -10379,7 +15294,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Nana",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1457356796237709465/6f35c1ead44a85e20a328c358362e25a.png?size=512",
     "sourceThreadId": "discord-board-1483813267183767782",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1483750947023880292",
@@ -10408,7 +15324,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1404038461874245752/3b0b81177331b41c1a488521fb22c3da.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1483750947023880292",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1483729298853724200",
@@ -10436,7 +15353,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "まよ",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1457716275814862880/648935b29efdefec2798df39902d7809.png?size=512",
     "sourceThreadId": "discord-board-1483729298853724200",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1483447408389132392",
@@ -10464,7 +15382,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "もってぃー【運営】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1352978791483572326/aa0f81f03bc22b267fa676eb6bf32402.png?size=512",
     "sourceThreadId": "discord-board-1483447408389132392",
-    "sourceLabel": "関東支部イベント"
+    "sourceLabel": "関東支部イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1482772334908801096",
@@ -10492,7 +15411,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1446344592214724700/559a459ef83e54fad1ec64ffc9a3d64a.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1482772334908801096",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1482734113608962231",
@@ -10520,7 +15440,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/696624208532340756/b824079889c51ec1cf68e5ba0f03233f.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1482734113608962231",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1482558925260984461",
@@ -10532,7 +15453,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "詳細をご確認ください",
     "image": "",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -10547,7 +15468,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "ユウ【運営】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/817730242516746252/cda00c1c2a58a4d6462c54c2b5bb7ea0.png?size=512",
     "sourceThreadId": "discord-board-1482558925260984461",
-    "sourceLabel": "関西支部イベント"
+    "sourceLabel": "関西支部イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1481983099179896843",
@@ -10576,7 +15498,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1457508300588453932/5278f4112aced688e599ecee747cb9ba.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1481983099179896843",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1481921494140325990",
@@ -10604,7 +15527,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "みか",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1459402456403411005/5a8a5ce7b6194575b5d4be320677a64f.png?size=512",
     "sourceThreadId": "discord-board-1481921494140325990",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1481626410245160970",
@@ -10632,7 +15556,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/525718374152536074/09849f7b7fde14fd39dfb44c6f73479a.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1481626410245160970",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1481609561679855687",
@@ -10660,7 +15585,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "kanade",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/432375662347550736/1c5ff29a19b6ad23fd7eb1d44b1d11be.png?size=512",
     "sourceThreadId": "discord-board-1481609561679855687",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1481252692465815624",
@@ -10689,7 +15615,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1457701236936671439/7169ea71d19917ec77be40e97847ce7b.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1481252692465815624",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1481250807621095476",
@@ -10717,7 +15644,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "もってぃー【運営】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1352978791483572326/aa0f81f03bc22b267fa676eb6bf32402.png?size=512",
     "sourceThreadId": "discord-board-1481250807621095476",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1481214408419053639",
@@ -10746,7 +15674,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1353192432291811438/499e9d98545b93bbba5c3db8ce69dbcd.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1481214408419053639",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1481129470281912370",
@@ -10774,7 +15703,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/804712649598042172/ffa3b5462506477b220530a9f18571bc.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1481129470281912370",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1480901533213130763",
@@ -10803,7 +15733,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1457701236936671439/7169ea71d19917ec77be40e97847ce7b.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1480901533213130763",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1480568645146120334",
@@ -10832,7 +15763,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1479840315107184804/b050cd588b38d9d6a6e1b35cdc437c43.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1480568645146120334",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1480496053437333666",
@@ -10861,7 +15793,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1223177154397995110/6b1d27d82aad0e87c3f144ba27e3efbd.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1480496053437333666",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1480181129167241408",
@@ -10890,7 +15823,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1223177154397995110/6b1d27d82aad0e87c3f144ba27e3efbd.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1480181129167241408",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1480102998284963901",
@@ -10902,7 +15836,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "詳細をご確認ください",
     "image": "https://cdn.discordapp.com/attachments/1480102998284963901/1480102998838480982/Cream_and_Red_Modern_Retro_Burger_Instagram_Post.png?ex=6a952b55&is=6a93d9d5&hm=c2ac2424ab0246cff999479b906335fb144cc445d6445e8fad92fedc5a6566dc&",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -10915,7 +15849,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1480102998284963901",
-    "sourceLabel": "全体イベント"
+    "sourceLabel": "全体イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1479749777989042245",
@@ -10928,7 +15863,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "image": "https://cdn.discordapp.com/attachments/1479749777989042245/1479749778341498991/Instagram45.png?ex=6a9533df&is=6a93e25f&hm=ecac3f84a0248ec7637525d811a8395f86ba6369e26c50e79496f69f170749ca&",
     "tabelogUrl": "https://tabelog.com/tokyo/A1304/A130401/13299763/",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -10943,7 +15878,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1479749777989042245",
-    "sourceLabel": "関東支部イベント"
+    "sourceLabel": "関東支部イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1479635124348784811",
@@ -10971,7 +15907,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "きよ",
     "organizerAvatar": "",
     "sourceThreadId": "discord-board-1479635124348784811",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1479468198863569038",
@@ -10999,7 +15936,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "あゆり",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1450406520394354689/98332f2f3fa7b9910b46f9704ce30eb2.png?size=512",
     "sourceThreadId": "discord-board-1479468198863569038",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1479075937952862360",
@@ -11027,7 +15965,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1457591200243777589/a787f91f604d35bef48da01f73e9c750.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1479075937952862360",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1478577070861717626",
@@ -11056,7 +15995,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1458057842434244679/f68198c8e93aa96927114664d5c064b6.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1478577070861717626",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1478381830943277237",
@@ -11084,7 +16024,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/711884076340215831/6d1215e63e0ab68e2d27902cb847e50e.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1478381830943277237",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1478252289843007620",
@@ -11113,7 +16054,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1457371560670265374/d09179eea94d16710cda2370a546a963.png?size=512",
     "organizerRank": "platinum",
     "sourceThreadId": "discord-board-1478252289843007620",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1478225512487981219",
@@ -11140,7 +16082,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "NANA",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1477541469291155497/bd76cebf84c829cf95f68af4ea5b385c.png?size=512",
     "sourceThreadId": "discord-board-1478225512487981219",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1478215679768395846",
@@ -11169,7 +16112,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1353192432291811438/499e9d98545b93bbba5c3db8ce69dbcd.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1478215679768395846",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1478016775508590715",
@@ -11196,7 +16140,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Kosuke",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/922024990067548190/f2b5a319885643395cce0e8a2e903b69.png?size=512",
     "sourceThreadId": "discord-board-1478016775508590715",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1477803582240849961",
@@ -11224,7 +16169,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1457526173616705549/1fc6273adfe90cc49907612c466a8a42.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1477803582240849961",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1477620110444466236",
@@ -11253,7 +16199,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1353307711130828841/2a106d968b021c0277e464d4af283e25.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1477620110444466236",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1477602555423883428",
@@ -11282,7 +16229,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1353307711130828841/2a106d968b021c0277e464d4af283e25.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1477602555423883428",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1477596200222851113",
@@ -11310,7 +16258,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1477596200222851113",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1477592770880471091",
@@ -11338,7 +16287,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1477592770880471091",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1477236109024169994",
@@ -11366,7 +16316,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/896044735611953172/f5787af3f69ec2e78401a2af06f3570c.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1477236109024169994",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1476532635466600468",
@@ -11394,7 +16345,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/696624208532340756/b824079889c51ec1cf68e5ba0f03233f.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1476532635466600468",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1476174975483510815",
@@ -11423,7 +16375,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1446344592214724700/559a459ef83e54fad1ec64ffc9a3d64a.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1476174975483510815",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1475847743380521001",
@@ -11453,7 +16406,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1353587486604922921/e661b608255cec37aecf95944458b180.png?size=512",
     "organizerRank": "platinum",
     "sourceThreadId": "discord-board-1475847743380521001",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1475795287044919411",
@@ -11482,7 +16436,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1353192432291811438/499e9d98545b93bbba5c3db8ce69dbcd.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1475795287044919411",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1474929682540531875",
@@ -11511,7 +16466,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1223177154397995110/6b1d27d82aad0e87c3f144ba27e3efbd.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1474929682540531875",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1474782920643182642",
@@ -11539,7 +16495,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Hazuki",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1452174899438288918/d6d0cfefd9e0dfd5492fbc4575c1b421.png?size=512",
     "sourceThreadId": "discord-board-1474782920643182642",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1474703793676488796",
@@ -11568,7 +16525,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1457701236936671439/7169ea71d19917ec77be40e97847ce7b.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1474703793676488796",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1474691894889021490",
@@ -11597,7 +16555,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1457741437633564909/c3b6ae0373633eec085d487f2b44a0f4.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1474691894889021490",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1474678893163053097",
@@ -11624,7 +16583,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "あおい",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/794072900029251595/9306ed66ea0b447bb7c287a74ab0b9e4.png?size=512",
     "sourceThreadId": "discord-board-1474678893163053097",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1474661001675800707",
@@ -11652,7 +16612,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1474661001675800707",
-    "sourceLabel": "全体イベント"
+    "sourceLabel": "全体イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1474628619631333406",
@@ -11680,7 +16641,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1474628619631333406",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1474364262779453554",
@@ -11708,7 +16670,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "こだま",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1248246861576540302/d2b1d749c7f59abc7841bc7075d77167.png?size=512",
     "sourceThreadId": "discord-board-1474364262779453554",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1473098380681941143",
@@ -11733,7 +16696,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Hazuki",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1452174899438288918/d6d0cfefd9e0dfd5492fbc4575c1b421.png?size=512",
     "sourceThreadId": "discord-board-1473098380681941143",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1474213216270815313",
@@ -11746,7 +16710,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "image": "",
     "googleMapsUrl": "https://maps.app.goo.gl/TbozAThxkEVES3s36?g_st=ipc",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -11759,7 +16723,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "nonoka【運営】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1228681600594743387/0e4067e11bbc4dd53c30e9aad23ef1e0.png?size=512",
     "sourceThreadId": "discord-board-1474213216270815313",
-    "sourceLabel": "関西支部イベント"
+    "sourceLabel": "関西支部イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1474034588883095786",
@@ -11788,7 +16753,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1341394331063550014/3f852c68137d5d8de86fbd5b0e14d645.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1474034588883095786",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1473677811318395059",
@@ -11817,7 +16783,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1353735645373136926/8466a7d863d8505dff4e2bf28d8d3c70.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1473677811318395059",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1473335512562667630",
@@ -11845,7 +16812,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "まよ",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1457716275814862880/648935b29efdefec2798df39902d7809.png?size=512",
     "sourceThreadId": "discord-board-1473335512562667630",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1473048256006328340",
@@ -11874,7 +16842,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1353053734174982197/50785deafe13c7658095ad5529a2bc2c.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1473048256006328340",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1472947800546213911",
@@ -11902,7 +16871,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/896044735611953172/f5787af3f69ec2e78401a2af06f3570c.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1472947800546213911",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1472566107377373299",
@@ -11914,7 +16884,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "白金ザ・スカイ パーティールーム「Sky Lounge」",
     "image": "https://cdn.discordapp.com/attachments/1472566107377373299/1472566108081881252/Elegant_Black_and_Gold_Grand_Opening_Invitation_Instagram_Post.jpg?ex=6a956f8f&is=6a941e0f&hm=e103cc448d9300592a9c2e98cf9c9d4f7b442f58ce1fe593ebaa2051b6f92fe2&",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -11929,7 +16899,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "IRO+運営",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1334056760863883294/2d550914366cefb1693360eea7d7ebcc.png?size=512",
     "sourceThreadId": "discord-board-1472566107377373299",
-    "sourceLabel": "全体イベント"
+    "sourceLabel": "全体イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1472459406196080812",
@@ -11958,7 +16929,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1457362274980200473/4273079b45b88481652ee21e2cf05ef9.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1472459406196080812",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1472168960228200489",
@@ -11970,7 +16942,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "詳細をご確認ください",
     "image": "https://cdn.discordapp.com/attachments/1472168960228200489/1472168960794427413/Cream_and_Red_Modern_Retro_Burger_Instagram_Post.png?ex=6a954f2f&is=6a93fdaf&hm=975d6faf58187432e0ce3084257e83b96f7dd7f6a77946a65a198c35f74aef8e&",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -11983,7 +16955,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1472168960228200489",
-    "sourceLabel": "全体イベント"
+    "sourceLabel": "全体イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1471941503453757460",
@@ -12012,7 +16985,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1404038461874245752/3b0b81177331b41c1a488521fb22c3da.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1471941503453757460",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1471136580805591123",
@@ -12040,7 +17014,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1246014118390005861/d5bba723d100b51a401f77aa930796f8.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1471136580805591123",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1471019868445872312",
@@ -12069,7 +17044,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1457371560670265374/d09179eea94d16710cda2370a546a963.png?size=512",
     "organizerRank": "platinum",
     "sourceThreadId": "discord-board-1471019868445872312",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1470412636951941241",
@@ -12097,7 +17073,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/696624208532340756/b824079889c51ec1cf68e5ba0f03233f.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1470412636951941241",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1470386049808072800",
@@ -12126,7 +17103,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1353192432291811438/499e9d98545b93bbba5c3db8ce69dbcd.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1470386049808072800",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1470263735590453388",
@@ -12139,7 +17117,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "image": "https://cdn.discordapp.com/attachments/1470263735590453388/1470263736030859284/Black_Orange_and_White_Modern_Sushi_Instagram_Post_-_2.PNG?ex=6a94f84e&is=6a93a6ce&hm=6ae025391b2bc8492a37f45891ccb9b086c0e973ffe94075d8f04ffe3072b8e5&",
     "tabelogUrl": "https://tabelog.com/tokyo/A1304/A130401/13298617/",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -12154,7 +17132,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1470263735590453388",
-    "sourceLabel": "関東支部イベント"
+    "sourceLabel": "関東支部イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1470001905303293985",
@@ -12183,7 +17162,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "shusuke",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/390423883095998464/994f8a675afaeea8260b024448b68346.png?size=512",
     "sourceThreadId": "discord-board-1470001905303293985",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1469938541365821542",
@@ -12210,7 +17190,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Ryo🍨",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/916635788366708767/11baaa6ec57e4979d10c39a757558267.png?size=512",
     "sourceThreadId": "discord-board-1469938541365821542",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1469705863320178698",
@@ -12239,7 +17220,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1404425352150777856/81e575c385cbb8e5ec074b6829657df3.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1469705863320178698",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1469570831758917763",
@@ -12252,7 +17234,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "image": "https://cdn.discordapp.com/attachments/1469570831758917763/1469570831993802895/IMG_6376.jpg?ex=6a9515fd&is=6a93c47d&hm=c7a96de11b3089bc76975ac481b1bc301fb6e2d14e276dcbd2160f8af7fef12d&",
     "tabelogUrl": "https://tabelog.com/tokyo/A1323/A132302/13276342/",
     "capacity": 30,
-    "reservationCapacity": 30,
+    "reservationCapacity": 31,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -12267,7 +17249,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "さな【運営】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1404762625077809152/ca540a9e6c8e7f31f87f4b95ce0ef77d.png?size=512",
     "sourceThreadId": "discord-board-1469570831758917763",
-    "sourceLabel": "関東支部イベント"
+    "sourceLabel": "関東支部イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1469326002336436376",
@@ -12296,7 +17279,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1353735645373136926/8466a7d863d8505dff4e2bf28d8d3c70.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1469326002336436376",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1468910934146945056",
@@ -12324,7 +17308,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1457701236936671439/7169ea71d19917ec77be40e97847ce7b.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1468910934146945056",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1468897684504182982",
@@ -12352,7 +17337,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "kanade",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/432375662347550736/1c5ff29a19b6ad23fd7eb1d44b1d11be.png?size=512",
     "sourceThreadId": "discord-board-1468897684504182982",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1468632320159387648",
@@ -12381,7 +17367,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1294635051438309550/21ad5521b1e73e2236e9c127cb631567.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1468632320159387648",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1468228285816373393",
@@ -12410,7 +17397,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1458057842434244679/f68198c8e93aa96927114664d5c064b6.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1468228285816373393",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1468200286937026642",
@@ -12437,7 +17425,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "こだま",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1248246861576540302/d2b1d749c7f59abc7841bc7075d77167.png?size=512",
     "sourceThreadId": "discord-board-1468200286937026642",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1467839344957067318",
@@ -12466,7 +17455,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "shusuke",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/390423883095998464/994f8a675afaeea8260b024448b68346.png?size=512",
     "sourceThreadId": "discord-board-1467839344957067318",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1467775706800066622",
@@ -12479,7 +17469,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "image": "https://cdn.discordapp.com/attachments/1467775706800066622/1467775707257114828/Instagram.png?ex=6a9525a6&is=6a93d426&hm=06931272ce9d6761e69a471fe917f81bd14b3a82343e7b0c7e0bef019b010277&",
     "tabelogUrl": "https://tabelog.com/tokyo/A1303/A130301/13316065/",
     "capacity": 30,
-    "reservationCapacity": 30,
+    "reservationCapacity": 31,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -12494,7 +17484,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1467775706800066622",
-    "sourceLabel": "関東支部イベント"
+    "sourceLabel": "関東支部イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1467466465975210006",
@@ -12523,7 +17514,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1457741437633564909/c3b6ae0373633eec085d487f2b44a0f4.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1467466465975210006",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1467418508634750997",
@@ -12553,7 +17545,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/959759896037961748/f0569afafae367b73b3e52b908114922.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1467418508634750997",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1467077523849347165",
@@ -12565,7 +17558,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "詳細をご確認ください",
     "image": "",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -12578,7 +17571,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "もってぃー【運営】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1352978791483572326/aa0f81f03bc22b267fa676eb6bf32402.png?size=512",
     "sourceThreadId": "discord-board-1467077523849347165",
-    "sourceLabel": "関東支部イベント"
+    "sourceLabel": "関東支部イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1466714047977226330",
@@ -12607,7 +17601,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/804712649598042172/ffa3b5462506477b220530a9f18571bc.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1466714047977226330",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1466368261448011860",
@@ -12635,7 +17630,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/696624208532340756/b824079889c51ec1cf68e5ba0f03233f.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1466368261448011860",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1465953052564394078",
@@ -12663,7 +17659,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "kanade",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/432375662347550736/1c5ff29a19b6ad23fd7eb1d44b1d11be.png?size=512",
     "sourceThreadId": "discord-board-1465953052564394078",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1465673698768978146",
@@ -12691,7 +17688,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1294635051438309550/21ad5521b1e73e2236e9c127cb631567.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1465673698768978146",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1464949374365733130",
@@ -12719,7 +17717,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1353307711130828841/2a106d968b021c0277e464d4af283e25.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1464949374365733130",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1464901061042245677",
@@ -12732,7 +17731,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "image": "https://cdn.discordapp.com/attachments/1464901061042245677/1464901061612404799/Beige_Minimal_Strawberry_Cake_Bakery_Instagram_Post.png?ex=6a953c6d&is=6a93eaed&hm=181f6f890ce72deae8b743a8c7b18a0fb8cececc405fe9c7799bca28b7b75f57&",
     "tabelogUrl": "https://tabelog.com/tokyo/A1306/A130602/13251857/",
     "capacity": 28,
-    "reservationCapacity": 28,
+    "reservationCapacity": 29,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -12747,7 +17746,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1464901061042245677",
-    "sourceLabel": "関東支部イベント"
+    "sourceLabel": "関東支部イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1464505832006750334",
@@ -12759,7 +17759,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "詳細をご確認ください",
     "image": "https://cdn.discordapp.com/attachments/1464505832006750334/1464505832451473470/IROPARTY_0218.PNG?ex=6a951dd7&is=6a93cc57&hm=6755b31d404934a2c798d599e3d3573041ff313dd5fff2a1f53b059fec836ce7&",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -12772,7 +17772,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "IRO+運営",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1334056760863883294/2d550914366cefb1693360eea7d7ebcc.png?size=512",
     "sourceThreadId": "discord-board-1464505832006750334",
-    "sourceLabel": "全体イベント"
+    "sourceLabel": "全体イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1464258580537540753",
@@ -12801,7 +17802,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1327670901373931661/031bcf501f0b7e7d76ab56a51bdb926d.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1464258580537540753",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1464047292926529578",
@@ -12830,7 +17832,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1457596781272633369/c35a55d8ed1e0dd326ea584b8dd5a0fd.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1464047292926529578",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1463861588074434744",
@@ -12858,7 +17861,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/696624208532340756/b824079889c51ec1cf68e5ba0f03233f.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1463861588074434744",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1463840937271754855",
@@ -12887,7 +17891,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1004342455895855144/882feb03f38a2f7fe758b2633f1f5a3b.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1463840937271754855",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1463840528381509666",
@@ -12916,7 +17921,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1004342455895855144/882feb03f38a2f7fe758b2633f1f5a3b.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1463840528381509666",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1463774821107236976",
@@ -12944,7 +17950,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1457591200243777589/a787f91f604d35bef48da01f73e9c750.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1463774821107236976",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1463514190823166045",
@@ -12972,7 +17979,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "kanade",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/432375662347550736/1c5ff29a19b6ad23fd7eb1d44b1d11be.png?size=512",
     "sourceThreadId": "discord-board-1463514190823166045",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1463166472829276221",
@@ -13001,7 +18009,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1353735645373136926/8466a7d863d8505dff4e2bf28d8d3c70.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1463166472829276221",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1463131755895853211",
@@ -13029,7 +18038,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1463131755895853211",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1463029361136369716",
@@ -13057,7 +18067,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "平田祐基",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1077595012004593684/da9f7e0d148108651369df9c42d6f207.png?size=512",
     "sourceThreadId": "discord-board-1463029361136369716",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1462633236915032095",
@@ -13070,7 +18081,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "image": "",
     "tabelogUrl": "https://tabelog.com/tokyo/A1309/A130905/13314088/",
     "capacity": 25,
-    "reservationCapacity": 25,
+    "reservationCapacity": 26,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -13085,7 +18096,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Nana【運営】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1228712639903961190/ec0618fb90198159eda44242b7db2bd6.png?size=512",
     "sourceThreadId": "discord-board-1462633236915032095",
-    "sourceLabel": "関東支部イベント"
+    "sourceLabel": "関東支部イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1462369844920844328",
@@ -13113,7 +18125,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "まよ",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1457716275814862880/648935b29efdefec2798df39902d7809.png?size=512",
     "sourceThreadId": "discord-board-1462369844920844328",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1462221349152882863",
@@ -13142,7 +18155,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1457508300588453932/5278f4112aced688e599ecee747cb9ba.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1462221349152882863",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1461705748818956473",
@@ -13170,7 +18184,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "もってぃー【運営】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1352978791483572326/aa0f81f03bc22b267fa676eb6bf32402.png?size=512",
     "sourceThreadId": "discord-board-1461705748818956473",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1461548050819580019",
@@ -13199,7 +18214,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1353192432291811438/499e9d98545b93bbba5c3db8ce69dbcd.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1461548050819580019",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1461313086869995654",
@@ -13228,7 +18244,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1004342455895855144/882feb03f38a2f7fe758b2633f1f5a3b.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1461313086869995654",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1460503732365295658",
@@ -13256,7 +18273,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "すず",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1228677207522541648/51b7a7b731b54bad382bb91b03570259.png?size=512",
     "sourceThreadId": "discord-board-1460503732365295658",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1460423048422494249",
@@ -13283,7 +18301,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "平田祐基",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1077595012004593684/da9f7e0d148108651369df9c42d6f207.png?size=512",
     "sourceThreadId": "discord-board-1460423048422494249",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1459945843607077088",
@@ -13311,7 +18330,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/804712649598042172/ffa3b5462506477b220530a9f18571bc.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1459945843607077088",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1459802437241143448",
@@ -13340,7 +18360,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1457701236936671439/7169ea71d19917ec77be40e97847ce7b.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1459802437241143448",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1459570218916646992",
@@ -13368,7 +18389,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1457371560670265374/d09179eea94d16710cda2370a546a963.png?size=512",
     "organizerRank": "platinum",
     "sourceThreadId": "discord-board-1459570218916646992",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1459560150170865807",
@@ -13396,7 +18418,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "かなみ",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1341374143932923986/20b569103030f86e652fc3be12e180e2.png?size=512",
     "sourceThreadId": "discord-board-1459560150170865807",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1459516806891831388",
@@ -13424,7 +18447,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "さな【運営】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1404762625077809152/ca540a9e6c8e7f31f87f4b95ce0ef77d.png?size=512",
     "sourceThreadId": "discord-board-1459516806891831388",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1459494529529938104",
@@ -13452,7 +18476,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Nana【運営】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1228712639903961190/ec0618fb90198159eda44242b7db2bd6.png?size=512",
     "sourceThreadId": "discord-board-1459494529529938104",
-    "sourceLabel": "関東支部イベント"
+    "sourceLabel": "関東支部イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1459225567848173811",
@@ -13481,7 +18506,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1353735645373136926/8466a7d863d8505dff4e2bf28d8d3c70.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1459225567848173811",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1459217827016998966",
@@ -13511,7 +18537,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1353587486604922921/e661b608255cec37aecf95944458b180.png?size=512",
     "organizerRank": "platinum",
     "sourceThreadId": "discord-board-1459217827016998966",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1459126067234340986",
@@ -13539,7 +18566,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "もってぃー【運営】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1352978791483572326/aa0f81f03bc22b267fa676eb6bf32402.png?size=512",
     "sourceThreadId": "discord-board-1459126067234340986",
-    "sourceLabel": "関東支部イベント"
+    "sourceLabel": "関東支部イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1458786496214732882",
@@ -13567,7 +18595,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Ryo🍨",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/916635788366708767/11baaa6ec57e4979d10c39a757558267.png?size=512",
     "sourceThreadId": "discord-board-1458786496214732882",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1458626813130571859",
@@ -13595,7 +18624,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1457526173616705549/1fc6273adfe90cc49907612c466a8a42.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1458626813130571859",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1458456445866475531",
@@ -13607,7 +18637,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "大阪(レンスペを借りてのホームパーティー)",
     "image": "",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -13622,7 +18652,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "723【運営】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1228677104577544362/78fd98fa03f458894bc3b5b09eb80066.png?size=512",
     "sourceThreadId": "discord-board-1458456445866475531",
-    "sourceLabel": "関西支部イベント"
+    "sourceLabel": "関西支部イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1458428162294677577",
@@ -13650,7 +18681,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Ryo🍨",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/916635788366708767/11baaa6ec57e4979d10c39a757558267.png?size=512",
     "sourceThreadId": "discord-board-1458428162294677577",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1458400703235096616",
@@ -13679,7 +18711,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1404038461874245752/3b0b81177331b41c1a488521fb22c3da.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1458400703235096616",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1458097360302379182",
@@ -13708,7 +18741,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1457596781272633369/c35a55d8ed1e0dd326ea584b8dd5a0fd.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1458097360302379182",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1458089665411420212",
@@ -13736,7 +18770,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "kanade",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/432375662347550736/1c5ff29a19b6ad23fd7eb1d44b1d11be.png?size=512",
     "sourceThreadId": "discord-board-1458089665411420212",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1458066117242257449",
@@ -13765,7 +18800,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/804712649598042172/ffa3b5462506477b220530a9f18571bc.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1458066117242257449",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1458048791323213961",
@@ -13777,7 +18813,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "詳細をご確認ください",
     "image": "",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -13790,7 +18826,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "もってぃー【運営】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1352978791483572326/aa0f81f03bc22b267fa676eb6bf32402.png?size=512",
     "sourceThreadId": "discord-board-1458048791323213961",
-    "sourceLabel": "関東支部イベント"
+    "sourceLabel": "関東支部イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1457974401973883085",
@@ -13817,7 +18854,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "かずま【運営】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1228677950401151139/8fe93f8b9cd2f84ec1711f01ae0dbdfc.png?size=512",
     "sourceThreadId": "discord-board-1457974401973883085",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1457306459275788319",
@@ -13830,7 +18868,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "image": "https://cdn.discordapp.com/attachments/1457306459275788319/1457306459791691889/Elegant_Black_and_Gold_Grand_Opening_Invitation_Instagram_Post.png?ex=6a954ae7&is=6a93f967&hm=234a6eb01f53a93f2eb3849fe9403f4089bbbb59c797dfd8a06c103c06fac500&",
     "googleMapsUrl": "https://maps.app.goo.gl/F4zQaALxFMgHFyuk8?g_st=ipc",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -13845,7 +18883,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1457306459275788319",
-    "sourceLabel": "全体イベント"
+    "sourceLabel": "全体イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1456679088780480575",
@@ -13873,7 +18912,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "🦊",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1228677045454639119/5e2f2f8fbc7d4f7167220ca2498796b4.png?size=512",
     "sourceThreadId": "discord-board-1456679088780480575",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1453572035304358039",
@@ -13885,7 +18925,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "詳細をご確認ください",
     "image": "https://cdn.discordapp.com/attachments/1453572035304358039/1453572035971383339/10D5FADE-1E62-48BF-AA60-27E68ACFC593.jpg?ex=6a94e3f3&is=6a939273&hm=5ac8d394f56c8e04afcad87c3330fc1ebc4d1399dc70e24e97400dec4762c8f9&",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -13898,7 +18938,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "かずま【運営】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1228677950401151139/8fe93f8b9cd2f84ec1711f01ae0dbdfc.png?size=512",
     "sourceThreadId": "discord-board-1453572035304358039",
-    "sourceLabel": "関東支部イベント"
+    "sourceLabel": "関東支部イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1453358235158577172",
@@ -13927,7 +18968,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1353307711130828841/2a106d968b021c0277e464d4af283e25.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1453358235158577172",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1453319015224053871",
@@ -13956,7 +18998,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1353307711130828841/2a106d968b021c0277e464d4af283e25.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1453319015224053871",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1453024014883885138",
@@ -13985,7 +19028,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1353735645373136926/8466a7d863d8505dff4e2bf28d8d3c70.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1453024014883885138",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1452504369240211456",
@@ -14013,7 +19057,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/696624208532340756/b824079889c51ec1cf68e5ba0f03233f.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1452504369240211456",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1450862433093550130",
@@ -14040,7 +19085,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "かずま【運営】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1228677950401151139/8fe93f8b9cd2f84ec1711f01ae0dbdfc.png?size=512",
     "sourceThreadId": "discord-board-1450862433093550130",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1449402018732183743",
@@ -14068,7 +19114,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "もってぃー【運営】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1352978791483572326/aa0f81f03bc22b267fa676eb6bf32402.png?size=512",
     "sourceThreadId": "discord-board-1449402018732183743",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1449325266911363082",
@@ -14096,7 +19143,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Ayana",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1228677466499977346/95c33aa4e744943cb57d3e669ded5bd3.png?size=512",
     "sourceThreadId": "discord-board-1449325266911363082",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1446092753401282580",
@@ -14125,7 +19173,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1353735645373136926/8466a7d863d8505dff4e2bf28d8d3c70.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1446092753401282580",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1446007865566560299",
@@ -14154,7 +19203,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1228678386902372374/04a71500e3608ede85dd9aef73d334b7.png?size=512",
     "organizerRank": "platinum",
     "sourceThreadId": "discord-board-1446007865566560299",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1445451574884171970",
@@ -14183,7 +19233,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/804712649598042172/ffa3b5462506477b220530a9f18571bc.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1445451574884171970",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1444283435077341354",
@@ -14212,7 +19263,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1228678386902372374/04a71500e3608ede85dd9aef73d334b7.png?size=512",
     "organizerRank": "platinum",
     "sourceThreadId": "discord-board-1444283435077341354",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1442836192566706186",
@@ -14241,7 +19293,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1228678386902372374/04a71500e3608ede85dd9aef73d334b7.png?size=512",
     "organizerRank": "platinum",
     "sourceThreadId": "discord-board-1442836192566706186",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1441346782268489849",
@@ -14269,7 +19322,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1403348999557222473/ce7f2eea11bbe1db6de05d0f1a634202.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1441346782268489849",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1441044750609154190",
@@ -14297,7 +19351,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "ふじ",
     "organizerAvatar": "",
     "sourceThreadId": "discord-board-1441044750609154190",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1440641031593922591",
@@ -14325,7 +19380,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "もってぃー【運営】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1352978791483572326/aa0f81f03bc22b267fa676eb6bf32402.png?size=512",
     "sourceThreadId": "discord-board-1440641031593922591",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1440319675387871242",
@@ -14337,7 +19393,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "池袋から徒歩5分のレンタルスペース",
     "image": "https://cdn.discordapp.com/attachments/1440319675387871242/1440319691808837786/Red_and_Green_Floral_Christmas_Eve_Dinner_Party_Flyer.png?ex=6a95753e&is=6a9423be&hm=881a4916104facb125d7387a8d27ec3e25f6850916fb4d97e7da67cad5ba8d42&",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -14352,7 +19408,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1440319675387871242",
-    "sourceLabel": "関東支部イベント"
+    "sourceLabel": "関東支部イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1440257037178241105",
@@ -14381,7 +19438,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1403348999557222473/ce7f2eea11bbe1db6de05d0f1a634202.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1440257037178241105",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1439907381948448768",
@@ -14410,7 +19468,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/804712649598042172/ffa3b5462506477b220530a9f18571bc.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1439907381948448768",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1438460123637878845",
@@ -14439,7 +19498,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1353735645373136926/8466a7d863d8505dff4e2bf28d8d3c70.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1438460123637878845",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1436677323016503369",
@@ -14467,7 +19527,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/711884076340215831/6d1215e63e0ab68e2d27902cb847e50e.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1436677323016503369",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1435933257236611092",
@@ -14495,7 +19556,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1435933257236611092",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1433372134184583208",
@@ -14524,7 +19586,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1353307711130828841/2a106d968b021c0277e464d4af283e25.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1433372134184583208",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1431998814385864775",
@@ -14552,7 +19615,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/711884076340215831/6d1215e63e0ab68e2d27902cb847e50e.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1431998814385864775",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1431574752060772372",
@@ -14565,7 +19629,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "image": "https://cdn.discordapp.com/attachments/1431574752060772372/1431574759115722794/png.png?ex=6a9548e3&is=6a93f763&hm=0fd8c2c9cae25bc9634ca28daba824c61920d999a997d9ad5b1d2b6465c422ec&",
     "googleMapsUrl": "https://maps.app.goo.gl/RVkZPeNWCrbBuaeJ7?g_st=ipc",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -14580,7 +19644,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1431574752060772372",
-    "sourceLabel": "関東支部イベント"
+    "sourceLabel": "関東支部イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1431314496156073994",
@@ -14609,7 +19674,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1004342455895855144/882feb03f38a2f7fe758b2633f1f5a3b.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1431314496156073994",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1430934955113840753",
@@ -14637,7 +19703,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1294635051438309550/21ad5521b1e73e2236e9c127cb631567.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1430934955113840753",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1429450172592554015",
@@ -14665,7 +19732,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1429450172592554015",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1429251668398178474",
@@ -14694,7 +19762,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1228678386902372374/04a71500e3608ede85dd9aef73d334b7.png?size=512",
     "organizerRank": "platinum",
     "sourceThreadId": "discord-board-1429251668398178474",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1428352308466679890",
@@ -14721,7 +19790,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "こだま",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1248246861576540302/d2b1d749c7f59abc7841bc7075d77167.png?size=512",
     "sourceThreadId": "discord-board-1428352308466679890",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1428304424488538172",
@@ -14749,7 +19819,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "のぶ",
     "organizerAvatar": "",
     "sourceThreadId": "discord-board-1428304424488538172",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1427245742116048916",
@@ -14774,7 +19845,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "723【運営】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1228677104577544362/78fd98fa03f458894bc3b5b09eb80066.png?size=512",
     "sourceThreadId": "discord-board-1427245742116048916",
-    "sourceLabel": "関西グルメ掲示板"
+    "sourceLabel": "関西グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1425812228044619786",
@@ -14803,7 +19875,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1353735645373136926/8466a7d863d8505dff4e2bf28d8d3c70.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1425812228044619786",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1425804330434428938",
@@ -14832,7 +19905,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1353735645373136926/8466a7d863d8505dff4e2bf28d8d3c70.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1425804330434428938",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1425091349064974336",
@@ -14861,7 +19935,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1403348999557222473/ce7f2eea11bbe1db6de05d0f1a634202.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1425091349064974336",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1424690351654047775",
@@ -14889,7 +19964,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "もってぃー【運営】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1352978791483572326/aa0f81f03bc22b267fa676eb6bf32402.png?size=512",
     "sourceThreadId": "discord-board-1424690351654047775",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1424681102106431638",
@@ -14902,7 +19978,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "image": "",
     "tabelogUrl": "https://tabelog.com/tokyo/A1301/A130103/13224176/",
     "capacity": 15,
-    "reservationCapacity": 15,
+    "reservationCapacity": 16,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -14917,7 +19993,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Nana【運営】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1228712639903961190/ec0618fb90198159eda44242b7db2bd6.png?size=512",
     "sourceThreadId": "discord-board-1424681102106431638",
-    "sourceLabel": "関東支部イベント"
+    "sourceLabel": "関東支部イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1424278374649561149",
@@ -14945,7 +20022,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1424278374649561149",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1422915877803921498",
@@ -14973,7 +20051,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Yuta",
     "organizerAvatar": "",
     "sourceThreadId": "discord-board-1422915877803921498",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1422888499513786388",
@@ -15001,7 +20080,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1422888499513786388",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1422064424105148547",
@@ -15030,7 +20110,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1353192432291811438/499e9d98545b93bbba5c3db8ce69dbcd.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1422064424105148547",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1422057164700123149",
@@ -15058,7 +20139,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "かなみ",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1341374143932923986/20b569103030f86e652fc3be12e180e2.png?size=512",
     "sourceThreadId": "discord-board-1422057164700123149",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1421147497644036229",
@@ -15086,7 +20168,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "のぶ",
     "organizerAvatar": "",
     "sourceThreadId": "discord-board-1421147497644036229",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1420639687818612817",
@@ -15115,7 +20198,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1271250501068918857/6446f0795805d8b8508d495e772d13a2.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1420639687818612817",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1420569340515844207",
@@ -15128,7 +20212,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "image": "https://cdn.discordapp.com/attachments/1420569340515844207/1420569350246629376/IMG_2761.png?ex=6a95750e&is=6a94238e&hm=feec778c47092c0d63526f4900d81f731f474b2ca103e162eadf5e3fc211f028&",
     "googleMapsUrl": "https://maps.app.goo.gl/LcsddvJCGzfAXiZ97?g_st=ipc",
     "capacity": 30,
-    "reservationCapacity": 30,
+    "reservationCapacity": 31,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -15143,7 +20227,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Nana【運営】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1228712639903961190/ec0618fb90198159eda44242b7db2bd6.png?size=512",
     "sourceThreadId": "discord-board-1420569340515844207",
-    "sourceLabel": "関東支部イベント"
+    "sourceLabel": "関東支部イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1419697803210526802",
@@ -15172,7 +20257,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1004342455895855144/882feb03f38a2f7fe758b2633f1f5a3b.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1419697803210526802",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1415668630900969593",
@@ -15185,7 +20271,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "image": "https://cdn.discordapp.com/attachments/1415668630900969593/1415668643961897010/BBQ_.png.png?ex=6a956d2a&is=6a941baa&hm=e7926e3694d6de8e8734aef81e21e53d60bcbcd8264560c45cda7cb4b6c6278f&",
     "googleMapsUrl": "https://maps.app.goo.gl/CqfjpRgqTnWD9pP4A?g_st=ipc",
     "capacity": 15,
-    "reservationCapacity": 15,
+    "reservationCapacity": 16,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -15200,7 +20286,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1415668630900969593",
-    "sourceLabel": "関東支部イベント"
+    "sourceLabel": "関東支部イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1415643902391619665",
@@ -15229,7 +20316,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1004342455895855144/882feb03f38a2f7fe758b2633f1f5a3b.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1415643902391619665",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1415123308357353665",
@@ -15257,7 +20345,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "moeko",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1299934485541814284/7e31ab8b7ac0ac56aeb96d1c3de740a0.png?size=512",
     "sourceThreadId": "discord-board-1415123308357353665",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1414565170612670521",
@@ -15287,7 +20376,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1353587486604922921/e661b608255cec37aecf95944458b180.png?size=512",
     "organizerRank": "platinum",
     "sourceThreadId": "discord-board-1414565170612670521",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1413206252258857081",
@@ -15299,7 +20389,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "詳細をご確認ください",
     "image": "https://cdn.discordapp.com/attachments/1413206252258857081/1413206252506452228/IMG_0845.png?ex=6a9509a2&is=6a93b822&hm=0eea285517d777c2f8ddcc2671507464b7dee1774f2324fc990674f750e7bd44&",
     "capacity": 20,
-    "reservationCapacity": 20,
+    "reservationCapacity": 21,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -15314,7 +20404,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "かずま【運営】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1228677950401151139/8fe93f8b9cd2f84ec1711f01ae0dbdfc.png?size=512",
     "sourceThreadId": "discord-board-1413206252258857081",
-    "sourceLabel": "関東支部イベント"
+    "sourceLabel": "関東支部イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1412425863378501782",
@@ -15327,7 +20418,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "image": "https://cdn.discordapp.com/attachments/1412425863378501782/1412425864087470332/BBQ_Instagram.png.png?ex=6a957e97&is=6a942d17&hm=a175fde15b4fa6e79e65757a2ec3aa388df887b05f6d914614dbfc0984da0cb0&",
     "googleMapsUrl": "https://maps.app.goo.gl/eUkupeb3t7Fdm9Bc9?g_st=ipc",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -15342,7 +20433,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1412425863378501782",
-    "sourceLabel": "全体イベント"
+    "sourceLabel": "全体イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1412283609578213447",
@@ -15370,7 +20462,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "たけまる【運営】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/789786995970015242/122846247a2c819c5dd1c7e60af73810.png?size=512",
     "sourceThreadId": "discord-board-1412283609578213447",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1412033664161681491",
@@ -15399,7 +20492,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1353735645373136926/8466a7d863d8505dff4e2bf28d8d3c70.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1412033664161681491",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1410975756586188910",
@@ -15426,7 +20520,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "こだま",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1248246861576540302/d2b1d749c7f59abc7841bc7075d77167.png?size=512",
     "sourceThreadId": "discord-board-1410975756586188910",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1409848108820729856",
@@ -15455,7 +20550,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/804712649598042172/ffa3b5462506477b220530a9f18571bc.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1409848108820729856",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1409184811255332964",
@@ -15483,7 +20579,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1294635051438309550/21ad5521b1e73e2236e9c127cb631567.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1409184811255332964",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1409148158767792288",
@@ -15511,7 +20608,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Yuta",
     "organizerAvatar": "",
     "sourceThreadId": "discord-board-1409148158767792288",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1409120488462221352",
@@ -15539,7 +20637,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "かなみ",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1341374143932923986/20b569103030f86e652fc3be12e180e2.png?size=512",
     "sourceThreadId": "discord-board-1409120488462221352",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1408321726697312286",
@@ -15568,7 +20667,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1353307711130828841/2a106d968b021c0277e464d4af283e25.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1408321726697312286",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1408077050782154905",
@@ -15597,7 +20697,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/711884076340215831/6d1215e63e0ab68e2d27902cb847e50e.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1408077050782154905",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1407710813908766853",
@@ -15625,7 +20726,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "たけまる【運営】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/789786995970015242/122846247a2c819c5dd1c7e60af73810.png?size=512",
     "sourceThreadId": "discord-board-1407710813908766853",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1407658118447366154",
@@ -15653,7 +20755,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1407658118447366154",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1406985211295825952",
@@ -15681,7 +20784,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "のぶ",
     "organizerAvatar": "",
     "sourceThreadId": "discord-board-1406985211295825952",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1406833845600387284",
@@ -15694,7 +20798,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "image": "",
     "tabelogUrl": "https://tabelog.com/tokyo/A1303/A130302/13173015/",
     "capacity": 20,
-    "reservationCapacity": 20,
+    "reservationCapacity": 21,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -15709,7 +20813,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Nana【運営】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1228712639903961190/ec0618fb90198159eda44242b7db2bd6.png?size=512",
     "sourceThreadId": "discord-board-1406833845600387284",
-    "sourceLabel": "関東支部イベント"
+    "sourceLabel": "関東支部イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1406127452216098867",
@@ -15737,7 +20842,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "もってぃー【運営】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1352978791483572326/aa0f81f03bc22b267fa676eb6bf32402.png?size=512",
     "sourceThreadId": "discord-board-1406127452216098867",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1406113711260827710",
@@ -15750,7 +20856,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "image": "https://cdn.discordapp.com/attachments/1406113711260827710/1406113718839804024/Happy_hour_Instagram.png?ex=6a94f172&is=6a939ff2&hm=ce0774a9bdded6e44ddf013b22c29044e4eeaa83b308539333ee92c3f8a3f427&",
     "tabelogUrl": "https://tabelog.com/tokyo/A1303/A130301/13161444/",
     "capacity": 20,
-    "reservationCapacity": 20,
+    "reservationCapacity": 21,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -15765,7 +20871,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1406113711260827710",
-    "sourceLabel": "関東支部イベント"
+    "sourceLabel": "関東支部イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1405869693939744921",
@@ -15778,7 +20885,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "image": "https://cdn.discordapp.com/attachments/1405869693939744921/1405869704211468288/png.png?ex=6a955fb1&is=6a940e31&hm=03ece91328e98fcacbe77301baa7c5ffa3d5748d675ffa6a74e8070e3443bd43&",
     "googleMapsUrl": "https://maps.app.goo.gl/99sF6NweMPzNDJiBA?g_st=ipc",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -15793,7 +20900,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1405869693939744921",
-    "sourceLabel": "関東支部イベント"
+    "sourceLabel": "関東支部イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1405479904413225020",
@@ -15821,7 +20929,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1405479904413225020",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1405476377427316786",
@@ -15849,7 +20958,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1405476377427316786",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1405124381008728145",
@@ -15861,7 +20971,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "詳細をご確認ください",
     "image": "",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -15874,7 +20984,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1405124381008728145",
-    "sourceLabel": "関東支部イベント"
+    "sourceLabel": "関東支部イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1405036442861703168",
@@ -15901,7 +21012,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "こだま",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1248246861576540302/d2b1d749c7f59abc7841bc7075d77167.png?size=512",
     "sourceThreadId": "discord-board-1405036442861703168",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1401933744000073809",
@@ -15929,7 +21041,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "すず",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1228677207522541648/51b7a7b731b54bad382bb91b03570259.png?size=512",
     "sourceThreadId": "discord-board-1401933744000073809",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1401547965415428258",
@@ -15958,7 +21071,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1353735645373136926/8466a7d863d8505dff4e2bf28d8d3c70.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1401547965415428258",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1400423675295043584",
@@ -15987,7 +21101,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1004342455895855144/882feb03f38a2f7fe758b2633f1f5a3b.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1400423675295043584",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1400422806751281372",
@@ -16016,7 +21131,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1004342455895855144/882feb03f38a2f7fe758b2633f1f5a3b.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1400422806751281372",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1400407753821913243",
@@ -16028,7 +21144,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "東京都港区タワーマンションのパーティールーム(参加者にのみ詳細をお伝えします)",
     "image": "https://cdn.discordapp.com/attachments/1400407753821913243/1400407754102935623/Shimee.png?ex=6a95475a&is=6a93f5da&hm=2f1e5979bab753b1fe042d6ff39538c726ca03593d7ada3847bdf6e2bd6df42a&",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -16043,7 +21159,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1400407753821913243",
-    "sourceLabel": "全体イベント"
+    "sourceLabel": "全体イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1398236293917446266",
@@ -16070,7 +21187,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "こだま",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1248246861576540302/d2b1d749c7f59abc7841bc7075d77167.png?size=512",
     "sourceThreadId": "discord-board-1398236293917446266",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1397869543128567919",
@@ -16098,7 +21216,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "たけまる【運営】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/789786995970015242/122846247a2c819c5dd1c7e60af73810.png?size=512",
     "sourceThreadId": "discord-board-1397869543128567919",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1394614915062562908",
@@ -16126,7 +21245,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Ayana",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1228677466499977346/95c33aa4e744943cb57d3e669ded5bd3.png?size=512",
     "sourceThreadId": "discord-board-1394614915062562908",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1394350094278721678",
@@ -16154,7 +21274,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/804712649598042172/ffa3b5462506477b220530a9f18571bc.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1394350094278721678",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1393520708084174939",
@@ -16166,7 +21287,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "詳細をご確認ください",
     "image": "",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -16179,7 +21300,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "723【運営】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1228677104577544362/78fd98fa03f458894bc3b5b09eb80066.png?size=512",
     "sourceThreadId": "discord-board-1393520708084174939",
-    "sourceLabel": "関西支部イベント"
+    "sourceLabel": "関西支部イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1393461526748332125",
@@ -16191,7 +21313,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "詳細をご確認ください",
     "image": "",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -16204,7 +21326,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1393461526748332125",
-    "sourceLabel": "関東支部イベント"
+    "sourceLabel": "関東支部イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1393459468397973654",
@@ -16217,7 +21340,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "image": "https://cdn.discordapp.com/attachments/1393459468397973654/1393459475247136828/IMG_2637.jpg?ex=6a950cc4&is=6a93bb44&hm=00de1111134cd06a82537a2e17a929e4b94a72813aa5834b49ce68b5748458e0&",
     "tabelogUrl": "https://tabelog.com/tokyo/A1303/A130301/13296149/",
     "capacity": 12,
-    "reservationCapacity": 12,
+    "reservationCapacity": 13,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -16232,7 +21355,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1393459468397973654",
-    "sourceLabel": "関東支部イベント"
+    "sourceLabel": "関東支部イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1390310303149064237",
@@ -16260,7 +21384,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "すず",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1228677207522541648/51b7a7b731b54bad382bb91b03570259.png?size=512",
     "sourceThreadId": "discord-board-1390310303149064237",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1390167145610219610",
@@ -16286,7 +21411,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "🦊",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1228677045454639119/5e2f2f8fbc7d4f7167220ca2498796b4.png?size=512",
     "sourceThreadId": "discord-board-1390167145610219610",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1389907623632961547",
@@ -16315,7 +21441,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1004342455895855144/882feb03f38a2f7fe758b2633f1f5a3b.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1389907623632961547",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1389870070091747338",
@@ -16343,7 +21470,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1389870070091747338",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1387080988580122674",
@@ -16355,7 +21483,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "鳥貴族(新橋)",
     "image": "",
     "capacity": 12,
-    "reservationCapacity": 12,
+    "reservationCapacity": 13,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -16370,7 +21498,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "かずま【運営】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1228677950401151139/8fe93f8b9cd2f84ec1711f01ae0dbdfc.png?size=512",
     "sourceThreadId": "discord-board-1387080988580122674",
-    "sourceLabel": "関東支部イベント"
+    "sourceLabel": "関東支部イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1386928922045972581",
@@ -16398,7 +21527,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1386928922045972581",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1386673521924636713",
@@ -16410,7 +21540,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "詳細をご確認ください",
     "image": "https://cdn.discordapp.com/attachments/1386673521924636713/1386673522075635802/IMG_7332.jpg?ex=6a95695a&is=6a9417da&hm=5549582cf6753a6b43ca26ab03d7a60b4666792036744973e1796aee28959719&",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -16425,7 +21555,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "ユウ【運営】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/817730242516746252/cda00c1c2a58a4d6462c54c2b5bb7ea0.png?size=512",
     "sourceThreadId": "discord-board-1386673521924636713",
-    "sourceLabel": "関西支部イベント"
+    "sourceLabel": "関西支部イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1384147686411997246",
@@ -16437,7 +21568,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "渋谷の高層タワーマンションのパーティールーム",
     "image": "https://cdn.discordapp.com/attachments/1384147686411997246/1384147698088673330/A4.png.png?ex=6a95737f&is=6a9421ff&hm=70a21cf53bfd9520139f470f20bec31f3e9ab537abecd7269643750fd1ed4c13&",
     "capacity": 30,
-    "reservationCapacity": 30,
+    "reservationCapacity": 31,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -16452,7 +21583,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1384147686411997246",
-    "sourceLabel": "関東支部イベント"
+    "sourceLabel": "関東支部イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1383060273241391146",
@@ -16480,7 +21612,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1353587486604922921/e661b608255cec37aecf95944458b180.png?size=512",
     "organizerRank": "platinum",
     "sourceThreadId": "discord-board-1383060273241391146",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1382562564893835314",
@@ -16507,7 +21640,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "のぶ",
     "organizerAvatar": "",
     "sourceThreadId": "discord-board-1382562564893835314",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1382319164496154674",
@@ -16533,7 +21667,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1382319164496154674",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1380836330384392232",
@@ -16559,7 +21694,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "たけまる【運営】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/789786995970015242/122846247a2c819c5dd1c7e60af73810.png?size=512",
     "sourceThreadId": "discord-board-1380836330384392232",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1380762642204852244",
@@ -16587,7 +21723,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1380762642204852244",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1378674516598853652",
@@ -16613,7 +21750,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1378674516598853652",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1378307931308822558",
@@ -16639,7 +21777,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1378307931308822558",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1376138439661191290",
@@ -16651,7 +21790,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "堺筋本町から徒歩1分の高層タワーマンション",
     "image": "https://cdn.discordapp.com/attachments/1376138439661191290/1376138444224466975/Osaka_Meet-up.png?ex=6a95514c&is=6a93ffcc&hm=de801cac5c88a49550878260603a774b8905dd6431b1999aee11080efdec0754&",
     "capacity": 20,
-    "reservationCapacity": 20,
+    "reservationCapacity": 21,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -16666,7 +21805,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1376138439661191290",
-    "sourceLabel": "関西支部イベント"
+    "sourceLabel": "関西支部イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1374935678290497686",
@@ -16694,7 +21834,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "のぶ",
     "organizerAvatar": "",
     "sourceThreadId": "discord-board-1374935678290497686",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1374763540136726778",
@@ -16723,7 +21864,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/804712649598042172/ffa3b5462506477b220530a9f18571bc.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1374763540136726778",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1374348278975692911",
@@ -16736,7 +21878,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "image": "https://cdn.discordapp.com/attachments/1374348278975692911/1374348298093203486/White_and_Yellow_Beer_Day_Social_Media_Graphic.png?ex=6a956598&is=6a941418&hm=70834b8edc7c7230fec79d8bfca4f3d77c9859fe6db6935be562681ce08b064a&",
     "googleMapsUrl": "https://maps.app.goo.gl/UyRVuSZSKvRsT8VS8?g_st=com.google.maps.preview.copy",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -16751,7 +21893,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1374348278975692911",
-    "sourceLabel": "関東支部イベント"
+    "sourceLabel": "関東支部イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1372550361063096380",
@@ -16776,7 +21919,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "IRO+運営",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1334056760863883294/2d550914366cefb1693360eea7d7ebcc.png?size=512",
     "sourceThreadId": "discord-board-1372550361063096380",
-    "sourceLabel": "関西グルメ掲示板"
+    "sourceLabel": "関西グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1372550217223901185",
@@ -16801,7 +21945,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "IRO+運営",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1334056760863883294/2d550914366cefb1693360eea7d7ebcc.png?size=512",
     "sourceThreadId": "discord-board-1372550217223901185",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1371128536102080532",
@@ -16829,7 +21974,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "もってぃー【運営】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1352978791483572326/aa0f81f03bc22b267fa676eb6bf32402.png?size=512",
     "sourceThreadId": "discord-board-1371128536102080532",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1365955158160183317",
@@ -16841,7 +21987,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "大阪",
     "image": "https://cdn.discordapp.com/attachments/1365955158160183317/1365955158605037618/Black_and_Gold_Anniversary_Poster.png.png?ex=6a952f60&is=6a93dde0&hm=5ce85578e091c027bde43c2c619588b3fbc60a4e2b239ec98cb428763ac4b10d&",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -16856,7 +22002,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "IRO+運営",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1334056760863883294/2d550914366cefb1693360eea7d7ebcc.png?size=512",
     "sourceThreadId": "discord-board-1365955158160183317",
-    "sourceLabel": "全体イベント"
+    "sourceLabel": "全体イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1365954425654349875",
@@ -16868,7 +22015,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "東京",
     "image": "https://cdn.discordapp.com/attachments/1365954425654349875/1365954426170245132/Black_and_Gold_Anniversary_Poster.png.png?ex=6a952eb1&is=6a93dd31&hm=83bf410ab477e80e1838dc8944dc2febea5053105e7a1a7d42516934f419d908&",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -16883,7 +22030,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "IRO+運営",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1334056760863883294/2d550914366cefb1693360eea7d7ebcc.png?size=512",
     "sourceThreadId": "discord-board-1365954425654349875",
-    "sourceLabel": "全体イベント"
+    "sourceLabel": "全体イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1362444252487094405",
@@ -16911,7 +22059,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "たけまる【運営】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/789786995970015242/122846247a2c819c5dd1c7e60af73810.png?size=512",
     "sourceThreadId": "discord-board-1362444252487094405",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1359468590662680636",
@@ -16940,7 +22089,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1353735645373136926/8466a7d863d8505dff4e2bf28d8d3c70.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1359468590662680636",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1359445404722266152",
@@ -16969,7 +22119,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1004342455895855144/882feb03f38a2f7fe758b2633f1f5a3b.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1359445404722266152",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1359206861076828452",
@@ -16997,7 +22148,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1294635051438309550/21ad5521b1e73e2236e9c127cb631567.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1359206861076828452",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1359139902280958165",
@@ -17026,7 +22178,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1059373969590984764/857b85adf11b840e1cacf44276528eda.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1359139902280958165",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1358375003724447904",
@@ -17054,7 +22207,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "のぶ",
     "organizerAvatar": "",
     "sourceThreadId": "discord-board-1358375003724447904",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1356265979155447909",
@@ -17083,7 +22237,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1228680700455157851/91f01b8f5468af1db9f98223b4145728.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1356265979155447909",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1356207216943824928",
@@ -17110,7 +22265,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "のぶ",
     "organizerAvatar": "",
     "sourceThreadId": "discord-board-1356207216943824928",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1354048688929898577",
@@ -17123,7 +22279,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "image": "https://cdn.discordapp.com/attachments/1354048688929898577/1354048689311711263/Shimee.png?ex=6a95601c&is=6a940e9c&hm=e85c45a3ff9edb91e9e47dc336d7364c7e29381f4f13ff7403f8018cd3349c54&",
     "googleMapsUrl": "https://maps.app.goo.gl/tipt1v6VLKn7jLkLA?g_st=com.google.maps.preview.copy",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -17138,7 +22294,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "IRO+運営",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1334056760863883294/2d550914366cefb1693360eea7d7ebcc.png?size=512",
     "sourceThreadId": "discord-board-1354048688929898577",
-    "sourceLabel": "全体イベント"
+    "sourceLabel": "全体イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1354047981396951121",
@@ -17151,7 +22308,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "image": "https://cdn.discordapp.com/attachments/1354047981396951121/1354047982055460894/Shimee.png?ex=6a955f73&is=6a940df3&hm=8a8ea6152b3ef76c2860c33a36d1f4cc805eb51cc6be4f3f63920b9f57437337&",
     "googleMapsUrl": "https://maps.app.goo.gl/bYHQ8xazdLLUPsUt8?g_st=com.google.maps.preview.copy",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -17166,7 +22323,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "IRO+運営",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1334056760863883294/2d550914366cefb1693360eea7d7ebcc.png?size=512",
     "sourceThreadId": "discord-board-1354047981396951121",
-    "sourceLabel": "全体イベント"
+    "sourceLabel": "全体イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1353340666783993856",
@@ -17194,7 +22352,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1353340666783993856",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1351878323747426436",
@@ -17222,7 +22381,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Ayana",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1228677466499977346/95c33aa4e744943cb57d3e669ded5bd3.png?size=512",
     "sourceThreadId": "discord-board-1351878323747426436",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1351509236428963863",
@@ -17250,7 +22410,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "サニービュッフェ【運営】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/863786104033509418/06d975096333cef6beb2a4d8314f6e0e.png?size=512",
     "sourceThreadId": "discord-board-1351509236428963863",
-    "sourceLabel": "関西グルメ掲示板"
+    "sourceLabel": "関西グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1350856722239062136",
@@ -17279,7 +22440,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1059373969590984764/857b85adf11b840e1cacf44276528eda.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1350856722239062136",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1347538257503588362",
@@ -17291,7 +22453,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "- 🫖:14:50 インターコンチネンタル1階入り口前",
     "image": "https://cdn.discordapp.com/attachments/1347538257503588362/1347538258325798922/IMG_5748.jpg?ex=6a956bcc&is=6a941a4c&hm=f5aa60cfdc6dc73a94f5772140772206d317686a0874ba1fce53b9fac7b7a9ba&",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -17306,7 +22468,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "サニービュッフェ【運営】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/863786104033509418/06d975096333cef6beb2a4d8314f6e0e.png?size=512",
     "sourceThreadId": "discord-board-1347538257503588362",
-    "sourceLabel": "関西支部イベント"
+    "sourceLabel": "関西支部イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1345697613923749971",
@@ -17331,7 +22494,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "nonoka【運営】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1228681600594743387/0e4067e11bbc4dd53c30e9aad23ef1e0.png?size=512",
     "sourceThreadId": "discord-board-1345697613923749971",
-    "sourceLabel": "関西グルメ掲示板"
+    "sourceLabel": "関西グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1344284760222203956",
@@ -17357,7 +22521,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1344284760222203956",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1344281550644318218",
@@ -17383,7 +22548,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1344281550644318218",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1343144866993143808",
@@ -17395,7 +22561,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "梅田駅徒歩5分の隠れ家イタリアンレストラン",
     "image": "https://cdn.discordapp.com/attachments/1343144866993143808/1343144867441803385/Wine_party.png?ex=6a954222&is=6a93f0a2&hm=ddc405badedbff5fe7e3ec589fb3c499105c14ae7e4540cdda87d5c9f77a2184&",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -17410,7 +22576,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1343144866993143808",
-    "sourceLabel": "関西支部イベント"
+    "sourceLabel": "関西支部イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1343143233789628516",
@@ -17422,7 +22589,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "恵比寿駅徒歩1分の隠れ家ルーフトップレストラン",
     "image": "https://cdn.discordapp.com/attachments/1343143233789628516/1343143237933858816/Wine_party.png?ex=6a95409e&is=6a93ef1e&hm=9dcd03774f0e6c9c15f8acc665114d829e70cd243c2e44e4154c1ea5f3d1665f&",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -17437,7 +22604,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1343143233789628516",
-    "sourceLabel": "関東支部イベント"
+    "sourceLabel": "関東支部イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1340661028148740134",
@@ -17462,7 +22630,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "723【運営】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1228677104577544362/78fd98fa03f458894bc3b5b09eb80066.png?size=512",
     "sourceThreadId": "discord-board-1340661028148740134",
-    "sourceLabel": "関西グルメ掲示板"
+    "sourceLabel": "関西グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1339542429732438106",
@@ -17475,7 +22644,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "image": "",
     "googleMapsUrl": "https://maps.app.goo.gl/9tqgQFfvab9CaU7v6?g_st=com.google.maps.preview.copy",
     "capacity": 5,
-    "reservationCapacity": 5,
+    "reservationCapacity": 6,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -17490,7 +22659,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Nana【運営】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1228712639903961190/ec0618fb90198159eda44242b7db2bd6.png?size=512",
     "sourceThreadId": "discord-board-1339542429732438106",
-    "sourceLabel": "関東支部イベント"
+    "sourceLabel": "関東支部イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1336674415697596436",
@@ -17519,7 +22689,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1228677952334725213/342ebdafc945abd8be7d4422f51fc9c6.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1336674415697596436",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1335563973856329768",
@@ -17544,7 +22715,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "たけまる【運営】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/789786995970015242/122846247a2c819c5dd1c7e60af73810.png?size=512",
     "sourceThreadId": "discord-board-1335563973856329768",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1335058860045504522",
@@ -17569,7 +22741,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "🦊",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1228677045454639119/5e2f2f8fbc7d4f7167220ca2498796b4.png?size=512",
     "sourceThreadId": "discord-board-1335058860045504522",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1333775381475495946",
@@ -17581,7 +22754,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "都内(白金)のタワーマンション",
     "image": "https://cdn.discordapp.com/attachments/1333775381475495946/1333775384356978718/Pink_Romantic_Valentines_Day_Party_Instagram_Post.png?ex=6a95731f&is=6a94219f&hm=d4cbdf2feb29424d5c7762b267faeae47664ea8291b8a5d6ca7601a0a4832208&",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -17596,7 +22769,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1333775381475495946",
-    "sourceLabel": "関東支部イベント"
+    "sourceLabel": "関東支部イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1333415003394670723",
@@ -17621,7 +22795,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1333415003394670723",
-    "sourceLabel": "関西グルメ掲示板"
+    "sourceLabel": "関西グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1332975170918289481",
@@ -17634,7 +22809,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "image": "https://cdn.discordapp.com/attachments/1332975170918289481/1332975171719528458/Black_Pink_Cream_Illustrated_Cocktail_Party_Virtual_Invitation.png.png?ex=6a952cde&is=6a93db5e&hm=f56ac32806d883c314f618d6de8ef24944588f2c792447be75890722145a0bef&",
     "googleMapsUrl": "https://maps.app.goo.gl/7pD8XjWLd24Z8tax9?g_st=il",
     "capacity": 15,
-    "reservationCapacity": 15,
+    "reservationCapacity": 16,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -17649,7 +22824,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1332975170918289481",
-    "sourceLabel": "関西支部イベント"
+    "sourceLabel": "関西支部イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1332974963652558881",
@@ -17661,7 +22837,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "詳細をご確認ください",
     "image": "https://cdn.discordapp.com/attachments/1332974963652558881/1332974964650807359/Black_Japanese_Sushi_Food_Flyer.png.png?ex=6a952cad&is=6a93db2d&hm=ac14b5f98bf11b9821a14e70906e0b98ee7ff37d18697391c34b18ba602fb5d2&",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -17674,7 +22850,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1332974963652558881",
-    "sourceLabel": "関西支部イベント"
+    "sourceLabel": "関西支部イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1332974739735576607",
@@ -17686,7 +22863,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "詳細をご確認ください",
     "image": "https://cdn.discordapp.com/attachments/1332974739735576607/1332974739928649849/IMG_0277.jpg?ex=6a952c77&is=6a93daf7&hm=86e40b98e1cf64c38f022f66b1940e5c90fd6f4b7dd47827f92f8a4ca1cdf45e&",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -17699,7 +22876,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1332974739735576607",
-    "sourceLabel": "関西支部イベント"
+    "sourceLabel": "関西支部イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1332974172837642370",
@@ -17711,7 +22889,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "詳細をご確認ください",
     "image": "https://cdn.discordapp.com/attachments/1332974172837642370/1332974173638627390/Red_Modern_Christmas_Party_Invitation.png?ex=6a952bf0&is=6a93da70&hm=f3aabcae480252b6448beaa40201fdbd4cba7eaebb69a42604908323f33adcc6&",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -17724,7 +22902,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1332974172837642370",
-    "sourceLabel": "関西支部イベント"
+    "sourceLabel": "関西支部イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1332973936455192606",
@@ -17736,7 +22915,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "詳細をご確認ください",
     "image": "https://cdn.discordapp.com/attachments/1332973936455192606/1332973936681680976/IMG_2815.png?ex=6a952bb7&is=6a93da37&hm=eab98a6dc75f0cd856e74b5e7d7b3fc475cd228e159bb06a5b3308331e1c89dd&",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -17749,7 +22928,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1332973936455192606",
-    "sourceLabel": "関西支部イベント"
+    "sourceLabel": "関西支部イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1332973660662665339",
@@ -17761,7 +22941,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "詳細をご確認ください",
     "image": "https://cdn.discordapp.com/attachments/1332973660662665339/1332973660880896020/Watercolor_Wine_Tasting_Flyer.png.png?ex=6a952b76&is=6a93d9f6&hm=0bc12e2c82e9063257a770c403374c759ec9b9fbb09cfb245c7a16d856c010ea&",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -17774,7 +22954,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1332973660662665339",
-    "sourceLabel": "関西支部イベント"
+    "sourceLabel": "関西支部イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1332973457385848832",
@@ -17786,7 +22967,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "詳細をご確認ください",
     "image": "https://cdn.discordapp.com/attachments/1332973457385848832/1332973457524264971/IMG_0275.jpg?ex=6a952b45&is=6a93d9c5&hm=6392eb7d1d3d30b5af5ed2fa86073653d67288b5a42f5fc6d9289fbb99230516&",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -17799,7 +22980,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1332973457385848832",
-    "sourceLabel": "関西支部イベント"
+    "sourceLabel": "関西支部イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1332972733016965142",
@@ -17811,7 +22993,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "詳細をご確認ください",
     "image": "https://cdn.discordapp.com/attachments/1332972733016965142/1332972733230743592/IMG_0274.jpg?ex=6a952a99&is=6a93d919&hm=b1eb3f4e1aa04a869beaf7cf8e66073b93f525dc529dec08ebd96381f54d7c8f&",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -17824,7 +23006,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1332972733016965142",
-    "sourceLabel": "関西支部イベント"
+    "sourceLabel": "関西支部イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1332972236654641182",
@@ -17836,7 +23019,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "詳細をご確認ください",
     "image": "https://cdn.discordapp.com/attachments/1332972236654641182/1332972236914819143/IMG_1433.png?ex=6a952a22&is=6a93d8a2&hm=2eae82ebe3d6d91e758ebf259e696d50c3ff4b883449efa7bdca21ab7016cfcd&",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -17849,7 +23032,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1332972236654641182",
-    "sourceLabel": "関西支部イベント"
+    "sourceLabel": "関西支部イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1332971018263855224",
@@ -17861,7 +23045,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "詳細をご確認ください",
     "image": "https://cdn.discordapp.com/attachments/1332971018263855224/1332971018649862194/IMG_5457.png?ex=6a952900&is=6a93d780&hm=40587c5750d23639459b33648a308e7fa3cd2e12233db915d4ecb9e06fa9cfb3&",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -17874,7 +23058,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1332971018263855224",
-    "sourceLabel": "関西支部イベント"
+    "sourceLabel": "関西支部イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1332970617221414962",
@@ -17886,7 +23071,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "詳細をご確認ください",
     "image": "https://cdn.discordapp.com/attachments/1332970617221414962/1332970617758158908/IMG_0272.png?ex=6a9528a0&is=6a93d720&hm=0355b2f23ba03af69f68f6ff225fadeed3cf186729cfaf4a3162977d61b00cf2&",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -17899,7 +23084,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1332970617221414962",
-    "sourceLabel": "関西支部イベント"
+    "sourceLabel": "関西支部イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1332969852817899551",
@@ -17911,7 +23097,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "詳細をご確認ください",
     "image": "https://cdn.discordapp.com/attachments/1332969852817899551/1332969853140865065/IMG_0271.jpg?ex=6a9527ea&is=6a93d66a&hm=0419e32b8dffb465bc533c41db1dc1ace4940d82c2a03ca3efc09d06bbab6eaa&",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -17924,7 +23110,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1332969852817899551",
-    "sourceLabel": "関西支部イベント"
+    "sourceLabel": "関西支部イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1332969153388089384",
@@ -17936,7 +23123,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "詳細をご確認ください",
     "image": "https://cdn.discordapp.com/attachments/1332969153388089384/1332969153652461598/IMG_0270.jpg?ex=6a952743&is=6a93d5c3&hm=eb8bdf747fe8d0a7ca75a5307540f8a801576d6604c3bee7ff8d775bb0712695&",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -17949,7 +23136,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1332969153388089384",
-    "sourceLabel": "関西支部イベント"
+    "sourceLabel": "関西支部イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1332968219614646363",
@@ -17961,7 +23149,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "詳細をご確認ください",
     "image": "https://cdn.discordapp.com/attachments/1332968219614646363/1332968219807318066/IMG_0269.jpg?ex=6a952664&is=6a93d4e4&hm=830bbb56317d88e28d6d062cb40b04dc365205248d349a2ef44dc8fb4f75f789&",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -17974,7 +23162,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1332968219614646363",
-    "sourceLabel": "関西支部イベント"
+    "sourceLabel": "関西支部イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1332968023102849034",
@@ -17986,7 +23175,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "詳細をご確認ください",
     "image": "https://cdn.discordapp.com/attachments/1332968023102849034/1332968023535124530/IMG_6543.png?ex=6a952636&is=6a93d4b6&hm=988e6ab5b366d762c35a2d1101dab531a444e31c0257105801f84a20ad94d1ec&",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -17999,7 +23188,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1332968023102849034",
-    "sourceLabel": "関西支部イベント"
+    "sourceLabel": "関西支部イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1332967920258646057",
@@ -18011,7 +23201,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "詳細をご確認ください",
     "image": "https://cdn.discordapp.com/attachments/1332967920258646057/1332967920594063360/IMG_0258.png?ex=6a95261d&is=6a93d49d&hm=7573ebd9df003032177a57c36336413cc7fd1570f969693a0f8d479693d1a789&",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -18024,7 +23214,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1332967920258646057",
-    "sourceLabel": "関西支部イベント"
+    "sourceLabel": "関西支部イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1332967825567907940",
@@ -18036,7 +23227,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "詳細をご確認ください",
     "image": "https://cdn.discordapp.com/attachments/1332967825567907940/1332967825685614683/IMG_0268.jpg?ex=6a952606&is=6a93d486&hm=272c7758471b50ad812bd8b03f7ab30235e3bd1b4f2ee3abc182361c212e6894&",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -18049,7 +23240,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1332967825567907940",
-    "sourceLabel": "関西支部イベント"
+    "sourceLabel": "関西支部イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1332967651277799426",
@@ -18061,7 +23253,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "詳細をご確認ください",
     "image": "https://cdn.discordapp.com/attachments/1332967651277799426/1332967651563147274/IMG_0267.png?ex=6a9525dd&is=6a93d45d&hm=5fcb348ea00ddd3965895513b1dca8ffe1e72549a3893341df555804e533f5f6&",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -18074,7 +23266,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1332967651277799426",
-    "sourceLabel": "関西支部イベント"
+    "sourceLabel": "関西支部イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1332967100532129863",
@@ -18086,7 +23279,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "詳細をご確認ください",
     "image": "https://cdn.discordapp.com/attachments/1332967100532129863/1332967100788117537/DSC00175.jpg?ex=6a95255a&is=6a93d3da&hm=9edcf32c9181f9b4c136c2e3ff533b1859d4b3907c9ec7b11ffae5656c74427f&",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -18099,7 +23292,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1332967100532129863",
-    "sourceLabel": "関西支部イベント"
+    "sourceLabel": "関西支部イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1332966882424393810",
@@ -18111,7 +23305,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "詳細をご確認ください",
     "image": "https://cdn.discordapp.com/attachments/1332966882424393810/1332966882935967887/Revision.png?ex=6a952526&is=6a93d3a6&hm=1cfdb9c5eee974b1233fff51aeec429f97dc984ef9fca22c7fe4aceece7bc0d2&",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -18124,7 +23318,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1332966882424393810",
-    "sourceLabel": "関西支部イベント"
+    "sourceLabel": "関西支部イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1332966734461927450",
@@ -18136,7 +23331,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "詳細をご確認ください",
     "image": "https://cdn.discordapp.com/attachments/1332966734461927450/1332966734780563466/IMG_0266.png?ex=6a952502&is=6a93d382&hm=8dfd28eb66094734054a5529375caaff56177375c504c4e85abd661aa68748be&",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -18149,7 +23344,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1332966734461927450",
-    "sourceLabel": "関西支部イベント"
+    "sourceLabel": "関西支部イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1332965738427715605",
@@ -18161,7 +23357,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "詳細をご確認ください",
     "image": "https://cdn.discordapp.com/attachments/1332965738427715605/1332965739350593588/IMG_6024.jpg?ex=6a952415&is=6a93d295&hm=8d8f4937877f7b802ddf6e1dece93adc7d2e51d290fb73c6ceb98e4dfc0402c4&",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -18174,7 +23370,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1332965738427715605",
-    "sourceLabel": "関西支部イベント"
+    "sourceLabel": "関西支部イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1332965164529483837",
@@ -18186,7 +23383,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "詳細をご確認ください",
     "image": "https://cdn.discordapp.com/attachments/1332965164529483837/1332965164772757535/IMG_0265.png?ex=6a95238c&is=6a93d20c&hm=0397f0954cb2208e36213d12dfea8bed40340502159fc992a8590c729f81ba9d&",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -18199,7 +23396,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1332965164529483837",
-    "sourceLabel": "関西支部イベント"
+    "sourceLabel": "関西支部イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1332964579952693359",
@@ -18211,7 +23409,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "詳細をご確認ください",
     "image": "https://cdn.discordapp.com/attachments/1332964579952693359/1332964580099625010/IMG_0264.jpg?ex=6a952301&is=6a93d181&hm=cc66e5ad5e1f2e60fef1d7188ee15abc5166ecb182cdc183a467d693c0ee3e86&",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -18224,7 +23422,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1332964579952693359",
-    "sourceLabel": "関西支部イベント"
+    "sourceLabel": "関西支部イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1332963923292323951",
@@ -18236,7 +23435,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "詳細をご確認ください",
     "image": "https://cdn.discordapp.com/attachments/1332963923292323951/1332963923770740747/DSC08926.jpg?ex=6a952264&is=6a93d0e4&hm=05e63644b58c364700b6de910e53aa2c1a6fdcb28f4375681e511cd96a8482b9&",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -18249,7 +23448,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1332963923292323951",
-    "sourceLabel": "関西支部イベント"
+    "sourceLabel": "関西支部イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1332959045488742460",
@@ -18261,7 +23461,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "詳細をご確認ください",
     "image": "https://cdn.discordapp.com/attachments/1332959045488742460/1332959045732143145/IMG_0255.jpg?ex=6a951dd9&is=6a93cc59&hm=8873b5cfd361b658e5f439b0320a473f8d56ef240e28e167bf856d94c67358a0&",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -18274,7 +23474,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1332959045488742460",
-    "sourceLabel": "関東支部イベント"
+    "sourceLabel": "関東支部イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1332957860828680323",
@@ -18286,7 +23487,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "詳細をご確認ください",
     "image": "https://cdn.discordapp.com/attachments/1332957860828680323/1332957861424402442/IMG_9874.jpg?ex=6a951cbf&is=6a93cb3f&hm=050778599ccdd3b8bc1d6d59fd66d41fc39446a49fbf3f8fafef11ffa4a15c56&",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -18299,7 +23500,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1332957860828680323",
-    "sourceLabel": "関東支部イベント"
+    "sourceLabel": "関東支部イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1332957617378558045",
@@ -18311,7 +23513,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "詳細をご確認ください",
     "image": "https://cdn.discordapp.com/attachments/1332957617378558045/1332957618066558997/Red_Modern_Christmas_Party_Invitation.png?ex=6a951c85&is=6a93cb05&hm=fc5c3c42051569eb0fe959cb9e14cefb90db9715fc0e39897f6e27373c1e3fa9&",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -18324,7 +23526,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1332957617378558045",
-    "sourceLabel": "関東支部イベント"
+    "sourceLabel": "関東支部イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1332957278810411050",
@@ -18336,7 +23539,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "詳細をご確認ください",
     "image": "https://cdn.discordapp.com/attachments/1332957278810411050/1332957279053549568/IMG_0238.png?ex=6a951c34&is=6a93cab4&hm=1247cdcb2def6bacdb8ebb4e1abe207b64cb3a954e5ce795bcf9dcc9c45bd757&",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -18349,7 +23552,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1332957278810411050",
-    "sourceLabel": "関東支部イベント"
+    "sourceLabel": "関東支部イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1332957132236132384",
@@ -18361,7 +23565,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "詳細をご確認ください",
     "image": "https://cdn.discordapp.com/attachments/1332957132236132384/1332957132919672893/IMG_4740.jpg?ex=6a951c11&is=6a93ca91&hm=8ddb5e23880e95145d3c6a7083e3759b69b3ed9e352b0e0a9645567729ac4360&",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -18374,7 +23578,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1332957132236132384",
-    "sourceLabel": "関東支部イベント"
+    "sourceLabel": "関東支部イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1332956839964311553",
@@ -18386,7 +23591,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "詳細をご確認ください",
     "image": "https://cdn.discordapp.com/attachments/1332956839964311553/1332956840216105010/IMG_1433.png?ex=6a951bcb&is=6a93ca4b&hm=aa4a4195db1ebb65f86615a17eb4632ec79daeb47a0280ecb12e17cc92ac135f&",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -18399,7 +23604,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1332956839964311553",
-    "sourceLabel": "関東支部イベント"
+    "sourceLabel": "関東支部イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1332956710662312028",
@@ -18411,7 +23617,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "詳細をご確認ください",
     "image": "https://cdn.discordapp.com/attachments/1332956710662312028/1332956710939131994/IMG_1466.png?ex=6a951bad&is=6a93ca2d&hm=0b597d4d0d23f376174dcd77715e7b9332cbce29190632b8b9275f430eb36b3b&",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -18424,7 +23630,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1332956710662312028",
-    "sourceLabel": "関東支部イベント"
+    "sourceLabel": "関東支部イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1332956509356687391",
@@ -18436,7 +23643,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "詳細をご確認ください",
     "image": "https://cdn.discordapp.com/attachments/1332956509356687391/1332956510027907143/IMG_9162.jpg?ex=6a951b7d&is=6a93c9fd&hm=55d0e00ff29f2b8be7ee974c4002f37066637bf8de7454bb2d5b39bf98bd1f7b&",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -18449,7 +23656,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1332956509356687391",
-    "sourceLabel": "関東支部イベント"
+    "sourceLabel": "関東支部イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1332955842059702305",
@@ -18461,7 +23669,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "詳細をご確認ください",
     "image": "https://cdn.discordapp.com/attachments/1332955842059702305/1332955842395373568/IMG_7446.png?ex=6a951add&is=6a93c95d&hm=e60c7c4cbab194b84409152af4b91903f533c7e200289fc08b01f0a95b105780&",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -18474,7 +23682,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1332955842059702305",
-    "sourceLabel": "関東支部イベント"
+    "sourceLabel": "関東支部イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1332955505970385016",
@@ -18486,7 +23695,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "詳細をご確認ください",
     "image": "https://cdn.discordapp.com/attachments/1332955505970385016/1332955506867830864/IMG_5994.jpg?ex=6a951a8d&is=6a93c90d&hm=5cbe0341d7eb90761f4a7e171e96a8f536fac2619704f7053da3a747a14f757a&",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -18499,7 +23708,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1332955505970385016",
-    "sourceLabel": "関東支部イベント"
+    "sourceLabel": "関東支部イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1332955254131654739",
@@ -18511,7 +23721,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "詳細をご確認ください",
     "image": "https://cdn.discordapp.com/attachments/1332955254131654739/1332955254269939732/IMG_1227.jpg?ex=6a951a51&is=6a93c8d1&hm=a13bf3ed9f6c3690f667a9cfd9ca951a1ecd876f5229880738d1d47167d07113&",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -18524,7 +23734,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1332955254131654739",
-    "sourceLabel": "関東支部イベント"
+    "sourceLabel": "関東支部イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1332955079858454568",
@@ -18536,7 +23747,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "詳細をご確認ください",
     "image": "https://cdn.discordapp.com/attachments/1332955079858454568/1332955080168837230/8EDACD18-F5A8-4B03-B8FA-8D5614F16C0A.jpg?ex=6a951a28&is=6a93c8a8&hm=b352ae2572c13c45c50eeeb948386d519e88695967772fdf9d7d868f2409589e&",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -18549,7 +23760,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1332955079858454568",
-    "sourceLabel": "関東支部イベント"
+    "sourceLabel": "関東支部イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1332954879106351156",
@@ -18561,7 +23773,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "詳細をご確認ください",
     "image": "https://cdn.discordapp.com/attachments/1332954879106351156/1332954879299162122/IMG_0252.png?ex=6a9519f8&is=6a93c878&hm=3322d3237253ade2bb1393272e6954f3798598048084434f41de7805bc6cef31&",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -18574,7 +23786,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1332954879106351156",
-    "sourceLabel": "関東支部イベント"
+    "sourceLabel": "関東支部イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1332954096604545024",
@@ -18586,7 +23799,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "詳細をご確認ください",
     "image": "https://cdn.discordapp.com/attachments/1332954096604545024/1332954096918855720/IMG_0251.jpg?ex=6a95193d&is=6a93c7bd&hm=05f1440324bf4752254b9af1c287377362efe74bf850785a03363025c1d9b397&",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -18599,7 +23812,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1332954096604545024",
-    "sourceLabel": "関東支部イベント"
+    "sourceLabel": "関東支部イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1332953546131247104",
@@ -18611,7 +23825,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "詳細をご確認ください",
     "image": "https://cdn.discordapp.com/attachments/1332953546131247104/1332953546424844359/IMG_6543.png?ex=6a9518ba&is=6a93c73a&hm=191519a925da8817cb061d9520ca58fc6b8824f37a6b13b986300f3b204f6690&",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -18624,7 +23838,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1332953546131247104",
-    "sourceLabel": "関東支部イベント"
+    "sourceLabel": "関東支部イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1332952633765269524",
@@ -18636,7 +23851,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "詳細をご確認ください",
     "image": "https://cdn.discordapp.com/attachments/1332952633765269524/1332952634071580767/IMG_0250.png?ex=6a9517e1&is=6a93c661&hm=5b79e4f54f694af3c5bfedbadd9bb9f9dba95fe14e9f6efe5b6776568dddeeb9&",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -18649,7 +23864,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1332952633765269524",
-    "sourceLabel": "関東支部イベント"
+    "sourceLabel": "関東支部イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1332951557356130345",
@@ -18661,7 +23877,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "詳細をご確認ください",
     "image": "https://cdn.discordapp.com/attachments/1332951557356130345/1332951557582491718/-_2.png?ex=6a9516e0&is=6a93c560&hm=6f53adab8021f4206bdbdad303f4efe03aae4417719bb48a30548a1d0b055f97&",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -18674,7 +23890,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1332951557356130345",
-    "sourceLabel": "関東支部イベント"
+    "sourceLabel": "関東支部イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1332951426107703398",
@@ -18686,7 +23903,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "詳細をご確認ください",
     "image": "https://cdn.discordapp.com/attachments/1332951426107703398/1332951426363818035/82ECCD4C-33BB-48EF-B15C-AD634CF9B572.png?ex=6a9516c1&is=6a93c541&hm=9c680aa30df2d4f2565c9353a02264cfae8e8e967674400e3f34171a5d48410d&",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -18699,7 +23916,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1332951426107703398",
-    "sourceLabel": "関東支部イベント"
+    "sourceLabel": "関東支部イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1332951311167131711",
@@ -18711,7 +23929,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "詳細をご確認ください",
     "image": "https://cdn.discordapp.com/attachments/1332951311167131711/1332951311812919368/20240510_153150_0000.jpg?ex=6a9516a5&is=6a93c525&hm=49acd9a2ac94e951ce3deaf8a2ac5c8ab017472109948124bc506480a3327d1b&",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -18724,7 +23942,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1332951311167131711",
-    "sourceLabel": "関東支部イベント"
+    "sourceLabel": "関東支部イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1332951155998982154",
@@ -18736,7 +23955,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "詳細をご確認ください",
     "image": "https://cdn.discordapp.com/attachments/1332951155998982154/1332951156430733352/DSC08926.jpg?ex=6a951680&is=6a93c500&hm=bd401ea3eef488f49a50a9c5d9d5d394874d7a62e436490586aa8ae9e6b01c81&",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -18749,7 +23968,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1332951155998982154",
-    "sourceLabel": "関東支部イベント"
+    "sourceLabel": "関東支部イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1332950208077893683",
@@ -18761,7 +23981,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "詳細をご確認ください",
     "image": "https://cdn.discordapp.com/attachments/1332950208077893683/1332950538102505573/IMG_4969.jpg?ex=6a9515ed&is=6a93c46d&hm=b69bfa8a1196bd22dabd0e62c7a3111a35529fbefdd3ad6d351b2f8055453862&",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -18774,7 +23994,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1332950208077893683",
-    "sourceLabel": "関東支部イベント"
+    "sourceLabel": "関東支部イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1331603302852333568",
@@ -18799,7 +24020,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "たけまる【運営】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/789786995970015242/122846247a2c819c5dd1c7e60af73810.png?size=512",
     "sourceThreadId": "discord-board-1331603302852333568",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1330899941391859825",
@@ -18827,7 +24049,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "🦊",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1228677045454639119/5e2f2f8fbc7d4f7167220ca2498796b4.png?size=512",
     "sourceThreadId": "discord-board-1330899941391859825",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1329043819534094396",
@@ -18854,7 +24077,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1329043819534094396",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1328620379337527337",
@@ -18880,7 +24104,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "のぶ",
     "organizerAvatar": "",
     "sourceThreadId": "discord-board-1328620379337527337",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1324990129114320978",
@@ -18908,7 +24133,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/804712649598042172/ffa3b5462506477b220530a9f18571bc.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1324990129114320978",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1315686896893952052",
@@ -18934,7 +24160,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1315686896893952052",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1313087281204170766",
@@ -18962,7 +24189,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1313087281204170766",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1313085355896864842",
@@ -18988,7 +24216,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1313085355896864842",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1312538589158047834",
@@ -19014,7 +24243,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "こだま",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1248246861576540302/d2b1d749c7f59abc7841bc7075d77167.png?size=512",
     "sourceThreadId": "discord-board-1312538589158047834",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1308724475847774228",
@@ -19027,7 +24257,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "image": "https://cdn.discordapp.com/attachments/1308724475847774228/1308724476849946704/Red_Modern_Christmas_Party_Invitation.png?ex=6a954826&is=6a93f6a6&hm=acec18c3f9e28ba419f547bef9690f9a70e00498c3e8c516da40b7562f4079d4&",
     "tabelogUrl": "https://tabelog.com/osaka/A2701/A270101/27003676/",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -19042,7 +24272,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1308724475847774228",
-    "sourceLabel": "全体イベント"
+    "sourceLabel": "全体イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1308724263632506973",
@@ -19055,7 +24286,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "image": "https://cdn.discordapp.com/attachments/1308724263632506973/1308724264555384852/Red_Modern_Christmas_Party_Invitation.png?ex=6a9547f3&is=6a93f673&hm=2fe1ed36fe4c4469fb1b5d66a0c56eac2c1eae78ff7c90c9afb921536677c93a&",
     "tabelogUrl": "https://tabelog.com/tokyo/A1301/A130101/13050861/",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -19070,7 +24301,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1308724263632506973",
-    "sourceLabel": "全体イベント"
+    "sourceLabel": "全体イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1302942810722271264",
@@ -19098,7 +24330,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1302942810722271264",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1300395735614881823",
@@ -19125,7 +24358,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/804712649598042172/ffa3b5462506477b220530a9f18571bc.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1300395735614881823",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1299346516023971913",
@@ -19138,7 +24372,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "image": "https://cdn.discordapp.com/attachments/1299346516023971913/1299346516292403311/IMG_2815.png?ex=6a95713e&is=6a941fbe&hm=a299aaa7d234170ac86c534ae3c66593b3c18f294c4780759f6886770fa62aa1&",
     "googleMapsUrl": "https://maps.app.goo.gl/saWQvgVpPxsA1dyr8?g_st=com.google.maps.preview.copy",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -19151,7 +24385,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1299346516023971913",
-    "sourceLabel": "全体イベント"
+    "sourceLabel": "全体イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1298928331085058058",
@@ -19177,7 +24412,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "かずま【運営】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1228677950401151139/8fe93f8b9cd2f84ec1711f01ae0dbdfc.png?size=512",
     "sourceThreadId": "discord-board-1298928331085058058",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1296829234396004422",
@@ -19190,7 +24426,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "image": "",
     "tabelogUrl": "https://tabelog.com/tokyo/A1303/A130301/13096558/",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -19205,7 +24441,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1296829234396004422",
-    "sourceLabel": "全体イベント"
+    "sourceLabel": "全体イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1295326855393443965",
@@ -19218,7 +24455,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "image": "https://cdn.discordapp.com/attachments/1295326855393443965/1295357980665184347/IMG_1433.png?ex=6a956f21&is=6a941da1&hm=67ac3c90e2458015a1c33893bbef595cdc0d428f75d8743ce55617e2dff12a31&",
     "googleMapsUrl": "https://maps.app.goo.gl/5pjjeWD5WGZeaaQK6?g_st=com.google.maps.preview.copy",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -19233,7 +24470,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1295326855393443965",
-    "sourceLabel": "全体イベント"
+    "sourceLabel": "全体イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1295326315788107836",
@@ -19246,7 +24484,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "image": "https://cdn.discordapp.com/attachments/1295326315788107836/1295357895965147136/IMG_1433.png?ex=6a956f0c&is=6a941d8c&hm=df6c36f3dccce4ea7bb22686ad74e742b55427cec1a98ee0e5a1a73cc385df59&",
     "googleMapsUrl": "https://maps.app.goo.gl/Pw8H6Rvbodk1RqNb6?g_st=com.google.maps.preview.copy",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -19261,7 +24499,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1295326315788107836",
-    "sourceLabel": "全体イベント"
+    "sourceLabel": "全体イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1294911069558542346",
@@ -19287,7 +24526,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "こだま",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1248246861576540302/d2b1d749c7f59abc7841bc7075d77167.png?size=512",
     "sourceThreadId": "discord-board-1294911069558542346",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1292799704031301673",
@@ -19315,7 +24555,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1292799704031301673",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1284064727613308969",
@@ -19341,7 +24582,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "yurie",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1228755489446166528/ddf30284f6e3dacf9c3889c752861779.png?size=512",
     "sourceThreadId": "discord-board-1284064727613308969",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1281069072187916328",
@@ -19368,7 +24610,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1228680202952118416/79db0a0052562728670a00bc8807c4d8.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1281069072187916328",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1278299403303780446",
@@ -19395,7 +24638,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/804712649598042172/ffa3b5462506477b220530a9f18571bc.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1278299403303780446",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1276126965232963595",
@@ -19408,7 +24652,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "image": "https://cdn.discordapp.com/attachments/1276126965232963595/1276126965698400347/IMG_5457.png?ex=6a955859&is=6a9406d9&hm=a09fc6507e2ca109450057fba573f09d5295c32fde260be91f056f36a06aa4ff&",
     "googleMapsUrl": "https://maps.app.goo.gl/83r15uTHoNWSNLCG9?g_st=com.google.maps.preview.copy",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -19423,7 +24667,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1276126965232963595",
-    "sourceLabel": "全体イベント"
+    "sourceLabel": "全体イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1260978029388107899",
@@ -19449,7 +24694,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Deleted User",
     "organizerAvatar": "",
     "sourceThreadId": "discord-board-1260978029388107899",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1260614949202432002",
@@ -19477,7 +24723,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Deleted User",
     "organizerAvatar": "",
     "sourceThreadId": "discord-board-1260614949202432002",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1259525982981718026",
@@ -19505,7 +24752,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "のぶ",
     "organizerAvatar": "",
     "sourceThreadId": "discord-board-1259525982981718026",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1257278396694794291",
@@ -19518,7 +24766,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "image": "https://cdn.discordapp.com/attachments/1257278396694794291/1257278396891922432/8EDACD18-F5A8-4B03-B8FA-8D5614F16C0A.jpg?ex=6a955440&is=6a9402c0&hm=a7bf96d0d2531954c73f8298bb20a0e9e4aa97e7b745473f860896459d3917a6&",
     "googleMapsUrl": "https://maps.app.goo.gl/sYGSqvdH4JZA9q8K7?g_st=com.google.maps.preview.copy",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -19533,7 +24781,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1257278396694794291",
-    "sourceLabel": "全体イベント"
+    "sourceLabel": "全体イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1256550592629968977",
@@ -19561,7 +24810,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/804712649598042172/ffa3b5462506477b220530a9f18571bc.png?size=512",
     "organizerRank": "gold",
     "sourceThreadId": "discord-board-1256550592629968977",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1255873670702960650",
@@ -19573,7 +24823,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "大阪",
     "image": "",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -19586,7 +24836,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "kaeko 🌎 京都支部長",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1228676964391587923/70ea667af947f18b467f41988fd876dd.png?size=512",
     "sourceThreadId": "discord-board-1255873670702960650",
-    "sourceLabel": "全体イベント"
+    "sourceLabel": "全体イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1255705222886723676",
@@ -19612,7 +24863,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "かずま【運営】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1228677950401151139/8fe93f8b9cd2f84ec1711f01ae0dbdfc.png?size=512",
     "sourceThreadId": "discord-board-1255705222886723676",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1255443707340132403",
@@ -19638,7 +24890,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "かずま【運営】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1228677950401151139/8fe93f8b9cd2f84ec1711f01ae0dbdfc.png?size=512",
     "sourceThreadId": "discord-board-1255443707340132403",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1253246110009659442",
@@ -19664,7 +24917,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Deleted User",
     "organizerAvatar": "",
     "sourceThreadId": "discord-board-1253246110009659442",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1253211260586033235",
@@ -19691,7 +24945,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Deleted User",
     "organizerAvatar": "",
     "sourceThreadId": "discord-board-1253211260586033235",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1246303880216576050",
@@ -19703,7 +24958,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "大阪",
     "image": "https://cdn.discordapp.com/attachments/1246303880216576050/1246303880762097694/83775734-1CA2-451A-8360-0DE53CADE12F.png?ex=6a94f470&is=6a93a2f0&hm=40d9ec1426f26dd7357af329f99899bce343854e54d52a72cbb96e0fa9eecb51&",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -19718,7 +24973,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "IRO+運営",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119605898743120044/2d550914366cefb1693360eea7d7ebcc.png?size=512",
     "sourceThreadId": "discord-board-1246303880216576050",
-    "sourceLabel": "全体イベント"
+    "sourceLabel": "全体イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1246303435633197128",
@@ -19730,7 +24986,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "東京",
     "image": "https://cdn.discordapp.com/attachments/1246303435633197128/1246303436673122484/FA9170F2-81C0-4DBC-9C1B-249D2E2CF7D8.png?ex=6a94f406&is=6a93a286&hm=733dac1c98444ccdd2ba248f3a9692ca2ef13b72889a5b0a50416c56e60f090c&",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -19745,7 +25001,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "IRO+運営",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119605898743120044/2d550914366cefb1693360eea7d7ebcc.png?size=512",
     "sourceThreadId": "discord-board-1246303435633197128",
-    "sourceLabel": "全体イベント"
+    "sourceLabel": "全体イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1244668461834043413",
@@ -19757,7 +25014,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "詳細をご確認ください",
     "image": "",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -19772,7 +25029,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1244668461834043413",
-    "sourceLabel": "全体イベント"
+    "sourceLabel": "全体イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1242089908324008077",
@@ -19800,7 +25058,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1242089908324008077",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1239951125067595816",
@@ -19812,7 +25071,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "location": "詳細をご確認ください",
     "image": "https://cdn.discordapp.com/attachments/1239951125067595816/1239951125587951676/8D50364E-519E-4CB1-A50C-AE028310070D.png?ex=6a94ea39&is=6a9398b9&hm=e778a968d615770687c5c5f2bb5342602ead432171366d5101a5f6d903145a3d&",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -19827,7 +25086,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1239951125067595816",
-    "sourceLabel": "全体イベント"
+    "sourceLabel": "全体イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1235218256998957066",
@@ -19856,7 +25116,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1228680202952118416/79db0a0052562728670a00bc8807c4d8.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1235218256998957066",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1235216776006992002",
@@ -19885,7 +25146,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1228680202952118416/79db0a0052562728670a00bc8807c4d8.png?size=512",
     "organizerRank": "silver",
     "sourceThreadId": "discord-board-1235216776006992002",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1234480761411731456",
@@ -19910,7 +25172,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1234480761411731456",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1233385703564513373",
@@ -19935,7 +25198,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "Non【IRO+代表】",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119606639763390545/842c9f459df1e1666567f01514bbf99a.png?size=512",
     "sourceThreadId": "discord-board-1233385703564513373",
-    "sourceLabel": "関東グルメ掲示板"
+    "sourceLabel": "関東グルメ掲示板",
+    "importedComments": []
   },
   {
     "id": "discord-event-1229028282436030494",
@@ -19948,7 +25212,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "image": "https://cdn.discordapp.com/attachments/1229028282436030494/1229028282897399879/83775734-1CA2-451A-8360-0DE53CADE12F.png?ex=6a956348&is=6a9411c8&hm=8ca94be71fef7ba6cffbdca9696a1b664f64513e808a8dc11dfda9832e935bbe&",
     "tabelogUrl": "https://tabelog.com/osaka/A2701/A270201/27138105/",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -19963,7 +25227,8 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "IRO+運営",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119605898743120044/2d550914366cefb1693360eea7d7ebcc.png?size=512",
     "sourceThreadId": "discord-board-1229028282436030494",
-    "sourceLabel": "全体イベント"
+    "sourceLabel": "全体イベント",
+    "importedComments": []
   },
   {
     "id": "discord-event-1229027049419571220",
@@ -19976,7 +25241,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "image": "https://cdn.discordapp.com/attachments/1229027049419571220/1229027049771896862/FA9170F2-81C0-4DBC-9C1B-249D2E2CF7D8.png?ex=6a956222&is=6a9410a2&hm=66283d87e7dc0743e3bbef0f1d5c4dbaa2ea5676f260e5316d721c5552f8ab78&",
     "googleMapsUrl": "https://maps.app.goo.gl/kEdZeKxDEj7EBWEA9?g_st=ic",
     "capacity": 1,
-    "reservationCapacity": 1,
+    "reservationCapacity": 2,
     "attendees": 0,
     "participants": [],
     "applicantIds": [],
@@ -19991,6 +25256,7 @@ export const IMPORTED_DISCORD_EVENTS = [
     "organizerName": "IRO+運営",
     "organizerAvatar": "https://cdn.discordapp.com/avatars/1119605898743120044/2d550914366cefb1693360eea7d7ebcc.png?size=512",
     "sourceThreadId": "discord-board-1229027049419571220",
-    "sourceLabel": "全体イベント"
+    "sourceLabel": "全体イベント",
+    "importedComments": []
   }
 ];

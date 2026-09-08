@@ -128,6 +128,8 @@ export interface Event {
   organizerName?: string;
   organizerAvatar?: string;
   organizerRank?: MemberRank;
+  /** 幹事本人の実際の運営権限。表示名から推測しない。 */
+  organizerAccessRole?: "admin" | "operator" | "member";
   chatId?: string; // private chat id
   applicationDeadline?: string; // 募集期日
   cancellationPolicy?: string; // イベント個別のキャンセルポリシー
@@ -160,6 +162,7 @@ export interface Event {
   /** 未入部者向けに詳細を除いた部活動イベントの一覧プレビュー。 */
   lockedClubEvent?: boolean;
   priceMax?: number;
+  importedComments?: { id: string; author: string; authorId?: string; text: string; createdAt: string }[];
 }
 
 export interface Restaurant {

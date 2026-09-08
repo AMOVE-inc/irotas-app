@@ -26,6 +26,7 @@ type EventRow = {
   public_member_id: string | null;
   organizer_display_name?: string | null;
   organizer_member_rank?: string | null;
+  organizer_access_role?: "admin" | "operator" | "member" | null;
   organizer_profile_json?: string | null;
   event_type: "official" | "gourmet" | "club";
   club_id: string | null;
@@ -264,6 +265,7 @@ function publicEvent(
     organizerName: row.organizer_display_name?.trim() || "メンバー",
     organizerAvatar: organizerProfile(row),
     organizerRank: row.organizer_member_rank ?? undefined,
+    organizerAccessRole: row.organizer_access_role ?? undefined,
     applicantIds: active.map(publicId),
     participants: participantIds,
     attendees: Math.max(active.length, participantIds.length),
@@ -320,6 +322,7 @@ export function lockedClubEventPreview(row: EventRow) {
 const selectEvents = `SELECT e.*, m.public_member_id,
   m.display_name AS organizer_display_name,
   m.member_rank AS organizer_member_rank,
+  m.access_role AS organizer_access_role,
   m.profile_json AS organizer_profile_json
   FROM events e JOIN members m ON m.id = e.organizer_member_id`;
 
