@@ -16,7 +16,7 @@ import {
 } from "@/constants/mock-data";
 import { useAuthContext } from "@/lib/auth-context";
 import { isAdminRole, canPostToChat } from "@/lib/access-control";
-import { getAllRooms, getRoomById, saveMessagesToStorage, deleteMessageFromStorage, loadMessagesFromStorage, loadDynamicRooms, renameRoom, addMemberToRoom, removeMemberFromRoom, toggleMessageReaction } from "@/lib/chat-store";
+import { getAllRooms, getRoomById, getMessages, saveMessagesToStorage, deleteMessageFromStorage, loadMessagesFromStorage, loadDynamicRooms, renameRoom, addMemberToRoom, removeMemberFromRoom, toggleMessageReaction } from "@/lib/chat-store";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useColors } from "@/hooks/use-colors";
 import { Image } from "expo-image";
@@ -270,12 +270,14 @@ export default function ChatScreen() {
 
   const applySharedMessages = useCallback((shared: ChatMessage[]) => {
     setMessages((previous) => {
-      const localMessages = previous.filter((message) => !message.shared);
+      // 自己紹介など移行済みのローカル履歴は、共有ストアがまだ空でも消さない。
+      const localMessages = [...getMessages(id ?? ""), ...previous.filter((message) => !message.shared)];
       return [...localMessages, ...shared]
+        .filter((message, index, all) => all.findIndex((candidate) => candidate.id === message.id) === index)
         .filter((message) => !isRetiredAnnouncement(message))
         .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
     });
-  }, []);
+  }, [id]);
 
   // 初回起動時: プロフィール画像と永続化メッセージを読み込む
   useEffect(() => {
@@ -296,7 +298,9 @@ export default function ChatScreen() {
       Api.getSharedChatMessages(id).then(applySharedMessages).catch(async () => {
         // 旧移行チャットは共有DBへの切替対象外でも、既存履歴を引き続き表示する。
         const stored = await loadMessagesFromStorage(id);
-        setMessages(stored.filter((message) => !isRetiredAnnouncement(message)));
+        setMessages([...getMessages(id), ...stored]
+          .filter((message, index, all) => all.findIndex((candidate) => candidate.id === message.id) === index)
+          .filter((message) => !isRetiredAnnouncement(message)));
       });
       Api.getSharedChatRooms().then((sharedRooms) => {
         const sharedRoom = sharedRooms.find((item) => item.id === id);

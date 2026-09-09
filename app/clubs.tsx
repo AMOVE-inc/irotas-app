@@ -1755,8 +1755,9 @@ export default function ClubsScreen() {
   const clubs = useClubs();
   const [selectedClub, setSelectedClub] = useState<Club | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showClubFinder, setShowClubFinder] = useState(false);
   const [archiveThreads, setArchiveThreads] = useState<BoardThread[]>([]);
-  const activityReports = getLatestClubActivityReports(archiveThreads, 3);
+  const activityReports = getLatestClubActivityReports(archiveThreads, 100);
 
   useEffect(() => {
     let active = true;
@@ -1859,20 +1860,24 @@ export default function ClubsScreen() {
       </View>
 
       <ScrollView contentContainerStyle={{ paddingTop: 16, paddingBottom: 32 }}>
+        <View style={{ paddingHorizontal: 16, marginBottom: 18 }}>
+          <Pressable onPress={() => setShowClubFinder((visible) => !visible)} style={{ minHeight: 50, borderRadius: 14, backgroundColor: "#EAF3FA", borderWidth: 1, borderColor: "#A7C7E7", flexDirection: "row", alignItems: "center", justifyContent: "center" }}>
+            <IconSymbol name="magnifyingglass" size={18} color="#39749D" />
+            <Text style={{ fontSize: 15, fontWeight: "900", color: "#39749D", marginLeft: 8 }}>部活動を探す</Text>
+          </Pressable>
+        </View>
+
+        {showClubFinder ? <View style={{ marginBottom: 18 }}>
+          <View style={{ paddingHorizontal: 16, marginBottom: 10 }}><Text style={{ fontSize: 18, fontWeight: "900", color: colors.foreground }}>部活動一覧</Text></View>
+          {clubsWithAccess.map(({ club }) => <ClubCard key={club.id} club={club} onPress={() => setSelectedClub(club)} />)}
+        </View> : null}
+
         <View style={{ paddingHorizontal: 16, marginBottom: 22 }}>
           <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 11 }}>
             <View style={{ flex: 1 }}>
               <Text style={{ fontSize: 19, fontWeight: "900", color: colors.foreground }}>活動報告</Text>
               <Text style={{ fontSize: 12, color: colors.muted, marginTop: 3 }}>各部活動の最新レポート</Text>
             </View>
-            <Pressable
-              onPress={() => router.push({ pathname: "/board", params: { category: "club-all", view: "threads" } })}
-              accessibilityRole="button"
-              accessibilityLabel="活動報告をすべて見る"
-              hitSlop={8}
-            >
-              <Text style={{ fontSize: 13, fontWeight: "800", color: "#5579A6" }}>すべて見る ›</Text>
-            </Pressable>
           </View>
           <View style={{ gap: 9 }}>
             {activityReports.map((report) => (
@@ -1900,6 +1905,9 @@ export default function ClubsScreen() {
                   </View>
                 )}
                 <View style={{ flex: 1 }}>
+                  <View style={{ alignSelf: "flex-start", backgroundColor: "#3478C7", borderRadius: 7, paddingHorizontal: 6, paddingVertical: 2, marginBottom: 4 }}>
+                    <Text style={{ fontSize: 9, fontWeight: "900", color: "#FFFFFF" }}>NEW</Text>
+                  </View>
                   <Text style={{ fontSize: 14, fontWeight: "800", color: colors.foreground, lineHeight: 20 }} numberOfLines={2}>{report.title}</Text>
                   <Text style={{ fontSize: 11, color: colors.muted, marginTop: 4 }} numberOfLines={1}>
                     {report.author.name} · {new Intl.DateTimeFormat("ja-JP", { timeZone: "Asia/Tokyo", month: "numeric", day: "numeric" }).format(new Date(report.lastUpdated))}

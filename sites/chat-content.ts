@@ -138,6 +138,14 @@ async function ensureEventRoom(db: D1Database, roomId: string) {
 async function ensureKnownRoom(db: D1Database, roomId: string) {
   const existing = await roomById(db, roomId);
   if (existing) return existing;
+  if (roomId === "board-introduction") {
+    const now = new Date().toISOString();
+    await db.prepare(`INSERT OR IGNORE INTO chat_rooms
+      (id, name, room_type, source_id, created_at, updated_at)
+      VALUES (?, '自己紹介', 'board', 'introduction', ?, ?)`)
+      .bind(roomId, now, now).run();
+    return roomById(db, roomId);
+  }
   if (roomId.startsWith("event_chat_")) return ensureEventRoom(db, roomId);
   return null;
 }

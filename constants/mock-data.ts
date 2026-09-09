@@ -733,6 +733,11 @@ export const BOARD_COMMENTS: BoardComment[] = [
 
 export const CHAT_ROOMS: ChatRoom[] = [
   {
+    id: "board-introduction", name: "自己紹介", type: "board", sourceId: "introduction",
+    participants: MEMBERS.map((member) => member.id), createdBy: "system",
+    lastMessage: "メンバー同士で自己紹介しましょう", lastMessageAt: undefined, unreadCount: 0,
+  },
+  {
     id: "board-announcement", name: "運営アナウンス", type: "board", sourceId: "announcement",
     participants: MEMBERS.map((member) => member.id), createdBy: "system",
     lastMessage: "", lastMessageAt: undefined, unreadCount: 1,
@@ -785,6 +790,8 @@ export const CHAT_ROOMS: ChatRoom[] = [
 ];
 
 export const CHAT_MESSAGES: ChatMessage[] = [
+  { id: "intro-u1", chatId: "board-introduction", senderId: "u1", content: "東京を中心に食べ歩きを始めたばかりです。皆さんよろしくお願いします。\n\nIRO+でやってみたいこと\n気になるお店を一緒に開拓するグルメ会を企画してみたいです。", createdAt: "2026-08-30T10:00:00+09:00" },
+  { id: "intro-u2", chatId: "board-introduction", senderId: "u2", content: "美味しいお店と楽しい時間が大好きです。よろしくお願いします！\n\nIRO+でやってみたいこと\n週末のランチ会に参加してみたいです。", createdAt: "2026-08-31T12:00:00+09:00" },
   {
     id: "discord-announcement-1536285603661086823",
     chatId: "board-announcement",

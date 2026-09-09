@@ -2397,6 +2397,13 @@ export default function BoardScreen() {
     if (isClubIndexView) router.replace("/clubs");
   }, [isClubIndexView, router]);
 
+  // 自己紹介は通常チャットと同じ操作・未読・リアクション UI に統一する。
+  useEffect(() => {
+    if (isThreadView && categoryParam === "introduction") {
+      router.replace({ pathname: "/chat", params: { id: "board-introduction", unreadCount: "0" } });
+    }
+  }, [categoryParam, isThreadView, router]);
+
   useEffect(() => {
     void loadImportedGourmetContests().then((items) => {
       setDynamicThreads((current) => {
@@ -2609,6 +2616,10 @@ export default function BoardScreen() {
   };
 
   const handleOpenCategory = (category: BoardCategory) => {
+    if (category.key === "introduction") {
+      router.push({ pathname: "/chat", params: { id: "board-introduction", unreadCount: "0" } });
+      return;
+    }
     if (category.key === "gourmet-map") {
       router.push("/gourmet-map" as any);
       return;
