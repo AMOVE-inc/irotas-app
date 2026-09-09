@@ -270,12 +270,10 @@ function MealReportTimelineCard({ thread }: { thread: BoardThread }) {
   const area = (report.areaDisplay ?? formatMealReportArea(report.prefecture)).replace(/^📍\s*/, "").trim();
   const rating = Math.max(0, Math.min(5, Math.round(report.rating)));
   const impression = mealReportImpression(thread);
-  const hasLongImpression = Boolean(impression && impression.length > 64);
   return (
     <View>
-      <View style={{ flexDirection: "row", alignItems: "stretch", height: 128 }}>
-        {image ? <Image source={boardImageSource(image)} style={{ width: 128, height: 128, borderRadius: 12, backgroundColor: "#F1EEF0" }} contentFit="cover" /> : <View style={{ width: 128, height: 128, borderRadius: 12, backgroundColor: "#F4F1F3", alignItems: "center", justifyContent: "center" }}><IconSymbol name="fork.knife" size={30} color="#B8AEB4" /><Text style={{ fontSize: 10, color: colors.muted, marginTop: 5 }}>写真なし</Text></View>}
-        <View style={{ flex: 1, minWidth: 0, marginLeft: 12 }}>
+      <View>
+        <View style={{ minWidth: 0 }}>
           {report.postTitle ? <Text numberOfLines={2} style={{ fontSize: 15, lineHeight: 20, fontWeight: "900", color: colors.foreground }}>{report.postTitle}</Text> : null}
           <Text numberOfLines={2} style={{ fontSize: report.postTitle ? 13 : 16, lineHeight: report.postTitle ? 18 : 21, fontWeight: "900", color: colors.foreground, marginTop: report.postTitle ? 3 : 0 }}>{report.restaurantName}</Text>
           {rating ? <View style={{ flexDirection: "row", alignItems: "center", marginTop: 6 }}><Text style={{ fontSize: 17, fontWeight: "900", color: "#E29A17" }}>★ {rating}.0</Text><Text style={{ fontSize: 11, color: colors.muted, marginLeft: 5 }}>/ 5</Text></View> : null}
@@ -283,10 +281,10 @@ function MealReportTimelineCard({ thread }: { thread: BoardThread }) {
             {area ? <Text numberOfLines={1} style={{ maxWidth: "100%", fontSize: 11, fontWeight: "700", color: "#5F5960", backgroundColor: "#F4F1F3", borderRadius: 8, paddingHorizontal: 7, paddingVertical: 3 }}>📍 {area}</Text> : null}
             {report.budget ? <Text style={{ fontSize: 11, fontWeight: "700", color: "#5F5960", backgroundColor: "#F4F1F3", borderRadius: 8, paddingHorizontal: 7, paddingVertical: 3 }}>{report.budget}</Text> : null}
           </View>
-          {impression ? <View style={{ marginTop: 7, flex: 1 }}><Text numberOfLines={2} style={{ fontSize: 12, lineHeight: 17, color: colors.foreground }}>{impression}</Text>{hasLongImpression ? <Text style={{ fontSize: 10, fontWeight: "800", color: "#8C6276", marginTop: 2 }}>詳細で続きを読む</Text> : null}</View> : null}
+          {impression ? <View style={{ marginTop: 7 }}><Text style={{ fontSize: 13, lineHeight: 19, color: colors.foreground }}>{impression}</Text></View> : null}
         </View>
       </View>
-      {thread.images && thread.images.length > 1 ? <Text style={{ fontSize: 11, fontWeight: "800", color: "#8C6276", marginTop: 7 }}>写真 {thread.images.length}枚</Text> : null}
+      {thread.images?.length ? <View style={{ gap: 8, marginTop: 10 }}>{thread.images.map((item, index) => <Image key={`${thread.id}-image-${index}`} source={boardImageSource(item)} style={{ width: "100%", height: 210, borderRadius: 12, backgroundColor: "#F1EEF0" }} contentFit="cover" />)}</View> : null}
     </View>
   );
 }
@@ -2342,7 +2340,7 @@ function CreateThreadModal({
 export default function BoardScreen() {
   const colors = useColors();
   const router = useRouter();
-  const { compose, category: categoryParam, view, thread: threadParam, fromHome } = useLocalSearchParams<{ compose?: string; category?: string; view?: string; thread?: string; fromHome?: string }>();
+  const { compose, category: categoryParam, view, thread: threadParam, fromHome, fromProfile } = useLocalSearchParams<{ compose?: string; category?: string; view?: string; thread?: string; fromHome?: string; fromProfile?: string }>();
   const { user: authUser } = useAuthContext();
   const userIsAdmin = canManageBoardCategories(authUser?.role, authUser?.accessRole);
   const userCanModerateAll = isOperatorRole(authUser?.role, authUser?.accessRole);
@@ -2642,6 +2640,7 @@ export default function BoardScreen() {
       >
         <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: `${presentation.accent}20`, alignItems: "center", justifyContent: "center" }}><IconSymbol name={presentation.icon as any} size={21} color={presentation.accent} /></View>
         <View style={{ flex: 1, marginLeft: 11 }}><Text style={{ fontSize: 15, fontWeight: "900", color: colors.foreground }}>{cat.label}</Text><Text style={{ fontSize: 11, color: colors.muted, marginTop: 3 }}>{presentation.description}</Text></View>
+        <View style={{ backgroundColor: "#3478C7", borderRadius: 9, paddingHorizontal: 7, paddingVertical: 3, marginRight: 8 }}><Text style={{ fontSize: 10, fontWeight: "900", color: "#FFFFFF" }}>新着</Text></View>
         <IconSymbol name="chevron.right" size={17} color={colors.muted} />
       </Pressable>
     );
@@ -2662,7 +2661,7 @@ export default function BoardScreen() {
         }}
       >
         {isThreadView || isClubIndexView ? (
-          <Pressable accessibilityLabel={fromHome === "1" ? "ホームへ戻る" : "掲示板トップへ戻る"} onPress={() => fromHome === "1" ? router.replace("/(tabs)" as any) : router.replace("/board")} style={{ flexDirection: "row", alignItems: "center", flex: 1, paddingVertical: 4 }}>
+          <Pressable accessibilityLabel={fromProfile === "1" ? "マイページへ戻る" : fromHome === "1" ? "ホームへ戻る" : "掲示板トップへ戻る"} onPress={() => fromProfile === "1" ? router.replace("/profile" as any) : fromHome === "1" ? router.replace("/(tabs)" as any) : router.replace("/board")} style={{ flexDirection: "row", alignItems: "center", flex: 1, paddingVertical: 4 }}>
             <IconSymbol name="chevron.left" size={20} color={colors.foreground} />
             <Text numberOfLines={1} style={{ flex: 1, marginLeft: 8, fontSize: 20, fontWeight: "800", color: colors.foreground }}>
               {isClubIndexView ? "部活動" : activeCategoryLabel}

@@ -513,7 +513,8 @@ export default function ChatScreen() {
     );
   }
 
-  if (!canAccessChatRoom(room, viewerMemberId, (authUser?.memberRank ?? CURRENT_USER.rank) as typeof CURRENT_USER.rank, userIsAdmin) && room.id !== "board-announcement") {
+  const isBranchRoom = room.id === "branch-kanto-free" ? authUser?.branches?.includes("kanto") : room.id === "branch-kansai-free" ? authUser?.branches?.includes("kansai") : false;
+  if (!canAccessChatRoom(room, viewerMemberId, (authUser?.memberRank ?? CURRENT_USER.rank) as typeof CURRENT_USER.rank, userIsAdmin) && room.id !== "board-announcement" && room.id !== "board-introduction" && !isBranchRoom) {
     return (
       <ScreenContainer edges={["top", "left", "right"]}>
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: 24 }}>

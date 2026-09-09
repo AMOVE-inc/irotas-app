@@ -146,6 +146,16 @@ async function ensureKnownRoom(db: D1Database, roomId: string) {
       .bind(roomId, now, now).run();
     return roomById(db, roomId);
   }
+  if (roomId === "branch-kanto-free" || roomId === "branch-kansai-free") {
+    const branch = roomId === "branch-kanto-free" ? "kanto" : "kansai";
+    const name = branch === "kanto" ? "関東支部フリーチャット" : "関西支部フリーチャット";
+    const now = new Date().toISOString();
+    await db.prepare(`INSERT OR IGNORE INTO chat_rooms
+      (id, name, room_type, source_id, created_at, updated_at)
+      VALUES (?, ?, 'board', ?, ?, ?)`)
+      .bind(roomId, name, `branch-${branch}`, now, now).run();
+    return roomById(db, roomId);
+  }
   if (roomId.startsWith("event_chat_")) return ensureEventRoom(db, roomId);
   return null;
 }
@@ -165,6 +175,14 @@ async function canAccessRoom(db: D1Database, room: RoomRow, member: Viewer) {
     return Boolean(membership);
   }
   if (elevated(member)) return true;
+  if (room.room_type === "board" && room.source_id === "introduction") return true;
+  if (room.room_type === "board" && (room.source_id === "branch-kanto" || room.source_id === "branch-kansai")) {
+    const expected = room.source_id.slice("branch-".length);
+    const row = await db.prepare("SELECT branches_json FROM members WHERE id = ? LIMIT 1").bind(member.id).first<{ branches_json: string | null }>();
+    let branches: string[] = [];
+    try { branches = JSON.parse(row?.branches_json ?? "[]") as string[]; } catch {}
+    return branches.includes(expected);
+  }
   if (room.room_type === "announcement") return true;
   if (room.room_type === "rank")
     return !elevated(member) && (await viewerRank(db, member.id)) === room.required_rank;

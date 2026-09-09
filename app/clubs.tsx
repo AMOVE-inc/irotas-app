@@ -1860,6 +1860,16 @@ export default function ClubsScreen() {
       </View>
 
       <ScrollView contentContainerStyle={{ paddingTop: 16, paddingBottom: 32 }}>
+        {joinedClubs.length > 0 ? (
+          <View style={{ marginBottom: 18 }}>
+            <View style={{ paddingHorizontal: 16, marginBottom: 10 }}><Text style={{ fontSize: 19, fontWeight: "900", color: colors.foreground }}>入部中の部活動</Text><Text style={{ fontSize: 12, color: colors.muted, marginTop: 3 }}>部活をタップすると部員専用スレッドを開きます</Text></View>
+            {joinedClubs.map((club) => <ClubCard key={club.id} club={club} onPress={() => {
+              const category = `club-${club.id}`;
+              const latestThread = archiveThreads.filter((thread) => thread.category === category).sort((a, b) => Date.parse(b.lastUpdated) - Date.parse(a.lastUpdated))[0];
+              router.push({ pathname: "/board", params: { category, view: "threads", ...(latestThread ? { thread: latestThread.id } : {}) } });
+            }} />)}
+          </View>
+        ) : null}
         <View style={{ paddingHorizontal: 16, marginBottom: 18 }}>
           <Pressable onPress={() => setShowClubFinder((visible) => !visible)} style={{ minHeight: 50, borderRadius: 14, backgroundColor: "#EAF3FA", borderWidth: 1, borderColor: "#A7C7E7", flexDirection: "row", alignItems: "center", justifyContent: "center" }}>
             <IconSymbol name="magnifyingglass" size={18} color="#39749D" />
@@ -1919,7 +1929,7 @@ export default function ClubsScreen() {
           </View>
         </View>
 
-        {joinedClubs.length > 0 ? (
+        {false && joinedClubs.length > 0 ? (
           <View style={{ marginBottom: 18 }}>
             <View style={{ paddingHorizontal: 16, marginBottom: 10 }}>
               <Text style={{ fontSize: 19, fontWeight: "900", color: colors.foreground }}>入部中の部活動</Text>

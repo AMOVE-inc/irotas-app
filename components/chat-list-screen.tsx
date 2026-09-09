@@ -1,6 +1,6 @@
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
-import { CURRENT_USER, DEFAULT_AVATAR, type ChatRoom } from "@/constants/mock-data";
+import { CHAT_ROOMS, CURRENT_USER, DEFAULT_AVATAR, type ChatRoom } from "@/constants/mock-data";
 import { useAuthContext } from "@/lib/auth-context";
 import { applyReadRoomState, getAllMessages, getMyRooms, getRankRoomsForUser, loadDynamicRooms, markRoomRead } from "@/lib/chat-store";
 import { useColors } from "@/hooks/use-colors";
@@ -185,6 +185,7 @@ export default function ChatListScreen() {
   const { user: authUser } = useAuthContext();
   const viewerMemberId = authUser?.memberId ?? (authUser?.id ? `member-${authUser.id}` : CURRENT_USER.id);
   const viewerRank = authUser?.memberRank ?? CURRENT_USER.rank;
+  const viewerBranches = authUser?.branches ?? [authUser?.branch ?? CURRENT_USER.branch];
   const [showCreateGroup, setShowCreateGroup] = useState(false);
   const [myRooms, setMyRooms] = useState<ChatRoom[]>([]);
   const [rankRooms, setRankRooms] = useState<ChatRoom[]>([]);
@@ -197,7 +198,8 @@ export default function ChatListScreen() {
     setRoomsLoading(true);
     // 旧プロトタイプ用の chat1〜chat4 は、保存済みの実際の会話ではないため一覧に出さない。
     const isFixtureRoom = (room: ChatRoom) => /^chat\d+$/.test(room.id);
-    const localJoinedRooms = getMyRooms(viewerMemberId)
+    const branchRooms = CHAT_ROOMS.filter((room) => room.sourceId === "branch-kanto" ? viewerBranches.includes("kanto") : room.sourceId === "branch-kansai" ? viewerBranches.includes("kansai") : false);
+    const localJoinedRooms = [...getMyRooms(viewerMemberId), ...branchRooms]
       .filter((room) => room.type !== "rank" && !isFixtureRoom(room));
     const localRankRooms = getRankRoomsForUser(viewerRank);
     let sharedRooms: ChatRoom[] = [];
@@ -224,6 +226,7 @@ export default function ChatListScreen() {
     const localAnnouncement = getAllMessages().filter((message) => message.chatId === "board-announcement").at(-1);
     const announcementPreview = latestAnnouncement ?? localAnnouncement;
     const mergedJoined = [...localJoinedRooms.filter((room) => !sharedById.has(room.id)), ...sharedRooms.filter((room) => room.type !== "rank" && !isFixtureRoom(room))]
+      .filter((room, index, all) => all.findIndex((candidate) => candidate.id === room.id) === index)
       .map((room) => room.id === "board-announcement" && announcementPreview
         ? { ...room, lastMessage: announcementPreview.content.replace(/^【IRO\+\s*システム】\s*/, "").replace(/\s+/g, " ").trim(), lastMessageAt: announcementPreview.createdAt }
         : room);
@@ -235,7 +238,7 @@ export default function ChatListScreen() {
     setMyRooms(sortedJoined);
     setRankRooms(sortedRank);
     setRoomsLoading(false);
-  }, [viewerMemberId, viewerRank]);
+  }, [viewerBranches, viewerMemberId, viewerRank]);
 
   useFocusEffect(useCallback(() => {
     let active = true;

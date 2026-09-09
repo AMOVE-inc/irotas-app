@@ -37,6 +37,7 @@ export default function MembersScreen() {
     return () => { active = false; };
   }, [authUser]);
 
+  // サーバーの会員一覧が届くまでモック会員を描画しない。
   const searchableMembers = useMemo(() => directory !== null ? directory.map((member) => ({
     id: member.id,
     name: stripRankFromName(member.displayName),
@@ -50,7 +51,7 @@ export default function MembersScreen() {
     joinedAt: member.joinedAt,
     isCurrentUser: member.userId === authUser?.id,
     isDatabaseMember: true,
-  })) : MEMBERS.map((member) => ({ ...member, name: stripRankFromName(member.name), rawName: member.name, accessRole: member.role, discordRoles: [], isCurrentUser: member.id === CURRENT_USER.id, isDatabaseMember: false })), [authUser?.id, directory]);
+  })) : [], [authUser?.id, directory]);
 
   const filteredMembers = useMemo(() => {
     return searchableMembers.filter((member) => matchesAllSearchWords(searchText, [member.name, member.id]));

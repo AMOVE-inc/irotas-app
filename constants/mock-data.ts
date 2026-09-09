@@ -732,6 +732,8 @@ export const BOARD_COMMENTS: BoardComment[] = [
 ];
 
 export const CHAT_ROOMS: ChatRoom[] = [
+  { id: "branch-kanto-free", name: "関東支部フリーチャット", type: "board", sourceId: "branch-kanto", participants: MEMBERS.filter((member) => member.branch === "kanto").map((member) => member.id), createdBy: "system", lastMessage: "関東支部メンバー専用のフリーチャットです。", unreadCount: 0 },
+  { id: "branch-kansai-free", name: "関西支部フリーチャット", type: "board", sourceId: "branch-kansai", participants: MEMBERS.filter((member) => member.branch === "kansai").map((member) => member.id), createdBy: "system", lastMessage: "関西支部メンバー専用のフリーチャットです。", unreadCount: 0 },
   {
     id: "board-introduction", name: "自己紹介", type: "board", sourceId: "introduction",
     participants: MEMBERS.map((member) => member.id), createdBy: "system",
