@@ -325,7 +325,7 @@ export default function EventDetailScreen() {
   const organizerDirectoryMember = memberDirectory.find((member) => member.id === organizerId);
   const viewerMemberId = event.viewerMemberId ?? authenticatedViewerMemberId;
   const isOrganizer = isEventOrganizer(event, viewerMemberId);
-  const pendingApplicantIds = getPendingGourmetApplicants(event);
+  const pendingApplicantIds = event.isCancelled ? [] : getPendingGourmetApplicants(event);
   const confirmedParticipantCount = (event.participants ?? []).length;
   const canFinalizeParticipants = !event.participantsFinalizedAt && pendingApplicantIds.length === 0 && confirmedParticipantCount > 0;
   const displayMember = (memberId: string) => {

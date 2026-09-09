@@ -274,7 +274,7 @@ function publicEvent(
     organizerAvatar: organizerProfile(row),
     organizerRank: row.organizer_member_rank ?? undefined,
     organizerAccessRole: row.organizer_access_role ?? undefined,
-    applicantIds: active.map(publicId),
+    applicantIds: row.status === "cancelled" ? [] : active.map(publicId),
     participants: row.status === "cancelled" ? [] : participantIds,
     cancelledParticipantIds,
     attendees: row.status === "cancelled" ? 0 : Math.max(active.length, participantIds.length),
