@@ -26,6 +26,7 @@ import {
   FlatList,
   KeyboardAvoidingView,
   Platform,
+  Modal,
   Pressable,
   ScrollView,
   Share,
@@ -63,6 +64,7 @@ function AnnouncementBanner({ announcements }: { announcements: Announcement[] }
   const slideWidth = screenWidth - 32;
   const [activeIndex, setActiveIndex] = useState(0);
   const [isInteracting, setIsInteracting] = useState(false);
+  const [selectedAnnouncement, setSelectedAnnouncement] = useState<Announcement | null>(null);
   const scrollRef = useRef<ScrollView>(null);
 
   useEffect(() => {
@@ -98,6 +100,8 @@ function AnnouncementBanner({ announcements }: { announcements: Announcement[] }
         {announcements.map((item) => (
           <Pressable
             key={item.id}
+            onPress={() => setSelectedAnnouncement(item)}
+            accessibilityLabel={`${item.title}の全文を表示`}
             style={{ width: slideWidth, borderRadius: 18, overflow: "hidden" }}
           >
             <View style={{ backgroundColor: colors.surface, borderRadius: 18, padding: 16, borderWidth: 1, borderColor: "#F3DCE7" }}>
@@ -134,6 +138,19 @@ function AnnouncementBanner({ announcements }: { announcements: Announcement[] }
           />
         ))}
       </View>
+      <Modal visible={selectedAnnouncement !== null} transparent animationType="fade" onRequestClose={() => setSelectedAnnouncement(null)}>
+        <Pressable onPress={() => setSelectedAnnouncement(null)} style={{ flex: 1, backgroundColor: "rgba(20,18,24,0.48)", justifyContent: "center", padding: 24 }}>
+          <Pressable onPress={() => {}} style={{ maxHeight: "78%", backgroundColor: colors.background, borderRadius: 20, padding: 20 }}>
+            <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 12 }}>
+              <IconSymbol name="megaphone.fill" size={17} color="#E8A0BF" />
+              <Text style={{ marginLeft: 7, fontSize: 13, fontWeight: "800", color: "#E8A0BF" }}>お知らせ</Text>
+              <Pressable onPress={() => setSelectedAnnouncement(null)} accessibilityLabel="閉じる" style={{ marginLeft: "auto", padding: 4 }}><IconSymbol name="xmark" size={20} color={colors.muted} /></Pressable>
+            </View>
+            <Text style={{ fontSize: 19, lineHeight: 27, fontWeight: "900", color: colors.foreground }}>{selectedAnnouncement?.title}</Text>
+            <ScrollView style={{ marginTop: 14 }} showsVerticalScrollIndicator={false}><Text style={{ fontSize: 15, lineHeight: 24, color: colors.foreground }}>{selectedAnnouncement?.content}</Text></ScrollView>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </View>
   );
 }
@@ -162,15 +179,15 @@ function CampaignSection({ gifts, campaigns }: { gifts: GiftCampaign[]; campaign
       </View>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, gap: 10 }}>
         {campaignItems.map((campaign) => (
-          <Pressable key={campaign.id} onPress={() => router.push(campaign.route)} style={{ width: 270, borderRadius: 16, padding: 16, backgroundColor: `${campaign.color}16`, borderWidth: 1, borderColor: `${campaign.color}45` }}>
+          <View key={campaign.id} style={{ width: 270, height: 236, borderRadius: 16, padding: 16, backgroundColor: "#EDF8FE", borderWidth: 1, borderColor: "#B9DDF3" }}>
             <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 8 }}>
-              <Text style={{ fontSize: 10, fontWeight: "800", color: campaign.color, backgroundColor: colors.background, borderRadius: 8, paddingHorizontal: 8, paddingVertical: 3 }}>{campaign.label}</Text>
+              <Text style={{ fontSize: 10, fontWeight: "800", color: "#4A91BD", backgroundColor: colors.background, borderRadius: 8, paddingHorizontal: 8, paddingVertical: 3 }}>{campaign.label}</Text>
               <Text style={{ marginLeft: "auto", fontSize: 11, fontWeight: "700", color: colors.muted }}>{campaign.period}</Text>
             </View>
             <Text style={{ fontSize: 15, fontWeight: "900", color: colors.foreground }}>{campaign.title}</Text>
-            <Text style={{ fontSize: 12, lineHeight: 18, color: colors.muted, marginTop: 5 }}>{campaign.description}</Text>
-            <Text style={{ fontSize: 12, fontWeight: "800", color: campaign.color, marginTop: 10 }}>詳しく見る →</Text>
-          </Pressable>
+            <Text numberOfLines={4} style={{ fontSize: 12, lineHeight: 18, color: colors.muted, marginTop: 5 }}>{campaign.description}</Text>
+            <Pressable onPress={() => router.push(campaign.route)} accessibilityLabel={`${campaign.title}の詳細を見る`} style={{ position: "absolute", left: 16, bottom: 16, paddingVertical: 4 }}><Text style={{ fontSize: 12, fontWeight: "800", color: "#4A91BD" }}>詳しく見る →</Text></Pressable>
+          </View>
         ))}
       </ScrollView>
     </View>
