@@ -655,6 +655,7 @@ export async function setSharedChatReaction(
     {
       method: active ? "PUT" : "DELETE",
       body: JSON.stringify({ messageId, emoji }),
+      suppressGlobalLoading: true,
     },
   );
 }

@@ -15,7 +15,7 @@ import {
   type ChatRoom,
 } from "@/constants/mock-data";
 import { useAuthContext } from "@/lib/auth-context";
-import { isAdminRole, isOperatorRole, canPostToChat } from "@/lib/access-control";
+import { isAdminRole, canPostToChat } from "@/lib/access-control";
 import { getAllRooms, getRoomById, getMessages, saveMessagesToStorage, loadMessagesFromStorage, loadDynamicRooms, renameRoom, addMemberToRoom, removeMemberFromRoom, toggleMessageReaction } from "@/lib/chat-store";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useColors } from "@/hooks/use-colors";
@@ -64,7 +64,7 @@ function systemMessageText(content: string): string {
   return joined ? `${stripRankFromName(joined[1])}がチャットに参加しました` : text;
 }
 
-function MessageBubble({ message, isMe, viewerId, myAvatarUri, senderMember, onReact, mentionGroups, onOpenInternalLink, onOpenProfile, canManage, onReply, onEdit, onDelete }: { message: ChatMessage; isMe: boolean; viewerId: string; myAvatarUri?: string | null; senderMember?: Api.PublicMember; onReact: (emoji: string, pollChoices?: string[], allowMultiple?: boolean) => void; mentionGroups: ReturnType<typeof getMentionGroups>; onOpenInternalLink: (pathname: "/chat" | "/board", params: Record<string, string>) => void; onOpenProfile: () => void; canManage: boolean; onReply: () => void; onEdit: () => void; onDelete: () => void }) {
+function MessageBubble({ message, isMe, viewerId, myAvatarUri, senderMember, onReact, mentionGroups, onOpenInternalLink, onOpenProfile, onReply }: { message: ChatMessage; isMe: boolean; viewerId: string; myAvatarUri?: string | null; senderMember?: Api.PublicMember; onReact: (emoji: string, pollChoices?: string[], allowMultiple?: boolean) => void; mentionGroups: ReturnType<typeof getMentionGroups>; onOpenInternalLink: (pathname: "/chat" | "/board", params: Record<string, string>) => void; onOpenProfile: () => void; onReply: () => void }) {
   const colors = useColors();
   const sender = getMemberById(message.senderId);
   const [showReactionPicker, setShowReactionPicker] = useState(false);
@@ -195,7 +195,7 @@ function MessageBubble({ message, isMe, viewerId, myAvatarUri, senderMember, onR
             {showMoreReactions ? <View style={{ width: "100%", flexDirection: "row", flexWrap: "wrap", marginTop: 4 }}>{MORE_REACTION_EMOJIS.map((emoji) => <Pressable key={emoji} onPress={() => { onReact(emoji); setShowReactionPicker(false); setShowMoreReactions(false); }} style={{ width: 34, height: 32, alignItems: "center", justifyContent: "center" }}><Text style={{ fontSize: 19 }}>{emoji}</Text></Pressable>)}</View> : null}
           </View>
         ) : null}
-        <Modal visible={showActions} transparent animationType="fade" onRequestClose={() => setShowActions(false)}><Pressable onPress={() => setShowActions(false)} style={{ flex: 1, backgroundColor: "rgba(20,18,24,0.48)", justifyContent: "flex-end" }}><Pressable onPress={() => {}} style={{ backgroundColor: colors.background, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 16, paddingBottom: 30 }}><View style={{ flexDirection: "row", justifyContent: "space-around", backgroundColor: colors.surface, borderRadius: 16, padding: 10, marginBottom: 10 }}>{REACTION_EMOJIS.map((emoji) => <Pressable key={emoji} onPress={() => { onReact(emoji); setShowActions(false); }} style={{ padding: 7 }}><Text style={{ fontSize: 24 }}>{emoji}</Text></Pressable>)}</View>{[{ label: "返信", icon: "arrowshape.turn.up.left", action: onReply }, { label: "テキストをコピー", icon: "doc.on.doc", action: () => { void Clipboard.setStringAsync(message.content); } }, ...(canManage ? [{ label: "メッセージを編集", icon: "pencil", action: onEdit }, { label: "メッセージを削除", icon: "trash", action: onDelete }] : []), { label: "メッセージをピン留め", icon: "pin.fill", action: () => Alert.alert("ピン留めしました") }].map((item) => <Pressable key={item.label} onPress={() => { item.action(); setShowActions(false); }} style={{ minHeight: 48, flexDirection: "row", alignItems: "center", paddingHorizontal: 12, borderBottomWidth: 0.5, borderBottomColor: colors.border }}><IconSymbol name={item.icon as any} size={19} color={item.label.includes("削除") ? colors.error : colors.foreground} /><Text style={{ marginLeft: 12, fontSize: 15, fontWeight: "700", color: item.label.includes("削除") ? colors.error : colors.foreground }}>{item.label}</Text></Pressable>)}</Pressable></Pressable></Modal>
+        <Modal visible={showActions} transparent animationType="fade" onRequestClose={() => setShowActions(false)}><Pressable onPress={() => setShowActions(false)} style={{ flex: 1, backgroundColor: "rgba(20,18,24,0.48)", justifyContent: "flex-end" }}><Pressable onPress={() => {}} style={{ backgroundColor: colors.background, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 16, paddingBottom: 30 }}><View style={{ flexDirection: "row", justifyContent: "space-around", backgroundColor: colors.surface, borderRadius: 16, padding: 10, marginBottom: 10 }}>{REACTION_EMOJIS.map((emoji) => <Pressable key={emoji} onPress={() => { onReact(emoji); setShowActions(false); }} style={{ padding: 7 }}><Text style={{ fontSize: 24 }}>{emoji}</Text></Pressable>)}</View>{[{ label: "返信", icon: "arrowshape.turn.up.left", action: onReply }, { label: "テキストをコピー", icon: "doc.on.doc", action: () => { void Clipboard.setStringAsync(message.content); } }, { label: "メッセージをピン留め", icon: "pin.fill", action: () => Alert.alert("ピン留めしました") }].map((item) => <Pressable key={item.label} onPress={() => { item.action(); setShowActions(false); }} style={{ minHeight: 48, flexDirection: "row", alignItems: "center", paddingHorizontal: 12, borderBottomWidth: 0.5, borderBottomColor: colors.border }}><IconSymbol name={item.icon as any} size={19} color={colors.foreground} /><Text style={{ marginLeft: 12, fontSize: 15, fontWeight: "700", color: colors.foreground }}>{item.label}</Text></Pressable>)}</Pressable></Pressable></Modal>
       </View>
     </View>
   );
@@ -207,7 +207,6 @@ export default function ChatScreen() {
   const { user: authUser } = useAuthContext();
   const viewerMemberId = authUser?.memberId ?? (authUser?.id ? `member-${authUser.id}` : CURRENT_USER.id);
   const userIsAdmin = isAdminRole(authUser?.role, authUser?.accessRole);
-  const userCanModerate = isOperatorRole(authUser?.role, authUser?.accessRole) || userIsAdmin;
   const { id, unreadCount: unreadCountParam } = useLocalSearchParams<{ id: string; unreadCount?: string }>();
   const [messageText, setMessageText] = useState("");
   const [mentionQuery, setMentionQuery] = useState<string | null>(null);
@@ -254,6 +253,15 @@ export default function ChatScreen() {
   // 自分のプロフィール画像（AsyncStorageから読み込み）
   const [myAvatarUri, setMyAvatarUri] = useState<string | null>(null);
 
+  const applySharedMessages = useCallback((shared: ChatMessage[]) => {
+    setMessages((previous) => {
+      const localMessages = previous.filter((message) => !message.shared);
+      return [...localMessages, ...shared]
+        .filter((message) => !isRetiredAnnouncement(message))
+        .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+    });
+  }, []);
+
   // 初回起動時: プロフィール画像と永続化メッセージを読み込む
   useEffect(() => {
     if (!id) return;
@@ -280,13 +288,7 @@ export default function ChatScreen() {
           });
         }
       });
-      Api.getSharedChatMessages(id).then((shared) => {
-        setMessages((previous) => {
-          const byId = new Map(previous.map((message) => [message.id, message]));
-          for (const message of shared) byId.set(message.id, message);
-          return [...byId.values()].filter((message) => !isRetiredAnnouncement(message)).sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
-        });
-      }).catch(() => {
+      Api.getSharedChatMessages(id).then(applySharedMessages).catch(() => {
         // 旧移行チャットは共有DBへの切替対象外でも、既存履歴を引き続き表示する。
       });
       Api.getSharedChatRooms().then((sharedRooms) => {
@@ -299,7 +301,15 @@ export default function ChatScreen() {
       Api.getMemberDirectory().then(setDirectory).catch(() => {});
     }).catch(() => setIsLoadingRoom(false));
     return () => clearTimeout(loadingFallback);
-  }, [id]);
+  }, [id, applySharedMessages]);
+
+  // 共有メッセージの編集・削除・リアクションを、参加者全員の画面へ反映する。
+  useEffect(() => {
+    if (!id) return;
+    const refresh = () => { void Api.getSharedChatMessages(id).then(applySharedMessages).catch(() => {}); };
+    const timer = setInterval(refresh, 1500);
+    return () => clearInterval(timer);
+  }, [id, applySharedMessages]);
 
   // @入力を検出してメンション候補を表示
   const handleTextChange = useCallback((text: string) => {
@@ -402,15 +412,32 @@ export default function ChatScreen() {
     if (!id) return;
     const sharedMessage = messages.find((item) => item.id === messageId && item.shared);
     if (sharedMessage) {
+      const active = !(sharedMessage.reactions?.[emoji] ?? []).includes(viewerMemberId);
+      const previousReactions = sharedMessage.reactions;
+      setMessages((current) => current.map((message) => {
+        if (message.id !== messageId) return message;
+        const reactions = Object.fromEntries(Object.entries(message.reactions ?? {}).map(([key, members]) => [key, [...members]])) as Record<string, string[]>;
+        if (pollChoices && !allowMultiple) {
+          for (const choice of pollChoices) {
+            const key = `🗳️${choice}`;
+            if (key !== emoji) reactions[key] = (reactions[key] ?? []).filter((memberId) => memberId !== viewerMemberId);
+          }
+        }
+        reactions[emoji] = active
+          ? [...new Set([...(reactions[emoji] ?? []), viewerMemberId])]
+          : (reactions[emoji] ?? []).filter((memberId) => memberId !== viewerMemberId);
+        if (!reactions[emoji].length) delete reactions[emoji];
+        return { ...message, reactions };
+      }));
       try {
         if (pollChoices && !allowMultiple) {
           const otherVotes = pollChoices.map((choice) => `🗳️${choice}`).filter((key) => key !== emoji && (sharedMessage.reactions?.[key] ?? []).includes(viewerMemberId));
           await Promise.all(otherVotes.map((key) => Api.setSharedChatReaction(messageId, key, false)));
         }
-        const active = !(sharedMessage.reactions?.[emoji] ?? []).includes(viewerMemberId);
         const result = await Api.setSharedChatReaction(messageId, emoji, active);
         setMessages((current) => current.map((message) => message.id === messageId ? { ...message, reactions: result.reactions } : message));
       } catch (error) {
+        setMessages((current) => current.map((message) => message.id === messageId ? { ...message, reactions: previousReactions } : message));
         Alert.alert("リアクションできませんでした", error instanceof Error ? error.message : "もう一度お試しください。");
       }
       return;
@@ -589,10 +616,7 @@ export default function ChatScreen() {
                     openProfile(item.senderId ?? sender?.id ?? "");
                   }
                 }}
-                canManage={item.senderId === viewerMemberId || userCanModerate}
                 onReply={() => { const sender = getMemberById(item.senderId); setMessageText(`@${item.externalAuthorName ?? sender?.name ?? "メンバー"} `); inputRef.current?.focus(); }}
-                onEdit={() => { const next = Platform.OS === "web" ? window.prompt("メッセージを編集", item.content) : null; if (typeof next === "string" && next.trim()) { setMessages((current) => current.map((message) => message.id === item.id ? { ...message, content: next.trim() } : message)); void saveMessagesToStorage(id ?? "", [{ ...item, content: next.trim() }]); } }}
-                onDelete={() => { setMessages((current) => current.filter((message) => message.id !== item.id)); }}
               />
             </>;
           }}
@@ -715,8 +739,8 @@ export default function ChatScreen() {
               onChangeText={handleTextChange}
               placeholder="メッセージを入力..."
               placeholderTextColor={colors.muted}
-              returnKeyType="done"
-              onSubmitEditing={handleSend}
+              multiline
+              blurOnSubmit={false}
               style={{
                 flex: 1,
                 backgroundColor: colors.surface,
@@ -725,6 +749,9 @@ export default function ChatScreen() {
                 paddingVertical: 10,
                 fontSize: 14,
                 color: colors.foreground,
+                minHeight: 44,
+                maxHeight: 120,
+                textAlignVertical: "top",
               }}
             />
             <Pressable
