@@ -350,6 +350,15 @@ export function saveMessagesToStorage(chatId: string, msgs: ChatMessage[]): Prom
   });
 }
 
+/** 通信できない旧チャットでも、削除した投稿を次回起動時に復活させない。 */
+export function deleteMessageFromStorage(chatId: string, messageId: string): Promise<void> {
+  return enqueueMessageWrite(chatId, async () => {
+    const key = `${MESSAGES_KEY_PREFIX}${chatId}`;
+    const existing = await loadMessagesFromStorage(chatId);
+    await AsyncStorage.setItem(key, JSON.stringify(existing.filter((message) => message.id !== messageId)));
+  });
+}
+
 /** 特定チャットのメッセージをAsyncStorageから読み込む */
 export async function loadMessagesFromStorage(chatId: string): Promise<ChatMessage[]> {
   try {

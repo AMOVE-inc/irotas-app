@@ -3,7 +3,7 @@ import type { BoardThread, ChatRoom } from "@/constants/mock-data";
 export type InternalLinkMention = {
   raw: string;
   label: string;
-  pathname: "/chat" | "/board";
+  pathname: "/chat" | "/board" | "/event-detail";
   params: Record<string, string>;
 };
 
@@ -17,17 +17,28 @@ export function parseInternalLink(rawValue: string, rooms: ChatRoom[], threads: 
   const raw = trimTrailingPunctuation(rawValue);
   let url: URL;
   try { url = new URL(raw); } catch { return null; }
+  // IRO+ のURLだけをDiscord風のメンションとして扱う。外部URLは通常のリンクのままにする。
+  const isIrotasHost = /(^|\.)irotas-community\.com$/i.test(url.hostname)
+    || /^irotas-app-[a-z0-9-]+\.chatgpt\.site$/i.test(url.hostname);
+  if (!isIrotasHost) return null;
   const pathname = url.pathname.replace(/^\/(?:\(tabs\)\/)?/, "/");
+  if (pathname === "/event-detail") {
+    const id = url.searchParams.get("id");
+    if (!id) return null;
+    return { raw, label: "📅 イベント", pathname: "/event-detail", params: { id } };
+  }
   if (pathname === "/chat") {
     const id = url.searchParams.get("id");
     const room = rooms.find((item) => item.id === id);
-    if (!id || !room) return null;
-    return { raw, label: `#${room.name}`, pathname: "/chat", params: { id } };
+    if (!id) return null;
+    return { raw, label: `#${room?.name ?? "チャット"}`, pathname: "/chat", params: { id } };
   }
   if (pathname === "/board") {
     const threadId = url.searchParams.get("thread");
     const thread = threads.find((item) => item.id === threadId);
     if (thread) return { raw, label: `#${thread.title}`, pathname: "/board", params: { category: thread.category, view: "threads", thread: thread.id } };
+    const category = url.searchParams.get("category");
+    if (category) return { raw, label: `#${threadId ? "スレッド" : "掲示板"}`, pathname: "/board", params: { category, view: url.searchParams.get("view") ?? "threads", ...(threadId ? { thread: threadId } : {}) } };
   }
   return null;
 }

@@ -22,10 +22,10 @@ function normalizeRenderedMentions(content: string) {
   return content.replace(/(@[^\s@]+)(?:\s*(?:[🍖⛳🏃🚶⚾💃🎭🏀🍷✈️🍳🍞🐭🍺]\s*)?[^\s【】]{1,20}部長)?(?:\s*[【[(（]\s*(?:🥈|🥇|💎)?\s*(?:SILVER|GOLD|PLATINUM|シルバー|ゴールド|プラチナ)(?:会員)?\s*[】\])）])?/giu, (_whole, mention: string) => `@${mentionDisplayName(mention)}`);
 }
 
-export function MentionText({ content, outgoing = false, groups, rooms = getAllRooms(), threads = BOARD_THREADS, onOpenInternalLink, onMentionPress, onClubMentionPress }: { content: string; outgoing?: boolean; groups: MentionGroup[]; rooms?: ChatRoom[]; threads?: BoardThread[]; onOpenInternalLink?: (pathname: "/chat" | "/board", params: Record<string, string>) => void; onMentionPress?: (label: string) => void; onClubMentionPress?: (group: MentionGroup) => void }) {
+export function MentionText({ content, outgoing = false, groups, rooms = getAllRooms(), threads = BOARD_THREADS, onOpenInternalLink, onMentionPress, onClubMentionPress }: { content: string; outgoing?: boolean; groups: MentionGroup[]; rooms?: ChatRoom[]; threads?: BoardThread[]; onOpenInternalLink?: (pathname: "/chat" | "/board" | "/event-detail", params: Record<string, string>) => void; onMentionPress?: (label: string) => void; onClubMentionPress?: (group: MentionGroup) => void }) {
   const colors = useColors();
   const router = useRouter();
-  const openInternalLink = onOpenInternalLink ?? ((pathname: "/chat" | "/board", params: Record<string, string>) => router.push({ pathname, params } as any));
+  const openInternalLink = onOpenInternalLink ?? ((pathname: "/chat" | "/board" | "/event-detail", params: Record<string, string>) => router.push({ pathname, params } as any));
   const renderMentions = (value: string, keyPrefix: string) => value.split(/(@[^\s@]+)/g).map((part, index) => {
     if (!part.startsWith("@")) return <Text key={`${keyPrefix}-${index}`}>{part}</Text>;
     const [rawLabel] = extractMentionLabels(part);
@@ -43,7 +43,7 @@ export function MentionText({ content, outgoing = false, groups, rooms = getAllR
   const renderPlain = (value: string, keyPrefix: string) => tokenizeRichTextLinks(value).map((token, index) => {
     if (token.type === "text") return <Text key={`${keyPrefix}-${index}`}>{renderMentions(token.value, `${keyPrefix}-${index}-mention`)}</Text>;
     const internal = parseInternalLink(token.url, rooms, threads);
-    if (internal) return <Text key={`${keyPrefix}-${index}`}><Text accessibilityRole="link" onPress={() => openInternalLink(internal.pathname, internal.params)} style={{ fontWeight: "900", color: outgoing ? "#FFF3B0" : "#5B5A73", backgroundColor: outgoing ? "rgba(255,210,70,0.22)" : "#EEEAF7" }}>{token.label === token.url ? internal.label : token.label}</Text>{token.suffix}</Text>;
+    if (internal) return <Text key={`${keyPrefix}-${index}`}><Text accessibilityRole="link" onPress={() => openInternalLink(internal.pathname, internal.params)} style={{ fontWeight: "900", color: outgoing ? "#FFF3B0" : "#5B5A73", backgroundColor: outgoing ? "rgba(255,210,70,0.22)" : "#EEEAF7" }}>{internal.label}</Text>{token.suffix}</Text>;
     return <Text key={`${keyPrefix}-${index}`}><Text accessibilityRole="link" onPress={() => void Linking.openURL(token.url)} style={{ color: outgoing ? "#DCEBFF" : "#3478C7", textDecorationLine: "underline", fontWeight: "700" }}>{token.label}</Text>{token.suffix}</Text>;
   });
 

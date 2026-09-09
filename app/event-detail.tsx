@@ -9,6 +9,7 @@ import { extractMentionLabels, getMentionGroups, getMentionQuery, getMentionedMe
 import { EVENT_TERMS_URL } from "@/constants/external-links";
 import { joinEventChat, removeMemberFromRoom } from "@/lib/chat-store";
 import { getAllEvents } from "@/lib/event-store";
+import { IMPORTED_DISCORD_EVENTS } from "@/constants/imported-discord-events";
 import { approveGourmetApplication, cancelGourmetParticipation, getPendingGourmetApplicants, reopenGourmetRecruitment, submitGourmetApplication } from "@/lib/gourmet-event";
 import { getIrotasPoints, adjustIrotasPoints } from "@/lib/irotas-points-store";
 import { createPaymentRecord } from "@/lib/payment-store";
@@ -106,14 +107,16 @@ function EventMemberPicker({
 export default function EventDetailScreen() {
   const colors = useColors();
   const router = useRouter();
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id } = useLocalSearchParams<{ id: string | string[] }>();
+  const eventId = Array.isArray(id) ? id[0] : id;
   const { user: authUser, loading: authLoading } = useAuthContext();
   const clubs = useClubs();
   const authenticatedViewerMemberId = resolveViewerMemberId(authUser?.memberId, Boolean(authUser), CURRENT_USER.id);
 
   // モックデータ + 動的追加分から検索
   const allEvents = useMemo(() => getAllEvents(EVENTS), []);
-  const initialEvent = allEvents.find((e) => e.id === id);
+  const initialEvent = allEvents.find((e) => e.id === eventId)
+    ?? IMPORTED_DISCORD_EVENTS.find((e) => e.id === eventId) as Event | undefined;
   const [event, setEvent] = useState<Event | undefined>(initialEvent);
   const [eventLoading, setEventLoading] = useState(!initialEvent);
   const [eventResolved, setEventResolved] = useState(Boolean(initialEvent));
@@ -191,13 +194,14 @@ export default function EventDetailScreen() {
   const eventMentionQuery = getMentionQuery(eventCommentText);
 
   useEffect(() => {
-    const imported = allEvents.find((item) => item.id === id);
+    const imported = allEvents.find((item) => item.id === eventId)
+      ?? IMPORTED_DISCORD_EVENTS.find((item) => item.id === eventId) as Event | undefined;
     if (imported) { setEvent(imported); setEventLoading(false); setEventResolved(true); }
-    if (!id) { setEvent(undefined); setEventLoading(false); setEventResolved(true); return; }
+    if (!eventId) { setEvent(undefined); setEventLoading(false); setEventResolved(true); return; }
     if (authLoading) { setEventLoading(!imported); return; }
     let active = true;
     if (!imported) setEventLoading(true);
-    void Api.getEvent(id)
+    void Api.getEvent(eventId)
       .then((value) => { if (active) {
         // Discord移行イベントは、アーカイブから再照合した人数・コメントを優先する。
         // 参加操作で変動する通常イベントの値には影響させない。
@@ -209,7 +213,7 @@ export default function EventDetailScreen() {
       .catch(() => { if (active && !imported) setEvent(undefined); })
       .finally(() => { if (active) { setEventLoading(false); setEventResolved(true); } });
     return () => { active = false; };
-  }, [allEvents, authLoading, id]);
+  }, [allEvents, authLoading, eventId]);
 
   useEffect(() => { void Api.getMemberDirectory().then(setMemberDirectory).catch(() => setMemberDirectory([])); }, []);
 

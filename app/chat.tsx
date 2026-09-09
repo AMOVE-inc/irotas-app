@@ -16,7 +16,7 @@ import {
 } from "@/constants/mock-data";
 import { useAuthContext } from "@/lib/auth-context";
 import { isAdminRole, canPostToChat } from "@/lib/access-control";
-import { getAllRooms, getRoomById, saveMessagesToStorage, loadMessagesFromStorage, loadDynamicRooms, renameRoom, addMemberToRoom, removeMemberFromRoom, toggleMessageReaction } from "@/lib/chat-store";
+import { getAllRooms, getRoomById, saveMessagesToStorage, deleteMessageFromStorage, loadMessagesFromStorage, loadDynamicRooms, renameRoom, addMemberToRoom, removeMemberFromRoom, toggleMessageReaction } from "@/lib/chat-store";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useColors } from "@/hooks/use-colors";
 import { Image } from "expo-image";
@@ -64,7 +64,7 @@ function systemMessageText(content: string): string {
   return joined ? `${stripRankFromName(joined[1])}がチャットに参加しました` : text;
 }
 
-function MessageBubble({ message, isMe, viewerId, myAvatarUri, senderMember, memberDirectory, onReact, mentionGroups, onOpenInternalLink, onOpenProfile, onReply, onEdit, onDelete }: { message: ChatMessage; isMe: boolean; viewerId: string; myAvatarUri?: string | null; senderMember?: Api.PublicMember; memberDirectory: Api.PublicMember[]; onReact: (emoji: string, pollChoices?: string[], allowMultiple?: boolean) => void; mentionGroups: ReturnType<typeof getMentionGroups>; onOpenInternalLink: (pathname: "/chat" | "/board", params: Record<string, string>) => void; onOpenProfile: () => void; onReply: () => void; onEdit: () => void; onDelete: () => void }) {
+function MessageBubble({ message, isMe, viewerId, myAvatarUri, senderMember, memberDirectory, onReact, mentionGroups, onOpenInternalLink, onOpenProfile, onReply, onEdit, onDelete }: { message: ChatMessage; isMe: boolean; viewerId: string; myAvatarUri?: string | null; senderMember?: Api.PublicMember; memberDirectory: Api.PublicMember[]; onReact: (emoji: string, pollChoices?: string[], allowMultiple?: boolean) => void; mentionGroups: ReturnType<typeof getMentionGroups>; onOpenInternalLink: (pathname: "/chat" | "/board" | "/event-detail", params: Record<string, string>) => void; onOpenProfile: () => void; onReply: () => void; onEdit: () => void; onDelete: () => void }) {
   const colors = useColors();
   const sender = getMemberById(message.senderId);
   const [showReactionPicker, setShowReactionPicker] = useState(false);
@@ -525,6 +525,7 @@ export default function ChatScreen() {
 
   const typeLabel = room.id === "board-announcement" ? "お知らせ" : room.type === "event" ? "イベント" : room.type === "board" ? "掲示板" : room.type === "rank" ? "ランク専用" : room.type === "group" ? "友達グループ" : room.type === "dm" ? "DM" : "部活動";
   const typeColor = room.type === "event" ? "#E8A0BF" : room.type === "board" ? "#A7C7E7" : room.type === "rank" ? "#F59E0B" : room.type === "group" ? "#5B9BD5" : room.type === "dm" ? "#FF9500" : "#34C759";
+  const firstUnreadIndex = Math.max(0, messages.length - Math.min(messages.length, Math.max(0, Number(unreadCountParam ?? 0))));
   const canManageRoom = userIsAdmin || room.createdBy === viewerMemberId;
   const canInviteMembers = canManageRoom && room.type !== "rank" && room.type !== "event" && room.type !== "dm";
   const canPostAnnouncement = canPostToChat(authUser?.role, room.id, authUser?.accessRole);
@@ -595,6 +596,7 @@ export default function ChatScreen() {
             const previousDay = previous && new Date(previous.createdAt).toLocaleDateString("ja-JP", { year: "numeric", month: "long", day: "numeric", weekday: "short" });
             return <>
               {day !== previousDay ? <View style={{ alignItems: "center", marginVertical: 10 }}><View style={{ borderRadius: 12, backgroundColor: colors.surface, paddingHorizontal: 11, paddingVertical: 4 }}><Text style={{ fontSize: 11, fontWeight: "700", color: colors.muted }}>{day}</Text></View></View> : null}
+              {Number(unreadCountParam ?? 0) > 0 && index === firstUnreadIndex ? <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginVertical: 10, paddingHorizontal: 16 }}><View style={{ flex: 1, height: 1, backgroundColor: "#E8A0BF" }} /><Text style={{ fontSize: 11, fontWeight: "900", color: "#C05B88" }}>ここから未読メッセージ</Text><View style={{ flex: 1, height: 1, backgroundColor: "#E8A0BF" }} /></View> : null}
               <MessageBubble
                 message={item}
                 isMe={item.senderId === viewerMemberId || item.senderId === authUser?.memberId || (
@@ -629,7 +631,7 @@ export default function ChatScreen() {
                 }}
                 onReply={() => { const sender = getMemberById(item.senderId); setMessageText(`@${item.externalAuthorName ?? sender?.name ?? "メンバー"} `); inputRef.current?.focus(); }}
                 onEdit={() => { setEditingMessage(item); setEditingMessageText(item.content); }}
-                onDelete={() => Alert.alert("メッセージを削除", "このメッセージを削除しますか？", [{ text: "キャンセル", style: "cancel" }, { text: "削除", style: "destructive", onPress: async () => { try { if (item.shared) await Api.deleteSharedChatMessage(item.id); else await saveMessagesToStorage(id ?? "", [{ ...item, content: "" }]); setMessages((current) => current.filter((message) => message.id !== item.id)); } catch (error) { Alert.alert("削除できませんでした", error instanceof Error ? error.message : "もう一度お試しください。"); } } }])}
+                onDelete={() => Alert.alert("メッセージを削除", "このメッセージを削除しますか？", [{ text: "キャンセル", style: "cancel" }, { text: "削除", style: "destructive", onPress: async () => { try { if (item.shared) await Api.deleteSharedChatMessage(item.id); else await deleteMessageFromStorage(id ?? "", item.id); setMessages((current) => current.filter((message) => message.id !== item.id)); } catch (error) { Alert.alert("削除できませんでした", error instanceof Error ? error.message : "もう一度お試しください。"); } } }])}
               />
             </>;
           }}

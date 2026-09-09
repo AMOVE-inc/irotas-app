@@ -91,13 +91,12 @@ export const CUISINE_OPTIONS = [
   { key: "cafe", label: "カフェ・喫茶" }, { key: "sweets", label: "スイーツ" }, { key: "wine", label: "ワイン・バー" },
 ] as const;
 
-export function createDefaultPreferences(seed?: { residence?: string; favoriteCuisines?: string[] }): MemberPreferences {
-  const area = AREA_OPTIONS.find((item) => seed?.residence?.includes(item.label))?.key;
-  const cuisineKeys = CUISINE_OPTIONS.filter((item) => seed?.favoriteCuisines?.some((genre) => genre.includes(item.label) || item.label.includes(genre))).map((item) => item.key).slice(0, 5);
+export function createDefaultPreferences(): MemberPreferences {
   return {
-    preferredAreas: area ? [area] : [], favoriteCuisineKeys: cuisineKeys, budgetMinYen: 3000, budgetMaxYen: 10000,
-    availableDayTypes: ["saturday", "sunday_holiday"], availableTimeSlots: ["dinner"], preferredGroupSizes: ["small", "medium"],
-    preferredEventTypes: ["regular_dining"], participationGoals: ["food_discovery", "make_friends"], soloParticipationComfort: "comfortable",
+    // 初回表示ではプロフィールから推測して選択済みにしない。
+    preferredAreas: [], favoriteCuisineKeys: [], budgetMinYen: null, budgetMaxYen: null,
+    availableDayTypes: [], availableTimeSlots: [], preferredGroupSizes: [],
+    preferredEventTypes: [], participationGoals: [], soloParticipationComfort: null,
     newMemberWelcome: false, completedAt: null, updatedAt: new Date().toISOString(),
   };
 }
@@ -124,8 +123,8 @@ async function read<T>(storageKey: string, fallback: T): Promise<T> {
   try { const raw = await AsyncStorage.getItem(storageKey); return raw ? { ...fallback, ...JSON.parse(raw) } : fallback; } catch { return fallback; }
 }
 
-export function loadMemberPreferences(userId: string, seed?: Parameters<typeof createDefaultPreferences>[0]) {
-  const defaults = createDefaultPreferences(seed);
+export function loadMemberPreferences(userId: string) {
+  const defaults = createDefaultPreferences();
   return read(key("preferences", userId), defaults);
 }
 

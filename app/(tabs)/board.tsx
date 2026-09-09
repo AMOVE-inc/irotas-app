@@ -318,6 +318,34 @@ function SelfIntroductionContent({ thread, compact = false }: { thread: BoardThr
   );
 }
 
+/** 自己紹介は掲示板のスレッドではなく、会話の流れとして表示する。 */
+function SelfIntroductionMessage({ thread }: { thread: BoardThread }) {
+  const colors = useColors();
+  const router = useRouter();
+  const timeAgo = (() => {
+    const elapsed = Date.now() - Date.parse(thread.lastUpdated);
+    if (elapsed < 3_600_000) return "たった今";
+    if (elapsed < 86_400_000) return `${Math.floor(elapsed / 3_600_000)}時間前`;
+    return `${Math.floor(elapsed / 86_400_000)}日前`;
+  })();
+  return <View style={{ flexDirection: "row", alignItems: "flex-start", paddingHorizontal: 16, marginBottom: 14 }}>
+    <Pressable onPress={() => router.push({ pathname: "/member-profile", params: { id: thread.author.id, legacyName: thread.author.name } })} accessibilityLabel={`${stripRankFromName(thread.author.name)}のプロフィールを表示`}>
+      <Image source={thread.author.avatar} style={{ width: 34, height: 34, borderRadius: 17 }} contentFit="cover" />
+    </Pressable>
+    <View style={{ flex: 1, maxWidth: "82%", marginLeft: 9 }}>
+      <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 3 }}>
+        <Text style={{ fontSize: 13, fontWeight: "800", color: colors.foreground }}>{stripRankFromName(thread.author.name)}</Text>
+        <NewMemberMark member={thread.author} size={12} />
+        <OperatorOrRankBadge member={thread.author} />
+      </View>
+      <View style={{ alignSelf: "flex-start", backgroundColor: "#ECECEF", borderWidth: 1, borderColor: "#D4D4D8", borderRadius: 16, borderTopLeftRadius: 4, paddingHorizontal: 13, paddingVertical: 10 }}>
+        <SelfIntroductionContent thread={thread} />
+      </View>
+      <Text style={{ fontSize: 10, color: colors.muted, marginTop: 3, marginLeft: 3 }}>{timeAgo}</Text>
+    </View>
+  </View>;
+}
+
 function ThreadCard({ thread, onPress, onEdit, onDelete, onPin, onChangeRecruitment, unreadCount = 0, mentionCount = 0, showMenu = true }: { thread: BoardThread; onPress: () => void; onEdit?: () => void; onDelete?: () => void; onPin?: () => void; onChangeRecruitment?: () => void; unreadCount?: number; mentionCount?: number; showMenu?: boolean }) {
   const colors = useColors();
   const router = useRouter();
@@ -1191,7 +1219,11 @@ function ThreadDetailModal({
               コメント ({comments.length})
             </Text>
             {comments.map((comment) => (
-              <View key={comment.id} style={{ marginBottom: 14 }}>
+              <Pressable key={comment.id} disabled={comment.author.id !== viewerMemberId && !canModerateAll} onLongPress={() => Alert.alert("コメント", "操作を選択してください", [
+                { text: "投稿を編集", onPress: () => { setEditingCommentId(comment.id); setEditingCommentText(comment.content); } },
+                { text: "投稿を削除", style: "destructive", onPress: () => handleDeleteComment(comment.id) },
+                { text: "キャンセル", style: "cancel" },
+              ])} delayLongPress={350} style={{ marginBottom: 14 }}>
                 <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 4 }}>
                   <Image
                     source={comment.author.avatar}
@@ -1205,11 +1237,6 @@ function ThreadDetailModal({
                   <Text style={{ fontSize: 11, color: colors.muted, marginLeft: 8 }}>
                     {timeAgo(comment.createdAt)}
                   </Text>
-                  {(comment.author.id === viewerMemberId || canModerateAll) ? <Pressable accessibilityLabel="コメントメニュー" onPress={() => Alert.alert("コメント", "操作を選択してください", [
-                    { text: "投稿を編集", onPress: () => { setEditingCommentId(comment.id); setEditingCommentText(comment.content); } },
-                    { text: "投稿を削除", style: "destructive", onPress: () => handleDeleteComment(comment.id) },
-                    { text: "キャンセル", style: "cancel" },
-                  ])} style={{ marginLeft: "auto", padding: 5 }}><IconSymbol name="ellipsis" size={17} color={colors.muted} /></Pressable> : null}
                 </View>
                 {editingCommentId === comment.id ? <View style={{ marginLeft: 32, gap: 7 }}><TextInput value={editingCommentText} onChangeText={setEditingCommentText} multiline autoFocus style={{ minHeight: 90, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: 10, padding: 10, fontSize: 14, color: colors.foreground }} /><View style={{ flexDirection: "row", gap: 8 }}><Pressable onPress={() => handleSaveCommentEdit(comment.id)} style={{ backgroundColor: "#3478C7", borderRadius: 8, paddingHorizontal: 13, paddingVertical: 7 }}><Text style={{ color: "#FFF", fontSize: 12, fontWeight: "800" }}>保存</Text></Pressable><Pressable onPress={() => handleDeleteComment(comment.id)} style={{ backgroundColor: "#FCE7E7", borderRadius: 8, paddingHorizontal: 13, paddingVertical: 7 }}><Text style={{ color: colors.error, fontSize: 12, fontWeight: "800" }}>削除</Text></Pressable><Pressable onPress={() => setEditingCommentId(null)} style={{ paddingHorizontal: 10, paddingVertical: 7 }}><Text style={{ color: colors.muted, fontSize: 12 }}>キャンセル</Text></Pressable></View></View> : <View style={{ marginLeft: 32 }}>{isContest ? (comment.isSystem ? <MentionText content={comment.content} groups={mentionGroups} /> : <LinkifiedText content={comment.content} />) : <MentionText content={comment.content} groups={mentionGroups} />}</View>}
                 {comment.poll ? <View style={{ marginLeft: 32 }}><PollCard ownerKey={`comment:${comment.id}`} poll={comment.poll} /></View> : null}
@@ -1221,7 +1248,7 @@ function ThreadDetailModal({
                 {comment.videos?.length ? <View style={{ marginLeft: 32, marginTop: 8, gap: 8 }}>{comment.videos.map((uri) => <BoardVideo key={uri} uri={uri} />)}</View> : null}
                 {isContest && !comment.isSystem ? <Pressable onPress={() => handleCommentHeart(comment.id)} disabled={!contestCommentingOpen} style={{ marginLeft: 32, marginTop: 7, flexDirection: "row", alignItems: "center", alignSelf: "flex-start", borderRadius: 14, paddingHorizontal: 9, paddingVertical: 4, backgroundColor: (comment.reactions?.["❤️"] ?? []).includes(CURRENT_USER.id) ? "#FFE4EA" : colors.surface, borderWidth: 1, borderColor: colors.border }}><Text style={{ fontSize: 15 }}>❤️</Text><Text style={{ fontSize: 11, fontWeight: "800", color: colors.muted, marginLeft: 4 }}>{comment.reactions?.["❤️"]?.length ?? 0}</Text></Pressable> : null}
                 {!comment.isSystem && !isContest ? <View style={{ marginLeft: 32, marginTop: 7, flexDirection: "row", flexWrap: "wrap", gap: 6 }}>{Array.from(new Set(["👏", ...Object.keys(comment.reactions ?? {})])).map((emoji) => { const ids = comment.reactions?.[emoji] ?? []; return <Pressable key={emoji} onPress={() => handleCommentReaction(comment.id, emoji)} style={{ flexDirection: "row", alignItems: "center", borderRadius: 14, paddingHorizontal: 9, paddingVertical: 4, backgroundColor: ids.includes(CURRENT_USER.id) ? "#F0E7F7" : colors.surface, borderWidth: 1, borderColor: colors.border }}><Text style={{ fontSize: 15 }}>{emoji}</Text>{ids.length ? <Text style={{ fontSize: 11, fontWeight: "800", color: colors.muted, marginLeft: 4 }}>{ids.length}</Text> : null}</Pressable>; })}<Pressable accessibilityLabel="別の絵文字を追加" onPress={() => setCommentEmojiPickerId((current) => current === comment.id ? null : comment.id)} style={{ width: 31, height: 29, borderRadius: 15, alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface }}><IconSymbol name="plus" size={14} color={colors.muted} /></Pressable>{commentEmojiPickerId === comment.id ? <View style={{ width: "100%", flexDirection: "row", flexWrap: "wrap", gap: 7, paddingTop: 3 }}>{THREAD_REACTION_EMOJIS.map((emoji) => <Pressable key={emoji} onPress={() => { handleCommentReaction(comment.id, emoji); setCommentEmojiPickerId(null); }} style={{ width: 38, height: 34, borderRadius: 17, alignItems: "center", justifyContent: "center", backgroundColor: "#F4F1F3" }}><Text style={{ fontSize: 19 }}>{emoji}</Text></Pressable>)}</View> : null}</View> : null}
-              </View>
+              </Pressable>
             ))}
           </View>
         </ScrollView>
@@ -2660,7 +2687,7 @@ export default function BoardScreen() {
         data={filteredThreads}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
-          (() => {
+          activeCategory === "introduction" ? <SelfIntroductionMessage thread={item} /> : (() => {
             const comments = importedComments[item.id] ?? [];
             const unreadComments = comments.slice(threadReadCounts[item.id] ?? 0).filter((comment) => comment.author.id !== viewerMemberId);
             const mentionCount = unreadComments.filter((comment) => comment.content.includes(`@${viewerMember.name}`) || /@(全員|everyone|here)/i.test(comment.content)).length;
@@ -2681,7 +2708,7 @@ export default function BoardScreen() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#E8A0BF" />
         }
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingTop: 10, paddingBottom: 92 }}
+        contentContainerStyle={{ paddingTop: 14, paddingBottom: activeCategory === "introduction" ? 28 : 92 }}
         ListEmptyComponent={
           <View style={{ alignItems: "center", paddingTop: 60 }}>
             <IconSymbol name="bubble.left.and.bubble.right.fill" size={48} color={colors.border} />
@@ -2692,7 +2719,7 @@ export default function BoardScreen() {
         }
       /> : null}
 
-      {isThreadView && activeCategory !== "gourmet-map" && (activeCategory !== "gourmet-contest" || userCanManageContests) ? (
+      {isThreadView && activeCategory !== "introduction" && activeCategory !== "gourmet-map" && (activeCategory !== "gourmet-contest" || userCanManageContests) ? (
         <Pressable
           accessibilityLabel={`${categories.find((category) => category.key === activeCategory)?.label ?? "掲示板"}に投稿`}
           onPress={() => setShowCreateThread(true)}
