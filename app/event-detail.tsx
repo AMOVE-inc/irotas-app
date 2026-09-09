@@ -210,7 +210,17 @@ export default function EventDetailScreen() {
           : {};
         setEvent({ ...imported, ...value, ...importedDiscordData, description: value.description?.trim() ?? "", image: value.image || imported?.image || "", tabelogUrl: value.tabelogUrl || imported?.tabelogUrl, googleMapsUrl: value.googleMapsUrl || imported?.googleMapsUrl, organizerProfileId: value.organizerProfileId || imported?.organizerProfileId, organizerName: value.organizerName || imported?.organizerName, organizerAvatar: value.organizerAvatar || imported?.organizerAvatar, organizerRank: value.organizerRank || imported?.organizerRank } as Event);
       } })
-      .catch(() => { if (active && !imported) setEvent(undefined); })
+      .catch(async () => {
+        // 個別取得が一時的に失敗しても、一覧で取得できる公開イベントを表示する。
+        // タイムラインからの遷移で「見つかりません」となることを防ぐ。
+        try {
+          const events = await Api.getEvents({ includeCancelled: true });
+          const fallback = events.find((item) => item.id === eventId);
+          if (active) setEvent(fallback ?? imported);
+        } catch {
+          if (active && !imported) setEvent(undefined);
+        }
+      })
       .finally(() => { if (active) { setEventLoading(false); setEventResolved(true); } });
     return () => { active = false; };
   }, [allEvents, authLoading, eventId]);

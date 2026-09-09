@@ -1218,8 +1218,9 @@ function ThreadDetailModal({
             <Text style={{ fontSize: 14, fontWeight: "700", color: colors.foreground, marginBottom: 12 }}>
               コメント ({comments.length})
             </Text>
-            {comments.map((comment) => (
-              <Pressable key={comment.id} disabled={comment.author.id !== viewerMemberId && !canModerateAll} onLongPress={() => Alert.alert("コメント", "操作を選択してください", [
+            {comments.map((comment) => {
+              const isOwnComment = comment.author.id === viewerMemberId || stripRankFromName(comment.author.name) === stripRankFromName(viewerMember.name);
+              return <Pressable key={comment.id} disabled={!isOwnComment && !canModerateAll} onLongPress={() => Alert.alert("コメント", "操作を選択してください", [
                 { text: "投稿を編集", onPress: () => { setEditingCommentId(comment.id); setEditingCommentText(comment.content); } },
                 { text: "投稿を削除", style: "destructive", onPress: () => handleDeleteComment(comment.id) },
                 { text: "キャンセル", style: "cancel" },
@@ -1248,8 +1249,8 @@ function ThreadDetailModal({
                 {comment.videos?.length ? <View style={{ marginLeft: 32, marginTop: 8, gap: 8 }}>{comment.videos.map((uri) => <BoardVideo key={uri} uri={uri} />)}</View> : null}
                 {isContest && !comment.isSystem ? <Pressable onPress={() => handleCommentHeart(comment.id)} disabled={!contestCommentingOpen} style={{ marginLeft: 32, marginTop: 7, flexDirection: "row", alignItems: "center", alignSelf: "flex-start", borderRadius: 14, paddingHorizontal: 9, paddingVertical: 4, backgroundColor: (comment.reactions?.["❤️"] ?? []).includes(CURRENT_USER.id) ? "#FFE4EA" : colors.surface, borderWidth: 1, borderColor: colors.border }}><Text style={{ fontSize: 15 }}>❤️</Text><Text style={{ fontSize: 11, fontWeight: "800", color: colors.muted, marginLeft: 4 }}>{comment.reactions?.["❤️"]?.length ?? 0}</Text></Pressable> : null}
                 {!comment.isSystem && !isContest ? <View style={{ marginLeft: 32, marginTop: 7, flexDirection: "row", flexWrap: "wrap", gap: 6 }}>{Array.from(new Set(["👏", ...Object.keys(comment.reactions ?? {})])).map((emoji) => { const ids = comment.reactions?.[emoji] ?? []; return <Pressable key={emoji} onPress={() => handleCommentReaction(comment.id, emoji)} style={{ flexDirection: "row", alignItems: "center", borderRadius: 14, paddingHorizontal: 9, paddingVertical: 4, backgroundColor: ids.includes(CURRENT_USER.id) ? "#F0E7F7" : colors.surface, borderWidth: 1, borderColor: colors.border }}><Text style={{ fontSize: 15 }}>{emoji}</Text>{ids.length ? <Text style={{ fontSize: 11, fontWeight: "800", color: colors.muted, marginLeft: 4 }}>{ids.length}</Text> : null}</Pressable>; })}<Pressable accessibilityLabel="別の絵文字を追加" onPress={() => setCommentEmojiPickerId((current) => current === comment.id ? null : comment.id)} style={{ width: 31, height: 29, borderRadius: 15, alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface }}><IconSymbol name="plus" size={14} color={colors.muted} /></Pressable>{commentEmojiPickerId === comment.id ? <View style={{ width: "100%", flexDirection: "row", flexWrap: "wrap", gap: 7, paddingTop: 3 }}>{THREAD_REACTION_EMOJIS.map((emoji) => <Pressable key={emoji} onPress={() => { handleCommentReaction(comment.id, emoji); setCommentEmojiPickerId(null); }} style={{ width: 38, height: 34, borderRadius: 17, alignItems: "center", justifyContent: "center", backgroundColor: "#F4F1F3" }}><Text style={{ fontSize: 19 }}>{emoji}</Text></Pressable>)}</View> : null}</View> : null}
-              </Pressable>
-            ))}
+              </Pressable>;
+            })}
           </View>
         </ScrollView>
 

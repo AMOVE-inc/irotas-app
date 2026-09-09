@@ -1,4 +1,5 @@
 import type { BoardThread, ChatRoom } from "@/constants/mock-data";
+import { IMPORTED_DISCORD_EVENTS } from "@/constants/imported-discord-events";
 
 export type InternalLinkMention = {
   raw: string;
@@ -19,13 +20,14 @@ export function parseInternalLink(rawValue: string, rooms: ChatRoom[], threads: 
   try { url = new URL(raw); } catch { return null; }
   // IRO+ のURLだけをDiscord風のメンションとして扱う。外部URLは通常のリンクのままにする。
   const isIrotasHost = /(^|\.)irotas-community\.com$/i.test(url.hostname)
-    || /^irotas-app-[a-z0-9-]+\.chatgpt\.site$/i.test(url.hostname);
+    || /^irotas-app-[a-z0-9-]+(?:\.[a-z0-9-]+)?\.chatgpt\.site$/i.test(url.hostname);
   if (!isIrotasHost) return null;
   const pathname = url.pathname.replace(/^\/(?:\(tabs\)\/)?/, "/");
   if (pathname === "/event-detail") {
     const id = url.searchParams.get("id");
     if (!id) return null;
-    return { raw, label: "📅 イベント", pathname: "/event-detail", params: { id } };
+    const event = IMPORTED_DISCORD_EVENTS.find((item) => item.id === id);
+    return { raw, label: event ? `📅 ${event.date.replace(/-/g, "/")} ${event.time}　${event.title}` : "📅 イベントを開く", pathname: "/event-detail", params: { id } };
   }
   if (pathname === "/chat") {
     const id = url.searchParams.get("id");

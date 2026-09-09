@@ -1760,7 +1760,8 @@ export default function ClubsScreen() {
 
   useEffect(() => {
     let active = true;
-    void Api.getBoardArchive("public").then((archive) => {
+    // 部員限定カテゴリも含めて移行済みスレを解決する。
+    void Api.getBoardArchive("all").then((archive) => {
       if (active) setArchiveThreads(parseDiscordBoardArchive(archive).threads);
     }).catch(() => {
       // 公開範囲の移行データが取得できない場合も、部活動一覧は利用できる。
@@ -1920,7 +1921,13 @@ export default function ClubsScreen() {
               <ClubCard
                 key={club.id}
                 club={club}
-                onPress={() => router.push({ pathname: "/board", params: { category: `club-${club.id}`, view: "threads" } })}
+                onPress={() => {
+                  const category = `club-${club.id}`;
+                  const latestThread = archiveThreads
+                    .filter((thread) => thread.category === category)
+                    .sort((a, b) => Date.parse(b.lastUpdated) - Date.parse(a.lastUpdated))[0];
+                  router.push({ pathname: "/board", params: { category, view: "threads", ...(latestThread ? { thread: latestThread.id } : {}) } });
+                }}
               />
             ))}
           </View>
