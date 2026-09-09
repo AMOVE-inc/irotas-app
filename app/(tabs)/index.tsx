@@ -6,7 +6,6 @@ import { hasEventImageSource } from "@/lib/event-image-source";
 import { MemberRankBadge, MemberRoleBadge, stripRankFromName } from "@/components/member-rank-badge";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import {
-  ANNOUNCEMENTS,
   RANK_COLORS,
   RANK_LABELS,
   getTodayEvents,
@@ -37,12 +36,11 @@ import {
   RefreshControl,
   useWindowDimensions,
 } from "react-native";
-import { getHomeActivities, type HomeActivity, type HomeActivityKind } from "@/lib/home-activity-store";
+import { type HomeActivity, type HomeActivityKind } from "@/lib/home-activity-store";
 import { getGiftCampaigns, type GiftCampaign } from "@/lib/gift-campaign-store";
 import { useCampaigns, type Campaign } from "@/lib/campaign-store";
 import { getSharedAnnouncements } from "@/lib/announcement-api";
 import { getAllEvents } from "@/lib/event-store";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { createDefaultPreferences, loadMemberAiConsents, loadMemberPreferences, recordActivityEvent, type MemberAiConsents, type MemberPreferences } from "@/lib/ai-data-store";
 import { recommendEvents, type RecommendedEvent } from "@/lib/event-recommendation";
 import * as Api from "@/lib/_core/api";
@@ -614,7 +612,9 @@ export default function HomeScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [activities, setActivities] = useState<HomeActivity[]>([]);
   const [giftCampaigns, setGiftCampaigns] = useState<GiftCampaign[]>([]);
-  const [homeAnnouncements, setHomeAnnouncements] = useState<Announcement[]>(ANNOUNCEMENTS);
+  // 共有APIの内容だけを描画する。モックのお知らせを初期値にしないことで、
+  // 起動直後に古いテストデータが一瞬表示されることを防ぐ。
+  const [homeAnnouncements, setHomeAnnouncements] = useState<Announcement[]>([]);
   const managedCampaigns = useCampaigns();
   const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
   const [preferences, setPreferences] = useState<MemberPreferences>(() => createDefaultPreferences({ residence: CURRENT_USER.residence, favoriteCuisines: CURRENT_USER.favoriteCuisines }));
@@ -624,41 +624,20 @@ export default function HomeScreen() {
     void Api.getNotifications()
       .then((items) => setUnreadNotificationCount(items.filter((item) => !item.read).length))
       .catch(() => setUnreadNotificationCount(0));
-    void Promise.all([Api.getHomeActivities().catch(() => []), getHomeActivities(), getGiftCampaigns(), getSharedAnnouncements().catch(() => null), AsyncStorage.getItem("custom_announcements"), loadMemberPreferences(CURRENT_USER.id, { residence: CURRENT_USER.residence, favoriteCuisines: CURRENT_USER.favoriteCuisines }), loadMemberAiConsents(CURRENT_USER.id)]).then(([remoteActivities, fallbackActivities, gifts, sharedAnnouncements, savedAnnouncements, nextPreferences, nextConsents]) => {
-      const mergedActivities = new Map(fallbackActivities.map((activity) => [activity.id, activity]));
-      remoteActivities.forEach((activity) => {
-        const fallback = mergedActivities.get(activity.id);
-        const discordIdentity = activity.id.startsWith("event:discord-") || activity.id.startsWith("thread:discord-");
-        mergedActivities.set(activity.id, discordIdentity && fallback ? {
-          ...fallback,
-          ...activity,
-          authorId: fallback.authorId ?? activity.authorId,
-          authorName: fallback.authorName ?? activity.authorName,
-          authorAvatar: fallback.authorAvatar ?? activity.authorAvatar,
-          authorMemberTerm: fallback.authorMemberTerm ?? activity.authorMemberTerm,
-          authorRank: fallback.authorRank ?? activity.authorRank,
-        } : activity);
-      });
-      setActivities([...mergedActivities.values()]);
+    void Promise.all([Api.getHomeActivities().catch(() => []), getGiftCampaigns(), getSharedAnnouncements().catch(() => []), loadMemberPreferences(CURRENT_USER.id, { residence: CURRENT_USER.residence, favoriteCuisines: CURRENT_USER.favoriteCuisines }), loadMemberAiConsents(CURRENT_USER.id)]).then(([remoteActivities, gifts, sharedAnnouncements, nextPreferences, nextConsents]) => {
+      setActivities(remoteActivities);
       setPreferences(nextPreferences); setAiConsents(nextConsents);
-      if (sharedAnnouncements?.length) {
-        setHomeAnnouncements(sharedAnnouncements);
-      } else if (savedAnnouncements !== null) {
-        try {
-          const parsed = JSON.parse(savedAnnouncements) as Announcement[];
-          setHomeAnnouncements(parsed.filter((item) => item && typeof item.id === "string" && typeof item.title === "string" && typeof item.content === "string"));
-        } catch {
-          setHomeAnnouncements(ANNOUNCEMENTS);
-        }
-      } else {
-        setHomeAnnouncements(ANNOUNCEMENTS);
-      }
+      setHomeAnnouncements(sharedAnnouncements);
       const today = new Date().toISOString().slice(0, 10);
       setGiftCampaigns(gifts.filter((gift) => gift.status === "open" && gift.deadline >= today).sort((a, b) => a.deadline.localeCompare(b.deadline)));
     });
   }, []);
 
-  useFocusEffect(useCallback(() => { loadHomeContent(); }, [loadHomeContent]));
+  useFocusEffect(useCallback(() => {
+    loadHomeContent();
+    const timer = setInterval(loadHomeContent, 3000);
+    return () => clearInterval(timer);
+  }, [loadHomeContent]));
 
   const { events: todayEvents, boardEvents: todayBoardEvents } = useMemo(
     () => getTodayEvents(),
@@ -672,7 +651,6 @@ export default function HomeScreen() {
   }, [loadHomeContent]);
 
   const timelineItems = useMemo(() => activities
-    .filter((activity) => activity.id.startsWith("event:discord-event-") || activity.id.startsWith("thread:discord-board-") || activity.id.startsWith("comment:discord-"))
     .sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt))
     .slice(0, 10), [activities]);
   const recommendedEvents = useMemo(() => recommendEvents(getAllEvents(EVENTS), preferences, CURRENT_USER.id), [preferences]);

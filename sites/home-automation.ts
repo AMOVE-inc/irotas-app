@@ -250,15 +250,15 @@ async function homeActivities(db: D1Database) {
     db.prepare(`SELECT e.id, e.event_type, e.title, e.event_date, e.created_at, e.public_data_json, m.public_member_id, m.display_name,
         m.member_rank, m.profile_json
       FROM events e JOIN members m ON m.id = e.organizer_member_id
-      WHERE e.status != 'cancelled' AND e.id LIKE 'discord-event-%' ORDER BY e.created_at DESC LIMIT 30`).all<Record<string, unknown>>(),
+      WHERE e.status != 'cancelled' ORDER BY e.created_at DESC LIMIT 30`).all<Record<string, unknown>>(),
     db.prepare(`SELECT t.id, t.category, t.title, t.content, t.data_json, t.created_at, m.display_name,
         m.public_member_id, m.member_term, m.member_rank, m.profile_json
       FROM board_threads t JOIN members m ON m.id = t.author_member_id
-      WHERE t.deleted_at IS NULL AND t.id LIKE 'discord-board-%' AND t.category IN ('gourmet-contest','meal-report','gourmet-advice','free-chat')
+      WHERE t.deleted_at IS NULL AND t.category IN ('gourmet-contest','meal-report','gourmet-advice','free-chat')
       ORDER BY t.created_at DESC LIMIT 80`).all<Record<string, unknown>>(),
     db.prepare(`SELECT c.id, c.content, c.created_at, t.id AS thread_id, t.title
       FROM board_comments c JOIN board_threads t ON t.id = c.thread_id
-      WHERE c.deleted_at IS NULL AND t.deleted_at IS NULL AND t.id LIKE 'discord-board-%' AND t.category = 'gourmet-contest'
+      WHERE c.deleted_at IS NULL AND t.deleted_at IS NULL AND t.category = 'gourmet-contest'
       ORDER BY c.created_at DESC LIMIT 50`).all<Record<string, unknown>>(),
   ]);
   const kindByCategory: Record<string, string> = { "gourmet-contest": "contest_thread", "meal-report": "meal_report", "gourmet-advice": "gourmet_advice", "free-chat": "free_chat" };

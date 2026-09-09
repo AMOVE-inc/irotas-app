@@ -16,7 +16,7 @@ import {
 } from "@/constants/mock-data";
 import { useAuthContext } from "@/lib/auth-context";
 import { isAdminRole, canPostToChat } from "@/lib/access-control";
-import { getAllRooms, getRoomById, getMessages, saveMessagesToStorage, loadMessagesFromStorage, loadDynamicRooms, renameRoom, addMemberToRoom, removeMemberFromRoom, toggleMessageReaction } from "@/lib/chat-store";
+import { getAllRooms, getRoomById, saveMessagesToStorage, loadMessagesFromStorage, loadDynamicRooms, renameRoom, addMemberToRoom, removeMemberFromRoom, toggleMessageReaction } from "@/lib/chat-store";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useColors } from "@/hooks/use-colors";
 import { Image } from "expo-image";
@@ -264,9 +264,7 @@ export default function ChatScreen() {
     })) as unknown as typeof MEMBERS
     : MEMBERS, [directory]);
   const mentionGroups = useMemo(() => getMentionGroups(mentionMembers, CLUBS), [mentionMembers]);
-  const [messages, setMessages] = useState<ChatMessage[]>(() =>
-    id ? getMessages(id).filter((message) => !isRetiredAnnouncement(message)) : [],
-  );
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   // 自分のプロフィール画像（AsyncStorageから読み込み）
   const [myAvatarUri, setMyAvatarUri] = useState<string | null>(null);
 
@@ -283,7 +281,7 @@ export default function ChatScreen() {
   useEffect(() => {
     if (!id) return;
     setIsLoadingRoom(true);
-    const loadingFallback = setTimeout(() => setIsLoadingRoom(false), 8000);
+    const loadingFallback = setTimeout(() => setIsLoadingRoom(false), 2500);
     // プロフィール画像読み込み
     AsyncStorage.getItem("profile_avatar_uri").then((uri) => {
       if (uri) setMyAvatarUri(uri);
@@ -295,18 +293,10 @@ export default function ChatScreen() {
         setRoom(r);
         setRoomParticipants([...r.participants]);
       }
-      loadMessagesFromStorage(id).then((stored) => {
-        if (stored.length > 0) {
-          setMessages((prev) => {
-            const storedById = new Map(stored.map((message) => [message.id, message]));
-            const existingIds = new Set(prev.map((message) => message.id));
-          const merged = [...prev.map((message) => storedById.get(message.id) ?? message), ...stored.filter((message) => !existingIds.has(message.id))];
-          return merged.filter((message) => !isRetiredAnnouncement(message)).sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
-          });
-        }
-      });
-      Api.getSharedChatMessages(id).then(applySharedMessages).catch(() => {
+      Api.getSharedChatMessages(id).then(applySharedMessages).catch(async () => {
         // 旧移行チャットは共有DBへの切替対象外でも、既存履歴を引き続き表示する。
+        const stored = await loadMessagesFromStorage(id);
+        setMessages(stored.filter((message) => !isRetiredAnnouncement(message)));
       });
       Api.getSharedChatRooms().then((sharedRooms) => {
         const sharedRoom = sharedRooms.find((item) => item.id === id);

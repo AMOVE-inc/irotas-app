@@ -1690,6 +1690,10 @@ export default function EventsScreen() {
               ) : null}
             </View>
 
+            <View pointerEvents="none" style={{ opacity: 0.5 }}>
+              <View style={{ borderRadius: 10, backgroundColor: "#D7D7DB", paddingHorizontal: 12, paddingVertical: 10, marginBottom: 12 }}>
+                <Text style={{ color: "#66666C", fontSize: 13, fontWeight: "800", textAlign: "center" }}>現在は準備中のためご利用いただけません</Text>
+              </View>
             <View
               style={{
                 flexDirection: "row",
@@ -1765,6 +1769,7 @@ export default function EventsScreen() {
               })}
             </View>
 
+            </View>
             <View
               style={{
                 flexDirection: "row",
