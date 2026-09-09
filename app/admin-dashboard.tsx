@@ -126,6 +126,7 @@ export default function AdminDashboardScreen() {
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [gourmetContests, setGourmetContests] = useState<ImportedGourmetContest[]>([]);
   const [showAnnouncementModal, setShowAnnouncementModal] = useState(false);
+  const [editingAnnouncement, setEditingAnnouncement] = useState<Announcement | null>(null);
   const [showCouponModal, setShowCouponModal] = useState(false);
   const [editingCouponId, setEditingCouponId] = useState<string | null>(null);
   const [couponDraft, setCouponDraft] = useState<Coupon>(EMPTY_COUPON);
@@ -509,17 +510,22 @@ export default function AdminDashboardScreen() {
     );
   };
 
-  // お知らせ追加
-  const handleAddAnnouncement = async (title: string, content: string, type: string) => {
-    const newAnnouncement: Announcement = {
-      id: `ann_${Date.now()}`,
-      title,
-      content,
-      createdAt: new Date().toISOString().split("T")[0],
-    };
-    const updated = [newAnnouncement, ...announcements];
+  // お知らせの作成・編集
+  const handleSaveAnnouncement = async (title: string, content: string, _type: string) => {
+    const nextAnnouncement: Announcement = editingAnnouncement
+      ? { ...editingAnnouncement, title, content }
+      : {
+          id: `ann_${Date.now()}`,
+          title,
+          content,
+          createdAt: new Date().toISOString().split("T")[0],
+        };
+    const updated = editingAnnouncement
+      ? announcements.map((announcement) => announcement.id === editingAnnouncement.id ? nextAnnouncement : announcement)
+      : [nextAnnouncement, ...announcements];
     setAnnouncements(updated);
     await AsyncStorage.setItem("custom_announcements", JSON.stringify(updated));
+    setEditingAnnouncement(null);
   };
 
   // お知らせ削除
@@ -1425,7 +1431,7 @@ export default function AdminDashboardScreen() {
                 お知らせ管理 ({announcements.length}件)
               </Text>
               <Pressable
-                onPress={() => setShowAnnouncementModal(true)}
+                onPress={() => { setEditingAnnouncement(null); setShowAnnouncementModal(true); }}
                 style={({ pressed }) => ({
                   backgroundColor: pressed ? "#d4849e" : "#E8A0BF",
                   borderRadius: 10,
@@ -1465,12 +1471,22 @@ export default function AdminDashboardScreen() {
                     <Text style={{ fontSize: 15, fontWeight: "700", color: colors.foreground, flex: 1, marginRight: 8 }}>
                       {ann.title}
                     </Text>
-                    <Pressable
-                      onPress={() => handleDeleteAnnouncement(ann.id)}
-                      style={({ pressed }) => ({ opacity: pressed ? 0.5 : 1, padding: 4 })}
-                    >
-                      <IconSymbol name="trash.fill" size={16} color="#FF3B30" />
-                    </Pressable>
+                    <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                      <Pressable
+                        onPress={() => { setEditingAnnouncement(ann); setShowAnnouncementModal(true); }}
+                        accessibilityLabel={`${ann.title}を編集`}
+                        style={({ pressed }) => ({ opacity: pressed ? 0.5 : 1, padding: 4 })}
+                      >
+                        <IconSymbol name="pencil" size={16} color="#5D5C74" />
+                      </Pressable>
+                      <Pressable
+                        onPress={() => handleDeleteAnnouncement(ann.id)}
+                        accessibilityLabel={`${ann.title}を削除`}
+                        style={({ pressed }) => ({ opacity: pressed ? 0.5 : 1, padding: 4 })}
+                      >
+                        <IconSymbol name="trash.fill" size={16} color="#FF3B30" />
+                      </Pressable>
+                    </View>
                   </View>
                   <Text style={{ fontSize: 13, color: colors.muted, marginTop: 6, lineHeight: 18 }}>
                     {ann.content}
@@ -1982,8 +1998,9 @@ export default function AdminDashboardScreen() {
       {/* お知らせ作成モーダル */}
       <AnnouncementCreateModal
         visible={showAnnouncementModal}
-        onClose={() => setShowAnnouncementModal(false)}
-        onSave={handleAddAnnouncement}
+        announcement={editingAnnouncement}
+        onClose={() => { setShowAnnouncementModal(false); setEditingAnnouncement(null); }}
+        onSave={handleSaveAnnouncement}
       />
     </ScreenContainer>
   );
@@ -2253,10 +2270,12 @@ function AnalyticsTab() {
 
 function AnnouncementCreateModal({
   visible,
+  announcement,
   onClose,
   onSave,
 }: {
   visible: boolean;
+  announcement: Announcement | null;
   onClose: () => void;
   onSave: (title: string, content: string, type: string) => Promise<void>;
 }) {
@@ -2265,6 +2284,13 @@ function AnnouncementCreateModal({
   const [content, setContent] = useState("");
   const [type, setType] = useState<"important" | "event" | "general">("general");
   const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (!visible) return;
+    setTitle(announcement?.title ?? "");
+    setContent(announcement?.content ?? "");
+    setType("general");
+  }, [visible, announcement]);
 
   const typeOptions: { key: "important" | "event" | "general"; label: string; color: string }[] = [
     { key: "important", label: "重要", color: "#FF3B30" },
@@ -2277,9 +2303,6 @@ function AnnouncementCreateModal({
     setSaving(true);
     await onSave(title.trim(), content.trim(), type);
     setSaving(false);
-    setTitle("");
-    setContent("");
-    setType("general");
     onClose();
   };
 
@@ -2303,7 +2326,7 @@ function AnnouncementCreateModal({
             <Text style={{ fontSize: 16, color: colors.muted }}>キャンセル</Text>
           </Pressable>
           <Text style={{ fontSize: 17, fontWeight: "700", color: colors.foreground }}>
-            お知らせを作成
+            {announcement ? "お知らせを編集" : "お知らせを作成"}
           </Text>
           <Pressable onPress={handleSave} disabled={saving || !title.trim() || !content.trim()}>
             {saving ? (
@@ -2316,7 +2339,7 @@ function AnnouncementCreateModal({
                   color: title.trim() && content.trim() ? "#E8A0BF" : colors.muted,
                 }}
               >
-                投稿
+                {announcement ? "保存" : "投稿"}
               </Text>
             )}
           </Pressable>

@@ -37,7 +37,9 @@ import {
 } from "react-native";
 import { getHomeActivities, type HomeActivity, type HomeActivityKind } from "@/lib/home-activity-store";
 import { getGiftCampaigns, type GiftCampaign } from "@/lib/gift-campaign-store";
+import { useCampaigns, type Campaign } from "@/lib/campaign-store";
 import { getAllEvents } from "@/lib/event-store";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { createDefaultPreferences, loadMemberAiConsents, loadMemberPreferences, recordActivityEvent, type MemberAiConsents, type MemberPreferences } from "@/lib/ai-data-store";
 import { recommendEvents, type RecommendedEvent } from "@/lib/event-recommendation";
 import * as Api from "@/lib/_core/api";
@@ -54,27 +56,6 @@ interface TimelineComment {
 
 // コメントストア（メモリ内）
 const timelineComments: TimelineComment[] = [];
-
-const HOME_CAMPAIGNS = [
-  {
-    id: "summer-points",
-    label: "期間限定",
-    title: "夏のイベント参加キャンペーン",
-    description: "対象イベントへの参加でイロタスポイントが2倍",
-    period: "7/1〜8/31",
-    color: "#E8A0BF",
-    route: "/events" as const,
-  },
-  {
-    id: "member-coupons",
-    label: "会員限定",
-    title: "今月のグルメクーポン",
-    description: "提携店で使える最新クーポンをチェック",
-    period: "7月分公開中",
-    color: "#5B9BD5",
-    route: "/coupons" as const,
-  },
-];
 
 function AnnouncementBanner({ announcements }: { announcements: Announcement[] }) {
   const colors = useColors();
@@ -157,9 +138,22 @@ function AnnouncementBanner({ announcements }: { announcements: Announcement[] }
   );
 }
 
-function CampaignSection({ gifts }: { gifts: GiftCampaign[] }) {
+function CampaignSection({ gifts, campaigns }: { gifts: GiftCampaign[]; campaigns: Campaign[] }) {
   const colors = useColors();
   const router = useRouter();
+  const campaignItems = [
+    ...campaigns.map((campaign) => ({
+      id: `campaign:${campaign.id}`,
+      label: campaign.status === "scheduled" ? "開催予定" : "実施中",
+      title: campaign.title,
+      description: campaign.description,
+      period: `${campaign.startDate.slice(5).replace("-", "/")}〜${campaign.endDate.slice(5).replace("-", "/")}`,
+      color: campaign.type === "gift" ? "#FF9500" : campaign.type === "event" ? "#5B9BD5" : campaign.type === "notification" ? "#AF52DE" : "#E8A0BF",
+      route: "/campaigns" as const,
+    })),
+    ...gifts.map((gift) => ({ id: `gift:${gift.id}`, label: "抽選受付中", title: gift.title, description: gift.description, period: `応募期限 ${gift.deadline}`, color: "#D1749B", route: "/gift-campaign" as const })),
+  ];
+  if (!campaignItems.length) return null;
   return (
     <View style={{ marginBottom: 16 }}>
       <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 16, marginBottom: 10 }}>
@@ -167,7 +161,7 @@ function CampaignSection({ gifts }: { gifts: GiftCampaign[] }) {
         <Text style={{ fontSize: 16, fontWeight: "800", color: colors.foreground, marginLeft: 7 }}>キャンペーン情報</Text>
       </View>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, gap: 10 }}>
-        {[...gifts.map((gift) => ({ id: `gift:${gift.id}`, label: "抽選受付中", title: gift.title, description: gift.description, period: `応募期限 ${gift.deadline}`, color: "#D1749B", route: "/gift-campaign" as const })), ...HOME_CAMPAIGNS].map((campaign) => (
+        {campaignItems.map((campaign) => (
           <Pressable key={campaign.id} onPress={() => router.push(campaign.route)} style={{ width: 270, borderRadius: 16, padding: 16, backgroundColor: `${campaign.color}16`, borderWidth: 1, borderColor: `${campaign.color}45` }}>
             <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 8 }}>
               <Text style={{ fontSize: 10, fontWeight: "800", color: campaign.color, backgroundColor: colors.background, borderRadius: 8, paddingHorizontal: 8, paddingVertical: 3 }}>{campaign.label}</Text>
@@ -583,6 +577,8 @@ export default function HomeScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [activities, setActivities] = useState<HomeActivity[]>([]);
   const [giftCampaigns, setGiftCampaigns] = useState<GiftCampaign[]>([]);
+  const [homeAnnouncements, setHomeAnnouncements] = useState<Announcement[]>(ANNOUNCEMENTS);
+  const managedCampaigns = useCampaigns();
   const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
   const [preferences, setPreferences] = useState<MemberPreferences>(() => createDefaultPreferences({ residence: CURRENT_USER.residence, favoriteCuisines: CURRENT_USER.favoriteCuisines }));
   const [aiConsents, setAiConsents] = useState<MemberAiConsents>({ eventRecommendation: false, memberMatching: false, conciergeHistory: false, anonymousImprovement: false, updatedAt: "" });
@@ -591,7 +587,7 @@ export default function HomeScreen() {
     void Api.getNotifications()
       .then((items) => setUnreadNotificationCount(items.filter((item) => !item.read).length))
       .catch(() => setUnreadNotificationCount(0));
-    void Promise.all([Api.getHomeActivities().catch(() => []), getHomeActivities(), getGiftCampaigns(), loadMemberPreferences(CURRENT_USER.id, { residence: CURRENT_USER.residence, favoriteCuisines: CURRENT_USER.favoriteCuisines }), loadMemberAiConsents(CURRENT_USER.id)]).then(([remoteActivities, fallbackActivities, gifts, nextPreferences, nextConsents]) => {
+    void Promise.all([Api.getHomeActivities().catch(() => []), getHomeActivities(), getGiftCampaigns(), AsyncStorage.getItem("custom_announcements"), loadMemberPreferences(CURRENT_USER.id, { residence: CURRENT_USER.residence, favoriteCuisines: CURRENT_USER.favoriteCuisines }), loadMemberAiConsents(CURRENT_USER.id)]).then(([remoteActivities, fallbackActivities, gifts, savedAnnouncements, nextPreferences, nextConsents]) => {
       const mergedActivities = new Map(fallbackActivities.map((activity) => [activity.id, activity]));
       remoteActivities.forEach((activity) => {
         const fallback = mergedActivities.get(activity.id);
@@ -608,6 +604,16 @@ export default function HomeScreen() {
       });
       setActivities([...mergedActivities.values()]);
       setPreferences(nextPreferences); setAiConsents(nextConsents);
+      if (savedAnnouncements !== null) {
+        try {
+          const parsed = JSON.parse(savedAnnouncements) as Announcement[];
+          setHomeAnnouncements(parsed.filter((item) => item && typeof item.id === "string" && typeof item.title === "string" && typeof item.content === "string"));
+        } catch {
+          setHomeAnnouncements(ANNOUNCEMENTS);
+        }
+      } else {
+        setHomeAnnouncements(ANNOUNCEMENTS);
+      }
       const today = new Date().toISOString().slice(0, 10);
       setGiftCampaigns(gifts.filter((gift) => gift.status === "open" && gift.deadline >= today).sort((a, b) => a.deadline.localeCompare(b.deadline)));
     });
@@ -636,8 +642,8 @@ export default function HomeScreen() {
   const ListHeader = useMemo(
     () => (
       <>
-        <AnnouncementBanner announcements={ANNOUNCEMENTS} />
-        <CampaignSection gifts={giftCampaigns} />
+        <AnnouncementBanner announcements={homeAnnouncements} />
+        <CampaignSection gifts={giftCampaigns} campaigns={managedCampaigns.filter((campaign) => campaign.status !== "ended" && campaign.endDate >= new Date().toISOString().slice(0, 10))} />
         <RecommendedEventsSection items={recommendedEvents} enabled={aiConsents.eventRecommendation} />
         <TodayEventsSection events={todayEvents} boardEvents={todayBoardEvents} />
         <View style={{ paddingHorizontal: 16, paddingVertical: 8, borderBottomWidth: 0.5, borderBottomColor: colors.border }}>
@@ -647,7 +653,7 @@ export default function HomeScreen() {
         </View>
       </>
     ),
-    [todayEvents, todayBoardEvents, giftCampaigns, recommendedEvents, aiConsents.eventRecommendation, colors],
+    [todayEvents, todayBoardEvents, giftCampaigns, managedCampaigns, homeAnnouncements, recommendedEvents, aiConsents.eventRecommendation, colors],
   );
 
   return (
