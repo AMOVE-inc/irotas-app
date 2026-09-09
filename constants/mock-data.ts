@@ -112,6 +112,8 @@ export interface Event {
   capacity: number;
   attendees: number;
   participants: string[]; // member ids
+  /** Participants retained for history when an event is cancelled. */
+  cancelledParticipantIds?: string[];
   price: string; // デフォルト料金（ランク別未設定の場合に使用）
   rankPrices?: {
     regular?: string;

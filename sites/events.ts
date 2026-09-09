@@ -255,6 +255,7 @@ function publicEvent(
     ? data.manualParticipantIds.filter((value): value is string => typeof value === "string" && Boolean(value.trim()))
     : [];
   const participantIds = [...new Set([...confirmed.map(publicId), ...manualParticipantIds])];
+  const cancelledParticipantIds = row.status === "cancelled" ? participantIds : [];
   const viewerParticipation = active.find((item) => item.member_id === viewerId)?.status ?? null;
   return {
     ...data,
@@ -274,8 +275,9 @@ function publicEvent(
     organizerRank: row.organizer_member_rank ?? undefined,
     organizerAccessRole: row.organizer_access_role ?? undefined,
     applicantIds: active.map(publicId),
-    participants: participantIds,
-    attendees: Math.max(active.length, participantIds.length),
+    participants: row.status === "cancelled" ? [] : participantIds,
+    cancelledParticipantIds,
+    attendees: row.status === "cancelled" ? 0 : Math.max(active.length, participantIds.length),
     cancellationRequests: cancellations.map((item) => ({
       memberId: publicId(item),
       requestedAt: item.requested_at,
