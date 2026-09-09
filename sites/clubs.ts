@@ -77,6 +77,25 @@ async function membershipsForClubs(db: D1Database, clubIds: string[]) {
   return result.results ?? [];
 }
 
+async function reconcileDiscordClubMemberships(db: D1Database) {
+  const now = new Date().toISOString();
+  // Discordの現行ロールを取り込んだmembers.discord_roles_jsonを毎回の一覧取得時に
+  // 所属へ反映する。既存の手動申請・退部履歴を消さず、ロール保有者だけを承認済みにする。
+  await db.prepare(`INSERT INTO club_memberships
+    (club_id, member_id, status, source, applied_at, approved_at, updated_at)
+    SELECT c.id, m.id, 'approved', 'discord', ?, ?, ?
+    FROM clubs c
+    CROSS JOIN members m
+    CROSS JOIN json_each(CASE WHEN json_valid(m.discord_roles_json) THEN m.discord_roles_json ELSE '[]' END) r
+    WHERE c.status = 'active' AND m.account_status = 'active'
+      AND CAST(r.value AS TEXT) LIKE '%' || c.name || '%'
+    ON CONFLICT(club_id, member_id) DO UPDATE SET
+      status = 'approved',
+      source = 'discord',
+      approved_at = COALESCE(club_memberships.approved_at, excluded.approved_at),
+      updated_at = excluded.updated_at`).bind(now, now, now).run();
+}
+
 function serializeClub(row: ClubRow, memberships: MembershipRow[], viewerId: number, elevated: boolean) {
   const clubMemberships = memberships.filter((item) => item.club_id === row.id);
   const approved = clubMemberships.filter((item) => item.status === "approved");
@@ -168,6 +187,7 @@ export async function handleClubRequest(request: Request, env: SitesEnv): Promis
   const elevated = isAdmin(member);
 
   if (pathname === CLUBS_PATH && request.method === "GET") {
+    await reconcileDiscordClubMemberships(env.DB);
     const rows = await env.DB.prepare(`SELECT c.*, leader.public_member_id AS leader_public_member_id,
         leader.display_name AS leader_display_name
       FROM clubs c LEFT JOIN members leader ON leader.id = c.leader_member_id
@@ -178,6 +198,7 @@ export async function handleClubRequest(request: Request, env: SitesEnv): Promis
   }
 
   if (clubMatch && request.method === "GET") {
+    await reconcileDiscordClubMemberships(env.DB);
     const row = await clubRow(env.DB, decodeURIComponent(clubMatch[1]));
     if (!row || row.status !== "active") return json({ error: "部活が見つかりません" }, 404);
     const memberships = await membershipsForClubs(env.DB, [row.id]);

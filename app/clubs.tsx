@@ -1780,9 +1780,6 @@ export default function ClubsScreen() {
     .sort((a, b) => clubMembershipSortPriority(a.access) - clubMembershipSortPriority(b.access)
       || a.club.name.localeCompare(b.club.name, "ja"))
     .map(({ club }) => club);
-  const joinedClubPreview = joinedClubs.length === 0
-    ? clubs.find((club) => club.name === "スイーツ部")
-    : undefined;
 
   useEffect(() => {
     if (!clubId) return;
@@ -1913,13 +1910,11 @@ export default function ClubsScreen() {
           </View>
         </View>
 
-        {joinedClubs.length > 0 || joinedClubPreview ? (
+        {joinedClubs.length > 0 ? (
           <View style={{ marginBottom: 18 }}>
             <View style={{ paddingHorizontal: 16, marginBottom: 10 }}>
               <Text style={{ fontSize: 19, fontWeight: "900", color: colors.foreground }}>入部中の部活動</Text>
-              <Text style={{ fontSize: 12, color: colors.muted, marginTop: 3 }}>
-                {joinedClubPreview ? "入部後の表示イメージです（実際には未入部です）" : "部活動を開くと投稿やメンバーを確認できます"}
-              </Text>
+              <Text style={{ fontSize: 12, color: colors.muted, marginTop: 3 }}>部活動を開くと投稿やメンバーを確認できます</Text>
             </View>
             {joinedClubs.map((club) => (
               <ClubCard
@@ -1928,12 +1923,6 @@ export default function ClubsScreen() {
                 onPress={() => router.push({ pathname: "/board", params: { category: `club-${club.id}`, view: "threads" } })}
               />
             ))}
-            {joinedClubPreview ? (
-              <ClubCard
-                club={joinedClubPreview}
-                previewAsMember
-              />
-            ) : null}
           </View>
         ) : null}
 

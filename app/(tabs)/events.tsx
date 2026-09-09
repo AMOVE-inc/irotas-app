@@ -1690,10 +1690,15 @@ export default function EventsScreen() {
               ) : null}
             </View>
 
-            <View pointerEvents="none" style={{ opacity: 0.5 }}>
-              <View style={{ borderRadius: 10, backgroundColor: "#D7D7DB", paddingHorizontal: 12, paddingVertical: 10, marginBottom: 12 }}>
-                <Text style={{ color: "#66666C", fontSize: 13, fontWeight: "800", textAlign: "center" }}>現在は準備中のためご利用いただけません</Text>
-              </View>
+            <View
+              pointerEvents="none"
+              style={{
+                opacity: 0.52,
+                backgroundColor: "#E3E3E6",
+                borderRadius: 14,
+                padding: 12,
+              }}
+            >
             <View
               style={{
                 flexDirection: "row",
@@ -1724,7 +1729,6 @@ export default function EventsScreen() {
                   選択解除
                 </Text>
               </Pressable>
-            </View>
             <View
               style={{
                 flexDirection: "row",
@@ -1895,6 +1899,33 @@ export default function EventsScreen() {
                 options={BUDGET_VALUES}
                 onChange={setBudgetMax}
               />
+            </View>
+              <View
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  right: 0,
+                  bottom: 0,
+                  left: 0,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  paddingHorizontal: 24,
+                  borderRadius: 14,
+                  backgroundColor: "rgba(71, 71, 76, 0.88)",
+                }}
+              >
+                <Text
+                  style={{
+                    color: "#FFFFFF",
+                    fontSize: 14,
+                    fontWeight: "800",
+                    textAlign: "center",
+                    lineHeight: 21,
+                  }}
+                >
+                  以下機能は現在準備中のためご利用いただけません
+                </Text>
+              </View>
             </View>
           </ScrollView>
         </View>

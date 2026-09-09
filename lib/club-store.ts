@@ -1,14 +1,10 @@
 import { useEffect, useSyncExternalStore } from "react";
-import { CLUBS, type Club } from "@/constants/mock-data";
+import { type Club } from "@/constants/mock-data";
 import * as Api from "@/lib/_core/api";
 
-let clubs: Club[] = CLUBS.map((club) => ({
-  ...club,
-  memberIds: [...club.memberIds],
-  applicantIds: [...club.applicantIds],
-  applications: club.applications.map((application) => ({ ...application })),
-  events: club.events.map((event) => ({ ...event })),
-}));
+// 部活動の所属状態はサーバーのDiscordロール移行結果を唯一の情報源にする。
+// 初期モックを表示すると、実際には部員である会員にも一瞬「入部申請」が出る。
+let clubs: Club[] = [];
 
 const listeners = new Set<() => void>();
 let loading: Promise<Club[]> | null = null;
