@@ -1879,7 +1879,7 @@ export default function ClubsScreen() {
 
         {showClubFinder ? <View style={{ marginBottom: 18 }}>
           <View style={{ paddingHorizontal: 16, marginBottom: 10 }}><Text style={{ fontSize: 18, fontWeight: "900", color: colors.foreground }}>部活動一覧</Text></View>
-          {clubsWithAccess.map(({ club }) => <ClubCard key={club.id} club={club} onPress={() => setSelectedClub(club)} />)}
+          {discoverClubs.map((club) => <ClubCard key={club.id} club={club} onPress={() => setSelectedClub(club)} />)}
         </View> : null}
 
         <View style={{ paddingHorizontal: 16, marginBottom: 22 }}>
@@ -1951,7 +1951,7 @@ export default function ClubsScreen() {
           </View>
         ) : null}
 
-        <View>
+        {false ? <View>
           <View style={{ paddingHorizontal: 16, marginBottom: 10 }}>
             <Text style={{ fontSize: 19, fontWeight: "900", color: colors.foreground }}>部活動を探す</Text>
             <Text style={{ fontSize: 12, lineHeight: 18, color: colors.muted, marginTop: 3 }}>
@@ -1959,7 +1959,7 @@ export default function ClubsScreen() {
             </Text>
           </View>
           {discoverClubs.map((club) => <ClubCard key={club.id} club={club} onPress={() => setSelectedClub(club)} />)}
-        </View>
+        </View> : null}
       </ScrollView>
 
       {/* 部活動詳細モーダル */}

@@ -266,7 +266,6 @@ function MealReportTimelineCard({ thread }: { thread: BoardThread }) {
   const colors = useColors();
   const report = thread.mealReport;
   if (!report) return null;
-  const image = thread.images?.[0];
   const area = (report.areaDisplay ?? formatMealReportArea(report.prefecture)).replace(/^📍\s*/, "").trim();
   const rating = Math.max(0, Math.min(5, Math.round(report.rating)));
   const impression = mealReportImpression(thread);
@@ -275,16 +274,15 @@ function MealReportTimelineCard({ thread }: { thread: BoardThread }) {
       <View>
         <View style={{ minWidth: 0 }}>
           {report.postTitle ? <Text numberOfLines={2} style={{ fontSize: 15, lineHeight: 20, fontWeight: "900", color: colors.foreground }}>{report.postTitle}</Text> : null}
-          <Text numberOfLines={2} style={{ fontSize: report.postTitle ? 13 : 16, lineHeight: report.postTitle ? 18 : 21, fontWeight: "900", color: colors.foreground, marginTop: report.postTitle ? 3 : 0 }}>{report.restaurantName}</Text>
-          {rating ? <View style={{ flexDirection: "row", alignItems: "center", marginTop: 6 }}><Text style={{ fontSize: 17, fontWeight: "900", color: "#E29A17" }}>★ {rating}.0</Text><Text style={{ fontSize: 11, color: colors.muted, marginLeft: 5 }}>/ 5</Text></View> : null}
+          <View style={{ flexDirection: "row", alignItems: "center", flexWrap: "wrap", gap: 6, marginTop: report.postTitle ? 3 : 0 }}><Text numberOfLines={2} style={{ fontSize: report.postTitle ? 13 : 16, lineHeight: report.postTitle ? 18 : 21, fontWeight: "900", color: colors.foreground }}>{report.restaurantName}</Text>{area ? <Text style={{ fontSize: 11, fontWeight: "700", color: "#5F5960", backgroundColor: "#F4F1F3", borderRadius: 8, paddingHorizontal: 7, paddingVertical: 3 }}>📍 {area}</Text> : null}</View>
+          {rating ? <View style={{ flexDirection: "row", alignItems: "center", marginTop: 6 }}><Text style={{ fontSize: 17, fontWeight: "900", color: "#E29A17" }}>★ {rating}</Text><Text style={{ fontSize: 11, color: colors.muted, marginLeft: 5 }}>/ 5</Text></View> : null}
           <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 5, marginTop: 7 }}>
-            {area ? <Text numberOfLines={1} style={{ maxWidth: "100%", fontSize: 11, fontWeight: "700", color: "#5F5960", backgroundColor: "#F4F1F3", borderRadius: 8, paddingHorizontal: 7, paddingVertical: 3 }}>📍 {area}</Text> : null}
             {report.budget ? <Text style={{ fontSize: 11, fontWeight: "700", color: "#5F5960", backgroundColor: "#F4F1F3", borderRadius: 8, paddingHorizontal: 7, paddingVertical: 3 }}>{report.budget}</Text> : null}
           </View>
           {impression ? <View style={{ marginTop: 7 }}><Text style={{ fontSize: 13, lineHeight: 19, color: colors.foreground }}>{impression}</Text></View> : null}
         </View>
       </View>
-      {thread.images?.length ? <View style={{ gap: 8, marginTop: 10 }}>{thread.images.map((item, index) => <Image key={`${thread.id}-image-${index}`} source={boardImageSource(item)} style={{ width: "100%", height: 210, borderRadius: 12, backgroundColor: "#F1EEF0" }} contentFit="cover" />)}</View> : null}
+      {thread.images?.length ? <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6, marginTop: 10 }}>{thread.images.map((item, index) => <Image key={`${thread.id}-image-${index}`} source={boardImageSource(item)} style={{ width: "32%", aspectRatio: 1, borderRadius: 10, backgroundColor: "#F1EEF0" }} contentFit="cover" />)}</View> : null}
     </View>
   );
 }
@@ -2507,7 +2505,9 @@ export default function BoardScreen() {
     [authUser, dynamicThreads, editedThreads, deletedThreadIds],
   );
   const boardLoading = Boolean(authUser) && (archiveLoading || sharedLoading);
-  const filteredThreads = sortRecruitmentThreads(allThreads.filter((t) => t.category === activeCategory));
+  const filteredThreads = activeCategory === "meal-report"
+    ? allThreads.filter((thread) => thread.category === activeCategory).sort((a, b) => Date.parse(a.lastUpdated) - Date.parse(b.lastUpdated))
+    : sortRecruitmentThreads(allThreads.filter((t) => t.category === activeCategory));
   const clubForThread = (thread: BoardThread) => clubs.find((club) => `club-${club.id}` === thread.category);
   const canChangeRecruitment = (thread: BoardThread) => {
     const club = clubForThread(thread);

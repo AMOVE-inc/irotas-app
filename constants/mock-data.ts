@@ -792,6 +792,7 @@ export const CHAT_ROOMS: ChatRoom[] = [
 ];
 
 export const CHAT_MESSAGES: ChatMessage[] = [
+  ...BOARD_THREADS.filter((thread) => thread.category === "introduction" && thread.selfIntroduction).map((thread) => ({ id: `intro-board-${thread.id}`, chatId: "board-introduction", senderId: thread.author.id, content: `${thread.selfIntroduction!.introduction}${thread.selfIntroduction!.wantToTry ? `\n\nIRO+でやってみたいこと\n${thread.selfIntroduction!.wantToTry}` : ""}`, createdAt: thread.lastUpdated })),
   { id: "intro-u1", chatId: "board-introduction", senderId: "u1", content: "東京を中心に食べ歩きを始めたばかりです。皆さんよろしくお願いします。\n\nIRO+でやってみたいこと\n気になるお店を一緒に開拓するグルメ会を企画してみたいです。", createdAt: "2026-08-30T10:00:00+09:00" },
   { id: "intro-u2", chatId: "board-introduction", senderId: "u2", content: "美味しいお店と楽しい時間が大好きです。よろしくお願いします！\n\nIRO+でやってみたいこと\n週末のランチ会に参加してみたいです。", createdAt: "2026-08-31T12:00:00+09:00" },
   {
