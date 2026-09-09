@@ -71,6 +71,7 @@ function MessageBubble({ message, isMe, viewerId, myAvatarUri, senderMember, mem
   const [showMoreReactions, setShowMoreReactions] = useState(false);
   const [showActions, setShowActions] = useState(false);
   const [reactionDetails, setReactionDetails] = useState<{ emoji: string; memberIds: string[] } | null>(null);
+  const reactionLongPress = useRef(false);
   const pollLines = message.content.startsWith("📊 ") ? message.content.split("\n") : [];
   const pollChoices = pollLines.filter((line) => line.startsWith("◯ ")).map((line) => line.slice(2));
   const pollAllowsMultiple = pollLines.includes("🔢 複数回答可");
@@ -178,8 +179,17 @@ function MessageBubble({ message, isMe, viewerId, myAvatarUri, senderMember, mem
           {Object.entries(message.reactions ?? {}).filter(([emoji]) => !emoji.startsWith("🗳️")).map(([emoji, memberIds]) => (
             <Pressable
               key={emoji}
-              onPress={() => onReact(emoji)}
-              onLongPress={() => setReactionDetails({ emoji, memberIds })}
+              onPress={() => {
+                if (reactionLongPress.current) {
+                  reactionLongPress.current = false;
+                  return;
+                }
+                onReact(emoji);
+              }}
+              onLongPress={() => {
+                reactionLongPress.current = true;
+                setReactionDetails({ emoji, memberIds });
+              }}
               delayLongPress={350}
               style={{ flexDirection: "row", alignItems: "center", borderRadius: 11, paddingHorizontal: 7, paddingVertical: 2, backgroundColor: memberIds.includes(viewerId) ? "#F8DCE9" : colors.surface, borderWidth: 1, borderColor: memberIds.includes(viewerId) ? "#E8A0BF" : colors.border }}
             >
@@ -597,7 +607,10 @@ export default function ChatScreen() {
               {day !== previousDay ? <View style={{ alignItems: "center", marginVertical: 10 }}><View style={{ borderRadius: 12, backgroundColor: colors.surface, paddingHorizontal: 11, paddingVertical: 4 }}><Text style={{ fontSize: 11, fontWeight: "700", color: colors.muted }}>{day}</Text></View></View> : null}
               <MessageBubble
                 message={item}
-                isMe={item.senderId === viewerMemberId}
+                isMe={item.senderId === viewerMemberId || item.senderId === authUser?.memberId || (
+                  Boolean(item.shared && item.externalAuthorName && authUser?.name) &&
+                  stripRankFromName(item.externalAuthorName ?? "") === stripRankFromName(authUser?.name ?? "")
+                )}
                 viewerId={viewerMemberId}
                 myAvatarUri={myAvatarUri}
                 senderMember={directory.find((member) => member.id === item.senderId)}

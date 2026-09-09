@@ -550,24 +550,18 @@ export default function AdminDashboardScreen() {
   };
 
   // お知らせ削除
-  const handleDeleteAnnouncement = (id: string) => {
-    Alert.alert("削除確認", "このお知らせを削除しますか？", [
-      { text: "キャンセル", style: "cancel" },
-      {
-        text: "削除",
-        style: "destructive",
-        onPress: async () => {
-          try {
-            await deleteSharedAnnouncement(id);
-            const updated = announcements.filter((a) => a.id !== id);
-            setAnnouncements(updated);
-            await AsyncStorage.setItem("custom_announcements", JSON.stringify(updated));
-          } catch (error) {
-            Alert.alert("削除できませんでした", error instanceof Error ? error.message : "通信状況を確認してもう一度お試しください。");
-          }
-        },
-      },
-    ]);
+  const handleDeleteAnnouncement = async (id: string) => {
+    const previous = announcements;
+    const updated = previous.filter((announcement) => announcement.id !== id);
+    // 操作直後に一覧から取り除き、二重タップも防ぐ。通信に失敗したときだけ元に戻す。
+    setAnnouncements(updated);
+    try {
+      await deleteSharedAnnouncement(id);
+      await AsyncStorage.setItem("custom_announcements", JSON.stringify(updated));
+    } catch (error) {
+      setAnnouncements(previous);
+      Alert.alert("削除できませんでした", error instanceof Error ? error.message : "通信状況を確認してもう一度お試しください。");
+    }
   };
 
   const handleAddEmail = () => {
@@ -1506,7 +1500,7 @@ export default function AdminDashboardScreen() {
                         <IconSymbol name="pencil" size={16} color="#5D5C74" />
                       </Pressable>
                       <Pressable
-                        onPress={() => handleDeleteAnnouncement(ann.id)}
+                        onPress={() => void handleDeleteAnnouncement(ann.id)}
                         accessibilityLabel={`${ann.title}を削除`}
                         style={({ pressed }) => ({ opacity: pressed ? 0.5 : 1, padding: 4 })}
                       >

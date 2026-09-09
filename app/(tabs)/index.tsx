@@ -25,6 +25,7 @@ import { useRef, useState, useCallback, useEffect, useMemo } from "react";
 import {
   FlatList,
   KeyboardAvoidingView,
+  Linking,
   Platform,
   Modal,
   Pressable,
@@ -58,6 +59,24 @@ interface TimelineComment {
 
 // コメントストア（メモリ内）
 const timelineComments: TimelineComment[] = [];
+
+function LinkifiedText({ content, style }: { content: string; style: any }) {
+  const parts = content.split(/(https?:\/\/[^\s]+)/g);
+  return (
+    <Text style={style}>
+      {parts.map((part, index) => /^https?:\/\//.test(part) ? (
+        <Text
+          key={`${part}-${index}`}
+          accessibilityRole="link"
+          onPress={() => void Linking.openURL(part)}
+          style={{ color: "#3686BD", textDecorationLine: "underline", fontWeight: "700" }}
+        >
+          {part}
+        </Text>
+      ) : part)}
+    </Text>
+  );
+}
 
 function AnnouncementBanner({ announcements }: { announcements: Announcement[] }) {
   const colors = useColors();
@@ -148,7 +167,7 @@ function AnnouncementBanner({ announcements }: { announcements: Announcement[] }
               <Pressable onPress={() => setSelectedAnnouncement(null)} accessibilityLabel="閉じる" style={{ marginLeft: "auto", padding: 4 }}><IconSymbol name="xmark" size={20} color={colors.muted} /></Pressable>
             </View>
             <Text style={{ fontSize: 19, lineHeight: 27, fontWeight: "900", color: colors.foreground }}>{selectedAnnouncement?.title}</Text>
-            <ScrollView style={{ marginTop: 14 }} showsVerticalScrollIndicator={false}><Text style={{ fontSize: 15, lineHeight: 24, color: colors.foreground }}>{selectedAnnouncement?.content}</Text></ScrollView>
+            <ScrollView style={{ marginTop: 14 }} showsVerticalScrollIndicator={false}><LinkifiedText content={selectedAnnouncement?.content ?? ""} style={{ fontSize: 15, lineHeight: 24, color: colors.foreground }} /></ScrollView>
           </Pressable>
         </Pressable>
       </Modal>
@@ -186,7 +205,7 @@ function CampaignSection({ gifts, campaigns }: { gifts: GiftCampaign[]; campaign
               <Text style={{ marginLeft: "auto", fontSize: 11, fontWeight: "700", color: colors.muted }}>{campaign.period}</Text>
             </View>
             <Text style={{ fontSize: 15, fontWeight: "900", color: colors.foreground }}>{campaign.title}</Text>
-            <Text numberOfLines={4} style={{ fontSize: 12, lineHeight: 18, color: colors.muted, marginTop: 5 }}>{campaign.description}</Text>
+            <Text numberOfLines={2} ellipsizeMode="tail" style={{ fontSize: 12, lineHeight: 18, color: colors.muted, marginTop: 5 }}>{campaign.description}</Text>
             <Pressable onPress={() => router.push(campaign.route)} accessibilityLabel={`${campaign.title}の詳細を見る`} style={{ alignSelf: "flex-start", marginTop: 10, paddingVertical: 4 }}><Text style={{ fontSize: 12, fontWeight: "800", color: "#4A91BD" }}>詳しく見る →</Text></Pressable>
           </View>
         ))}
