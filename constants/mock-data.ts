@@ -695,15 +695,6 @@ export const BOARD_THREADS: BoardThread[] = [
     },
   },
   {
-    id: "t4", title: "東飲みしたい人集まれ！🍻",
-    author: MEMBERS[5], category: "free-chat", commentCount: 30,
-    lastUpdated: "2026-03-23T19:00:00",
-    preview: "来週末に東京で飲み会を企画しています。参加したい方はコメントください！",
-    isRecruiting: true, recruitCapacity: 12, recruitAttendees: 8,
-    recruitParticipants: ["u6", "u1", "u2", "u4"],
-    eventDate: today, chatId: "chat3",
-  },
-  {
     id: "t5", title: "おしえてグルメ相談室：記念日ディナー",
     author: MEMBERS[4], category: "gourmet-advice", commentCount: 12,
     lastUpdated: "2026-03-21T16:00:00",
