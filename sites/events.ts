@@ -63,6 +63,12 @@ function eventStart(row: EventRow) {
   return Number.isNaN(value.getTime()) ? null : value;
 }
 
+function japanDateKey(now = new Date()) {
+  const parts = new Intl.DateTimeFormat("en-US", { timeZone: "Asia/Tokyo", year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(now);
+  const value = Object.fromEntries(parts.filter((part) => part.type !== "literal").map((part) => [part.type, part.value]));
+  return `${value.year}-${value.month}-${value.day}`;
+}
+
 function lateCancellationCutoff(row: EventRow) {
   // Policy is calendar-based in JST: 00:00 on the previous calendar day, not "24 hours before".
   const localCutoff = new Date(`${row.event_date}T00:00:00+09:00`);
@@ -494,6 +500,7 @@ async function createEvent(request: Request, db: D1Database, member: Awaited<Ret
   const input = JSON.parse(raw) as Record<string, unknown>;
   const event = sanitizeEvent(input.event);
   if (!event) return responseJson({ error: "イベントの入力内容を確認してください" }, 400);
+  if (event.date < japanDateKey()) return responseJson({ error: "開催日は本日以降に設定してください" }, 400);
   const elevated = isElevated(member);
   const admin = isAdmin(member);
   if (event.eventType === "official" && !elevated)
@@ -679,9 +686,12 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
       if (prefecture !== undefined) data.prefecture = prefecture || undefined;
       if (tokyoArea !== undefined) data.tokyoArea = tokyoArea || undefined;
       if (publicNotes !== undefined) data.publicNotes = publicNotes || undefined;
+      const effectiveDate = date ?? row.event_date;
+      const effectiveTime = time ?? (typeof data.time === "string" && /^\d{2}:\d{2}$/.test(data.time) ? data.time : "00:00");
+      const reopensFutureEvent = row.status === "ended" && new Date(`${effectiveDate}T${effectiveTime}:00+09:00`).getTime() > Date.now();
       const now = new Date().toISOString();
       await env.DB.batch([
-        env.DB.prepare("UPDATE events SET title = ?, event_type = ?, club_id = ?, event_date = ?, public_data_json = ?, private_memo = COALESCE(?, private_memo), updated_at = ? WHERE id = ?").bind(title, eventType, eventType === "club" ? clubId : null, date ?? row.event_date, JSON.stringify(data), privateMemo, now, id),
+        env.DB.prepare("UPDATE events SET title = ?, event_type = ?, club_id = ?, event_date = ?, status = ?, public_data_json = ?, private_memo = COALESCE(?, private_memo), updated_at = ? WHERE id = ?").bind(title, eventType, eventType === "club" ? clubId : null, effectiveDate, reopensFutureEvent ? "open" : row.status, JSON.stringify(data), privateMemo, now, id),
         ...["title", "description", "eventType", "clubId", "restaurantName", "image", "genres", "companionIds", "rankPrices", "selectionMethod", "category", "prefecture", "tokyoArea", "publicNotes", "privateMemo", "event_date", "time", "location", "capacity", "reservationCapacity", "price", "priceMin", "priceMax", "applicationDeadline", "cancellationPolicy", "tabelogUrl", "googleMapsUrl", "manualParticipantIds"].map((field) => env.DB!.prepare(`INSERT INTO event_import_field_edits (event_id, field_name, edited_at, actor_member_id)
           VALUES (?, ?, ?, ?) ON CONFLICT(event_id, field_name) DO UPDATE SET edited_at = excluded.edited_at, actor_member_id = excluded.actor_member_id`).bind(id, field, now, member.id)),
         env.DB.prepare(`INSERT INTO audit_logs (actor_user_id, action, entity_type, entity_id, metadata_json, created_at)

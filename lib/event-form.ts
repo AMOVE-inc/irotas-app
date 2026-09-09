@@ -41,6 +41,14 @@ export function numericEventAmount(value: string) {
   return Number(value.replace(/[^0-9]/g, ""));
 }
 
+function japanDateKey(now = new Date()) {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Asia/Tokyo", year: "numeric", month: "2-digit", day: "2-digit",
+  }).formatToParts(now);
+  const value = Object.fromEntries(parts.filter((part) => part.type !== "literal").map((part) => [part.type, part.value]));
+  return `${value.year}-${value.month}-${value.day}`;
+}
+
 /** 幹事・同席者・募集枠を収容するために必要な最小予約人数。 */
 export function minimumReservationCapacity(recruitCapacity: string, companionIds: readonly string[]) {
   return 1 + companionIds.length + Number(recruitCapacity || 0);
@@ -93,7 +101,7 @@ export function eventFormValuesFromEvent(event: Event): EventFormValues {
   };
 }
 
-export function validateEventForm(values: EventFormValues, options: { requireImage: boolean; requireTerms?: boolean; termsAccepted?: boolean; allowedClubIds?: string[]; allowEmptyGenres?: boolean }) {
+export function validateEventForm(values: EventFormValues, options: { requireImage: boolean; requireTerms?: boolean; termsAccepted?: boolean; allowedClubIds?: string[]; allowEmptyGenres?: boolean; allowPastDate?: boolean }) {
   const clubEvent = values.eventType === "club";
   const missing: string[] = [];
   if (!clubEvent && !values.restaurantName.trim()) missing.push("店名");
@@ -111,6 +119,7 @@ export function validateEventForm(values: EventFormValues, options: { requireIma
   if (options.requireImage && !values.image) missing.push("写真");
   if (options.requireTerms && !options.termsAccepted) missing.push("イベント開催時のルールへの同意");
   if (missing.length) return `次の項目を設定してください：${missing.join("、")}`;
+  if (!options.allowPastDate && values.date < japanDateKey()) return "開催日は本日以降に設定してください";
   if (clubEvent && options.allowedClubIds && !options.allowedClubIds.includes(values.clubId)) return "所属している部活動のみイベントを作成・編集できます。";
   const extracted = extractEventLocation(values.address);
   if (values.address.trim() && !extracted.prefecture) return "住所を入力する場合は都道府県名を含めてください";
