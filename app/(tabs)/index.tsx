@@ -39,6 +39,7 @@ import {
 import { getHomeActivities, type HomeActivity, type HomeActivityKind } from "@/lib/home-activity-store";
 import { getGiftCampaigns, type GiftCampaign } from "@/lib/gift-campaign-store";
 import { useCampaigns, type Campaign } from "@/lib/campaign-store";
+import { getSharedAnnouncements } from "@/lib/announcement-api";
 import { getAllEvents } from "@/lib/event-store";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { createDefaultPreferences, loadMemberAiConsents, loadMemberPreferences, recordActivityEvent, type MemberAiConsents, type MemberPreferences } from "@/lib/ai-data-store";
@@ -179,14 +180,14 @@ function CampaignSection({ gifts, campaigns }: { gifts: GiftCampaign[]; campaign
       </View>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, gap: 10 }}>
         {campaignItems.map((campaign) => (
-          <View key={campaign.id} style={{ width: 270, height: 236, borderRadius: 16, padding: 16, backgroundColor: "#EDF8FE", borderWidth: 1, borderColor: "#B9DDF3" }}>
+          <View key={campaign.id} style={{ width: 270, borderRadius: 16, padding: 16, backgroundColor: "#EDF8FE", borderWidth: 1, borderColor: "#B9DDF3" }}>
             <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 8 }}>
               <Text style={{ fontSize: 10, fontWeight: "800", color: "#4A91BD", backgroundColor: colors.background, borderRadius: 8, paddingHorizontal: 8, paddingVertical: 3 }}>{campaign.label}</Text>
               <Text style={{ marginLeft: "auto", fontSize: 11, fontWeight: "700", color: colors.muted }}>{campaign.period}</Text>
             </View>
             <Text style={{ fontSize: 15, fontWeight: "900", color: colors.foreground }}>{campaign.title}</Text>
             <Text numberOfLines={4} style={{ fontSize: 12, lineHeight: 18, color: colors.muted, marginTop: 5 }}>{campaign.description}</Text>
-            <Pressable onPress={() => router.push(campaign.route)} accessibilityLabel={`${campaign.title}の詳細を見る`} style={{ position: "absolute", left: 16, bottom: 16, paddingVertical: 4 }}><Text style={{ fontSize: 12, fontWeight: "800", color: "#4A91BD" }}>詳しく見る →</Text></Pressable>
+            <Pressable onPress={() => router.push(campaign.route)} accessibilityLabel={`${campaign.title}の詳細を見る`} style={{ alignSelf: "flex-start", marginTop: 10, paddingVertical: 4 }}><Text style={{ fontSize: 12, fontWeight: "800", color: "#4A91BD" }}>詳しく見る →</Text></Pressable>
           </View>
         ))}
       </ScrollView>
@@ -604,7 +605,7 @@ export default function HomeScreen() {
     void Api.getNotifications()
       .then((items) => setUnreadNotificationCount(items.filter((item) => !item.read).length))
       .catch(() => setUnreadNotificationCount(0));
-    void Promise.all([Api.getHomeActivities().catch(() => []), getHomeActivities(), getGiftCampaigns(), AsyncStorage.getItem("custom_announcements"), loadMemberPreferences(CURRENT_USER.id, { residence: CURRENT_USER.residence, favoriteCuisines: CURRENT_USER.favoriteCuisines }), loadMemberAiConsents(CURRENT_USER.id)]).then(([remoteActivities, fallbackActivities, gifts, savedAnnouncements, nextPreferences, nextConsents]) => {
+    void Promise.all([Api.getHomeActivities().catch(() => []), getHomeActivities(), getGiftCampaigns(), getSharedAnnouncements().catch(() => null), AsyncStorage.getItem("custom_announcements"), loadMemberPreferences(CURRENT_USER.id, { residence: CURRENT_USER.residence, favoriteCuisines: CURRENT_USER.favoriteCuisines }), loadMemberAiConsents(CURRENT_USER.id)]).then(([remoteActivities, fallbackActivities, gifts, sharedAnnouncements, savedAnnouncements, nextPreferences, nextConsents]) => {
       const mergedActivities = new Map(fallbackActivities.map((activity) => [activity.id, activity]));
       remoteActivities.forEach((activity) => {
         const fallback = mergedActivities.get(activity.id);
@@ -621,7 +622,9 @@ export default function HomeScreen() {
       });
       setActivities([...mergedActivities.values()]);
       setPreferences(nextPreferences); setAiConsents(nextConsents);
-      if (savedAnnouncements !== null) {
+      if (sharedAnnouncements?.length) {
+        setHomeAnnouncements(sharedAnnouncements);
+      } else if (savedAnnouncements !== null) {
         try {
           const parsed = JSON.parse(savedAnnouncements) as Announcement[];
           setHomeAnnouncements(parsed.filter((item) => item && typeof item.id === "string" && typeof item.title === "string" && typeof item.content === "string"));

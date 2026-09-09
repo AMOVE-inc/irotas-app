@@ -20,6 +20,7 @@ import {
   type PaymentStatus,
 } from "@/lib/payment-store";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { deleteSharedAnnouncement, getSharedAnnouncements, saveSharedAnnouncement } from "@/lib/announcement-api";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -320,9 +321,24 @@ export default function AdminDashboardScreen() {
     AsyncStorage.getItem("points_history").then((val) => {
       if (val) setPointsHistory(JSON.parse(val));
     });
-    AsyncStorage.getItem("custom_announcements").then((val) => {
-      if (val) setAnnouncements(JSON.parse(val));
-    });
+    void (async () => {
+      const cachedRaw = await AsyncStorage.getItem("custom_announcements");
+      const cached = cachedRaw ? JSON.parse(cachedRaw) as Announcement[] : [];
+      try {
+        const shared = await getSharedAnnouncements();
+        if (shared.length) {
+          setAnnouncements(shared);
+          await AsyncStorage.setItem("custom_announcements", JSON.stringify(shared));
+        } else if (cached.length) {
+          await Promise.all(cached.map(saveSharedAnnouncement));
+          setAnnouncements(cached);
+        } else {
+          setAnnouncements([]);
+        }
+      } catch {
+        setAnnouncements(cached);
+      }
+    })();
     // イロタスポイント・会費免除を読み込む
     getIrotasPointsBalances().then(setIrotasBalances);
     getIrotasPointsHistory().then(setIrotasHistory);
@@ -523,9 +539,14 @@ export default function AdminDashboardScreen() {
     const updated = editingAnnouncement
       ? announcements.map((announcement) => announcement.id === editingAnnouncement.id ? nextAnnouncement : announcement)
       : [nextAnnouncement, ...announcements];
-    setAnnouncements(updated);
-    await AsyncStorage.setItem("custom_announcements", JSON.stringify(updated));
-    setEditingAnnouncement(null);
+    try {
+      await saveSharedAnnouncement(nextAnnouncement);
+      setAnnouncements(updated);
+      await AsyncStorage.setItem("custom_announcements", JSON.stringify(updated));
+      setEditingAnnouncement(null);
+    } catch (error) {
+      Alert.alert("保存できませんでした", error instanceof Error ? error.message : "通信状況を確認してもう一度お試しください。");
+    }
   };
 
   // お知らせ削除
@@ -536,9 +557,14 @@ export default function AdminDashboardScreen() {
         text: "削除",
         style: "destructive",
         onPress: async () => {
-          const updated = announcements.filter((a) => a.id !== id);
-          setAnnouncements(updated);
-          await AsyncStorage.setItem("custom_announcements", JSON.stringify(updated));
+          try {
+            await deleteSharedAnnouncement(id);
+            const updated = announcements.filter((a) => a.id !== id);
+            setAnnouncements(updated);
+            await AsyncStorage.setItem("custom_announcements", JSON.stringify(updated));
+          } catch (error) {
+            Alert.alert("削除できませんでした", error instanceof Error ? error.message : "通信状況を確認してもう一度お試しください。");
+          }
         },
       },
     ]);

@@ -23,6 +23,7 @@ import { handleBoardContentRequest } from "./board-content";
 import { handleChatContentRequest } from "./chat-content";
 import { handleBenefitsRequest } from "./benefits";
 import { handleCampaignRequest } from "./campaigns";
+import { handleAnnouncementRequest } from "./announcements";
 import { handleHomeAutomationRequest, runEventAutomation } from "./home-automation";
 import { handleXpRequest } from "./xp";
 import {
@@ -300,6 +301,8 @@ async function routeRequest(
   if (benefitsResponse) return benefitsResponse;
   const campaignResponse = await handleCampaignRequest(request, env);
   if (campaignResponse) return campaignResponse;
+  const announcementResponse = await handleAnnouncementRequest(request, env);
+  if (announcementResponse) return announcementResponse;
   const xpResponse = await handleXpRequest(request, env);
   if (xpResponse) return xpResponse;
   const homeAutomationResponse = await handleHomeAutomationRequest(request, env);

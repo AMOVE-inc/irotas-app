@@ -645,6 +645,21 @@ export async function createSharedChatMessage(
   return result.message;
 }
 
+export async function updateSharedChatMessage(messageId: string, content: string) {
+  const result = await apiCall<{ message: SharedChatMessage }>(
+    `/api/chats/messages/${encodeURIComponent(messageId)}`,
+    { method: "PATCH", body: JSON.stringify({ content }), suppressGlobalLoading: true },
+  );
+  return result.message;
+}
+
+export function deleteSharedChatMessage(messageId: string) {
+  return apiCall<{ success: true }>(
+    `/api/chats/messages/${encodeURIComponent(messageId)}`,
+    { method: "DELETE", suppressGlobalLoading: true },
+  );
+}
+
 export async function setSharedChatReaction(
   messageId: string,
   emoji: string,

@@ -9,6 +9,7 @@ const MEMBERS_PATH = /^\/api\/chats\/([^/]+)\/members$/;
 const MEMBER_PATH = /^\/api\/chats\/([^/]+)\/members\/([^/]+)$/;
 const READ_PATH = /^\/api\/chats\/([^/]+)\/read$/;
 const REACTIONS_PATH = "/api/chats/reactions";
+const MESSAGE_PATH = /^\/api\/chats\/messages\/([^/]+)$/;
 const MAX_BODY_BYTES = 64 * 1024;
 
 type Viewer = NonNullable<Awaited<ReturnType<typeof authenticatedRequestMember>>>;
@@ -340,11 +341,12 @@ export async function handleChatContentRequest(
 ): Promise<Response | null> {
   const url = new URL(request.url);
   const messagesMatch = MESSAGES_PATH.exec(url.pathname);
+  const messageMatch = MESSAGE_PATH.exec(url.pathname);
   const readMatch = READ_PATH.exec(url.pathname);
   const membersMatch = MEMBERS_PATH.exec(url.pathname);
   const memberMatch = MEMBER_PATH.exec(url.pathname);
   const roomMatch = ROOM_PATH.exec(url.pathname);
-  if (!messagesMatch && !readMatch && !membersMatch && !memberMatch && !roomMatch &&
+  if (!messagesMatch && !messageMatch && !readMatch && !membersMatch && !memberMatch && !roomMatch &&
       url.pathname !== REACTIONS_PATH && url.pathname !== ROOMS_PATH) return null;
   if (!env.DB) return json({ error: "データベースに接続できません" }, 503);
   const member = await authenticatedRequestMember(request, env);
@@ -554,6 +556,38 @@ export async function handleChatContentRequest(
       return json({ message: created ? serializeMessage(created, []) : null }, 201);
     }
     return json({ error: "対応していない操作です" }, 405);
+  }
+
+  if (messageMatch && (request.method === "PATCH" || request.method === "DELETE")) {
+    const messageId = decodeURIComponent(messageMatch[1]);
+    const existing = await env.DB.prepare(`SELECT id, room_id, sender_member_id
+      FROM chat_messages WHERE id = ? AND deleted_at IS NULL LIMIT 1`).bind(messageId)
+      .first<{ id: string; room_id: string; sender_member_id: number }>();
+    if (!existing) return json({ error: "メッセージが見つかりません" }, 404);
+    if (existing.sender_member_id !== member.id) return json({ error: "自分のメッセージのみ操作できます" }, 403);
+    const room = await ensureKnownRoom(env.DB, existing.room_id);
+    if (!room || !await canAccessRoom(env.DB, room, member)) return json({ error: "このチャットを閲覧する権限がありません" }, 403);
+    const now = new Date().toISOString();
+    if (request.method === "DELETE") {
+      await env.DB.batch([
+        env.DB.prepare("UPDATE chat_messages SET deleted_at = ?, updated_at = ? WHERE id = ?").bind(now, now, messageId),
+        env.DB.prepare("UPDATE chat_rooms SET updated_at = ? WHERE id = ?").bind(now, existing.room_id),
+      ]);
+      await audit(env.DB, member.id, "chat.message_deleted", messageId);
+      return json({ success: true });
+    }
+    const input = await readBody(request);
+    const content = typeof input?.content === "string" ? input.content.normalize("NFKC").trim() : "";
+    if (!content || content.length > 10_000) return json({ error: "メッセージ内容を確認してください" }, 400);
+    await env.DB.batch([
+      env.DB.prepare("UPDATE chat_messages SET content = ?, updated_at = ? WHERE id = ?").bind(content, now, messageId),
+      env.DB.prepare("UPDATE chat_rooms SET updated_at = ? WHERE id = ?").bind(now, existing.room_id),
+    ]);
+    await audit(env.DB, member.id, "chat.message_edited", messageId);
+    const messages = await messageRows(env.DB, existing.room_id);
+    const reactions = await reactionRows(env.DB, [messageId]);
+    const updated = messages.find((item) => item.id === messageId);
+    return json({ message: updated ? serializeMessage(updated, reactions) : null });
   }
 
   if (url.pathname === REACTIONS_PATH && (request.method === "PUT" || request.method === "DELETE")) {
