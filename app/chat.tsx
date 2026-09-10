@@ -264,11 +264,9 @@ export default function ChatScreen() {
   const [mentionQuery, setMentionQuery] = useState<string | null>(null);
   const [messageSelection, setMessageSelection] = useState<TextSelection>({ start: 0, end: 0 });
   const flatListRef = useRef<FlatList>(null);
-  const didInitialScrollRef = useRef(false);
-  const keepInitialScrollAtLatestRef = useRef(false);
   const inputRef = useRef<TextInput>(null);
   const [isNearLatest, setIsNearLatest] = useState(true);
-  const [hasOpenedIntroduction, setHasOpenedIntroduction] = useState(false);
+  const [hasOpenedIntroduction, setHasOpenedIntroduction] = useState<boolean | null>(null);
   const [introductionHydrated, setIntroductionHydrated] = useState(false);
 
   // 参加者モーダル
@@ -334,14 +332,11 @@ export default function ChatScreen() {
   // 初回起動時: プロフィール画像と永続化メッセージを読み込む
   useEffect(() => {
     if (!id) return;
-    didInitialScrollRef.current = false;
-    keepInitialScrollAtLatestRef.current = false;
     setIntroductionHydrated(id !== "board-introduction");
     if (id === "board-introduction") {
+      setHasOpenedIntroduction(null);
       void AsyncStorage.getItem("irotas_introduction_chat_opened_v1").then((value) => setHasOpenedIntroduction(value === "1"));
-    } else {
-      setHasOpenedIntroduction(true);
-    }
+    } else setHasOpenedIntroduction(true);
     // 一度開いたチャットはサーバー・端末の両方で即時既読にする。戻った直後に新着バッジが残らないようにする。
     void markRoomRead(id);
     void Api.markSharedChatRoomRead(id).catch(() => {});
@@ -561,31 +556,10 @@ export default function ChatScreen() {
   }, [id, pollAllowMultiple, pollDeadline, pollOptions, pollQuestion, pollSending]);
 
   useEffect(() => {
-    if (messages.length > 0 && (id !== "board-introduction" || introductionHydrated)) {
-      setTimeout(() => {
-        if (!didInitialScrollRef.current) {
-          const unreadCount = Math.max(0, Number(unreadCountParam ?? 0));
-          const shouldStartAtLatest = id === "board-introduction" && !hasOpenedIntroduction;
-          if (!shouldStartAtLatest && unreadCount > 0) {
-            const firstUnreadIndex = Math.max(0, messages.length - unreadCount);
-            flatListRef.current?.scrollToIndex({ index: firstUnreadIndex, animated: false, viewPosition: 0.08 });
-            setIsNearLatest(firstUnreadIndex >= messages.length - 2);
-          } else if (shouldStartAtLatest || unreadCount === 0) {
-            keepInitialScrollAtLatestRef.current = true;
-            scrollToLatest(false);
-            setTimeout(() => { keepInitialScrollAtLatestRef.current = false; }, 900);
-            setIsNearLatest(true);
-          }
-          if (id === "board-introduction") void AsyncStorage.setItem("irotas_introduction_chat_opened_v1", "1").then(() => setHasOpenedIntroduction(true));
-          didInitialScrollRef.current = true;
-          return;
-        }
-        if (messages.at(-1)?.senderId === viewerMemberId) {
-          scrollToLatest(true);
-        }
-      }, 100);
+    if (id === "board-introduction" && introductionHydrated && hasOpenedIntroduction !== null) {
+      void AsyncStorage.setItem("irotas_introduction_chat_opened_v1", "1");
     }
-  }, [messages, unreadCountParam, viewerMemberId, id, hasOpenedIntroduction, introductionHydrated, scrollToLatest]);
+  }, [id, introductionHydrated, hasOpenedIntroduction]);
 
   if (!room) {
     return (
@@ -675,9 +649,11 @@ export default function ChatScreen() {
         keyboardVerticalOffset={Platform.OS === "ios" ? insets.top + 52 : 0}
       >
         {/* Messages */}
-        <FlatList
+        {id === "board-introduction" && (!introductionHydrated || hasOpenedIntroduction === null) ? <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}><ActivityIndicator size="large" color="#E8A0BF" /><Text style={{ fontSize: 14, color: colors.muted, marginTop: 12 }}>自己紹介を読み込んでいます…</Text></View> : <FlatList
           ref={flatListRef}
+          key={`${id ?? "chat"}:${id === "board-introduction" ? "ready" : "default"}`}
           data={messages}
+          initialScrollIndex={messages.length ? ((!hasOpenedIntroduction && id === "board-introduction") || Number(unreadCountParam ?? 0) === 0 ? messages.length - 1 : Math.max(0, messages.length - Math.min(messages.length, Math.max(0, Number(unreadCountParam ?? 0)))) ) : undefined}
           keyExtractor={(item) => item.id}
           renderItem={({ item, index }) => {
             const previous = index > 0 ? messages[index - 1] : undefined;
@@ -727,9 +703,6 @@ export default function ChatScreen() {
           style={{ flex: 1 }}
           contentContainerStyle={{ paddingVertical: 16, paddingBottom: 120, flexGrow: 1 }}
           showsVerticalScrollIndicator={false}
-          onContentSizeChange={() => {
-            if (keepInitialScrollAtLatestRef.current) scrollToLatest(false);
-          }}
           onScroll={(event) => {
             const { contentOffset, contentSize, layoutMeasurement } = event.nativeEvent;
             setIsNearLatest(contentOffset.y + layoutMeasurement.height >= contentSize.height - 80);
@@ -744,7 +717,7 @@ export default function ChatScreen() {
               </Text>
             </View>
           }
-        />
+        />}
 
         {!isNearLatest && messages.length > 0 ? (
           <Pressable
