@@ -347,6 +347,7 @@ function ThreadCard({ thread, onPress, onEdit, onDelete, onPin, onChangeRecruitm
   const recruitmentManaged = isRecruitmentBoardCategory(thread.category) && !clubSelfIntroduction;
   const recruitmentStatus = getBoardRecruitmentStatus(thread);
   const pinned = isThreadPinned(thread);
+  const longPressHandled = useRef(false);
   // 募集終了の過去投稿も通常の投稿として読めるようにする。募集状態はワッペンだけで区別する。
   const visuallyClosed = thread.gourmetContest && !contestOpen;
   useEffect(() => { void loadThreadReactions(thread.id, thread.reactions).then(setCardReactions); }, [thread.id, thread.reactions]);
@@ -371,16 +372,20 @@ function ThreadCard({ thread, onPress, onEdit, onDelete, onPin, onChangeRecruitm
     const days = Math.floor(hours / 24);
     return `${days}日前`;
   }, []);
+  const openThreadActions = useCallback(() => {
+    longPressHandled.current = true;
+    Alert.alert(thread.title, "操作を選択してください", [
+      { text: "リンクをコピー", onPress: () => { void Clipboard.setStringAsync(`https://app.irotas-community.com/board?category=${encodeURIComponent(thread.category)}&view=threads&thread=${encodeURIComponent(thread.id)}`); } },
+      ...(onEdit ? [{ text: "投稿を編集", onPress: onEdit }] : []),
+      ...(onDelete ? [{ text: "投稿を削除", style: "destructive" as const, onPress: onDelete }] : []),
+      { text: "キャンセル", style: "cancel" },
+    ]);
+  }, [onDelete, onEdit, thread.category, thread.id, thread.title]);
 
   return (
     <Pressable
-      onPress={onPress}
-      onLongPress={() => Alert.alert(thread.title, "操作を選択してください", [
-        { text: "リンクをコピー", onPress: () => { void Clipboard.setStringAsync(`https://app.irotas-community.com/board?category=${encodeURIComponent(thread.category)}&view=threads&thread=${encodeURIComponent(thread.id)}`); } },
-        ...(onEdit ? [{ text: "投稿を編集", onPress: onEdit }] : []),
-        ...(onDelete ? [{ text: "投稿を削除", style: "destructive" as const, onPress: onDelete }] : []),
-        { text: "キャンセル", style: "cancel" },
-      ])}
+      onPress={() => { if (longPressHandled.current) { longPressHandled.current = false; return; } onPress(); }}
+      onLongPress={openThreadActions}
       delayLongPress={450}
       style={{
         backgroundColor: visuallyClosed ? "#F1F1F3" : colors.surface,
