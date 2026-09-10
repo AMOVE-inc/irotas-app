@@ -347,7 +347,8 @@ function ThreadCard({ thread, onPress, onEdit, onDelete, onPin, onChangeRecruitm
   const recruitmentManaged = isRecruitmentBoardCategory(thread.category) && !clubSelfIntroduction;
   const recruitmentStatus = getBoardRecruitmentStatus(thread);
   const pinned = isThreadPinned(thread);
-  const visuallyClosed = (thread.gourmetContest && !contestOpen) || (recruitmentManaged && recruitmentStatus === "closed");
+  // 募集終了の過去投稿も通常の投稿として読めるようにする。募集状態はワッペンだけで区別する。
+  const visuallyClosed = thread.gourmetContest && !contestOpen;
   useEffect(() => { void loadThreadReactions(thread.id, thread.reactions).then(setCardReactions); }, [thread.id, thread.reactions]);
   const toggleCardReaction = () => {
     if (!cardEmoji) return;
@@ -374,6 +375,13 @@ function ThreadCard({ thread, onPress, onEdit, onDelete, onPin, onChangeRecruitm
   return (
     <Pressable
       onPress={onPress}
+      onLongPress={() => Alert.alert(thread.title, "操作を選択してください", [
+        { text: "リンクをコピー", onPress: () => { void Clipboard.setStringAsync(`https://app.irotas-community.com/board?category=${encodeURIComponent(thread.category)}&view=threads&thread=${encodeURIComponent(thread.id)}`); } },
+        ...(onEdit ? [{ text: "投稿を編集", onPress: onEdit }] : []),
+        ...(onDelete ? [{ text: "投稿を削除", style: "destructive" as const, onPress: onDelete }] : []),
+        { text: "キャンセル", style: "cancel" },
+      ])}
+      delayLongPress={450}
       style={{
         backgroundColor: visuallyClosed ? "#F1F1F3" : colors.surface,
         borderRadius: 14,
@@ -409,21 +417,6 @@ function ThreadCard({ thread, onPress, onEdit, onDelete, onPin, onChangeRecruitm
         </View>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
           <Text style={{ fontSize: 11, color: colors.muted }}>{timeAgo(thread.lastUpdated)}</Text>
-          {showMenu && !thread.mealReport ? <Pressable
-              accessibilityLabel="投稿メニュー"
-              onPress={(e) => {
-                e.stopPropagation?.();
-                Alert.alert(thread.title, "操作を選択してください", [
-                  ...(onEdit ? [{ text: "投稿を編集", onPress: onEdit }] : []),
-                  ...(onDelete ? [{ text: "投稿を削除", style: "destructive" as const, onPress: onDelete }] : []),
-                  { text: "リンクをコピー", onPress: () => { void Clipboard.setStringAsync(`https://irotas-app-20260721.k1998915n.chatgpt.site/board?category=${encodeURIComponent(thread.category)}&view=threads&thread=${encodeURIComponent(thread.id)}`); } },
-                  { text: "キャンセル", style: "cancel" },
-                ]);
-              }}
-              style={{ padding: 4 }}
-            >
-              <IconSymbol name="ellipsis" size={16} color={colors.muted} />
-            </Pressable> : null}
         </View>
       </Pressable>
 
@@ -2525,7 +2518,9 @@ export default function BoardScreen() {
 
   useEffect(() => {
     if (!isThreadView || !categoryParam) return;
-    const selectedCategory = categories.find((category) => category.key === categoryParam);
+    const matchedClub = categoryParam.startsWith("club-") ? clubs.find((club) => `club-${club.id}` === categoryParam) : undefined;
+    const selectedCategory = categories.find((category) => category.key === categoryParam)
+      ?? (matchedClub ? { key: `club-${matchedClub.id}`, label: matchedClub.name, group: "club" as const, createdByAdmin: true } : undefined);
     if (!selectedCategory || !canAccessCategory(selectedCategory)) {
       router.replace("/board");
       return;

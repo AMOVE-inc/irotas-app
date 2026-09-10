@@ -1830,7 +1830,11 @@ export default function ClubsScreen() {
     const requestedClub = clubs.find((club) => club.id === clubId);
     if (!requestedClub) return;
     const access = getClubViewerAccess(requestedClub, authUser?.memberId, CURRENT_USER.id);
-    if (!access.isMember || reviewApplications === "1") setSelectedClub(requestedClub);
+    if (!access.isMember || reviewApplications === "1") {
+      setSelectedClub(requestedClub);
+      // URLパラメータを消費して、詳細画面を閉じた後に再び開かないようにする。
+      router.setParams({ clubId: "", reviewApplications: "" });
+    }
   }, [authUser?.memberId, clubId, clubs, reviewApplications]);
 
   const handleApply = async (clubId: string, application: ClubApplication) => {
