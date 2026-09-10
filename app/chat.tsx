@@ -265,6 +265,7 @@ export default function ChatScreen() {
   const [messageSelection, setMessageSelection] = useState<TextSelection>({ start: 0, end: 0 });
   const flatListRef = useRef<FlatList>(null);
   const didInitialScrollRef = useRef(false);
+  const keepInitialScrollAtLatestRef = useRef(false);
   const inputRef = useRef<TextInput>(null);
   const [isNearLatest, setIsNearLatest] = useState(true);
   const [hasOpenedIntroduction, setHasOpenedIntroduction] = useState(false);
@@ -304,6 +305,17 @@ export default function ChatScreen() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   // 自分のプロフィール画像（AsyncStorageから読み込み）
   const [myAvatarUri, setMyAvatarUri] = useState<string | null>(null);
+  const scrollToLatest = useCallback((animated = false) => {
+    if (!messages.length) return;
+    const scroll = () => {
+      flatListRef.current?.scrollToIndex({ index: messages.length - 1, animated, viewPosition: 1 });
+      flatListRef.current?.scrollToEnd({ animated });
+    };
+    scroll();
+    requestAnimationFrame(scroll);
+    setTimeout(scroll, 180);
+    setTimeout(scroll, 500);
+  }, [messages.length]);
 
   const applySharedMessages = useCallback((shared: ChatMessage[]) => {
     setMessages((previous) => {
@@ -323,6 +335,7 @@ export default function ChatScreen() {
   useEffect(() => {
     if (!id) return;
     didInitialScrollRef.current = false;
+    keepInitialScrollAtLatestRef.current = false;
     setIntroductionHydrated(id !== "board-introduction");
     if (id === "board-introduction") {
       void AsyncStorage.getItem("irotas_introduction_chat_opened_v1").then((value) => setHasOpenedIntroduction(value === "1"));
@@ -558,7 +571,9 @@ export default function ChatScreen() {
             flatListRef.current?.scrollToIndex({ index: firstUnreadIndex, animated: false, viewPosition: 0.08 });
             setIsNearLatest(firstUnreadIndex >= messages.length - 2);
           } else if (shouldStartAtLatest || unreadCount === 0) {
-            flatListRef.current?.scrollToEnd({ animated: false });
+            keepInitialScrollAtLatestRef.current = true;
+            scrollToLatest(false);
+            setTimeout(() => { keepInitialScrollAtLatestRef.current = false; }, 900);
             setIsNearLatest(true);
           }
           if (id === "board-introduction") void AsyncStorage.setItem("irotas_introduction_chat_opened_v1", "1").then(() => setHasOpenedIntroduction(true));
@@ -566,11 +581,11 @@ export default function ChatScreen() {
           return;
         }
         if (messages.at(-1)?.senderId === viewerMemberId) {
-          flatListRef.current?.scrollToEnd({ animated: true });
+          scrollToLatest(true);
         }
       }, 100);
     }
-  }, [messages, unreadCountParam, viewerMemberId, id, hasOpenedIntroduction, introductionHydrated]);
+  }, [messages, unreadCountParam, viewerMemberId, id, hasOpenedIntroduction, introductionHydrated, scrollToLatest]);
 
   if (!room) {
     return (
@@ -712,6 +727,9 @@ export default function ChatScreen() {
           style={{ flex: 1 }}
           contentContainerStyle={{ paddingVertical: 16, paddingBottom: 120, flexGrow: 1 }}
           showsVerticalScrollIndicator={false}
+          onContentSizeChange={() => {
+            if (keepInitialScrollAtLatestRef.current) scrollToLatest(false);
+          }}
           onScroll={(event) => {
             const { contentOffset, contentSize, layoutMeasurement } = event.nativeEvent;
             setIsNearLatest(contentOffset.y + layoutMeasurement.height >= contentSize.height - 80);
@@ -731,9 +749,7 @@ export default function ChatScreen() {
         {!isNearLatest && messages.length > 0 ? (
           <Pressable
             onPress={() => {
-              flatListRef.current?.scrollToEnd({ animated: true });
-              requestAnimationFrame(() => flatListRef.current?.scrollToOffset({ offset: Number.MAX_SAFE_INTEGER, animated: true }));
-              setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 250);
+              scrollToLatest(true);
             }}
             accessibilityLabel="最新のメッセージへ移動"
             style={{ position: "absolute", right: 16, bottom: keyboardVisible ? 106 : 118, zIndex: 20, flexDirection: "row", alignItems: "center", gap: 5, borderRadius: 18, paddingHorizontal: 12, paddingVertical: 8, backgroundColor: colors.foreground, shadowColor: "#000", shadowOpacity: 0.16, shadowRadius: 5, shadowOffset: { width: 0, height: 2 }, elevation: 4 }}
