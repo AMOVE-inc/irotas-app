@@ -800,6 +800,7 @@ function ClubDetailModal({
   const [messageToLeader, setMessageToLeader] = useState("");
   const [applicationError, setApplicationError] = useState("");
   const [previewApplication, setPreviewApplication] = useState(false);
+  const [showApplications, setShowApplications] = useState(false);
   const [showClubOverview, setShowClubOverview] = useState(false);
 
   const viewerAccess = getClubViewerAccess(
@@ -984,6 +985,14 @@ function ClubDetailModal({
     onClose();
     router.push({ pathname: "/chat", params: { id: chatId } });
   };
+
+  if (showApplications && canManageMembers) {
+    const reviewRows = [
+      ...applicantIds.map((memberId) => ({ memberId, status: "pending" as const })),
+      ...pendingIds.map((memberId) => ({ memberId, status: "on_hold" as const })),
+    ];
+    return <View style={{ flex: 1, backgroundColor: colors.background }}><View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 16, paddingTop: 16, paddingBottom: 12, borderBottomWidth: 0.5, borderBottomColor: colors.border }}><Pressable onPress={() => setShowApplications(false)} accessibilityLabel="部員一覧へ戻る"><IconSymbol name="chevron.left" size={22} color={colors.foreground} /></Pressable><Text style={{ flex: 1, fontSize: 17, fontWeight: "800", color: colors.foreground, marginLeft: 12 }}>入部申請一覧</Text></View><ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>{reviewRows.length === 0 ? <View style={{ alignItems: "center", paddingVertical: 52 }}><Text style={{ fontSize: 14, color: colors.muted }}>確認待ちの入部申請はありません。</Text></View> : reviewRows.map(({ memberId, status }) => <View key={memberId} style={{ backgroundColor: colors.surface, borderRadius: 12, padding: 12, marginBottom: 10, borderWidth: 1, borderColor: colors.border }}><Text style={{ marginBottom: 8, fontSize: 12, fontWeight: "800", color: status === "pending" ? "#C47718" : "#39749D" }}>{status === "pending" ? "新規申請" : "保留中"}</Text><ApplicationReviewDetails clubId={club.id} memberId={memberId} application={applications.find((application) => application.memberId === memberId)} /><View style={{ flexDirection: "row", gap: 8 }}><Pressable onPress={() => handleApprove(memberId)} style={{ flex: 1, backgroundColor: "#34C75920", borderRadius: 8, paddingVertical: 9, alignItems: "center" }}><Text style={{ fontSize: 13, fontWeight: "800", color: "#248A3D" }}>承認</Text></Pressable><Pressable onPress={() => handlePending(memberId)} style={{ flex: 1, backgroundColor: "#FF990015", borderRadius: 8, paddingVertical: 9, alignItems: "center" }}><Text style={{ fontSize: 13, fontWeight: "800", color: "#B86F16" }}>保留</Text></Pressable><Pressable onPress={() => handleReject(memberId)} style={{ flex: 1, backgroundColor: "#FFF0F0", borderRadius: 8, paddingVertical: 9, alignItems: "center" }}><Text style={{ fontSize: 13, fontWeight: "800", color: colors.error }}>却下</Text></Pressable></View></View>)}</ScrollView></View>;
+  }
 
   // 部員でない場合は申請画面のみ表示
   if ((!isMember && !canManageMembers) || previewApplication) {
@@ -1173,7 +1182,7 @@ function ClubDetailModal({
         <Text style={{ flex: 1, fontSize: 17, fontWeight: "700", color: colors.foreground, marginLeft: 12 }}>
           {club.name}
         </Text>
-        {canManageMembers ? <Pressable onPress={() => setPreviewApplication(true)} style={{ borderRadius: 8, backgroundColor: "#EAF3FA", paddingHorizontal: 10, paddingVertical: 6, marginRight: 8 }}><Text style={{ fontSize: 11, fontWeight: "800", color: "#3E6F97" }}>入部申請一覧</Text></Pressable> : null}
+        {canManageMembers ? <Pressable onPress={() => setShowApplications(true)} style={{ borderRadius: 8, backgroundColor: "#EAF3FA", paddingHorizontal: 10, paddingVertical: 6, marginRight: 8 }}><Text style={{ fontSize: 11, fontWeight: "800", color: "#3E6F97" }}>入部申請一覧</Text></Pressable> : null}
         {club.chatId && (
           <Pressable
             onPress={() => handleOpenChat(club.chatId!)}
@@ -1782,7 +1791,7 @@ function AddClubModal({
 export default function ClubsScreen() {
   const colors = useColors();
   const router = useRouter();
-  const { clubId } = useLocalSearchParams<{ clubId?: string }>();
+  const { clubId, reviewApplications } = useLocalSearchParams<{ clubId?: string; reviewApplications?: string }>();
   const { user: authUser } = useAuthContext();
   const userIsAdmin = canCreateClub(authUser?.role, authUser?.accessRole);
   const clubs = useClubs();
@@ -1821,8 +1830,8 @@ export default function ClubsScreen() {
     const requestedClub = clubs.find((club) => club.id === clubId);
     if (!requestedClub) return;
     const access = getClubViewerAccess(requestedClub, authUser?.memberId, CURRENT_USER.id);
-    if (!access.isMember) setSelectedClub(requestedClub);
-  }, [authUser?.memberId, clubId, clubs]);
+    if (!access.isMember || reviewApplications === "1") setSelectedClub(requestedClub);
+  }, [authUser?.memberId, clubId, clubs, reviewApplications]);
 
   const handleApply = async (clubId: string, application: ClubApplication) => {
     const updated = await submitClubApplicationToStore(clubId, application.wantsToDo, application.messageToLeader);

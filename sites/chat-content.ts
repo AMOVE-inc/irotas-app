@@ -629,7 +629,10 @@ export async function handleChatContentRequest(
       FROM chat_messages WHERE id = ? AND deleted_at IS NULL LIMIT 1`).bind(messageId)
       .first<{ id: string; room_id: string; sender_member_id: number }>();
     if (!existing) return json({ error: "メッセージが見つかりません" }, 404);
-    if (existing.sender_member_id !== member.id && !administrator(member)) return json({ error: "自分のメッセージのみ操作できます" }, 403);
+    if (request.method === "PATCH" && existing.sender_member_id !== member.id)
+      return json({ error: "自分のメッセージのみ編集できます" }, 403);
+    if (request.method === "DELETE" && existing.sender_member_id !== member.id && !administrator(member))
+      return json({ error: "自分のメッセージまたは管理者のみ削除できます" }, 403);
     const room = await ensureKnownRoom(env.DB, existing.room_id);
     if (!room || !await canAccessRoom(env.DB, room, member)) return json({ error: "このチャットを閲覧する権限がありません" }, 403);
     const now = new Date().toISOString();

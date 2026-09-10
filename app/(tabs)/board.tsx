@@ -2378,6 +2378,7 @@ export default function BoardScreen() {
   const [showAddCategory, setShowAddCategory] = useState(false);
   const [showClubMembers, setShowClubMembers] = useState(false);
   const [memberDirectory, setMemberDirectory] = useState<Api.PublicMember[]>([]);
+  const [memberDirectoryLoading, setMemberDirectoryLoading] = useState(true);
   const [xpReward, setXpReward] = useState<XpReward | null>(null);
 
   const [dynamicThreads, setDynamicThreads] = useState<BoardThread[]>([]);
@@ -2450,7 +2451,7 @@ export default function BoardScreen() {
       setImportedComments((current) => ({ ...current, ...archive.comments }));
     }).catch(() => {
       // 認証または通信に失敗した場合は、移行済みデータを表示しない（fail closed）。
-    }).finally(() => { if (active) setArchiveLoading(false); });
+    }).finally(() => { if (active) { setArchiveLoading(false); setMemberDirectoryLoading(false); } });
     return () => { active = false; };
   }, []);
 
@@ -2657,6 +2658,7 @@ export default function BoardScreen() {
   const activeCategoryLabel = categories.find((category) => category.key === activeCategory)?.label ?? "掲示板";
   const activeClub = isThreadView ? clubs.find((club) => `club-${club.id}` === activeCategory) : undefined;
   const canViewActiveClubMembers = Boolean(activeClub && getClubViewerAccess(activeClub, authUser?.memberId, CURRENT_USER.id).isMember);
+  const canReviewActiveClubApplications = Boolean(activeClub?.canReviewApplications || activeClub?.viewerIsLeader || userIsAdmin);
   const activeClubMemberIds = activeClub ? [...new Set([activeClub.leaderId, ...activeClub.memberIds])] : [];
   useEffect(() => {
     if (openClubMembers === "1" && canViewActiveClubMembers) {
@@ -2716,25 +2718,27 @@ export default function BoardScreen() {
           <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 16, paddingVertical: 14, borderBottomWidth: 0.5, borderBottomColor: colors.border }}>
             <Pressable onPress={() => setShowClubMembers(false)} accessibilityRole="button" accessibilityLabel="部員一覧を閉じる" hitSlop={10}><IconSymbol name="xmark" size={21} color={colors.foreground} /></Pressable>
             <Text style={{ flex: 1, marginLeft: 12, fontSize: 18, fontWeight: "900", color: colors.foreground }}>{activeClub?.name ?? "部活動"}の部員一覧</Text>
+            {canReviewActiveClubApplications && activeClub ? <Pressable onPress={() => { setShowClubMembers(false); router.push({ pathname: "/clubs", params: { clubId: activeClub.id, reviewApplications: "1" } }); }} accessibilityRole="button" style={{ borderRadius: 8, backgroundColor: "#EAF3FA", paddingHorizontal: 9, paddingVertical: 6 }}><Text style={{ fontSize: 11, fontWeight: "900", color: "#39749D" }}>入部申請一覧</Text></Pressable> : null}
           </View>
-          <FlatList
-            data={activeClubMemberIds}
-            keyExtractor={(memberId) => memberId}
-            contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 10, paddingBottom: 32 }}
-            renderItem={({ item: memberId }) => {
-              const directoryMember = memberDirectory.find((member) => member.id === memberId);
-              const staticMember = MEMBERS.find((member) => member.id === memberId);
-              const name = directoryMember?.displayName ?? staticMember?.name ?? "未設定";
-              const avatar = typeof directoryMember?.profile.avatarUrl === "string" ? directoryMember.profile.avatarUrl : staticMember?.avatar ?? DEFAULT_AVATAR;
-              const isLeader = memberId === activeClub?.leaderId;
-              return <Pressable onPress={() => { setShowClubMembers(false); setTimeout(() => router.push({ pathname: "/member-profile", params: { id: memberId, returnToClubRoster: "1", clubCategory: activeCategory } }), 0); }} accessibilityRole="button" accessibilityLabel={`${name}のプロフィールを開く`} style={({ pressed }) => ({ flexDirection: "row", alignItems: "center", paddingVertical: 12, borderBottomWidth: 0.5, borderBottomColor: colors.border, opacity: pressed ? 0.72 : 1 })}>
-                <Image source={avatar} style={{ width: 44, height: 44, borderRadius: 22 }} contentFit="cover" />
-                <Text style={{ flex: 1, marginLeft: 12, fontSize: 15, fontWeight: "800", color: colors.foreground }}>{name}</Text>
-                {isLeader ? <View style={{ borderRadius: 8, backgroundColor: "#FFF4C6", paddingHorizontal: 8, paddingVertical: 4, marginRight: 8 }}><Text style={{ fontSize: 10, fontWeight: "900", color: "#9A7200" }}>部長</Text></View> : null}
-                <IconSymbol name="chevron.right" size={16} color={colors.muted} />
-              </Pressable>;
-            }}
-          />
+          {memberDirectoryLoading ? <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}><ActivityIndicator size="large" color="#39749D" /><Text style={{ marginTop: 12, fontSize: 14, color: colors.muted }}>部員一覧を読み込んでいます…</Text></View> : <FlatList
+              data={activeClubMemberIds.filter((memberId) => Boolean(memberDirectory.find((member) => member.id === memberId) || MEMBERS.find((member) => member.id === memberId)))}
+              keyExtractor={(memberId) => memberId}
+              contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 10, paddingBottom: 32 }}
+              ListEmptyComponent={<View style={{ paddingVertical: 36, alignItems: "center" }}><Text style={{ fontSize: 14, color: colors.muted }}>部員情報を読み込めませんでした。もう一度お試しください。</Text></View>}
+              renderItem={({ item: memberId }) => {
+                const directoryMember = memberDirectory.find((member) => member.id === memberId);
+                const staticMember = MEMBERS.find((member) => member.id === memberId);
+                const name = directoryMember?.displayName ?? staticMember?.name ?? "メンバー";
+                const avatar = typeof directoryMember?.profile.avatarUrl === "string" ? directoryMember.profile.avatarUrl : staticMember?.avatar ?? DEFAULT_AVATAR;
+                const isLeader = memberId === activeClub?.leaderId;
+                return <Pressable onPress={() => { setShowClubMembers(false); setTimeout(() => router.push({ pathname: "/member-profile", params: { id: memberId, returnToClubRoster: "1", clubCategory: activeCategory } }), 0); }} accessibilityRole="button" accessibilityLabel={`${name}のプロフィールを開く`} style={({ pressed }) => ({ flexDirection: "row", alignItems: "center", paddingVertical: 12, borderBottomWidth: 0.5, borderBottomColor: colors.border, opacity: pressed ? 0.72 : 1 })}>
+                  <Image source={avatar} style={{ width: 44, height: 44, borderRadius: 22 }} contentFit="cover" />
+                  <Text style={{ flex: 1, marginLeft: 12, fontSize: 15, fontWeight: "800", color: colors.foreground }}>{name}</Text>
+                  {isLeader ? <View style={{ borderRadius: 8, backgroundColor: "#FFF4C6", paddingHorizontal: 8, paddingVertical: 4, marginRight: 8 }}><Text style={{ fontSize: 10, fontWeight: "900", color: "#9A7200" }}>部長</Text></View> : null}
+                  <IconSymbol name="chevron.right" size={16} color={colors.muted} />
+                </Pressable>;
+              }}
+            />}
         </View>
       </Modal>
 

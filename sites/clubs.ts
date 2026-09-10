@@ -42,6 +42,10 @@ function isAdmin(member: NonNullable<Awaited<ReturnType<typeof authenticatedRequ
   return member.role === "admin" || member.access_role === "admin";
 }
 
+function canReviewApplications(member: NonNullable<Awaited<ReturnType<typeof authenticatedRequestMember>>>) {
+  return isAdmin(member) || member.role === "operator" || member.access_role === "operator";
+}
+
 async function readBody(request: Request) {
   const raw = await request.text();
   if (new TextEncoder().encode(raw).byteLength > MAX_BODY_BYTES) return null;
@@ -96,11 +100,11 @@ async function reconcileDiscordClubMemberships(db: D1Database) {
       updated_at = excluded.updated_at`).bind(now, now, now).run();
 }
 
-function serializeClub(row: ClubRow, memberships: MembershipRow[], viewerId: number, elevated: boolean) {
+function serializeClub(row: ClubRow, memberships: MembershipRow[], viewerId: number, elevated: boolean, applicationReviewer = false) {
   const clubMemberships = memberships.filter((item) => item.club_id === row.id);
   const approved = clubMemberships.filter((item) => item.status === "approved");
   const pending = clubMemberships.filter((item) => item.status === "pending" || item.status === "on_hold");
-  const canReview = elevated || row.leader_member_id === viewerId;
+  const canReview = applicationReviewer || elevated || row.leader_member_id === viewerId;
   const viewerMembership = clubMemberships.find((item) => item.member_id === viewerId);
   const visiblePending = pending.filter((item) => canReview || item.member_id === viewerId);
   const viewerMemberPublicId = viewerMembership ? publicId(viewerMembership) : null;
@@ -185,6 +189,7 @@ export async function handleClubRequest(request: Request, env: SitesEnv): Promis
   const member = await authenticatedRequestMember(request, env);
   if (!member) return json({ error: "ログインが必要です" }, 401);
   const elevated = isAdmin(member);
+  const applicationReviewer = canReviewApplications(member);
 
   if (pathname === CLUBS_PATH && request.method === "GET") {
     await reconcileDiscordClubMemberships(env.DB);
@@ -194,7 +199,7 @@ export async function handleClubRequest(request: Request, env: SitesEnv): Promis
       WHERE c.status = 'active' ORDER BY c.created_at, c.name`).all<ClubRow>();
     const clubs = rows.results ?? [];
     const memberships = await membershipsForClubs(env.DB, clubs.map((item) => item.id));
-    return json({ clubs: clubs.map((item) => serializeClub(item, memberships, member.id, elevated)) });
+    return json({ clubs: clubs.map((item) => serializeClub(item, memberships, member.id, elevated, applicationReviewer)) });
   }
 
   if (clubMatch && request.method === "GET") {
@@ -202,7 +207,7 @@ export async function handleClubRequest(request: Request, env: SitesEnv): Promis
     const row = await clubRow(env.DB, decodeURIComponent(clubMatch[1]));
     if (!row || row.status !== "active") return json({ error: "部活が見つかりません" }, 404);
     const memberships = await membershipsForClubs(env.DB, [row.id]);
-    return json({ club: serializeClub(row, memberships, member.id, elevated) });
+    return json({ club: serializeClub(row, memberships, member.id, elevated, applicationReviewer) });
   }
 
   if (applicationMatch && request.method === "POST") {
@@ -245,7 +250,7 @@ export async function handleClubRequest(request: Request, env: SitesEnv): Promis
     const targetPublicId = decodeURIComponent(reviewMatch[2]);
     const row = await clubRow(env.DB, id);
     if (!row) return json({ error: "部活が見つかりません" }, 404);
-    if (!(elevated || row.leader_member_id === member.id)) return json({ error: "この部活の部長または管理者のみ承認できます" }, 403);
+    if (!(applicationReviewer || row.leader_member_id === member.id)) return json({ error: "この部活の部長・運営メンバー・管理者のみ承認できます" }, 403);
     const targetId = await memberIdFromPublicId(env.DB, targetPublicId);
     const input = await readBody(request);
     const action = input?.action;
@@ -271,7 +276,7 @@ export async function handleClubRequest(request: Request, env: SitesEnv): Promis
       );
     }
     const memberships = await membershipsForClubs(env.DB, [id]);
-    return json({ club: serializeClub(row, memberships, member.id, elevated) });
+    return json({ club: serializeClub(row, memberships, member.id, elevated, applicationReviewer) });
   }
 
   if (reviewMatch && request.method === "GET") {
@@ -279,7 +284,7 @@ export async function handleClubRequest(request: Request, env: SitesEnv): Promis
     const targetPublicId = decodeURIComponent(reviewMatch[2]);
     const row = await clubRow(env.DB, id);
     if (!row) return json({ error: "部活が見つかりません" }, 404);
-    if (!(elevated || row.leader_member_id === member.id)) return json({ error: "申請者情報を確認できるのは、この部活の部長または管理者のみです" }, 403);
+    if (!(applicationReviewer || row.leader_member_id === member.id)) return json({ error: "申請者情報を確認できるのは、この部活の部長・運営メンバー・管理者のみです" }, 403);
     const targetId = await memberIdFromPublicId(env.DB, targetPublicId);
     if (!targetId) return json({ error: "メンバーが見つかりません" }, 404);
     const application = await env.DB.prepare(`SELECT status, wants_to_do, message_to_leader, applied_at
