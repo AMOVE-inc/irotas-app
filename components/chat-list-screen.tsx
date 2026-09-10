@@ -258,7 +258,8 @@ export default function ChatListScreen() {
   }, [refreshRooms]));
 
   const announcementRoom = myRooms.find((room) => room.id === "board-announcement");
-  const joinedChatRooms = myRooms.filter((room) => room.id !== "board-announcement");
+  // 自己紹介は掲示板から開く導線に統一し、通常のチャット一覧には表示しない。
+  const joinedChatRooms = myRooms.filter((room) => room.id !== "board-announcement" && room.id !== "board-introduction");
 
   return (
     <ScreenContainer edges={["top", "left", "right", "bottom"]}>
