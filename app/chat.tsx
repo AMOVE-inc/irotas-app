@@ -269,6 +269,7 @@ export default function ChatScreen() {
   const [isNearLatest, setIsNearLatest] = useState(true);
   const [hasOpenedIntroduction, setHasOpenedIntroduction] = useState<boolean | null>(null);
   const [introductionHydrated, setIntroductionHydrated] = useState(false);
+  const initialIntroductionPositioned = useRef<string | null>(null);
 
   // 参加者モーダル
   const [showParticipants, setShowParticipants] = useState(false);
@@ -316,6 +317,16 @@ export default function ChatScreen() {
     setTimeout(scroll, 500);
   }, [messages.length]);
 
+  // 自己紹介は履歴が揃った状態で初めてリストを描画する。可変高の大量履歴では
+  // initialScrollIndex が失敗することがあるため、描画済みのコンテンツ高さでも一度だけ補正する。
+  const ensureIntroductionStartsAtLatest = useCallback(() => {
+    if (id !== "board-introduction" || !introductionHydrated || !messages.length) return;
+    const token = `${id}:${messages.length}`;
+    if (initialIntroductionPositioned.current === token) return;
+    initialIntroductionPositioned.current = token;
+    scrollToLatest(false);
+  }, [id, introductionHydrated, messages.length, scrollToLatest]);
+
   const applySharedMessages = useCallback((shared: ChatMessage[]) => {
     setMessages((previous) => {
       // 自己紹介はDiscordアーカイブ由来の履歴と共有チャットの新規投稿だけを表示し、テスト用ローカル履歴を混在させない。
@@ -333,6 +344,7 @@ export default function ChatScreen() {
   // 初回起動時: プロフィール画像と永続化メッセージを読み込む
   useEffect(() => {
     if (!id) return;
+    initialIntroductionPositioned.current = null;
     setIntroductionHydrated(id !== "board-introduction");
     if (id === "board-introduction") {
       setHasOpenedIntroduction(null);
@@ -652,7 +664,7 @@ export default function ChatScreen() {
         {/* Messages */}
         {id === "board-introduction" && (!introductionHydrated || hasOpenedIntroduction === null) ? <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}><ActivityIndicator size="large" color="#E8A0BF" /><Text style={{ fontSize: 14, color: colors.muted, marginTop: 12 }}>自己紹介を読み込んでいます…</Text></View> : <FlatList
           ref={flatListRef}
-          key={`${id ?? "chat"}:${id === "board-introduction" ? "ready" : "default"}`}
+          key={`${id ?? "chat"}:${id === "board-introduction" ? `ready-${messages.length}` : "default"}`}
           data={messages}
           initialScrollIndex={messages.length ? ((!hasOpenedIntroduction && id === "board-introduction") || Number(unreadCountParam ?? 0) === 0 ? messages.length - 1 : Math.max(0, messages.length - Math.min(messages.length, Math.max(0, Number(unreadCountParam ?? 0)))) ) : undefined}
           keyExtractor={(item) => item.id}
@@ -710,6 +722,7 @@ export default function ChatScreen() {
           }}
           scrollEventThrottle={80}
           onScrollToIndexFailed={() => flatListRef.current?.scrollToEnd({ animated: false })}
+          onContentSizeChange={ensureIntroductionStartsAtLatest}
           ListEmptyComponent={
             <View style={{ alignItems: "center", paddingVertical: 40 }}>
               <IconSymbol name="message.fill" size={36} color={colors.border} />

@@ -2,7 +2,7 @@ import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { CURRENT_USER, RANK_LABELS } from "@/constants/mock-data";
 import { useColors } from "@/hooks/use-colors";
-import { applyForGift, getGiftApplications, getGiftCampaigns, type GiftCampaign, type GiftCategory } from "@/lib/gift-campaign-store";
+import { applyForGift, getGiftApplications, getGiftCampaigns, type GiftCampaign } from "@/lib/gift-campaign-store";
 import { isGiftCampaignOpen } from "@/lib/gift-campaign-status";
 import { useRouter } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
@@ -18,7 +18,6 @@ export default function GiftCampaignScreen() {
   const memberId = authUser?.memberId ?? String(authUser?.id ?? CURRENT_USER.id);
   const memberName = authUser?.name ?? CURRENT_USER.name;
   const memberRank = (authUser?.memberRank ?? CURRENT_USER.rank) as keyof typeof RANK_ORDER;
-  const [category, setCategory] = useState<"all" | GiftCategory>("all");
   const [campaigns, setCampaigns] = useState<GiftCampaign[]>([]);
   const [appliedIds, setAppliedIds] = useState<string[]>([]);
   const [selectedCampaign, setSelectedCampaign] = useState<GiftCampaign | null>(null);
@@ -31,8 +30,7 @@ export default function GiftCampaignScreen() {
   }, [memberId]);
 
   const visibleCampaigns = useMemo(() => campaigns
-    .filter((item) => category === "all" || item.category === category)
-    .sort((a, b) => Number(!isGiftCampaignOpen(a)) - Number(!isGiftCampaignOpen(b)) || a.deadline.localeCompare(b.deadline)), [campaigns, category]);
+    .sort((a, b) => Number(!isGiftCampaignOpen(a)) - Number(!isGiftCampaignOpen(b)) || a.deadline.localeCompare(b.deadline)), [campaigns]);
 
   const handleApply = (campaign: GiftCampaign) => {
     Alert.alert("抽選申込", `「${campaign.title}」の抽選に申し込みますか？`, [
@@ -49,9 +47,6 @@ export default function GiftCampaignScreen() {
     <View style={{ flexDirection: "row", alignItems: "center", padding: 16, borderBottomWidth: 0.5, borderBottomColor: colors.border }}>
       <Pressable onPress={() => router.back()}><IconSymbol name="arrow.left" size={22} color={colors.foreground} /></Pressable>
       <View style={{ marginLeft: 12 }}><Text style={{ fontSize: 20, fontWeight: "800", color: colors.foreground }}>プレゼント企画</Text><Text style={{ fontSize: 12, color: colors.muted }}>会員限定の抽選キャンペーン</Text></View>
-    </View>
-    <View style={{ flexDirection: "row", gap: 8, padding: 16 }}>
-      {([['all', 'すべて'], ['gourmet', 'グルメ'], ['non_gourmet', 'グルメ以外']] as const).map(([key, label]) => <Pressable key={key} onPress={() => setCategory(key)} style={{ flex: 1, alignItems: "center", paddingVertical: 10, borderRadius: 12, backgroundColor: category === key ? "#E8A0BF" : colors.surface }}><Text style={{ fontWeight: "700", color: category === key ? "#FFF" : colors.foreground }}>{label}</Text></Pressable>)}
     </View>
     <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 40 }}>
       {visibleCampaigns.map((campaign) => {
