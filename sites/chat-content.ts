@@ -412,6 +412,9 @@ export async function handleChatContentRequest(
 
   if (url.pathname === ROOMS_PATH && request.method === "GET") {
     await ensureViewerEventRooms(env.DB, member);
+    // 一覧から開くケースでも、旧支部フリーチャットを先にv2へ移行して履歴を残さない。
+    await ensureKnownRoom(env.DB, "branch-kanto-free");
+    await ensureKnownRoom(env.DB, "branch-kansai-free");
     const result = await env.DB.prepare(`SELECT id, name, room_type, source_id, required_rank, created_by_member_id
       FROM chat_rooms WHERE deleted_at IS NULL ORDER BY updated_at DESC LIMIT 200`).all<RoomRow>();
     const visible: RoomRow[] = [];
