@@ -61,8 +61,8 @@ export async function saveGiftCampaigns(campaigns: GiftCampaign[]): Promise<void
   const previous = await getGiftCampaigns();
   const nextIds = new Set(campaigns.map((item) => item.id));
   await Promise.all([
-    ...campaigns.filter((item) => !item.archivedFromDiscord).map(saveSharedGift),
-    ...previous.filter((item) => !item.archivedFromDiscord && !nextIds.has(item.id)).map((item) => deleteSharedGift(item.id)),
+    ...campaigns.map(saveSharedGift),
+    ...previous.filter((item) => !nextIds.has(item.id)).map((item) => deleteSharedGift(item.id)),
   ]);
   await AsyncStorage.setItem(CAMPAIGNS_KEY, JSON.stringify(campaigns));
 }

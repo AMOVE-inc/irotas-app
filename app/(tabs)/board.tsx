@@ -2721,7 +2721,7 @@ export default function BoardScreen() {
               const name = directoryMember?.displayName ?? staticMember?.name ?? "未設定";
               const avatar = typeof directoryMember?.profile.avatarUrl === "string" ? directoryMember.profile.avatarUrl : staticMember?.avatar ?? DEFAULT_AVATAR;
               const isLeader = memberId === activeClub?.leaderId;
-              return <Pressable onPress={() => { setShowClubMembers(false); router.push({ pathname: "/member-profile", params: { id: memberId } }); }} accessibilityRole="button" accessibilityLabel={`${name}のプロフィールを開く`} style={({ pressed }) => ({ flexDirection: "row", alignItems: "center", paddingVertical: 12, borderBottomWidth: 0.5, borderBottomColor: colors.border, opacity: pressed ? 0.72 : 1 })}>
+              return <Pressable onPress={() => { router.push({ pathname: "/member-profile", params: { id: memberId } }); }} accessibilityRole="button" accessibilityLabel={`${name}のプロフィールを開く`} style={({ pressed }) => ({ flexDirection: "row", alignItems: "center", paddingVertical: 12, borderBottomWidth: 0.5, borderBottomColor: colors.border, opacity: pressed ? 0.72 : 1 })}>
                 <Image source={avatar} style={{ width: 44, height: 44, borderRadius: 22 }} contentFit="cover" />
                 <Text style={{ flex: 1, marginLeft: 12, fontSize: 15, fontWeight: "800", color: colors.foreground }}>{name}</Text>
                 {isLeader ? <View style={{ borderRadius: 8, backgroundColor: "#FFF4C6", paddingHorizontal: 8, paddingVertical: 4, marginRight: 8 }}><Text style={{ fontSize: 10, fontWeight: "900", color: "#9A7200" }}>部長</Text></View> : null}

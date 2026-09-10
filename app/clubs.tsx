@@ -986,7 +986,7 @@ function ClubDetailModal({
   };
 
   // 部員でない場合は申請画面のみ表示
-  if (!isMember || previewApplication) {
+  if ((!isMember && !canManageMembers) || previewApplication) {
     return (
       <View style={{ flex: 1, backgroundColor: colors.background }}>
         <View

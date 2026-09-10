@@ -271,13 +271,25 @@ function serializeMessage(row: MessageRow, reactions: ReactionRow[]) {
   };
 }
 
-async function messageRows(db: D1Database, roomId: string) {
+async function ensureBranchRoomMembership(db: D1Database, room: RoomRow, member: Viewer) {
+  if (room.room_type !== "board" || (room.source_id !== "branch-kanto" && room.source_id !== "branch-kansai")) return null;
+  const now = new Date().toISOString();
+  await db.prepare(`INSERT INTO chat_room_members (room_id, member_id, member_role, joined_at, left_at)
+    VALUES (?, ?, 'member', ?, NULL)
+    ON CONFLICT(room_id, member_id) DO UPDATE SET left_at = NULL`)
+    .bind(room.id, member.id, now).run();
+  return db.prepare(`SELECT joined_at FROM chat_room_members
+    WHERE room_id = ? AND member_id = ? AND left_at IS NULL LIMIT 1`)
+    .bind(room.id, member.id).first<{ joined_at: string }>();
+}
+
+async function messageRows(db: D1Database, roomId: string, visibleFrom?: string) {
   const result = await db.prepare(`SELECT cm.id, cm.room_id, cm.sender_member_id,
       m.public_member_id AS sender_public_member_id, m.display_name AS sender_display_name, m.profile_json AS sender_profile_json,
       cm.content, cm.image_url, cm.created_at, cm.updated_at
     FROM chat_messages cm JOIN members m ON m.id = cm.sender_member_id
-    WHERE cm.room_id = ? AND cm.deleted_at IS NULL
-    ORDER BY cm.created_at ASC LIMIT 500`).bind(roomId).all<MessageRow>();
+    WHERE cm.room_id = ? AND cm.deleted_at IS NULL AND (? IS NULL OR cm.created_at >= ?)
+    ORDER BY cm.created_at ASC LIMIT 500`).bind(roomId, visibleFrom ?? null, visibleFrom ?? null).all<MessageRow>();
   return result.results ?? [];
 }
 
@@ -312,26 +324,29 @@ async function ensureViewerEventRooms(db: D1Database, member: Viewer) {
   }
 }
 
-async function serializeRoom(db: D1Database, room: RoomRow, member: Viewer) {
+async function serializeRoom(db: D1Database, room: RoomRow, member: Viewer, visibleFrom?: string) {
   const participantResult = await db.prepare(`SELECT crm.member_id, m.public_member_id, m.display_name
     FROM chat_room_members crm JOIN members m ON m.id = crm.member_id
     WHERE crm.room_id = ? AND crm.left_at IS NULL ORDER BY crm.joined_at`)
     .bind(room.id).all<{ member_id: number; public_member_id: string | null; display_name: string }>();
   const last = await db.prepare(`SELECT content, image_url, created_at FROM chat_messages
-    WHERE room_id = ? AND deleted_at IS NULL ORDER BY created_at DESC LIMIT 1`)
-    .bind(room.id).first<{ content: string; image_url: string | null; created_at: string }>();
+    WHERE room_id = ? AND deleted_at IS NULL AND (? IS NULL OR created_at >= ?)
+    ORDER BY created_at DESC LIMIT 1`)
+    .bind(room.id, visibleFrom ?? null, visibleFrom ?? null).first<{ content: string; image_url: string | null; created_at: string }>();
   const viewerDisplayName = (participantResult.results ?? []).find((item) => item.member_id === member.id)?.display_name ?? "";
   const unread = await db.prepare(`SELECT COUNT(*) AS count FROM chat_messages cm
     LEFT JOIN chat_room_reads crr ON crr.room_id = cm.room_id AND crr.member_id = ?
     WHERE cm.room_id = ? AND cm.deleted_at IS NULL AND cm.sender_member_id != ?
+      AND (? IS NULL OR cm.created_at >= ?)
       AND (crr.last_read_at IS NULL OR cm.created_at > crr.last_read_at)`)
-    .bind(member.id, room.id, member.id).first<{ count: number }>();
+    .bind(member.id, room.id, member.id, visibleFrom ?? null, visibleFrom ?? null).first<{ count: number }>();
   const mentions = await db.prepare(`SELECT COUNT(*) AS count FROM chat_messages cm
     LEFT JOIN chat_room_reads crr ON crr.room_id = cm.room_id AND crr.member_id = ?
     WHERE cm.room_id = ? AND cm.deleted_at IS NULL AND cm.sender_member_id != ?
+      AND (? IS NULL OR cm.created_at >= ?)
       AND (crr.last_read_at IS NULL OR cm.created_at > crr.last_read_at)
       AND (cm.content LIKE ? OR cm.content LIKE '%@全員%' OR cm.content LIKE '%@everyone%' OR cm.content LIKE '%@here%')`)
-    .bind(member.id, room.id, member.id, `%@${viewerDisplayName}%`).first<{ count: number }>();
+    .bind(member.id, room.id, member.id, visibleFrom ?? null, visibleFrom ?? null, `%@${viewerDisplayName}%`).first<{ count: number }>();
   const creator = room.created_by_member_id
     ? await db.prepare("SELECT public_member_id FROM members WHERE id = ? LIMIT 1")
       .bind(room.created_by_member_id).first<{ public_member_id: string | null }>()
@@ -386,7 +401,10 @@ export async function handleChatContentRequest(
     for (const room of result.results ?? []) {
       if (await canAccessRoom(env.DB, room, member)) visible.push(room);
     }
-    return json({ rooms: await Promise.all(visible.map((room) => serializeRoom(env.DB!, room, member))) });
+    return json({ rooms: await Promise.all(visible.map(async (room) => {
+      const branchMembership = await ensureBranchRoomMembership(env.DB!, room, member);
+      return serializeRoom(env.DB!, room, member, branchMembership?.joined_at);
+    })) });
   }
 
   if (url.pathname === ROOMS_PATH && request.method === "POST") {
@@ -555,7 +573,8 @@ export async function handleChatContentRequest(
       return json({ error: "このチャットを閲覧する権限がありません" }, 403);
 
     if (request.method === "GET") {
-      const messages = await messageRows(env.DB, roomId);
+      const branchMembership = await ensureBranchRoomMembership(env.DB, room, member);
+      const messages = await messageRows(env.DB, roomId, branchMembership?.joined_at);
       const reactions = await reactionRows(env.DB, messages.map((item) => item.id));
       return json({ messages: messages.map((item) => serializeMessage(item, reactions)) });
     }

@@ -60,6 +60,7 @@ const GIFT_METADATA: Pick<GiftCampaign, "winnerCount" | "deadline" | "imageUrl" 
 
 export function loadImportedDiscordGiftCampaigns(): GiftCampaign[] {
   return (archive.gifts as RawBenefitRecord[])
+    // 「新部活投票」はプレゼント企画ではないため、Discord上の実際の企画のみを移行する。
     .filter((record) => record.rawText.length > 100)
     .map((record, index) => ({
       id: `discord-gift-${index + 1}`,
@@ -75,4 +76,3 @@ export function loadImportedDiscordGiftCampaigns(): GiftCampaign[] {
       archivedFromDiscord: true,
     }));
 }
-

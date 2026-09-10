@@ -74,24 +74,6 @@ function importedIntroductionMessages(archive: Awaited<ReturnType<typeof Api.get
     .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
 }
 
-function importedBranchMessages(archive: Awaited<ReturnType<typeof Api.getBoardArchive>>, branch: "kanto" | "kansai"): ChatMessage[] {
-  const category = `gourmet-board-${branch}`;
-  const threads = archive.threads.filter((thread) => thread.category === category);
-  const threadIds = new Set(threads.map((thread) => thread.id));
-  const records = [...threads, ...archive.comments.filter((comment) => threadIds.has(comment.threadId))];
-  return records.map((record) => ({
-    id: `discord-${branch}-free-${record.id}`,
-    chatId: `branch-${branch}-free`,
-    senderId: `discord-${record.authorId}`,
-    externalMessageId: record.id,
-    externalAuthorName: displayMemberName(record.authorName),
-    senderAvatar: record.authorAvatarUrl ?? undefined,
-    content: record.content,
-    createdAt: record.createdAt,
-  })).filter((message) => message.content.trim().length > 0)
-    .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
-}
-
 function systemMessageText(content: string): string {
   const text = content.replace(/^【IRO\+\s*システム】\s*/, "");
   const legacyWelcome = text.match(/^「(.+)」の参加者専用チャットへようこそ！$/);
@@ -100,7 +82,7 @@ function systemMessageText(content: string): string {
   return joined ? `${stripRankFromName(joined[1])}がチャットに参加しました` : text;
 }
 
-function MessageBubble({ message, isMe, viewerId, myAvatarUri, senderMember, memberDirectory, onReact, mentionGroups, onOpenInternalLink, onOpenProfile, onReply, onEdit, onDelete }: { message: ChatMessage; isMe: boolean; viewerId: string; myAvatarUri?: string | null; senderMember?: Api.PublicMember; memberDirectory: Api.PublicMember[]; onReact: (emoji: string, pollChoices?: string[], allowMultiple?: boolean) => void; mentionGroups: ReturnType<typeof getMentionGroups>; onOpenInternalLink: (pathname: "/chat" | "/board" | "/event-detail", params: Record<string, string>) => void; onOpenProfile: () => void; onReply: () => void; onEdit: () => void; onDelete: () => void }) {
+function MessageBubble({ message, isMe, viewerId, viewerName, myAvatarUri, senderMember, memberDirectory, onReact, mentionGroups, onOpenInternalLink, onOpenProfile, onReply, onEdit, onDelete }: { message: ChatMessage; isMe: boolean; viewerId: string; viewerName: string; myAvatarUri?: string | null; senderMember?: Api.PublicMember; memberDirectory: Api.PublicMember[]; onReact: (emoji: string, pollChoices?: string[], allowMultiple?: boolean) => void; mentionGroups: ReturnType<typeof getMentionGroups>; onOpenInternalLink: (pathname: "/chat" | "/board" | "/event-detail", params: Record<string, string>) => void; onOpenProfile: () => void; onReply: () => void; onEdit: () => void; onDelete: () => void }) {
   const colors = useColors();
   const sender = getMemberById(message.senderId);
   const [showReactionPicker, setShowReactionPicker] = useState(false);
@@ -245,7 +227,7 @@ function MessageBubble({ message, isMe, viewerId, myAvatarUri, senderMember, mem
           </View>
         ) : null}
         <Modal visible={showActions} transparent animationType="fade" onRequestClose={() => setShowActions(false)}><Pressable onPress={() => setShowActions(false)} style={{ flex: 1, backgroundColor: "rgba(20,18,24,0.48)", justifyContent: "flex-end" }}><Pressable onPress={() => {}} style={{ backgroundColor: colors.background, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 16, paddingBottom: 30 }}><View style={{ flexDirection: "row", justifyContent: "space-around", backgroundColor: colors.surface, borderRadius: 16, padding: 10, marginBottom: 10 }}>{REACTION_EMOJIS.map((emoji) => <Pressable key={emoji} onPress={() => { onReact(emoji); setShowActions(false); }} style={{ padding: 7 }}><Text style={{ fontSize: 24 }}>{emoji}</Text></Pressable>)}</View>{[{ label: "返信", icon: "arrowshape.turn.up.left", action: onReply }, { label: "テキストをコピー", icon: "doc.on.doc", action: () => { void Clipboard.setStringAsync(message.content); } }, ...(isMe ? [{ label: "メッセージを編集", icon: "pencil", action: onEdit }, { label: "メッセージを削除", icon: "trash", action: onDelete }] : []), { label: "メッセージをピン留め", icon: "pin.fill", action: () => Alert.alert("ピン留めしました") }].map((item) => <Pressable key={item.label} onPress={() => { item.action(); setShowActions(false); }} style={{ minHeight: 48, flexDirection: "row", alignItems: "center", paddingHorizontal: 12, borderBottomWidth: 0.5, borderBottomColor: colors.border }}><IconSymbol name={item.icon as any} size={19} color={item.label.includes("削除") ? colors.error : colors.foreground} /><Text style={{ marginLeft: 12, fontSize: 15, fontWeight: "700", color: item.label.includes("削除") ? colors.error : colors.foreground }}>{item.label}</Text></Pressable>)}</Pressable></Pressable></Modal>
-        <Modal visible={reactionDetails !== null} transparent animationType="fade" onRequestClose={() => setReactionDetails(null)}><Pressable onPress={() => setReactionDetails(null)} style={{ flex: 1, backgroundColor: "rgba(20,18,24,0.48)", justifyContent: "center", padding: 28 }}><Pressable onPress={() => {}} style={{ maxHeight: "72%", backgroundColor: colors.background, borderRadius: 20, padding: 18 }}><View style={{ flexDirection: "row", alignItems: "center", marginBottom: 12 }}><Text style={{ fontSize: 21 }}>{reactionDetails?.emoji}</Text><Text style={{ marginLeft: 8, fontSize: 16, fontWeight: "900", color: colors.foreground }}>リアクションした人</Text><Pressable onPress={() => setReactionDetails(null)} style={{ marginLeft: "auto", padding: 4 }}><IconSymbol name="xmark" size={19} color={colors.muted} /></Pressable></View><ScrollView>{reactionDetails?.memberIds.map((memberId) => { const sharedMember = memberDirectory.find((member) => member.id === memberId); const localMember = getMemberById(memberId); const avatarUrl = sharedMember?.profile?.avatarUrl; const avatar = typeof avatarUrl === "string" ? { uri: avatarUrl } : localMember?.avatar ?? DEFAULT_AVATAR; return <View key={memberId} style={{ flexDirection: "row", alignItems: "center", paddingVertical: 9 }}><Image source={avatar} style={{ width: 34, height: 34, borderRadius: 17 }} contentFit="cover" /><Text style={{ marginLeft: 10, fontSize: 15, fontWeight: "700", color: colors.foreground }}>{sharedMember?.displayName ?? localMember?.name ?? "メンバー"}</Text></View>; })}</ScrollView></Pressable></Pressable></Modal>
+        <Modal visible={reactionDetails !== null} transparent animationType="fade" onRequestClose={() => setReactionDetails(null)}><Pressable onPress={() => setReactionDetails(null)} style={{ flex: 1, backgroundColor: "rgba(20,18,24,0.48)", justifyContent: "center", padding: 28 }}><Pressable onPress={() => {}} style={{ maxHeight: "72%", backgroundColor: colors.background, borderRadius: 20, padding: 18 }}><View style={{ flexDirection: "row", alignItems: "center", marginBottom: 12 }}><Text style={{ fontSize: 21 }}>{reactionDetails?.emoji}</Text><Text style={{ marginLeft: 8, fontSize: 16, fontWeight: "900", color: colors.foreground }}>リアクションした人</Text><Pressable onPress={() => setReactionDetails(null)} style={{ marginLeft: "auto", padding: 4 }}><IconSymbol name="xmark" size={19} color={colors.muted} /></Pressable></View><ScrollView>{reactionDetails?.memberIds.map((memberId) => { const isViewer = memberId === viewerId; const sharedMember = memberDirectory.find((member) => member.id === memberId); const localMember = getMemberById(memberId); const avatarUrl = sharedMember?.profile?.avatarUrl; const avatar = isViewer && myAvatarUri ? { uri: myAvatarUri } : typeof avatarUrl === "string" ? { uri: avatarUrl } : localMember?.avatar ?? DEFAULT_AVATAR; const name = isViewer ? displayMemberName(viewerName) : sharedMember?.displayName ?? localMember?.name ?? "メンバー"; return <View key={memberId} style={{ flexDirection: "row", alignItems: "center", paddingVertical: 9 }}><Image source={avatar} style={{ width: 34, height: 34, borderRadius: 17 }} contentFit="cover" /><Text style={{ marginLeft: 10, fontSize: 15, fontWeight: "700", color: colors.foreground }}>{name}</Text></View>; })}</ScrollView></Pressable></Pressable></Modal>
       </View>
     </View>
   );
@@ -327,8 +309,10 @@ export default function ChatScreen() {
   const applySharedMessages = useCallback((shared: ChatMessage[]) => {
     setMessages((previous) => {
       // 自己紹介はDiscordアーカイブ由来の履歴と共有チャットの新規投稿だけを表示し、テスト用ローカル履歴を混在させない。
-      const archivePrefix = id === "board-introduction" ? "discord-introduction-" : id === "branch-kanto-free" ? "discord-kanto-free-" : id === "branch-kansai-free" ? "discord-kansai-free-" : null;
-      const localMessages = archivePrefix
+      const archivePrefix = id === "board-introduction" ? "discord-introduction-" : null;
+      const localMessages = id === "branch-kanto-free" || id === "branch-kansai-free"
+        ? []
+        : archivePrefix
         ? previous.filter((message) => message.id.startsWith(archivePrefix))
         : [...getMessages(id ?? ""), ...previous.filter((message) => !message.shared)];
       return [...localMessages, ...shared]
@@ -376,15 +360,6 @@ export default function ChatScreen() {
             .filter((message, index, all) => all.findIndex((candidate) => candidate.id === message.id) === index)
             .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()));
         }).catch(() => setMessages((current) => current.filter((message) => message.shared))).finally(() => setIntroductionHydrated(true));
-      }
-      if (id === "branch-kanto-free" || id === "branch-kansai-free") {
-        const branch = id === "branch-kanto-free" ? "kanto" : "kansai";
-        Api.getBoardArchive("all").then((archive) => {
-          const imported = importedBranchMessages(archive, branch);
-          setMessages((current) => [...imported, ...current.filter((message) => message.shared)]
-            .filter((message, index, all) => all.findIndex((candidate) => candidate.id === message.id) === index)
-            .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()));
-        }).catch(() => setMessages((current) => current.filter((message) => message.shared)));
       }
       Api.getSharedChatRooms().then((sharedRooms) => {
         const sharedRoom = sharedRooms.find((item) => item.id === id);
@@ -679,6 +654,7 @@ export default function ChatScreen() {
                   stripRankFromName(item.externalAuthorName ?? "") === stripRankFromName(authUser?.name ?? "")
                 )}
                 viewerId={viewerMemberId}
+                viewerName={authUser?.name ?? CURRENT_USER.name}
                 myAvatarUri={myAvatarUri}
                 senderMember={directory.find((member) => member.id === item.senderId)}
                 memberDirectory={directory}
@@ -706,7 +682,7 @@ export default function ChatScreen() {
                 }}
                 onReply={() => { const sender = getMemberById(item.senderId); setMessageText(`@${item.externalAuthorName ?? sender?.name ?? "メンバー"} `); inputRef.current?.focus(); }}
                 onEdit={() => { setEditingMessage(item); setEditingMessageText(item.content); }}
-                onDelete={() => Alert.alert("メッセージを削除", "このメッセージを削除しますか？", [{ text: "キャンセル", style: "cancel" }, { text: "削除", style: "destructive", onPress: async () => { try { if (item.shared) await Api.deleteSharedChatMessage(item.id); else await deleteMessageFromStorage(id ?? "", item.id); setMessages((current) => current.filter((message) => message.id !== item.id)); } catch (error) { Alert.alert("削除できませんでした", error instanceof Error ? error.message : "もう一度お試しください。"); } } }])}
+                onDelete={() => { const remove = async () => { try { if (item.shared) await Api.deleteSharedChatMessage(item.id); else await deleteMessageFromStorage(id ?? "", item.id); setMessages((current) => current.filter((message) => message.id !== item.id)); } catch (error) { Alert.alert("削除できませんでした", error instanceof Error ? error.message : "もう一度お試しください。"); } }; if (Platform.OS === "web") { void remove(); return; } Alert.alert("メッセージを削除", "このメッセージを削除しますか？", [{ text: "キャンセル", style: "cancel" }, { text: "削除", style: "destructive", onPress: remove }]); }}
               />
             </>;
           }}

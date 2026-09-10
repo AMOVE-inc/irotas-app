@@ -18,8 +18,17 @@ export default function GiftCampaignManagerScreen() {
   const colors = useColors(); const router = useRouter(); const { user } = useAuthContext();
   const [items, setItems] = useState<GiftCampaign[]>([]); const [applications, setApplications] = useState<GiftApplication[]>([]);
   const [draft, setDraft] = useState<GiftCampaign>(EMPTY_GIFT); const [editingId, setEditingId] = useState<string | null>(null); const [showModal, setShowModal] = useState(false);
-  const reload = async () => { const [gifts, apps] = await Promise.all([getGiftCampaigns(), getGiftApplications()]); setItems(gifts); setApplications(apps); };
-  useEffect(() => { void reload(); }, []);
+  const reload = async () => { const [gifts, apps] = await Promise.all([getGiftCampaigns(), getGiftApplications()]); setItems(gifts); setApplications(apps); return gifts; };
+  useEffect(() => {
+    if (!isOperatorRole(user?.role, user?.accessRole)) return;
+    void (async () => {
+      // Discordから取り込んだ過去企画も、管理画面を開いた時点で共有データへ保存する。
+      // 以後は他の企画と同じく編集・削除できる。
+      const gifts = await reload();
+      await saveGiftCampaigns(gifts);
+      await reload();
+    })();
+  }, [user?.role, user?.accessRole]);
   if (!isOperatorRole(user?.role, user?.accessRole)) return <ScreenContainer className="p-6"><Text style={{ textAlign: "center", color: colors.muted, marginTop: 40 }}>運営メンバーのみアクセスできます</Text></ScreenContainer>;
 
   const openCreate = () => { setEditingId(null); setDraft({ ...EMPTY_GIFT, id: `gift_${Date.now()}`, deadline: new Date().toISOString().slice(0, 10) }); setShowModal(true); };
