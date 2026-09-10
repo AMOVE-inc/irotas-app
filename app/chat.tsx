@@ -16,7 +16,7 @@ import {
 } from "@/constants/mock-data";
 import { useAuthContext } from "@/lib/auth-context";
 import { isAdminRole, canPostToChat } from "@/lib/access-control";
-import { getAllRooms, getRoomById, getMessages, saveMessagesToStorage, deleteMessageFromStorage, loadMessagesFromStorage, loadDynamicRooms, renameRoom, addMemberToRoom, removeMemberFromRoom, toggleMessageReaction } from "@/lib/chat-store";
+import { getAllRooms, getRoomById, getMessages, saveMessagesToStorage, deleteMessageFromStorage, loadMessagesFromStorage, loadDynamicRooms, markRoomRead, renameRoom, addMemberToRoom, removeMemberFromRoom, toggleMessageReaction } from "@/lib/chat-store";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useColors } from "@/hooks/use-colors";
 import { Image } from "expo-image";
@@ -267,6 +267,7 @@ export default function ChatScreen() {
   const didInitialScrollRef = useRef(false);
   const inputRef = useRef<TextInput>(null);
   const [isNearLatest, setIsNearLatest] = useState(true);
+  const [hasOpenedIntroduction, setHasOpenedIntroduction] = useState(false);
 
   // 参加者モーダル
   const [showParticipants, setShowParticipants] = useState(false);
@@ -320,6 +321,15 @@ export default function ChatScreen() {
   // 初回起動時: プロフィール画像と永続化メッセージを読み込む
   useEffect(() => {
     if (!id) return;
+    didInitialScrollRef.current = false;
+    if (id === "board-introduction") {
+      void AsyncStorage.getItem("irotas_introduction_chat_opened_v1").then((value) => setHasOpenedIntroduction(value === "1"));
+    } else {
+      setHasOpenedIntroduction(true);
+    }
+    // 一度開いたチャットはサーバー・端末の両方で即時既読にする。戻った直後に新着バッジが残らないようにする。
+    void markRoomRead(id);
+    void Api.markSharedChatRoomRead(id).catch(() => {});
     setIsLoadingRoom(true);
     const loadingFallback = setTimeout(() => setIsLoadingRoom(false), 2500);
     // プロフィール画像読み込み
@@ -540,14 +550,16 @@ export default function ChatScreen() {
       setTimeout(() => {
         if (!didInitialScrollRef.current) {
           const unreadCount = Math.max(0, Number(unreadCountParam ?? 0));
-          if (unreadCount > 0) {
+          const shouldStartAtLatest = id === "board-introduction" && !hasOpenedIntroduction;
+          if (!shouldStartAtLatest && unreadCount > 0) {
             const firstUnreadIndex = Math.max(0, messages.length - unreadCount);
             flatListRef.current?.scrollToIndex({ index: firstUnreadIndex, animated: false, viewPosition: 0.08 });
             setIsNearLatest(firstUnreadIndex >= messages.length - 2);
-          } else {
+          } else if (shouldStartAtLatest || unreadCount === 0) {
             flatListRef.current?.scrollToEnd({ animated: false });
             setIsNearLatest(true);
           }
+          if (id === "board-introduction") void AsyncStorage.setItem("irotas_introduction_chat_opened_v1", "1").then(() => setHasOpenedIntroduction(true));
           didInitialScrollRef.current = true;
           return;
         }
@@ -556,7 +568,7 @@ export default function ChatScreen() {
         }
       }, 100);
     }
-  }, [messages, unreadCountParam, viewerMemberId]);
+  }, [messages, unreadCountParam, viewerMemberId, id, hasOpenedIntroduction]);
 
   if (!room) {
     return (
@@ -716,7 +728,10 @@ export default function ChatScreen() {
 
         {!isNearLatest && messages.length > 0 ? (
           <Pressable
-            onPress={() => flatListRef.current?.scrollToEnd({ animated: true })}
+            onPress={() => {
+              flatListRef.current?.scrollToEnd({ animated: true });
+              requestAnimationFrame(() => flatListRef.current?.scrollToEnd({ animated: true }));
+            }}
             accessibilityLabel="最新のメッセージへ移動"
             style={{ position: "absolute", right: 16, bottom: keyboardVisible ? 106 : 118, zIndex: 20, flexDirection: "row", alignItems: "center", gap: 5, borderRadius: 18, paddingHorizontal: 12, paddingVertical: 8, backgroundColor: colors.foreground, shadowColor: "#000", shadowOpacity: 0.16, shadowRadius: 5, shadowOffset: { width: 0, height: 2 }, elevation: 4 }}
           >

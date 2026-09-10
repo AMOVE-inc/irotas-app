@@ -19,12 +19,13 @@ function formatEventStart(event: { date: string; time: string }) {
   return `${Number(match[2])}/${Number(match[3])}(${["日", "月", "火", "水", "木", "金", "土"][day]})${event.time ? ` ${event.time}` : ""}`;
 }
 
-function ChatRoomCard({ room, eventStarts, eventImages, memberAvatars, viewerMemberId }: {
+function ChatRoomCard({ room, eventStarts, eventImages, memberAvatars, viewerMemberId, onOpened }: {
   room: ChatRoom;
   eventStarts: Record<string, string>;
   eventImages: Record<string, string>;
   memberAvatars: Record<string, string>;
   viewerMemberId: string;
+  onOpened: (roomId: string) => void;
 }) {
   const colors = useColors();
   const router = useRouter();
@@ -62,6 +63,7 @@ function ChatRoomCard({ room, eventStarts, eventImages, memberAvatars, viewerMem
     <Pressable
       onPress={() => {
         const unreadCount = room.unreadCount ?? 0;
+        onOpened(room.id);
         void markRoomRead(room.id);
         void Api.markSharedChatRoomRead(room.id).catch(() => {});
         router.push({ pathname: "/chat", params: { id: room.id, unreadCount: String(unreadCount) } });
@@ -193,6 +195,11 @@ export default function ChatListScreen() {
   const [eventImages, setEventImages] = useState<Record<string, string>>({});
   const [memberAvatars, setMemberAvatars] = useState<Record<string, string>>({});
   const [roomsLoading, setRoomsLoading] = useState(true);
+  const clearUnreadImmediately = useCallback((roomId: string) => {
+    const clear = (rooms: ChatRoom[]) => rooms.map((room) => room.id === roomId ? { ...room, unreadCount: 0, mentionCount: 0 } : room);
+    setMyRooms(clear);
+    setRankRooms(clear);
+  }, []);
 
   const refreshRooms = useCallback(async () => {
     setRoomsLoading(true);
@@ -260,12 +267,12 @@ export default function ChatListScreen() {
         </Pressable>
       </View>
 
-      {announcementRoom ? <ChatRoomCard room={announcementRoom} eventStarts={eventStarts} eventImages={eventImages} memberAvatars={memberAvatars} viewerMemberId={viewerMemberId} /> : null}
+      {announcementRoom ? <ChatRoomCard room={announcementRoom} eventStarts={eventStarts} eventImages={eventImages} memberAvatars={memberAvatars} viewerMemberId={viewerMemberId} onOpened={clearUnreadImmediately} /> : null}
       <FlatList
         data={joinedChatRooms}
         keyExtractor={(item) => item.id}
-        renderItem={({ item }) => <ChatRoomCard room={item} eventStarts={eventStarts} eventImages={eventImages} memberAvatars={memberAvatars} viewerMemberId={viewerMemberId} />}
-        ListHeaderComponent={<>{rankRooms.length > 0 ? <View><View style={{ paddingHorizontal: 16, paddingVertical: 8, backgroundColor: colors.surface }}><Text style={{ fontSize: 12, fontWeight: "700", color: colors.muted, letterSpacing: 0.5 }}>あなたのランク専用チャット</Text></View>{rankRooms.map((room) => <ChatRoomCard key={room.id} room={room} eventStarts={eventStarts} eventImages={eventImages} memberAvatars={memberAvatars} viewerMemberId={viewerMemberId} />)}</View> : null}{joinedChatRooms.length > 0 ? <View style={{ paddingHorizontal: 16, paddingVertical: 8, backgroundColor: colors.surface }}><Text style={{ fontSize: 12, fontWeight: "700", color: colors.muted, letterSpacing: 0.5 }}>参加中のチャット</Text></View> : null}</>}
+        renderItem={({ item }) => <ChatRoomCard room={item} eventStarts={eventStarts} eventImages={eventImages} memberAvatars={memberAvatars} viewerMemberId={viewerMemberId} onOpened={clearUnreadImmediately} />}
+        ListHeaderComponent={<>{rankRooms.length > 0 ? <View><View style={{ paddingHorizontal: 16, paddingVertical: 8, backgroundColor: colors.surface }}><Text style={{ fontSize: 12, fontWeight: "700", color: colors.muted, letterSpacing: 0.5 }}>あなたのランク専用チャット</Text></View>{rankRooms.map((room) => <ChatRoomCard key={room.id} room={room} eventStarts={eventStarts} eventImages={eventImages} memberAvatars={memberAvatars} viewerMemberId={viewerMemberId} onOpened={clearUnreadImmediately} />)}</View> : null}{joinedChatRooms.length > 0 ? <View style={{ paddingHorizontal: 16, paddingVertical: 8, backgroundColor: colors.surface }}><Text style={{ fontSize: 12, fontWeight: "700", color: colors.muted, letterSpacing: 0.5 }}>参加中のチャット</Text></View> : null}</>}
         showsVerticalScrollIndicator={false}
         style={{ flex: 1 }}
         contentContainerStyle={{ paddingBottom: 112, flexGrow: 1 }}
