@@ -151,6 +151,7 @@ export default function CreateEventScreen() {
   const [privateMemo, setPrivateMemo] = useState("");
   const [cancellationPolicy, setCancellationPolicy] = useState(DEFAULT_CANCELLATION_POLICY);
   const [selectionMethod, setSelectionMethod] = useState<"first_come" | "lottery">("first_come");
+  const [recruitmentStatus, setRecruitmentStatus] = useState<"draft" | "open">("open");
   const [useRankPrices, setUseRankPrices] = useState(false);
   const [rankPrices, setRankPrices] = useState<Record<"regular" | "silver" | "gold" | "platinum", string>>({ regular: "", silver: "", gold: "", platinum: "" });
   const [termsAccepted, setTermsAccepted] = useState(false);
@@ -189,7 +190,7 @@ export default function CreateEventScreen() {
     const savedFields = eventFormSaveFields({ ...form, eventType: finalType });
     const draftEvent: Event = {
       id: `event_${Date.now()}`, createdAt: new Date().toISOString(), ...savedFields,
-      description: savedFields.description, image: imageUri, attendees: 0, applicantIds: [], participants: [], status: "open", createdBy: viewerMemberId,
+      description: savedFields.description, image: imageUri, attendees: 0, applicantIds: [], participants: [], status: "open", recruitmentStatus: finalType === "official" ? recruitmentStatus : "open", createdBy: viewerMemberId,
     };
     setIsSubmitting(true);
     let newEvent: Event;
@@ -202,8 +203,8 @@ export default function CreateEventScreen() {
       return;
     }
     pendingEvents.unshift(newEvent);
-    void recordHomeActivity({ id: `event:${newEvent.id}`, kind: "event", title: newEvent.title, description: finalType === "official" ? "新しい公式イベントが公開されました" : finalType === "club" ? "新しい部活動イベントが公開されました" : "新しいグルメ会が公開されました", createdAt: newEvent.createdAt!, route: "/event-detail", params: { id: newEvent.id } });
-    void scheduleOrganizerDeadlineNotification(newEvent);
+    void recordHomeActivity({ id: `event:${newEvent.id}`, kind: "event", title: newEvent.title, description: finalType === "official" ? recruitmentStatus === "draft" ? "公式イベントを募集前で登録しました" : "新しい公式イベントが公開されました" : finalType === "club" ? "新しい部活動イベントが公開されました" : "新しいグルメ会が公開されました", createdAt: newEvent.createdAt!, route: "/event-detail", params: { id: newEvent.id } });
+    if (newEvent.recruitmentStatus !== "draft") void scheduleOrganizerDeadlineNotification(newEvent);
     setIsSubmitting(false);
     // 作成XPはイベント作成APIで一意に付与済み。画面遷移前に獲得通知を表示する。
     if (finalType !== "official" && !userIsOperator) {
@@ -225,7 +226,7 @@ export default function CreateEventScreen() {
 
         {eventType === "club" ? <><FieldLabel>開催する部活動 *</FieldLabel><View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>{joinedClubs.map((club) => { const selected = selectedClubId === club.id; return <Pressable key={club.id} onPress={() => setSelectedClubId(club.id)} style={{ borderRadius: 18, paddingHorizontal: 12, paddingVertical: 8, backgroundColor: selected ? "#4E6756" : colors.surface, borderWidth: 1, borderColor: selected ? "#4E6756" : colors.border }}><Text style={{ fontSize: 12, fontWeight: "800", color: selected ? "#FFF" : colors.foreground }}>{club.icon} {club.name}</Text></Pressable>; })}</View></> : null}
 
-        {eventType === "official" ? <><FieldLabel>参加者の決め方 *</FieldLabel><View style={{ flexDirection: "row", gap: 10 }}>{(["first_come", "lottery"] as const).map((value) => <Pressable key={value} onPress={() => setSelectionMethod(value)} style={{ flex: 1, paddingVertical: 11, alignItems: "center", borderRadius: 12, backgroundColor: selectionMethod === value ? "#E8A0BF" : colors.surface }}><Text style={{ fontWeight: "800", color: selectionMethod === value ? "#FFF" : colors.foreground }}>{value === "first_come" ? "先着順" : "抽選"}</Text></Pressable>)}</View></> : null}
+        {eventType === "official" ? <><FieldLabel>募集ステータス *</FieldLabel><View style={{ flexDirection: "row", gap: 10 }}>{(["draft", "open"] as const).map((value) => <Pressable key={value} onPress={() => setRecruitmentStatus(value)} style={{ flex: 1, paddingVertical: 11, alignItems: "center", borderRadius: 12, backgroundColor: recruitmentStatus === value ? "#E8A0BF" : colors.surface }}><Text style={{ fontWeight: "800", color: recruitmentStatus === value ? "#FFF" : colors.foreground }}>{value === "draft" ? "募集前" : "募集中"}</Text></Pressable>)}</View><Text style={{ marginTop: 7, fontSize: 12, color: colors.muted }}>募集前で登録したイベントは、管理者が詳細画面から募集を開始できます。</Text><FieldLabel>参加者の決め方 *</FieldLabel><View style={{ flexDirection: "row", gap: 10 }}>{(["first_come", "lottery"] as const).map((value) => <Pressable key={value} onPress={() => setSelectionMethod(value)} style={{ flex: 1, paddingVertical: 11, alignItems: "center", borderRadius: 12, backgroundColor: selectionMethod === value ? "#E8A0BF" : colors.surface }}><Text style={{ fontWeight: "800", color: selectionMethod === value ? "#FFF" : colors.foreground }}>{value === "first_come" ? "先着順" : "抽選"}</Text></Pressable>)}</View></> : null}
 
         <FieldLabel>{eventType === "club" ? "店名・会場名（任意）" : "店名 *"}</FieldLabel><TextInput value={restaurantName} onChangeText={setRestaurantName} placeholder={eventType === "club" ? "例：代々木公園、〇〇スタジアム" : "店舗名"} placeholderTextColor={colors.muted} style={inputStyle} />
         <FieldLabel>{eventType === "club" ? "イベント名 *" : "イベント名（任意）"}</FieldLabel><TextInput value={eventName} onChangeText={setEventName} placeholder={eventType === "club" ? "例：朝の代々木公園ランニング" : "未入力の場合は店名を表示"} placeholderTextColor={colors.muted} style={inputStyle} />

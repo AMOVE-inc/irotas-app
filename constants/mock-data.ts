@@ -123,6 +123,8 @@ export interface Event {
   };
   category: "all" | "kanto" | "kansai";
   eventType: "official" | "gourmet" | "club";
+  /** 公式イベントは募集開始前のまま公開し、後から募集を開始できる。 */
+  recruitmentStatus?: "draft" | "open";
   clubId?: string;
   status: "open" | "full" | "ended";
   createdBy: string; // admin member id
@@ -558,15 +560,6 @@ export const EVENTS: Event[] = ([
     capacity: 100, attendees: 28, participants: ["u1", "u2", "u3"],
     price: "無料", priceMin: 0, priceMax: 0, genres: ["日本料理", "洋食", "中華料理"], category: "all", eventType: "official", status: "open",
     createdBy: "u1",
-  },
-  {
-    id: "e5", createdAt: "2026-07-21T10:00:00+09:00", title: "恵比寿で楽しむ夏のビストロ会",
-    restaurantName: "BISTRO IRO", description: "気軽なビストロ料理を囲む少人数のグルメ会です。参加申込は幹事の承認後に確定します。",
-    date: "2026-08-15", time: "18:30", location: "東京都渋谷区恵比寿", prefecture: "東京都",
-    image: "https://images.unsplash.com/photo-1550966871-3ed3cdb5ed0c?w=400", capacity: 8, attendees: 3,
-    participants: ["u6", "u4", "u1"], applicantIds: ["u6", "u4", "u1"], price: "¥6,000", priceMin: 6000, priceMax: 6000,
-    genres: ["フレンチ", "洋食"], category: "kanto", eventType: "gourmet", status: "open", createdBy: "u6",
-    cancellationPolicy: "参加者自身でのキャンセル操作はできません。必ず幹事へ連絡してください。",
   },
   {
     id: "e6", createdAt: "2026-08-14T12:00:00+09:00", title: "ワイン部 テイスティング交流会",

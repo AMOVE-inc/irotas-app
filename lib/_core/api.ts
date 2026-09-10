@@ -1195,6 +1195,22 @@ export async function cancelEvent(eventId: string, confirmedParticipantNotified 
   );
 }
 
+/** 管理者専用。中止とは異なり、過去イベントを含めイベントを完全に削除する。 */
+export async function deleteEvent(eventId: string) {
+  return apiCall<{ success: boolean }>(
+    `/api/events/${encodeURIComponent(eventId)}`,
+    { method: "DELETE" },
+  );
+}
+
+export async function startOfficialEventRecruitment(eventId: string) {
+  const result = await apiCall<{ event: Event }>(`/api/events/${encodeURIComponent(eventId)}`, {
+    method: "PATCH",
+    body: JSON.stringify({ action: "start_recruitment" }),
+  });
+  return result.event;
+}
+
 export async function updateEventDetails(eventId: string, input: {
   title: string;
   description: string;

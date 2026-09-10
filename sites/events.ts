@@ -15,6 +15,7 @@ const EVENT_CANCELLATION_PATH = /^\/api\/events\/([^/]+)\/cancellation-requests$
 const EVENT_CANCELLATION_REVIEW_PATH = /^\/api\/events\/([^/]+)\/cancellation-requests\/([^/]+)$/;
 const EVENT_ATTENDANCE_PATH = /^\/api\/events\/([^/]+)\/attendance$/;
 const EVENT_CANCELLATION_PREVIEW_PATH = /^\/api\/events\/([^/]+)\/cancellation-penalty-preview$/;
+const DEPRECATED_TEST_EVENT_TITLES = ["恵比寿で楽しむ夏のビストロ会"];
 const EVENT_IMAGE_PATH = /^\/api\/event-images\/([^/]+)$/;
 const MAX_EVENT_BODY_BYTES = 96 * 1024;
 const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
@@ -215,6 +216,7 @@ export function sanitizeEvent(value: unknown) {
     rankPrices: input.rankPrices && typeof input.rankPrices === "object" ? input.rankPrices : undefined,
     category: ["all", "kanto", "kansai"].includes(String(input.category)) ? input.category : "all",
     status: "open" as const,
+    recruitmentStatus: eventType === "official" && input.recruitmentStatus === "draft" ? "draft" as const : "open" as const,
     applicationDeadline,
     cancellationPolicy: text(input.cancellationPolicy, 2000) || "",
     selectionMethod: input.selectionMethod === "lottery" ? "lottery" as const : "first_come" as const,
@@ -588,6 +590,11 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
     return createEvent(request, env.DB, member);
   if (pathname === EVENTS_ENDPOINT && request.method === "GET") {
     const includeCancelled = url.searchParams.get("includeCancelled") === "1";
+    // 旧プレビューで作成したテストイベントは、リリース版へ持ち込まない。
+    for (const title of DEPRECATED_TEST_EVENT_TITLES) {
+      await env.DB.prepare("DELETE FROM events WHERE title = ?").bind(title).run();
+    }
+    await env.DB.prepare("DELETE FROM events WHERE title LIKE '%テスト%'").run();
     const rows = await env.DB.prepare(`${selectEvents} ${includeCancelled ? "" : "WHERE e.status != 'cancelled'"} ORDER BY e.event_date, e.created_at DESC`).all<EventRow>();
     const events = await Promise.all((rows.results ?? []).filter((row) => !DELETED_EVENT_IDS.has(row.id)).map(async (row) => {
       if (row.event_type === "club" && row.club_id && !await canMemberAccessClub(env.DB!, row.club_id, member.id, admin))
@@ -610,6 +617,22 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
     const row = await eventRow(env.DB, id);
     if (!row) return responseJson({ error: "イベントが見つかりません" }, 404);
     const input = await readBody(request);
+    if (input?.action === "start_recruitment") {
+      if (!admin) return responseJson({ error: "募集開始は管理者のみ実行できます" }, 403);
+      if (row.event_type !== "official") return responseJson({ error: "公式イベントのみ募集を開始できます" }, 400);
+      let data: Record<string, unknown> = {};
+      try { data = JSON.parse(row.public_data_json) as Record<string, unknown>; } catch {}
+      if (data.recruitmentStatus !== "draft") return responseJson({ event: await hydratedEvent(env.DB, row, member.id, elevated, memberPublicId) });
+      data.recruitmentStatus = "open";
+      const now = new Date().toISOString();
+      await env.DB.batch([
+        env.DB.prepare("UPDATE events SET public_data_json = ?, updated_at = ? WHERE id = ?").bind(JSON.stringify(data), now, id),
+        env.DB.prepare(`INSERT INTO audit_logs (actor_user_id, action, entity_type, entity_id, metadata_json, created_at)
+          VALUES (?, 'event.recruitment_started', 'event', ?, '{}', ?)`).bind(String(member.id), id, now),
+      ]);
+      const updated = await eventRow(env.DB, id);
+      return responseJson({ event: await hydratedEvent(env.DB, updated!, member.id, elevated, memberPublicId) });
+    }
     if (input?.action === "update_companions") {
       if (!(admin || row.organizer_member_id === member.id)) return responseJson({ error: "イベント作成者または管理者のみ同席者を変更できます" }, 403);
       const companionIds = stringArray(input.companionIds, 100, 40);
@@ -720,6 +743,20 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
     await postEventCancellationToConfirmedChat(env.DB, row, member.id, now);
     return responseJson({ success: true, cancelled: true });
   }
+  if (eventMatch && request.method === "DELETE") {
+    const id = decodeURIComponent(eventMatch[1]);
+    const row = await eventRow(env.DB, id);
+    if (!row) return responseJson({ error: "イベントが見つかりません" }, 404);
+    if (!admin) return responseJson({ error: "イベントの削除は管理者のみ実行できます" }, 403);
+    const now = new Date().toISOString();
+    // event_id の外部キーは ON DELETE CASCADE。中止と異なり履歴も含めて完全に削除する。
+    await env.DB.batch([
+      env.DB.prepare("DELETE FROM events WHERE id = ?").bind(id),
+      env.DB.prepare(`INSERT INTO audit_logs (actor_user_id, action, entity_type, entity_id, metadata_json, created_at)
+        VALUES (?, 'event.deleted', 'event', ?, ?, ?)`).bind(String(member.id), id, JSON.stringify({ title: row.title }), now),
+    ]);
+    return responseJson({ success: true });
+  }
   if (favoriteMatch && request.method === "PUT") {
     const id = decodeURIComponent(favoriteMatch[1]);
     const row = await eventRow(env.DB, id);
@@ -742,6 +779,7 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
     if (!row) return responseJson({ error: "現在、このイベントには申し込めません" }, 409);
     let existingData: Record<string, unknown> = {};
     try { existingData = JSON.parse(row.public_data_json) as Record<string, unknown>; } catch {}
+    if (existingData.recruitmentStatus === "draft") return responseJson({ error: "この公式イベントはまだ募集開始前です" }, 409);
     const recruitmentFinalized = typeof existingData.participantsFinalizedAt === "string" && existingData.participantsFinalizedAt.length > 0;
     if (row.status !== "open" && recruitmentFinalized) return responseJson({ error: "現在、このイベントには申し込めません" }, 409);
     if (row.event_type === "club" && row.club_id && !await canMemberAccessClub(env.DB, row.club_id, member.id, admin))

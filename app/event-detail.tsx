@@ -633,6 +633,33 @@ export default function EventDetailScreen() {
     });
   };
 
+  const handleDeleteEvent = () => {
+    setApplicationConfirmation({
+      title: "イベントを完全に削除しますか？",
+      message: "中止とは異なり、過去の参加・申込履歴を含めてイベントを完全に削除します。この操作は元に戻せません。",
+      buttons: [
+        { text: "戻る", style: "cancel" },
+        { text: "完全に削除", style: "destructive", onPress: async () => {
+          try {
+            await Api.deleteEvent(event.id);
+            Alert.alert("イベントを削除しました", "イベントと関連する申込履歴を削除しました。", [{ text: "OK", onPress: () => router.replace("/events") }]);
+          } catch (error) {
+            Alert.alert("削除できませんでした", error instanceof Error ? error.message : "もう一度お試しください。");
+          }
+        } },
+      ],
+    });
+  };
+
+  const handleStartRecruitment = async () => {
+    try {
+      setEvent(await Api.startOfficialEventRecruitment(event.id));
+      Alert.alert("募集を開始しました", "メンバーがこの公式イベントへ申し込めるようになりました。");
+    } catch (error) {
+      Alert.alert("募集を開始できませんでした", error instanceof Error ? error.message : "もう一度お試しください。");
+    }
+  };
+
   const cancelGourmetParticipant = (memberId: string) => {
     const member = displayMember(memberId);
     setApplicationConfirmation({
@@ -785,6 +812,8 @@ export default function EventDetailScreen() {
               backgroundColor:
                 eventEnded
                   ? "#8E8E93"
+                  : event.recruitmentStatus === "draft"
+                  ? "#7E6C9E"
                   : event.status === "open"
                   ? "#34C759"
                   : event.status === "full"
@@ -796,7 +825,7 @@ export default function EventDetailScreen() {
             }}
           >
             <Text style={{ fontSize: 13, fontWeight: "700", color: "#FFF" }}>
-              {eventEnded ? "開催終了" : event.status === "open" ? "受付中" : event.status === "full" ? (event.participantsFinalizedAt ? "募集終了" : "満席") : "終了"}
+              {eventEnded ? "開催終了" : event.recruitmentStatus === "draft" ? "募集前" : event.status === "open" ? "受付中" : event.status === "full" ? (event.participantsFinalizedAt ? "募集終了" : "満席") : "終了"}
             </Text>
           </View>
         </View>
@@ -922,6 +951,8 @@ export default function EventDetailScreen() {
         </View> : null}
 
         {canManageEvent ? <Pressable onPress={() => { const form = eventFormValuesFromEvent(event); setAdminInitialForm(form); setAdminTitle(form.eventName); setAdminParticipants((event.participants ?? []).join("\n")); setAdminDate(form.date); setAdminTime(form.time); setAdminLocation(form.address); setAdminCapacity(form.recruitCapacity); setAdminReservationCapacity(form.reservationCapacity); setAdminEventType(form.eventType); setAdminClubId(form.clubId); setAdminRestaurantName(form.restaurantName); setAdminFixedAmount(form.fixedAmount); setAdminBudgetMin(form.budgetMin); setAdminBudgetMax(form.budgetMax); setAdminCompanionIds(form.companionIds); setAdminImage(form.image); setAdminImageChanged(false); setAdminPublicNotes(form.publicNotes); setAdminPrivateMemo(form.privateMemo); setAdminSelectionMethod(form.selectionMethod); setAdminUseRankPrices(form.useRankPrices); setAdminRankPrices(form.rankPrices); setAdminGenres(form.genres); setShowAdminEdit(true); }} style={{ marginBottom: 16, borderRadius: 12, paddingVertical: 12, alignItems: "center", backgroundColor: "#B42318" }}><Text style={{ color: "#FFF", fontSize: 14, fontWeight: "900" }}>{canAdminEdit ? "管理者：イベント情報を編集" : "イベント情報を編集"}</Text></Pressable> : null}
+        {canAdminEdit && event.eventType === "official" && event.recruitmentStatus === "draft" && !event.isCancelled ? <Pressable onPress={() => { void handleStartRecruitment(); }} style={{ marginTop: -6, marginBottom: 16, borderRadius: 12, paddingVertical: 12, alignItems: "center", backgroundColor: "#5B9BD5" }}><Text style={{ color: "#FFF", fontSize: 14, fontWeight: "900" }}>管理者：募集を開始</Text></Pressable> : null}
+        {canAdminEdit ? <Pressable onPress={handleDeleteEvent} style={{ marginTop: -6, marginBottom: 16, borderRadius: 12, paddingVertical: 12, alignItems: "center", borderWidth: 1, borderColor: "#D94C55" }}><Text style={{ color: "#D94C55", fontSize: 14, fontWeight: "900" }}>管理者：イベントを完全に削除</Text></Pressable> : null}
 
         {isOrganizer ? (
           <View style={{ backgroundColor: "#F5F8FC", borderRadius: 14, padding: 14, marginBottom: 16, borderWidth: 1, borderColor: "#DCE7F2" }}>
@@ -1123,7 +1154,7 @@ export default function EventDetailScreen() {
           </View>
         ) : null}
 
-        {!isJoined && !hasApplied && !isOrganizer && event.status === "open" ? (
+        {!isJoined && !hasApplied && !isOrganizer && event.status === "open" && event.recruitmentStatus !== "draft" ? (
           <View style={{ backgroundColor: "#FFF8F0", borderRadius: 14, padding: 14, marginBottom: 16, borderWidth: 1, borderColor: "#EED9BF" }}>
             <Pressable onPress={() => setTermsAccepted((value) => !value)} style={{ flexDirection: "row", alignItems: "center" }}>
               <View style={{ width: 24, height: 24, borderRadius: 6, backgroundColor: termsAccepted ? "#E8A0BF" : colors.surface, borderWidth: 1, borderColor: termsAccepted ? "#E8A0BF" : colors.border, alignItems: "center", justifyContent: "center" }}>{termsAccepted ? <IconSymbol name="checkmark" size={15} color="#FFF" /> : null}</View>
@@ -1294,8 +1325,8 @@ export default function EventDetailScreen() {
         ) : (
         /* 参加ボタン */
         <Pressable
-          disabled={isJoined || hasApplied || isOrganizer || event.status !== "open" || (requiresOrganizerApproval && !termsAccepted)}
-          onPress={isJoined || hasApplied || isOrganizer || event.status !== "open" || (requiresOrganizerApproval && !termsAccepted) ? undefined : handleJoin}
+          disabled={isJoined || hasApplied || isOrganizer || event.status !== "open" || event.recruitmentStatus === "draft" || (requiresOrganizerApproval && !termsAccepted)}
+          onPress={isJoined || hasApplied || isOrganizer || event.status !== "open" || event.recruitmentStatus === "draft" || (requiresOrganizerApproval && !termsAccepted) ? undefined : handleJoin}
           style={({ pressed }) => ({
             backgroundColor: isOrganizer
               ? (event.participantsFinalizedAt ? "#34C759" : "#B42318")
@@ -1303,7 +1334,7 @@ export default function EventDetailScreen() {
               ? "#34C759"
               : hasApplied
               ? "#5B9BD5"
-              : event.status !== "open"
+              : event.status !== "open" || event.recruitmentStatus === "draft"
               ? colors.muted
               : !termsAccepted
               ? "#B8B8BD"
@@ -1315,7 +1346,7 @@ export default function EventDetailScreen() {
           })}
         >
           <Text style={{ fontSize: 17, fontWeight: "700", color: "#FFF" }}>
-            {isOrganizer ? (event.participantsFinalizedAt ? "幹事イベント（参加者確定済み）" : "幹事イベント（参加者募集中）") : isJoined ? "✓ 参加確定" : hasApplied ? "✓ 申込済み（幹事の承認待ち）" : event.status !== "open" ? "募集終了" : requiresOrganizerApproval && !termsAccepted ? "規約に同意して申し込む" : event.selectionMethod === "lottery" ? "抽選に申し込む" : "参加を申し込む"}
+            {isOrganizer ? (event.participantsFinalizedAt ? "幹事イベント（参加者確定済み）" : event.recruitmentStatus === "draft" ? "幹事イベント（募集前）" : "幹事イベント（参加者募集中）") : isJoined ? "✓ 参加確定" : hasApplied ? "✓ 申込済み（幹事の承認待ち）" : event.recruitmentStatus === "draft" ? "募集開始前" : event.status !== "open" ? "募集終了" : requiresOrganizerApproval && !termsAccepted ? "規約に同意して申し込む" : event.selectionMethod === "lottery" ? "抽選に申し込む" : "参加を申し込む"}
           </Text>
         </Pressable>
         )}
