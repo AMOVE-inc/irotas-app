@@ -50,6 +50,7 @@ import { getMentionGroups, getMentionQuery, getMentionedMemberIds, insertMention
 import { type TextSelection } from "@/lib/text-formatting";
 import * as Api from "@/lib/_core/api";
 import { getDiscordAuthorByName } from "@/lib/discord-author-directory";
+import { displayMemberName } from "@/lib/display-name";
 
 const REACTION_EMOJIS = ["👍", "❤️", "😂", "🎉", "😋", "🙏"] as const;
 const MORE_REACTION_EMOJIS = ["😀", "😃", "😄", "😁", "😆", "😅", "😂", "🤣", "😊", "😇", "🙂", "🙃", "😉", "😍", "🥰", "😘", "😋", "😛", "🤪", "🤔", "🫡", "😎", "🥳", "😮", "😢", "😭", "😡", "👍", "👎", "👏", "🙌", "🙏", "💪", "👀", "❤️", "🩷", "🧡", "💛", "💚", "💙", "💜", "🖤", "🤍", "🔥", "✨", "🎉", "💯", "✅", "❌", "💡", "📌", "🍽️", "🍣", "🍖", "🍜", "🍕", "🍰", "☕", "🍺", "🍷"] as const;
@@ -65,7 +66,7 @@ function importedIntroductionMessages(archive: Awaited<ReturnType<typeof Api.get
     chatId: "board-introduction",
     senderId: `discord-${record.authorId}`,
     externalMessageId: record.id,
-    externalAuthorName: record.authorName,
+    externalAuthorName: displayMemberName(record.authorName),
     senderAvatar: record.authorAvatarUrl ?? undefined,
     content: record.content,
     createdAt: record.createdAt,
@@ -83,7 +84,7 @@ function importedBranchMessages(archive: Awaited<ReturnType<typeof Api.getBoardA
     chatId: `branch-${branch}-free`,
     senderId: `discord-${record.authorId}`,
     externalMessageId: record.id,
-    externalAuthorName: record.authorName,
+    externalAuthorName: displayMemberName(record.authorName),
     senderAvatar: record.authorAvatarUrl ?? undefined,
     content: record.content,
     createdAt: record.createdAt,

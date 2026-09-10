@@ -87,7 +87,7 @@ for (const record of [...(archive as RawDiscordBoardArchive).threads, ...(archiv
       : /SILVER|シルバー/i.test(record.authorName) ? "silver"
         : undefined);
   discordAuthorFallbacks.set(record.authorId, {
-    displayName: current.displayName || record.authorName.replace(/\s*【[^】]*(?:SILVER|GOLD|PLATINUM)[^】]*】/gi, "").trim(),
+    displayName: (current.displayName || record.authorName.replace(/\s*【[^】]*(?:SILVER|GOLD|PLATINUM)[^】]*】/gi, "").trim()).replace(/^deleted\s+user$/i, "未設定"),
     avatarUrl: current.avatarUrl || record.authorAvatarUrl || undefined,
     memberRank: current.memberRank || rank,
   });

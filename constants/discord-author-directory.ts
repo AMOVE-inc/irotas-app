@@ -4053,7 +4053,7 @@ export const DISCORD_AUTHOR_DIRECTORY: DiscordAuthorRecord[] = [
   },
   {
     "id": "discord-456226577798135808",
-    "name": "Deleted User",
+    "name": "未設定",
     "avatarUrl": "",
     "rank": "regular"
   },

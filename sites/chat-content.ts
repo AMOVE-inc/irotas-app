@@ -260,7 +260,7 @@ function serializeMessage(row: MessageRow, reactions: ReactionRow[]) {
     id: row.id,
     chatId: row.room_id,
     senderId: publicMemberId(row.sender_member_id, row.sender_public_member_id),
-    externalAuthorName: row.sender_display_name?.trim() || "メンバー",
+    externalAuthorName: (row.sender_display_name?.trim() || "メンバー").replace(/^deleted\s+user$/i, "未設定"),
     senderAvatar,
     content: row.content,
     imageUri: row.image_url || undefined,

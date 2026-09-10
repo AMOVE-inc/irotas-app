@@ -8,6 +8,7 @@ import {
 } from "../constants/mock-data";
 import type { SharedBoardComment, SharedBoardThread } from "./_core/api";
 import { cleanDiscordBoardContent, cleanDiscordBoardTitle } from "./discord-board-normalization";
+import { displayMemberName } from "./display-name";
 
 type ReactionSummary = Record<string, { count: number; reacted: boolean }>;
 
@@ -24,7 +25,7 @@ function memberFor(id: string, name: string, profile?: { avatarUrl?: string; mem
   const rank = ["regular", "silver", "gold", "platinum"].includes(profile?.rank ?? "") ? profile!.rank as Member["rank"] : "regular";
   return {
     id,
-    name,
+    name: displayMemberName(name, "メンバー"),
     avatar: profile?.avatarUrl || DEFAULT_AVATAR,
     rank,
     branch: "kanto",

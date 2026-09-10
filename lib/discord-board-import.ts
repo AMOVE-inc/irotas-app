@@ -2,6 +2,7 @@ import { MEMBERS, type BoardComment, type BoardThread, type Member } from "../co
 import { normalizeBoardReactions } from "./board-reactions";
 import { inferImportedRecruitmentStatus } from "./board-recruitment";
 import { cleanDiscordBoardContent, cleanDiscordBoardTitle } from "./discord-board-normalization";
+import { displayMemberName } from "./display-name";
 
 export interface RawDiscordBoardRecord {
   id: string;
@@ -69,7 +70,7 @@ function authorFor(record: RawDiscordBoardRecord, directory: DiscordMemberDirect
   const rank = (["regular", "silver", "gold", "platinum"].includes(databaseMember?.memberRank ?? "") ? databaseMember!.memberRank : record.authorRank || fallback?.rank || rankFromDiscordName(record.authorName) || "regular") as Member["rank"];
   return {
     id: databaseMember?.id ?? discordId,
-    name: databaseMember?.displayName || cleanDiscordMemberName(record.authorName) || "旧Discordメンバー",
+    name: displayMemberName(databaseMember?.displayName || cleanDiscordMemberName(record.authorName), "旧Discordメンバー"),
     avatar,
     rank,
     points: databaseMember?.xp ?? 0,

@@ -202,13 +202,17 @@ export default function ChatListScreen() {
   }, []);
 
   const refreshRooms = useCallback(async () => {
-    setRoomsLoading(true);
     // 旧プロトタイプ用の chat1〜chat4 は、保存済みの実際の会話ではないため一覧に出さない。
     const isFixtureRoom = (room: ChatRoom) => /^chat\d+$/.test(room.id);
     const branchRooms = CHAT_ROOMS.filter((room) => room.sourceId === "branch-kanto" ? viewerBranches.includes("kanto") : room.sourceId === "branch-kansai" ? viewerBranches.includes("kansai") : false);
     const localJoinedRooms = [...getMyRooms(viewerMemberId), ...branchRooms]
       .filter((room) => room.type !== "rank" && !isFixtureRoom(room));
     const localRankRooms = getRankRoomsForUser(viewerRank);
+    // ネットワーク応答を待たず、端末にあるチャット一覧をまず表示する。
+    // 共有データが到着した時点で下の処理が正しい未読数・並び順に更新する。
+    setMyRooms(localJoinedRooms);
+    setRankRooms(localRankRooms);
+    setRoomsLoading(false);
     let sharedRooms: ChatRoom[] = [];
     let latestAnnouncement: { content: string; createdAt: string } | undefined;
     try {
@@ -249,6 +253,7 @@ export default function ChatListScreen() {
 
   useFocusEffect(useCallback(() => {
     let active = true;
+    void refreshRooms();
     void loadDynamicRooms().then(() => { if (active) void refreshRooms(); });
     return () => { active = false; };
   }, [refreshRooms]));

@@ -1,5 +1,6 @@
 import { RANK_COLORS, RANK_LABELS, type MemberRank } from "@/constants/mock-data";
 import { getMemberStaffRole, shouldShowMemberRank } from "@/lib/member-staff-role";
+import { displayMemberName } from "@/lib/display-name";
 import { Text, View } from "react-native";
 
 const CLUB_LEADER_BADGES = [
@@ -60,7 +61,7 @@ export function stripRankFromName(name: string) {
   for (const { term } of CLUB_LEADER_BADGES) {
     normalized = normalized.replace(new RegExp(`(?:[🍖⛳🏃🚶⚾💃🎭🏀🍷✈️🍳🍞🐭🍺]\\s*)?${term}$`, "u"), "");
   }
-  return normalized.trim();
+  return displayMemberName(normalized);
 }
 
 export function MemberRoleBadge({ name, role, compact = false, leaderLabel }: { name?: string; role?: string; compact?: boolean; leaderLabel?: string | null }) {
