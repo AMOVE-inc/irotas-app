@@ -1173,7 +1173,7 @@ function ClubDetailModal({
         <Text style={{ flex: 1, fontSize: 17, fontWeight: "700", color: colors.foreground, marginLeft: 12 }}>
           {club.name}
         </Text>
-        {canManageMembers ? <Pressable onPress={() => setPreviewApplication(true)} style={{ borderRadius: 8, backgroundColor: "#EAF3FA", paddingHorizontal: 10, paddingVertical: 6, marginRight: 8 }}><Text style={{ fontSize: 11, fontWeight: "800", color: "#3E6F97" }}>申請画面</Text></Pressable> : null}
+        {canManageMembers ? <Pressable onPress={() => setPreviewApplication(true)} style={{ borderRadius: 8, backgroundColor: "#EAF3FA", paddingHorizontal: 10, paddingVertical: 6, marginRight: 8 }}><Text style={{ fontSize: 11, fontWeight: "800", color: "#3E6F97" }}>入部申請一覧</Text></Pressable> : null}
         {club.chatId && (
           <Pressable
             onPress={() => handleOpenChat(club.chatId!)}

@@ -39,7 +39,7 @@ import {
 export default function MemberProfileScreen() {
   const colors = useColors();
   const router = useRouter();
-  const { id, legacyName } = useLocalSearchParams<{ id: string; legacyName?: string }>();
+  const { id, legacyName, returnToClubRoster, clubCategory } = useLocalSearchParams<{ id: string; legacyName?: string; returnToClubRoster?: string; clubCategory?: string }>();
   const clubs = useClubs();
   const { user: authUser } = useAuthContext();
 
@@ -218,7 +218,7 @@ export default function MemberProfileScreen() {
           borderBottomColor: colors.border,
         }}
       >
-        <Pressable onPress={() => router.back()}>
+        <Pressable onPress={() => returnToClubRoster === "1" && clubCategory ? router.replace({ pathname: "/board", params: { category: clubCategory, view: "threads", openClubMembers: "1" } }) : router.back()}>
           <IconSymbol name="arrow.left" size={22} color={colors.foreground} />
         </Pressable>
         <Text style={{ fontSize: 17, fontWeight: "700", color: colors.foreground, marginLeft: 12 }}>
