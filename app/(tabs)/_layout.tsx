@@ -5,8 +5,8 @@ import { HapticTab } from "@/components/haptic-tab";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { Platform, useWindowDimensions } from "react-native";
 import { useColors } from "@/hooks/use-colors";
-import { CURRENT_USER } from "@/constants/mock-data";
-import { getUnreadTotalForUser, subscribeUnreadChanges } from "@/lib/chat-store";
+import { useAuthContext } from "@/lib/auth-context";
+import * as Api from "@/lib/_core/api";
 import { useEffect, useState } from "react";
 
 export default function TabLayout() {
@@ -19,12 +19,14 @@ export default function TabLayout() {
   const tabBarHeight = isMobileWeb ? 78 : 62 + bottomPadding;
   const tabBarBottomMargin = isMobileWeb ? 0 : Platform.OS === "web" ? 10 : 6;
   const [unreadTotal, setUnreadTotal] = useState(0);
+  const { user } = useAuthContext();
 
   useEffect(() => {
-    const refresh = () => { void getUnreadTotalForUser(CURRENT_USER.id, CURRENT_USER.rank).then(setUnreadTotal); };
+    const refresh = () => { void Api.getSharedChatRooms().then((rooms) => setUnreadTotal(rooms.reduce((total, room) => total + Math.max(0, room.unreadCount ?? 0), 0))).catch(() => setUnreadTotal(0)); };
     refresh();
-    return subscribeUnreadChanges(refresh);
-  }, []);
+    const timer = setInterval(refresh, 1500);
+    return () => clearInterval(timer);
+  }, [user?.memberId]);
 
   return (
     <Tabs

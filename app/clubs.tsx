@@ -1757,7 +1757,7 @@ export default function ClubsScreen() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showClubFinder, setShowClubFinder] = useState(false);
   const [archiveThreads, setArchiveThreads] = useState<BoardThread[]>([]);
-  const activityReports = getLatestClubActivityReports(archiveThreads, 100);
+  const activityReports = getLatestClubActivityReports(archiveThreads, 5);
 
   useEffect(() => {
     let active = true;
@@ -1882,7 +1882,7 @@ export default function ClubsScreen() {
           {discoverClubs.map((club) => <ClubCard key={club.id} club={club} onPress={() => setSelectedClub(club)} />)}
         </View> : null}
 
-        <View style={{ paddingHorizontal: 16, marginBottom: 22 }}>
+          <View style={{ paddingHorizontal: 16, marginBottom: 22 }}>
           <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 11 }}>
             <View style={{ flex: 1 }}>
               <Text style={{ fontSize: 19, fontWeight: "900", color: colors.foreground }}>活動報告</Text>
@@ -1926,6 +1926,7 @@ export default function ClubsScreen() {
                 <IconSymbol name="chevron.right" size={16} color={colors.muted} />
               </Pressable>
             ))}
+            {archiveThreads.filter((thread) => thread.category === "club-all").length > 5 ? <Pressable onPress={() => router.push({ pathname: "/board", params: { category: "club-all", view: "threads" } })} style={{ minHeight: 46, marginTop: 3, borderRadius: 12, alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: "#A7C7E7", backgroundColor: "#EAF3FA" }}><Text style={{ fontSize: 14, fontWeight: "900", color: "#39749D" }}>すべての投稿を見る</Text></Pressable> : null}
           </View>
         </View>
 

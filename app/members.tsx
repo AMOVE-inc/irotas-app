@@ -7,7 +7,7 @@ import { useColors } from "@/hooks/use-colors";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { useEffect, useState, useMemo } from "react";
-import { FlatList, Pressable, Text, TextInput, View } from "react-native";
+import { ActivityIndicator, FlatList, Pressable, Text, TextInput, View } from "react-native";
 import { useAuthContext } from "@/lib/auth-context";
 import { matchesAllSearchWords } from "@/lib/multi-word-search";
 import * as Api from "@/lib/_core/api";
@@ -175,10 +175,7 @@ export default function MembersScreen() {
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={
           <View style={{ alignItems: "center", paddingVertical: 60 }}>
-            <IconSymbol name="person.2.fill" size={40} color={colors.border} />
-            <Text style={{ fontSize: 15, color: colors.muted, marginTop: 12 }}>
-              メンバーが見つかりません
-            </Text>
+            {directory === null ? <><ActivityIndicator size="large" color="#E8A0BF" /><Text style={{ fontSize: 15, color: colors.muted, marginTop: 12 }}>メンバーを読み込んでいます…</Text></> : <><IconSymbol name="person.2.fill" size={40} color={colors.border} /><Text style={{ fontSize: 15, color: colors.muted, marginTop: 12 }}>メンバーが見つかりません</Text></>}
           </View>
         }
       />

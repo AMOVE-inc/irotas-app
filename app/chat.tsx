@@ -73,6 +73,24 @@ function importedIntroductionMessages(archive: Awaited<ReturnType<typeof Api.get
     .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
 }
 
+function importedBranchMessages(archive: Awaited<ReturnType<typeof Api.getBoardArchive>>, branch: "kanto" | "kansai"): ChatMessage[] {
+  const category = `gourmet-board-${branch}`;
+  const threads = archive.threads.filter((thread) => thread.category === category);
+  const threadIds = new Set(threads.map((thread) => thread.id));
+  const records = [...threads, ...archive.comments.filter((comment) => threadIds.has(comment.threadId))];
+  return records.map((record) => ({
+    id: `discord-${branch}-free-${record.id}`,
+    chatId: `branch-${branch}-free`,
+    senderId: `discord-${record.authorId}`,
+    externalMessageId: record.id,
+    externalAuthorName: record.authorName,
+    senderAvatar: record.authorAvatarUrl ?? undefined,
+    content: record.content,
+    createdAt: record.createdAt,
+  })).filter((message) => message.content.trim().length > 0)
+    .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+}
+
 function systemMessageText(content: string): string {
   const text = content.replace(/^【IRO\+\s*システム】\s*/, "");
   const legacyWelcome = text.match(/^「(.+)」の参加者専用チャットへようこそ！$/);
@@ -288,8 +306,9 @@ export default function ChatScreen() {
   const applySharedMessages = useCallback((shared: ChatMessage[]) => {
     setMessages((previous) => {
       // 自己紹介はDiscordアーカイブ由来の履歴と共有チャットの新規投稿だけを表示し、テスト用ローカル履歴を混在させない。
-      const localMessages = id === "board-introduction"
-        ? previous.filter((message) => message.id.startsWith("discord-introduction-"))
+      const archivePrefix = id === "board-introduction" ? "discord-introduction-" : id === "branch-kanto-free" ? "discord-kanto-free-" : id === "branch-kansai-free" ? "discord-kansai-free-" : null;
+      const localMessages = archivePrefix
+        ? previous.filter((message) => message.id.startsWith(archivePrefix))
         : [...getMessages(id ?? ""), ...previous.filter((message) => !message.shared)];
       return [...localMessages, ...shared]
         .filter((message, index, all) => all.findIndex((candidate) => candidate.id === message.id) === index)
@@ -324,6 +343,15 @@ export default function ChatScreen() {
       if (id === "board-introduction") {
         Api.getBoardArchive("all").then((archive) => {
           const imported = importedIntroductionMessages(archive);
+          setMessages((current) => [...imported, ...current.filter((message) => message.shared)]
+            .filter((message, index, all) => all.findIndex((candidate) => candidate.id === message.id) === index)
+            .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()));
+        }).catch(() => setMessages((current) => current.filter((message) => message.shared)));
+      }
+      if (id === "branch-kanto-free" || id === "branch-kansai-free") {
+        const branch = id === "branch-kanto-free" ? "kanto" : "kansai";
+        Api.getBoardArchive("all").then((archive) => {
+          const imported = importedBranchMessages(archive, branch);
           setMessages((current) => [...imported, ...current.filter((message) => message.shared)]
             .filter((message, index, all) => all.findIndex((candidate) => candidate.id === message.id) === index)
             .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()));
@@ -598,14 +626,14 @@ export default function ChatScreen() {
                 {typeLabel}
               </Text>
             </View>
-            {room.id !== "board-announcement" && room.id !== "board-introduction" ? (
+            {room.id !== "board-announcement" && room.id !== "board-introduction" && room.id !== "branch-kanto-free" && room.id !== "branch-kansai-free" ? (
               <Text style={{ fontSize: 11, color: colors.muted, marginLeft: 6 }}>
                 {roomParticipants.length}人参加中
               </Text>
             ) : null}
           </View>
         </View>
-        {room.id !== "board-announcement" && room.id !== "board-introduction" ? (
+        {room.id !== "board-announcement" && room.id !== "board-introduction" && room.id !== "branch-kanto-free" && room.id !== "branch-kansai-free" ? (
           <Pressable onPress={() => setShowParticipants(true)}>
             <IconSymbol name="person.2.fill" size={20} color={colors.muted} />
           </Pressable>

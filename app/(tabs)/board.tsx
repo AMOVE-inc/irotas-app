@@ -196,14 +196,7 @@ function MealReportContent({ thread, compact = false }: { thread: BoardThread; c
 
   return (
     <View
-      style={{
-        backgroundColor: "#FFF8F0",
-        borderRadius: 12,
-        padding: 14,
-        marginBottom: 16,
-        borderWidth: 1,
-        borderColor: "#F3E2D2",
-      }}
+      style={{ marginBottom: 16 }}
     >
       {report.postTitle ? <Text style={{ fontSize: 18, lineHeight: 24, fontWeight: "900", color: colors.foreground, marginBottom: 4 }}>{report.postTitle}</Text> : null}
       <Text style={{ fontSize: 16, lineHeight: 22, fontWeight: "800", color: colors.foreground, marginBottom: 9 }}>{report.restaurantName}</Text>
@@ -1101,7 +1094,7 @@ function ThreadDetailModal({
             </View>
           ) : null}
 
-          {(
+          {!thread.mealReport && (
             <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 7, marginBottom: 16 }}>
               {(thread.selfIntroduction ? ["🎉"] : Array.from(new Set(["❤️", ...Object.keys(threadReactions)]))).map((emoji) => {
                 const memberIds = threadReactions[emoji] ?? [];
@@ -1127,6 +1120,15 @@ function ThreadDetailModal({
             </View>
           )}
           {thread.videos?.map((uri) => <View key={uri} style={{ marginBottom: 20 }}><BoardVideo uri={uri} /></View>)}
+          {thread.mealReport ? <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 7, marginBottom: 16 }}>
+            {Array.from(new Set(["❤️", ...Object.keys(threadReactions)])).map((emoji) => {
+              const memberIds = threadReactions[emoji] ?? [];
+              const selected = memberIds.includes(CURRENT_USER.id);
+              return <Pressable key={emoji} onPress={() => handleThreadReaction(emoji)} accessibilityLabel={`${emoji}スタンプ`} style={{ flexDirection: "row", alignItems: "center", backgroundColor: selected ? "#F0E7F7" : colors.surface, borderWidth: 1, borderColor: selected ? "#7D6A92" : colors.border, borderRadius: 16, paddingHorizontal: 10, paddingVertical: 5 }}><Text style={{ fontSize: 17 }}>{emoji}</Text>{memberIds.length > 0 ? <Text style={{ fontSize: 11, fontWeight: "800", color: colors.muted, marginLeft: 4 }}>{memberIds.length}</Text> : null}</Pressable>;
+            })}
+            <Pressable accessibilityLabel="別の絵文字を追加" onPress={() => setShowThreadEmojiPicker((current) => !current)} style={{ width: 34, height: 31, borderRadius: 16, alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface }}><IconSymbol name="plus" size={16} color={colors.muted} /></Pressable>
+            {showThreadEmojiPicker ? <View style={{ width: "100%", flexDirection: "row", flexWrap: "wrap", gap: 7, paddingTop: 3 }}>{THREAD_REACTION_EMOJIS.map((emoji) => <Pressable key={emoji} onPress={() => { handleThreadReaction(emoji); setShowThreadEmojiPicker(false); }} style={{ width: 38, height: 34, borderRadius: 17, alignItems: "center", justifyContent: "center", backgroundColor: "#F4F1F3" }}><Text style={{ fontSize: 19 }}>{emoji}</Text></Pressable>)}</View> : null}
+          </View> : null}
 
           {/* 募集中バナー（投稿者向け：チャット作成ボタン付き） */}
           {thread.isRecruiting && !recruitmentManaged && (
@@ -1415,6 +1417,13 @@ function EditThreadModal({
   const insets = useSafeAreaInsets();
   const [title, setTitle] = useState(thread.title);
   const [content, setContent] = useState(thread.preview);
+  const [mealRestaurantName, setMealRestaurantName] = useState(thread.mealReport?.restaurantName ?? "");
+  const [mealArea, setMealArea] = useState(thread.mealReport?.areaDisplay ?? thread.mealReport?.prefecture ?? "");
+  const [mealBudget, setMealBudget] = useState(thread.mealReport?.budget ?? "");
+  const [mealRecommendedMenu, setMealRecommendedMenu] = useState(thread.mealReport?.recommendedMenu ?? "");
+  const [mealRating, setMealRating] = useState(thread.mealReport?.rating ?? 0);
+  const [mealGoogleMapUrl, setMealGoogleMapUrl] = useState(thread.mealReport?.googleMapUrl ?? "");
+  const [mealTabelogUrl, setMealTabelogUrl] = useState(thread.mealReport?.tabelogUrl ?? "");
   const [adviceGenres, setAdviceGenres] = useState<string[]>(thread.gourmetAdvice?.genres ?? ["指定なし"]);
   const [adviceArea, setAdviceArea] = useState(thread.gourmetAdvice?.area ?? "指定なし");
   const [adviceScene, setAdviceScene] = useState(thread.gourmetAdvice?.scene ?? "指定なし");
@@ -1457,7 +1466,7 @@ function EditThreadModal({
       ...thread,
       title: title.trim(),
       preview: savedContent,
-      mealReport: thread.mealReport ? { ...thread.mealReport, comment: savedContent } : undefined,
+      mealReport: thread.mealReport ? { ...thread.mealReport, postTitle: title.trim() || undefined, restaurantName: mealRestaurantName.trim(), areaDisplay: mealArea.trim() || undefined, prefecture: mealArea.trim() || thread.mealReport.prefecture, budget: mealBudget.trim() || undefined, recommendedMenu: mealRecommendedMenu.trim() || undefined, rating: mealRating, comment: savedContent, googleMapUrl: mealGoogleMapUrl.trim() || undefined, tabelogUrl: mealTabelogUrl.trim() || undefined } : undefined,
       gourmetAdvice: thread.gourmetAdvice ? { ...thread.gourmetAdvice, theme: title.trim(), genres: adviceGenres, area: adviceArea.trim() || "指定なし", scene: adviceScene.trim() || "指定なし", budget: adviceBudget.trim() || "指定なし", comment: savedContent } : undefined,
       recruitmentStatus: isRecruitmentBoardCategory(thread.category) && !isClubSelfIntroduction(thread) ? recruitmentStatus : thread.recruitmentStatus,
       isRecruiting: isRecruitmentBoardCategory(thread.category) && !isClubSelfIntroduction(thread) ? recruitmentStatus === "open" : thread.isRecruiting,
@@ -1530,6 +1539,17 @@ function EditThreadModal({
                   color: colors.foreground,
                 }}
               />
+            </View> : null}
+
+            {thread.mealReport ? <View style={{ gap: 12 }}>
+              <Text style={{ fontSize: 15, fontWeight: "900", color: colors.foreground }}>ごちそうさま報告</Text>
+              <View><Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground, marginBottom: 6 }}>店名</Text><TextInput value={mealRestaurantName} onChangeText={setMealRestaurantName} placeholder="店名" placeholderTextColor={colors.muted} style={{ backgroundColor: colors.surface, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, color: colors.foreground }} /></View>
+              <View><Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground, marginBottom: 6 }}>エリア</Text><TextInput value={mealArea} onChangeText={setMealArea} placeholder="例：銀座" placeholderTextColor={colors.muted} style={{ backgroundColor: colors.surface, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, color: colors.foreground }} /></View>
+              <View><Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground, marginBottom: 6 }}>予算</Text><TextInput value={mealBudget} onChangeText={setMealBudget} placeholder="例：¥5,000〜¥7,999" placeholderTextColor={colors.muted} style={{ backgroundColor: colors.surface, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, color: colors.foreground }} /></View>
+              <View><Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground, marginBottom: 6 }}>おすすめメニュー</Text><TextInput value={mealRecommendedMenu} onChangeText={setMealRecommendedMenu} placeholder="おすすめメニュー" placeholderTextColor={colors.muted} style={{ backgroundColor: colors.surface, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, color: colors.foreground }} /></View>
+              <View><Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground, marginBottom: 7 }}>評価</Text><View style={{ flexDirection: "row", gap: 8 }}>{[1, 2, 3, 4, 5].map((star) => <Pressable key={star} onPress={() => setMealRating(star)} style={{ padding: 2 }}><IconSymbol name="star.fill" size={28} color={star <= mealRating ? "#F5A623" : colors.border} /></Pressable>)}</View></View>
+              <View><Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground, marginBottom: 6 }}>Google Mapのリンク</Text><TextInput value={mealGoogleMapUrl} onChangeText={setMealGoogleMapUrl} placeholder="https://maps.app.goo.gl/..." placeholderTextColor={colors.muted} autoCapitalize="none" keyboardType="url" style={{ backgroundColor: colors.surface, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, color: colors.foreground }} /></View>
+              <View><Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground, marginBottom: 6 }}>食べログのリンク</Text><TextInput value={mealTabelogUrl} onChangeText={setMealTabelogUrl} placeholder="https://tabelog.com/..." placeholderTextColor={colors.muted} autoCapitalize="none" keyboardType="url" style={{ backgroundColor: colors.surface, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, color: colors.foreground }} /></View>
             </View> : null}
 
             {isRecruitmentBoardCategory(thread.category) && !isClubSelfIntroduction(thread) ? <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", borderRadius: 12, padding: 13, backgroundColor: "#F6FAF7", borderWidth: 1, borderColor: "#D8EADA" }}><View><Text style={{ fontSize: 14, fontWeight: "900", color: colors.foreground }}>募集中ステータスをオンにする</Text><Text style={{ fontSize: 11, color: colors.muted, marginTop: 3 }}>オンの投稿だけ一覧に「募集中」と表示されます。</Text></View><Pressable onPress={() => setRecruitmentStatus((current) => current === "open" ? "none" : "open")} accessibilityRole="switch" accessibilityState={{ checked: recruitmentStatus === "open" }} style={{ width: 48, height: 28, borderRadius: 14, backgroundColor: recruitmentStatus === "open" ? "#34C759" : "#C7C7CC", position: "relative" }}><View style={{ position: "absolute", top: 3, left: recruitmentStatus === "open" ? 23 : 3, width: 22, height: 22, borderRadius: 11, backgroundColor: "#FFF" }} /></Pressable></View> : null}
