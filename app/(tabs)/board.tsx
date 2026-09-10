@@ -262,7 +262,7 @@ function MealReportContent({ thread, compact = false }: { thread: BoardThread; c
   );
 }
 
-function MealReportTimelineCard({ thread }: { thread: BoardThread }) {
+function MealReportTimelineCard({ thread, comments = [] }: { thread: BoardThread; comments?: BoardComment[] }) {
   const colors = useColors();
   const report = thread.mealReport;
   if (!report) return null;
@@ -275,7 +275,7 @@ function MealReportTimelineCard({ thread }: { thread: BoardThread }) {
         <View style={{ minWidth: 0 }}>
           {report.postTitle ? <Text numberOfLines={2} style={{ fontSize: 15, lineHeight: 20, fontWeight: "900", color: colors.foreground }}>{report.postTitle}</Text> : null}
           <View style={{ flexDirection: "row", alignItems: "center", flexWrap: "wrap", gap: 6, marginTop: report.postTitle ? 3 : 0 }}><Text numberOfLines={2} style={{ fontSize: report.postTitle ? 13 : 16, lineHeight: report.postTitle ? 18 : 21, fontWeight: "900", color: colors.foreground }}>{report.restaurantName}</Text>{area ? <Text style={{ fontSize: 11, fontWeight: "700", color: "#5F5960", backgroundColor: "#F4F1F3", borderRadius: 8, paddingHorizontal: 7, paddingVertical: 3 }}>📍 {area}</Text> : null}</View>
-          {rating ? <View style={{ flexDirection: "row", alignItems: "center", marginTop: 6 }}><Text style={{ fontSize: 17, fontWeight: "900", color: "#E29A17" }}>★ {rating}</Text><Text style={{ fontSize: 11, color: colors.muted, marginLeft: 5 }}>/ 5</Text></View> : null}
+          {rating ? <View style={{ flexDirection: "row", alignItems: "center", marginTop: 6 }}><Text accessibilityLabel={`評価 ${rating} / 5`} style={{ fontSize: 17, letterSpacing: 1, color: "#E29A17" }}>{"⭐️".repeat(rating)}{"☆".repeat(5 - rating)}</Text></View> : null}
           <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 5, marginTop: 7 }}>
             {report.budget ? <Text style={{ fontSize: 11, fontWeight: "700", color: "#5F5960", backgroundColor: "#F4F1F3", borderRadius: 8, paddingHorizontal: 7, paddingVertical: 3 }}>{report.budget}</Text> : null}
           </View>
@@ -283,6 +283,11 @@ function MealReportTimelineCard({ thread }: { thread: BoardThread }) {
         </View>
       </View>
       {thread.images?.length ? <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6, marginTop: 10 }}>{thread.images.map((item, index) => <Image key={`${thread.id}-image-${index}`} source={boardImageSource(item)} style={{ width: "32%", aspectRatio: 1, borderRadius: 10, backgroundColor: "#F1EEF0" }} contentFit="cover" />)}</View> : null}
+      <View style={{ marginTop: 12, paddingTop: 10, borderTopWidth: 1, borderTopColor: colors.border }}>
+        <Text style={{ fontSize: 12, fontWeight: "900", color: colors.foreground }}>コメント{comments.length ? ` (${comments.length})` : ""}</Text>
+        {comments.slice(-2).map((comment) => <View key={comment.id} style={{ marginTop: 7 }}><Text style={{ fontSize: 11, fontWeight: "800", color: colors.muted }}>{stripRankFromName(comment.author.name)}</Text><Text numberOfLines={2} style={{ fontSize: 12, lineHeight: 18, color: colors.foreground, marginTop: 1 }}>{comment.content}</Text></View>)}
+        {!comments.length ? <Text style={{ fontSize: 12, color: colors.muted, marginTop: 5 }}>まだコメントはありません</Text> : null}
+      </View>
     </View>
   );
 }
@@ -342,7 +347,7 @@ function SelfIntroductionMessage({ thread }: { thread: BoardThread }) {
   </View>;
 }
 
-function ThreadCard({ thread, onPress, onEdit, onDelete, onPin, onChangeRecruitment, unreadCount = 0, mentionCount = 0, showMenu = true }: { thread: BoardThread; onPress: () => void; onEdit?: () => void; onDelete?: () => void; onPin?: () => void; onChangeRecruitment?: () => void; unreadCount?: number; mentionCount?: number; showMenu?: boolean }) {
+function ThreadCard({ thread, onPress, onEdit, onDelete, onPin, onChangeRecruitment, unreadCount = 0, mentionCount = 0, showMenu = true, comments = [] }: { thread: BoardThread; onPress: () => void; onEdit?: () => void; onDelete?: () => void; onPin?: () => void; onChangeRecruitment?: () => void; unreadCount?: number; mentionCount?: number; showMenu?: boolean; comments?: BoardComment[] }) {
   const colors = useColors();
   const router = useRouter();
   const isParticipant = thread.recruitParticipants?.includes(CURRENT_USER.id);
@@ -391,6 +396,7 @@ function ThreadCard({ thread, onPress, onEdit, onDelete, onPin, onChangeRecruitm
         opacity: visuallyClosed ? 0.72 : 1,
       }}
     >
+      {thread.category === "meal-report" && unreadCount > 0 ? <View style={{ position: "absolute", top: 10, left: 10, zIndex: 2, backgroundColor: "#3478C7", borderRadius: 7, paddingHorizontal: 7, paddingVertical: 3 }}><Text style={{ color: "#FFFFFF", fontSize: 10, fontWeight: "900" }}>NEW</Text></View> : null}
       {/* Author */}
       <Pressable
         onPress={() => router.push({ pathname: "/member-profile", params: { id: thread.author.id, legacyName: thread.author.name } })}
@@ -443,7 +449,7 @@ function ThreadCard({ thread, onPress, onEdit, onDelete, onPin, onChangeRecruitm
           </Text> : null}
           {/* Preview */}
           {thread.mealReport ? (
-            <MealReportTimelineCard thread={thread} />
+            <MealReportTimelineCard thread={thread} comments={comments} />
           ) : thread.gourmetAdvice ? (
             null
           ) : thread.selfIntroduction ? (
@@ -2506,7 +2512,7 @@ export default function BoardScreen() {
   );
   const boardLoading = Boolean(authUser) && (archiveLoading || sharedLoading);
   const filteredThreads = activeCategory === "meal-report"
-    ? allThreads.filter((thread) => thread.category === activeCategory).sort((a, b) => Date.parse(a.lastUpdated) - Date.parse(b.lastUpdated))
+    ? allThreads.filter((thread) => thread.category === activeCategory).sort((a, b) => Date.parse(b.lastUpdated) - Date.parse(a.lastUpdated))
     : sortRecruitmentThreads(allThreads.filter((t) => t.category === activeCategory));
   const clubForThread = (thread: BoardThread) => clubs.find((club) => `club-${club.id}` === thread.category);
   const canChangeRecruitment = (thread: BoardThread) => {
@@ -2704,6 +2710,7 @@ export default function BoardScreen() {
             const mentionCount = unreadComments.filter((comment) => comment.content.includes(`@${viewerMember.name}`) || /@(全員|everyone|here)/i.test(comment.content)).length;
             return <ThreadCard
             thread={item}
+            comments={comments}
             showMenu={item.category !== "introduction"}
             unreadCount={unreadComments.length}
             mentionCount={mentionCount}

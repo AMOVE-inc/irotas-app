@@ -56,6 +56,23 @@ const MORE_REACTION_EMOJIS = ["😀", "😃", "😄", "😁", "😆", "😅", "�
 const RETIRED_ANNOUNCEMENT = "IRO+運営からのお知らせをお届けします。最新情報はこちらでご確認ください。";
 const isRetiredAnnouncement = (message: ChatMessage) => message.chatId === "board-announcement" && message.content === RETIRED_ANNOUNCEMENT;
 
+function importedIntroductionMessages(archive: Awaited<ReturnType<typeof Api.getBoardArchive>>): ChatMessage[] {
+  const introductionThreads = archive.threads.filter((thread) => thread.category === "introduction");
+  const introductionIds = new Set(introductionThreads.map((thread) => thread.id));
+  const records = [...introductionThreads, ...archive.comments.filter((comment) => introductionIds.has(comment.threadId))];
+  return records.map((record) => ({
+    id: `discord-introduction-${record.id}`,
+    chatId: "board-introduction",
+    senderId: `discord-${record.authorId}`,
+    externalMessageId: record.id,
+    externalAuthorName: record.authorName,
+    senderAvatar: record.authorAvatarUrl ?? undefined,
+    content: record.content,
+    createdAt: record.createdAt,
+  })).filter((message) => message.content.trim().length > 0)
+    .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+}
+
 function systemMessageText(content: string): string {
   const text = content.replace(/^【IRO\+\s*システム】\s*/, "");
   const legacyWelcome = text.match(/^「(.+)」の参加者専用チャットへようこそ！$/);
@@ -270,8 +287,10 @@ export default function ChatScreen() {
 
   const applySharedMessages = useCallback((shared: ChatMessage[]) => {
     setMessages((previous) => {
-      // 自己紹介など移行済みのローカル履歴は、共有ストアがまだ空でも消さない。
-      const localMessages = [...getMessages(id ?? ""), ...previous.filter((message) => !message.shared)];
+      // 自己紹介はDiscordアーカイブ由来の履歴と共有チャットの新規投稿だけを表示し、テスト用ローカル履歴を混在させない。
+      const localMessages = id === "board-introduction"
+        ? previous.filter((message) => message.id.startsWith("discord-introduction-"))
+        : [...getMessages(id ?? ""), ...previous.filter((message) => !message.shared)];
       return [...localMessages, ...shared]
         .filter((message, index, all) => all.findIndex((candidate) => candidate.id === message.id) === index)
         .filter((message) => !isRetiredAnnouncement(message))
@@ -298,10 +317,18 @@ export default function ChatScreen() {
       Api.getSharedChatMessages(id).then(applySharedMessages).catch(async () => {
         // 旧移行チャットは共有DBへの切替対象外でも、既存履歴を引き続き表示する。
         const stored = await loadMessagesFromStorage(id);
-        setMessages([...getMessages(id), ...stored]
+        setMessages([...(id === "board-introduction" ? [] : getMessages(id)), ...stored]
           .filter((message, index, all) => all.findIndex((candidate) => candidate.id === message.id) === index)
           .filter((message) => !isRetiredAnnouncement(message)));
       });
+      if (id === "board-introduction") {
+        Api.getBoardArchive("all").then((archive) => {
+          const imported = importedIntroductionMessages(archive);
+          setMessages((current) => [...imported, ...current.filter((message) => message.shared)]
+            .filter((message, index, all) => all.findIndex((candidate) => candidate.id === message.id) === index)
+            .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()));
+        }).catch(() => setMessages((current) => current.filter((message) => message.shared)));
+      }
       Api.getSharedChatRooms().then((sharedRooms) => {
         const sharedRoom = sharedRooms.find((item) => item.id === id);
         if (!sharedRoom) return;
@@ -571,14 +598,14 @@ export default function ChatScreen() {
                 {typeLabel}
               </Text>
             </View>
-            {room.id !== "board-announcement" ? (
+            {room.id !== "board-announcement" && room.id !== "board-introduction" ? (
               <Text style={{ fontSize: 11, color: colors.muted, marginLeft: 6 }}>
                 {roomParticipants.length}人参加中
               </Text>
             ) : null}
           </View>
         </View>
-        {room.id !== "board-announcement" ? (
+        {room.id !== "board-announcement" && room.id !== "board-introduction" ? (
           <Pressable onPress={() => setShowParticipants(true)}>
             <IconSymbol name="person.2.fill" size={20} color={colors.muted} />
           </Pressable>
