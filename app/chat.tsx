@@ -269,7 +269,6 @@ export default function ChatScreen() {
   const [isNearLatest, setIsNearLatest] = useState(true);
   const [hasOpenedIntroduction, setHasOpenedIntroduction] = useState<boolean | null>(null);
   const [introductionHydrated, setIntroductionHydrated] = useState(false);
-  const initialIntroductionPositioned = useRef<string | null>(null);
 
   // 参加者モーダル
   const [showParticipants, setShowParticipants] = useState(false);
@@ -303,11 +302,19 @@ export default function ChatScreen() {
     : MEMBERS, [directory]);
   const mentionGroups = useMemo(() => getMentionGroups(mentionMembers, CLUBS), [mentionMembers]);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const introductionChat = id === "board-introduction";
+  // inverted リストではデータの先頭が入力欄側に置かれるため、最新メッセージを
+  // 先頭にしておけばスクロール処理なしで最初から最新位置を描画できる。
+  const displayedMessages = useMemo(() => introductionChat ? [...messages].reverse() : messages, [introductionChat, messages]);
   // 自分のプロフィール画像（AsyncStorageから読み込み）
   const [myAvatarUri, setMyAvatarUri] = useState<string | null>(null);
   const scrollToLatest = useCallback((animated = false) => {
     if (!messages.length) return;
     const scroll = () => {
+      if (id === "board-introduction") {
+        flatListRef.current?.scrollToOffset({ offset: 0, animated });
+        return;
+      }
       flatListRef.current?.scrollToIndex({ index: messages.length - 1, animated, viewPosition: 1 });
       flatListRef.current?.scrollToEnd({ animated });
     };
@@ -315,17 +322,7 @@ export default function ChatScreen() {
     requestAnimationFrame(scroll);
     setTimeout(scroll, 180);
     setTimeout(scroll, 500);
-  }, [messages.length]);
-
-  // 自己紹介は履歴が揃った状態で初めてリストを描画する。可変高の大量履歴では
-  // initialScrollIndex が失敗することがあるため、描画済みのコンテンツ高さでも一度だけ補正する。
-  const ensureIntroductionStartsAtLatest = useCallback(() => {
-    if (id !== "board-introduction" || !introductionHydrated || !messages.length) return;
-    const token = `${id}:${messages.length}`;
-    if (initialIntroductionPositioned.current === token) return;
-    initialIntroductionPositioned.current = token;
-    scrollToLatest(false);
-  }, [id, introductionHydrated, messages.length, scrollToLatest]);
+  }, [id, messages.length]);
 
   const applySharedMessages = useCallback((shared: ChatMessage[]) => {
     setMessages((previous) => {
@@ -344,7 +341,6 @@ export default function ChatScreen() {
   // 初回起動時: プロフィール画像と永続化メッセージを読み込む
   useEffect(() => {
     if (!id) return;
-    initialIntroductionPositioned.current = null;
     setIntroductionHydrated(id !== "board-introduction");
     if (id === "board-introduction") {
       setHasOpenedIntroduction(null);
@@ -664,12 +660,13 @@ export default function ChatScreen() {
         {/* Messages */}
         {id === "board-introduction" && (!introductionHydrated || hasOpenedIntroduction === null) ? <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}><ActivityIndicator size="large" color="#E8A0BF" /><Text style={{ fontSize: 14, color: colors.muted, marginTop: 12 }}>自己紹介を読み込んでいます…</Text></View> : <FlatList
           ref={flatListRef}
-          key={`${id ?? "chat"}:${id === "board-introduction" ? `ready-${messages.length}` : "default"}`}
-          data={messages}
-          initialScrollIndex={messages.length ? ((!hasOpenedIntroduction && id === "board-introduction") || Number(unreadCountParam ?? 0) === 0 ? messages.length - 1 : Math.max(0, messages.length - Math.min(messages.length, Math.max(0, Number(unreadCountParam ?? 0)))) ) : undefined}
+          key={`${id ?? "chat"}:${introductionChat ? "latest-first" : "default"}`}
+          data={displayedMessages}
+          inverted={introductionChat}
+          initialScrollIndex={introductionChat ? undefined : messages.length ? (Number(unreadCountParam ?? 0) === 0 ? messages.length - 1 : Math.max(0, messages.length - Math.min(messages.length, Math.max(0, Number(unreadCountParam ?? 0)))) ) : undefined}
           keyExtractor={(item) => item.id}
           renderItem={({ item, index }) => {
-            const previous = index > 0 ? messages[index - 1] : undefined;
+            const previous = index > 0 ? displayedMessages[index - 1] : undefined;
             const day = new Date(item.createdAt).toLocaleDateString("ja-JP", { year: "numeric", month: "long", day: "numeric", weekday: "short" });
             const previousDay = previous && new Date(previous.createdAt).toLocaleDateString("ja-JP", { year: "numeric", month: "long", day: "numeric", weekday: "short" });
             return <>
@@ -718,11 +715,10 @@ export default function ChatScreen() {
           showsVerticalScrollIndicator={false}
           onScroll={(event) => {
             const { contentOffset, contentSize, layoutMeasurement } = event.nativeEvent;
-            setIsNearLatest(contentOffset.y + layoutMeasurement.height >= contentSize.height - 80);
+            setIsNearLatest(introductionChat ? contentOffset.y <= 80 : contentOffset.y + layoutMeasurement.height >= contentSize.height - 80);
           }}
           scrollEventThrottle={80}
-          onScrollToIndexFailed={() => flatListRef.current?.scrollToEnd({ animated: false })}
-          onContentSizeChange={ensureIntroductionStartsAtLatest}
+          onScrollToIndexFailed={() => introductionChat ? flatListRef.current?.scrollToOffset({ offset: 0, animated: false }) : flatListRef.current?.scrollToEnd({ animated: false })}
           ListEmptyComponent={
             <View style={{ alignItems: "center", paddingVertical: 40 }}>
               <IconSymbol name="message.fill" size={36} color={colors.border} />
