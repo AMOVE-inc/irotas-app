@@ -175,6 +175,39 @@ function ClubCard({ club, onPress, previewAsMember = false }: { club: Club; onPr
   );
 }
 
+function JoinedClubList({ clubs, onOpen }: { clubs: Club[]; onOpen: (club: Club) => void }) {
+  const colors = useColors();
+
+  return (
+    <View style={{ marginHorizontal: 16, backgroundColor: colors.surface, borderRadius: 16, overflow: "hidden" }}>
+      {clubs.map((club, index) => (
+        <Pressable
+          key={club.id}
+          onPress={() => onOpen(club)}
+          accessibilityRole="button"
+          accessibilityLabel={`${formatClubName(club.name)}を開く`}
+          style={({ pressed }) => ({
+            flexDirection: "row",
+            alignItems: "center",
+            padding: 14,
+            borderTopWidth: index ? 0.5 : 0,
+            borderTopColor: colors.border,
+            opacity: pressed ? 0.72 : 1,
+          })}
+        >
+          <Text style={{ fontSize: 24, marginRight: 12 }}>{club.icon}</Text>
+          <View style={{ flex: 1 }}>
+            <Text style={{ fontSize: 15, fontWeight: "800", color: colors.foreground }}>{formatClubName(club.name)}</Text>
+            <Text style={{ fontSize: 11, color: colors.muted, marginTop: 2 }}>{club.memberIds.length}人が参加</Text>
+          </View>
+          <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: "#3478C7", marginRight: 9 }} />
+          <IconSymbol name="chevron.right" size={16} color={colors.muted} />
+        </Pressable>
+      ))}
+    </View>
+  );
+}
+
 // ============================================================
 // ClubPostCard - 部活動掲示板の投稿カード
 // ============================================================
@@ -984,6 +1017,25 @@ function ClubDetailModal({
           </Text>
           {leaderProfileId ? <Pressable onPress={() => { onClose(); router.push({ pathname: "/member-profile", params: { id: leaderProfileId } }); }} style={{ flexDirection: "row", alignItems: "center", minHeight: 52, paddingHorizontal: 16, borderRadius: 14, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border }}><Image source={leaderAvatar} style={{ width: 36, height: 36, borderRadius: 18 }} contentFit="cover" /><View style={{ marginLeft: 10 }}><Text style={{ fontSize: 11, color: colors.muted }}>部長</Text><Text style={{ fontSize: 14, fontWeight: "800", color: colors.foreground }}>{leaderName}</Text></View><IconSymbol name="chevron.right" size={16} color={colors.muted} style={{ marginLeft: 12 }} /></Pressable> : <Text style={{ fontSize: 14, color: colors.muted }}>部長 {leaderName}</Text>}
           <Text style={{ fontSize: 13, fontWeight: "700", color: colors.muted, textAlign: "center", marginTop: 9 }}>{club.memberIds.length}人のメンバー</Text>
+          <View style={{ width: "100%", marginTop: 18, marginBottom: 16 }}>
+            <Text style={{ fontSize: 15, fontWeight: "800", color: colors.foreground, marginBottom: 8 }}>部員一覧（{memberIds.length}人）</Text>
+            <View style={{ backgroundColor: colors.surface, borderRadius: 14, overflow: "hidden", borderWidth: 1, borderColor: colors.border }}>
+              {memberIds.map((memberId, index) => {
+                const directoryMember = memberDirectory.find((member) => member.id === memberId);
+                const staticMember = getMemberById(memberId);
+                const name = directoryMember?.displayName ?? staticMember?.name ?? "未設定";
+                const avatar = typeof directoryMember?.profile.avatarUrl === "string" ? directoryMember.profile.avatarUrl : staticMember?.avatar ?? DEFAULT_AVATAR;
+                return (
+                  <Pressable key={memberId} onPress={() => { onClose(); router.push({ pathname: "/member-profile", params: { id: memberId } }); }} style={({ pressed }) => ({ flexDirection: "row", alignItems: "center", padding: 11, borderTopWidth: index ? 0.5 : 0, borderTopColor: colors.border, opacity: pressed ? 0.72 : 1 })}>
+                    <Image source={avatar} style={{ width: 34, height: 34, borderRadius: 17 }} contentFit="cover" />
+                    <Text style={{ flex: 1, marginLeft: 10, fontSize: 13, fontWeight: "700", color: colors.foreground }}>{name}</Text>
+                    {memberId === currentLeaderId ? <View style={{ borderRadius: 8, backgroundColor: "#FFD70020", paddingHorizontal: 7, paddingVertical: 3, marginRight: 7 }}><Text style={{ fontSize: 10, fontWeight: "800", color: "#B88A00" }}>部長</Text></View> : null}
+                    <IconSymbol name="chevron.right" size={14} color={colors.muted} />
+                  </Pressable>
+                );
+              })}
+            </View>
+          </View>
           <Pressable
             onPress={() => setShowClubOverview(true)}
             accessibilityRole="button"
@@ -1344,7 +1396,7 @@ function ClubDetailModal({
           ))
         )}
 
-        {/* メンバー一覧（部員のみ閲覧可） */}
+        {/* メンバー一覧 */}
         <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 10, marginTop: 8 }}>
           <Text style={{ flex: 1, fontSize: 14, fontWeight: "700", color: colors.foreground }}>
             メンバー ({memberIds.length}人)
@@ -1817,6 +1869,14 @@ export default function ClubsScreen() {
     addClubToStore(club);
   };
 
+  const openJoinedClub = (club: Club) => {
+    const category = `club-${club.id}`;
+    const latestThread = archiveThreads
+      .filter((thread) => thread.category === category)
+      .sort((a, b) => Date.parse(b.lastUpdated) - Date.parse(a.lastUpdated))[0];
+    router.push({ pathname: "/board", params: { category, view: "threads", ...(latestThread ? { thread: latestThread.id } : {}) } });
+  };
+
   return (
     <ScreenContainer>
       {/* Header */}
@@ -1862,12 +1922,8 @@ export default function ClubsScreen() {
       <ScrollView contentContainerStyle={{ paddingTop: 16, paddingBottom: 32 }}>
         {joinedClubs.length > 0 ? (
           <View style={{ marginBottom: 18 }}>
-            <View style={{ paddingHorizontal: 16, marginBottom: 10 }}><Text style={{ fontSize: 19, fontWeight: "900", color: colors.foreground }}>入部中の部活動</Text><Text style={{ fontSize: 12, color: colors.muted, marginTop: 3 }}>部活をタップすると部員専用スレッドを開きます</Text></View>
-            {joinedClubs.map((club) => <ClubCard key={club.id} club={club} onPress={() => {
-              const category = `club-${club.id}`;
-              const latestThread = archiveThreads.filter((thread) => thread.category === category).sort((a, b) => Date.parse(b.lastUpdated) - Date.parse(a.lastUpdated))[0];
-              router.push({ pathname: "/board", params: { category, view: "threads", ...(latestThread ? { thread: latestThread.id } : {}) } });
-            }} />)}
+            <View style={{ paddingHorizontal: 16, marginBottom: 10 }}><Text style={{ fontSize: 19, fontWeight: "900", color: colors.foreground }}>入部中の部活動</Text></View>
+            <JoinedClubList clubs={joinedClubs} onOpen={openJoinedClub} />
           </View>
         ) : null}
         <View style={{ paddingHorizontal: 16, marginBottom: 18 }}>
