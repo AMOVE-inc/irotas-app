@@ -210,28 +210,32 @@ export default function ChatListScreen() {
       .filter((room) => room.type !== "rank" && !isFixtureRoom(room));
     const localRankRooms = getRankRoomsForUser(viewerRank);
     let sharedRooms: ChatRoom[] = [];
-    let latestAnnouncement: { content: string; createdAt: string } | undefined;
     try {
-      const [rooms, events, members, announcementMessages] = await Promise.all([
-        Api.getSharedChatRooms(),
+      // 一覧表示に必要なのはルーム一覧だけ。重い補助情報は後段で補完する。
+      const rooms = await Api.getSharedChatRooms();
+      sharedRooms = rooms.map((room) => ({ ...room, requiredRank: room.requiredRank as ChatRoom["requiredRank"] }));
+      void Promise.all([
         Api.getEvents().catch(() => []),
         Api.getMemberDirectory().catch(() => []),
         Api.getSharedChatMessages("board-announcement").catch(() => []),
-      ]);
-      sharedRooms = rooms.map((room) => ({ ...room, requiredRank: room.requiredRank as ChatRoom["requiredRank"] }));
-      latestAnnouncement = announcementMessages.at(-1);
-      setEventStarts(Object.fromEntries(events.map((event) => [event.id, formatEventStart(event)])));
-      setEventImages(Object.fromEntries(events.flatMap((event) => typeof event.image === "string" && event.image ? [[event.id, event.image]] : [])));
-      setMemberAvatars(Object.fromEntries(members.flatMap((member) => {
-        const avatar = member.profile.avatarUrl;
-        return typeof avatar === "string" && avatar ? [[member.id, avatar]] : [];
-      })));
+      ]).then(([events, members, announcementMessages]) => {
+        const latestAnnouncement = announcementMessages.at(-1);
+        if (latestAnnouncement) setMyRooms((current) => current.map((room) => room.id === "board-announcement"
+          ? { ...room, lastMessage: latestAnnouncement.content.replace(/^【IRO\+\s*システム】\s*/, "").replace(/\s+/g, " ").trim(), lastMessageAt: latestAnnouncement.createdAt }
+          : room));
+        setEventStarts(Object.fromEntries(events.map((event) => [event.id, formatEventStart(event)])));
+        setEventImages(Object.fromEntries(events.flatMap((event) => typeof event.image === "string" && event.image ? [[event.id, event.image]] : [])));
+        setMemberAvatars(Object.fromEntries(members.flatMap((member) => {
+          const avatar = member.profile.avatarUrl;
+          return typeof avatar === "string" && avatar ? [[member.id, avatar]] : [];
+        })));
+      });
     } catch {
       // オフライン時も端末内の移行済みチャット一覧は利用できる。
     }
     const sharedById = new Map(sharedRooms.map((room) => [room.id, room]));
     const localAnnouncement = getAllMessages().filter((message) => message.chatId === "board-announcement").at(-1);
-    const announcementPreview = latestAnnouncement ?? localAnnouncement;
+    const announcementPreview = localAnnouncement;
     const mergedJoined = [...localJoinedRooms.filter((room) => !sharedById.has(room.id)), ...sharedRooms.filter((room) => room.type !== "rank" && !isFixtureRoom(room))]
       .filter((room, index, all) => all.findIndex((candidate) => candidate.id === room.id) === index)
       .map((room) => room.id === "board-announcement" && announcementPreview
