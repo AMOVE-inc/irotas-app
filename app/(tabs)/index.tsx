@@ -23,6 +23,7 @@ import { useFocusEffect, useRouter } from "expo-router";
 import { useRef, useState, useCallback, useEffect, useMemo } from "react";
 import {
   FlatList,
+  ActivityIndicator,
   KeyboardAvoidingView,
   Linking,
   Platform,
@@ -612,6 +613,7 @@ export default function HomeScreen() {
   const router = useRouter();
   const [refreshing, setRefreshing] = useState(false);
   const [activities, setActivities] = useState<HomeActivity[]>([]);
+  const [timelineLoading, setTimelineLoading] = useState(true);
   const [giftCampaigns, setGiftCampaigns] = useState<GiftCampaign[]>([]);
   // 共有APIの内容だけを描画する。モックのお知らせを初期値にしないことで、
   // 起動直後に古いテストデータが一瞬表示されることを防ぐ。
@@ -631,7 +633,7 @@ export default function HomeScreen() {
       setHomeAnnouncements(sharedAnnouncements);
       const today = new Date().toISOString().slice(0, 10);
       setGiftCampaigns(gifts.filter((gift) => gift.status === "open" && gift.deadline >= today).sort((a, b) => a.deadline.localeCompare(b.deadline)));
-    });
+    }).finally(() => setTimelineLoading(false));
   }, []);
 
   useFocusEffect(useCallback(() => {
@@ -702,6 +704,7 @@ export default function HomeScreen() {
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => <ActivityCard activity={item} />}
         ListHeaderComponent={ListHeader}
+        ListEmptyComponent={timelineLoading ? <View style={{ alignItems: "center", paddingVertical: 42 }}><ActivityIndicator color="#D65E8D" /><Text style={{ marginTop: 12, fontSize: 14, color: colors.muted }}>タイムラインを読み込み中…</Text></View> : <View style={{ alignItems: "center", paddingVertical: 42 }}><Text style={{ fontSize: 14, color: colors.muted }}>タイムラインはまだありません</Text></View>}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}

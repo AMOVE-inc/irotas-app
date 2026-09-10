@@ -1204,9 +1204,13 @@ export async function deleteEvent(eventId: string) {
 }
 
 export async function startOfficialEventRecruitment(eventId: string) {
+  return setOfficialEventRecruitmentStatus(eventId, "open");
+}
+
+export async function setOfficialEventRecruitmentStatus(eventId: string, recruitmentStatus: "draft" | "open") {
   const result = await apiCall<{ event: Event }>(`/api/events/${encodeURIComponent(eventId)}`, {
     method: "PATCH",
-    body: JSON.stringify({ action: "start_recruitment" }),
+    body: JSON.stringify({ action: "set_recruitment_status", recruitmentStatus }),
   });
   return result.event;
 }
@@ -1223,6 +1227,7 @@ export async function updateEventDetails(eventId: string, input: {
   rankPrices?: Event["rankPrices"];
   companionIds?: string[];
   selectionMethod?: "first_come" | "lottery";
+  recruitmentStatus?: "draft" | "open";
   category?: Event["category"];
   prefecture?: string;
   tokyoArea?: string;

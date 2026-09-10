@@ -2384,6 +2384,7 @@ export default function BoardScreen() {
   const [dynamicThreads, setDynamicThreads] = useState<BoardThread[]>([]);
   const [importedComments, setImportedComments] = useState<Record<string, BoardComment[]>>({});
   const [threadReadCounts, setThreadReadCounts] = useState<Record<string, number>>({});
+  const [threadReadsHydrated, setThreadReadsHydrated] = useState(false);
   const [editedThreads, setEditedThreads] = useState<Record<string, BoardThread>>({});
   const [deletedThreadIds, setDeletedThreadIds] = useState<string[]>([]);
   const [editingThread, setEditingThread] = useState<BoardThread | null>(null);
@@ -2392,7 +2393,13 @@ export default function BoardScreen() {
   const viewerMemberId = resolveViewerMemberId(authUser?.memberId, Boolean(authUser), CURRENT_USER.id);
   const viewerMember = memberFromAuthUser(authUser);
   const boardReadKey = `irotas_board_thread_reads_v1:${viewerMemberId}`;
-  useEffect(() => { void AsyncStorage.getItem(boardReadKey).then((raw) => setThreadReadCounts(raw ? JSON.parse(raw) : {})).catch(() => setThreadReadCounts({})); }, [boardReadKey]);
+  useEffect(() => {
+    setThreadReadsHydrated(false);
+    void AsyncStorage.getItem(boardReadKey)
+      .then((raw) => setThreadReadCounts(raw ? JSON.parse(raw) : {}))
+      .catch(() => setThreadReadCounts({}))
+      .finally(() => setThreadReadsHydrated(true));
+  }, [boardReadKey]);
   const markThreadRead = useCallback((threadId: string) => {
     const count = (importedComments[threadId] ?? []).length;
     setThreadReadCounts((current) => {
@@ -2530,6 +2537,22 @@ export default function BoardScreen() {
     () => applyBoardThreadEdits(authUser ? dynamicThreads : [...dynamicThreads, ...BOARD_THREADS], editedThreads).filter((thread) => !deletedThreadIds.includes(thread.id)),
     [authUser, dynamicThreads, editedThreads, deletedThreadIds],
   );
+  const categoryHasUnread = useCallback((categoryKey: string) => threadReadsHydrated && allThreads
+    .filter((thread) => thread.category === categoryKey)
+    .some((thread) => {
+      const comments = importedComments[thread.id] ?? [];
+      return comments.slice(threadReadCounts[thread.id] ?? 0).some((comment) => comment.author.id !== viewerMemberId);
+    }), [allThreads, importedComments, threadReadCounts, threadReadsHydrated, viewerMemberId]);
+  const markCategoryRead = useCallback((categoryKey: string) => {
+    setThreadReadCounts((current) => {
+      const next = { ...current };
+      allThreads.filter((thread) => thread.category === categoryKey).forEach((thread) => {
+        next[thread.id] = (importedComments[thread.id] ?? []).length;
+      });
+      void AsyncStorage.setItem(boardReadKey, JSON.stringify(next));
+      return next;
+    });
+  }, [allThreads, boardReadKey, importedComments]);
   const boardLoading = Boolean(authUser) && (archiveLoading || sharedLoading);
   const filteredThreads = activeCategory === "meal-report"
     ? allThreads.filter((thread) => thread.category === activeCategory).sort((a, b) => Date.parse(b.lastUpdated) - Date.parse(a.lastUpdated))
@@ -2640,6 +2663,7 @@ export default function BoardScreen() {
   };
 
   const handleOpenCategory = (category: BoardCategory) => {
+    markCategoryRead(category.key);
     if (category.key === "introduction") {
       router.push({ pathname: "/chat", params: { id: "board-introduction", unreadCount: "0" } });
       return;
@@ -2676,7 +2700,7 @@ export default function BoardScreen() {
       >
         <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: `${presentation.accent}20`, alignItems: "center", justifyContent: "center" }}><IconSymbol name={presentation.icon as any} size={21} color={presentation.accent} /></View>
         <View style={{ flex: 1, marginLeft: 11 }}><Text style={{ fontSize: 15, fontWeight: "900", color: colors.foreground }}>{cat.label}</Text><Text style={{ fontSize: 11, color: colors.muted, marginTop: 3 }}>{presentation.description}</Text></View>
-        <View style={{ backgroundColor: "#3478C7", borderRadius: 9, paddingHorizontal: 7, paddingVertical: 3, marginRight: 8 }}><Text style={{ fontSize: 10, fontWeight: "900", color: "#FFFFFF" }}>新着</Text></View>
+        {categoryHasUnread(cat.key) ? <View style={{ backgroundColor: "#3478C7", borderRadius: 9, paddingHorizontal: 7, paddingVertical: 3, marginRight: 8 }}><Text style={{ fontSize: 10, fontWeight: "900", color: "#FFFFFF" }}>新着</Text></View> : null}
         <IconSymbol name="chevron.right" size={17} color={colors.muted} />
       </Pressable>
     );

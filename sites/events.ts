@@ -617,18 +617,20 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
     const row = await eventRow(env.DB, id);
     if (!row) return responseJson({ error: "イベントが見つかりません" }, 404);
     const input = await readBody(request);
-    if (input?.action === "start_recruitment") {
-      if (!admin) return responseJson({ error: "募集開始は管理者のみ実行できます" }, 403);
-      if (row.event_type !== "official") return responseJson({ error: "公式イベントのみ募集を開始できます" }, 400);
+    if (input?.action === "start_recruitment" || input?.action === "set_recruitment_status") {
+      if (!admin) return responseJson({ error: "募集ステータスの変更は管理者のみ実行できます" }, 403);
+      if (row.event_type !== "official") return responseJson({ error: "公式イベントのみ募集ステータスを変更できます" }, 400);
+      const recruitmentStatus = input?.action === "start_recruitment" ? "open" : input?.recruitmentStatus;
+      if (recruitmentStatus !== "draft" && recruitmentStatus !== "open") return responseJson({ error: "募集ステータスが不正です" }, 400);
       let data: Record<string, unknown> = {};
       try { data = JSON.parse(row.public_data_json) as Record<string, unknown>; } catch {}
-      if (data.recruitmentStatus !== "draft") return responseJson({ event: await hydratedEvent(env.DB, row, member.id, elevated, memberPublicId) });
-      data.recruitmentStatus = "open";
+      if (data.recruitmentStatus === recruitmentStatus) return responseJson({ event: await hydratedEvent(env.DB, row, member.id, elevated, memberPublicId) });
+      data.recruitmentStatus = recruitmentStatus;
       const now = new Date().toISOString();
       await env.DB.batch([
         env.DB.prepare("UPDATE events SET public_data_json = ?, updated_at = ? WHERE id = ?").bind(JSON.stringify(data), now, id),
         env.DB.prepare(`INSERT INTO audit_logs (actor_user_id, action, entity_type, entity_id, metadata_json, created_at)
-          VALUES (?, 'event.recruitment_started', 'event', ?, '{}', ?)`).bind(String(member.id), id, now),
+          VALUES (?, 'event.recruitment_status_changed', 'event', ?, ?, ?)`).bind(String(member.id), id, JSON.stringify({ recruitmentStatus }), now),
       ]);
       const updated = await eventRow(env.DB, id);
       return responseJson({ event: await hydratedEvent(env.DB, updated!, member.id, elevated, memberPublicId) });
@@ -676,12 +678,13 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
       const companionIds = input.companionIds === undefined ? undefined : stringArray(input.companionIds, 100, 40);
       const rankPrices = input.rankPrices === undefined ? undefined : input.rankPrices && typeof input.rankPrices === "object" ? input.rankPrices : null;
       const selectionMethod = input.selectionMethod === undefined ? undefined : input.selectionMethod === "lottery" ? "lottery" : input.selectionMethod === "first_come" ? "first_come" : null;
+      const recruitmentStatus = input.recruitmentStatus === undefined ? undefined : input.recruitmentStatus === "draft" || input.recruitmentStatus === "open" ? input.recruitmentStatus : null;
       const category = input.category === undefined ? undefined : ["all", "kanto", "kansai"].includes(String(input.category)) ? input.category : null;
       const prefecture = input.prefecture === undefined ? undefined : text(input.prefecture, 16);
       const tokyoArea = input.tokyoArea === undefined ? undefined : text(input.tokyoArea, 80);
       const publicNotes = input.publicNotes === undefined ? undefined : text(input.publicNotes, 5000);
       const privateMemo = input.privateMemo === undefined ? undefined : text(input.privateMemo, 5000);
-      if (!title || description === null || (date !== undefined && (typeof date !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(date))) || (time !== undefined && (typeof time !== "string" || !/^([01]\d|2[0-3]):(00|15|30|45)$/.test(time))) || location === null || capacity === null || reservationCapacity === null || price === null || priceMin === null || priceMax === null || applicationDeadline === null || cancellationPolicy === null || tabelogUrl === null || googleMapsUrl === null || !eventType || clubId === null || restaurantName === null || (image !== undefined && (!image || !image.startsWith("/api/event-images/"))) || genres === null || companionIds === null || rankPrices === null || selectionMethod === null || category === null || prefecture === null || tokyoArea === null || publicNotes === null || privateMemo === null)
+      if (!title || description === null || (date !== undefined && (typeof date !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(date))) || (time !== undefined && (typeof time !== "string" || !/^([01]\d|2[0-3]):(00|15|30|45)$/.test(time))) || location === null || capacity === null || reservationCapacity === null || price === null || priceMin === null || priceMax === null || applicationDeadline === null || cancellationPolicy === null || tabelogUrl === null || googleMapsUrl === null || !eventType || clubId === null || restaurantName === null || (image !== undefined && (!image || !image.startsWith("/api/event-images/"))) || genres === null || companionIds === null || rankPrices === null || selectionMethod === null || recruitmentStatus === null || category === null || prefecture === null || tokyoArea === null || publicNotes === null || privateMemo === null)
         return responseJson({ error: "変更内容が不正です" }, 400);
       if (eventType === "official" && !elevated) return responseJson({ error: "公式イベントは運営メンバーのみ設定できます" }, 403);
       if (eventType === "club" && (!clubId || !await canMemberAccessClub(env.DB, clubId, member.id, admin))) return responseJson({ error: "所属している部活動のみ設定できます" }, 403);
@@ -707,6 +710,8 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
       if (companionIds !== undefined) data.companionIds = companionIds;
       if (rankPrices !== undefined) data.rankPrices = rankPrices;
       if (selectionMethod !== undefined) data.selectionMethod = selectionMethod;
+      if (eventType === "official" && recruitmentStatus !== undefined) data.recruitmentStatus = recruitmentStatus;
+      if (eventType !== "official") delete data.recruitmentStatus;
       if (category !== undefined) data.category = category;
       if (prefecture !== undefined) data.prefecture = prefecture || undefined;
       if (tokyoArea !== undefined) data.tokyoArea = tokyoArea || undefined;
@@ -717,7 +722,7 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
       const now = new Date().toISOString();
       await env.DB.batch([
         env.DB.prepare("UPDATE events SET title = ?, event_type = ?, club_id = ?, event_date = ?, status = ?, public_data_json = ?, private_memo = COALESCE(?, private_memo), updated_at = ? WHERE id = ?").bind(title, eventType, eventType === "club" ? clubId : null, effectiveDate, reopensFutureEvent ? "open" : row.status, JSON.stringify(data), privateMemo, now, id),
-        ...["title", "description", "eventType", "clubId", "restaurantName", "image", "genres", "companionIds", "rankPrices", "selectionMethod", "category", "prefecture", "tokyoArea", "publicNotes", "privateMemo", "event_date", "time", "location", "capacity", "reservationCapacity", "price", "priceMin", "priceMax", "applicationDeadline", "cancellationPolicy", "tabelogUrl", "googleMapsUrl", "manualParticipantIds"].map((field) => env.DB!.prepare(`INSERT INTO event_import_field_edits (event_id, field_name, edited_at, actor_member_id)
+        ...["title", "description", "eventType", "clubId", "restaurantName", "image", "genres", "companionIds", "rankPrices", "selectionMethod", "recruitmentStatus", "category", "prefecture", "tokyoArea", "publicNotes", "privateMemo", "event_date", "time", "location", "capacity", "reservationCapacity", "price", "priceMin", "priceMax", "applicationDeadline", "cancellationPolicy", "tabelogUrl", "googleMapsUrl", "manualParticipantIds"].map((field) => env.DB!.prepare(`INSERT INTO event_import_field_edits (event_id, field_name, edited_at, actor_member_id)
           VALUES (?, ?, ?, ?) ON CONFLICT(event_id, field_name) DO UPDATE SET edited_at = excluded.edited_at, actor_member_id = excluded.actor_member_id`).bind(id, field, now, member.id)),
         env.DB.prepare(`INSERT INTO audit_logs (actor_user_id, action, entity_type, entity_id, metadata_json, created_at)
           VALUES (?, 'event.edited', 'event', ?, ?, ?)`).bind(String(member.id), id, JSON.stringify({ participants: participants.length }), now),
