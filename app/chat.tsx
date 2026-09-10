@@ -268,6 +268,7 @@ export default function ChatScreen() {
   const inputRef = useRef<TextInput>(null);
   const [isNearLatest, setIsNearLatest] = useState(true);
   const [hasOpenedIntroduction, setHasOpenedIntroduction] = useState(false);
+  const [introductionHydrated, setIntroductionHydrated] = useState(false);
 
   // 参加者モーダル
   const [showParticipants, setShowParticipants] = useState(false);
@@ -322,6 +323,7 @@ export default function ChatScreen() {
   useEffect(() => {
     if (!id) return;
     didInitialScrollRef.current = false;
+    setIntroductionHydrated(id !== "board-introduction");
     if (id === "board-introduction") {
       void AsyncStorage.getItem("irotas_introduction_chat_opened_v1").then((value) => setHasOpenedIntroduction(value === "1"));
     } else {
@@ -356,7 +358,7 @@ export default function ChatScreen() {
           setMessages((current) => [...imported, ...current.filter((message) => message.shared)]
             .filter((message, index, all) => all.findIndex((candidate) => candidate.id === message.id) === index)
             .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()));
-        }).catch(() => setMessages((current) => current.filter((message) => message.shared)));
+        }).catch(() => setMessages((current) => current.filter((message) => message.shared))).finally(() => setIntroductionHydrated(true));
       }
       if (id === "branch-kanto-free" || id === "branch-kansai-free") {
         const branch = id === "branch-kanto-free" ? "kanto" : "kansai";
@@ -546,7 +548,7 @@ export default function ChatScreen() {
   }, [id, pollAllowMultiple, pollDeadline, pollOptions, pollQuestion, pollSending]);
 
   useEffect(() => {
-    if (messages.length > 0) {
+    if (messages.length > 0 && (id !== "board-introduction" || introductionHydrated)) {
       setTimeout(() => {
         if (!didInitialScrollRef.current) {
           const unreadCount = Math.max(0, Number(unreadCountParam ?? 0));
@@ -568,7 +570,7 @@ export default function ChatScreen() {
         }
       }, 100);
     }
-  }, [messages, unreadCountParam, viewerMemberId, id, hasOpenedIntroduction]);
+  }, [messages, unreadCountParam, viewerMemberId, id, hasOpenedIntroduction, introductionHydrated]);
 
   if (!room) {
     return (
@@ -730,7 +732,8 @@ export default function ChatScreen() {
           <Pressable
             onPress={() => {
               flatListRef.current?.scrollToEnd({ animated: true });
-              requestAnimationFrame(() => flatListRef.current?.scrollToEnd({ animated: true }));
+              requestAnimationFrame(() => flatListRef.current?.scrollToOffset({ offset: Number.MAX_SAFE_INTEGER, animated: true }));
+              setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 250);
             }}
             accessibilityLabel="最新のメッセージへ移動"
             style={{ position: "absolute", right: 16, bottom: keyboardVisible ? 106 : 118, zIndex: 20, flexDirection: "row", alignItems: "center", gap: 5, borderRadius: 18, paddingHorizontal: 12, paddingVertical: 8, backgroundColor: colors.foreground, shadowColor: "#000", shadowOpacity: 0.16, shadowRadius: 5, shadowOffset: { width: 0, height: 2 }, elevation: 4 }}

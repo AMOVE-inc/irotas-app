@@ -255,7 +255,7 @@ function MealReportContent({ thread, compact = false }: { thread: BoardThread; c
   );
 }
 
-function MealReportTimelineCard({ thread, comments = [] }: { thread: BoardThread; comments?: BoardComment[] }) {
+function MealReportTimelineCard({ thread }: { thread: BoardThread }) {
   const colors = useColors();
   const report = thread.mealReport;
   if (!report) return null;
@@ -276,10 +276,6 @@ function MealReportTimelineCard({ thread, comments = [] }: { thread: BoardThread
         </View>
       </View>
       {thread.images?.length ? <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6, marginTop: 10 }}>{thread.images.slice(0, 3).map((item, index) => <Image key={`${thread.id}-image-${index}`} source={boardImageSource(item)} style={{ width: "32%", aspectRatio: 1, borderRadius: 10, backgroundColor: "#F1EEF0" }} contentFit="cover" />)}</View> : null}
-      <View style={{ marginTop: 12, paddingTop: 10, borderTopWidth: 1, borderTopColor: colors.border }}>
-        <Text style={{ fontSize: 12, fontWeight: "900", color: colors.foreground }}>コメント（{comments.length}件）</Text>
-        {comments.slice(-2).map((comment) => <View key={comment.id} style={{ marginTop: 7 }}><Text style={{ fontSize: 11, fontWeight: "800", color: colors.muted }}>{stripRankFromName(comment.author.name)}</Text><Text numberOfLines={2} style={{ fontSize: 12, lineHeight: 18, color: colors.foreground, marginTop: 1 }}>{comment.content}</Text></View>)}
-      </View>
     </View>
   );
 }
@@ -412,7 +408,7 @@ function ThreadCard({ thread, onPress, onEdit, onDelete, onPin, onChangeRecruitm
         </View>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
           <Text style={{ fontSize: 11, color: colors.muted }}>{timeAgo(thread.lastUpdated)}</Text>
-          {showMenu ? <Pressable
+          {showMenu && !thread.mealReport ? <Pressable
               accessibilityLabel="投稿メニュー"
               onPress={(e) => {
                 e.stopPropagation?.();
@@ -441,7 +437,7 @@ function ThreadCard({ thread, onPress, onEdit, onDelete, onPin, onChangeRecruitm
           </Text> : null}
           {/* Preview */}
           {thread.mealReport ? (
-            <MealReportTimelineCard thread={thread} comments={comments} />
+            <MealReportTimelineCard thread={thread} />
           ) : thread.gourmetAdvice ? (
             null
           ) : thread.selfIntroduction ? (
