@@ -137,7 +137,24 @@ async function ensureEventRoom(db: D1Database, roomId: string) {
 
 async function ensureKnownRoom(db: D1Database, roomId: string) {
   const existing = await roomById(db, roomId);
-  if (existing) return existing;
+  if (existing) {
+    // 支部フリーチャットはDiscord移行時の履歴を引き継がない。v2へ切り替える一度だけ、
+    // 保存済みメッセージも論理削除して新しい参加者の起点を揃える。
+    if ((roomId === "branch-kanto-free" || roomId === "branch-kansai-free") && !existing.source_id?.endsWith("-v2")) {
+      const now = new Date().toISOString();
+      const sourceId = `${existing.source_id ?? (roomId === "branch-kanto-free" ? "branch-kanto" : "branch-kansai")}-v2`;
+      await db.batch([
+        db.prepare("UPDATE chat_messages SET deleted_at = ?, updated_at = ? WHERE room_id = ? AND deleted_at IS NULL")
+          .bind(now, now, roomId),
+        db.prepare("UPDATE chat_room_members SET joined_at = ?, left_at = NULL WHERE room_id = ?")
+          .bind(now, roomId),
+        db.prepare("UPDATE chat_rooms SET source_id = ?, updated_at = ? WHERE id = ?")
+          .bind(sourceId, now, roomId),
+      ]);
+      return roomById(db, roomId);
+    }
+    return existing;
+  }
   if (roomId === "board-introduction") {
     const now = new Date().toISOString();
     await db.prepare(`INSERT OR IGNORE INTO chat_rooms
@@ -153,7 +170,7 @@ async function ensureKnownRoom(db: D1Database, roomId: string) {
     await db.prepare(`INSERT OR IGNORE INTO chat_rooms
       (id, name, room_type, source_id, created_at, updated_at)
       VALUES (?, ?, 'board', ?, ?, ?)`)
-      .bind(roomId, name, `branch-${branch}`, now, now).run();
+      .bind(roomId, name, `branch-${branch}-v2`, now, now).run();
     return roomById(db, roomId);
   }
   if (roomId.startsWith("event_chat_")) return ensureEventRoom(db, roomId);
@@ -176,8 +193,8 @@ async function canAccessRoom(db: D1Database, room: RoomRow, member: Viewer) {
   }
   if (elevated(member)) return true;
   if (room.room_type === "board" && room.source_id === "introduction") return true;
-  if (room.room_type === "board" && (room.source_id === "branch-kanto" || room.source_id === "branch-kansai")) {
-    const expected = room.source_id.slice("branch-".length);
+  if (room.room_type === "board" && (room.source_id === "branch-kanto-v2" || room.source_id === "branch-kansai-v2")) {
+    const expected = room.source_id === "branch-kanto-v2" ? "kanto" : "kansai";
     const row = await db.prepare("SELECT branches_json FROM members WHERE id = ? LIMIT 1").bind(member.id).first<{ branches_json: string | null }>();
     let branches: string[] = [];
     try { branches = JSON.parse(row?.branches_json ?? "[]") as string[]; } catch {}
@@ -272,7 +289,7 @@ function serializeMessage(row: MessageRow, reactions: ReactionRow[]) {
 }
 
 async function ensureBranchRoomMembership(db: D1Database, room: RoomRow, member: Viewer) {
-  if (room.room_type !== "board" || (room.source_id !== "branch-kanto" && room.source_id !== "branch-kansai")) return null;
+  if (room.room_type !== "board" || (room.source_id !== "branch-kanto-v2" && room.source_id !== "branch-kansai-v2")) return null;
   const now = new Date().toISOString();
   await db.prepare(`INSERT INTO chat_room_members (room_id, member_id, member_role, joined_at, left_at)
     VALUES (?, ?, 'member', ?, NULL)
