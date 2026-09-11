@@ -29,6 +29,7 @@ import { getConfirmedParticipantDisplayIds } from "@/lib/event-confirmed-partici
 import { isEventOrganizer } from "@/lib/event-participation";
 import { EVENT_AMOUNT_OPTIONS, EVENT_CAPACITY_OPTIONS, EVENT_RANKS, EVENT_TIME_OPTIONS, eventFormSaveFields, eventFormValuesFromEvent, hasOnlyCompanionChanges, minimumReservationCapacity, type EventFormValues, validateEventForm } from "@/lib/event-form";
 import { GOURMET_GENRES } from "@/constants/event-options";
+import { displayEventTitle } from "@/lib/event-title";
 import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -765,9 +766,12 @@ export default function EventDetailScreen() {
     }
   };
 
-  const openMemberProfile = (memberId: string) => {
-    const discordAuthor = getDiscordAuthorById(memberId);
-    router.push({ pathname: "/member-profile", params: { id: memberId, ...(discordAuthor ? { legacyName: discordAuthor.name } : {}) } });
+  const openMemberProfile = (memberId: string, displayName?: string) => {
+    const discordAuthor = getDiscordAuthorById(memberId) ?? (displayName ? getDiscordAuthorByName(displayName) : undefined);
+    const directoryMatch = memberDirectory.find((member) => member.id === memberId)
+      ?? (displayName ? memberDirectory.find((member) => stripRankFromName(member.displayName) === stripRankFromName(displayName)) : undefined);
+    const resolvedId = directoryMatch?.id ?? discordAuthor?.id ?? memberId;
+    router.push({ pathname: "/member-profile", params: { id: resolvedId, ...(discordAuthor ? { legacyName: discordAuthor.name } : displayName ? { legacyName: displayName } : {}) } });
   };
 
   const handleOpenMap = () => {
@@ -843,7 +847,7 @@ export default function EventDetailScreen() {
         <EventImage event={event} style={{ width: "100%", height: 250, borderRadius: 16, marginBottom: 16 }} />
         {/* Title */}
         <Text style={{ fontSize: 26, fontWeight: "800", color: colors.foreground, marginBottom: 12 }}>
-          {event.title}
+          {displayEventTitle(event.title)}
         </Text>
         {event.restaurantName && event.restaurantName !== event.title ? (
           <Text style={{ fontSize: 15, fontWeight: "700", color: colors.muted, marginTop: -5, marginBottom: 12 }}>
@@ -937,7 +941,7 @@ export default function EventDetailScreen() {
           ))}
         </View>
 
-        <Pressable onPress={() => openMemberProfile(event.organizerProfileId ?? event.createdBy)} accessibilityLabel="幹事のプロフィールを表示" style={{ flexDirection: "row", alignItems: "center", backgroundColor: colors.surface, borderRadius: 14, padding: 14, marginBottom: 16 }}>
+        <Pressable onPress={() => openMemberProfile(event.organizerProfileId ?? event.createdBy, event.organizerName)} accessibilityLabel="幹事のプロフィールを表示" style={{ flexDirection: "row", alignItems: "center", backgroundColor: colors.surface, borderRadius: 14, padding: 14, marginBottom: 16 }}>
           <Image source={event.organizerAvatar ?? (typeof organizerDirectoryMember?.profile.avatarUrl === "string" ? organizerDirectoryMember.profile.avatarUrl : organizer?.avatar ?? DEFAULT_AVATAR)} style={{ width: 42, height: 42, borderRadius: 21 }} contentFit="cover" />
           <View style={{ flex: 1, marginLeft: 11 }}><Text style={{ fontSize: 11, color: colors.muted }}>幹事</Text><View style={{ flexDirection: "row", alignItems: "center", flexWrap: "wrap" }}><Text style={{ fontSize: 15, fontWeight: "800", color: colors.foreground }}>{stripRankFromName(event.organizerName ?? organizerDirectoryMember?.displayName ?? organizer?.name ?? "メンバー")}</Text>{event.organizerRank ? <MemberRankBadge rank={event.organizerRank} name={event.organizerName} compact /> : null}<MemberClubLeaderBadges roles={organizerDirectoryMember?.discordRoles} name={event.organizerName} compact /><MemberRoleBadge name="" role={/IRO\+代表/.test(event.organizerName ?? "") ? "admin" : organizerDirectoryMember?.accessRole ?? (event.eventType === "official" ? "operator" : undefined)} compact /></View></View>
           <IconSymbol name="chevron.right" size={17} color={colors.muted} />
@@ -1130,11 +1134,15 @@ export default function EventDetailScreen() {
           <Text style={{ fontSize: 11, color: colors.muted, marginTop: 4 }}>参加申込前でも閲覧・コメントできます。@で会員・部活・支部をメンションできます。</Text>
           {eventComments.map((comment) => {
             const author = displayCommentAuthor(comment);
+            const profileId = comment.authorId
+              ?? memberDirectory.find((member) => stripRankFromName(member.displayName) === stripRankFromName(comment.author))?.id
+              ?? getDiscordAuthorByName(comment.author)?.id;
+            const openAuthor = () => { if (profileId) openMemberProfile(profileId, comment.author); };
             return <View key={comment.id} style={{ flexDirection: "row", marginTop: 12, paddingTop: 12, borderTopWidth: 0.5, borderTopColor: colors.border }}>
-              <Image source={author.avatar} style={{ width: 32, height: 32, borderRadius: 16, marginRight: 9 }} contentFit="cover" />
+              <Pressable onPress={openAuthor} disabled={!profileId}><Image source={author.avatar} style={{ width: 32, height: 32, borderRadius: 16, marginRight: 9 }} contentFit="cover" /></Pressable>
               <View style={{ flex: 1 }}>
                 <View style={{ flexDirection: "row", alignItems: "center", flexWrap: "wrap", marginBottom: 3 }}>
-                  <Text style={{ fontSize: 12, fontWeight: "900", color: colors.foreground }}>{author.name}</Text>
+                  <Pressable onPress={openAuthor} disabled={!profileId}><Text style={{ fontSize: 12, fontWeight: "900", color: colors.foreground }}>{author.name}</Text></Pressable>
                   {author.rank ? <MemberRankBadge rank={author.rank} name={author.badgeName} role={author.role} compact /> : null}
                   <MemberClubLeaderBadges roles={author.roles} name={author.badgeName} compact />
                   <MemberRoleBadge name="" role={author.role} compact />

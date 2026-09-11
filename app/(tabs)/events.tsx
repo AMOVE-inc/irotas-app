@@ -30,6 +30,7 @@ import {
   useEventFavorites,
 } from "@/lib/event-favorites-store";
 import { formatEventArea, TOKYO_EVENT_AREAS } from "@/lib/event-location";
+import { displayEventTitle } from "@/lib/event-title";
 import { useColors } from "@/hooks/use-colors";
 import { Image } from "expo-image";
 import { EventImage } from "@/components/event-image";
@@ -709,7 +710,7 @@ function EventCard({
             color: colors.foreground,
           }}
         >
-          {event.title}
+          {displayEventTitle(event.title)}
         </Text>
         {locked ? (
           <Text

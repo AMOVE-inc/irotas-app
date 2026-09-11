@@ -4,6 +4,7 @@ import { reverseCancelledEventHostXp } from "./event-host-xp";
 import { applyEventPointDiscount, refundEventPointDiscount } from "./event-points";
 import { EVENT_XP, awardEventReward, reverseEventRewards } from "./event-rewards";
 import type { D1Database, SitesEnv } from "./platform-types";
+import { displayEventTitle } from "../lib/event-title";
 
 const EVENTS_ENDPOINT = "/api/events";
 const EVENT_PATH = /^\/api\/events\/([^/]+)$/;
@@ -269,7 +270,7 @@ function publicEvent(
     // 定員に達していても、幹事が参加者を確定するまでは受付を継続する。
     status: row.status === "cancelled" ? "ended" : row.status === "full" && !participantsFinalized ? "open" : row.status,
     isCancelled: row.status === "cancelled",
-    title: row.title,
+    title: displayEventTitle(row.title),
     createdBy: row.public_member_id ?? `member-${row.organizer_member_id}`,
     organizerProfileId: row.public_member_id ?? `member-${row.organizer_member_id}`,
     organizerName: row.organizer_display_name?.trim() || "メンバー",
@@ -305,7 +306,7 @@ export function lockedClubEventPreview(row: EventRow) {
     clubId: row.club_id ?? undefined,
     date: row.event_date,
     status: row.status === "cancelled" ? "ended" as const : row.status,
-    title: row.title,
+    title: displayEventTitle(row.title),
     image: typeof data.image === "string" && data.image.startsWith("/api/event-images/") ? data.image : "",
     createdBy: row.public_member_id ?? `member-${row.organizer_member_id}`,
     organizerProfileId: row.public_member_id ?? `member-${row.organizer_member_id}`,
@@ -655,7 +656,8 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
     }
     if (input?.action === "edit") {
       if (!(admin || row.organizer_member_id === member.id)) return responseJson({ error: "イベント作成者または管理者のみイベント情報を編集できます" }, 403);
-      const title = text(input.title, 160, true);
+      const rawTitle = text(input.title, 160, true);
+      const title = rawTitle ? displayEventTitle(rawTitle) : null;
       const description = text(input.description, 5000);
       const participants = stringArray(input.participants, 100, 80) ?? [];
       const date = input.date === undefined ? undefined : text(input.date, 10, true);

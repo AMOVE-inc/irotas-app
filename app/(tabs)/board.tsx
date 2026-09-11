@@ -1224,14 +1224,12 @@ function ThreadDetailModal({
                 { text: "キャンセル", style: "cancel" },
               ])} delayLongPress={350} style={{ marginBottom: 14 }}>
                 <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 4 }}>
-                  <Image
-                    source={comment.author.avatar}
-                    style={{ width: 24, height: 24, borderRadius: 12 }}
-                    contentFit="cover"
-                  />
-                  <Text style={{ fontSize: 13, fontWeight: "600", color: colors.foreground, marginLeft: 8 }}>
+                  <Pressable onPress={() => router.push({ pathname: "/member-profile", params: { id: comment.author.id, legacyName: comment.author.name } })} accessibilityLabel={`${stripRankFromName(comment.author.name)}のプロフィールを表示`}>
+                    <Image source={comment.author.avatar} style={{ width: 24, height: 24, borderRadius: 12 }} contentFit="cover" />
+                  </Pressable>
+                  <Pressable onPress={() => router.push({ pathname: "/member-profile", params: { id: comment.author.id, legacyName: comment.author.name } })} accessibilityLabel={`${stripRankFromName(comment.author.name)}のプロフィールを表示`}><Text style={{ fontSize: 13, fontWeight: "600", color: colors.foreground, marginLeft: 8 }}>
                     {stripRankFromName(comment.author.name)}
-                  </Text>
+                  </Text></Pressable>
                   <OperatorOrRankBadge member={comment.author} />
                   <Text style={{ fontSize: 11, color: colors.muted, marginLeft: 8 }}>
                     {timeAgo(comment.createdAt)}

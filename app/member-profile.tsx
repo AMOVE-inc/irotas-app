@@ -55,6 +55,7 @@ export default function MemberProfileScreen() {
   const [followSaving, setFollowSaving] = useState(false);
   const [confirmedEvents, setConfirmedEvents] = useState<Event[]>([]);
   const discordAuthor = getDiscordAuthorById(id);
+  const isLookingUpRequestedMember = Boolean(id && authUser && (!databaseLookupComplete || (databaseMember !== null && databaseMember.id !== id)));
 
   useEffect(() => {
     if (!id || !authUser) { setDatabaseMember(null); setDatabaseLookupComplete(true); return; }
@@ -152,12 +153,12 @@ export default function MemberProfileScreen() {
     void getPrivateMemberNote(CURRENT_USER.id, id).then(setPrivateNote);
   }, [authUser?.id, databaseMember, id]);
 
-  if (!member) {
+  if (isLookingUpRequestedMember || !member) {
     return (
       <ScreenContainer edges={["top", "left", "right"]}>
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
           <Text style={{ fontSize: 16, color: colors.muted }}>
-            {databaseLookupComplete ? "メンバーが見つかりません" : "メンバー情報を読み込んでいます"}
+            {isLookingUpRequestedMember || !databaseLookupComplete ? "メンバー情報を読み込んでいます" : "メンバーが見つかりません"}
           </Text>
         </View>
       </ScreenContainer>
