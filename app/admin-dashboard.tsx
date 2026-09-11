@@ -78,7 +78,7 @@ type PointsHistoryEntry = {
 
 const EMPTY_COUPON: Coupon = { id: "", title: "", description: "", discount: "", expiresAt: "", code: "", requiredRank: "regular", usageType: "single", status: "active" };
 
-function selectJsonFile(): Promise<{ name: string; text: string }> {
+function selectJsonFile(label = "DiscordプロフィールJSON"): Promise<{ name: string; text: string }> {
   return new Promise((resolve, reject) => {
     if (typeof document === "undefined") { reject(new Error("Web版の管理画面から実行してください")); return; }
     const input = document.createElement("input");
@@ -86,7 +86,7 @@ function selectJsonFile(): Promise<{ name: string; text: string }> {
     input.accept = "application/json,.json";
     input.style.position = "fixed";
     input.style.left = "-9999px";
-    input.setAttribute("aria-label", "DiscordプロフィールJSON");
+    input.setAttribute("aria-label", label);
     document.body.appendChild(input);
     input.onchange = async () => {
       const file = input.files?.[0];
@@ -138,6 +138,8 @@ export default function AdminDashboardScreen() {
   const [squareSyncProgress, setSquareSyncProgress] = useState<string | null>(null);
   const [discordProfileImporting, setDiscordProfileImporting] = useState(false);
   const [discordProfileImportResult, setDiscordProfileImportResult] = useState<string | null>(null);
+  const [discordEventImporting, setDiscordEventImporting] = useState(false);
+  const [discordEventImportResult, setDiscordEventImportResult] = useState<string | null>(null);
   const [membershipSummary, setMembershipSummary] = useState<MembershipSummary | null>(null);
   const [memberReconciliation, setMemberReconciliation] = useState<MemberReconciliationReport | null>(null);
   const [membershipSummaryLoading, setMembershipSummaryLoading] = useState(false);
@@ -1872,6 +1874,37 @@ export default function AdminDashboardScreen() {
 
         {activeTab === "events" && (
           <>
+            <View style={{ backgroundColor: colors.surface, borderRadius: 14, borderWidth: 1, borderColor: colors.border, padding: 16, marginBottom: 14 }}>
+              <Text style={{ fontSize: 16, fontWeight: "800", color: colors.foreground }}>Discordイベント移行</Text>
+              <Text style={{ fontSize: 12, lineHeight: 19, color: colors.muted, marginTop: 6 }}>Discordのイベントを、元スレッドIDで重複なく反映します。既にアプリで編集した項目は上書きせず、差分は競合として記録します。</Text>
+              {discordEventImportResult ? <Text style={{ fontSize: 12, fontWeight: "700", color: "#237A3B", marginTop: 10 }}>{discordEventImportResult}</Text> : null}
+              <Pressable disabled={discordEventImporting} onPress={async () => {
+                setDiscordEventImporting(true);
+                setDiscordEventImportResult(null);
+                try {
+                  const selected = await selectJsonFile("DiscordイベントJSON");
+                  const payload = JSON.parse(selected.text) as { events?: unknown[] };
+                  const eventCount = Array.isArray(payload.events) ? payload.events.length : 0;
+                  if (!eventCount) throw new Error("イベントデータが見つかりません");
+                  const response = await fetch("/api/admin/event-import/commit", {
+                    method: "POST",
+                    headers: { "content-type": "application/json" },
+                    body: JSON.stringify({ ...payload, confirmation: `APPLY_${eventCount}_EVENTS` }),
+                  });
+                  const result = await response.json() as { error?: string; counts?: { created?: number; updated?: number; preserved?: number; conflicted?: number; skipped?: number } };
+                  if (!response.ok) throw new Error(result.error ?? "取込に失敗しました");
+                  const counts = result.counts ?? {};
+                  const summary = `新規 ${counts.created ?? 0}件／更新 ${counts.updated ?? 0}件／保持 ${counts.preserved ?? 0}件／競合 ${counts.conflicted ?? 0}件／保留 ${counts.skipped ?? 0}件`;
+                  setDiscordEventImportResult(summary);
+                  Alert.alert("イベント移行完了", summary);
+                } catch (error) {
+                  if (error instanceof SyntaxError) Alert.alert("読込エラー", "JSONファイルの形式を確認してください。");
+                  else if (error instanceof Error && error.message !== "ファイルが選択されませんでした") Alert.alert("取込エラー", error.message);
+                } finally { setDiscordEventImporting(false); }
+              }} style={{ minHeight: 48, borderRadius: 12, backgroundColor: discordEventImporting ? colors.border : "#5865F2", alignItems: "center", justifyContent: "center", marginTop: 14 }}>
+                {discordEventImporting ? <ActivityIndicator color="#FFF" /> : <Text style={{ color: "#FFF", fontWeight: "800" }}>DiscordイベントJSONを選択して反映</Text>}
+              </Pressable>
+            </View>
             <Text style={{ fontSize: 16, fontWeight: "700", color: colors.foreground, marginBottom: 12 }}>
               イベント管理 ({EVENTS.length}件)
             </Text>
