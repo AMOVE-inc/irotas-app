@@ -9,7 +9,7 @@ const RESOLVE = /^\/api\/admin\/event-import\/conflicts\/([^/]+)\/resolve$/;
 const MAX_BODY = 5 * 1024 * 1024;
 
 type Viewer = NonNullable<Awaited<ReturnType<typeof authenticatedRequestMember>>>;
-type IncomingItem = { sourceThreadId: string; organizerMemberId?: number; event: ImportEventShape };
+type IncomingItem = { sourceThreadId: string; organizerMemberId?: number; organizerDiscordUserId?: string; event: ImportEventShape };
 type ExistingRow = { id: string; organizer_member_id: number; event_type: ImportEventShape["eventType"]; club_id: string | null; event_date: string; status: ImportEventShape["status"]; title: string; public_data_json: string };
 
 function json(body: unknown, status = 200) { return Response.json(body, { status, headers: { "cache-control": "private, no-store" } }); }
@@ -39,7 +39,13 @@ function inputItem(value: unknown): IncomingItem | null {
   const publicData = event?.publicData && typeof event.publicData === "object" && !Array.isArray(event.publicData) ? event.publicData as Record<string, unknown> : {};
   if (!threadId || !title || !eventDate || !/^\d{4}-\d{2}-\d{2}$/.test(eventDate) || !["official", "gourmet", "club"].includes(eventType) || !["open", "full", "ended", "cancelled"].includes(status)) return null;
   const organizerMemberId = Number(raw.organizerMemberId);
-  return { sourceThreadId: threadId, organizerMemberId: Number.isInteger(organizerMemberId) && organizerMemberId > 0 ? organizerMemberId : undefined, event: { title, eventDate, eventType: eventType as ImportEventShape["eventType"], clubId: safeText(event?.clubId, 80), status: status as ImportEventShape["status"], publicData } };
+  const organizerDiscordUserId = safeText(raw.organizerDiscordUserId, 20);
+  return {
+    sourceThreadId: threadId,
+    organizerMemberId: Number.isInteger(organizerMemberId) && organizerMemberId > 0 ? organizerMemberId : undefined,
+    organizerDiscordUserId: organizerDiscordUserId && /^\d{17,20}$/.test(organizerDiscordUserId) ? organizerDiscordUserId : undefined,
+    event: { title, eventDate, eventType: eventType as ImportEventShape["eventType"], clubId: safeText(event?.clubId, 80), status: status as ImportEventShape["status"], publicData },
+  };
 }
 
 function parseRow(row: ExistingRow): ImportEventShape {
@@ -52,6 +58,13 @@ async function analyze(db: D1Database, items: IncomingItem[]) {
   const counts = { created: 0, updated: 0, preserved: 0, conflicted: 0, skipped: 0 };
   const decisions: Record<string, unknown>[] = [];
   for (const item of items) {
+    // Migration files retain Discord's immutable author ID rather than an
+    // environment-specific numeric member key. Resolve it server-side so a
+    // payload remains portable and cannot point an event at the wrong member.
+    if (!item.organizerMemberId && item.organizerDiscordUserId) {
+      const organizer = await db.prepare("SELECT id FROM members WHERE discord_user_id = ?").bind(item.organizerDiscordUserId).first<{ id: number }>();
+      if (organizer?.id) item.organizerMemberId = organizer.id;
+    }
     const eventId = `discord-event-${item.sourceThreadId}`;
     const row = await db.prepare("SELECT id, organizer_member_id, event_type, club_id, event_date, status, title, public_data_json FROM events WHERE id = ?").bind(eventId).first<ExistingRow>();
     if (!row) {
