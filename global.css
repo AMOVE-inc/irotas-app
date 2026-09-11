@@ -5,11 +5,12 @@
 /* Ensure the web preview fills the entire viewport */
 html, body, #root {
   width: 100%;
-  height: 100%;
+  height: var(--app-viewport-height, 100dvh);
   margin: 0;
   padding: 0;
   overflow: hidden;
-  min-height: 100dvh;
+  min-height: var(--app-viewport-height, 100dvh);
+  background: #fff;
 }
 
 /* Fix React Native Web root container */
@@ -18,6 +19,5 @@ html, body, #root {
   flex-direction: column !important;
   width: 100% !important;
   height: 100% !important;
-  min-height: 100vh !important;
-  min-height: 100dvh !important;
+  min-height: 100% !important;
 }
