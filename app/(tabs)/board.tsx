@@ -399,12 +399,12 @@ function ThreadCard({ thread, onPress, onEdit, onDelete, onPin, onChangeRecruitm
         opacity: visuallyClosed ? 0.72 : 1,
       }}
     >
-      {unreadCount > 0 ? <View style={{ position: "absolute", top: 10, left: 10, zIndex: 2, backgroundColor: "#3478C7", borderRadius: 7, paddingHorizontal: 7, paddingVertical: 3 }}><Text style={{ color: "#FFFFFF", fontSize: 10, fontWeight: "900" }}>NEW</Text></View> : null}
       {/* Author */}
       <Pressable
         onPress={() => router.push({ pathname: "/member-profile", params: { id: thread.author.id, legacyName: thread.author.name } })}
         style={{ flexDirection: "row", alignItems: "center", marginBottom: 8 }}
       >
+        {unreadCount > 0 ? <View style={{ marginRight: 7, backgroundColor: "#3478C7", borderRadius: 7, paddingHorizontal: 7, paddingVertical: 3 }}><Text style={{ color: "#FFFFFF", fontSize: 10, fontWeight: "900" }}>NEW</Text></View> : null}
         {pinned ? <View style={{ marginRight: 7, borderRadius: 10, paddingHorizontal: 8, paddingVertical: 6, backgroundColor: "#FFF2C7" }}><Text style={{ fontSize: 11, fontWeight: "900", color: "#8A6512" }}>📌 固定</Text></View> : null}
         {recruitmentManaged ? <RecruitmentStatusBadge status={recruitmentStatus} /> : thread.gourmetContest && contestOpen ? <View style={{ marginRight: 9, borderRadius: 10, paddingHorizontal: 9, paddingVertical: 6, backgroundColor: "#DDF3E3" }}><Text style={{ fontSize: 11, fontWeight: "900", color: "#247A42" }}>開催中</Text></View> : null}
         <Image

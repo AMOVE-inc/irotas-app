@@ -76,7 +76,7 @@ export function eventFormValuesFromEvent(event: Event): EventFormValues {
   return {
     eventType: event.eventType,
     clubId: event.clubId ?? "",
-    restaurantName: event.restaurantName ?? "",
+    restaurantName: event.restaurantName ?? (event.location !== "住所未設定" && event.location !== "詳細をご確認ください" ? event.location : ""),
     eventName: event.title ?? "",
     date: event.date ?? "",
     time: event.time ?? "",
@@ -90,7 +90,9 @@ export function eventFormValuesFromEvent(event: Event): EventFormValues {
     googleMapsUrl: event.googleMapsUrl ?? "",
     companionIds: event.companionIds ?? [],
     image: typeof event.image === "string" ? event.image : "",
-    decisionDate: event.applicationDeadline ?? "",
+    // Discordから移行した旧イベントには決定予定日が無いものがある。
+    // 編集時だけ開催日を安全な初期値にし、必須入力で保存不能になるのを防ぐ。
+    decisionDate: event.applicationDeadline ?? event.date ?? "",
     publicNotes: event.publicNotes ?? event.description ?? "",
     privateMemo: event.privateMemo ?? "",
     cancellationPolicy: event.cancellationPolicy ?? DEFAULT_CANCELLATION_POLICY,

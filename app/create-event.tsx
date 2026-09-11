@@ -1,6 +1,6 @@
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
-import { CURRENT_USER, DEFAULT_AVATAR, getRankFromPoints, type Event } from "@/constants/mock-data";
+import { CURRENT_USER, DEFAULT_AVATAR, EVENTS, getRankFromPoints, type Event } from "@/constants/mock-data";
 import { XpRewardPopup } from "@/components/xp-reward-popup";
 import type { XpReward } from "@/lib/xp-store";
 import { GOURMET_GENRES } from "@/constants/event-options";
@@ -11,7 +11,7 @@ import { useClubs } from "@/lib/club-store";
 import { pendingEvents } from "@/lib/event-store";
 import { scheduleOrganizerDeadlineNotification } from "@/lib/notifications";
 import { extractEventLocation, formatEventArea } from "@/lib/event-location";
-import { DEFAULT_CANCELLATION_POLICY, EVENT_AMOUNT_OPTIONS, EVENT_CAPACITY_OPTIONS, EVENT_RANKS, EVENT_TIME_OPTIONS, eventFormSaveFields, validateEventForm } from "@/lib/event-form";
+import { DEFAULT_CANCELLATION_POLICY, EVENT_AMOUNT_OPTIONS, EVENT_CAPACITY_OPTIONS, EVENT_RANKS, EVENT_TIME_OPTIONS, eventFormSaveFields, eventFormValuesFromEvent, validateEventForm } from "@/lib/event-form";
 import { useColors } from "@/hooks/use-colors";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
@@ -122,7 +122,8 @@ function MemberPicker({ selectedIds, onChange, members, viewerMemberId, loading 
 export default function CreateEventScreen() {
   const colors = useColors();
   const router = useRouter();
-  const params = useLocalSearchParams<{ sourceThreadId?: string; sourceTitle?: string; sourceDescription?: string; sourceCategory?: string }>();
+  const params = useLocalSearchParams<{ sourceThreadId?: string; sourceTitle?: string; sourceDescription?: string; sourceCategory?: string; editId?: string }>();
+  const editId = typeof params.editId === "string" ? params.editId : "";
   const { user: authUser } = useAuthContext();
   const userIsOperator = isOperatorRole(authUser?.role, authUser?.accessRole);
   const clubs = useClubs();
@@ -162,9 +163,35 @@ export default function CreateEventScreen() {
   const [memberDirectoryLoading, setMemberDirectoryLoading] = useState(true);
   const [xpReward, setXpReward] = useState<XpReward | null>(null);
   const [createdEventId, setCreatedEventId] = useState<string | null>(null);
+  const [editingEvent, setEditingEvent] = useState<Event | null>(null);
+  const [editLoading, setEditLoading] = useState(Boolean(editId));
+  const [initialImageUri, setInitialImageUri] = useState("");
   const extractedLocation = useMemo(() => extractEventLocation(address), [address]);
 
   useEffect(() => { void Api.getMemberDirectory().then(setMemberDirectory).catch(() => setMemberDirectory([])).finally(() => setMemberDirectoryLoading(false)); }, []);
+
+  useEffect(() => {
+    if (!editId) return;
+    let active = true;
+    const fallback = EVENTS.find((item) => item.id === editId);
+    void Api.getEvent(editId).catch(() => fallback).then((event) => {
+      if (!active) return;
+      if (!event) { setFormError("イベントが見つかりません"); return; }
+      const form = eventFormValuesFromEvent(event);
+      setEditingEvent(event);
+      setEventType(form.eventType); setSelectedClubId(form.clubId); setRestaurantName(form.restaurantName);
+      setEventName(form.eventName); setDate(form.date); setTime(form.time); setAddress(form.address);
+      setReservationCapacity(form.reservationCapacity); setRecruitCapacity(form.recruitCapacity);
+      setFixedAmount(form.fixedAmount); setBudgetMin(form.budgetMin); setBudgetMax(form.budgetMax);
+      setTabelogUrl(form.tabelogUrl); setGoogleMapsUrl(form.googleMapsUrl); setCompanionIds(form.companionIds);
+      setImageUri(form.image); setInitialImageUri(form.image); setDecisionDate(form.decisionDate);
+      setPublicNotes(form.publicNotes); setPrivateMemo(form.privateMemo); setCancellationPolicy(form.cancellationPolicy);
+      setSelectionMethod(form.selectionMethod); setUseRankPrices(form.useRankPrices); setRankPrices(form.rankPrices);
+      setGenres(form.genres); setRecruitmentStatus(event.recruitmentStatus === "draft" ? "draft" : "open");
+      setTermsAccepted(true);
+    }).finally(() => { if (active) setEditLoading(false); });
+    return () => { active = false; };
+  }, [editId]);
 
   if (!authUser) return <ScreenContainer edges={["top", "left", "right"]}><View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}><IconSymbol name="lock.fill" size={44} color={colors.border} /><Text style={{ marginTop: 12, color: colors.muted }}>メンバーのみ作成できます</Text></View></ScreenContainer>;
 
@@ -183,7 +210,7 @@ export default function CreateEventScreen() {
   };
   const handleCreate = async () => {
     const form = { eventType, clubId: selectedClubId, restaurantName, eventName, date, time, address, reservationCapacity, recruitCapacity, fixedAmount, budgetMin, budgetMax, tabelogUrl, googleMapsUrl, companionIds, image: imageUri, decisionDate, publicNotes, privateMemo, cancellationPolicy, selectionMethod, useRankPrices, rankPrices, genres };
-    const validationError = validateEventForm(form, { requireImage: false, requireTerms: true, termsAccepted, allowedClubIds: joinedClubs.map((club) => club.id) });
+    const validationError = validateEventForm(form, { requireImage: false, requireTerms: true, termsAccepted, allowedClubIds: joinedClubs.map((club) => club.id), allowEmptyGenres: Boolean(editId), allowPastDate: Boolean(editId) });
     if (validationError) { setFormError(validationError); return; }
     setFormError("");
     const finalType: Event["eventType"] = eventType === "official" && !userIsOperator ? "gourmet" : eventType;
@@ -193,6 +220,23 @@ export default function CreateEventScreen() {
       description: savedFields.description, image: imageUri, attendees: 0, applicantIds: [], participants: [], status: "open", recruitmentStatus: finalType === "official" ? recruitmentStatus : "open", createdBy: viewerMemberId,
     };
     setIsSubmitting(true);
+    if (editId && editingEvent) {
+      try {
+        const uploadedImage = imageUri && imageUri !== initialImageUri ? (await Api.uploadEventImage(imageUri)).imageUrl : undefined;
+        const updated = await Api.updateEventDetails(editId, {
+          ...savedFields,
+          recruitmentStatus: finalType === "official" ? recruitmentStatus : undefined,
+          ...(uploadedImage ? { image: uploadedImage } : {}),
+          participants: editingEvent.participants ?? [],
+        });
+        setIsSubmitting(false);
+        router.replace({ pathname: "/event-detail", params: { id: updated.id } });
+      } catch (error) {
+        setIsSubmitting(false);
+        Alert.alert("イベントを保存できませんでした", error instanceof Error ? error.message : "通信状況を確認して、もう一度お試しください。");
+      }
+      return;
+    }
     let newEvent: Event;
     try {
       const uploadedImage = imageUri ? (await Api.uploadEventImage(imageUri)).imageUrl : undefined;
@@ -219,7 +263,8 @@ export default function CreateEventScreen() {
   const inputStyle = { backgroundColor: colors.surface, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: colors.foreground, borderWidth: 1, borderColor: colors.border } as const;
   return (
     <ScreenContainer edges={["top", "left", "right"]}>
-      <View style={{ flexDirection: "row", alignItems: "center", padding: 16, borderBottomWidth: 0.5, borderBottomColor: colors.border }}><Pressable onPress={() => router.back()}><Text style={{ color: colors.muted }}>キャンセル</Text></Pressable><Text style={{ flex: 1, textAlign: "center", fontSize: 17, fontWeight: "800", color: colors.foreground }}>イベント作成</Text><View style={{ width: 54 }} /></View>
+      <View style={{ flexDirection: "row", alignItems: "center", padding: 16, borderBottomWidth: 0.5, borderBottomColor: colors.border }}><Pressable onPress={() => router.back()}><Text style={{ color: colors.muted }}>キャンセル</Text></Pressable><Text style={{ flex: 1, textAlign: "center", fontSize: 17, fontWeight: "800", color: colors.foreground }}>{editId ? "イベント編集" : "イベント作成"}</Text><View style={{ width: 54 }} /></View>
+      {editLoading ? <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}><ActivityIndicator size="large" color="#E8A0BF" /><Text style={{ marginTop: 12, color: colors.muted }}>イベント情報を読み込んでいます…</Text></View> :
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 48 }} keyboardShouldPersistTaps="handled">
         {params.sourceThreadId ? <View style={{ flexDirection: "row", alignItems: "center", borderRadius: 13, padding: 12, marginBottom: 4, backgroundColor: "#EEF4FB", borderWidth: 1, borderColor: "#D4E3F2" }}><IconSymbol name="doc.text.fill" size={18} color="#4D78A4" /><Text style={{ flex: 1, marginLeft: 8, fontSize: 12, lineHeight: 18, fontWeight: "700", color: "#3F6489" }}>掲示板のタイトルと本文を引き継ぎました。必要に応じて編集してください。</Text></View> : null}
         {(userIsOperator || joinedClubs.length > 0) ? <><FieldLabel>イベント種別 *</FieldLabel><View style={{ flexDirection: "row", gap: 8 }}>{([...(userIsOperator ? ["official"] as const : []), "gourmet", ...(joinedClubs.length ? ["club"] as const : [])] as Event["eventType"][]).map((type) => <Pressable key={type} onPress={() => chooseEventType(type)} style={{ flex: 1, paddingVertical: 12, alignItems: "center", borderRadius: 12, backgroundColor: eventType === type ? "#5B9BD5" : colors.surface }}><Text style={{ fontSize: 12, fontWeight: "800", color: eventType === type ? "#FFF" : colors.foreground }}>{type === "official" ? "公式" : type === "club" ? "部活動" : "グルメ会"}</Text></Pressable>)}</View></> : null}
@@ -253,10 +298,10 @@ export default function CreateEventScreen() {
         <FieldLabel>自分用メモ</FieldLabel><TextInput value={privateMemo} onChangeText={setPrivateMemo} placeholder="他の人には公開されません" placeholderTextColor={colors.muted} multiline textAlignVertical="top" style={[inputStyle, { minHeight: 90 }]} />
         <View style={{ marginTop: 26, padding: 14, borderRadius: 14, backgroundColor: "#FFF8F0", borderWidth: 1, borderColor: "#EED9BF" }}><Text style={{ fontSize: 15, fontWeight: "900", color: colors.foreground, marginBottom: 10 }}>イベント開催時のルール</Text>{["イベントの日時・人数・場所などに誤りがないことを確認してください", "原則、参加者はIRO+メンバー限定としてください（やむをえず外部の方も参加される場合は、その旨を自由記述欄に記載してください）", "募集期日までに参加者を確定し、専用チャットにて参加確定連絡をお願いします"].map((rule) => <Text key={rule} style={{ fontSize: 12, lineHeight: 19, color: colors.foreground, marginBottom: 5 }}>・{rule}</Text>)}<Pressable onPress={() => setTermsAccepted((value) => !value)} style={{ flexDirection: "row", alignItems: "center", marginTop: 8 }}><View style={{ width: 24, height: 24, borderRadius: 6, backgroundColor: termsAccepted ? "#E8A0BF" : colors.surface, borderWidth: 1, borderColor: termsAccepted ? "#E8A0BF" : colors.border, alignItems: "center", justifyContent: "center" }}>{termsAccepted ? <IconSymbol name="checkmark" size={15} color="#FFF" /> : null}</View><Text style={{ flex: 1, marginLeft: 9, fontSize: 14, fontWeight: "800", color: colors.foreground }}>上記のルールを確認し、同意する <Text style={{ color: colors.error }}>必須</Text></Text></Pressable></View>
         {formError ? <Text accessibilityRole="alert" style={{ marginTop: 16, color: colors.error, fontSize: 13, fontWeight: "800" }}>{formError}</Text> : null}
-        <Pressable disabled={isSubmitting} onPress={() => { void handleCreate(); }} style={{ marginTop: 22, minHeight: 56, borderRadius: 16, backgroundColor: termsAccepted && !isSubmitting ? "#18171A" : "#B8B8BD", alignItems: "center", justifyContent: "center", opacity: isSubmitting ? 0.65 : 1 }}><Text style={{ fontSize: 17, fontWeight: "900", color: "#FFF" }}>{isSubmitting ? "作成しています…" : "イベントを作成する"}</Text></Pressable>
-      </ScrollView>
+        <Pressable disabled={isSubmitting} onPress={() => { void handleCreate(); }} style={{ marginTop: 22, minHeight: 56, borderRadius: 16, backgroundColor: termsAccepted && !isSubmitting ? "#18171A" : "#B8B8BD", alignItems: "center", justifyContent: "center", opacity: isSubmitting ? 0.65 : 1 }}><Text style={{ fontSize: 17, fontWeight: "900", color: "#FFF" }}>{isSubmitting ? (editId ? "保存しています…" : "作成しています…") : (editId ? "変更を保存する" : "イベントを作成する")}</Text></Pressable>
+      </ScrollView>}
       <XpRewardPopup reward={xpReward} onClose={() => { setXpReward(null); if (createdEventId) router.replace({ pathname: "/event-detail", params: { id: createdEventId } }); }} />
-      {isSubmitting ? <View pointerEvents="auto" style={{ position: "absolute", inset: 0, backgroundColor: "rgba(255,255,255,0.72)", alignItems: "center", justifyContent: "center" }}><View style={{ minWidth: 170, borderRadius: 18, padding: 22, alignItems: "center", backgroundColor: colors.surface, shadowColor: "#000", shadowOpacity: 0.14, shadowRadius: 14, elevation: 6 }}><ActivityIndicator size="large" color="#D65E8D" /><Text style={{ marginTop: 12, fontSize: 14, fontWeight: "900", color: colors.foreground }}>イベントを作成中です</Text></View></View> : null}
+      {isSubmitting ? <View pointerEvents="auto" style={{ position: "absolute", inset: 0, backgroundColor: "rgba(255,255,255,0.72)", alignItems: "center", justifyContent: "center" }}><View style={{ minWidth: 170, borderRadius: 18, padding: 22, alignItems: "center", backgroundColor: colors.surface, shadowColor: "#000", shadowOpacity: 0.14, shadowRadius: 14, elevation: 6 }}><ActivityIndicator size="large" color="#D65E8D" /><Text style={{ marginTop: 12, fontSize: 14, fontWeight: "900", color: colors.foreground }}>{editId ? "イベントを保存中です" : "イベントを作成中です"}</Text></View></View> : null}
     </ScreenContainer>
   );
 }

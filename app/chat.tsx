@@ -664,10 +664,13 @@ export default function ChatScreen() {
           keyExtractor={(item) => item.id}
           renderItem={({ item, index }) => {
             const previous = index > 0 ? displayedMessages[index - 1] : undefined;
+            const next = index + 1 < displayedMessages.length ? displayedMessages[index + 1] : undefined;
             const day = formatJapanDate(item.createdAt);
             const previousDay = previous && formatJapanDate(previous.createdAt);
+            const nextDay = next && formatJapanDate(next.createdAt);
+            const dateSeparator = <View style={{ alignItems: "center", marginVertical: 10 }}><View style={{ borderRadius: 12, backgroundColor: colors.surface, paddingHorizontal: 11, paddingVertical: 4 }}><Text style={{ fontSize: 11, fontWeight: "700", color: colors.muted }}>{day}</Text></View></View>;
             return <>
-              {day !== previousDay ? <View style={{ alignItems: "center", marginVertical: 10 }}><View style={{ borderRadius: 12, backgroundColor: colors.surface, paddingHorizontal: 11, paddingVertical: 4 }}><Text style={{ fontSize: 11, fontWeight: "700", color: colors.muted }}>{day}</Text></View></View> : null}
+              {!introductionChat && day !== previousDay ? dateSeparator : null}
               {Number(unreadCountParam ?? 0) > 0 && index === firstUnreadIndex ? <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginVertical: 10, paddingHorizontal: 16 }}><View style={{ flex: 1, height: 1, backgroundColor: "#E8A0BF" }} /><Text style={{ fontSize: 11, fontWeight: "900", color: "#C05B88" }}>ここから未読メッセージ</Text><View style={{ flex: 1, height: 1, backgroundColor: "#E8A0BF" }} /></View> : null}
               <MessageBubble
                 message={item}
@@ -708,6 +711,9 @@ export default function ChatScreen() {
                 onEdit={() => { setEditingMessage(item); setEditingMessageText(item.content); }}
                 onDelete={() => { const remove = async () => { try { if (item.shared) await Api.deleteSharedChatMessage(item.id); else await deleteMessageFromStorage(id ?? "", item.id); setMessages((current) => current.filter((message) => message.id !== item.id)); } catch (error) { Alert.alert("削除できませんでした", error instanceof Error ? error.message : "もう一度お試しください。"); } }; if (Platform.OS === "web") { void remove(); return; } Alert.alert("メッセージを削除", "このメッセージを削除しますか？", [{ text: "キャンセル", style: "cancel" }, { text: "削除", style: "destructive", onPress: remove }]); }}
               />
+              {/* FlatList の inverted 表示では要素内の上下も反転するため、区切りを
+                  メッセージの後ろに置くと画面上ではその日の先頭に表示される。 */}
+              {introductionChat && day !== nextDay ? dateSeparator : null}
             </>;
           }}
           style={{ flex: 1 }}
