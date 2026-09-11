@@ -269,7 +269,7 @@ function MealReportTimelineCard({ thread }: { thread: BoardThread }) {
         <View style={{ minWidth: 0 }}>
           {report.postTitle ? <Text numberOfLines={2} style={{ fontSize: 15, lineHeight: 20, fontWeight: "900", color: colors.foreground }}>{report.postTitle}</Text> : null}
           <View style={{ flexDirection: "row", alignItems: "center", flexWrap: "wrap", gap: 6, marginTop: report.postTitle ? 3 : 0 }}><Text numberOfLines={2} style={{ fontSize: report.postTitle ? 13 : 16, lineHeight: report.postTitle ? 18 : 21, fontWeight: "900", color: colors.foreground }}>{report.restaurantName}</Text>{area ? <Text style={{ fontSize: 11, fontWeight: "700", color: "#5F5960", backgroundColor: "#F4F1F3", borderRadius: 8, paddingHorizontal: 7, paddingVertical: 3 }}>📍 {area}</Text> : null}</View>
-          {rating ? <View style={{ flexDirection: "row", alignItems: "center", marginTop: 6 }}><Text accessibilityLabel={`評価 ${rating} / 5`} style={{ fontSize: 17, letterSpacing: 1, color: "#E29A17" }}>{"⭐️".repeat(rating)}{"☆".repeat(5 - rating)}</Text></View> : null}
+          {rating ? <View style={{ flexDirection: "row", alignItems: "center", marginTop: 6 }}><Text accessibilityLabel={`評価 ${rating} / 5`} style={{ fontSize: 17, letterSpacing: 1, color: "#F5A623" }}>{"★".repeat(rating)}{"☆".repeat(5 - rating)}</Text></View> : null}
           <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 5, marginTop: 7 }}>
             {report.budget ? <Text style={{ fontSize: 11, fontWeight: "700", color: "#5F5960", backgroundColor: "#F4F1F3", borderRadius: 8, paddingHorizontal: 7, paddingVertical: 3 }}>{report.budget}</Text> : null}
           </View>
@@ -376,11 +376,12 @@ function ThreadCard({ thread, onPress, onEdit, onDelete, onPin, onChangeRecruitm
     longPressHandled.current = true;
     Alert.alert(thread.title, "操作を選択してください", [
       { text: "リンクをコピー", onPress: () => { void Clipboard.setStringAsync(`https://app.irotas-community.com/board?category=${encodeURIComponent(thread.category)}&view=threads&thread=${encodeURIComponent(thread.id)}`); } },
+      ...(onPin ? [{ text: pinned ? "固定表示を解除" : "固定表示にする", onPress: onPin }] : []),
       ...(onEdit ? [{ text: "投稿を編集", onPress: onEdit }] : []),
       ...(onDelete ? [{ text: "投稿を削除", style: "destructive" as const, onPress: onDelete }] : []),
       { text: "キャンセル", style: "cancel" },
     ]);
-  }, [onDelete, onEdit, thread.category, thread.id, thread.title]);
+  }, [onDelete, onEdit, onPin, pinned, thread.category, thread.id, thread.title]);
 
   return (
     <Pressable
@@ -398,7 +399,7 @@ function ThreadCard({ thread, onPress, onEdit, onDelete, onPin, onChangeRecruitm
         opacity: visuallyClosed ? 0.72 : 1,
       }}
     >
-      {thread.category === "meal-report" && unreadCount > 0 ? <View style={{ position: "absolute", top: 10, left: 10, zIndex: 2, backgroundColor: "#3478C7", borderRadius: 7, paddingHorizontal: 7, paddingVertical: 3 }}><Text style={{ color: "#FFFFFF", fontSize: 10, fontWeight: "900" }}>NEW</Text></View> : null}
+      {unreadCount > 0 ? <View style={{ position: "absolute", top: 10, left: 10, zIndex: 2, backgroundColor: "#3478C7", borderRadius: 7, paddingHorizontal: 7, paddingVertical: 3 }}><Text style={{ color: "#FFFFFF", fontSize: 10, fontWeight: "900" }}>NEW</Text></View> : null}
       {/* Author */}
       <Pressable
         onPress={() => router.push({ pathname: "/member-profile", params: { id: thread.author.id, legacyName: thread.author.name } })}
@@ -1032,14 +1033,10 @@ function ThreadDetailModal({
       >
         <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16 }}>
           {/* Thread content */}
-          <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 12 }}>
+          <Pressable onPress={() => router.push({ pathname: "/member-profile", params: { id: thread.author.id, legacyName: thread.author.name } })} accessibilityLabel={`${stripRankFromName(thread.author.name)}のプロフィールを表示`} style={{ flexDirection: "row", alignItems: "center", marginBottom: 12 }}>
             {isThreadPinned(thread) ? <View style={{ marginRight: 7, borderRadius: 10, paddingHorizontal: 8, paddingVertical: 6, backgroundColor: "#FFF2C7" }}><Text style={{ fontSize: 11, fontWeight: "900", color: "#8A6512" }}>📌 固定</Text></View> : null}
             {recruitmentManaged ? <RecruitmentStatusBadge status={recruitmentStatus} /> : null}
-            <Image
-              source={thread.author.avatar}
-              style={{ width: 36, height: 36, borderRadius: 18 }}
-              contentFit="cover"
-            />
+            <Image source={thread.author.avatar} style={{ width: 36, height: 36, borderRadius: 18 }} contentFit="cover" />
             <View style={{ marginLeft: 10 }}>
               <View style={{ flexDirection: "row", alignItems: "center" }}>
                 <Text style={{ fontSize: 14, fontWeight: "700", color: colors.foreground }}>
@@ -1048,11 +1045,9 @@ function ThreadDetailModal({
                 <NewMemberMark member={thread.author} size={13} />
                 <OperatorOrRankBadge member={thread.author} />
               </View>
-              <Text style={{ fontSize: 11, color: colors.muted, marginTop: 2 }}>
-                {thread.author.generation > 0 ? `${thread.author.generation}期生` : "期設定なし"}
-              </Text>
+              {thread.author.generation > 0 ? <Text style={{ fontSize: 11, color: colors.muted, marginTop: 2 }}>{thread.author.generation}期生</Text> : null}
             </View>
-          </View>
+          </Pressable>
 
           {thread.mealReport ? (
             <MealReportContent thread={thread} />
@@ -1218,9 +1213,11 @@ function ThreadDetailModal({
             </Text>
             {comments.map((comment) => {
               const isOwnComment = comment.author.id === viewerMemberId || stripRankFromName(comment.author.name) === stripRankFromName(viewerMember.name);
-              return <Pressable key={comment.id} disabled={!isOwnComment && !canModerateAll} onLongPress={() => Alert.alert("コメント", "操作を選択してください", [
-                { text: "投稿を編集", onPress: () => { setEditingCommentId(comment.id); setEditingCommentText(comment.content); } },
-                { text: "投稿を削除", style: "destructive", onPress: () => handleDeleteComment(comment.id) },
+              return <Pressable key={comment.id} onLongPress={() => Alert.alert("コメント", "操作を選択してください", [
+                { text: "返信", onPress: () => { setCommentText(`@${stripRankFromName(comment.author.name)} `); requestAnimationFrame(() => commentInputRef.current?.focus()); } },
+                { text: "テキストをコピー", onPress: () => { void Clipboard.setStringAsync(comment.content); } },
+                { text: "メッセージリンクをコピー", onPress: () => { void Clipboard.setStringAsync(`https://app.irotas-community.com/board?category=${encodeURIComponent(thread.category)}&view=threads&thread=${encodeURIComponent(thread.id)}&comment=${encodeURIComponent(comment.id)}`); } },
+                ...((isOwnComment || canModerateAll) ? [{ text: "投稿を編集", onPress: () => { setEditingCommentId(comment.id); setEditingCommentText(comment.content); } }, { text: "投稿を削除", style: "destructive" as const, onPress: () => handleDeleteComment(comment.id) }] : []),
                 { text: "キャンセル", style: "cancel" },
               ])} delayLongPress={350} style={{ marginBottom: 14 }}>
                 <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 4 }}>
@@ -2561,7 +2558,7 @@ export default function BoardScreen() {
     const viewerIsLeader = Boolean(club && getClubViewerAccess(club, authUser?.memberId, CURRENT_USER.id).isLeader);
     return isRecruitmentBoardCategory(thread.category) && !isClubSelfIntroduction(thread) && (thread.author.id === viewerMemberId || userCanModerateRecruitment || viewerIsLeader);
   };
-  const canPinThread = (thread: BoardThread) => thread.category.startsWith("club-club-") && !isClubSelfIntroduction(thread) && (thread.author.id === viewerMemberId || Boolean(clubForThread(thread) && getClubViewerAccess(clubForThread(thread)!, authUser?.memberId, CURRENT_USER.id).isLeader) || userCanModerateRecruitment);
+  const canPinThread = (thread: BoardThread) => !isClubSelfIntroduction(thread) && (thread.author.id === viewerMemberId || Boolean(clubForThread(thread) && getClubViewerAccess(clubForThread(thread)!, authUser?.memberId, CURRENT_USER.id).isLeader) || userCanModerateRecruitment);
   const updateThreadManagement = async (thread: BoardThread, changes: Pick<BoardThread, "isRecruiting" | "isPinned" | "recruitmentStatus">) => {
     const updated = { ...thread, ...changes, lastUpdated: thread.lastUpdated };
     if (thread.shared) {

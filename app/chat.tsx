@@ -56,6 +56,20 @@ const REACTION_EMOJIS = ["👍", "❤️", "😂", "🎉", "😋", "🙏"] as co
 const MORE_REACTION_EMOJIS = ["😀", "😃", "😄", "😁", "😆", "😅", "😂", "🤣", "😊", "😇", "🙂", "🙃", "😉", "😍", "🥰", "😘", "😋", "😛", "🤪", "🤔", "🫡", "😎", "🥳", "😮", "😢", "😭", "😡", "👍", "👎", "👏", "🙌", "🙏", "💪", "👀", "❤️", "🩷", "🧡", "💛", "💚", "💙", "💜", "🖤", "🤍", "🔥", "✨", "🎉", "💯", "✅", "❌", "💡", "📌", "🍽️", "🍣", "🍖", "🍜", "🍕", "🍰", "☕", "🍺", "🍷"] as const;
 const RETIRED_ANNOUNCEMENT = "IRO+運営からのお知らせをお届けします。最新情報はこちらでご確認ください。";
 const isRetiredAnnouncement = (message: ChatMessage) => message.chatId === "board-announcement" && message.content === RETIRED_ANNOUNCEMENT;
+const JAPAN_TIME_ZONE = "Asia/Tokyo";
+const formatJapanDate = (value: string) => new Intl.DateTimeFormat("ja-JP", {
+  timeZone: JAPAN_TIME_ZONE,
+  year: "numeric",
+  month: "long",
+  day: "numeric",
+  weekday: "short",
+}).format(new Date(value));
+const formatJapanTime = (value: string) => new Intl.DateTimeFormat("ja-JP", {
+  timeZone: JAPAN_TIME_ZONE,
+  hour: "2-digit",
+  minute: "2-digit",
+  hourCycle: "h23",
+}).format(new Date(value));
 
 function importedIntroductionMessages(archive: Awaited<ReturnType<typeof Api.getBoardArchive>>): ChatMessage[] {
   const introductionThreads = archive.threads.filter((thread) => thread.category === "introduction");
@@ -106,8 +120,7 @@ function MessageBubble({ message, isMe, canDelete, viewerId, viewerName, viewerA
   }
 
   const formatTime = (dateStr: string) => {
-    const d = new Date(dateStr);
-    return `${d.getHours()}:${String(d.getMinutes()).padStart(2, "0")}`;
+    return formatJapanTime(dateStr);
   };
 
   // アバター画像の決定: 自分はプロフィール画像、他者はモックデータのアバター
@@ -642,8 +655,8 @@ export default function ChatScreen() {
           keyExtractor={(item) => item.id}
           renderItem={({ item, index }) => {
             const previous = index > 0 ? displayedMessages[index - 1] : undefined;
-            const day = new Date(item.createdAt).toLocaleDateString("ja-JP", { year: "numeric", month: "long", day: "numeric", weekday: "short" });
-            const previousDay = previous && new Date(previous.createdAt).toLocaleDateString("ja-JP", { year: "numeric", month: "long", day: "numeric", weekday: "short" });
+            const day = formatJapanDate(item.createdAt);
+            const previousDay = previous && formatJapanDate(previous.createdAt);
             return <>
               {day !== previousDay ? <View style={{ alignItems: "center", marginVertical: 10 }}><View style={{ borderRadius: 12, backgroundColor: colors.surface, paddingHorizontal: 11, paddingVertical: 4 }}><Text style={{ fontSize: 11, fontWeight: "700", color: colors.muted }}>{day}</Text></View></View> : null}
               {Number(unreadCountParam ?? 0) > 0 && index === firstUnreadIndex ? <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginVertical: 10, paddingHorizontal: 16 }}><View style={{ flex: 1, height: 1, backgroundColor: "#E8A0BF" }} /><Text style={{ fontSize: 11, fontWeight: "900", color: "#C05B88" }}>ここから未読メッセージ</Text><View style={{ flex: 1, height: 1, backgroundColor: "#E8A0BF" }} /></View> : null}
