@@ -11,7 +11,7 @@ import { handleSquareSyncRequest } from "./square-sync";
 import { handleMemberDirectoryRequest } from "./member-directory";
 import { handleEventRequest } from "./events";
 import { handleEventImportRequest } from "./event-import";
-import { handleEventChatImportRequest } from "./event-chat-import";
+import { handleEventChatImportRequest, handleEventChatImportPurgeRequest } from "./event-chat-import";
 import { handleEventFeedbackRequest } from "./event-feedback";
 import { handleConciergeRequest } from "./concierge";
 import { handleOperatorManagementRequest } from "./operator-management";
@@ -314,6 +314,8 @@ async function routeRequest(
   if (eventImportResponse) return eventImportResponse;
   const eventChatImportResponse = await handleEventChatImportRequest(request, env);
   if (eventChatImportResponse) return eventChatImportResponse;
+  const eventChatImportPurgeResponse = await handleEventChatImportPurgeRequest(request, env);
+  if (eventChatImportPurgeResponse) return eventChatImportPurgeResponse;
   const eventResponse = await handleEventRequest(request, env);
   if (eventResponse) return eventResponse;
   const eventFeedbackResponse = await handleEventFeedbackRequest(request, env);
