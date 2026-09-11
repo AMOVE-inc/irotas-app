@@ -140,6 +140,8 @@ export default function AdminDashboardScreen() {
   const [discordProfileImportResult, setDiscordProfileImportResult] = useState<string | null>(null);
   const [discordEventImporting, setDiscordEventImporting] = useState(false);
   const [discordEventImportResult, setDiscordEventImportResult] = useState<string | null>(null);
+  const [discordEventChatImporting, setDiscordEventChatImporting] = useState(false);
+  const [discordEventChatImportResult, setDiscordEventChatImportResult] = useState<string | null>(null);
   const [membershipSummary, setMembershipSummary] = useState<MembershipSummary | null>(null);
   const [memberReconciliation, setMemberReconciliation] = useState<MemberReconciliationReport | null>(null);
   const [membershipSummaryLoading, setMembershipSummaryLoading] = useState(false);
@@ -1917,6 +1919,29 @@ export default function AdminDashboardScreen() {
                 } finally { setDiscordEventImporting(false); }
               }} style={{ minHeight: 48, borderRadius: 12, backgroundColor: discordEventImporting ? colors.border : "#5865F2", alignItems: "center", justifyContent: "center", marginTop: 14 }}>
                 {discordEventImporting ? <ActivityIndicator color="#FFF" /> : <Text style={{ color: "#FFF", fontWeight: "800" }}>DiscordイベントJSONを選択して反映</Text>}
+              </Pressable>
+            </View>
+            <View style={{ backgroundColor: colors.surface, borderRadius: 14, borderWidth: 1, borderColor: colors.border, padding: 16, marginBottom: 14 }}>
+              <Text style={{ fontSize: 16, fontWeight: "800", color: colors.foreground }}>Discordイベントチャット移行</Text>
+              <Text style={{ fontSize: 12, lineHeight: 19, color: colors.muted, marginTop: 6 }}>イベントID・日付・名称が一致したチャットだけを取り込みます。イベント参加者およびメッセージ送信者以外には公開されません。</Text>
+              {discordEventChatImportResult ? <Text style={{ fontSize: 12, fontWeight: "700", color: "#237A3B", marginTop: 10 }}>{discordEventChatImportResult}</Text> : null}
+              <Pressable disabled={discordEventChatImporting} onPress={async () => {
+                setDiscordEventChatImporting(true); setDiscordEventChatImportResult(null);
+                try {
+                  const selected = await selectJsonFile("DiscordイベントチャットJSON");
+                  const payload = JSON.parse(selected.text) as { chats?: unknown[] };
+                  if (!Array.isArray(payload.chats) || !payload.chats.length) throw new Error("イベントチャットデータが見つかりません");
+                  const response = await fetch("/api/admin/event-chat-import/commit", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(payload) });
+                  const result = await response.json() as { error?: string; rooms?: number; messages?: number; held?: number };
+                  if (!response.ok) throw new Error(result.error ?? "取込に失敗しました");
+                  const summary = `チャット ${result.rooms ?? 0}件／メッセージ ${result.messages ?? 0}件／保留 ${result.held ?? 0}件`;
+                  setDiscordEventChatImportResult(summary); Alert.alert("イベントチャット移行完了", summary);
+                } catch (error) {
+                  if (error instanceof SyntaxError) Alert.alert("読込エラー", "JSONファイルの形式を確認してください。");
+                  else if (error instanceof Error && error.message !== "ファイルが選択されませんでした") Alert.alert("取込エラー", error.message);
+                } finally { setDiscordEventChatImporting(false); }
+              }} style={{ minHeight: 48, borderRadius: 12, backgroundColor: discordEventChatImporting ? colors.border : "#5865F2", alignItems: "center", justifyContent: "center", marginTop: 14 }}>
+                {discordEventChatImporting ? <ActivityIndicator color="#FFF" /> : <Text style={{ color: "#FFF", fontWeight: "800" }}>DiscordイベントチャットJSONを選択して反映</Text>}
               </Pressable>
             </View>
             <Text style={{ fontSize: 16, fontWeight: "700", color: colors.foreground, marginBottom: 12 }}>
