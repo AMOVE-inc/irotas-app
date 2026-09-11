@@ -5,6 +5,7 @@ import { applyEventPointDiscount, refundEventPointDiscount } from "./event-point
 import { EVENT_XP, awardEventReward, reverseEventRewards } from "./event-rewards";
 import type { D1Database, SitesEnv } from "./platform-types";
 import { displayEventTitle } from "../lib/event-title";
+import { IMPORTED_DISCORD_EVENTS } from "../constants/imported-discord-events";
 
 const EVENTS_ENDPOINT = "/api/events";
 const EVENT_PATH = /^\/api\/events\/([^/]+)$/;
@@ -375,6 +376,25 @@ async function eventRow(db: D1Database, eventId: string) {
   return db.prepare(`${selectEvents} WHERE e.id = ? LIMIT 1`).bind(eventId).first<EventRow>();
 }
 
+/**
+ * Discordアーカイブの更新直後でも詳細表示・編集を止めないため、参照された
+ * 移行イベントをD1へ遅延反映する。幹事を実会員へ照合できた場合だけ作成する。
+ */
+async function materializeImportedEvent(db: D1Database, eventId: string) {
+  const imported = IMPORTED_DISCORD_EVENTS.find((event) => event.id === eventId);
+  const discordUserId = imported?.organizerProfileId?.replace(/^discord-/, "");
+  if (!imported || !discordUserId || !/^\d{17,20}$/.test(discordUserId)) return null;
+  const organizer = await db.prepare("SELECT id FROM members WHERE discord_user_id = ? LIMIT 1")
+    .bind(discordUserId).first<{ id: number }>();
+  if (!organizer) return null;
+  const now = new Date().toISOString();
+  await db.prepare(`INSERT OR IGNORE INTO events
+    (id, organizer_member_id, event_type, club_id, event_date, status, title, public_data_json, created_at, updated_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
+    .bind(imported.id, organizer.id, imported.eventType, imported.clubId ?? null, imported.date, imported.status, displayEventTitle(imported.title), JSON.stringify(imported), imported.createdAt ?? now, now).run();
+  return eventRow(db, eventId);
+}
+
 async function memberIdFromPublicId(db: D1Database, value: string) {
   const direct = /^member-(\d+)$/.exec(value);
   if (direct) return Number(direct[1]);
@@ -607,7 +627,7 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
   if (eventMatch && request.method === "GET") {
     const requestedEventId = decodeURIComponent(eventMatch[1]);
     if (DELETED_EVENT_IDS.has(requestedEventId)) return responseJson({ error: "イベントが見つかりません" }, 404);
-    const row = await eventRow(env.DB, requestedEventId);
+    const row = await eventRow(env.DB, requestedEventId) ?? await materializeImportedEvent(env.DB, requestedEventId);
     if (!row) return responseJson({ error: "イベントが見つかりません" }, 404);
     if (row.event_type === "club" && row.club_id && !await canMemberAccessClub(env.DB, row.club_id, member.id, admin))
       return responseJson({ error: "この部活の部員のみ詳細を閲覧できます" }, 403);
@@ -615,7 +635,7 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
   }
   if (eventMatch && request.method === "PATCH") {
     const id = decodeURIComponent(eventMatch[1]);
-    const row = await eventRow(env.DB, id);
+    const row = await eventRow(env.DB, id) ?? await materializeImportedEvent(env.DB, id);
     if (!row) return responseJson({ error: "イベントが見つかりません" }, 404);
     const input = await readBody(request);
     if (input?.action === "start_recruitment" || input?.action === "set_recruitment_status") {
