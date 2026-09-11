@@ -5,7 +5,9 @@ if (!rawPath || !candidatesPath || !outputPath) throw new Error("Usage: node scr
 const [raw, candidates] = await Promise.all([rawPath, candidatesPath].map(async (path) => JSON.parse(await readFile(path, "utf8"))));
 const byId = new Map((raw.channels ?? []).map((channel) => [String(channel.id), channel]));
 const chats = (candidates.chats ?? []).flatMap((candidate) => {
-  const match = candidate.candidates?.length === 1 && candidate.candidates[0].score >= 43 && candidate.candidates[0].textScore >= 3
+  // Only accept a source-thread URL emitted by Discord itself. Name/date scoring
+  // remains available for human review but never grants private-chat access.
+  const match = candidate.candidates?.length === 1 && candidate.candidates[0].directSourceLink
     ? candidate.candidates[0] : null;
   const source = byId.get(String(candidate.sourceChannelId));
   if (!match || !source) return [];

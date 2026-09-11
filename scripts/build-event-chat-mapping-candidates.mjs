@@ -33,13 +33,11 @@ const score = (chat, event) => {
   for (const token of chatTokens) if (token.length >= 3 && eventTokens.has(token)) value += token.length >= 5 ? 5 : 3;
   return value;
 };
-const textScore = (chat, event) => {
-  const chatTokens = tokens(chat.name);
-  const eventTokens = new Set([...tokens(event.event.title), ...tokens(event.event.publicData?.location)]);
-  let value = 0;
-  for (const token of chatTokens) if (token.length >= 3 && eventTokens.has(token)) value += token.length >= 5 ? 5 : 3;
-  return value;
-};
+const linkedDiscordThreadIds = (messages) => new Set(
+  messages.flatMap((message) => [...String(message.content ?? "").matchAll(
+    /https?:\/\/(?:discord(?:app)?\.com)\/channels\/\d+\/(\d+)(?:\/\d+)?/g,
+  )].map((match) => match[1])),
+);
 
 const eventChats = (raw.channels ?? []).filter((channel) =>
   channel.type === "TextChannel" && /プライベートチャット/.test(String(channel.categoryName ?? "")),
@@ -50,6 +48,7 @@ const eventChats = (raw.channels ?? []).filter((channel) =>
   messageCount: (channel.messages ?? []).length,
   attachmentCount: (channel.messages ?? []).reduce((total, message) => total + (message.attachments ?? []).length, 0),
   authorDiscordUserIds: [...new Set((channel.messages ?? []).map((message) => String(message.authorId ?? "")).filter(Boolean))],
+  linkedDiscordThreadIds: [...linkedDiscordThreadIds(channel.messages ?? [])],
 }));
 const events = imported.events ?? [];
 const mapping = eventChats.map((chat) => ({
@@ -58,10 +57,14 @@ const mapping = eventChats.map((chat) => ({
     eventId: `discord-event-${event.sourceThreadId}`,
     title: event.event.title,
     date: event.event.eventDate,
-    score: score(chat, event),
-    textScore: textScore(chat, event),
-  })).filter((candidate) => candidate.score >= 43 && candidate.textScore >= 3)
-    .sort((a, b) => b.score - a.score || a.date.localeCompare(b.date)).slice(0, 3),
+    // A Discord event thread URL in a private chat is an exact source reference,
+    // and is safer than inferring from a similar event name or date.
+    score: chat.linkedDiscordThreadIds.includes(String(event.sourceThreadId)) ? 100 : score(chat, event),
+    directSourceLink: chat.linkedDiscordThreadIds.includes(String(event.sourceThreadId)),
+  })).filter((candidate) => candidate.directSourceLink || candidate.score >= 43)
+    .sort((a, b) => b.score - a.score || a.date.localeCompare(b.date))
+    .filter((candidate, index, all) => index === all.findIndex((other) => other.eventId === candidate.eventId))
+    .slice(0, 3),
 }));
 
 const output = {
