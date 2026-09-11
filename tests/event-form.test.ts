@@ -12,6 +12,15 @@ describe("event edit form values", () => {
     expect(form).toMatchObject({ restaurantName: "鮨いろた", eventName: "寿司会", genres: ["寿司"], companionIds: ["member-2"], budgetMin: "8,000円", budgetMax: "10,000円", fixedAmount: false, decisionDate: "2026-09-18", publicNotes: "公開メモ", privateMemo: "非公開メモ" });
   });
 
+  it("recovers a full address from imported event details when location only has the venue", () => {
+    const form = eventFormValuesFromEvent({
+      ...event,
+      location: "森のブッチャーズ",
+      description: "開催場所：森のブッチャーズ\n東京都千代田区一ツ橋2-6-5\n参加をお待ちしています",
+    });
+    expect(form.address).toBe("東京都千代田区一ツ橋2-6-5");
+  });
+
   it("serializes an edited genre and related search metadata in the same event format", () => {
     const form = eventFormValuesFromEvent(event);
     form.genres = ["イタリアン"];

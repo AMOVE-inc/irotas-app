@@ -65,6 +65,16 @@ function amountOption(value: number) {
   return value > 0 ? `${value.toLocaleString()}円` : "";
 }
 
+function editableEventAddress(event: Event) {
+  const location = event.location === "住所未設定" ? "" : event.location ?? "";
+  if (!location || extractEventLocation(location).prefecture) return location;
+  const addressFromDescription = (event.description ?? "")
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .find((line) => Boolean(extractEventLocation(line).prefecture));
+  return addressFromDescription ?? location;
+}
+
 export function eventFormValuesFromEvent(event: Event): EventFormValues {
   const priceMin = event.priceMin ?? numericEventAmount(event.price);
   const priceMax = event.priceMax ?? priceMin;
@@ -80,7 +90,7 @@ export function eventFormValuesFromEvent(event: Event): EventFormValues {
     eventName: event.title ?? "",
     date: event.date ?? "",
     time: event.time ?? "",
-    address: event.location === "住所未設定" ? "" : event.location ?? "",
+    address: editableEventAddress(event),
     reservationCapacity: String(event.reservationCapacity ?? event.capacity ?? ""),
     recruitCapacity: String(event.capacity ?? ""),
     fixedAmount,
