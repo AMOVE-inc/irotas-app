@@ -1886,14 +1886,28 @@ export default function AdminDashboardScreen() {
                   const payload = JSON.parse(selected.text) as { events?: unknown[] };
                   const eventCount = Array.isArray(payload.events) ? payload.events.length : 0;
                   if (!eventCount) throw new Error("イベントデータが見つかりません");
-                  const response = await fetch("/api/admin/event-import/commit", {
-                    method: "POST",
-                    headers: { "content-type": "application/json" },
-                    body: JSON.stringify({ ...payload, confirmation: `APPLY_${eventCount}_EVENTS` }),
-                  });
-                  const result = await response.json() as { error?: string; counts?: { created?: number; updated?: number; preserved?: number; conflicted?: number; skipped?: number } };
-                  if (!response.ok) throw new Error(result.error ?? "取込に失敗しました");
-                  const counts = result.counts ?? {};
+                  // D1 writes are intentionally processed in small, retry-safe batches.
+                  // This avoids a single long-running request timing out on a full Discord archive.
+                  const totals = { created: 0, updated: 0, preserved: 0, conflicted: 0, skipped: 0 };
+                  const events = payload.events as unknown[];
+                  const batchSize = 12;
+                  for (let start = 0; start < events.length; start += batchSize) {
+                    const batch = events.slice(start, start + batchSize);
+                    const response = await fetch("/api/admin/event-import/commit", {
+                      method: "POST",
+                      headers: { "content-type": "application/json" },
+                      body: JSON.stringify({ ...payload, events: batch, confirmation: `APPLY_${batch.length}_EVENTS` }),
+                    });
+                    const result = await response.json() as { error?: string; counts?: { created?: number; updated?: number; preserved?: number; conflicted?: number; skipped?: number } };
+                    if (!response.ok) throw new Error(result.error ?? "取込に失敗しました");
+                    const counts = result.counts ?? {};
+                    totals.created += counts.created ?? 0;
+                    totals.updated += counts.updated ?? 0;
+                    totals.preserved += counts.preserved ?? 0;
+                    totals.conflicted += counts.conflicted ?? 0;
+                    totals.skipped += counts.skipped ?? 0;
+                  }
+                  const counts = totals;
                   const summary = `新規 ${counts.created ?? 0}件／更新 ${counts.updated ?? 0}件／保持 ${counts.preserved ?? 0}件／競合 ${counts.conflicted ?? 0}件／保留 ${counts.skipped ?? 0}件`;
                   setDiscordEventImportResult(summary);
                   Alert.alert("イベント移行完了", summary);
