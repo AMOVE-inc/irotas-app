@@ -57,23 +57,35 @@ function parseRow(row: ExistingRow): ImportEventShape {
 async function analyze(db: D1Database, items: IncomingItem[]) {
   const counts = { created: 0, updated: 0, preserved: 0, conflicted: 0, skipped: 0 };
   const decisions: Record<string, unknown>[] = [];
+  // Resolve authors and source event IDs in batches.  The previous one-query-at-a-time
+  // approach was safe but slow enough for a browser request to time out.
+  const [memberResult, eventResults] = await Promise.all([
+    db.prepare("SELECT id, discord_user_id FROM members WHERE discord_user_id IS NOT NULL").all<{ id: number; discord_user_id: string }>(),
+    db.batch<ExistingRow>(items.map((item) => db.prepare("SELECT id, organizer_member_id, event_type, club_id, event_date, status, title, public_data_json FROM events WHERE id = ?").bind(`discord-event-${item.sourceThreadId}`))),
+  ]);
+  const membersByDiscordId = new Map((memberResult.results ?? []).map((member) => [member.discord_user_id, member.id]));
+  const existingById = new Map<string, ExistingRow>();
+  for (let index = 0; index < items.length; index += 1) {
+    const row = eventResults[index]?.results?.[0];
+    if (row) existingById.set(`discord-event-${items[index].sourceThreadId}`, row);
+  }
+  const existingIds = [...existingById.keys()];
+  const editResults = existingIds.length
+    ? await db.batch<{ field_name: string }>(existingIds.map((eventId) => db.prepare("SELECT field_name FROM event_import_field_edits WHERE event_id = ?").bind(eventId)))
+    : [];
+  const editsById = new Map<string, Set<string>>();
+  existingIds.forEach((eventId, index) => editsById.set(eventId, new Set((editResults[index]?.results ?? []).map((edit) => edit.field_name))));
+
   for (const item of items) {
-    // Migration files retain Discord's immutable author ID rather than an
-    // environment-specific numeric member key. Resolve it server-side so a
-    // payload remains portable and cannot point an event at the wrong member.
-    if (!item.organizerMemberId && item.organizerDiscordUserId) {
-      const organizer = await db.prepare("SELECT id FROM members WHERE discord_user_id = ?").bind(item.organizerDiscordUserId).first<{ id: number }>();
-      if (organizer?.id) item.organizerMemberId = organizer.id;
-    }
+    if (!item.organizerMemberId && item.organizerDiscordUserId) item.organizerMemberId = membersByDiscordId.get(item.organizerDiscordUserId);
     const eventId = `discord-event-${item.sourceThreadId}`;
-    const row = await db.prepare("SELECT id, organizer_member_id, event_type, club_id, event_date, status, title, public_data_json FROM events WHERE id = ?").bind(eventId).first<ExistingRow>();
+    const row = existingById.get(eventId);
     if (!row) {
       if (!item.organizerMemberId) { counts.skipped += 1; decisions.push({ sourceThreadId: item.sourceThreadId, eventId, action: "skipped", reason: "organizerMemberId_required" }); }
       else { counts.created += 1; decisions.push({ sourceThreadId: item.sourceThreadId, eventId, action: "created", item }); }
       continue;
     }
-    const edits = await db.prepare("SELECT field_name FROM event_import_field_edits WHERE event_id = ?").bind(eventId).all<{ field_name: string }>();
-    const result = mergeImportedEvent(parseRow(row), item.event, new Set((edits.results ?? []).map((edit) => edit.field_name)));
+    const result = mergeImportedEvent(parseRow(row), item.event, editsById.get(eventId) ?? new Set());
     if (result.conflicts.length) counts.conflicted += 1;
     else if (result.changedFields.length) counts.updated += 1;
     else counts.preserved += 1;
