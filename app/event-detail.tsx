@@ -390,8 +390,9 @@ export default function EventDetailScreen() {
   const requiresOrganizerApproval = true;
   const canAdminEdit = isAdminRole(authUser?.role, authUser?.accessRole);
   const userIsOperator = isOperatorRole(authUser?.role, authUser?.accessRole);
+  const isDiscordImportedEvent = event.id.startsWith("discord-event-");
   const editableClubs = clubs.filter((club) => canViewerAccessClubContent(club, authUser?.memberId, CURRENT_USER.id, canAdminEdit));
-  const canManageEvent = canAdminEdit || isOrganizer;
+  const canManageEvent = canAdminEdit || isOrganizer || (isDiscordImportedEvent && userIsOperator);
   const showApplicationConfirmation = (title: string, message: string, buttons: AlertButton[]) => setApplicationConfirmation({ title, message, buttons });
 
   const handleEventComment = () => {
@@ -993,7 +994,7 @@ export default function EventDetailScreen() {
           })}
         </View> : null}
 
-        {canManageEvent ? <Pressable onPress={() => router.push({ pathname: "/create-event", params: { editId: event.id } })} style={{ marginBottom: 16, borderRadius: 12, paddingVertical: 12, alignItems: "center", backgroundColor: "#B42318" }}><Text style={{ color: "#FFF", fontSize: 14, fontWeight: "900" }}>{canAdminEdit ? "管理者：イベント情報を編集" : "イベント情報を編集"}</Text></Pressable> : null}
+        {canManageEvent ? <Pressable onPress={() => router.push({ pathname: "/create-event", params: { editId: event.id } })} style={{ marginBottom: 16, borderRadius: 12, paddingVertical: 12, alignItems: "center", backgroundColor: "#B42318" }}><Text style={{ color: "#FFF", fontSize: 14, fontWeight: "900" }}>{canAdminEdit ? "管理者：イベント情報を編集" : isDiscordImportedEvent && userIsOperator && !isOrganizer ? "運営：イベント情報を編集" : "イベント情報を編集"}</Text></Pressable> : null}
         {canAdminEdit && event.eventType === "official" && !event.isCancelled ? <Pressable onPress={() => { void handleSetRecruitmentStatus(event.recruitmentStatus === "draft" ? "open" : "draft"); }} style={{ marginTop: -6, marginBottom: 16, borderRadius: 12, paddingVertical: 12, alignItems: "center", backgroundColor: "#5B9BD5" }}><Text style={{ color: "#FFF", fontSize: 14, fontWeight: "900" }}>{event.recruitmentStatus === "draft" ? "管理者：募集を開始" : "管理者：募集前に戻す"}</Text></Pressable> : null}
         {canAdminEdit ? <Pressable onPress={handleDeleteEvent} style={{ marginTop: -6, marginBottom: 16, borderRadius: 12, paddingVertical: 12, alignItems: "center", borderWidth: 1, borderColor: "#D94C55" }}><Text style={{ color: "#D94C55", fontSize: 14, fontWeight: "900" }}>管理者：イベントを完全に削除</Text></Pressable> : null}
 

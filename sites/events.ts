@@ -252,6 +252,15 @@ function publicEvent(
 ) {
   let data: Record<string, unknown> = {};
   try { data = JSON.parse(row.public_data_json) as Record<string, unknown>; } catch {}
+  const usesImportedOrganizerFallback = data.materializedOrganizerFallback === true;
+  const importedOrganizerId = usesImportedOrganizerFallback && typeof data.organizerProfileId === "string" ? data.organizerProfileId : null;
+  const importedCreatedBy = usesImportedOrganizerFallback && typeof data.createdBy === "string" ? data.createdBy : null;
+  const importedOrganizerName = usesImportedOrganizerFallback && typeof data.organizerName === "string" ? data.organizerName : null;
+  const importedOrganizerAvatar = usesImportedOrganizerFallback && typeof data.organizerAvatar === "string" ? data.organizerAvatar : null;
+  const importedOrganizerRank = usesImportedOrganizerFallback && typeof data.organizerRank === "string" ? data.organizerRank : null;
+  const importedOrganizerAccessRole = usesImportedOrganizerFallback && ["admin", "operator", "member"].includes(String(data.organizerAccessRole))
+    ? data.organizerAccessRole as "admin" | "operator" | "member"
+    : undefined;
   const participantsFinalized = typeof data.participantsFinalizedAt === "string" && data.participantsFinalizedAt.length > 0;
   const active = participations.filter((item) => item.status === "applied" || item.status === "confirmed" || item.status === "cancel_requested");
   const confirmed = active.filter((item) => item.status === "confirmed" || item.status === "cancel_requested");
@@ -272,12 +281,12 @@ function publicEvent(
     status: row.status === "cancelled" ? "ended" : row.status === "full" && !participantsFinalized ? "open" : row.status,
     isCancelled: row.status === "cancelled",
     title: displayEventTitle(row.title),
-    createdBy: row.public_member_id ?? `member-${row.organizer_member_id}`,
-    organizerProfileId: row.public_member_id ?? `member-${row.organizer_member_id}`,
-    organizerName: row.organizer_display_name?.trim() || "メンバー",
-    organizerAvatar: organizerProfile(row),
-    organizerRank: row.organizer_member_rank ?? undefined,
-    organizerAccessRole: row.organizer_access_role ?? undefined,
+    createdBy: importedCreatedBy ?? importedOrganizerId ?? row.public_member_id ?? `member-${row.organizer_member_id}`,
+    organizerProfileId: importedOrganizerId ?? row.public_member_id ?? `member-${row.organizer_member_id}`,
+    organizerName: importedOrganizerName ?? (row.organizer_display_name?.trim() || "メンバー"),
+    organizerAvatar: importedOrganizerAvatar ?? organizerProfile(row),
+    organizerRank: importedOrganizerRank ?? row.organizer_member_rank ?? undefined,
+    organizerAccessRole: usesImportedOrganizerFallback ? importedOrganizerAccessRole : row.organizer_access_role ?? undefined,
     applicantIds: row.status === "cancelled" ? [] : active.map(publicId),
     participants: row.status === "cancelled" ? [] : participantIds,
     cancelledParticipantIds,
@@ -292,7 +301,7 @@ function publicEvent(
     viewerMemberId: viewerPublicId,
     viewerParticipationStatus: viewerParticipation === "cancel_requested" ? "cancel_requested" : viewerParticipation,
     isFavorite: favorite,
-    isOrganizer: viewerId === row.organizer_member_id,
+    isOrganizer: !usesImportedOrganizerFallback && viewerId === row.organizer_member_id,
     ...(viewerId === row.organizer_member_id || elevated ? { privateMemo: row.private_memo ?? undefined } : {}),
   };
 }
@@ -378,20 +387,23 @@ async function eventRow(db: D1Database, eventId: string) {
 
 /**
  * Discordアーカイブの更新直後でも詳細表示・編集を止めないため、参照された
- * 移行イベントをD1へ遅延反映する。幹事を実会員へ照合できた場合だけ作成する。
+ * 移行イベントをD1へ遅延反映する。通常は幹事を実会員へ照合し、照合前の
+ * イベントを運営が編集する場合だけ内部所有者を一時的に運営へ割り当てる。
  */
-async function materializeImportedEvent(db: D1Database, eventId: string) {
+async function materializeImportedEvent(db: D1Database, eventId: string, fallbackOrganizerMemberId?: number) {
   const imported = IMPORTED_DISCORD_EVENTS.find((event) => event.id === eventId);
   const discordUserId = imported?.organizerProfileId?.replace(/^discord-/, "");
   if (!imported || !discordUserId || !/^\d{17,20}$/.test(discordUserId)) return null;
   const organizer = await db.prepare("SELECT id FROM members WHERE discord_user_id = ? LIMIT 1")
     .bind(discordUserId).first<{ id: number }>();
-  if (!organizer) return null;
+  const organizerMemberId = organizer?.id ?? fallbackOrganizerMemberId;
+  if (!organizerMemberId) return null;
   const now = new Date().toISOString();
+  const publicData = organizer ? imported : { ...imported, materializedOrganizerFallback: true };
   await db.prepare(`INSERT OR IGNORE INTO events
     (id, organizer_member_id, event_type, club_id, event_date, status, title, public_data_json, created_at, updated_at)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
-    .bind(imported.id, organizer.id, imported.eventType, imported.clubId ?? null, imported.date, imported.status, displayEventTitle(imported.title), JSON.stringify(imported), imported.createdAt ?? now, now).run();
+    .bind(imported.id, organizerMemberId, imported.eventType, imported.clubId ?? null, imported.date, imported.status, displayEventTitle(imported.title), JSON.stringify(publicData), imported.createdAt ?? now, now).run();
   return eventRow(db, eventId);
 }
 
@@ -635,9 +647,10 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
   }
   if (eventMatch && request.method === "PATCH") {
     const id = decodeURIComponent(eventMatch[1]);
-    const row = await eventRow(env.DB, id) ?? await materializeImportedEvent(env.DB, id);
+    const row = await eventRow(env.DB, id) ?? await materializeImportedEvent(env.DB, id, elevated ? member.id : undefined);
     if (!row) return responseJson({ error: "イベントが見つかりません" }, 404);
     const input = await readBody(request);
+    const canManageImportedEvent = id.startsWith("discord-event-") && elevated;
     if (input?.action === "start_recruitment" || input?.action === "set_recruitment_status") {
       if (!admin) return responseJson({ error: "募集ステータスの変更は管理者のみ実行できます" }, 403);
       if (row.event_type !== "official") return responseJson({ error: "公式イベントのみ募集ステータスを変更できます" }, 400);
@@ -657,7 +670,7 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
       return responseJson({ event: await hydratedEvent(env.DB, updated!, member.id, elevated, memberPublicId) });
     }
     if (input?.action === "update_companions") {
-      if (!(admin || row.organizer_member_id === member.id)) return responseJson({ error: "イベント作成者または管理者のみ同席者を変更できます" }, 403);
+      if (!(admin || row.organizer_member_id === member.id || canManageImportedEvent)) return responseJson({ error: "イベント作成者または管理者のみ同席者を変更できます" }, 403);
       const companionIds = stringArray(input.companionIds, 100, 40);
       if (companionIds === null) return responseJson({ error: "同席者の内容が不正です" }, 400);
       let data: Record<string, unknown> = {};
@@ -675,7 +688,7 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
       return responseJson({ event: await hydratedEvent(env.DB, updated!, member.id, elevated, memberPublicId) });
     }
     if (input?.action === "edit") {
-      if (!(admin || row.organizer_member_id === member.id)) return responseJson({ error: "イベント作成者または管理者のみイベント情報を編集できます" }, 403);
+      if (!(admin || row.organizer_member_id === member.id || canManageImportedEvent)) return responseJson({ error: "イベント作成者または管理者のみイベント情報を編集できます" }, 403);
       const rawTitle = text(input.title, 160, true);
       const title = rawTitle ? displayEventTitle(rawTitle) : null;
       const description = text(input.description, 5000);

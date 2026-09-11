@@ -6,7 +6,7 @@ import { XpRewardPopup } from "@/components/xp-reward-popup";
 import type { XpReward } from "@/lib/xp-store";
 import { GOURMET_GENRES } from "@/constants/event-options";
 import { useAuthContext } from "@/lib/auth-context";
-import { isOperatorRole } from "@/lib/access-control";
+import { isAdminRole, isOperatorRole } from "@/lib/access-control";
 import { canViewerAccessClubContent, resolveViewerMemberId } from "@/lib/club-viewer-access";
 import { useClubs } from "@/lib/club-store";
 import { pendingEvents } from "@/lib/event-store";
@@ -127,9 +127,10 @@ export default function CreateEventScreen() {
   const editId = typeof params.editId === "string" ? params.editId : "";
   const { user: authUser } = useAuthContext();
   const userIsOperator = isOperatorRole(authUser?.role, authUser?.accessRole);
+  const userIsAdmin = isAdminRole(authUser?.role, authUser?.accessRole);
   const clubs = useClubs();
   const viewerMemberId = resolveViewerMemberId(authUser?.memberId, Boolean(authUser), CURRENT_USER.id);
-  const joinedClubs = clubs.filter((club) => canViewerAccessClubContent(club, authUser?.memberId, CURRENT_USER.id));
+  const joinedClubs = clubs.filter((club) => canViewerAccessClubContent(club, authUser?.memberId, CURRENT_USER.id, userIsAdmin, Boolean(authUser)));
   const sourceClubId = params.sourceCategory?.startsWith("club-") ? params.sourceCategory.slice("club-".length) : "";
   const sourceIsJoinedClub = Boolean(sourceClubId && joinedClubs.some((club) => club.id === sourceClubId));
   const initialEditingEvent = editId

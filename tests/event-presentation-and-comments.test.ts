@@ -46,6 +46,17 @@ describe("event presentation and comments", () => {
     expect(detail).toContain("userIsOperator");
   });
 
+  it("lets operators edit events imported from Discord", () => {
+    const detail = source("app/event-detail.tsx");
+    const create = source("app/create-event.tsx");
+    const server = source("sites/events.ts");
+    expect(detail).toContain('isDiscordImportedEvent && userIsOperator');
+    expect(create).toContain('isAdminRole(authUser?.role, authUser?.accessRole)');
+    expect(server).toContain('id.startsWith("discord-event-") && elevated');
+    expect(server).toContain('materializeImportedEvent(env.DB, id, elevated ? member.id : undefined)');
+    expect(server).toContain('materializedOrganizerFallback: true');
+  });
+
   it("uses the complete badge set for confirmed participants", () => {
     const detail = source("app/event-detail.tsx");
     expect(detail).toContain("<MemberRankBadge rank={member.rank} name={member.badgeName} role={member.role} compact />");
