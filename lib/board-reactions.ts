@@ -17,9 +17,20 @@ export function normalizeBoardReactionEmoji(value: string): string {
   return "😊";
 }
 
-export function normalizeBoardReactions(reactions: Record<string, string[]> = {}): Record<string, string[]> {
+/**
+ * Discord exports may contain either a list of reacting member IDs or an
+ * aggregate `{ count, users }` object.  A count without user IDs cannot be
+ * represented by the app's per-member reaction model, but it must never make
+ * the whole imported board unreadable.
+ */
+export function normalizeBoardReactions(reactions: Record<string, unknown> = {}): Record<string, string[]> {
   const normalized: Record<string, string[]> = {};
-  for (const [emoji, memberIds] of Object.entries(reactions)) {
+  for (const [emoji, value] of Object.entries(reactions)) {
+    const memberIds = Array.isArray(value)
+      ? value.filter((memberId): memberId is string => typeof memberId === "string")
+      : value && typeof value === "object" && Array.isArray((value as { users?: unknown }).users)
+        ? (value as { users: unknown[] }).users.filter((memberId): memberId is string => typeof memberId === "string")
+        : [];
     const key = normalizeBoardReactionEmoji(emoji);
     normalized[key] = Array.from(new Set([...(normalized[key] ?? []), ...memberIds]));
   }

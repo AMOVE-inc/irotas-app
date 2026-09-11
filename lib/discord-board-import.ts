@@ -15,7 +15,7 @@ export interface RawDiscordBoardRecord {
   images: string[];
   videos: string[];
   mentions?: { id: string; name: string }[];
-  reactions?: Record<string, string[]> | null;
+  reactions?: Record<string, unknown> | null;
 }
 
 export interface RawDiscordBoardThread extends RawDiscordBoardRecord {
