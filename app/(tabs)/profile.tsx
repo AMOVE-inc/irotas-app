@@ -901,7 +901,7 @@ export default function ProfileScreen() {
 
   return (
     <ScreenContainer>
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 128 }}>
         {/* Profile Header */}
         <View style={{ alignItems: "center", paddingVertical: 24 }}>
           <View style={{ position: "relative" }}>
@@ -1046,7 +1046,7 @@ export default function ProfileScreen() {
         </View>
 
         <View style={{ marginHorizontal: 16, marginBottom: 16 }}>
-          <Text style={{ fontSize: 14, fontWeight: "800", color: colors.foreground, marginBottom: 9 }}>参加申込中／参加確定済み／自分が幹事のイベント</Text>
+          <Text style={{ fontSize: 14, fontWeight: "800", color: colors.foreground, marginBottom: 9 }}>イベント予定</Text>
           <View style={{ backgroundColor: colors.surface, borderRadius: 16, overflow: "hidden" }}>
             {participatingEvents.length ? participatingEvents.map((event, index) => {
               const status = getEventParticipationStatus(event, user.id);
@@ -1057,7 +1057,7 @@ export default function ProfileScreen() {
                 <View style={{ flex: 1, marginLeft: 11 }}><Text style={{ fontSize: 13, fontWeight: "800", color: colors.foreground }} numberOfLines={2}>{event.title}</Text><Text style={{ fontSize: 11, color: colors.muted, marginTop: 3 }}>{event.date} {event.time}</Text></View>
                 <View style={{ borderRadius: 8, backgroundColor: organizer ? "#FFF0E4" : confirmed ? "#E6F6EA" : "#E8F2FA", paddingHorizontal: 7, paddingVertical: 4 }}><Text style={{ fontSize: 10, fontWeight: "800", color: organizer ? "#C66B16" : confirmed ? "#237A3B" : "#3E78A1" }}>{organizer ? "幹事" : confirmed ? "参加確定" : "参加申込中"}</Text></View>
               </Pressable>;
-            }) : <Text style={{ padding: 16, fontSize: 13, color: colors.muted }}>参加申込中・参加確定済み・自分が幹事のイベントはありません。</Text>}
+            }) : <Text style={{ padding: 16, fontSize: 13, color: colors.muted }}>イベント予定はありません。</Text>}
           </View>
           <Pressable
             onPress={() => router.push("/my-events" as any)}

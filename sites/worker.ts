@@ -257,7 +257,8 @@ async function routeRequest(
   request: Request,
   env: SitesEnv,
 ): Promise<Response> {
-  const { pathname } = new URL(request.url);
+  const routeUrl = new URL(request.url);
+  const { pathname } = routeUrl;
   if (
     ["POST", "PUT", "PATCH", "DELETE"].includes(request.method) &&
     pathname !== "/api/webhooks/square" &&
@@ -402,6 +403,35 @@ async function routeRequest(
         { configured: true, restaurants: [] },
         { status: 502 },
       );
+    }
+  }
+
+  if (pathname === "/api/gourmet-map/image" && request.method === "GET") {
+    const sourceUrl = routeUrl.searchParams.get("url");
+    if (!sourceUrl) return Response.json({ error: "画像URLが指定されていません" }, { status: 400 });
+    let imageUrl: URL;
+    try {
+      imageUrl = new URL(sourceUrl);
+    } catch {
+      return Response.json({ error: "画像URLが不正です" }, { status: 400 });
+    }
+    // Google Maps 由来の写真だけを許可し、任意 URL へのプロキシにはしない。
+    if (imageUrl.protocol !== "https:" || imageUrl.hostname !== "lh3.googleusercontent.com") {
+      return Response.json({ error: "許可されていない画像URLです" }, { status: 400 });
+    }
+    try {
+      const imageResponse = await fetch(imageUrl.toString(), {
+        headers: { accept: "image/avif,image/webp,image/*,*/*;q=0.8" },
+      });
+      if (!imageResponse.ok) throw new Error(`Image returned ${imageResponse.status}`);
+      return new Response(imageResponse.body, {
+        headers: {
+          "content-type": imageResponse.headers.get("content-type") ?? "image/jpeg",
+          "cache-control": "public, max-age=86400",
+        },
+      });
+    } catch {
+      return Response.json({ error: "画像を取得できませんでした" }, { status: 502 });
     }
   }
 

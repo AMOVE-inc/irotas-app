@@ -44,6 +44,15 @@ const GENRE_ICONS: Record<string, string> = {
   "中南米料理（メキシコ、ブラジル、ペルーなど）": "🌮", "シーフード・海鮮": "🦐",
 };
 
+/** Google Maps が返す写真 URL はブラウザから直接読むと拒否されることがあるため、
+ * 同一オリジンの安全な画像プロキシを経由して表示する。 */
+function restaurantImageSource(image: string) {
+  if (/^https:\/\/lh3\.googleusercontent\.com\//.test(image)) {
+    return { uri: `/api/gourmet-map/image?url=${encodeURIComponent(image)}` };
+  }
+  return { uri: image };
+}
+
 function RestaurantCard({
   restaurant,
   onPress,
@@ -65,7 +74,7 @@ function RestaurantCard({
       }}
     >
       <Image
-        source={restaurant.image}
+        source={restaurantImageSource(restaurant.image)}
         style={{ width: 100, height: 100 }}
         contentFit="cover"
         transition={300}
@@ -128,7 +137,7 @@ function RestaurantDetail({
       {/* Header image */}
       <View>
         <Image
-          source={restaurant.image}
+          source={restaurantImageSource(restaurant.image)}
           style={{ width: "100%", height: 220 }}
           contentFit="cover"
         />

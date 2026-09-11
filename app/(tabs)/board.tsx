@@ -287,11 +287,11 @@ function GourmetAdviceContent({ thread, compact = false }: { thread: BoardThread
   if (!advice) return null;
   const genres = (advice.genres?.length ? advice.genres : ["指定なし"]).map((genre) => genre === "指定しない" ? "指定なし" : genre);
   return (
-    <View style={{ backgroundColor: "#FFF9EA", borderRadius: 12, padding: compact ? 10 : 14, marginBottom: compact ? 8 : 16, borderWidth: 1, borderColor: "#F0DDA8" }}>
-      {[{ label: "料理ジャンル", value: genres.join("・") }, { label: "エリア", value: normalizedAdviceValue(advice.area) }, { label: "利用シーン", value: normalizedAdviceValue(advice.scene) }, { label: "予算", value: normalizedAdviceValue(advice.budget) }].map((item) => (
-        <View key={item.label} style={{ flexDirection: "row", marginBottom: 5 }}><Text style={{ width: 74, fontSize: 12, fontWeight: "900", color: "#9A6A12" }}>{item.label}</Text><Text style={{ flex: 1, fontSize: 13, color: colors.foreground }} numberOfLines={compact ? 1 : undefined}>{item.value}</Text></View>
+    <View style={{ marginBottom: compact ? 8 : 16, paddingVertical: compact ? 2 : 4 }}>
+      {[{ label: "料理ジャンル", value: genres.join("・") }, { label: "エリア", value: normalizedAdviceValue(advice.area) }, { label: "利用シーン", value: normalizedAdviceValue(advice.scene) }, { label: "予算", value: normalizedAdviceValue(advice.budget) }].map((item, index) => (
+        <View key={item.label} style={{ flexDirection: "row", alignItems: "baseline", paddingVertical: compact ? 2 : 4, borderTopWidth: index ? 0.5 : 0, borderTopColor: colors.border }}><Text style={{ width: 74, fontSize: 12, fontWeight: "800", color: colors.muted }}>{item.label}</Text><Text style={{ flex: 1, fontSize: 13, lineHeight: 19, color: colors.foreground }} numberOfLines={compact ? 1 : undefined}>{item.value}</Text></View>
       ))}
-      {!compact ? <View style={{ flexDirection: "row", marginTop: 7 }}><Text style={{ width: 74, fontSize: 12, fontWeight: "900", color: "#9A6A12" }}>一言</Text><Text style={{ flex: 1, fontSize: 13, lineHeight: 20, color: colors.foreground }}>{advice.comment?.trim() || thread.preview}</Text></View> : null}
+      {!compact ? <View style={{ flexDirection: "row", marginTop: 8, paddingTop: 8, borderTopWidth: 0.5, borderTopColor: colors.border }}><Text style={{ width: 74, fontSize: 12, fontWeight: "800", color: colors.muted }}>一言</Text><Text style={{ flex: 1, fontSize: 13, lineHeight: 20, color: colors.foreground }}>{advice.comment?.trim() || thread.preview}</Text></View> : null}
     </View>
   );
 }
