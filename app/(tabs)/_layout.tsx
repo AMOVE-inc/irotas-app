@@ -64,6 +64,9 @@ export default function TabLayout() {
           marginBottom: isMobileWeb ? 3 : 0,
         },
         tabBarShowLabel: true,
+        sceneStyle: {
+          backgroundColor: colors.background,
+        },
         tabBarItemStyle: {
           borderRadius: 18,
         },
