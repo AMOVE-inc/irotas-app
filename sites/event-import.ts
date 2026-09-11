@@ -146,6 +146,12 @@ export async function handleEventImportRequest(request: Request, env: SitesEnv):
   const items = rawItems.map(inputItem);
   if (!input || !rawItems.length || items.some((item) => !item) || rawItems.length > 2_000) return json({ error: "移行データを確認してください" }, 400);
   const normalized = items as IncomingItem[];
-  const analysis = await analyze(env.DB, normalized);
-  return pathname === DRY_RUN ? json({ dryRun: true, ...analysis }) : applyCommit(env.DB, viewer, input, normalized);
+  // A commit performs its own analysis immediately before writing. Avoiding a
+  // second identical pass keeps browser-triggered archive imports within the
+  // Worker request time limit.
+  if (pathname === DRY_RUN) {
+    const analysis = await analyze(env.DB, normalized);
+    return json({ dryRun: true, ...analysis });
+  }
+  return applyCommit(env.DB, viewer, input, normalized);
 }
