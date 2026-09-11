@@ -35,12 +35,20 @@ describe("掲示板募集ステータス", () => {
     expect(sortRecruitmentThreads([closed, open]).map((item) => item.id)).toEqual(["open", "closed"]);
   });
 
-  it("部活の自己紹介を自動で固定し募集状態の上にも表示する", () => {
+  it("募集中を固定済みの募集終了投稿より上に表示する", () => {
     const base = { author: {} as BoardThread["author"], commentCount: 0, preview: "", category: "club-club-wine" };
     const open = { ...base, id: "open", title: "ワイン会", isRecruiting: true, lastUpdated: "2026-08-15T10:00:00Z" } as BoardThread;
     const introduction = { ...base, id: "intro", title: "ワイン部 自己紹介", isRecruiting: false, lastUpdated: "2026-01-01T10:00:00Z" } as BoardThread;
     expect(isClubSelfIntroduction(introduction)).toBe(true);
     expect(isThreadPinned(introduction)).toBe(true);
-    expect(sortRecruitmentThreads([open, introduction]).map((item) => item.id)).toEqual(["intro", "open"]);
+    expect(sortRecruitmentThreads([open, introduction]).map((item) => item.id)).toEqual(["open", "intro"]);
+  });
+
+  it("同じ募集状態では固定表示を優先し、その後は最終更新日の新しい順にする", () => {
+    const base = { author: {} as BoardThread["author"], commentCount: 0, preview: "", category: "free-chat", recruitmentStatus: "open" as const };
+    const older = { ...base, id: "older", title: "older", lastUpdated: "2026-08-14T10:00:00Z" } as BoardThread;
+    const newer = { ...base, id: "newer", title: "newer", lastUpdated: "2026-08-16T10:00:00Z" } as BoardThread;
+    const pinned = { ...base, id: "pinned", title: "pinned", isPinned: true, lastUpdated: "2026-08-13T10:00:00Z" } as BoardThread;
+    expect(sortRecruitmentThreads([older, pinned, newer]).map((item) => item.id)).toEqual(["pinned", "newer", "older"]);
   });
 });

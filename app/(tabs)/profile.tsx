@@ -22,6 +22,7 @@ import { Image } from "expo-image";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
+  ActivityIndicator,
   Alert,
   Linking,
   Modal,
@@ -760,7 +761,7 @@ export default function ProfileScreen() {
   const colors = useColors();
   const clubs = useClubs();
   const router = useRouter();
-  const { logout, refresh: refreshAuthUser, user: authUser } = useAuthContext();
+  const { logout, refresh: refreshAuthUser, user: authUser, loading: authLoading } = useAuthContext();
   const performLogout = useCallback(async () => {
     if (Api.submitBrowserLogout()) return;
     await logout();
@@ -809,6 +810,7 @@ export default function ProfileScreen() {
   const userIsOperator = isOperatorRole(authUser?.role, authUser?.accessRole);
   const [myRooms, setMyRooms] = useState(() => getMyRooms(user.id));
   const [participatingEvents, setParticipatingEvents] = useState<Event[]>([]);
+  const [participatingEventsLoading, setParticipatingEventsLoading] = useState(true);
   const [avatarUri, setAvatarUri] = useState<string | null>(null);
   const [profileName, setProfileName] = useState<string>("");
   const [profileBio, setProfileBio] = useState<string>("");
@@ -833,18 +835,28 @@ export default function ProfileScreen() {
 
   useFocusEffect(
     useCallback(() => {
+      if (authLoading) {
+        setParticipatingEventsLoading(true);
+        return;
+      }
       // Covers direct navigation and restores. Login preloads this too, so the
       // club-leader badge is available on the first profile render.
       void refreshClubs();
       setMyRooms(getMyRooms(user.id));
+      let eventsActive = true;
       const viewerMemberId = isRealMember ? (authUser?.memberId ?? memberIdentity?.memberId ?? user.id) : user.id;
       const sortParticipating = (items: Event[]) => items
         .filter((event) => !isPastEventDate(event) && (isEventOrganizer(event, viewerMemberId) || getEventParticipationStatus(event, viewerMemberId) !== null))
         .sort((a, b) => Date.parse(`${a.date}T${a.time}:00`) - Date.parse(`${b.date}T${b.time}:00`));
       if (isRealMember) {
-        void Api.getEvents().then((items) => setParticipatingEvents(sortParticipating(items))).catch(() => setParticipatingEvents([]));
+        setParticipatingEventsLoading(true);
+        void Api.getEvents()
+          .then((items) => { if (eventsActive) setParticipatingEvents(sortParticipating(items)); })
+          .catch(() => { if (eventsActive) setParticipatingEvents([]); })
+          .finally(() => { if (eventsActive) setParticipatingEventsLoading(false); });
       } else {
         setParticipatingEvents(sortParticipating(getAllEvents(EVENTS)));
+        setParticipatingEventsLoading(false);
       }
       // AsyncStorageから保存済みデータを読み込む
       import("@react-native-async-storage/async-storage").then(({ default: AsyncStorage }) => {
@@ -884,7 +896,8 @@ export default function ProfileScreen() {
       });
       // イロタスポイント・会費免除を読み込む
       getIrotasPoints(user.id).then(setIrotasPoints);
-    }, [authUser?.memberId, isRealMember, memberIdentity?.memberId, serverDetails, serverProfile, storageNamespace, user])
+      return () => { eventsActive = false; };
+    }, [authLoading, authUser?.memberId, isRealMember, memberIdentity?.memberId, serverDetails, serverProfile, storageNamespace, user])
   );
 
   const publishedAge = getPublishedAgeBand(profileDetails.birthDate, profileDetails.showAge);
@@ -1048,7 +1061,7 @@ export default function ProfileScreen() {
         <View style={{ marginHorizontal: 16, marginBottom: 16 }}>
           <Text style={{ fontSize: 14, fontWeight: "800", color: colors.foreground, marginBottom: 9 }}>イベント予定</Text>
           <View style={{ backgroundColor: colors.surface, borderRadius: 16, overflow: "hidden" }}>
-            {participatingEvents.length ? participatingEvents.map((event, index) => {
+            {participatingEventsLoading ? <View style={{ minHeight: 76, flexDirection: "row", alignItems: "center", justifyContent: "center", padding: 16 }}><ActivityIndicator size="small" color="#E8A0BF" /><Text style={{ marginLeft: 9, fontSize: 13, color: colors.muted }}>イベント予定を読み込んでいます…</Text></View> : participatingEvents.length ? participatingEvents.map((event, index) => {
               const status = getEventParticipationStatus(event, user.id);
               const organizer = isEventOrganizer(event, user.id);
               const confirmed = status === "confirmed";

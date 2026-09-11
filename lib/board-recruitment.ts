@@ -34,14 +34,14 @@ export function getBoardRecruitmentStatus(thread: Pick<BoardThread, "category" |
 
 export function sortRecruitmentThreads(threads: BoardThread[]): BoardThread[] {
   return [...threads].sort((left, right) => {
-    const leftPinned = isThreadPinned(left);
-    const rightPinned = isThreadPinned(right);
-    if (leftPinned !== rightPinned) return Number(rightPinned) - Number(leftPinned);
     if (isRecruitmentBoardCategory(left.category)) {
       const priority: Record<BoardRecruitmentStatus, number> = { open: 0, none: 1, closed: 2 };
       const statusDifference = priority[getBoardRecruitmentStatus(left)] - priority[getBoardRecruitmentStatus(right)];
       if (statusDifference) return statusDifference;
     }
+    const leftPinned = isThreadPinned(left);
+    const rightPinned = isThreadPinned(right);
+    if (leftPinned !== rightPinned) return Number(rightPinned) - Number(leftPinned);
     return Date.parse(right.lastUpdated) - Date.parse(left.lastUpdated);
   });
 }

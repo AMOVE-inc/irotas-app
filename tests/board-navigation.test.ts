@@ -61,4 +61,10 @@ describe("board category ordering", () => {
     expect(clubsScreen).toContain("club-${club.id}");
     expect(clubsScreen).toContain("view: \"threads\"");
   });
+
+  it("returns from an individual club board to the club list", () => {
+    const boardScreen = readFileSync(resolve(process.cwd(), "app/(tabs)/board.tsx"), "utf8");
+    expect(boardScreen).toContain('isIndividualClubBoard) router.replace("/clubs")');
+    expect(boardScreen).toContain('"部活一覧へ戻る"');
+  });
 });

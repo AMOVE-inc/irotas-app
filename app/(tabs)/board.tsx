@@ -2688,6 +2688,20 @@ export default function BoardScreen() {
 
   const activeCategoryLabel = categories.find((category) => category.key === activeCategory)?.label ?? "掲示板";
   const activeClub = isThreadView ? clubs.find((club) => `club-${club.id}` === activeCategory) : undefined;
+  const isIndividualClubBoard = Boolean(activeClub);
+  const boardBackLabel = fromProfile === "1"
+    ? "マイページへ戻る"
+    : fromHome === "1"
+      ? "ホームへ戻る"
+      : isIndividualClubBoard
+        ? "部活一覧へ戻る"
+        : "掲示板トップへ戻る";
+  const handleBoardBack = () => {
+    if (fromProfile === "1") router.replace("/profile" as any);
+    else if (fromHome === "1") router.replace("/(tabs)" as any);
+    else if (isIndividualClubBoard) router.replace("/clubs");
+    else router.replace("/board");
+  };
   const canViewActiveClubMembers = Boolean(activeClub && getClubViewerAccess(activeClub, authUser?.memberId, CURRENT_USER.id).isMember);
   const canReviewActiveClubApplications = Boolean(activeClub?.canReviewApplications || activeClub?.viewerIsLeader || userIsAdmin);
   const activeClubMemberIds = activeClub ? [...new Set([activeClub.leaderId, ...activeClub.memberIds])] : [];
@@ -2729,7 +2743,7 @@ export default function BoardScreen() {
       >
         {isThreadView || isClubIndexView ? (
           <>
-            <Pressable accessibilityLabel={fromProfile === "1" ? "マイページへ戻る" : fromHome === "1" ? "ホームへ戻る" : "掲示板トップへ戻る"} onPress={() => fromProfile === "1" ? router.replace("/profile" as any) : fromHome === "1" ? router.replace("/(tabs)" as any) : router.replace("/board")} style={{ flexDirection: "row", alignItems: "center", flex: 1, paddingVertical: 4 }}>
+            <Pressable accessibilityLabel={boardBackLabel} onPress={handleBoardBack} style={{ flexDirection: "row", alignItems: "center", flex: 1, paddingVertical: 4 }}>
               <IconSymbol name="chevron.left" size={20} color={colors.foreground} />
               <Text numberOfLines={1} style={{ flex: 1, marginLeft: 8, fontSize: 20, fontWeight: "800", color: colors.foreground }}>
                 {isClubIndexView ? "部活動" : activeCategoryLabel}
