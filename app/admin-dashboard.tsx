@@ -144,6 +144,7 @@ export default function AdminDashboardScreen() {
   const [discordEventChatImportResult, setDiscordEventChatImportResult] = useState<string | null>(null);
   const [discordEventChatPurging, setDiscordEventChatPurging] = useState(false);
   const [discordEventChatPurgeResult, setDiscordEventChatPurgeResult] = useState<string | null>(null);
+  const [discordEventChatPurgePreview, setDiscordEventChatPurgePreview] = useState<{ messages: number; rooms: number } | null>(null);
   const [membershipSummary, setMembershipSummary] = useState<MembershipSummary | null>(null);
   const [memberReconciliation, setMemberReconciliation] = useState<MemberReconciliationReport | null>(null);
   const [membershipSummaryLoading, setMembershipSummaryLoading] = useState(false);
@@ -1946,6 +1947,29 @@ export default function AdminDashboardScreen() {
                 {discordEventChatImporting ? <ActivityIndicator color="#FFF" /> : <Text style={{ color: "#FFF", fontWeight: "800" }}>DiscordイベントチャットJSONを選択して反映</Text>}
               </Pressable>
               {discordEventChatPurgeResult ? <Text style={{ fontSize: 12, fontWeight: "700", color: "#237A3B", marginTop: 10 }}>{discordEventChatPurgeResult}</Text> : null}
+              {discordEventChatPurgePreview ? <View style={{ marginTop: 10, padding: 12, borderRadius: 12, backgroundColor: "#FFF3F1" }}>
+                <Text style={{ color: "#8A1C12", fontWeight: "800", lineHeight: 20 }}>Discord由来のメッセージ {discordEventChatPurgePreview.messages}件を削除します。空になるチャットルームも削除します。</Text>
+                <Text style={{ color: "#6F4B46", fontSize: 12, marginTop: 5, lineHeight: 18 }}>イベント・申込・参加者・IRO+で投稿したメッセージは残ります。</Text>
+                <Pressable disabled={discordEventChatPurging} onPress={async () => {
+                  const preview = discordEventChatPurgePreview;
+                  if (!preview) return;
+                  setDiscordEventChatPurging(true); setDiscordEventChatPurgeResult(null);
+                  try {
+                    const response = await fetch("/api/admin/event-chat-import/purge", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ confirmation: `DELETE_${preview.messages}_IMPORTED_EVENT_CHAT_MESSAGES` }) });
+                    const result = await response.json() as { error?: string; deletedMessages?: number; deletedRooms?: number; retainedRooms?: number };
+                    if (!response.ok) throw new Error(result.error ?? "削除に失敗しました");
+                    setDiscordEventChatPurgePreview(null);
+                    setDiscordEventChatPurgeResult(`メッセージ ${result.deletedMessages ?? 0}件を削除／空のルーム ${result.deletedRooms ?? 0}件を削除／IRO+のメッセージを含むルーム ${result.retainedRooms ?? 0}件は保持`);
+                  } catch (error) {
+                    Alert.alert("削除エラー", error instanceof Error ? error.message : "削除に失敗しました");
+                  } finally { setDiscordEventChatPurging(false); }
+                }} style={{ minHeight: 42, borderRadius: 10, backgroundColor: "#D92D20", alignItems: "center", justifyContent: "center", marginTop: 10 }}>
+                  {discordEventChatPurging ? <ActivityIndicator color="#FFF" /> : <Text style={{ color: "#FFF", fontWeight: "800" }}>この {discordEventChatPurgePreview.messages}件を削除する</Text>}
+                </Pressable>
+                <Pressable disabled={discordEventChatPurging} onPress={() => setDiscordEventChatPurgePreview(null)} style={{ minHeight: 38, alignItems: "center", justifyContent: "center", marginTop: 4 }}>
+                  <Text style={{ color: colors.muted, fontWeight: "700" }}>キャンセル</Text>
+                </Pressable>
+              </View> : null}
               <Pressable disabled={discordEventChatPurging} onPress={async () => {
                 try {
                   const previewResponse = await fetch("/api/admin/event-chat-import/purge");
@@ -1954,31 +1978,7 @@ export default function AdminDashboardScreen() {
                   const messages = preview.messages ?? 0;
                   const rooms = preview.rooms ?? 0;
                   if (!messages) { Alert.alert("削除対象なし", "Discordから取り込んだイベントチャットはありません。"); return; }
-                  Alert.alert(
-                    "取り込み済みイベントチャットを削除",
-                    `Discordから取り込んだメッセージ ${messages}件と、空になるチャットルームを削除します。イベント・申込・参加者・IRO+で投稿したメッセージは残ります。`,
-                    [
-                      { text: "キャンセル", style: "cancel" },
-                      {
-                        text: `削除する（${rooms}ルーム）`, style: "destructive", onPress: async () => {
-                          setDiscordEventChatPurging(true); setDiscordEventChatPurgeResult(null);
-                          try {
-                            const response = await fetch("/api/admin/event-chat-import/purge", {
-                              method: "POST",
-                              headers: { "content-type": "application/json" },
-                              body: JSON.stringify({ confirmation: `DELETE_${messages}_IMPORTED_EVENT_CHAT_MESSAGES` }),
-                            });
-                            const result = await response.json() as { error?: string; deletedMessages?: number; deletedRooms?: number; retainedRooms?: number };
-                            if (!response.ok) throw new Error(result.error ?? "削除に失敗しました");
-                            const summary = `メッセージ ${result.deletedMessages ?? 0}件を削除／空のルーム ${result.deletedRooms ?? 0}件を削除／IRO+のメッセージを含むルーム ${result.retainedRooms ?? 0}件は保持`;
-                            setDiscordEventChatPurgeResult(summary); Alert.alert("削除完了", summary);
-                          } catch (error) {
-                            Alert.alert("削除エラー", error instanceof Error ? error.message : "削除に失敗しました");
-                          } finally { setDiscordEventChatPurging(false); }
-                        },
-                      },
-                    ],
-                  );
+                  setDiscordEventChatPurgePreview({ messages, rooms });
                 } catch (error) {
                   Alert.alert("確認エラー", error instanceof Error ? error.message : "対象を確認できませんでした");
                 }
