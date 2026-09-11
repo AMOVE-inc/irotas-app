@@ -1865,10 +1865,7 @@ export default function ClubsScreen() {
 
   const openJoinedClub = (club: Club) => {
     const category = `club-${club.id}`;
-    const latestThread = archiveThreads
-      .filter((thread) => thread.category === category)
-      .sort((a, b) => Date.parse(b.lastUpdated) - Date.parse(a.lastUpdated))[0];
-    router.push({ pathname: "/board", params: { category, view: "threads", ...(latestThread ? { thread: latestThread.id } : {}) } });
+    router.push({ pathname: "/board", params: { category, view: "threads" } });
   };
 
   return (
@@ -1992,10 +1989,7 @@ export default function ClubsScreen() {
                 club={club}
                 onPress={() => {
                   const category = `club-${club.id}`;
-                  const latestThread = archiveThreads
-                    .filter((thread) => thread.category === category)
-                    .sort((a, b) => Date.parse(b.lastUpdated) - Date.parse(a.lastUpdated))[0];
-                  router.push({ pathname: "/board", params: { category, view: "threads", ...(latestThread ? { thread: latestThread.id } : {}) } });
+                  router.push({ pathname: "/board", params: { category, view: "threads" } });
                 }}
               />
             ))}

@@ -1,4 +1,5 @@
 import { ScreenContainer } from "@/components/screen-container";
+import { ExpandableImage } from "@/components/expandable-image";
 import { MemberClubLeaderBadges, MemberRankBadge, MemberRoleBadge, stripRankFromName } from "@/components/member-rank-badge";
 import { NewMemberMark } from "@/components/new-member-mark";
 import { MentionSuggestions, MentionText } from "@/components/mention-ui";
@@ -187,15 +188,16 @@ function MessageBubble({ message, isMe, canDelete, viewerId, viewerName, viewerA
           }}
         >
           {message.imageUri ? (
-            <Image
+            <ExpandableImage
               source={{ uri: message.imageUri }}
+              uri={message.imageUri}
               style={{ width: 220, height: 180 }}
               contentFit="cover"
             />
           ) : null}
           {message.attachmentUrls?.length ? (
             <View style={{ gap: 4 }}>
-              {message.attachmentUrls.map((uri) => <Image key={uri} source={{ uri }} style={{ width: 220, height: 180 }} contentFit="cover" />)}
+              {message.attachmentUrls.map((uri) => <ExpandableImage key={uri} source={{ uri }} uri={uri} style={{ width: 220, height: 180 }} contentFit="cover" />)}
             </View>
           ) : null}
           {message.content ? (

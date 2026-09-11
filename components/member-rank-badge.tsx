@@ -58,6 +58,7 @@ export function stripRankFromName(name: string) {
   let normalized = name
     .replace(/\s*[【[(（]\s*(?:🥈|🥇|💎)?\s*(?:SILVER|GOLD|PLATINUM|シルバー|ゴールド|プラチナ)(?:会員)?\s*[】\])）]/gi, "")
     .replace(/\s*[【[(（]\s*(?:運営(?:メンバー)?|管理者|admin)\s*[】\])）]/gi, "");
+  normalized = normalized.replace(/(?:🎞️?\s*)?映画[・･]?ドラマ鑑賞部長$/u, "");
   for (const { term } of CLUB_LEADER_BADGES) {
     normalized = normalized.replace(new RegExp(`(?:[🍖⛳🏃🚶⚾💃🎭🏀🍷✈️🍳🍞🐭🍺]\\s*)?${term}$`, "u"), "");
   }

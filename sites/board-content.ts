@@ -5,6 +5,7 @@ import archive from "../data/discord-board-2026-08-29.json";
 import { IMPORTED_DISCORD_EVENTS } from "../constants/imported-discord-events";
 import { cleanDiscordBoardContent, cleanDiscordBoardTitle } from "../lib/discord-board-normalization";
 import type { RawDiscordBoardArchive } from "../lib/discord-board-import";
+import { isRetiredMovieClubThread, normalizeDiscordBoardCategory } from "../lib/board-category";
 
 const CONTENT_PATH = "/api/board/content";
 const THREADS_PATH = "/api/board/threads";
@@ -305,17 +306,18 @@ async function ensureImportedThread(
   id: string,
   member: BoardMember,
 ) {
+  const raw = (archive as RawDiscordBoardArchive).threads.find((thread) => thread.id === id);
+  if (!raw || isRetiredMovieClubThread(raw)) return null;
   const existing = await threadById(db, id);
   // Discord断面の再取得時も、同じスレッドIDがアプリDBに存在する場合は
   // アプリ側で編集された募集ステータス・固定状態・本文を一切上書きしない。
   if (existing) return existing;
-  const raw = (archive as RawDiscordBoardArchive).threads.find((thread) => thread.id === id);
-  const category = raw ? validCategory(raw.category) : null;
-  if (!raw || !category) return null;
+  const category = validCategory(normalizeDiscordBoardCategory(raw.category));
+  if (!category) return null;
   if (!await canAccessBoardCategory(db, category, member)) return null;
   const now = new Date().toISOString();
   const normalizedTitle = cleanDiscordBoardTitle(raw.title || "移行済み投稿");
-  const normalizedContent = cleanDiscordBoardContent(raw.title, raw.content || "移行済み投稿", raw.category);
+  const normalizedContent = cleanDiscordBoardContent(raw.title, raw.content || "移行済み投稿", category);
   const linkedAuthor = raw.authorId ? await db.prepare("SELECT id FROM members WHERE discord_user_id = ? LIMIT 1")
     .bind(raw.authorId).first<{ id: number }>() : null;
   const authorMemberId = linkedAuthor?.id ?? member.id;

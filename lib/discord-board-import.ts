@@ -3,6 +3,8 @@ import { normalizeBoardReactions } from "./board-reactions";
 import { inferImportedRecruitmentStatus } from "./board-recruitment";
 import { cleanDiscordBoardContent, cleanDiscordBoardTitle } from "./discord-board-normalization";
 import { displayMemberName } from "./display-name";
+import { isRetiredMovieClubThread, normalizeDiscordBoardCategory } from "./board-category";
+export { isRetiredMovieClubThread, normalizeDiscordBoardCategory } from "./board-category";
 
 export interface RawDiscordBoardRecord {
   id: string;
@@ -89,17 +91,6 @@ export interface ImportedDiscordBoard {
   comments: Record<string, BoardComment[]>;
 }
 
-/** Discord側の旧フォーラム名を、アプリで表示する正式キーに揃える。 */
-export function normalizeDiscordBoardCategory(category: string): string {
-  switch (category) {
-    case "gourmet-consultation": return "gourmet-advice";
-    case "free-board": return "free-chat";
-    case "gourmet-board-kanto":
-    case "gourmet-board-kansai": return "free-chat";
-    default: return category;
-  }
-}
-
 function importedGourmetContest(title: string, content: string): BoardThread["gourmetContest"] | undefined {
   const text = `${title}\n${content}`;
   if (!/開催中|開催終了/.test(text)) return undefined;
@@ -132,9 +123,8 @@ export function parseDiscordBoardArchive(archive: RawDiscordBoardArchive, direct
       rank: current.rank || record.authorRank || rankFromDiscordName(record.authorName),
     });
   }
-  const rawThreads = archive.threads.filter((record) => !(
-    record.category === "meal-report" &&
-    record.mealReport?.rating === 1 &&
+  const rawThreads = archive.threads.filter((record) => !isRetiredMovieClubThread(record) && !(
+    record.category === "meal-report" && record.mealReport?.rating === 1 &&
     ["IRO+運営", "IRO＋運営"].includes(record.authorName.trim())
   ));
   const visibleThreadIds = new Set(rawThreads.map((record) => record.id));

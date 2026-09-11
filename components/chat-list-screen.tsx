@@ -2,7 +2,7 @@ import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { CHAT_ROOMS, CURRENT_USER, DEFAULT_AVATAR, type ChatRoom } from "@/constants/mock-data";
 import { useAuthContext } from "@/lib/auth-context";
-import { applyReadRoomState, getAllMessages, getMyRooms, getRankRoomsForUser, loadDynamicRooms, markRoomRead } from "@/lib/chat-store";
+import { applyReadRoomState, getMyRooms, getRankRoomsForUser, loadDynamicRooms, markRoomRead } from "@/lib/chat-store";
 import { useColors } from "@/hooks/use-colors";
 import { Image } from "expo-image";
 import { useFocusEffect, useRouter } from "expo-router";
@@ -219,7 +219,7 @@ export default function ChatListScreen() {
         Api.getMemberDirectory().catch(() => []),
         Api.getSharedChatMessages("board-announcement").catch(() => []),
       ]).then(([events, members, announcementMessages]) => {
-        const latestAnnouncement = announcementMessages.at(-1);
+        const latestAnnouncement = [...announcementMessages].sort((left, right) => Date.parse(left.createdAt) - Date.parse(right.createdAt)).at(-1);
         if (latestAnnouncement) setMyRooms((current) => current.map((room) => room.id === "board-announcement"
           ? { ...room, lastMessage: latestAnnouncement.content.replace(/^【IRO\+\s*システム】\s*/, "").replace(/\s+/g, " ").trim(), lastMessageAt: latestAnnouncement.createdAt }
           : room));
@@ -234,12 +234,10 @@ export default function ChatListScreen() {
       // オフライン時も端末内の移行済みチャット一覧は利用できる。
     }
     const sharedById = new Map(sharedRooms.map((room) => [room.id, room]));
-    const localAnnouncement = getAllMessages().filter((message) => message.chatId === "board-announcement").at(-1);
-    const announcementPreview = localAnnouncement;
     const mergedJoined = [...localJoinedRooms.filter((room) => !sharedById.has(room.id)), ...sharedRooms.filter((room) => room.type !== "rank" && !isFixtureRoom(room))]
       .filter((room, index, all) => all.findIndex((candidate) => candidate.id === room.id) === index)
-      .map((room) => room.id === "board-announcement" && announcementPreview
-        ? { ...room, lastMessage: announcementPreview.content.replace(/^【IRO\+\s*システム】\s*/, "").replace(/\s+/g, " ").trim(), lastMessageAt: announcementPreview.createdAt }
+      .map((room) => room.id === "board-announcement" && !sharedById.has(room.id)
+        ? { ...room, lastMessage: "", lastMessageAt: undefined }
         : room);
     const mergedRank = viewerRank === "regular" ? [] : [
       ...localRankRooms.filter((room) => !sharedById.has(room.id)),

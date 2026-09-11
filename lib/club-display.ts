@@ -14,6 +14,7 @@ export function formatClubLeaderName(name?: string | null) {
   normalized = normalized
     .replace(/\s*[【[(（]\s*(?:🥈|🥇|💎)?\s*(?:SILVER|GOLD|PLATINUM|シルバー|ゴールド|プラチナ)(?:会員)?\s*[】\])）]/gi, "")
     .replace(/\s*[【[(（]\s*(?:運営(?:メンバー)?|管理者|admin)\s*[】\])）]/gi, "");
+  normalized = normalized.replace(/(?:🎞️?\s*)?映画[・･]?ドラマ鑑賞部長$/u, "");
   for (const term of CLUB_LEADER_TERMS) {
     normalized = normalized.replace(new RegExp(`(?:[🍖⛳🏃🚶⚾💃🎭🏀🍷✈️🍳🍞🐭🍺]\\s*)?${term}$`, "u"), "");
   }

@@ -2,6 +2,7 @@ import archive from "../data/discord-board-2026-08-29.json";
 import type {
   RawDiscordBoardArchive,
 } from "../lib/discord-board-import";
+import { isRetiredMovieClubThread, normalizeDiscordBoardCategory } from "../lib/board-category";
 import { authenticatedRequestMember } from "./auth";
 import type { D1Database, SitesEnv } from "./platform-types";
 
@@ -15,9 +16,10 @@ export function filterBoardArchive(
   source: RawDiscordBoardArchive,
   allowedPrivateCategories: ReadonlySet<string>,
 ): RawDiscordBoardArchive {
-  const threads = source.threads.filter(
-    (thread) => !isPrivateClubCategory(thread.category) || allowedPrivateCategories.has(thread.category),
-  );
+  const threads = source.threads
+    .filter((thread) => !isRetiredMovieClubThread(thread))
+    .map((thread) => ({ ...thread, category: normalizeDiscordBoardCategory(thread.category) }))
+    .filter((thread) => !isPrivateClubCategory(thread.category) || allowedPrivateCategories.has(thread.category));
   const threadIds = new Set(threads.map((thread) => thread.id));
   const comments = source.comments.filter((comment) => threadIds.has(comment.threadId));
   return { threads, comments };
@@ -67,7 +69,8 @@ export async function handleBoardArchiveRequest(
   if (!publicOnly) {
     if (isAdmin) {
       source.threads.forEach((thread) => {
-        if (isPrivateClubCategory(thread.category)) allowed.add(thread.category);
+        const category = normalizeDiscordBoardCategory(thread.category);
+        if (isPrivateClubCategory(category) && !isRetiredMovieClubThread(thread)) allowed.add(category);
       });
     } else {
       const memberCategories = await allowedPrivateClubCategories(env.DB, member.id);

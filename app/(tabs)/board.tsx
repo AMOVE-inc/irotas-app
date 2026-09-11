@@ -1,4 +1,5 @@
 import { ScreenContainer } from "@/components/screen-container";
+import { ExpandableImage } from "@/components/expandable-image";
 import { NewMemberMark } from "@/components/new-member-mark";
 import { MemberRankBadge, MemberRoleBadge, stripRankFromName } from "@/components/member-rank-badge";
 import { MentionSuggestions, MentionText } from "@/components/mention-ui";
@@ -78,6 +79,7 @@ import * as Clipboard from "expo-clipboard";
 const BOARD_MENTION_GROUPS = getMentionGroups(MEMBERS, CLUBS);
 const THREAD_REACTION_EMOJIS = ["😀", "😃", "😄", "😁", "😆", "😅", "😂", "🤣", "😊", "😇", "🙂", "🙃", "😉", "😍", "🥰", "😘", "😋", "😛", "🤪", "🤔", "🫡", "😎", "🥳", "😮", "😢", "😭", "😡", "👍", "👎", "👏", "🙌", "🙏", "💪", "👀", "❤️", "🩷", "🧡", "💛", "💚", "💙", "💜", "🖤", "🤍", "🔥", "✨", "🎉", "💯", "✅", "❌", "💡", "📌", "🍽️", "🍣", "🍖", "🍜", "🍕", "🍰", "☕", "🍺", "🍷"] as const;
 const boardImageSource = (image: BoardImage) => typeof image === "string" ? { uri: image } : image;
+const boardImageUri = (image: BoardImage) => typeof image === "string" ? image : typeof image === "object" && image && "uri" in image && typeof image.uri === "string" ? image.uri : undefined;
 const isDurableBoardImage = (uri: string) => /^https:\/\//i.test(uri) || uri.startsWith("/api/event-images/");
 async function uploadBoardImages(images?: BoardImage[]) {
   if (!images?.length) return undefined;
@@ -276,7 +278,7 @@ function MealReportTimelineCard({ thread }: { thread: BoardThread }) {
           {impression ? <View style={{ marginTop: 7 }}><Text numberOfLines={3} style={{ fontSize: 13, lineHeight: 19, color: colors.foreground }}>{impression}</Text>{impression.split(/\r?\n/).length > 3 || impression.length > 90 ? <Text style={{ fontSize: 12, fontWeight: "800", color: "#3478C7", marginTop: 3 }}>詳細を見る</Text> : null}</View> : null}
         </View>
       </View>
-      {thread.images?.length ? <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6, marginTop: 10 }}>{thread.images.slice(0, 3).map((item, index) => <Image key={`${thread.id}-image-${index}`} source={boardImageSource(item)} style={{ width: "32%", aspectRatio: 1, borderRadius: 10, backgroundColor: "#F1EEF0" }} contentFit="cover" />)}</View> : null}
+      {thread.images?.length ? <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6, marginTop: 10 }}>{thread.images.slice(0, 3).map((item, index) => <ExpandableImage key={`${thread.id}-image-${index}`} source={boardImageSource(item)} uri={boardImageUri(item)} style={{ width: "32%", aspectRatio: 1, borderRadius: 10, backgroundColor: "#F1EEF0" }} contentFit="cover" />)}</View> : null}
     </View>
   );
 }
@@ -447,8 +449,9 @@ function ThreadCard({ thread, onPress, onEdit, onDelete, onPin, onChangeRecruitm
           )}
         </View>
         {rightPreviewImage ? (
-          <Image
+          <ExpandableImage
             source={boardImageSource(rightPreviewImage)}
+            uri={boardImageUri(rightPreviewImage)}
             style={{ width: 72, height: 72, borderRadius: 9, marginLeft: 10 }}
             contentFit="cover"
           />
@@ -460,8 +463,9 @@ function ThreadCard({ thread, onPress, onEdit, onDelete, onPin, onChangeRecruitm
         <View style={{ flexDirection: "row", gap: 6, marginBottom: 8 }}>
           {thread.images.slice(0, 3).map((uri, i) => (
             <View key={i} style={{ position: "relative" }}>
-              <Image
-              source={boardImageSource(uri)}
+              <ExpandableImage
+                source={boardImageSource(uri)}
+                uri={boardImageUri(uri)}
                 style={{ width: 72, height: 72, borderRadius: 8 }}
                 contentFit="cover"
               />
@@ -1099,9 +1103,10 @@ function ThreadDetailModal({
           {thread.images && thread.images.length > 0 && (
             <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 20 }}>
               {thread.images.map((uri, i) => (
-                <Image
+                <ExpandableImage
                   key={i}
                   source={boardImageSource(uri)}
+                  uri={boardImageUri(uri)}
                   style={isContest ? { width: "100%", aspectRatio: 1, borderRadius: 14, backgroundColor: colors.surface } : { width: 100, height: 100, borderRadius: 10 }}
                   contentFit={isContest ? "contain" : "cover"}
                 />
@@ -1236,7 +1241,7 @@ function ThreadDetailModal({
                 {comment.poll ? <View style={{ marginLeft: 32 }}><PollCard ownerKey={`comment:${comment.id}`} poll={comment.poll} /></View> : null}
                 {comment.images?.length ? (
                   <View style={{ marginLeft: 32, marginTop: 8, flexDirection: "row", flexWrap: "wrap", gap: 7 }}>
-                    {comment.images.map((uri, index) => <Image key={`${comment.id}-image-${index}`} source={boardImageSource(uri)} style={{ width: 104, height: 104, borderRadius: 10, backgroundColor: colors.surface }} contentFit="cover" />)}
+                    {comment.images.map((uri, index) => <ExpandableImage key={`${comment.id}-image-${index}`} source={boardImageSource(uri)} uri={boardImageUri(uri)} style={{ width: 104, height: 104, borderRadius: 10, backgroundColor: colors.surface }} contentFit="cover" />)}
                   </View>
                 ) : null}
                 {comment.videos?.length ? <View style={{ marginLeft: 32, marginTop: 8, gap: 8 }}>{comment.videos.map((uri) => <BoardVideo key={uri} uri={uri} />)}</View> : null}
@@ -1869,8 +1874,8 @@ function CreateThreadModal({
       preview: isMealReport
         ? normalizedComment || normalizedMenu || `${resolvedArea}でいただきました。`
         : isGourmetAdvice ? adviceComment.trim() : isIntroduction ? introductionText.trim() : content.trim(),
-      isRecruiting: hasManagedRecruitmentStatus ? !(category.startsWith("club-club-") && /自己紹介/.test(title.trim())) : isMealReport || isGourmetAdvice || isIntroduction || isGourmetContest ? false : isRecruiting,
-      recruitmentStatus: hasManagedRecruitmentStatus ? (category.startsWith("club-club-") && /自己紹介/.test(title.trim()) ? "none" : "open") : undefined,
+      isRecruiting: hasManagedRecruitmentStatus ? (category.startsWith("club-club-") && /自己紹介/.test(title.trim()) ? false : isRecruiting) : isMealReport || isGourmetAdvice || isIntroduction || isGourmetContest ? false : isRecruiting,
+      recruitmentStatus: hasManagedRecruitmentStatus ? (category.startsWith("club-club-") && /自己紹介/.test(title.trim()) ? "none" : isRecruiting ? "open" : "none") : undefined,
       isPinned: category.startsWith("club-club-") && /自己紹介/.test(title.trim()) ? true : undefined,
       recruitCapacity: !hasManagedRecruitmentStatus && !isMealReport && !isGourmetAdvice && !isIntroduction && !isGourmetContest && isRecruiting ? parseInt(capacity || "10", 10) : undefined,
       recruitAttendees: 0,
@@ -2266,7 +2271,7 @@ function CreateThreadModal({
             {pollEnabled && !pollValid ? <Text style={{ fontSize: 12, color: colors.error, marginTop: 6 }}>質問・選択肢2つ以上・期限を入力してください</Text> : null}
           </View> : null}
 
-          {hasManagedRecruitmentStatus ? <View style={{ flexDirection: "row", alignItems: "center", backgroundColor: "#EEF7F0", borderRadius: 12, padding: 13, marginBottom: 16, borderWidth: 1, borderColor: "#CFE7D5" }}><RecruitmentStatusBadge status="open" /><Text style={{ flex: 1, fontSize: 12, lineHeight: 18, color: "#356845" }}>新規投稿は「募集中」で公開されます。投稿後に長押しすると「募集中・募集終了・なし」から変更できます。</Text></View> : !isMealReport && !isGourmetAdvice && !isIntroduction && !isGourmetContest ? (
+          {hasManagedRecruitmentStatus ? <Pressable onPress={() => setIsRecruiting((current) => !current)} accessibilityRole="switch" accessibilityState={{ checked: isRecruiting }} style={{ flexDirection: "row", alignItems: "center", backgroundColor: colors.surface, borderRadius: 12, padding: 14, marginBottom: 16, borderWidth: 1, borderColor: colors.border }}><IconSymbol name="person.badge.plus" size={20} color={isRecruiting ? "#34C759" : colors.muted} /><View style={{ flex: 1, marginLeft: 10 }}><Text style={{ fontSize: 15, fontWeight: "800", color: colors.foreground }}>募集中ステータス</Text><Text style={{ fontSize: 11, lineHeight: 16, color: colors.muted, marginTop: 2 }}>オンにすると一覧へ「募集中」と表示されます。</Text></View><View style={{ width: 48, height: 28, borderRadius: 14, backgroundColor: isRecruiting ? "#34C759" : "#C7C7CC", justifyContent: "center", paddingHorizontal: 2 }}><View style={{ width: 24, height: 24, borderRadius: 12, backgroundColor: "#FFF", alignSelf: isRecruiting ? "flex-end" : "flex-start" }} /></View></Pressable> : !isMealReport && !isGourmetAdvice && !isIntroduction && !isGourmetContest ? (
             <>
               {/* Recruiting toggle */}
               <Pressable
