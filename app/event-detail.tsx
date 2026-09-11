@@ -6,7 +6,7 @@ import { PersistentBottomNav } from "@/components/persistent-bottom-nav";
 import { MemberClubLeaderBadges, MemberRankBadge, MemberRoleBadge, stripRankFromName } from "@/components/member-rank-badge";
 import { MentionSuggestions, MentionText, mentionDisplayName } from "@/components/mention-ui";
 import { extractMentionLabels, getMentionGroups, getMentionQuery, getMentionedMemberIds, insertMention } from "@/lib/mentions";
-import { EVENT_TERMS_URL } from "@/constants/external-links";
+import { EVENT_TERMS_URL, PUBLIC_APP_URL } from "@/constants/external-links";
 import { joinEventChat, removeMemberFromRoom } from "@/lib/chat-store";
 import { getAllEvents } from "@/lib/event-store";
 import { IMPORTED_DISCORD_EVENTS } from "@/constants/imported-discord-events";
@@ -871,7 +871,7 @@ export default function EventDetailScreen() {
         <Pressable onPress={() => { const favorite = event.isFavorite ?? favoriteEventIds.includes(event.id); if (event.viewerMemberId) { void Api.setEventFavorite(event.id, !favorite).then(() => setEvent({ ...event, isFavorite: !favorite })).catch((error) => Alert.alert("更新できませんでした", error instanceof Error ? error.message : "もう一度お試しください。")); } else { void toggleEventFavoriteWithNotifications(event, CURRENT_USER.id); } if (!favorite) void recordActivityEvent({ userId: CURRENT_USER.id, eventName: "event_favorited", entityType: "event", entityId: event.id }); }} accessibilityLabel={(event.isFavorite ?? favoriteEventIds.includes(event.id)) ? "お気に入りから削除" : "お気に入りに追加"} style={{ position: "absolute", top: 56, right: 16, width: 38, height: 38, borderRadius: 19, backgroundColor: "rgba(0,0,0,0.5)", alignItems: "center", justifyContent: "center" }}>
           <IconSymbol name={(event.isFavorite ?? favoriteEventIds.includes(event.id)) ? "heart.fill" : "heart"} size={20} color={(event.isFavorite ?? favoriteEventIds.includes(event.id)) ? "#F59AB9" : "#FFF"} />
         </Pressable>
-        <Pressable onPress={() => { void Clipboard.setStringAsync(`https://irotas-app-20260721.k1998915n.chatgpt.site/event-detail?id=${encodeURIComponent(event.id)}`).finally(() => { setLinkCopied(true); setTimeout(() => setLinkCopied(false), 2200); }); }} accessibilityLabel="イベントリンクをコピー" style={{ position: "absolute", top: 100, right: 16, width: 38, height: 38, borderRadius: 19, backgroundColor: "rgba(0,0,0,0.5)", alignItems: "center", justifyContent: "center" }}>
+        <Pressable onPress={() => { void Clipboard.setStringAsync(`${PUBLIC_APP_URL}/event-detail?id=${encodeURIComponent(event.id)}`).finally(() => { setLinkCopied(true); setTimeout(() => setLinkCopied(false), 2200); }); }} accessibilityLabel="イベントリンクをコピー" style={{ position: "absolute", top: 100, right: 16, width: 38, height: 38, borderRadius: 19, backgroundColor: "rgba(0,0,0,0.5)", alignItems: "center", justifyContent: "center" }}>
           <IconSymbol name="square.and.arrow.up" size={19} color="#FFF" />
         </Pressable>
         {linkCopied ? <View style={{ position: "absolute", top: 146, right: 16, borderRadius: 10, backgroundColor: "rgba(25,25,28,0.92)", paddingHorizontal: 12, paddingVertical: 9 }}><Text style={{ color: "#FFF", fontSize: 12, fontWeight: "800" }}>リンクをコピーしました</Text></View> : null}
@@ -1176,7 +1176,7 @@ export default function EventDetailScreen() {
             return <Pressable key={comment.id} onLongPress={() => Alert.alert("コメント", "操作を選択してください", [
               { text: "返信", onPress: () => { setEventCommentText(`@${stripRankFromName(comment.author)} `); requestAnimationFrame(() => eventCommentInputRef.current?.focus()); } },
               { text: "テキストをコピー", onPress: () => { void Clipboard.setStringAsync(comment.text); } },
-              { text: "メッセージリンクをコピー", onPress: () => { void Clipboard.setStringAsync(`https://app.irotas-community.com/event-detail?id=${encodeURIComponent(event.id)}&comment=${encodeURIComponent(comment.id)}`); } },
+              { text: "メッセージリンクをコピー", onPress: () => { void Clipboard.setStringAsync(`${PUBLIC_APP_URL}/event-detail?id=${encodeURIComponent(event.id)}&comment=${encodeURIComponent(comment.id)}`); } },
               ...((isOwnComment || userIsOperator) ? [
                 { text: "投稿を編集", onPress: () => { setEditingEventCommentId(comment.id); setEditingEventCommentText(comment.text); } },
                 { text: "投稿を削除", style: "destructive" as const, onPress: () => handleDeleteEventComment(comment.id) },
