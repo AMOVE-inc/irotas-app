@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { toggleReactionMember } from "../lib/chat-reactions";
-import { normalizeBoardReactions } from "../lib/board-reactions";
+import { boardReactionImageUrl, normalizeBoardReactions } from "../lib/board-reactions";
 
 describe("chat emoji reactions", () => {
   it("adds and removes a member reaction without changing the source", () => {
@@ -15,7 +15,14 @@ describe("chat emoji reactions", () => {
     expect(toggleReactionMember({ "❤️": ["u1"] }, "❤️", "u1")).toEqual({});
   });
 
-  it("Discordのカスタム絵文字コードを通常の絵文字へ統合する", () => {
-    expect(normalizeBoardReactions({ "<:emoji_3:1458869416589529220>": ["u1"], "😊": ["u2"] })).toEqual({ "😊": ["u1", "u2"] });
+  it("Discordのカスタム絵文字コードと旧識別名を画像表示用に統合する", () => {
+    expect(normalizeBoardReactions({ "<:emoji_6:1458869550471975023>": ["u1"], emoji_6: ["u2"] })).toEqual({
+      "<:emoji_6:1458869550471975023>": ["u1", "u2"],
+    });
+    expect(boardReactionImageUrl("emoji_6")).toBe("https://cdn.discordapp.com/emojis/1458869550471975023.png?size=64&quality=lossless");
+  });
+
+  it("IDが不明な旧識別名を画面に露出しない", () => {
+    expect(normalizeBoardReactions({ emoji_999: ["u1"] })).toEqual({ "😊": ["u1"] });
   });
 });

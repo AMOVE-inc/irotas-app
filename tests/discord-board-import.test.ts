@@ -42,6 +42,16 @@ describe("Discord board archive", () => {
     expect(archive.threads.find((thread) => thread.category === "gourmet-advice")?.gourmetAdvice).toBeTruthy();
   });
 
+  it("移行したカスタムスタンプをDiscord画像として保持する", () => {
+    const henderson = archive.threads.find((thread) => thread.id === "discord-board-1547395669915078667");
+    expect(Object.keys(henderson?.reactions ?? {})).toEqual(expect.arrayContaining([
+      "💖",
+      "<:emoji_6:1458869550471975023>",
+      "<:emoji_11:1458869693862510645>",
+    ]));
+    expect(Object.keys(henderson?.reactions ?? {})).not.toContain("emoji_6");
+  });
+
   it("グルメ相談室の全スレ・コメント・添付画像を保持する", () => {
     const adviceThreads = archive.threads.filter((thread) => thread.category === "gourmet-advice");
     const adviceComments = adviceThreads.flatMap((thread) => archive.comments[thread.id] ?? []);

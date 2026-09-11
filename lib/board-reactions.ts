@@ -6,15 +6,40 @@ const COMMENT_KEY = "board_comment_reactions_v1";
 
 type ReactionMap = Record<string, Record<string, string[]>>;
 
+const LEGACY_DISCORD_EMOJI_IDS: Record<string, string> = {
+  emoji_1: "1458866898656690246",
+  emoji_3: "1458869416589529220",
+  emoji_4: "1458869442909044746",
+  emoji_5: "1458869474466857245",
+  emoji_6: "1458869550471975023",
+  emoji_7: "1458869576451358780",
+  emoji_11: "1458869693862510645",
+  emoji_12: "1458871164490350757",
+  emoji_23: "1226010585339138080",
+};
+
+const DISCORD_EMOJI_PATTERN = /^<a?:([^:>]+):(\d+)>$/;
+
+export function boardReactionImageUrl(value: string): string | undefined {
+  const customEmoji = value.match(DISCORD_EMOJI_PATTERN);
+  if (customEmoji) return `https://cdn.discordapp.com/emojis/${customEmoji[2]}.png?size=64&quality=lossless`;
+  const legacyId = LEGACY_DISCORD_EMOJI_IDS[value.toLowerCase()];
+  return legacyId ? `https://cdn.discordapp.com/emojis/${legacyId}.png?size=64&quality=lossless` : undefined;
+}
+
+export function boardReactionAccessibilityLabel(value: string): string {
+  const customEmoji = value.match(DISCORD_EMOJI_PATTERN);
+  const name = customEmoji?.[1] ?? (/^emoji_\d+$/i.test(value) ? value : undefined);
+  return name ? "カスタムスタンプ" : value;
+}
+
 export function normalizeBoardReactionEmoji(value: string): string {
-  const match = value.match(/^<a?:([^:>]+):\d+>$/);
-  if (!match) return value;
-  const name = match[1].toLowerCase();
-  if (/heart|love|like/.test(name)) return "❤️";
-  if (/clap|applause/.test(name)) return "👏";
-  if (/party|congrat|celebrat/.test(name)) return "🎉";
-  if (/yum|delicious|food/.test(name)) return "😋";
-  return "😊";
+  const match = value.match(DISCORD_EMOJI_PATTERN);
+  if (match) return `<:${match[1]}:${match[2]}>`;
+  const legacyId = LEGACY_DISCORD_EMOJI_IDS[value.toLowerCase()];
+  if (legacyId) return `<:${value.toLowerCase()}:${legacyId}>`;
+  if (/^emoji_\d+$/i.test(value)) return "😊";
+  return value;
 }
 
 /**
