@@ -147,6 +147,8 @@ export default function EventDetailScreen() {
   const [editingEventCommentId, setEditingEventCommentId] = useState<string | null>(null);
   const [editingEventCommentText, setEditingEventCommentText] = useState("");
   const [deletedEventCommentIds, setDeletedEventCommentIds] = useState<string[]>([]);
+  const [eventCommentActionTarget, setEventCommentActionTarget] = useState<EventComment | null>(null);
+  const [eventCommentDeleteTarget, setEventCommentDeleteTarget] = useState<EventComment | null>(null);
   const [eventCommentFocused, setEventCommentFocused] = useState(false);
   const [showAdminEdit, setShowAdminEdit] = useState(false);
   const [adminTitle, setAdminTitle] = useState(event?.title ?? "");
@@ -422,19 +424,21 @@ export default function EventDetailScreen() {
     void AsyncStorage.setItem(eventCommentsKey(event.id), JSON.stringify(next));
   };
 
-  const handleDeleteEventComment = (commentId: string) => Alert.alert("コメントを削除しますか？", "削除後は元に戻せません。", [
-    { text: "キャンセル", style: "cancel" },
-    { text: "削除", style: "destructive", onPress: () => {
-      const next = eventComments.filter((comment) => comment.id !== commentId);
-      const deletedIds = [...new Set([...deletedEventCommentIds, commentId])];
-      setEventComments(next);
-      setDeletedEventCommentIds(deletedIds);
-      void Promise.all([
-        AsyncStorage.setItem(eventCommentsKey(event.id), JSON.stringify(next)),
-        AsyncStorage.setItem(deletedEventCommentsKey(event.id), JSON.stringify(deletedIds)),
-      ]);
-    } },
-  ]);
+  const handleDeleteEventComment = (commentId: string) => {
+    const next = eventComments.filter((comment) => comment.id !== commentId);
+    const deletedIds = [...new Set([...deletedEventCommentIds, commentId])];
+    setEventComments(next);
+    setDeletedEventCommentIds(deletedIds);
+    setEventCommentDeleteTarget(null);
+    if (editingEventCommentId === commentId) {
+      setEditingEventCommentId(null);
+      setEditingEventCommentText("");
+    }
+    void Promise.all([
+      AsyncStorage.setItem(eventCommentsKey(event.id), JSON.stringify(next)),
+      AsyncStorage.setItem(deletedEventCommentsKey(event.id), JSON.stringify(deletedIds)),
+    ]);
+  };
 
   const handleJoin = () => {
     if (event.status === "full") {
@@ -1172,17 +1176,7 @@ export default function EventDetailScreen() {
               ?? memberDirectory.find((member) => stripRankFromName(member.displayName) === stripRankFromName(comment.author))?.id
               ?? getDiscordAuthorByName(comment.author)?.id;
             const openAuthor = () => { if (profileId) openMemberProfile(profileId, comment.author); };
-            const isOwnComment = comment.authorId === viewerMemberId || stripRankFromName(comment.author) === stripRankFromName(authUser?.name ?? CURRENT_USER.name);
-            return <Pressable key={comment.id} onLongPress={() => Alert.alert("コメント", "操作を選択してください", [
-              { text: "返信", onPress: () => { setEventCommentText(`@${stripRankFromName(comment.author)} `); requestAnimationFrame(() => eventCommentInputRef.current?.focus()); } },
-              { text: "テキストをコピー", onPress: () => { void Clipboard.setStringAsync(comment.text); } },
-              { text: "メッセージリンクをコピー", onPress: () => { void Clipboard.setStringAsync(`${PUBLIC_APP_URL}/event-detail?id=${encodeURIComponent(event.id)}&comment=${encodeURIComponent(comment.id)}`); } },
-              ...((isOwnComment || userIsOperator) ? [
-                { text: "投稿を編集", onPress: () => { setEditingEventCommentId(comment.id); setEditingEventCommentText(comment.text); } },
-                { text: "投稿を削除", style: "destructive" as const, onPress: () => handleDeleteEventComment(comment.id) },
-              ] : []),
-              { text: "キャンセル", style: "cancel" },
-            ])} delayLongPress={350} style={{ flexDirection: "row", marginTop: 12, paddingTop: 12, borderTopWidth: 0.5, borderTopColor: colors.border }}>
+            return <Pressable key={comment.id} onLongPress={() => setEventCommentActionTarget(comment)} delayLongPress={350} accessibilityHint="長押しするとコメントの操作メニューを開きます" style={{ flexDirection: "row", marginTop: 12, paddingTop: 12, borderTopWidth: 0.5, borderTopColor: colors.border }}>
               <Pressable onPress={openAuthor} disabled={!profileId}><Image source={author.avatar} style={{ width: 32, height: 32, borderRadius: 16, marginRight: 9 }} contentFit="cover" /></Pressable>
               <View style={{ flex: 1 }}>
                 <View style={{ flexDirection: "row", alignItems: "center", flexWrap: "wrap", marginBottom: 3 }}>
@@ -1191,7 +1185,7 @@ export default function EventDetailScreen() {
                   <MemberClubLeaderBadges roles={author.roles} name={author.badgeName} compact />
                   <MemberRoleBadge name="" role={author.role} compact />
                 </View>
-                {editingEventCommentId === comment.id ? <View style={{ gap: 7 }}><TextInput value={editingEventCommentText} onChangeText={setEditingEventCommentText} multiline autoFocus style={{ minHeight: 84, backgroundColor: colors.background, borderWidth: 1, borderColor: colors.border, borderRadius: 10, padding: 10, fontSize: 14, color: colors.foreground }} /><View style={{ flexDirection: "row", gap: 8 }}><Pressable onPress={handleSaveEventCommentEdit} style={{ backgroundColor: "#3478C7", borderRadius: 8, paddingHorizontal: 13, paddingVertical: 7 }}><Text style={{ color: "#FFF", fontSize: 12, fontWeight: "800" }}>保存</Text></Pressable><Pressable onPress={() => handleDeleteEventComment(comment.id)} style={{ backgroundColor: "#FCE7E7", borderRadius: 8, paddingHorizontal: 13, paddingVertical: 7 }}><Text style={{ color: colors.error, fontSize: 12, fontWeight: "800" }}>削除</Text></Pressable><Pressable onPress={() => setEditingEventCommentId(null)} style={{ paddingHorizontal: 10, paddingVertical: 7 }}><Text style={{ color: colors.muted, fontSize: 12 }}>キャンセル</Text></Pressable></View></View> : <MentionText content={comment.text} groups={eventMentionGroups} onMentionPress={(label) => { const normalized = mentionDisplayName(label); const targetId = getDiscordAuthorByName(normalized)?.id ?? memberDirectory.find((member) => mentionDisplayName(member.displayName) === normalized)?.id ?? findMentionedMemberId(normalized, MEMBERS); if (targetId) openMemberProfile(targetId); }} />}
+                {editingEventCommentId === comment.id ? <View style={{ gap: 7 }}><TextInput value={editingEventCommentText} onChangeText={setEditingEventCommentText} multiline autoFocus style={{ minHeight: 84, backgroundColor: colors.background, borderWidth: 1, borderColor: colors.border, borderRadius: 10, padding: 10, fontSize: 14, color: colors.foreground }} /><View style={{ flexDirection: "row", gap: 8 }}><Pressable onPress={handleSaveEventCommentEdit} style={{ backgroundColor: "#3478C7", borderRadius: 8, paddingHorizontal: 13, paddingVertical: 7 }}><Text style={{ color: "#FFF", fontSize: 12, fontWeight: "800" }}>保存</Text></Pressable><Pressable onPress={() => setEventCommentDeleteTarget(comment)} style={{ backgroundColor: "#FCE7E7", borderRadius: 8, paddingHorizontal: 13, paddingVertical: 7 }}><Text style={{ color: colors.error, fontSize: 12, fontWeight: "800" }}>削除</Text></Pressable><Pressable onPress={() => setEditingEventCommentId(null)} style={{ paddingHorizontal: 10, paddingVertical: 7 }}><Text style={{ color: colors.muted, fontSize: 12 }}>キャンセル</Text></Pressable></View></View> : <MentionText content={comment.text} groups={eventMentionGroups} onMentionPress={(label) => { const normalized = mentionDisplayName(label); const targetId = getDiscordAuthorByName(normalized)?.id ?? memberDirectory.find((member) => mentionDisplayName(member.displayName) === normalized)?.id ?? findMentionedMemberId(normalized, MEMBERS); if (targetId) openMemberProfile(targetId); }} />}
               </View>
             </Pressable>;
           })}
@@ -1266,6 +1260,36 @@ export default function EventDetailScreen() {
           </View>
       </ScrollView>
       <PersistentBottomNav active="/events" />
+
+      <Modal visible={eventCommentActionTarget !== null} transparent animationType="fade" onRequestClose={() => setEventCommentActionTarget(null)}>
+        <View style={{ flex: 1, justifyContent: "flex-end", backgroundColor: "rgba(20,18,24,0.45)" }}>
+          <Pressable accessibilityLabel="コメント操作を閉じる" onPress={() => setEventCommentActionTarget(null)} style={{ position: "absolute", top: 0, right: 0, bottom: 0, left: 0 }} />
+          <View style={{ width: "100%", maxWidth: 520, alignSelf: "center", borderTopLeftRadius: 24, borderTopRightRadius: 24, backgroundColor: colors.background, paddingHorizontal: 18, paddingTop: 10, paddingBottom: 22 }}>
+            <View style={{ width: 42, height: 5, borderRadius: 3, alignSelf: "center", backgroundColor: colors.border, marginBottom: 10 }} />
+            <Text style={{ fontSize: 13, color: colors.muted, marginBottom: 5 }} numberOfLines={2}>{eventCommentActionTarget?.text}</Text>
+            {[
+              { label: "返信", icon: "arrowshape.turn.up.left.fill", action: () => { const target = eventCommentActionTarget; setEventCommentActionTarget(null); if (!target) return; setEventCommentText(`@${stripRankFromName(target.author)} `); requestAnimationFrame(() => eventCommentInputRef.current?.focus()); } },
+              { label: "テキストをコピー", icon: "doc.on.doc", action: () => { const target = eventCommentActionTarget; setEventCommentActionTarget(null); if (target) void Clipboard.setStringAsync(target.text); } },
+              { label: "メッセージリンクをコピー", icon: "link", action: () => { const target = eventCommentActionTarget; setEventCommentActionTarget(null); if (target) void Clipboard.setStringAsync(`${PUBLIC_APP_URL}/event-detail?id=${encodeURIComponent(event.id)}&comment=${encodeURIComponent(target.id)}`); } },
+              ...((eventCommentActionTarget && (eventCommentActionTarget.authorId === viewerMemberId || stripRankFromName(eventCommentActionTarget.author) === stripRankFromName(authUser?.name ?? CURRENT_USER.name) || userIsOperator)) ? [
+                { label: "コメントを編集", icon: "pencil", action: () => { const target = eventCommentActionTarget; setEventCommentActionTarget(null); if (!target) return; setEditingEventCommentId(target.id); setEditingEventCommentText(target.text); } },
+                { label: "コメントを削除", icon: "trash", destructive: true, action: () => { const target = eventCommentActionTarget; setEventCommentActionTarget(null); if (target) setEventCommentDeleteTarget(target); } },
+              ] : []),
+            ].map((item) => <Pressable key={item.label} onPress={item.action} style={{ minHeight: 50, flexDirection: "row", alignItems: "center", borderTopWidth: 0.5, borderTopColor: colors.border }}><IconSymbol name={item.icon as any} size={20} color={("destructive" in item && item.destructive) ? colors.error : colors.foreground} /><Text style={{ marginLeft: 12, fontSize: 15, fontWeight: "700", color: ("destructive" in item && item.destructive) ? colors.error : colors.foreground }}>{item.label}</Text></Pressable>)}
+            <Pressable onPress={() => setEventCommentActionTarget(null)} style={{ minHeight: 50, alignItems: "center", justifyContent: "center", borderRadius: 13, backgroundColor: colors.surface, marginTop: 8 }}><Text style={{ fontSize: 15, fontWeight: "800", color: colors.foreground }}>キャンセル</Text></Pressable>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal visible={eventCommentDeleteTarget !== null} transparent animationType="fade" onRequestClose={() => setEventCommentDeleteTarget(null)}>
+        <View style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: 22, backgroundColor: "rgba(20,18,24,0.52)" }}>
+          <View style={{ width: "100%", maxWidth: 390, borderRadius: 20, backgroundColor: colors.background, padding: 20 }}>
+            <Text style={{ textAlign: "center", fontSize: 18, fontWeight: "900", color: colors.foreground }}>コメントを削除しますか？</Text>
+            <Text style={{ textAlign: "center", fontSize: 13, lineHeight: 19, color: colors.muted, marginTop: 8 }}>削除後は元に戻せません。</Text>
+            <View style={{ flexDirection: "row", gap: 10, marginTop: 20 }}><Pressable onPress={() => setEventCommentDeleteTarget(null)} style={{ flex: 1, minHeight: 48, alignItems: "center", justifyContent: "center", borderRadius: 13, backgroundColor: colors.surface }}><Text style={{ fontWeight: "800", color: colors.foreground }}>キャンセル</Text></Pressable><Pressable onPress={() => { if (eventCommentDeleteTarget) handleDeleteEventComment(eventCommentDeleteTarget.id); }} style={{ flex: 1, minHeight: 48, alignItems: "center", justifyContent: "center", borderRadius: 13, backgroundColor: "#D94C55" }}><Text style={{ fontWeight: "900", color: "#FFF" }}>削除</Text></Pressable></View>
+          </View>
+        </View>
+      </Modal>
 
       <Modal visible={attendanceSheet !== null} transparent animationType="slide" onRequestClose={() => setAttendanceSheet(null)}>
         <View style={{ flex: 1, justifyContent: "flex-end", backgroundColor: "rgba(20,18,24,0.5)" }}>

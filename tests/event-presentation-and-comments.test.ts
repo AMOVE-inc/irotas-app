@@ -34,6 +34,18 @@ describe("event presentation and comments", () => {
     expect(detail).toContain("<MemberClubLeaderBadges roles={author.roles} name={author.badgeName} compact />");
   });
 
+  it("opens an in-app long-press menu for event comment actions", () => {
+    const detail = source("app/event-detail.tsx");
+    expect(detail).toContain("onLongPress={() => setEventCommentActionTarget(comment)}");
+    expect(detail).toContain('label: "返信"');
+    expect(detail).toContain('label: "テキストをコピー"');
+    expect(detail).toContain('label: "メッセージリンクをコピー"');
+    expect(detail).toContain('label: "コメントを編集"');
+    expect(detail).toContain('label: "コメントを削除"');
+    expect(detail).toContain("eventCommentActionTarget.authorId === viewerMemberId");
+    expect(detail).toContain("userIsOperator");
+  });
+
   it("uses the complete badge set for confirmed participants", () => {
     const detail = source("app/event-detail.tsx");
     expect(detail).toContain("<MemberRankBadge rank={member.rank} name={member.badgeName} role={member.role} compact />");
