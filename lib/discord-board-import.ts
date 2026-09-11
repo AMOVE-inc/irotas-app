@@ -89,6 +89,32 @@ export interface ImportedDiscordBoard {
   comments: Record<string, BoardComment[]>;
 }
 
+/** Discord側の旧フォーラム名を、アプリで表示する正式キーに揃える。 */
+export function normalizeDiscordBoardCategory(category: string): string {
+  switch (category) {
+    case "gourmet-consultation": return "gourmet-advice";
+    case "free-board": return "free-chat";
+    case "gourmet-board-kanto":
+    case "gourmet-board-kansai": return "free-chat";
+    default: return category;
+  }
+}
+
+function importedGourmetContest(title: string, content: string): BoardThread["gourmetContest"] | undefined {
+  const text = `${title}\n${content}`;
+  if (!/開催中|開催終了/.test(text)) return undefined;
+  const isOpen = /開催中/.test(text) && !/開催終了/.test(text);
+  return { commentDeadline: isOpen ? "2099-12-31" : "2000-01-01", archived: !isOpen };
+}
+
+function importedGourmetAdvice(record: RawDiscordBoardThread, preview: string): BoardThread["gourmetAdvice"] | undefined {
+  if (record.gourmetAdvice) return record.gourmetAdvice;
+  const area = preview.match(/(?:エリア|場所)\s*[：:]\s*([^\n]+)/)?.[1]?.trim() ?? "指定なし";
+  const budget = preview.match(/予算\s*[：:]\s*([^\n]+)/)?.[1]?.trim() ?? "指定なし";
+  const scene = preview.match(/(?:利用シーン|シーン)\s*[：:]\s*([^\n]+)/)?.[1]?.trim() ?? "指定なし";
+  return { theme: record.title, area, budget, scene, comment: preview };
+}
+
 export function stripLegacyClubApplicationBlock(content: string): string {
   return content
     .replace(/\*{0,2}📝\s*入部申請フォーム\*{0,2}[\s\S]*?https:\/\/docs\.google\.com\/forms\/[^\s*]+\*{0,2}/g, "")
@@ -131,14 +157,15 @@ export function parseDiscordBoardArchive(archive: RawDiscordBoardArchive, direct
 
   const threads = rawThreads.map((record): BoardThread => {
     const threadComments = comments[record.id] ?? [];
-    const normalizedContent = cleanDiscordBoardContent(record.title, record.content, record.category);
-    const preview = record.category === "club-introduction" ? stripLegacyClubApplicationBlock(normalizedContent) : normalizedContent;
-    const recruitmentStatus = inferImportedRecruitmentStatus(record.category, record.title, preview);
+    const category = normalizeDiscordBoardCategory(record.category);
+    const normalizedContent = cleanDiscordBoardContent(record.title, record.content, category);
+    const preview = category === "club-introduction" ? stripLegacyClubApplicationBlock(normalizedContent) : normalizedContent;
+    const recruitmentStatus = inferImportedRecruitmentStatus(category, record.title, preview);
     return {
       id: record.id,
       title: cleanDiscordBoardTitle(record.title),
       author: authorFor(record, directory, authorFallbacks),
-      category: record.category,
+      category,
       commentCount: threadComments.length,
       lastUpdated: threadComments.at(-1)?.createdAt ?? record.createdAt,
       preview,
@@ -149,7 +176,8 @@ export function parseDiscordBoardArchive(archive: RawDiscordBoardArchive, direct
       reactions: record.reactions ? normalizeBoardReactions(record.reactions) : undefined,
       selfIntroduction: record.selfIntroduction,
       mealReport: record.mealReport,
-      gourmetAdvice: record.gourmetAdvice,
+      gourmetAdvice: category === "gourmet-advice" ? importedGourmetAdvice(record, preview) : undefined,
+      gourmetContest: category === "gourmet-contest" ? importedGourmetContest(record.title, preview) : undefined,
     };
   });
 

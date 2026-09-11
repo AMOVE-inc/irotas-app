@@ -35,7 +35,7 @@ const schemeFromBundleId = process.env.EXPO_PUBLIC_APP_SCHEME ?? "iroplus";
 const env = {
   // App branding - update these values directly (do not use env vars)
   appName: "IRO＋",
-  appSlug: "irotas-app",
+  appSlug: "irotas-community",
   // Hosted app logo used by screens that need an absolute URL.
   // Native and web preview icons use assets/images/irotas-logo-square.png below.
   logoUrl:
@@ -151,6 +151,11 @@ const config: ExpoConfig = {
   experiments: {
     typedRoutes: true,
     reactCompiler: true,
+  },
+  extra: {
+    eas: {
+      projectId: "d185f77b-b47d-4820-9cc9-51a15b159de7",
+    },
   },
 };
 

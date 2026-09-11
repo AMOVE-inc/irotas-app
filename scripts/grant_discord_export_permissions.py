@@ -9,16 +9,8 @@ import aiohttp
 import yaml
 
 API = "https://discord.com/api/v10"
-CHANNEL_IDS = (
-    "1228983536988586044",  # 全体イベント
-    "1332944923166507038",  # 関東支部イベント
-    "1332959273394638911",  # 関西支部イベント
-    "1227876549139890226",  # 関東グルメ掲示板
-    "1333062225514201129",  # 関西グルメ掲示板
-    "1228614719309352970",  # なんでも掲示板
-    "1472183879187042375",  # 教えてグルメ相談室
-)
 READ_BITS = (1 << 10) | (1 << 16)  # VIEW_CHANNEL | READ_MESSAGE_HISTORY
+ACCESS_ROLE_NAME = "IRO+ Migration Channel Access"
 
 
 async def request(session, method, path, **kwargs):
@@ -48,18 +40,41 @@ async def main():
             raise RuntimeError("IRO+ Migration Export role was not found")
         migration_role = role_by_id[migration_role_id]
         print(f"role={migration_role['name']} permissions={migration_role['permissions']}", flush=True)
-        for channel_id in CHANNEL_IDS:
-            channel = await request(session, "GET", f"/channels/{channel_id}")
-            relevant = [{"id": str(row["id"]), "name": role_by_id.get(str(row["id"]), {}).get("name", "member"), "allow": row.get("allow"), "deny": row.get("deny")} for row in channel.get("permission_overwrites", []) if str(row["id"]) in {guild_id, migration_role_id, *map(str, member.get("roles", []))}]
+        access_role = next(
+            (role for role in roles if role["name"] == ACCESS_ROLE_NAME),
+            None,
+        )
+        if not access_role:
+            if not args.apply:
+                raise RuntimeError(
+                    f"{ACCESS_ROLE_NAME} is absent; rerun with --apply to create it"
+                )
+            access_role = await request(
+                session,
+                "POST",
+                f"/guilds/{guild_id}/roles",
+                json={"name": ACCESS_ROLE_NAME, "permissions": str(READ_BITS)},
+            )
+            await request(
+                session,
+                "PUT",
+                f"/guilds/{guild_id}/members/{bot['id']}/roles/{access_role['id']}",
+            )
+            print(f"created access role={access_role['id']}", flush=True)
+        access_role_id = str(access_role["id"])
+        channels = await request(session, "GET", f"/guilds/{guild_id}/channels")
+        for channel in channels:
+            channel_id = str(channel["id"])
+            relevant = [{"id": str(row["id"]), "name": role_by_id.get(str(row["id"]), {}).get("name", "member"), "allow": row.get("allow"), "deny": row.get("deny")} for row in channel.get("permission_overwrites", []) if str(row["id"]) in {guild_id, migration_role_id, access_role_id, *map(str, member.get("roles", []))}]
             print(f"  overwrites={relevant}", flush=True)
-            overwrite = next((row for row in channel.get("permission_overwrites", []) if str(row["id"]) == migration_role_id and int(row["type"]) == 0), None)
+            overwrite = next((row for row in channel.get("permission_overwrites", []) if str(row["id"]) == access_role_id and int(row["type"]) == 0), None)
             allow = int(overwrite.get("allow", "0")) if overwrite else 0
             deny = int(overwrite.get("deny", "0")) if overwrite else 0
             updated_allow = allow | READ_BITS
             updated_deny = deny & ~READ_BITS
-            print(f"{channel['name']}: allow {allow}->{updated_allow}, deny {deny}->{updated_deny}", flush=True)
+            print(f"{channel['name']} ({channel_id}): allow {allow}->{updated_allow}, deny {deny}->{updated_deny}", flush=True)
             if args.apply:
-                await request(session, "PUT", f"/channels/{channel_id}/permissions/{migration_role_id}", json={"type": 0, "allow": str(updated_allow), "deny": str(updated_deny)})
+                await request(session, "PUT", f"/channels/{channel_id}/permissions/{access_role_id}", json={"type": 0, "allow": str(updated_allow), "deny": str(updated_deny)})
         print("適用完了" if args.apply else "dry-run", flush=True)
 
 

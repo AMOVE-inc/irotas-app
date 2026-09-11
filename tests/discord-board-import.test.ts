@@ -10,6 +10,7 @@ describe("Discord board archive", () => {
     expect(categories).toContain("introduction");
     expect(categories).toContain("meal-report");
     expect(categories).toContain("gourmet-advice");
+    expect(categories).toContain("free-chat");
     expect([...categories].some((category) => category.startsWith("club-club-"))).toBe(true);
     expect(categories).toContain("club-introduction");
     expect(categories).toContain("club-all");
@@ -47,6 +48,13 @@ describe("Discord board archive", () => {
     expect(adviceThreads.length).toBeGreaterThanOrEqual(50);
     expect(adviceComments.length).toBeGreaterThanOrEqual(375);
     expect(adviceComments.flatMap((comment) => comment.images ?? []).length).toBeGreaterThanOrEqual(62);
+  });
+
+  it("なんでも掲示板の全スレ・コメントを表示用カテゴリへ正規化する", () => {
+    const freeThreads = archive.threads.filter((thread) => thread.category === "free-chat");
+    const freeComments = freeThreads.flatMap((thread) => archive.comments[thread.id] ?? []);
+    expect(freeThreads.length).toBeGreaterThanOrEqual(150);
+    expect(freeComments.length).toBeGreaterThanOrEqual(4_900);
   });
 
   it("部活紹介と活動報告の全スレ・コメント・添付画像を保持する", () => {

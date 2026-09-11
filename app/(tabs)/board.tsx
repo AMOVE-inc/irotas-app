@@ -348,8 +348,8 @@ function ThreadCard({ thread, onPress, onEdit, onDelete, onPin, onChangeRecruitm
   const recruitmentStatus = getBoardRecruitmentStatus(thread);
   const pinned = isThreadPinned(thread);
   const longPressHandled = useRef(false);
-  // 募集終了の過去投稿も通常の投稿として読めるようにする。募集状態はワッペンだけで区別する。
-  const visuallyClosed = thread.gourmetContest && !contestOpen;
+  // 過去の選手権も通常のカードとして表示し、開催中だけを緑のワッペンで区別する。
+  const visuallyClosed = false;
   useEffect(() => { void loadThreadReactions(thread.id, thread.reactions).then(setCardReactions); }, [thread.id, thread.reactions]);
   const toggleCardReaction = () => {
     if (!cardEmoji) return;
@@ -405,7 +405,7 @@ function ThreadCard({ thread, onPress, onEdit, onDelete, onPin, onChangeRecruitm
         style={{ flexDirection: "row", alignItems: "center", marginBottom: 8 }}
       >
         {pinned ? <View style={{ marginRight: 7, borderRadius: 10, paddingHorizontal: 8, paddingVertical: 6, backgroundColor: "#FFF2C7" }}><Text style={{ fontSize: 11, fontWeight: "900", color: "#8A6512" }}>📌 固定</Text></View> : null}
-        {recruitmentManaged ? <RecruitmentStatusBadge status={recruitmentStatus} /> : thread.gourmetContest ? <View style={{ marginRight: 9, borderRadius: 10, paddingHorizontal: 9, paddingVertical: 6, backgroundColor: contestOpen ? "#DDF3E3" : "#DADADD" }}><Text style={{ fontSize: 11, fontWeight: "900", color: contestOpen ? "#247A42" : "#66666B" }}>{contestOpen ? "開催中" : "開催終了"}</Text></View> : null}
+        {recruitmentManaged ? <RecruitmentStatusBadge status={recruitmentStatus} /> : thread.gourmetContest && contestOpen ? <View style={{ marginRight: 9, borderRadius: 10, paddingHorizontal: 9, paddingVertical: 6, backgroundColor: "#DDF3E3" }}><Text style={{ fontSize: 11, fontWeight: "900", color: "#247A42" }}>開催中</Text></View> : null}
         <Image
           source={thread.author.avatar}
           style={{ width: 30, height: 30, borderRadius: 15 }}

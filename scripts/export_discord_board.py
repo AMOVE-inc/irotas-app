@@ -77,14 +77,28 @@ def isoformat(value) -> str:
     return value.isoformat().replace("+00:00", "Z")
 
 
-def reactions_for(message: discord.Message) -> dict[str, list[str]] | None:
+async def reactions_for(message: discord.Message) -> dict[str, list[str]] | None:
+    """Keep the actual reactor IDs, rather than synthetic count placeholders.
+
+    The prior export preserved only reaction counts.  That made it impossible to
+    restore a member's existing reaction in IRO+ and could make the same member
+    react twice after migration.  Discord exposes the reactor list per emoji;
+    retain those IDs so the import can be idempotent and auditable.
+    """
     reactions = {}
     for reaction in message.reactions:
-        count = max(0, reaction.count)
-        if count:
-            reactions[str(reaction.emoji)] = [
-                f"discord-reaction-{message.id}-{index + 1}" for index in range(count)
+        try:
+            member_ids = [str(user.id) async for user in reaction.users(limit=None) if not user.bot]
+        except discord.HTTPException:
+            # Preserve the original count if Discord no longer exposes the
+            # member list (for example, a departed account).  The fallback is
+            # explicitly synthetic, so reconciliation can flag it later.
+            member_ids = [
+                f"discord-reaction-unresolved-{message.id}-{index + 1}"
+                for index in range(max(0, reaction.count))
             ]
+        if member_ids:
+            reactions[str(reaction.emoji)] = member_ids
     return reactions or None
 
 
@@ -253,7 +267,7 @@ async def message_record(message: discord.Message, asset_root: Path, relative_ro
         "parentMessageId": str(message.reference.message_id) if message.reference and message.reference.message_id else None,
         "images": images,
         "videos": videos,
-        "reactions": reactions_for(message),
+        "reactions": await reactions_for(message),
     }
 
 
@@ -265,6 +279,128 @@ async def records_for_messages(messages: list[discord.Message], asset_root: Path
             for message in messages[start:start + 16]
         ]))
     return records
+
+
+async def raw_message_record(message: discord.Message, asset_root: Path, relative_root: Path) -> dict:
+    """Produce an auditable source record for migration, without discarding files."""
+    # Keep the source snapshot fast and resumable. Binary image downloads run
+    # in a separate pass; their canonical Discord URLs and metadata are already
+    # retained here, so no attachment is lost if that pass is interrupted.
+    return {
+        "id": str(message.id),
+        "authorId": str(message.author.id),
+        "authorName": getattr(message.author, "display_name", message.author.name),
+        "content": message_content(message),
+        "createdAt": isoformat(message.created_at),
+        "parentMessageId": str(message.reference.message_id) if message.reference and message.reference.message_id else None,
+        "images": [],
+        "videos": [],
+        # A full user list for every emoji requires a separate Discord request
+        # per reaction.  On the historical channels that turns a server backup
+        # into hours of rate-limited requests.  Preserve the exact emoji and
+        # count in the primary immutable snapshot, then reconcile individual
+        # reactors in a resumable second pass.
+        "reactions": {
+            str(reaction.emoji): {"count": reaction.count, "users": None}
+            for reaction in message.reactions
+        } or None,
+        "attachments": [{
+        "id": str(attachment.id),
+        "filename": attachment.filename,
+        "contentType": attachment.content_type,
+        "size": attachment.size,
+        "url": attachment.url,
+        } for attachment in message.attachments],
+        "discordType": str(message.type),
+        "editedAt": isoformat(message.edited_at) if message.edited_at else None,
+    }
+
+
+async def raw_records_for_messages(messages, asset_root: Path, relative_root: Path) -> list[dict]:
+    records = []
+    for start in range(0, len(messages), 12):
+        records.extend(await asyncio.gather(*[
+            raw_message_record(message, asset_root, relative_root)
+            for message in messages[start:start + 12]
+        ]))
+    return records
+
+
+async def export_raw_guild(guild: discord.Guild, output_path: Path, asset_root: Path) -> None:
+    """Back up every readable server channel before transforming it for IRO+.
+
+    This snapshot is intentionally separate from the app-shaped board export: it
+    preserves channel IDs, thread boundaries, attachment metadata and reactor
+    IDs so imports can be re-run and reconciled later.
+    """
+    relative_root = Path("discord-final")
+    archive = {
+        "schemaVersion": 1,
+        "guildId": str(guild.id),
+        "guildName": guild.name,
+        "exportedAt": isoformat(discord.utils.utcnow()),
+        "channels": [],
+    }
+    readable = 0
+    messages_total = 0
+
+    def checkpoint() -> None:
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        output_path.write_text(json.dumps(archive, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+
+    for channel in sorted(guild.channels, key=lambda item: (item.position, item.id)):
+        checkpoint()
+        base = {
+            "id": str(channel.id),
+            "name": channel.name,
+            "type": channel.__class__.__name__,
+            "categoryId": str(channel.category_id) if getattr(channel, "category_id", None) else None,
+            "categoryName": getattr(getattr(channel, "category", None), "name", None),
+            "createdAt": isoformat(channel.created_at),
+        }
+        if isinstance(channel, discord.CategoryChannel):
+            archive["channels"].append(base)
+            continue
+        if not channel.permissions_for(guild.me).view_channel:
+            archive["channels"].append({**base, "unavailable": True})
+            continue
+        readable += 1
+        if isinstance(channel, discord.TextChannel):
+            print(f"[取得中] {channel.name}", flush=True)
+            messages = [message async for message in channel.history(limit=None, oldest_first=True)]
+            records = await raw_records_for_messages(messages, asset_root / str(channel.id), relative_root / str(channel.id))
+            messages_total += len(records)
+            archive["channels"].append({**base, "messages": records})
+            continue
+        if isinstance(channel, discord.ForumChannel):
+            print(f"[取得中] {channel.name} (forum)", flush=True)
+            threads = {thread.id: thread for thread in channel.threads}
+            async for thread in channel.archived_threads(limit=None):
+                threads[thread.id] = thread
+            exported_threads = []
+            for thread in sorted(threads.values(), key=lambda item: item.created_at):
+                messages = [message async for message in thread.history(limit=None, oldest_first=True)]
+                if not messages:
+                    try:
+                        messages = [await thread.fetch_message(thread.id)]
+                    except discord.DiscordException:
+                        messages = []
+                records = await raw_records_for_messages(messages, asset_root / str(channel.id), relative_root / str(channel.id))
+                messages_total += len(records)
+                exported_threads.append({
+                    "id": str(thread.id),
+                    "name": thread.name,
+                    "createdAt": isoformat(thread.created_at),
+                    "archived": thread.archived,
+                    "locked": thread.locked,
+                    "ownerId": str(thread.owner_id) if thread.owner_id else None,
+                    "messages": records,
+                })
+            archive["channels"].append({**base, "threads": exported_threads})
+            continue
+        archive["channels"].append({**base, "unsupported": True})
+    checkpoint()
+    print(f"[完了] 読取チャンネル {readable}件 / メッセージ {messages_total}件 / {output_path}", flush=True)
 
 
 def merge_consecutive(records: list[dict]) -> list[dict]:
@@ -394,6 +530,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--assets")
     parser.add_argument("--contest-output")
     parser.add_argument("--members-output")
+    parser.add_argument("--raw-output")
     parser.add_argument("--event-channels-only", action="store_true")
     return parser.parse_args()
 
@@ -545,6 +682,12 @@ async def main() -> None:
             destination.parent.mkdir(parents=True, exist_ok=True)
             destination.write_text(json.dumps(contests, ensure_ascii=False), encoding="utf-8")
             print(f"[完了] グルメ選手権 {len(contests)}件 / {destination}", flush=True)
+        elif args.raw_output:
+            await export_raw_guild(
+                guild,
+                Path(args.raw_output),
+                Path(args.raw_output).parent / "assets",
+            )
         elif args.output:
             if not args.assets:
                 raise ValueError("--assets is required with --output")

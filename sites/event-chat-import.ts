@@ -123,7 +123,7 @@ export async function handleEventChatImportPurgeRequest(request: Request, env: S
           WHERE room_id = ? AND deleted_at IS NULL
         )
     `).bind(now, now, roomId, roomId).run();
-    deletedRooms += Number(result.meta.changes ?? 0);
+    deletedRooms += Number(result.meta?.changes ?? 0);
   }
 
   return json({
