@@ -1,6 +1,7 @@
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { CURRENT_USER, DEFAULT_AVATAR, EVENTS, getRankFromPoints, type Event } from "@/constants/mock-data";
+import { IMPORTED_DISCORD_EVENTS } from "@/constants/imported-discord-events";
 import { XpRewardPopup } from "@/components/xp-reward-popup";
 import type { XpReward } from "@/lib/xp-store";
 import { GOURMET_GENRES } from "@/constants/event-options";
@@ -131,7 +132,10 @@ export default function CreateEventScreen() {
   const joinedClubs = clubs.filter((club) => canViewerAccessClubContent(club, authUser?.memberId, CURRENT_USER.id));
   const sourceClubId = params.sourceCategory?.startsWith("club-") ? params.sourceCategory.slice("club-".length) : "";
   const sourceIsJoinedClub = Boolean(sourceClubId && joinedClubs.some((club) => club.id === sourceClubId));
-  const initialEditingEvent = editId ? EVENTS.find((item) => item.id === editId) : undefined;
+  const initialEditingEvent = editId
+    ? EVENTS.find((item) => item.id === editId)
+      ?? IMPORTED_DISCORD_EVENTS.find((item) => item.id === editId) as Event | undefined
+    : undefined;
   const initialEditForm = initialEditingEvent ? eventFormValuesFromEvent(initialEditingEvent) : undefined;
   const [eventType, setEventType] = useState<Event["eventType"]>(initialEditForm?.eventType ?? (params.sourceThreadId ? (sourceIsJoinedClub ? "club" : "gourmet") : userIsOperator ? "official" : "gourmet"));
   const [selectedClubId, setSelectedClubId] = useState(initialEditForm?.clubId ?? (sourceIsJoinedClub ? sourceClubId : ""));
@@ -175,10 +179,14 @@ export default function CreateEventScreen() {
   useEffect(() => {
     if (!editId) return;
     let active = true;
-    const fallback = EVENTS.find((item) => item.id === editId);
-    void Api.getEvent(editId).catch(() => fallback).then((event) => {
+    const fallback = initialEditingEvent;
+    void Api.getEvent(editId).catch(() => fallback).then((fetchedEvent) => {
       if (!active) return;
-      if (!event) { setFormError("イベントが見つかりません"); return; }
+      if (!fetchedEvent) { setFormError("イベントが見つかりません"); return; }
+      const populatedFields = Object.fromEntries(
+        Object.entries(fetchedEvent).filter(([, value]) => value !== undefined && value !== null && value !== ""),
+      ) as Partial<Event>;
+      const event = fallback ? { ...fallback, ...populatedFields } as Event : fetchedEvent;
       const form = eventFormValuesFromEvent(event);
       setEditingEvent(event);
       setEventType(form.eventType); setSelectedClubId(form.clubId); setRestaurantName(form.restaurantName);
