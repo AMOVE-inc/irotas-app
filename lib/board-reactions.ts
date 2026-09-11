@@ -30,7 +30,7 @@ export function boardReactionImageUrl(value: string): string | undefined {
 export function boardReactionAccessibilityLabel(value: string): string {
   const customEmoji = value.match(DISCORD_EMOJI_PATTERN);
   const name = customEmoji?.[1] ?? (/^emoji_\d+$/i.test(value) ? value : undefined);
-  return name ? "カスタムスタンプ" : value;
+  return name ? "カスタムスタンプ" : `${value}スタンプ`;
 }
 
 export function normalizeBoardReactionEmoji(value: string): string {
