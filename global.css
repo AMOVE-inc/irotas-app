@@ -5,12 +5,21 @@
 /* Ensure the web preview fills the entire viewport */
 html, body, #root {
   width: 100%;
-  height: var(--app-viewport-height, 100dvh);
+  height: 100%;
+  min-height: 100%;
   margin: 0;
   padding: 0;
   overflow: hidden;
-  min-height: var(--app-viewport-height, 100dvh);
   background: #fff;
+}
+
+/* Let the browser own dynamic toolbar changes. This avoids resizing the React
+   tree on every Safari visualViewport scroll event. */
+@supports (height: 100dvh) {
+  html, body, #root {
+    height: 100dvh;
+    min-height: 100dvh;
+  }
 }
 
 /* Fix React Native Web root container */
@@ -19,5 +28,6 @@ html, body, #root {
   flex-direction: column !important;
   width: 100% !important;
   height: 100% !important;
-  min-height: 100% !important;
+  min-height: 0 !important;
+  background: #fff;
 }

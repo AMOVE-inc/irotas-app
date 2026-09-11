@@ -44,16 +44,7 @@ const DEFAULT_WEB_INSETS: EdgeInsets = {
   bottom: 0,
   left: 0,
 };
-const getWebViewportFrame = (): Rect | null => {
-  if (typeof window === "undefined") return null;
-  const viewport = window.visualViewport;
-  const width = viewport?.width ?? document.documentElement.clientWidth ?? window.innerWidth;
-  const height = viewport?.height ?? document.documentElement.clientHeight ?? window.innerHeight;
-  return { x: 0, y: 0, width, height };
-};
 const getRootFrame = (): Rect => {
-  const viewportFrame = getWebViewportFrame();
-  if (viewportFrame) return viewportFrame;
   if (typeof document !== "undefined") {
     const el = document.getElementById("root");
     if (el) {
@@ -170,16 +161,9 @@ export default function RootLayout() {
   useEffect(() => {
     if (Platform.OS !== "web") return;
     const updateFrame = () => {
-      const nextFrame = getRootFrame();
-      document.documentElement.style.setProperty("--app-viewport-height", `${Math.ceil(nextFrame.height)}px`);
-      setFrame(nextFrame);
+      setFrame(getRootFrame());
     };
     updateFrame();
-    const scheduledUpdates = [
-      window.setTimeout(updateFrame, 100),
-      window.setTimeout(updateFrame, 350),
-      window.setTimeout(updateFrame, 1000),
-    ];
     const rootEl = document.getElementById("root");
     let observer: ResizeObserver | null = null;
     if (rootEl && typeof ResizeObserver !== "undefined") {
@@ -189,15 +173,10 @@ export default function RootLayout() {
     window.addEventListener("resize", updateFrame);
     window.addEventListener("orientationchange", updateFrame);
     window.addEventListener("pageshow", updateFrame);
-    window.visualViewport?.addEventListener("resize", updateFrame);
-    window.visualViewport?.addEventListener("scroll", updateFrame);
     return () => {
-      scheduledUpdates.forEach((timer) => window.clearTimeout(timer));
       window.removeEventListener("resize", updateFrame);
       window.removeEventListener("orientationchange", updateFrame);
       window.removeEventListener("pageshow", updateFrame);
-      window.visualViewport?.removeEventListener("resize", updateFrame);
-      window.visualViewport?.removeEventListener("scroll", updateFrame);
       observer?.disconnect();
     };
   }, []);
@@ -267,12 +246,12 @@ export default function RootLayout() {
   }, [initialInsets, initialFrame]);
 
   const content = (
-    <GestureHandlerRootView style={{ flex: 1 }}>
+    <GestureHandlerRootView style={{ flex: 1, minHeight: 0, backgroundColor: "#FFFFFF" }}>
       <trpc.Provider client={trpcClient} queryClient={queryClient}>
         <QueryClientProvider client={queryClient}>
           <AuthProvider>
             <AuthGuard>
-              <Stack screenOptions={{ headerShown: false }}>
+              <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: "#FFFFFF" } }}>
                 <Stack.Screen
                   name="login"
                   options={{ presentation: "fullScreenModal" }}

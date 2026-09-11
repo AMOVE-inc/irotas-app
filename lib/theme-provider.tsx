@@ -62,7 +62,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   );
   return (
     <ThemeContext.Provider value={value}>
-      <View style={[{ flex: 1, width: "100%", height: "100%" }, themeVariables]}>{children}</View>
+      <View style={[{ flex: 1, minHeight: 0, width: "100%", height: "100%", backgroundColor: SchemeColors[colorScheme].background }, themeVariables]}>{children}</View>
     </ThemeContext.Provider>
   );
 }
