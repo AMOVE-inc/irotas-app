@@ -55,8 +55,17 @@ import { displayMemberName } from "@/lib/display-name";
 const REACTION_EMOJIS = ["👍", "❤️", "😂", "🎉", "😋", "🙏"] as const;
 const MORE_REACTION_EMOJIS = ["😀", "😃", "😄", "😁", "😆", "😅", "😂", "🤣", "😊", "😇", "🙂", "🙃", "😉", "😍", "🥰", "😘", "😋", "😛", "🤪", "🤔", "🫡", "😎", "🥳", "😮", "😢", "😭", "😡", "👍", "👎", "👏", "🙌", "🙏", "💪", "👀", "❤️", "🩷", "🧡", "💛", "💚", "💙", "💜", "🖤", "🤍", "🔥", "✨", "🎉", "💯", "✅", "❌", "💡", "📌", "🍽️", "🍣", "🍖", "🍜", "🍕", "🍰", "☕", "🍺", "🍷"] as const;
 const RETIRED_ANNOUNCEMENT = "IRO+運営からのお知らせをお届けします。最新情報はこちらでご確認ください。";
-const isRetiredAnnouncement = (message: ChatMessage) => message.chatId === "board-announcement" && message.content === RETIRED_ANNOUNCEMENT;
 const JAPAN_TIME_ZONE = "Asia/Tokyo";
+const AUGUST_2026_JST_START = Date.parse("2026-07-31T15:00:00.000Z");
+const SEPTEMBER_2026_JST_START = Date.parse("2026-08-31T15:00:00.000Z");
+const isRetiredAnnouncement = (message: ChatMessage) => {
+  if (message.chatId !== "board-announcement") return false;
+  if (message.content === RETIRED_ANNOUNCEMENT) return true;
+  const createdAt = Date.parse(message.createdAt);
+  return Number.isFinite(createdAt)
+    && createdAt >= AUGUST_2026_JST_START
+    && createdAt < SEPTEMBER_2026_JST_START;
+};
 const formatJapanDate = (value: string) => new Intl.DateTimeFormat("ja-JP", {
   timeZone: JAPAN_TIME_ZONE,
   year: "numeric",
