@@ -33,7 +33,7 @@ describe("event edit form values", () => {
     const form = eventFormValuesFromEvent(event);
     expect(validateEventForm(form, { requireImage: false })).toBeNull();
     form.genres = [];
-    expect(validateEventForm(form, { requireImage: false })).toContain("必須項目");
+    expect(validateEventForm(form, { requireImage: false })).toContain("グルメジャンル");
     expect(validateEventForm(form, { requireImage: false, allowEmptyGenres: true })).toBeNull();
   });
 
@@ -46,5 +46,16 @@ describe("event edit form values", () => {
     const after = { ...before, companionIds: ["member-2", "member-3"] };
     expect(hasOnlyCompanionChanges(before, after)).toBe(true);
     expect(hasOnlyCompanionChanges(before, { ...after, publicNotes: "変更" })).toBe(false);
+  });
+
+  it("accepts rank pricing without a separate participation fee and derives its range", () => {
+    const form = eventFormValuesFromEvent({ ...event, eventType: "official" });
+    form.useRankPrices = true;
+    form.fixedAmount = false;
+    form.budgetMin = "";
+    form.budgetMax = "";
+    form.rankPrices = { regular: "14,000円", silver: "13,000円", gold: "12,000円", platinum: "11,000円" };
+    expect(validateEventForm(form, { requireImage: false })).toBeNull();
+    expect(eventFormSaveFields(form)).toMatchObject({ price: "11,000円〜14,000円", priceMin: 11000, priceMax: 14000 });
   });
 });

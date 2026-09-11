@@ -115,6 +115,7 @@ export function eventFormValuesFromEvent(event: Event): EventFormValues {
 
 export function validateEventForm(values: EventFormValues, options: { requireImage: boolean; requireTerms?: boolean; termsAccepted?: boolean; allowedClubIds?: string[]; allowEmptyGenres?: boolean; allowPastDate?: boolean }) {
   const clubEvent = values.eventType === "club";
+  const usesRankPrices = values.eventType === "official" && values.useRankPrices;
   const missing: string[] = [];
   if (!clubEvent && !values.restaurantName.trim()) missing.push("店名");
   if (clubEvent && !values.eventName.trim()) missing.push("イベント名");
@@ -123,8 +124,8 @@ export function validateEventForm(values: EventFormValues, options: { requireIma
   if (!values.time) missing.push("開始時間");
   if (!values.reservationCapacity) missing.push("予約人数");
   if (!values.recruitCapacity) missing.push("募集人数");
-  if (!values.budgetMin) missing.push(values.eventType === "official" ? "参加費" : "予算");
-  if (!values.fixedAmount && !values.budgetMax) missing.push("予算の上限");
+  if (!usesRankPrices && !values.budgetMin) missing.push(values.eventType === "official" ? "参加費" : "予算");
+  if (!usesRankPrices && !values.fixedAmount && !values.budgetMax) missing.push("予算の上限");
   if (!values.decisionDate) missing.push("参加者決定予定日");
   if (!values.cancellationPolicy.trim()) missing.push("キャンセルポリシー");
   if (!clubEvent && !options.allowEmptyGenres && values.genres.length === 0) missing.push("グルメジャンル");
@@ -136,7 +137,7 @@ export function validateEventForm(values: EventFormValues, options: { requireIma
   const extracted = extractEventLocation(values.address);
   if (values.address.trim() && !extracted.prefecture) return "住所を入力する場合は都道府県名を含めてください";
   if (values.decisionDate > values.date) return "参加者決定予定日は開催日以前を選択してください";
-  if (!values.fixedAmount && numericEventAmount(values.budgetMin) > numericEventAmount(values.budgetMax)) return "下限金額は上限金額以下にしてください";
+  if (!usesRankPrices && !values.fixedAmount && numericEventAmount(values.budgetMin) > numericEventAmount(values.budgetMax)) return "下限金額は上限金額以下にしてください";
   if (minimumReservationCapacity(values.recruitCapacity, values.companionIds) > Number(values.reservationCapacity)) return "予約人数には、自分・同席者・募集人数の全員が収まるよう設定してください";
   if (values.tabelogUrl && !/^https?:\/\//i.test(values.tabelogUrl)) return "食べログURLは http:// または https:// から入力してください";
   if (values.googleMapsUrl && !/^https?:\/\//i.test(values.googleMapsUrl)) return "GoogleマップURLは http:// または https:// から入力してください";
@@ -146,11 +147,14 @@ export function validateEventForm(values: EventFormValues, options: { requireIma
 
 export function eventFormSaveFields(values: EventFormValues): Pick<Event, "title" | "restaurantName" | "description" | "date" | "time" | "location" | "prefecture" | "tokyoArea" | "capacity" | "reservationCapacity" | "price" | "priceMin" | "priceMax" | "genres" | "rankPrices" | "category" | "eventType" | "clubId" | "applicationDeadline" | "cancellationPolicy" | "selectionMethod" | "tabelogUrl" | "googleMapsUrl" | "publicNotes" | "privateMemo" | "companionIds"> {
   const extracted = extractEventLocation(values.address);
-  const priceMin = numericEventAmount(values.budgetMin);
-  const priceMax = values.fixedAmount ? priceMin : numericEventAmount(values.budgetMax);
-  const rankPrices = values.eventType === "official" && values.useRankPrices
+  const usesRankPrices = values.eventType === "official" && values.useRankPrices;
+  const rankPrices = usesRankPrices
     ? Object.fromEntries(EVENT_RANKS.map((rank) => [rank, values.rankPrices[rank]]))
     : undefined;
+  const rankAmounts = usesRankPrices ? EVENT_RANKS.map((rank) => numericEventAmount(values.rankPrices[rank])) : [];
+  const priceMin = usesRankPrices ? Math.min(...rankAmounts) : numericEventAmount(values.budgetMin);
+  const priceMax = usesRankPrices ? Math.max(...rankAmounts) : values.fixedAmount ? priceMin : numericEventAmount(values.budgetMax);
+  const price = priceMin === priceMax ? `${priceMin.toLocaleString()}円` : `${priceMin.toLocaleString()}円〜${priceMax.toLocaleString()}円`;
   return {
     title: values.eventName.trim() || values.restaurantName.trim(),
     restaurantName: values.restaurantName.trim(),
@@ -162,7 +166,7 @@ export function eventFormSaveFields(values: EventFormValues): Pick<Event, "title
     tokyoArea: extracted.tokyoArea,
     capacity: Number(values.recruitCapacity),
     reservationCapacity: Number(values.reservationCapacity),
-    price: values.fixedAmount ? `${priceMin.toLocaleString()}円` : `${values.budgetMin}〜${values.budgetMax}`,
+    price,
     priceMin,
     priceMax,
     genres: values.genres,

@@ -51,6 +51,11 @@ import {
   View,
 } from "react-native";
 
+type EventComment = { id: string; author: string; authorId?: string; text: string; createdAt: string };
+
+const eventCommentsKey = (eventId: string) => `irotas_event_comments_v1:${eventId}`;
+const deletedEventCommentsKey = (eventId: string) => `irotas_deleted_event_comments_v1:${eventId}`;
+
 function SharedEventSelectField({ label, value, options, onChange }: { label: string; value: string; options: string[]; onChange: (value: string) => void }) {
   const colors = useColors();
   const [visible, setVisible] = useState(false);
@@ -137,8 +142,11 @@ export default function EventDetailScreen() {
   const [contactedOrganizer, setContactedOrganizer] = useState(false);
   const [cancellationPolicyConfirmed, setCancellationPolicyConfirmed] = useState(false);
   const [applicationConfirmation, setApplicationConfirmation] = useState<{ title: string; message: string; buttons: AlertButton[] } | null>(null);
-  const [eventComments, setEventComments] = useState<{ id: string; author: string; authorId?: string; text: string; createdAt: string }[]>([]);
+  const [eventComments, setEventComments] = useState<EventComment[]>([]);
   const [eventCommentText, setEventCommentText] = useState("");
+  const [editingEventCommentId, setEditingEventCommentId] = useState<string | null>(null);
+  const [editingEventCommentText, setEditingEventCommentText] = useState("");
+  const [deletedEventCommentIds, setDeletedEventCommentIds] = useState<string[]>([]);
   const [eventCommentFocused, setEventCommentFocused] = useState(false);
   const [showAdminEdit, setShowAdminEdit] = useState(false);
   const [adminTitle, setAdminTitle] = useState(event?.title ?? "");
@@ -179,6 +187,7 @@ export default function EventDetailScreen() {
   const [, setEventRevision] = useState(0);
   // ボタン連打防止フラグ
   const joiningRef = useRef(false);
+  const eventCommentInputRef = useRef<TextInput>(null);
   const usePointsRef = useRef(false);
   const favoriteEventIds = useEventFavorites();
   // Event comments support the same club, branch, and member mentions as other composers.
@@ -261,13 +270,15 @@ export default function EventDetailScreen() {
   }, []);
   useEffect(() => { if (!event?.id) return; void recordActivityEvent({ userId: CURRENT_USER.id, eventName: "event_viewed", entityType: "event", entityId: event.id, dedupeKey: `${CURRENT_USER.id}:event_viewed:${event.id}:${new Date().toISOString().slice(0, 10)}` }); }, [event?.id]);
   useEffect(() => {
-    if (!id) return;
-    void AsyncStorage.getItem(`irotas_event_comments_v1:${id}`).then((raw) => {
-      const local = raw ? JSON.parse(raw) : [];
+    if (!event?.id) return;
+    void Promise.all([AsyncStorage.getItem(eventCommentsKey(event.id)), AsyncStorage.getItem(deletedEventCommentsKey(event.id))]).then(([raw, deletedRaw]) => {
+      const local = raw ? JSON.parse(raw) as EventComment[] : [];
+      const deletedIds = deletedRaw ? JSON.parse(deletedRaw) as string[] : [];
       const merged = [...(event?.importedComments ?? []), ...local];
-      setEventComments([...new Map(merged.map((comment) => [comment.id, comment])).values()].sort((a, b) => Date.parse(a.createdAt) - Date.parse(b.createdAt)));
+      setDeletedEventCommentIds(deletedIds);
+      setEventComments([...new Map(merged.map((comment) => [comment.id, comment])).values()].filter((comment) => !deletedIds.includes(comment.id)).sort((a, b) => Date.parse(a.createdAt) - Date.parse(b.createdAt)));
     }).catch(() => setEventComments(event?.importedComments ?? []));
-  }, [id, event?.id, event?.importedComments]);
+  }, [event?.id, event?.importedComments]);
 
   if (!event && (eventLoading || !eventResolved)) {
     return <ScreenContainer edges={["top", "bottom", "left", "right"]} className="p-6"><Text style={{ fontSize: 16, color: colors.muted, textAlign: "center", marginTop: 40 }}>読み込み中…</Text></ScreenContainer>;
@@ -387,7 +398,7 @@ export default function EventDetailScreen() {
     const next = [...eventComments, { id: `ec_${Date.now()}`, author: authUser?.name ?? CURRENT_USER.name, authorId: authUser?.memberId ?? authenticatedViewerMemberId, text: content, createdAt: new Date().toISOString() }];
     setEventComments(next);
     setEventCommentText("");
-    void AsyncStorage.setItem(`irotas_event_comments_v1:${event.id}`, JSON.stringify(next));
+    void AsyncStorage.setItem(eventCommentsKey(event.id), JSON.stringify(next));
     const preview = content.length > 50 ? `${content.slice(0, 50)}...` : content;
     const mentionedMemberIds = new Set(getMentionedMemberIds(content, MEMBERS, eventMentionGroups));
     for (const label of extractMentionLabels(content)) {
@@ -401,6 +412,29 @@ export default function EventDetailScreen() {
       if (directoryMember || member) void sendMentionNotification(directoryMember?.displayName ?? member?.name ?? "会員", authUser?.name ?? CURRENT_USER.name, event.title, preview);
     }
   };
+
+  const handleSaveEventCommentEdit = () => {
+    if (!editingEventCommentId || !editingEventCommentText.trim()) return;
+    const next = eventComments.map((comment) => comment.id === editingEventCommentId ? { ...comment, text: editingEventCommentText.trim() } : comment);
+    setEventComments(next);
+    setEditingEventCommentId(null);
+    setEditingEventCommentText("");
+    void AsyncStorage.setItem(eventCommentsKey(event.id), JSON.stringify(next));
+  };
+
+  const handleDeleteEventComment = (commentId: string) => Alert.alert("コメントを削除しますか？", "削除後は元に戻せません。", [
+    { text: "キャンセル", style: "cancel" },
+    { text: "削除", style: "destructive", onPress: () => {
+      const next = eventComments.filter((comment) => comment.id !== commentId);
+      const deletedIds = [...new Set([...deletedEventCommentIds, commentId])];
+      setEventComments(next);
+      setDeletedEventCommentIds(deletedIds);
+      void Promise.all([
+        AsyncStorage.setItem(eventCommentsKey(event.id), JSON.stringify(next)),
+        AsyncStorage.setItem(deletedEventCommentsKey(event.id), JSON.stringify(deletedIds)),
+      ]);
+    } },
+  ]);
 
   const handleJoin = () => {
     if (event.status === "full") {
@@ -1138,7 +1172,17 @@ export default function EventDetailScreen() {
               ?? memberDirectory.find((member) => stripRankFromName(member.displayName) === stripRankFromName(comment.author))?.id
               ?? getDiscordAuthorByName(comment.author)?.id;
             const openAuthor = () => { if (profileId) openMemberProfile(profileId, comment.author); };
-            return <View key={comment.id} style={{ flexDirection: "row", marginTop: 12, paddingTop: 12, borderTopWidth: 0.5, borderTopColor: colors.border }}>
+            const isOwnComment = comment.authorId === viewerMemberId || stripRankFromName(comment.author) === stripRankFromName(authUser?.name ?? CURRENT_USER.name);
+            return <Pressable key={comment.id} onLongPress={() => Alert.alert("コメント", "操作を選択してください", [
+              { text: "返信", onPress: () => { setEventCommentText(`@${stripRankFromName(comment.author)} `); requestAnimationFrame(() => eventCommentInputRef.current?.focus()); } },
+              { text: "テキストをコピー", onPress: () => { void Clipboard.setStringAsync(comment.text); } },
+              { text: "メッセージリンクをコピー", onPress: () => { void Clipboard.setStringAsync(`https://app.irotas-community.com/event-detail?id=${encodeURIComponent(event.id)}&comment=${encodeURIComponent(comment.id)}`); } },
+              ...((isOwnComment || userIsOperator) ? [
+                { text: "投稿を編集", onPress: () => { setEditingEventCommentId(comment.id); setEditingEventCommentText(comment.text); } },
+                { text: "投稿を削除", style: "destructive" as const, onPress: () => handleDeleteEventComment(comment.id) },
+              ] : []),
+              { text: "キャンセル", style: "cancel" },
+            ])} delayLongPress={350} style={{ flexDirection: "row", marginTop: 12, paddingTop: 12, borderTopWidth: 0.5, borderTopColor: colors.border }}>
               <Pressable onPress={openAuthor} disabled={!profileId}><Image source={author.avatar} style={{ width: 32, height: 32, borderRadius: 16, marginRight: 9 }} contentFit="cover" /></Pressable>
               <View style={{ flex: 1 }}>
                 <View style={{ flexDirection: "row", alignItems: "center", flexWrap: "wrap", marginBottom: 3 }}>
@@ -1147,12 +1191,12 @@ export default function EventDetailScreen() {
                   <MemberClubLeaderBadges roles={author.roles} name={author.badgeName} compact />
                   <MemberRoleBadge name="" role={author.role} compact />
                 </View>
-                <MentionText content={comment.text} groups={eventMentionGroups} onMentionPress={(label) => { const normalized = mentionDisplayName(label); const targetId = getDiscordAuthorByName(normalized)?.id ?? memberDirectory.find((member) => mentionDisplayName(member.displayName) === normalized)?.id ?? findMentionedMemberId(normalized, MEMBERS); if (targetId) openMemberProfile(targetId); }} />
+                {editingEventCommentId === comment.id ? <View style={{ gap: 7 }}><TextInput value={editingEventCommentText} onChangeText={setEditingEventCommentText} multiline autoFocus style={{ minHeight: 84, backgroundColor: colors.background, borderWidth: 1, borderColor: colors.border, borderRadius: 10, padding: 10, fontSize: 14, color: colors.foreground }} /><View style={{ flexDirection: "row", gap: 8 }}><Pressable onPress={handleSaveEventCommentEdit} style={{ backgroundColor: "#3478C7", borderRadius: 8, paddingHorizontal: 13, paddingVertical: 7 }}><Text style={{ color: "#FFF", fontSize: 12, fontWeight: "800" }}>保存</Text></Pressable><Pressable onPress={() => handleDeleteEventComment(comment.id)} style={{ backgroundColor: "#FCE7E7", borderRadius: 8, paddingHorizontal: 13, paddingVertical: 7 }}><Text style={{ color: colors.error, fontSize: 12, fontWeight: "800" }}>削除</Text></Pressable><Pressable onPress={() => setEditingEventCommentId(null)} style={{ paddingHorizontal: 10, paddingVertical: 7 }}><Text style={{ color: colors.muted, fontSize: 12 }}>キャンセル</Text></Pressable></View></View> : <MentionText content={comment.text} groups={eventMentionGroups} onMentionPress={(label) => { const normalized = mentionDisplayName(label); const targetId = getDiscordAuthorByName(normalized)?.id ?? memberDirectory.find((member) => mentionDisplayName(member.displayName) === normalized)?.id ?? findMentionedMemberId(normalized, MEMBERS); if (targetId) openMemberProfile(targetId); }} />}
               </View>
-            </View>;
+            </Pressable>;
           })}
           {eventMentionQuery !== null ? <MentionSuggestions query={eventMentionQuery} groups={eventMentionGroups} members={MEMBERS} onSelect={(label) => setEventCommentText((value) => insertMention(value, label))} /> : null}
-          <View style={{ flexDirection: "row", alignItems: "flex-end", marginTop: 14 }}><TextInput value={eventCommentText} onChangeText={(value) => setEventCommentText(value.replace(/@everyone\b/gi, ""))} onFocus={() => setEventCommentFocused(true)} onBlur={() => setEventCommentFocused(false)} placeholder="質問やコメントを入力" placeholderTextColor={colors.muted} multiline style={{ flex: 1, minHeight: 44, maxHeight: 100, borderRadius: 14, backgroundColor: colors.background, borderWidth: 1, borderColor: colors.border, paddingHorizontal: 12, paddingVertical: 10, color: colors.foreground }} /><Pressable disabled={!eventCommentText.trim()} onPress={handleEventComment} style={{ width: 44, height: 44, borderRadius: 22, marginLeft: 8, alignItems: "center", justifyContent: "center", backgroundColor: eventCommentText.trim() ? "#D65E8D" : colors.border }}><IconSymbol name="paperplane.fill" size={19} color="#FFF" /></Pressable></View>
+          <View style={{ flexDirection: "row", alignItems: "flex-end", marginTop: 14 }}><TextInput ref={eventCommentInputRef} value={eventCommentText} onChangeText={(value) => setEventCommentText(value.replace(/@everyone\b/gi, ""))} onFocus={() => setEventCommentFocused(true)} onBlur={() => setEventCommentFocused(false)} placeholder="質問やコメントを入力" placeholderTextColor={colors.muted} multiline style={{ flex: 1, minHeight: 44, maxHeight: 100, borderRadius: 14, backgroundColor: colors.background, borderWidth: 1, borderColor: colors.border, paddingHorizontal: 12, paddingVertical: 10, color: colors.foreground }} /><Pressable disabled={!eventCommentText.trim()} onPress={handleEventComment} style={{ width: 44, height: 44, borderRadius: 22, marginLeft: 8, alignItems: "center", justifyContent: "center", backgroundColor: eventCommentText.trim() ? "#D65E8D" : colors.border }}><IconSymbol name="paperplane.fill" size={19} color="#FFF" /></Pressable></View>
         </View>
 
         {(isJoined || hasApplied) && !isOrganizer ? (
