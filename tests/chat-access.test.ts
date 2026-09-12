@@ -36,6 +36,7 @@ describe("community free chat access", () => {
   it("allows a member without explicit room participation", () => {
     const room = { id: "community-free-chat", name: "フリーチャット", type: "board" as const, sourceId: "community-free-chat", participants: [], createdBy: "system" };
     expect(canAccessChatRoom(room, "IRO0009", "regular")).toBe(true);
+    expect(canAccessChatRoom({ ...room, id: "legacy-free-room" }, "IRO0009", "regular")).toBe(true);
   });
 });
 

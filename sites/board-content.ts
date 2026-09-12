@@ -4,6 +4,7 @@ import type { D1Database, SitesEnv } from "./platform-types";
 import archive from "../data/discord-board-2026-08-29.json";
 import { IMPORTED_DISCORD_EVENTS } from "../constants/imported-discord-events";
 import { cleanDiscordBoardContent, cleanDiscordBoardTitle } from "../lib/discord-board-normalization";
+import { inferImportedRecruitmentStatus } from "../lib/board-recruitment";
 import type { RawDiscordBoardArchive } from "../lib/discord-board-import";
 import { isRetiredMovieClubThread, normalizeDiscordBoardCategory } from "../lib/board-category";
 
@@ -322,17 +323,19 @@ async function ensureImportedThread(
   const now = new Date().toISOString();
   const normalizedTitle = cleanDiscordBoardTitle(raw.title || "移行済み投稿");
   const normalizedContent = cleanDiscordBoardContent(raw.title, raw.content || "移行済み投稿", category);
+  const initialStatus = inferImportedRecruitmentStatus(category, normalizedTitle, normalizedContent);
   const linkedAuthor = raw.authorId ? await db.prepare("SELECT id FROM members WHERE discord_user_id = ? LIMIT 1")
     .bind(raw.authorId).first<{ id: number }>() : null;
   const authorMemberId = linkedAuthor?.id ?? member.id;
   await db.prepare(`INSERT OR IGNORE INTO board_threads
     (id, author_member_id, category, title, content, status, pinned, data_json, created_at, updated_at)
-    VALUES (?, ?, ?, ?, ?, 'none', 0, ?, ?, ?)`).bind(
+    VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?, ?)`).bind(
       id,
       authorMemberId,
       category,
       normalizedTitle,
       normalizedContent,
+      initialStatus,
       JSON.stringify({
         archiveShadow: true,
         sourceThreadId: id,
@@ -352,7 +355,7 @@ async function ensureImportedThread(
     category,
     title: normalizedTitle,
     content: normalizedContent,
-    status: "none" as const,
+    status: initialStatus,
     pinned: 0,
     data_json: JSON.stringify({
       archiveShadow: true,
@@ -548,7 +551,12 @@ export async function handleBoardContentRequest(
     if (!current) return json({ error: "投稿が見つかりません" }, 404);
     if (!await canAccessBoardCategory(db, current.category, member))
       return json({ error: "この投稿を操作できません" }, 403);
-    if (current.author_member_id !== member.id && !elevated(member))
+    const importedAuthorId = id.startsWith("discord-board-")
+      ? (archive as RawDiscordBoardArchive).threads.find((thread) => thread.id === id)?.authorId
+      : undefined;
+    const viewerDiscordId = importedAuthorId ? await db.prepare("SELECT discord_user_id FROM members WHERE id = ?")
+      .bind(member.id).first<{ discord_user_id: string | null }>() : null;
+    if (current.author_member_id !== member.id && !elevated(member) && (!importedAuthorId || viewerDiscordId?.discord_user_id !== importedAuthorId))
       return json({ error: "投稿者本人または管理者のみ変更できます" }, 403);
     const now = new Date().toISOString();
     if (request.method === "DELETE") {
@@ -564,7 +572,10 @@ export async function handleBoardContentRequest(
     const status = input.status === undefined ? current.status :
       input.status === "open" || input.status === "closed" || input.status === "none" ? input.status : null;
     const pinned = input.pinned === undefined ? current.pinned : input.pinned === true ? 1 : input.pinned === false ? 0 : null;
-    const data = input.data === undefined ? current.data_json : safeData(input.data);
+    const data = input.data === undefined ? current.data_json : safeData(
+      id.startsWith("discord-board-") && input.data && typeof input.data === "object" && !Array.isArray(input.data)
+        ? { ...input.data, archiveShadow: true } : input.data,
+    );
     if (!title || !content || !status || pinned === null || data === null)
       return json({ error: "変更内容が不正です" }, 400);
     await db.prepare(`UPDATE board_threads SET title = ?, content = ?, status = ?, pinned = ?,

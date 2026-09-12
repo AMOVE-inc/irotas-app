@@ -414,7 +414,7 @@ function ThreadCard({ thread, onPress, onEdit, onDelete, onPin, onChangeRecruitm
         onPress={() => router.push({ pathname: "/member-profile", params: { id: thread.author.id, legacyName: thread.author.name } })}
         style={{ flexDirection: "row", alignItems: "center", marginBottom: 8 }}
       >
-        {unreadCount > 0 ? <View style={{ marginRight: 7, backgroundColor: mentionCount > 0 ? "#D9363E" : "#3478C7", borderRadius: 7, paddingHorizontal: 7, paddingVertical: 3 }}><Text style={{ color: "#FFFFFF", fontSize: 10, fontWeight: "900" }}>{mentionCount > 0 ? "@メンション" : "NEW"}</Text></View> : null}
+        {unreadCount > 0 && mentionCount === 0 ? <View style={{ marginRight: 7, backgroundColor: "#3478C7", borderRadius: 7, paddingHorizontal: 7, paddingVertical: 3 }}><Text style={{ color: "#FFFFFF", fontSize: 10, fontWeight: "900" }}>NEW</Text></View> : null}
         {pinned ? <View style={{ marginRight: 7, borderRadius: 10, paddingHorizontal: 8, paddingVertical: 6, backgroundColor: "#FFF2C7" }}><Text style={{ fontSize: 11, fontWeight: "900", color: "#8A6512" }}>📌 固定</Text></View> : null}
         {recruitmentManaged ? <RecruitmentStatusBadge status={recruitmentStatus} /> : thread.gourmetContest && contestOpen ? <View style={{ marginRight: 9, borderRadius: 10, paddingHorizontal: 9, paddingVertical: 6, backgroundColor: "#DDF3E3" }}><Text style={{ fontSize: 11, fontWeight: "900", color: "#247A42" }}>開催中</Text></View> : null}
         <Image
@@ -528,7 +528,7 @@ function ThreadCard({ thread, onPress, onEdit, onDelete, onPin, onChangeRecruitm
           <Text style={{ fontSize: 12, color: colors.muted, marginLeft: 4 }}>
             {thread.commentCount}件のコメント
           </Text>
-          {mentionCount > 0 ? <Text style={{ fontSize: 12, fontWeight: "900", color: "#ED4245", marginLeft: 8 }}>メンション {mentionCount}件</Text> : unreadCount > 0 ? <Text style={{ fontSize: 12, fontWeight: "900", color: "#3478C7", marginLeft: 8 }}>{unreadCount}件の新規</Text> : null}
+          {mentionCount > 0 ? <Text style={{ fontSize: 12, fontWeight: "900", color: "#ED4245", marginLeft: 8 }}>＠メンション{mentionCount}件</Text> : unreadCount > 0 ? <Text style={{ fontSize: 12, fontWeight: "900", color: "#3478C7", marginLeft: 8 }}>{unreadCount}件の新規</Text> : null}
         </View>
         {isParticipant && thread.chatId && (
           <Pressable
@@ -2549,22 +2549,24 @@ export default function BoardScreen() {
     });
   }, []);
 
+  const loadBoardArchive = useCallback(async () => {
+    const [rawArchive, directory] = await Promise.all([Api.getBoardArchive("all"), Api.getMemberDirectory().catch(() => [])]);
+    setMemberDirectory(directory);
+    const archive = parseDiscordBoardArchive(rawArchive, directory);
+    setDynamicThreads((current) => {
+      const withoutDiscordArchive = current.filter((thread) => !thread.id.startsWith("discord-board-"));
+      return [...archive.threads, ...withoutDiscordArchive];
+    });
+    setImportedComments((current) => ({ ...current, ...archive.comments }));
+  }, []);
+
   useEffect(() => {
     let active = true;
-    void Promise.all([Api.getBoardArchive("all"), Api.getMemberDirectory().catch(() => [])]).then(([rawArchive, directory]) => {
-      if (!active) return;
-      setMemberDirectory(directory);
-      const archive = parseDiscordBoardArchive(rawArchive, directory);
-      setDynamicThreads((current) => {
-        const withoutDiscordArchive = current.filter((thread) => !thread.id.startsWith("discord-board-"));
-        return [...archive.threads, ...withoutDiscordArchive];
-      });
-      setImportedComments((current) => ({ ...current, ...archive.comments }));
-    }).catch(() => {
+    void loadBoardArchive().catch(() => {
       // 認証または通信に失敗した場合は、移行済みデータを表示しない（fail closed）。
     }).finally(() => { if (active) { setArchiveLoading(false); setMemberDirectoryLoading(false); } });
     return () => { active = false; };
-  }, []);
+  }, [loadBoardArchive]);
 
   const loadSharedBoardContent = useCallback(async (category?: string) => {
     const result = await Api.getSharedBoardContent(category);
@@ -2574,7 +2576,7 @@ export default function BoardScreen() {
         (groups[comment.threadId] ??= []).push(comment);
         return groups;
       }, {});
-    const visibleRecords = result.threads.filter((thread) => thread.data.archiveShadow !== true);
+    const visibleRecords = result.threads.filter((thread) => thread.data.archiveShadow !== true && !thread.id.startsWith("discord-board-"));
     const threads = visibleRecords.map((thread) => ({
       ...sharedThreadToBoardThread(thread, viewerMemberId),
       commentCount: commentsByThread[thread.id]?.length ?? 0,
@@ -2621,6 +2623,7 @@ export default function BoardScreen() {
         const activity = await Api.getSharedBoardActivity(watchedCategory);
         if (active && revision !== null && activity.revision !== revision) {
           await loadSharedBoardContent(watchedCategory);
+          await loadBoardArchive();
         }
         if (active) revision = activity.revision;
       } catch {
@@ -2634,7 +2637,7 @@ export default function BoardScreen() {
       void check();
     }, 2000);
     return () => { active = false; clearInterval(timer); };
-  }, [activeCategory, authUser, isThreadView, loadSharedBoardContent]);
+  }, [activeCategory, authUser, isThreadView, loadSharedBoardContent, loadBoardArchive]);
 
   useEffect(() => {
     void loadBoardThreadEdits().then(setEditedThreads);
@@ -2671,7 +2674,7 @@ export default function BoardScreen() {
     setActiveCategory(selectedCategory.key);
   }, [canAccessCategory, categories, categoryParam, isThreadView, router]);
   const allThreads = useMemo(
-    () => applyBoardThreadEdits(authUser ? dynamicThreads : [...dynamicThreads, ...BOARD_THREADS], editedThreads).filter((thread) => !deletedThreadIds.includes(thread.id)),
+    () => (authUser ? dynamicThreads : applyBoardThreadEdits([...dynamicThreads, ...BOARD_THREADS], editedThreads)).filter((thread) => !deletedThreadIds.includes(thread.id)),
     [authUser, dynamicThreads, editedThreads, deletedThreadIds],
   );
   const categoryUnreadStatus = useCallback((categoryKey: string): "mention" | "unread" | null => {
@@ -2708,8 +2711,9 @@ export default function BoardScreen() {
   const canPinThread = (thread: BoardThread) => !isClubSelfIntroduction(thread) && (thread.author.id === viewerMemberId || Boolean(clubForThread(thread) && getClubViewerAccess(clubForThread(thread)!, authUser?.memberId, CURRENT_USER.id).isLeader) || userCanModerateRecruitment);
   const updateThreadManagement = async (thread: BoardThread, changes: Pick<BoardThread, "isRecruiting" | "isPinned" | "recruitmentStatus">) => {
     const updated = { ...thread, ...changes, lastUpdated: thread.lastUpdated };
-    if (thread.shared) {
+    if (thread.shared || thread.id.startsWith("discord-board-")) {
       try {
+        if (!thread.shared) await Api.ensureSharedImportedBoardThread(thread.id);
         await Api.updateSharedBoardThread(thread.id, { status: changes.recruitmentStatus ?? "none", pinned: Boolean(changes.isPinned), data: boardThreadData(updated) });
       } catch (error) {
         Alert.alert("保存できませんでした", error instanceof Error ? error.message : "通信環境を確認して、もう一度お試しください。");
@@ -2718,12 +2722,16 @@ export default function BoardScreen() {
     }
     setEditedThreads((current) => ({ ...current, [updated.id]: updated }));
     setSelectedThread((current) => current?.id === updated.id ? updated : current);
-    if (!thread.shared) void saveBoardThreadEdit(updated).catch(() => Alert.alert("保存できませんでした", "通信環境を確認して、もう一度お試しください。"));
+    if (!thread.shared && !thread.id.startsWith("discord-board-")) void saveBoardThreadEdit(updated).catch(() => Alert.alert("保存できませんでした", "通信環境を確認して、もう一度お試しください。"));
   };
   const deleteThread = async (thread: BoardThread) => {
     try {
-      if (thread.shared) await Api.deleteSharedBoardThread(thread.id);
+      if (thread.shared || thread.id.startsWith("discord-board-")) {
+        if (!thread.shared) await Api.ensureSharedImportedBoardThread(thread.id);
+        await Api.deleteSharedBoardThread(thread.id);
+      }
       try { await deleteBoardThread(thread.id); } catch { /* shared deletion is authoritative */ }
+      setDynamicThreads((current) => current.filter((item) => item.id !== thread.id));
       setDeletedThreadIds((current) => current.includes(thread.id) ? current : [...current, thread.id]);
       if (selectedThread?.id === thread.id) setSelectedThread(null);
       router.setParams({ thread: "" });
@@ -3064,8 +3072,11 @@ export default function BoardScreen() {
           thread={editingThread}
           onClose={() => setEditingThread(null)}
           onSave={(updated) => {
-            if (updated.shared) {
-              void Api.updateSharedBoardThread(updated.id, { title: updated.title, content: updated.preview, status: updated.recruitmentStatus ?? (updated.isRecruiting ? "open" : "none"), pinned: Boolean(updated.isPinned), data: boardThreadData(updated) }).then(() => {
+            if (updated.shared || updated.id.startsWith("discord-board-")) {
+              void (async () => {
+                if (!updated.shared) await Api.ensureSharedImportedBoardThread(updated.id);
+                await Api.updateSharedBoardThread(updated.id, { title: updated.title, content: updated.preview, status: updated.recruitmentStatus ?? (updated.isRecruiting ? "open" : "none"), pinned: Boolean(updated.isPinned), data: boardThreadData(updated) });
+              })().then(() => {
                 setEditedThreads((prev) => ({ ...prev, [updated.id]: updated }));
                 setEditingThread(null);
               }).catch((error) => Alert.alert("保存できませんでした", error instanceof Error ? error.message : "もう一度お試しください。"));
@@ -3080,8 +3091,12 @@ export default function BoardScreen() {
           onDelete={async () => {
             const deletingId = editingThread.id;
             try {
-              if (editingThread.shared) await Api.deleteSharedBoardThread(deletingId);
+              if (editingThread.shared || deletingId.startsWith("discord-board-")) {
+                if (!editingThread.shared) await Api.ensureSharedImportedBoardThread(deletingId);
+                await Api.deleteSharedBoardThread(deletingId);
+              }
               try { await deleteBoardThread(deletingId); } catch { /* server deletion already succeeded */ }
+              setDynamicThreads((current) => current.filter((item) => item.id !== deletingId));
               setDeletedThreadIds((current) => current.includes(deletingId) ? current : [...current, deletingId]);
               setSelectedThread(null);
               setEditingThread(null);

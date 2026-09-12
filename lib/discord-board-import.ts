@@ -35,6 +35,7 @@ export interface RawDiscordBoardComment extends RawDiscordBoardRecord {
 export interface RawDiscordBoardArchive {
   threads: RawDiscordBoardThread[];
   comments: RawDiscordBoardComment[];
+  threadOverrides?: Record<string, { title: string; content: string; status: "open" | "closed" | "none"; pinned: boolean; updatedAt: string; data?: Record<string, unknown> }>;
 }
 
 export interface DiscordMemberDirectoryRecord {
@@ -128,7 +129,14 @@ export function parseDiscordBoardArchive(archive: RawDiscordBoardArchive, direct
     ["IRO+運営", "IRO＋運営"].includes(record.authorName.trim())
   ));
   const visibleThreadIds = new Set(rawThreads.map((record) => record.id));
-  const rawComments = archive.comments.filter((record) => visibleThreadIds.has(record.threadId));
+  const seenDiscordCommentIds = new Set<string>();
+  const rawComments = archive.comments.filter((record) => {
+    if (!visibleThreadIds.has(record.threadId)) return false;
+    const key = `${record.threadId}:${record.id.replace(/^(?:discord-comment-)+/, "")}`;
+    if (seenDiscordCommentIds.has(key)) return false;
+    seenDiscordCommentIds.add(key);
+    return true;
+  });
   const comments: Record<string, BoardComment[]> = {};
 
   rawComments.forEach((record) => {
@@ -150,17 +158,19 @@ export function parseDiscordBoardArchive(archive: RawDiscordBoardArchive, direct
     const category = normalizeDiscordBoardCategory(record.category);
     const normalizedContent = cleanDiscordBoardContent(record.title, record.content, category);
     const preview = category === "club-introduction" ? stripLegacyClubApplicationBlock(normalizedContent) : normalizedContent;
-    const recruitmentStatus = inferImportedRecruitmentStatus(category, record.title, preview);
+    const override = archive.threadOverrides?.[record.id];
+    const recruitmentStatus = override?.status ?? inferImportedRecruitmentStatus(category, record.title, preview);
     return {
       id: record.id,
-      title: cleanDiscordBoardTitle(record.title),
+      title: override?.title ?? cleanDiscordBoardTitle(record.title),
       author: authorFor(record, directory, authorFallbacks),
       category,
       commentCount: threadComments.length,
-      lastUpdated: threadComments.at(-1)?.createdAt ?? record.createdAt,
-      preview,
+      lastUpdated: override?.updatedAt ?? threadComments.at(-1)?.createdAt ?? record.createdAt,
+      preview: override?.content ?? preview,
       isRecruiting: recruitmentStatus === "open",
       recruitmentStatus,
+      isPinned: override?.pinned,
       images: record.images.length ? record.images : undefined,
       videos: record.videos.length ? record.videos : undefined,
       reactions: record.reactions ? normalizeBoardReactions(record.reactions) : undefined,

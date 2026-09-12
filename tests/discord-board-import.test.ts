@@ -27,6 +27,19 @@ describe("Discord board archive", () => {
     expect(archive.threads.some((thread) => thread.images?.length)).toBe(true);
   });
 
+  it("DiscordコメントIDの別表記を同じコメントとして表示する", () => {
+    const comments = archive.comments["discord-board-1228721098716221502"] ?? [];
+    expect(comments.filter((comment) => comment.content.includes("心強いです、、！"))).toHaveLength(1);
+  });
+
+  it("共有編集後の募集ステータス・本文を移行元より優先する", () => {
+    const original = rawArchive.threads.find((thread) => thread.id === "discord-board-1228721098716221502")!;
+    const result = parseDiscordBoardArchive({ threads: [original], comments: [], threadOverrides: {
+      [original.id]: { title: "編集後", content: "編集された本文", status: "closed", pinned: true, updatedAt: "2026-09-12T12:00:00Z" },
+    } });
+    expect(result.threads[0]).toMatchObject({ title: "編集後", preview: "編集された本文", recruitmentStatus: "closed", isPinned: true });
+  });
+
   it("DiscordユーザーID単位で投稿者のアバターとロールを全投稿へ反映する", () => {
     const pokohide = archive.threads.find((thread) => thread.author.name === "pokohide");
     const nori = archive.threads.find((thread) => thread.author.name.startsWith("nori"));

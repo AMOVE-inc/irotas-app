@@ -823,13 +823,15 @@ export default function ProfileScreen() {
     else if (memberIdentity?.memberId) setMemberId(memberIdentity.memberId);
     if (memberIdentity?.displayName) setProfileName((current) => current || memberIdentity.displayName || "");
   }, [authUser?.memberId, memberIdentity]);
-  useEffect(() => {
+  useFocusEffect(useCallback(() => {
     if (!isRealMember || !authUser) return;
-    void Api.getMemberDirectory().then((members) => {
-      const self = members.find((member) => member.userId === authUser.id);
-      if (self) setSocialStats({ followers: self.followerCount, following: self.followingCount });
+    const selfId = authUser.memberId ?? memberIdentity?.memberId ?? `member-${authUser.id}`;
+    let active = true;
+    void Api.getMemberProfile(selfId).then((self) => {
+      if (active) setSocialStats({ followers: self.followerCount, following: self.followingCount });
     }).catch(() => {});
-  }, [authUser, isRealMember]);
+    return () => { active = false; };
+  }, [authUser?.id, authUser?.memberId, isRealMember, memberIdentity?.memberId]));
   // イロタスポイント
   const [irotasPoints, setIrotasPoints] = useState(0);
 

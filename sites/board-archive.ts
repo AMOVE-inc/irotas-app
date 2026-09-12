@@ -79,7 +79,22 @@ export async function handleBoardArchiveRequest(
   }
 
   const filtered = filterBoardArchive(source, allowed);
-  return Response.json(filtered, {
+  const visibleIds = new Set(filtered.threads.map((thread) => thread.id));
+  const saved = await env.DB.prepare(`SELECT id, title, content, status, pinned, data_json, updated_at, deleted_at
+    FROM board_threads WHERE id LIKE 'discord-board-%'`).all<{
+    id: string; title: string; content: string; status: "open" | "closed" | "none";
+    pinned: number; data_json: string; updated_at: string; deleted_at: string | null;
+  }>();
+  const deletedIds = new Set((saved.results ?? []).filter((row) => row.deleted_at).map((row) => row.id));
+  const threads = filtered.threads.filter((thread) => !deletedIds.has(thread.id));
+  const liveIds = new Set(threads.map((thread) => thread.id));
+  const threadOverrides = Object.fromEntries((saved.results ?? [])
+    .filter((row) => visibleIds.has(row.id) && !row.deleted_at)
+    .map((row) => [row.id, {
+      title: row.title, content: row.content, status: row.status, pinned: Boolean(row.pinned),
+      updatedAt: row.updated_at, data: JSON.parse(row.data_json || "{}"),
+    }]));
+  return Response.json({ threads, comments: filtered.comments.filter((comment) => liveIds.has(comment.threadId)), threadOverrides }, {
     headers: {
       "cache-control": "private, no-store",
       vary: "Cookie, Authorization",

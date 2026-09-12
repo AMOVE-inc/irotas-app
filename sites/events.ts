@@ -91,8 +91,11 @@ export function mergeEventComments(
   const importedIds = new Set(imported.map((comment) => comment.id));
   const canonicalImportedId = (id: string) => id.replace(/^discord-event-comment-(?:discord-comment-)?(?=\d{17,20}$)/, "discord-event-comment-");
   const importedGroups = new Map<string, ImportedEventComment[]>();
+  const sameImportedContent = new Map<string, string>();
   for (const comment of imported) {
-    const key = canonicalImportedId(comment.id);
+    const contentKey = `${comment.authorId ?? comment.author}:${comment.text}:${Date.parse(comment.createdAt)}`;
+    const key = sameImportedContent.get(contentKey) ?? canonicalImportedId(comment.id);
+    sameImportedContent.set(contentKey, key);
     importedGroups.set(key, [...(importedGroups.get(key) ?? []), comment]);
   }
   return [

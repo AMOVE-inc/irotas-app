@@ -265,7 +265,7 @@ async function canAccessRoom(db: D1Database, room: RoomRow, member: Viewer) {
     return room.source_id ? canMemberAccessClub(db, room.source_id, member.id) : false;
   if (elevated(member)) return true;
   if (room.room_type === "board" && room.source_id === "introduction") return true;
-  if (room.room_type === "board" && room.source_id === "community-free-chat") return true;
+  if (room.id === "community-free-chat" || (room.room_type === "board" && room.source_id === "community-free-chat")) return true;
   if (room.room_type === "board" && (room.source_id === "branch-kanto-v2" || room.source_id === "branch-kansai-v2")) {
     const expected = room.source_id === "branch-kanto-v2" ? "kanto" : "kansai";
     const row = await db.prepare("SELECT branches_json FROM members WHERE id = ? LIMIT 1").bind(member.id).first<{ branches_json: string | null }>();

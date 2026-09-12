@@ -576,14 +576,14 @@ function EventCard({
         borderWidth: 1,
         borderColor: colors.border,
         flexDirection: "row",
-        minHeight: 142,
+        height: 158,
         opacity: cardMuted ? 0.56 : 1,
       }}
     >
       <View
         style={{
           width: 142,
-          minHeight: 142,
+          height: 158,
           alignSelf: "stretch",
           overflow: "hidden",
         }}
@@ -704,6 +704,7 @@ function EventCard({
           </View>
         </View>
         <Text
+          numberOfLines={2}
           style={{
             fontSize: 14,
             lineHeight: 19,
@@ -730,6 +731,7 @@ function EventCard({
           <>
             {event.restaurantName && event.restaurantName !== event.title ? (
               <Text
+                numberOfLines={1}
                 style={{
                   fontSize: 11,
                   lineHeight: 16,
@@ -742,6 +744,7 @@ function EventCard({
               </Text>
             ) : null}
             <Text
+              numberOfLines={1}
               style={{
                 fontSize: 10,
                 lineHeight: 15,

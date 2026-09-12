@@ -33,4 +33,10 @@ describe("shared event comments", () => {
     const tombstone = { id: second.id, event_id: "event-1", author_member_id: null, author_name: second.author, author_public_id: second.authorId, content: second.text, created_at: second.createdAt, deleted_at: "2026-09-12T00:00:00Z" };
     expect(mergeEventComments([first, second], [tombstone], viewer)).toHaveLength(0);
   });
+
+  it("collapses identical Discord comments imported under different IDs", () => {
+    const first = { id: "discord-event-comment-1", author: "RIHO", authorId: "discord-100", text: "参加希望です", createdAt: "2026-07-31T14:47:26.160Z" };
+    const second = { ...first, id: "discord-event-comment-2" };
+    expect(mergeEventComments([first, second], [], { memberId: 9, publicId: "IRO0009", discordUserId: null, elevated: false })).toHaveLength(1);
+  });
 });

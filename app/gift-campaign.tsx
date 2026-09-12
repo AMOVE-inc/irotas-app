@@ -30,7 +30,7 @@ export default function GiftCampaignScreen() {
   }, [memberId]);
 
   const visibleCampaigns = useMemo(() => [...campaigns]
-    .sort((a, b) => (b.createdAt ?? b.deadline).localeCompare(a.createdAt ?? a.deadline)), [campaigns]);
+    .sort((a, b) => b.deadline.localeCompare(a.deadline) || (b.createdAt ?? "").localeCompare(a.createdAt ?? "")), [campaigns]);
 
   const handleApply = (campaign: GiftCampaign) => {
     Alert.alert("抽選申込", `「${campaign.title}」の抽選に申し込みますか？`, [
