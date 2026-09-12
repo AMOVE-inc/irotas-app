@@ -52,7 +52,7 @@ import {
   View,
 } from "react-native";
 
-type EventComment = { id: string; author: string; authorId?: string; text: string; createdAt: string };
+type EventComment = Api.SharedEventComment;
 
 const eventCommentsKey = (eventId: string) => `irotas_event_comments_v1:${eventId}`;
 const deletedEventCommentsKey = (eventId: string) => `irotas_deleted_event_comments_v1:${eventId}`;
@@ -122,8 +122,9 @@ export default function EventDetailScreen() {
 
   // モックデータ + 動的追加分から検索
   const allEvents = useMemo(() => getAllEvents(EVENTS), []);
-  const initialEvent = allEvents.find((e) => e.id === eventId)
-    ?? IMPORTED_DISCORD_EVENTS.find((e) => e.id === eventId) as Event | undefined;
+  // Imported fixtures are not authoritative after an organizer edits an event.
+  // Wait for the server instead of flashing the original Discord snapshot.
+  const initialEvent = eventId?.startsWith("discord-event-") ? undefined : allEvents.find((e) => e.id === eventId);
   const [event, setEvent] = useState<Event | undefined>(initialEvent);
   const [eventLoading, setEventLoading] = useState(!initialEvent);
   const [eventResolved, setEventResolved] = useState(Boolean(initialEvent));
@@ -147,7 +148,7 @@ export default function EventDetailScreen() {
   const [eventCommentText, setEventCommentText] = useState("");
   const [editingEventCommentId, setEditingEventCommentId] = useState<string | null>(null);
   const [editingEventCommentText, setEditingEventCommentText] = useState("");
-  const [deletedEventCommentIds, setDeletedEventCommentIds] = useState<string[]>([]);
+  const [eventCommentBusy, setEventCommentBusy] = useState(false);
   const [eventCommentActionTarget, setEventCommentActionTarget] = useState<EventComment | null>(null);
   const [eventCommentDeleteTarget, setEventCommentDeleteTarget] = useState<EventComment | null>(null);
   const [eventCommentFocused, setEventCommentFocused] = useState(false);
@@ -208,30 +209,27 @@ export default function EventDetailScreen() {
   const eventMentionQuery = getMentionQuery(eventCommentText);
 
   useEffect(() => {
-    const imported = allEvents.find((item) => item.id === eventId)
-      ?? IMPORTED_DISCORD_EVENTS.find((item) => item.id === eventId) as Event | undefined;
-    if (imported) { setEvent(imported); setEventLoading(false); setEventResolved(true); }
+    const fallback = eventId?.startsWith("discord-event-") ? undefined : allEvents.find((item) => item.id === eventId);
+    setEvent(fallback);
+    setEventLoading(true);
+    setEventResolved(false);
     if (!eventId) { setEvent(undefined); setEventLoading(false); setEventResolved(true); return; }
-    if (authLoading) { setEventLoading(!imported); return; }
+    if (authLoading) return;
     let active = true;
-    if (!imported) setEventLoading(true);
     void Api.getEvent(eventId)
       .then((value) => { if (active) {
-        // Keep imported comments, but let the server's edited event fields win.
-        const importedDiscordData = imported?.id.startsWith("discord-event-")
-          ? { importedComments: imported.importedComments }
-          : {};
-        setEvent({ ...imported, ...value, ...importedDiscordData, description: value.description?.trim() ?? "", image: value.image || imported?.image || "", tabelogUrl: value.tabelogUrl || imported?.tabelogUrl, googleMapsUrl: value.googleMapsUrl || imported?.googleMapsUrl, organizerProfileId: value.organizerProfileId || imported?.organizerProfileId, organizerName: value.organizerName || imported?.organizerName, organizerAvatar: value.organizerAvatar || imported?.organizerAvatar, organizerRank: value.organizerRank || imported?.organizerRank } as Event);
+        setEvent(value);
       } })
       .catch(async () => {
-        // 個別取得が一時的に失敗しても、一覧で取得できる公開イベントを表示する。
-        // タイムラインからの遷移で「見つかりません」となることを防ぐ。
+        // A server list is safe as fallback; never show the stale imported fixture.
         try {
           const events = await Api.getEvents({ includeCancelled: true });
-          const fallback = events.find((item) => item.id === eventId);
-          if (active) setEvent(fallback ?? imported);
+          // Only a confirmed absence from the server may fall back to an
+          // unmaterialized archive event; it is never rendered before the fetch.
+          const archived = IMPORTED_DISCORD_EVENTS.find((item) => item.id === eventId) as Event | undefined;
+          if (active) setEvent(events.find((item) => item.id === eventId) ?? archived ?? fallback);
         } catch {
-          if (active && !imported) setEvent(undefined);
+          if (active) setEvent(fallback);
         }
       })
       .finally(() => { if (active) { setEventLoading(false); setEventResolved(true); } });
@@ -272,21 +270,48 @@ export default function EventDetailScreen() {
   }, []);
   useEffect(() => { if (!event?.id) return; void recordActivityEvent({ userId: CURRENT_USER.id, eventName: "event_viewed", entityType: "event", entityId: event.id, dedupeKey: `${CURRENT_USER.id}:event_viewed:${event.id}:${new Date().toISOString().slice(0, 10)}` }); }, [event?.id]);
   useEffect(() => {
-    if (!event?.id) return;
-    void Promise.all([AsyncStorage.getItem(eventCommentsKey(event.id)), AsyncStorage.getItem(deletedEventCommentsKey(event.id))]).then(([raw, deletedRaw]) => {
+    if (!event?.id || authLoading) return;
+    const currentEventId = event.id;
+    let active = true;
+    setEventComments([]);
+    const refresh = async () => {
+      try { const comments = await Api.getEventComments(currentEventId); if (active) setEventComments(comments); }
+      catch { /* Keep the last confirmed server result during a temporary connection failure. */ }
+    };
+    const migrateDeviceComments = async () => {
+      // Earlier releases stored event edits/deletions only on this device.
+      // Replay the current member's changes once, then use D1 exclusively.
+      const [raw, deletedRaw] = await Promise.all([
+        AsyncStorage.getItem(eventCommentsKey(currentEventId)),
+        AsyncStorage.getItem(deletedEventCommentsKey(currentEventId)),
+      ]);
       const local = raw ? JSON.parse(raw) as EventComment[] : [];
       const deletedIds = deletedRaw ? JSON.parse(deletedRaw) as string[] : [];
-      const merged = [...(event?.importedComments ?? []), ...local];
-      setDeletedEventCommentIds(deletedIds);
-      setEventComments([...new Map(merged.map((comment) => [comment.id, comment])).values()].filter((comment) => !deletedIds.includes(comment.id)).sort((a, b) => Date.parse(a.createdAt) - Date.parse(b.createdAt)));
-    }).catch(() => setEventComments(event?.importedComments ?? []));
-  }, [event?.id, event?.importedComments]);
+      let migrated = true;
+      for (const comment of local) {
+        if (!/^ec_\d{10,20}$/.test(comment.id) || comment.authorId !== authenticatedViewerMemberId || deletedIds.includes(comment.id)) continue;
+        try { await Api.createEventComment(currentEventId, comment.text, comment.id); } catch { migrated = false; }
+      }
+      for (const commentId of deletedIds) {
+        try { await Api.deleteEventComment(currentEventId, commentId); }
+        catch (error) { if (!(error instanceof Error && /見つかりません|404/.test(error.message))) migrated = false; }
+      }
+      if (migrated) await Promise.all([
+        AsyncStorage.removeItem(eventCommentsKey(currentEventId)),
+        AsyncStorage.removeItem(deletedEventCommentsKey(currentEventId)),
+      ]);
+    };
+    void refresh();
+    void migrateDeviceComments().catch(() => {}).finally(() => { if (active) void refresh(); });
+    const timer = setInterval(() => { void refresh(); }, 5000);
+    return () => { active = false; clearInterval(timer); };
+  }, [event?.id, authLoading, authenticatedViewerMemberId]);
 
-  if (!event && (eventLoading || !eventResolved)) {
+  if ((!event || event.id !== eventId) && (eventLoading || !eventResolved)) {
     return <ScreenContainer edges={["top", "bottom", "left", "right"]} className="p-6"><Text style={{ fontSize: 16, color: colors.muted, textAlign: "center", marginTop: 40 }}>読み込み中…</Text></ScreenContainer>;
   }
 
-  if (!event) {
+  if (!event || event.id !== eventId) {
     return (
       <ScreenContainer edges={["top", "bottom", "left", "right"]} className="p-6">
         <Text style={{ fontSize: 16, color: colors.muted, textAlign: "center", marginTop: 40 }}>
@@ -396,13 +421,20 @@ export default function EventDetailScreen() {
   const canManageEvent = canAdminEdit || isOrganizer || (isDiscordImportedEvent && userIsOperator);
   const showApplicationConfirmation = (title: string, message: string, buttons: AlertButton[]) => setApplicationConfirmation({ title, message, buttons });
 
-  const handleEventComment = () => {
+  const handleEventComment = async () => {
     const content = eventCommentText.trim();
-    if (!content) return;
-    const next = [...eventComments, { id: `ec_${Date.now()}`, author: authUser?.name ?? CURRENT_USER.name, authorId: authUser?.memberId ?? authenticatedViewerMemberId, text: content, createdAt: new Date().toISOString() }];
-    setEventComments(next);
-    setEventCommentText("");
-    void AsyncStorage.setItem(eventCommentsKey(event.id), JSON.stringify(next));
+    if (!content || eventCommentBusy) return;
+    setEventCommentBusy(true);
+    try {
+      const saved = await Api.createEventComment(event.id, content);
+      setEventComments((current) => [...current.filter((comment) => comment.id !== saved.id), saved].sort((a, b) => a.createdAt.localeCompare(b.createdAt)));
+      setEventCommentText("");
+    } catch (error) {
+      Alert.alert("コメントを送信できませんでした", error instanceof Error ? error.message : "通信状況を確認して再度お試しください。");
+      setEventCommentBusy(false);
+      return;
+    }
+    setEventCommentBusy(false);
     const preview = content.length > 50 ? `${content.slice(0, 50)}...` : content;
     const mentionedMemberIds = new Set(getMentionedMemberIds(content, MEMBERS, eventMentionGroups));
     for (const label of extractMentionLabels(content)) {
@@ -417,29 +449,33 @@ export default function EventDetailScreen() {
     }
   };
 
-  const handleSaveEventCommentEdit = () => {
-    if (!editingEventCommentId || !editingEventCommentText.trim()) return;
-    const next = eventComments.map((comment) => comment.id === editingEventCommentId ? { ...comment, text: editingEventCommentText.trim() } : comment);
-    setEventComments(next);
-    setEditingEventCommentId(null);
-    setEditingEventCommentText("");
-    void AsyncStorage.setItem(eventCommentsKey(event.id), JSON.stringify(next));
-  };
-
-  const handleDeleteEventComment = (commentId: string) => {
-    const next = eventComments.filter((comment) => comment.id !== commentId);
-    const deletedIds = [...new Set([...deletedEventCommentIds, commentId])];
-    setEventComments(next);
-    setDeletedEventCommentIds(deletedIds);
-    setEventCommentDeleteTarget(null);
-    if (editingEventCommentId === commentId) {
+  const handleSaveEventCommentEdit = async () => {
+    if (!editingEventCommentId || !editingEventCommentText.trim() || eventCommentBusy) return;
+    setEventCommentBusy(true);
+    try {
+      const saved = await Api.updateEventComment(event.id, editingEventCommentId, editingEventCommentText.trim());
+      setEventComments((current) => current.map((comment) => comment.id === saved.id ? saved : comment));
       setEditingEventCommentId(null);
       setEditingEventCommentText("");
-    }
-    void Promise.all([
-      AsyncStorage.setItem(eventCommentsKey(event.id), JSON.stringify(next)),
-      AsyncStorage.setItem(deletedEventCommentsKey(event.id), JSON.stringify(deletedIds)),
-    ]);
+    } catch (error) {
+      Alert.alert("コメントを編集できませんでした", error instanceof Error ? error.message : "もう一度お試しください。");
+    } finally { setEventCommentBusy(false); }
+  };
+
+  const handleDeleteEventComment = async (commentId: string) => {
+    if (eventCommentBusy) return;
+    setEventCommentBusy(true);
+    try {
+      await Api.deleteEventComment(event.id, commentId);
+      setEventComments((current) => current.filter((comment) => comment.id !== commentId));
+      setEventCommentDeleteTarget(null);
+      if (editingEventCommentId === commentId) {
+        setEditingEventCommentId(null);
+        setEditingEventCommentText("");
+      }
+    } catch (error) {
+      Alert.alert("コメントを削除できませんでした", error instanceof Error ? error.message : "もう一度お試しください。");
+    } finally { setEventCommentBusy(false); }
   };
 
   const handleJoin = () => {
@@ -1195,7 +1231,7 @@ export default function EventDetailScreen() {
             </Pressable>;
           })}
           {eventMentionQuery !== null ? <MentionSuggestions query={eventMentionQuery} groups={eventMentionGroups} members={MEMBERS} onSelect={(label) => setEventCommentText((value) => insertMention(value, label))} /> : null}
-          <View style={{ flexDirection: "row", alignItems: "flex-end", marginTop: 14 }}><TextInput ref={eventCommentInputRef} value={eventCommentText} onChangeText={(value) => setEventCommentText(value.replace(/@everyone\b/gi, ""))} onFocus={() => setEventCommentFocused(true)} onBlur={() => setEventCommentFocused(false)} placeholder="質問やコメントを入力" placeholderTextColor={colors.muted} multiline style={{ flex: 1, minHeight: 44, maxHeight: 100, borderRadius: 14, backgroundColor: colors.background, borderWidth: 1, borderColor: colors.border, paddingHorizontal: 12, paddingVertical: 10, color: colors.foreground }} /><Pressable disabled={!eventCommentText.trim()} onPress={handleEventComment} style={{ width: 44, height: 44, borderRadius: 22, marginLeft: 8, alignItems: "center", justifyContent: "center", backgroundColor: eventCommentText.trim() ? "#D65E8D" : colors.border }}><IconSymbol name="paperplane.fill" size={19} color="#FFF" /></Pressable></View>
+          <View style={{ flexDirection: "row", alignItems: "flex-end", marginTop: 14 }}><TextInput ref={eventCommentInputRef} value={eventCommentText} onChangeText={(value) => setEventCommentText(value.replace(/@everyone\b/gi, ""))} onFocus={() => setEventCommentFocused(true)} onBlur={() => setEventCommentFocused(false)} placeholder="質問やコメントを入力" placeholderTextColor={colors.muted} multiline style={{ flex: 1, minHeight: 44, maxHeight: 100, borderRadius: 14, backgroundColor: colors.background, borderWidth: 1, borderColor: colors.border, paddingHorizontal: 12, paddingVertical: 10, color: colors.foreground }} /><Pressable disabled={!eventCommentText.trim() || eventCommentBusy} onPress={() => { void handleEventComment(); }} style={{ width: 44, height: 44, borderRadius: 22, marginLeft: 8, alignItems: "center", justifyContent: "center", backgroundColor: eventCommentText.trim() && !eventCommentBusy ? "#D65E8D" : colors.border }}><IconSymbol name="paperplane.fill" size={19} color="#FFF" /></Pressable></View>
         </View>
 
         {(isJoined || hasApplied) && !isOrganizer ? (
@@ -1276,7 +1312,7 @@ export default function EventDetailScreen() {
               { label: "返信", icon: "arrowshape.turn.up.left.fill", action: () => { const target = eventCommentActionTarget; setEventCommentActionTarget(null); if (!target) return; setEventCommentText(`@${stripRankFromName(target.author)} `); requestAnimationFrame(() => eventCommentInputRef.current?.focus()); } },
               { label: "テキストをコピー", icon: "doc.on.doc", action: () => { const target = eventCommentActionTarget; setEventCommentActionTarget(null); if (target) void Clipboard.setStringAsync(target.text); } },
               { label: "メッセージリンクをコピー", icon: "link", action: () => { const target = eventCommentActionTarget; setEventCommentActionTarget(null); if (target) void Clipboard.setStringAsync(`${PUBLIC_APP_URL}/event-detail?id=${encodeURIComponent(event.id)}&comment=${encodeURIComponent(target.id)}`); } },
-              ...((eventCommentActionTarget && (eventCommentActionTarget.authorId === viewerMemberId || stripRankFromName(eventCommentActionTarget.author) === stripRankFromName(authUser?.name ?? CURRENT_USER.name) || userIsOperator)) ? [
+              ...((eventCommentActionTarget?.canEdit) ? [
                 { label: "コメントを編集", icon: "pencil", action: () => { const target = eventCommentActionTarget; setEventCommentActionTarget(null); if (!target) return; setEditingEventCommentId(target.id); setEditingEventCommentText(target.text); } },
                 { label: "コメントを削除", icon: "trash", destructive: true, action: () => { const target = eventCommentActionTarget; setEventCommentActionTarget(null); if (target) setEventCommentDeleteTarget(target); } },
               ] : []),
@@ -1291,7 +1327,7 @@ export default function EventDetailScreen() {
           <View style={{ width: "100%", maxWidth: 390, borderRadius: 20, backgroundColor: colors.background, padding: 20 }}>
             <Text style={{ textAlign: "center", fontSize: 18, fontWeight: "900", color: colors.foreground }}>コメントを削除しますか？</Text>
             <Text style={{ textAlign: "center", fontSize: 13, lineHeight: 19, color: colors.muted, marginTop: 8 }}>削除後は元に戻せません。</Text>
-            <View style={{ flexDirection: "row", gap: 10, marginTop: 20 }}><Pressable onPress={() => setEventCommentDeleteTarget(null)} style={{ flex: 1, minHeight: 48, alignItems: "center", justifyContent: "center", borderRadius: 13, backgroundColor: colors.surface }}><Text style={{ fontWeight: "800", color: colors.foreground }}>キャンセル</Text></Pressable><Pressable onPress={() => { if (eventCommentDeleteTarget) handleDeleteEventComment(eventCommentDeleteTarget.id); }} style={{ flex: 1, minHeight: 48, alignItems: "center", justifyContent: "center", borderRadius: 13, backgroundColor: "#D94C55" }}><Text style={{ fontWeight: "900", color: "#FFF" }}>削除</Text></Pressable></View>
+            <View style={{ flexDirection: "row", gap: 10, marginTop: 20 }}><Pressable onPress={() => setEventCommentDeleteTarget(null)} style={{ flex: 1, minHeight: 48, alignItems: "center", justifyContent: "center", borderRadius: 13, backgroundColor: colors.surface }}><Text style={{ fontWeight: "800", color: colors.foreground }}>キャンセル</Text></Pressable><Pressable disabled={eventCommentBusy} onPress={() => { if (eventCommentDeleteTarget) void handleDeleteEventComment(eventCommentDeleteTarget.id); }} style={{ flex: 1, minHeight: 48, alignItems: "center", justifyContent: "center", borderRadius: 13, backgroundColor: "#D94C55", opacity: eventCommentBusy ? 0.5 : 1 }}><Text style={{ fontWeight: "900", color: "#FFF" }}>{eventCommentBusy ? "削除中…" : "削除"}</Text></Pressable></View>
           </View>
         </View>
       </Modal>

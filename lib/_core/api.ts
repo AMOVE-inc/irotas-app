@@ -1085,6 +1085,31 @@ export async function getEvent(eventId: string) {
   return result.event;
 }
 
+export type SharedEventComment = { id: string; author: string; authorId?: string; text: string; createdAt: string; canEdit: boolean };
+
+export async function getEventComments(eventId: string) {
+  const result = await apiCall<{ comments: SharedEventComment[] }>(`/api/events/${encodeURIComponent(eventId)}/comments`);
+  return result.comments;
+}
+
+export async function createEventComment(eventId: string, text: string, id?: string) {
+  const result = await apiCall<{ comment: SharedEventComment }>(`/api/events/${encodeURIComponent(eventId)}/comments`, {
+    method: "POST", body: JSON.stringify({ text, ...(id ? { id } : {}) }),
+  });
+  return result.comment;
+}
+
+export async function updateEventComment(eventId: string, commentId: string, text: string) {
+  const result = await apiCall<{ comment: SharedEventComment }>(`/api/events/${encodeURIComponent(eventId)}/comments/${encodeURIComponent(commentId)}`, {
+    method: "PATCH", body: JSON.stringify({ text }),
+  });
+  return result.comment;
+}
+
+export async function deleteEventComment(eventId: string, commentId: string) {
+  return apiCall<{ success: true }>(`/api/events/${encodeURIComponent(eventId)}/comments/${encodeURIComponent(commentId)}`, { method: "DELETE" });
+}
+
 export async function saveEventFeedback(input: { eventId: string; overallRating: number; foodRating: number; venueRating: number; communityRating: number; wouldAttendAgain: boolean; goodTags: string[]; improvementTags: string[]; comment: string }) {
   return apiCall<{ success: true; submittedAt: string }>(`/api/events/${encodeURIComponent(input.eventId)}/feedback`, { method: "PUT", body: JSON.stringify(input) });
 }
