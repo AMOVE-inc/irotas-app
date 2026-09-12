@@ -1377,6 +1377,52 @@ export async function getMembershipSummary() {
   return apiCall<MembershipSummary>("/api/admin/membership-summary");
 }
 
+export type MemberOnboardingRecord = {
+  subscriptionId: number;
+  billingEmail: string;
+  subscriptionStatus: "active" | "grace";
+  squareStatus: string;
+  paidUntilDate: string | null;
+  graceUntilDate: string | null;
+  memberId: string | null;
+  displayName: string | null;
+  accountStatus: string | null;
+  isTestAccount: boolean;
+  linkIssue: boolean;
+  loginStatus: "needs_attention" | "logged_in" | "password_set" | "code_requested" | "not_started";
+  passwordSetAt: string | null;
+  lastSignedInAt: string | null;
+  codeIssuedAt: string | null;
+  followUp: {
+    outreachStatus: "not_sent" | "sent" | "follow_up";
+    sentAt: string | null;
+    lastContactAt: string | null;
+    nextFollowUpAt: string | null;
+    ownerName: string;
+    issueNote: string;
+  };
+};
+
+export async function getMemberOnboarding() {
+  return apiCall<{ members: MemberOnboardingRecord[]; updatedAt: string }>(
+    "/api/admin/member-onboarding", { cache: "no-store" },
+  );
+}
+
+export async function saveMemberOnboardingFollowUp(input: {
+  billingEmail: string;
+  outreachStatus: "not_sent" | "sent" | "follow_up";
+  sentAt: string | null;
+  lastContactAt: string | null;
+  nextFollowUpAt: string | null;
+  ownerName: string;
+  issueNote: string;
+}) {
+  return apiCall<{ success: true }>("/api/admin/member-onboarding/follow-up", {
+    method: "PUT", body: JSON.stringify(input),
+  });
+}
+
 export type MemberReconciliationReport = {
   activeMembers: number;
   activeGeneralMembers: number;

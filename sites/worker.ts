@@ -32,6 +32,7 @@ import {
   recordApplicationError,
 } from "./system-monitoring";
 import { handleAccountDeletionAdminRequest } from "./account-deletion-admin";
+import { handleMemberOnboardingRequest } from "./member-onboarding";
 import { handleReviewAccountRequest } from "./review-account";
 import { handleBackupReadinessRequest } from "./backup-readiness";
 import { handleBackupRequest } from "./backups";
@@ -279,6 +280,8 @@ async function routeRequest(
   if (systemMonitoringResponse) return systemMonitoringResponse;
   const accountDeletionAdminResponse = await handleAccountDeletionAdminRequest(request, env);
   if (accountDeletionAdminResponse) return accountDeletionAdminResponse;
+  const memberOnboardingResponse = await handleMemberOnboardingRequest(request, env);
+  if (memberOnboardingResponse) return memberOnboardingResponse;
   const reviewAccountResponse = await handleReviewAccountRequest(request, env);
   if (reviewAccountResponse) return reviewAccountResponse;
   const backupReadinessResponse = await handleBackupReadinessRequest(request, env);

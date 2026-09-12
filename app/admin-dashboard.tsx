@@ -1,4 +1,5 @@
 import { ScreenContainer } from "@/components/screen-container";
+import { AdminOnboardingProgress } from "@/components/admin-onboarding-progress";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { MEMBERS, EVENTS, CURRENT_USER, RANK_LABELS, RANK_COLORS, getRankFromPoints, type Announcement, type Club, type Coupon, type MemberRank } from "@/constants/mock-data";
 import { useAuthContext } from "@/lib/auth-context";
@@ -111,7 +112,7 @@ export default function AdminDashboardScreen() {
   const clubs = useClubs();
 
   // すべての state を条件分岐の外で定義
-  const [activeTab, setActiveTab] = useState<"overview" | "monitoring" | "backups" | "deletions" | "review" | "operators" | "members" | "events" | "contests" | "clubs" | "payments" | "emails" | "announcements" | "coupons" | "analytics">(tab === "monitoring" ? "monitoring" : tab === "backups" ? "backups" : tab === "deletions" ? "deletions" : tab === "review" ? "review" : tab === "coupons" ? "coupons" : tab === "contests" ? "contests" : tab === "operators" ? "operators" : "overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "onboarding" | "monitoring" | "backups" | "deletions" | "review" | "operators" | "members" | "events" | "contests" | "clubs" | "payments" | "emails" | "announcements" | "coupons" | "analytics">(tab === "onboarding" ? "onboarding" : tab === "monitoring" ? "monitoring" : tab === "backups" ? "backups" : tab === "deletions" ? "deletions" : tab === "review" ? "review" : tab === "coupons" ? "coupons" : tab === "contests" ? "contests" : tab === "operators" ? "operators" : "overview");
   const [editingClub, setEditingClub] = useState<Club | null>(null);
   const [paymentRecords, setPaymentRecords] = useState<PaymentRecord[]>([]);
   const [selectedPaymentEventId, setSelectedPaymentEventId] = useState<string | null>(null);
@@ -676,8 +677,8 @@ export default function AdminDashboardScreen() {
         }}
         style={{ borderBottomWidth: 0.5, borderBottomColor: colors.border, flexGrow: 0, maxHeight: compactTabs ? 154 : undefined }}
       >
-        {(["overview", "monitoring", "backups", "deletions", "review", "operators", "members", "events", "contests", "clubs", "payments", "emails", "announcements", "coupons", "analytics"] as const).map((tab) => {
-          const labels = { overview: "概要", monitoring: "監視ログ", backups: "バックアップ", deletions: "退会申請", review: "審査アカウント", operators: "運営メンバー", members: "会員", events: "イベント", contests: "グルメ選手権", clubs: "部活動", payments: "支払管理", emails: "承認メール", announcements: "お知らせ", coupons: "クーポン", analytics: "分析" };
+        {(["overview", "onboarding", "monitoring", "backups", "deletions", "review", "operators", "members", "events", "contests", "clubs", "payments", "emails", "announcements", "coupons", "analytics"] as const).map((tab) => {
+          const labels = { overview: "概要", onboarding: "初回ログイン", monitoring: "監視ログ", backups: "バックアップ", deletions: "退会申請", review: "審査アカウント", operators: "運営メンバー", members: "会員", events: "イベント", contests: "グルメ選手権", clubs: "部活動", payments: "支払管理", emails: "承認メール", announcements: "お知らせ", coupons: "クーポン", analytics: "分析" };
           return (
             <Pressable
               key={tab}
@@ -704,6 +705,7 @@ export default function AdminDashboardScreen() {
       </ScrollView>
 
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
+        {activeTab === "onboarding" && <AdminOnboardingProgress />}
         {activeTab === "backups" && (
           <View style={{ backgroundColor: colors.surface, borderRadius: 14, borderWidth: 1, borderColor: colors.border, padding: 16 }}>
             <Text style={{ fontSize: 18, fontWeight: "800", color: colors.foreground }}>バックアップ準備状況</Text>
