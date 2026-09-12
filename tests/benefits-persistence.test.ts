@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import { handleBenefitsRequest } from "../sites/benefits";
 import type { D1Database, D1PreparedStatement, SitesEnv } from "../sites/platform-types";
 
-function database(): D1Database {
+function database(couponRows: Record<string, unknown>[] = []): D1Database {
   return {
     prepare(sql: string) {
       const statement: D1PreparedStatement = {
@@ -24,7 +24,7 @@ function database(): D1Database {
           return null;
         },
         async run() { return { success: true }; },
-        async all<T>() { return { success: true, results: [] as T[] }; },
+        async all<T>() { return { success: true, results: (sql.includes("SELECT * FROM coupons") ? couponRows : []) as T[] }; },
       };
       return statement;
     },
@@ -52,7 +52,16 @@ describe("benefits and IRO+ points persistence", () => {
   it("returns only the signed-in member's benefit state to a member", async () => {
     const response = await handleBenefitsRequest(new Request("https://app.example/api/benefits", { headers: { cookie: "__Host-irotas_session=test-session" } }), { DB: database(), AUTH_SECRET: "test" } as SitesEnv);
     expect(response?.status).toBe(200);
-    await expect(response?.json()).resolves.toMatchObject({ memberRank: "gold", coupons: [], gifts: [], points: { balance: 0 } });
+    const data = await response?.json();
+    expect(data).toMatchObject({ memberRank: "gold", gifts: [], points: { balance: 0 } });
+    expect(data.coupons).toEqual(expect.arrayContaining([expect.objectContaining({ id: "discord-coupon-1" })]));
+  });
+
+  it("does not restore a deleted Discord coupon from the archive", async () => {
+    const db = database([{ id: "discord-coupon-1", deleted_at: "2026-09-12T00:00:00Z" }]);
+    const response = await handleBenefitsRequest(new Request("https://app.example/api/benefits", { headers: { cookie: "__Host-irotas_session=test-session" } }), { DB: db, AUTH_SECRET: "test" } as SitesEnv);
+    const data = await response?.json();
+    expect(data.coupons.some((coupon: { id: string }) => coupon.id === "discord-coupon-1")).toBe(false);
   });
 });
 

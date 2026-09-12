@@ -32,6 +32,7 @@ import {
   View,
   ActivityIndicator,
   Modal,
+  Platform,
   useWindowDimensions,
 } from "react-native";
 import { createCoupon, deleteCoupon, setCouponStatus, updateCoupon, updateCouponUsageType, useCoupons } from "@/lib/coupon-store";
@@ -289,10 +290,28 @@ export default function AdminDashboardScreen() {
   const openCouponEdit = (coupon: Coupon) => { setEditingCouponId(coupon.id); setCouponDraft({ ...coupon, status: coupon.status ?? "active" }); setShowCouponModal(true); };
   const saveCoupon = async () => {
     if (!couponDraft.title.trim() || !couponDraft.discount.trim() || !couponDraft.expiresAt.trim() || !couponDraft.code.trim()) { Alert.alert("入力内容を確認", "タイトル・特典内容・有効期限・コードは必須です。"); return; }
-    if (editingCouponId) await updateCoupon(couponDraft);
-    else await createCoupon(couponDraft);
-    setShowCouponModal(false);
-    Alert.alert(editingCouponId ? "更新完了" : "作成完了", editingCouponId ? "クーポンを更新しました。" : "クーポンを作成しました。");
+    try {
+      if (editingCouponId) await updateCoupon(couponDraft);
+      else await createCoupon(couponDraft);
+      setShowCouponModal(false);
+      Alert.alert(editingCouponId ? "更新完了" : "作成完了", editingCouponId ? "クーポンを更新しました。" : "クーポンを作成しました。");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "もう一度お試しください。";
+      if (Platform.OS === "web") window.alert(`保存できませんでした: ${message}`);
+      else Alert.alert("保存できませんでした", message);
+    }
+  };
+  const confirmDeleteCoupon = (coupon: Coupon) => {
+    const remove = () => { void deleteCoupon(coupon.id).catch((error) => {
+      const message = error instanceof Error ? error.message : "もう一度お試しください。";
+      if (Platform.OS === "web") window.alert(`削除できませんでした: ${message}`);
+      else Alert.alert("削除できませんでした", message);
+    }); };
+    if (Platform.OS === "web") {
+      if (window.confirm(`${coupon.title}を削除しますか？`)) remove();
+    } else {
+      Alert.alert("クーポンを削除", `${coupon.title}を削除しますか？`, [{ text: "キャンセル", style: "cancel" }, { text: "削除", style: "destructive", onPress: remove }]);
+    }
   };
   const pickCouponImage = async () => {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -1554,7 +1573,7 @@ export default function AdminDashboardScreen() {
                     );
                   })}
                 </View>
-                <View style={{ flexDirection: "row", gap: 7, marginTop: 10 }}><Pressable onPress={() => openCouponEdit(coupon)} style={{ flex: 1, alignItems: "center", paddingVertical: 8, borderRadius: 9, backgroundColor: "#5D5C7418" }}><Text style={{ color: "#5D5C74", fontSize: 12, fontWeight: "800" }}>編集</Text></Pressable><Pressable onPress={() => { void setCouponStatus(coupon.id, coupon.status === "ended" ? "active" : "ended"); }} style={{ flex: 1, alignItems: "center", paddingVertical: 8, borderRadius: 9, backgroundColor: coupon.status === "ended" ? "#34C75918" : "#FF950018" }}><Text style={{ color: coupon.status === "ended" ? "#248A3D" : "#B06C21", fontSize: 12, fontWeight: "800" }}>{coupon.status === "ended" ? "再開" : "終了"}</Text></Pressable><Pressable onPress={() => Alert.alert("クーポンを削除", `${coupon.title}を削除しますか？`, [{ text: "キャンセル", style: "cancel" }, { text: "削除", style: "destructive", onPress: () => { void deleteCoupon(coupon.id); } }])} style={{ flex: 1, alignItems: "center", paddingVertical: 8, borderRadius: 9, backgroundColor: "#FF3B3018" }}><Text style={{ color: "#FF3B30", fontSize: 12, fontWeight: "800" }}>削除</Text></Pressable></View>
+                <View style={{ flexDirection: "row", gap: 7, marginTop: 10 }}><Pressable onPress={() => openCouponEdit(coupon)} style={{ flex: 1, alignItems: "center", paddingVertical: 8, borderRadius: 9, backgroundColor: "#5D5C7418" }}><Text style={{ color: "#5D5C74", fontSize: 12, fontWeight: "800" }}>編集</Text></Pressable><Pressable onPress={() => { void setCouponStatus(coupon.id, coupon.status === "ended" ? "active" : "ended"); }} style={{ flex: 1, alignItems: "center", paddingVertical: 8, borderRadius: 9, backgroundColor: coupon.status === "ended" ? "#34C75918" : "#FF950018" }}><Text style={{ color: coupon.status === "ended" ? "#248A3D" : "#B06C21", fontSize: 12, fontWeight: "800" }}>{coupon.status === "ended" ? "再開" : "終了"}</Text></Pressable><Pressable onPress={() => confirmDeleteCoupon(coupon)} style={{ flex: 1, alignItems: "center", paddingVertical: 8, borderRadius: 9, backgroundColor: "#FF3B3018" }}><Text style={{ color: "#FF3B30", fontSize: 12, fontWeight: "800" }}>削除</Text></Pressable></View>
               </View>
             ))}
           </>

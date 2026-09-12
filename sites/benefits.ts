@@ -1,5 +1,6 @@
 import { authenticatedRequestMember } from "./auth";
 import type { D1Database, SitesEnv } from "./platform-types";
+import { loadImportedDiscordCoupons } from "../lib/discord-benefits-import";
 
 const COUPON_ACTION = /^\/api\/benefits\/coupons\/([^/]+)\/(present|redeem)$/;
 const COUPON_ITEM = /^\/api\/benefits\/coupons\/([^/]+)$/;
@@ -8,6 +9,7 @@ const GIFT_ITEM = /^\/api\/benefits\/gifts\/([^/]+)$/;
 const ROOT = "/api/benefits";
 const POINTS_ADJUST = "/api/benefits/points/adjust";
 const RANKS = ["regular", "silver", "gold", "platinum"] as const;
+const importedCoupons = loadImportedDiscordCoupons();
 
 type Viewer = NonNullable<Awaited<ReturnType<typeof authenticatedRequestMember>>>;
 
@@ -84,7 +86,7 @@ function giftFromRow(row: Record<string, unknown>) {
 
 async function getBenefits(db: D1Database, viewer: Viewer) {
   const [coupons, usages, gifts, applications, balance, history, balances] = await Promise.all([
-    db.prepare("SELECT * FROM coupons WHERE deleted_at IS NULL ORDER BY expires_at DESC, created_at DESC").all<Record<string, unknown>>(),
+    db.prepare("SELECT * FROM coupons ORDER BY expires_at DESC, created_at DESC").all<Record<string, unknown>>(),
     db.prepare("SELECT coupon_id, use_count, last_presented_at, used_at FROM coupon_usages WHERE member_id = ?").bind(viewer.id).all<Record<string, unknown>>(),
     db.prepare("SELECT * FROM gift_campaigns WHERE deleted_at IS NULL ORDER BY CASE status WHEN 'open' THEN 0 ELSE 1 END, deadline").all<Record<string, unknown>>(),
     db.prepare(`SELECT ga.id, ga.campaign_id, ga.applied_at, ga.result, ga.member_id, m.public_member_id, m.display_name
@@ -98,7 +100,12 @@ async function getBenefits(db: D1Database, viewer: Viewer) {
   ]);
   return json({
     memberRank: await memberRank(db, viewer.id),
-    coupons: (coupons.results ?? []).map(couponFromRow),
+    // Archived Discord coupons are legacy records. A database row (including
+    // its deletion tombstone) overrides the archive, so removed items stay gone.
+    coupons: [
+      ...(coupons.results ?? []).filter((row) => !row.deleted_at).map(couponFromRow),
+      ...importedCoupons.filter((coupon) => !(coupons.results ?? []).some((row) => row.id === coupon.id)),
+    ],
     usages: Object.fromEntries((usages.results ?? []).map((row) => [String(row.coupon_id), { useCount: Number(row.use_count), lastPresentedAt: row.last_presented_at || undefined, usedAt: row.used_at || undefined }])),
     gifts: (gifts.results ?? []).map(giftFromRow),
     applications: (applications.results ?? []).map((row) => ({ id: row.id, campaignId: row.campaign_id, memberId: row.public_member_id ?? `member-${row.member_id}`, memberName: row.display_name, appliedAt: row.applied_at, result: row.result })),
@@ -107,7 +114,18 @@ async function getBenefits(db: D1Database, viewer: Viewer) {
 }
 
 async function couponAction(db: D1Database, viewer: Viewer, couponId: string, action: string) {
-  const coupon = await db.prepare("SELECT usage_type, status, expires_at, required_rank, recipient_ids_json FROM coupons WHERE id = ? AND deleted_at IS NULL").bind(couponId).first<Record<string, unknown>>();
+  let coupon = await db.prepare("SELECT usage_type, status, expires_at, required_rank, recipient_ids_json FROM coupons WHERE id = ? AND deleted_at IS NULL").bind(couponId).first<Record<string, unknown>>();
+  if (!coupon) {
+    const archived = importedCoupons.find((item) => item.id === couponId);
+    if (archived) {
+      const now = new Date().toISOString();
+      await db.prepare(`INSERT OR IGNORE INTO coupons (id,title,description,discount,expires_at,code,required_rank,usage_type,status,image_url,recipient_ids_json,source_contest_id,created_at,updated_at,deleted_at)
+        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,NULL)`)
+        .bind(archived.id,archived.title,archived.description,archived.discount,archived.expiresAt,archived.code,archived.requiredRank,archived.usageType,archived.status ?? 'ended',archived.imageUrl ?? null,'[]',archived.sourceContestId ?? null,now,now).run();
+      // A soft-deleted row wins over the archive; never reactivate it here.
+      coupon = await db.prepare("SELECT usage_type, status, expires_at, required_rank, recipient_ids_json FROM coupons WHERE id = ? AND deleted_at IS NULL").bind(couponId).first<Record<string, unknown>>();
+    }
+  }
   if (!coupon) return json({ error: "クーポンが見つかりません" }, 404);
   const rank = await memberRank(db, viewer.id);
   let recipients: string[] = [];
@@ -216,7 +234,18 @@ export async function handleBenefitsRequest(request: Request, env: SitesEnv): Pr
   if (couponItemMatch) {
     if (!elevated(viewer)) return json({ error: "運営権限が必要です" }, 403);
     const id = decodeURIComponent(couponItemMatch[1]);
-    if (request.method === 'DELETE') { await env.DB.prepare("UPDATE coupons SET deleted_at = ?, updated_at = ? WHERE id = ?").bind(new Date().toISOString(), new Date().toISOString(), id).run(); return json({ success: true }); }
+    if (request.method === 'DELETE') {
+      const now = new Date().toISOString();
+      const archived = importedCoupons.find((coupon) => coupon.id === id);
+      if (archived) {
+        await env.DB.prepare(`INSERT INTO coupons (id,title,description,discount,expires_at,code,required_rank,usage_type,status,image_url,recipient_ids_json,source_contest_id,created_at,updated_at,deleted_at)
+          VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET deleted_at=excluded.deleted_at,updated_at=excluded.updated_at`)
+          .bind(id,archived.title,archived.description,archived.discount,archived.expiresAt,archived.code,archived.requiredRank,archived.usageType,archived.status ?? 'ended',archived.imageUrl ?? null,'[]',archived.sourceContestId ?? null,now,now,now).run();
+      } else {
+        await env.DB.prepare("UPDATE coupons SET deleted_at = ?, updated_at = ? WHERE id = ?").bind(now, now, id).run();
+      }
+      return json({ success: true });
+    }
     if (!['PUT', 'PATCH'].includes(request.method)) return json({ error: 'method_not_allowed' }, 405);
     const input = await body(request); const value = input && couponInput(input);
     if (!value) return json({ error: "クーポンの入力内容を確認してください" }, 400);
