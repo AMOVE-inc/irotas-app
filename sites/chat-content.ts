@@ -633,6 +633,16 @@ export async function handleChatContentRequest(
       }
       await env.DB.prepare("UPDATE chat_rooms SET updated_at = ? WHERE id = ?")
         .bind(now, roomId).run();
+      const author = await env.DB.prepare("SELECT display_name FROM members WHERE id = ? LIMIT 1")
+        .bind(member.id).first<{ display_name: string }>();
+      // Notify members of private/group rooms; public rooms use their live unread
+      // badges, avoiding a notification blast to every community member.
+      await env.DB.prepare(`INSERT OR IGNORE INTO in_app_notifications
+        (id, target_member_id, type, title, body, chat_room_id, target_path, created_at)
+        SELECT ? || ':' || crm.member_id, crm.member_id, 'chat', ?, ?, ?, ?, ?
+        FROM chat_room_members crm
+        WHERE crm.room_id = ? AND crm.left_at IS NULL AND crm.member_id != ?`)
+        .bind(`chat-message:${id}`, room.name, `${author?.display_name || "メンバー"}: ${(content || "画像が送信されました").replace(/\s+/g, " ").slice(0, 160)}`, roomId, `/chat?id=${encodeURIComponent(roomId)}`, now, roomId, member.id).run();
       await audit(env.DB, member.id, "chat.message_created", id);
       const rows = await messageRows(env.DB, roomId);
       const created = rows.find((item) => item.id === id);

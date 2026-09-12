@@ -21,6 +21,7 @@ function testDatabase(
   member: Member,
   clubAllowed = false,
   recentIntroduction?: { id: string; created_at: string },
+  thread?: { id: string; author_member_id: number; category: string; title: string },
 ) {
   const writes: { sql: string; values: unknown[] }[] = [];
   const db: D1Database = {
@@ -61,6 +62,10 @@ function testDatabase(
             return (clubAllowed ? { allowed: 1 } : null) as T | null;
           if (sql.includes("category = 'introduction'"))
             return (recentIntroduction ?? null) as T | null;
+          if (sql.includes("FROM board_threads WHERE id = ?"))
+            return (thread ?? null) as T | null;
+          if (sql.includes("SELECT display_name FROM members"))
+            return { display_name: "テスト会員" } as T;
           return null;
         },
         async run() {
@@ -124,6 +129,21 @@ describe("shared board content API", () => {
     expect(response?.status).toBe(201);
     expect(writes.some((item) => item.sql.includes("INSERT INTO board_threads"))).toBe(true);
     expect(writes.some((item) => item.sql.includes("INSERT INTO audit_logs"))).toBe(true);
+  });
+
+  it("notifies the post author when another member comments", async () => {
+    const { db, writes } = testDatabase(
+      { id: 9, role: "user", access_role: "member", account_status: "active" },
+      false,
+      undefined,
+      { id: "post-1", author_member_id: 10, category: "meal-report", title: "おすすめのお店" },
+    );
+    const response = await handleBoardContentRequest(
+      request("/api/board/threads/post-1/comments", "POST", { content: "ありがとうございます" }),
+      { DB: db } as SitesEnv,
+    );
+    expect(response?.status).toBe(201);
+    expect(writes.some((item) => item.sql.includes("INSERT OR IGNORE INTO in_app_notifications") && item.values.includes(10))).toBe(true);
   });
 
   it("returns the recent self-introduction instead of creating it twice", async () => {

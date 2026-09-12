@@ -16,6 +16,8 @@ type Row = {
   body: string;
   club_id: string | null;
   event_id: string | null;
+  chat_room_id: string | null;
+  target_path: string | null;
   read_at: string | null;
   created_at: string;
 };
@@ -61,6 +63,8 @@ const notification = (id: string, target: number): Row => ({
   body: "申請内容を確認してください",
   club_id: "club-wine",
   event_id: null,
+  chat_room_id: null,
+  target_path: null,
   read_at: null,
   created_at: "2026-08-20T12:00:00.000Z",
 });
@@ -76,6 +80,12 @@ describe("notification API ownership", () => {
     expect(response?.status).toBe(200);
     const body = await response?.json() as { notifications: { id: string }[] };
     expect(body.notifications.map((item) => item.id)).toEqual(["own"]);
+  });
+
+  it("includes a direct path for newly received board comments", async () => {
+    const row = { ...notification("comment", 10), type: "comment", target_path: "/board?category=meal-report&view=threads&thread=post-1" };
+    const response = await handleNotificationRequest(new Request("https://app.example/api/notifications"), { DB: new NotificationDb([row]) } as never);
+    await expect(response?.json()).resolves.toMatchObject({ notifications: [{ targetPath: row.target_path, type: "comment" }] });
   });
 
   it("does not allow a member to mark another member's notification as read", async () => {

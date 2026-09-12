@@ -2506,6 +2506,37 @@ export default function BoardScreen() {
     });
   }, [activeCategory, canAccessCategory, categories, loadSharedBoardContent]);
 
+  // Keep the open thread list and its unread-comment badges current while the
+  // page remains visible. The selected category avoids repeatedly fetching
+  // every board comment in the community.
+  useEffect(() => {
+    if (!authUser) return;
+    const watchedCategory = isThreadView ? activeCategory : undefined;
+    let pending = false;
+    let active = true;
+    let revision: string | null = null;
+    const check = async () => {
+      if (pending || (Platform.OS === "web" && document.visibilityState === "hidden")) return;
+      pending = true;
+      try {
+        const activity = await Api.getSharedBoardActivity(watchedCategory);
+        if (active && revision !== null && activity.revision !== revision) {
+          await loadSharedBoardContent(watchedCategory);
+        }
+        if (active) revision = activity.revision;
+      } catch {
+        // Keep the current list and check again when the connection recovers.
+      } finally {
+        pending = false;
+      }
+    };
+    void check();
+    const timer = setInterval(() => {
+      void check();
+    }, 2000);
+    return () => { active = false; clearInterval(timer); };
+  }, [activeCategory, authUser, isThreadView, loadSharedBoardContent]);
+
   useEffect(() => {
     void loadBoardThreadEdits().then(setEditedThreads);
     void loadDeletedBoardThreadIds().then(setDeletedThreadIds);

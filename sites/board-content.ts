@@ -8,6 +8,7 @@ import type { RawDiscordBoardArchive } from "../lib/discord-board-import";
 import { isRetiredMovieClubThread, normalizeDiscordBoardCategory } from "../lib/board-category";
 
 const CONTENT_PATH = "/api/board/content";
+const ACTIVITY_PATH = "/api/board/activity";
 const THREADS_PATH = "/api/board/threads";
 const THREAD_PATH = /^\/api\/board\/threads\/([^/]+)$/;
 const COMMENTS_PATH = /^\/api\/board\/threads\/([^/]+)\/comments$/;
@@ -393,13 +394,32 @@ export async function handleBoardContentRequest(
   const commentMatch = COMMENT_PATH.exec(url.pathname);
   const importedThreadEnsureMatch = IMPORTED_THREAD_ENSURE_PATH.exec(url.pathname);
   const pollMatch = POLL_PATH.exec(url.pathname);
-  const handled = url.pathname === CONTENT_PATH || url.pathname === THREADS_PATH ||
+  const handled = url.pathname === CONTENT_PATH || url.pathname === ACTIVITY_PATH || url.pathname === THREADS_PATH ||
     url.pathname === REACTIONS_PATH || threadMatch || commentsMatch || commentMatch || importedThreadEnsureMatch || pollMatch;
   if (!handled) return null;
   if (!env.DB) return json({ error: "データベースに接続できません" }, 503);
   const member = await authenticatedRequestMember(request, env);
   if (!member) return json({ error: "ログインが必要です" }, 401);
   const db = env.DB;
+
+  if (url.pathname === ACTIVITY_PATH && request.method === "GET") {
+    const categoryParam = url.searchParams.get("category");
+    const category = categoryParam ? validCategory(categoryParam) : null;
+    if (categoryParam && !category) return json({ error: "カテゴリが不正です" }, 400);
+    if (category && !await canAccessBoardCategory(db, category, member))
+      return json({ error: "この部活動の部員のみ閲覧できます" }, 403);
+    const [threads, comments] = await Promise.all([
+      category
+        ? db.prepare("SELECT COUNT(*) AS count, MAX(updated_at) AS latest FROM board_threads WHERE category = ? AND deleted_at IS NULL").bind(category).first<{ count: number; latest: string | null }>()
+        : db.prepare("SELECT COUNT(*) AS count, MAX(updated_at) AS latest FROM board_threads WHERE category NOT LIKE 'club-club-%' AND deleted_at IS NULL").first<{ count: number; latest: string | null }>(),
+      category
+        ? db.prepare(`SELECT COUNT(*) AS count, MAX(bc.updated_at) AS latest FROM board_comments bc JOIN board_threads bt ON bt.id = bc.thread_id
+            WHERE bt.category = ? AND bt.deleted_at IS NULL AND bc.deleted_at IS NULL`).bind(category).first<{ count: number; latest: string | null }>()
+        : db.prepare(`SELECT COUNT(*) AS count, MAX(bc.updated_at) AS latest FROM board_comments bc JOIN board_threads bt ON bt.id = bc.thread_id
+            WHERE bt.category NOT LIKE 'club-club-%' AND bt.deleted_at IS NULL AND bc.deleted_at IS NULL`).first<{ count: number; latest: string | null }>(),
+    ]);
+    return json({ revision: `${threads?.count ?? 0}:${threads?.latest ?? ""}:${comments?.count ?? 0}:${comments?.latest ?? ""}` });
+  }
 
   if (pollMatch && (request.method === "GET" || request.method === "PUT")) {
     const ownerType = pollMatch[1] as "thread" | "comment";
@@ -566,6 +586,21 @@ export async function handleBoardContentRequest(
       (id, thread_id, author_member_id, content, data_json, created_at, updated_at)
       VALUES (?, ?, ?, ?, ?, ?, ?)`)
       .bind(id, threadId, member.id, content, data, now, now).run();
+    if (thread.author_member_id !== member.id) {
+      const author = await db.prepare("SELECT display_name FROM members WHERE id = ? LIMIT 1")
+        .bind(member.id).first<{ display_name: string }>();
+      const targetPath = `/board?category=${encodeURIComponent(thread.category)}&view=threads&thread=${encodeURIComponent(threadId)}`;
+      await db.prepare(`INSERT OR IGNORE INTO in_app_notifications
+        (id, target_member_id, type, title, body, target_path, created_at)
+        VALUES (?, ?, 'comment', ?, ?, ?, ?)`).bind(
+          `board-comment:${id}:${thread.author_member_id}`,
+          thread.author_member_id,
+          `「${thread.title.slice(0, 80)}」にコメントが届きました`,
+          `${author?.display_name || "メンバー"}: ${content.replace(/\s+/g, " ").slice(0, 160)}`,
+          targetPath,
+          now,
+        ).run();
+    }
     await audit(db, member.id, "board.comment_created", "board_comment", id, { threadId });
     return json({ id, createdAt: now }, 201);
   }

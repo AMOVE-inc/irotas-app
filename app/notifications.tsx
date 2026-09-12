@@ -12,6 +12,7 @@ const ICON_MAP: Record<string, { icon: string; color: string }> = {
   announcement: { icon: "megaphone.fill", color: "#E8A0BF" },
   like: { icon: "heart.fill", color: "#FF3B30" },
   comment: { icon: "bubble.left.fill", color: "#34C759" },
+  chat: { icon: "bubble.left.and.bubble.right.fill", color: "#5865F2" },
   coupon: { icon: "ticket.fill", color: "#FF9500" },
   club_application: { icon: "person.badge.plus", color: "#FF9900" },
   club_approval: { icon: "checkmark.circle.fill", color: "#34C759" },
@@ -106,11 +107,19 @@ export default function NotificationsScreen() {
 
   useEffect(() => {
     let mounted = true;
-    Api.getNotifications()
-      .then((items) => { if (mounted) setNotifications(items); })
-      .catch((cause) => { if (mounted) setError(cause instanceof Error ? cause.message : "通知を読み込めませんでした"); })
-      .finally(() => { if (mounted) setLoading(false); });
-    return () => { mounted = false; };
+    let pending = false;
+    let loaded = false;
+    const refresh = () => {
+      if (pending || (Platform.OS === "web" && document.visibilityState === "hidden")) return;
+      pending = true;
+      void Api.getNotifications()
+        .then((items) => { if (mounted) { loaded = true; setNotifications(items); setError(""); } })
+        .catch((cause) => { if (mounted && !loaded) setError(cause instanceof Error ? cause.message : "通知を読み込めませんでした"); })
+        .finally(() => { pending = false; if (mounted) setLoading(false); });
+    };
+    refresh();
+    const timer = setInterval(refresh, 2000);
+    return () => { mounted = false; clearInterval(timer); };
   }, []);
 
   const openNotification = async (notification: Notification) => {
@@ -118,7 +127,9 @@ export default function NotificationsScreen() {
       setNotifications((items) => items.map((item) => item.id === notification.id ? { ...item, read: true } : item));
       try { await Api.markNotificationRead(notification.id); } catch {}
     }
-    if (notification.type === "club_application" || notification.type === "club_approval") {
+    if (notification.targetPath?.startsWith("/board?") || notification.targetPath?.startsWith("/chat?")) {
+      router.push(notification.targetPath as any);
+    } else if (notification.type === "club_application" || notification.type === "club_approval") {
       router.push("/clubs");
     } else if (notification.type === "event_feedback" && notification.eventId) {
       router.push({ pathname: "/event-feedback", params: { id: notification.eventId } });

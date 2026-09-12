@@ -192,6 +192,10 @@ describe("shared chat content API", () => {
     expect(createdBody.room.participants).toEqual(["IRO0009", "IRO0010", "IRO0011"]);
     expect(createdBody.room.createdBy).toBe("IRO0009");
 
+    const posted = await handleChatContentRequest(request(`/api/chats/${createdBody.room.id}/messages`, "POST", { content: "週末に集まりましょう" }), env);
+    expect(posted?.status).toBe(201);
+    expect(db.writes.some((sql) => sql.includes("INSERT OR IGNORE INTO in_app_notifications") && sql.includes("chat_room_members"))).toBe(true);
+
     const renamed = await handleChatContentRequest(request(`/api/chats/${createdBody.room.id}`, "PATCH", { name: "新しい名前" }), env);
     expect(renamed?.status).toBe(200);
 

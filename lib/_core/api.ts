@@ -153,12 +153,15 @@ export type AppNotification = {
     | "event"
     | "like"
     | "comment"
+    | "chat"
     | "coupon"
     | "system_error";
   title: string;
   body: string;
   clubId: string | null;
   eventId: string | null;
+  chatRoomId: string | null;
+  targetPath: string | null;
   read: boolean;
   createdAt: string;
 };
@@ -457,6 +460,11 @@ export async function getSharedBoardContent(category?: string) {
     threads: SharedBoardThread[];
     comments: SharedBoardComment[];
   }>(`/api/board/content${query}`);
+}
+
+export async function getSharedBoardActivity(category?: string) {
+  const query = category ? `?category=${encodeURIComponent(category)}` : "";
+  return apiCall<{ revision: string }>(`/api/board/activity${query}`);
 }
 
 export async function createSharedBoardThread(input: {

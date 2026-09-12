@@ -201,8 +201,8 @@ export default function ChatListScreen() {
     setRankRooms(clear);
   }, []);
 
-  const refreshRooms = useCallback(async () => {
-    setRoomsLoading(true);
+  const refreshRooms = useCallback(async (includeDetails = true) => {
+    if (includeDetails) setRoomsLoading(true);
     // 旧プロトタイプ用の chat1〜chat4 は、保存済みの実際の会話ではないため一覧に出さない。
     const isFixtureRoom = (room: ChatRoom) => /^chat\d+$/.test(room.id);
     const branchRooms = CHAT_ROOMS.filter((room) => room.sourceId === "branch-kanto" ? viewerBranches.includes("kanto") : room.sourceId === "branch-kansai" ? viewerBranches.includes("kansai") : false);
@@ -214,7 +214,7 @@ export default function ChatListScreen() {
       // 一覧表示に必要なのはルーム一覧だけ。重い補助情報は後段で補完する。
       const rooms = await Api.getSharedChatRooms();
       sharedRooms = rooms.map((room) => ({ ...room, requiredRank: room.requiredRank as ChatRoom["requiredRank"] }));
-      void Promise.all([
+      if (includeDetails) void Promise.all([
         Api.getEvents().catch(() => []),
         Api.getMemberDirectory().catch(() => []),
         Api.getSharedChatMessages("board-announcement").catch(() => []),
@@ -251,8 +251,14 @@ export default function ChatListScreen() {
 
   useFocusEffect(useCallback(() => {
     let active = true;
+    let pending = false;
     void loadDynamicRooms().then(() => { if (active) void refreshRooms(); });
-    return () => { active = false; };
+    const timer = setInterval(() => {
+      if (!active || pending) return;
+      pending = true;
+      void refreshRooms(false).finally(() => { pending = false; });
+    }, 2000);
+    return () => { active = false; clearInterval(timer); };
   }, [refreshRooms]));
 
   const announcementRoom = myRooms.find((room) => room.id === "board-announcement");
