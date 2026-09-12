@@ -35,6 +35,7 @@ import {
 import { handleAccountDeletionAdminRequest } from "./account-deletion-admin";
 import { handleMemberOnboardingRequest } from "./member-onboarding";
 import { handleReviewAccountRequest } from "./review-account";
+import { handleNonMemberIdRequest } from "./non-member-id";
 import { handleBackupReadinessRequest } from "./backup-readiness";
 import { handleBackupRequest } from "./backups";
 import { handleLinkPreviewRequest } from "./link-preview";
@@ -285,6 +286,8 @@ async function routeRequest(
   if (memberOnboardingResponse) return memberOnboardingResponse;
   const reviewAccountResponse = await handleReviewAccountRequest(request, env);
   if (reviewAccountResponse) return reviewAccountResponse;
+  const nonMemberIdResponse = await handleNonMemberIdRequest(request, env);
+  if (nonMemberIdResponse) return nonMemberIdResponse;
   const backupReadinessResponse = await handleBackupReadinessRequest(request, env);
   if (backupReadinessResponse) return backupReadinessResponse;
   const backupResponse = await handleBackupRequest(request, env);

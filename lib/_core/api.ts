@@ -800,6 +800,18 @@ export async function getReviewAccountStatus() {
   return result.account;
 }
 
+export type NonMemberIdStatus = { name: string; currentId: string | null; nextId: string | null };
+
+export async function getNonMemberIdStatus() {
+  const result = await apiCall<{ member: NonMemberIdStatus }>("/api/admin/non-member-id");
+  return result.member;
+}
+
+export async function correctNonMemberId() {
+  const result = await apiCall<{ member: NonMemberIdStatus; updated: boolean }>("/api/admin/non-member-id", { method: "POST" });
+  return result.member;
+}
+
 export async function configureReviewAccount(input: {
   email: string;
   displayName: string;

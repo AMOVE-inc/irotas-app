@@ -158,7 +158,7 @@ export default function EventDetailScreen() {
   const [adminTime, setAdminTime] = useState(event?.time ?? "");
   const [adminLocation, setAdminLocation] = useState(event?.location ?? "");
   const [adminCapacity, setAdminCapacity] = useState(event?.capacityMode ?? String(event?.capacity ?? ""));
-  const [adminReservationCapacity, setAdminReservationCapacity] = useState(String(event?.reservationCapacity ?? event?.capacity ?? ""));
+  const [adminReservationCapacity, setAdminReservationCapacity] = useState(event?.reservationCapacity === 0 ? "undecided" : String(event?.reservationCapacity ?? event?.capacity ?? ""));
   const [adminDeadline, setAdminDeadline] = useState(event?.applicationDeadline ?? "");
   const [adminCancellationPolicy, setAdminCancellationPolicy] = useState(event?.cancellationPolicy ?? "");
   const [adminTabelogUrl, setAdminTabelogUrl] = useState(event?.tabelogUrl ?? "");
@@ -252,7 +252,7 @@ export default function EventDetailScreen() {
     const form = eventFormValuesFromEvent(event);
     setAdminTitle(event.title); setAdminParticipants((event.participants ?? []).join("\n"));
     setAdminDate(event.date); setAdminTime(event.time); setAdminLocation(event.location); setAdminCapacity(event.capacityMode ?? String(event.capacity));
-    setAdminReservationCapacity(String(event.reservationCapacity ?? event.capacity));
+    setAdminReservationCapacity(event.reservationCapacity === 0 ? "undecided" : String(event.reservationCapacity ?? event.capacity));
     setAdminDeadline(event.applicationDeadline ?? ""); setAdminCancellationPolicy(event.cancellationPolicy ?? "");
     setAdminTabelogUrl(event.tabelogUrl ?? ""); setAdminGoogleMapsUrl(event.googleMapsUrl ?? ""); setAdminRecruitmentStatus(event.recruitmentStatus === "draft" ? "draft" : "open");
     setAdminEventType(form.eventType); setAdminClubId(form.clubId); setAdminRestaurantName(form.restaurantName); setAdminFixedAmount(form.fixedAmount); setAdminBudgetMin(form.budgetMin); setAdminBudgetMax(form.budgetMax); setAdminCompanionIds(form.companionIds); setAdminImage(form.image); setAdminImageChanged(false); setAdminPublicNotes(form.publicNotes); setAdminPrivateMemo(form.privateMemo); setAdminSelectionMethod(form.selectionMethod); setAdminUseRankPrices(form.useRankPrices); setAdminRankPrices(form.rankPrices); setAdminGenres(form.genres);
@@ -364,9 +364,10 @@ export default function EventDetailScreen() {
     return evt.eventType === "official" && Boolean(rankPrices && EVENT_RANKS.some((rank) => Boolean(rankPrices[rank])));
   };
   const getRankPrice = (evt: Event): string => {
-    if (!eventHasRankPrices(evt)) return evt.price;
+    const fallbackPrice = evt.price ?? (typeof evt.priceMin === "number" ? `${evt.priceMin.toLocaleString()}円` : "未定");
+    if (!eventHasRankPrices(evt)) return fallbackPrice;
     const rank = (authUser?.memberRank ?? CURRENT_USER.rank) as "regular" | "silver" | "gold" | "platinum";
-    return evt.rankPrices?.[rank] ?? evt.price;
+    return evt.rankPrices?.[rank] ?? fallbackPrice;
   };
   const effectivePrice = getRankPrice(event);
   const hasRankPrices = eventHasRankPrices(event);
@@ -1039,7 +1040,7 @@ export default function EventDetailScreen() {
             </View>
             <View style={{ marginLeft: 12 }}>
               <Text style={{ fontSize: 15, fontWeight: "600", color: colors.foreground }}>
-                予約人数 {event.reservationCapacity ?? event.capacity + 1}人
+                予約人数 {event.reservationCapacity === 0 ? "未定" : `${event.reservationCapacity ?? event.capacity + 1}人`}
               </Text>
               <Text style={{ fontSize: 13, color: colors.muted }}>
                 募集人数（幹事除く） {eventCapacityLabel(event)}

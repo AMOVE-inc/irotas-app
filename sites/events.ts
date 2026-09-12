@@ -255,7 +255,7 @@ export function sanitizeEvent(value: unknown) {
   const time = text(input.time, 5, true);
   const capacityMode = input.capacityMode === "undecided" || input.capacityMode === "unlimited" ? input.capacityMode : undefined;
   const capacity = number(input.capacity, capacityMode ? 0 : 1, 100);
-  const reservationCapacity = number(input.reservationCapacity, 1, 101);
+  const reservationCapacity = number(input.reservationCapacity, 0, 101);
   const genres = stringArray(input.genres, 20);
   if (!eventType || !title || !date || !/^\d{4}-\d{2}-\d{2}$/.test(date) || !time || !/^([01]\d|2[0-3]):(00|15|30|45)$/.test(time) || capacity === null || (capacityMode && capacity !== 0) || reservationCapacity === null || genres === null)
     return null;
@@ -938,7 +938,7 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
       const location = input.location === undefined ? undefined : text(input.location, 500, true);
       const capacityMode = input.capacityMode === undefined ? undefined : input.capacityMode === "undecided" || input.capacityMode === "unlimited" ? input.capacityMode : input.capacityMode === null ? null : false;
       const capacity = input.capacity === undefined ? undefined : number(input.capacity, capacityMode === "undecided" || capacityMode === "unlimited" ? 0 : 1, 100);
-      const reservationCapacity = input.reservationCapacity === undefined ? undefined : number(input.reservationCapacity, 1, 101);
+      const reservationCapacity = input.reservationCapacity === undefined ? undefined : number(input.reservationCapacity, 0, 101);
       const price = input.price === undefined ? undefined : text(input.price, 80);
       const priceMin = input.priceMin === undefined ? undefined : number(input.priceMin, 0, 300_000);
       const priceMax = input.priceMax === undefined ? undefined : number(input.priceMax, 0, 300_000);

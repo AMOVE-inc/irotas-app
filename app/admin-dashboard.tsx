@@ -52,6 +52,8 @@ import {
   getAdminAccountDeletionRequests,
   completeAdminAccountDeletion,
   getReviewAccountStatus,
+  getNonMemberIdStatus,
+  correctNonMemberId,
   configureReviewAccount,
   suspendReviewAccount,
   getBackupReadiness,
@@ -65,6 +67,7 @@ import {
   type ApplicationErrorLog,
   type AdminAccountDeletionRequest,
   type ReviewAccountStatus,
+  type NonMemberIdStatus,
   type BackupReadinessManifest,
   type BackupSnapshot,
 } from "@/lib/_core/api";
@@ -165,6 +168,8 @@ export default function AdminDashboardScreen() {
   const [deletionsLoading, setDeletionsLoading] = useState(false);
   const [completingDeletionId, setCompletingDeletionId] = useState<string | null>(null);
   const [reviewAccount, setReviewAccount] = useState<ReviewAccountStatus | null>(null);
+  const [nonMemberId, setNonMemberId] = useState<NonMemberIdStatus | null>(null);
+  const [nonMemberIdSaving, setNonMemberIdSaving] = useState(false);
   const [reviewEmail, setReviewEmail] = useState("");
   const [reviewPassword, setReviewPassword] = useState("");
   const [reviewSaving, setReviewSaving] = useState(false);
@@ -202,6 +207,7 @@ export default function AdminDashboardScreen() {
     } finally { setMee6Loading(false); }
   };
   useEffect(() => { if (userIsAdmin && activeTab === "mee6") void loadMee6Members(); }, [userIsAdmin, activeTab]);
+  useEffect(() => { if (userIsAdmin && activeTab === "members") void getNonMemberIdStatus().then(setNonMemberId).catch(() => setNonMemberId(null)); }, [userIsAdmin, activeTab]);
   const loadSystemMonitoring = async () => {
     setMonitoringLoading(true);
     try {
@@ -1290,6 +1296,11 @@ export default function AdminDashboardScreen() {
         )}
         {activeTab === "members" && (
           <>
+            {nonMemberId && <View style={{ backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: 12, padding: 14, marginBottom: 16 }}>
+              <Text style={{ fontSize: 15, fontWeight: "800", color: colors.foreground }}>Non代表の会員ID</Text>
+              <Text style={{ marginTop: 6, color: colors.muted }}>{nonMemberId.name}：{nonMemberId.currentId ?? "未設定"}</Text>
+              {nonMemberId.currentId === "IRO-TEST-001" && nonMemberId.nextId ? <Pressable disabled={nonMemberIdSaving} onPress={async () => { setNonMemberIdSaving(true); try { const corrected = await correctNonMemberId(); setNonMemberId(corrected); Alert.alert("会員IDを修正しました", `${corrected.name}：${corrected.currentId}`); } catch (error) { Alert.alert("修正できませんでした", error instanceof Error ? error.message : "もう一度お試しください"); } finally { setNonMemberIdSaving(false); } }} style={{ backgroundColor: "#5865F2", borderRadius: 10, padding: 12, alignItems: "center", marginTop: 10, opacity: nonMemberIdSaving ? 0.6 : 1 }}><Text style={{ color: "#FFF", fontWeight: "800" }}>{nonMemberIdSaving ? "修正中…" : `${nonMemberId.nextId}に修正`}</Text></Pressable> : null}
+            </View>}
             <Text style={{ fontSize: 16, fontWeight: "700", color: colors.foreground, marginBottom: 12 }}>
               会員一覧 ({MEMBERS.length}名)
             </Text>

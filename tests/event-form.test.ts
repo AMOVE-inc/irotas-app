@@ -69,4 +69,13 @@ describe("event edit form values", () => {
     expect(saved).toMatchObject({ price: "未定", priceMin: 0, priceMax: 0 });
     expect(eventFormValuesFromEvent({ ...event, ...saved }).budgetMin).toBe("未定");
   });
+
+  it("allows an undecided reservation count without inventing a numeric limit", () => {
+    const form = eventFormValuesFromEvent(event);
+    form.reservationCapacity = "undecided";
+    expect(validateEventForm(form, { requireImage: false })).toBeNull();
+    const saved = eventFormSaveFields(form);
+    expect(saved.reservationCapacity).toBe(0);
+    expect(eventFormValuesFromEvent({ ...event, ...saved }).reservationCapacity).toBe("undecided");
+  });
 });

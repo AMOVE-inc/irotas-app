@@ -6,7 +6,7 @@ export const EVENT_TIME_OPTIONS = Array.from(
   (_, index) => `${String(Math.floor(index / 4)).padStart(2, "0")}:${String((index % 4) * 15).padStart(2, "0")}`,
 );
 export const EVENT_CAPACITY_OPTIONS = ["undecided", "unlimited", ...Array.from({ length: 100 }, (_, index) => String(index + 1))];
-export const EVENT_RESERVATION_CAPACITY_OPTIONS = EVENT_CAPACITY_OPTIONS.slice(2);
+export const EVENT_RESERVATION_CAPACITY_OPTIONS = ["undecided", ...EVENT_CAPACITY_OPTIONS.slice(2)];
 export function eventCapacityOptionLabel(value: string) {
   return value === "undecided" ? "未定" : value === "unlimited" ? "上限なし" : value;
 }
@@ -44,8 +44,8 @@ export type EventFormValues = {
   genres: string[];
 };
 
-export function numericEventAmount(value: string) {
-  return Number(value.replace(/[^0-9]/g, ""));
+export function numericEventAmount(value: string | undefined | null) {
+  return Number((value ?? "").replace(/[^0-9]/g, ""));
 }
 
 function japanDateKey(now = new Date()) {
@@ -99,7 +99,7 @@ export function eventFormValuesFromEvent(event: Event): EventFormValues {
     date: event.date ?? "",
     time: event.time ?? "",
     address: editableEventAddress(event),
-    reservationCapacity: String(event.reservationCapacity ?? event.capacity ?? ""),
+    reservationCapacity: event.reservationCapacity === 0 ? "undecided" : String(event.reservationCapacity ?? event.capacity ?? ""),
     recruitCapacity: event.capacityMode ?? String(event.capacity ?? ""),
     fixedAmount,
     budgetMin: budgetUndecided ? "未定" : fixedAmount ? String(priceMin || "") : amountOption(priceMin),
@@ -147,7 +147,7 @@ export function validateEventForm(values: EventFormValues, options: { requireIma
   if (values.decisionDate > values.date) return "参加者決定予定日は開催日以前を選択してください";
   if (!usesRankPrices && !values.fixedAmount && (values.budgetMin === "未定") !== (values.budgetMax === "未定")) return "予算を未定にする場合は下限・上限とも未定にしてください";
   if (!usesRankPrices && !values.fixedAmount && values.budgetMin !== "未定" && numericEventAmount(values.budgetMin) > numericEventAmount(values.budgetMax)) return "下限金額は上限金額以下にしてください";
-  if (!['undecided', 'unlimited'].includes(values.recruitCapacity) && minimumReservationCapacity(values.recruitCapacity, values.companionIds) > Number(values.reservationCapacity)) return "予約人数には、自分・同席者・募集人数の全員が収まるよう設定してください";
+  if (values.reservationCapacity !== "undecided" && !['undecided', 'unlimited'].includes(values.recruitCapacity) && minimumReservationCapacity(values.recruitCapacity, values.companionIds) > Number(values.reservationCapacity)) return "予約人数には、自分・同席者・募集人数の全員が収まるよう設定してください";
   if (values.tabelogUrl && !/^https?:\/\//i.test(values.tabelogUrl)) return "食べログURLは http:// または https:// から入力してください";
   if (values.googleMapsUrl && !/^https?:\/\//i.test(values.googleMapsUrl)) return "GoogleマップURLは http:// または https:// から入力してください";
   if (values.eventType === "official" && values.useRankPrices && EVENT_RANKS.some((rank) => !values.rankPrices[rank])) return "ランク別料金を設定する場合は、すべてのランクの料金を選択してください";
@@ -175,7 +175,7 @@ export function eventFormSaveFields(values: EventFormValues): Pick<Event, "title
     tokyoArea: extracted.tokyoArea,
     capacity: ['undecided', 'unlimited'].includes(values.recruitCapacity) ? 0 : Number(values.recruitCapacity),
     capacityMode: values.recruitCapacity === 'undecided' || values.recruitCapacity === 'unlimited' ? values.recruitCapacity : null,
-    reservationCapacity: Number(values.reservationCapacity),
+    reservationCapacity: values.reservationCapacity === "undecided" ? 0 : Number(values.reservationCapacity),
     price,
     priceMin,
     priceMax,

@@ -764,7 +764,7 @@ function EventCard({
               <Text
                 style={{ fontSize: 10, fontWeight: "900", color: "#34A853" }}
               >
-                {event.discordRecruitmentClosedAt ? "Discordでの募集は終了" : isDiscordRecruitmentOpen(event) ? "参加者はDiscordで確定" : event.capacityMode ? `募集人数 ${event.capacityMode === "undecided" ? "未定" : "上限なし"} ${event.status === "open" ? "募集中" : ""}` : `${remainingCapacity}名/${reservationCapacity}名 ${event.status === "open" ? "募集中" : ""}`}
+                {event.discordRecruitmentClosedAt ? "Discordでの募集は終了" : isDiscordRecruitmentOpen(event) ? "参加者はDiscordで確定" : event.capacityMode ? `募集人数 ${event.capacityMode === "undecided" ? "未定" : "上限なし"} ${event.status === "open" ? "募集中" : ""}` : `${remainingCapacity}名/${reservationCapacity === 0 ? "未定" : `${reservationCapacity}名`} ${event.status === "open" ? "募集中" : ""}`}
               </Text>
             </View>
             <View
@@ -1087,12 +1087,12 @@ export default function EventsScreen() {
         </Text>
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Discordからのイベント移行について"
+          accessibilityLabel="イベントの移行について"
           onPress={() => setMigrationNoticeVisible(true)}
           style={{ flexDirection: "row", alignItems: "center", gap: 5, paddingHorizontal: 10, paddingVertical: 8 }}
         >
           <IconSymbol name="info.circle.fill" size={19} color="#C05B88" />
-          <Text style={{ color: "#C05B88", fontSize: 13, fontWeight: "700" }}>移行について</Text>
+          <Text style={{ color: "#C05B88", fontSize: 13, fontWeight: "700" }}>イベントの移行について</Text>
         </Pressable>
       </View>
 
@@ -1491,9 +1491,13 @@ export default function EventsScreen() {
 
       <Modal visible={migrationNoticeVisible} transparent animationType="fade" onRequestClose={() => setMigrationNoticeVisible(false)}>
         <Pressable onPress={() => setMigrationNoticeVisible(false)} style={{ flex: 1, backgroundColor: "#0006", justifyContent: "center", paddingHorizontal: 24 }}>
-          <Pressable onPress={() => {}} style={{ backgroundColor: colors.background, borderRadius: 18, padding: 22 }}>
-            <Text style={{ fontSize: 18, fontWeight: "800", color: colors.foreground, marginBottom: 12 }}>Discordからのイベント移行について</Text>
-            <Text style={{ fontSize: 14, lineHeight: 23, color: colors.foreground }}>Discordで募集を開始したイベントは、申込・参加確定をDiscordで行います。アプリではイベント情報と、幹事が登録した参加確定者を確認できます。</Text>
+          <Pressable onPress={() => {}} style={{ backgroundColor: colors.background, borderRadius: 18, padding: 22, maxHeight: "85%" }}>
+            <Text style={{ fontSize: 18, fontWeight: "800", color: colors.foreground, marginBottom: 12 }}>イベントの移行について</Text>
+            <ScrollView showsVerticalScrollIndicator>
+              <Text style={{ fontSize: 14, lineHeight: 23, color: colors.foreground }}>IRO+は、これまで利用していたDiscordから本アプリへ移行します。{"\n"}まずは、9/13よりWeb版を公開します。 初期はスマホのブラウザからご利用いただき、今後順次アプリへ移行する予定です。</Text>
+              <Text style={{ fontSize: 14, lineHeight: 23, color: colors.foreground, marginTop: 16 }}>■ データ移行について{"\n"}Discord内の投稿・イベントなどは、順次アプリへ移行中です。{"\n"}※移行後も、Discordは年内まで閲覧可能です。</Text>
+              <Text style={{ fontSize: 14, lineHeight: 23, color: colors.foreground, marginTop: 16 }}>■ イベント募集について{"\n"}<Text style={{ fontWeight: "800" }}>9/12以前</Text>に既にDiscordで募集を開始していたイベントは、引き続きDiscord内で募集・参加者の確定を行います。{"\n"}<Text style={{ fontWeight: "800" }}>9/13以降</Text>に新規作成するイベントはアプリ側で募集を行ってください。</Text>
+            </ScrollView>
             <Pressable onPress={() => setMigrationNoticeVisible(false)} style={{ alignSelf: "flex-end", marginTop: 20, paddingVertical: 8, paddingHorizontal: 12 }}><Text style={{ color: "#C05B88", fontWeight: "800" }}>閉じる</Text></Pressable>
           </Pressable>
         </Pressable>
