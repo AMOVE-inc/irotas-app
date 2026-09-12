@@ -98,6 +98,7 @@ export type ClubRecord = {
   leaderId: string;
   leaderName: string;
   memberIds: string[];
+  members: { id: string; displayName: string; avatarUrl?: string; memberTerm: string | null; branches: string[] }[];
   applicantIds: string[];
   applications: ClubApplicationRecord[];
   createdByAdmin: true;
@@ -1242,6 +1243,7 @@ export async function updateEventDetails(eventId: string, input: {
   companionIds?: string[];
   selectionMethod?: "first_come" | "lottery";
   recruitmentStatus?: "draft" | "open";
+  recruitmentChannel?: "discord" | "app";
   category?: Event["category"];
   prefecture?: string;
   tokyoArea?: string;

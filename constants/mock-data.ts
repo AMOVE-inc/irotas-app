@@ -125,6 +125,8 @@ export interface Event {
   eventType: "official" | "gourmet" | "club";
   /** 公式イベントは募集開始前のまま公開し、後から募集を開始できる。 */
   recruitmentStatus?: "draft" | "open";
+  /** 申込・参加者確定を行う場所。Discord移行イベントは初期状態でDiscord管理。 */
+  recruitmentChannel?: "discord" | "app";
   clubId?: string;
   status: "open" | "full" | "ended";
   createdBy: string; // admin member id
@@ -364,6 +366,7 @@ export interface Club {
   leaderId: string; // 部長（運営が任命）
   leaderName?: string;
   memberIds: string[];
+  members?: { id: string; displayName: string; avatarUrl?: string; memberTerm: string | null; branches: string[] }[];
   applicantIds: string[]; // 入部申請中のメンバーID
   applications: ClubApplication[];
   chatId?: string;

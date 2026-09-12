@@ -10,6 +10,7 @@ import { isAdminRole, isOperatorRole } from "@/lib/access-control";
 import { canViewerAccessClubContent, resolveViewerMemberId } from "@/lib/club-viewer-access";
 import { useClubs } from "@/lib/club-store";
 import { pendingEvents } from "@/lib/event-store";
+import { eventRecruitmentChannel } from "@/lib/event-recruitment-channel";
 import { scheduleOrganizerDeadlineNotification } from "@/lib/notifications";
 import { extractEventLocation, formatEventArea } from "@/lib/event-location";
 import { DEFAULT_CANCELLATION_POLICY, EVENT_AMOUNT_OPTIONS, EVENT_CAPACITY_OPTIONS, EVENT_RANKS, EVENT_TIME_OPTIONS, eventFormSaveFields, eventFormValuesFromEvent, validateEventForm } from "@/lib/event-form";
@@ -98,7 +99,7 @@ function FieldLabel({ children }: { children: string }) {
   return <Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground, marginBottom: 7, marginTop: 16 }}>{label}{required ? <Text style={{ color: colors.error }}> 必須</Text> : null}</Text>;
 }
 
-function MemberPicker({ selectedIds, onChange, members, viewerMemberId, loading }: { selectedIds: string[]; onChange: (ids: string[]) => void; members: Api.PublicMember[]; viewerMemberId: string; loading: boolean }) {
+function MemberPicker({ selectedIds, onChange, members, viewerMemberId, loading, title = "同席者を選択" }: { selectedIds: string[]; onChange: (ids: string[]) => void; members: Api.PublicMember[]; viewerMemberId: string; loading: boolean; title?: string }) {
   const colors = useColors();
   const [visible, setVisible] = useState(false);
   const [query, setQuery] = useState("");
@@ -111,7 +112,7 @@ function MemberPicker({ selectedIds, onChange, members, viewerMemberId, loading 
       {selectedIds.length > 0 ? <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 7, marginTop: 8 }}>{selectedIds.map((id) => { const member = members.find((item) => item.id === id); return member ? <View key={id} style={{ flexDirection: "row", alignItems: "center", backgroundColor: "#E8A0BF18", borderRadius: 16, paddingHorizontal: 9, paddingVertical: 5 }}><Text style={{ fontSize: 12, color: colors.foreground }}>{member.displayName}</Text><Pressable onPress={() => onChange(selectedIds.filter((value) => value !== id))} style={{ marginLeft: 5 }}><IconSymbol name="xmark" size={12} color={colors.muted} /></Pressable></View> : null; })}</View> : null}
       <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setVisible(false)}>
         <View style={{ flex: 1, backgroundColor: colors.background }}>
-          <View style={{ flexDirection: "row", alignItems: "center", padding: 16, borderBottomWidth: 0.5, borderBottomColor: colors.border }}><Text style={{ flex: 1, fontSize: 18, fontWeight: "800", color: colors.foreground }}>同席者を選択</Text><Pressable onPress={() => setVisible(false)}><Text style={{ color: "#E8A0BF", fontWeight: "800" }}>完了</Text></Pressable></View>
+          <View style={{ flexDirection: "row", alignItems: "center", padding: 16, borderBottomWidth: 0.5, borderBottomColor: colors.border }}><Text style={{ flex: 1, fontSize: 18, fontWeight: "800", color: colors.foreground }}>{title}</Text><Pressable onPress={() => setVisible(false)}><Text style={{ color: "#E8A0BF", fontWeight: "800" }}>完了</Text></Pressable></View>
           <TextInput value={query} onChangeText={setQuery} placeholder="名前または会員IDで検索" placeholderTextColor={colors.muted} style={{ margin: 16, backgroundColor: colors.surface, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, color: colors.foreground }} />
           <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 30 }}>{loading ? <Text style={{ paddingVertical: 18, color: colors.muted }}>会員情報を読み込み中…</Text> : candidates.length ? candidates.map((member) => { const selected = selectedIds.includes(member.id); const avatar = typeof member.profile.avatarUrl === "string" ? member.profile.avatarUrl : DEFAULT_AVATAR; return <Pressable key={member.id} onPress={() => onChange(selected ? selectedIds.filter((id) => id !== member.id) : [...selectedIds, member.id])} style={{ flexDirection: "row", alignItems: "center", paddingVertical: 11, borderBottomWidth: 0.5, borderBottomColor: colors.border }}><Image source={avatar} style={{ width: 40, height: 40, borderRadius: 20 }} /><View style={{ flex: 1, marginLeft: 10 }}><Text style={{ fontSize: 15, fontWeight: "700", color: colors.foreground }}>{member.displayName}</Text><Text style={{ fontSize: 12, color: colors.muted }}>ID: {member.id}・{member.memberTerm ?? "期未設定"}</Text></View><View style={{ width: 24, height: 24, borderRadius: 12, backgroundColor: selected ? "#E8A0BF" : colors.surface, borderWidth: 1, borderColor: selected ? "#E8A0BF" : colors.border, alignItems: "center", justifyContent: "center" }}>{selected ? <IconSymbol name="checkmark" size={14} color="#FFF" /> : null}</View></Pressable>; }) : <Text style={{ paddingVertical: 18, color: colors.muted }}>一致する有効会員はいません。</Text>}</ScrollView>
         </View>
@@ -160,6 +161,8 @@ export default function CreateEventScreen() {
   const [cancellationPolicy, setCancellationPolicy] = useState(initialEditForm?.cancellationPolicy ?? DEFAULT_CANCELLATION_POLICY);
   const [selectionMethod, setSelectionMethod] = useState<"first_come" | "lottery">(initialEditForm?.selectionMethod ?? "first_come");
   const [recruitmentStatus, setRecruitmentStatus] = useState<"draft" | "open">(initialEditingEvent?.recruitmentStatus === "draft" ? "draft" : "open");
+  const [recruitmentChannel, setRecruitmentChannel] = useState<"discord" | "app">(initialEditingEvent ? eventRecruitmentChannel(initialEditingEvent) : "app");
+  const [confirmedParticipantIds, setConfirmedParticipantIds] = useState<string[]>(initialEditingEvent?.participants ?? []);
   const [useRankPrices, setUseRankPrices] = useState(initialEditForm?.useRankPrices ?? false);
   const [rankPrices, setRankPrices] = useState<Record<"regular" | "silver" | "gold" | "platinum", string>>(initialEditForm?.rankPrices ?? { regular: "", silver: "", gold: "", platinum: "" });
   const [termsAccepted, setTermsAccepted] = useState(Boolean(editId));
@@ -199,6 +202,8 @@ export default function CreateEventScreen() {
       setPublicNotes(form.publicNotes); setPrivateMemo(form.privateMemo); setCancellationPolicy(form.cancellationPolicy);
       setSelectionMethod(form.selectionMethod); setUseRankPrices(form.useRankPrices); setRankPrices(form.rankPrices);
       setGenres(form.genres); setRecruitmentStatus(event.recruitmentStatus === "draft" ? "draft" : "open");
+      setRecruitmentChannel(eventRecruitmentChannel(event));
+      setConfirmedParticipantIds(event.participants ?? []);
       setTermsAccepted(true);
     }).finally(() => { if (active) setEditLoading(false); });
     return () => { active = false; };
@@ -236,9 +241,10 @@ export default function CreateEventScreen() {
         const uploadedImage = imageUri && imageUri !== initialImageUri ? (await Api.uploadEventImage(imageUri)).imageUrl : undefined;
         const updated = await Api.updateEventDetails(editId, {
           ...savedFields,
+          recruitmentChannel,
           recruitmentStatus: finalType === "official" ? recruitmentStatus : undefined,
           ...(uploadedImage ? { image: uploadedImage } : {}),
-          participants: editingEvent.participants ?? [],
+          participants: recruitmentChannel === "discord" ? confirmedParticipantIds : editingEvent.participants ?? [],
         });
         setIsSubmitting(false);
         router.replace({ pathname: "/event-detail", params: { id: updated.id } });
@@ -283,6 +289,13 @@ export default function CreateEventScreen() {
         {eventType === "club" ? <><FieldLabel>開催する部活動 *</FieldLabel><View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>{joinedClubs.map((club) => { const selected = selectedClubId === club.id; return <Pressable key={club.id} onPress={() => setSelectedClubId(club.id)} style={{ borderRadius: 18, paddingHorizontal: 12, paddingVertical: 8, backgroundColor: selected ? "#4E6756" : colors.surface, borderWidth: 1, borderColor: selected ? "#4E6756" : colors.border }}><Text style={{ fontSize: 12, fontWeight: "800", color: selected ? "#FFF" : colors.foreground }}>{club.icon} {club.name}</Text></Pressable>; })}</View></> : null}
 
         {eventType === "official" ? <><FieldLabel>募集ステータス *</FieldLabel><View style={{ flexDirection: "row", gap: 10 }}>{(["draft", "open"] as const).map((value) => <Pressable key={value} onPress={() => setRecruitmentStatus(value)} style={{ flex: 1, paddingVertical: 11, alignItems: "center", borderRadius: 12, backgroundColor: recruitmentStatus === value ? "#E8A0BF" : colors.surface }}><Text style={{ fontWeight: "800", color: recruitmentStatus === value ? "#FFF" : colors.foreground }}>{value === "draft" ? "募集前" : "募集中"}</Text></Pressable>)}</View><Text style={{ marginTop: 7, fontSize: 12, color: colors.muted }}>募集前で登録したイベントは、管理者が詳細画面から募集を開始できます。</Text><FieldLabel>参加者の決め方 *</FieldLabel><View style={{ flexDirection: "row", gap: 10 }}>{(["first_come", "lottery"] as const).map((value) => <Pressable key={value} onPress={() => setSelectionMethod(value)} style={{ flex: 1, paddingVertical: 11, alignItems: "center", borderRadius: 12, backgroundColor: selectionMethod === value ? "#E8A0BF" : colors.surface }}><Text style={{ fontWeight: "800", color: selectionMethod === value ? "#FFF" : colors.foreground }}>{value === "first_come" ? "先着順" : "抽選"}</Text></Pressable>)}</View></> : null}
+
+        {editId && editingEvent?.id.startsWith("discord-event-") ? <>
+          <FieldLabel>参加申込の受付先</FieldLabel>
+          <View style={{ flexDirection: "row", gap: 10 }}>{(["discord", "app"] as const).map((value) => <Pressable key={value} onPress={() => setRecruitmentChannel(value)} style={{ flex: 1, paddingVertical: 11, alignItems: "center", borderRadius: 12, borderWidth: 1, borderColor: recruitmentChannel === value ? "#6B5A96" : colors.border, backgroundColor: recruitmentChannel === value ? "#F1ECFA" : colors.surface }}><Text style={{ fontWeight: "800", color: recruitmentChannel === value ? "#5B4788" : colors.foreground }}>{value === "discord" ? "Discordで受付" : "アプリで受付"}</Text></Pressable>)}</View>
+          <Text style={{ marginTop: 7, fontSize: 12, lineHeight: 18, color: colors.muted }}>Discordで受付中はアプリ内の参加申込を停止します。Discordで参加者を確定後、イベント情報を編集して参加者を反映してください。</Text>
+          {recruitmentChannel === "discord" ? <><FieldLabel>Discordで確定した参加者（任意）</FieldLabel><MemberPicker selectedIds={confirmedParticipantIds} onChange={setConfirmedParticipantIds} members={memberDirectory} viewerMemberId={viewerMemberId} loading={memberDirectoryLoading} title="参加確定者を選択" /><Text style={{ marginTop: 7, fontSize: 12, lineHeight: 18, color: colors.muted }}>Discordで募集を続ける間はここで確定者を記録できます。会員の登録がない方は選択できません。</Text></> : null}
+        </> : null}
 
         <FieldLabel>{eventType === "club" ? "店名・会場名（任意）" : "店名 *"}</FieldLabel><TextInput value={restaurantName} onChangeText={setRestaurantName} placeholder={eventType === "club" ? "例：代々木公園、〇〇スタジアム" : "店舗名"} placeholderTextColor={colors.muted} style={inputStyle} />
         <FieldLabel>{eventType === "club" ? "イベント名 *" : "イベント名（任意）"}</FieldLabel><TextInput value={eventName} onChangeText={setEventName} placeholder={eventType === "club" ? "例：朝の代々木公園ランニング" : "未入力の場合は店名を表示"} placeholderTextColor={colors.muted} style={inputStyle} />

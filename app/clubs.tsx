@@ -1403,11 +1403,12 @@ function ClubDetailModal({
         {memberIds.map((memberId) => {
           const member = getMemberById(memberId);
           const directoryMember = memberDirectory.find((item) => item.id === memberId);
-          const memberName = directoryMember?.displayName ?? member?.name ?? "メンバー";
-          const avatarUrl = directoryMember?.profile?.avatarUrl;
+          const clubMember = club.members?.find((item) => item.id === memberId);
+          const memberName = clubMember?.displayName ?? directoryMember?.displayName ?? member?.name ?? "メンバー";
+          const avatarUrl = clubMember?.avatarUrl ?? directoryMember?.profile?.avatarUrl;
           const avatar = typeof avatarUrl === "string" && avatarUrl ? { uri: avatarUrl } : member?.avatar ?? DEFAULT_AVATAR;
-          const memberTerm = directoryMember?.memberTerm ?? (member ? `${member.generation}期生` : null);
-          const branch = directoryMember?.branches?.map((item) => item === "kanto" ? "関東支部" : item === "kansai" ? "関西支部" : item).join("・") ?? (member ? `${member.branch}支部` : "");
+          const memberTerm = clubMember?.memberTerm ?? directoryMember?.memberTerm ?? (member ? `${member.generation}期生` : null);
+          const branch = (clubMember?.branches ?? directoryMember?.branches)?.map((item) => item === "kanto" ? "関東支部" : item === "kansai" ? "関西支部" : item).join("・") ?? (member ? `${member.branch}支部` : "");
           const isCurrentLeader = memberId === currentLeaderId;
           const isCurrentUser = memberId === CURRENT_USER.id;
           return (

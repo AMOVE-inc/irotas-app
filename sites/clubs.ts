@@ -24,6 +24,10 @@ type MembershipRow = {
   club_id: string;
   member_id: number;
   public_member_id: string | null;
+  display_name: string;
+  profile_json: string;
+  member_term: string | null;
+  branches_json: string;
   status: "pending" | "on_hold" | "approved" | "rejected" | "left";
   wants_to_do: string;
   message_to_leader: string;
@@ -73,7 +77,8 @@ async function clubRow(db: D1Database, id: string) {
 async function membershipsForClubs(db: D1Database, clubIds: string[]) {
   if (!clubIds.length) return [];
   const placeholders = clubIds.map(() => "?").join(",");
-  const result = await db.prepare(`SELECT cm.club_id, cm.member_id, m.public_member_id, cm.status,
+  const result = await db.prepare(`SELECT cm.club_id, cm.member_id, m.public_member_id, m.display_name,
+      m.profile_json, m.member_term, m.branches_json, cm.status,
       cm.wants_to_do, cm.message_to_leader, cm.applied_at
     FROM club_memberships cm JOIN members m ON m.id = cm.member_id
     WHERE cm.club_id IN (${placeholders}) AND m.account_status = 'active'
@@ -116,6 +121,13 @@ function serializeClub(row: ClubRow, memberships: MembershipRow[], viewerId: num
     leaderId: row.leader_public_member_id ?? "",
     leaderName: row.leader_display_name ?? "未設定",
     memberIds: approved.map(publicId),
+    members: approved.map((item) => {
+      let avatarUrl: string | undefined;
+      let branches: string[] = [];
+      try { const profile = JSON.parse(item.profile_json) as Record<string, unknown>; if (typeof profile.avatarUrl === "string") avatarUrl = profile.avatarUrl; } catch {}
+      try { const parsed = JSON.parse(item.branches_json) as unknown; if (Array.isArray(parsed)) branches = parsed.filter((branch): branch is string => typeof branch === "string"); } catch {}
+      return { id: publicId(item), displayName: item.display_name, avatarUrl, memberTerm: item.member_term, branches };
+    }),
     applicantIds: visiblePending.filter((item) => item.status === "pending").map(publicId),
     applications: visiblePending
       .map((item) => ({

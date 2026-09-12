@@ -18,6 +18,7 @@ import {
   resolveViewerMemberId,
 } from "@/lib/club-viewer-access";
 import { getAllEvents } from "@/lib/event-store";
+import { isDiscordRecruitmentOpen } from "@/lib/event-recruitment-channel";
 import {
   DEFAULT_EVENT_SORT_ORDER,
   filterAndSortEvents,
@@ -482,9 +483,9 @@ function CalendarDateField({
   );
 }
 
-function StatusBadge({ status, participantsFinalizedAt }: { status: Event["status"]; participantsFinalizedAt?: string }) {
+function StatusBadge({ status, participantsFinalizedAt, discordRecruitment = false }: { status: Event["status"]; participantsFinalizedAt?: string; discordRecruitment?: boolean }) {
   const config = {
-    open: { bg: "#34C75920", color: "#34C759", label: "受付中" },
+    open: discordRecruitment ? { bg: "#EFE9FA", color: "#604C8C", label: "Discord受付" } : { bg: "#34C75920", color: "#34C759", label: "アプリ受付" },
     full: { bg: "#FF950020", color: "#FF9500", label: participantsFinalizedAt ? "募集終了" : "満席" },
     ended: { bg: "#8E8E9320", color: "#8E8E93", label: "終了" },
   };
@@ -684,7 +685,7 @@ function EventCard({
             {locked ? "" : ` ${event.time}`}
           </Text>
           <View style={{ flexDirection: "row", gap: 4 }}>
-            <StatusBadge status={isPast ? "ended" : event.status} participantsFinalizedAt={event.participantsFinalizedAt} />
+            <StatusBadge status={isPast ? "ended" : event.status} participantsFinalizedAt={event.participantsFinalizedAt} discordRecruitment={isDiscordRecruitmentOpen(event)} />
             {isConfirmed ? (
               <Text
                 style={{
@@ -760,8 +761,7 @@ function EventCard({
               <Text
                 style={{ fontSize: 10, fontWeight: "900", color: "#34A853" }}
               >
-                {remainingCapacity}名/{reservationCapacity}名{" "}
-                {event.status === "open" ? "募集中" : ""}
+                {isDiscordRecruitmentOpen(event) ? "参加者はDiscordで確定" : `${remainingCapacity}名/${reservationCapacity}名 ${event.status === "open" ? "募集中" : ""}`}
               </Text>
             </View>
             <View
