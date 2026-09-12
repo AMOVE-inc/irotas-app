@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseCouponDescription } from "../lib/coupon-description";
+import { parseCouponDescription, parseLinkedText } from "../lib/coupon-description";
 
 describe("coupon description formatting", () => {
   it("renders **wrapped text** as bold without the markers", () => {
@@ -22,6 +22,14 @@ describe("coupon description formatting", () => {
     expect(parseCouponDescription("**公式LINE https://lin.ee/ljxlREBS**")).toEqual([
       { text: "公式LINE ", bold: true },
       { text: "https://lin.ee/ljxlREBS", bold: true, url: "https://lin.ee/ljxlREBS" },
+    ]);
+  });
+
+  it("keeps campaign text intact while activating its URL", () => {
+    expect(parseLinkedText("公式サイト https://irotas-community.com\n次の手順へ")).toEqual([
+      { text: "公式サイト " },
+      { text: "https://irotas-community.com", url: "https://irotas-community.com" },
+      { text: "\n次の手順へ" },
     ]);
   });
 });
