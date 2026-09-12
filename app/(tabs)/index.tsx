@@ -17,6 +17,7 @@ import {
 } from "@/constants/mock-data";
 import { useColors } from "@/hooks/use-colors";
 import { useAuthContext } from "@/lib/auth-context";
+import { japanDateKey } from "@/lib/japan-date";
 import { Image } from "expo-image";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useRef, useState, useCallback, useEffect, useMemo } from "react";
@@ -642,7 +643,7 @@ export default function HomeScreen() {
     void Promise.all([Api.getHomeActivities().catch(() => []), getGiftCampaigns(), loadMemberPreferences(CURRENT_USER.id), loadMemberAiConsents(CURRENT_USER.id)]).then(([remoteActivities, gifts, nextPreferences, nextConsents]) => {
       setActivities(remoteActivities);
       setPreferences(nextPreferences); setAiConsents(nextConsents);
-      const today = new Date().toISOString().slice(0, 10);
+      const today = japanDateKey();
       setGiftCampaigns(gifts.filter((gift) => gift.status === "open" && gift.deadline >= today).sort((a, b) => a.deadline.localeCompare(b.deadline)));
     }).finally(() => setTimelineLoading(false));
   }, []);
@@ -655,7 +656,7 @@ export default function HomeScreen() {
   }, [loadHomeContent, loadVisibleEvents, authUser?.memberId]));
 
   const { events: todayEvents, boardEvents: todayBoardEvents } = useMemo(() => ({
-    events: visibleEvents.filter((event) => event.date === new Date().toISOString().slice(0, 10)),
+    events: visibleEvents.filter((event) => event.date === japanDateKey()),
     boardEvents: getTodayEvents().boardEvents,
   }), [visibleEvents]);
 
@@ -676,7 +677,7 @@ export default function HomeScreen() {
     () => (
       <>
         <AnnouncementBanner announcements={homeAnnouncements} loading={announcementsLoading} />
-        <CampaignSection gifts={giftCampaigns} campaigns={managedCampaigns.filter((campaign) => campaign.status !== "ended" && campaign.endDate >= new Date().toISOString().slice(0, 10))} />
+        <CampaignSection gifts={giftCampaigns} campaigns={managedCampaigns.filter((campaign) => campaign.status !== "ended" && campaign.endDate >= japanDateKey())} />
         <RecommendedEventsSection items={recommendedEvents} enabled={aiConsents.eventRecommendation} />
         <TodayEventsSection events={todayEvents} boardEvents={todayBoardEvents} />
         <View style={{ paddingHorizontal: 16, paddingVertical: 8, borderBottomWidth: 0.5, borderBottomColor: colors.border }}>

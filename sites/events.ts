@@ -725,7 +725,7 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
       if (!DELETED_EVENT_IDS.has(id)) await materializeImportedEvent(env.DB, id, fallbackOrganizer?.id);
     }
     const includeCancelled = url.searchParams.get("includeCancelled") === "1";
-    const rows = await env.DB.prepare(`${selectEvents} ${includeCancelled ? "" : "WHERE e.status != 'cancelled'"} ORDER BY e.event_date, e.created_at DESC`).all<EventRow>();
+    const rows = await env.DB.prepare(`${selectEvents} ORDER BY e.event_date, e.created_at DESC`).all<EventRow>();
     const deleted = await env.DB.prepare("SELECT event_id FROM deleted_imported_events").all<{ event_id: string }>();
     const deletedIds = new Set((deleted.results ?? []).map((item) => item.event_id));
     const [participations, cancellations, favorites] = await Promise.all([
@@ -748,18 +748,34 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
     const participationsByEvent = byEvent(participations.results ?? []);
     const cancellationsByEvent = byEvent(cancellations.results ?? []);
     const favoriteIds = new Set((favorites.results ?? []).map((item) => item.event_id));
-    const events = await Promise.all((rows.results ?? []).filter((row) => !DELETED_EVENT_IDS.has(row.id) && !deletedIds.has(row.id)).map(async (row) => {
+    const allPersistedRows = rows.results ?? [];
+    const persistedRows = allPersistedRows.filter((row) =>
+      (includeCancelled || row.status !== "cancelled") && !DELETED_EVENT_IDS.has(row.id) && !deletedIds.has(row.id));
+    const persistedIds = new Set(allPersistedRows.map((row) => row.id));
+    const persistedSourceThreadIds = new Set(allPersistedRows.map((row) => {
+      try { return (JSON.parse(row.public_data_json) as { sourceThreadId?: string }).sourceThreadId; }
+      catch { return undefined; }
+    }).filter((id): id is string => Boolean(id)));
+    const events = await Promise.all(persistedRows.map(async (row) => {
       if (row.event_type === "club" && row.club_id && !isImportedEventConfirmedParticipant(row, memberPublicId, participationsByEvent.get(row.id)) && !await canMemberAccessClub(env.DB!, row.club_id, member.id, admin))
         return lockedClubEventPreview(row);
       return publicEvent(row, member.id, memberPublicId, elevated,
         participationsByEvent.get(row.id) ?? [], cancellationsByEvent.get(row.id) ?? [], favoriteIds.has(row.id));
     }));
-    return responseJson({ events, deletedImportedEventIds: [...deletedIds] });
+    // Keep the app-edited D1 row authoritative. Historical Discord event seeds
+    // missing from D1 are listable without writing over titles, photos or dates.
+    const missingImportedEvents = IMPORTED_DISCORD_EVENTS.filter((event) =>
+      event.eventType !== "club" && !persistedIds.has(event.id) && !persistedSourceThreadIds.has(event.sourceThreadId) &&
+      !DELETED_EVENT_IDS.has(event.id) && !deletedIds.has(event.id),
+    ).map((event) => ({ ...event, recruitmentChannel: "discord" as const }));
+    return responseJson({ events: [...events, ...missingImportedEvents], deletedImportedEventIds: [...deletedIds] });
   }
   if (eventMatch && request.method === "GET") {
     const requestedEventId = decodeURIComponent(eventMatch[1]);
     if (DELETED_EVENT_IDS.has(requestedEventId) || await isDeletedImportedEvent(env.DB, requestedEventId)) return responseJson({ error: "イベントが見つかりません" }, 404);
-    const row = await eventRow(env.DB, requestedEventId) ?? await materializeImportedEvent(env.DB, requestedEventId);
+    const fallbackOrganizer = await env.DB.prepare("SELECT id FROM members WHERE access_role = 'admin' AND account_status = 'active' ORDER BY id LIMIT 1")
+      .first<{ id: number }>();
+    const row = await eventRow(env.DB, requestedEventId) ?? await materializeImportedEvent(env.DB, requestedEventId, fallbackOrganizer?.id);
     if (!row) return responseJson({ error: "イベントが見つかりません" }, 404);
     if (row.event_type === "club" && row.club_id && !await canMemberAccessClub(env.DB, row.club_id, member.id, admin)) {
       const participation = row.id.startsWith("discord-event-")

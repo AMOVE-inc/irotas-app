@@ -2,7 +2,7 @@ import archive from "../data/discord-board-2026-08-29.json";
 import type {
   RawDiscordBoardArchive,
 } from "../lib/discord-board-import";
-import { isRetiredMovieClubThread, normalizeDiscordBoardCategory } from "../lib/board-category";
+import { isDiscordGourmetEventBoard, isRetiredMovieClubThread, normalizeDiscordBoardCategory } from "../lib/board-category";
 import { authenticatedRequestMember } from "./auth";
 import type { D1Database, SitesEnv } from "./platform-types";
 
@@ -17,7 +17,7 @@ export function filterBoardArchive(
   allowedPrivateCategories: ReadonlySet<string>,
 ): RawDiscordBoardArchive {
   const threads = source.threads
-    .filter((thread) => !isRetiredMovieClubThread(thread))
+    .filter((thread) => !isDiscordGourmetEventBoard(thread.category) && !isRetiredMovieClubThread(thread))
     .map((thread) => ({ ...thread, category: normalizeDiscordBoardCategory(thread.category) }))
     .filter((thread) => !isPrivateClubCategory(thread.category) || allowedPrivateCategories.has(thread.category));
   const threadIds = new Set(threads.map((thread) => thread.id));

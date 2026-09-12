@@ -11,11 +11,13 @@ const fixture: RawDiscordBoardArchive = {
     { id: "public", authorId: "1", authorName: "公開", content: "公開本文", createdAt: "2026-01-01", images: [], videos: [], category: "club-all", title: "活動報告" },
     { id: "bread", authorId: "2", authorName: "パン", content: "パン部限定", createdAt: "2026-01-02", images: [], videos: [], category: "club-club-bread", title: "パン部" },
     { id: "wine", authorId: "3", authorName: "ワイン", content: "ワイン部限定", createdAt: "2026-01-03", images: [], videos: [], category: "club-club-wine", title: "ワイン部" },
+    { id: "gourmet-event", authorId: "4", authorName: "幹事", content: "イベント募集", createdAt: "2026-01-04", images: [], videos: [], category: "gourmet-board-kanto", title: "グルメ会" },
   ],
   comments: [
     { id: "c1", threadId: "public", authorId: "1", authorName: "公開", content: "公開コメント", createdAt: "2026-01-01", images: [], videos: [] },
     { id: "c2", threadId: "bread", authorId: "2", authorName: "パン", content: "パン部コメント", createdAt: "2026-01-02", images: [], videos: [] },
     { id: "c3", threadId: "wine", authorId: "3", authorName: "ワイン", content: "ワイン部コメント", createdAt: "2026-01-03", images: [], videos: [] },
+    { id: "c4", threadId: "gourmet-event", authorId: "4", authorName: "幹事", content: "参加希望", createdAt: "2026-01-04", images: [], videos: [] },
   ],
 };
 

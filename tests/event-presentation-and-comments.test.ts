@@ -9,9 +9,10 @@ describe("event presentation and comments", () => {
     expect(source("app/(tabs)/events.tsx")).toContain('const [openOnly, setOpenOnly] = useState(true)');
   });
 
-  it("keeps past official events out of the public event list while retaining their data", () => {
+  it("keeps past official events in the public event history", () => {
     const events = source("app/(tabs)/events.tsx");
-    expect(events).toContain('event.eventType !== "official" || Date.parse');
+    expect(events).toContain("const visibleEvents = filteredEvents");
+    expect(events).toContain("isPastEventDate(event)");
     expect(events).toContain("data={visibleEvents}");
   });
 

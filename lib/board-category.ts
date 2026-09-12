@@ -1,4 +1,8 @@
 /** Discord forum keys are normalized to the current app club IDs at every boundary. */
+export function isDiscordGourmetEventBoard(category: string): boolean {
+  return category === "gourmet-board-kanto" || category === "gourmet-board-kansai";
+}
+
 export function normalizeDiscordBoardCategory(category: string): string {
   switch (category) {
     case "gourmet-consultation": return "gourmet-advice";

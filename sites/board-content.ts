@@ -6,7 +6,10 @@ import { IMPORTED_DISCORD_EVENTS } from "../constants/imported-discord-events";
 import { cleanDiscordBoardContent, cleanDiscordBoardTitle } from "../lib/discord-board-normalization";
 import { inferImportedRecruitmentStatus } from "../lib/board-recruitment";
 import type { RawDiscordBoardArchive } from "../lib/discord-board-import";
-import { isRetiredMovieClubThread, normalizeDiscordBoardCategory } from "../lib/board-category";
+import { isDiscordGourmetEventBoard, isRetiredMovieClubThread, normalizeDiscordBoardCategory } from "../lib/board-category";
+
+const gourmetEventBoardThreadIds = new Set((archive as RawDiscordBoardArchive).threads
+  .filter((thread) => isDiscordGourmetEventBoard(thread.category)).map((thread) => thread.id));
 
 const CONTENT_PATH = "/api/board/content";
 const ACTIVITY_PATH = "/api/board/activity";
@@ -274,6 +277,7 @@ function serializeComment(row: CommentRow, viewerId: number, reactions: Reaction
 }
 
 async function threadById(db: D1Database, id: string) {
+  if (gourmetEventBoardThreadIds.has(id)) return null;
   return db.prepare(`SELECT id, author_member_id, category, title, content, status, pinned,
       data_json, created_at, updated_at
     FROM board_threads WHERE id = ? AND deleted_at IS NULL LIMIT 1`)
@@ -312,7 +316,7 @@ async function ensureImportedThread(
   member: BoardMember,
 ) {
   const raw = (archive as RawDiscordBoardArchive).threads.find((thread) => thread.id === id);
-  if (!raw || isRetiredMovieClubThread(raw)) return null;
+  if (!raw || isDiscordGourmetEventBoard(raw.category) || isRetiredMovieClubThread(raw)) return null;
   const existing = await threadById(db, id);
   // Discord断面の再取得時も、同じスレッドIDがアプリDBに存在する場合は
   // アプリ側で編集された募集ステータス・固定状態・本文を一切上書きしない。
@@ -468,20 +472,24 @@ export async function handleBoardContentRequest(
     if (category && !await canAccessBoardCategory(db, category, member))
       return json({ error: "この部活動の部員のみ閲覧できます" }, 403);
     const limit = Math.min(Math.max(Number(url.searchParams.get("limit")) || 100, 1), 200);
+    // Previously materialized Discord event threads still have category=free-chat in D1.
+    // Read past them without deleting or altering any app-managed data.
+    const candidateLimit = limit + gourmetEventBoardThreadIds.size;
     const rows = category
       ? await db.prepare(`SELECT bt.*, m.public_member_id AS author_public_member_id,
           m.display_name AS author_display_name, m.member_term AS author_member_term,
           m.member_rank AS author_member_rank, m.profile_json AS author_profile_json
         FROM board_threads bt JOIN members m ON m.id = bt.author_member_id
         WHERE bt.category = ? AND bt.deleted_at IS NULL
-        ORDER BY bt.pinned DESC, bt.created_at DESC LIMIT ?`).bind(category, limit).all<ThreadRow>()
+        ORDER BY bt.pinned DESC, bt.created_at DESC LIMIT ?`).bind(category, candidateLimit).all<ThreadRow>()
       : await db.prepare(`SELECT bt.*, m.public_member_id AS author_public_member_id,
           m.display_name AS author_display_name, m.member_term AS author_member_term,
           m.member_rank AS author_member_rank, m.profile_json AS author_profile_json
         FROM board_threads bt JOIN members m ON m.id = bt.author_member_id
         WHERE bt.deleted_at IS NULL AND bt.category NOT LIKE 'club-club-%'
-        ORDER BY bt.pinned DESC, bt.created_at DESC LIMIT ?`).bind(limit).all<ThreadRow>();
-    const threads = await Promise.all((rows.results ?? []).map((row) => restoreDiscordThreadAuthor(db, row)));
+        ORDER BY bt.pinned DESC, bt.created_at DESC LIMIT ?`).bind(candidateLimit).all<ThreadRow>();
+    const visibleRows = (rows.results ?? []).filter((row) => !gourmetEventBoardThreadIds.has(row.id)).slice(0, limit);
+    const threads = await Promise.all(visibleRows.map((row) => restoreDiscordThreadAuthor(db, row)));
     if (!threads.length) return json({ threads: [], comments: [] });
     const placeholders = threads.map(() => "?").join(",");
     const ids = threads.map((item) => item.id);

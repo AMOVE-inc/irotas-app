@@ -78,7 +78,11 @@ describe("Discord board archive", () => {
     const freeThreads = archive.threads.filter((thread) => thread.category === "free-chat");
     const freeComments = freeThreads.flatMap((thread) => archive.comments[thread.id] ?? []);
     expect(freeThreads.length).toBeGreaterThanOrEqual(150);
-    expect(freeComments.length).toBeGreaterThanOrEqual(4_900);
+    expect(freeComments.length).toBeGreaterThanOrEqual(2_500);
+    const eventBoardIds = new Set(rawArchive.threads.filter((thread) =>
+      thread.category === "gourmet-board-kanto" || thread.category === "gourmet-board-kansai",
+    ).map((thread) => thread.id));
+    expect(freeThreads.some((thread) => eventBoardIds.has(thread.id))).toBe(false);
   });
 
   it("部活紹介と活動報告の全スレ・コメント・添付画像を保持する", () => {

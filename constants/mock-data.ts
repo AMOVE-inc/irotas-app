@@ -1,5 +1,6 @@
 // Mock data for IRO＋ app development
 import { IMPORTED_DISCORD_EVENTS } from "./imported-discord-events";
+import { japanDateKey } from "../lib/japan-date";
 
 export type MemberRank = "regular" | "silver" | "gold" | "platinum";
 export type UserRole = "member" | "operator" | "admin";
@@ -950,7 +951,7 @@ export function isAdmin(member: Member): boolean {
 
 // Helper: get today's events (including board recruiting events)
 export function getTodayEvents(): { events: Event[]; boardEvents: BoardThread[] } {
-  const todayStr = new Date().toISOString().split("T")[0];
+  const todayStr = japanDateKey();
   const events = EVENTS.filter((e) => e.date === todayStr);
   const boardEvents = BOARD_THREADS.filter((t) => t.isRecruiting && t.eventDate === todayStr);
   return { events, boardEvents };

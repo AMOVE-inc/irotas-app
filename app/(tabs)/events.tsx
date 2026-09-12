@@ -25,7 +25,7 @@ import {
   type EventSortOrder,
   type EventTypeFilter,
 } from "@/lib/event-filters";
-import { getConfirmedRecruitParticipantCount, getEventParticipationStatus } from "@/lib/event-participation";
+import { getConfirmedRecruitParticipantCount, getEventParticipationStatus, isPastEventDate } from "@/lib/event-participation";
 import {
   toggleEventFavoriteWithNotifications,
   useEventFavorites,
@@ -1013,12 +1013,9 @@ export default function EventsScreen() {
       viewerMemberId,
     ],
   );
-  // 公式イベントの開催済み分は通常のイベント一覧には表示しない。管理画面・DBには残す。
-  const visibleEvents = useMemo(() => filteredEvents.filter((event) =>
-    event.eventType !== "official" || Date.parse(`${event.date}T23:59:59`) >= Date.now(),
-  ), [filteredEvents]);
+  const visibleEvents = filteredEvents;
   const firstPastEventIndex = useMemo(
-    () => visibleEvents.findIndex((event) => Date.parse(`${event.date}T23:59:59`) < Date.now()),
+    () => visibleEvents.findIndex((event) => isPastEventDate(event)),
     [visibleEvents],
   );
 

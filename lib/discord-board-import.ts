@@ -3,7 +3,7 @@ import { normalizeBoardReactions } from "./board-reactions";
 import { inferImportedRecruitmentStatus } from "./board-recruitment";
 import { cleanDiscordBoardContent, cleanDiscordBoardTitle } from "./discord-board-normalization";
 import { displayMemberName } from "./display-name";
-import { isRetiredMovieClubThread, normalizeDiscordBoardCategory } from "./board-category";
+import { isDiscordGourmetEventBoard, isRetiredMovieClubThread, normalizeDiscordBoardCategory } from "./board-category";
 export { isRetiredMovieClubThread, normalizeDiscordBoardCategory } from "./board-category";
 
 export interface RawDiscordBoardRecord {
@@ -124,7 +124,7 @@ export function parseDiscordBoardArchive(archive: RawDiscordBoardArchive, direct
       rank: current.rank || record.authorRank || rankFromDiscordName(record.authorName),
     });
   }
-  const rawThreads = archive.threads.filter((record) => !isRetiredMovieClubThread(record) && !(
+  const rawThreads = archive.threads.filter((record) => !isDiscordGourmetEventBoard(record.category) && !isRetiredMovieClubThread(record) && !(
     record.category === "meal-report" && record.mealReport?.rating === 1 &&
     ["IRO+運営", "IRO＋運営"].includes(record.authorName.trim())
   ));

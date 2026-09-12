@@ -1,6 +1,7 @@
 import type { Event } from "../constants/mock-data";
 import { PREFECTURE_TO_REGION } from "../constants/event-areas";
 import { getEventSearchText, resolveEventGenres, resolveEventLocation } from "./event-metadata";
+import { japanDateKey } from "./japan-date";
 
 export type EventAreaFilter = "all" | "kanto" | "kansai";
 export type EventTypeFilter = "all" | Event["eventType"];
@@ -61,7 +62,7 @@ export function filterAndSortEvents(
   filters: EventFilters,
   referenceDate = new Date(),
 ): Event[] {
-  const today = new Date(referenceDate.getFullYear(), referenceDate.getMonth(), referenceDate.getDate()).getTime();
+  const todayKey = japanDateKey(referenceDate);
   const startBoundary = dateBoundary(filters.startDate);
   const endBoundary = dateBoundary(filters.endDate, true);
 
@@ -131,8 +132,8 @@ export function filterAndSortEvents(
       if (!Number.isFinite(aStart)) return Number.isFinite(bStart) ? 1 : 0;
       if (!Number.isFinite(bStart)) return -1;
 
-      const aUpcoming = aStart >= today;
-      const bUpcoming = bStart >= today;
+      const aUpcoming = a.date >= todayKey;
+      const bUpcoming = b.date >= todayKey;
       if (aUpcoming !== bUpcoming) return aUpcoming ? -1 : 1;
       return aUpcoming ? aStart - bStart : bStart - aStart;
     });
