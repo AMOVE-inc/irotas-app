@@ -61,6 +61,10 @@ class ChatDatabase implements D1Database {
         }
         if (sql.includes("SELECT COUNT(*) AS count FROM chat_messages")) return { count: 0 } as T;
         if (sql.includes("SELECT content, image_url, created_at FROM chat_messages")) return null;
+        if (sql.includes("SELECT room_id, sender_member_id FROM chat_messages")) {
+          const found = this.messages.find((message) => message.id === values[0]);
+          return (found ? { room_id: found.room_id, sender_member_id: found.sender_member_id } : null) as T;
+        }
         if (sql.includes("SELECT member_id FROM chat_room_members")) {
           const found = this.roomMembers.find((item) => item.roomId === values[0] && !item.left);
           return (found ? { member_id: found.memberId } : null) as T;
@@ -87,7 +91,9 @@ class ChatDatabase implements D1Database {
       },
       run: async () => {
         this.writes.push(sql);
-        if (sql.includes("INSERT INTO chat_rooms")) {
+        if (sql.includes("INSERT OR IGNORE INTO chat_rooms") && values[0] === "community-free-chat") {
+          this.rooms.set("community-free-chat", { id: "community-free-chat", name: "フリーチャット", room_type: "board", source_id: "community-free-chat", required_rank: null, created_by_member_id: null });
+        } else if (sql.includes("INSERT INTO chat_rooms")) {
           this.rooms.set(String(values[0]), {
             id: String(values[0]), name: String(values[1]), room_type: String(values[2]), source_id: values[3] ? String(values[3]) : null,
             required_rank: null, created_by_member_id: Number(values[4]),
@@ -104,7 +110,7 @@ class ChatDatabase implements D1Database {
           const found = this.roomMembers.find((item) => item.roomId === values[1] && item.memberId === Number(values[2]));
           if (found) found.left = true;
         }
-        if (sql.includes("INSERT INTO chat_messages")) {
+        if (sql.includes("INTO chat_messages") && !this.messages.some((message) => message.id === values[0])) {
           this.messages.push({
             id: String(values[0]), room_id: String(values[1]), sender_member_id: Number(values[2]),
             sender_public_member_id: "IRO0099", sender_display_name: "運営テスト",
@@ -157,6 +163,15 @@ describe("shared chat content API", () => {
     const body = await allowed?.json() as { message: Record<string, unknown> };
     expect(body.message).toMatchObject({ content: "運営からのお知らせ", senderId: "IRO0099", senderAvatar: "https://cdn.example/operator.png", shared: true });
     expect(db.writes.some((sql) => sql.includes("INSERT INTO audit_logs"))).toBe(true);
+  });
+
+  it("lets members use the global free chat and deduplicates a retried send", async () => {
+    const id = "cm_retry_1234567890123456";
+    const first = await handleChatContentRequest(request("/api/chats/community-free-chat/messages", "POST", { content: "こんにちは", clientMessageId: id }), env);
+    const second = await handleChatContentRequest(request("/api/chats/community-free-chat/messages", "POST", { content: "こんにちは", clientMessageId: id }), env);
+    expect(first?.status).toBe(201);
+    expect(second?.status).toBe(201);
+    expect(db.messages.filter((message) => message.id === id)).toHaveLength(1);
   });
 
   it("allows only members of the matching rank room", async () => {

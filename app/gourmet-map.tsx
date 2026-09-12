@@ -53,6 +53,18 @@ function restaurantImageSource(image: string) {
   return { uri: image };
 }
 
+function RestaurantPhoto({ restaurant, style }: { restaurant: Restaurant; style: any }) {
+  const [googlePhotoUnavailable, setGooglePhotoUnavailable] = useState(false);
+  const [legacyPhotoUnavailable, setLegacyPhotoUnavailable] = useState(false);
+  useEffect(() => { setGooglePhotoUnavailable(false); setLegacyPhotoUnavailable(false); }, [restaurant.placeId, restaurant.image]);
+  if (legacyPhotoUnavailable) return <View style={[style, { backgroundColor: "#F3F4F6", alignItems: "center", justifyContent: "center" }]}><IconSymbol name="photo.fill" size={28} color="#A1A1AA" /></View>;
+  const source = restaurant.placeId && !googlePhotoUnavailable
+    ? { uri: `/api/gourmet-map/photo?placeId=${encodeURIComponent(restaurant.placeId)}` }
+    : restaurantImageSource(restaurant.image);
+  return <Image source={source} style={style} contentFit="cover" transition={300}
+    onError={() => { if (!googlePhotoUnavailable) setGooglePhotoUnavailable(true); else setLegacyPhotoUnavailable(true); }} />;
+}
+
 function RestaurantCard({
   restaurant,
   onPress,
@@ -73,12 +85,7 @@ function RestaurantCard({
         overflow: "hidden",
       }}
     >
-      <Image
-        source={restaurantImageSource(restaurant.image)}
-        style={{ width: 100, height: 100 }}
-        contentFit="cover"
-        transition={300}
-      />
+      <RestaurantPhoto restaurant={restaurant} style={{ width: 100, height: 100 }} />
       <View style={{ flex: 1, padding: 12, justifyContent: "center" }}>
         <Text
           style={{ fontSize: 16, fontWeight: "700", color: colors.foreground, marginBottom: 4 }}
@@ -136,11 +143,7 @@ function RestaurantDetail({
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       {/* Header image */}
       <View>
-        <Image
-          source={restaurantImageSource(restaurant.image)}
-          style={{ width: "100%", height: 220 }}
-          contentFit="cover"
-        />
+        <RestaurantPhoto restaurant={restaurant} style={{ width: "100%", height: 220 }} />
         <Pressable
           onPress={onClose}
           style={{

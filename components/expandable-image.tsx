@@ -13,18 +13,21 @@ async function saveImage(uri: string) {
     if (Platform.OS === "web") {
       const response = await fetch(uri);
       if (!response.ok) throw new Error("image download failed");
-      const objectUrl = URL.createObjectURL(await response.blob());
-      const anchor = document.createElement("a");
-      anchor.href = objectUrl;
-      anchor.download = `irotas-image-${Date.now()}`;
-      document.body.appendChild(anchor);
-      anchor.click();
-      anchor.remove();
-      URL.revokeObjectURL(objectUrl);
+      const blob = await response.blob();
+      const file = new File([blob], `irotas-image-${Date.now()}.${blob.type.includes("png") ? "png" : "jpg"}`, { type: blob.type || "image/jpeg" });
+      // Mobile Safari cannot silently write Photos; its share sheet offers
+      // 「画像を保存」, whereas an anchor download goes to Files.
+      if (navigator.share && (!navigator.canShare || navigator.canShare({ files: [file] }))) {
+        await navigator.share({ files: [file] });
+        return;
+      }
+      window.open(URL.createObjectURL(blob), "_blank", "noopener,noreferrer");
+      window.alert("画像を長押しして「写真に保存」を選択してください。");
       return;
     }
     await Linking.openURL(uri);
-  } catch {
+  } catch (error) {
+    if (error instanceof Error && error.name === "AbortError") return;
     if (Platform.OS === "web") window.open(uri, "_blank", "noopener,noreferrer");
     else Alert.alert("保存できませんでした", "画像を開いて端末の保存操作をお試しください。");
   }

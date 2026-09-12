@@ -435,6 +435,35 @@ async function routeRequest(
     }
   }
 
+  if (pathname === "/api/gourmet-map/photo" && request.method === "GET") {
+    const placeId = routeUrl.searchParams.get("placeId") ?? "";
+    if (!/^[A-Za-z0-9_-]{15,128}$/.test(placeId) || !env.GOOGLE_MAPS_API_KEY)
+      return new Response(null, { status: 404 });
+    try {
+      const details = await fetch(`https://places.googleapis.com/v1/places/${encodeURIComponent(placeId)}`, {
+        headers: { "x-goog-api-key": env.GOOGLE_MAPS_API_KEY, "x-goog-fieldmask": "photos" },
+      });
+      if (!details.ok) return new Response(null, { status: 404 });
+      const place = await details.json() as { photos?: { name?: string }[] };
+      const name = place.photos?.[0]?.name ?? "";
+      if (!/^places\/[A-Za-z0-9_-]+\/photos\/[A-Za-z0-9_-]+$/.test(name)) return new Response(null, { status: 404 });
+      const media = await fetch(`https://places.googleapis.com/v1/${name}/media?maxWidthPx=800&skipHttpRedirect=true`, {
+        headers: { "x-goog-api-key": env.GOOGLE_MAPS_API_KEY },
+      });
+      if (!media.ok) return new Response(null, { status: 404 });
+      const photoUri = ((await media.json()) as { photoUri?: string }).photoUri;
+      if (!photoUri || !/^https:\/\//.test(photoUri)) return new Response(null, { status: 404 });
+      const image = await fetch(photoUri);
+      if (!image.ok) return new Response(null, { status: 502 });
+      return new Response(image.body, { headers: {
+        "content-type": image.headers.get("content-type") ?? "image/jpeg",
+        "cache-control": "public, max-age=86400",
+      } });
+    } catch {
+      return new Response(null, { status: 502 });
+    }
+  }
+
   if (pathname === "/api/restaurant-location" && request.method === "POST") {
     const denied = await protectedWhenAuthEnabled(request, env);
     if (denied) return denied;

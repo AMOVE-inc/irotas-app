@@ -84,6 +84,11 @@ class EventAccessDatabase implements D1Database {
         if (sql.includes("INSERT INTO event_participations")) db.participationStatus = String(values[2]);
         if (sql.includes("UPDATE event_participations SET status = 'confirmed'")) db.participationStatus = "confirmed";
         if (sql.includes("UPDATE events SET public_data_json")) db.row.public_data_json = String(values[0]);
+        if (sql.includes("UPDATE events SET title = ?")) db.row = {
+          ...db.row, title: String(values[0]), event_type: values[1] as "official" | "club",
+          club_id: values[2] as string | null, event_date: String(values[3]),
+          status: values[4] as typeof db.row.status, public_data_json: String(values[5]),
+        };
         if (sql.includes("INSERT INTO event_cancellation_requests")) db.cancellationPending = true;
         if (sql.includes("UPDATE event_cancellation_requests SET status")) db.cancellationPending = false;
         if (sql.includes("UPDATE event_participations SET status = ?")) db.participationStatus = String(values[0]);
@@ -113,6 +118,17 @@ describe("club event access", () => {
     canMemberAccessClub.mockReset();
     db = new EventAccessDatabase();
     env = { DB: db } as unknown as SitesEnv;
+  });
+
+  it("saves edits to an official event without a club ID", async () => {
+    db.row = { ...db.row, id: "discord-event-1547552751800553543", event_type: "official", club_id: null };
+    authenticatedRequestMember.mockResolvedValue({ id: 10, role: "admin", access_role: "admin" });
+    const response = await handleEventRequest(new Request(`https://app.example/api/events/${db.row.id}`, {
+      method: "PATCH", body: JSON.stringify({ action: "edit", title: "支部交流会 更新後", description: "変更した内容", participants: [] }),
+    }), env);
+    expect(response?.status).toBe(200);
+    expect(db.row.title).toBe("支部交流会 更新後");
+    expect(JSON.parse(db.row.public_data_json).description).toBe("変更した内容");
   });
 
   it("shows a redacted list preview but blocks detail and favorites for non-members", async () => {

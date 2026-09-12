@@ -55,7 +55,8 @@ export default function MemberProfileScreen() {
   const [followSaving, setFollowSaving] = useState(false);
   const [confirmedEvents, setConfirmedEvents] = useState<Event[]>([]);
   const discordAuthor = getDiscordAuthorById(id);
-  const isLookingUpRequestedMember = Boolean(id && authUser && (!databaseLookupComplete || (databaseMember !== null && databaseMember.id !== id)));
+  // A Discord alias can resolve to a different canonical public member ID.
+  const isLookingUpRequestedMember = Boolean(id && authUser && !databaseLookupComplete);
 
   useEffect(() => {
     if (!id || !authUser) { setDatabaseMember(null); setDatabaseLookupComplete(true); return; }
@@ -66,7 +67,7 @@ export default function MemberProfileScreen() {
       .catch(() => { if (active) setDatabaseMember(null); })
       .finally(() => { if (active) setDatabaseLookupComplete(true); });
     return () => { active = false; };
-  }, [authUser, id]);
+  }, [authUser?.id, id]);
 
   useEffect(() => {
     if (!authUser || !id) { setConfirmedEvents([]); return; }

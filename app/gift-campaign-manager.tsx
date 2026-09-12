@@ -10,6 +10,9 @@ import { useEffect, useState } from "react";
 import { Alert, Modal, Pressable, ScrollView, Text, TextInput, View } from "react-native";
 import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
+import * as Api from "@/lib/_core/api";
+import { deleteSharedGift, saveSharedGift } from "@/lib/benefits-api";
+import { Platform } from "react-native";
 
 const EMPTY_GIFT: GiftCampaign = { id: "", title: "", description: "", category: "gourmet", minimumRank: "regular", winnerCount: 1, deadline: "", status: "open", imageEmoji: "🎁" };
 const RANKS: [MemberRank, string][] = [["regular", "全会員"], ["silver", "シルバー以上"], ["gold", "ゴールド以上"], ["platinum", "プラチナ"]];
@@ -21,22 +24,16 @@ export default function GiftCampaignManagerScreen() {
   const reload = async () => { const [gifts, apps] = await Promise.all([getGiftCampaigns(), getGiftApplications()]); setItems(gifts); setApplications(apps); return gifts; };
   useEffect(() => {
     if (!isOperatorRole(user?.role, user?.accessRole)) return;
-    void (async () => {
-      // Discordから取り込んだ過去企画も、管理画面を開いた時点で共有データへ保存する。
-      // 以後は他の企画と同じく編集・削除できる。
-      const gifts = await reload();
-      await saveGiftCampaigns(gifts);
-      await reload();
-    })();
+    void reload();
   }, [user?.role, user?.accessRole]);
   if (!isOperatorRole(user?.role, user?.accessRole)) return <ScreenContainer className="p-6"><Text style={{ textAlign: "center", color: colors.muted, marginTop: 40 }}>運営メンバーのみアクセスできます</Text></ScreenContainer>;
 
   const openCreate = () => { setEditingId(null); setDraft({ ...EMPTY_GIFT, id: `gift_${Date.now()}`, deadline: new Date().toISOString().slice(0, 10) }); setShowModal(true); };
   const openEdit = (gift: GiftCampaign) => { setEditingId(gift.id); setDraft({ ...gift }); setShowModal(true); };
-  const save = async () => { if (!draft.title.trim() || !draft.deadline || draft.winnerCount < 1) { Alert.alert("入力内容を確認", "タイトル・募集期限・当選人数は必須です。"); return; } const next = editingId ? items.map((item) => item.id === editingId ? draft : item) : [draft, ...items]; await saveGiftCampaigns(next); setItems(next); setShowModal(false); Alert.alert(editingId ? "更新完了" : "作成完了", editingId ? "プレゼント企画を更新しました。" : "プレゼント企画を作成しました。"); };
+  const save = async () => { if (!draft.title.trim() || !draft.deadline || draft.winnerCount < 1) { Alert.alert("入力内容を確認", "タイトル・募集期限・当選人数は必須です。"); return; } try { const imageUrl = draft.imageUrl && !/^https?:\/\//i.test(draft.imageUrl) && !draft.imageUrl.startsWith("/api/") ? (await Api.uploadEventImage(draft.imageUrl)).imageUrl : draft.imageUrl; await saveSharedGift({ ...draft, imageUrl }); await reload(); setShowModal(false); Alert.alert(editingId ? "更新完了" : "作成完了", editingId ? "プレゼント企画を更新しました。" : "プレゼント企画を作成しました。"); } catch (error) { Alert.alert("保存できませんでした", error instanceof Error ? error.message : "通信状況を確認してください。"); } };
   const pickImage = async () => { const permission = await ImagePicker.requestMediaLibraryPermissionsAsync(); if (!permission.granted) { Alert.alert("権限が必要です", "画像を選ぶには写真ライブラリへのアクセスを許可してください。"); return; } const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images, allowsEditing: true, aspect: [1, 1], quality: 0.8 }); if (!result.canceled && result.assets[0]) setDraft((current) => ({ ...current, imageUrl: result.assets[0].uri })); };
-  const setStatus = async (gift: GiftCampaign) => { const next = items.map((item) => item.id === gift.id ? { ...item, status: gift.status === "open" ? "closed" as const : "open" as const } : item); await saveGiftCampaigns(next); setItems(next); };
-  const remove = (gift: GiftCampaign) => Alert.alert("プレゼント企画を削除", `${gift.title}を削除しますか？`, [{ text: "キャンセル", style: "cancel" }, { text: "削除", style: "destructive", onPress: async () => { const next = items.filter((item) => item.id !== gift.id); await saveGiftCampaigns(next); setItems(next); } }]);
+  const setStatus = async (gift: GiftCampaign) => { try { await saveSharedGift({ ...gift, status: gift.status === "open" ? "closed" : "open" }); await reload(); } catch (error) { Alert.alert("変更できませんでした", error instanceof Error ? error.message : "通信状況を確認してください。"); } };
+  const remove = (gift: GiftCampaign) => { const execute = async () => { try { await deleteSharedGift(gift.id); await reload(); } catch (error) { Alert.alert("削除できませんでした", error instanceof Error ? error.message : "通信状況を確認してください。"); } }; if (Platform.OS === "web") { if (window.confirm(`${gift.title}を削除しますか？`)) void execute(); return; } Alert.alert("プレゼント企画を削除", `${gift.title}を削除しますか？`, [{ text: "キャンセル", style: "cancel" }, { text: "削除", style: "destructive", onPress: () => { void execute(); } }]); };
   const lottery = (gift: GiftCampaign) => { const pending = applications.filter((item) => item.campaignId === gift.id && item.result === "pending"); if (!pending.length) { Alert.alert("申込者がいません"); return; } Alert.alert("抽選を確定", `${pending.length}名から${Math.min(gift.winnerCount, pending.length)}名を抽選します。`, [{ text: "キャンセル", style: "cancel" }, { text: "抽選する", onPress: async () => { const result = await confirmGiftLottery(gift.id, gift.winnerCount); await reload(); const winners = result.filter((item) => item.campaignId === gift.id && item.result === "winner"); Alert.alert("抽選確定", `当選者：${winners.map((item) => item.memberName).join("、")}`); } }]); };
 
   return <ScreenContainer edges={["top", "left", "right"]}>

@@ -216,10 +216,9 @@ export default function EventDetailScreen() {
     if (!imported) setEventLoading(true);
     void Api.getEvent(eventId)
       .then((value) => { if (active) {
-        // Discord移行イベントは、アーカイブから再照合した人数・コメントを優先する。
-        // 参加操作で変動する通常イベントの値には影響させない。
+        // Keep imported comments, but let the server's edited event fields win.
         const importedDiscordData = imported?.id.startsWith("discord-event-")
-          ? { capacity: imported.capacity, reservationCapacity: imported.reservationCapacity, participants: imported.participants, applicantIds: imported.applicantIds, attendees: imported.attendees, importedComments: imported.importedComments }
+          ? { importedComments: imported.importedComments }
           : {};
         setEvent({ ...imported, ...value, ...importedDiscordData, description: value.description?.trim() ?? "", image: value.image || imported?.image || "", tabelogUrl: value.tabelogUrl || imported?.tabelogUrl, googleMapsUrl: value.googleMapsUrl || imported?.googleMapsUrl, organizerProfileId: value.organizerProfileId || imported?.organizerProfileId, organizerName: value.organizerName || imported?.organizerName, organizerAvatar: value.organizerAvatar || imported?.organizerAvatar, organizerRank: value.organizerRank || imported?.organizerRank } as Event);
       } })

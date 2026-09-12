@@ -45,7 +45,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const fetchUser = useCallback(async () => {
     try {
-      setLoading(true);
+      // Keep the navigation tree mounted during profile refreshes. Unmounting it
+      // resets the active tab to Home when the editor closes.
 
       if (Platform.OS === "web") {
         const apiUser = await Api.getMe();

@@ -429,6 +429,8 @@ export default function ChatScreen() {
 
   const insets = useSafeAreaInsets();
   const [pendingImage, setPendingImage] = useState<string | null>(null);
+  const sendingRef = useRef(false);
+  const pendingSendRef = useRef<{ signature: string; messageId: string } | null>(null);
   const [showAttachmentMenu, setShowAttachmentMenu] = useState(false);
   const [, setIsLoadingRoom] = useState(true);
   const [showPollComposer, setShowPollComposer] = useState(false);
@@ -455,15 +457,22 @@ export default function ChatScreen() {
   }, []);
 
   const handleSend = useCallback(async () => {
+    if (sendingRef.current) return;
     if (!canPostToChat(authUser?.role, id ?? "", authUser?.accessRole)) return;
     if (!messageText.trim() && !pendingImage) return;
     const content = messageText.trim();
     if (!id) return;
+    sendingRef.current = true;
+    const signature = JSON.stringify([id, content, pendingImage]);
+    if (pendingSendRef.current?.signature !== signature) {
+      pendingSendRef.current = { signature, messageId: `cm_${Date.now()}_${Math.random().toString(36).slice(2)}` };
+    }
     try {
       let imageUrl: string | undefined;
       const supportsSharedStorage = Boolean(room?.shared) || id === "board-announcement" || id.startsWith("rank-") || id.startsWith("event_chat_");
       if (pendingImage && supportsSharedStorage) imageUrl = (await Api.uploadEventImage(pendingImage)).imageUrl;
-      const newMessage = await Api.createSharedChatMessage(id, { content, imageUrl });
+      const newMessage = await Api.createSharedChatMessage(id, { content, imageUrl, clientMessageId: pendingSendRef.current.messageId });
+      pendingSendRef.current = null;
       setMessages((prev) => [...prev.filter((item) => item.id !== newMessage.id), newMessage]);
       setMessageText("");
       setMessageSelection({ start: 0, end: 0 });
@@ -481,6 +490,7 @@ export default function ChatScreen() {
       }
     } catch (error) {
       if (error instanceof Api.ApiError && error.statusCode === 404) {
+        pendingSendRef.current = null;
         const legacyMessage: ChatMessage = {
           id: `m_new_${Date.now()}`,
           chatId: id,
@@ -499,6 +509,8 @@ export default function ChatScreen() {
         return;
       }
       Alert.alert("送信できませんでした", error instanceof Error ? error.message : "通信状況を確認してもう一度お試しください。");
+    } finally {
+      sendingRef.current = false;
     }
   }, [messageText, pendingImage, id, room, mentionGroups, authUser?.role, authUser?.accessRole, authUser?.name, viewerMemberId]);
 
@@ -696,7 +708,9 @@ export default function ChatScreen() {
                   const discordAuthor = getDiscordAuthorByName(legacyName);
                   const matchedMember = directory.find((member) => stripRankFromName(member.displayName) === stripRankFromName(legacyName));
                   const openProfile = (memberId: string) => router.push({ pathname: "/member-profile", params: { id: memberId, legacyName } });
-                  if (discordAuthor) {
+                  if (item.shared && /^(member-|discord-)/.test(item.senderId)) {
+                    openProfile(item.senderId);
+                  } else if (discordAuthor) {
                     openProfile(discordAuthor.id);
                   } else if (matchedMember) {
                     openProfile(matchedMember.id);

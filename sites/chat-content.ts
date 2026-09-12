@@ -163,6 +163,14 @@ async function ensureKnownRoom(db: D1Database, roomId: string) {
       .bind(roomId, now, now).run();
     return roomById(db, roomId);
   }
+  if (roomId === "community-free-chat") {
+    const now = new Date().toISOString();
+    await db.prepare(`INSERT OR IGNORE INTO chat_rooms
+      (id, name, room_type, source_id, created_at, updated_at)
+      VALUES (?, 'フリーチャット', 'board', 'community-free-chat', ?, ?)`)
+      .bind(roomId, now, now).run();
+    return roomById(db, roomId);
+  }
   if (roomId === "branch-kanto-free" || roomId === "branch-kansai-free") {
     const branch = roomId === "branch-kanto-free" ? "kanto" : "kansai";
     const name = branch === "kanto" ? "関東支部フリーチャット" : "関西支部フリーチャット";
@@ -193,6 +201,7 @@ async function canAccessRoom(db: D1Database, room: RoomRow, member: Viewer) {
   }
   if (elevated(member)) return true;
   if (room.room_type === "board" && room.source_id === "introduction") return true;
+  if (room.room_type === "board" && room.source_id === "community-free-chat") return true;
   if (room.room_type === "board" && (room.source_id === "branch-kanto-v2" || room.source_id === "branch-kansai-v2")) {
     const expected = room.source_id === "branch-kanto-v2" ? "kanto" : "kansai";
     const row = await db.prepare("SELECT branches_json FROM members WHERE id = ? LIMIT 1").bind(member.id).first<{ branches_json: string | null }>();
@@ -412,6 +421,7 @@ export async function handleChatContentRequest(
 
   if (url.pathname === ROOMS_PATH && request.method === "GET") {
     await ensureViewerEventRooms(env.DB, member);
+    await ensureKnownRoom(env.DB, "community-free-chat");
     // 一覧から開くケースでも、旧支部フリーチャットを先にv2へ移行して履歴を残さない。
     await ensureKnownRoom(env.DB, "branch-kanto-free");
     await ensureKnownRoom(env.DB, "branch-kansai-free");
@@ -606,13 +616,21 @@ export async function handleChatContentRequest(
       const imageUrl = validImageUrl(input?.imageUrl);
       if (!input || content.length > 10_000 || imageUrl === null || (!content && !imageUrl))
         return json({ error: "メッセージ内容が不正です" }, 400);
-      const id = crypto.randomUUID();
+      const requestedId = typeof input.clientMessageId === "string" && /^cm_[a-zA-Z0-9_-]{12,80}$/.test(input.clientMessageId)
+        ? input.clientMessageId : null;
+      const id = requestedId ?? crypto.randomUUID();
       const now = new Date().toISOString();
-      await env.DB.prepare(`INSERT INTO chat_messages
+      await env.DB.prepare(`INSERT OR IGNORE INTO chat_messages
         (id, room_id, sender_member_id, content, image_url, created_at, updated_at)
         VALUES (?, ?, ?, ?, ?, ?, ?)`).bind(
           id, roomId, member.id, content, imageUrl || null, now, now,
         ).run();
+      if (requestedId) {
+        const existing = await env.DB.prepare("SELECT room_id, sender_member_id FROM chat_messages WHERE id = ? LIMIT 1")
+          .bind(id).first<{ room_id: string; sender_member_id: number }>();
+        if (!existing || existing.room_id !== roomId || existing.sender_member_id !== member.id)
+          return json({ error: "メッセージIDが不正です" }, 409);
+      }
       await env.DB.prepare("UPDATE chat_rooms SET updated_at = ? WHERE id = ?")
         .bind(now, roomId).run();
       await audit(env.DB, member.id, "chat.message_created", id);

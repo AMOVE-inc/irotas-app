@@ -636,7 +636,7 @@ export async function markSharedChatRoomRead(roomId: string) {
 
 export async function createSharedChatMessage(
   roomId: string,
-  input: { content: string; imageUrl?: string },
+  input: { content: string; imageUrl?: string; clientMessageId?: string },
 ) {
   const result = await apiCall<{ message: SharedChatMessage }>(
     `/api/chats/${encodeURIComponent(roomId)}/messages`,

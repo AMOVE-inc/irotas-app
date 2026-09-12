@@ -706,7 +706,9 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
       const tabelogUrl = input.tabelogUrl === undefined ? undefined : text(input.tabelogUrl, 500);
       const googleMapsUrl = input.googleMapsUrl === undefined ? undefined : text(input.googleMapsUrl, 500);
       const eventType = input.eventType === undefined ? row.event_type : ["official", "gourmet", "club"].includes(String(input.eventType)) ? String(input.eventType) as EventRow["event_type"] : null;
-      const clubId = input.clubId === undefined ? row.club_id : text(input.clubId, 80);
+      // Official/gourmet events legitimately have no club ID. A NULL database
+      // value must not make every edit fail with 400.
+      const clubId = input.clubId === undefined ? (row.club_id ?? "") : text(input.clubId, 80);
       const restaurantName = input.restaurantName === undefined ? undefined : text(input.restaurantName, 160);
       const image = input.image === undefined ? undefined : text(input.image, 500, true);
       const genres = input.genres === undefined ? undefined : stringArray(input.genres, 20);

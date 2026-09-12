@@ -33,7 +33,7 @@ function ChatRoomCard({ room, eventStarts, eventImages, memberAvatars, viewerMem
   const isGroup = room.type === "group";
   const isRank = room.type === "rank";
   const rankColor: Record<string, string> = { silver: "#8B9DC3", gold: "#F59E0B", platinum: "#8B5CF6" };
-  const typeLabel = room.id === "board-announcement" ? "お知らせ" : room.type === "event" ? "イベント" : room.type === "board" ? "掲示板" : isDM ? "DM" : isGroup ? "友達グループ" : isRank ? (
+  const typeLabel = room.id === "board-announcement" ? "お知らせ" : room.id === "community-free-chat" ? "フリーチャット" : room.type === "event" ? "イベント" : room.type === "board" ? "掲示板" : isDM ? "DM" : isGroup ? "友達グループ" : isRank ? (
     room.requiredRank === "platinum" ? "プラチナ" : room.requiredRank === "gold" ? "ゴールド" : "シルバー"
   ) : "部活動";
   const typeColor = room.type === "event" ? "#E8A0BF" : room.type === "board" ? "#A7C7E7" : isDM ? "#FF9500" : isGroup ? "#5B9BD5" : isRank ? (rankColor[room.requiredRank ?? "silver"] ?? "#8B9DC3") : "#34C759";

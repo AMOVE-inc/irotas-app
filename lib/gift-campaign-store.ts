@@ -44,14 +44,13 @@ export const INITIAL_GIFT_CAMPAIGNS: GiftCampaign[] = [
 export async function getGiftCampaigns(): Promise<GiftCampaign[]> {
   try {
     const shared = await getSharedBenefits();
-    const sharedIds = new Set(shared.gifts.map((item) => item.id));
-    return [...shared.gifts, ...INITIAL_GIFT_CAMPAIGNS.filter((item) => item.archivedFromDiscord && !sharedIds.has(item.id))];
+    // The server is authoritative: merging seeds here resurrects deleted campaigns.
+    return shared.gifts;
   } catch {}
   const raw = await AsyncStorage.getItem(CAMPAIGNS_KEY);
   if (!raw) return INITIAL_GIFT_CAMPAIGNS;
   const saved = (JSON.parse(raw) as GiftCampaign[]).filter((item) => !LEGACY_DISCORD_GIFT_IDS.has(item.id));
-  const savedIds = new Set(saved.map((item) => item.id));
-  return [...saved, ...INITIAL_GIFT_CAMPAIGNS.filter((item) => item.archivedFromDiscord && !savedIds.has(item.id))].map((item) => ({
+  return saved.map((item) => ({
     ...item,
     imageUrl: item.imageUrl ?? INITIAL_GIFT_CAMPAIGNS.find((seed) => seed.id === item.id)?.imageUrl,
   }));
