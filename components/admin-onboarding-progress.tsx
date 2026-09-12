@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, Alert, Pressable, Text, TextInput, View } from "react-native";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { ActivityIndicator, Alert, Platform, Pressable, Text, TextInput, View } from "react-native";
 import * as Clipboard from "expo-clipboard";
+import { buildPendingOnboardingCsv, isPendingOnboarding } from "@/lib/onboarding-csv";
 import {
   getMemberOnboarding,
   saveMemberOnboardingFollowUp,
@@ -42,24 +43,49 @@ export function AdminOnboardingProgress() {
   const [selectedEmail, setSelectedEmail] = useState<string | null>(null);
   const [draft, setDraft] = useState<FollowUp | null>(null);
   const [saving, setSaving] = useState(false);
+  const [downloading, setDownloading] = useState(false);
+  const [updatedAt, setUpdatedAt] = useState<string | null>(null);
+  const loadingRef = useRef(false);
+  const mountedRef = useRef(false);
+  const requestSequenceRef = useRef(0);
 
-  const reload = useCallback(async () => {
-    setLoading(true);
+  const reload = useCallback(async (silent = false) => {
+    if (loadingRef.current) return;
+    loadingRef.current = true;
+    const requestSequence = ++requestSequenceRef.current;
+    if (!silent) setLoading(true);
     setError("");
     try {
       const result = await getMemberOnboarding();
-      setRecords(result.members);
+      if (mountedRef.current && requestSequence === requestSequenceRef.current) {
+        setRecords(result.members);
+        setUpdatedAt(result.updatedAt);
+      }
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "一覧を取得できませんでした");
+      if (mountedRef.current) setError(cause instanceof Error ? cause.message : "一覧を取得できませんでした");
     } finally {
-      setLoading(false);
+      loadingRef.current = false;
+      if (mountedRef.current) setLoading(false);
     }
   }, []);
-  useEffect(() => { void reload(); }, [reload]);
+  useEffect(() => {
+    mountedRef.current = true;
+    void reload();
+    const timer = setInterval(() => {
+      if (typeof document === "undefined" || document.visibilityState === "visible") void reload(true);
+    }, 30_000);
+    const onVisible = () => { if (document.visibilityState === "visible") void reload(true); };
+    if (typeof document !== "undefined") document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      mountedRef.current = false;
+      clearInterval(timer);
+      if (typeof document !== "undefined") document.removeEventListener("visibilitychange", onVisible);
+    };
+  }, [reload]);
 
   const done = records.filter((record) => record.loginStatus === "logged_in" && !record.linkIssue).length;
   const attention = records.filter(needsAttention).length;
-  const pending = records.length - done;
+  const pending = records.filter(isPendingOnboarding).length;
   const notSent = records.filter((record) => (record.loginStatus !== "logged_in" || record.linkIssue) && record.followUp.outreachStatus === "not_sent").length;
   const visible = useMemo(() => {
     const normalized = query.trim().toLowerCase();
@@ -92,10 +118,46 @@ export function AdminOnboardingProgress() {
   }
 
   async function copyPendingEmails() {
-    const emails = records.filter((record) => record.loginStatus !== "logged_in" || record.linkIssue).map((record) => record.billingEmail);
+    const emails = records.filter(isPendingOnboarding).map((record) => record.billingEmail);
     if (!emails.length) return;
     await Clipboard.setStringAsync(emails.join("\n"));
     Alert.alert("コピーしました", `未完了・要確認の ${emails.length} 件のメールアドレスをコピーしました。`);
+  }
+
+  async function downloadPendingCsv() {
+    if (downloading) return;
+    setDownloading(true);
+    try {
+      // 書き出す直前に再取得し、別端末からのログインを反映する。
+      const requestSequence = ++requestSequenceRef.current;
+      const latest = await getMemberOnboarding();
+      if (requestSequence === requestSequenceRef.current) {
+        setRecords(latest.members);
+        setUpdatedAt(latest.updatedAt);
+      }
+      const { csv, count } = buildPendingOnboardingCsv(latest.members);
+      if (!count) {
+        Alert.alert("対象者はいません", "未完了・要確認の会員はいません。");
+        return;
+      }
+      if (Platform.OS !== "web" || typeof document === "undefined") {
+        Alert.alert("Web版で利用してください", "CSVのダウンロードはWeb版の管理者画面から行えます。");
+        return;
+      }
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `IRO+_初回ログイン未完了_${new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Tokyo" })}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 10_000);
+    } catch (cause) {
+      Alert.alert("ダウンロードできませんでした", cause instanceof Error ? cause.message : "通信状態を確認してください");
+    } finally {
+      setDownloading(false);
+    }
   }
 
   const smallButton = (label: string, onPress: () => void, active = false) => (
@@ -106,7 +168,7 @@ export function AdminOnboardingProgress() {
 
   return <View style={{ gap: 14 }}>
     <Text style={{ fontSize: 20, fontWeight: "800", color: ink }}>初回ログイン進捗</Text>
-    <Text style={{ fontSize: 13, lineHeight: 20, color: muted }}>サブスク有効・猶予中の契約メールをすべて表示します。ログイン完了は実際のログイン記録で判定します。契約と会員の紐付けに問題がある場合も一覧に残します。</Text>
+    <Text style={{ fontSize: 13, lineHeight: 20, color: muted }}>サブスク有効・猶予中の契約メールをすべて表示します。ログイン完了は実際のログイン記録で判定します。契約と会員の紐付けに問題がある場合も一覧に残します。画面を開いている間は30秒ごとに更新します。</Text>
     <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
       {[["対象契約", records.length], ["ログイン済み", done], ["未完了・要確認", pending], ["案内未記録", notSent], ["紐付け等の要確認", attention]].map(([label, count]) => <View key={label} style={{ minWidth: 125, flexGrow: 1, padding: 12, borderRadius: 12, borderWidth: 1, borderColor: border, backgroundColor: "#fff" }}>
         <Text style={{ color: muted, fontSize: 12 }}>{label}</Text><Text style={{ color: ink, fontSize: 24, fontWeight: "800" }}>{count}</Text>
@@ -121,13 +183,14 @@ export function AdminOnboardingProgress() {
     </View>
     <TextInput value={query} onChangeText={setQuery} placeholder="名前・メールアドレスで検索" autoCapitalize="none" style={{ borderWidth: 1, borderColor: border, borderRadius: 10, padding: 12, color: ink, backgroundColor: "#fff" }} />
     <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
-      {smallButton("最新状態に更新", () => { void reload(); })}
+      {smallButton("最新状態に更新", () => { void reload(true); })}
       {smallButton("未完了者のメールをコピー", () => { void copyPendingEmails(); })}
+      {smallButton(downloading ? "CSVを準備中…" : "未完了者をCSVでダウンロード", () => { void downloadPendingCsv(); })}
     </View>
     {loading && <ActivityIndicator color="#E8A0BF" />}
     {!!error && <Text style={{ color: "#bd3848" }}>{error}</Text>}
-    {!loading && !error && <Text style={{ color: muted, fontSize: 12 }}>表示 {visible.length} 件 / 対象 {records.length} 件</Text>}
-    {!loading && !error && visible.map((record) => {
+    {!loading && <Text style={{ color: muted, fontSize: 12 }}>表示 {visible.length} 件 / 対象 {records.length} 件{updatedAt ? ` · 最終更新 ${dateLabel(updatedAt)}` : ""}</Text>}
+    {!loading && visible.map((record) => {
       const selected = selectedEmail === record.billingEmail;
       const statusColor = record.loginStatus === "logged_in" && !record.linkIssue ? "#237c4d" : needsAttention(record) ? "#be3e48" : "#a35e19";
       return <View key={record.billingEmail} style={{ padding: 14, borderWidth: 1, borderColor: border, borderRadius: 14, backgroundColor: "#fff", gap: 5 }}>
