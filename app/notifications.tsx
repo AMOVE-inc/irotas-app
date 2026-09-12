@@ -6,6 +6,7 @@ import { ActivityIndicator, FlatList, Platform, Pressable, Text, View } from "re
 import * as Api from "@/lib/_core/api";
 
 type Notification = Api.AppNotification;
+const cleanSystemLabel = (value: string) => value.replace(/^【IRO\+\s*システム】\s*/, "");
 
 const ICON_MAP: Record<string, { icon: string; color: string }> = {
   event: { icon: "calendar", color: "#A7C7E7" },
@@ -87,11 +88,11 @@ function NotificationItem({ notification, onOpen }: { notification: Notification
             }}
             numberOfLines={1}
           >
-            {notification.title}
+            {cleanSystemLabel(notification.title).replace(/^イベント参加が取り消されました$/, "イベントのキャンセルが確定しました")}
           </Text>
         </View>
         <Text style={{ fontSize: 13, color: colors.muted, marginBottom: 2 }} numberOfLines={1}>
-          {notification.body}
+          {cleanSystemLabel(notification.body)}
         </Text>
         <Text style={{ fontSize: 11, color: colors.muted }}>{relativeTime(notification.createdAt)}</Text>
       </View>

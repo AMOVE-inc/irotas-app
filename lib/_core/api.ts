@@ -591,6 +591,11 @@ export async function getSharedChatRooms() {
   return result.rooms;
 }
 
+export async function getSharedChatRoom(roomId: string) {
+  const result = await apiCall<{ room: SharedChatRoom }>(`/api/chats/${encodeURIComponent(roomId)}`);
+  return result.room;
+}
+
 export async function createSharedChatRoom(input: {
   type: "dm" | "group";
   name?: string;

@@ -291,7 +291,9 @@ export default function ChatScreen() {
     return () => { show.remove(); hide.remove(); };
   }, []);
 
-  const [room, setRoom] = useState(() => getRoomById(id ?? ""));
+  const [room, setRoom] = useState(() => getRoomById(id ?? "") ?? (id === "community-free-chat" ? {
+    id, name: "フリーチャット", type: "board" as const, sourceId: "community-free-chat", participants: [], createdBy: "system", shared: true,
+  } : undefined));
   const [clubAccessDenied, setClubAccessDenied] = useState(false);
   const [roomParticipants, setRoomParticipants] = useState<string[]>(
     () => getRoomById(id ?? "")?.participants ?? []
@@ -382,25 +384,31 @@ export default function ChatScreen() {
     AsyncStorage.getItem("profile_avatar_uri").then((uri) => {
       if (uri) setMyAvatarUri(uri);
     });
-    // 動的ルームを復元してから永続化メッセージを読み込む
-    loadDynamicRooms().then(() => {
-      const r = getRoomById(id);
-      if (r) {
-        setRoom(r);
-        setRoomParticipants([...r.participants]);
+    // 個別のチャット・メッセージを先に取得する。一覧全件の読み込みを画面表示の条件にしない。
+    void Api.getSharedChatRoom(id).then((sharedRoom) => {
+      const normalized = sharedRoom as unknown as ChatRoom;
+      setRoom(normalized);
+      setRoomParticipants([...normalized.participants]);
+      setClubAccessDenied(false);
+    }).catch((error) => {
+      if (id.startsWith("club-chat-") && error instanceof Api.ApiError && (error.statusCode === 403 || error.statusCode === 404)) setClubAccessDenied(true);
+    }).finally(() => setIsLoadingRoom(false));
+    void Api.getSharedChatMessages(id).then(applySharedMessages).catch(async (error) => {
+      if (id.startsWith("club-chat-")) {
+        setMessages([]);
+        if (error instanceof Api.ApiError && (error.statusCode === 403 || error.statusCode === 404)) setClubAccessDenied(true);
+        return;
       }
-      Api.getSharedChatMessages(id).then(applySharedMessages).catch(async (error) => {
-        if (id.startsWith("club-chat-")) {
-          setMessages([]);
-          if (error instanceof Api.ApiError && (error.statusCode === 403 || error.statusCode === 404)) setClubAccessDenied(true);
-          return;
-        }
-        // 旧移行チャットは共有DBへの切替対象外でも、既存履歴を引き続き表示する。
-        const stored = await loadMessagesFromStorage(id);
-        setMessages([...(id === "board-introduction" ? [] : getMessages(id)), ...stored]
-          .filter((message, index, all) => all.findIndex((candidate) => candidate.id === message.id) === index)
-          .filter((message) => !isRetiredAnnouncement(message)));
-      });
+      const stored = await loadMessagesFromStorage(id);
+      setMessages([...(id === "board-introduction" ? [] : getMessages(id)), ...stored]
+        .filter((message, index, all) => all.findIndex((candidate) => candidate.id === message.id) === index)
+        .filter((message) => !isRetiredAnnouncement(message)));
+    });
+    void loadDynamicRooms().then(() => {
+      const r = getRoomById(id);
+      if (r && !r.shared) {
+        setRoom((current) => current?.shared && current.id === id ? current : r);
+      }
       if (id === "board-introduction") {
         Api.getBoardArchive("all").then((archive) => {
           const imported = importedIntroductionMessages(archive);
@@ -409,19 +417,6 @@ export default function ChatScreen() {
             .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()));
         }).catch(() => setMessages((current) => current.filter((message) => message.shared))).finally(() => setIntroductionHydrated(true));
       }
-      Api.getSharedChatRooms().then((sharedRooms) => {
-        const sharedRoom = sharedRooms.find((item) => item.id === id);
-        if (!sharedRoom) {
-          if (id.startsWith("club-chat-")) setClubAccessDenied(true);
-          return;
-        }
-        setClubAccessDenied(false);
-        const normalized = sharedRoom as unknown as ChatRoom;
-        setRoom(normalized);
-        setRoomParticipants([...normalized.participants]);
-      }).catch(() => {
-        if (id.startsWith("club-chat-")) setClubAccessDenied(true);
-      }).finally(() => setIsLoadingRoom(false));
       Api.getMemberDirectory().then(setDirectory).catch(() => {});
     }).catch(() => setIsLoadingRoom(false));
     return () => clearTimeout(loadingFallback);
@@ -643,7 +638,7 @@ export default function ChatScreen() {
 
   if (!room) return null;
 
-  const typeLabel = room.id === "board-announcement" ? "お知らせ" : room.type === "event" ? "イベント" : room.type === "board" ? "掲示板" : room.type === "rank" ? "ランク専用" : room.type === "group" ? "友達グループ" : room.type === "dm" ? "DM" : "部活動";
+  const typeLabel = room.id === "board-announcement" ? "お知らせ" : room.id === "community-free-chat" ? "チャット" : room.type === "event" ? "イベント" : room.type === "board" ? "掲示板" : room.type === "rank" ? "ランク専用" : room.type === "group" ? "友達グループ" : room.type === "dm" ? "DM" : "部活動";
   const typeColor = room.type === "event" ? "#E8A0BF" : room.type === "board" ? "#A7C7E7" : room.type === "rank" ? "#F59E0B" : room.type === "group" ? "#5B9BD5" : room.type === "dm" ? "#FF9500" : "#34C759";
   const firstUnreadIndex = Math.max(0, messages.length - Math.min(messages.length, Math.max(0, Number(unreadCountParam ?? 0))));
   const canManageRoom = room.type !== "club" && (userIsAdmin || room.createdBy === viewerMemberId);
@@ -1123,18 +1118,29 @@ export default function ChatScreen() {
                 </View>
               );
             })}
-            {room.type !== "rank" && room.type !== "club" ? (
+            {(room.type === "event" || room.type === "dm" || room.type === "group" || (room.type === "board" && !["community-free-chat", "board-introduction", "branch-kanto-free", "branch-kansai-free"].includes(room.id))) ? (
               <Pressable
-                onPress={() => Alert.alert("チャットから退出", "このチャットから退出しますか？退出後は、再度招待されるまで閲覧できません。", [
-                  { text: "キャンセル", style: "cancel" },
-                  { text: "退出する", style: "destructive", onPress: async () => {
+                onPress={() => {
+                  const leave = async () => {
                     if (!id) return;
-                    if (room.shared) await Api.removeSharedChatRoomMember(id, viewerMemberId);
-                    else await removeMemberFromRoom(id, CURRENT_USER.id);
-                    setShowParticipants(false);
-                    router.replace("/chat-list");
-                  } },
-                ])}
+                    try {
+                      if (room.shared) await Api.removeSharedChatRoomMember(id, viewerMemberId);
+                      else await removeMemberFromRoom(id, CURRENT_USER.id);
+                      setShowParticipants(false);
+                      router.replace("/chat-list");
+                    } catch (error) {
+                      const message = error instanceof Error ? error.message : "もう一度お試しください。";
+                      if (Platform.OS === "web") window.alert(`退出できませんでした: ${message}`);
+                      else Alert.alert("退出できませんでした", message);
+                    }
+                  };
+                  if (Platform.OS === "web") {
+                    if (window.confirm("このチャットから退出しますか？退出後は、再度招待されるまで閲覧できません。")) void leave();
+                  } else Alert.alert("チャットから退出", "このチャットから退出しますか？退出後は、再度招待されるまで閲覧できません。", [
+                    { text: "キャンセル", style: "cancel" },
+                    { text: "退出する", style: "destructive", onPress: () => { void leave(); } },
+                  ]);
+                }}
                 style={{ marginTop: 20, borderRadius: 12, borderWidth: 1, borderColor: colors.error, paddingVertical: 13, alignItems: "center" }}
               >
                 <Text style={{ fontSize: 14, fontWeight: "800", color: colors.error }}>チャットから退出</Text>

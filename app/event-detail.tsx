@@ -382,9 +382,8 @@ export default function EventDetailScreen() {
   // Companions join the event chat, but are not applicants and therefore do not consume or count toward the recruiting capacity.
   const confirmedDisplayIds = getConfirmedParticipantDisplayIds(event.participants, undefined, organizerId);
   const confirmedParticipantIds = event.isCancelled ? [] : confirmedDisplayIds.filter((memberId) => memberId !== organizerId && !companionIds.includes(memberId));
-  const cancelledParticipantIds = event.isCancelled
-    ? [...new Set(event.cancelledParticipantIds ?? confirmedDisplayIds)].filter((memberId) => memberId !== organizerId && !companionIds.includes(memberId))
-    : [];
+  const cancelledParticipantIds = [...new Set(event.cancelledParticipantIds ?? (event.isCancelled ? confirmedDisplayIds : []))]
+    .filter((memberId) => memberId !== organizerId && !companionIds.includes(memberId));
   const applicantCount = event.applicantIds?.length ?? event.attendees;
   const organizer = getMemberById(organizerId) ?? getMemberById(event.createdBy);
   const organizerDirectoryMember = memberDirectory.find((member) => member.id === organizerId);
@@ -1092,6 +1091,8 @@ export default function EventDetailScreen() {
 
             <Text style={{ fontSize: 13, fontWeight: "800", color: colors.foreground, marginTop: 14, marginBottom: 7 }}>キャンセル申請（{pendingCancellationRequests.length}件）</Text>
             {pendingCancellationRequests.length ? pendingCancellationRequests.map((request) => { const member = displayMember(request.memberId); return <View key={request.memberId} style={{ flexDirection: "row", alignItems: "center", paddingVertical: 8, borderTopWidth: 0.5, borderTopColor: colors.border }}><Pressable onPress={() => openMemberProfile(request.memberId)} style={{ flex: 1, flexDirection: "row", alignItems: "center" }}><Image source={member.avatar} style={{ width: 34, height: 34, borderRadius: 17 }} contentFit="cover" /><View style={{ flex: 1, marginLeft: 9, flexDirection: "row", alignItems: "center", flexWrap: "wrap" }}><Text style={{ fontSize: 14, fontWeight: "700", color: colors.foreground }}>{member.name}</Text>{member.rank ? <MemberRankBadge rank={member.rank} name={member.badgeName} role={member.role} compact /> : null}<MemberClubLeaderBadges roles={member.roles} name={member.badgeName} compact /><MemberRoleBadge name="" role={member.role} compact /></View></Pressable><Pressable onPress={() => void handleApproveCancellation(request.memberId)} style={{ borderRadius: 9, backgroundColor: "#D94C55", paddingHorizontal: 10, paddingVertical: 7 }}><Text style={{ color: "#FFF", fontSize: 11, fontWeight: "800" }}>承認・再募集</Text></Pressable></View>; }) : <Text style={{ fontSize: 13, color: colors.muted, paddingVertical: 8 }}>現在、キャンセル申請はありません。</Text>}
+
+            {!event.isCancelled ? <><Text style={{ fontSize: 13, fontWeight: "800", color: colors.foreground, marginTop: 14, marginBottom: 7 }}>キャンセル済み（{cancelledParticipantIds.length}人）</Text>{cancelledParticipantIds.length ? cancelledParticipantIds.map((memberId) => { const member = displayMember(memberId); return <Pressable key={memberId} onPress={() => openMemberProfile(memberId)} style={{ flexDirection: "row", alignItems: "center", paddingVertical: 8, borderTopWidth: 0.5, borderTopColor: colors.border }}><Image source={member.avatar} style={{ width: 34, height: 34, borderRadius: 17 }} contentFit="cover" /><Text style={{ marginLeft: 9, flex: 1, fontSize: 14, fontWeight: "700", color: colors.foreground }}>{member.name}</Text><IconSymbol name="chevron.right" size={16} color={colors.muted} /></Pressable>; }) : <Text style={{ fontSize: 13, color: colors.muted, paddingVertical: 8 }}>キャンセル済みの参加者はいません。</Text>}</> : null}
 
             <Text style={{ fontSize: 13, fontWeight: "800", color: colors.foreground, marginTop: 14, marginBottom: 7 }}>参加確定者{event.isCancelled ? "（0人）" : ""}</Text>
             {(event.isCancelled ? [] : event.participants ?? []).map((memberId) => {

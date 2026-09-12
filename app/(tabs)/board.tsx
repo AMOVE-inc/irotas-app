@@ -735,6 +735,7 @@ function ThreadDetailModal({
   const [showContestComposer, setShowContestComposer] = useState(false);
   const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
   const [editingCommentText, setEditingCommentText] = useState("");
+  const [selectedComment, setSelectedComment] = useState<BoardComment | null>(null);
   const [mentionQuery, setMentionQuery] = useState<string | null>(null);
   const [commentSelection, setCommentSelection] = useState<TextSelection>({ start: 0, end: 0 });
   const [commentPollEnabled, setCommentPollEnabled] = useState(false);
@@ -969,12 +970,19 @@ function ThreadDetailModal({
     setEditingCommentText("");
   };
 
-  const handleDeleteComment = (commentId: string) => Alert.alert("コメントを削除しますか？", "削除後は元に戻せません。", [{ text: "キャンセル", style: "cancel" }, { text: "削除", style: "destructive", onPress: () => {
+  const handleDeleteComment = (commentId: string) => {
+    const removeComment = () => {
     const target = comments.find((comment) => comment.id === commentId);
     const remove = () => setComments((current) => current.filter((comment) => comment.id !== commentId));
     if (target?.shared) void Api.deleteSharedBoardComment(commentId).then(remove).catch((error) => Alert.alert("削除できませんでした", error instanceof Error ? error.message : "もう一度お試しください。"));
     else { remove(); void deleteBoardComment(commentId); }
-  } }]);
+    };
+    if (Platform.OS === "web") {
+      if (window.confirm("コメントを削除しますか？削除後は元に戻せません。")) removeComment();
+    } else Alert.alert("コメントを削除しますか？", "削除後は元に戻せません。", [
+      { text: "キャンセル", style: "cancel" }, { text: "削除", style: "destructive", onPress: removeComment },
+    ]);
+  };
 
   const handleThreadReaction = (emoji: string) => {
     setThreadReactions((current) => {
@@ -1267,14 +1275,7 @@ function ThreadDetailModal({
               コメント ({comments.length})
             </Text>
             {comments.map((comment) => {
-              const isOwnComment = comment.author.id === viewerMemberId || stripRankFromName(comment.author.name) === stripRankFromName(viewerMember.name);
-              return <Pressable key={comment.id} onLongPress={() => Alert.alert("コメント", "操作を選択してください", [
-                { text: "返信", onPress: () => { setCommentText(`@${stripRankFromName(comment.author.name)} `); requestAnimationFrame(() => commentInputRef.current?.focus()); } },
-                { text: "テキストをコピー", onPress: () => { void Clipboard.setStringAsync(comment.content); } },
-                { text: "メッセージリンクをコピー", onPress: () => { void Clipboard.setStringAsync(`https://app.irotas-community.com/board?category=${encodeURIComponent(thread.category)}&view=threads&thread=${encodeURIComponent(thread.id)}&comment=${encodeURIComponent(comment.id)}`); } },
-                ...((isOwnComment || canModerateAll) ? [{ text: "投稿を編集", onPress: () => { setEditingCommentId(comment.id); setEditingCommentText(comment.content); } }, { text: "投稿を削除", style: "destructive" as const, onPress: () => handleDeleteComment(comment.id) }] : []),
-                { text: "キャンセル", style: "cancel" },
-              ])} delayLongPress={350} style={{ marginBottom: 14 }}>
+              return <Pressable key={comment.id} onLongPress={() => setSelectedComment(comment)} delayLongPress={350} style={{ marginBottom: 14 }}>
                 <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 4 }}>
                   <Pressable onPress={() => router.push({ pathname: "/member-profile", params: { id: comment.author.id, legacyName: comment.author.name } })} accessibilityLabel={`${stripRankFromName(comment.author.name)}のプロフィールを表示`}>
                     <Image source={comment.author.avatar} style={{ width: 24, height: 24, borderRadius: 12 }} contentFit="cover" />
@@ -1363,6 +1364,23 @@ function ThreadDetailModal({
           </>}
         </View> : <View style={{ padding: 14, backgroundColor: colors.surface, borderTopWidth: 1, borderTopColor: colors.border }}><Text style={{ textAlign: "center", fontSize: 13, fontWeight: "700", color: colors.muted }}>コメント募集は終了しました</Text></View>}
       </KeyboardAvoidingView>
+
+      <Modal visible={selectedComment !== null} transparent animationType="fade" onRequestClose={() => setSelectedComment(null)}>
+        <Pressable onPress={() => setSelectedComment(null)} style={{ flex: 1, justifyContent: "flex-end", backgroundColor: "rgba(20,18,24,0.48)" }}>
+          <View style={{ backgroundColor: colors.background, borderTopLeftRadius: 22, borderTopRightRadius: 22, padding: 18, paddingBottom: 32 }}>
+            <Text style={{ fontSize: 16, fontWeight: "800", color: colors.foreground, marginBottom: 10 }}>コメントの操作</Text>
+            {selectedComment ? ([
+              { label: "返信", action: () => { setCommentText(`@${stripRankFromName(selectedComment.author.name)} `); requestAnimationFrame(() => commentInputRef.current?.focus()); } },
+              { label: "コピー", action: () => { void Clipboard.setStringAsync(selectedComment.content); } },
+              ...((selectedComment.author.id === viewerMemberId || canModerateAll) ? [
+                { label: "編集", action: () => { setEditingCommentId(selectedComment.id); setEditingCommentText(selectedComment.content); } },
+                { label: "削除", action: () => handleDeleteComment(selectedComment.id) },
+              ] : []),
+            ].map((item) => <Pressable key={item.label} onPress={() => { setSelectedComment(null); item.action(); }} style={{ paddingVertical: 13, borderBottomWidth: 0.5, borderBottomColor: colors.border }}><Text style={{ fontSize: 15, fontWeight: "700", color: item.label === "削除" ? colors.error : colors.foreground }}>{item.label}</Text></Pressable>)) : null}
+            <Pressable onPress={() => setSelectedComment(null)} style={{ paddingVertical: 14 }}><Text style={{ color: colors.muted, textAlign: "center" }}>キャンセル</Text></Pressable>
+          </View>
+        </Pressable>
+      </Modal>
 
       <Modal visible={showContestComposer} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setShowContestComposer(false)}>
         <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ flex: 1, backgroundColor: colors.background }}>

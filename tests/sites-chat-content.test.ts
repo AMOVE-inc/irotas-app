@@ -64,6 +64,14 @@ class ChatDatabase implements D1Database {
           const found = this.roomMembers.find((item) => item.roomId === values[0] && item.memberId === Number(values[1]) && !item.left);
           return (found ? { allowed: 1 } : null) as T;
         }
+        if (sql.includes("SELECT 1 AS active FROM chat_room_members")) {
+          const found = this.roomMembers.find((item) => item.roomId === values[0] && item.memberId === Number(values[1]) && !item.left);
+          return (found ? { active: 1 } : null) as T;
+        }
+        if (sql.includes("SELECT 1 AS left FROM chat_room_members")) {
+          const found = this.roomMembers.find((item) => item.roomId === values[0] && item.memberId === Number(values[1]) && item.left);
+          return (found ? { left: 1 } : null) as T;
+        }
         if (sql.includes("SELECT COUNT(*) AS count FROM chat_messages")) return { count: 0 } as T;
         if (sql.includes("SELECT content, image_url, created_at FROM chat_messages")) return null;
         if (sql.includes("SELECT room_id, sender_member_id FROM chat_messages")) {
@@ -140,12 +148,13 @@ class ChatDatabase implements D1Database {
           if (found) found.left = true;
         }
         if (sql.includes("INTO chat_messages") && !this.messages.some((message) => message.id === values[0])) {
+          const systemMessage = sql.includes("chat_leave_") || String(values[0]).startsWith("chat_leave_");
           this.messages.push({
             id: String(values[0]), room_id: String(values[1]), sender_member_id: Number(values[2]),
             sender_public_member_id: "IRO0099", sender_display_name: "運営テスト",
             sender_profile_json: JSON.stringify({ avatarUrl: "https://cdn.example/operator.png" }),
-            content: String(values[3]), image_url: values[4] ? String(values[4]) : null,
-            created_at: String(values[5]), updated_at: String(values[6]),
+            content: String(values[3]), image_url: systemMessage ? null : values[4] ? String(values[4]) : null,
+            created_at: String(values[systemMessage ? 4 : 5]), updated_at: String(values[systemMessage ? 5 : 6]),
           });
         }
         return { success: true };
@@ -246,10 +255,14 @@ describe("shared chat content API", () => {
 
     const renamed = await handleChatContentRequest(request(`/api/chats/${createdBody.room.id}`, "PATCH", { name: "新しい名前" }), env);
     expect(renamed?.status).toBe(200);
+    const direct = await handleChatContentRequest(request(`/api/chats/${createdBody.room.id}`), env);
+    expect((await direct?.json() as { room: { id: string } }).room.id).toBe(createdBody.room.id);
 
     authenticatedRequestMember.mockResolvedValue({ id: 10, role: "user", access_role: "member", account_status: "active" });
     const left = await handleChatContentRequest(request(`/api/chats/${createdBody.room.id}/members/IRO0010`, "DELETE"), env);
     expect(left?.status).toBe(200);
+    expect(db.messages.some((message) => message.content === "【IRO+ システム】友達Aが退出しました")).toBe(true);
+    expect((await handleChatContentRequest(request(`/api/chats/${createdBody.room.id}/members/IRO0010`, "DELETE"), env))?.status).toBe(409);
   });
 
   it("reuses one DM room for the same pair", async () => {

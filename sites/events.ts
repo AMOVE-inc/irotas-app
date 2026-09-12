@@ -335,7 +335,10 @@ function publicEvent(
     ? data.manualParticipantIds.filter((value): value is string => typeof value === "string" && Boolean(value.trim()))
     : [];
   const participantIds = [...new Set([...confirmed.map(publicId), ...manualParticipantIds])];
-  const cancelledParticipantIds = row.status === "cancelled" ? participantIds : [];
+  const cancelledParticipantIds = [...new Set([
+    ...cancellations.filter((item) => item.status === "approved").map(publicId),
+    ...(row.status === "cancelled" ? participantIds : []),
+  ])];
   const viewerParticipation = active.find((item) => item.member_id === viewerId)?.status ?? null;
   return {
     ...data,
@@ -585,7 +588,7 @@ async function notifyOrganizerParticipantCancellation(
 ) {
   const targetName = await eventChatMemberName(db, targetMemberId);
   const body = eventChatSystemContent(`${targetName}の参加がキャンセルされました`);
-  await notifyEventCancellation(db, targetMemberId, row.id, "イベント参加が取り消されました", body);
+  await notifyEventCancellation(db, targetMemberId, row.id, "イベントのキャンセルが確定しました", body);
   let data: Record<string, unknown> = {};
   try { data = JSON.parse(row.public_data_json) as Record<string, unknown>; } catch {}
   const chatId = typeof data.chatId === "string" && data.chatId ? data.chatId : eventChatId(row.id);
@@ -1307,6 +1310,10 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
       env.DB.prepare("UPDATE event_participations SET status = 'cancel_requested', updated_at = ? WHERE event_id = ? AND member_id = ?").bind(now, id, member.id),
     ]);
     await audit(env.DB, member.id, "event.cancellation_requested", id);
+    await notifyEventCancellation(
+      env.DB, member.id, id, "イベントのキャンセル申請を送りました",
+      `「${row.title}」のキャンセルを幹事へ申請しました。承認されるまで参加は確定したままです。`,
+    );
     await notifyEventCancellation(
       env.DB,
       row.organizer_member_id,
