@@ -725,7 +725,6 @@ export async function requestSetupCode(email: string) {
 export async function register(input: {
   email: string;
   password: string;
-  name: string;
   verificationCode: string;
 }) {
   return apiCall<{ success: boolean; sessionToken: string; user: AuthApiUser }>(

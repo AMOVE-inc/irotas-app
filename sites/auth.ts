@@ -696,9 +696,6 @@ async function register(request: Request, env: SitesEnv, db: D1Database) {
   const input = await readJson(request);
   const email = normalizeEmail(String(input.email ?? ""));
   const password = String(input.password ?? "");
-  const name = String(input.name ?? "")
-    .trim()
-    .slice(0, 80);
   const code = String(input.verificationCode ?? "");
   if (
     !/^\S+@\S+\.\S+$/.test(email) ||
@@ -786,7 +783,7 @@ async function register(request: Request, env: SitesEnv, db: D1Database) {
       )
       .bind(
         passwordHash,
-        name || email.split("@")[0],
+        email.split("@")[0],
         now,
         now,
         now,
@@ -806,7 +803,7 @@ async function register(request: Request, env: SitesEnv, db: D1Database) {
   const updated = {
     ...member,
     password_hash: passwordHash,
-    display_name: member.display_name || name || email.split("@")[0],
+    display_name: member.display_name || email.split("@")[0],
     last_signed_in_at: now,
   };
   const session = await createSession(db, member.id);

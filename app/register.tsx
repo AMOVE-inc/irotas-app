@@ -23,7 +23,6 @@ export default function RegisterScreen() {
   const colors = useColors();
   const router = useRouter();
   const { setUser, refresh } = useAuthContext();
-  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [verificationCode, setVerificationCode] = useState("");
   const [codeSent, setCodeSent] = useState(false);
@@ -34,10 +33,6 @@ export default function RegisterScreen() {
   const [codeLoading, setCodeLoading] = useState(false);
 
   const handleRegister = async () => {
-    if (!name.trim()) {
-      setError("名前を入力してください");
-      return;
-    }
     if (!email.trim()) {
       setError("メールアドレスを入力してください");
       return;
@@ -62,7 +57,6 @@ export default function RegisterScreen() {
       const result = await Api.register({
         email: email.trim(),
         password,
-        name: name.trim(),
         verificationCode,
       });
 
@@ -153,7 +147,7 @@ export default function RegisterScreen() {
                   lineHeight: 20,
                 }}
               >
-                Square決済時、または運営・部長として登録されたメールアドレスを入力してください。会員資格を確認して登録します。
+                IRO+にご登録のメールアドレスを入力してください。その後メールで届く認証コードを入力し、パスワードを設定してください。
               </Text>
             </View>
 
@@ -177,36 +171,6 @@ export default function RegisterScreen() {
                 </Text>
               </View>
             ) : null}
-
-            {/* Name Input */}
-            <View style={{ gap: 6 }}>
-              <Text
-                style={{
-                  fontSize: 14,
-                  fontWeight: "600",
-                  color: colors.foreground,
-                }}
-              >
-                名前
-              </Text>
-              <TextInput
-                value={name}
-                onChangeText={setName}
-                placeholder="表示名を入力"
-                placeholderTextColor={colors.muted}
-                autoCapitalize="words"
-                returnKeyType="next"
-                style={{
-                  backgroundColor: colors.background,
-                  borderRadius: 14,
-                  padding: 14,
-                  fontSize: 16,
-                  color: colors.foreground,
-                  borderWidth: 1,
-                  borderColor: colors.border,
-                }}
-              />
-            </View>
 
             {/* Email Input */}
             <View style={{ gap: 6 }}>
