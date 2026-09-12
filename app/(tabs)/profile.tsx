@@ -1067,8 +1067,9 @@ export default function ProfileScreen() {
           <Text style={{ fontSize: 14, fontWeight: "800", color: colors.foreground, marginBottom: 9 }}>イベント予定</Text>
           <View style={{ backgroundColor: colors.surface, borderRadius: 16, overflow: "hidden" }}>
             {participatingEventsLoading ? <View style={{ minHeight: 76, flexDirection: "row", alignItems: "center", justifyContent: "center", padding: 16 }}><ActivityIndicator size="small" color="#E8A0BF" /><Text style={{ marginLeft: 9, fontSize: 13, color: colors.muted }}>イベント予定を読み込んでいます…</Text></View> : participatingEvents.length ? participatingEvents.map((event, index) => {
-              const status = getEventParticipationStatus(event, user.id);
-              const organizer = isEventOrganizer(event, user.id);
+              const eventViewerId = isRealMember ? (authUser?.memberId ?? memberIdentity?.memberId ?? user.id) : user.id;
+              const status = getEventParticipationStatus(event, eventViewerId);
+              const organizer = isEventOrganizer(event, eventViewerId);
               const confirmed = status === "confirmed";
               return <Pressable key={event.id} onPress={() => router.push({ pathname: "/event-detail", params: { id: event.id } })} style={{ flexDirection: "row", alignItems: "center", padding: 12, borderTopWidth: index ? 0.5 : 0, borderTopColor: colors.border }}>
                 <Image source={event.image} style={{ width: 52, height: 52, borderRadius: 10 }} contentFit="cover" />

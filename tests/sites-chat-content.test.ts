@@ -27,6 +27,7 @@ type Message = {
 class ChatDatabase implements D1Database {
   messages: Message[] = [];
   writes: string[] = [];
+  notifiedMemberIds: number[] = [];
   memberRank = "regular";
   approvedClubMemberIds = new Set([9]);
   clubs = [{ id: "club-travel", name: "旅行部", leader_member_id: 10 }];
@@ -114,6 +115,8 @@ class ChatDatabase implements D1Database {
       },
       run: async () => {
         this.writes.push(sql);
+        if (sql.includes("INSERT OR IGNORE INTO in_app_notifications") && sql.includes("VALUES (?, ?, 'chat'"))
+          this.notifiedMemberIds.push(Number(values[1]));
         if (sql.includes("INSERT OR IGNORE INTO chat_rooms") && sql.includes("'club'")) {
           this.rooms.set(String(values[0]), { id: String(values[0]), name: String(values[1]), room_type: "club", source_id: String(values[2]), required_rank: null, created_by_member_id: null });
         }
@@ -183,6 +186,20 @@ describe("shared chat content API", () => {
     env = { DB: db } as unknown as SitesEnv;
     authenticatedRequestMember.mockResolvedValue({ id: 9, role: "user", access_role: "member", account_status: "active" });
     vi.mocked(canMemberAccessClub).mockImplementation(async (_database, clubId, memberId) => clubId === "club-travel" && (memberId === 10 || db.approvedClubMemberIds.has(memberId)));
+  });
+
+  it("notifies only directly mentioned members in a free chat", async () => {
+    db.roomMembers.push(
+      { roomId: "community-free-chat", memberId: 9, role: "member", left: false },
+      { roomId: "community-free-chat", memberId: 10, role: "member", left: false },
+      { roomId: "community-free-chat", memberId: 11, role: "member", left: false },
+    );
+    expect((await handleChatContentRequest(request("/api/chats/community-free-chat/messages", "POST", { content: "こんにちは" }), env))?.status).toBe(201);
+    expect(db.notifiedMemberIds).toEqual([]);
+    expect((await handleChatContentRequest(request("/api/chats/community-free-chat/messages", "POST", { content: "@everyone 集合です" }), env))?.status).toBe(201);
+    expect(db.notifiedMemberIds).toEqual([]);
+    expect((await handleChatContentRequest(request("/api/chats/community-free-chat/messages", "POST", { content: "@友達A こんにちは" }), env))?.status).toBe(201);
+    expect(db.notifiedMemberIds).toEqual([10]);
   });
 
   it("creates a room for each joined club and denies non-members, including administrators", async () => {

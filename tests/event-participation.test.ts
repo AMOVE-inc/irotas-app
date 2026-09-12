@@ -12,6 +12,10 @@ describe("event participation labels", () => {
     expect(getEventParticipationStatus(event, "other")).toBeNull();
   });
 
+  it("treats Discord manually confirmed participants as confirmed even without an app application", () => {
+    expect(getEventParticipationStatus({ ...event, recruitmentChannel: "discord", viewerParticipationStatus: "applied", participants: ["IRO0001"] }, "IRO0001")).toBe("confirmed");
+  });
+
   it("identifies the organizer even before a refreshed event includes the server flag", () => {
     expect(isEventOrganizer(event, "host")).toBe(true);
     expect(isEventOrganizer({ ...event, organizerProfileId: "organizer", isOrganizer: false }, "organizer")).toBe(true);

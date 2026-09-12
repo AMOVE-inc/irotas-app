@@ -64,6 +64,16 @@ type CancellationRow = {
   status: "pending" | "approved" | "rejected";
 };
 
+function isImportedEventConfirmedParticipant(row: EventRow, memberPublicId: string, participations: ParticipationRow[] = []): boolean {
+  if (!row.id.startsWith("discord-event-")) return false;
+  try {
+    const data = JSON.parse(row.public_data_json) as { manualParticipantIds?: unknown };
+    if (Array.isArray(data.manualParticipantIds) && data.manualParticipantIds.includes(memberPublicId)) return true;
+  } catch {}
+  return participations.some((participation) => participation.public_member_id === memberPublicId &&
+    (participation.status === "confirmed" || participation.status === "cancel_requested"));
+}
+
 type StoredEventComment = {
   id: string;
   event_id: string;
@@ -739,7 +749,7 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
     const cancellationsByEvent = byEvent(cancellations.results ?? []);
     const favoriteIds = new Set((favorites.results ?? []).map((item) => item.event_id));
     const events = await Promise.all((rows.results ?? []).filter((row) => !DELETED_EVENT_IDS.has(row.id) && !deletedIds.has(row.id)).map(async (row) => {
-      if (row.event_type === "club" && row.club_id && !await canMemberAccessClub(env.DB!, row.club_id, member.id, admin))
+      if (row.event_type === "club" && row.club_id && !isImportedEventConfirmedParticipant(row, memberPublicId, participationsByEvent.get(row.id)) && !await canMemberAccessClub(env.DB!, row.club_id, member.id, admin))
         return lockedClubEventPreview(row);
       return publicEvent(row, member.id, memberPublicId, elevated,
         participationsByEvent.get(row.id) ?? [], cancellationsByEvent.get(row.id) ?? [], favoriteIds.has(row.id));
@@ -751,8 +761,14 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
     if (DELETED_EVENT_IDS.has(requestedEventId) || await isDeletedImportedEvent(env.DB, requestedEventId)) return responseJson({ error: "イベントが見つかりません" }, 404);
     const row = await eventRow(env.DB, requestedEventId) ?? await materializeImportedEvent(env.DB, requestedEventId);
     if (!row) return responseJson({ error: "イベントが見つかりません" }, 404);
-    if (row.event_type === "club" && row.club_id && !await canMemberAccessClub(env.DB, row.club_id, member.id, admin))
-      return responseJson({ error: "この部活の部員のみ詳細を閲覧できます" }, 403);
+    if (row.event_type === "club" && row.club_id && !await canMemberAccessClub(env.DB, row.club_id, member.id, admin)) {
+      const participation = row.id.startsWith("discord-event-")
+        ? await env.DB.prepare("SELECT status FROM event_participations WHERE event_id = ? AND member_id = ? LIMIT 1")
+          .bind(row.id, member.id).first<{ status: ParticipationRow["status"] }>() : null;
+      const isConfirmed = isImportedEventConfirmedParticipant(row, memberPublicId) ||
+        participation?.status === "confirmed" || participation?.status === "cancel_requested";
+      if (!isConfirmed) return responseJson({ error: "この部活の部員のみ詳細を閲覧できます" }, 403);
+    }
     return responseJson({ event: await hydratedEvent(env.DB, row, member.id, elevated, memberPublicId) });
   }
   if (commentsMatch || commentMatch) {

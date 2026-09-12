@@ -1,4 +1,5 @@
 import { RANK_LABELS, type Club, type Member, type MemberRank } from "../constants/mock-data";
+export { mentionsViewer } from "./mention-matching";
 
 export type MentionGroup = {
   id: string;
@@ -61,16 +62,6 @@ export function insertMention(text: string, label: string): string {
 
 export function extractMentionLabels(content: string): string[] {
   return [...content.matchAll(/@([^\s@]+)/g)].map((match) => match[1].replace(/[、。！？!?.,，．]+$/g, ""));
-}
-
-/** Match a viewer's exact mention labels, not similarly named people or clubs. */
-export function mentionsViewer(content: string, labels: readonly string[]): boolean {
-  if (!content.includes("@")) return false;
-  return labels.some((label) => {
-    if (!label.trim()) return false;
-    const escaped = label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    return new RegExp(`@${escaped}(?=$|[\\s、。！？!?.,，．:：;；)）\\]｝}])`, "u").test(content);
-  });
 }
 
 export function getMentionedMemberIds(

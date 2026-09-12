@@ -1,5 +1,6 @@
 import { authenticatedRequestMember } from "./auth";
 import { canMemberAccessClub } from "./clubs";
+import { mentionsViewer } from "../lib/mention-matching";
 import type { D1Database, SitesEnv } from "./platform-types";
 
 const MESSAGES_PATH = /^\/api\/chats\/([^/]+)\/messages$/;
@@ -39,6 +40,11 @@ type ReactionRow = {
   member_id: number;
   public_member_id: string | null;
 };
+
+function isFreeChatRoom(room: RoomRow): boolean {
+  return room.room_type === "club" || room.id === "community-free-chat" ||
+    room.id === "branch-kanto-free" || room.id === "branch-kansai-free";
+}
 
 function json(body: unknown, status = 200) {
   return Response.json(body, {
@@ -744,14 +750,30 @@ export async function handleChatContentRequest(
         .bind(now, roomId).run();
       const author = await env.DB.prepare("SELECT display_name FROM members WHERE id = ? LIMIT 1")
         .bind(member.id).first<{ display_name: string }>();
-      // Notify members of private/group rooms; public rooms use their live unread
-      // badges, avoiding a notification blast to every community member.
-      await env.DB.prepare(`INSERT OR IGNORE INTO in_app_notifications
-        (id, target_member_id, type, title, body, chat_room_id, target_path, created_at)
-        SELECT ? || ':' || crm.member_id, crm.member_id, 'chat', ?, ?, ?, ?, ?
-        FROM chat_room_members crm
-        WHERE crm.room_id = ? AND crm.left_at IS NULL AND crm.member_id != ?`)
-        .bind(`chat-message:${id}`, room.name, `${author?.display_name || "メンバー"}: ${(content || "画像が送信されました").replace(/\s+/g, " ").slice(0, 160)}`, roomId, `/chat?id=${encodeURIComponent(roomId)}`, now, roomId, member.id).run();
+      const notificationBody = `${author?.display_name || "メンバー"}: ${(content || "画像が送信されました").replace(/\s+/g, " ").slice(0, 160)}`;
+      if (isFreeChatRoom(room)) {
+        // 全体・支部・部活のフリーチャットでは本人宛ての @メンションだけをベルへ送る。
+        if (content.includes("@")) {
+          const recipients = await env.DB.prepare(`SELECT crm.member_id, m.display_name, m.public_member_id
+            FROM chat_room_members crm JOIN members m ON m.id = crm.member_id
+            WHERE crm.room_id = ? AND crm.left_at IS NULL AND crm.member_id != ?`)
+            .bind(roomId, member.id).all<{ member_id: number; display_name: string; public_member_id: string | null }>();
+          const statements = (recipients.results ?? [])
+            .filter((recipient) => mentionsViewer(content, [recipient.display_name, recipient.public_member_id ?? ""]))
+            .map((recipient) => env.DB!.prepare(`INSERT OR IGNORE INTO in_app_notifications
+              (id, target_member_id, type, title, body, chat_room_id, target_path, created_at)
+              VALUES (?, ?, 'chat', ?, ?, ?, ?, ?)`)
+              .bind(`chat-message:${id}:${recipient.member_id}`, recipient.member_id, room.name, notificationBody, roomId, `/chat?id=${encodeURIComponent(roomId)}`, now));
+          if (statements.length) await env.DB.batch(statements);
+        }
+      } else {
+        await env.DB.prepare(`INSERT OR IGNORE INTO in_app_notifications
+          (id, target_member_id, type, title, body, chat_room_id, target_path, created_at)
+          SELECT ? || ':' || crm.member_id, crm.member_id, 'chat', ?, ?, ?, ?, ?
+          FROM chat_room_members crm
+          WHERE crm.room_id = ? AND crm.left_at IS NULL AND crm.member_id != ?`)
+          .bind(`chat-message:${id}`, room.name, notificationBody, roomId, `/chat?id=${encodeURIComponent(roomId)}`, now, roomId, member.id).run();
+      }
       await audit(env.DB, member.id, "chat.message_created", id);
       const rows = await messageRows(env.DB, roomId);
       const created = rows.find((item) => item.id === id);

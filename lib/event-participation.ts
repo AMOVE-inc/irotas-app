@@ -17,6 +17,8 @@ export function isEventOrganizer(event: Event, memberId: string): boolean {
 }
 
 export function getEventParticipationStatus(event: Event, memberId: string): EventParticipationStatus {
+  // Discordで確定した参加者はアプリの申込レコードを持たないことがある。
+  if (event.recruitmentChannel === "discord" && event.participants.includes(memberId)) return "confirmed";
   // Events returned by the API carry a viewer-specific status.  It is the
   // source of truth while a participant list can be stale during refreshes.
   if (event.viewerParticipationStatus) {

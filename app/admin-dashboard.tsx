@@ -1246,8 +1246,8 @@ export default function AdminDashboardScreen() {
 
         {activeTab === "mee6" && (
           <View style={{ padding: 14, borderWidth: 1, borderColor: colors.border, borderRadius: 14, backgroundColor: colors.surface }}>
-            <Text style={{ fontSize: 18, fontWeight: "800", color: colors.foreground }}>会員のMee6レベル（上位順）</Text>
-            <Text style={{ color: colors.muted, fontSize: 12, marginTop: 6 }}>アプリの有効会員を全件表示。未照合は「未取込」とし、Discord IDのない会員を0扱いしません。取込済み {mee6Members.filter((member) => member.mee6Level !== null).length}／{mee6Members.length}名。</Text>
+            <Text style={{ fontSize: 18, fontWeight: "800", color: colors.foreground }}>会員レベル（上位順）</Text>
+            <Text style={{ color: colors.muted, fontSize: 12, marginTop: 6 }}>Mee6から移行したXPにアプリ内の活動で得たXPを加算した現在のレベルです。未照合は「未取込」とし、Discord IDのない会員を0扱いしません。取込済み {mee6Members.filter((member) => member.mee6Level !== null).length}／{mee6Members.length}名。</Text>
             {mee6ImportResult ? <Text style={{ color: "#237A3B", marginTop: 8 }}>{mee6ImportResult}</Text> : null}
             <Pressable disabled={mee6Importing} onPress={async () => {
               setMee6Importing(true);
@@ -1283,7 +1283,7 @@ export default function AdminDashboardScreen() {
               <View key={member.memberId} style={{ flexDirection: "row", paddingVertical: 8, borderTopWidth: 0.5, borderColor: colors.border, alignItems: "center" }}>
                 <Text style={{ width: 40, color: colors.muted }}>{index + 1}位</Text>
                 <View style={{ flex: 1 }}><Text style={{ color: colors.foreground, fontWeight: "700" }}>{member.displayName}</Text><Text style={{ color: colors.muted, fontSize: 11 }}>{member.memberId}{!member.discordLinked ? "・Discord未連携" : ""}</Text></View>
-                <Text style={{ color: member.mee6Level === null ? colors.muted : "#5865F2", fontWeight: "800" }}>{member.mee6Level === null ? "未取込" : `Lv.${member.mee6Level}`}</Text>
+                <View style={{ alignItems: "flex-end" }}><Text style={{ color: member.mee6Level === null ? colors.muted : "#5865F2", fontWeight: "800" }}>{member.mee6Level === null ? "未取込" : `Lv.${member.currentLevel}`}</Text>{member.mee6Level !== null ? <Text style={{ color: colors.muted, fontSize: 10 }}>移行時 Lv.{member.mee6Level}</Text> : null}</View>
               </View>
             ))}
           </View>

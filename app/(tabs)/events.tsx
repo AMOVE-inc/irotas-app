@@ -880,6 +880,7 @@ export default function EventsScreen() {
     DEFAULT_EVENT_SORT_ORDER,
   );
   const [sortMenuVisible, setSortMenuVisible] = useState(false);
+  const [migrationNoticeVisible, setMigrationNoticeVisible] = useState(false);
   const [detailSearchVisible, setDetailSearchVisible] = useState(false);
   const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
   const [budgetMin, setBudgetMin] = useState("none");
@@ -1084,6 +1085,15 @@ export default function EventsScreen() {
         >
           イベント
         </Text>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Discordからのイベント移行について"
+          onPress={() => setMigrationNoticeVisible(true)}
+          style={{ flexDirection: "row", alignItems: "center", gap: 5, paddingHorizontal: 10, paddingVertical: 8 }}
+        >
+          <IconSymbol name="info.circle.fill" size={19} color="#C05B88" />
+          <Text style={{ color: "#C05B88", fontSize: 13, fontWeight: "700" }}>移行について</Text>
+        </Pressable>
       </View>
 
       <FlatList
@@ -1478,6 +1488,16 @@ export default function EventsScreen() {
           <IconSymbol name="plus" size={27} color="#FFF" />
         </Pressable>
       ) : null}
+
+      <Modal visible={migrationNoticeVisible} transparent animationType="fade" onRequestClose={() => setMigrationNoticeVisible(false)}>
+        <Pressable onPress={() => setMigrationNoticeVisible(false)} style={{ flex: 1, backgroundColor: "#0006", justifyContent: "center", paddingHorizontal: 24 }}>
+          <Pressable onPress={() => {}} style={{ backgroundColor: colors.background, borderRadius: 18, padding: 22 }}>
+            <Text style={{ fontSize: 18, fontWeight: "800", color: colors.foreground, marginBottom: 12 }}>Discordからのイベント移行について</Text>
+            <Text style={{ fontSize: 14, lineHeight: 23, color: colors.foreground }}>Discordで募集を開始したイベントは、申込・参加確定をDiscordで行います。アプリではイベント情報と、幹事が登録した参加確定者を確認できます。</Text>
+            <Pressable onPress={() => setMigrationNoticeVisible(false)} style={{ alignSelf: "flex-end", marginTop: 20, paddingVertical: 8, paddingHorizontal: 12 }}><Text style={{ color: "#C05B88", fontWeight: "800" }}>閉じる</Text></Pressable>
+          </Pressable>
+        </Pressable>
+      </Modal>
 
       <Modal
         visible={sortMenuVisible}

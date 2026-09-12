@@ -99,11 +99,11 @@ function FieldLabel({ children }: { children: string }) {
   return <Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground, marginBottom: 7, marginTop: 16 }}>{label}{required ? <Text style={{ color: colors.error }}> 必須</Text> : null}</Text>;
 }
 
-function MemberPicker({ selectedIds, onChange, members, viewerMemberId, loading, title = "同席者を選択" }: { selectedIds: string[]; onChange: (ids: string[]) => void; members: Api.PublicMember[]; viewerMemberId: string; loading: boolean; title?: string }) {
+function MemberPicker({ selectedIds, onChange, members, viewerMemberId, loading, title = "同席者を選択", allowSelf = false }: { selectedIds: string[]; onChange: (ids: string[]) => void; members: Api.PublicMember[]; viewerMemberId: string; loading: boolean; title?: string; allowSelf?: boolean }) {
   const colors = useColors();
   const [visible, setVisible] = useState(false);
   const [query, setQuery] = useState("");
-  const candidates = members.filter((member) => member.id !== viewerMemberId && (`${member.displayName} ${member.id}`).toLowerCase().includes(query.toLowerCase()));
+  const candidates = members.filter((member) => (allowSelf || member.id !== viewerMemberId) && (`${member.displayName} ${member.id}`).toLowerCase().includes(query.toLowerCase()));
   return (
     <>
       <Pressable onPress={() => setVisible(true)} style={{ minHeight: 48, borderRadius: 12, backgroundColor: colors.surface, padding: 12, borderWidth: 1, borderColor: colors.border }}>
@@ -295,7 +295,7 @@ export default function CreateEventScreen() {
           <FieldLabel>参加申込の受付先</FieldLabel>
           <View style={{ flexDirection: "row", gap: 10 }}>{(["discord", "app"] as const).map((value) => <Pressable key={value} onPress={() => setRecruitmentChannel(value)} style={{ flex: 1, paddingVertical: 11, alignItems: "center", borderRadius: 12, borderWidth: 1, borderColor: recruitmentChannel === value ? "#6B5A96" : colors.border, backgroundColor: recruitmentChannel === value ? "#F1ECFA" : colors.surface }}><Text style={{ fontWeight: "800", color: recruitmentChannel === value ? "#5B4788" : colors.foreground }}>{value === "discord" ? "Discordで受付" : "アプリで受付"}</Text></Pressable>)}</View>
           <Text style={{ marginTop: 7, fontSize: 12, lineHeight: 18, color: colors.muted }}>Discordで受付中はアプリ内の参加申込を停止します。Discordで参加者を確定後、イベント情報を編集して参加者を反映してください。</Text>
-          {recruitmentChannel === "discord" ? <><FieldLabel>Discordで確定した参加者（任意）</FieldLabel><MemberPicker selectedIds={confirmedParticipantIds} onChange={setConfirmedParticipantIds} members={memberDirectory} viewerMemberId={viewerMemberId} loading={memberDirectoryLoading} title="参加確定者を選択" /><Text style={{ marginTop: 7, fontSize: 12, lineHeight: 18, color: colors.muted }}>Discordで募集を続ける間はここで確定者を記録できます。会員の登録がない方は選択できません。</Text></> : null}
+          {recruitmentChannel === "discord" ? <><FieldLabel>Discordで確定した参加者（任意）</FieldLabel><MemberPicker selectedIds={confirmedParticipantIds} onChange={setConfirmedParticipantIds} members={memberDirectory} viewerMemberId={viewerMemberId} loading={memberDirectoryLoading} title="参加確定者を選択" allowSelf /><Text style={{ marginTop: 7, fontSize: 12, lineHeight: 18, color: colors.muted }}>Discordで募集を続ける間はここで確定者を記録できます。会員の登録がない方は選択できません。</Text></> : null}
         </> : null}
 
         <FieldLabel>{eventType === "club" ? "店名・会場名（任意）" : "店名 *"}</FieldLabel><TextInput value={restaurantName} onChangeText={setRestaurantName} placeholder={eventType === "club" ? "例：代々木公園、〇〇スタジアム" : "店舗名"} placeholderTextColor={colors.muted} style={inputStyle} />

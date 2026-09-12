@@ -30,7 +30,7 @@ export async function handleMee6LevelsRequest(request: Request, env: SitesEnv): 
     const result = await env.DB.prepare(`SELECT id, public_member_id, display_name, discord_user_id, xp, member_rank,
       mee6_level, mee6_imported_at FROM members WHERE account_status = 'active'
       AND COALESCE(json_extract(profile_json, '$.isTestAccount'), 0) <> 1
-      ORDER BY COALESCE(mee6_level, -1) DESC, COALESCE(xp, 0) DESC, id`).all<MemberRow>();
+      ORDER BY CASE WHEN mee6_level IS NULL THEN 1 ELSE 0 END, COALESCE(xp, 0) DESC, id`).all<MemberRow>();
     const members = (result.results ?? []).map((row) => ({
       memberId: row.public_member_id ?? `member-${row.id}`,
       displayName: row.display_name,
