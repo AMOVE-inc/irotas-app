@@ -754,16 +754,26 @@ export async function handleChatContentRequest(
       if (isFreeChatRoom(room)) {
         // 全体・支部・部活のフリーチャットでは本人宛ての @メンションだけをベルへ送る。
         if (content.includes("@")) {
-          const recipients = await env.DB.prepare(`SELECT crm.member_id, m.display_name, m.public_member_id
-            FROM chat_room_members crm JOIN members m ON m.id = crm.member_id
-            WHERE crm.room_id = ? AND crm.left_at IS NULL AND crm.member_id != ?`)
-            .bind(roomId, member.id).all<{ member_id: number; display_name: string; public_member_id: string | null }>();
-          const statements = (recipients.results ?? [])
-            .filter((recipient) => mentionsViewer(content, [recipient.display_name, recipient.public_member_id ?? ""]))
+          const recipients = await env.DB.prepare(`SELECT id, display_name, public_member_id, branches_json, role, access_role
+            FROM members WHERE account_status = 'active' AND id != ?`)
+            .bind(member.id).all<{ id: number; display_name: string; public_member_id: string | null; branches_json: string | null; role: string | null; access_role: string | null }>();
+          const mentioned = (recipients.results ?? [])
+            .filter((recipient) => mentionsViewer(content, [recipient.display_name, recipient.public_member_id ?? ""]));
+          const eligible = (await Promise.all(mentioned.map(async (recipient) => {
+            if (room.room_type === "club") return room.source_id && await canMemberAccessClub(env.DB!, room.source_id, recipient.id) ? recipient : null;
+            if (room.id === "branch-kanto-free" || room.id === "branch-kansai-free") {
+              if (recipient.role === "admin" || recipient.access_role === "admin" || recipient.access_role === "operator") return recipient;
+              let branches: string[] = [];
+              try { branches = JSON.parse(recipient.branches_json ?? "[]") as string[]; } catch {}
+              return branches.includes(room.id === "branch-kanto-free" ? "kanto" : "kansai") ? recipient : null;
+            }
+            return recipient;
+          }))).filter((recipient): recipient is NonNullable<typeof recipient> => Boolean(recipient));
+          const statements = eligible
             .map((recipient) => env.DB!.prepare(`INSERT OR IGNORE INTO in_app_notifications
               (id, target_member_id, type, title, body, chat_room_id, target_path, created_at)
               VALUES (?, ?, 'chat', ?, ?, ?, ?, ?)`)
-              .bind(`chat-message:${id}:${recipient.member_id}`, recipient.member_id, room.name, notificationBody, roomId, `/chat?id=${encodeURIComponent(roomId)}`, now));
+              .bind(`chat-message:${id}:${recipient.id}`, recipient.id, room.name, notificationBody, roomId, `/chat?id=${encodeURIComponent(roomId)}`, now));
           if (statements.length) await env.DB.batch(statements);
         }
       } else {

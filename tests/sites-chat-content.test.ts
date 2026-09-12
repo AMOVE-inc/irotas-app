@@ -92,6 +92,8 @@ class ChatDatabase implements D1Database {
         return null;
       },
       all: async <T>() => {
+        if (sql.includes("SELECT id, display_name, public_member_id, branches_json, role, access_role"))
+          return { success: true, results: this.members.filter((member) => member.id !== Number(values[0])).map((member) => ({ ...member, branches_json: '["kanto"]', role: "user", access_role: "member" })) as T[] };
         if (sql.includes("SELECT m.id AS member_id") && sql.includes("club_memberships cm")) {
           const memberIds = [...new Set([...this.approvedClubMemberIds, Number(values[0])])].filter(Number.isFinite);
           return { success: true, results: memberIds.map((memberId) => ({ member_id: memberId, member_role: memberId === values[0] ? "owner" : "member" })) as T[] };
@@ -189,11 +191,7 @@ describe("shared chat content API", () => {
   });
 
   it("notifies only directly mentioned members in a free chat", async () => {
-    db.roomMembers.push(
-      { roomId: "community-free-chat", memberId: 9, role: "member", left: false },
-      { roomId: "community-free-chat", memberId: 10, role: "member", left: false },
-      { roomId: "community-free-chat", memberId: 11, role: "member", left: false },
-    );
+    // Global free chat can be read without joining chat_room_members first.
     expect((await handleChatContentRequest(request("/api/chats/community-free-chat/messages", "POST", { content: "こんにちは" }), env))?.status).toBe(201);
     expect(db.notifiedMemberIds).toEqual([]);
     expect((await handleChatContentRequest(request("/api/chats/community-free-chat/messages", "POST", { content: "@everyone 集合です" }), env))?.status).toBe(201);
