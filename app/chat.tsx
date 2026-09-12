@@ -292,6 +292,7 @@ export default function ChatScreen() {
   }, []);
 
   const [room, setRoom] = useState(() => getRoomById(id ?? ""));
+  const [clubAccessDenied, setClubAccessDenied] = useState(false);
   const [roomParticipants, setRoomParticipants] = useState<string[]>(
     () => getRoomById(id ?? "")?.participants ?? []
   );
@@ -349,6 +350,8 @@ export default function ChatScreen() {
   // 初回起動時: プロフィール画像と永続化メッセージを読み込む
   useEffect(() => {
     if (!id) return;
+    setClubAccessDenied(false);
+    if (id.startsWith("club-chat-")) setMessages([]);
     setIntroductionHydrated(id !== "board-introduction");
     if (id === "board-introduction") {
       setHasOpenedIntroduction(null);
@@ -370,7 +373,12 @@ export default function ChatScreen() {
         setRoom(r);
         setRoomParticipants([...r.participants]);
       }
-      Api.getSharedChatMessages(id).then(applySharedMessages).catch(async () => {
+      Api.getSharedChatMessages(id).then(applySharedMessages).catch(async (error) => {
+        if (id.startsWith("club-chat-")) {
+          setMessages([]);
+          if (error instanceof Api.ApiError && (error.statusCode === 403 || error.statusCode === 404)) setClubAccessDenied(true);
+          return;
+        }
         // 旧移行チャットは共有DBへの切替対象外でも、既存履歴を引き続き表示する。
         const stored = await loadMessagesFromStorage(id);
         setMessages([...(id === "board-introduction" ? [] : getMessages(id)), ...stored]
@@ -387,11 +395,17 @@ export default function ChatScreen() {
       }
       Api.getSharedChatRooms().then((sharedRooms) => {
         const sharedRoom = sharedRooms.find((item) => item.id === id);
-        if (!sharedRoom) return;
+        if (!sharedRoom) {
+          if (id.startsWith("club-chat-")) setClubAccessDenied(true);
+          return;
+        }
+        setClubAccessDenied(false);
         const normalized = sharedRoom as unknown as ChatRoom;
         setRoom(normalized);
         setRoomParticipants([...normalized.participants]);
-      }).catch(() => {}).finally(() => setIsLoadingRoom(false));
+      }).catch(() => {
+        if (id.startsWith("club-chat-")) setClubAccessDenied(true);
+      }).finally(() => setIsLoadingRoom(false));
       Api.getMemberDirectory().then(setDirectory).catch(() => {});
     }).catch(() => setIsLoadingRoom(false));
     return () => clearTimeout(loadingFallback);
@@ -400,7 +414,12 @@ export default function ChatScreen() {
   // 共有メッセージの編集・削除・リアクションを、参加者全員の画面へ反映する。
   useEffect(() => {
     if (!id) return;
-    const refresh = () => { void Api.getSharedChatMessages(id).then(applySharedMessages).catch(() => {}); };
+    const refresh = () => { void Api.getSharedChatMessages(id).then(applySharedMessages).catch((error) => {
+      if (id.startsWith("club-chat-") && error instanceof Api.ApiError && (error.statusCode === 403 || error.statusCode === 404)) {
+        setMessages([]);
+        setClubAccessDenied(true);
+      }
+    }); };
     const timer = setInterval(refresh, 1500);
     return () => clearInterval(timer);
   }, [id, applySharedMessages]);
@@ -581,7 +600,7 @@ export default function ChatScreen() {
     }
   }, [id, introductionHydrated, hasOpenedIntroduction]);
 
-  if (!room) {
+  if ((!room || room.id !== id) && !clubAccessDenied) {
     return (
       <ScreenContainer edges={["top", "left", "right"]}>
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
@@ -591,25 +610,27 @@ export default function ChatScreen() {
     );
   }
 
-  const isBranchRoom = room.id === "branch-kanto-free" ? authUser?.branches?.includes("kanto") : room.id === "branch-kansai-free" ? authUser?.branches?.includes("kansai") : false;
-  if (!canAccessChatRoom(room, viewerMemberId, (authUser?.memberRank ?? CURRENT_USER.rank) as typeof CURRENT_USER.rank, userIsAdmin) && room.id !== "board-announcement" && room.id !== "board-introduction" && !isBranchRoom) {
+  const isBranchRoom = room?.id === "branch-kanto-free" ? authUser?.branches?.includes("kanto") : room?.id === "branch-kansai-free" ? authUser?.branches?.includes("kansai") : false;
+  if (clubAccessDenied || (room && !canAccessChatRoom(room, viewerMemberId, (authUser?.memberRank ?? CURRENT_USER.rank) as typeof CURRENT_USER.rank, userIsAdmin) && room.id !== "board-announcement" && room.id !== "board-introduction" && !isBranchRoom)) {
     return (
       <ScreenContainer edges={["top", "left", "right"]}>
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: 24 }}>
           <IconSymbol name="lock.fill" size={40} color={colors.muted} />
           <Text style={{ fontSize: 17, fontWeight: "700", color: colors.foreground, marginTop: 14 }}>このチャットは閲覧できません</Text>
           <Text style={{ fontSize: 13, lineHeight: 20, color: colors.muted, textAlign: "center", marginTop: 6 }}>
-            ランク専用チャットは同じランクの会員、その他のチャットは参加者だけが閲覧できます。
+            部活チャットは承認済みの部員、その他のチャットは参加者だけが閲覧できます。
           </Text>
         </View>
       </ScreenContainer>
     );
   }
 
+  if (!room) return null;
+
   const typeLabel = room.id === "board-announcement" ? "お知らせ" : room.type === "event" ? "イベント" : room.type === "board" ? "掲示板" : room.type === "rank" ? "ランク専用" : room.type === "group" ? "友達グループ" : room.type === "dm" ? "DM" : "部活動";
   const typeColor = room.type === "event" ? "#E8A0BF" : room.type === "board" ? "#A7C7E7" : room.type === "rank" ? "#F59E0B" : room.type === "group" ? "#5B9BD5" : room.type === "dm" ? "#FF9500" : "#34C759";
   const firstUnreadIndex = Math.max(0, messages.length - Math.min(messages.length, Math.max(0, Number(unreadCountParam ?? 0))));
-  const canManageRoom = userIsAdmin || room.createdBy === viewerMemberId;
+  const canManageRoom = room.type !== "club" && (userIsAdmin || room.createdBy === viewerMemberId);
   const canInviteMembers = canManageRoom && room.type !== "rank" && room.type !== "event" && room.type !== "dm";
   const canPostAnnouncement = canPostToChat(authUser?.role, room.id, authUser?.accessRole);
   const sharedInviteCandidates = directory.filter((member) => member.id !== viewerMemberId && !roomParticipants.includes(member.id));
@@ -1083,7 +1104,7 @@ export default function ChatScreen() {
                 </View>
               );
             })}
-            {room.type !== "rank" ? (
+            {room.type !== "rank" && room.type !== "club" ? (
               <Pressable
                 onPress={() => Alert.alert("チャットから退出", "このチャットから退出しますか？退出後は、再度招待されるまで閲覧できません。", [
                   { text: "キャンセル", style: "cancel" },

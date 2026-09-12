@@ -135,7 +135,69 @@ async function ensureEventRoom(db: D1Database, roomId: string) {
   return roomById(db, roomId);
 }
 
-async function ensureKnownRoom(db: D1Database, roomId: string) {
+async function syncClubRoom(db: D1Database, club: { id: string; name: string; leader_member_id: number | null }) {
+  const roomId = `club-chat-${club.id}`;
+  if (!validRoomId(roomId)) return null;
+  const now = new Date().toISOString();
+  const existingRoom = await roomById(db, roomId);
+  if (!existingRoom) await db.prepare(`INSERT OR IGNORE INTO chat_rooms
+    (id, name, room_type, source_id, created_at, updated_at)
+    VALUES (?, ?, 'club', ?, ?, ?)`)
+    .bind(roomId, `${club.name}チャット`, club.id, now, now).run();
+  const desired = await db.prepare(`SELECT m.id AS member_id,
+      CASE WHEN m.id = ? THEN 'owner' ELSE 'member' END AS member_role
+    FROM members m WHERE m.account_status = 'active' AND
+      (m.id = ? OR EXISTS (SELECT 1 FROM club_memberships cm
+        WHERE cm.club_id = ? AND cm.member_id = m.id AND cm.status = 'approved'))`)
+    .bind(club.leader_member_id, club.leader_member_id, club.id)
+    .all<{ member_id: number; member_role: string }>();
+  const current = await db.prepare(`SELECT member_id, member_role FROM chat_room_members
+    WHERE room_id = ? AND left_at IS NULL`).bind(roomId).all<{ member_id: number; member_role: string }>();
+  const currentRoles = new Map((current.results ?? []).map((item) => [item.member_id, item.member_role]));
+  const expected = desired.results ?? [];
+  if (expected.length === currentRoles.size && expected.every((item) => currentRoles.get(item.member_id) === item.member_role))
+    return roomById(db, roomId);
+  // 部員の承認・退部を毎回反映し、過去に参加していた人へ通知や参加者情報を漏らさない。
+  await db.prepare(`INSERT INTO chat_room_members (room_id, member_id, member_role, joined_at, left_at)
+    SELECT ?, m.id, CASE WHEN m.id = ? THEN 'owner' ELSE 'member' END, ?, NULL
+    FROM members m
+    WHERE m.account_status = 'active' AND
+      (m.id = ? OR EXISTS (SELECT 1 FROM club_memberships cm
+        WHERE cm.club_id = ? AND cm.member_id = m.id AND cm.status = 'approved'))
+    ON CONFLICT(room_id, member_id) DO UPDATE SET
+      member_role = excluded.member_role, left_at = NULL`)
+    .bind(roomId, club.leader_member_id, now, club.leader_member_id, club.id).run();
+  await db.prepare(`UPDATE chat_room_members SET left_at = ?
+    WHERE room_id = ? AND left_at IS NULL AND member_id NOT IN (
+      SELECT m.id FROM members m WHERE m.account_status = 'active' AND
+        (m.id = ? OR EXISTS (SELECT 1 FROM club_memberships cm
+          WHERE cm.club_id = ? AND cm.member_id = m.id AND cm.status = 'approved'))
+    )`).bind(now, roomId, club.leader_member_id, club.id).run();
+  return roomById(db, roomId);
+}
+
+async function ensureClubRoom(db: D1Database, roomId: string, syncMembers = false) {
+  const clubId = roomId.startsWith("club-chat-") ? roomId.slice("club-chat-".length) : "";
+  if (!clubId) return null;
+  const club = await db.prepare("SELECT id, name, leader_member_id FROM clubs WHERE id = ? AND status = 'active' LIMIT 1")
+    .bind(clubId).first<{ id: string; name: string; leader_member_id: number | null }>();
+  if (!club) return null;
+  const existing = await roomById(db, roomId);
+  return existing && !syncMembers ? existing : syncClubRoom(db, club);
+}
+
+async function ensureClubRooms(db: D1Database, memberId: number) {
+  const clubs = await db.prepare(`SELECT c.id, c.name, c.leader_member_id FROM clubs c
+    WHERE c.status = 'active' AND (c.leader_member_id = ? OR EXISTS (
+      SELECT 1 FROM club_memberships cm
+      WHERE cm.club_id = c.id AND cm.member_id = ? AND cm.status = 'approved'))`)
+    .bind(memberId, memberId)
+    .all<{ id: string; name: string; leader_member_id: number | null }>();
+  for (const club of clubs.results ?? []) await syncClubRoom(db, club);
+}
+
+async function ensureKnownRoom(db: D1Database, roomId: string, syncClubMembers = false) {
+  if (roomId.startsWith("club-chat-")) return ensureClubRoom(db, roomId, syncClubMembers);
   const existing = await roomById(db, roomId);
   if (existing) {
     // 支部フリーチャットはDiscord移行時の履歴を引き継がない。v2へ切り替える一度だけ、
@@ -199,6 +261,8 @@ async function canAccessRoom(db: D1Database, room: RoomRow, member: Viewer) {
       .bind(room.id, member.id).first<{ allowed: number }>();
     return Boolean(membership);
   }
+  if (room.room_type === "club")
+    return room.source_id ? canMemberAccessClub(db, room.source_id, member.id) : false;
   if (elevated(member)) return true;
   if (room.room_type === "board" && room.source_id === "introduction") return true;
   if (room.room_type === "board" && room.source_id === "community-free-chat") return true;
@@ -212,8 +276,6 @@ async function canAccessRoom(db: D1Database, room: RoomRow, member: Viewer) {
   if (room.room_type === "announcement") return true;
   if (room.room_type === "rank")
     return !elevated(member) && (await viewerRank(db, member.id)) === room.required_rank;
-  if (room.room_type === "club" && room.source_id)
-    return canMemberAccessClub(db, room.source_id, member.id, elevated(member));
   if (room.room_type === "event" && room.source_id) {
     const event = await db.prepare(`SELECT event_type, club_id, organizer_member_id
       FROM events WHERE id = ? LIMIT 1`).bind(room.source_id)
@@ -421,12 +483,14 @@ export async function handleChatContentRequest(
 
   if (url.pathname === ROOMS_PATH && request.method === "GET") {
     await ensureViewerEventRooms(env.DB, member);
+    await ensureClubRooms(env.DB, member.id);
     await ensureKnownRoom(env.DB, "community-free-chat");
     // 一覧から開くケースでも、旧支部フリーチャットを先にv2へ移行して履歴を残さない。
     await ensureKnownRoom(env.DB, "branch-kanto-free");
     await ensureKnownRoom(env.DB, "branch-kansai-free");
     const result = await env.DB.prepare(`SELECT id, name, room_type, source_id, required_rank, created_by_member_id
-      FROM chat_rooms WHERE deleted_at IS NULL ORDER BY updated_at DESC LIMIT 200`).all<RoomRow>();
+      FROM chat_rooms WHERE deleted_at IS NULL
+      ORDER BY CASE WHEN room_type = 'club' THEN 0 ELSE 1 END, updated_at DESC LIMIT 200`).all<RoomRow>();
     const visible: RoomRow[] = [];
     for (const room of result.results ?? []) {
       if (await canAccessRoom(env.DB, room, member)) visible.push(room);
@@ -597,7 +661,7 @@ export async function handleChatContentRequest(
   if (messagesMatch) {
     const roomId = decodeURIComponent(messagesMatch[1]);
     if (!validRoomId(roomId)) return json({ error: "チャットIDが不正です" }, 400);
-    const room = await ensureKnownRoom(env.DB, roomId);
+    const room = await ensureKnownRoom(env.DB, roomId, request.method === "POST");
     if (!room) return json({ error: "チャットが見つかりません" }, 404);
     if (!await canAccessRoom(env.DB, room, member))
       return json({ error: "このチャットを閲覧する権限がありません" }, 403);

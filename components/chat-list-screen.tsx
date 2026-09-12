@@ -207,7 +207,7 @@ export default function ChatListScreen() {
     const isFixtureRoom = (room: ChatRoom) => /^chat\d+$/.test(room.id);
     const branchRooms = CHAT_ROOMS.filter((room) => room.sourceId === "branch-kanto" ? viewerBranches.includes("kanto") : room.sourceId === "branch-kansai" ? viewerBranches.includes("kansai") : false);
     const localJoinedRooms = [...getMyRooms(viewerMemberId), ...branchRooms]
-      .filter((room) => room.type !== "rank" && !isFixtureRoom(room));
+      .filter((room) => room.type !== "rank" && room.type !== "club" && !isFixtureRoom(room));
     const localRankRooms = getRankRoomsForUser(viewerRank);
     let sharedRooms: ChatRoom[] = [];
     try {

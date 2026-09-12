@@ -21,6 +21,17 @@ describe("rank chat access", () => {
   });
 });
 
+describe("club chat access", () => {
+  it("only allows joined members, even when the viewer is an administrator", () => {
+    const room = {
+      id: "club-chat-club-travel", name: "旅行部チャット", type: "club" as const,
+      sourceId: "club-travel", participants: ["IRO0009"], createdBy: "system",
+    };
+    expect(canAccessChatRoom(room, "IRO0009", "regular")).toBe(true);
+    expect(canAccessChatRoom(room, "IRO0011", "regular", true)).toBe(false);
+  });
+});
+
 describe("mutual friendship", () => {
   it("treats an approved friendship as mutual", () => {
     expect(areFriends("u1", "u2")).toBe(true);

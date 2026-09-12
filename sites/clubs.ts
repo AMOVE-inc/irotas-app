@@ -172,7 +172,7 @@ export async function canMemberAccessClub(db: D1Database, clubId: string, member
   if (elevated) return true;
   const row = await db.prepare(`SELECT 1 AS allowed FROM clubs c
     LEFT JOIN club_memberships cm ON cm.club_id = c.id AND cm.member_id = ? AND cm.status = 'approved'
-    WHERE c.id = ? AND (c.leader_member_id = ? OR cm.member_id IS NOT NULL) LIMIT 1`)
+    WHERE c.id = ? AND c.status = 'active' AND (c.leader_member_id = ? OR cm.member_id IS NOT NULL) LIMIT 1`)
     .bind(memberId, clubId, memberId).first<{ allowed: number }>();
   return Boolean(row);
 }

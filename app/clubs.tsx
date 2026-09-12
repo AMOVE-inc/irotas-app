@@ -1183,9 +1183,9 @@ function ClubDetailModal({
           {club.name}
         </Text>
         {canManageMembers ? <Pressable onPress={() => setShowApplications(true)} style={{ borderRadius: 8, backgroundColor: "#EAF3FA", paddingHorizontal: 10, paddingVertical: 6, marginRight: 8 }}><Text style={{ fontSize: 11, fontWeight: "800", color: "#3E6F97" }}>入部申請一覧</Text></Pressable> : null}
-        {club.chatId && (
+        {(isMember || isLeader) && (
           <Pressable
-            onPress={() => handleOpenChat(club.chatId!)}
+            onPress={() => handleOpenChat(`club-chat-${club.id}`)}
             style={{
               flexDirection: "row",
               alignItems: "center",
