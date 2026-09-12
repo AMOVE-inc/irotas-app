@@ -112,7 +112,7 @@ export default function AdminDashboardScreen() {
   const clubs = useClubs();
 
   // すべての state を条件分岐の外で定義
-  const [activeTab, setActiveTab] = useState<"overview" | "onboarding" | "monitoring" | "backups" | "deletions" | "review" | "operators" | "members" | "events" | "contests" | "clubs" | "payments" | "emails" | "announcements" | "coupons" | "analytics">(tab === "onboarding" ? "onboarding" : tab === "monitoring" ? "monitoring" : tab === "backups" ? "backups" : tab === "deletions" ? "deletions" : tab === "review" ? "review" : tab === "coupons" ? "coupons" : tab === "contests" ? "contests" : tab === "operators" ? "operators" : "overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "onboarding" | "monitoring" | "backups" | "deletions" | "review" | "operators" | "members" | "mee6" | "events" | "contests" | "clubs" | "payments" | "emails" | "announcements" | "coupons" | "analytics">(tab === "mee6" ? "mee6" : tab === "onboarding" ? "onboarding" : tab === "monitoring" ? "monitoring" : tab === "backups" ? "backups" : tab === "deletions" ? "deletions" : tab === "review" ? "review" : tab === "coupons" ? "coupons" : tab === "contests" ? "contests" : tab === "operators" ? "operators" : "overview");
   const [editingClub, setEditingClub] = useState<Club | null>(null);
   const [paymentRecords, setPaymentRecords] = useState<PaymentRecord[]>([]);
   const [selectedPaymentEventId, setSelectedPaymentEventId] = useState<string | null>(null);
@@ -140,6 +140,10 @@ export default function AdminDashboardScreen() {
   const [squareSyncProgress, setSquareSyncProgress] = useState<string | null>(null);
   const [discordProfileImporting, setDiscordProfileImporting] = useState(false);
   const [discordProfileImportResult, setDiscordProfileImportResult] = useState<string | null>(null);
+  const [mee6Members, setMee6Members] = useState<{ memberId: string; displayName: string; discordLinked: boolean; mee6Level: number | null; currentLevel: number; importedAt: string | null }[]>([]);
+  const [mee6Loading, setMee6Loading] = useState(false);
+  const [mee6Importing, setMee6Importing] = useState(false);
+  const [mee6ImportResult, setMee6ImportResult] = useState<string | null>(null);
   const [discordEventImporting, setDiscordEventImporting] = useState(false);
   const [discordEventImportResult, setDiscordEventImportResult] = useState<string | null>(null);
   const [discordEventChatImporting, setDiscordEventChatImporting] = useState(false);
@@ -186,6 +190,18 @@ export default function AdminDashboardScreen() {
   useEffect(() => {
     if (userIsAdmin && activeTab === "overview") void loadMembershipSummary();
   }, [userIsAdmin, activeTab]);
+  const loadMee6Members = async () => {
+    setMee6Loading(true);
+    try {
+      const response = await fetch("/api/admin/mee6-levels", { credentials: "same-origin" });
+      const result = await response.json() as { error?: string; members?: typeof mee6Members };
+      if (!response.ok) throw new Error(result.error ?? "レベル一覧を読み込めませんでした");
+      setMee6Members(result.members ?? []);
+    } catch (error) {
+      Alert.alert("読み込みエラー", error instanceof Error ? error.message : "レベル一覧を読み込めませんでした");
+    } finally { setMee6Loading(false); }
+  };
+  useEffect(() => { if (userIsAdmin && activeTab === "mee6") void loadMee6Members(); }, [userIsAdmin, activeTab]);
   const loadSystemMonitoring = async () => {
     setMonitoringLoading(true);
     try {
@@ -675,10 +691,10 @@ export default function AdminDashboardScreen() {
           paddingVertical: 10,
           gap: 8,
         }}
-        style={{ borderBottomWidth: 0.5, borderBottomColor: colors.border, flexGrow: 0, maxHeight: compactTabs ? 154 : undefined }}
+        style={{ borderBottomWidth: 0.5, borderBottomColor: colors.border, flexGrow: 0, maxHeight: compactTabs ? 190 : undefined }}
       >
-        {(["overview", "onboarding", "monitoring", "backups", "deletions", "review", "operators", "members", "events", "contests", "clubs", "payments", "emails", "announcements", "coupons", "analytics"] as const).map((tab) => {
-          const labels = { overview: "概要", onboarding: "初回ログイン", monitoring: "監視ログ", backups: "バックアップ", deletions: "退会申請", review: "審査アカウント", operators: "運営メンバー", members: "会員", events: "イベント", contests: "グルメ選手権", clubs: "部活動", payments: "支払管理", emails: "承認メール", announcements: "お知らせ", coupons: "クーポン", analytics: "分析" };
+        {(["overview", "onboarding", "monitoring", "backups", "deletions", "review", "operators", "members", "mee6", "events", "contests", "clubs", "payments", "emails", "announcements", "coupons", "analytics"] as const).map((tab) => {
+          const labels = { overview: "概要", onboarding: "初回ログイン", monitoring: "監視ログ", backups: "バックアップ", deletions: "退会申請", review: "審査アカウント", operators: "運営メンバー", members: "会員", mee6: "Mee6レベル", events: "イベント", contests: "グルメ選手権", clubs: "部活動", payments: "支払管理", emails: "承認メール", announcements: "お知らせ", coupons: "クーポン", analytics: "分析" };
           return (
             <Pressable
               key={tab}
@@ -1228,6 +1244,50 @@ export default function AdminDashboardScreen() {
           </>
         )}
 
+        {activeTab === "mee6" && (
+          <View style={{ padding: 14, borderWidth: 1, borderColor: colors.border, borderRadius: 14, backgroundColor: colors.surface }}>
+            <Text style={{ fontSize: 18, fontWeight: "800", color: colors.foreground }}>会員のMee6レベル（上位順）</Text>
+            <Text style={{ color: colors.muted, fontSize: 12, marginTop: 6 }}>アプリの有効会員を全件表示。未照合は「未取込」とし、Discord IDのない会員を0扱いしません。取込済み {mee6Members.filter((member) => member.mee6Level !== null).length}／{mee6Members.length}名。</Text>
+            {mee6ImportResult ? <Text style={{ color: "#237A3B", marginTop: 8 }}>{mee6ImportResult}</Text> : null}
+            <Pressable disabled={mee6Importing} onPress={async () => {
+              setMee6Importing(true);
+              try {
+                const response = await fetch("/api/admin/mee6-levels/import-identified-snapshot", { method: "POST" });
+                const result = await response.json() as { error?: string; importedCount?: number; unmatchedDiscordIds?: string[] };
+                if (!response.ok) throw new Error(result.error ?? "取込に失敗しました");
+                setMee6ImportResult(`Discord IDを照合できた772件のうち ${result.importedCount ?? 0}名を反映／アプリ未登録 ${result.unmatchedDiscordIds?.length ?? 0}件`);
+                await loadMee6Members();
+              } catch (error) { Alert.alert("Mee6取込エラー", error instanceof Error ? error.message : "取込に失敗しました"); }
+              finally { setMee6Importing(false); }
+            }} style={{ backgroundColor: "#237A3B", padding: 13, borderRadius: 10, alignItems: "center", marginTop: 12 }}>
+              <Text style={{ color: "#FFF", fontWeight: "800" }}>照合済み772件を反映</Text>
+            </Pressable>
+            <Pressable disabled={mee6Importing} onPress={async () => {
+              setMee6Importing(true);
+              try {
+                const selected = await selectJsonFile("Mee6順位表JSON");
+                const payload = JSON.parse(selected.text);
+                const response = await fetch("/api/admin/mee6-levels/import", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(payload) });
+                const result = await response.json() as { error?: string; importedCount?: number; unmatchedDiscordIds?: string[] };
+                if (!response.ok) throw new Error(result.error ?? "取込に失敗しました");
+                setMee6ImportResult(`${result.importedCount ?? 0}名反映／Discord ID未一致 ${result.unmatchedDiscordIds?.length ?? 0}件`);
+                await loadMee6Members();
+              } catch (error) {
+                if (error instanceof Error && error.message !== "ファイルが選択されませんでした") Alert.alert("Mee6取込エラー", error.message);
+              } finally { setMee6Importing(false); }
+            }} style={{ backgroundColor: "#5865F2", padding: 13, borderRadius: 10, alignItems: "center", marginTop: 12 }}>
+              <Text style={{ color: "#FFF", fontWeight: "800" }}>{mee6Importing ? "取込中…" : "Mee6順位表JSONを選択して反映"}</Text>
+            </Pressable>
+            <Pressable onPress={() => void loadMee6Members()} style={{ padding: 11, alignItems: "center" }}><Text style={{ color: "#5865F2" }}>一覧を更新</Text></Pressable>
+            {mee6Loading ? <ActivityIndicator color="#5865F2" /> : mee6Members.map((member, index) => (
+              <View key={member.memberId} style={{ flexDirection: "row", paddingVertical: 8, borderTopWidth: 0.5, borderColor: colors.border, alignItems: "center" }}>
+                <Text style={{ width: 40, color: colors.muted }}>{index + 1}位</Text>
+                <View style={{ flex: 1 }}><Text style={{ color: colors.foreground, fontWeight: "700" }}>{member.displayName}</Text><Text style={{ color: colors.muted, fontSize: 11 }}>{member.memberId}{!member.discordLinked ? "・Discord未連携" : ""}</Text></View>
+                <Text style={{ color: member.mee6Level === null ? colors.muted : "#5865F2", fontWeight: "800" }}>{member.mee6Level === null ? "未取込" : `Lv.${member.mee6Level}`}</Text>
+              </View>
+            ))}
+          </View>
+        )}
         {activeTab === "members" && (
           <>
             <Text style={{ fontSize: 16, fontWeight: "700", color: colors.foreground, marginBottom: 12 }}>

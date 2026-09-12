@@ -82,7 +82,7 @@ async function pendingReminders(db: D1Database, now: Date) {
         }
       }
     }
-    if (start) {
+    if (start && !event.id.startsWith("discord-event-") && data.recruitmentChannel !== "discord") {
       const dataChatId = typeof data.chatId === "string" && data.chatId ? data.chatId : `event_chat_${event.id}`;
       const participants = await db.prepare("SELECT member_id FROM event_participations WHERE event_id = ? AND status IN ('confirmed','cancel_requested')").bind(event.id).all<{ member_id: number }>();
       for (const participant of participants.results ?? []) {

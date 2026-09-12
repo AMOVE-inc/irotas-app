@@ -20,6 +20,23 @@ function formatEventStart(event: { date: string; time: string }) {
 }
 
 const lastRoomLists = new Map<string, { joined: ChatRoom[]; rank: ChatRoom[] }>();
+const dismissedRooms = new Map<string, Set<string>>();
+const dismissedAt = new Map<string, number>();
+
+export function dismissChatRoomImmediately(memberId: string, roomId: string) {
+  const dismissed = dismissedRooms.get(memberId) ?? new Set<string>();
+  dismissed.add(roomId);
+  dismissedRooms.set(memberId, dismissed);
+  dismissedAt.set(`${memberId}:${roomId}`, Date.now());
+  const saved = lastRoomLists.get(memberId);
+  if (saved) lastRoomLists.set(memberId, {
+    joined: saved.joined.filter((room) => room.id !== roomId),
+    rank: saved.rank.filter((room) => room.id !== roomId),
+  });
+  if (typeof window !== "undefined") window.dispatchEvent(new CustomEvent("irotas-chat-dismissed", { detail: { memberId, roomId } }));
+}
+
+const isImportedEventChat = (room: ChatRoom) => room.type === "event" && room.sourceId.startsWith("discord-event-");
 
 function ChatRoomCard({ room, eventStarts, eventImages, memberAvatars, viewerMemberId, onOpened }: {
   room: ChatRoom;
@@ -35,7 +52,7 @@ function ChatRoomCard({ room, eventStarts, eventImages, memberAvatars, viewerMem
   const isGroup = room.type === "group";
   const isRank = room.type === "rank";
   const rankColor: Record<string, string> = { silver: "#8B9DC3", gold: "#F59E0B", platinum: "#8B5CF6" };
-  const typeLabel = room.id === "board-announcement" ? "お知らせ" : room.id === "community-free-chat" ? "フリーチャット" : room.type === "event" ? "イベント" : room.type === "board" ? "掲示板" : isDM ? "DM" : isGroup ? "友達グループ" : isRank ? (
+  const typeLabel = room.id === "board-announcement" ? "お知らせ" : ["community-free-chat", "branch-kanto-free", "branch-kansai-free"].includes(room.id) ? "チャット" : room.type === "event" ? "イベント" : room.type === "board" ? "掲示板" : isDM ? "DM" : isGroup ? "友達グループ" : isRank ? (
     room.requiredRank === "platinum" ? "プラチナ" : room.requiredRank === "gold" ? "ゴールド" : "シルバー"
   ) : "部活動";
   const typeColor = room.type === "event" ? "#E8A0BF" : room.type === "board" ? "#A7C7E7" : isDM ? "#FF9500" : isGroup ? "#5B9BD5" : isRank ? (rankColor[room.requiredRank ?? "silver"] ?? "#8B9DC3") : "#34C759";
@@ -205,6 +222,17 @@ export default function ChatListScreen() {
     setRankRooms(saved?.rank ?? []);
     setRoomsLoading(!saved);
   }, [viewerMemberId]);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const onDismissed = (event: Event) => {
+      const detail = (event as CustomEvent<{ memberId: string; roomId: string }>).detail;
+      if (detail?.memberId !== viewerMemberId) return;
+      setMyRooms((rooms) => rooms.filter((room) => room.id !== detail.roomId));
+      setRankRooms((rooms) => rooms.filter((room) => room.id !== detail.roomId));
+    };
+    window.addEventListener("irotas-chat-dismissed", onDismissed);
+    return () => window.removeEventListener("irotas-chat-dismissed", onDismissed);
+  }, [viewerMemberId]);
   const clearUnreadImmediately = useCallback((roomId: string) => {
     const clear = (rooms: ChatRoom[]) => rooms.map((room) => room.id === roomId ? { ...room, unreadCount: 0, mentionCount: 0 } : room);
     setMyRooms(clear);
@@ -212,19 +240,29 @@ export default function ChatListScreen() {
   }, []);
 
   const refreshRooms = useCallback(async (includeDetails = true) => {
+    const refreshStartedAt = Date.now();
     if (includeDetails && !lastRoomLists.has(viewerMemberId)) setRoomsLoading(true);
     // 旧プロトタイプ用の chat1〜chat4 は、保存済みの実際の会話ではないため一覧に出さない。
     const isFixtureRoom = (room: ChatRoom) => /^chat\d+$/.test(room.id);
     const branchRooms = CHAT_ROOMS.filter((room) => room.sourceId === "branch-kanto" ? viewerBranches.includes("kanto") : room.sourceId === "branch-kansai" ? viewerBranches.includes("kansai") : false);
     const localJoinedRooms = [...getMyRooms(viewerMemberId), ...branchRooms]
-      .filter((room) => room.type !== "rank" && room.type !== "club" && !isFixtureRoom(room));
+      .filter((room) => room.type !== "rank" && room.type !== "club" && !isFixtureRoom(room) && !isImportedEventChat(room) && !dismissedRooms.get(viewerMemberId)?.has(room.id));
     const localRankRooms = getRankRoomsForUser(viewerRank);
     // Do not present the local subset as a complete list while shared rooms load.
     let sharedRooms: ChatRoom[] = [];
     try {
       // 一覧表示に必要なのはルーム一覧だけ。重い補助情報は後段で補完する。
       const rooms = await Api.getSharedChatRooms();
-      sharedRooms = rooms.map((room) => ({ ...room, requiredRank: room.requiredRank as ChatRoom["requiredRank"] }));
+      // A room returned by a fresh request after departure is a new invitation.
+      for (const room of rooms) {
+        const key = `${viewerMemberId}:${room.id}`;
+        if (refreshStartedAt > (dismissedAt.get(key) ?? Infinity)) {
+          dismissedRooms.get(viewerMemberId)?.delete(room.id);
+          dismissedAt.delete(key);
+        }
+      }
+      sharedRooms = rooms.map((room) => ({ ...room, requiredRank: room.requiredRank as ChatRoom["requiredRank"] }))
+        .filter((room) => !isImportedEventChat(room));
       if (includeDetails) void Promise.all([
         Api.getEvents().catch(() => []),
         Api.getMemberDirectory().catch(() => []),
@@ -246,6 +284,7 @@ export default function ChatListScreen() {
     }
     const sharedById = new Map(sharedRooms.map((room) => [room.id, room]));
     const mergedJoined = [...localJoinedRooms.filter((room) => !sharedById.has(room.id)), ...sharedRooms.filter((room) => room.type !== "rank" && !isFixtureRoom(room))]
+      .filter((room) => !dismissedRooms.get(viewerMemberId)?.has(room.id))
       .filter((room, index, all) => all.findIndex((candidate) => candidate.id === room.id) === index)
       .map((room) => room.id === "board-announcement" && !sharedById.has(room.id)
         ? { ...room, lastMessage: "", lastMessageAt: undefined }

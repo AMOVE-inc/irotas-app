@@ -342,6 +342,7 @@ function publicEvent(
   const viewerParticipation = active.find((item) => item.member_id === viewerId)?.status ?? null;
   return {
     ...data,
+    chatId: row.id.startsWith("discord-event-") || data.recruitmentChannel === "discord" ? undefined : data.chatId,
     id: row.id,
     recruitmentChannel: data.recruitmentChannel === "app" || data.recruitmentChannel === "discord"
       ? data.recruitmentChannel : row.id.startsWith("discord-event-") ? "discord" : "app",
@@ -559,6 +560,7 @@ async function postEventCancellationToConfirmedChat(
   if (!confirmed.length) return;
   let data: Record<string, unknown> = {};
   try { data = JSON.parse(row.public_data_json) as Record<string, unknown>; } catch {}
+  if (row.id.startsWith("discord-event-") || data.recruitmentChannel === "discord") return;
   const chatId = typeof data.chatId === "string" && data.chatId ? data.chatId : eventChatId(row.id);
   await db.batch([
     db.prepare(`INSERT OR IGNORE INTO chat_rooms (id, name, room_type, source_id, created_by_member_id, created_at, updated_at)
@@ -591,6 +593,7 @@ async function notifyOrganizerParticipantCancellation(
   await notifyEventCancellation(db, targetMemberId, row.id, "イベントのキャンセルが確定しました", body);
   let data: Record<string, unknown> = {};
   try { data = JSON.parse(row.public_data_json) as Record<string, unknown>; } catch {}
+  if (row.id.startsWith("discord-event-") || data.recruitmentChannel === "discord") return;
   const chatId = typeof data.chatId === "string" && data.chatId ? data.chatId : eventChatId(row.id);
   await db.batch([
     db.prepare(`INSERT OR IGNORE INTO chat_rooms (id, name, room_type, source_id, created_by_member_id, created_at, updated_at)
@@ -1085,7 +1088,7 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
       pointResult = await applyEventPointDiscount(env.DB, id, member.id, requestedPoints, row.title, now);
       if (!pointResult.success) return responseJson({ error: "イロタスポイント残高が不足しています" }, 409);
     }
-    if (immediate && !(typeof data.chatId === "string" && data.chatId)) data.chatId = eventChatId(id);
+    if (immediate && !id.startsWith("discord-event-") && data.recruitmentChannel !== "discord" && !(typeof data.chatId === "string" && data.chatId)) data.chatId = eventChatId(id);
     try {
       await env.DB.prepare(`INSERT INTO event_participations
         (event_id, member_id, status, terms_accepted_at, applied_at, confirmed_at, updated_at)
@@ -1119,7 +1122,8 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
     }
     const now = new Date().toISOString();
     const chatId = typeof data.chatId === "string" && data.chatId ? data.chatId : eventChatId(id);
-    data.chatId = chatId;
+    const importedDiscordEvent = id.startsWith("discord-event-") || data.recruitmentChannel === "discord";
+    if (!importedDiscordEvent) data.chatId = chatId;
     data.participantsFinalizedAt = now;
     const confirmed = await env.DB.prepare("SELECT member_id FROM event_participations WHERE event_id = ? AND status IN ('confirmed','cancel_requested')").bind(id).all<{ member_id: number }>();
     const previouslyFinalized = new Set(Array.isArray(data.previouslyFinalizedParticipantIds) ? data.previouslyFinalizedParticipantIds.filter((value): value is number => typeof value === "number") : []);
@@ -1136,7 +1140,7 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
     await env.DB.batch([
       env.DB.prepare("UPDATE events SET public_data_json = ?, status = 'full', updated_at = ? WHERE id = ?").bind(JSON.stringify(data), now, id),
       env.DB.prepare("UPDATE event_participations SET status = 'rejected', cancelled_at = ?, updated_at = ? WHERE event_id = ? AND status = 'applied'").bind(now, now, id),
-      env.DB.prepare(`INSERT OR IGNORE INTO chat_rooms (id, name, room_type, source_id, created_by_member_id, created_at, updated_at)
+      ...(!importedDiscordEvent ? [env.DB.prepare(`INSERT OR IGNORE INTO chat_rooms (id, name, room_type, source_id, created_by_member_id, created_at, updated_at)
         VALUES (?, ?, 'event', ?, ?, ?, ?)`).bind(chatId, row.title, id, row.organizer_member_id, now, now),
       env.DB.prepare(`INSERT INTO chat_room_members (room_id, member_id, member_role, joined_at, left_at) VALUES (?, ?, 'owner', ?, NULL)
         ON CONFLICT(room_id, member_id) DO UPDATE SET member_role = 'owner', left_at = NULL`)
@@ -1150,6 +1154,7 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
       ...chatMemberNames.map(({ memberId, name }) => env.DB!.prepare(`INSERT OR IGNORE INTO chat_messages (id, room_id, sender_member_id, content, created_at, updated_at)
         VALUES (?, ?, ?, ?, ?, ?)`)
         .bind(`event-chat-join:${id}:${memberId}`, chatId, row.organizer_member_id, eventChatSystemContent(`${name}がチャットに参加しました`), now, now)),
+      ] : []),
       env.DB.prepare(`INSERT INTO audit_logs (actor_user_id, action, entity_type, entity_id, metadata_json, created_at)
         VALUES (?, 'event.participants_finalized', 'event', ?, ?, ?)`).bind(String(member.id), id, JSON.stringify({ chatId, count: confirmed.results?.length ?? 0, companionCount: companionMemberIds.size }), now),
     ]);
@@ -1191,12 +1196,13 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
       await env.DB.prepare(`UPDATE event_participations SET status = 'confirmed', confirmed_at = ?, cancelled_at = NULL, updated_at = ?
         WHERE event_id = ? AND member_id = ? AND status IN ('applied','cancelled','rejected')`).bind(now, now, id, targetId).run();
       const chatId = typeof data.chatId === "string" && data.chatId ? data.chatId : eventChatId(id);
-      data.chatId = chatId;
+      const importedDiscordEvent = id.startsWith("discord-event-") || data.recruitmentChannel === "discord";
+      if (!importedDiscordEvent) data.chatId = chatId;
       const targetName = await eventChatMemberName(env.DB, targetId);
       await env.DB.prepare("UPDATE events SET public_data_json = ?, updated_at = ? WHERE id = ?")
         .bind(JSON.stringify(data), now, id).run();
       await env.DB.batch([
-        env.DB.prepare(`INSERT OR IGNORE INTO chat_rooms (id, name, room_type, source_id, created_by_member_id, created_at, updated_at)
+        ...(!importedDiscordEvent ? [env.DB.prepare(`INSERT OR IGNORE INTO chat_rooms (id, name, room_type, source_id, created_by_member_id, created_at, updated_at)
           VALUES (?, ?, 'event', ?, ?, ?, ?)`).bind(chatId, row.title, id, row.organizer_member_id, now, now),
         env.DB.prepare(`INSERT INTO chat_room_members (room_id, member_id, member_role, joined_at, left_at)
           VALUES (?, ?, 'owner', ?, NULL)
@@ -1212,6 +1218,7 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
         env.DB.prepare(`INSERT OR IGNORE INTO chat_messages (id, room_id, sender_member_id, content, created_at, updated_at)
           VALUES (?, ?, ?, ?, ?, ?)`)
           .bind(`event-chat-join:${id}:${targetId}`, chatId, row.organizer_member_id, eventChatSystemContent(`${targetName}がチャットに参加しました`), now, now),
+        ] : []),
       ]);
       await notifyEventConfirmation(env.DB, targetId, id, row.title);
     } else {

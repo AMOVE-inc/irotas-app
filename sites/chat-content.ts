@@ -99,6 +99,10 @@ async function ensureEventRoom(db: D1Database, roomId: string) {
     WHERE json_extract(public_data_json, '$.chatId') = ?
     LIMIT 1`).bind(roomId).first<{ id: string; title: string; organizer_member_id: number; public_data_json: string }>();
   if (!event) return null;
+  if (event.id.startsWith("discord-event-")) return null;
+  let origin: { recruitmentChannel?: string } = {};
+  try { origin = JSON.parse(event.public_data_json) as typeof origin; } catch {}
+  if (origin.recruitmentChannel === "discord") return null;
   const now = new Date().toISOString();
   await db.prepare(`INSERT OR IGNORE INTO chat_rooms
     (id, name, room_type, source_id, created_by_member_id, created_at, updated_at)
@@ -254,7 +258,17 @@ async function viewerRank(db: D1Database, memberId: number) {
 }
 
 async function canAccessRoom(db: D1Database, room: RoomRow, member: Viewer) {
+  if (room.room_type === "group") {
+    const departed = await db.prepare(`SELECT 1 AS left FROM chat_room_members
+      WHERE room_id = ? AND member_id = ? AND left_at IS NOT NULL LIMIT 1`)
+      .bind(room.id, member.id).first<{ left: number }>();
+    if (departed) return false;
+  }
   if (room.room_type === "event") {
+    if (room.source_id?.startsWith("discord-event-")) return false;
+    const origin = await db.prepare("SELECT json_extract(public_data_json, '$.recruitmentChannel') AS channel FROM events WHERE id = ? LIMIT 1")
+      .bind(room.source_id).first<{ channel: string | null }>();
+    if (origin?.channel === "discord") return false;
     const departed = await db.prepare(`SELECT 1 AS left FROM chat_room_members
       WHERE room_id = ? AND member_id = ? AND left_at IS NOT NULL LIMIT 1`)
       .bind(room.id, member.id).first<{ left: number }>();
@@ -410,6 +424,7 @@ async function ensureViewerEventRooms(db: D1Database, member: Viewer) {
       json_extract(public_data_json, '$.chatId') AS chat_id
     FROM events
     WHERE status != 'cancelled' AND json_extract(public_data_json, '$.chatId') IS NOT NULL
+      AND id NOT LIKE 'discord-event-%' AND COALESCE(json_extract(public_data_json, '$.recruitmentChannel'), 'app') != 'discord'
       AND (organizer_member_id = ? OR EXISTS (
         SELECT 1 FROM event_participations ep WHERE ep.event_id = events.id
           AND ep.member_id = ? AND ep.status IN ('confirmed', 'cancel_requested')))
@@ -501,7 +516,10 @@ export async function handleChatContentRequest(
     await ensureKnownRoom(env.DB, "branch-kansai-free");
     await ensureViewerEventRooms(env.DB, member);
     const result = await env.DB.prepare(`SELECT cr.id, cr.name, cr.room_type, cr.source_id, cr.required_rank, cr.created_by_member_id
-      FROM chat_rooms cr WHERE cr.deleted_at IS NULL AND (
+      FROM chat_rooms cr WHERE cr.deleted_at IS NULL
+      AND (cr.room_type != 'event' OR (cr.source_id NOT LIKE 'discord-event-%' AND NOT EXISTS (
+        SELECT 1 FROM events e WHERE e.id = cr.source_id AND json_extract(e.public_data_json, '$.recruitmentChannel') = 'discord')))
+      AND (
         ? = 1 OR cr.room_type IN ('announcement', 'rank', 'club')
         OR cr.id IN ('community-free-chat', 'branch-kanto-free', 'branch-kansai-free', 'board-introduction')
         OR EXISTS (SELECT 1 FROM chat_room_members crm WHERE crm.room_id = cr.id AND crm.member_id = ? AND crm.left_at IS NULL)

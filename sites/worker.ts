@@ -27,6 +27,7 @@ import { handleCampaignRequest } from "./campaigns";
 import { handleAnnouncementRequest } from "./announcements";
 import { handleHomeAutomationRequest, runEventAutomation } from "./home-automation";
 import { handleXpRequest } from "./xp";
+import { handleMee6LevelsRequest } from "./mee6-levels";
 import {
   handleSystemMonitoringRequest,
   recordApplicationError,
@@ -292,6 +293,8 @@ async function routeRequest(
   if (memberHistoryImportResponse) return memberHistoryImportResponse;
   const discordProfileImportResponse = await handleDiscordProfileImportRequest(request, env);
   if (discordProfileImportResponse) return discordProfileImportResponse;
+  const mee6LevelsResponse = await handleMee6LevelsRequest(request, env);
+  if (mee6LevelsResponse) return mee6LevelsResponse;
   const memberDirectoryResponse = await handleMemberDirectoryRequest(request, env);
   if (memberDirectoryResponse) return memberDirectoryResponse;
   const clubResponse = await handleClubRequest(request, env);

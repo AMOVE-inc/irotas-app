@@ -20,6 +20,7 @@ import { isAdminRole, canPostToChat } from "@/lib/access-control";
 import { getAllRooms, getRoomById, getMessages, saveMessagesToStorage, deleteMessageFromStorage, loadMessagesFromStorage, loadDynamicRooms, markRoomRead, renameRoom, addMemberToRoom, removeMemberFromRoom, toggleMessageReaction } from "@/lib/chat-store";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useColors } from "@/hooks/use-colors";
+import { dismissChatRoomImmediately } from "@/components/chat-list-screen";
 import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
 import * as Clipboard from "expo-clipboard";
@@ -638,7 +639,7 @@ export default function ChatScreen() {
 
   if (!room) return null;
 
-  const typeLabel = room.id === "board-announcement" ? "お知らせ" : room.id === "community-free-chat" ? "チャット" : room.type === "event" ? "イベント" : room.type === "board" ? "掲示板" : room.type === "rank" ? "ランク専用" : room.type === "group" ? "友達グループ" : room.type === "dm" ? "DM" : "部活動";
+  const typeLabel = room.id === "board-announcement" ? "お知らせ" : ["community-free-chat", "branch-kanto-free", "branch-kansai-free"].includes(room.id) ? "チャット" : room.type === "event" ? "イベント" : room.type === "board" ? "掲示板" : room.type === "rank" ? "ランク専用" : room.type === "group" ? "友達グループ" : room.type === "dm" ? "DM" : "部活動";
   const typeColor = room.type === "event" ? "#E8A0BF" : room.type === "board" ? "#A7C7E7" : room.type === "rank" ? "#F59E0B" : room.type === "group" ? "#5B9BD5" : room.type === "dm" ? "#FF9500" : "#34C759";
   const firstUnreadIndex = Math.max(0, messages.length - Math.min(messages.length, Math.max(0, Number(unreadCountParam ?? 0))));
   const canManageRoom = room.type !== "club" && (userIsAdmin || room.createdBy === viewerMemberId);
@@ -1124,8 +1125,12 @@ export default function ChatScreen() {
                   const leave = async () => {
                     if (!id) return;
                     try {
-                      if (room.shared) await Api.removeSharedChatRoomMember(id, viewerMemberId);
+                      if (room.shared) {
+                        await Api.removeSharedChatRoomMember(id, viewerMemberId);
+                        await removeMemberFromRoom(id, viewerMemberId);
+                      }
                       else await removeMemberFromRoom(id, CURRENT_USER.id);
+                      dismissChatRoomImmediately(viewerMemberId, id);
                       setShowParticipants(false);
                       router.replace("/chat-list");
                     } catch (error) {

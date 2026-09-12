@@ -134,7 +134,7 @@ export default function EventDetailScreen() {
   });
   const [hasApplied, setHasApplied] = useState(() => event?.applicantIds?.includes(CURRENT_USER.id) ?? false);
   const [chatRoomId, setChatRoomId] = useState<string | null>(() => {
-    return event?.chatId ?? null;
+    return event?.id.startsWith("discord-event-") || event?.recruitmentChannel === "discord" ? null : event?.chatId ?? null;
   });
   // イロタスポイント
   const [irotasPoints, setIrotasPoints] = useState(0);
@@ -264,6 +264,10 @@ export default function EventDetailScreen() {
     const status = event.viewerParticipationStatus;
     setIsJoined(status ? status === "confirmed" || status === "cancel_requested" : event.participants.includes(viewerId));
     setHasApplied(status ? status === "applied" || status === "confirmed" || status === "cancel_requested" : Boolean(event.applicantIds?.includes(viewerId)));
+    if (event.id.startsWith("discord-event-") || event.recruitmentChannel === "discord") {
+      setChatRoomId(null);
+      return;
+    }
     if (!event.viewerMemberId || !event.chatId) return;
     if (isEventOrganizer(event, viewerId) || status === "confirmed" || status === "cancel_requested") {
       const room = joinEventChat(event.id, event.title, event.chatId, viewerId);

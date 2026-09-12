@@ -26,7 +26,7 @@ describe("event cancellation lifecycle", () => {
   it("notifies an organizer-cancelled participant in Home and the event chat", () => {
     const events = source("sites/events.ts");
     expect(events).toContain("notifyOrganizerParticipantCancellation");
-    expect(events).toContain("イベント参加が取り消されました");
+    expect(events).toContain("イベントのキャンセルが確定しました");
     expect(events).toContain("event_participant_cancel_${crypto.randomUUID()}");
     expect(events).toContain("await notifyOrganizerParticipantCancellation(env.DB, row, targetId, member.id, now)");
   });
