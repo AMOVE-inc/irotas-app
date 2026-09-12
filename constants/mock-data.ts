@@ -1,5 +1,4 @@
 // Mock data for IRO＋ app development
-import { IMPORTED_DISCORD_EVENTS } from "./imported-discord-events";
 import { japanDateKey } from "../lib/japan-date";
 
 export type MemberRank = "regular" | "silver" | "gold" | "platinum";
@@ -525,7 +524,6 @@ export const TIMELINE_POSTS: TimelinePost[] = [];
 const today = new Date().toISOString().split("T")[0]; // 今日の日付
 
 export const EVENTS: Event[] = ([
-  ...IMPORTED_DISCORD_EVENTS.map(({ sourceThreadId: _sourceThreadId, sourceLabel: _sourceLabel, ...event }) => event as Event),
   {
     id: "e1", createdAt: "2026-03-20T10:00:00+09:00", title: "第3回 関東支部交流会",
     description: "関東支部メンバーの交流を深める食事会です。今回は恵比寿の隠れ家イタリアンで開催！",

@@ -3,8 +3,15 @@ import { BOARD_THREADS, CHAT_ROOMS } from "../constants/mock-data";
 import { parseInternalLink, splitInternalLinks } from "../lib/internal-links";
 
 describe("internal link mentions", () => {
+  it("links to an imported event without embedding its title in the client", () => {
+    expect(parseInternalLink("https://app.irotas-community.com/event-detail?id=discord-event-123", CHAT_ROOMS, BOARD_THREADS)).toMatchObject({
+      label: "📅 イベントを開く",
+      pathname: "/event-detail",
+      params: { id: "discord-event-123" },
+    });
+  });
   it("converts a chat URL into a named mention", () => {
-    expect(parseInternalLink("https://irotas.example/chat?id=board-announcement", CHAT_ROOMS, BOARD_THREADS)).toMatchObject({
+    expect(parseInternalLink("https://app.irotas-community.com/chat?id=board-announcement", CHAT_ROOMS, BOARD_THREADS)).toMatchObject({
       label: "#運営アナウンス",
       pathname: "/chat",
       params: { id: "board-announcement" },
@@ -12,7 +19,7 @@ describe("internal link mentions", () => {
   });
 
   it("converts a board thread URL into a named mention", () => {
-    expect(parseInternalLink("https://irotas.example/board?category=gourmet-advice&view=threads&thread=t1", CHAT_ROOMS, BOARD_THREADS)).toMatchObject({
+    expect(parseInternalLink("https://app.irotas-community.com/board?category=gourmet-advice&view=threads&thread=t1", CHAT_ROOMS, BOARD_THREADS)).toMatchObject({
       label: "#渋谷でおすすめの焼肉屋さん教えてください！",
       pathname: "/board",
       params: { category: "gourmet-advice", view: "threads", thread: "t1" },
@@ -20,6 +27,6 @@ describe("internal link mentions", () => {
   });
 
   it("keeps surrounding message text", () => {
-    expect(splitInternalLinks("こちら https://irotas.example/chat?id=chat1 を確認")).toHaveLength(3);
+    expect(splitInternalLinks("こちら https://app.irotas-community.com/chat?id=chat1 を確認")).toHaveLength(3);
   });
 });

@@ -1,7 +1,6 @@
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { CURRENT_USER, DEFAULT_AVATAR, EVENTS, getRankFromPoints, type Event } from "@/constants/mock-data";
-import { IMPORTED_DISCORD_EVENTS } from "@/constants/imported-discord-events";
 import { XpRewardPopup } from "@/components/xp-reward-popup";
 import type { XpReward } from "@/lib/xp-store";
 import { GOURMET_GENRES } from "@/constants/event-options";
@@ -136,7 +135,6 @@ export default function CreateEventScreen() {
   const sourceIsJoinedClub = Boolean(sourceClubId && joinedClubs.some((club) => club.id === sourceClubId));
   const initialEditingEvent = editId
     ? EVENTS.find((item) => item.id === editId)
-      ?? IMPORTED_DISCORD_EVENTS.find((item) => item.id === editId) as Event | undefined
     : undefined;
   const initialEditForm = initialEditingEvent ? eventFormValuesFromEvent(initialEditingEvent) : undefined;
   const [eventType, setEventType] = useState<Event["eventType"]>(initialEditForm?.eventType ?? (params.sourceThreadId ? (sourceIsJoinedClub ? "club" : "gourmet") : userIsOperator ? "official" : "gourmet"));

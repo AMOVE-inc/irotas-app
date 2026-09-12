@@ -1,4 +1,5 @@
 import archive from "../data/discord-board-2026-08-29.json";
+import { SEEDED_GOURMET_CONTESTS } from "../constants/imported-gourmet-contests";
 import type {
   RawDiscordBoardArchive,
 } from "../lib/discord-board-import";
@@ -7,6 +8,7 @@ import { authenticatedRequestMember } from "./auth";
 import type { D1Database, SitesEnv } from "./platform-types";
 
 const ARCHIVE_PATH = "/api/board/archive";
+const CONTESTS_PATH = "/api/board/contests";
 
 function isPrivateClubCategory(category: string) {
   return category.startsWith("club-club-");
@@ -50,7 +52,7 @@ export async function handleBoardArchiveRequest(
   env: SitesEnv,
 ): Promise<Response | null> {
   const url = new URL(request.url);
-  if (url.pathname !== ARCHIVE_PATH) return null;
+  if (url.pathname !== ARCHIVE_PATH && url.pathname !== CONTESTS_PATH) return null;
   if (request.method !== "GET") {
     return Response.json({ error: "許可されていない操作です" }, { status: 405 });
   }
@@ -60,6 +62,12 @@ export async function handleBoardArchiveRequest(
   const member = await authenticatedRequestMember(request, env);
   if (!member) {
     return Response.json({ error: "ログインが必要です" }, { status: 401 });
+  }
+
+  if (url.pathname === CONTESTS_PATH) {
+    return Response.json({ contests: SEEDED_GOURMET_CONTESTS }, {
+      headers: { "cache-control": "private, no-store", vary: "Cookie, Authorization" },
+    });
   }
 
   const source = archive as RawDiscordBoardArchive;

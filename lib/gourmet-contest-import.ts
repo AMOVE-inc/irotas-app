@@ -1,13 +1,28 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { MEMBERS, type BoardComment, type BoardThread, type Member } from "../constants/mock-data";
 import { parseCsv } from "./migration-csv";
-import { SEEDED_GOURMET_CONTESTS } from "../constants/imported-gourmet-contests";
 
 const STORAGE_KEY = "irotas_imported_gourmet_contests_v1";
 
 export interface ImportedGourmetContest {
   thread: BoardThread;
   comments: BoardComment[];
+}
+
+async function getSeededGourmetContests(): Promise<ImportedGourmetContest[]> {
+  const base = typeof window === "undefined"
+    ? process.env.EXPO_PUBLIC_API_BASE_URL ?? process.env.EXPO_PUBLIC_OAUTH_SERVER_URL ?? ""
+    : "";
+  const url = `${base.replace(/\/$/, "")}/api/board/contests`;
+  const headers: Record<string, string> = {};
+  if (typeof window === "undefined" && typeof navigator !== "undefined") {
+    const token = await import("./_core/auth").then((module) => module.getSessionToken());
+    if (token) headers.authorization = `Bearer ${token}`;
+  }
+  const response = await fetch(url, { credentials: "include", headers });
+  if (!response.ok) throw new Error("選手権履歴を取得できませんでした");
+  const result = await response.json() as { contests: ImportedGourmetContest[] };
+  return result.contests;
 }
 
 export const GOURMET_CONTEST_IMPORT_COLUMNS = [
@@ -110,28 +125,26 @@ function contestRound(title: string): string | undefined {
   return title.match(/第\s*(\d+)\s*回/)?.[1];
 }
 
-export function mergeWithSeededGourmetContests(stored: ImportedGourmetContest[]): ImportedGourmetContest[] {
-  const seededRounds = new Set(SEEDED_GOURMET_CONTESTS.map((item) => contestRound(item.thread.title)).filter(Boolean));
+export function mergeWithSeededGourmetContests(stored: ImportedGourmetContest[], seeded: ImportedGourmetContest[]): ImportedGourmetContest[] {
+  const seededRounds = new Set(seeded.map((item) => contestRound(item.thread.title)).filter(Boolean));
   const current = stored.filter((item) => {
     if (item.thread.id.startsWith("imported-contest-history-")) return false;
     const round = contestRound(item.thread.title);
     return !round || !seededRounds.has(round);
   });
   const merged = new Map(current.map((item) => [item.thread.id, item]));
-  SEEDED_GOURMET_CONTESTS.forEach((item) => merged.set(item.thread.id, item));
+  seeded.forEach((item) => merged.set(item.thread.id, item));
   return [...merged.values()];
 }
 
 export async function loadImportedGourmetContests(): Promise<ImportedGourmetContest[]> {
+  const seeded = await getSeededGourmetContests().catch(() => []);
   try {
     const stored = JSON.parse((await AsyncStorage.getItem(STORAGE_KEY)) ?? "[]") as ImportedGourmetContest[];
-    // Bundled Discord archives are the immutable source of truth. This also
-    // replaces older browser-cached imports that may contain summarized text
-    // or expired Discord CDN URLs.
-    const merged = mergeWithSeededGourmetContests(stored);
+    const merged = mergeWithSeededGourmetContests(stored, seeded);
     await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
     return merged;
   } catch {
-    return SEEDED_GOURMET_CONTESTS;
+    return seeded;
   }
 }

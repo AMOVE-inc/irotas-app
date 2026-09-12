@@ -142,11 +142,8 @@ describe("Event filtering", () => {
     }
   });
 
-  it("should filter events by category", () => {
-    const kantoEvents = EVENTS.filter(
-      (e) => e.category === "kanto" || e.category === "all"
-    );
-    expect(kantoEvents.length).toBeGreaterThan(0);
+  it("does not bundle imported event records into the public client", () => {
+    expect(EVENTS.every((event) => !event.id.startsWith("discord-event-"))).toBe(true);
   });
 });
 

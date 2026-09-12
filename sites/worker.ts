@@ -262,6 +262,15 @@ async function routeRequest(
 ): Promise<Response> {
   const routeUrl = new URL(request.url);
   const { pathname } = routeUrl;
+  if (/^\/discord-(?:board|benefits|gourmet-contests)\//.test(pathname)) {
+    if (!["GET", "HEAD"].includes(request.method)) return apiError("許可されていない操作です", 405);
+    if (!await requestHasMemberAccess(request, env)) return apiError("ログインが必要です", 401);
+    const asset = await env.ASSETS.fetch(request);
+    const headers = new Headers(asset.headers);
+    headers.set("cache-control", "private, no-store");
+    headers.set("vary", "Cookie, Authorization");
+    return new Response(asset.body, { status: asset.status, statusText: asset.statusText, headers });
+  }
   if (
     ["POST", "PUT", "PATCH", "DELETE"].includes(request.method) &&
     pathname !== "/api/webhooks/square" &&

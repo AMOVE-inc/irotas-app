@@ -1,5 +1,4 @@
 import type { BoardThread, ChatRoom } from "@/constants/mock-data";
-import { IMPORTED_DISCORD_EVENTS } from "@/constants/imported-discord-events";
 
 export type InternalLinkMention = {
   raw: string;
@@ -26,8 +25,7 @@ export function parseInternalLink(rawValue: string, rooms: ChatRoom[], threads: 
   if (pathname === "/event-detail") {
     const id = url.searchParams.get("id");
     if (!id) return null;
-    const event = IMPORTED_DISCORD_EVENTS.find((item) => item.id === id);
-    return { raw, label: event ? `📅 ${event.date.replace(/-/g, "/")} ${event.time}　${event.title}` : "📅 イベントを開く", pathname: "/event-detail", params: { id } };
+    return { raw, label: "📅 イベントを開く", pathname: "/event-detail", params: { id } };
   }
   if (pathname === "/chat") {
     const id = url.searchParams.get("id");

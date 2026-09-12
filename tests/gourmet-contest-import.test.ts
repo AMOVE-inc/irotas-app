@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { mergeWithSeededGourmetContests, parseGourmetContestImport } from "../lib/gourmet-contest-import";
 import { createContestPrizeCoupon } from "../lib/gourmet-contest";
+import { SEEDED_GOURMET_CONTESTS } from "../constants/imported-gourmet-contests";
 
 const csv = `record_type,contest_id,title,content,author_member_id,author_name,created_at,comment_deadline,prize_title,prize_description,prize_expires_at,attachment_urls,comment_id,heart_count,winner_name
 contest,gp1,第1回,好きなお店を投稿,m1,運営,2025-01-01T10:00:00+09:00,2025-01-31,優勝券,1000円引き,2025-03-31,https://example.com/a.jpg,,,花子
@@ -30,7 +31,7 @@ describe("mergeWithSeededGourmetContests", () => {
       thread: { ...parseGourmetContestImport(csv)[0].thread, id: "imported-contest-history-14", title: "第14回 うどん No.1決定戦" },
       comments: [],
     };
-    const merged = mergeWithSeededGourmetContests([legacy]);
+    const merged = mergeWithSeededGourmetContests([legacy], SEEDED_GOURMET_CONTESTS);
     expect(merged).toHaveLength(25);
     expect(merged.some((item) => item.thread.id === legacy.thread.id)).toBe(false);
     expect(merged.find((item) => item.thread.title.startsWith("第14回"))?.comments.length).toBeGreaterThan(0);

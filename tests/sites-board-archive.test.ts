@@ -2,9 +2,21 @@ import { describe, expect, it } from "vitest";
 import {
   allowedPrivateClubCategories,
   filterBoardArchive,
+  handleBoardArchiveRequest,
 } from "../sites/board-archive";
 import type { RawDiscordBoardArchive } from "../lib/discord-board-import";
 import type { D1Database, D1PreparedStatement } from "../sites/platform-types";
+
+describe("gourmet contest archive access", () => {
+  it("does not return imported contests to signed-out visitors", async () => {
+    const response = await handleBoardArchiveRequest(
+      new Request("https://app.irotas-community.com/api/board/contests"),
+      { DB: {} as D1Database } as Parameters<typeof handleBoardArchiveRequest>[1],
+    );
+    expect(response?.status).toBe(401);
+    expect(await response?.text()).not.toContain("第1回 初デート");
+  });
+});
 
 const fixture: RawDiscordBoardArchive = {
   threads: [

@@ -1,7 +1,7 @@
 import { ScreenContainer } from "@/components/screen-container";
 import { AdminOnboardingProgress } from "@/components/admin-onboarding-progress";
 import { IconSymbol } from "@/components/ui/icon-symbol";
-import { MEMBERS, EVENTS, CURRENT_USER, RANK_LABELS, RANK_COLORS, getRankFromPoints, type Announcement, type Club, type Coupon, type MemberRank } from "@/constants/mock-data";
+import { MEMBERS, CURRENT_USER, RANK_LABELS, RANK_COLORS, getRankFromPoints, type Announcement, type Club, type Coupon, type Event, type MemberRank } from "@/constants/mock-data";
 import { useAuthContext } from "@/lib/auth-context";
 import { isAdminRole } from "@/lib/access-control";
 import { useColors } from "@/hooks/use-colors";
@@ -59,6 +59,7 @@ import {
   getBackupReadiness,
   createBackupSnapshot,
   syncSquareSubscriptions,
+  getEvents,
   updateOperatorMemberTerm,
   type MembershipSummary,
   type MemberReconciliationReport,
@@ -111,6 +112,13 @@ export default function AdminDashboardScreen() {
   const { tab } = useLocalSearchParams<{ tab?: string }>();
   const { user: authUser } = useAuthContext();
   const userIsAdmin = isAdminRole(authUser?.role, authUser?.accessRole);
+  const [adminEvents, setAdminEvents] = useState<Event[]>([]);
+  useEffect(() => {
+    if (!userIsAdmin) return;
+    let active = true;
+    void getEvents().then((events) => { if (active) setAdminEvents(events); }).catch(() => {});
+    return () => { active = false; };
+  }, [userIsAdmin]);
   const coupons = useCoupons();
   const clubs = useClubs();
 
@@ -349,12 +357,12 @@ export default function AdminDashboardScreen() {
     for (const m of MEMBERS) {
       rankCounts[m.rank] = (rankCounts[m.rank] ?? 0) + 1;
     }
-    const openEvents = EVENTS.filter((e) => e.status === "open").length;
-    const fullEvents = EVENTS.filter((e) => e.status === "full").length;
-    const totalParticipants = EVENTS.reduce((sum, e) => sum + e.attendees, 0);
+    const openEvents = adminEvents.filter((e) => e.status === "open").length;
+    const fullEvents = adminEvents.filter((e) => e.status === "full").length;
+    const totalParticipants = adminEvents.reduce((sum, e) => sum + e.attendees, 0);
     const activeClubs = clubs.length;
     return { rankCounts, openEvents, fullEvents, totalParticipants, activeClubs };
-  }, [clubs.length]);
+  }, [clubs.length, adminEvents]);
 
   useEffect(() => {
     if (!userIsAdmin) return;
@@ -1835,7 +1843,7 @@ export default function AdminDashboardScreen() {
                     contentContainerStyle={{ flexDirection: "row", gap: 8, marginBottom: 16 }}
                   >
                     {eventIds.map((eid) => {
-                      const ev = EVENTS.find((e) => e.id === eid);
+                      const ev = adminEvents.find((e) => e.id === eid);
                       const label = ev?.title ?? eid;
                       const records = paymentRecords.filter((r) => r.eventId === eid);
                       const paidCount = records.filter((r) => r.status === "paid").length;
@@ -1863,7 +1871,7 @@ export default function AdminDashboardScreen() {
 
                   {/* 選択中イベントの参加者一覧 */}
                   {selectedPaymentEventId && (() => {
-                    const ev = EVENTS.find((e) => e.id === selectedPaymentEventId);
+                    const ev = adminEvents.find((e) => e.id === selectedPaymentEventId);
                     const records = paymentRecords.filter((r) => r.eventId === selectedPaymentEventId);
                     const paidAmount = records.filter((r) => r.status === "paid").reduce((s, r) => s + r.amount, 0);
                     return (
@@ -2079,9 +2087,9 @@ export default function AdminDashboardScreen() {
               </Pressable>
             </View>
             <Text style={{ fontSize: 16, fontWeight: "700", color: colors.foreground, marginBottom: 12 }}>
-              イベント管理 ({EVENTS.length}件)
+              イベント管理 ({adminEvents.length}件)
             </Text>
-            {EVENTS.map((event) => (
+            {adminEvents.map((event) => (
               <Pressable
                 key={event.id}
                 onPress={() => router.push({ pathname: "/event-detail", params: { id: event.id } })}
@@ -2187,7 +2195,7 @@ export default function AdminDashboardScreen() {
           </>
         )}
         {activeTab === "analytics" && (
-          <AnalyticsTab />
+          <AnalyticsTab adminEvents={adminEvents} />
         )}
       </ScrollView>
 
@@ -2235,7 +2243,7 @@ export default function AdminDashboardScreen() {
 // ─────────────────────────────────────────────────────────────
 // 分析タブ
 // ─────────────────────────────────────────────────────────────
-function AnalyticsTab() {
+function AnalyticsTab({ adminEvents }: { adminEvents: Event[] }) {
   const colors = useColors();
 
   // 男女比
@@ -2289,27 +2297,27 @@ function AnalyticsTab() {
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
       const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
       const label = `${d.getMonth() + 1}月`;
-      const eventsInMonth = EVENTS.filter((e) => e.date?.startsWith(key));
+      const eventsInMonth = adminEvents.filter((e) => e.date?.startsWith(key));
       const avgFill = eventsInMonth.length > 0
         ? Math.round(eventsInMonth.reduce((s, e) => s + (e.attendees / Math.max(e.capacity, 1)), 0) / eventsInMonth.length * 100)
         : 0;
       months.push({ label, count: eventsInMonth.length, avgFill });
     }
     return months;
-  }, []);
+  }, [adminEvents]);
   const maxMonthlyEvents = Math.max(...monthlyEvents.map((m) => m.count), 1);
 
   // イベント全体の平均充足率
-  const avgFillRate = EVENTS.length > 0
-    ? Math.round(EVENTS.reduce((s, e) => s + (e.attendees / Math.max(e.capacity, 1)), 0) / EVENTS.length * 100)
+  const avgFillRate = adminEvents.length > 0
+    ? Math.round(adminEvents.reduce((s, e) => s + (e.attendees / Math.max(e.capacity, 1)), 0) / adminEvents.length * 100)
     : 0;
 
   // 支部別イベント数
   const eventByCategory = useMemo(() => ({
-    all: EVENTS.filter((e) => e.category === "all").length,
-    kanto: EVENTS.filter((e) => e.category === "kanto").length,
-    kansai: EVENTS.filter((e) => e.category === "kansai").length,
-  }), []);
+    all: adminEvents.filter((e) => e.category === "all").length,
+    kanto: adminEvents.filter((e) => e.category === "kanto").length,
+    kansai: adminEvents.filter((e) => e.category === "kansai").length,
+  }), [adminEvents]);
 
   const BAR_COLOR_MALE = "#A7C7E7";
   const BAR_COLOR_FEMALE = "#E8A0BF";
@@ -2326,7 +2334,7 @@ function AnalyticsTab() {
           { label: "総会員数", value: `${MEMBERS.length}名`, color: "#E8A0BF" },
           { label: "男女比（男）", value: `${maleRatio}%`, color: BAR_COLOR_MALE },
           { label: "男女比（女）", value: `${femaleRatio}%`, color: BAR_COLOR_FEMALE },
-          { label: "総イベント数", value: `${EVENTS.length}件`, color: "#34C759" },
+          { label: "総イベント数", value: `${adminEvents.length}件`, color: "#34C759" },
           { label: "平均充足率", value: `${avgFillRate}%`, color: "#FF9500" },
         ].map((kpi) => (
           <View
@@ -2476,7 +2484,7 @@ function AnalyticsTab() {
           { label: "関東限定", count: eventByCategory.kanto, color: "#A7C7E7" },
           { label: "関西限定", count: eventByCategory.kansai, color: "#E8A0BF" },
         ].map((cat) => {
-          const pct = EVENTS.length > 0 ? cat.count / EVENTS.length : 0;
+          const pct = adminEvents.length > 0 ? cat.count / adminEvents.length : 0;
           return (
             <View key={cat.label} style={{ marginBottom: 10 }}>
               <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 4 }}>

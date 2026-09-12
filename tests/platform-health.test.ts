@@ -20,6 +20,13 @@ function environment(options?: { database?: boolean; uploads?: boolean }) {
 }
 
 describe("platform health endpoint", () => {
+  it("requires membership before serving imported Discord media", async () => {
+    const response = await worker.fetch(
+      new Request("https://example.com/discord-board/1485649683345969182/1503041419307126977.webp"),
+      environment({ database: false }),
+    );
+    expect(response.status).toBe(401);
+  });
   it("reports healthy when database and uploads are connected", async () => {
     const response = await worker.fetch(
       new Request("https://example.com/api/platform/health"),
