@@ -1,4 +1,5 @@
 import archive from "../data/discord-benefits-2026-08-15.json";
+import giftArchive from "../data/discord-gift-posts-2026-09-12.json";
 import type { Coupon } from "../constants/mock-data";
 import type { GiftCampaign } from "./gift-campaign-store";
 
@@ -47,32 +48,46 @@ export function loadImportedDiscordCoupons(): Coupon[] {
   }));
 }
 
-const GIFT_METADATA: Pick<GiftCampaign, "winnerCount" | "deadline" | "imageUrl" | "imageEmoji">[] = [
-  { winnerCount: 3, deadline: "2026-06-24", imageUrl: "/discord-benefits/gift-0.webp", imageEmoji: "🥩" },
-  { winnerCount: 4, deadline: "2026-05-23", imageUrl: "/discord-benefits/gift-1.webp", imageEmoji: "🥩" },
-  { winnerCount: 3, deadline: "2026-04-21", imageUrl: "/discord-benefits/gift-2.webp", imageEmoji: "🫖" },
-  { winnerCount: 3, deadline: "2026-04-08", imageUrl: "/discord-benefits/gift-3.webp", imageEmoji: "🌸" },
-  { winnerCount: 5, deadline: "2026-03-07", imageUrl: "/discord-benefits/gift-4.webp", imageEmoji: "🍸" },
-  { winnerCount: 3, deadline: "2026-02-09", imageEmoji: "🥩" },
-  { winnerCount: 3, deadline: "2026-02-20", imageEmoji: "🥩" },
-  { winnerCount: 3, deadline: "2026-01-16", imageEmoji: "🍽️" },
-];
+interface DiscordGiftPost {
+  id: string;
+  title: string;
+  body: string;
+  createdAt: string;
+  sourceImageUrl: string;
+}
+
+function giftDeadline(post: DiscordGiftPost): string {
+  const match = post.body.match(/(\d{1,2})\s*[/月]\s*(\d{1,2})\s*(?:日)?[^。\n]{0,25}?(?:まで|締切|〆切)/);
+  if (!match) return post.createdAt.slice(0, 10);
+  const month = Number(match[1]);
+  const day = Number(match[2]);
+  if (month < 1 || month > 12 || day < 1 || day > 31) return post.createdAt.slice(0, 10);
+  const posted = new Date(post.createdAt);
+  const year = posted.getUTCFullYear() + (month < posted.getUTCMonth() + 1 - 6 ? 1 : 0);
+  return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+}
+
+function giftWinnerCount(post: DiscordGiftPost): number {
+  const body = post.body.match(/(?:抽選で|募集人数[^\d]{0,15})(\d+)名/);
+  const title = post.title.match(/(\d+)名様/);
+  return Math.max(1, Number(body?.[1] ?? title?.[1] ?? 1));
+}
 
 export function loadImportedDiscordGiftCampaigns(): GiftCampaign[] {
-  return (archive.gifts as RawBenefitRecord[])
-    // 「新部活投票」はプレゼント企画ではないため、Discord上の実際の企画のみを移行する。
-    .filter((record) => record.rawText.length > 100)
-    .map((record, index) => ({
-      id: `discord-gift-${index + 1}`,
-      title: record.title.replace(/^【募集終了】/, "").trim(),
-      description: cleanForumDescription(record),
+  return (giftArchive as DiscordGiftPost[])
+    .map((post): GiftCampaign => ({
+      id: `discord-gift-${post.id}`,
+      title: post.title.replace(/^【募集終了】/, "").trim(),
+      description: post.body.replace(/\n,\n@everyone[\s\S]*$/, "").trim(),
       category: "gourmet",
       minimumRank: "regular",
-      winnerCount: GIFT_METADATA[index]?.winnerCount ?? 1,
-      deadline: GIFT_METADATA[index]?.deadline ?? "2026-01-01",
+      winnerCount: giftWinnerCount(post),
+      deadline: giftDeadline(post),
       status: "closed",
-      imageEmoji: GIFT_METADATA[index]?.imageEmoji ?? "🎁",
-      imageUrl: GIFT_METADATA[index]?.imageUrl,
+      imageEmoji: "🎁",
+      imageUrl: post.sourceImageUrl ? `/discord-benefits/gift-${post.id}.${post.id === "1459122252984356864" ? "jpg" : "webp"}` : undefined,
       archivedFromDiscord: true,
-    }));
+      createdAt: post.createdAt,
+    }))
+    .sort((a, b) => (b.createdAt ?? "").localeCompare(a.createdAt ?? ""));
 }

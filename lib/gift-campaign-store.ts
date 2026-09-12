@@ -18,6 +18,7 @@ export interface GiftCampaign {
   imageEmoji: string;
   imageUrl?: string;
   archivedFromDiscord?: boolean;
+  createdAt?: string;
 }
 
 export interface GiftApplication {

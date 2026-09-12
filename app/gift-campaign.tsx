@@ -29,8 +29,8 @@ export default function GiftCampaignScreen() {
     });
   }, [memberId]);
 
-  const visibleCampaigns = useMemo(() => campaigns
-    .sort((a, b) => Number(!isGiftCampaignOpen(a)) - Number(!isGiftCampaignOpen(b)) || a.deadline.localeCompare(b.deadline)), [campaigns]);
+  const visibleCampaigns = useMemo(() => [...campaigns]
+    .sort((a, b) => (b.createdAt ?? b.deadline).localeCompare(a.createdAt ?? a.deadline)), [campaigns]);
 
   const handleApply = (campaign: GiftCampaign) => {
     Alert.alert("抽選申込", `「${campaign.title}」の抽選に申し込みますか？`, [

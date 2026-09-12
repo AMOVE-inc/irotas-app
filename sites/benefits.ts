@@ -1,6 +1,6 @@
 import { authenticatedRequestMember } from "./auth";
 import type { D1Database, SitesEnv } from "./platform-types";
-import { loadImportedDiscordCoupons } from "../lib/discord-benefits-import";
+import { loadImportedDiscordCoupons, loadImportedDiscordGiftCampaigns } from "../lib/discord-benefits-import";
 
 const COUPON_ACTION = /^\/api\/benefits\/coupons\/([^/]+)\/(present|redeem)$/;
 const COUPON_ITEM = /^\/api\/benefits\/coupons\/([^/]+)$/;
@@ -10,6 +10,7 @@ const ROOT = "/api/benefits";
 const POINTS_ADJUST = "/api/benefits/points/adjust";
 const RANKS = ["regular", "silver", "gold", "platinum"] as const;
 const importedCoupons = loadImportedDiscordCoupons();
+const importedGifts = loadImportedDiscordGiftCampaigns();
 
 type Viewer = NonNullable<Awaited<ReturnType<typeof authenticatedRequestMember>>>;
 
@@ -81,14 +82,14 @@ function couponFromRow(row: Record<string, unknown>) {
 }
 
 function giftFromRow(row: Record<string, unknown>) {
-  return { id: row.id, title: row.title, description: row.description, category: row.category, minimumRank: row.minimum_rank, winnerCount: row.winner_count, deadline: row.deadline, status: row.status, imageEmoji: row.image_emoji, imageUrl: row.image_url || undefined, archivedFromDiscord: Number(row.archived_from_discord) === 1 };
+  return { id: row.id, title: row.title, description: row.description, category: row.category, minimumRank: row.minimum_rank, winnerCount: row.winner_count, deadline: row.deadline, status: row.status, imageEmoji: row.image_emoji, imageUrl: row.image_url || undefined, archivedFromDiscord: Number(row.archived_from_discord) === 1, createdAt: row.created_at };
 }
 
 async function getBenefits(db: D1Database, viewer: Viewer) {
   const [coupons, usages, gifts, applications, balance, history, balances] = await Promise.all([
     db.prepare("SELECT * FROM coupons ORDER BY expires_at DESC, created_at DESC").all<Record<string, unknown>>(),
     db.prepare("SELECT coupon_id, use_count, last_presented_at, used_at FROM coupon_usages WHERE member_id = ?").bind(viewer.id).all<Record<string, unknown>>(),
-    db.prepare("SELECT * FROM gift_campaigns WHERE deleted_at IS NULL ORDER BY CASE status WHEN 'open' THEN 0 ELSE 1 END, deadline").all<Record<string, unknown>>(),
+    db.prepare("SELECT * FROM gift_campaigns ORDER BY created_at DESC").all<Record<string, unknown>>(),
     db.prepare(`SELECT ga.id, ga.campaign_id, ga.applied_at, ga.result, ga.member_id, m.public_member_id, m.display_name
       FROM gift_applications ga JOIN members m ON m.id = ga.member_id
       WHERE ga.member_id = ? OR ? = 1 ORDER BY ga.applied_at DESC`).bind(viewer.id, elevated(viewer) ? 1 : 0).all<Record<string, unknown>>(),
@@ -107,7 +108,10 @@ async function getBenefits(db: D1Database, viewer: Viewer) {
       ...importedCoupons.filter((coupon) => !(coupons.results ?? []).some((row) => row.id === coupon.id)),
     ],
     usages: Object.fromEntries((usages.results ?? []).map((row) => [String(row.coupon_id), { useCount: Number(row.use_count), lastPresentedAt: row.last_presented_at || undefined, usedAt: row.used_at || undefined }])),
-    gifts: (gifts.results ?? []).map(giftFromRow),
+    gifts: [
+      ...(gifts.results ?? []).filter((row) => !row.deleted_at).map(giftFromRow),
+      ...importedGifts.filter((gift) => !(gifts.results ?? []).some((row) => row.id === gift.id)),
+    ].sort((a, b) => String(b.createdAt ?? b.deadline).localeCompare(String(a.createdAt ?? a.deadline))),
     applications: (applications.results ?? []).map((row) => ({ id: row.id, campaignId: row.campaign_id, memberId: row.public_member_id ?? `member-${row.member_id}`, memberName: row.display_name, appliedAt: row.applied_at, result: row.result })),
     points: { balance: Number(balance?.balance ?? 0), balances: Object.fromEntries((balances.results ?? []).map((row) => [String(row.public_member_id ?? `member-${row.member_id}`), Number(row.balance)])), history: history.results ?? [] },
   });
@@ -257,13 +261,24 @@ export async function handleBenefitsRequest(request: Request, env: SitesEnv): Pr
   if (giftItemMatch) {
     if (!elevated(viewer)) return json({ error: "運営権限が必要です" }, 403);
     const id = decodeURIComponent(giftItemMatch[1]);
-    if (request.method === 'DELETE') { await env.DB.prepare("UPDATE gift_campaigns SET deleted_at = ?, updated_at = ? WHERE id = ?").bind(new Date().toISOString(), new Date().toISOString(), id).run(); return json({ success: true }); }
+    if (request.method === 'DELETE') {
+      const now = new Date().toISOString();
+      const archived = importedGifts.find((gift) => gift.id === id);
+      if (archived) {
+        await env.DB.prepare(`INSERT OR IGNORE INTO gift_campaigns (id,title,description,category,minimum_rank,winner_count,deadline,status,image_emoji,image_url,archived_from_discord,created_at,updated_at,deleted_at)
+          VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)`)
+          .bind(id, archived.title, archived.description, archived.category, archived.minimumRank, archived.winnerCount, archived.deadline, archived.status, archived.imageEmoji, archived.imageUrl ?? null, 1, archived.createdAt ?? now, now, now).run();
+      }
+      await env.DB.prepare("UPDATE gift_campaigns SET deleted_at = ?, updated_at = ? WHERE id = ?").bind(now, now, id).run();
+      return json({ success: true });
+    }
     if (!['PUT', 'PATCH'].includes(request.method)) return json({ error: 'method_not_allowed' }, 405);
     const input = await body(request); const value = input && giftInput(input);
     if (!value) return json({ error: "プレゼント企画の入力内容を確認してください" }, 400);
     const now = new Date().toISOString();
+    const createdAt = importedGifts.find((gift) => gift.id === id)?.createdAt ?? now;
     await env.DB.prepare(`INSERT INTO gift_campaigns (id,title,description,category,minimum_rank,winner_count,deadline,status,image_emoji,image_url,archived_from_discord,created_at,updated_at,deleted_at)
-      VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,NULL) ON CONFLICT(id) DO UPDATE SET title=excluded.title,description=excluded.description,category=excluded.category,minimum_rank=excluded.minimum_rank,winner_count=excluded.winner_count,deadline=excluded.deadline,status=excluded.status,image_emoji=excluded.image_emoji,image_url=excluded.image_url,archived_from_discord=excluded.archived_from_discord,updated_at=excluded.updated_at,deleted_at=NULL`).bind(id,value.title,value.description,value.category,value.minimumRank,value.winnerCount,value.deadline,value.status,value.imageEmoji,value.imageUrl || null,value.archivedFromDiscord,now,now).run();
+      VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,NULL) ON CONFLICT(id) DO UPDATE SET title=excluded.title,description=excluded.description,category=excluded.category,minimum_rank=excluded.minimum_rank,winner_count=excluded.winner_count,deadline=excluded.deadline,status=excluded.status,image_emoji=excluded.image_emoji,image_url=excluded.image_url,archived_from_discord=excluded.archived_from_discord,updated_at=excluded.updated_at,deleted_at=NULL`).bind(id,value.title,value.description,value.category,value.minimumRank,value.winnerCount,value.deadline,value.status,value.imageEmoji,value.imageUrl || null,value.archivedFromDiscord,createdAt,now).run();
     return json({ success: true });
   }
   return null;
