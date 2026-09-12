@@ -3,6 +3,7 @@ import type { D1Database, SitesEnv } from "./platform-types";
 
 const DIRECTORY_ENDPOINT = "/api/members";
 const SELF_PROFILE_ENDPOINT = "/api/members/me/profile";
+const SELF_SOCIAL_ENDPOINT = "/api/members/me/social-summary";
 const MEMBER_PATH = /^\/api\/members\/([^/]+)(?:\/(private-note))?$/;
 const FOLLOW_PATH = /^\/api\/members\/([^/]+)\/follow$/;
 const SOCIAL_PATH = /^\/api\/members\/([^/]+)\/(followers|following)$/;
@@ -238,10 +239,19 @@ export async function handleMemberDirectoryRequest(
   const match = MEMBER_PATH.exec(pathname);
   const followMatch = FOLLOW_PATH.exec(pathname);
   const socialMatch = SOCIAL_PATH.exec(pathname);
-  if (pathname !== DIRECTORY_ENDPOINT && pathname !== SELF_PROFILE_ENDPOINT && !match && !followMatch && !socialMatch) return null;
+  if (pathname !== DIRECTORY_ENDPOINT && pathname !== SELF_PROFILE_ENDPOINT && pathname !== SELF_SOCIAL_ENDPOINT && !match && !followMatch && !socialMatch) return null;
   if (!env.DB) return responseJson({ error: "データベースに接続できません" }, 503);
   const viewer = await authenticatedRequestMember(request, env);
   if (!viewer) return responseJson({ error: "ログインが必要です" }, 401);
+
+  if (pathname === SELF_SOCIAL_ENDPOINT) {
+    if (request.method !== "GET") return responseJson({ error: "method_not_allowed" }, 405);
+    const row = await env.DB.prepare(`SELECT
+      (SELECT COUNT(*) FROM member_follows WHERE followed_member_id = ?) AS followers,
+      (SELECT COUNT(*) FROM member_follows WHERE follower_member_id = ?) AS following`)
+      .bind(viewer.id, viewer.id).first<{ followers: number; following: number }>();
+    return responseJson({ followers: Number(row?.followers ?? 0), following: Number(row?.following ?? 0) });
+  }
 
   if (pathname === SELF_PROFILE_ENDPOINT) {
     if (request.method !== "PATCH") return responseJson({ error: "method_not_allowed" }, 405);

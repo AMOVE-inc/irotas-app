@@ -944,6 +944,10 @@ export async function getMemberProfile(memberId: string) {
   return result.member;
 }
 
+export async function getMySocialSummary() {
+  return apiCall<{ followers: number; following: number }>("/api/members/me/social-summary");
+}
+
 export async function updateMyProfile(input: {
   displayName: string;
   profile: Record<string, unknown>;

@@ -333,6 +333,7 @@ export default function EventDetailScreen() {
   const eventClub = event.eventType === "club" ? clubs.find((club) => club.id === event.clubId) : undefined;
   const eventEnded = Date.parse(`${event.date}T23:59:59`) < Date.now();
   const discordRecruitmentOpen = !eventEnded && isDiscordRecruitmentOpen(event);
+  const discordRecruitmentClosed = eventRecruitmentChannel(event) === "discord" && (Boolean(event.discordRecruitmentClosedAt) || event.status !== "open" || event.recruitmentStatus === "draft");
   if (event.eventType === "club" && (!eventClub || !canViewerAccessClubContent(eventClub, authUser?.memberId, CURRENT_USER.id, isAdminRole(authUser?.role, authUser?.accessRole)))) {
     return <ScreenContainer edges={["top", "bottom", "left", "right"]}><View style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: 28 }}><IconSymbol name="lock.fill" size={44} color={colors.muted} /><Text style={{ fontSize: 18, fontWeight: "900", color: colors.foreground, marginTop: 15 }}>部員限定イベントです</Text><Text style={{ fontSize: 13, lineHeight: 20, color: colors.muted, textAlign: "center", marginTop: 7 }}>{eventClub?.name ?? "この部活動"}に入部すると、イベント詳細の確認と参加申込ができます。</Text><Pressable onPress={() => router.replace("/clubs")} style={{ marginTop: 20, borderRadius: 14, backgroundColor: colors.foreground, paddingHorizontal: 20, paddingVertical: 12 }}><Text style={{ color: colors.background, fontWeight: "900" }}>部活動一覧を見る</Text></Pressable></View></ScreenContainer>;
   }
@@ -947,7 +948,7 @@ export default function EventDetailScreen() {
             }}
           >
             <Text style={{ fontSize: 13, fontWeight: "700", color: "#FFF" }}>
-              {eventEnded ? "開催終了" : event.discordRecruitmentClosedAt ? "募集終了" : event.recruitmentStatus === "draft" ? "募集前" : discordRecruitmentOpen ? "Discord受付" : event.status === "open" ? "募集中" : event.status === "full" ? (event.participantsFinalizedAt ? "募集終了" : "満席") : "終了"}
+              {eventEnded ? "開催終了" : discordRecruitmentClosed ? "募集終了" : event.recruitmentStatus === "draft" ? "募集前" : discordRecruitmentOpen ? "Discord受付" : event.status === "open" ? "募集中" : event.status === "full" ? (event.participantsFinalizedAt ? "募集終了" : "満席") : "終了"}
             </Text>
           </View>
         </View>
@@ -1073,8 +1074,8 @@ export default function EventDetailScreen() {
         </View> : null}
 
         {canManageEvent ? <Pressable onPress={() => router.push({ pathname: "/create-event", params: { editId: event.id } })} style={{ marginBottom: 16, borderRadius: 12, paddingVertical: 12, alignItems: "center", backgroundColor: "#B42318" }}><Text style={{ color: "#FFF", fontSize: 14, fontWeight: "900" }}>{canAdminEdit ? "管理者：イベント情報を編集" : isDiscordImportedEvent && userIsOperator && !isOrganizer ? "運営：イベント情報を編集" : "イベント情報を編集"}</Text></Pressable> : null}
-        {discordRecruitmentOpen ? <View style={{ borderRadius: 12, borderWidth: 1, borderColor: "#D7C9EB", backgroundColor: "#F7F3FC", padding: 14, marginBottom: 16 }}><Text style={{ fontSize: 14, fontWeight: "900", color: "#604C8C" }}>このイベントはDiscordで受付中</Text><Text style={{ fontSize: 12, lineHeight: 19, color: colors.foreground, marginTop: 5 }}>本イベントはDiscordから移行したイベントです。参加希望は元のDiscordの募集投稿へお願いします。参加者もDiscord側で確定するため、アプリからは申し込めません。確定後、幹事・運営が編集画面で参加者を記録できます。</Text></View> : null}
-        {canManageEvent && eventRecruitmentChannel(event) === "discord" && event.status === "open" && !event.isCancelled ? <Pressable onPress={handleCloseDiscordRecruitment} style={{ marginTop: -6, marginBottom: 16, borderRadius: 12, paddingVertical: 12, alignItems: "center", backgroundColor: "#6B5A96" }}><Text style={{ color: "#FFF", fontSize: 14, fontWeight: "900" }}>Discordでの募集を終了</Text></Pressable> : null}
+        {eventRecruitmentChannel(event) === "discord" ? <View style={{ borderRadius: 12, borderWidth: 1, borderColor: "#D7C9EB", backgroundColor: "#F7F3FC", padding: 14, marginBottom: 16 }}><Text style={{ fontSize: 14, fontWeight: "900", color: "#604C8C" }}>{discordRecruitmentClosed ? "Discordでの募集は終了しました" : "このイベントはDiscordで受付中"}</Text><Text style={{ fontSize: 12, lineHeight: 19, color: colors.foreground, marginTop: 5 }}>{discordRecruitmentClosed ? "本イベントはDiscordから移行したイベントです。募集内容・参加者確定などの詳細は元のDiscordの募集投稿をご確認ください。アプリからは申し込めません。" : "本イベントはDiscordから移行したイベントです。参加希望は元のDiscordの募集投稿へお願いします。参加者もDiscord側で確定するため、アプリからは申し込めません。確定後、幹事・運営が編集画面で参加者を記録できます。"}</Text></View> : null}
+        {canManageEvent && eventRecruitmentChannel(event) === "discord" && !discordRecruitmentClosed && event.status === "open" && !event.isCancelled ? <Pressable onPress={handleCloseDiscordRecruitment} style={{ marginTop: -6, marginBottom: 16, borderRadius: 12, paddingVertical: 12, alignItems: "center", backgroundColor: "#6B5A96" }}><Text style={{ color: "#FFF", fontSize: 14, fontWeight: "900" }}>Discordでの募集を終了</Text></Pressable> : null}
         {canAdminEdit && event.eventType === "official" && eventRecruitmentChannel(event) === "app" && !event.isCancelled ? <Pressable onPress={() => { void handleSetRecruitmentStatus(event.recruitmentStatus === "draft" ? "open" : "draft"); }} style={{ marginTop: -6, marginBottom: 16, borderRadius: 12, paddingVertical: 12, alignItems: "center", backgroundColor: "#5B9BD5" }}><Text style={{ color: "#FFF", fontSize: 14, fontWeight: "900" }}>{event.recruitmentStatus === "draft" ? "管理者：募集を開始" : "管理者：募集前に戻す"}</Text></Pressable> : null}
         {canAdminEdit ? <Pressable onPress={handleDeleteEvent} style={{ marginTop: -6, marginBottom: 16, borderRadius: 12, paddingVertical: 12, alignItems: "center", borderWidth: 1, borderColor: "#D94C55" }}><Text style={{ color: "#D94C55", fontSize: 14, fontWeight: "900" }}>管理者：イベントを完全に削除</Text></Pressable> : null}
 
@@ -1282,7 +1283,7 @@ export default function EventDetailScreen() {
           </View>
         ) : null}
 
-        {!isJoined && !hasApplied && !isOrganizer && event.status === "open" && event.recruitmentStatus !== "draft" && !discordRecruitmentOpen ? (
+        {!isJoined && !hasApplied && !isOrganizer && event.status === "open" && event.recruitmentStatus !== "draft" && eventRecruitmentChannel(event) !== "discord" ? (
           <View style={{ backgroundColor: "#FFF8F0", borderRadius: 14, padding: 14, marginBottom: 16, borderWidth: 1, borderColor: "#EED9BF" }}>
             <Pressable onPress={() => setTermsAccepted((value) => !value)} style={{ flexDirection: "row", alignItems: "center" }}>
               <View style={{ width: 24, height: 24, borderRadius: 6, backgroundColor: termsAccepted ? "#E8A0BF" : colors.surface, borderWidth: 1, borderColor: termsAccepted ? "#E8A0BF" : colors.border, alignItems: "center", justifyContent: "center" }}>{termsAccepted ? <IconSymbol name="checkmark" size={15} color="#FFF" /> : null}</View>
@@ -1485,8 +1486,8 @@ export default function EventDetailScreen() {
         ) : (
         /* 参加ボタン */
         <Pressable
-          disabled={isJoined || hasApplied || isOrganizer || event.status !== "open" || event.recruitmentStatus === "draft" || discordRecruitmentOpen || (requiresOrganizerApproval && !termsAccepted)}
-          onPress={isJoined || hasApplied || isOrganizer || event.status !== "open" || event.recruitmentStatus === "draft" || discordRecruitmentOpen || (requiresOrganizerApproval && !termsAccepted) ? undefined : handleJoin}
+          disabled={isJoined || hasApplied || isOrganizer || event.status !== "open" || event.recruitmentStatus === "draft" || eventRecruitmentChannel(event) === "discord" || (requiresOrganizerApproval && !termsAccepted)}
+          onPress={isJoined || hasApplied || isOrganizer || event.status !== "open" || event.recruitmentStatus === "draft" || eventRecruitmentChannel(event) === "discord" || (requiresOrganizerApproval && !termsAccepted) ? undefined : handleJoin}
           style={({ pressed }) => ({
             backgroundColor: isOrganizer
               ? (event.participantsFinalizedAt ? "#34C759" : "#B42318")
@@ -1494,7 +1495,7 @@ export default function EventDetailScreen() {
               ? "#34C759"
               : hasApplied
               ? "#5B9BD5"
-              : event.status !== "open" || event.recruitmentStatus === "draft" || discordRecruitmentOpen
+              : event.status !== "open" || event.recruitmentStatus === "draft" || eventRecruitmentChannel(event) === "discord"
               ? colors.muted
               : !termsAccepted
               ? "#B8B8BD"
@@ -1506,7 +1507,7 @@ export default function EventDetailScreen() {
           })}
         >
           <Text style={{ fontSize: 17, fontWeight: "700", color: "#FFF" }}>
-            {discordRecruitmentOpen ? "Discordで受付中（アプリ申込不可）" : isOrganizer ? (event.participantsFinalizedAt ? "幹事イベント（参加者確定済み）" : event.recruitmentStatus === "draft" ? "幹事イベント（募集前）" : "幹事イベント（参加者募集中）") : isJoined ? "✓ 参加確定" : hasApplied ? "✓ 申込済み（幹事の承認待ち）" : event.recruitmentStatus === "draft" ? "募集開始前" : event.status !== "open" ? "募集終了" : requiresOrganizerApproval && !termsAccepted ? "規約に同意して申し込む" : event.selectionMethod === "lottery" ? "抽選に申し込む" : "参加を申し込む"}
+            {discordRecruitmentClosed ? "募集終了（詳細はDiscordをご確認ください）" : discordRecruitmentOpen ? "Discordで受付中（アプリ申込不可）" : isOrganizer ? (event.participantsFinalizedAt ? "幹事イベント（参加者確定済み）" : event.recruitmentStatus === "draft" ? "幹事イベント（募集前）" : "幹事イベント（参加者募集中）") : isJoined ? "✓ 参加確定" : hasApplied ? "✓ 申込済み（幹事の承認待ち）" : event.recruitmentStatus === "draft" ? "募集開始前" : event.status !== "open" ? "募集終了" : requiresOrganizerApproval && !termsAccepted ? "規約に同意して申し込む" : event.selectionMethod === "lottery" ? "抽選に申し込む" : "参加を申し込む"}
           </Text>
         </Pressable>
         )}

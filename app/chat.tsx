@@ -313,14 +313,22 @@ export default function ChatScreen() {
   // inverted リストではデータの先頭が入力欄側に置かれるため、最新メッセージを
   // 先頭にしておけばスクロール処理なしで最初から最新位置を描画できる。
   const displayedMessages = useMemo(() => {
-    const unique = messages.filter((message, index) => !messages.slice(0, index).some((earlier) =>
-      earlier.senderId === message.senderId && earlier.content === message.content &&
-      earlier.imageUri === message.imageUri &&
-      JSON.stringify(earlier.attachmentUrls ?? []) === JSON.stringify(message.attachmentUrls ?? []) &&
-      Math.abs(Date.parse(earlier.createdAt) - Date.parse(message.createdAt)) <= 2_000,
-    ));
+    const seenWelcome = new Set<string>();
+    const unique = messages.filter((message, index) => {
+      const normalized = systemMessageText(message.content);
+      if (room?.type === "event" && message.content.startsWith("【IRO+ システム】") && normalized.endsWith("の参加者専用グループが作成されました")) {
+        if (seenWelcome.has(normalized)) return false;
+        seenWelcome.add(normalized);
+      }
+      return !messages.slice(0, index).some((earlier) =>
+        earlier.senderId === message.senderId && earlier.content === message.content &&
+        earlier.imageUri === message.imageUri &&
+        JSON.stringify(earlier.attachmentUrls ?? []) === JSON.stringify(message.attachmentUrls ?? []) &&
+        Math.abs(Date.parse(earlier.createdAt) - Date.parse(message.createdAt)) <= 2_000,
+      );
+    });
     return introductionChat ? unique.reverse() : unique;
-  }, [introductionChat, messages]);
+  }, [introductionChat, messages, room?.type]);
   // 自分のプロフィール画像（AsyncStorageから読み込み）
   const [myAvatarUri, setMyAvatarUri] = useState<string | null>(null);
   const scrollToLatest = useCallback((animated = false) => {
@@ -678,14 +686,14 @@ export default function ChatScreen() {
                 {typeLabel}
               </Text>
             </View>
-            {room.id !== "board-announcement" && room.id !== "board-introduction" && room.id !== "branch-kanto-free" && room.id !== "branch-kansai-free" ? (
+            {room.id !== "community-free-chat" && room.id !== "board-announcement" && room.id !== "board-introduction" && room.id !== "branch-kanto-free" && room.id !== "branch-kansai-free" ? (
               <Text style={{ fontSize: 11, color: colors.muted, marginLeft: 6 }}>
                 {roomParticipants.length}人参加中
               </Text>
             ) : null}
           </View>
         </View>
-        {room.id !== "board-announcement" && room.id !== "board-introduction" && room.id !== "branch-kanto-free" && room.id !== "branch-kansai-free" ? (
+        {room.id !== "community-free-chat" && room.id !== "board-announcement" && room.id !== "board-introduction" && room.id !== "branch-kanto-free" && room.id !== "branch-kansai-free" ? (
           <Pressable onPress={() => setShowParticipants(true)}>
             <IconSymbol name="person.2.fill" size={20} color={colors.muted} />
           </Pressable>

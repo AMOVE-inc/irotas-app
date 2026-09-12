@@ -85,7 +85,7 @@ export default function MemberProfileScreen() {
         if (active && !followSaving) setDatabaseMember(value);
       }).catch(() => {});
     };
-    const timer = setInterval(refresh, 15000);
+    const timer = setInterval(refresh, 3000);
     return () => { active = false; clearInterval(timer); };
   }, [authUser?.id, databaseLookupComplete, followSaving, id]);
 

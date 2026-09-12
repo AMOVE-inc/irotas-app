@@ -278,11 +278,8 @@ function MealReportTimelineCard({ thread }: { thread: BoardThread }) {
       <View>
         <View style={{ minWidth: 0 }}>
           {report.postTitle ? <Text numberOfLines={2} style={{ fontSize: 15, lineHeight: 20, fontWeight: "900", color: colors.foreground }}>{report.postTitle}</Text> : null}
-          <View style={{ flexDirection: "row", alignItems: "center", flexWrap: "wrap", gap: 6, marginTop: report.postTitle ? 3 : 0 }}><Text numberOfLines={2} style={{ fontSize: report.postTitle ? 13 : 16, lineHeight: report.postTitle ? 18 : 21, fontWeight: "900", color: colors.foreground }}>{report.restaurantName}</Text>{area ? <Text style={{ fontSize: 11, fontWeight: "700", color: "#5F5960", backgroundColor: "#F4F1F3", borderRadius: 8, paddingHorizontal: 7, paddingVertical: 3 }}>📍 {area}</Text> : null}</View>
+          <View style={{ flexDirection: "row", alignItems: "center", flexWrap: "wrap", gap: 6, marginTop: report.postTitle ? 3 : 0 }}><Text numberOfLines={2} style={{ fontSize: report.postTitle ? 13 : 16, lineHeight: report.postTitle ? 18 : 21, fontWeight: "900", color: colors.foreground }}>{report.restaurantName}</Text>{area ? <Text style={{ fontSize: 11, fontWeight: "700", color: "#5F5960", backgroundColor: "#F4F1F3", borderRadius: 8, paddingHorizontal: 7, paddingVertical: 3 }}>📍 {area}</Text> : null}{report.budget ? <Text style={{ fontSize: 11, fontWeight: "700", color: "#5F5960", backgroundColor: "#F4F1F3", borderRadius: 8, paddingHorizontal: 7, paddingVertical: 3 }}>{report.budget}</Text> : null}</View>
           {rating ? <View style={{ flexDirection: "row", alignItems: "center", marginTop: 6 }}><Text accessibilityLabel={`評価 ${rating} / 5`} style={{ fontSize: 17, letterSpacing: 1, color: "#F5A623" }}>{"★".repeat(rating)}{"☆".repeat(5 - rating)}</Text></View> : null}
-          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 5, marginTop: 7 }}>
-            {report.budget ? <Text style={{ fontSize: 11, fontWeight: "700", color: "#5F5960", backgroundColor: "#F4F1F3", borderRadius: 8, paddingHorizontal: 7, paddingVertical: 3 }}>{report.budget}</Text> : null}
-          </View>
           {impression ? <View style={{ marginTop: 7 }}><Text numberOfLines={3} style={{ fontSize: 13, lineHeight: 19, color: colors.foreground }}>{impression}</Text>{impression.split(/\r?\n/).length > 3 || impression.length > 90 ? <Text style={{ fontSize: 12, fontWeight: "800", color: "#3478C7", marginTop: 3 }}>詳細を見る</Text> : null}</View> : null}
         </View>
       </View>
@@ -2836,13 +2833,13 @@ export default function BoardScreen() {
     ? "マイページへ戻る"
     : fromHome === "1"
       ? "ホームへ戻る"
-      : isIndividualClubBoard
+      : isIndividualClubBoard || activeCategory === "club-all"
         ? "部活一覧へ戻る"
         : "掲示板トップへ戻る";
   const handleBoardBack = () => {
     if (fromProfile === "1") router.replace("/profile" as any);
     else if (fromHome === "1") router.replace("/(tabs)" as any);
-    else if (isIndividualClubBoard) router.replace("/clubs");
+    else if (isIndividualClubBoard || activeCategory === "club-all") router.replace("/clubs");
     else router.replace("/board");
   };
   const canViewActiveClubMembers = Boolean(activeClub && getClubViewerAccess(activeClub, authUser?.memberId, CURRENT_USER.id).isMember);

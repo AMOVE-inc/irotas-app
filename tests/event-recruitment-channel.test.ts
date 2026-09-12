@@ -12,6 +12,7 @@ describe("event recruitment channel", () => {
     expect(isDiscordRecruitmentOpen({ id: "discord-event-123", status: "open" })).toBe(true);
     expect(isDiscordRecruitmentOpen({ id: "discord-event-123", status: "open", recruitmentStatus: "draft" })).toBe(false);
     expect(isDiscordRecruitmentOpen({ id: "discord-event-123", status: "full" })).toBe(false);
+    expect(isDiscordRecruitmentOpen({ id: "discord-event-123", status: "open", discordRecruitmentClosedAt: "2026-09-12T00:00:00Z" })).toBe(false);
     expect(isDiscordRecruitmentOpen({ id: "discord-event-123", status: "open", recruitmentChannel: "app" })).toBe(false);
   });
 });

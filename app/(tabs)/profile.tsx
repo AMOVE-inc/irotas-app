@@ -825,11 +825,10 @@ export default function ProfileScreen() {
   }, [authUser?.memberId, memberIdentity]);
   useFocusEffect(useCallback(() => {
     if (!isRealMember || !authUser) return;
-    const selfId = authUser.memberId ?? memberIdentity?.memberId ?? `member-${authUser.id}`;
     let active = true;
     const refresh = () => {
-      void Api.getMemberProfile(selfId).then((self) => {
-        if (active) setSocialStats({ followers: self.followerCount, following: self.followingCount });
+      void Api.getMySocialSummary().then((summary) => {
+        if (active) setSocialStats(summary);
       }).catch(() => {});
     };
     refresh();

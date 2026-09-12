@@ -4,9 +4,10 @@ export function eventRecruitmentChannel(event: Pick<Event, "id" | "recruitmentCh
   return event.recruitmentChannel ?? (event.id.startsWith("discord-event-") ? "discord" : "app");
 }
 
-export function isDiscordRecruitmentOpen(event: Pick<Event, "id" | "recruitmentChannel" | "status" | "recruitmentStatus" | "isCancelled">): boolean {
+export function isDiscordRecruitmentOpen(event: Pick<Event, "id" | "recruitmentChannel" | "status" | "recruitmentStatus" | "isCancelled" | "discordRecruitmentClosedAt">): boolean {
   return eventRecruitmentChannel(event) === "discord"
     && event.status === "open"
     && event.recruitmentStatus !== "draft"
+    && !event.discordRecruitmentClosedAt
     && !event.isCancelled;
 }

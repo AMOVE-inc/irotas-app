@@ -347,7 +347,7 @@ function publicEvent(
     clubId: row.club_id ?? undefined,
     date: row.event_date,
     // 定員に達していても、幹事が参加者を確定するまでは受付を継続する。
-    status: row.status === "cancelled" ? "ended" : row.status === "full" && !participantsFinalized && !data.discordRecruitmentClosedAt ? "open" : row.status,
+    status: row.status === "cancelled" ? "ended" : row.status === "full" && !participantsFinalized && !data.discordRecruitmentClosedAt && data.recruitmentChannel !== "discord" && !row.id.startsWith("discord-event-") ? "open" : row.status,
     isCancelled: row.status === "cancelled",
     title: displayEventTitle(row.title),
     createdBy: importedCreatedBy ?? importedOrganizerId ?? row.public_member_id ?? `member-${row.organizer_member_id}`,
