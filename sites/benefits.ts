@@ -111,7 +111,10 @@ async function getBenefits(db: D1Database, viewer: Viewer) {
     gifts: [
       ...(gifts.results ?? []).filter((row) => !row.deleted_at).map(giftFromRow),
       ...importedGifts.filter((gift) => !(gifts.results ?? []).some((row) => row.id === gift.id)),
-    ].sort((a, b) => String(b.createdAt ?? b.deadline).localeCompare(String(a.createdAt ?? a.deadline))),
+    ].filter((gift, index, all) => all.findIndex((candidate) =>
+      String(candidate.title).normalize("NFKC").replace(/\s+/g, "").toLowerCase() === String(gift.title).normalize("NFKC").replace(/\s+/g, "").toLowerCase()
+      && candidate.deadline === gift.deadline) === index)
+      .sort((a, b) => String(b.createdAt ?? b.deadline).localeCompare(String(a.createdAt ?? a.deadline))),
     applications: (applications.results ?? []).map((row) => ({ id: row.id, campaignId: row.campaign_id, memberId: row.public_member_id ?? `member-${row.member_id}`, memberName: row.display_name, appliedAt: row.applied_at, result: row.result })),
     points: { balance: Number(balance?.balance ?? 0), balances: Object.fromEntries((balances.results ?? []).map((row) => [String(row.public_member_id ?? `member-${row.member_id}`), Number(row.balance)])), history: history.results ?? [] },
   });

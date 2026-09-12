@@ -234,6 +234,18 @@ export default function EventDetailScreen() {
   }, [allEvents, authLoading, eventId]);
 
   useEffect(() => { void Api.getMemberDirectory().then(setMemberDirectory).catch(() => setMemberDirectory([])); }, []);
+  useEffect(() => {
+    if (!event) return;
+    const ids = [...new Set([...(event.applicantIds ?? []), ...(event.participants ?? []), ...(event.companionIds ?? [])])];
+    const missing = ids.filter((id) => !memberDirectory.some((member) => member.id === id));
+    if (!missing.length) return;
+    let active = true;
+    void Promise.all(missing.map((id) => Api.getMemberProfile(id).catch(() => null))).then((members) => {
+      const found = members.filter((member): member is Api.PublicMember => Boolean(member));
+      if (active && found.length) setMemberDirectory((current) => [...current, ...found.filter((member) => !current.some((known) => known.id === member.id))]);
+    });
+    return () => { active = false; };
+  }, [event?.id, event?.applicantIds, event?.participants, event?.companionIds, memberDirectory]);
 
   useEffect(() => {
     if (!event || showAdminEdit) return;
@@ -935,7 +947,7 @@ export default function EventDetailScreen() {
             }}
           >
             <Text style={{ fontSize: 13, fontWeight: "700", color: "#FFF" }}>
-              {eventEnded ? "開催終了" : event.discordRecruitmentClosedAt ? "募集終了" : event.recruitmentStatus === "draft" ? "募集前" : discordRecruitmentOpen ? "Discord受付" : event.status === "open" ? "アプリ受付" : event.status === "full" ? (event.participantsFinalizedAt ? "募集終了" : "満席") : "終了"}
+              {eventEnded ? "開催終了" : event.discordRecruitmentClosedAt ? "募集終了" : event.recruitmentStatus === "draft" ? "募集前" : discordRecruitmentOpen ? "Discord受付" : event.status === "open" ? "募集中" : event.status === "full" ? (event.participantsFinalizedAt ? "募集終了" : "満席") : "終了"}
             </Text>
           </View>
         </View>

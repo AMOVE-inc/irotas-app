@@ -53,7 +53,10 @@ describe("benefits and IRO+ points persistence", () => {
     const response = await handleBenefitsRequest(new Request("https://app.example/api/benefits", { headers: { cookie: "__Host-irotas_session=test-session" } }), { DB: database(), AUTH_SECRET: "test" } as SitesEnv);
     expect(response?.status).toBe(200);
     const data = await response?.json();
-    expect(data).toMatchObject({ memberRank: "gold", gifts: [], points: { balance: 0 } });
+    expect(data).toMatchObject({ memberRank: "gold", points: { balance: 0 } });
+    const gifts = data.gifts as { title: string; deadline: string }[];
+    expect(gifts.length).toBeGreaterThan(0);
+    expect(new Set(gifts.map((gift) => `${gift.title.normalize("NFKC").replace(/\s+/g, "").toLowerCase()}:${gift.deadline}`)).size).toBe(gifts.length);
     expect(data.coupons).toEqual(expect.arrayContaining([expect.objectContaining({ id: "discord-coupon-1" })]));
   });
 

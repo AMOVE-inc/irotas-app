@@ -22,11 +22,26 @@ export default function TabLayout() {
   const { user } = useAuthContext();
 
   useEffect(() => {
-    const refresh = () => { void Api.getSharedChatRooms().then((rooms) => setUnreadTotal(rooms.reduce((total, room) => total + Math.max(0, room.unreadCount ?? 0), 0))).catch(() => setUnreadTotal(0)); };
+    if (!user) return;
+    let pending = false;
+    const refresh = () => {
+      if (pending) return;
+      pending = true;
+      void Api.getSharedChatRooms()
+        .then((rooms) => setUnreadTotal(rooms.reduce((total, room) => total + Math.max(0, room.unreadCount ?? 0), 0)))
+        .catch(() => {})
+        .finally(() => { pending = false; });
+    };
     refresh();
-    const timer = setInterval(refresh, 1500);
+    const timer = setInterval(refresh, 15000);
     return () => clearInterval(timer);
   }, [user?.memberId]);
+
+  useEffect(() => {
+    if (!user?.id) return;
+    const timer = setTimeout(() => { void Api.getMemberDirectory(String(user.id)).catch(() => {}); }, 2500);
+    return () => clearTimeout(timer);
+  }, [user?.id]);
 
   return (
     <Tabs

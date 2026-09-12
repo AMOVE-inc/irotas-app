@@ -219,11 +219,7 @@ export default function ChatListScreen() {
     const localJoinedRooms = [...getMyRooms(viewerMemberId), ...branchRooms]
       .filter((room) => room.type !== "rank" && room.type !== "club" && !isFixtureRoom(room));
     const localRankRooms = getRankRoomsForUser(viewerRank);
-    if (!lastRoomLists.has(viewerMemberId)) {
-      setMyRooms(localJoinedRooms);
-      setRankRooms(localRankRooms);
-      setRoomsLoading(false);
-    }
+    // Do not present the local subset as a complete list while shared rooms load.
     let sharedRooms: ChatRoom[] = [];
     try {
       // 一覧表示に必要なのはルーム一覧だけ。重い補助情報は後段で補完する。
@@ -270,7 +266,7 @@ export default function ChatListScreen() {
     let active = true;
     let pending = false;
     void refreshRooms();
-    void loadDynamicRooms().then(() => { if (active) void refreshRooms(false); });
+    void loadDynamicRooms();
     const timer = setInterval(() => {
       if (!active || pending) return;
       pending = true;

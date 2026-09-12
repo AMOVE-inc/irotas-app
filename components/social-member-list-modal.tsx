@@ -6,10 +6,13 @@ import { IconSymbol } from "@/components/ui/icon-symbol";
 import { DEFAULT_AVATAR } from "@/constants/mock-data";
 import { useColors } from "@/hooks/use-colors";
 import * as Api from "@/lib/_core/api";
+import { useAuthContext } from "@/lib/auth-context";
 
 export function SocialMemberListModal({ visible, kind, memberId, onClose }: { visible: boolean; kind: "followers" | "following"; memberId?: string; onClose: () => void }) {
   const colors = useColors();
   const router = useRouter();
+  const { user } = useAuthContext();
+  const viewerKey = String(user?.id ?? "");
   const title = kind === "followers" ? "フォロワー" : "フォロー";
   const [members, setMembers] = useState<Api.PublicMember[]>([]);
   const [loading, setLoading] = useState(false);
@@ -17,13 +20,15 @@ export function SocialMemberListModal({ visible, kind, memberId, onClose }: { vi
   useEffect(() => {
     if (!visible || !memberId) { setMembers([]); return; }
     let active = true;
-    setLoading(true);
-    void Api.getMemberSocialList(memberId, kind)
+    const cached = Api.peekMemberSocialList(memberId, kind, viewerKey);
+    setMembers(cached ?? []);
+    setLoading(!cached);
+    void Api.getMemberSocialList(memberId, kind, viewerKey)
       .then((value) => { if (active) setMembers(value); })
       .catch(() => { if (active) setMembers([]); })
       .finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
-  }, [kind, memberId, visible]);
+  }, [kind, memberId, viewerKey, visible]);
 
   return <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
     <View style={{ flex: 1, backgroundColor: colors.background }}>

@@ -298,8 +298,14 @@ export async function handleMemberDirectoryRequest(
       SELECT ${direction === "followers" ? "follower_member_id" : "followed_member_id"} FROM member_follows
       WHERE ${direction === "followers" ? "followed_member_id" : "follower_member_id"} = ?)
       ORDER BY m.display_name COLLATE NOCASE`).bind(target.id).all<MemberDirectoryRow>();
-    const members = [];
-    for (const row of socialRows.results ?? []) members.push(publicMemberFromRow(row, await relationship(env.DB, viewer.id, row.id)));
+    const followRows = await env.DB.prepare(`SELECT follower_member_id, followed_member_id FROM member_follows
+      WHERE follower_member_id = ? OR followed_member_id = ?`).bind(viewer.id, viewer.id)
+      .all<{ follower_member_id: number; followed_member_id: number }>();
+    const following = new Set((followRows.results ?? []).filter((row) => row.follower_member_id === viewer.id).map((row) => row.followed_member_id));
+    const followers = new Set((followRows.results ?? []).filter((row) => row.followed_member_id === viewer.id).map((row) => row.follower_member_id));
+    const members = (socialRows.results ?? []).map((row) => publicMemberFromRow(row, {
+      isFollowing: following.has(row.id), followsViewer: followers.has(row.id),
+    }));
     return responseJson({ members });
   }
 

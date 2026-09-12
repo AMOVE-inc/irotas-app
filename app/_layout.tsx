@@ -152,6 +152,19 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
 
 export default function RootLayout() {
   const [iconsLoaded] = useFonts(MaterialIcons.font);
+  const [webIconFontReady, setWebIconFontReady] = useState(Platform.OS !== "web");
+  useEffect(() => {
+    if (Platform.OS !== "web" || !iconsLoaded) return;
+    let active = true;
+    // Safari can paint fallback tofu glyphs before its font face is actually ready.
+    void document.fonts.load("24px material").then(() => {
+      if (active) setWebIconFontReady(true);
+    }).catch(() => {
+      if (active) setWebIconFontReady(true);
+    });
+    const fallback = window.setTimeout(() => { if (active) setWebIconFontReady(true); }, 5000);
+    return () => { active = false; window.clearTimeout(fallback); };
+  }, [iconsLoaded]);
   const initialInsets = initialWindowMetrics?.insets ?? DEFAULT_WEB_INSETS;
   const initialFrame = initialWindowMetrics?.frame ?? getRootFrame();
 
@@ -383,7 +396,7 @@ export default function RootLayout() {
     </GestureHandlerRootView>
   );
 
-  if (!iconsLoaded) {
+  if (!iconsLoaded || !webIconFontReady) {
     return (
       <View
         style={{

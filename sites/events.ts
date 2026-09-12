@@ -712,10 +712,31 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
     const rows = await env.DB.prepare(`${selectEvents} ${includeCancelled ? "" : "WHERE e.status != 'cancelled'"} ORDER BY e.event_date, e.created_at DESC`).all<EventRow>();
     const deleted = await env.DB.prepare("SELECT event_id FROM deleted_imported_events").all<{ event_id: string }>();
     const deletedIds = new Set((deleted.results ?? []).map((item) => item.event_id));
+    const [participations, cancellations, favorites] = await Promise.all([
+      env.DB.prepare(`SELECT p.event_id, p.member_id, m.public_member_id, p.status
+        FROM event_participations p JOIN members m ON m.id = p.member_id`).all<ParticipationRow>(),
+      env.DB.prepare(`SELECT c.event_id, c.member_id, m.public_member_id, c.requested_at,
+        c.contacted_organizer, c.policy_confirmed, c.status
+        FROM event_cancellation_requests c JOIN members m ON m.id = c.member_id`).all<CancellationRow>(),
+      env.DB.prepare("SELECT event_id FROM event_favorites WHERE member_id = ?").bind(member.id).all<{ event_id: string }>(),
+    ]);
+    const byEvent = <T extends { event_id: string }>(items: T[]) => {
+      const result = new Map<string, T[]>();
+      for (const item of items) {
+        const group = result.get(item.event_id) ?? [];
+        group.push(item);
+        result.set(item.event_id, group);
+      }
+      return result;
+    };
+    const participationsByEvent = byEvent(participations.results ?? []);
+    const cancellationsByEvent = byEvent(cancellations.results ?? []);
+    const favoriteIds = new Set((favorites.results ?? []).map((item) => item.event_id));
     const events = await Promise.all((rows.results ?? []).filter((row) => !DELETED_EVENT_IDS.has(row.id) && !deletedIds.has(row.id)).map(async (row) => {
       if (row.event_type === "club" && row.club_id && !await canMemberAccessClub(env.DB!, row.club_id, member.id, admin))
         return lockedClubEventPreview(row);
-      return hydratedEvent(env.DB!, row, member.id, elevated, memberPublicId);
+      return publicEvent(row, member.id, memberPublicId, elevated,
+        participationsByEvent.get(row.id) ?? [], cancellationsByEvent.get(row.id) ?? [], favoriteIds.has(row.id));
     }));
     return responseJson({ events, deletedImportedEventIds: [...deletedIds] });
   }

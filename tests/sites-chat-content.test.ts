@@ -91,7 +91,7 @@ class ChatDatabase implements D1Database {
           return { success: true, results: this.roomMembers.filter((item) => item.roomId === values[0] && !item.left).map((item) => ({ member_id: item.memberId, member_role: item.role })) as T[] };
         if (sql.includes("FROM clubs c") && sql.includes("club_memberships cm"))
           return { success: true, results: this.clubs.filter((club) => club.leader_member_id === Number(values[0]) || this.approvedClubMemberIds.has(Number(values[1]))) as T[] };
-        if (sql.includes("FROM chat_rooms WHERE deleted_at IS NULL") && sql.includes("ORDER BY"))
+        if (sql.includes("FROM chat_rooms cr WHERE cr.deleted_at IS NULL") && sql.includes("ORDER BY"))
           return { success: true, results: [...this.rooms.values()] as T[] };
         if (sql.includes("FROM chat_room_members crm JOIN members")) {
           const result = this.roomMembers.filter((item) => item.roomId === values[0] && !item.left).map((item) => {

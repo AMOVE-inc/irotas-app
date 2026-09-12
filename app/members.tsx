@@ -23,7 +23,8 @@ export default function MembersScreen() {
   const colors = useColors();
   const router = useRouter();
   const { user: authUser } = useAuthContext();
-  const [directory, setDirectory] = useState<Api.PublicMember[] | null>(null);
+  const viewerKey = String(authUser?.id ?? "");
+  const [directory, setDirectory] = useState<Api.PublicMember[] | null>(() => viewerKey ? Api.peekMemberDirectory(viewerKey) ?? null : null);
   const [directoryError, setDirectoryError] = useState(false);
   const [searchText, setSearchText] = useState("");
 
@@ -31,11 +32,12 @@ export default function MembersScreen() {
     if (!authUser) { setDirectory(null); setDirectoryError(false); return; }
     let active = true;
     setDirectoryError(false);
-    void Api.getMemberDirectory()
+    setDirectory(Api.peekMemberDirectory(viewerKey) ?? null);
+    void Api.getMemberDirectory(viewerKey)
       .then((members) => { if (active) setDirectory(members); })
       .catch(() => { if (active) { setDirectory([]); setDirectoryError(true); } });
     return () => { active = false; };
-  }, [authUser]);
+  }, [viewerKey]);
 
   // サーバーの会員一覧が届くまでモック会員を描画しない。
   const searchableMembers = useMemo(() => directory !== null ? directory.map((member) => ({

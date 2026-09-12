@@ -403,7 +403,11 @@ async function ensureViewerEventRooms(db: D1Database, member: Viewer) {
       json_extract(public_data_json, '$.chatId') AS chat_id
     FROM events
     WHERE status != 'cancelled' AND json_extract(public_data_json, '$.chatId') IS NOT NULL
-    ORDER BY event_date DESC LIMIT 100`).all<{
+      AND (organizer_member_id = ? OR EXISTS (
+        SELECT 1 FROM event_participations ep WHERE ep.event_id = events.id
+          AND ep.member_id = ? AND ep.status IN ('confirmed', 'cancel_requested')))
+      AND NOT EXISTS (SELECT 1 FROM chat_rooms cr WHERE cr.id = json_extract(events.public_data_json, '$.chatId') AND cr.deleted_at IS NULL)
+    ORDER BY event_date DESC LIMIT 30`).bind(member.id, member.id).all<{
       id: string; title: string; organizer_member_id: number; chat_id: string;
     }>();
   for (const event of result.results ?? []) {
@@ -482,16 +486,22 @@ export async function handleChatContentRequest(
   if (!member) return json({ error: "ログインが必要です" }, 401);
 
   if (url.pathname === ROOMS_PATH && request.method === "GET") {
-    // 全イベントのチャットを毎回同期すると、一覧を開くだけで大量のDB更新が走る。
-    // イベントチャットは個別アクセス時に必要な1部屋だけ同期する。
+    // Only repair missing rooms for events this member actually attends or organizes.
     await ensureClubRooms(env.DB, member.id);
     await ensureKnownRoom(env.DB, "community-free-chat");
     // 一覧から開くケースでも、旧支部フリーチャットを先にv2へ移行して履歴を残さない。
     await ensureKnownRoom(env.DB, "branch-kanto-free");
     await ensureKnownRoom(env.DB, "branch-kansai-free");
-    const result = await env.DB.prepare(`SELECT id, name, room_type, source_id, required_rank, created_by_member_id
-      FROM chat_rooms WHERE deleted_at IS NULL
-      ORDER BY CASE WHEN room_type = 'club' THEN 0 ELSE 1 END, updated_at DESC LIMIT 200`).all<RoomRow>();
+    await ensureViewerEventRooms(env.DB, member);
+    const result = await env.DB.prepare(`SELECT cr.id, cr.name, cr.room_type, cr.source_id, cr.required_rank, cr.created_by_member_id
+      FROM chat_rooms cr WHERE cr.deleted_at IS NULL AND (
+        ? = 1 OR cr.room_type IN ('announcement', 'rank', 'club')
+        OR cr.id IN ('community-free-chat', 'branch-kanto-free', 'branch-kansai-free', 'board-introduction')
+        OR EXISTS (SELECT 1 FROM chat_room_members crm WHERE crm.room_id = cr.id AND crm.member_id = ? AND crm.left_at IS NULL)
+        OR (cr.room_type = 'event' AND EXISTS (SELECT 1 FROM event_participations ep
+          WHERE ep.event_id = cr.source_id AND ep.member_id = ? AND ep.status IN ('confirmed', 'cancel_requested')))
+      ) ORDER BY CASE WHEN cr.room_type = 'club' THEN 0 ELSE 1 END, cr.updated_at DESC LIMIT 1000`)
+      .bind(elevated(member) ? 1 : 0, member.id, member.id).all<RoomRow>();
     const access = await Promise.all((result.results ?? []).map((room) => canAccessRoom(env.DB!, room, member)));
     const visible = (result.results ?? []).filter((_, index) => access[index]);
     return json({ rooms: await Promise.all(visible.map(async (room) => {

@@ -890,9 +890,25 @@ export async function getMe(): Promise<AuthApiUser | null> {
   }
 }
 
-export async function getMemberDirectory() {
-  const result = await apiCall<{ members: PublicMember[] }>("/api/members");
-  return result.members;
+const memberDirectorySnapshots = new Map<string, PublicMember[]>();
+const memberDirectoryRequests = new Map<string, Promise<PublicMember[]>>();
+
+export function peekMemberDirectory(viewerKey: string) {
+  return memberDirectorySnapshots.get(viewerKey);
+}
+
+export async function getMemberDirectory(viewerKey?: string) {
+  const key = viewerKey || "uncached";
+  const pending = memberDirectoryRequests.get(key);
+  if (pending) return pending;
+  const request = apiCall<{ members: PublicMember[] }>("/api/members")
+    .then((result) => {
+      if (viewerKey) memberDirectorySnapshots.set(viewerKey, result.members);
+      return result.members;
+    })
+    .finally(() => { memberDirectoryRequests.delete(key); });
+  memberDirectoryRequests.set(key, request);
+  return request;
 }
 
 export async function getOperatorMembers() {
@@ -953,14 +969,26 @@ export async function setMemberFollow(memberId: string, following: boolean) {
   return result.member;
 }
 
+const memberSocialSnapshots = new Map<string, PublicMember[]>();
+const memberSocialRequests = new Map<string, Promise<PublicMember[]>>();
+
+export function peekMemberSocialList(memberId: string, kind: "followers" | "following", viewerKey: string) {
+  return memberSocialSnapshots.get(`${viewerKey}:${memberId}:${kind}`);
+}
+
 export async function getMemberSocialList(
   memberId: string,
   kind: "followers" | "following",
+  viewerKey?: string,
 ) {
-  const result = await apiCall<{ members: PublicMember[] }>(
-    `/api/members/${encodeURIComponent(memberId)}/${kind}`,
-  );
-  return result.members;
+  const key = viewerKey ? `${viewerKey}:${memberId}:${kind}` : "";
+  const pending = key ? memberSocialRequests.get(key) : undefined;
+  if (pending) return pending;
+  const request = apiCall<{ members: PublicMember[] }>(`/api/members/${encodeURIComponent(memberId)}/${kind}`)
+    .then((result) => { if (key) memberSocialSnapshots.set(key, result.members); return result.members; })
+    .finally(() => { if (key) memberSocialRequests.delete(key); });
+  if (key) memberSocialRequests.set(key, request);
+  return request;
 }
 
 export async function getPrivateMemberNote(memberId: string) {

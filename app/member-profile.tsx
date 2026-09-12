@@ -70,6 +70,14 @@ export default function MemberProfileScreen() {
   }, [authUser?.id, id]);
 
   useEffect(() => {
+    if (!id || !authUser) return;
+    const viewerKey = String(authUser.id);
+    const targetId = databaseMember?.id ?? id;
+    void Api.getMemberSocialList(targetId, "followers", viewerKey).catch(() => {});
+    void Api.getMemberSocialList(targetId, "following", viewerKey).catch(() => {});
+  }, [authUser?.id, databaseMember?.id, id]);
+
+  useEffect(() => {
     if (!id || !authUser || !databaseLookupComplete) return;
     let active = true;
     const refresh = () => {
@@ -77,7 +85,7 @@ export default function MemberProfileScreen() {
         if (active && !followSaving) setDatabaseMember(value);
       }).catch(() => {});
     };
-    const timer = setInterval(refresh, 3000);
+    const timer = setInterval(refresh, 15000);
     return () => { active = false; clearInterval(timer); };
   }, [authUser?.id, databaseLookupComplete, followSaving, id]);
 
