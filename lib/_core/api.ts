@@ -1078,6 +1078,10 @@ export async function getEvents(options?: { includeCancelled?: boolean }) {
   return result.events;
 }
 
+export async function getEventsWithDeletedImportedIds(options?: { includeCancelled?: boolean }) {
+  return apiCall<{ events: Event[]; deletedImportedEventIds: string[] }>(`/api/events${options?.includeCancelled ? "?includeCancelled=1" : ""}`);
+}
+
 export async function getEvent(eventId: string) {
   const result = await apiCall<{ event: Event }>(
     `/api/events/${encodeURIComponent(eventId)}`,
@@ -1255,6 +1259,14 @@ export async function setOfficialEventRecruitmentStatus(eventId: string, recruit
   return result.event;
 }
 
+export async function closeDiscordEventRecruitment(eventId: string) {
+  const result = await apiCall<{ event: Event }>(`/api/events/${encodeURIComponent(eventId)}`, {
+    method: "PATCH",
+    body: JSON.stringify({ action: "close_discord_recruitment" }),
+  });
+  return result.event;
+}
+
 export async function updateEventDetails(eventId: string, input: {
   title: string;
   description: string;
@@ -1278,6 +1290,7 @@ export async function updateEventDetails(eventId: string, input: {
   time?: string;
   location?: string;
   capacity?: number;
+  capacityMode?: Event["capacityMode"] | null;
   reservationCapacity?: number;
   price?: string;
   priceMin?: number;

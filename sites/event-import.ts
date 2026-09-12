@@ -59,10 +59,12 @@ async function analyze(db: D1Database, items: IncomingItem[]) {
   const decisions: Record<string, unknown>[] = [];
   // Resolve authors and source event IDs in batches.  The previous one-query-at-a-time
   // approach was safe but slow enough for a browser request to time out.
-  const [memberResult, eventResults] = await Promise.all([
+  const [memberResult, eventResults, deletedResult] = await Promise.all([
     db.prepare("SELECT id, discord_user_id FROM members WHERE discord_user_id IS NOT NULL").all<{ id: number; discord_user_id: string }>(),
     db.batch<ExistingRow>(items.map((item) => db.prepare("SELECT id, organizer_member_id, event_type, club_id, event_date, status, title, public_data_json FROM events WHERE id = ?").bind(`discord-event-${item.sourceThreadId}`))),
+    db.prepare("SELECT event_id FROM deleted_imported_events").all<{ event_id: string }>(),
   ]);
+  const deletedIds = new Set((deletedResult.results ?? []).map((row) => row.event_id));
   const membersByDiscordId = new Map((memberResult.results ?? []).map((member) => [member.discord_user_id, member.id]));
   const existingById = new Map<string, ExistingRow>();
   for (let index = 0; index < items.length; index += 1) {
@@ -79,6 +81,7 @@ async function analyze(db: D1Database, items: IncomingItem[]) {
   for (const item of items) {
     if (!item.organizerMemberId && item.organizerDiscordUserId) item.organizerMemberId = membersByDiscordId.get(item.organizerDiscordUserId);
     const eventId = `discord-event-${item.sourceThreadId}`;
+    if (deletedIds.has(eventId)) { counts.skipped += 1; decisions.push({ sourceThreadId: item.sourceThreadId, eventId, action: "skipped", reason: "deleted_by_admin" }); continue; }
     const row = existingById.get(eventId);
     if (!row) {
       if (!item.organizerMemberId) { counts.skipped += 1; decisions.push({ sourceThreadId: item.sourceThreadId, eventId, action: "skipped", reason: "organizerMemberId_required" }); }

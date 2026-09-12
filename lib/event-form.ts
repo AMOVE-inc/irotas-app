@@ -5,7 +5,14 @@ export const EVENT_TIME_OPTIONS = Array.from(
   { length: 96 },
   (_, index) => `${String(Math.floor(index / 4)).padStart(2, "0")}:${String((index % 4) * 15).padStart(2, "0")}`,
 );
-export const EVENT_CAPACITY_OPTIONS = Array.from({ length: 100 }, (_, index) => String(index + 1));
+export const EVENT_CAPACITY_OPTIONS = ["undecided", "unlimited", ...Array.from({ length: 100 }, (_, index) => String(index + 1))];
+export const EVENT_RESERVATION_CAPACITY_OPTIONS = EVENT_CAPACITY_OPTIONS.slice(2);
+export function eventCapacityOptionLabel(value: string) {
+  return value === "undecided" ? "未定" : value === "unlimited" ? "上限なし" : value;
+}
+export function eventCapacityLabel(event: Pick<Event, "capacity" | "capacityMode">) {
+  return event.capacityMode === "undecided" ? "未定" : event.capacityMode === "unlimited" ? "上限なし" : `${event.capacity}人`;
+}
 export const EVENT_AMOUNT_OPTIONS = Array.from({ length: 300 }, (_, index) => `${((index + 1) * 1000).toLocaleString()}円`);
 export const EVENT_RANKS: MemberRank[] = ["regular", "silver", "gold", "platinum"];
 export const DEFAULT_CANCELLATION_POLICY = "1週間前より100%のキャンセル料が発生します。代理が見つかった場合はキャンセル料はかかりません";
@@ -51,7 +58,7 @@ function japanDateKey(now = new Date()) {
 
 /** 幹事・同席者・募集枠を収容するために必要な最小予約人数。 */
 export function minimumReservationCapacity(recruitCapacity: string, companionIds: readonly string[]) {
-  return 1 + companionIds.length + Number(recruitCapacity || 0);
+  return 1 + companionIds.length + (Number(recruitCapacity) || 0);
 }
 
 /** True when the editor has changed only the companion selection. */
@@ -92,7 +99,7 @@ export function eventFormValuesFromEvent(event: Event): EventFormValues {
     time: event.time ?? "",
     address: editableEventAddress(event),
     reservationCapacity: String(event.reservationCapacity ?? event.capacity ?? ""),
-    recruitCapacity: String(event.capacity ?? ""),
+    recruitCapacity: event.capacityMode ?? String(event.capacity ?? ""),
     fixedAmount,
     budgetMin: fixedAmount ? String(priceMin || "") : amountOption(priceMin),
     budgetMax: fixedAmount ? "" : amountOption(priceMax),
@@ -138,14 +145,14 @@ export function validateEventForm(values: EventFormValues, options: { requireIma
   if (values.address.trim() && !extracted.prefecture) return "住所を入力する場合は都道府県名を含めてください";
   if (values.decisionDate > values.date) return "参加者決定予定日は開催日以前を選択してください";
   if (!usesRankPrices && !values.fixedAmount && numericEventAmount(values.budgetMin) > numericEventAmount(values.budgetMax)) return "下限金額は上限金額以下にしてください";
-  if (minimumReservationCapacity(values.recruitCapacity, values.companionIds) > Number(values.reservationCapacity)) return "予約人数には、自分・同席者・募集人数の全員が収まるよう設定してください";
+  if (!['undecided', 'unlimited'].includes(values.recruitCapacity) && minimumReservationCapacity(values.recruitCapacity, values.companionIds) > Number(values.reservationCapacity)) return "予約人数には、自分・同席者・募集人数の全員が収まるよう設定してください";
   if (values.tabelogUrl && !/^https?:\/\//i.test(values.tabelogUrl)) return "食べログURLは http:// または https:// から入力してください";
   if (values.googleMapsUrl && !/^https?:\/\//i.test(values.googleMapsUrl)) return "GoogleマップURLは http:// または https:// から入力してください";
   if (values.eventType === "official" && values.useRankPrices && EVENT_RANKS.some((rank) => !values.rankPrices[rank])) return "ランク別料金を設定する場合は、すべてのランクの料金を選択してください";
   return null;
 }
 
-export function eventFormSaveFields(values: EventFormValues): Pick<Event, "title" | "restaurantName" | "description" | "date" | "time" | "location" | "prefecture" | "tokyoArea" | "capacity" | "reservationCapacity" | "price" | "priceMin" | "priceMax" | "genres" | "rankPrices" | "category" | "eventType" | "clubId" | "applicationDeadline" | "cancellationPolicy" | "selectionMethod" | "tabelogUrl" | "googleMapsUrl" | "publicNotes" | "privateMemo" | "companionIds"> {
+export function eventFormSaveFields(values: EventFormValues): Pick<Event, "title" | "restaurantName" | "description" | "date" | "time" | "location" | "prefecture" | "tokyoArea" | "capacity" | "capacityMode" | "reservationCapacity" | "price" | "priceMin" | "priceMax" | "genres" | "rankPrices" | "category" | "eventType" | "clubId" | "applicationDeadline" | "cancellationPolicy" | "selectionMethod" | "tabelogUrl" | "googleMapsUrl" | "publicNotes" | "privateMemo" | "companionIds"> {
   const extracted = extractEventLocation(values.address);
   const usesRankPrices = values.eventType === "official" && values.useRankPrices;
   const rankPrices = usesRankPrices
@@ -164,7 +171,8 @@ export function eventFormSaveFields(values: EventFormValues): Pick<Event, "title
     location: values.address.trim() || "住所未設定",
     prefecture: extracted.prefecture,
     tokyoArea: extracted.tokyoArea,
-    capacity: Number(values.recruitCapacity),
+    capacity: ['undecided', 'unlimited'].includes(values.recruitCapacity) ? 0 : Number(values.recruitCapacity),
+    capacityMode: values.recruitCapacity === 'undecided' || values.recruitCapacity === 'unlimited' ? values.recruitCapacity : null,
     reservationCapacity: Number(values.reservationCapacity),
     price,
     priceMin,

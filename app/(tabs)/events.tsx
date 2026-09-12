@@ -761,7 +761,7 @@ function EventCard({
               <Text
                 style={{ fontSize: 10, fontWeight: "900", color: "#34A853" }}
               >
-                {isDiscordRecruitmentOpen(event) ? "参加者はDiscordで確定" : `${remainingCapacity}名/${reservationCapacity}名 ${event.status === "open" ? "募集中" : ""}`}
+                {event.discordRecruitmentClosedAt ? "Discordでの募集は終了" : isDiscordRecruitmentOpen(event) ? "参加者はDiscordで確定" : event.capacityMode ? `募集人数 ${event.capacityMode === "undecided" ? "未定" : "上限なし"} ${event.status === "open" ? "募集中" : ""}` : `${remainingCapacity}名/${reservationCapacity}名 ${event.status === "open" ? "募集中" : ""}`}
               </Text>
             </View>
             <View
@@ -887,7 +887,7 @@ export default function EventsScreen() {
   const [endDate, setEndDate] = useState("");
   const [refreshing, setRefreshing] = useState(false);
   const [allEvents, setAllEvents] = useState<Event[]>(() =>
-    getAllEvents(EVENTS),
+    getAllEvents(EVENTS).filter((event) => !event.id.startsWith("discord-event-")),
   );
   const favoriteEventIds = useEventFavorites();
   const effectiveFavoriteEventIds = useMemo(
@@ -930,22 +930,23 @@ export default function EventsScreen() {
 
   const refreshEvents = useCallback(async () => {
     if (!authUser) {
-      setAllEvents([...getAllEvents(EVENTS)]);
+      setAllEvents(getAllEvents(EVENTS).filter((event) => !event.id.startsWith("discord-event-")));
       return;
     }
     try {
-      const databaseEvents = await Api.getEvents();
+      const { events: databaseEvents, deletedImportedEventIds } = await Api.getEventsWithDeletedImportedIds();
       const databaseIds = new Set(databaseEvents.map((event) => event.id));
+      const deletedIds = new Set(deletedImportedEventIds);
       const importedById = new Map(getAllEvents(EVENTS).map((event) => [event.id, event]));
       setAllEvents([
         ...databaseEvents.map((event) => {
           const imported = importedById.get(event.id);
           return imported ? { ...event, organizerProfileId: imported.organizerProfileId || event.organizerProfileId, organizerName: imported.organizerName || event.organizerName, organizerAvatar: imported.organizerAvatar || event.organizerAvatar, organizerRank: imported.organizerRank || event.organizerRank } : event;
         }),
-        ...getAllEvents(EVENTS).filter((event) => !databaseIds.has(event.id)),
+        ...getAllEvents(EVENTS).filter((event) => !deletedIds.has(event.id) && !databaseIds.has(event.id)),
       ]);
     } catch {
-      setAllEvents([...getAllEvents(EVENTS)]);
+      setAllEvents(getAllEvents(EVENTS).filter((event) => !event.id.startsWith("discord-event-")));
     }
   }, [authUser]);
 

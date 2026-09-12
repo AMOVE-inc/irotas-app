@@ -13,7 +13,7 @@ import { pendingEvents } from "@/lib/event-store";
 import { eventRecruitmentChannel } from "@/lib/event-recruitment-channel";
 import { scheduleOrganizerDeadlineNotification } from "@/lib/notifications";
 import { extractEventLocation, formatEventArea } from "@/lib/event-location";
-import { DEFAULT_CANCELLATION_POLICY, EVENT_AMOUNT_OPTIONS, EVENT_CAPACITY_OPTIONS, EVENT_RANKS, EVENT_TIME_OPTIONS, eventFormSaveFields, eventFormValuesFromEvent, validateEventForm } from "@/lib/event-form";
+import { DEFAULT_CANCELLATION_POLICY, EVENT_AMOUNT_OPTIONS, EVENT_CAPACITY_OPTIONS, EVENT_RESERVATION_CAPACITY_OPTIONS, EVENT_RANKS, EVENT_TIME_OPTIONS, eventCapacityOptionLabel, eventFormSaveFields, eventFormValuesFromEvent, validateEventForm } from "@/lib/event-form";
 import { useColors } from "@/hooks/use-colors";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
@@ -79,13 +79,13 @@ function SelectField({ label, value, options, onChange }: { label: string; value
   return (
     <>
       <Pressable onPress={() => setVisible(true)} style={{ height: 48, borderRadius: 12, backgroundColor: colors.surface, paddingHorizontal: 14, flexDirection: "row", alignItems: "center", justifyContent: "space-between", borderWidth: 1, borderColor: colors.border }}>
-        <Text style={{ fontSize: 15, color: value ? colors.foreground : colors.muted }}>{value || "選択してください"}</Text>
+        <Text style={{ fontSize: 15, color: value ? colors.foreground : colors.muted }}>{value ? eventCapacityOptionLabel(value) : "選択してください"}</Text>
         <IconSymbol name="chevron.down" size={17} color={colors.muted} />
       </Pressable>
       <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setVisible(false)}>
         <View style={{ flex: 1, backgroundColor: colors.background }}>
           <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 16, paddingTop: 20, paddingBottom: 12, borderBottomWidth: 0.5, borderBottomColor: colors.border }}><Text style={{ flex: 1, fontSize: 18, fontWeight: "800", color: colors.foreground }}>{label}</Text><Pressable onPress={() => setVisible(false)}><IconSymbol name="xmark" size={22} color={colors.muted} /></Pressable></View>
-          <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 32 }}>{options.map((option) => <Pressable key={option} onPress={() => { onChange(option); setVisible(false); }} style={{ flexDirection: "row", alignItems: "center", paddingVertical: 13, borderBottomWidth: 0.5, borderBottomColor: colors.border }}><Text style={{ flex: 1, fontSize: 15, color: colors.foreground }}>{option}</Text>{value === option ? <IconSymbol name="checkmark" size={18} color="#E8A0BF" /> : null}</Pressable>)}</ScrollView>
+          <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 32 }}>{options.map((option) => <Pressable key={option} onPress={() => { onChange(option); setVisible(false); }} style={{ flexDirection: "row", alignItems: "center", paddingVertical: 13, borderBottomWidth: 0.5, borderBottomColor: colors.border }}><Text style={{ flex: 1, fontSize: 15, color: colors.foreground }}>{eventCapacityOptionLabel(option)}</Text>{value === option ? <IconSymbol name="checkmark" size={18} color="#E8A0BF" /> : null}</Pressable>)}</ScrollView>
         </View>
       </Modal>
     </>
@@ -241,6 +241,7 @@ export default function CreateEventScreen() {
         const uploadedImage = imageUri && imageUri !== initialImageUri ? (await Api.uploadEventImage(imageUri)).imageUrl : undefined;
         const updated = await Api.updateEventDetails(editId, {
           ...savedFields,
+          capacityMode: savedFields.capacityMode ?? null,
           recruitmentChannel,
           recruitmentStatus: finalType === "official" ? recruitmentStatus : undefined,
           ...(uploadedImage ? { image: uploadedImage } : {}),
@@ -305,7 +306,7 @@ export default function CreateEventScreen() {
         <FieldLabel>食べログURL（任意）</FieldLabel><TextInput value={tabelogUrl} onChangeText={setTabelogUrl} placeholder="https://tabelog.com/..." placeholderTextColor={colors.muted} autoCapitalize="none" keyboardType="url" style={inputStyle} />
         <FieldLabel>GoogleマップURL（任意）</FieldLabel><TextInput value={googleMapsUrl} onChangeText={setGoogleMapsUrl} placeholder="https://maps.app.goo.gl/..." placeholderTextColor={colors.muted} autoCapitalize="none" keyboardType="url" style={inputStyle} />
         {eventType !== "club" ? <><FieldLabel>グルメジャンル *（複数選択可）</FieldLabel><View style={{ flexDirection: "row", flexWrap: "wrap", gap: 7 }}>{GOURMET_GENRES.map((genre) => { const selected = genres.includes(genre); return <Pressable key={genre} onPress={() => setGenres((current) => selected ? current.filter((item) => item !== genre) : [...current, genre])} style={{ borderRadius: 18, paddingHorizontal: 11, paddingVertical: 7, backgroundColor: selected ? "#5D5C74" : colors.surface, borderWidth: 1, borderColor: selected ? "#5D5C74" : colors.border }}><Text style={{ fontSize: 12, fontWeight: "700", color: selected ? "#FFF" : colors.foreground }}>{genre}</Text></Pressable>; })}</View></> : null}
-        <FieldLabel>予約人数 *</FieldLabel><SelectField label="予約人数" value={reservationCapacity} options={EVENT_CAPACITY_OPTIONS} onChange={setReservationCapacity} />
+        <FieldLabel>予約人数 *</FieldLabel><SelectField label="予約人数" value={reservationCapacity} options={EVENT_RESERVATION_CAPACITY_OPTIONS} onChange={setReservationCapacity} />
         <FieldLabel>募集人数（自分以外） *</FieldLabel><SelectField label="募集人数" value={recruitCapacity} options={EVENT_CAPACITY_OPTIONS} onChange={setRecruitCapacity} />
 
         <FieldLabel>{eventType === "official" ? useRankPrices ? "参加費（任意）" : "参加費 *" : "予算 *"}</FieldLabel>

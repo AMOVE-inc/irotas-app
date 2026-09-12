@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { lockedClubEventPreview, sanitizeEvent } from "../sites/events";
+import { eventCapacityLabel, eventFormSaveFields, eventFormValuesFromEvent, validateEventForm } from "../lib/event-form";
+import type { Event } from "../constants/mock-data";
 
 function validEvent(overrides: Record<string, unknown> = {}) {
   return {
@@ -44,6 +46,19 @@ describe("production event validation", () => {
     expect(sanitizeEvent(validEvent({ time: "19:10" }))).toBeNull();
     expect(sanitizeEvent(validEvent({ image: "https://example.com/a.jpg" }))).toBeNull();
     expect(sanitizeEvent(validEvent({ applicationDeadline: "2026-09-21" }))).toBeNull();
+  });
+
+  it("keeps undecided and unlimited recruitment capacity distinct from a numeric limit", () => {
+    for (const mode of ["undecided", "unlimited"] as const) {
+      const accepted = sanitizeEvent(validEvent({ capacity: 0, capacityMode: mode }));
+      expect(accepted?.capacityMode).toBe(mode);
+      expect(eventCapacityLabel(accepted as Event)).toBe(mode === "undecided" ? "未定" : "上限なし");
+      const form = eventFormValuesFromEvent({ ...validEvent(), ...accepted, id: "event-test", createdBy: "member-1" } as Event);
+      expect(form.recruitCapacity).toBe(mode);
+      expect(validateEventForm(form, { requireImage: false, allowPastDate: true, allowEmptyGenres: true })).toBeNull();
+      expect(eventFormSaveFields(form)).toMatchObject({ capacity: 0, capacityMode: mode });
+    }
+    expect(sanitizeEvent(validEvent({ capacity: 0 }))).toBeNull();
   });
 
   it("returns only a safe preview for a club event visible to a non-member", () => {

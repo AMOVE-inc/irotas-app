@@ -110,6 +110,8 @@ export interface Event {
   location: string;
   image: string;
   capacity: number;
+  /** When capacity is 0, distinguish an undecided limit from no upper limit. */
+  capacityMode?: "undecided" | "unlimited" | null;
   attendees: number;
   participants: string[]; // member ids
   /** Participants retained for history when an event is cancelled. */
@@ -127,6 +129,7 @@ export interface Event {
   recruitmentStatus?: "draft" | "open";
   /** 申込・参加者確定を行う場所。Discord移行イベントは初期状態でDiscord管理。 */
   recruitmentChannel?: "discord" | "app";
+  discordRecruitmentClosedAt?: string;
   clubId?: string;
   status: "open" | "full" | "ended";
   createdBy: string; // admin member id

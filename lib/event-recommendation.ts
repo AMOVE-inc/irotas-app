@@ -24,7 +24,7 @@ function overlapsBudget(event: Event, preferences: MemberPreferences) {
 export function recommendEvents(events: Event[], preferences: MemberPreferences, userId: string, now = new Date()): RecommendedEvent[] {
   return events.filter((event) => {
     const date = dateAt(event); const applied = event.applicantIds?.includes(userId) || event.participants.includes(userId);
-    return event.status === "open" && event.attendees < event.capacity && date >= now && !applied;
+    return event.status === "open" && (Boolean(event.capacityMode) || event.attendees < event.capacity) && date >= now && !applied;
   }).map((event) => {
     let score = 0; const reasons: string[] = [];
     if (cuisineKeys(event).some((key) => preferences.favoriteCuisineKeys.includes(key))) { score += 25; reasons.push("好きな料理ジャンル"); }
@@ -32,7 +32,7 @@ export function recommendEvents(events: Event[], preferences: MemberPreferences,
     if (overlapsBudget(event, preferences)) { score += 20; reasons.push("希望予算"); }
     const day = dateAt(event).getDay(); const dayKey = day === 6 ? "saturday" : day === 0 ? "sunday_holiday" : "weekday";
     if (preferences.availableDayTypes.includes(dayKey) && preferences.availableTimeSlots.includes(timeSlot(event.time))) { score += 15; reasons.push("参加しやすい日時"); }
-    if (preferences.preferredGroupSizes.includes("any") || preferences.preferredGroupSizes.includes(groupSize(event.capacity))) { score += 10; reasons.push("希望の人数規模"); }
+    if (preferences.preferredGroupSizes.includes("any") || (!event.capacityMode && preferences.preferredGroupSizes.includes(groupSize(event.capacity)))) { score += 10; reasons.push("希望の人数規模"); }
     if ((event.eventType === "club" && preferences.preferredEventTypes.includes("club_activity")) || (event.eventType !== "club" && preferences.preferredEventTypes.includes("regular_dining"))) { score += 10; reasons.push("興味のあるイベント種別"); }
     return { event, score, reasons };
   }).filter((item) => item.score > 0).sort((a, b) => b.score - a.score || a.event.date.localeCompare(b.event.date)).slice(0, 6);

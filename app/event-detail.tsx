@@ -9,8 +9,7 @@ import { extractMentionLabels, getMentionGroups, getMentionQuery, getMentionedMe
 import { EVENT_TERMS_URL, PUBLIC_APP_URL } from "@/constants/external-links";
 import { joinEventChat, removeMemberFromRoom } from "@/lib/chat-store";
 import { getAllEvents } from "@/lib/event-store";
-import { isDiscordRecruitmentOpen } from "@/lib/event-recruitment-channel";
-import { IMPORTED_DISCORD_EVENTS } from "@/constants/imported-discord-events";
+import { eventRecruitmentChannel, isDiscordRecruitmentOpen } from "@/lib/event-recruitment-channel";
 import { approveGourmetApplication, cancelGourmetParticipation, getPendingGourmetApplicants, reopenGourmetRecruitment, submitGourmetApplication } from "@/lib/gourmet-event";
 import { getIrotasPoints, adjustIrotasPoints } from "@/lib/irotas-points-store";
 import { createPaymentRecord } from "@/lib/payment-store";
@@ -28,7 +27,7 @@ import { getDiscordAuthorById, getDiscordAuthorByName } from "@/lib/discord-auth
 import { findMentionedClub, findMentionedMemberId } from "@/lib/mention-targets";
 import { getConfirmedParticipantDisplayIds } from "@/lib/event-confirmed-participants";
 import { isEventOrganizer } from "@/lib/event-participation";
-import { EVENT_AMOUNT_OPTIONS, EVENT_CAPACITY_OPTIONS, EVENT_RANKS, EVENT_TIME_OPTIONS, eventFormSaveFields, eventFormValuesFromEvent, hasOnlyCompanionChanges, minimumReservationCapacity, type EventFormValues, validateEventForm } from "@/lib/event-form";
+import { EVENT_AMOUNT_OPTIONS, EVENT_CAPACITY_OPTIONS, EVENT_RESERVATION_CAPACITY_OPTIONS, EVENT_RANKS, EVENT_TIME_OPTIONS, eventCapacityLabel, eventCapacityOptionLabel, eventFormSaveFields, eventFormValuesFromEvent, hasOnlyCompanionChanges, minimumReservationCapacity, type EventFormValues, validateEventForm } from "@/lib/event-form";
 import { GOURMET_GENRES } from "@/constants/event-options";
 import { displayEventTitle } from "@/lib/event-title";
 import { Image } from "expo-image";
@@ -60,7 +59,7 @@ const deletedEventCommentsKey = (eventId: string) => `irotas_deleted_event_comme
 function SharedEventSelectField({ label, value, options, onChange }: { label: string; value: string; options: string[]; onChange: (value: string) => void }) {
   const colors = useColors();
   const [visible, setVisible] = useState(false);
-  return <><Pressable onPress={() => setVisible(true)} style={{ marginTop: 5, minHeight: 44, borderWidth: 1, borderColor: colors.border, borderRadius: 10, paddingHorizontal: 11, justifyContent: "center" }}><Text style={{ color: value ? colors.foreground : colors.muted }}>{value || "選択してください"}</Text></Pressable><Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setVisible(false)}><View style={{ flex: 1, backgroundColor: colors.background }}><View style={{ flexDirection: "row", alignItems: "center", padding: 16, borderBottomWidth: 0.5, borderColor: colors.border }}><Text style={{ flex: 1, color: colors.foreground, fontSize: 18, fontWeight: "900" }}>{label}</Text><Pressable onPress={() => setVisible(false)}><Text style={{ color: "#D65E8D", fontWeight: "800" }}>閉じる</Text></Pressable></View><ScrollView>{options.map((option) => <Pressable key={option} onPress={() => { onChange(option); setVisible(false); }} style={{ padding: 15, borderBottomWidth: 0.5, borderColor: colors.border }}><Text style={{ color: colors.foreground, fontWeight: value === option ? "900" : "500" }}>{value === option ? "✓ " : ""}{option}</Text></Pressable>)}</ScrollView></View></Modal></>;
+  return <><Pressable onPress={() => setVisible(true)} style={{ marginTop: 5, minHeight: 44, borderWidth: 1, borderColor: colors.border, borderRadius: 10, paddingHorizontal: 11, justifyContent: "center" }}><Text style={{ color: value ? colors.foreground : colors.muted }}>{value ? eventCapacityOptionLabel(value) : "選択してください"}</Text></Pressable><Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setVisible(false)}><View style={{ flex: 1, backgroundColor: colors.background }}><View style={{ flexDirection: "row", alignItems: "center", padding: 16, borderBottomWidth: 0.5, borderColor: colors.border }}><Text style={{ flex: 1, color: colors.foreground, fontSize: 18, fontWeight: "900" }}>{label}</Text><Pressable onPress={() => setVisible(false)}><Text style={{ color: "#D65E8D", fontWeight: "800" }}>閉じる</Text></Pressable></View><ScrollView>{options.map((option) => <Pressable key={option} onPress={() => { onChange(option); setVisible(false); }} style={{ padding: 15, borderBottomWidth: 0.5, borderColor: colors.border }}><Text style={{ color: colors.foreground, fontWeight: value === option ? "900" : "500" }}>{value === option ? "✓ " : ""}{eventCapacityOptionLabel(option)}</Text></Pressable>)}</ScrollView></View></Modal></>;
 }
 
 function selectedMemberIds(value: string) {
@@ -158,7 +157,7 @@ export default function EventDetailScreen() {
   const [adminDate, setAdminDate] = useState(event?.date ?? "");
   const [adminTime, setAdminTime] = useState(event?.time ?? "");
   const [adminLocation, setAdminLocation] = useState(event?.location ?? "");
-  const [adminCapacity, setAdminCapacity] = useState(String(event?.capacity ?? ""));
+  const [adminCapacity, setAdminCapacity] = useState(event?.capacityMode ?? String(event?.capacity ?? ""));
   const [adminReservationCapacity, setAdminReservationCapacity] = useState(String(event?.reservationCapacity ?? event?.capacity ?? ""));
   const [adminDeadline, setAdminDeadline] = useState(event?.applicationDeadline ?? "");
   const [adminCancellationPolicy, setAdminCancellationPolicy] = useState(event?.cancellationPolicy ?? "");
@@ -224,10 +223,7 @@ export default function EventDetailScreen() {
         // A server list is safe as fallback; never show the stale imported fixture.
         try {
           const events = await Api.getEvents({ includeCancelled: true });
-          // Only a confirmed absence from the server may fall back to an
-          // unmaterialized archive event; it is never rendered before the fetch.
-          const archived = IMPORTED_DISCORD_EVENTS.find((item) => item.id === eventId) as Event | undefined;
-          if (active) setEvent(events.find((item) => item.id === eventId) ?? archived ?? fallback);
+          if (active) setEvent(events.find((item) => item.id === eventId) ?? fallback);
         } catch {
           if (active) setEvent(fallback);
         }
@@ -242,7 +238,7 @@ export default function EventDetailScreen() {
     if (!event || showAdminEdit) return;
     const form = eventFormValuesFromEvent(event);
     setAdminTitle(event.title); setAdminParticipants((event.participants ?? []).join("\n"));
-    setAdminDate(event.date); setAdminTime(event.time); setAdminLocation(event.location); setAdminCapacity(String(event.capacity));
+    setAdminDate(event.date); setAdminTime(event.time); setAdminLocation(event.location); setAdminCapacity(event.capacityMode ?? String(event.capacity));
     setAdminReservationCapacity(String(event.reservationCapacity ?? event.capacity));
     setAdminDeadline(event.applicationDeadline ?? ""); setAdminCancellationPolicy(event.cancellationPolicy ?? "");
     setAdminTabelogUrl(event.tabelogUrl ?? ""); setAdminGoogleMapsUrl(event.googleMapsUrl ?? ""); setAdminRecruitmentStatus(event.recruitmentStatus === "draft" ? "draft" : "open");
@@ -738,6 +734,24 @@ export default function EventDetailScreen() {
     }
   };
 
+  const handleCloseDiscordRecruitment = () => {
+    setApplicationConfirmation({
+      title: "Discordでの募集を終了しますか？",
+      message: "アプリ上の表示を募集終了に変更します。Discord側の募集投稿は別途終了してください。",
+      buttons: [
+        { text: "戻る", style: "cancel" },
+        { text: "募集終了にする", onPress: async () => {
+          try {
+            setEvent(await Api.closeDiscordEventRecruitment(event.id));
+            Alert.alert("募集を終了しました", "アプリ上の表示を募集終了に変更しました。");
+          } catch (error) {
+            Alert.alert("変更できませんでした", error instanceof Error ? error.message : "もう一度お試しください。");
+          }
+        } },
+      ],
+    });
+  };
+
   const cancelGourmetParticipant = (memberId: string) => {
     const member = displayMember(memberId);
     setApplicationConfirmation({
@@ -908,7 +922,7 @@ export default function EventDetailScreen() {
             }}
           >
             <Text style={{ fontSize: 13, fontWeight: "700", color: "#FFF" }}>
-              {eventEnded ? "開催終了" : event.recruitmentStatus === "draft" ? "募集前" : discordRecruitmentOpen ? "Discord受付" : event.status === "open" ? "アプリ受付" : event.status === "full" ? (event.participantsFinalizedAt ? "募集終了" : "満席") : "終了"}
+              {eventEnded ? "開催終了" : event.discordRecruitmentClosedAt ? "募集終了" : event.recruitmentStatus === "draft" ? "募集前" : discordRecruitmentOpen ? "Discord受付" : event.status === "open" ? "アプリ受付" : event.status === "full" ? (event.participantsFinalizedAt ? "募集終了" : "満席") : "終了"}
             </Text>
           </View>
         </View>
@@ -999,7 +1013,7 @@ export default function EventDetailScreen() {
                 予約人数 {event.reservationCapacity ?? event.capacity + 1}人
               </Text>
               <Text style={{ fontSize: 13, color: colors.muted }}>
-                募集人数（幹事除く） {event.capacity}人
+                募集人数（幹事除く） {eventCapacityLabel(event)}
               </Text>
             </View>
           </View>
@@ -1011,10 +1025,10 @@ export default function EventDetailScreen() {
         </View>
 
         <View style={{ flexDirection: "row", gap: 8, marginBottom: 16 }}>
-          {[{ label: "現在の参加申込", value: applicantCount, color: "#5B9BD5" }, { label: "募集定員", value: event.capacity, color: "#E8A0BF" }, { label: "参加確定", value: confirmedParticipantIds.length, color: "#34C759" }].map((item) => (
+          {[{ label: "現在の参加申込", value: `${applicantCount}人`, color: "#5B9BD5" }, { label: "募集定員", value: eventCapacityLabel(event), color: "#E8A0BF" }, { label: "参加確定", value: `${confirmedParticipantIds.length}人`, color: "#34C759" }].map((item) => (
             <View key={item.label} style={{ flex: 1, backgroundColor: colors.surface, borderRadius: 12, paddingVertical: 12, alignItems: "center", borderTopWidth: 3, borderTopColor: item.color }}>
               <Text style={{ fontSize: 10, color: colors.muted, textAlign: "center" }}>{item.label}</Text>
-              <Text style={{ fontSize: 22, fontWeight: "900", color: item.color, marginTop: 3 }}>{item.value}<Text style={{ fontSize: 11 }}>人</Text></Text>
+              <Text style={{ fontSize: item.label === "募集定員" && event.capacityMode ? 16 : 22, fontWeight: "900", color: item.color, marginTop: 3 }}>{item.value}</Text>
             </View>
           ))}
         </View>
@@ -1035,7 +1049,8 @@ export default function EventDetailScreen() {
 
         {canManageEvent ? <Pressable onPress={() => router.push({ pathname: "/create-event", params: { editId: event.id } })} style={{ marginBottom: 16, borderRadius: 12, paddingVertical: 12, alignItems: "center", backgroundColor: "#B42318" }}><Text style={{ color: "#FFF", fontSize: 14, fontWeight: "900" }}>{canAdminEdit ? "管理者：イベント情報を編集" : isDiscordImportedEvent && userIsOperator && !isOrganizer ? "運営：イベント情報を編集" : "イベント情報を編集"}</Text></Pressable> : null}
         {discordRecruitmentOpen ? <View style={{ borderRadius: 12, borderWidth: 1, borderColor: "#D7C9EB", backgroundColor: "#F7F3FC", padding: 14, marginBottom: 16 }}><Text style={{ fontSize: 14, fontWeight: "900", color: "#604C8C" }}>このイベントはDiscordで受付中</Text><Text style={{ fontSize: 12, lineHeight: 19, color: colors.foreground, marginTop: 5 }}>本イベントはDiscordから移行したイベントです。参加希望は元のDiscordの募集投稿へお願いします。参加者もDiscord側で確定するため、アプリからは申し込めません。確定後、幹事・運営が編集画面で参加者を記録できます。</Text></View> : null}
-        {canAdminEdit && event.eventType === "official" && !event.isCancelled ? <Pressable onPress={() => { void handleSetRecruitmentStatus(event.recruitmentStatus === "draft" ? "open" : "draft"); }} style={{ marginTop: -6, marginBottom: 16, borderRadius: 12, paddingVertical: 12, alignItems: "center", backgroundColor: "#5B9BD5" }}><Text style={{ color: "#FFF", fontSize: 14, fontWeight: "900" }}>{event.recruitmentStatus === "draft" ? "管理者：募集を開始" : "管理者：募集前に戻す"}</Text></Pressable> : null}
+        {canManageEvent && eventRecruitmentChannel(event) === "discord" && event.status === "open" && !event.isCancelled ? <Pressable onPress={handleCloseDiscordRecruitment} style={{ marginTop: -6, marginBottom: 16, borderRadius: 12, paddingVertical: 12, alignItems: "center", backgroundColor: "#6B5A96" }}><Text style={{ color: "#FFF", fontSize: 14, fontWeight: "900" }}>Discordでの募集を終了</Text></Pressable> : null}
+        {canAdminEdit && event.eventType === "official" && eventRecruitmentChannel(event) === "app" && !event.isCancelled ? <Pressable onPress={() => { void handleSetRecruitmentStatus(event.recruitmentStatus === "draft" ? "open" : "draft"); }} style={{ marginTop: -6, marginBottom: 16, borderRadius: 12, paddingVertical: 12, alignItems: "center", backgroundColor: "#5B9BD5" }}><Text style={{ color: "#FFF", fontSize: 14, fontWeight: "900" }}>{event.recruitmentStatus === "draft" ? "管理者：募集を開始" : "管理者：募集前に戻す"}</Text></Pressable> : null}
         {canAdminEdit ? <Pressable onPress={handleDeleteEvent} style={{ marginTop: -6, marginBottom: 16, borderRadius: 12, paddingVertical: 12, alignItems: "center", borderWidth: 1, borderColor: "#D94C55" }}><Text style={{ color: "#D94C55", fontSize: 14, fontWeight: "900" }}>管理者：イベントを完全に削除</Text></Pressable> : null}
 
         {isOrganizer ? (
@@ -1364,7 +1379,7 @@ export default function EventDetailScreen() {
               {[[adminEventType === "club" ? "店名・会場名" : "店名", adminRestaurantName, setAdminRestaurantName], ["イベント名", adminTitle, setAdminTitle], ["開催日（YYYY-MM-DD）", adminDate, setAdminDate], ["住所", adminLocation, setAdminLocation], ["募集締切（YYYY-MM-DD）", adminDeadline, setAdminDeadline], ["食べログURL", adminTabelogUrl, setAdminTabelogUrl], ["GoogleマップURL", adminGoogleMapsUrl, setAdminGoogleMapsUrl], ["キャンセルポリシー", adminCancellationPolicy, setAdminCancellationPolicy]].map(([label, value, setter]) => <View key={String(label)}><Text style={{ marginTop: 12, fontSize: 12, fontWeight: "800", color: colors.muted }}>{String(label)}</Text><TextInput value={String(value)} onChangeText={setter as (value: string) => void} multiline={String(label) === "キャンセルポリシー"} style={{ marginTop: 5, minHeight: String(label) === "キャンセルポリシー" ? 70 : undefined, borderWidth: 1, borderColor: colors.border, borderRadius: 10, padding: 11, color: colors.foreground, textAlignVertical: "top" }} /></View>)}
               <Text style={{ marginTop: 12, fontSize: 12, fontWeight: "800", color: colors.muted }}>開始時刻（15分単位）</Text><SharedEventSelectField label="開始時刻" value={adminTime} options={EVENT_TIME_OPTIONS} onChange={setAdminTime} />
               <Text style={{ marginTop: 12, fontSize: 12, fontWeight: "800", color: colors.muted }}>募集人数（幹事除く）</Text><SharedEventSelectField label="募集人数" value={adminCapacity} options={EVENT_CAPACITY_OPTIONS} onChange={setAdminCapacity} />
-              <Text style={{ marginTop: 12, fontSize: 12, fontWeight: "800", color: colors.muted }}>予約人数</Text><SharedEventSelectField label="予約人数" value={adminReservationCapacity} options={EVENT_CAPACITY_OPTIONS} onChange={setAdminReservationCapacity} />
+              <Text style={{ marginTop: 12, fontSize: 12, fontWeight: "800", color: colors.muted }}>予約人数</Text><SharedEventSelectField label="予約人数" value={adminReservationCapacity} options={EVENT_RESERVATION_CAPACITY_OPTIONS} onChange={setAdminReservationCapacity} />
               {adminEventType !== "club" ? <><Text style={{ marginTop: 12, fontSize: 12, fontWeight: "800", color: colors.muted }}>グルメジャンル（複数選択）</Text><View style={{ flexDirection: "row", flexWrap: "wrap", gap: 7, marginTop: 5 }}>{GOURMET_GENRES.map((genre) => { const selected = adminGenres.includes(genre); return <Pressable key={genre} onPress={() => setAdminGenres((current) => selected ? current.filter((item) => item !== genre) : [...current, genre])} style={{ borderRadius: 16, paddingHorizontal: 10, paddingVertical: 7, backgroundColor: selected ? "#5D5C74" : colors.surface }}><Text style={{ fontSize: 12, fontWeight: "800", color: selected ? "#FFF" : colors.foreground }}>{genre}</Text></Pressable>; })}</View></> : null}
               <Text style={{ marginTop: 12, fontSize: 12, fontWeight: "800", color: colors.muted }}>{adminEventType === "official" ? "参加費" : "予算"}</Text><Pressable onPress={() => { setAdminFixedAmount((value) => !value); setAdminBudgetMin(""); setAdminBudgetMax(""); }} style={{ marginTop: 6 }}><Text style={{ color: "#D65E8D", fontWeight: "800" }}>{adminFixedAmount ? "✓ 固定金額で設定" : "範囲で設定"}</Text></Pressable>{adminFixedAmount ? <TextInput value={adminBudgetMin} onChangeText={(value) => setAdminBudgetMin(value.replace(/[^0-9]/g, ""))} placeholder="例：8000" keyboardType="number-pad" style={{ marginTop: 6, borderWidth: 1, borderColor: colors.border, borderRadius: 10, padding: 11, color: colors.foreground }} /> : <View style={{ gap: 8, marginTop: 6 }}><SharedEventSelectField label="予算下限" value={adminBudgetMin} options={EVENT_AMOUNT_OPTIONS} onChange={setAdminBudgetMin} /><SharedEventSelectField label="予算上限" value={adminBudgetMax} options={EVENT_AMOUNT_OPTIONS} onChange={setAdminBudgetMax} /></View>}
               {adminEventType === "official" ? <><Pressable onPress={() => setAdminUseRankPrices((value) => !value)} style={{ marginTop: 12 }}><Text style={{ color: "#D65E8D", fontWeight: "800" }}>{adminUseRankPrices ? "✓ ランク別料金を設定" : "ランク別料金を設定する"}</Text></Pressable>{adminUseRankPrices ? EVENT_RANKS.map((rank) => <View key={rank}><Text style={{ marginTop: 8, fontSize: 12, color: colors.muted }}>{rank}</Text><SharedEventSelectField label={`${rank}料金`} value={adminRankPrices[rank]} options={EVENT_AMOUNT_OPTIONS} onChange={(value) => setAdminRankPrices((current) => ({ ...current, [rank]: value }))} /></View>) : null}</> : null}

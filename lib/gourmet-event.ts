@@ -28,7 +28,7 @@ export function cancelGourmetParticipation(event: Event, memberId: string): void
 }
 
 export function reopenGourmetRecruitment(event: Event): boolean {
-  if ((event.participants ?? []).length >= event.capacity) return false;
+  if (!event.capacityMode && (event.participants ?? []).length >= event.capacity) return false;
   event.status = "open";
   return true;
 }

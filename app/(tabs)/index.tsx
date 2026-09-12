@@ -320,7 +320,7 @@ function TodayEventsSection({
                       color: event.status === "full" ? colors.error : "#E8A0BF",
                     }}
                   >
-                    {event.status === "full" ? (event.participantsFinalizedAt ? "募集終了" : "満席") : `${event.attendees}/${event.capacity}名`}
+                    {event.status === "full" ? (event.participantsFinalizedAt || event.discordRecruitmentClosedAt ? "募集終了" : "満席") : event.capacityMode === "undecided" ? "募集人数 未定" : event.capacityMode === "unlimited" ? "募集人数 上限なし" : `${event.attendees}/${event.capacity}名`}
                   </Text>
                 </View>
               </View>
@@ -619,8 +619,17 @@ export default function HomeScreen() {
   const [homeAnnouncements, setHomeAnnouncements] = useState<Announcement[]>([]);
   const managedCampaigns = useCampaigns();
   const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
+  const [visibleEvents, setVisibleEvents] = useState<Event[]>(() => getAllEvents(EVENTS).filter((event) => !event.id.startsWith("discord-event-")));
   const [preferences, setPreferences] = useState<MemberPreferences>(() => createDefaultPreferences());
   const [aiConsents, setAiConsents] = useState<MemberAiConsents>({ eventRecommendation: false, memberMatching: false, conciergeHistory: false, anonymousImprovement: false, updatedAt: "" });
+
+  const loadVisibleEvents = useCallback(() => {
+    void Api.getEventsWithDeletedImportedIds().then(({ events, deletedImportedEventIds }) => {
+      const known = new Set(events.map((event) => event.id));
+      const deleted = new Set(deletedImportedEventIds);
+      setVisibleEvents([...events, ...getAllEvents(EVENTS).filter((event) => !known.has(event.id) && !deleted.has(event.id))]);
+    }).catch(() => undefined);
+  }, []);
 
   const loadHomeContent = useCallback(() => {
     void Api.getNotifications()
@@ -637,25 +646,27 @@ export default function HomeScreen() {
 
   useFocusEffect(useCallback(() => {
     loadHomeContent();
+    loadVisibleEvents();
     const timer = setInterval(loadHomeContent, 3000);
     return () => clearInterval(timer);
-  }, [loadHomeContent]));
+  }, [loadHomeContent, loadVisibleEvents]));
 
-  const { events: todayEvents, boardEvents: todayBoardEvents } = useMemo(
-    () => getTodayEvents(),
-    [],
-  );
+  const { events: todayEvents, boardEvents: todayBoardEvents } = useMemo(() => ({
+    events: visibleEvents.filter((event) => event.date === new Date().toISOString().slice(0, 10)),
+    boardEvents: getTodayEvents().boardEvents,
+  }), [visibleEvents]);
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
     loadHomeContent();
+    loadVisibleEvents();
     setTimeout(() => setRefreshing(false), 500);
-  }, [loadHomeContent]);
+  }, [loadHomeContent, loadVisibleEvents]);
 
   const timelineItems = useMemo(() => activities
     .sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt))
     .slice(0, 10), [activities]);
-  const recommendedEvents = useMemo(() => recommendEvents(getAllEvents(EVENTS), preferences, CURRENT_USER.id), [preferences]);
+  const recommendedEvents = useMemo(() => recommendEvents(visibleEvents, preferences, CURRENT_USER.id), [visibleEvents, preferences]);
   useEffect(() => { if (!aiConsents.eventRecommendation) return; recommendedEvents.forEach(({ event }) => { void recordActivityEvent({ userId: CURRENT_USER.id, eventName: "recommendation_shown", entityType: "recommendation", entityId: event.id, dedupeKey: `${CURRENT_USER.id}:recommendation_shown:${event.id}:${new Date().toISOString().slice(0, 10)}` }); }); }, [aiConsents.eventRecommendation, recommendedEvents]);
 
   const ListHeader = useMemo(

@@ -855,7 +855,7 @@ export default function ProfileScreen() {
           .catch(() => { if (eventsActive) setParticipatingEvents([]); })
           .finally(() => { if (eventsActive) setParticipatingEventsLoading(false); });
       } else {
-        setParticipatingEvents(sortParticipating(getAllEvents(EVENTS)));
+        setParticipatingEvents(sortParticipating(getAllEvents(EVENTS).filter((event) => !event.id.startsWith("discord-event-"))));
         setParticipatingEventsLoading(false);
       }
       // AsyncStorageから保存済みデータを読み込む

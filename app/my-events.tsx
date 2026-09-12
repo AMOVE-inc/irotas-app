@@ -31,7 +31,7 @@ export default function MyEventsScreen() {
   const router = useRouter();
   const { user } = useAuthContext();
   const memberId = user?.memberId ?? CURRENT_USER.id;
-  const [events, setEvents] = useState<Event[]>(() => getAllEvents(EVENTS));
+  const [events, setEvents] = useState<Event[]>(() => getAllEvents(EVENTS).filter((event) => !event.id.startsWith("discord-event-")));
   const [selectedView, setSelectedView] = useState<EventView | null>(null);
 
   useEffect(() => {
