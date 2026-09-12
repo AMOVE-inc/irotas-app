@@ -19,7 +19,6 @@ const EVENT_CANCELLATION_PATH = /^\/api\/events\/([^/]+)\/cancellation-requests$
 const EVENT_CANCELLATION_REVIEW_PATH = /^\/api\/events\/([^/]+)\/cancellation-requests\/([^/]+)$/;
 const EVENT_ATTENDANCE_PATH = /^\/api\/events\/([^/]+)\/attendance$/;
 const EVENT_CANCELLATION_PREVIEW_PATH = /^\/api\/events\/([^/]+)\/cancellation-penalty-preview$/;
-const DEPRECATED_TEST_EVENT_TITLES = ["恵比寿で楽しむ夏のビストロ会"];
 const EVENT_IMAGE_PATH = /^\/api\/event-images\/([^/]+)$/;
 const MAX_EVENT_BODY_BYTES = 96 * 1024;
 const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
@@ -698,11 +697,6 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
     return createEvent(request, env.DB, member);
   if (pathname === EVENTS_ENDPOINT && request.method === "GET") {
     const includeCancelled = url.searchParams.get("includeCancelled") === "1";
-    // 旧プレビューで作成したテストイベントは、リリース版へ持ち込まない。
-    for (const title of DEPRECATED_TEST_EVENT_TITLES) {
-      await env.DB.prepare("DELETE FROM events WHERE title = ?").bind(title).run();
-    }
-    await env.DB.prepare("DELETE FROM events WHERE title LIKE '%テスト%'").run();
     const rows = await env.DB.prepare(`${selectEvents} ${includeCancelled ? "" : "WHERE e.status != 'cancelled'"} ORDER BY e.event_date, e.created_at DESC`).all<EventRow>();
     const deleted = await env.DB.prepare("SELECT event_id FROM deleted_imported_events").all<{ event_id: string }>();
     const deletedIds = new Set((deleted.results ?? []).map((item) => item.event_id));
@@ -819,6 +813,29 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
       return responseJson({ event: await hydratedEvent(env.DB, (await eventRow(env.DB, id))!, member.id, elevated, memberPublicId) });
     }
     const canManageImportedEvent = id.startsWith("discord-event-") && elevated;
+    if (input?.action === "reopen_recruitment") {
+      if (!(admin || row.organizer_member_id === member.id || canManageImportedEvent)) return responseJson({ error: "イベント作成者または管理者のみ追加募集できます" }, 403);
+      if (row.status === "cancelled" || row.status === "ended") return responseJson({ error: "終了したイベントは追加募集できません" }, 409);
+      let data: Record<string, unknown> = {};
+      try { data = JSON.parse(row.public_data_json) as Record<string, unknown>; } catch {}
+      if (data.recruitmentChannel === "discord") return responseJson({ error: "Discord受付イベントはアプリで追加募集できません" }, 400);
+      if (row.event_date < japanDateKey()) return responseJson({ error: "開催済みのイベントは追加募集できません" }, 409);
+      const capacity = typeof data.capacity === "number" ? data.capacity : 0;
+      const confirmed = await env.DB.prepare("SELECT COUNT(*) AS count FROM event_participations WHERE event_id = ? AND status IN ('confirmed','cancel_requested')").bind(id).first<{ count: number }>();
+      if (!["undecided", "unlimited"].includes(String(data.capacityMode)) && (confirmed?.count ?? 0) >= capacity) return responseJson({ error: "募集定員に空きがありません" }, 409);
+      if (row.status === "open") return responseJson({ event: await hydratedEvent(env.DB, row, member.id, elevated, memberPublicId) });
+      const now = new Date().toISOString();
+      if (data.participantsFinalizedAt) {
+        data.previouslyFinalizedParticipantIds = [...new Set([...(Array.isArray(data.previouslyFinalizedParticipantIds) ? data.previouslyFinalizedParticipantIds : []), ...((await env.DB.prepare("SELECT member_id FROM event_participations WHERE event_id = ? AND status IN ('confirmed','cancel_requested')").bind(id).all<{ member_id: number }>()).results ?? []).map((item) => item.member_id)])];
+        delete data.participantsFinalizedAt;
+      }
+      data.recruitmentStatus = "open";
+      await env.DB.batch([
+        env.DB.prepare("UPDATE events SET status = 'open', public_data_json = ?, updated_at = ? WHERE id = ?").bind(JSON.stringify(data), now, id),
+        env.DB.prepare("INSERT INTO audit_logs (actor_user_id, action, entity_type, entity_id, metadata_json, created_at) VALUES (?, 'event.recruitment_reopened', 'event', ?, '{}', ?)").bind(String(member.id), id, now),
+      ]);
+      return responseJson({ event: await hydratedEvent(env.DB, (await eventRow(env.DB, id))!, member.id, elevated, memberPublicId) });
+    }
     if (input?.action === "start_recruitment" || input?.action === "set_recruitment_status") {
       if (!admin) return responseJson({ error: "募集ステータスの変更は管理者のみ実行できます" }, 403);
       if (row.event_type !== "official") return responseJson({ error: "公式イベントのみ募集ステータスを変更できます" }, 400);
@@ -1069,6 +1086,8 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
     data.chatId = chatId;
     data.participantsFinalizedAt = now;
     const confirmed = await env.DB.prepare("SELECT member_id FROM event_participations WHERE event_id = ? AND status IN ('confirmed','cancel_requested')").bind(id).all<{ member_id: number }>();
+    const previouslyFinalized = new Set(Array.isArray(data.previouslyFinalizedParticipantIds) ? data.previouslyFinalizedParticipantIds.filter((value): value is number => typeof value === "number") : []);
+    data.previouslyFinalizedParticipantIds = [...new Set([...previouslyFinalized, ...(confirmed.results ?? []).map((participant) => participant.member_id)])];
     const companionPublicIds = stringArray(data.companionIds, 100, 40) ?? [];
     const companionMemberIds = new Set<number>();
     for (const companionPublicId of companionPublicIds) {
@@ -1098,7 +1117,7 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
       env.DB.prepare(`INSERT INTO audit_logs (actor_user_id, action, entity_type, entity_id, metadata_json, created_at)
         VALUES (?, 'event.participants_finalized', 'event', ?, ?, ?)`).bind(String(member.id), id, JSON.stringify({ chatId, count: confirmed.results?.length ?? 0, companionCount: companionMemberIds.size }), now),
     ]);
-    for (const participant of confirmed.results ?? []) await notifyEventConfirmation(env.DB, participant.member_id, id, row.title);
+    for (const participant of confirmed.results ?? []) if (!previouslyFinalized.has(participant.member_id)) await notifyEventConfirmation(env.DB, participant.member_id, id, row.title);
     for (const companionMemberId of companionMemberIds) await notifyEventConfirmation(env.DB, companionMemberId, id, row.title);
     const start = new Date(`${row.event_date}T${String(data.time ?? "00:00")}:00`);
     const startLabel = Number.isNaN(start.getTime()) ? `${row.event_date} ${String(data.time ?? "")}` : `${start.getMonth() + 1}月${start.getDate()}日 ${String(data.time ?? "")}`;

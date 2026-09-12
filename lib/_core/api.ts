@@ -1266,6 +1266,14 @@ export async function closeDiscordEventRecruitment(eventId: string) {
   return result.event;
 }
 
+export async function reopenEventRecruitment(eventId: string) {
+  const result = await apiCall<{ event: Event }>(`/api/events/${encodeURIComponent(eventId)}`, {
+    method: "PATCH",
+    body: JSON.stringify({ action: "reopen_recruitment" }),
+  });
+  return result.event;
+}
+
 export async function updateEventDetails(eventId: string, input: {
   title: string;
   description: string;

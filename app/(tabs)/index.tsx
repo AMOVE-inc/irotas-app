@@ -39,7 +39,7 @@ import {
 import { type HomeActivity, type HomeActivityKind } from "@/lib/home-activity-store";
 import { getGiftCampaigns, type GiftCampaign } from "@/lib/gift-campaign-store";
 import { useCampaigns, type Campaign } from "@/lib/campaign-store";
-import { getSharedAnnouncements } from "@/lib/announcement-api";
+import { getCachedSharedAnnouncements, getSharedAnnouncements } from "@/lib/announcement-api";
 import { createDefaultPreferences, loadMemberAiConsents, loadMemberPreferences, recordActivityEvent, type MemberAiConsents, type MemberPreferences } from "@/lib/ai-data-store";
 import { recommendEvents, type RecommendedEvent } from "@/lib/event-recommendation";
 import * as Api from "@/lib/_core/api";
@@ -75,7 +75,7 @@ function LinkifiedText({ content, style }: { content: string; style: any }) {
   );
 }
 
-function AnnouncementBanner({ announcements }: { announcements: Announcement[] }) {
+function AnnouncementBanner({ announcements, loading }: { announcements: Announcement[]; loading: boolean }) {
   const colors = useColors();
   const { width: screenWidth } = useWindowDimensions();
   const slideWidth = screenWidth - 32;
@@ -96,6 +96,8 @@ function AnnouncementBanner({ announcements }: { announcements: Announcement[] }
     return () => clearTimeout(timer);
   }, [activeIndex, announcements.length, isInteracting, slideWidth]);
 
+  if (!announcements.length && !loading) return null;
+
   return (
     <View style={{ marginHorizontal: 16, marginTop: 14, marginBottom: 10 }}>
       <ScrollView
@@ -114,7 +116,11 @@ function AnnouncementBanner({ announcements }: { announcements: Announcement[] }
           setIsInteracting(false);
         }}
       >
-        {announcements.map((item) => (
+        {loading && !announcements.length ? (
+          <View style={{ width: slideWidth, minHeight: 106, borderRadius: 18, borderWidth: 1, borderColor: "#F3DCE7", backgroundColor: colors.surface, padding: 16, justifyContent: "center" }}>
+            <Text style={{ fontSize: 14, fontWeight: "700", color: colors.muted }}>お知らせを読み込んでいます…</Text>
+          </View>
+        ) : announcements.map((item) => (
           <Pressable
             key={item.id}
             onPress={() => setSelectedAnnouncement(item)}
@@ -614,9 +620,8 @@ export default function HomeScreen() {
   const [activities, setActivities] = useState<HomeActivity[]>([]);
   const [timelineLoading, setTimelineLoading] = useState(true);
   const [giftCampaigns, setGiftCampaigns] = useState<GiftCampaign[]>([]);
-  // 共有APIの内容だけを描画する。モックのお知らせを初期値にしないことで、
-  // 起動直後に古いテストデータが一瞬表示されることを防ぐ。
-  const [homeAnnouncements, setHomeAnnouncements] = useState<Announcement[]>([]);
+  const [homeAnnouncements, setHomeAnnouncements] = useState<Announcement[]>(getCachedSharedAnnouncements);
+  const [announcementsLoading, setAnnouncementsLoading] = useState(true);
   const managedCampaigns = useCampaigns();
   const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
   const [visibleEvents, setVisibleEvents] = useState<Event[]>([]);
@@ -633,10 +638,10 @@ export default function HomeScreen() {
     void Api.getNotifications()
       .then((items) => setUnreadNotificationCount(items.filter((item) => !item.read).length))
       .catch(() => setUnreadNotificationCount(0));
-    void Promise.all([Api.getHomeActivities().catch(() => []), getGiftCampaigns(), getSharedAnnouncements().catch(() => []), loadMemberPreferences(CURRENT_USER.id), loadMemberAiConsents(CURRENT_USER.id)]).then(([remoteActivities, gifts, sharedAnnouncements, nextPreferences, nextConsents]) => {
+    void getSharedAnnouncements().then(setHomeAnnouncements).catch(() => undefined).finally(() => setAnnouncementsLoading(false));
+    void Promise.all([Api.getHomeActivities().catch(() => []), getGiftCampaigns(), loadMemberPreferences(CURRENT_USER.id), loadMemberAiConsents(CURRENT_USER.id)]).then(([remoteActivities, gifts, nextPreferences, nextConsents]) => {
       setActivities(remoteActivities);
       setPreferences(nextPreferences); setAiConsents(nextConsents);
-      setHomeAnnouncements(sharedAnnouncements);
       const today = new Date().toISOString().slice(0, 10);
       setGiftCampaigns(gifts.filter((gift) => gift.status === "open" && gift.deadline >= today).sort((a, b) => a.deadline.localeCompare(b.deadline)));
     }).finally(() => setTimelineLoading(false));
@@ -670,7 +675,7 @@ export default function HomeScreen() {
   const ListHeader = useMemo(
     () => (
       <>
-        <AnnouncementBanner announcements={homeAnnouncements} />
+        <AnnouncementBanner announcements={homeAnnouncements} loading={announcementsLoading} />
         <CampaignSection gifts={giftCampaigns} campaigns={managedCampaigns.filter((campaign) => campaign.status !== "ended" && campaign.endDate >= new Date().toISOString().slice(0, 10))} />
         <RecommendedEventsSection items={recommendedEvents} enabled={aiConsents.eventRecommendation} />
         <TodayEventsSection events={todayEvents} boardEvents={todayBoardEvents} />
@@ -681,7 +686,7 @@ export default function HomeScreen() {
         </View>
       </>
     ),
-    [todayEvents, todayBoardEvents, giftCampaigns, managedCampaigns, homeAnnouncements, recommendedEvents, aiConsents.eventRecommendation, colors],
+    [todayEvents, todayBoardEvents, giftCampaigns, managedCampaigns, homeAnnouncements, announcementsLoading, recommendedEvents, aiConsents.eventRecommendation, colors],
   );
 
   return (

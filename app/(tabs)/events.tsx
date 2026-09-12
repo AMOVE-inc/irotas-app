@@ -869,8 +869,8 @@ export default function EventsScreen() {
   const colors = useColors();
   const router = useRouter();
   const [eventType, setEventType] = useState<EventTypeFilter>("all");
-  // 一覧を開いた時点では、参加できるイベントだけを優先して表示する。
-  const [openOnly, setOpenOnly] = useState(true);
+  // 新規作成したイベントも、募集前・満席などの状態に関係なく一覧で見つけられる。
+  const [openOnly, setOpenOnly] = useState(false);
   const [hostedByMe, setHostedByMe] = useState(false);
   const [appliedOnly, setAppliedOnly] = useState(false);
   const [confirmedOnly, setConfirmedOnly] = useState(false);

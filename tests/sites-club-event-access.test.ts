@@ -50,12 +50,14 @@ const eventRow = {
 };
 
 class EventAccessDatabase implements D1Database {
-  row = { ...eventRow } as Omit<typeof eventRow, "event_type" | "club_id"> & {
+  row = { ...eventRow } as Omit<typeof eventRow, "event_type" | "club_id" | "status"> & {
     event_type: "official" | "club";
     club_id: string | null;
+    status: "open" | "full" | "ended" | "cancelled";
   };
   participationStatus: string | null = null;
   cancellationPending = false;
+  mutationQueries: string[] = [];
   notifications: { targetMemberId: number; type: string; eventId: string }[] = [];
 
   prepare(sql: string): D1PreparedStatement {
@@ -81,9 +83,11 @@ class EventAccessDatabase implements D1Database {
         return { results: [] as T[] };
       },
       run: async () => {
+        db.mutationQueries.push(sql);
         if (sql.includes("INSERT INTO event_participations")) db.participationStatus = String(values[2]);
         if (sql.includes("UPDATE event_participations SET status = 'confirmed'")) db.participationStatus = "confirmed";
         if (sql.includes("UPDATE events SET public_data_json")) db.row.public_data_json = String(values[0]);
+        if (sql.includes("UPDATE events SET status = 'open', public_data_json")) db.row = { ...db.row, status: "open", public_data_json: String(values[0]) };
         if (sql.includes("UPDATE events SET title = ?")) db.row = {
           ...db.row, title: String(values[0]), event_type: values[1] as "official" | "club",
           club_id: values[2] as string | null, event_date: String(values[3]),
@@ -129,6 +133,24 @@ describe("club event access", () => {
     expect(response?.status).toBe(200);
     expect(db.row.title).toBe("支部交流会 更新後");
     expect(JSON.parse(db.row.public_data_json).description).toBe("変更した内容");
+  });
+
+  it("does not delete newly created events with テスト in their title when listing", async () => {
+    db.row = { ...db.row, id: "event-new-1", title: "テスト食事会", event_type: "official", club_id: null };
+    const response = await handleEventRequest(new Request("https://app.example/api/events"), env);
+    expect((await response!.json()).events[0].title).toBe("テスト食事会");
+    expect(db.mutationQueries.some((sql) => sql.includes("DELETE FROM events"))).toBe(false);
+  });
+
+  it("lets a regular event creator reopen recruitment after finalization", async () => {
+    const original = JSON.parse(db.row.public_data_json);
+    db.row = { ...db.row, id: "event-new-2", organizer_member_id: 10, event_type: "official", club_id: null, event_date: new Date(Date.now() + 30 * 86_400_000).toISOString().slice(0, 10), status: "full", public_data_json: JSON.stringify({ ...original, recruitmentChannel: "app", participantsFinalizedAt: "2026-09-12T00:00:00.000Z" }) };
+    const response = await handleEventRequest(new Request("https://app.example/api/events/event-new-2", {
+      method: "PATCH", body: JSON.stringify({ action: "reopen_recruitment" }),
+    }), env);
+    expect(response?.status).toBe(200);
+    expect(db.row.status).toBe("open");
+    expect(JSON.parse(db.row.public_data_json).participantsFinalizedAt).toBeUndefined();
   });
 
   it("shows a redacted list preview but blocks detail and favorites for non-members", async () => {
