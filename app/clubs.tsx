@@ -40,6 +40,7 @@ import {
   leaveClub as leaveClubInStore,
   removeClubMember as removeClubMemberInStore,
   reviewClubApplication as reviewClubApplicationInStore,
+  refreshClubs,
   submitClubApplication as submitClubApplicationToStore,
   updateClub as updateClubInStore,
   useClubs,
@@ -793,6 +794,13 @@ function ClubDetailModal({
     club.applications.filter((application) => application.status === "on_hold").map((application) => application.memberId),
   );
   const [currentLeaderId, setCurrentLeaderId] = useState(club.leaderId);
+  useEffect(() => {
+    setMemberIds(club.memberIds);
+    setApplicantIds(club.applicantIds);
+    setApplications(club.applications);
+    setPendingIds(club.applications.filter((application) => application.status === "on_hold").map((application) => application.memberId));
+    setCurrentLeaderId(club.leaderId);
+  }, [club]);
   const [posts, setPosts] = useState<ClubPost[]>([]);
   const [selectedPost, setSelectedPost] = useState<ClubPost | null>(null);
   const [showCreatePost, setShowCreatePost] = useState(false);
@@ -1394,7 +1402,12 @@ function ClubDetailModal({
         </View>
         {memberIds.map((memberId) => {
           const member = getMemberById(memberId);
-          if (!member) return null;
+          const directoryMember = memberDirectory.find((item) => item.id === memberId);
+          const memberName = directoryMember?.displayName ?? member?.name ?? "メンバー";
+          const avatarUrl = directoryMember?.profile?.avatarUrl;
+          const avatar = typeof avatarUrl === "string" && avatarUrl ? { uri: avatarUrl } : member?.avatar ?? DEFAULT_AVATAR;
+          const memberTerm = directoryMember?.memberTerm ?? (member ? `${member.generation}期生` : null);
+          const branch = directoryMember?.branches?.map((item) => item === "kanto" ? "関東支部" : item === "kansai" ? "関西支部" : item).join("・") ?? (member ? `${member.branch}支部` : "");
           const isCurrentLeader = memberId === currentLeaderId;
           const isCurrentUser = memberId === CURRENT_USER.id;
           return (
@@ -1412,10 +1425,10 @@ function ClubDetailModal({
                 onPress={() => { onClose(); router.push({ pathname: "/member-profile", params: { id: memberId } }); }}
                 style={{ flexDirection: "row", alignItems: "center", flex: 1 }}
               >
-                <Image source={member.avatar} style={{ width: 36, height: 36, borderRadius: 18 }} contentFit="cover" />
+                <Image source={avatar} style={{ width: 36, height: 36, borderRadius: 18 }} contentFit="cover" />
                 <View style={{ flex: 1, marginLeft: 12 }}>
-                  <Text style={{ fontSize: 14, fontWeight: "600", color: colors.foreground }}>{member.name}</Text>
-                  <Text style={{ fontSize: 12, color: colors.muted }}>{member.generation}期生 · {member.branch}支部</Text>
+                  <Text style={{ fontSize: 14, fontWeight: "600", color: colors.foreground }}>{memberName}</Text>
+                  <Text style={{ fontSize: 12, color: colors.muted }}>{[memberTerm, branch].filter(Boolean).join(" · ")}</Text>
                 </View>
               </Pressable>
               {isCurrentLeader ? (
@@ -1800,6 +1813,28 @@ export default function ClubsScreen() {
   const [showClubFinder, setShowClubFinder] = useState(false);
   const [archiveThreads, setArchiveThreads] = useState<BoardThread[]>([]);
   const activityReports = getLatestClubActivityReports(archiveThreads, 5);
+
+  useEffect(() => {
+    if (!selectedClub) return;
+    let active = true;
+    let pending = false;
+    const refresh = async () => {
+      if (pending || (Platform.OS === "web" && document.visibilityState === "hidden")) return;
+      pending = true;
+      try { await refreshClubs(); } catch { /* 接続回復後に再試行する。 */ }
+      finally { pending = false; }
+    };
+    const timer = setInterval(() => { if (active) void refresh(); }, 2000);
+    return () => { active = false; clearInterval(timer); };
+  }, [selectedClub?.id]);
+
+  useEffect(() => {
+    setSelectedClub((current) => {
+      if (!current) return current;
+      const updated = clubs.find((club) => club.id === current.id);
+      return updated && updated !== current ? updated : current;
+    });
+  }, [clubs]);
 
   useEffect(() => {
     let active = true;

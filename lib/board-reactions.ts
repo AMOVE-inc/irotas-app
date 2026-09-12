@@ -83,7 +83,7 @@ export async function saveThreadReactions(threadId: string, reactions: Record<st
 
 export async function loadCommentReactions(comments: BoardComment[]): Promise<BoardComment[]> {
   const stored = await readMap(COMMENT_KEY);
-  return comments.map((comment) => ({ ...comment, reactions: normalizeBoardReactions(stored[comment.id] ?? comment.reactions) }));
+  return comments.map((comment) => ({ ...comment, reactions: normalizeBoardReactions(comment.shared ? comment.reactions : stored[comment.id] ?? comment.reactions) }));
 }
 
 export async function saveCommentReactions(commentId: string, reactions: Record<string, string[]>) {

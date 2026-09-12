@@ -182,7 +182,7 @@ export type SharedBoardThread = {
   createdAt: string;
   updatedAt: string;
   lastActivityAt?: string;
-  reactions: Record<string, { count: number; reacted: boolean }>;
+  reactions: Record<string, { count: number; reacted: boolean; memberIds?: string[] }>;
 };
 
 export type SharedBoardComment = {
@@ -197,7 +197,7 @@ export type SharedBoardComment = {
   data: Record<string, unknown>;
   createdAt: string;
   updatedAt: string;
-  reactions: Record<string, { count: number; reacted: boolean }>;
+  reactions: Record<string, { count: number; reacted: boolean; memberIds?: string[] }>;
 };
 
 export type SharedChatMessage = {
@@ -549,6 +549,12 @@ export async function setSharedBoardReaction(
     method: active ? "PUT" : "DELETE",
     body: JSON.stringify(input),
   });
+}
+
+export async function getSharedBoardReactions(threadId: string) {
+  return apiCall<{ reactions: Record<string, Record<string, string[]>> }>(
+    `/api/board/reactions?threadId=${encodeURIComponent(threadId)}`,
+  );
 }
 
 export async function getSharedBoardPoll(

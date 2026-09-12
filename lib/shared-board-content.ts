@@ -10,7 +10,7 @@ import type { SharedBoardComment, SharedBoardThread } from "./_core/api";
 import { cleanDiscordBoardContent, cleanDiscordBoardTitle } from "./discord-board-normalization";
 import { displayMemberName } from "./display-name";
 
-type ReactionSummary = Record<string, { count: number; reacted: boolean }>;
+type ReactionSummary = Record<string, { count: number; reacted: boolean; memberIds?: string[] }>;
 
 const durableUri = (uri: string) => /^https:\/\//i.test(uri) || uri.startsWith("/api/event-images/");
 const durableImages = (images?: BoardImage[]) => images?.filter((image) =>
@@ -45,6 +45,7 @@ function memberFor(id: string, name: string, profile?: { avatarUrl?: string; mem
 
 function reactionArrays(summary: ReactionSummary, viewerId: string) {
   return Object.fromEntries(Object.entries(summary).map(([emoji, item]) => {
+    if (item.memberIds) return [emoji, item.memberIds];
     const own = item.reacted ? [viewerId] : [];
     const remaining = Math.max(0, item.count - own.length);
     return [emoji, [...own, ...Array.from({ length: remaining }, (_, index) => `shared-reaction-${emoji}-${index}`)]];

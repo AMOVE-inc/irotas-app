@@ -20,6 +20,7 @@ import {
   type BoardPoll,
   type Club,
   type Member,
+  getMemberById,
 } from "@/constants/mock-data";
 import { useAuthContext } from "@/lib/auth-context";
 import { useColors } from "@/hooks/use-colors";
@@ -746,6 +747,10 @@ function ThreadDetailModal({
   const [threadReactions, setThreadReactions] = useState(thread.reactions ?? {});
   const [showThreadEmojiPicker, setShowThreadEmojiPicker] = useState(false);
   const [commentEmojiPickerId, setCommentEmojiPickerId] = useState<string | null>(null);
+  const [reactionDetails, setReactionDetails] = useState<{ emoji: string; memberIds: string[] } | null>(null);
+  const [reactionMembers, setReactionMembers] = useState<Api.PublicMember[]>([]);
+  const reactionLongPress = useRef(false);
+  const pendingReactions = useRef(new Set<string>());
   const [contestWinnerName, setContestWinnerName] = useState<string | null>(null);
   const [reactionsHydrated, setReactionsHydrated] = useState(false);
   const contestFinalizedRef = useRef(false);
@@ -758,6 +763,32 @@ function ThreadDetailModal({
   const [clubWantsToDo, setClubWantsToDo] = useState("");
   const [clubLeaderMessage, setClubLeaderMessage] = useState("");
   const persistedThread = thread.shared || thread.id.startsWith("discord-board-");
+
+  useEffect(() => {
+    if (!reactionDetails) return;
+    void Api.getMemberDirectory().then(setReactionMembers).catch(() => {});
+  }, [reactionDetails?.emoji]);
+
+  useEffect(() => {
+    if (!persistedThread) return;
+    let active = true;
+    let pending = false;
+    const refresh = async () => {
+      if (pending || pendingReactions.current.size || (Platform.OS === "web" && document.visibilityState === "hidden")) return;
+      pending = true;
+      try {
+        const result = await Api.getSharedBoardReactions(thread.id);
+        if (!active || pendingReactions.current.size) return;
+        if (thread.shared) setThreadReactions(result.reactions[`thread:${thread.id}`] ?? {});
+        setComments((current) => current.map((comment) => comment.shared
+          ? { ...comment, reactions: result.reactions[`comment:${comment.id}`] ?? {} }
+          : comment));
+      } catch { /* 次の同期周期で再試行する。 */ }
+      finally { pending = false; }
+    };
+    const timer = setInterval(() => { void refresh(); }, 2000);
+    return () => { active = false; clearInterval(timer); };
+  }, [persistedThread, thread.id, thread.shared]);
 
   const isAuthor = thread.author.id === viewerMemberId;
   const isParticipant = (thread.recruitParticipants ?? []).includes(viewerMemberId);
@@ -809,7 +840,7 @@ function ThreadDetailModal({
       if (!active) return;
       const shared = result.comments
         .filter((comment) => comment.threadId === thread.id && comment.data.archiveShadow !== true)
-        .map((comment) => sharedCommentToBoardComment(comment, CURRENT_USER.id));
+        .map((comment) => sharedCommentToBoardComment(comment, viewerMemberId));
       setComments((current) => {
         const sharedIds = new Set(shared.map((comment) => comment.id));
         return [...current.filter((comment) => !comment.shared && !sharedIds.has(comment.id)), ...shared];
@@ -818,7 +849,7 @@ function ThreadDetailModal({
       // 移行済み本文は表示を続け、共有コメントだけ次回再取得する。
     });
     return () => { active = false; };
-  }, [persistedThread, thread.category, thread.id]);
+  }, [persistedThread, thread.category, thread.id, viewerMemberId]);
 
   useEffect(() => {
     if (!reactionsHydrated || !thread.gourmetContest || thread.gourmetContest.archived || contestCommentingOpen) return;
@@ -945,22 +976,24 @@ function ThreadDetailModal({
   };
 
   const handleCommentHeart = (commentId: string) => {
-    setComments((current) => current.map((comment) => {
-      if (comment.id !== commentId) return comment;
-      const reactions = toggleReactionMember(comment.reactions, "❤️", CURRENT_USER.id);
-      if (comment.shared) void Api.setSharedBoardReaction({ targetType: "comment", targetId: comment.id, emoji: "❤️" }, reactions["❤️"]?.includes(CURRENT_USER.id) ?? false);
-      else void saveCommentReactions(comment.id, reactions);
-      return { ...comment, reactions };
-    }));
+    handleCommentReaction(commentId, "❤️");
   };
   const handleCommentReaction = (commentId: string, emoji: string) => {
-    setComments((current) => current.map((comment) => {
-      if (comment.id !== commentId) return comment;
-      const reactions = toggleReactionMember(comment.reactions, emoji, CURRENT_USER.id);
-      if (comment.shared) void Api.setSharedBoardReaction({ targetType: "comment", targetId: comment.id, emoji }, reactions[emoji]?.includes(CURRENT_USER.id) ?? false);
-      else void saveCommentReactions(comment.id, reactions);
-      return { ...comment, reactions };
-    }));
+    const key = `${commentId}:${emoji}`;
+    if (pendingReactions.current.has(key)) return;
+    const comment = comments.find((item) => item.id === commentId);
+    if (!comment) return;
+    const previous = comment.reactions;
+    const reactions = toggleReactionMember(previous, emoji, viewerMemberId);
+    pendingReactions.current.add(key);
+    setComments((current) => current.map((item) => item.id === commentId ? { ...item, reactions } : item));
+    const save = comment.shared
+      ? Api.setSharedBoardReaction({ targetType: "comment", targetId: commentId, emoji }, reactions[emoji]?.includes(viewerMemberId) ?? false)
+      : saveCommentReactions(commentId, reactions);
+    void save.catch(() => {
+      setComments((current) => current.map((item) => item.id === commentId ? { ...item, reactions: previous } : item));
+      Alert.alert("スタンプを反映できませんでした", "通信環境を確認して、もう一度お試しください。");
+    }).finally(() => { pendingReactions.current.delete(key); });
   };
 
   const handleCommentTextChange = (text: string) => {
@@ -1252,8 +1285,22 @@ function ThreadDetailModal({
                   </View>
                 ) : null}
                 {comment.videos?.length ? <View style={{ marginLeft: 32, marginTop: 8, gap: 8 }}>{comment.videos.map((uri) => <BoardVideo key={uri} uri={uri} />)}</View> : null}
-                {isContest && !comment.isSystem ? <Pressable onPress={() => handleCommentHeart(comment.id)} disabled={!contestCommentingOpen} style={{ marginLeft: 32, marginTop: 7, flexDirection: "row", alignItems: "center", alignSelf: "flex-start", borderRadius: 14, paddingHorizontal: 9, paddingVertical: 4, backgroundColor: (comment.reactions?.["❤️"] ?? []).includes(CURRENT_USER.id) ? "#FFE4EA" : colors.surface, borderWidth: 1, borderColor: colors.border }}><Text style={{ fontSize: 15 }}>❤️</Text><Text style={{ fontSize: 11, fontWeight: "800", color: colors.muted, marginLeft: 4 }}>{comment.reactions?.["❤️"]?.length ?? 0}</Text></Pressable> : null}
-                {!comment.isSystem && !isContest ? <View style={{ marginLeft: 32, marginTop: 7, flexDirection: "row", flexWrap: "wrap", gap: 6 }}>{Object.keys(comment.reactions ?? {}).filter((emoji) => (comment.reactions?.[emoji] ?? []).length > 0).map((emoji) => { const ids = comment.reactions?.[emoji] ?? []; return <Pressable key={emoji} onPress={() => handleCommentReaction(comment.id, emoji)} accessibilityLabel={boardReactionAccessibilityLabel(emoji)} style={{ flexDirection: "row", alignItems: "center", borderRadius: 14, paddingHorizontal: 9, paddingVertical: 4, backgroundColor: ids.includes(CURRENT_USER.id) ? "#F0E7F7" : colors.surface, borderWidth: 1, borderColor: colors.border }}><BoardReactionIcon emoji={emoji} size={20} /><Text style={{ fontSize: 11, fontWeight: "800", color: colors.muted, marginLeft: 4 }}>{ids.length}</Text></Pressable>; })}<Pressable accessibilityLabel="別の絵文字を追加" onPress={() => setCommentEmojiPickerId((current) => current === comment.id ? null : comment.id)} style={{ width: 31, height: 29, borderRadius: 15, alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface }}><IconSymbol name="plus" size={14} color={colors.muted} /></Pressable>{commentEmojiPickerId === comment.id ? <View style={{ width: "100%", flexDirection: "row", flexWrap: "wrap", gap: 7, paddingTop: 3 }}>{THREAD_REACTION_EMOJIS.map((emoji) => <Pressable key={emoji} onPress={() => { handleCommentReaction(comment.id, emoji); setCommentEmojiPickerId(null); }} style={{ width: 38, height: 34, borderRadius: 17, alignItems: "center", justifyContent: "center", backgroundColor: "#F4F1F3" }}><Text style={{ fontSize: 19 }}>{emoji}</Text></Pressable>)}</View> : null}</View> : null}
+                {isContest && !comment.isSystem ? <Pressable onPress={() => { if (reactionLongPress.current) { reactionLongPress.current = false; return; } handleCommentHeart(comment.id); }} onLongPress={(event) => { event.stopPropagation?.(); reactionLongPress.current = true; setReactionDetails({ emoji: "❤️", memberIds: comment.reactions?.["❤️"] ?? [] }); }} delayLongPress={350} disabled={!contestCommentingOpen} style={{ marginLeft: 32, marginTop: 7, flexDirection: "row", alignItems: "center", alignSelf: "flex-start", borderRadius: 14, paddingHorizontal: 9, paddingVertical: 4, backgroundColor: (comment.reactions?.["❤️"] ?? []).includes(viewerMemberId) ? "#FFE4EA" : colors.surface, borderWidth: 1, borderColor: colors.border }}><Text style={{ fontSize: 15 }}>❤️</Text><Text style={{ fontSize: 11, fontWeight: "800", color: colors.muted, marginLeft: 4 }}>{comment.reactions?.["❤️"]?.length ?? 0}</Text></Pressable> : null}
+                {!comment.isSystem && !isContest ? <View style={{ marginLeft: 32, marginTop: 7, flexDirection: "row", flexWrap: "wrap", gap: 6 }}>
+                  {Object.keys(comment.reactions ?? {}).filter((emoji) => (comment.reactions?.[emoji] ?? []).length > 0).map((emoji) => {
+                    const ids = comment.reactions?.[emoji] ?? [];
+                    return <Pressable key={emoji}
+                      onPress={() => { if (reactionLongPress.current) { reactionLongPress.current = false; return; } handleCommentReaction(comment.id, emoji); }}
+                      onLongPress={(event) => { event.stopPropagation?.(); reactionLongPress.current = true; setReactionDetails({ emoji, memberIds: ids }); }}
+                      delayLongPress={350}
+                      accessibilityLabel={boardReactionAccessibilityLabel(emoji)}
+                      style={{ flexDirection: "row", alignItems: "center", borderRadius: 14, paddingHorizontal: 9, paddingVertical: 4, backgroundColor: ids.includes(viewerMemberId) ? "#F0E7F7" : colors.surface, borderWidth: 1, borderColor: colors.border }}>
+                      <BoardReactionIcon emoji={emoji} size={20} /><Text style={{ fontSize: 11, fontWeight: "800", color: colors.muted, marginLeft: 4 }}>{ids.length}</Text>
+                    </Pressable>;
+                  })}
+                  <Pressable accessibilityLabel="別の絵文字を追加" onPress={() => setCommentEmojiPickerId((current) => current === comment.id ? null : comment.id)} style={{ width: 31, height: 29, borderRadius: 15, alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface }}><IconSymbol name="plus" size={14} color={colors.muted} /></Pressable>
+                  {commentEmojiPickerId === comment.id ? <View style={{ width: "100%", flexDirection: "row", flexWrap: "wrap", gap: 7, paddingTop: 3 }}>{THREAD_REACTION_EMOJIS.map((emoji) => <Pressable key={emoji} onPress={() => { handleCommentReaction(comment.id, emoji); setCommentEmojiPickerId(null); }} style={{ width: 38, height: 34, borderRadius: 17, alignItems: "center", justifyContent: "center", backgroundColor: "#F4F1F3" }}><Text style={{ fontSize: 19 }}>{emoji}</Text></Pressable>)}</View> : null}
+                </View> : null}
               </Pressable>;
             })}
           </View>
@@ -1324,6 +1371,28 @@ function ThreadDetailModal({
             <Pressable accessibilityLabel="選手権の投稿を送信" onPress={handleComment} disabled={!contestFormValid || !commentPollValid} style={{ marginTop: 5, backgroundColor: contestFormValid && commentPollValid ? "#D45470" : colors.border, borderRadius: 13, paddingVertical: 14, alignItems: "center" }}><Text style={{ fontSize: 15, fontWeight: "900", color: "#FFF" }}>投稿する</Text></Pressable>
           </ScrollView>
         </KeyboardAvoidingView>
+      </Modal>
+
+      <Modal visible={reactionDetails !== null} transparent animationType="fade" onRequestClose={() => setReactionDetails(null)}>
+        <Pressable onPress={() => setReactionDetails(null)} style={{ flex: 1, backgroundColor: "rgba(20,18,24,0.48)", justifyContent: "center", padding: 28 }}>
+          <Pressable onPress={() => {}} style={{ maxHeight: "72%", backgroundColor: colors.background, borderRadius: 20, padding: 18 }}>
+            <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 12 }}>
+              {reactionDetails ? <BoardReactionIcon emoji={reactionDetails.emoji} size={24} /> : null}
+              <Text style={{ marginLeft: 8, fontSize: 16, fontWeight: "900", color: colors.foreground }}>スタンプを押した人</Text>
+              <Pressable onPress={() => setReactionDetails(null)} style={{ marginLeft: "auto", padding: 4 }}><IconSymbol name="xmark" size={19} color={colors.muted} /></Pressable>
+            </View>
+            <ScrollView>
+              {reactionDetails?.memberIds.filter((memberId) => !memberId.startsWith("shared-reaction-")).map((memberId) => {
+                const directoryMember = reactionMembers.find((member) => member.id === memberId);
+                const localMember = getMemberById(memberId);
+                const avatarUrl = directoryMember?.profile?.avatarUrl;
+                const avatar = typeof avatarUrl === "string" && avatarUrl ? { uri: avatarUrl } : localMember?.avatar ?? DEFAULT_AVATAR;
+                const name = memberId === viewerMemberId ? viewerMember.name : directoryMember?.displayName ?? localMember?.name ?? "メンバー";
+                return <View key={memberId} style={{ flexDirection: "row", alignItems: "center", paddingVertical: 9 }}><Image source={avatar} style={{ width: 34, height: 34, borderRadius: 17 }} contentFit="cover" /><Text style={{ marginLeft: 10, fontSize: 15, fontWeight: "700", color: colors.foreground }}>{name}</Text></View>;
+              })}
+            </ScrollView>
+          </Pressable>
+        </Pressable>
       </Modal>
 
       {/* メンバー選択モーダル */}
@@ -2487,14 +2556,14 @@ export default function BoardScreen() {
   const loadSharedBoardContent = useCallback(async (category?: string) => {
     const result = await Api.getSharedBoardContent(category);
     const commentsByThread = result.comments
-      .map((comment) => sharedCommentToBoardComment(comment, CURRENT_USER.id))
+      .map((comment) => sharedCommentToBoardComment(comment, viewerMemberId))
       .reduce<Record<string, BoardComment[]>>((groups, comment) => {
         (groups[comment.threadId] ??= []).push(comment);
         return groups;
       }, {});
     const visibleRecords = result.threads.filter((thread) => thread.data.archiveShadow !== true);
     const threads = visibleRecords.map((thread) => ({
-      ...sharedThreadToBoardThread(thread, CURRENT_USER.id),
+      ...sharedThreadToBoardThread(thread, viewerMemberId),
       commentCount: commentsByThread[thread.id]?.length ?? 0,
     }));
     setDynamicThreads((current) => {
@@ -2508,7 +2577,7 @@ export default function BoardScreen() {
       ...current,
       ...Object.fromEntries(visibleRecords.map((thread) => [thread.id, commentsByThread[thread.id] ?? []])),
     }));
-  }, []);
+  }, [viewerMemberId]);
 
   useEffect(() => {
     void loadSharedBoardContent().catch(() => {

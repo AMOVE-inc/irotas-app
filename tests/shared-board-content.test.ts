@@ -25,4 +25,9 @@ describe("shared board content mapping", () => {
     expect(comment.poll?.question).toBe("どちら？");
     expect(boardCommentData(comment).poll).toEqual(comment.poll);
   });
+
+  it("keeps reacting member IDs for the reaction details sheet", () => {
+    const record: SharedBoardComment = { id: "comment-2", threadId: "shared-1", authorId: "IRO0099", authorName: "共有会員", content: "コメント", data: {}, createdAt: "2026-08-23T00:00:00Z", updatedAt: "2026-08-23T00:00:00Z", reactions: { "🎉": { count: 2, reacted: true, memberIds: ["IRO0001", "IRO0002"] } } };
+    expect(sharedCommentToBoardComment(record, "IRO0001").reactions?.["🎉"]).toEqual(["IRO0001", "IRO0002"]);
+  });
 });

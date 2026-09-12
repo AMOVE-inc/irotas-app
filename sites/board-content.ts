@@ -66,6 +66,7 @@ type ReactionRow = {
   target_type: "thread" | "comment";
   target_id: string;
   member_id: number;
+  public_member_id: string | null;
   emoji: string;
 };
 type PollOption = { id: string; text: string; voterIds: string[] };
@@ -235,9 +236,10 @@ function serializeThread(row: ThreadRow, viewerId: number, reactions: ReactionRo
     updatedAt: row.updated_at,
     reactions: reactions
       .filter((item) => item.target_type === "thread" && item.target_id === row.id)
-      .reduce<Record<string, { count: number; reacted: boolean }>>((summary, item) => {
-        summary[item.emoji] ??= { count: 0, reacted: false };
+      .reduce<Record<string, { count: number; reacted: boolean; memberIds: string[] }>>((summary, item) => {
+        summary[item.emoji] ??= { count: 0, reacted: false, memberIds: [] };
         summary[item.emoji].count += 1;
+        summary[item.emoji].memberIds.push(item.public_member_id ?? `member-${item.member_id}`);
         if (item.member_id === viewerId) summary[item.emoji].reacted = true;
         return summary;
       }, {}),
@@ -260,9 +262,10 @@ function serializeComment(row: CommentRow, viewerId: number, reactions: Reaction
     updatedAt: row.updated_at,
     reactions: reactions
       .filter((item) => item.target_type === "comment" && item.target_id === row.id)
-      .reduce<Record<string, { count: number; reacted: boolean }>>((summary, item) => {
-        summary[item.emoji] ??= { count: 0, reacted: false };
+      .reduce<Record<string, { count: number; reacted: boolean; memberIds: string[] }>>((summary, item) => {
+        summary[item.emoji] ??= { count: 0, reacted: false, memberIds: [] };
         summary[item.emoji].count += 1;
+        summary[item.emoji].memberIds.push(item.public_member_id ?? `member-${item.member_id}`);
         if (item.member_id === viewerId) summary[item.emoji].reacted = true;
         return summary;
       }, {}),
@@ -486,9 +489,10 @@ export async function handleBoardContentRequest(
         FROM board_comments bc JOIN members m ON m.id = bc.author_member_id
         WHERE bc.thread_id IN (${placeholders}) AND bc.deleted_at IS NULL
         ORDER BY bc.created_at ASC`).bind(...ids).all<CommentRow>(),
-      db.prepare(`SELECT target_type, target_id, member_id, emoji FROM board_reactions
-        WHERE (target_type = 'thread' AND target_id IN (${placeholders}))
-           OR (target_type = 'comment' AND target_id IN (
+      db.prepare(`SELECT br.target_type, br.target_id, br.member_id, br.emoji, m.public_member_id
+        FROM board_reactions br JOIN members m ON m.id = br.member_id
+        WHERE (br.target_type = 'thread' AND br.target_id IN (${placeholders}))
+           OR (br.target_type = 'comment' AND br.target_id IN (
              SELECT id FROM board_comments WHERE thread_id IN (${placeholders}) AND deleted_at IS NULL
            ))`).bind(...ids, ...ids).all<ReactionRow>(),
     ]);
@@ -631,6 +635,27 @@ export async function handleBoardContentRequest(
       .bind(content, data, now, id).run();
     await audit(db, member.id, "board.comment_updated", "board_comment", id);
     return json({ success: true, updatedAt: now });
+  }
+
+  if (url.pathname === REACTIONS_PATH && request.method === "GET") {
+    const threadId = text(url.searchParams.get("threadId"), 128, true);
+    if (!threadId) return json({ error: "スレが指定されていません" }, 400);
+    const thread = await threadById(db, threadId);
+    if (!thread || !await canAccessBoardCategory(db, thread.category, member)) return json({ error: "スレが見つかりません" }, 404);
+    const rows = await db.prepare(`SELECT br.target_type, br.target_id, br.member_id, br.emoji, m.public_member_id
+      FROM board_reactions br JOIN members m ON m.id = br.member_id
+      WHERE (br.target_type = 'thread' AND br.target_id = ?)
+        OR (br.target_type = 'comment' AND br.target_id IN (
+          SELECT id FROM board_comments WHERE thread_id = ? AND deleted_at IS NULL))`)
+      .bind(threadId, threadId).all<ReactionRow>();
+    const reactions: Record<string, Record<string, string[]>> = {};
+    for (const row of rows.results ?? []) {
+      const target = `${row.target_type}:${row.target_id}`;
+      reactions[target] ??= {};
+      reactions[target][row.emoji] ??= [];
+      reactions[target][row.emoji].push(row.public_member_id ?? `member-${row.member_id}`);
+    }
+    return json({ reactions });
   }
 
   if (url.pathname === REACTIONS_PATH && (request.method === "PUT" || request.method === "DELETE")) {
