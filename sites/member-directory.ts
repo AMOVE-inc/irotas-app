@@ -151,8 +151,8 @@ const publicMemberSelect = `
   FROM members m
   LEFT JOIN member_subscriptions s ON s.member_id = m.id
   WHERE m.account_status = 'active'
-    AND COALESCE(json_extract(m.profile_json, '$.isTestAccount'), 0) <> 1
-    AND (m.access_role IN ('club_leader', 'operator', 'admin')
+    AND (COALESCE(json_extract(m.profile_json, '$.isTestAccount'), 0) = 1
+      OR m.access_role IN ('club_leader', 'operator', 'admin')
       OR s.access_status IN ('active', 'grace'))`;
 
 async function findPublicMember(db: D1Database, key: string) {
@@ -270,8 +270,20 @@ export async function handleMemberDirectoryRequest(
     if (followMatch) {
       if (viewer.id === target.id) return responseJson({ error: "自分自身はフォローできません" }, 400);
       const now = new Date().toISOString();
-      if (request.method === "PUT") await env.DB.prepare(`INSERT OR IGNORE INTO member_follows
-        (follower_member_id, followed_member_id, created_at) VALUES (?, ?, ?)`).bind(viewer.id, target.id, now).run();
+      if (request.method === "PUT") {
+        const inserted = await env.DB.prepare(`INSERT OR IGNORE INTO member_follows
+          (follower_member_id, followed_member_id, created_at) VALUES (?, ?, ?)`).bind(viewer.id, target.id, now).run();
+        if (Number(inserted.meta?.changes ?? 0) > 0) {
+          const follower = await env.DB.prepare("SELECT display_name, public_member_id FROM members WHERE id = ? LIMIT 1")
+            .bind(viewer.id).first<{ display_name: string; public_member_id: string | null }>();
+          await env.DB.prepare(`INSERT OR IGNORE INTO in_app_notifications
+            (id, target_member_id, type, title, body, target_path, created_at)
+            VALUES (?, ?, 'follow', '新しいフォロワー', ?, ?, ?)`)
+            .bind(`member-follow:${viewer.id}:${target.id}:${now}`, target.id,
+              `${follower?.display_name || "メンバー"}さんがあなたをフォローしました`,
+              `/member-profile?id=${encodeURIComponent(follower?.public_member_id ?? `member-${viewer.id}`)}`, now).run();
+        }
+      }
       else if (request.method === "DELETE") await env.DB.prepare(`DELETE FROM member_follows
         WHERE follower_member_id = ? AND followed_member_id = ?`).bind(viewer.id, target.id).run();
       else return responseJson({ error: "method_not_allowed" }, 405);

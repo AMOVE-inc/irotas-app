@@ -482,7 +482,8 @@ export async function handleChatContentRequest(
   if (!member) return json({ error: "ログインが必要です" }, 401);
 
   if (url.pathname === ROOMS_PATH && request.method === "GET") {
-    await ensureViewerEventRooms(env.DB, member);
+    // 全イベントのチャットを毎回同期すると、一覧を開くだけで大量のDB更新が走る。
+    // イベントチャットは個別アクセス時に必要な1部屋だけ同期する。
     await ensureClubRooms(env.DB, member.id);
     await ensureKnownRoom(env.DB, "community-free-chat");
     // 一覧から開くケースでも、旧支部フリーチャットを先にv2へ移行して履歴を残さない。
@@ -491,10 +492,8 @@ export async function handleChatContentRequest(
     const result = await env.DB.prepare(`SELECT id, name, room_type, source_id, required_rank, created_by_member_id
       FROM chat_rooms WHERE deleted_at IS NULL
       ORDER BY CASE WHEN room_type = 'club' THEN 0 ELSE 1 END, updated_at DESC LIMIT 200`).all<RoomRow>();
-    const visible: RoomRow[] = [];
-    for (const room of result.results ?? []) {
-      if (await canAccessRoom(env.DB, room, member)) visible.push(room);
-    }
+    const access = await Promise.all((result.results ?? []).map((room) => canAccessRoom(env.DB!, room, member)));
+    const visible = (result.results ?? []).filter((_, index) => access[index]);
     return json({ rooms: await Promise.all(visible.map(async (room) => {
       const branchMembership = await ensureBranchRoomMembership(env.DB!, room, member);
       return serializeRoom(env.DB!, room, member, branchMembership?.joined_at);

@@ -38,6 +38,7 @@ describe("Discord board archive", () => {
       [original.id]: { title: "編集後", content: "編集された本文", status: "closed", pinned: true, updatedAt: "2026-09-12T12:00:00Z" },
     } });
     expect(result.threads[0]).toMatchObject({ title: "編集後", preview: "編集された本文", recruitmentStatus: "closed", isPinned: true });
+    expect(result.threads[0].lastUpdated).toBe(original.createdAt);
   });
 
   it("DiscordユーザーID単位で投稿者のアバターとロールを全投稿へ反映する", () => {

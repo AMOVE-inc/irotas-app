@@ -6,7 +6,7 @@ import { applyReadRoomState, getMyRooms, getRankRoomsForUser, loadDynamicRooms, 
 import { useColors } from "@/hooks/use-colors";
 import { Image } from "expo-image";
 import { useFocusEffect, useRouter } from "expo-router";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { FlatList, Modal, Pressable, ScrollView, Text, TextInput, View } from "react-native";
 import * as Api from "@/lib/_core/api";
 import { stripRankFromName } from "@/components/member-rank-badge";
@@ -18,6 +18,8 @@ function formatEventStart(event: { date: string; time: string }) {
   const day = new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3])).getDay();
   return `${Number(match[2])}/${Number(match[3])}(${["日", "月", "火", "水", "木", "金", "土"][day]})${event.time ? ` ${event.time}` : ""}`;
 }
+
+const lastRoomLists = new Map<string, { joined: ChatRoom[]; rank: ChatRoom[] }>();
 
 function ChatRoomCard({ room, eventStarts, eventImages, memberAvatars, viewerMemberId, onOpened }: {
   room: ChatRoom;
@@ -186,15 +188,23 @@ export default function ChatListScreen() {
   const router = useRouter();
   const { user: authUser } = useAuthContext();
   const viewerMemberId = authUser?.memberId ?? (authUser?.id ? `member-${authUser.id}` : CURRENT_USER.id);
+  const activeViewerId = useRef(viewerMemberId);
+  activeViewerId.current = viewerMemberId;
   const viewerRank = authUser?.memberRank ?? CURRENT_USER.rank;
   const viewerBranches = authUser?.branches ?? [authUser?.branch ?? CURRENT_USER.branch];
   const [showCreateGroup, setShowCreateGroup] = useState(false);
-  const [myRooms, setMyRooms] = useState<ChatRoom[]>([]);
-  const [rankRooms, setRankRooms] = useState<ChatRoom[]>([]);
+  const [myRooms, setMyRooms] = useState<ChatRoom[]>(() => lastRoomLists.get(viewerMemberId)?.joined ?? []);
+  const [rankRooms, setRankRooms] = useState<ChatRoom[]>(() => lastRoomLists.get(viewerMemberId)?.rank ?? []);
   const [eventStarts, setEventStarts] = useState<Record<string, string>>({});
   const [eventImages, setEventImages] = useState<Record<string, string>>({});
   const [memberAvatars, setMemberAvatars] = useState<Record<string, string>>({});
-  const [roomsLoading, setRoomsLoading] = useState(true);
+  const [roomsLoading, setRoomsLoading] = useState(() => !lastRoomLists.has(viewerMemberId));
+  useEffect(() => {
+    const saved = lastRoomLists.get(viewerMemberId);
+    setMyRooms(saved?.joined ?? []);
+    setRankRooms(saved?.rank ?? []);
+    setRoomsLoading(!saved);
+  }, [viewerMemberId]);
   const clearUnreadImmediately = useCallback((roomId: string) => {
     const clear = (rooms: ChatRoom[]) => rooms.map((room) => room.id === roomId ? { ...room, unreadCount: 0, mentionCount: 0 } : room);
     setMyRooms(clear);
@@ -202,13 +212,18 @@ export default function ChatListScreen() {
   }, []);
 
   const refreshRooms = useCallback(async (includeDetails = true) => {
-    if (includeDetails) setRoomsLoading(true);
+    if (includeDetails && !lastRoomLists.has(viewerMemberId)) setRoomsLoading(true);
     // 旧プロトタイプ用の chat1〜chat4 は、保存済みの実際の会話ではないため一覧に出さない。
     const isFixtureRoom = (room: ChatRoom) => /^chat\d+$/.test(room.id);
     const branchRooms = CHAT_ROOMS.filter((room) => room.sourceId === "branch-kanto" ? viewerBranches.includes("kanto") : room.sourceId === "branch-kansai" ? viewerBranches.includes("kansai") : false);
     const localJoinedRooms = [...getMyRooms(viewerMemberId), ...branchRooms]
       .filter((room) => room.type !== "rank" && room.type !== "club" && !isFixtureRoom(room));
     const localRankRooms = getRankRoomsForUser(viewerRank);
+    if (!lastRoomLists.has(viewerMemberId)) {
+      setMyRooms(localJoinedRooms);
+      setRankRooms(localRankRooms);
+      setRoomsLoading(false);
+    }
     let sharedRooms: ChatRoom[] = [];
     try {
       // 一覧表示に必要なのはルーム一覧だけ。重い補助情報は後段で補完する。
@@ -244,20 +259,23 @@ export default function ChatListScreen() {
       ...sharedRooms.filter((room) => room.type === "rank" && room.requiredRank === viewerRank),
     ];
     const [sortedJoined, sortedRank] = await Promise.all([applyReadRoomState(mergedJoined), applyReadRoomState(mergedRank)]);
+    if (activeViewerId.current !== viewerMemberId) return;
     setMyRooms(sortedJoined);
     setRankRooms(sortedRank);
+    lastRoomLists.set(viewerMemberId, { joined: sortedJoined, rank: sortedRank });
     setRoomsLoading(false);
   }, [viewerBranches, viewerMemberId, viewerRank]);
 
   useFocusEffect(useCallback(() => {
     let active = true;
     let pending = false;
-    void loadDynamicRooms().then(() => { if (active) void refreshRooms(); });
+    void refreshRooms();
+    void loadDynamicRooms().then(() => { if (active) void refreshRooms(false); });
     const timer = setInterval(() => {
       if (!active || pending) return;
       pending = true;
       void refreshRooms(false).finally(() => { pending = false; });
-    }, 2000);
+    }, 10000);
     return () => { active = false; clearInterval(timer); };
   }, [refreshRooms]));
 

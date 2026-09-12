@@ -23,6 +23,11 @@ const EVENT_IMAGE_PATH = /^\/api\/event-images\/([^/]+)$/;
 const MAX_EVENT_BODY_BYTES = 96 * 1024;
 const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
 const DELETED_EVENT_IDS = new Set(["discord-event-1504772980851478548"]);
+const BOARD_EVENTS_TO_REGISTER = [
+  "discord-event-1545026554533249044", // LA'S TOKYO
+  "discord-event-1543599911507861514", // さわいしmini
+  "discord-event-1543113999640694826", // VINOMONDO
+];
 
 type EventRow = {
   id: string;
@@ -696,6 +701,13 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
   if (pathname === EVENTS_ENDPOINT && request.method === "POST")
     return createEvent(request, env.DB, member);
   if (pathname === EVENTS_ENDPOINT && request.method === "GET") {
+    // なんでも掲示板で募集された3件を、既存のDiscord移行イベントとして登録する。
+    // 個別に削除済みのIDはmaterializeImportedEvent内で除外される。
+    const fallbackOrganizer = await env.DB.prepare("SELECT id FROM members WHERE access_role = 'admin' AND account_status = 'active' ORDER BY id LIMIT 1")
+      .first<{ id: number }>();
+    for (const id of BOARD_EVENTS_TO_REGISTER) {
+      if (!DELETED_EVENT_IDS.has(id)) await materializeImportedEvent(env.DB, id, fallbackOrganizer?.id);
+    }
     const includeCancelled = url.searchParams.get("includeCancelled") === "1";
     const rows = await env.DB.prepare(`${selectEvents} ${includeCancelled ? "" : "WHERE e.status != 'cancelled'"} ORDER BY e.event_date, e.created_at DESC`).all<EventRow>();
     const deleted = await env.DB.prepare("SELECT event_id FROM deleted_imported_events").all<{ event_id: string }>();

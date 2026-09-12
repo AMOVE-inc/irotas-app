@@ -166,7 +166,8 @@ export function parseDiscordBoardArchive(archive: RawDiscordBoardArchive, direct
       author: authorFor(record, directory, authorFallbacks),
       category,
       commentCount: threadComments.length,
-      lastUpdated: override?.updatedAt ?? threadComments.at(-1)?.createdAt ?? record.createdAt,
+      // 募集状態などの編集日時ではなく、最後のコメントを活動日時とする。
+      lastUpdated: threadComments.at(-1)?.createdAt ?? record.createdAt,
       preview: override?.content ?? preview,
       isRecruiting: recruitmentStatus === "open",
       recruitmentStatus,

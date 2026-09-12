@@ -827,10 +827,14 @@ export default function ProfileScreen() {
     if (!isRealMember || !authUser) return;
     const selfId = authUser.memberId ?? memberIdentity?.memberId ?? `member-${authUser.id}`;
     let active = true;
-    void Api.getMemberProfile(selfId).then((self) => {
-      if (active) setSocialStats({ followers: self.followerCount, following: self.followingCount });
-    }).catch(() => {});
-    return () => { active = false; };
+    const refresh = () => {
+      void Api.getMemberProfile(selfId).then((self) => {
+        if (active) setSocialStats({ followers: self.followerCount, following: self.followingCount });
+      }).catch(() => {});
+    };
+    refresh();
+    const timer = setInterval(refresh, 3000);
+    return () => { active = false; clearInterval(timer); };
   }, [authUser?.id, authUser?.memberId, isRealMember, memberIdentity?.memberId]));
   // イロタスポイント
   const [irotasPoints, setIrotasPoints] = useState(0);

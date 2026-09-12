@@ -155,6 +155,7 @@ export type AppNotification = {
     | "like"
     | "comment"
     | "chat"
+    | "follow"
     | "coupon"
     | "system_error";
   title: string;

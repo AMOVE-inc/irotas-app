@@ -70,6 +70,18 @@ export default function MemberProfileScreen() {
   }, [authUser?.id, id]);
 
   useEffect(() => {
+    if (!id || !authUser || !databaseLookupComplete) return;
+    let active = true;
+    const refresh = () => {
+      void Api.getMemberProfile(id).then((value) => {
+        if (active && !followSaving) setDatabaseMember(value);
+      }).catch(() => {});
+    };
+    const timer = setInterval(refresh, 3000);
+    return () => { active = false; clearInterval(timer); };
+  }, [authUser?.id, databaseLookupComplete, followSaving, id]);
+
+  useEffect(() => {
     if (!authUser || !id) { setConfirmedEvents([]); return; }
     let active = true;
     void Api.getEvents()

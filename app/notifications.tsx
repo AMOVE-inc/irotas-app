@@ -13,6 +13,7 @@ const ICON_MAP: Record<string, { icon: string; color: string }> = {
   like: { icon: "heart.fill", color: "#FF3B30" },
   comment: { icon: "bubble.left.fill", color: "#34C759" },
   chat: { icon: "bubble.left.and.bubble.right.fill", color: "#5865F2" },
+  follow: { icon: "person.badge.plus", color: "#E8A0BF" },
   coupon: { icon: "ticket.fill", color: "#FF9500" },
   club_application: { icon: "person.badge.plus", color: "#FF9900" },
   club_approval: { icon: "checkmark.circle.fill", color: "#34C759" },
@@ -127,7 +128,7 @@ export default function NotificationsScreen() {
       setNotifications((items) => items.map((item) => item.id === notification.id ? { ...item, read: true } : item));
       try { await Api.markNotificationRead(notification.id); } catch {}
     }
-    if (notification.targetPath?.startsWith("/board?") || notification.targetPath?.startsWith("/chat?")) {
+    if (notification.targetPath?.startsWith("/board?") || notification.targetPath?.startsWith("/chat?") || notification.targetPath?.startsWith("/member-profile?")) {
       router.push(notification.targetPath as any);
     } else if (notification.type === "club_application" || notification.type === "club_approval") {
       router.push("/clubs");

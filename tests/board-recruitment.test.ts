@@ -44,11 +44,11 @@ describe("掲示板募集ステータス", () => {
     expect(sortRecruitmentThreads([open, introduction]).map((item) => item.id)).toEqual(["open", "intro"]);
   });
 
-  it("同じ募集状態では固定表示を優先し、その後は最終更新日の新しい順にする", () => {
+  it("同じ募集状態では固定状態に関係なく最終コメントが新しい順にする", () => {
     const base = { author: {} as BoardThread["author"], commentCount: 0, preview: "", category: "free-chat", recruitmentStatus: "open" as const };
     const older = { ...base, id: "older", title: "older", lastUpdated: "2026-08-14T10:00:00Z" } as BoardThread;
     const newer = { ...base, id: "newer", title: "newer", lastUpdated: "2026-08-16T10:00:00Z" } as BoardThread;
     const pinned = { ...base, id: "pinned", title: "pinned", isPinned: true, lastUpdated: "2026-08-13T10:00:00Z" } as BoardThread;
-    expect(sortRecruitmentThreads([older, pinned, newer]).map((item) => item.id)).toEqual(["pinned", "newer", "older"]);
+    expect(sortRecruitmentThreads([older, pinned, newer]).map((item) => item.id)).toEqual(["newer", "older", "pinned"]);
   });
 });
