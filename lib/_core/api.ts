@@ -1074,12 +1074,12 @@ export async function setPrivateMemberNote(memberId: string, note: string) {
 }
 
 export async function getEvents(options?: { includeCancelled?: boolean }) {
-  const result = await apiCall<{ events: Event[] }>(`/api/events${options?.includeCancelled ? "?includeCancelled=1" : ""}`);
+  const result = await apiCall<{ events: Event[] }>(`/api/events${options?.includeCancelled ? "?includeCancelled=1" : ""}`, { cache: "no-store" });
   return result.events;
 }
 
 export async function getEventsWithDeletedImportedIds(options?: { includeCancelled?: boolean }) {
-  return apiCall<{ events: Event[]; deletedImportedEventIds: string[] }>(`/api/events${options?.includeCancelled ? "?includeCancelled=1" : ""}`);
+  return apiCall<{ events: Event[]; deletedImportedEventIds: string[] }>(`/api/events${options?.includeCancelled ? "?includeCancelled=1" : ""}`, { cache: "no-store" });
 }
 
 export async function getEvent(eventId: string) {

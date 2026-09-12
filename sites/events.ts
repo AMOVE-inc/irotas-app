@@ -89,9 +89,16 @@ export function mergeEventComments(
 ) {
   const overrides = new Map(stored.map((comment) => [comment.id, comment]));
   const importedIds = new Set(imported.map((comment) => comment.id));
+  const canonicalImportedId = (id: string) => id.replace(/^discord-event-comment-(?:discord-comment-)?(?=\d{17,20}$)/, "discord-event-comment-");
+  const importedGroups = new Map<string, ImportedEventComment[]>();
+  for (const comment of imported) {
+    const key = canonicalImportedId(comment.id);
+    importedGroups.set(key, [...(importedGroups.get(key) ?? []), comment]);
+  }
   return [
-    ...imported.filter((comment) => !overrides.get(comment.id)?.deleted_at).map((comment) => {
-      const override = overrides.get(comment.id);
+    ...[...importedGroups.values()].filter((group) => !group.some((comment) => overrides.get(comment.id)?.deleted_at)).map((group) => {
+      const comment = group[0];
+      const override = group.map((item) => overrides.get(item.id)).find((item) => item && !item.deleted_at);
       return {
         id: comment.id, author: override?.author_name ?? comment.author,
         authorId: override?.author_public_id ?? comment.authorId,
@@ -740,6 +747,11 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
       const suppliedId = typeof input?.id === "string" && /^ec_\d{10,20}$/.test(input.id) ? input.id : null;
       const commentId = suppliedId ?? `ec_${crypto.randomUUID()}`;
       const now = new Date().toISOString();
+      const duplicateSince = new Date(Date.parse(now) - 30_000).toISOString();
+      const duplicate = await env.DB.prepare(`SELECT id, event_id, author_member_id, author_name, author_public_id, content, created_at, deleted_at FROM event_comments
+        WHERE event_id = ? AND author_member_id = ? AND content = ? AND deleted_at IS NULL AND created_at >= ?
+        ORDER BY created_at DESC LIMIT 1`).bind(id, member.id, content, duplicateSince).first<StoredEventComment>();
+      if (duplicate) return responseJson({ comment: { id: duplicate.id, author: duplicate.author_name, authorId: duplicate.author_public_id, text: duplicate.content, createdAt: duplicate.created_at, canEdit: true }, duplicate: true });
       await env.DB.prepare(`INSERT OR IGNORE INTO event_comments
         (id, event_id, author_member_id, author_name, author_public_id, content, created_at, updated_at)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`).bind(commentId, id, member.id, identity?.display_name?.trim() || "メンバー", memberPublicId, content, now, now).run();

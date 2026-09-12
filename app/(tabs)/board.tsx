@@ -696,6 +696,14 @@ function SelectMembersModal({
   );
 }
 
+function dedupeBoardComments(comments: BoardComment[]): BoardComment[] {
+  return comments.filter((comment, index) => !comments.slice(0, index).some((earlier) =>
+    earlier.author.id === comment.author.id && earlier.content === comment.content &&
+    Math.abs(Date.parse(earlier.createdAt) - Date.parse(comment.createdAt)) <= 2_000 &&
+    JSON.stringify(earlier.images ?? []) === JSON.stringify(comment.images ?? []),
+  ));
+}
+
 function ThreadDetailModal({
   thread,
   initialComments = [],
@@ -740,9 +748,10 @@ function ThreadDetailModal({
   const [commentImages, setCommentImages] = useState<string[]>([]);
   const [showCommentAttachments, setShowCommentAttachments] = useState(false);
   const commentInputRef = useRef<TextInput>(null);
+  const commentSendingRef = useRef(false);
   const mentionGroups = useMemo(() => BOARD_MENTION_GROUPS, []);
   const [comments, setComments] = useState<BoardComment[]>(
-    [...BOARD_COMMENTS.filter((c) => c.threadId === thread.id), ...initialComments],
+    dedupeBoardComments([...BOARD_COMMENTS.filter((c) => c.threadId === thread.id), ...initialComments]),
   );
   const [threadReactions, setThreadReactions] = useState(thread.reactions ?? {});
   const [showThreadEmojiPicker, setShowThreadEmojiPicker] = useState(false);
@@ -826,7 +835,7 @@ function ThreadDetailModal({
       loadCommentReactions(sourceComments),
     ]).then(([savedThreadReactions, savedComments]) => {
       setThreadReactions(savedThreadReactions);
-      void Promise.all([loadBoardCommentEdits(), loadDeletedBoardCommentIds()]).then(([edits, deletedIds]) => setComments(savedComments.filter((comment) => !deletedIds.includes(comment.id)).map((comment) => edits[comment.id] ? { ...comment, content: edits[comment.id] } : comment)));
+      void Promise.all([loadBoardCommentEdits(), loadDeletedBoardCommentIds()]).then(([edits, deletedIds]) => setComments(dedupeBoardComments(savedComments.filter((comment) => !deletedIds.includes(comment.id)).map((comment) => edits[comment.id] ? { ...comment, content: edits[comment.id] } : comment))));
       setReactionsHydrated(true);
     });
   // Rehydrate when a direct-linked Discord thread finishes loading its archive comments.
@@ -843,7 +852,7 @@ function ThreadDetailModal({
         .map((comment) => sharedCommentToBoardComment(comment, viewerMemberId));
       setComments((current) => {
         const sharedIds = new Set(shared.map((comment) => comment.id));
-        return [...current.filter((comment) => !comment.shared && !sharedIds.has(comment.id)), ...shared];
+        return dedupeBoardComments([...current.filter((comment) => !comment.shared && !sharedIds.has(comment.id)), ...shared]);
       });
     }).catch(() => {
       // 移行済み本文は表示を続け、共有コメントだけ次回再取得する。
@@ -866,12 +875,14 @@ function ThreadDetailModal({
   }, [comments, contestCommentingOpen, reactionsHydrated, thread]);
 
   const handleComment = async () => {
+    if (commentSendingRef.current) return;
     if (!contestCommentingOpen) return;
     if (isContest && !contestFormValid) return;
     const content = isContest
       ? buildContestEntryContent({ restaurant: contestRestaurant, menu: contestMenu, pitch: contestPitch, referenceUrl: contestReferenceUrl })
       : commentText.trim();
     if (isContest ? !contestRestaurant.trim() || !contestMenu.trim() || !contestPitch.trim() : (!content && !commentPollEnabled) || !commentPollValid) return;
+    commentSendingRef.current = true;
     let newComment: BoardComment = {
       id: `bc_new_${Date.now()}`,
       threadId: thread.id,
@@ -888,11 +899,12 @@ function ThreadDetailModal({
         const saved = await Api.createSharedBoardComment(thread.id, { content, data: boardCommentData(newComment) });
         newComment = { ...newComment, id: saved.id, createdAt: saved.createdAt, shared: true };
       } catch (error) {
+        commentSendingRef.current = false;
         Alert.alert("コメントを送信できませんでした", error instanceof Error ? error.message : "通信環境を確認して、もう一度お試しください。");
         return;
       }
     }
-    setComments([...comments, newComment]);
+    setComments((current) => current.some((comment) => comment.id === newComment.id) ? current : [...current, newComment]);
     if (thread.category === "gourmet-contest") void recordHomeActivity({ id: `comment:${newComment.id}`, kind: "contest_comment", title: `${thread.title}にコメントが追加されました`, description: content, createdAt: newComment.createdAt, route: "/board", params: { category: "gourmet-contest", view: "threads" } });
     setCommentText("");
     setCommentImages([]);
@@ -911,6 +923,7 @@ function ThreadDetailModal({
       const member = MEMBERS.find((item) => item.id === memberId);
       if (member) void sendMentionNotification(member.name, viewerMember.name, thread.title || "自己紹介", preview);
     }
+    commentSendingRef.current = false;
   };
 
   const handlePickContestImages = async () => {

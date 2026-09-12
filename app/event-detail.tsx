@@ -191,6 +191,7 @@ export default function EventDetailScreen() {
   // ボタン連打防止フラグ
   const joiningRef = useRef(false);
   const eventCommentInputRef = useRef<TextInput>(null);
+  const eventCommentSendingRef = useRef(false);
   const usePointsRef = useRef(false);
   const favoriteEventIds = useEventFavorites();
   // Event comments support the same club, branch, and member mentions as other composers.
@@ -419,7 +420,8 @@ export default function EventDetailScreen() {
 
   const handleEventComment = async () => {
     const content = eventCommentText.trim();
-    if (!content || eventCommentBusy) return;
+    if (!content || eventCommentBusy || eventCommentSendingRef.current) return;
+    eventCommentSendingRef.current = true;
     setEventCommentBusy(true);
     try {
       const saved = await Api.createEventComment(event.id, content);
@@ -428,9 +430,11 @@ export default function EventDetailScreen() {
     } catch (error) {
       Alert.alert("コメントを送信できませんでした", error instanceof Error ? error.message : "通信状況を確認して再度お試しください。");
       setEventCommentBusy(false);
+      eventCommentSendingRef.current = false;
       return;
     }
     setEventCommentBusy(false);
+    eventCommentSendingRef.current = false;
     const preview = content.length > 50 ? `${content.slice(0, 50)}...` : content;
     const mentionedMemberIds = new Set(getMentionedMemberIds(content, MEMBERS, eventMentionGroups));
     for (const label of extractMentionLabels(content)) {
@@ -1381,7 +1385,9 @@ export default function EventDetailScreen() {
               <Text style={{ marginTop: 12, fontSize: 12, fontWeight: "800", color: colors.muted }}>募集人数（幹事除く）</Text><SharedEventSelectField label="募集人数" value={adminCapacity} options={EVENT_CAPACITY_OPTIONS} onChange={setAdminCapacity} />
               <Text style={{ marginTop: 12, fontSize: 12, fontWeight: "800", color: colors.muted }}>予約人数</Text><SharedEventSelectField label="予約人数" value={adminReservationCapacity} options={EVENT_RESERVATION_CAPACITY_OPTIONS} onChange={setAdminReservationCapacity} />
               {adminEventType !== "club" ? <><Text style={{ marginTop: 12, fontSize: 12, fontWeight: "800", color: colors.muted }}>グルメジャンル（複数選択）</Text><View style={{ flexDirection: "row", flexWrap: "wrap", gap: 7, marginTop: 5 }}>{GOURMET_GENRES.map((genre) => { const selected = adminGenres.includes(genre); return <Pressable key={genre} onPress={() => setAdminGenres((current) => selected ? current.filter((item) => item !== genre) : [...current, genre])} style={{ borderRadius: 16, paddingHorizontal: 10, paddingVertical: 7, backgroundColor: selected ? "#5D5C74" : colors.surface }}><Text style={{ fontSize: 12, fontWeight: "800", color: selected ? "#FFF" : colors.foreground }}>{genre}</Text></Pressable>; })}</View></> : null}
-              <Text style={{ marginTop: 12, fontSize: 12, fontWeight: "800", color: colors.muted }}>{adminEventType === "official" ? "参加費" : "予算"}</Text><Pressable onPress={() => { setAdminFixedAmount((value) => !value); setAdminBudgetMin(""); setAdminBudgetMax(""); }} style={{ marginTop: 6 }}><Text style={{ color: "#D65E8D", fontWeight: "800" }}>{adminFixedAmount ? "✓ 固定金額で設定" : "範囲で設定"}</Text></Pressable>{adminFixedAmount ? <TextInput value={adminBudgetMin} onChangeText={(value) => setAdminBudgetMin(value.replace(/[^0-9]/g, ""))} placeholder="例：8000" keyboardType="number-pad" style={{ marginTop: 6, borderWidth: 1, borderColor: colors.border, borderRadius: 10, padding: 11, color: colors.foreground }} /> : <View style={{ gap: 8, marginTop: 6 }}><SharedEventSelectField label="予算下限" value={adminBudgetMin} options={EVENT_AMOUNT_OPTIONS} onChange={setAdminBudgetMin} /><SharedEventSelectField label="予算上限" value={adminBudgetMax} options={EVENT_AMOUNT_OPTIONS} onChange={setAdminBudgetMax} /></View>}
+              <Text style={{ marginTop: 12, fontSize: 12, fontWeight: "800", color: colors.muted }}>{adminEventType === "official" ? "参加費" : "予算"}</Text>
+              <Pressable onPress={() => { const next = adminBudgetMin !== "未定"; setAdminFixedAmount(false); setAdminBudgetMin(next ? "未定" : ""); setAdminBudgetMax(next ? "未定" : ""); }} style={{ marginTop: 6 }}><Text style={{ color: adminBudgetMin === "未定" ? "#D65E8D" : colors.foreground, fontWeight: "800" }}>{adminBudgetMin === "未定" ? "✓ " : "□ "}未定</Text></Pressable>
+              {adminBudgetMin !== "未定" ? <><Pressable onPress={() => { setAdminFixedAmount((value) => !value); setAdminBudgetMin(""); setAdminBudgetMax(""); }} style={{ marginTop: 6 }}><Text style={{ color: "#D65E8D", fontWeight: "800" }}>{adminFixedAmount ? "✓ 固定金額で設定" : "範囲で設定"}</Text></Pressable>{adminFixedAmount ? <TextInput value={adminBudgetMin} onChangeText={(value) => setAdminBudgetMin(value.replace(/[^0-9]/g, ""))} placeholder="例：8000" keyboardType="number-pad" style={{ marginTop: 6, borderWidth: 1, borderColor: colors.border, borderRadius: 10, padding: 11, color: colors.foreground }} /> : <View style={{ gap: 8, marginTop: 6 }}><SharedEventSelectField label="予算下限" value={adminBudgetMin} options={EVENT_AMOUNT_OPTIONS} onChange={setAdminBudgetMin} /><SharedEventSelectField label="予算上限" value={adminBudgetMax} options={EVENT_AMOUNT_OPTIONS} onChange={setAdminBudgetMax} /></View>}</> : null}
               {adminEventType === "official" ? <><Pressable onPress={() => setAdminUseRankPrices((value) => !value)} style={{ marginTop: 12 }}><Text style={{ color: "#D65E8D", fontWeight: "800" }}>{adminUseRankPrices ? "✓ ランク別料金を設定" : "ランク別料金を設定する"}</Text></Pressable>{adminUseRankPrices ? EVENT_RANKS.map((rank) => <View key={rank}><Text style={{ marginTop: 8, fontSize: 12, color: colors.muted }}>{rank}</Text><SharedEventSelectField label={`${rank}料金`} value={adminRankPrices[rank]} options={EVENT_AMOUNT_OPTIONS} onChange={(value) => setAdminRankPrices((current) => ({ ...current, [rank]: value }))} /></View>) : null}</> : null}
               <EventMemberPicker label="同席者" selectedIds={adminCompanionIds} onChange={(ids) => { setAdminCompanionIds(ids); setAdminReservationCapacity((current) => String(Math.max(Number(current || 0), minimumReservationCapacity(adminCapacity, ids)))); }} members={memberDirectory} excludedIds={[organizerId]} />
               <Text style={{ marginTop: 12, fontSize: 12, fontWeight: "800", color: colors.muted }}>写真</Text><Pressable onPress={async () => { const permission = await ImagePicker.requestMediaLibraryPermissionsAsync(); if (!permission.granted) { Alert.alert("権限が必要です", "写真を選ぶには写真ライブラリへのアクセスを許可してください"); return; } const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images, quality: 0.8 }); if (!result.canceled && result.assets[0]) { setAdminImage(result.assets[0].uri); setAdminImageChanged(true); } }} style={{ marginTop: 5, height: 120, borderRadius: 10, overflow: "hidden", backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, alignItems: "center", justifyContent: "center" }}>{adminImage ? <Image source={{ uri: adminImage }} style={{ width: "100%", height: "100%" }} contentFit="cover" /> : <Text style={{ color: colors.muted }}>写真を選択</Text>}</Pressable>

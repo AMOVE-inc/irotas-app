@@ -312,24 +312,32 @@ export default function ChatScreen() {
   const introductionChat = id === "board-introduction";
   // inverted リストではデータの先頭が入力欄側に置かれるため、最新メッセージを
   // 先頭にしておけばスクロール処理なしで最初から最新位置を描画できる。
-  const displayedMessages = useMemo(() => introductionChat ? [...messages].reverse() : messages, [introductionChat, messages]);
+  const displayedMessages = useMemo(() => {
+    const unique = messages.filter((message, index) => !messages.slice(0, index).some((earlier) =>
+      earlier.senderId === message.senderId && earlier.content === message.content &&
+      earlier.imageUri === message.imageUri &&
+      JSON.stringify(earlier.attachmentUrls ?? []) === JSON.stringify(message.attachmentUrls ?? []) &&
+      Math.abs(Date.parse(earlier.createdAt) - Date.parse(message.createdAt)) <= 2_000,
+    ));
+    return introductionChat ? unique.reverse() : unique;
+  }, [introductionChat, messages]);
   // 自分のプロフィール画像（AsyncStorageから読み込み）
   const [myAvatarUri, setMyAvatarUri] = useState<string | null>(null);
   const scrollToLatest = useCallback((animated = false) => {
-    if (!messages.length) return;
+    if (!displayedMessages.length) return;
     const scroll = () => {
       if (id === "board-introduction") {
         flatListRef.current?.scrollToOffset({ offset: 0, animated });
         return;
       }
-      flatListRef.current?.scrollToIndex({ index: messages.length - 1, animated, viewPosition: 1 });
+      flatListRef.current?.scrollToIndex({ index: displayedMessages.length - 1, animated, viewPosition: 1 });
       flatListRef.current?.scrollToEnd({ animated });
     };
     scroll();
     requestAnimationFrame(scroll);
     setTimeout(scroll, 180);
     setTimeout(scroll, 500);
-  }, [id, messages.length]);
+  }, [id, displayedMessages.length]);
 
   const applySharedMessages = useCallback((shared: ChatMessage[]) => {
     setMessages((previous) => {
@@ -713,7 +721,10 @@ export default function ChatScreen() {
                   Boolean(item.shared && item.externalAuthorName && authUser?.name) &&
                   stripRankFromName(item.externalAuthorName ?? "") === stripRankFromName(authUser?.name ?? "")
                 )}
-                canDelete={userIsAdmin}
+                canDelete={userIsAdmin || item.senderId === viewerMemberId || item.senderId === authUser?.memberId || (
+                  Boolean(item.shared && item.externalAuthorName && authUser?.name) &&
+                  stripRankFromName(item.externalAuthorName ?? "") === stripRankFromName(authUser?.name ?? "")
+                )}
                 viewerId={viewerMemberId}
                 viewerName={authUser?.name ?? CURRENT_USER.name}
                 viewerAvatarUrl={typeof authUser?.profile?.avatarUrl === "string" ? authUser.profile.avatarUrl : undefined}

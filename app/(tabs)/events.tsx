@@ -886,9 +886,9 @@ export default function EventsScreen() {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [refreshing, setRefreshing] = useState(false);
-  const [allEvents, setAllEvents] = useState<Event[]>(() =>
-    getAllEvents(EVENTS).filter((event) => !event.id.startsWith("discord-event-")),
-  );
+  const [allEvents, setAllEvents] = useState<Event[]>([]);
+  const [eventsLoaded, setEventsLoaded] = useState(false);
+  const [eventsLoadFailed, setEventsLoadFailed] = useState(false);
   const favoriteEventIds = useEventFavorites();
   const effectiveFavoriteEventIds = useMemo(
     () => [
@@ -930,23 +930,22 @@ export default function EventsScreen() {
 
   const refreshEvents = useCallback(async () => {
     if (!authUser) {
-      setAllEvents(getAllEvents(EVENTS).filter((event) => !event.id.startsWith("discord-event-")));
       return;
     }
     try {
-      const { events: databaseEvents, deletedImportedEventIds } = await Api.getEventsWithDeletedImportedIds();
-      const databaseIds = new Set(databaseEvents.map((event) => event.id));
-      const deletedIds = new Set(deletedImportedEventIds);
+      const { events: databaseEvents } = await Api.getEventsWithDeletedImportedIds();
       const importedById = new Map(getAllEvents(EVENTS).map((event) => [event.id, event]));
       setAllEvents([
         ...databaseEvents.map((event) => {
           const imported = importedById.get(event.id);
           return imported ? { ...event, organizerProfileId: imported.organizerProfileId || event.organizerProfileId, organizerName: imported.organizerName || event.organizerName, organizerAvatar: imported.organizerAvatar || event.organizerAvatar, organizerRank: imported.organizerRank || event.organizerRank } : event;
         }),
-        ...getAllEvents(EVENTS).filter((event) => !deletedIds.has(event.id) && !databaseIds.has(event.id)),
       ]);
+      setEventsLoadFailed(false);
     } catch {
-      setAllEvents(getAllEvents(EVENTS).filter((event) => !event.id.startsWith("discord-event-")));
+      setEventsLoadFailed(true);
+    } finally {
+      setEventsLoaded(true);
     }
   }, [authUser]);
 
@@ -1424,7 +1423,7 @@ export default function EventsScreen() {
                   marginLeft: 10,
                 }}
               >
-                全{visibleEvents.length}件
+                {eventsLoaded ? `全${visibleEvents.length}件` : "読込中"}
               </Text>
             </View>
           </View>
@@ -1433,7 +1432,7 @@ export default function EventsScreen() {
           <View style={{ alignItems: "center", paddingVertical: 40 }}>
             <IconSymbol name="calendar" size={48} color={colors.border} />
             <Text style={{ fontSize: 15, color: colors.muted, marginTop: 12 }}>
-              イベントがありません
+              {eventsLoadFailed ? "イベントを読み込めませんでした。画面を下に引いて再読み込みしてください。" : eventsLoaded ? "イベントがありません" : "イベントを読み込んでいます"}
             </Text>
             {hostedByMe ? (
               <Text

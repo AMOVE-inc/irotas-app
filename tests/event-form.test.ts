@@ -58,4 +58,15 @@ describe("event edit form values", () => {
     expect(validateEventForm(form, { requireImage: false })).toBeNull();
     expect(eventFormSaveFields(form)).toMatchObject({ price: "11,000円〜14,000円", priceMin: 11000, priceMax: 14000 });
   });
+
+  it("round-trips an undecided budget", () => {
+    const form = eventFormValuesFromEvent(event);
+    form.fixedAmount = false;
+    form.budgetMin = "未定";
+    form.budgetMax = "未定";
+    expect(validateEventForm(form, { requireImage: false })).toBeNull();
+    const saved = eventFormSaveFields(form);
+    expect(saved).toMatchObject({ price: "未定", priceMin: 0, priceMax: 0 });
+    expect(eventFormValuesFromEvent({ ...event, ...saved }).budgetMin).toBe("未定");
+  });
 });

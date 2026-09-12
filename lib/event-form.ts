@@ -85,7 +85,8 @@ function editableEventAddress(event: Event) {
 export function eventFormValuesFromEvent(event: Event): EventFormValues {
   const priceMin = event.priceMin ?? numericEventAmount(event.price);
   const priceMax = event.priceMax ?? priceMin;
-  const fixedAmount = priceMin === priceMax;
+  const budgetUndecided = event.price === "未定";
+  const fixedAmount = !budgetUndecided && priceMin === priceMax;
   const rankPrices = EVENT_RANKS.reduce<Record<MemberRank, string>>((result, rank) => {
     result[rank] = event.rankPrices?.[rank] ?? "";
     return result;
@@ -101,8 +102,8 @@ export function eventFormValuesFromEvent(event: Event): EventFormValues {
     reservationCapacity: String(event.reservationCapacity ?? event.capacity ?? ""),
     recruitCapacity: event.capacityMode ?? String(event.capacity ?? ""),
     fixedAmount,
-    budgetMin: fixedAmount ? String(priceMin || "") : amountOption(priceMin),
-    budgetMax: fixedAmount ? "" : amountOption(priceMax),
+    budgetMin: budgetUndecided ? "未定" : fixedAmount ? String(priceMin || "") : amountOption(priceMin),
+    budgetMax: budgetUndecided ? "未定" : fixedAmount ? "" : amountOption(priceMax),
     tabelogUrl: event.tabelogUrl ?? "",
     googleMapsUrl: event.googleMapsUrl ?? "",
     companionIds: event.companionIds ?? [],
@@ -144,7 +145,8 @@ export function validateEventForm(values: EventFormValues, options: { requireIma
   const extracted = extractEventLocation(values.address);
   if (values.address.trim() && !extracted.prefecture) return "住所を入力する場合は都道府県名を含めてください";
   if (values.decisionDate > values.date) return "参加者決定予定日は開催日以前を選択してください";
-  if (!usesRankPrices && !values.fixedAmount && numericEventAmount(values.budgetMin) > numericEventAmount(values.budgetMax)) return "下限金額は上限金額以下にしてください";
+  if (!usesRankPrices && !values.fixedAmount && (values.budgetMin === "未定") !== (values.budgetMax === "未定")) return "予算を未定にする場合は下限・上限とも未定にしてください";
+  if (!usesRankPrices && !values.fixedAmount && values.budgetMin !== "未定" && numericEventAmount(values.budgetMin) > numericEventAmount(values.budgetMax)) return "下限金額は上限金額以下にしてください";
   if (!['undecided', 'unlimited'].includes(values.recruitCapacity) && minimumReservationCapacity(values.recruitCapacity, values.companionIds) > Number(values.reservationCapacity)) return "予約人数には、自分・同席者・募集人数の全員が収まるよう設定してください";
   if (values.tabelogUrl && !/^https?:\/\//i.test(values.tabelogUrl)) return "食べログURLは http:// または https:// から入力してください";
   if (values.googleMapsUrl && !/^https?:\/\//i.test(values.googleMapsUrl)) return "GoogleマップURLは http:// または https:// から入力してください";
@@ -161,7 +163,7 @@ export function eventFormSaveFields(values: EventFormValues): Pick<Event, "title
   const rankAmounts = usesRankPrices ? EVENT_RANKS.map((rank) => numericEventAmount(values.rankPrices[rank])) : [];
   const priceMin = usesRankPrices ? Math.min(...rankAmounts) : numericEventAmount(values.budgetMin);
   const priceMax = usesRankPrices ? Math.max(...rankAmounts) : values.fixedAmount ? priceMin : numericEventAmount(values.budgetMax);
-  const price = priceMin === priceMax ? `${priceMin.toLocaleString()}円` : `${priceMin.toLocaleString()}円〜${priceMax.toLocaleString()}円`;
+  const price = !usesRankPrices && values.budgetMin === "未定" ? "未定" : priceMin === priceMax ? `${priceMin.toLocaleString()}円` : `${priceMin.toLocaleString()}円〜${priceMax.toLocaleString()}円`;
   return {
     title: values.eventName.trim() || values.restaurantName.trim(),
     restaurantName: values.restaurantName.trim(),

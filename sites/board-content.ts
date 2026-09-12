@@ -584,6 +584,13 @@ export async function handleBoardContentRequest(
     const content = text(input?.content, 10_000, true);
     const data = safeData(input?.data);
     if (!input || !content || data === null) return json({ error: "コメント内容が不正です" }, 400);
+    const duplicateSince = new Date(Date.now() - 30_000).toISOString();
+    const duplicate = await db.prepare(`SELECT id, created_at FROM board_comments
+      WHERE thread_id = ? AND author_member_id = ? AND content = ? AND data_json = ?
+        AND deleted_at IS NULL AND created_at >= ? ORDER BY created_at DESC LIMIT 1`)
+      .bind(threadId, member.id, content, data, duplicateSince)
+      .first<{ id: string; created_at: string }>();
+    if (duplicate) return json({ id: duplicate.id, createdAt: duplicate.created_at, duplicate: true });
     const id = crypto.randomUUID();
     const now = new Date().toISOString();
     await db.prepare(`INSERT INTO board_comments

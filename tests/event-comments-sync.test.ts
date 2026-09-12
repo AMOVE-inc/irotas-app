@@ -24,4 +24,13 @@ describe("shared event comments", () => {
     expect(mergeEventComments([], stored, { memberId: 3, publicId: "IRO0003", discordUserId: null, elevated: false })[0].canEdit).toBe(true);
     expect(mergeEventComments([], stored, { memberId: 4, publicId: "IRO0004", discordUserId: null, elevated: false })[0].canEdit).toBe(false);
   });
+
+  it("collapses duplicate Discord imports and honors deletion of either alias", () => {
+    const first = { id: "discord-event-comment-1532761614204276787", author: "RIHO", authorId: "discord-1004342455895855144", text: "同じコメント", createdAt: "2026-07-31T14:47:26.160Z" };
+    const second = { ...first, id: "discord-event-comment-discord-comment-1532761614204276787" };
+    const viewer = { memberId: 9, publicId: "IRO0009", discordUserId: null, elevated: false };
+    expect(mergeEventComments([first, second], [], viewer)).toHaveLength(1);
+    const tombstone = { id: second.id, event_id: "event-1", author_member_id: null, author_name: second.author, author_public_id: second.authorId, content: second.text, created_at: second.createdAt, deleted_at: "2026-09-12T00:00:00Z" };
+    expect(mergeEventComments([first, second], [tombstone], viewer)).toHaveLength(0);
+  });
 });

@@ -8,7 +8,6 @@ import {
   RANK_COLORS,
   RANK_LABELS,
   getTodayEvents,
-  EVENTS,
   CURRENT_USER,
   DEFAULT_AVATAR,
   type Announcement,
@@ -17,6 +16,7 @@ import {
   type TimelinePost,
 } from "@/constants/mock-data";
 import { useColors } from "@/hooks/use-colors";
+import { useAuthContext } from "@/lib/auth-context";
 import { Image } from "expo-image";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useRef, useState, useCallback, useEffect, useMemo } from "react";
@@ -40,7 +40,6 @@ import { type HomeActivity, type HomeActivityKind } from "@/lib/home-activity-st
 import { getGiftCampaigns, type GiftCampaign } from "@/lib/gift-campaign-store";
 import { useCampaigns, type Campaign } from "@/lib/campaign-store";
 import { getSharedAnnouncements } from "@/lib/announcement-api";
-import { getAllEvents } from "@/lib/event-store";
 import { createDefaultPreferences, loadMemberAiConsents, loadMemberPreferences, recordActivityEvent, type MemberAiConsents, type MemberPreferences } from "@/lib/ai-data-store";
 import { recommendEvents, type RecommendedEvent } from "@/lib/event-recommendation";
 import * as Api from "@/lib/_core/api";
@@ -610,6 +609,7 @@ function TimelinePostCard({ post }: { post: TimelinePost }) {
 export default function HomeScreen() {
   const colors = useColors();
   const router = useRouter();
+  const { user: authUser } = useAuthContext();
   const [refreshing, setRefreshing] = useState(false);
   const [activities, setActivities] = useState<HomeActivity[]>([]);
   const [timelineLoading, setTimelineLoading] = useState(true);
@@ -619,15 +619,13 @@ export default function HomeScreen() {
   const [homeAnnouncements, setHomeAnnouncements] = useState<Announcement[]>([]);
   const managedCampaigns = useCampaigns();
   const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
-  const [visibleEvents, setVisibleEvents] = useState<Event[]>(() => getAllEvents(EVENTS).filter((event) => !event.id.startsWith("discord-event-")));
+  const [visibleEvents, setVisibleEvents] = useState<Event[]>([]);
   const [preferences, setPreferences] = useState<MemberPreferences>(() => createDefaultPreferences());
   const [aiConsents, setAiConsents] = useState<MemberAiConsents>({ eventRecommendation: false, memberMatching: false, conciergeHistory: false, anonymousImprovement: false, updatedAt: "" });
 
   const loadVisibleEvents = useCallback(() => {
-    void Api.getEventsWithDeletedImportedIds().then(({ events, deletedImportedEventIds }) => {
-      const known = new Set(events.map((event) => event.id));
-      const deleted = new Set(deletedImportedEventIds);
-      setVisibleEvents([...events, ...getAllEvents(EVENTS).filter((event) => !known.has(event.id) && !deleted.has(event.id))]);
+    void Api.getEventsWithDeletedImportedIds().then(({ events }) => {
+      setVisibleEvents(events);
     }).catch(() => undefined);
   }, []);
 
@@ -649,7 +647,7 @@ export default function HomeScreen() {
     loadVisibleEvents();
     const timer = setInterval(loadHomeContent, 3000);
     return () => clearInterval(timer);
-  }, [loadHomeContent, loadVisibleEvents]));
+  }, [loadHomeContent, loadVisibleEvents, authUser?.memberId]));
 
   const { events: todayEvents, boardEvents: todayBoardEvents } = useMemo(() => ({
     events: visibleEvents.filter((event) => event.date === new Date().toISOString().slice(0, 10)),
