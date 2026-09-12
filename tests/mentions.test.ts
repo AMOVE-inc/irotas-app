@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { CLUBS, MEMBERS } from "../constants/mock-data";
-import { getMentionGroups, getMentionQuery, getMentionedMemberIds, insertMention } from "../lib/mentions";
+import { getMentionGroups, getMentionQuery, getMentionedMemberIds, insertMention, mentionsViewer } from "../lib/mentions";
 
 const groups = getMentionGroups(MEMBERS, CLUBS);
 
@@ -31,5 +31,19 @@ describe("group mentions", () => {
   it("detects a mention query and inserts the selected label", () => {
     expect(getMentionQuery("確認お願いします @関東")).toBe("関東");
     expect(insertMention("確認お願いします @関東", "関東支部")).toBe("確認お願いします @関東支部 ");
+  });
+
+  it("distinguishes exact personal, branch, and joined-club mentions", () => {
+    const labels = ["さくら", "関東支部", "旅行部", "everyone"];
+    expect(mentionsViewer("@さくら @関東支部 @旅行部", labels)).toBe(true);
+    expect(mentionsViewer("@旅行部員", labels)).toBe(false);
+    expect(mentionsViewer("@関西支部", labels)).toBe(false);
+    expect(mentionsViewer("@スポーツ部", labels)).toBe(false);
+    expect(mentionsViewer("@everyone", labels)).toBe(true);
+  });
+
+  it("supports names with spaces and punctuation after mentions", () => {
+    expect(mentionsViewer("確認をお願いします、@Non 【IRO+代表】。", ["Non 【IRO+代表】"])).toBe(true);
+    expect(mentionsViewer("@Non 【IRO+代表】さん", ["Non 【IRO+代表】"])).toBe(false);
   });
 });

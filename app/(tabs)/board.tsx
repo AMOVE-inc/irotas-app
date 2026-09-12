@@ -33,7 +33,7 @@ import { XpRewardPopup } from "@/components/xp-reward-popup";
 import { awardXp, type XpReward } from "@/lib/xp-store";
 import { POINT_ACTIONS } from "@/constants/mock-data";
 import { submitClubApplication as submitClubApplicationToStore, useClubs } from "@/lib/club-store";
-import { getMentionGroups, getMentionQuery, getMentionedMemberIds, insertMention } from "@/lib/mentions";
+import { getMentionGroups, getMentionQuery, getMentionedMemberIds, insertMention, mentionsViewer } from "@/lib/mentions";
 import { sendClubApplicationNotification, sendMentionNotification } from "@/lib/notifications";
 import { type TextSelection } from "@/lib/text-formatting";
 import { toggleReactionMember } from "@/lib/chat-reactions";
@@ -413,7 +413,7 @@ function ThreadCard({ thread, onPress, onEdit, onDelete, onPin, onChangeRecruitm
         onPress={() => router.push({ pathname: "/member-profile", params: { id: thread.author.id, legacyName: thread.author.name } })}
         style={{ flexDirection: "row", alignItems: "center", marginBottom: 8 }}
       >
-        {unreadCount > 0 ? <View style={{ marginRight: 7, backgroundColor: "#3478C7", borderRadius: 7, paddingHorizontal: 7, paddingVertical: 3 }}><Text style={{ color: "#FFFFFF", fontSize: 10, fontWeight: "900" }}>NEW</Text></View> : null}
+        {unreadCount > 0 ? <View style={{ marginRight: 7, backgroundColor: mentionCount > 0 ? "#D9363E" : "#3478C7", borderRadius: 7, paddingHorizontal: 7, paddingVertical: 3 }}><Text style={{ color: "#FFFFFF", fontSize: 10, fontWeight: "900" }}>{mentionCount > 0 ? "@メンション" : "NEW"}</Text></View> : null}
         {pinned ? <View style={{ marginRight: 7, borderRadius: 10, paddingHorizontal: 8, paddingVertical: 6, backgroundColor: "#FFF2C7" }}><Text style={{ fontSize: 11, fontWeight: "900", color: "#8A6512" }}>📌 固定</Text></View> : null}
         {recruitmentManaged ? <RecruitmentStatusBadge status={recruitmentStatus} /> : thread.gourmetContest && contestOpen ? <View style={{ marginRight: 9, borderRadius: 10, paddingHorizontal: 9, paddingVertical: 6, backgroundColor: "#DDF3E3" }}><Text style={{ fontSize: 11, fontWeight: "900", color: "#247A42" }}>開催中</Text></View> : null}
         <Image
@@ -2397,6 +2397,23 @@ export default function BoardScreen() {
   const isClubIndexView = view === "clubs";
   const viewerMemberId = resolveViewerMemberId(authUser?.memberId, Boolean(authUser), CURRENT_USER.id);
   const viewerMember = memberFromAuthUser(authUser);
+  const viewerMentionLabels = useMemo(() => {
+    if (!viewerMemberId) return [];
+    const branch = authUser?.branch ?? viewerMember.branch;
+    const joinedClubs = clubs.filter((club) => {
+      const access = getClubViewerAccess(club, authUser?.memberId, CURRENT_USER.id, Boolean(authUser));
+      return access.isMember || access.isLeader;
+    });
+    return [...new Set([
+      viewerMember.name,
+      authUser?.name ?? "",
+      branch === "kansai" ? "関西支部" : "関東支部",
+      ...joinedClubs.map((club) => club.name),
+      "everyone",
+      "全員",
+      "here",
+    ].filter(Boolean))];
+  }, [authUser, clubs, viewerMember.branch, viewerMember.name, viewerMemberId]);
   const boardReadKey = `irotas_board_thread_reads_v1:${viewerMemberId}`;
   useEffect(() => {
     setThreadReadsHydrated(false);
@@ -2575,12 +2592,17 @@ export default function BoardScreen() {
     () => applyBoardThreadEdits(authUser ? dynamicThreads : [...dynamicThreads, ...BOARD_THREADS], editedThreads).filter((thread) => !deletedThreadIds.includes(thread.id)),
     [authUser, dynamicThreads, editedThreads, deletedThreadIds],
   );
-  const categoryHasUnread = useCallback((categoryKey: string) => threadReadsHydrated && allThreads
-    .filter((thread) => thread.category === categoryKey)
-    .some((thread) => {
-      const comments = importedComments[thread.id] ?? [];
-      return comments.slice(threadReadCounts[thread.id] ?? 0).some((comment) => comment.author.id !== viewerMemberId);
-    }), [allThreads, importedComments, threadReadCounts, threadReadsHydrated, viewerMemberId]);
+  const categoryUnreadStatus = useCallback((categoryKey: string): "mention" | "unread" | null => {
+    if (!threadReadsHydrated) return null;
+    let hasUnread = false;
+    for (const thread of allThreads.filter((item) => item.category === categoryKey)) {
+      if (threadReadCounts[thread.id] === undefined && thread.author.id !== viewerMemberId && mentionsViewer(`${thread.title} ${thread.preview}`, viewerMentionLabels)) return "mention";
+      const comments = (importedComments[thread.id] ?? []).slice(threadReadCounts[thread.id] ?? 0).filter((comment) => comment.author.id !== viewerMemberId);
+      if (comments.some((comment) => mentionsViewer(comment.content, viewerMentionLabels))) return "mention";
+      if (comments.length) hasUnread = true;
+    }
+    return hasUnread ? "unread" : null;
+  }, [allThreads, importedComments, threadReadCounts, threadReadsHydrated, viewerMemberId, viewerMentionLabels]);
   const markCategoryRead = useCallback((categoryKey: string) => {
     setThreadReadCounts((current) => {
       const next = { ...current };
@@ -2744,6 +2766,7 @@ export default function BoardScreen() {
   }, [canViewActiveClubMembers, openClubMembers, router]);
   const renderCategoryRow = (cat: BoardCategory) => {
     const presentation = categoryPresentation(cat);
+    const unreadStatus = categoryUnreadStatus(cat.key);
     return (
       <Pressable
         key={cat.key}
@@ -2752,7 +2775,7 @@ export default function BoardScreen() {
       >
         <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: `${presentation.accent}20`, alignItems: "center", justifyContent: "center" }}><IconSymbol name={presentation.icon as any} size={21} color={presentation.accent} /></View>
         <View style={{ flex: 1, marginLeft: 11 }}><Text style={{ fontSize: 15, fontWeight: "900", color: colors.foreground }}>{cat.label}</Text><Text style={{ fontSize: 11, color: colors.muted, marginTop: 3 }}>{presentation.description}</Text></View>
-        {categoryHasUnread(cat.key) ? <View style={{ backgroundColor: "#3478C7", borderRadius: 9, paddingHorizontal: 7, paddingVertical: 3, marginRight: 8 }}><Text style={{ fontSize: 10, fontWeight: "900", color: "#FFFFFF" }}>新着</Text></View> : null}
+        {unreadStatus ? <View style={{ backgroundColor: unreadStatus === "mention" ? "#D9363E" : "#3478C7", borderRadius: 9, paddingHorizontal: 7, paddingVertical: 3, marginRight: 8 }}><Text style={{ fontSize: 10, fontWeight: "900", color: "#FFFFFF" }}>{unreadStatus === "mention" ? "@メンション" : "新着"}</Text></View> : null}
         <IconSymbol name="chevron.right" size={17} color={colors.muted} />
       </Pressable>
     );
@@ -2844,13 +2867,14 @@ export default function BoardScreen() {
         renderItem={({ item }) => (
           activeCategory === "introduction" ? <SelfIntroductionMessage thread={item} /> : (() => {
             const comments = importedComments[item.id] ?? [];
-            const unreadComments = comments.slice(threadReadCounts[item.id] ?? 0).filter((comment) => comment.author.id !== viewerMemberId);
-            const mentionCount = unreadComments.filter((comment) => comment.content.includes(`@${viewerMember.name}`) || /@(全員|everyone|here)/i.test(comment.content)).length;
+            const unreadComments = threadReadsHydrated ? comments.slice(threadReadCounts[item.id] ?? 0).filter((comment) => comment.author.id !== viewerMemberId) : [];
+            const postMention = threadReadsHydrated && threadReadCounts[item.id] === undefined && item.author.id !== viewerMemberId && mentionsViewer(`${item.title} ${item.preview}`, viewerMentionLabels);
+            const mentionCount = unreadComments.filter((comment) => mentionsViewer(comment.content, viewerMentionLabels)).length + (postMention ? 1 : 0);
             return <ThreadCard
             thread={item}
             comments={comments}
             showMenu={item.category !== "introduction"}
-            unreadCount={unreadComments.length}
+            unreadCount={unreadComments.length + (postMention ? 1 : 0)}
             mentionCount={mentionCount}
             onPress={() => { markThreadRead(item.id); setSelectedThread(item); router.setParams({ thread: item.id }); }}
             onEdit={item.author.id === viewerMemberId || userCanModerateAll ? () => setEditingThread(item) : undefined}
