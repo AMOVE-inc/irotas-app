@@ -157,6 +157,7 @@ export default function OAuthCallback() {
               email: result.user.email,
               loginMethod: result.user.loginMethod,
               lastSignedIn: new Date(result.user.lastSignedIn || Date.now()),
+              firstSignedIn: new Date(result.user.firstSignedIn || result.user.lastSignedIn || Date.now()),
               role: Auth.normalizeUserRole(result.user.role),
               accessRole: Auth.normalizeAccessRole(result.user.accessRole),
               branch: Auth.normalizeBranchRole(result.user.branch),

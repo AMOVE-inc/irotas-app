@@ -94,6 +94,7 @@ export default function LoginScreen() {
             email: result.user.email,
             loginMethod: result.user.loginMethod,
             lastSignedIn: new Date(result.user.lastSignedIn),
+            firstSignedIn: new Date(result.user.firstSignedIn ?? result.user.lastSignedIn),
             role: Auth.normalizeUserRole(result.user.role),
             accessRole: Auth.normalizeAccessRole(result.user.accessRole),
             branch: Auth.normalizeBranchRole(result.user.branch),

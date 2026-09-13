@@ -18,6 +18,7 @@ export type AuthApiUser = {
   email: string | null;
   loginMethod: string | null;
   lastSignedIn: string;
+  firstSignedIn?: string;
   role: Auth.UserRole;
   accessRole: Auth.AccessRole;
   branch: Auth.BranchRole | null;
