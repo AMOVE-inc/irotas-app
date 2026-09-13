@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
   extractSessionToken,
   hashPassword,
@@ -37,6 +37,50 @@ describe("Sites production authentication", () => {
 
   it("normalizes billing email addresses", () => {
     expect(normalizeEmail("  Member@Example.COM ")).toBe("member@example.com");
+  });
+
+  it("sends a setup code when stored member and billing emails contain whitespace", async () => {
+    const queries: string[] = [];
+    const db = {
+      prepare(query: string) {
+        queries.push(query);
+        return {
+          bind(...values: unknown[]) {
+            return {
+              async first() {
+                if (query.includes("FROM auth_rate_limits")) return null;
+                if (query.includes("FROM member_subscriptions WHERE"))
+                  return query.includes("LOWER(TRIM(billing_email))") && values[0] === "member@example.com"
+                    ? { billing_email: " Member@Example.COM ", square_status: "ACTIVE", access_status: "active", paid_until_date: null, grace_until_date: null }
+                    : null;
+                if (query.includes("FROM members m"))
+                  return query.includes("LOWER(TRIM(m.email))") && values[0] === "member@example.com"
+                    ? { id: 1, email: " Member@Example.COM ", role: "user", access_role: "member", account_status: "active" }
+                    : null;
+                return null;
+              },
+              async run() { return { success: true }; },
+            };
+          },
+        };
+      },
+    };
+    const send = vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response(null, { status: 202 }));
+    try {
+      const response = await handleAuthRequest(
+        new Request("https://app.example/api/auth/request-setup-code", {
+          method: "POST",
+          headers: { origin: "https://app.example", "content-type": "application/json" },
+          body: JSON.stringify({ email: "member@example.com" }),
+        }),
+        { DB: db, AUTH_SECRET: "test-secret", RESEND_API_KEY: "test-key", AUTH_EMAIL_FROM: "test@example.com" } as never,
+      );
+      expect(response?.status).toBe(200);
+      expect(send).toHaveBeenCalledOnce();
+      expect(queries.some((query) => query.includes("INSERT INTO email_verification_codes"))).toBe(true);
+    } finally {
+      send.mockRestore();
+    }
   });
 
   it("only recognizes the exact configured bootstrap administrator email", () => {

@@ -197,6 +197,7 @@ export function AdminOnboardingProgress() {
         <Text style={{ color: ink, fontSize: 16, fontWeight: "700" }}>{record.displayName || "アカウント未作成"}</Text>
         <Text selectable style={{ color: muted, fontSize: 13 }}>{record.billingEmail}</Text>
         <Text style={{ color: statusColor, fontWeight: "700", fontSize: 13 }}>{statusLabel(record)}{record.subscriptionStatus === "grace" ? " · 猶予中" : ""}</Text>
+        <Text style={{ color: muted, fontSize: 12 }}>Square: {record.squareStatus} / 支払期限: {record.paidUntilDate || "未設定"}</Text>
         <Text style={{ color: muted, fontSize: 12 }}>パスワード設定: {dateLabel(record.passwordSetAt)} / 最終ログイン: {dateLabel(record.lastSignedInAt)}</Text>
         {record.codeIssuedAt && record.loginStatus !== "logged_in" && <Text style={{ color: muted, fontSize: 12 }}>認証コード発行: {dateLabel(record.codeIssuedAt)}</Text>}
         <Text style={{ color: muted, fontSize: 12 }}>案内: {record.followUp.outreachStatus === "not_sent" ? "未記録" : record.followUp.outreachStatus === "sent" ? "案内済み" : "フォロー中"} / 次回: {record.followUp.nextFollowUpAt || "未設定"} / 担当: {record.followUp.ownerName || "未設定"}</Text>

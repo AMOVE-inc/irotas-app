@@ -429,7 +429,7 @@ async function rateLimit(
 async function findSubscription(db: D1Database, email: string) {
   return db
     .prepare(
-      "SELECT billing_email, square_status, access_status, paid_until_date, grace_until_date FROM member_subscriptions WHERE billing_email = ?",
+      "SELECT billing_email, square_status, access_status, paid_until_date, grace_until_date FROM member_subscriptions WHERE LOWER(TRIM(billing_email)) = ?",
     )
     .bind(email)
     .first<SubscriptionRow>();
@@ -444,8 +444,8 @@ async function findMember(db: D1Database, email: string) {
       m.profile_json, m.xp, m.participation_count, m.organizer_count,
       s.subscription_started_at
       FROM members m
-      LEFT JOIN member_subscriptions s ON s.member_id = m.id OR s.billing_email = m.email
-      WHERE m.email = ? ORDER BY s.id DESC LIMIT 1`,
+      LEFT JOIN member_subscriptions s ON s.member_id = m.id OR LOWER(TRIM(s.billing_email)) = LOWER(TRIM(m.email))
+      WHERE LOWER(TRIM(m.email)) = ? ORDER BY s.id DESC LIMIT 1`,
     )
     .bind(email)
     .first<MemberRow>();
@@ -475,7 +475,7 @@ async function sessionMember(db: D1Database, token: string) {
     s.billing_email, s.square_subscription_id, s.square_status, s.access_status, s.paid_until_date, s.grace_until_date
     FROM member_sessions ms
     JOIN members m ON m.id = ms.member_id
-    LEFT JOIN member_subscriptions s ON s.member_id = m.id OR s.billing_email = m.email
+    LEFT JOIN member_subscriptions s ON s.member_id = m.id OR LOWER(TRIM(s.billing_email)) = LOWER(TRIM(m.email))
     WHERE ms.token_hash = ? AND ms.expires_at > ?
     ORDER BY s.id DESC LIMIT 1`,
     )
@@ -796,7 +796,7 @@ async function register(request: Request, env: SitesEnv, db: D1Database) {
       .bind(now, verification.id),
     db
       .prepare(
-        "UPDATE member_subscriptions SET member_id = ?, updated_at = ? WHERE billing_email = ?",
+        "UPDATE member_subscriptions SET member_id = ?, updated_at = ? WHERE LOWER(TRIM(billing_email)) = ?",
       )
       .bind(member.id, now, email),
   ]);
