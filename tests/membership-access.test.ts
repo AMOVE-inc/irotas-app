@@ -6,9 +6,9 @@ describe("membership access", () => {
     expect(canAccessMemberApp({ squareStatus: "ACTIVE", accessStatus: "active", paidUntilDate: "2026-07-31" }, new Date("2026-07-26T12:00:00+09:00"))).toBe(true);
   });
 
-  it("blocks stopped subscriptions and expired paid periods", () => {
+  it("blocks stopped subscriptions but trusts Square ACTIVE when charged-through date lags", () => {
     expect(canAccessMemberApp({ squareStatus: "CANCELED", accessStatus: "suspended" })).toBe(false);
-    expect(canAccessMemberApp({ squareStatus: "ACTIVE", accessStatus: "active", paidUntilDate: "2026-07-20" }, new Date("2026-07-26T12:00:00+09:00"))).toBe(false);
+    expect(canAccessMemberApp({ squareStatus: "ACTIVE", accessStatus: "active", paidUntilDate: "2026-07-20" }, new Date("2026-07-26T12:00:00+09:00"))).toBe(true);
   });
 
   it("supports a bounded payment grace period", () => {

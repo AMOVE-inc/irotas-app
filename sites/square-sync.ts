@@ -36,16 +36,9 @@ export function isStrictAdmin(member: {
   );
 }
 
-function addDays(date: string, days: number) {
-  const value = new Date(`${date.slice(0, 10)}T00:00:00Z`);
-  value.setUTCDate(value.getUTCDate() + days);
-  return value.toISOString().slice(0, 10);
-}
-
 export function subscriptionAccessState(
   subscription: SquareSubscription,
   allowedPlanIds: Set<string>,
-  today = new Date().toISOString().slice(0, 10),
 ) {
   const status = VALID_STATUSES.has(subscription.status ?? "")
     ? subscription.status!
@@ -65,15 +58,8 @@ export function subscriptionAccessState(
   if (status !== "ACTIVE") {
     return { status, accessStatus: "pending", paidUntil, graceUntil: null };
   }
-  if (paidUntil && paidUntil < today) {
-    const graceUntil = addDays(paidUntil, 7);
-    return {
-      status,
-      accessStatus: graceUntil >= today ? "grace" : "suspended",
-      paidUntil,
-      graceUntil,
-    };
-  }
+  // Square can keep charged_through_date in the past while a subscription is ACTIVE.
+  // Payment failures enter grace through invoice webhooks instead of this date.
   return { status, accessStatus: "active", paidUntil, graceUntil: null };
 }
 
@@ -148,7 +134,7 @@ async function reconcileSubscriptions(
 ) {
   const statements = subscriptions.flatMap((subscription) => {
     if (!subscription.id) return [];
-    const state = subscriptionAccessState(subscription, allowedPlanIds, now.slice(0, 10));
+    const state = subscriptionAccessState(subscription, allowedPlanIds);
     return [
       db
         .prepare(

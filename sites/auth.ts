@@ -231,11 +231,7 @@ export function membershipAllowsAccess(
       subscription.grace_until_date &&
       now.getTime() <= endOfDate(subscription.grace_until_date),
     );
-  return (
-    subscription.square_status === "ACTIVE" &&
-    (!subscription.paid_until_date ||
-      now.getTime() <= endOfDate(subscription.paid_until_date))
-  );
+  return subscription.square_status === "ACTIVE";
 }
 
 /**

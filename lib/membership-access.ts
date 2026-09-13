@@ -26,8 +26,7 @@ export function canAccessMemberApp(record: MembershipAccessRecord | null | undef
   if (record.accessStatus === "grace") {
     return Boolean(record.graceUntilDate && now.getTime() <= endOfDate(record.graceUntilDate));
   }
-  if (record.squareStatus !== "ACTIVE") return false;
-  return !record.paidUntilDate || now.getTime() <= endOfDate(record.paidUntilDate);
+  return record.squareStatus === "ACTIVE";
 }
 
 export function accessStatusForSquareStatus(status: SquareSubscriptionStatus): MembershipAccessStatus {

@@ -51,7 +51,7 @@ describe("Sites production authentication", () => {
                 if (query.includes("FROM auth_rate_limits")) return null;
                 if (query.includes("FROM member_subscriptions WHERE"))
                   return query.includes("LOWER(TRIM(billing_email))") && values[0] === "member@example.com"
-                    ? { billing_email: " Member@Example.COM ", square_status: "ACTIVE", access_status: "active", paid_until_date: null, grace_until_date: null }
+                    ? { billing_email: " Member@Example.COM ", square_status: "ACTIVE", access_status: "active", paid_until_date: "2026-09-03", grace_until_date: null }
                     : null;
                 if (query.includes("FROM members m"))
                   return query.includes("LOWER(TRIM(m.email))") && values[0] === "member@example.com"
@@ -227,6 +227,20 @@ describe("Sites production authentication", () => {
         now,
       ),
     ).toBe(false);
+  });
+
+  it("allows a Square ACTIVE member when the charged-through date is stale", () => {
+    expect(membershipAllowsAccess({
+      billing_email: "member@example.com",
+      square_status: "ACTIVE",
+      access_status: "active",
+      paid_until_date: "2026-09-03",
+      grace_until_date: null,
+    }, {
+      role: "user",
+      access_role: "member",
+      account_status: "active",
+    }, new Date("2026-09-13T12:00:00+09:00"))).toBe(true);
   });
 
   it("does not clear payment-failure grace on a later active subscription update", () => {

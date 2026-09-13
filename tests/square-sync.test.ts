@@ -23,26 +23,23 @@ describe("Square subscription reconciliation", () => {
       subscriptionAccessState(
         { status: "PAUSED", paid_until_date: "2026-08-31" },
         new Set(),
-        "2026-08-18",
       ).accessStatus,
     ).toBe("suspended");
   });
 
-  it("applies a seven-day grace period after paid-through date", () => {
+  it("does not revoke an ACTIVE subscription based only on a stale charged-through date", () => {
     expect(
       subscriptionAccessState(
         { status: "ACTIVE", paid_until_date: "2026-08-15" },
         new Set(),
-        "2026-08-18",
       ),
-    ).toMatchObject({ accessStatus: "grace", graceUntil: "2026-08-22" });
+    ).toMatchObject({ accessStatus: "active", graceUntil: null });
     expect(
       subscriptionAccessState(
         { status: "ACTIVE", paid_until_date: "2026-08-10" },
         new Set(),
-        "2026-08-18",
       ).accessStatus,
-    ).toBe("suspended");
+    ).toBe("active");
   });
 
   it("rejects subscriptions outside the configured plans", () => {
@@ -50,7 +47,6 @@ describe("Square subscription reconciliation", () => {
       subscriptionAccessState(
         { status: "ACTIVE", plan_variation_id: "other" },
         new Set(["approved"]),
-        "2026-08-18",
       ).accessStatus,
     ).toBe("suspended");
   });
