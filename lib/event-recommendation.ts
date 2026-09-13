@@ -9,7 +9,14 @@ function areaKey(event: Event) {
 }
 function cuisineKeys(event: Event) {
   const text = `${event.genres?.join(" ") ?? ""} ${event.title} ${event.restaurantName ?? ""}`;
-  return CUISINE_OPTIONS.filter((item) => text.includes(item.label) || (item.key === "wine" && text.includes("ワイン"))).map((item) => item.key);
+  const aliases: Record<string, string[]> = {
+    sushi: ["鮨", "すし", "スシ"],
+    yakitori: ["焼き鳥", "やきとり"],
+    yakiniku: ["焼き肉"],
+  };
+  return CUISINE_OPTIONS.filter((item) =>
+    text.includes(item.label) || (aliases[item.key] ?? []).some((alias) => text.includes(alias)) || (item.key === "wine" && text.includes("ワイン"))
+  ).map((item) => item.key);
 }
 function timeSlot(time: string): TimeSlot {
   const hour = Number(time.slice(0, 2)); if (hour < 14) return "lunch"; if (hour < 17) return "afternoon"; if (hour < 22) return "dinner"; return "late_night";

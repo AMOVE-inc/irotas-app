@@ -1,0 +1,936 @@
+{
+  "version": 1,
+  "generatedAt": "2026-09-05",
+  "sourceReport": "outputs/event-genre-candidates-2026-09-05.md",
+  "expectedEventCount": 152,
+  "expectedGenreValueCount": 166,
+  "candidates": [
+    {
+      "id": "discord-event-1543599911507861514",
+      "genres": [
+        "焼肉",
+        "ホルモン"
+      ]
+    },
+    {
+      "id": "discord-event-1543585895804833902",
+      "genres": [
+        "焼肉"
+      ]
+    },
+    {
+      "id": "discord-event-1543113999640694826",
+      "genres": [
+        "バー"
+      ]
+    },
+    {
+      "id": "discord-event-1543085683365781644",
+      "genres": [
+        "寿司"
+      ]
+    },
+    {
+      "id": "discord-event-1542201410542772425",
+      "genres": [
+        "焼肉"
+      ]
+    },
+    {
+      "id": "discord-event-1542135969665523762",
+      "genres": [
+        "海鮮"
+      ]
+    },
+    {
+      "id": "discord-event-1542095258953981984",
+      "genres": [
+        "寿司"
+      ]
+    },
+    {
+      "id": "discord-event-1541439315140280453",
+      "genres": [
+        "海鮮"
+      ]
+    },
+    {
+      "id": "discord-event-1540321358305820682",
+      "genres": [
+        "寿司"
+      ]
+    },
+    {
+      "id": "discord-event-1538100984952389642",
+      "genres": [
+        "スイーツ"
+      ]
+    },
+    {
+      "id": "discord-event-1537334496612065280",
+      "genres": [
+        "焼き鳥・串焼き"
+      ]
+    },
+    {
+      "id": "discord-event-1537306033481846804",
+      "genres": [
+        "イタリアン"
+      ]
+    },
+    {
+      "id": "discord-event-1537013556807999509",
+      "genres": [
+        "焼肉",
+        "ホルモン"
+      ]
+    },
+    {
+      "id": "discord-event-1536386349085761637",
+      "genres": [
+        "寿司"
+      ]
+    },
+    {
+      "id": "discord-event-1535962397020262520",
+      "genres": [
+        "中華料理"
+      ]
+    },
+    {
+      "id": "discord-event-1535301178362040400",
+      "genres": [
+        "寿司"
+      ]
+    },
+    {
+      "id": "discord-event-1535210597400977419",
+      "genres": [
+        "焼肉"
+      ]
+    },
+    {
+      "id": "discord-event-1533806411891347598",
+      "genres": [
+        "ホルモン"
+      ]
+    },
+    {
+      "id": "discord-event-1533793050059477052",
+      "genres": [
+        "焼肉"
+      ]
+    },
+    {
+      "id": "discord-event-1533403695713226855",
+      "genres": [
+        "カフェ・喫茶店"
+      ]
+    },
+    {
+      "id": "discord-event-1533308368217837640",
+      "genres": [
+        "スイーツ"
+      ]
+    },
+    {
+      "id": "discord-event-1532749867569516715",
+      "genres": [
+        "イタリアン"
+      ]
+    },
+    {
+      "id": "discord-event-1530420040112017528",
+      "genres": [
+        "日本料理"
+      ]
+    },
+    {
+      "id": "discord-event-1530005931633410242",
+      "genres": [
+        "焼肉"
+      ]
+    },
+    {
+      "id": "discord-event-1529688516374565044",
+      "genres": [
+        "焼肉"
+      ]
+    },
+    {
+      "id": "discord-event-1529440845776818276",
+      "genres": [
+        "焼肉"
+      ]
+    },
+    {
+      "id": "discord-event-1527300114522046506",
+      "genres": [
+        "焼肉"
+      ]
+    },
+    {
+      "id": "discord-event-1527234462130110605",
+      "genres": [
+        "イタリアン"
+      ]
+    },
+    {
+      "id": "discord-event-1526931833726697644",
+      "genres": [
+        "寿司"
+      ]
+    },
+    {
+      "id": "discord-event-1526427287870898187",
+      "genres": [
+        "スイーツ"
+      ]
+    },
+    {
+      "id": "discord-event-1526393786324877454",
+      "genres": [
+        "焼肉"
+      ]
+    },
+    {
+      "id": "discord-event-1525386599775342692",
+      "genres": [
+        "焼肉"
+      ]
+    },
+    {
+      "id": "discord-event-1522081200116862996",
+      "genres": [
+        "寿司"
+      ]
+    },
+    {
+      "id": "discord-event-1521115947027533955",
+      "genres": [
+        "焼き鳥・串焼き"
+      ]
+    },
+    {
+      "id": "discord-event-1520956727993045044",
+      "genres": [
+        "焼肉"
+      ]
+    },
+    {
+      "id": "discord-event-1520808042168324338",
+      "genres": [
+        "居酒屋"
+      ]
+    },
+    {
+      "id": "discord-event-1520041586145103942",
+      "genres": [
+        "焼肉"
+      ]
+    },
+    {
+      "id": "discord-event-1516802073902059681",
+      "genres": [
+        "焼肉"
+      ]
+    },
+    {
+      "id": "discord-event-1516780129609584644",
+      "genres": [
+        "スイーツ"
+      ]
+    },
+    {
+      "id": "discord-event-1515659198858526800",
+      "genres": [
+        "天ぷら"
+      ]
+    },
+    {
+      "id": "discord-event-1512467613341712394",
+      "genres": [
+        "焼肉"
+      ]
+    },
+    {
+      "id": "discord-event-1511589898207891466",
+      "genres": [
+        "バー"
+      ]
+    },
+    {
+      "id": "discord-event-1511589527880339566",
+      "genres": [
+        "スイーツ"
+      ]
+    },
+    {
+      "id": "discord-event-1511365499538378883",
+      "genres": [
+        "焼き鳥・串焼き"
+      ]
+    },
+    {
+      "id": "discord-event-1509448052971274240",
+      "genres": [
+        "焼肉"
+      ]
+    },
+    {
+      "id": "discord-event-1508262606618497125",
+      "genres": [
+        "洋食"
+      ]
+    },
+    {
+      "id": "discord-event-1505742572147183738",
+      "genres": [
+        "カフェ・喫茶店"
+      ]
+    },
+    {
+      "id": "discord-event-1504149802730913792",
+      "genres": [
+        "フレンチ",
+        "中華料理"
+      ]
+    },
+    {
+      "id": "discord-event-1502626521125224538",
+      "genres": [
+        "スペイン料理"
+      ]
+    },
+    {
+      "id": "discord-event-1502571809113899168",
+      "genres": [
+        "寿司"
+      ]
+    },
+    {
+      "id": "discord-event-1501958855251329114",
+      "genres": [
+        "焼肉"
+      ]
+    },
+    {
+      "id": "discord-event-1501516003916644352",
+      "genres": [
+        "焼肉"
+      ]
+    },
+    {
+      "id": "discord-event-1499625603857649734",
+      "genres": [
+        "寿司"
+      ]
+    },
+    {
+      "id": "discord-event-1499249706822275262",
+      "genres": [
+        "ステーキ・鉄板焼き"
+      ]
+    },
+    {
+      "id": "discord-event-1493566009540612176",
+      "genres": [
+        "洋食"
+      ]
+    },
+    {
+      "id": "discord-event-1493228799930662962",
+      "genres": [
+        "スイーツ"
+      ]
+    },
+    {
+      "id": "discord-event-1493224082517397635",
+      "genres": [
+        "スイーツ"
+      ]
+    },
+    {
+      "id": "discord-event-1490931093543587921",
+      "genres": [
+        "焼肉"
+      ]
+    },
+    {
+      "id": "discord-event-1490883793937240094",
+      "genres": [
+        "焼肉"
+      ]
+    },
+    {
+      "id": "discord-event-1488868324090577006",
+      "genres": [
+        "焼肉"
+      ]
+    },
+    {
+      "id": "discord-event-1488823769064538132",
+      "genres": [
+        "フレンチ"
+      ]
+    },
+    {
+      "id": "discord-event-1486960217693491221",
+      "genres": [
+        "バー"
+      ]
+    },
+    {
+      "id": "discord-event-1483813267183767782",
+      "genres": [
+        "フレンチ"
+      ]
+    },
+    {
+      "id": "discord-event-1483750947023880292",
+      "genres": [
+        "焼肉"
+      ]
+    },
+    {
+      "id": "discord-event-1482734113608962231",
+      "genres": [
+        "フレンチ"
+      ]
+    },
+    {
+      "id": "discord-event-1481214408419053639",
+      "genres": [
+        "焼肉",
+        "ホルモン"
+      ]
+    },
+    {
+      "id": "discord-event-1481129470281912370",
+      "genres": [
+        "焼肉"
+      ]
+    },
+    {
+      "id": "discord-event-1479749777989042245",
+      "genres": [
+        "寿司",
+        "海鮮"
+      ]
+    },
+    {
+      "id": "discord-event-1479468198863569038",
+      "genres": [
+        "焼き鳥・串焼き"
+      ]
+    },
+    {
+      "id": "discord-event-1479075937952862360",
+      "genres": [
+        "焼肉"
+      ]
+    },
+    {
+      "id": "discord-event-1477602555423883428",
+      "genres": [
+        "寿司"
+      ]
+    },
+    {
+      "id": "discord-event-1476532635466600468",
+      "genres": [
+        "フレンチ"
+      ]
+    },
+    {
+      "id": "discord-event-1474364262779453554",
+      "genres": [
+        "焼き鳥・串焼き"
+      ]
+    },
+    {
+      "id": "discord-event-1474034588883095786",
+      "genres": [
+        "居酒屋"
+      ]
+    },
+    {
+      "id": "discord-event-1471136580805591123",
+      "genres": [
+        "焼肉"
+      ]
+    },
+    {
+      "id": "discord-event-1470412636951941241",
+      "genres": [
+        "フレンチ"
+      ]
+    },
+    {
+      "id": "discord-event-1470263735590453388",
+      "genres": [
+        "焼肉"
+      ]
+    },
+    {
+      "id": "discord-event-1468897684504182982",
+      "genres": [
+        "カフェ・喫茶店"
+      ]
+    },
+    {
+      "id": "discord-event-1467418508634750997",
+      "genres": [
+        "スペイン料理"
+      ]
+    },
+    {
+      "id": "discord-event-1466714047977226330",
+      "genres": [
+        "カレー"
+      ]
+    },
+    {
+      "id": "discord-event-1466368261448011860",
+      "genres": [
+        "とんかつ・揚げ物"
+      ]
+    },
+    {
+      "id": "discord-event-1465673698768978146",
+      "genres": [
+        "日本料理"
+      ]
+    },
+    {
+      "id": "discord-event-1464901061042245677",
+      "genres": [
+        "スイーツ"
+      ]
+    },
+    {
+      "id": "discord-event-1463861588074434744",
+      "genres": [
+        "フレンチ"
+      ]
+    },
+    {
+      "id": "discord-event-1463774821107236976",
+      "genres": [
+        "焼肉"
+      ]
+    },
+    {
+      "id": "discord-event-1463514190823166045",
+      "genres": [
+        "焼肉"
+      ]
+    },
+    {
+      "id": "discord-event-1463131755895853211",
+      "genres": [
+        "海鮮",
+        "居酒屋"
+      ]
+    },
+    {
+      "id": "discord-event-1460423048422494249",
+      "genres": [
+        "うなぎ・穴子"
+      ]
+    },
+    {
+      "id": "discord-event-1459802437241143448",
+      "genres": [
+        "焼肉"
+      ]
+    },
+    {
+      "id": "discord-event-1459570218916646992",
+      "genres": [
+        "スイーツ",
+        "バー"
+      ]
+    },
+    {
+      "id": "discord-event-1456679088780480575",
+      "genres": [
+        "焼肉"
+      ]
+    },
+    {
+      "id": "discord-event-1453572035304358039",
+      "genres": [
+        "海鮮"
+      ]
+    },
+    {
+      "id": "discord-event-1453358235158577172",
+      "genres": [
+        "寿司"
+      ]
+    },
+    {
+      "id": "discord-event-1453319015224053871",
+      "genres": [
+        "寿司"
+      ]
+    },
+    {
+      "id": "discord-event-1450862433093550130",
+      "genres": [
+        "焼肉"
+      ]
+    },
+    {
+      "id": "discord-event-1449402018732183743",
+      "genres": [
+        "バー"
+      ]
+    },
+    {
+      "id": "discord-event-1449325266911363082",
+      "genres": [
+        "バー"
+      ]
+    },
+    {
+      "id": "discord-event-1442836192566706186",
+      "genres": [
+        "フレンチ"
+      ]
+    },
+    {
+      "id": "discord-event-1436677323016503369",
+      "genres": [
+        "焼肉"
+      ]
+    },
+    {
+      "id": "discord-event-1435933257236611092",
+      "genres": [
+        "海鮮",
+        "居酒屋"
+      ]
+    },
+    {
+      "id": "discord-event-1433372134184583208",
+      "genres": [
+        "寿司"
+      ]
+    },
+    {
+      "id": "discord-event-1431998814385864775",
+      "genres": [
+        "焼肉"
+      ]
+    },
+    {
+      "id": "discord-event-1431314496156073994",
+      "genres": [
+        "中華料理"
+      ]
+    },
+    {
+      "id": "discord-event-1430934955113840753",
+      "genres": [
+        "焼肉"
+      ]
+    },
+    {
+      "id": "discord-event-1429251668398178474",
+      "genres": [
+        "うなぎ・穴子"
+      ]
+    },
+    {
+      "id": "discord-event-1422888499513786388",
+      "genres": [
+        "海鮮",
+        "居酒屋"
+      ]
+    },
+    {
+      "id": "discord-event-1421147497644036229",
+      "genres": [
+        "中華料理"
+      ]
+    },
+    {
+      "id": "discord-event-1414565170612670521",
+      "genres": [
+        "ステーキ・鉄板焼き"
+      ]
+    },
+    {
+      "id": "discord-event-1409184811255332964",
+      "genres": [
+        "焼肉"
+      ]
+    },
+    {
+      "id": "discord-event-1408321726697312286",
+      "genres": [
+        "寿司"
+      ]
+    },
+    {
+      "id": "discord-event-1407710813908766853",
+      "genres": [
+        "イタリアン"
+      ]
+    },
+    {
+      "id": "discord-event-1407658118447366154",
+      "genres": [
+        "海鮮",
+        "居酒屋"
+      ]
+    },
+    {
+      "id": "discord-event-1405476377427316786",
+      "genres": [
+        "焼肉"
+      ]
+    },
+    {
+      "id": "discord-event-1405036442861703168",
+      "genres": [
+        "焼肉"
+      ]
+    },
+    {
+      "id": "discord-event-1398236293917446266",
+      "genres": [
+        "焼肉"
+      ]
+    },
+    {
+      "id": "discord-event-1390167145610219610",
+      "genres": [
+        "海鮮"
+      ]
+    },
+    {
+      "id": "discord-event-1389907623632961547",
+      "genres": [
+        "焼肉",
+        "ホルモン"
+      ]
+    },
+    {
+      "id": "discord-event-1389870070091747338",
+      "genres": [
+        "焼肉"
+      ]
+    },
+    {
+      "id": "discord-event-1386928922045972581",
+      "genres": [
+        "焼肉"
+      ]
+    },
+    {
+      "id": "discord-event-1384147686411997246",
+      "genres": [
+        "寿司"
+      ]
+    },
+    {
+      "id": "discord-event-1383060273241391146",
+      "genres": [
+        "カレー"
+      ]
+    },
+    {
+      "id": "discord-event-1371128536102080532",
+      "genres": [
+        "うなぎ・穴子"
+      ]
+    },
+    {
+      "id": "discord-event-1359206861076828452",
+      "genres": [
+        "中華料理"
+      ]
+    },
+    {
+      "id": "discord-event-1356265979155447909",
+      "genres": [
+        "焼肉"
+      ]
+    },
+    {
+      "id": "discord-event-1351509236428963863",
+      "genres": [
+        "イタリアン"
+      ]
+    },
+    {
+      "id": "discord-event-1350856722239062136",
+      "genres": [
+        "スイーツ"
+      ]
+    },
+    {
+      "id": "discord-event-1344284760222203956",
+      "genres": [
+        "バー"
+      ]
+    },
+    {
+      "id": "discord-event-1344281550644318218",
+      "genres": [
+        "焼き鳥・串焼き"
+      ]
+    },
+    {
+      "id": "discord-event-1333775381475495946",
+      "genres": [
+        "スイーツ",
+        "バー"
+      ]
+    },
+    {
+      "id": "discord-event-1332974963652558881",
+      "genres": [
+        "寿司"
+      ]
+    },
+    {
+      "id": "discord-event-1332974739735576607",
+      "genres": [
+        "韓国料理"
+      ]
+    },
+    {
+      "id": "discord-event-1332973660662665339",
+      "genres": [
+        "バー"
+      ]
+    },
+    {
+      "id": "discord-event-1332967920258646057",
+      "genres": [
+        "イタリアン"
+      ]
+    },
+    {
+      "id": "discord-event-1332957860828680323",
+      "genres": [
+        "海鮮"
+      ]
+    },
+    {
+      "id": "discord-event-1332956509356687391",
+      "genres": [
+        "海鮮"
+      ]
+    },
+    {
+      "id": "discord-event-1332955505970385016",
+      "genres": [
+        "バー"
+      ]
+    },
+    {
+      "id": "discord-event-1332951311167131711",
+      "genres": [
+        "バー"
+      ]
+    },
+    {
+      "id": "discord-event-1332950208077893683",
+      "genres": [
+        "寿司",
+        "バー"
+      ]
+    },
+    {
+      "id": "discord-event-1329043819534094396",
+      "genres": [
+        "焼肉"
+      ]
+    },
+    {
+      "id": "discord-event-1324990129114320978",
+      "genres": [
+        "焼肉"
+      ]
+    },
+    {
+      "id": "discord-event-1315686896893952052",
+      "genres": [
+        "焼き鳥・串焼き"
+      ]
+    },
+    {
+      "id": "discord-event-1313085355896864842",
+      "genres": [
+        "焼き鳥・串焼き"
+      ]
+    },
+    {
+      "id": "discord-event-1302942810722271264",
+      "genres": [
+        "焼肉"
+      ]
+    },
+    {
+      "id": "discord-event-1300395735614881823",
+      "genres": [
+        "焼肉"
+      ]
+    },
+    {
+      "id": "discord-event-1281069072187916328",
+      "genres": [
+        "焼肉"
+      ]
+    },
+    {
+      "id": "discord-event-1278299403303780446",
+      "genres": [
+        "カレー"
+      ]
+    },
+    {
+      "id": "discord-event-1260614949202432002",
+      "genres": [
+        "寿司"
+      ]
+    },
+    {
+      "id": "discord-event-1259525982981718026",
+      "genres": [
+        "焼肉"
+      ]
+    },
+    {
+      "id": "discord-event-1256550592629968977",
+      "genres": [
+        "焼肉"
+      ]
+    },
+    {
+      "id": "discord-event-1253211260586033235",
+      "genres": [
+        "焼き鳥・串焼き"
+      ]
+    },
+    {
+      "id": "discord-event-1235216776006992002",
+      "genres": [
+        "焼肉"
+      ]
+    },
+    {
+      "id": "discord-event-1233385703564513373",
+      "genres": [
+        "寿司",
+        "バー"
+      ]
+    }
+  ],
+  "sha256": "bf202080f26a9a130eddd1150bc8b91d7c65fcb1976ca6abcd69dd6a2d95ce7c"
+}

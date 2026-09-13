@@ -15,9 +15,14 @@ describe("AI recommendation MVP", () => {
   it("scores matching cuisine, area, budget, time and group size", () => {
     const preferences = createDefaultPreferences();
     preferences.favoriteCuisineKeys = ["sushi"]; preferences.preferredAreas = ["tokyo"];
+    preferences.budgetMaxYen = 10000;
+    preferences.availableDayTypes = ["sunday_holiday"];
+    preferences.availableTimeSlots = ["dinner"];
+    preferences.preferredGroupSizes = ["small"];
     const [result] = recommendEvents([event], preferences, "u1", new Date("2026-08-17T00:00:00+09:00"));
-    expect(result.score).toBeGreaterThanOrEqual(75);
+    expect(result.score).toBeGreaterThanOrEqual(90);
     expect(result.reasons).toContain("好きな料理ジャンル");
+    expect(result.reasons).toContain("参加しやすい日時");
   });
 
   it("excludes applied, full and past events", () => {

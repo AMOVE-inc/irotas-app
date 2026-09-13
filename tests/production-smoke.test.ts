@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { DEFAULT_CHECKS, healthIsReady, runProductionSmoke } from "../scripts/production-smoke.mjs";
+import { DEFAULT_BASE_URL, DEFAULT_CHECKS, healthIsReady, runProductionSmoke } from "../scripts/production-smoke.mjs";
 
 function responseFor(path: string) {
   if (path === "/api/platform/health")
@@ -14,6 +14,9 @@ function responseFor(path: string) {
 }
 
 describe("production smoke monitor", () => {
+  it("targets the public app domain by default", () => {
+    expect(DEFAULT_BASE_URL).toBe("https://app.irotas-community.com");
+  });
   it("accepts healthy pages, platform services and protected APIs", async () => {
     const fetchImpl = vi.fn(async (input: string | URL | Request) => responseFor(new URL(String(input)).pathname));
     const report = await runProductionSmoke({ baseUrl: "https://example.test", fetchImpl });

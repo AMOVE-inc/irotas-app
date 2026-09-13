@@ -23,7 +23,7 @@ describe("FAQ, rules and manual", () => {
   });
 
   it("matches the current first login and club application flow", () => {
-    expect(manual).toContain("Square決済時のメールアドレス");
+    expect(manual).toContain("決済時のメールアドレス");
     expect(manual).toContain("6桁の認証コード");
     expect(manual).toContain("入部申請");
     expect(manual).toContain("部員専用スレ");

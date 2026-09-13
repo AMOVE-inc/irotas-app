@@ -13,7 +13,7 @@ describe("event cancellation lifecycle", () => {
     expect(events).toContain("reverseCancelledEventHostXp(env.DB, id, now)");
     expect(events).toContain("reverseEventRewards(env.DB, id, now)");
     expect(events).toContain("UPDATE events SET status = 'cancelled'");
-    expect(events).toContain("WHERE e.status != 'cancelled'");
+    expect(source("sites/home-automation.ts")).toContain("WHERE e.status != 'cancelled'");
   });
 
   it("uses the in-app confirmation dialog so cancellation works on web as well", () => {

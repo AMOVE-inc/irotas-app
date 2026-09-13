@@ -127,6 +127,8 @@ export default function EventDetailScreen() {
   const [event, setEvent] = useState<Event | undefined>(initialEvent);
   const [eventLoading, setEventLoading] = useState(!initialEvent);
   const [eventResolved, setEventResolved] = useState(Boolean(initialEvent));
+  const [eventCheckout, setEventCheckout] = useState<Api.EventCheckout | null>(null);
+  const [checkoutBusy, setCheckoutBusy] = useState(false);
 
   const [isJoined, setIsJoined] = useState(() => {
     // 既に参加済かチェック
@@ -190,6 +192,7 @@ export default function EventDetailScreen() {
   const [, setEventRevision] = useState(0);
   // ボタン連打防止フラグ
   const joiningRef = useRef(false);
+  const checkoutBusyRef = useRef(false);
   const eventCommentInputRef = useRef<TextInput>(null);
   const eventCommentSendingRef = useRef(false);
   const usePointsRef = useRef(false);
@@ -277,6 +280,19 @@ export default function EventDetailScreen() {
       setChatRoomId(null);
     }
   }, [authenticatedViewerMemberId, event]);
+
+  useEffect(() => {
+    if (!event || !authUser || event.eventType !== "official" ||
+      !(event.viewerPaymentState === "awaiting_payment" || ["confirmed", "cancel_requested"].includes(event.viewerParticipationStatus ?? "")) ||
+      eventRecruitmentChannel(event) === "discord") {
+      setEventCheckout(null);
+      return;
+    }
+    let active = true;
+    void Api.getEventCheckout(event.id).then((checkout) => { if (active) setEventCheckout(checkout); })
+      .catch(() => { if (active) setEventCheckout(null); });
+    return () => { active = false; };
+  }, [event?.id, event?.eventType, event?.viewerParticipationStatus, event?.viewerPaymentState, authUser?.memberId]);
 
   useEffect(() => {
     getIrotasPoints(CURRENT_USER.id).then(setIrotasPoints);
@@ -514,7 +530,7 @@ export default function EventDetailScreen() {
         : effectivePrice;
     showApplicationConfirmation(
       "参加申込の確認",
-      `「${event.title}」に申し込みますか？\n${requiresOrganizerApproval ? "幹事の承認後に参加確定となり、参加者チャットへ入れます。" : event.selectionMethod === "lottery" ? "抽選イベントです。申込後、参加確定をお待ちください。" : `参加費: ${priceLabel}`}`,
+      `「${event.title}」に申し込みますか？\n${requiresOrganizerApproval ? "幹事の承認後に参加確定となり、参加者チャットへ入れます。" : event.selectionMethod === "lottery" ? (isOfficialEvent && finalPrice > 0 ? "抽選イベントです。当選後に決済し、支払い完了で参加確定となります。" : "抽選イベントです。申込後、参加確定をお待ちください。") : (isOfficialEvent && finalPrice > 0 ? `参加費: ${priceLabel}。決済完了後に参加確定します。` : `参加費: ${priceLabel}`)}`,
       [
         { text: "キャンセル", style: "cancel" },
         {
@@ -535,9 +551,11 @@ export default function EventDetailScreen() {
                 setHasApplied(true);
                 setIsJoined(confirmed);
                 Alert.alert(
-                  confirmed ? "参加確定" : "申込完了",
+                  confirmed ? "参加確定" : updated.viewerPaymentState === "awaiting_payment" ? "決済待ち" : "申込完了",
                   confirmed
                     ? `参加が確定しました。${application.pointsUsed ? `${application.pointsUsed.toLocaleString()}ptを参加費に利用しました。` : ""}参加者専用チャットは確定者へ順次案内されます。`
+                    : updated.viewerPaymentState === "awaiting_payment"
+                      ? `参加費の決済完了後に参加が確定します。${application.pointsUsed ? `${application.pointsUsed.toLocaleString()}ptを割引に適用しました。` : ""}下の「Squareで参加費を支払う」からお進みください。`
                     : requiresOrganizerApproval
                       ? `幹事へ参加申込を送りました。${application.pointsUsed ? `${application.pointsUsed.toLocaleString()}ptを確保しました。` : ""}承認後に参加が確定します。`
                       : "抽選への申込を受け付けました。参加確定の連絡をお待ちください。",
@@ -628,6 +646,35 @@ export default function EventDetailScreen() {
         },
       ],
     );
+  };
+
+  const handleEventPayment = async () => {
+    if (!event || checkoutBusyRef.current) return;
+    checkoutBusyRef.current = true;
+    setCheckoutBusy(true);
+    try {
+      const checkout = await Api.createEventCheckout(event.id);
+      setEventCheckout(checkout);
+      if (checkout.status === "ready" && checkout.checkoutUrl) await Linking.openURL(checkout.checkoutUrl);
+    } catch (error) {
+      Alert.alert("決済ページを開けませんでした", error instanceof Error ? error.message : "時間をおいて再度お試しください。");
+    } finally {
+      checkoutBusyRef.current = false;
+      setCheckoutBusy(false);
+    }
+  };
+
+  const refreshEventPayment = async () => {
+    if (!event || checkoutBusyRef.current) return;
+    checkoutBusyRef.current = true;
+    setCheckoutBusy(true);
+    try {
+      const [checkout, updated] = await Promise.all([Api.getEventCheckout(event.id), Api.getEvent(event.id)]);
+      setEventCheckout(checkout);
+      setEvent(updated);
+    }
+    catch (error) { Alert.alert("支払い状況を確認できませんでした", error instanceof Error ? error.message : "時間をおいて再度お試しください。"); }
+    finally { checkoutBusyRef.current = false; setCheckoutBusy(false); }
   };
 
   const approveApplicant = async (memberId: string) => {
@@ -1232,6 +1279,28 @@ export default function EventDetailScreen() {
             </View>
           )}
         </View>
+
+        {isOfficialEvent && (event.viewerPaymentState === "awaiting_payment" || ["confirmed", "cancel_requested"].includes(event.viewerParticipationStatus ?? "")) &&
+          eventRecruitmentChannel(event) !== "discord" ? (
+          <View style={{ backgroundColor: colors.surface, borderRadius: 14, padding: 16, marginBottom: 16 }}>
+            <Text style={{ fontSize: 15, fontWeight: "800", color: colors.foreground }}>参加費のお支払い</Text>
+            <Text style={{ fontSize: 13, color: colors.muted, marginTop: 6 }}>
+              {eventCheckout?.status === "paid" ? "Squareでの支払いを確認しました。参加確定は画面更新後に反映されます。"
+                : eventCheckout?.status === "free" ? "お支払いは不要です。"
+                  : eventCheckout ? `お支払い残額：${eventCheckout.amountYen.toLocaleString()}円。決済完了後に参加が確定します。`
+                    : "支払い状況を確認してください。"}
+            </Text>
+            {eventCheckout?.status !== "paid" && eventCheckout?.status !== "free" ? (
+              <Pressable disabled={checkoutBusy} onPress={() => void handleEventPayment()}
+                style={{ marginTop: 12, paddingVertical: 12, borderRadius: 10, backgroundColor: checkoutBusy ? colors.muted : "#D65E8D", alignItems: "center" }}>
+                <Text style={{ color: "#FFF", fontWeight: "800" }}>{checkoutBusy ? "確認中…" : "Squareで参加費を支払う"}</Text>
+              </Pressable>
+            ) : null}
+            <Pressable disabled={checkoutBusy} onPress={() => void refreshEventPayment()} style={{ alignSelf: "center", padding: 10, marginTop: 4 }}>
+              <Text style={{ color: "#5865F2", fontSize: 12, fontWeight: "700" }}>支払い状況を更新</Text>
+            </Pressable>
+          </View>
+        ) : null}
 
         {/* Description */}
         <View style={{ marginBottom: 16 }}>

@@ -8,7 +8,7 @@ const { authenticatedRequestMember } = vi.hoisted(() => ({
   authenticatedRequestMember: vi.fn(),
 }));
 
-vi.mock("../sites/auth", () => ({ authenticatedRequestMember }));
+vi.mock("../sites/auth", async (importOriginal) => ({ ...(await importOriginal<typeof import("../sites/auth")>()), authenticatedRequestMember }));
 vi.mock("../sites/clubs", () => ({ canMemberAccessClub: vi.fn() }));
 
 type Message = {
@@ -29,17 +29,19 @@ class ChatDatabase implements D1Database {
   writes: string[] = [];
   notifiedMemberIds: number[] = [];
   memberRank = "regular";
+  discordRolesJson = "[]";
   approvedClubMemberIds = new Set([9]);
   clubs = [{ id: "club-travel", name: "旅行部", leader_member_id: 10 }];
   rooms = new Map<string, { id: string; name: string; room_type: string; source_id: string | null; required_rank: string | null; created_by_member_id: number | null }>([
     ["board-announcement", { id: "board-announcement", name: "運営アナウンス", room_type: "announcement", source_id: "announcement", required_rank: null, created_by_member_id: null }],
     ["rank-gold", { id: "rank-gold", name: "ゴールドメンバールーム", room_type: "rank", source_id: "rank-gold", required_rank: "gold", created_by_member_id: null }],
+    ["branch-kanto-free", { id: "branch-kanto-free", name: "関東支部フリーチャット", room_type: "board", source_id: "branch-kanto-v2", required_rank: null, created_by_member_id: null }],
   ]);
   roomMembers: { roomId: string; memberId: number; role: string; left: boolean }[] = [];
   members = [
-    { id: 9, public_member_id: "IRO0009", display_name: "テスト本人" },
-    { id: 10, public_member_id: "IRO0010", display_name: "友達A" },
-    { id: 11, public_member_id: "IRO0011", display_name: "友達B" },
+    { id: 9, public_member_id: "IRO0009", display_name: "テスト本人", branches_json: '["kanto"]', role: "user", access_role: "member" },
+    { id: 10, public_member_id: "IRO0010", display_name: "友達A", branches_json: '["kanto"]', role: "user", access_role: "member" },
+    { id: 11, public_member_id: "IRO0011", display_name: "友達B", branches_json: '["kansai"]', role: "user", access_role: "member" },
   ];
 
   prepare(sql: string): D1PreparedStatement {
@@ -88,16 +90,20 @@ class ChatDatabase implements D1Database {
             return ([...this.rooms.values()].find((room) => room.room_type === "dm" && room.source_id === values[0]) ?? null) as T;
           return (this.rooms.get(String(values[0])) ?? null) as T;
         }
-        if (sql.includes("SELECT member_rank FROM members")) return { member_rank: this.memberRank } as T;
+        if (sql.includes("SELECT member_rank, discord_roles_json FROM members")) return { member_rank: this.memberRank, discord_roles_json: this.discordRolesJson } as T;
+        if (sql.includes("SELECT branches_json FROM members WHERE id"))
+          return (this.members.find((member) => member.id === Number(values[0])) ?? null) as T;
         return null;
       },
       all: async <T>() => {
         if (sql.includes("SELECT id, display_name, public_member_id, branches_json, role, access_role"))
-          return { success: true, results: this.members.filter((member) => member.id !== Number(values[0])).map((member) => ({ ...member, branches_json: '["kanto"]', role: "user", access_role: "member" })) as T[] };
+          return { success: true, results: this.members.filter((member) => member.id !== Number(values[0])) as T[] };
         if (sql.includes("SELECT m.id AS member_id") && sql.includes("club_memberships cm")) {
           const memberIds = [...new Set([...this.approvedClubMemberIds, Number(values[0])])].filter(Number.isFinite);
           return { success: true, results: memberIds.map((memberId) => ({ member_id: memberId, member_role: memberId === values[0] ? "owner" : "member" })) as T[] };
         }
+        if (sql.includes("SELECT member_id FROM chat_room_members") && sql.includes("left_at IS NULL"))
+          return { success: true, results: this.roomMembers.filter((item) => item.roomId === values[0] && !item.left).map((item) => ({ member_id: item.memberId })) as T[] };
         if (sql.includes("SELECT member_id, member_role FROM chat_room_members"))
           return { success: true, results: this.roomMembers.filter((item) => item.roomId === values[0] && !item.left).map((item) => ({ member_id: item.memberId, member_role: item.role })) as T[] };
         if (sql.includes("FROM clubs c") && sql.includes("club_memberships cm"))
@@ -190,17 +196,42 @@ describe("shared chat content API", () => {
     vi.mocked(canMemberAccessClub).mockImplementation(async (_database, clubId, memberId) => clubId === "club-travel" && (memberId === 10 || db.approvedClubMemberIds.has(memberId)));
   });
 
-  it("notifies only directly mentioned members in a free chat", async () => {
+  it("notifies direct mentions and room-scoped group mentions in the global free chat", async () => {
     // Global free chat can be read without joining chat_room_members first.
     expect((await handleChatContentRequest(request("/api/chats/community-free-chat/messages", "POST", { content: "こんにちは" }), env))?.status).toBe(201);
     expect(db.notifiedMemberIds).toEqual([]);
     expect((await handleChatContentRequest(request("/api/chats/community-free-chat/messages", "POST", { content: "@everyone 集合です" }), env))?.status).toBe(201);
-    expect(db.notifiedMemberIds).toEqual([]);
+    expect(db.notifiedMemberIds).toEqual([10, 11]);
+    db.notifiedMemberIds = [];
     expect((await handleChatContentRequest(request("/api/chats/community-free-chat/messages", "POST", { content: "@友達A こんにちは" }), env))?.status).toBe(201);
     expect(db.notifiedMemberIds).toEqual([10]);
+    db.notifiedMemberIds = [];
+    expect((await handleChatContentRequest(request("/api/chats/community-free-chat/messages", "POST", { content: "@関西支部 の皆さん" }), env))?.status).toBe(201);
+    expect(db.notifiedMemberIds).toEqual([11]);
+    db.notifiedMemberIds = [];
+    expect((await handleChatContentRequest(request("/api/chats/community-free-chat/messages", "POST", { content: "@全体 @友達A 集合" }), env))?.status).toBe(201);
+    expect(db.notifiedMemberIds.sort()).toEqual([10, 11]);
+    db.notifiedMemberIds = [];
+    expect((await handleChatContentRequest(request("/api/chats/community-free-chat/messages", "POST", { content: "@everyoneさん こんにちは" }), env))?.status).toBe(201);
+    expect(db.notifiedMemberIds).toEqual([]);
   });
 
-  it("creates a room for each joined club and denies non-members, including administrators", async () => {
+  it("keeps branch and club group mentions inside the room's access boundary", async () => {
+    db.members.push({ id: 12, public_member_id: "IRO0012", display_name: "運営A", branches_json: "[]", role: "operator", access_role: "operator" });
+    expect((await handleChatContentRequest(request("/api/chats/branch-kanto-free/messages", "POST", { content: "@支部全員 お知らせ" }), env))?.status).toBe(201);
+    expect(db.notifiedMemberIds).toEqual([10]);
+    db.notifiedMemberIds = [];
+    expect((await handleChatContentRequest(request("/api/chats/branch-kanto-free/messages", "POST", { content: "@関西支部 お知らせ" }), env))?.status).toBe(201);
+    expect(db.notifiedMemberIds).toEqual([]);
+    db.notifiedMemberIds = [];
+    expect((await handleChatContentRequest(request("/api/chats/club-chat-club-travel/messages", "POST", { content: "@チャット内の人全員 お知らせ" }), env))?.status).toBe(201);
+    expect(db.notifiedMemberIds).toEqual([10]);
+    db.notifiedMemberIds = [];
+    expect((await handleChatContentRequest(request("/api/chats/branch-kanto-free/messages", "POST", { content: "@運営A 確認お願いします" }), env))?.status).toBe(201);
+    expect(db.notifiedMemberIds).toEqual([12]);
+  });
+
+  it("creates a room for each joined club and limits ordinary members to their clubs", async () => {
     const listing = await handleChatContentRequest(request("/api/chats"), env);
     const body = await listing?.json() as { rooms: { id: string; name: string }[] };
     expect(body.rooms).toContainEqual(expect.objectContaining({ id: "club-chat-club-travel", name: "旅行部チャット" }));
@@ -211,11 +242,33 @@ describe("shared chat content API", () => {
     expect((await handleChatContentRequest(request("/api/chats/club-chat-club-travel/messages", "POST", { content: "部員向けのお知らせ" }), env))?.status).toBe(201);
     expect(db.roomMembers.find((item) => item.roomId === "club-chat-club-travel" && item.memberId === 9)?.left).toBe(true);
     authenticatedRequestMember.mockResolvedValue({ id: 9, role: "admin", access_role: "admin", account_status: "active" });
-    expect((await handleChatContentRequest(request("/api/chats/club-chat-club-travel/messages"), env))?.status).toBe(403);
+    expect((await handleChatContentRequest(request("/api/chats/club-chat-club-travel/messages"), env))?.status).toBe(200);
     expect((await handleChatContentRequest(request("/api/chats/club-chat-club-travel/messages", "POST", { content: "閲覧できない投稿" }), env))?.status).toBe(403);
     const hiddenListing = await handleChatContentRequest(request("/api/chats"), env);
     const hidden = await hiddenListing?.json() as { rooms: { id: string }[] };
-    expect(hidden.rooms.some((room) => room.id === "club-chat-club-travel")).toBe(false);
+    expect(hidden.rooms.some((room) => room.id === "club-chat-club-travel")).toBe(true);
+    authenticatedRequestMember.mockResolvedValue({ id: 9, role: "operator", access_role: "operator", account_status: "active" });
+    expect((await handleChatContentRequest(request("/api/chats/club-chat-club-travel/messages"), env))?.status).toBe(200);
+    expect((await handleChatContentRequest(request("/api/chats/club-chat-club-travel/messages", "POST", { content: "運営の非参加投稿" }), env))?.status).toBe(403);
+  });
+
+  it("lets administrators and operators view non-member DMs without posting or managing them", async () => {
+    db.rooms.set("dm-private", { id: "dm-private", name: "DM", room_type: "dm", source_id: "dm-private", required_rank: null, created_by_member_id: 10 });
+    db.roomMembers.push(
+      { roomId: "dm-private", memberId: 10, role: "owner", left: false },
+      { roomId: "dm-private", memberId: 11, role: "member", left: false },
+    );
+    expect((await handleChatContentRequest(request("/api/chats/dm-private/messages"), env))?.status).toBe(403);
+    for (const role of ["admin", "operator"] as const) {
+      authenticatedRequestMember.mockResolvedValue({ id: 9, role, access_role: role, account_status: "active" });
+      const list = await handleChatContentRequest(request("/api/chats"), env);
+      const listed = await list?.json() as { rooms: { id: string; name: string }[] };
+      expect(listed.rooms).toContainEqual(expect.objectContaining({ id: "dm-private", name: "友達A・友達B" }));
+      expect((await handleChatContentRequest(request("/api/chats/dm-private"), env))?.status).toBe(200);
+      expect((await handleChatContentRequest(request("/api/chats/dm-private/messages"), env))?.status).toBe(200);
+      expect((await handleChatContentRequest(request("/api/chats/dm-private/messages", "POST", { content: "監視者の投稿" }), env))?.status).toBe(403);
+      expect((await handleChatContentRequest(request("/api/chats/dm-private", "DELETE"), env))?.status).toBe(403);
+    }
   });
 
   it("requires login and lets authenticated members read announcements", async () => {
@@ -246,13 +299,26 @@ describe("shared chat content API", () => {
     expect(db.messages.filter((message) => message.id === id)).toHaveLength(1);
   });
 
-  it("allows only members of the matching rank room", async () => {
+  it("allows the matching and higher ranks to read a rank room", async () => {
     db.memberRank = "regular";
     const denied = await handleChatContentRequest(request("/api/chats/rank-gold/messages"), env);
     expect(denied?.status).toBe(403);
     db.memberRank = "gold";
     const allowed = await handleChatContentRequest(request("/api/chats/rank-gold/messages"), env);
     expect(allowed?.status).toBe(200);
+    db.memberRank = "platinum";
+    const higherRank = await handleChatContentRequest(request("/api/chats/rank-gold/messages"), env);
+    expect(higherRank?.status).toBe(200);
+    const listing = await handleChatContentRequest(request("/api/chats"), env);
+    const listed = await listing?.json() as { rooms: { id: string }[] };
+    expect(listed.rooms.some((room) => room.id === "rank-gold")).toBe(true);
+    db.memberRank = "silver";
+    db.discordRolesJson = '["PLATINUM"]';
+    expect((await handleChatContentRequest(request("/api/chats/rank-gold/messages"), env))?.status).toBe(200);
+    db.memberRank = "regular";
+    db.discordRolesJson = "[]";
+    authenticatedRequestMember.mockResolvedValue({ id: 9, role: "operator", access_role: "operator", account_status: "active" });
+    expect((await handleChatContentRequest(request("/api/chats/rank-gold/messages"), env))?.status).toBe(200);
   });
 
   it("creates a shared group, renames it, invites a member, and lets a member leave", async () => {

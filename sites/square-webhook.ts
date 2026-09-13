@@ -1,4 +1,5 @@
 import type { D1Database, SitesEnv } from "./platform-types";
+import { confirmPaidEventParticipation } from "./events";
 
 const encoder = new TextEncoder();
 
@@ -104,6 +105,41 @@ export function squareBillingEvent(
 }
 
 async function processEvent(db: D1Database, event: Record<string, any>) {
+  const payment = event.data?.object?.payment as Record<string, any> | undefined;
+  if ((event.type === "payment.created" || event.type === "payment.updated") && payment?.order_id) {
+    const checkout = await db.prepare("SELECT id, event_id, member_id, amount_yen FROM event_payment_checkouts WHERE square_order_id = ? LIMIT 1")
+      .bind(String(payment.order_id)).first<{ id: string; event_id: string; member_id: number; amount_yen: number }>();
+    if (checkout) {
+      const money = payment.amount_money as { amount?: number; currency?: string } | undefined;
+      if (payment.status === "COMPLETED") {
+        if (typeof payment.id === "string" && money?.currency === "JPY" && money.amount === checkout.amount_yen) {
+          const paidAt = new Date().toISOString();
+          await db.prepare(`UPDATE event_payment_checkouts SET status = 'paid', square_payment_id = ?,
+            paid_at = COALESCE(paid_at, ?), updated_at = ?
+            WHERE id = ? AND status IN ('ready','cancelled') AND amount_yen = ?`)
+            .bind(payment.id, paidAt, paidAt, checkout.id, checkout.amount_yen).run();
+          const recorded = await db.prepare("SELECT status, square_payment_id FROM event_payment_checkouts WHERE id = ?")
+            .bind(checkout.id).first<{ status: string; square_payment_id: string | null }>();
+          if (recorded?.status === "paid" && recorded.square_payment_id === payment.id) {
+            const confirmed = await confirmPaidEventParticipation(db, checkout.event_id, checkout.member_id, paidAt);
+            if (!confirmed) await db.prepare(`INSERT INTO audit_logs (action, entity_type, entity_id, metadata_json, created_at)
+              VALUES ('event.payment_requires_review', 'event_payment_checkout', ?, ?, ?)`).bind(
+                checkout.id, JSON.stringify({ reason: "participation_not_eligible_after_payment", eventId: checkout.event_id, memberId: checkout.member_id }), paidAt,
+              ).run();
+          }
+        } else {
+          await db.prepare(`INSERT INTO audit_logs (action, entity_type, entity_id, metadata_json, created_at)
+            VALUES ('event.payment_mismatch', 'event_payment_checkout', ?, ?, ?)`).bind(
+              checkout.id,
+              JSON.stringify({ expectedYen: checkout.amount_yen, received: money?.amount ?? null, currency: money?.currency ?? null }),
+              new Date().toISOString(),
+            ).run();
+        }
+      }
+      // イベントの決済失敗を月額会費の延滞と誤判定しない。
+      return;
+    }
+  }
   const action = squareBillingEvent(event);
   if (!action) return;
   const now = new Date();
@@ -209,12 +245,12 @@ export async function handleSquareWebhook(
   const eventType = String(event.type ?? "");
   if (!eventId || !eventType) return json({ error: "invalid event" }, 400);
   const existing = await env.DB.prepare(
-    "SELECT event_id FROM square_webhook_events WHERE event_id = ?",
+    "SELECT event_id, processed_at FROM square_webhook_events WHERE event_id = ?",
   )
     .bind(eventId)
-    .first();
-  if (existing) return json({ ok: true, duplicate: true });
-  await env.DB.prepare(
+    .first<{ event_id: string; processed_at: string | null }>();
+  if (existing?.processed_at) return json({ ok: true, duplicate: true });
+  if (!existing) await env.DB.prepare(
     "INSERT INTO square_webhook_events (event_id, event_type) VALUES (?, ?)",
   )
     .bind(eventId, eventType)

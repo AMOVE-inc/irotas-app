@@ -5,8 +5,10 @@ import path from "node:path";
 const source = (file: string) => fs.readFileSync(path.join(process.cwd(), file), "utf8");
 
 describe("event presentation and comments", () => {
-  it("filters the event list to events with availability by default", () => {
-    expect(source("app/(tabs)/events.tsx")).toContain('const [openOnly, setOpenOnly] = useState(true)');
+  it("keeps all event states discoverable and offers an availability filter", () => {
+    const events = source("app/(tabs)/events.tsx");
+    expect(events).toContain('const [openOnly, setOpenOnly] = useState(false)');
+    expect(events).toContain('label: "空席あり"');
   });
 
   it("keeps past official events in the public event history", () => {
@@ -43,8 +45,8 @@ describe("event presentation and comments", () => {
     expect(detail).toContain('label: "メッセージリンクをコピー"');
     expect(detail).toContain('label: "コメントを編集"');
     expect(detail).toContain('label: "コメントを削除"');
-    expect(detail).toContain("eventCommentActionTarget.authorId === viewerMemberId");
-    expect(detail).toContain("userIsOperator");
+    expect(detail).toContain("eventCommentActionTarget?.canEdit");
+    expect(source("sites/events.ts")).toContain("canEdit:");
   });
 
   it("lets operators edit events imported from Discord", () => {
@@ -89,8 +91,8 @@ describe("event presentation and comments", () => {
   it("labels upcoming organizer events clearly and keeps past dates in the history view", () => {
     const profile = source("app/(tabs)/profile.tsx");
     const myEvents = source("app/my-events.tsx");
-    expect(profile).toContain("自分が幹事のイベント");
-    expect(profile).toContain("!isPastEventDate(event)");
+    expect(profile).toContain("イベント予定");
+    expect(profile).toContain('router.push("/my-events"');
     expect(myEvents).toContain('title: "自分が幹事のイベント"');
     expect(myEvents).toContain('title: "過去のイベント"');
     expect(myEvents).toContain("isPastEventDate(event");
@@ -108,7 +110,8 @@ describe("event presentation and comments", () => {
     expect(chat).toContain("参加者専用グループが作成されました");
     expect(chat).toContain("if (isSystemMessage)");
     expect(chat).toContain("!isMe && avatarSource");
-    expect(chat).toContain("toLocaleDateString(\"ja-JP\"");
+    expect(chat).toContain('new Intl.DateTimeFormat("ja-JP"');
+    expect(chat).toContain('timeZone: JAPAN_TIME_ZONE');
   });
 
   it("keeps only the lower participant-chat CTA and labels confirmed profile events", () => {
@@ -124,6 +127,7 @@ describe("event presentation and comments", () => {
     expect(create).toContain("const [formError, setFormError]");
     expect(create).toContain('accessibilityRole="alert"');
     expect(create).toContain("description: savedFields.description");
-    expect(create).toContain("requireImage: true");
+    expect(create).toContain("requireImage: false");
+    expect(create).toContain("写真（任意）");
   });
 });

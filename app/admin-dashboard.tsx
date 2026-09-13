@@ -13,6 +13,7 @@ import { getIrotasPointsBalances,
   setFeeExemption,
   type IrotasPointsHistory,
 } from "@/lib/irotas-points-store";
+import { buildAdminAnalyticsCsv } from "@/lib/admin-analytics-csv";
 import {
   getAllPayments,
   updatePaymentStatus,
@@ -60,6 +61,8 @@ import {
   createBackupSnapshot,
   syncSquareSubscriptions,
   getEvents,
+  getAdminAnalytics,
+  getAdminEventPayments,
   updateOperatorMemberTerm,
   type MembershipSummary,
   type MemberReconciliationReport,
@@ -71,6 +74,8 @@ import {
   type NonMemberIdStatus,
   type BackupReadinessManifest,
   type BackupSnapshot,
+  type AdminAnalytics,
+  type AdminEventPayment,
 } from "@/lib/_core/api";
 
 type PointsHistoryEntry = {
@@ -113,12 +118,17 @@ export default function AdminDashboardScreen() {
   const { user: authUser } = useAuthContext();
   const userIsAdmin = isAdminRole(authUser?.role, authUser?.accessRole);
   const [adminEvents, setAdminEvents] = useState<Event[]>([]);
+  const [adminEventsReady, setAdminEventsReady] = useState(false);
+  const [adminEventsError, setAdminEventsError] = useState(false);
+  const [adminEventsReloadKey, setAdminEventsReloadKey] = useState(0);
   useEffect(() => {
     if (!userIsAdmin) return;
     let active = true;
-    void getEvents().then((events) => { if (active) setAdminEvents(events); }).catch(() => {});
+    setAdminEventsReady(false);
+    setAdminEventsError(false);
+    void getEvents().then((events) => { if (active) { setAdminEvents(events); setAdminEventsReady(true); } }).catch(() => { if (active) setAdminEventsError(true); });
     return () => { active = false; };
-  }, [userIsAdmin]);
+  }, [userIsAdmin, adminEventsReloadKey]);
   const coupons = useCoupons();
   const clubs = useClubs();
 
@@ -126,7 +136,17 @@ export default function AdminDashboardScreen() {
   const [activeTab, setActiveTab] = useState<"overview" | "onboarding" | "monitoring" | "backups" | "deletions" | "review" | "operators" | "members" | "mee6" | "events" | "contests" | "clubs" | "payments" | "emails" | "announcements" | "coupons" | "analytics">(tab === "mee6" ? "mee6" : tab === "onboarding" ? "onboarding" : tab === "monitoring" ? "monitoring" : tab === "backups" ? "backups" : tab === "deletions" ? "deletions" : tab === "review" ? "review" : tab === "coupons" ? "coupons" : tab === "contests" ? "contests" : tab === "operators" ? "operators" : "overview");
   const [editingClub, setEditingClub] = useState<Club | null>(null);
   const [paymentRecords, setPaymentRecords] = useState<PaymentRecord[]>([]);
+  const [squareEventPayments, setSquareEventPayments] = useState<AdminEventPayment[]>([]);
+  const [squarePaymentsError, setSquarePaymentsError] = useState(false);
   const [selectedPaymentEventId, setSelectedPaymentEventId] = useState<string | null>(null);
+  useEffect(() => {
+    if (!userIsAdmin || activeTab !== "payments") return;
+    let active = true;
+    void getAdminEventPayments().then(({ payments }) => {
+      if (active) { setSquareEventPayments(payments); setSquarePaymentsError(false); }
+    }).catch(() => { if (active) setSquarePaymentsError(true); });
+    return () => { active = false; };
+  }, [userIsAdmin, activeTab]);
   const [adminIds, setAdminIds] = useState<Set<string>>(new Set(
     MEMBERS.filter((m) => m.role === "admin").map((m) => m.id)
   ));
@@ -1818,8 +1838,22 @@ export default function AdminDashboardScreen() {
         {activeTab === "payments" && (
           <>
             <Text style={{ fontSize: 16, fontWeight: "700", color: colors.foreground, marginBottom: 12 }}>
-              参加費支払管理
+              Squareイベント決済（共有DB・確認専用）
             </Text>
+            {squarePaymentsError ? <Text style={{ color: "#B42318", marginBottom: 12 }}>Square決済記録を取得できませんでした。</Text> : null}
+            {!squarePaymentsError && squareEventPayments.length === 0 ? <Text style={{ color: colors.muted, marginBottom: 16 }}>Square決済記録はまだありません。</Text> : null}
+            {squareEventPayments.map((payment) => (
+              <View key={payment.id} style={{ backgroundColor: colors.surface, borderRadius: 12, padding: 12, marginBottom: 8 }}>
+                <Text style={{ color: colors.foreground, fontWeight: "800" }}>{payment.eventTitle}</Text>
+                <Text style={{ color: colors.foreground, fontSize: 13, marginTop: 3 }}>{payment.memberName}（{payment.memberId}）</Text>
+                <Text style={{ color: payment.status === "paid" ? "#218548" : "#B42318", fontSize: 12, fontWeight: "800", marginTop: 3 }}>
+                  {payment.status === "paid" ? "支払済" : payment.status === "cancelled" ? "申込取消・リンク停止" : payment.status === "ready" ? "支払待ち" : "決済ページ作成中"} ・ {payment.amountYen.toLocaleString()}円
+                  {payment.pointsUsed ? `（${payment.pointsUsed.toLocaleString()}pt利用）` : ""}
+                </Text>
+              </View>
+            ))}
+            <Text style={{ fontSize: 16, fontWeight: "700", color: colors.foreground, marginTop: 18, marginBottom: 7 }}>旧端末内の支払い記録</Text>
+            <Text style={{ fontSize: 12, color: colors.muted, marginBottom: 12 }}>以下の記録と手動変更はこの端末内のみです。Squareの共有決済状態には反映されません。</Text>
 
             {/* イベント選択 */}
             {(() => {
@@ -2195,7 +2229,7 @@ export default function AdminDashboardScreen() {
           </>
         )}
         {activeTab === "analytics" && (
-          <AnalyticsTab adminEvents={adminEvents} />
+          <AnalyticsTab adminEvents={adminEvents} eventsReady={adminEventsReady} eventsError={adminEventsError} onReloadEvents={() => setAdminEventsReloadKey((value) => value + 1)} />
         )}
       </ScrollView>
 
@@ -2243,36 +2277,33 @@ export default function AdminDashboardScreen() {
 // ─────────────────────────────────────────────────────────────
 // 分析タブ
 // ─────────────────────────────────────────────────────────────
-function AnalyticsTab({ adminEvents }: { adminEvents: Event[] }) {
+function AnalyticsTab({ adminEvents, eventsReady, eventsError, onReloadEvents }: { adminEvents: Event[]; eventsReady: boolean; eventsError: boolean; onReloadEvents: () => void }) {
   const colors = useColors();
+  const [analytics, setAnalytics] = useState<AdminAnalytics | null>(null);
+  const [analyticsError, setAnalyticsError] = useState("");
+  const [reloadKey, setReloadKey] = useState(0);
+  useEffect(() => {
+    let active = true;
+    setAnalyticsError("");
+    void getAdminAnalytics()
+      .then((result) => { if (active) setAnalytics(result); })
+      .catch(() => { if (active) setAnalyticsError("分析データを読み込めませんでした"); });
+    return () => { active = false; };
+  }, [reloadKey]);
 
   // 男女比
-  const genderCounts = useMemo(() => {
-    const counts = { male: 0, female: 0, other: 0, unset: 0 };
-    for (const m of MEMBERS) {
-      const g = m.gender ?? "unset";
-      counts[g] = (counts[g] ?? 0) + 1;
-    }
-    return counts;
-  }, []);
+  const genderCounts = { male: analytics?.genderCounts.male ?? 0, female: analytics?.genderCounts.female ?? 0, other: analytics?.genderCounts.other ?? 0, unset: analytics?.genderCounts.unset ?? 0 };
+  const totalMembers = analytics?.totalMembers ?? 0;
   const totalWithGender = genderCounts.male + genderCounts.female + genderCounts.other;
-  const maleRatio = totalWithGender > 0 ? Math.round((genderCounts.male / MEMBERS.length) * 100) : 0;
-  const femaleRatio = totalWithGender > 0 ? Math.round((genderCounts.female / MEMBERS.length) * 100) : 0;
-  const otherRatio = totalWithGender > 0 ? Math.round((genderCounts.other / MEMBERS.length) * 100) : 0;
+  const maleRatio = totalWithGender > 0 ? Math.round((genderCounts.male / totalMembers) * 100) : 0;
+  const femaleRatio = totalWithGender > 0 ? Math.round((genderCounts.female / totalMembers) * 100) : 0;
+  const otherRatio = totalWithGender > 0 ? Math.round((genderCounts.other / totalMembers) * 100) : 0;
 
   // ランク分布
-  const rankCounts = useMemo(() => {
-    const counts: Record<string, number> = { regular: 0, silver: 0, gold: 0, platinum: 0 };
-    for (const m of MEMBERS) counts[m.rank] = (counts[m.rank] ?? 0) + 1;
-    return counts;
-  }, []);
+  const rankCounts = analytics?.rankCounts ?? {};
 
   // 支部別会員数
-  const branchCounts = useMemo(() => {
-    const counts: Record<string, number> = { kanto: 0, kansai: 0 };
-    for (const m of MEMBERS) counts[m.branch] = (counts[m.branch] ?? 0) + 1;
-    return counts;
-  }, []);
+  const branchCounts = analytics?.branchCounts ?? {};
 
   // 月別入会者数（直近6ヶ月）
   const monthlyJoins = useMemo(() => {
@@ -2282,11 +2313,11 @@ function AnalyticsTab({ adminEvents }: { adminEvents: Event[] }) {
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
       const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
       const label = `${d.getMonth() + 1}月`;
-      const count = MEMBERS.filter((m) => m.joinedAt?.startsWith(key)).length;
+      const count = analytics?.monthlyJoins[key] ?? 0;
       months.push({ label, count });
     }
     return months;
-  }, []);
+  }, [analytics]);
   const maxMonthlyJoins = Math.max(...monthlyJoins.map((m) => m.count), 1);
 
   // イベント月別開催数（直近6ヶ月）
@@ -2319,19 +2350,47 @@ function AnalyticsTab({ adminEvents }: { adminEvents: Event[] }) {
     kansai: adminEvents.filter((e) => e.category === "kansai").length,
   }), [adminEvents]);
 
+  if (!analytics) return analyticsError ? (
+    <View style={{ alignItems: "center", padding: 24 }}>
+      <Text style={{ color: colors.error, marginBottom: 12 }}>{analyticsError}</Text>
+      <Pressable accessibilityRole="button" onPress={() => setReloadKey((value) => value + 1)}><Text style={{ color: colors.foreground, fontWeight: "700" }}>再読み込み</Text></Pressable>
+    </View>
+  ) : <ActivityIndicator color="#E8A0BF" style={{ margin: 24 }} />;
+  if (eventsError) return (
+    <View style={{ alignItems: "center", padding: 24 }}>
+      <Text style={{ color: colors.error, marginBottom: 12 }}>イベントデータを読み込めませんでした</Text>
+      <Pressable accessibilityRole="button" onPress={onReloadEvents}><Text style={{ color: colors.foreground, fontWeight: "700" }}>再読み込み</Text></Pressable>
+    </View>
+  );
+  if (!eventsReady) return <ActivityIndicator color="#E8A0BF" style={{ margin: 24 }} />;
+
+  const downloadCsv = () => {
+    if (typeof document === "undefined") return;
+    const blob = new Blob([buildAdminAnalyticsCsv(analytics, adminEvents)], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `iro-analytics-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 0);
+  };
+
   const BAR_COLOR_MALE = "#A7C7E7";
   const BAR_COLOR_FEMALE = "#E8A0BF";
   const BAR_COLOR_EVENT = "#A7C7E7";
 
   return (
     <View>
+      {Platform.OS === "web" ? <Pressable accessibilityRole="button" onPress={downloadCsv} style={{ alignSelf: "flex-end", paddingVertical: 9, paddingHorizontal: 14, borderRadius: 9, backgroundColor: colors.surface, marginBottom: 12 }}><Text style={{ color: colors.foreground, fontWeight: "700" }}>分析CSVを保存</Text></Pressable> : null}
       {/* KPIカード */}
       <Text style={{ fontSize: 16, fontWeight: "700", color: colors.foreground, marginBottom: 12 }}>
         主要指標
       </Text>
       <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10, marginBottom: 20 }}>
         {[
-          { label: "総会員数", value: `${MEMBERS.length}名`, color: "#E8A0BF" },
+          { label: "利用可能会員数", value: `${totalMembers}名`, color: "#E8A0BF" },
           { label: "男女比（男）", value: `${maleRatio}%`, color: BAR_COLOR_MALE },
           { label: "男女比（女）", value: `${femaleRatio}%`, color: BAR_COLOR_FEMALE },
           { label: "総イベント数", value: `${adminEvents.length}件`, color: "#34C759" },
@@ -2387,7 +2446,7 @@ function AnalyticsTab({ adminEvents }: { adminEvents: Event[] }) {
         </Text>
         {(["platinum", "gold", "silver", "regular"] as const).map((rank) => {
           const count = rankCounts[rank] ?? 0;
-          const pct = MEMBERS.length > 0 ? count / MEMBERS.length : 0;
+          const pct = totalMembers > 0 ? count / totalMembers : 0;
           return (
             <View key={rank} style={{ marginBottom: 10 }}>
               <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 4 }}>

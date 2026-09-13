@@ -8,6 +8,7 @@
 import { CHAT_ROOMS, CHAT_MESSAGES, RANK_LABELS, type ChatRoom, type ChatMessage, type MemberRank } from "@/constants/mock-data";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { areFriends } from "@/lib/friendship";
+import { canAccessRankRoom } from "@/lib/chat-access";
 import { sortRoomsByRecent } from "@/lib/chat-order";
 import { toggleReactionMember } from "@/lib/chat-reactions";
 import { recordHomeActivity } from "@/lib/home-activity-store";
@@ -88,11 +89,11 @@ export async function getUnreadTotalForUser(userId: string, rank: string): Promi
 
 /**
  * ユーザーのランクに応じて参加できるランク別チャットルームを取得
- * ルール: 自分と同じランクのルームだけに参加できる
+ * ルール: 自分のランク以下のルームに参加できる
  */
-export function getRankRoomsForUser(userRank: string): ChatRoom[] {
+export function getRankRoomsForUser(userRank: string, canViewAllChats = false): ChatRoom[] {
   return getAllRooms().filter(
-    (r) => r.type === "rank" && r.requiredRank === userRank,
+    (r) => r.type === "rank" && (canViewAllChats || canAccessRankRoom(userRank, r.requiredRank)),
   );
 }
 

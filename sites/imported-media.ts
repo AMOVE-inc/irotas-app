@@ -46,8 +46,16 @@ export async function handleImportedMediaRequest(request: Request, env: SitesEnv
   const member = await authenticatedRequestMember(request, env);
   if (!member) return Response.json({ error: "ログインが必要です" }, { status: 401, headers });
   if (!env.UPLOADS) return Response.json({ error: "storage unavailable" }, { status: 503, headers });
-  const object = await env.UPLOADS.get(mediaKey(pathname));
-  if (!object) return Response.json({ error: "not found" }, { status: 404, headers });
+  let object = await env.UPLOADS.get(mediaKey(pathname));
+  if (!object) {
+    // Newly restored archive assets are copied into private storage on first
+    // authenticated access, so the image works in the same deployment.
+    const asset = await env.ASSETS.fetch(new Request(new URL(pathname, request.url)));
+    if (!asset.ok) return Response.json({ error: "not found" }, { status: 404, headers });
+    await env.UPLOADS.put(mediaKey(pathname), await asset.arrayBuffer(), { httpMetadata: { contentType: mediaType(pathname) } });
+    object = await env.UPLOADS.get(mediaKey(pathname));
+    if (!object) return Response.json({ error: "not found" }, { status: 404, headers });
+  }
   return new Response(request.method === "HEAD" ? null : object.body, {
     headers: { ...headers, "content-type": object.httpMetadata?.contentType ?? mediaType(pathname) },
   });

@@ -7,8 +7,8 @@ DiscordからIRO+アプリへ移行する既存会員が、Square決済時のメ
 - 配信責任者: Non
 - 案内・問い合わせ対応: 運営メンバー
 - 技術確認・公開: Codex
-- 登録URL: [IRO+アプリ 初回パスワード設定](https://irotas-app-20260721.k1998915n.chatgpt.site/register)
-- 通常ログインURL: [IRO+アプリ ログイン](https://irotas-app-20260721.k1998915n.chatgpt.site/login)
+- 登録URL: [IRO+アプリ 初回パスワード設定](https://app.irotas-community.com/register)
+- 通常ログインURL: [IRO+アプリ ログイン](https://app.irotas-community.com/login)
 
 ## 送信前チェック
 
@@ -34,7 +34,7 @@ IRO+会員限定アプリ 初回登録のお願い
 >
 > 下記の「初回パスワード設定」から、**Square決済時に登録したメールアドレス**を入力して登録してください。
 >
-> 初回パスワード設定: https://irotas-app-20260721.k1998915n.chatgpt.site/register
+> 初回パスワード設定: https://app.irotas-community.com/register
 >
 > 1. お名前とSquare決済時のメールアドレスを入力します。
 > 2. メールで届く6桁の認証コードを入力します。コードの有効期限は10分です。
@@ -42,7 +42,7 @@ IRO+会員限定アプリ 初回登録のお願い
 > 4. 所属支部を選択すると登録完了です。支部は後からマイページで変更できます。
 >
 > 次回からは通常ログイン画面をご利用ください。
-> https://irotas-app-20260721.k1998915n.chatgpt.site/login
+> https://app.irotas-community.com/login
 >
 > 認証コードやパスワードを運営からお尋ねすることはありません。第三者へ共有しないでください。
 >
@@ -55,7 +55,7 @@ IRO+会員限定アプリ 初回登録のお願い
 > IRO+会員限定アプリの初回登録をお願いします。
 >
 > Square決済時のメールアドレスを使い、こちらからパスワードを設定してください。
-> https://irotas-app-20260721.k1998915n.chatgpt.site/register
+> https://app.irotas-community.com/register
 >
 > 認証コードの有効期限は10分です。コードやパスワードは誰にも共有しないでください。登録できない場合は公式LINEへお問い合わせください。
 

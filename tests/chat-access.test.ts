@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { CHAT_ROOMS } from "../constants/mock-data";
-import { canAccessChatRoom } from "../lib/chat-access";
+import { canAccessChatRoom, canAccessRankRoom } from "../lib/chat-access";
 import { areFriends, getFriends } from "../lib/friendship";
 
 describe("rank chat access", () => {
@@ -9,26 +9,42 @@ describe("rank chat access", () => {
     expect(CHAT_ROOMS.filter((room) => room.type === "rank" && room.requiredRank === "regular")).toEqual([]);
   });
 
-  it("shows exactly one room for the member's current rank", () => {
-    expect(CHAT_ROOMS.filter((room) => room.type === "rank" && room.requiredRank === "gold").map((room) => room.id)).toEqual(["rank-gold"]);
+  it("shows the current rank and lower rank rooms", () => {
+    const visible = (rank: string) => CHAT_ROOMS.filter((room) => room.type === "rank" && canAccessRankRoom(rank, room.requiredRank)).map((room) => room.id);
+    expect(visible("regular")).toEqual([]);
+    expect(visible("silver")).toEqual(["rank-silver"]);
+    expect(visible("gold")).toEqual(["rank-silver", "rank-gold"]);
+    expect(visible("platinum")).toEqual(["rank-silver", "rank-gold", "rank-platinum"]);
   });
 
-  it("does not let another rank open a rank room directly", () => {
+  it("lets higher ranks enter lower rooms but rejects lower and unknown ranks", () => {
     const goldRoom = CHAT_ROOMS.find((room) => room.id === "rank-gold");
     expect(goldRoom).toBeDefined();
-    expect(canAccessChatRoom(goldRoom!, "u2", "platinum", true)).toBe(false);
+    expect(canAccessChatRoom(goldRoom!, "u2", "platinum")).toBe(true);
     expect(canAccessChatRoom(goldRoom!, "u1", "gold")).toBe(true);
+    expect(canAccessChatRoom(goldRoom!, "u3", "silver")).toBe(false);
+    expect(canAccessRankRoom("unknown", "silver")).toBe(false);
+    expect(canAccessRankRoom("platinum", "unknown")).toBe(false);
   });
 });
 
 describe("club chat access", () => {
-  it("only allows joined members, even when the viewer is an administrator", () => {
+  it("allows staff to view non-member club chats while ordinary members need approval", () => {
     const room = {
       id: "club-chat-club-travel", name: "旅行部チャット", type: "club" as const,
       sourceId: "club-travel", participants: ["IRO0009"], createdBy: "system",
     };
     expect(canAccessChatRoom(room, "IRO0009", "regular")).toBe(true);
-    expect(canAccessChatRoom(room, "IRO0011", "regular", true)).toBe(false);
+    expect(canAccessChatRoom(room, "IRO0011", "regular")).toBe(false);
+    expect(canAccessChatRoom(room, "IRO0011", "regular", true)).toBe(true);
+  });
+});
+
+describe("staff chat oversight", () => {
+  it("allows staff to view a DM without joining it", () => {
+    const room = { id: "dm-private", name: "DM", type: "dm" as const, sourceId: "dm-private", participants: ["IRO0010", "IRO0011"], createdBy: "IRO0010" };
+    expect(canAccessChatRoom(room, "IRO0009", "regular")).toBe(false);
+    expect(canAccessChatRoom(room, "IRO0009", "regular", true)).toBe(true);
   });
 });
 

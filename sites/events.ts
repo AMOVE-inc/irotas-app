@@ -1,7 +1,8 @@
-import { authenticatedRequestMember } from "./auth";
+import { authenticatedRequestMember, effectiveMemberRank } from "./auth";
 import { canMemberAccessClub } from "./clubs";
 import { reverseCancelledEventHostXp } from "./event-host-xp";
 import { applyEventPointDiscount, refundEventPointDiscount } from "./event-points";
+import { cancelEventCheckout, eventCheckoutAmount } from "./event-checkout";
 import { EVENT_XP, awardEventReward, reverseEventRewards } from "./event-rewards";
 import type { D1Database, SitesEnv } from "./platform-types";
 import { displayEventTitle } from "../lib/event-title";
@@ -52,6 +53,7 @@ type ParticipationRow = {
   member_id: number;
   public_member_id: string | null;
   status: "applied" | "confirmed" | "cancel_requested" | "cancelled" | "rejected";
+  payment_state?: "awaiting_selection" | "awaiting_payment" | null;
 };
 
 type CancellationRow = {
@@ -350,6 +352,7 @@ function publicEvent(
     ...(row.status === "cancelled" ? participantIds : []),
   ])];
   const viewerParticipation = active.find((item) => item.member_id === viewerId)?.status ?? null;
+  const viewerPaymentState = active.find((item) => item.member_id === viewerId)?.payment_state ?? null;
   return {
     ...data,
     chatId: row.id.startsWith("discord-event-") || data.recruitmentChannel === "discord" ? undefined : data.chatId,
@@ -383,6 +386,7 @@ function publicEvent(
     })),
     viewerMemberId: viewerPublicId,
     viewerParticipationStatus: viewerParticipation === "cancel_requested" ? "cancel_requested" : viewerParticipation,
+    viewerPaymentState,
     isFavorite: favorite,
     isOrganizer: !usesImportedOrganizerFallback && viewerId === row.organizer_member_id,
     ...(viewerId === row.organizer_member_id || elevated ? { privateMemo: row.private_memo ?? undefined } : {}),
@@ -446,7 +450,7 @@ async function viewerPublicId(db: D1Database, memberId: number) {
 
 async function hydratedEvent(db: D1Database, row: EventRow, memberId: number, elevated: boolean, viewerId?: string) {
   const [participations, cancellations, favorite] = await Promise.all([
-    db.prepare(`SELECT p.event_id, p.member_id, m.public_member_id, p.status
+    db.prepare(`SELECT p.event_id, p.member_id, m.public_member_id, p.status, p.payment_state
       FROM event_participations p JOIN members m ON m.id = p.member_id WHERE p.event_id = ?`)
       .bind(row.id).all<ParticipationRow>(),
     db.prepare(`SELECT c.event_id, c.member_id, m.public_member_id, c.requested_at,
@@ -539,6 +543,52 @@ async function notifyEventConfirmation(db: D1Database, targetMemberId: number, e
       eventId,
       new Date().toISOString(),
     ).run();
+}
+
+/** Squareの支払済注文に対応する応募だけを確定し、再送時は通知・チャットを重複させない。 */
+export async function confirmPaidEventParticipation(db: D1Database, eventId: string, memberId: number, now: string) {
+  const row = await eventRow(db, eventId);
+  if (!row || row.status === "cancelled" || row.status === "ended") return false;
+  const changed = await db.prepare(`UPDATE event_participations
+    SET status = 'confirmed', payment_state = 'completed', confirmed_at = ?, cancelled_at = NULL, updated_at = ?
+    WHERE event_id = ? AND member_id = ? AND status = 'applied' AND payment_state = 'awaiting_payment'
+      AND EXISTS (SELECT 1 FROM event_payment_checkouts
+        WHERE event_id = ? AND member_id = ? AND status = 'paid')`)
+    .bind(now, now, eventId, memberId, eventId, memberId).run();
+  const transitioned = Number(changed.meta?.changes ?? 0) > 0;
+  if (!transitioned) {
+    const participation = await db.prepare("SELECT status, payment_state FROM event_participations WHERE event_id = ? AND member_id = ?")
+      .bind(eventId, memberId).first<{ status: string; payment_state: string | null }>();
+    if (participation?.status !== "confirmed" || participation.payment_state !== "completed") return false;
+  }
+  let data: Record<string, unknown> = {};
+  try { data = JSON.parse(row.public_data_json) as Record<string, unknown>; } catch {}
+  const chatId = typeof data.chatId === "string" && data.chatId ? data.chatId : eventChatId(eventId);
+  const targetName = await eventChatMemberName(db, memberId);
+  await db.batch([
+    db.prepare(`UPDATE events SET public_data_json = json_set(public_data_json, '$.chatId', ?), updated_at = ?
+      WHERE id = ? AND COALESCE(json_extract(public_data_json, '$.chatId'), '') = ''`).bind(chatId, now, eventId),
+    db.prepare(`INSERT OR IGNORE INTO chat_rooms (id, name, room_type, source_id, created_by_member_id, created_at, updated_at)
+      VALUES (?, ?, 'event', ?, ?, ?, ?)`).bind(chatId, row.title, eventId, row.organizer_member_id, now, now),
+    db.prepare(`INSERT INTO chat_room_members (room_id, member_id, member_role, joined_at, left_at)
+      VALUES (?, ?, 'owner', ?, NULL) ON CONFLICT(room_id, member_id) DO UPDATE SET member_role = 'owner', left_at = NULL`)
+      .bind(chatId, row.organizer_member_id, now),
+    db.prepare(`INSERT INTO chat_room_members (room_id, member_id, member_role, joined_at, left_at)
+      VALUES (?, ?, 'member', ?, NULL) ON CONFLICT(room_id, member_id) DO UPDATE SET left_at = NULL`)
+      .bind(chatId, memberId, now),
+    db.prepare(`INSERT OR IGNORE INTO chat_messages (id, room_id, sender_member_id, content, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?)`).bind(`event-chat-welcome:${eventId}`, chatId, row.organizer_member_id, eventChatSystemContent(`「${row.title}」の参加者専用グループが作成されました`), now, now),
+    db.prepare(`INSERT OR IGNORE INTO chat_messages (id, room_id, sender_member_id, content, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?)`).bind(`event-chat-join:${eventId}:${memberId}`, chatId, row.organizer_member_id, eventChatSystemContent(`${targetName}がチャットに参加しました`), now, now),
+    db.prepare(`INSERT OR IGNORE INTO in_app_notifications
+      (id, target_member_id, type, title, body, event_id, created_at)
+      VALUES (?, ?, 'event_confirmed', ?, ?, ?, ?)`).bind(
+        `event-payment-confirmed:${eventId}:${memberId}`, memberId, "イベント参加が確定しました",
+        `「${row.title}」の決済が完了し、参加者専用チャットへ追加されました。`, eventId, now,
+      ),
+  ]);
+  if (transitioned) await audit(db, memberId, "event.payment_confirmed", eventId, { memberId });
+  return true;
 }
 
 async function notifyEventCancellation(
@@ -1032,6 +1082,13 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
     if (input?.confirmedParticipantNotified !== true) return responseJson({ error: "参加確定者への事前連絡の確認が必要です" }, 400);
     if (row.status === "cancelled") return responseJson({ success: true, cancelled: true });
     const now = new Date().toISOString();
+    const pendingPayments = await env.DB.prepare(`SELECT member_id FROM event_participations
+      WHERE event_id = ? AND status = 'applied' AND payment_state = 'awaiting_payment'`)
+      .bind(id).all<{ member_id: number }>();
+    for (const pending of pendingPayments.results ?? []) {
+      if (!await cancelEventCheckout(env.DB, env, id, pending.member_id))
+        return responseJson({ error: "決済リンクを停止できませんでした。イベント中止前にSquareの状態を確認してください" }, 502);
+    }
     await reverseCancelledEventHostXp(env.DB, id, now);
     await reverseEventRewards(env.DB, id, now);
     const pointUsers = await env.DB.prepare("SELECT member_id FROM event_point_usages WHERE event_id = ? AND status = 'applied'")
@@ -1051,6 +1108,9 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
     const row = await eventRow(env.DB, id);
     const imported = id.startsWith("discord-event-") && IMPORTED_DISCORD_EVENTS.some((event) => event.id === id);
     if (!row && !imported && !await isDeletedImportedEvent(env.DB, id)) return responseJson({ error: "イベントが見つかりません" }, 404);
+    const payment = await env.DB.prepare("SELECT 1 AS exists FROM event_payment_checkouts WHERE event_id = ? LIMIT 1")
+      .bind(id).first<{ exists: number }>();
+    if (payment) return responseJson({ error: "決済記録のあるイベントは削除できません。中止処理と返金確認を行ってください" }, 409);
     const now = new Date().toISOString();
     // event_id の外部キーは ON DELETE CASCADE。中止と異なり履歴も含めて完全に削除する。
     await env.DB.batch([
@@ -1099,41 +1159,78 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
     const deadline = typeof data.applicationDeadline === "string" ? data.applicationDeadline : "";
     const today = new Date().toISOString().slice(0, 10);
     if (deadline && deadline < today) return responseJson({ error: "参加申込の受付期間は終了しました" }, 409);
+    const previous = await env.DB.prepare("SELECT status FROM event_participations WHERE event_id = ? AND member_id = ? LIMIT 1")
+      .bind(id, member.id).first<{ status: string }>();
+    if (previous && ["applied", "confirmed", "cancel_requested"].includes(previous.status))
+      return responseJson({ error: "このイベントには申込済みです" }, 409);
+    const priorPayment = await env.DB.prepare("SELECT status FROM event_payment_checkouts WHERE event_id = ? AND member_id = ? LIMIT 1")
+      .bind(id, member.id).first<{ status: string }>();
+    if (priorPayment)
+      return responseJson({ error: "以前の決済リンクがある申込は運営へお問い合わせください" }, 409);
     const capacity = typeof data.capacity === "number" ? data.capacity : 0;
     const count = await env.DB.prepare(`SELECT COUNT(*) AS count FROM event_participations
-      WHERE event_id = ? AND status IN ('confirmed', 'cancel_requested')`).bind(id).first<{ count: number }>();
+      WHERE event_id = ? AND (status IN ('confirmed', 'cancel_requested') OR (status = 'applied' AND payment_state = 'awaiting_payment'))`).bind(id).first<{ count: number }>();
     const immediate = row.event_type === "official" && data.selectionMethod !== "lottery";
     if (immediate && !["undecided", "unlimited"].includes(String(data.capacityMode)) && (count?.count ?? 0) >= capacity) return responseJson({ error: "満席です" }, 409);
     const now = new Date().toISOString();
-    const status = immediate ? "confirmed" : "applied";
     const requestedPoints = Number(input?.pointsToUse ?? 0);
     if (!Number.isInteger(requestedPoints) || requestedPoints < 0 || requestedPoints > 300_000)
       return responseJson({ error: "利用ポイントを確認してください" }, 400);
     if (requestedPoints > 0 && row.event_type !== "official")
       return responseJson({ error: "イロタスポイントは公式イベントの参加費にのみ利用できます" }, 400);
-    const rankRow = await env.DB.prepare("SELECT member_rank FROM members WHERE id = ?").bind(member.id).first<{ member_rank: string }>();
+    const rankRow = await env.DB.prepare("SELECT member_rank, discord_roles_json FROM members WHERE id = ?").bind(member.id).first<{ member_rank: string | null; discord_roles_json: string | null }>();
     const rankPrices = data.rankPrices && typeof data.rankPrices === "object" ? data.rankPrices as Record<string, unknown> : {};
-    const eventPrice = priceNumber(rankPrices[rankRow?.member_rank ?? "regular"] ?? data.price);
+    const memberRank = effectiveMemberRank(rankRow?.member_rank, rankRow?.discord_roles_json) ?? "regular";
+    const eventPrice = priceNumber(rankPrices[memberRank] ?? data.price);
     if (requestedPoints > eventPrice) return responseJson({ error: "参加費を超えるポイントは利用できません" }, 400);
+    const appOfficial = row.event_type === "official" && data.recruitmentChannel !== "discord" && !id.startsWith("discord-event-");
+    const amountDue = appOfficial ? eventCheckoutAmount(data, memberRank, requestedPoints) : 0;
+    if (appOfficial && amountDue === null) return responseJson({ error: "参加費を確認できません" }, 409);
+    const paymentState = appOfficial && amountDue! > 0 ? immediate ? "awaiting_payment" : "awaiting_selection" : null;
+    const status = immediate && !paymentState ? "confirmed" : "applied";
     let pointResult: Awaited<ReturnType<typeof applyEventPointDiscount>> | null = null;
     if (requestedPoints > 0) {
       pointResult = await applyEventPointDiscount(env.DB, id, member.id, requestedPoints, row.title, now);
       if (!pointResult.success) return responseJson({ error: "イロタスポイント残高が不足しています" }, 409);
     }
-    if (immediate && !id.startsWith("discord-event-") && data.recruitmentChannel !== "discord" && !(typeof data.chatId === "string" && data.chatId)) data.chatId = eventChatId(id);
+    if (status === "confirmed" && !id.startsWith("discord-event-") && data.recruitmentChannel !== "discord" && !(typeof data.chatId === "string" && data.chatId)) data.chatId = eventChatId(id);
+    const capacityGuard = immediate && !["undecided", "unlimited"].includes(String(data.capacityMode));
     try {
-      await env.DB.prepare(`INSERT INTO event_participations
-        (event_id, member_id, status, terms_accepted_at, applied_at, confirmed_at, updated_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
+      const participationWrite = env.DB.prepare(`INSERT INTO event_participations
+        (event_id, member_id, status, payment_state, terms_accepted_at, applied_at, confirmed_at, updated_at)
+        SELECT ?, ?, ?, ?, ?, ?, ?, ?
+        WHERE ? = 0 OR (SELECT COUNT(*) FROM event_participations
+          WHERE event_id = ? AND (status IN ('confirmed', 'cancel_requested')
+            OR (status = 'applied' AND payment_state = 'awaiting_payment'))) < ?
         ON CONFLICT(event_id, member_id) DO UPDATE SET status = excluded.status,
+          payment_state = excluded.payment_state,
           terms_accepted_at = excluded.terms_accepted_at, applied_at = excluded.applied_at,
           confirmed_at = excluded.confirmed_at, cancelled_at = NULL, updated_at = excluded.updated_at`)
-        .bind(id, member.id, status, now, now, immediate ? now : null, now).run();
+        .bind(id, member.id, status, paymentState, now, now, status === "confirmed" ? now : null, now,
+          capacityGuard ? 1 : 0, id, capacity);
+      if (paymentState === "awaiting_payment") {
+        await env.DB.batch([
+          participationWrite,
+          env.DB.prepare(`INSERT INTO event_payment_checkouts
+            (id, event_id, member_id, item_name, amount_yen, points_used, status, created_at, updated_at)
+            SELECT ?, ?, ?, ?, ?, ?, 'creating', ?, ?
+            WHERE EXISTS (SELECT 1 FROM event_participations
+              WHERE event_id = ? AND member_id = ? AND status = 'applied' AND payment_state = 'awaiting_payment')`).bind(
+              crypto.randomUUID(), id, member.id, `IRO+ ${row.title}`.slice(0, 255), amountDue, requestedPoints, now, now, id, member.id,
+            ),
+        ]);
+      } else await participationWrite.run();
     } catch (error) {
       if (pointResult && !pointResult.duplicate) await refundEventPointDiscount(env.DB, id, member.id, row.title, now);
       throw error;
     }
-    if (immediate) {
+    const reserved = await env.DB.prepare("SELECT status, payment_state FROM event_participations WHERE event_id = ? AND member_id = ?")
+      .bind(id, member.id).first<{ status: string; payment_state: string | null }>();
+    if (reserved?.status !== status || (paymentState && reserved.payment_state !== paymentState)) {
+      if (pointResult && !pointResult.duplicate) await refundEventPointDiscount(env.DB, id, member.id, row.title, now);
+      return responseJson({ error: "満席のため申込を受け付けられませんでした" }, 409);
+    }
+    if (status === "confirmed") {
       await env.DB.prepare("UPDATE events SET public_data_json = ?, updated_at = ? WHERE id = ?")
         .bind(JSON.stringify(data), now, id).run();
       await notifyEventConfirmation(env.DB, member.id, id, row.title);
@@ -1152,6 +1249,11 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
     if (typeof data.participantsFinalizedAt === "string" && data.participantsFinalizedAt) {
       return responseJson({ event: await hydratedEvent(env.DB, row, member.id, elevated, memberPublicId) });
     }
+    const unpaidSelected = await env.DB.prepare(`SELECT COUNT(*) AS count FROM event_participations
+      WHERE event_id = ? AND status = 'applied' AND payment_state = 'awaiting_payment'`)
+      .bind(id).first<{ count: number }>();
+    if ((unpaidSelected?.count ?? 0) > 0)
+      return responseJson({ error: "決済待ちの参加者がいます。支払い完了または申込取消後に確定してください" }, 409);
     const now = new Date().toISOString();
     const chatId = typeof data.chatId === "string" && data.chatId ? data.chatId : eventChatId(id);
     const importedDiscordEvent = id.startsWith("discord-event-") || data.recruitmentChannel === "discord";
@@ -1171,7 +1273,7 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
     const pendingApplicants = await env.DB.prepare("SELECT member_id FROM event_participations WHERE event_id = ? AND status = 'applied'").bind(id).all<{ member_id: number }>();
     await env.DB.batch([
       env.DB.prepare("UPDATE events SET public_data_json = ?, status = 'full', updated_at = ? WHERE id = ?").bind(JSON.stringify(data), now, id),
-      env.DB.prepare("UPDATE event_participations SET status = 'rejected', cancelled_at = ?, updated_at = ? WHERE event_id = ? AND status = 'applied'").bind(now, now, id),
+      env.DB.prepare("UPDATE event_participations SET status = 'rejected', payment_state = NULL, cancelled_at = ?, updated_at = ? WHERE event_id = ? AND status = 'applied'").bind(now, now, id),
       ...(!importedDiscordEvent ? [env.DB.prepare(`INSERT OR IGNORE INTO chat_rooms (id, name, room_type, source_id, created_by_member_id, created_at, updated_at)
         VALUES (?, ?, 'event', ?, ?, ?, ?)`).bind(chatId, row.title, id, row.organizer_member_id, now, now),
       env.DB.prepare(`INSERT INTO chat_room_members (room_id, member_id, member_role, joined_at, left_at) VALUES (?, ?, 'owner', ?, NULL)
@@ -1190,6 +1292,7 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
       env.DB.prepare(`INSERT INTO audit_logs (actor_user_id, action, entity_type, entity_id, metadata_json, created_at)
         VALUES (?, 'event.participants_finalized', 'event', ?, ?, ?)`).bind(String(member.id), id, JSON.stringify({ chatId, count: confirmed.results?.length ?? 0, companionCount: companionMemberIds.size }), now),
     ]);
+    for (const applicant of pendingApplicants.results ?? []) await refundEventPointDiscount(env.DB, id, applicant.member_id, row.title, now);
     for (const participant of confirmed.results ?? []) if (!previouslyFinalized.has(participant.member_id)) await notifyEventConfirmation(env.DB, participant.member_id, id, row.title);
     for (const companionMemberId of companionMemberIds) await notifyEventConfirmation(env.DB, companionMemberId, id, row.title);
     const start = new Date(`${row.event_date}T${String(data.time ?? "00:00")}:00`);
@@ -1218,14 +1321,60 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
     if (input.action === "approve") {
       let data: Record<string, unknown> = {};
       try { data = JSON.parse(row.public_data_json) as Record<string, unknown>; } catch {}
-      const participation = await env.DB.prepare("SELECT status FROM event_participations WHERE event_id = ? AND member_id = ?")
-        .bind(id, targetId).first<{ status: string }>();
+      const participation = await env.DB.prepare("SELECT status, payment_state FROM event_participations WHERE event_id = ? AND member_id = ?")
+        .bind(id, targetId).first<{ status: string; payment_state: string | null }>();
       if (!participation || !["applied", "cancelled", "rejected"].includes(participation.status))
         return responseJson({ error: "承認可能な参加申込が見つかりません" }, 409);
+      if (participation.payment_state === "awaiting_payment")
+        return responseJson({ error: "この参加者は決済待ちです" }, 409);
       const capacity = typeof data.capacity === "number" ? data.capacity : 0;
-      const count = await env.DB.prepare(`SELECT COUNT(*) AS count FROM event_participations WHERE event_id = ? AND status IN ('confirmed','cancel_requested')`).bind(id).first<{ count: number }>();
+      const count = await env.DB.prepare(`SELECT COUNT(*) AS count FROM event_participations WHERE event_id = ?
+        AND (status IN ('confirmed','cancel_requested') OR (status = 'applied' AND payment_state = 'awaiting_payment'))`).bind(id).first<{ count: number }>();
       if (!["undecided", "unlimited"].includes(String(data.capacityMode)) && (count?.count ?? 0) >= capacity) return responseJson({ error: "満席のため承認できません" }, 409);
-      await env.DB.prepare(`UPDATE event_participations SET status = 'confirmed', confirmed_at = ?, cancelled_at = NULL, updated_at = ?
+      if (row.event_type === "official" && data.recruitmentChannel !== "discord" && !id.startsWith("discord-event-")) {
+        const targetRank = await env.DB.prepare("SELECT member_rank, discord_roles_json FROM members WHERE id = ?")
+          .bind(targetId).first<{ member_rank: string | null; discord_roles_json: string | null }>();
+        const usedPoints = await env.DB.prepare("SELECT amount FROM event_point_usages WHERE event_id = ? AND member_id = ? AND status = 'applied'")
+          .bind(id, targetId).first<{ amount: number }>();
+        const amountDue = eventCheckoutAmount(data, effectiveMemberRank(targetRank?.member_rank, targetRank?.discord_roles_json) ?? "regular", Number(usedPoints?.amount ?? 0));
+        if (amountDue === null) return responseJson({ error: "参加費を確認できません" }, 409);
+        if (amountDue > 0) {
+          if (participation.status !== "applied") return responseJson({ error: "有料イベントは会員からの再申込が必要です" }, 409);
+          const previousCheckout = await env.DB.prepare("SELECT id FROM event_payment_checkouts WHERE event_id = ? AND member_id = ? LIMIT 1")
+            .bind(id, targetId).first<{ id: string }>();
+          if (previousCheckout) return responseJson({ error: "以前の決済リンクがある申込は運営へお問い合わせください" }, 409);
+          const limited = !["undecided", "unlimited"].includes(String(data.capacityMode));
+          await env.DB.batch([
+            env.DB.prepare(`UPDATE event_participations SET status = 'applied', payment_state = 'awaiting_payment',
+              confirmed_at = NULL, cancelled_at = NULL, updated_at = ? WHERE event_id = ? AND member_id = ?
+                AND status = 'applied' AND payment_state IS NOT 'awaiting_payment'
+                AND (? = 0 OR (SELECT COUNT(*) FROM event_participations
+                  WHERE event_id = ? AND (status IN ('confirmed','cancel_requested')
+                    OR (status = 'applied' AND payment_state = 'awaiting_payment'))) < ?)`)
+              .bind(now, id, targetId, limited ? 1 : 0, id, capacity),
+            env.DB.prepare(`INSERT INTO event_payment_checkouts
+              (id, event_id, member_id, item_name, amount_yen, points_used, status, created_at, updated_at)
+              SELECT ?, ?, ?, ?, ?, ?, 'creating', ?, ?
+              WHERE EXISTS (SELECT 1 FROM event_participations
+                WHERE event_id = ? AND member_id = ? AND status = 'applied' AND payment_state = 'awaiting_payment')`).bind(
+                crypto.randomUUID(), id, targetId, `IRO+ ${row.title}`.slice(0, 255), amountDue, Number(usedPoints?.amount ?? 0), now, now, id, targetId,
+              ),
+            env.DB.prepare(`INSERT OR IGNORE INTO in_app_notifications
+              (id, target_member_id, type, title, body, event_id, created_at)
+              SELECT ?, ?, 'event_payment_ready', ?, ?, ?, ?
+              WHERE EXISTS (SELECT 1 FROM event_participations
+                WHERE event_id = ? AND member_id = ? AND status = 'applied' AND payment_state = 'awaiting_payment')`)
+              .bind(`event-payment-ready:${id}:${targetId}`, targetId, "参加費のお支払いへ進んでください", `「${row.title}」への参加は、Squareでの決済完了後に確定します。イベント詳細からお支払いください。`, id, now, id, targetId),
+          ]);
+          const selected = await env.DB.prepare("SELECT payment_state FROM event_participations WHERE event_id = ? AND member_id = ?")
+            .bind(id, targetId).first<{ payment_state: string | null }>();
+          if (selected?.payment_state !== "awaiting_payment") return responseJson({ error: "満席のため承認できません" }, 409);
+          await audit(env.DB, member.id, "event.payment_requested", id, { targetId, amountDue });
+          const updated = await eventRow(env.DB, id);
+          return responseJson({ event: await hydratedEvent(env.DB, updated!, member.id, elevated, memberPublicId) });
+        }
+      }
+      await env.DB.prepare(`UPDATE event_participations SET status = 'confirmed', payment_state = NULL, confirmed_at = ?, cancelled_at = NULL, updated_at = ?
         WHERE event_id = ? AND member_id = ? AND status IN ('applied','cancelled','rejected')`).bind(now, now, id, targetId).run();
       const chatId = typeof data.chatId === "string" && data.chatId ? data.chatId : eventChatId(id);
       const importedDiscordEvent = id.startsWith("discord-event-") || data.recruitmentChannel === "discord";
@@ -1254,7 +1403,12 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
       ]);
       await notifyEventConfirmation(env.DB, targetId, id, row.title);
     } else {
-      await env.DB.prepare(`UPDATE event_participations SET status = 'cancelled', cancelled_at = ?, updated_at = ?
+      const targetParticipation = await env.DB.prepare("SELECT status, payment_state FROM event_participations WHERE event_id = ? AND member_id = ?")
+        .bind(id, targetId).first<{ status: string; payment_state: string | null }>();
+      if (targetParticipation?.status === "applied" && targetParticipation.payment_state === "awaiting_payment" &&
+          !await cancelEventCheckout(env.DB, env, id, targetId))
+        return responseJson({ error: "決済リンクを停止できませんでした。Squareの状態を確認してください" }, 502);
+      await env.DB.prepare(`UPDATE event_participations SET status = 'cancelled', payment_state = NULL, cancelled_at = ?, updated_at = ?
         WHERE event_id = ? AND member_id = ?`).bind(now, now, id, targetId).run();
       await env.DB.prepare("UPDATE events SET status = 'open', updated_at = ? WHERE id = ? AND status = 'full' AND COALESCE(json_extract(public_data_json, '$.participantsFinalizedAt'), '') = '' AND COALESCE(json_extract(public_data_json, '$.discordRecruitmentClosedAt'), '') = ''").bind(now, id).run();
       await refundEventPointDiscount(env.DB, id, targetId, row.title, now);
@@ -1329,11 +1483,14 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
     const row = await eventRow(env.DB, id);
     if (!row) return responseJson({ error: "イベントが見つかりません" }, 404);
     const input = await readBody(request);
-    const participation = await env.DB.prepare("SELECT status FROM event_participations WHERE event_id = ? AND member_id = ?").bind(id, member.id).first<{ status: string }>();
+    const participation = await env.DB.prepare("SELECT status, payment_state FROM event_participations WHERE event_id = ? AND member_id = ?").bind(id, member.id).first<{ status: string; payment_state: string | null }>();
     const now = new Date().toISOString();
     if (participation?.status === "applied") {
-      await env.DB.prepare("UPDATE event_participations SET status = 'cancelled', cancelled_at = ?, updated_at = ? WHERE event_id = ? AND member_id = ? AND status = 'applied'")
+      if (participation.payment_state === "awaiting_payment" && !await cancelEventCheckout(env.DB, env, id, member.id))
+        return responseJson({ error: "決済リンクを停止できませんでした。運営へお問い合わせください" }, 502);
+      await env.DB.prepare("UPDATE event_participations SET status = 'cancelled', payment_state = NULL, cancelled_at = ?, updated_at = ? WHERE event_id = ? AND member_id = ? AND status = 'applied'")
         .bind(now, now, id, member.id).run();
+      await refundEventPointDiscount(env.DB, id, member.id, row.title, now);
       await audit(env.DB, member.id, "event.application_cancelled", id);
       return responseJson({ event: await hydratedEvent(env.DB, row, member.id, elevated, memberPublicId) }, 201);
     }
