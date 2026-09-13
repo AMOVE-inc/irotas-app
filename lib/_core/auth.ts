@@ -29,6 +29,7 @@ export type User = {
   email: string | null;
   loginMethod: string | null;
   lastSignedIn: Date;
+  firstSignedIn?: Date;
   role: UserRole;
   accessRole: AccessRole;
   branch: BranchRole | null;
@@ -48,7 +49,7 @@ function deserializeUser(value: string): User | null {
   const parsed: unknown = JSON.parse(value);
   if (!parsed || typeof parsed !== "object") return null;
 
-  const candidate = parsed as Partial<User> & { lastSignedIn?: string | Date };
+  const candidate = parsed as Partial<User> & { lastSignedIn?: string | Date; firstSignedIn?: string | Date };
   if (typeof candidate.id !== "number" || typeof candidate.openId !== "string") return null;
 
   const lastSignedIn = new Date(candidate.lastSignedIn ?? 0);
@@ -61,6 +62,7 @@ function deserializeUser(value: string): User | null {
     email: typeof candidate.email === "string" ? candidate.email : null,
     loginMethod: typeof candidate.loginMethod === "string" ? candidate.loginMethod : null,
     lastSignedIn,
+    firstSignedIn: new Date(candidate.firstSignedIn ?? lastSignedIn),
     role: normalizeUserRole(candidate.role),
     accessRole: normalizeAccessRole(candidate.accessRole),
     branch: normalizeBranchRole(candidate.branch),

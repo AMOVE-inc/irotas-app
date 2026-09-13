@@ -5,6 +5,7 @@ import type {
 } from "../lib/discord-board-import";
 import { isDiscordGourmetEventBoard, isRetiredMovieClubThread, normalizeDiscordBoardCategory } from "../lib/board-category";
 import { authenticatedRequestMember } from "./auth";
+import { importedMediaPaths } from "../lib/imported-media-path";
 import type { D1Database, SitesEnv } from "./platform-types";
 
 const ARCHIVE_PATH = "/api/board/archive";
@@ -20,10 +21,11 @@ export function filterBoardArchive(
 ): RawDiscordBoardArchive {
   const threads = source.threads
     .filter((thread) => !isDiscordGourmetEventBoard(thread.category) && !isRetiredMovieClubThread(thread))
-    .map((thread) => ({ ...thread, category: normalizeDiscordBoardCategory(thread.category) }))
+    .map((thread) => ({ ...thread, category: normalizeDiscordBoardCategory(thread.category), images: importedMediaPaths(thread.images) }))
     .filter((thread) => !isPrivateClubCategory(thread.category) || allowedPrivateCategories.has(thread.category));
   const threadIds = new Set(threads.map((thread) => thread.id));
-  const comments = source.comments.filter((comment) => threadIds.has(comment.threadId));
+  const comments = source.comments.filter((comment) => threadIds.has(comment.threadId))
+    .map((comment) => ({ ...comment, images: importedMediaPaths(comment.images) }));
   return { threads, comments };
 }
 

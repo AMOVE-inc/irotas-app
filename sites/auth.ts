@@ -19,6 +19,7 @@ type MemberRow = {
   branches_json: string;
   account_status: "active" | "suspended" | "withdrawn";
   last_signed_in_at: string | null;
+  password_set_at?: string | null;
   public_member_id: string | null;
   member_term: string | null;
   member_rank: string | null;
@@ -334,6 +335,7 @@ function memberPayload(row: MemberRow) {
     email: row.email,
     loginMethod: "email",
     lastSignedIn: row.last_signed_in_at ?? new Date().toISOString(),
+    firstSignedIn: row.password_set_at ?? row.last_signed_in_at ?? new Date().toISOString(),
     role: row.role === "operator" ? "operator" : row.role,
     accessRole: row.access_role,
     branch: branches[0] ?? null,
@@ -435,7 +437,7 @@ async function findMember(db: D1Database, email: string) {
   return db
     .prepare(
       `SELECT m.id, m.email, m.password_hash, m.display_name, m.role, m.access_role,
-      m.branches_json, m.account_status, m.last_signed_in_at, m.public_member_id,
+      m.branches_json, m.account_status, m.last_signed_in_at, m.password_set_at, m.public_member_id,
       m.member_term, m.member_rank, m.discord_roles_json, m.achievement_badges_json,
       m.profile_json, m.xp, m.participation_count, m.organizer_count,
       s.subscription_started_at
@@ -464,7 +466,7 @@ async function sessionMember(db: D1Database, token: string) {
   const tokenHash = await sha256(token);
   return db
     .prepare(
-      `SELECT m.id, m.email, m.password_hash, m.display_name, m.role, m.access_role, m.branches_json, m.account_status, m.last_signed_in_at,
+      `SELECT m.id, m.email, m.password_hash, m.display_name, m.role, m.access_role, m.branches_json, m.account_status, m.last_signed_in_at, m.password_set_at,
     m.public_member_id, m.member_term, m.member_rank, m.discord_roles_json,
     m.achievement_badges_json, m.profile_json, m.xp, m.participation_count,
     m.organizer_count, s.subscription_started_at,
@@ -801,6 +803,7 @@ async function register(request: Request, env: SitesEnv, db: D1Database) {
     password_hash: passwordHash,
     display_name: member.display_name || email.split("@")[0],
     last_signed_in_at: now,
+    password_set_at: now,
   };
   const session = await createSession(db, member.id);
   return responseJson(

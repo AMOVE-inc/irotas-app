@@ -162,6 +162,7 @@ export function parseDiscordBoardArchive(archive: RawDiscordBoardArchive, direct
     const recruitmentStatus = override?.status ?? inferImportedRecruitmentStatus(category, record.title, preview);
     return {
       id: record.id,
+      createdAt: record.createdAt,
       title: override?.title ?? cleanDiscordBoardTitle(record.title),
       author: authorFor(record, directory, authorFallbacks),
       category,

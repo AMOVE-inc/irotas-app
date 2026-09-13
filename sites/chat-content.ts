@@ -458,15 +458,17 @@ async function serializeRoom(db: D1Database, room: RoomRow, member: Viewer, visi
     LEFT JOIN chat_room_reads crr ON crr.room_id = cm.room_id AND crr.member_id = ?
     WHERE cm.room_id = ? AND cm.deleted_at IS NULL AND cm.sender_member_id != ?
       AND (? IS NULL OR cm.created_at >= ?)
+      AND julianday(cm.created_at) > julianday((SELECT COALESCE(password_set_at, last_signed_in_at) FROM members WHERE id = ?))
       AND (crr.last_read_at IS NULL OR cm.created_at > crr.last_read_at)`)
-    .bind(member.id, room.id, member.id, visibleFrom ?? null, visibleFrom ?? null).first<{ count: number }>();
+    .bind(member.id, room.id, member.id, visibleFrom ?? null, visibleFrom ?? null, member.id).first<{ count: number }>();
   const mentions = await db.prepare(`SELECT COUNT(*) AS count FROM chat_messages cm
     LEFT JOIN chat_room_reads crr ON crr.room_id = cm.room_id AND crr.member_id = ?
     WHERE cm.room_id = ? AND cm.deleted_at IS NULL AND cm.sender_member_id != ?
       AND (? IS NULL OR cm.created_at >= ?)
+      AND julianday(cm.created_at) > julianday((SELECT COALESCE(password_set_at, last_signed_in_at) FROM members WHERE id = ?))
       AND (crr.last_read_at IS NULL OR cm.created_at > crr.last_read_at)
       AND (cm.content LIKE ? OR cm.content LIKE '%@全員%' OR cm.content LIKE '%@everyone%' OR cm.content LIKE '%@here%')`)
-    .bind(member.id, room.id, member.id, visibleFrom ?? null, visibleFrom ?? null, `%@${viewerDisplayName}%`).first<{ count: number }>();
+    .bind(member.id, room.id, member.id, visibleFrom ?? null, visibleFrom ?? null, member.id, `%@${viewerDisplayName}%`).first<{ count: number }>();
   const creator = room.created_by_member_id
     ? await db.prepare("SELECT public_member_id FROM members WHERE id = ? LIMIT 1")
       .bind(room.created_by_member_id).first<{ public_member_id: string | null }>()

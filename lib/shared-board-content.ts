@@ -76,6 +76,7 @@ export function sharedThreadToBoardThread(record: SharedBoardThread, viewerId: s
   const data = record.data as Partial<BoardThread>;
   return {
     id: record.id,
+    createdAt: record.createdAt,
     title: cleanDiscordBoardTitle(record.title),
     author: memberFor(record.authorId, record.authorName, { avatarUrl: record.authorAvatarUrl, memberTerm: record.authorMemberTerm, rank: record.authorRank }),
     category: record.category,

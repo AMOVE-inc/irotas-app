@@ -1970,6 +1970,7 @@ function CreateThreadModal({
     const normalizedMenu = recommendedMenu.trim();
     let newThread: BoardThread = {
       id: `t_new_${Date.now()}`,
+      createdAt: new Date().toISOString(),
       title: isMealReport ? (mealTitle.trim() || restaurantName.trim()) : isGourmetAdvice ? adviceTheme.trim() : isIntroduction ? "自己紹介" : title.trim(),
       author,
       category: category as BoardThread["category"],
@@ -2692,17 +2693,20 @@ export default function BoardScreen() {
     () => (authUser ? dynamicThreads : applyBoardThreadEdits([...dynamicThreads, ...BOARD_THREADS], editedThreads)).filter((thread) => !deletedThreadIds.includes(thread.id)),
     [authUser, dynamicThreads, editedThreads, deletedThreadIds],
   );
+  const firstSignInTime = authUser?.firstSignedIn?.getTime() ?? authUser?.lastSignedIn?.getTime() ?? 0;
+  const postedAfterFirstSignIn = (createdAt: string | undefined) => Boolean(createdAt) && Date.parse(createdAt!) > firstSignInTime;
   const categoryUnreadStatus = useCallback((categoryKey: string): "mention" | "unread" | null => {
     if (!threadReadsHydrated) return null;
     let hasUnread = false;
     for (const thread of allThreads.filter((item) => item.category === categoryKey)) {
-      if (threadReadCounts[thread.id] === undefined && thread.author.id !== viewerMemberId && mentionsViewer(`${thread.title} ${thread.preview}`, viewerMentionLabels)) return "mention";
-      const comments = (importedComments[thread.id] ?? []).slice(threadReadCounts[thread.id] ?? 0).filter((comment) => comment.author.id !== viewerMemberId);
+      const newThread = threadReadCounts[thread.id] === undefined && thread.author.id !== viewerMemberId && postedAfterFirstSignIn(thread.createdAt);
+      if (newThread && mentionsViewer(`${thread.title} ${thread.preview}`, viewerMentionLabels)) return "mention";
+      const comments = (importedComments[thread.id] ?? []).slice(threadReadCounts[thread.id] ?? 0).filter((comment) => comment.author.id !== viewerMemberId && postedAfterFirstSignIn(comment.createdAt));
       if (comments.some((comment) => mentionsViewer(comment.content, viewerMentionLabels))) return "mention";
-      if (comments.length) hasUnread = true;
+      if (comments.length || newThread) hasUnread = true;
     }
     return hasUnread ? "unread" : null;
-  }, [allThreads, importedComments, threadReadCounts, threadReadsHydrated, viewerMemberId, viewerMentionLabels]);
+  }, [allThreads, importedComments, threadReadCounts, threadReadsHydrated, viewerMemberId, viewerMentionLabels, firstSignInTime]);
   const markCategoryRead = useCallback((categoryKey: string) => {
     setThreadReadCounts((current) => {
       const next = { ...current };
@@ -2972,14 +2976,15 @@ export default function BoardScreen() {
         renderItem={({ item }) => (
           activeCategory === "introduction" ? <SelfIntroductionMessage thread={item} /> : (() => {
             const comments = importedComments[item.id] ?? [];
-            const unreadComments = threadReadsHydrated ? comments.slice(threadReadCounts[item.id] ?? 0).filter((comment) => comment.author.id !== viewerMemberId) : [];
-            const postMention = threadReadsHydrated && threadReadCounts[item.id] === undefined && item.author.id !== viewerMemberId && mentionsViewer(`${item.title} ${item.preview}`, viewerMentionLabels);
+            const unreadComments = threadReadsHydrated ? comments.slice(threadReadCounts[item.id] ?? 0).filter((comment) => comment.author.id !== viewerMemberId && postedAfterFirstSignIn(comment.createdAt)) : [];
+            const newThread = threadReadsHydrated && threadReadCounts[item.id] === undefined && item.author.id !== viewerMemberId && postedAfterFirstSignIn(item.createdAt);
+            const postMention = newThread && mentionsViewer(`${item.title} ${item.preview}`, viewerMentionLabels);
             const mentionCount = unreadComments.filter((comment) => mentionsViewer(comment.content, viewerMentionLabels)).length + (postMention ? 1 : 0);
             return <ThreadCard
             thread={item}
             comments={comments}
             showMenu={item.category !== "introduction"}
-            unreadCount={unreadComments.length + (postMention ? 1 : 0)}
+            unreadCount={unreadComments.length + (newThread ? 1 : 0)}
             mentionCount={mentionCount}
             onPress={() => { markThreadRead(item.id); setSelectedThread(item); router.setParams({ thread: item.id }); }}
             onEdit={item.author.id === viewerMemberId || userCanModerateAll ? () => setEditingThread(item) : undefined}

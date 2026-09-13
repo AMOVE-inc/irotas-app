@@ -217,6 +217,7 @@ export interface BoardPoll {
 
 export interface BoardThread {
   id: string;
+  createdAt?: string;
   title: string;
   author: Member;
   category: string;
