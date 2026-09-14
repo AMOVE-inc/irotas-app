@@ -1190,14 +1190,14 @@ export async function askConcierge(query: string) {
   return apiCall<{ reply: string; places: Array<{ id?: string; name?: string; address?: string; rating?: number; reviewCount?: number; url?: string; genre?: string }> }>("/api/concierge/search", { method: "POST", body: JSON.stringify({ query }) });
 }
 
-export async function uploadEventImage(uri: string) {
+export async function uploadEventImage(uri: string, contentTypeOverride?: string) {
   const source = await fetch(uri);
   if (!source.ok) throw new Error("画像を読み込めませんでした");
   const blob = await source.blob();
   const baseUrl = getApiBaseUrl();
   const cleanBaseUrl = baseUrl.endsWith("/") ? baseUrl.slice(0, -1) : baseUrl;
   const headers: Record<string, string> = {
-    "content-type": blob.type || "image/jpeg",
+    "content-type": contentTypeOverride || blob.type || "image/jpeg",
   };
   if (Platform.OS !== "web") {
     const sessionToken = await Auth.getSessionToken();

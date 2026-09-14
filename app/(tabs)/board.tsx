@@ -1865,7 +1865,7 @@ function CreateThreadModal({
   const [isRecruiting, setIsRecruiting] = useState(false);
   const [capacity, setCapacity] = useState("");
   const [images, setImages] = useState<string[]>([]);
-  const [videos, setVideos] = useState<string[]>([]);
+  const [videos, setVideos] = useState<{ uri: string; mimeType?: string }[]>([]);
   const [restaurantName, setRestaurantName] = useState("");
   const [mealTitle, setMealTitle] = useState("");
   const [prefecture, setPrefecture] = useState("");
@@ -1937,7 +1937,7 @@ function CreateThreadModal({
       if (status !== "granted") { Alert.alert("権限が必要です", "動画ライブラリへのアクセスを許可してください"); return; }
     }
     const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ["videos"], allowsMultipleSelection: true, selectionLimit: Math.max(1, 3 - videos.length) });
-    if (!result.canceled) setVideos((current) => [...current, ...result.assets.map((asset) => asset.uri)].slice(0, 3));
+    if (!result.canceled) setVideos((current) => [...current, ...result.assets.map((asset) => ({ uri: asset.uri, mimeType: asset.mimeType ?? undefined }))].slice(0, 3));
   };
 
   const detectMealReportArea = async () => {
@@ -2004,7 +2004,7 @@ function CreateThreadModal({
       recruitParticipants: [],
       recruitApplicants: [],
       images: images.length > 0 ? images : undefined,
-      videos: videos.length > 0 ? videos : undefined,
+      videos: videos.length > 0 ? videos.map((video) => video.uri) : undefined,
       mealReport: isMealReport
         ? {
             postTitle: mealTitle.trim() || undefined,
@@ -2038,7 +2038,7 @@ function CreateThreadModal({
       }
     }
     if (newThread.videos?.length) {
-      try { newThread = { ...newThread, videos: await Promise.all(newThread.videos.map(async (uri) => (await Api.uploadEventImage(uri)).imageUrl)) }; }
+      try { newThread = { ...newThread, videos: await Promise.all(newThread.videos.map(async (uri, index) => (await Api.uploadEventImage(uri, videos[index]?.mimeType)).imageUrl)) }; }
       catch (error) { setFormError(error instanceof Error ? error.message : "動画を保存できませんでした。もう一度お試しください。"); return; }
     }
     let savedThread: BoardThread;
@@ -2385,7 +2385,7 @@ function CreateThreadModal({
 
           <View style={{ marginBottom: 16 }}>
             <Text style={{ fontSize: 13, fontWeight: "600", color: colors.muted, marginBottom: 8 }}>動画（最大3本・各30MBまで）</Text>
-            {videos.map((uri, index) => <View key={`${uri}-${index}`} style={{ flexDirection: "row", alignItems: "center", paddingVertical: 7 }}><Text style={{ flex: 1, color: colors.foreground }} numberOfLines={1}>動画 {index + 1}</Text><Pressable accessibilityLabel={`動画${index + 1}を削除`} onPress={() => setVideos((current) => current.filter((_, i) => i !== index))}><Text style={{ color: colors.error, fontWeight: "800" }}>削除</Text></Pressable></View>)}
+            {videos.map((video, index) => <View key={`${video.uri}-${index}`} style={{ flexDirection: "row", alignItems: "center", paddingVertical: 7 }}><Text style={{ flex: 1, color: colors.foreground }} numberOfLines={1}>動画 {index + 1}</Text><Pressable accessibilityLabel={`動画${index + 1}を削除`} onPress={() => setVideos((current) => current.filter((_, i) => i !== index))}><Text style={{ color: colors.error, fontWeight: "800" }}>削除</Text></Pressable></View>)}
             {videos.length < 3 ? <Pressable onPress={() => void handlePickVideo()} style={{ alignSelf: "flex-start", borderRadius: 10, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface, paddingHorizontal: 14, paddingVertical: 10 }}><Text style={{ color: colors.foreground, fontWeight: "800" }}>＋ 動画を追加</Text></Pressable> : null}
           </View>
 
