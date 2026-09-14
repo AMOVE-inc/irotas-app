@@ -1028,6 +1028,12 @@ export async function getBoardArchive(scope: "all" | "public" = "all") {
   return apiCall<RawDiscordBoardArchive>(`/api/board/archive?scope=${scope}`);
 }
 
+export async function getArchivedIntroductionProfile(authorId: string) {
+  return apiCall<{ name: string; avatarUrl: string; bio: string }>(
+    `/api/board/introduction-profile?authorId=${encodeURIComponent(authorId)}`,
+  );
+}
+
 export async function getClub(clubId: string) {
   const result = await apiCall<{ club: ClubRecord }>(
     `/api/clubs/${encodeURIComponent(clubId)}`,
@@ -1126,6 +1132,18 @@ export async function setPrivateMemberNote(memberId: string, note: string) {
 export async function getEvents(options?: { includeCancelled?: boolean }) {
   const result = await apiCall<{ events: Event[] }>(`/api/events${options?.includeCancelled ? "?includeCancelled=1" : ""}`, { cache: "no-store" });
   return result.events;
+}
+
+export type AdminAnalytics = {
+  totalMembers: number;
+  genderCounts: Record<string, number>;
+  rankCounts: Record<string, number>;
+  branchCounts: Record<string, number>;
+  monthlyJoins: Record<string, number>;
+};
+
+export async function getAdminAnalytics() {
+  return apiCall<AdminAnalytics>("/api/admin/analytics", { cache: "no-store" });
 }
 
 export async function getEventsWithDeletedImportedIds(options?: { includeCancelled?: boolean }) {
@@ -1234,6 +1252,39 @@ export async function applyToEvent(
     method: "POST",
     body: JSON.stringify({ termsAccepted, pointsToUse }),
   });
+}
+
+export type EventCheckout = {
+  status: "free" | "unstarted" | "creating" | "ready" | "paid";
+  amountYen: number;
+  pointsUsed: number;
+  checkoutUrl?: string;
+};
+
+export async function getEventCheckout(eventId: string) {
+  return apiCall<EventCheckout>(`/api/events/${encodeURIComponent(eventId)}/checkout`);
+}
+
+export async function createEventCheckout(eventId: string) {
+  return apiCall<EventCheckout>(`/api/events/${encodeURIComponent(eventId)}/checkout`, { method: "POST" });
+}
+
+export type AdminEventPayment = {
+  id: string;
+  eventId: string;
+  eventTitle: string;
+  memberId: string;
+  memberName: string;
+  amountYen: number;
+  pointsUsed: number;
+  status: "creating" | "ready" | "paid" | "cancelled";
+  createdAt: string;
+  paidAt: string | null;
+  cancelledAt: string | null;
+};
+
+export async function getAdminEventPayments() {
+  return apiCall<{ payments: AdminEventPayment[] }>("/api/admin/event-payments");
 }
 
 export async function reviewEventApplicant(

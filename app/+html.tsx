@@ -24,11 +24,11 @@ export default function Root({ children }: PropsWithChildren) {
         <meta property="og:site_name" content="IRO+" />
         <meta property="og:description" content="IRO+ 食のコミュニティアプリ" />
         <meta property="og:type" content="website" />
-        <meta property="og:image" content="https://irotas-app-20260721.k1998915n.chatgpt.site/pwa/icon-1024.png?v=198" />
+        <meta property="og:image" content="https://app.irotas-community.com/pwa/icon-1024.png?v=198" />
         <meta property="og:image:width" content="1080" />
         <meta property="og:image:height" content="1080" />
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:image" content="https://irotas-app-20260721.k1998915n.chatgpt.site/pwa/icon-1024.png?v=198" />
+        <meta name="twitter:image" content="https://app.irotas-community.com/pwa/icon-1024.png?v=198" />
         <link rel="manifest" href="/manifest.webmanifest" />
         <link rel="apple-touch-icon" href="/pwa/icon-1024.png" />
         <title>IRO+</title>

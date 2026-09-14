@@ -46,10 +46,6 @@ function isAdmin(member: NonNullable<Awaited<ReturnType<typeof authenticatedRequ
   return member.role === "admin" || member.access_role === "admin";
 }
 
-function canReviewApplications(member: NonNullable<Awaited<ReturnType<typeof authenticatedRequestMember>>>) {
-  return isAdmin(member) || member.role === "operator" || member.access_role === "operator";
-}
-
 async function readBody(request: Request) {
   const raw = await request.text();
   if (new TextEncoder().encode(raw).byteLength > MAX_BODY_BYTES) return null;
@@ -201,7 +197,7 @@ export async function handleClubRequest(request: Request, env: SitesEnv): Promis
   const member = await authenticatedRequestMember(request, env);
   if (!member) return json({ error: "ログインが必要です" }, 401);
   const elevated = isAdmin(member);
-  const applicationReviewer = canReviewApplications(member);
+  const applicationReviewer = isAdmin(member);
 
   if (pathname === CLUBS_PATH && request.method === "GET") {
     await reconcileDiscordClubMemberships(env.DB);
@@ -262,7 +258,7 @@ export async function handleClubRequest(request: Request, env: SitesEnv): Promis
     const targetPublicId = decodeURIComponent(reviewMatch[2]);
     const row = await clubRow(env.DB, id);
     if (!row) return json({ error: "部活が見つかりません" }, 404);
-    if (!(applicationReviewer || row.leader_member_id === member.id)) return json({ error: "この部活の部長・運営メンバー・管理者のみ承認できます" }, 403);
+    if (!(applicationReviewer || row.leader_member_id === member.id)) return json({ error: "この部活の部長または管理者のみ承認できます" }, 403);
     const targetId = await memberIdFromPublicId(env.DB, targetPublicId);
     const input = await readBody(request);
     const action = input?.action;
@@ -296,7 +292,7 @@ export async function handleClubRequest(request: Request, env: SitesEnv): Promis
     const targetPublicId = decodeURIComponent(reviewMatch[2]);
     const row = await clubRow(env.DB, id);
     if (!row) return json({ error: "部活が見つかりません" }, 404);
-    if (!(applicationReviewer || row.leader_member_id === member.id)) return json({ error: "申請者情報を確認できるのは、この部活の部長・運営メンバー・管理者のみです" }, 403);
+    if (!(applicationReviewer || row.leader_member_id === member.id)) return json({ error: "申請者情報を確認できるのは、この部活の部長または管理者のみです" }, 403);
     const targetId = await memberIdFromPublicId(env.DB, targetPublicId);
     if (!targetId) return json({ error: "メンバーが見つかりません" }, 404);
     const application = await env.DB.prepare(`SELECT status, wants_to_do, message_to_leader, applied_at

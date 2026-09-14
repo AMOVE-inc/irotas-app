@@ -16,7 +16,7 @@ import {
   type ChatRoom,
 } from "@/constants/mock-data";
 import { useAuthContext } from "@/lib/auth-context";
-import { isAdminRole, canPostToChat } from "@/lib/access-control";
+import { isAdminRole, isOperatorRole, canPostToChat } from "@/lib/access-control";
 import { getAllRooms, getRoomById, getMessages, saveMessagesToStorage, deleteMessageFromStorage, loadMessagesFromStorage, loadDynamicRooms, markRoomRead, renameRoom, addMemberToRoom, removeMemberFromRoom, toggleMessageReaction } from "@/lib/chat-store";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useColors } from "@/hooks/use-colors";
@@ -44,15 +44,15 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
   requestNotificationPermissions,
-  sendMentionNotification,
 } from "@/lib/notifications";
 import { canAccessChatRoom } from "@/lib/chat-access";
 import { getFriends } from "@/lib/friendship";
-import { getMentionGroups, getMentionQuery, getMentionedMemberIds, insertMention } from "@/lib/mentions";
+import { getMentionGroups, getMentionQuery, insertMention } from "@/lib/mentions";
 import { type TextSelection } from "@/lib/text-formatting";
 import * as Api from "@/lib/_core/api";
 import { getDiscordAuthorByName } from "@/lib/discord-author-directory";
 import { displayMemberName } from "@/lib/display-name";
+import { importedIntroductionReactions } from "@/lib/introduction-reactions";
 
 const REACTION_EMOJIS = ["👍", "❤️", "😂", "🎉", "😋", "🙏"] as const;
 const MORE_REACTION_EMOJIS = ["😀", "😃", "😄", "😁", "😆", "😅", "😂", "🤣", "😊", "😇", "🙂", "🙃", "😉", "😍", "🥰", "😘", "😋", "😛", "🤪", "🤔", "🫡", "😎", "🥳", "😮", "😢", "😭", "😡", "👍", "👎", "👏", "🙌", "🙏", "💪", "👀", "❤️", "🩷", "🧡", "💛", "💚", "💙", "💜", "🖤", "🤍", "🔥", "✨", "🎉", "💯", "✅", "❌", "💡", "📌", "🍽️", "🍣", "🍖", "🍜", "🍕", "🍰", "☕", "🍺", "🍷"] as const;
@@ -95,6 +95,8 @@ function importedIntroductionMessages(archive: Awaited<ReturnType<typeof Api.get
     senderAvatar: record.authorAvatarUrl ?? undefined,
     content: record.content,
     createdAt: record.createdAt,
+    attachmentUrls: record.images,
+    reactions: importedIntroductionReactions(record.id, record.reactions),
   })).filter((message) => message.content.trim().length > 0)
     .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
 }
@@ -107,7 +109,7 @@ function systemMessageText(content: string): string {
   return joined ? `${stripRankFromName(joined[1])}がチャットに参加しました` : text;
 }
 
-function MessageBubble({ message, isMe, canDelete, viewerId, viewerName, viewerAvatarUrl, myAvatarUri, senderMember, memberDirectory, onReact, mentionGroups, onOpenInternalLink, onOpenProfile, onReply, onEdit, onDelete }: { message: ChatMessage; isMe: boolean; canDelete: boolean; viewerId: string; viewerName: string; viewerAvatarUrl?: string; myAvatarUri?: string | null; senderMember?: Api.PublicMember; memberDirectory: Api.PublicMember[]; onReact: (emoji: string, pollChoices?: string[], allowMultiple?: boolean) => void; mentionGroups: ReturnType<typeof getMentionGroups>; onOpenInternalLink: (pathname: "/chat" | "/board" | "/event-detail", params: Record<string, string>) => void; onOpenProfile: () => void; onReply: () => void; onEdit: () => void; onDelete: () => void }) {
+function MessageBubble({ message, isMe, canDelete, readOnly, viewerId, viewerName, viewerAvatarUrl, myAvatarUri, senderMember, memberDirectory, onReact, mentionGroups, onOpenInternalLink, onOpenProfile, onReply, onEdit, onDelete }: { message: ChatMessage; isMe: boolean; canDelete: boolean; readOnly?: boolean; viewerId: string; viewerName: string; viewerAvatarUrl?: string; myAvatarUri?: string | null; senderMember?: Api.PublicMember; memberDirectory: Api.PublicMember[]; onReact: (emoji: string, pollChoices?: string[], allowMultiple?: boolean) => void; mentionGroups: ReturnType<typeof getMentionGroups>; onOpenInternalLink: (pathname: "/chat" | "/board" | "/event-detail", params: Record<string, string>) => void; onOpenProfile: () => void; onReply: () => void; onEdit: () => void; onDelete: () => void }) {
   const colors = useColors();
   const sender = getMemberById(message.senderId);
   const [showReactionPicker, setShowReactionPicker] = useState(false);
@@ -175,7 +177,7 @@ function MessageBubble({ message, isMe, canDelete, viewerId, viewerName, viewerA
             <MemberClubLeaderBadges roles={senderMember?.discordRoles} compact />
           </View>
         ) : null}
-        <Pressable onLongPress={() => setShowActions(true)} delayLongPress={350}
+        <Pressable onLongPress={() => readOnly ? void Clipboard.setStringAsync(message.content) : setShowActions(true)} delayLongPress={350}
           style={{
             backgroundColor: isMe ? "#E8A0BF" : "#ECECEF",
             borderWidth: isMe ? 0 : 1,
@@ -203,7 +205,7 @@ function MessageBubble({ message, isMe, canDelete, viewerId, viewerName, viewerA
           ) : null}
           {message.content ? (
             <View style={{ paddingHorizontal: 14, paddingVertical: 10 }}>
-              {pollChoices.length >= 2 ? <View style={{ minWidth: 220 }}><MentionText content={pollLines[0].replace(/^📊 /, "")} outgoing={isMe} groups={mentionGroups} /><Text style={{ fontSize: 10, fontWeight: "800", color: isMe ? "#FFF" : colors.muted, marginTop: 5 }}>{pollAllowsMultiple ? "複数回答可" : "1つ選択"}</Text><View style={{ gap: 7, marginTop: 10 }}>{pollChoices.map((choice) => { const voteKey = `🗳️${choice}`; const voters = message.reactions?.[voteKey] ?? []; const selected = voters.includes(viewerId); return <Pressable key={choice} onPress={() => onReact(voteKey, pollChoices, pollAllowsMultiple)} style={{ borderRadius: 8, paddingHorizontal: 10, paddingVertical: 9, borderWidth: 1, borderColor: selected ? "#5865F2" : isMe ? "#FFF8" : colors.border, backgroundColor: selected ? "#5865F228" : "transparent" }}><Text style={{ fontSize: 13, fontWeight: "800", color: isMe ? "#FFF" : colors.foreground }}>{selected ? "●" : "○"} {choice}　{voters.length}</Text></Pressable>; })}</View><Text style={{ fontSize: 10, color: isMe ? "#FFF" : colors.muted, marginTop: 9 }}>{pollLines.find((line) => line.startsWith("⏱"))}</Text></View> : <MentionText content={message.content} outgoing={isMe} groups={mentionGroups} rooms={getAllRooms()} threads={BOARD_THREADS} onOpenInternalLink={onOpenInternalLink} />}
+              {pollChoices.length >= 2 ? <View style={{ minWidth: 220 }}><MentionText content={pollLines[0].replace(/^📊 /, "")} outgoing={isMe} groups={mentionGroups} /><Text style={{ fontSize: 10, fontWeight: "800", color: isMe ? "#FFF" : colors.muted, marginTop: 5 }}>{pollAllowsMultiple ? "複数回答可" : "1つ選択"}</Text><View style={{ gap: 7, marginTop: 10 }}>{pollChoices.map((choice) => { const voteKey = `🗳️${choice}`; const voters = message.reactions?.[voteKey] ?? []; const selected = voters.includes(viewerId); return <Pressable key={choice} disabled={readOnly} onPress={() => onReact(voteKey, pollChoices, pollAllowsMultiple)} style={{ borderRadius: 8, paddingHorizontal: 10, paddingVertical: 9, borderWidth: 1, borderColor: selected ? "#5865F2" : isMe ? "#FFF8" : colors.border, backgroundColor: selected ? "#5865F228" : "transparent" }}><Text style={{ fontSize: 13, fontWeight: "800", color: isMe ? "#FFF" : colors.foreground }}>{selected ? "●" : "○"} {choice}　{voters.length}</Text></Pressable>; })}</View><Text style={{ fontSize: 10, color: isMe ? "#FFF" : colors.muted, marginTop: 9 }}>{pollLines.find((line) => line.startsWith("⏱"))}</Text></View> : <MentionText content={message.content} outgoing={isMe} groups={mentionGroups} rooms={getAllRooms()} threads={BOARD_THREADS} onOpenInternalLink={onOpenInternalLink} />}
             </View>
           ) : null}
         </Pressable>
@@ -222,6 +224,7 @@ function MessageBubble({ message, isMe, canDelete, viewerId, viewerName, viewerA
           {Object.entries(message.reactions ?? {}).filter(([emoji]) => !emoji.startsWith("🗳️")).map(([emoji, memberIds]) => (
             <Pressable
               key={emoji}
+              disabled={readOnly}
               onPress={() => {
                 if (reactionLongPress.current) {
                   reactionLongPress.current = false;
@@ -240,11 +243,11 @@ function MessageBubble({ message, isMe, canDelete, viewerId, viewerName, viewerA
               <Text style={{ fontSize: 10, fontWeight: "700", color: colors.muted, marginLeft: 3 }}>{memberIds.length}</Text>
             </Pressable>
           ))}
-          <Pressable onPress={() => setShowReactionPicker((value) => !value)} accessibilityLabel="リアクションを追加" style={{ paddingHorizontal: 5, paddingVertical: 2 }}>
+          {!readOnly ? <Pressable onPress={() => setShowReactionPicker((value) => !value)} accessibilityLabel="リアクションを追加" style={{ paddingHorizontal: 5, paddingVertical: 2 }}>
             <Text style={{ fontSize: 15, color: colors.muted }}>☺︎＋</Text>
-          </Pressable>
+          </Pressable> : null}
         </View>
-        {showReactionPicker ? (
+        {showReactionPicker && !readOnly ? (
           <View style={{ maxWidth: 280, flexDirection: "row", flexWrap: "wrap", borderRadius: 18, paddingHorizontal: 6, paddingVertical: 5, marginTop: 4, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, alignSelf: isMe ? "flex-end" : "flex-start" }}>
             {REACTION_EMOJIS.map((emoji) => <Pressable key={emoji} onPress={() => { onReact(emoji); setShowReactionPicker(false); }} style={{ paddingHorizontal: 5, paddingVertical: 2 }}><Text style={{ fontSize: 19 }}>{emoji}</Text></Pressable>)}
             <Pressable onPress={() => setShowMoreReactions((value) => !value)} style={{ paddingHorizontal: 7, paddingVertical: 4, borderRadius: 12, backgroundColor: colors.background }}><Text style={{ fontSize: 11, fontWeight: "800", color: colors.foreground }}>{showMoreReactions ? "閉じる" : "その他"}</Text></Pressable>
@@ -264,6 +267,7 @@ export default function ChatScreen() {
   const { user: authUser } = useAuthContext();
   const viewerMemberId = authUser?.memberId ?? (authUser?.id ? `member-${authUser.id}` : CURRENT_USER.id);
   const userIsAdmin = isAdminRole(authUser?.role, authUser?.accessRole);
+  const canViewAllChats = isOperatorRole(authUser?.role, authUser?.accessRole);
   const { id, unreadCount: unreadCountParam } = useLocalSearchParams<{ id: string; unreadCount?: string }>();
   const [messageText, setMessageText] = useState("");
   const [editingMessage, setEditingMessage] = useState<ChatMessage | null>(null);
@@ -295,6 +299,7 @@ export default function ChatScreen() {
   const [room, setRoom] = useState(() => getRoomById(id ?? "") ?? (id === "community-free-chat" ? {
     id, name: "フリーチャット", type: "board" as const, sourceId: "community-free-chat", participants: [], createdBy: "system", shared: true,
   } : undefined));
+  const staffViewingOnly = Boolean(canViewAllChats && room && (room.type === "dm" || room.type === "club") && !room.participants.includes(viewerMemberId));
   const [clubAccessDenied, setClubAccessDenied] = useState(false);
   const [roomParticipants, setRoomParticipants] = useState<string[]>(
     () => getRoomById(id ?? "")?.participants ?? []
@@ -310,7 +315,24 @@ export default function ChatScreen() {
       role: member.accessRole === "admin" ? "admin" : member.accessRole === "operator" ? "operator" : "member",
     })) as unknown as typeof MEMBERS
     : MEMBERS, [directory]);
-  const mentionGroups = useMemo(() => getMentionGroups(mentionMembers, CLUBS), [mentionMembers]);
+  const mentionGroups = useMemo(() => {
+    const branch = room?.id === "branch-kanto-free" ? "kanto" : room?.id === "branch-kansai-free" ? "kansai" : null;
+    const branchMemberIds = branch
+      ? directory.filter((member) => member.branches.includes(branch)).map((member) => member.id)
+      : [];
+    const roomMemberIds = branch ? branchMemberIds
+      : room?.id === "community-free-chat" ? mentionMembers.map((member) => member.id)
+      : roomParticipants;
+    const groups = getMentionGroups(mentionMembers, CLUBS).map((group) => group.id === "everyone"
+      ? { ...group, description: "このチャットの対象メンバー全員", memberIds: roomMemberIds }
+      : group);
+    groups.push(
+      { id: "all-current-room", label: "全体", description: "このチャットの対象メンバー全員", memberIds: roomMemberIds, category: "everyone" },
+      { id: "chat-participants", label: "チャット内の人全員", description: "このチャットの参加者全員", memberIds: roomMemberIds, category: "everyone" },
+    );
+    if (branch) groups.push({ id: "current-branch", label: "支部全員", description: "この支部のメンバー全員", memberIds: branchMemberIds, category: "branch" });
+    return groups;
+  }, [mentionMembers, directory, room?.id, roomParticipants]);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const introductionChat = id === "board-introduction";
   // inverted リストではデータの先頭が入力欄側に置かれるため、最新メッセージを
@@ -489,6 +511,7 @@ export default function ChatScreen() {
 
   const handleSend = useCallback(async () => {
     if (sendingRef.current) return;
+    if (staffViewingOnly) return;
     if (!canPostToChat(authUser?.role, id ?? "", authUser?.accessRole)) return;
     if (!messageText.trim() && !pendingImage) return;
     const content = messageText.trim();
@@ -510,15 +533,6 @@ export default function ChatScreen() {
       setPendingImage(null);
       setMentionQuery(null);
 
-      // メンション通知を送信
-      if (room && content.includes("@")) {
-        const preview = content.length > 50 ? `${content.slice(0, 50)}...` : content;
-        const targets = getMentionedMemberIds(content, MEMBERS, mentionGroups, room.participants).filter((memberId) => memberId !== viewerMemberId);
-        for (const memberId of targets) {
-          const member = getMemberById(memberId);
-          if (member) void sendMentionNotification(member.name, authUser?.name ?? "メンバー", room.name, preview);
-        }
-      }
     } catch (error) {
       if (error instanceof Api.ApiError && error.statusCode === 404) {
         pendingSendRef.current = null;
@@ -543,9 +557,10 @@ export default function ChatScreen() {
     } finally {
       sendingRef.current = false;
     }
-  }, [messageText, pendingImage, id, room, mentionGroups, authUser?.role, authUser?.accessRole, authUser?.name, viewerMemberId]);
+  }, [messageText, pendingImage, id, room, authUser?.role, authUser?.accessRole, authUser?.name, viewerMemberId, staffViewingOnly]);
 
   const handleReaction = useCallback(async (messageId: string, emoji: string, pollChoices?: string[], allowMultiple = true) => {
+    if (staffViewingOnly) return;
     if (!id) return;
     const sharedMessage = messages.find((item) => item.id === messageId && item.shared);
     if (sharedMessage) {
@@ -588,7 +603,7 @@ export default function ChatScreen() {
     }
     const updated = await toggleMessageReaction(id, messageId, emoji, viewerMemberId);
     if (updated) setMessages((current) => current.map((message) => message.id === updated.id ? updated : message));
-  }, [id, messages, viewerMemberId]);
+  }, [id, messages, viewerMemberId, staffViewingOnly]);
 
   const createPoll = useCallback(async () => {
     if (!id || pollSending || !pollQuestion.trim() || pollOptions.filter((value) => value.trim()).length < 2 || !pollDeadline.trim()) return;
@@ -623,7 +638,7 @@ export default function ChatScreen() {
   }
 
   const isBranchRoom = room?.id === "branch-kanto-free" ? authUser?.branches?.includes("kanto") : room?.id === "branch-kansai-free" ? authUser?.branches?.includes("kansai") : false;
-  if (clubAccessDenied || (room && !canAccessChatRoom(room, viewerMemberId, (authUser?.memberRank ?? CURRENT_USER.rank) as typeof CURRENT_USER.rank, userIsAdmin) && room.id !== "board-announcement" && room.id !== "board-introduction" && !isBranchRoom)) {
+  if (clubAccessDenied || (room && !canAccessChatRoom(room, viewerMemberId, (authUser?.memberRank ?? CURRENT_USER.rank) as typeof CURRENT_USER.rank, canViewAllChats) && room.id !== "board-announcement" && room.id !== "board-introduction" && !isBranchRoom)) {
     return (
       <ScreenContainer edges={["top", "left", "right"]}>
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: 24 }}>
@@ -642,9 +657,9 @@ export default function ChatScreen() {
   const typeLabel = room.id === "board-announcement" ? "お知らせ" : ["community-free-chat", "branch-kanto-free", "branch-kansai-free"].includes(room.id) ? "チャット" : room.type === "event" ? "イベント" : room.type === "board" ? "掲示板" : room.type === "rank" ? "ランク専用" : room.type === "group" ? "友達グループ" : room.type === "dm" ? "DM" : "部活動";
   const typeColor = room.type === "event" ? "#E8A0BF" : room.type === "board" ? "#A7C7E7" : room.type === "rank" ? "#F59E0B" : room.type === "group" ? "#5B9BD5" : room.type === "dm" ? "#FF9500" : "#34C759";
   const firstUnreadIndex = Math.max(0, messages.length - Math.min(messages.length, Math.max(0, Number(unreadCountParam ?? 0))));
-  const canManageRoom = room.type !== "club" && (userIsAdmin || room.createdBy === viewerMemberId);
+  const canManageRoom = room.type !== "club" && !staffViewingOnly && (userIsAdmin || room.createdBy === viewerMemberId);
   const canInviteMembers = canManageRoom && room.type !== "rank" && room.type !== "event" && room.type !== "dm";
-  const canPostAnnouncement = canPostToChat(authUser?.role, room.id, authUser?.accessRole);
+  const canPostAnnouncement = !staffViewingOnly && canPostToChat(authUser?.role, room.id, authUser?.accessRole);
   const sharedInviteCandidates = directory.filter((member) => member.id !== viewerMemberId && !roomParticipants.includes(member.id));
   const localInviteCandidates = (room.type === "group" ? getFriends(CURRENT_USER.id) : MEMBERS.filter((member) => member.id !== CURRENT_USER.id))
     .filter((member) => !roomParticipants.includes(member.id));
@@ -721,14 +736,15 @@ export default function ChatScreen() {
               {Number(unreadCountParam ?? 0) > 0 && index === firstUnreadIndex ? <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginVertical: 10, paddingHorizontal: 16 }}><View style={{ flex: 1, height: 1, backgroundColor: "#E8A0BF" }} /><Text style={{ fontSize: 11, fontWeight: "900", color: "#C05B88" }}>ここから未読メッセージ</Text><View style={{ flex: 1, height: 1, backgroundColor: "#E8A0BF" }} /></View> : null}
               <MessageBubble
                 message={item}
+                readOnly={staffViewingOnly}
                 isMe={item.senderId === viewerMemberId || item.senderId === authUser?.memberId || (
                   Boolean(item.shared && item.externalAuthorName && authUser?.name) &&
                   stripRankFromName(item.externalAuthorName ?? "") === stripRankFromName(authUser?.name ?? "")
                 )}
-                canDelete={userIsAdmin || item.senderId === viewerMemberId || item.senderId === authUser?.memberId || (
+                canDelete={!staffViewingOnly && (userIsAdmin || item.senderId === viewerMemberId || item.senderId === authUser?.memberId || (
                   Boolean(item.shared && item.externalAuthorName && authUser?.name) &&
                   stripRankFromName(item.externalAuthorName ?? "") === stripRankFromName(authUser?.name ?? "")
-                )}
+                ))}
                 viewerId={viewerMemberId}
                 viewerName={authUser?.name ?? CURRENT_USER.name}
                 viewerAvatarUrl={typeof authUser?.profile?.avatarUrl === "string" ? authUser.profile.avatarUrl : undefined}
@@ -741,19 +757,16 @@ export default function ChatScreen() {
                 onOpenProfile={() => {
                   const sender = getMemberById(item.senderId);
                   const legacyName = item.externalAuthorName ?? sender?.name ?? "旧Discordメンバー";
-                  const discordAuthor = getDiscordAuthorByName(legacyName);
-                  const matchedMember = directory.find((member) => stripRankFromName(member.displayName) === stripRankFromName(legacyName));
-                  const openProfile = (memberId: string) => router.push({ pathname: "/member-profile", params: { id: memberId, legacyName } });
-                  if (item.shared && /^(member-|discord-)/.test(item.senderId)) {
+                  const matchedMember = directory.find((member) => member.id === item.senderId);
+                  const openProfile = (memberId: string) => router.push({ pathname: "/member-profile", params: { id: memberId, legacyName, legacyAvatar: item.senderAvatar ?? "" } });
+                  if (/^(member-|discord-)/.test(item.senderId)) {
                     openProfile(item.senderId);
-                  } else if (discordAuthor) {
-                    openProfile(discordAuthor.id);
                   } else if (matchedMember) {
                     openProfile(matchedMember.id);
                   } else if (item.externalAuthorName) {
                     // 表示直後でも実際の会員名簿を確認してからプロフィールを開く。
                     void Api.getMemberDirectory().then((members) => {
-                      openProfile(members.find((member) => stripRankFromName(member.displayName) === stripRankFromName(legacyName))?.id ?? item.senderId ?? sender?.id ?? "");
+                      openProfile(members.find((member) => member.id === item.senderId)?.id ?? item.senderId ?? sender?.id ?? "");
                     }).catch(() => openProfile(item.senderId ?? sender?.id ?? ""));
                   } else {
                     openProfile(item.senderId ?? sender?.id ?? "");
@@ -915,7 +928,7 @@ export default function ChatScreen() {
               />
             </Pressable>
           </View>
-        </View> : <View style={{ borderTopWidth: 1, borderTopColor: colors.border, backgroundColor: colors.surface, paddingHorizontal: 18, paddingVertical: 14, alignItems: "center" }}><View style={{ flexDirection: "row", alignItems: "center" }}><IconSymbol name="lock.fill" size={15} color={colors.muted} /><Text style={{ marginLeft: 7, fontSize: 13, fontWeight: "800", color: colors.muted }}>運営からのお知らせ専用です</Text></View><Text style={{ marginTop: 4, fontSize: 11, color: colors.muted }}>メンバーから返信することはできません</Text></View>}
+        </View> : <View style={{ borderTopWidth: 1, borderTopColor: colors.border, backgroundColor: colors.surface, paddingHorizontal: 18, paddingVertical: 14, alignItems: "center" }}><View style={{ flexDirection: "row", alignItems: "center" }}><IconSymbol name="lock.fill" size={15} color={colors.muted} /><Text style={{ marginLeft: 7, fontSize: 13, fontWeight: "800", color: colors.muted }}>{staffViewingOnly ? "閲覧のみ可能です" : "運営からのお知らせ専用です"}</Text></View><Text style={{ marginTop: 4, fontSize: 11, color: colors.muted }}>{staffViewingOnly ? "参加していないチャットには投稿できません" : "メンバーから返信することはできません"}</Text></View>}
       </KeyboardAvoidingView>
 
       <Modal visible={showAttachmentMenu} transparent animationType="fade" onRequestClose={() => setShowAttachmentMenu(false)}><Pressable onPress={() => setShowAttachmentMenu(false)} style={{ flex: 1, backgroundColor: "rgba(20,18,24,0.38)", justifyContent: "flex-end" }}><Pressable onPress={() => {}} style={{ backgroundColor: colors.background, borderTopLeftRadius: 22, borderTopRightRadius: 22, padding: 18, paddingBottom: 34 }}><Text style={{ fontSize: 16, fontWeight: "900", color: colors.foreground, marginBottom: 10 }}>添付するものを選択</Text>{[{ label: "写真", icon: "photo.fill", action: () => { setShowAttachmentMenu(false); void handlePickPhoto(); } }, { label: "投票", icon: "chart.bar.fill", action: () => { setShowAttachmentMenu(false); setShowPollComposer(true); } }].map((item) => <Pressable key={item.label} onPress={item.action} style={{ minHeight: 54, flexDirection: "row", alignItems: "center", borderBottomWidth: 0.5, borderBottomColor: colors.border }}><View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: "#5865F218", alignItems: "center", justifyContent: "center" }}><IconSymbol name={item.icon as any} size={19} color="#5865F2" /></View><Text style={{ marginLeft: 12, fontSize: 15, fontWeight: "800", color: colors.foreground }}>{item.label}</Text></Pressable>)}</Pressable></Pressable></Modal>
@@ -1119,7 +1132,7 @@ export default function ChatScreen() {
                 </View>
               );
             })}
-            {(room.type === "event" || room.type === "dm" || room.type === "group" || (room.type === "board" && !["community-free-chat", "board-introduction", "branch-kanto-free", "branch-kansai-free"].includes(room.id))) ? (
+            {!staffViewingOnly && (room.type === "event" || room.type === "dm" || room.type === "group" || (room.type === "board" && !["community-free-chat", "board-introduction", "branch-kanto-free", "branch-kansai-free"].includes(room.id))) ? (
               <Pressable
                 onPress={() => {
                   const leave = async () => {

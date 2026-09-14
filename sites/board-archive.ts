@@ -9,6 +9,7 @@ import { importedMediaPaths } from "../lib/imported-media-path";
 import type { D1Database, SitesEnv } from "./platform-types";
 
 const ARCHIVE_PATH = "/api/board/archive";
+const INTRODUCTION_PROFILE_PATH = "/api/board/introduction-profile";
 const CONTESTS_PATH = "/api/board/contests";
 
 function isPrivateClubCategory(category: string) {
@@ -54,7 +55,7 @@ export async function handleBoardArchiveRequest(
   env: SitesEnv,
 ): Promise<Response | null> {
   const url = new URL(request.url);
-  if (url.pathname !== ARCHIVE_PATH && url.pathname !== CONTESTS_PATH) return null;
+  if (url.pathname !== ARCHIVE_PATH && url.pathname !== CONTESTS_PATH && url.pathname !== INTRODUCTION_PROFILE_PATH) return null;
   if (request.method !== "GET") {
     return Response.json({ error: "許可されていない操作です" }, { status: 405 });
   }
@@ -68,6 +69,18 @@ export async function handleBoardArchiveRequest(
 
   if (url.pathname === CONTESTS_PATH) {
     return Response.json({ contests: SEEDED_GOURMET_CONTESTS }, {
+      headers: { "cache-control": "private, no-store", vary: "Cookie, Authorization" },
+    });
+  }
+
+  if (url.pathname === INTRODUCTION_PROFILE_PATH) {
+    const authorId = url.searchParams.get("authorId")?.replace(/^discord-/, "");
+    if (!authorId || !/^\d{17,20}$/.test(authorId)) return Response.json({ error: "メンバーが見つかりません" }, { status: 404 });
+    const introduction = (archive as RawDiscordBoardArchive).threads
+      .filter((thread) => thread.category === "introduction" && thread.authorId === authorId)
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt))[0];
+    if (!introduction) return Response.json({ error: "メンバーが見つかりません" }, { status: 404 });
+    return Response.json({ name: introduction.authorName, avatarUrl: introduction.authorAvatarUrl ?? "", bio: introduction.content }, {
       headers: { "cache-control": "private, no-store", vary: "Cookie, Authorization" },
     });
   }

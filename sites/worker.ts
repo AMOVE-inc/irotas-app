@@ -40,6 +40,8 @@ import { handleNonMemberIdRequest } from "./non-member-id";
 import { handleBackupReadinessRequest } from "./backup-readiness";
 import { handleBackupRequest } from "./backups";
 import { handleLinkPreviewRequest } from "./link-preview";
+import { handleAnalyticsRequest } from "./analytics";
+import { handleAdminEventPaymentsRequest, handleEventCheckoutRequest } from "./event-checkout";
 
 type CommunitySubmission = {
   reportId: string;
@@ -277,6 +279,8 @@ async function routeRequest(
   if (squareResponse) return squareResponse;
   const squareSyncResponse = await handleSquareSyncRequest(request, env);
   if (squareSyncResponse) return squareSyncResponse;
+  const analyticsResponse = await handleAnalyticsRequest(request, env);
+  if (analyticsResponse) return analyticsResponse;
   const memberImportResponse = await handleMemberImportRequest(request, env);
   if (memberImportResponse) return memberImportResponse;
   const operatorManagementResponse = await handleOperatorManagementRequest(request, env);
@@ -329,6 +333,10 @@ async function routeRequest(
   if (eventChatImportResponse) return eventChatImportResponse;
   const eventChatImportPurgeResponse = await handleEventChatImportPurgeRequest(request, env);
   if (eventChatImportPurgeResponse) return eventChatImportPurgeResponse;
+  const eventCheckoutResponse = await handleEventCheckoutRequest(request, env);
+  if (eventCheckoutResponse) return eventCheckoutResponse;
+  const adminEventPaymentsResponse = await handleAdminEventPaymentsRequest(request, env);
+  if (adminEventPaymentsResponse) return adminEventPaymentsResponse;
   const eventResponse = await handleEventRequest(request, env);
   if (eventResponse) return eventResponse;
   const eventFeedbackResponse = await handleEventFeedbackRequest(request, env);

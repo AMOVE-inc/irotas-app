@@ -8,7 +8,9 @@ const { authenticatedRequestMember, canMemberAccessClub } = vi.hoisted(() => ({
   canMemberAccessClub: vi.fn(),
 }));
 
-vi.mock("../sites/auth", () => ({ authenticatedRequestMember }));
+vi.mock("../sites/auth", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("../sites/auth")>()), authenticatedRequestMember,
+}));
 vi.mock("../sites/clubs", () => ({ canMemberAccessClub }));
 
 const eventRow = {
@@ -56,6 +58,7 @@ class EventAccessDatabase implements D1Database {
     status: "open" | "full" | "ended" | "cancelled";
   };
   participationStatus: string | null = null;
+  paymentState: string | null = null;
   cancellationPending = false;
   mutationQueries: string[] = [];
   notifications: { targetMemberId: number; type: string; eventId: string }[] = [];
@@ -69,7 +72,7 @@ class EventAccessDatabase implements D1Database {
         if (sql.includes("SELECT public_member_id FROM members")) return { public_member_id: "IRO0010" } as T;
         if (sql.includes("SELECT id FROM members WHERE public_member_id")) return { id: 10 } as T;
         if (sql.includes("FROM events e JOIN members")) return db.row as T;
-        if (sql.includes("SELECT status FROM event_participations")) return db.participationStatus ? { status: db.participationStatus } as T : null;
+        if (sql.includes("FROM event_participations WHERE event_id = ? AND member_id = ?")) return db.participationStatus ? { status: db.participationStatus, payment_state: db.paymentState } as T : null;
         if (sql.includes("FROM event_cancellation_requests") && sql.includes("status = 'pending'")) return db.cancellationPending ? { id: "cancel-1" } as T : null;
         if (sql.includes("COUNT(*) AS count FROM event_participations")) return { count: db.participationStatus === "confirmed" ? 1 : 0 } as T;
         if (sql.includes("FROM event_favorites")) return null;
@@ -78,14 +81,15 @@ class EventAccessDatabase implements D1Database {
       all: async <T>() => {
         if (sql.includes("FROM events e JOIN members")) return { results: [db.row] as T[] };
         if (sql.includes("FROM event_participations p JOIN members")) {
-          return { results: db.participationStatus ? [{ event_id: db.row.id, member_id: 10, public_member_id: "IRO0010", status: db.participationStatus }] as T[] : [] };
+          return { results: db.participationStatus ? [{ event_id: db.row.id, member_id: 10, public_member_id: "IRO0010", status: db.participationStatus, payment_state: db.paymentState }] as T[] : [] };
         }
         return { results: [] as T[] };
       },
       run: async () => {
         db.mutationQueries.push(sql);
-        if (sql.includes("INSERT INTO event_participations")) db.participationStatus = String(values[2]);
+        if (sql.includes("INSERT INTO event_participations")) { db.participationStatus = String(values[2]); db.paymentState = values[3] ? String(values[3]) : null; }
         if (sql.includes("UPDATE event_participations SET status = 'confirmed'")) db.participationStatus = "confirmed";
+        if (sql.includes("UPDATE event_participations SET status = 'applied', payment_state = 'awaiting_payment'")) { db.participationStatus = "applied"; db.paymentState = "awaiting_payment"; }
         if (sql.includes("UPDATE events SET public_data_json")) db.row.public_data_json = String(values[0]);
         if (sql.includes("UPDATE events SET status = 'open', public_data_json")) db.row = { ...db.row, status: "open", public_data_json: String(values[0]) };
         if (sql.includes("UPDATE events SET title = ?")) db.row = {
@@ -98,8 +102,8 @@ class EventAccessDatabase implements D1Database {
         if (sql.includes("UPDATE event_participations SET status = ?")) db.participationStatus = String(values[0]);
         if (sql.includes("UPDATE event_participations SET status = 'cancel_requested'")) db.participationStatus = "cancel_requested";
         if (sql.includes("UPDATE event_participations SET status = 'cancelled'")) db.participationStatus = "cancelled";
-        if (sql.includes("INSERT INTO in_app_notifications")) {
-          const type = sql.includes("'event_cancellation'") ? "event_cancellation" : "event_confirmed";
+        if (sql.includes("INTO in_app_notifications")) {
+          const type = sql.includes("'event_cancellation'") ? "event_cancellation" : sql.includes("'event_payment_ready'") ? "event_payment_ready" : "event_confirmed";
           db.notifications.push({ targetMemberId: Number(values[1]), type, eventId: String(values[4]) });
         }
         return { success: true };
@@ -230,7 +234,7 @@ describe("club event access", () => {
     expect(confirmedBody.event).toMatchObject({ viewerParticipationStatus: "confirmed", chatId: "event_chat_event-club-1" });
   });
 
-  it("immediately confirms first-come official applications and creates the event chat", async () => {
+  it("keeps paid first-come official applications pending until payment", async () => {
     db.row.event_type = "official";
     db.row.club_id = null;
     db.row.public_data_json = JSON.stringify({
@@ -249,14 +253,29 @@ describe("club event access", () => {
 
     expect(response?.status).toBe(201);
     expect(body.event).toMatchObject({
-      viewerParticipationStatus: "confirmed",
-      chatId: "event_chat_event-club-1",
+      viewerParticipationStatus: "applied",
+      viewerPaymentState: "awaiting_payment",
     });
-    expect(db.notifications).toContainEqual({
-      targetMemberId: 10,
-      type: "event_confirmed",
-      eventId: "event-club-1",
-    });
+    expect(db.notifications.some((notification) => notification.type === "event_confirmed")).toBe(false);
+  });
+
+  it("moves a selected paid lottery applicant to payment pending", async () => {
+    db.row.event_type = "official";
+    db.row.club_id = null;
+    db.row.public_data_json = JSON.stringify({ ...JSON.parse(eventRow.public_data_json), eventType: "official", selectionMethod: "lottery" });
+    const applied = await handleEventRequest(new Request("https://app.example/api/events/event-club-1/applications", {
+      method: "POST", body: JSON.stringify({ termsAccepted: true }),
+    }), env);
+    expect((await applied?.json()).event.viewerPaymentState).toBe("awaiting_selection");
+    authenticatedRequestMember.mockResolvedValue({ id: 20, role: "operator", access_role: "operator" });
+    const selected = await handleEventRequest(new Request("https://app.example/api/events/event-club-1/participants/IRO0010", {
+      method: "PATCH", body: JSON.stringify({ action: "approve" }),
+    }), env);
+    expect(selected?.status).toBe(200);
+    expect(db.participationStatus).toBe("applied");
+    expect(db.paymentState).toBe("awaiting_payment");
+    expect(db.notifications.some((notification) => notification.type === "event_payment_ready")).toBe(true);
+    expect(db.notifications.some((notification) => notification.type === "event_confirmed")).toBe(false);
   });
 
   it("notifies the organizer once for a cancellation request and the member after review", async () => {

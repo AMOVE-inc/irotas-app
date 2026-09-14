@@ -39,12 +39,13 @@ import {
 export default function MemberProfileScreen() {
   const colors = useColors();
   const router = useRouter();
-  const { id, legacyName, returnToClubRoster, clubCategory } = useLocalSearchParams<{ id: string; legacyName?: string; returnToClubRoster?: string; clubCategory?: string }>();
+  const { id, legacyName, legacyAvatar, returnToClubRoster, clubCategory } = useLocalSearchParams<{ id: string; legacyName?: string; legacyAvatar?: string; returnToClubRoster?: string; clubCategory?: string }>();
   const clubs = useClubs();
   const { user: authUser } = useAuthContext();
 
   const mockMember = getMemberById(id || "");
   const [databaseMember, setDatabaseMember] = useState<Api.PublicMember | null>(null);
+  const [archivedIntroduction, setArchivedIntroduction] = useState<{ name: string; avatarUrl: string; bio: string } | null>(null);
   const [databaseLookupComplete, setDatabaseLookupComplete] = useState(false);
   const [selfDetails, setSelfDetails] = useState<Partial<ProfileDetails> | null>(null);
   const [selfBio, setSelfBio] = useState<string | null>(null);
@@ -57,6 +58,13 @@ export default function MemberProfileScreen() {
   const discordAuthor = getDiscordAuthorById(id);
   // A Discord alias can resolve to a different canonical public member ID.
   const isLookingUpRequestedMember = Boolean(id && authUser && !databaseLookupComplete);
+
+  useEffect(() => {
+    if (!id?.startsWith("discord-") || !authUser) { setArchivedIntroduction(null); return; }
+    let active = true;
+    void Api.getArchivedIntroductionProfile(id).then((profile) => { if (active) setArchivedIntroduction(profile); }).catch(() => {});
+    return () => { active = false; };
+  }, [authUser?.id, id]);
 
   useEffect(() => {
     if (!id || !authUser) { setDatabaseMember(null); setDatabaseLookupComplete(true); return; }
@@ -101,16 +109,16 @@ export default function MemberProfileScreen() {
   const member = useMemo<Member | undefined>(() => {
     if (!databaseMember) {
       if (mockMember) return mockMember;
-      if (id?.startsWith("discord-") && (discordAuthor || legacyName)) return {
+      if (id?.startsWith("discord-") && (discordAuthor || legacyName || archivedIntroduction)) return {
         id,
-        name: discordAuthor?.name ?? legacyName!,
-        avatar: discordAuthor?.avatarUrl ? { uri: discordAuthor.avatarUrl } : DEFAULT_AVATAR,
+        name: archivedIntroduction?.name ?? discordAuthor?.name ?? legacyName!,
+        avatar: archivedIntroduction?.avatarUrl || discordAuthor?.avatarUrl || legacyAvatar ? { uri: archivedIntroduction?.avatarUrl || discordAuthor?.avatarUrl || legacyAvatar } : DEFAULT_AVATAR,
         rank: (["regular", "silver", "gold", "platinum"].includes(discordAuthor?.rank ?? "") ? discordAuthor?.rank : "regular") as MemberRank,
         points: 0,
         level: 1,
         branch: "kanto",
         generation: 0,
-        bio: "",
+        bio: archivedIntroduction?.bio ?? "",
         interests: [],
         role: "member",
         joinedAt: "2024-01-01",
@@ -128,7 +136,9 @@ export default function MemberProfileScreen() {
     return {
       id: databaseMember.id,
       name: databaseMember.displayName,
-      avatar: text("avatarUrl") ? { uri: text("avatarUrl")! } : DEFAULT_AVATAR,
+      avatar: text("avatarUrl") || archivedIntroduction?.avatarUrl || discordAuthor?.avatarUrl || legacyAvatar
+        ? { uri: text("avatarUrl") || archivedIntroduction?.avatarUrl || discordAuthor?.avatarUrl || legacyAvatar }
+        : DEFAULT_AVATAR,
       rank,
       points: databaseMember.xp,
       level: 1,
@@ -146,7 +156,7 @@ export default function MemberProfileScreen() {
       desiredRestaurants: text("desiredRestaurants"), googleLocalGuideLevel: text("googleLocalGuideLevel"),
       participationCount: databaseMember.participationCount, organizerCount: databaseMember.organizerCount,
     };
-  }, [databaseMember, discordAuthor, id, legacyName, mockMember]);
+  }, [archivedIntroduction, databaseMember, discordAuthor, id, legacyAvatar, legacyName, mockMember]);
 
   useEffect(() => {
     const isCurrentMember = databaseMember ? databaseMember.userId === authUser?.id : member?.id === CURRENT_USER.id;

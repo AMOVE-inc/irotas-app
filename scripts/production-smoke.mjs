@@ -1,6 +1,6 @@
 import { pathToFileURL } from "node:url";
 
-export const DEFAULT_BASE_URL = "https://irotas-app-20260721.k1998915n.chatgpt.site";
+export const DEFAULT_BASE_URL = "https://app.irotas-community.com";
 
 export const DEFAULT_CHECKS = [
   ...["/", "/login", "/events", "/board", "/profile"].map((path) => ({

@@ -1,6 +1,8 @@
-import { authenticatedRequestMember } from "./auth";
+import { authenticatedRequestMember, effectiveMemberRank } from "./auth";
+import { canAccessRankRoom } from "../lib/chat-access";
 import { canMemberAccessClub } from "./clubs";
 import { mentionsViewer } from "../lib/mention-matching";
+import { freeChatMentionGroups } from "../lib/chat-group-mentions";
 import type { D1Database, SitesEnv } from "./platform-types";
 
 const MESSAGES_PATH = /^\/api\/chats\/([^/]+)\/messages$/;
@@ -67,7 +69,7 @@ async function readBody(request: Request) {
 }
 
 function elevated(member: Viewer) {
-  return member.role === "admin" || member.access_role === "admin" || member.access_role === "operator";
+  return member.role === "admin" || member.role === "operator" || member.access_role === "admin" || member.access_role === "operator";
 }
 
 function administrator(member: Viewer) {
@@ -258,9 +260,9 @@ async function ensureKnownRoom(db: D1Database, roomId: string, syncClubMembers =
 }
 
 async function viewerRank(db: D1Database, memberId: number) {
-  const row = await db.prepare("SELECT member_rank FROM members WHERE id = ? LIMIT 1")
-    .bind(memberId).first<{ member_rank: string | null }>();
-  return row?.member_rank ?? "regular";
+  const row = await db.prepare("SELECT member_rank, discord_roles_json FROM members WHERE id = ? LIMIT 1")
+    .bind(memberId).first<{ member_rank: string | null; discord_roles_json: string | null }>();
+  return effectiveMemberRank(row?.member_rank, row?.discord_roles_json);
 }
 
 async function canAccessRoom(db: D1Database, room: RoomRow, member: Viewer) {
@@ -280,7 +282,7 @@ async function canAccessRoom(db: D1Database, room: RoomRow, member: Viewer) {
       .bind(room.id, member.id).first<{ left: number }>();
     if (departed) return false;
   }
-  // 個人間DMは運営・管理者であっても当事者以外は閲覧できない。
+  // 通常の参加権限。運営・管理者による閲覧の例外は canViewRoom で扱う。
   if (room.room_type === "dm") {
     const membership = await db.prepare(`SELECT 1 AS allowed FROM chat_room_members
       WHERE room_id = ? AND member_id = ? AND left_at IS NULL LIMIT 1`)
@@ -301,7 +303,7 @@ async function canAccessRoom(db: D1Database, room: RoomRow, member: Viewer) {
   }
   if (room.room_type === "announcement") return true;
   if (room.room_type === "rank")
-    return !elevated(member) && (await viewerRank(db, member.id)) === room.required_rank;
+    return canAccessRankRoom(await viewerRank(db, member.id), room.required_rank);
   if (room.room_type === "event" && room.source_id) {
     const event = await db.prepare(`SELECT event_type, club_id, organizer_member_id
       FROM events WHERE id = ? LIMIT 1`).bind(room.source_id)
@@ -320,11 +322,14 @@ async function canAccessRoom(db: D1Database, room: RoomRow, member: Viewer) {
       .bind(room.source_id, member.id).first<{ allowed: number }>();
     return Boolean(participation);
   }
-  // 運営メンバーは問い合わせ・安全対応のため全チャットを閲覧できる。
   const membership = await db.prepare(`SELECT 1 AS allowed FROM chat_room_members
     WHERE room_id = ? AND member_id = ? AND left_at IS NULL LIMIT 1`)
     .bind(room.id, member.id).first<{ allowed: number }>();
   return Boolean(membership);
+}
+
+async function canViewRoom(db: D1Database, room: RoomRow, member: Viewer) {
+  return elevated(member) || canAccessRoom(db, room, member);
 }
 
 async function memberByPublicId(db: D1Database, memberId: string) {
@@ -336,6 +341,7 @@ async function memberByPublicId(db: D1Database, memberId: string) {
 }
 
 async function canManageRoom(db: D1Database, room: RoomRow, member: Viewer) {
+  if (room.room_type === "dm" && !await canAccessRoom(db, room, member)) return false;
   if (administrator(member)) return true;
   if (room.created_by_member_id === member.id) return true;
   const membership = await db.prepare(`SELECT member_role FROM chat_room_members
@@ -474,15 +480,19 @@ async function serializeRoom(db: D1Database, room: RoomRow, member: Viewer, visi
       .bind(room.created_by_member_id).first<{ public_member_id: string | null }>()
     : null;
   const participants = participantResult.results ?? [];
-  const dmPartner = room.room_type === "dm"
+  const viewerIsParticipant = participants.some((item) => item.member_id === member.id);
+  const dmPartner = room.room_type === "dm" && viewerIsParticipant
     ? participants.find((item) => item.member_id !== member.id)
     : null;
+  const dmName = room.room_type === "dm" && !viewerIsParticipant
+    ? participants.map((item) => item.display_name).join("・") || room.name
+    : dmPartner?.display_name;
   const cancelledEvent = room.room_type === "event" && room.source_id
     ? await db.prepare("SELECT title FROM events WHERE id = ? AND status = 'cancelled' LIMIT 1").bind(room.source_id).first<{ title: string }>()
     : null;
   return {
     id: room.id,
-    name: dmPartner?.display_name || (cancelledEvent ? `【開催中止】${cancelledEvent.title}` : room.name),
+    name: dmName || (cancelledEvent ? `【開催中止】${cancelledEvent.title}` : room.name),
     type: room.room_type === "announcement" ? "board" : room.room_type,
     sourceId: room.source_id ?? room.id,
     participants: participants.map((item) => publicMemberId(item.member_id, item.public_member_id)),
@@ -535,7 +545,7 @@ export async function handleChatContentRequest(
           WHERE ep.event_id = cr.source_id AND ep.member_id = ? AND ep.status IN ('confirmed', 'cancel_requested')))
       ) ORDER BY CASE WHEN cr.room_type = 'club' THEN 0 ELSE 1 END, cr.updated_at DESC LIMIT 1000`)
       .bind(elevated(member) ? 1 : 0, member.id, member.id).all<RoomRow>();
-    const access = await Promise.all((result.results ?? []).map((room) => canAccessRoom(env.DB!, room, member)));
+    const access = await Promise.all((result.results ?? []).map((room) => canViewRoom(env.DB!, room, member)));
     const visible = (result.results ?? []).filter((_, index) => access[index]);
     return json({ rooms: await Promise.all(visible.map(async (room) => {
       const branchMembership = await ensureBranchRoomMembership(env.DB!, room, member);
@@ -612,7 +622,7 @@ export async function handleChatContentRequest(
     const roomId = decodeURIComponent(roomMatch[1]);
     const room = validRoomId(roomId) ? await ensureKnownRoom(env.DB, roomId) : null;
     if (!room) return json({ error: "チャットが見つかりません" }, 404);
-    if (!await canAccessRoom(env.DB, room, member))
+    if (!await (request.method === "GET" ? canViewRoom(env.DB, room, member) : canAccessRoom(env.DB, room, member)))
       return json({ error: "このチャットを閲覧する権限がありません" }, 403);
     if (request.method === "GET") return json({ room: await serializeRoom(env.DB, room, member) });
     if (request.method === "PATCH") {
@@ -703,7 +713,7 @@ export async function handleChatContentRequest(
     const roomId = decodeURIComponent(readMatch[1]);
     const room = validRoomId(roomId) ? await ensureKnownRoom(env.DB, roomId) : null;
     if (!room) return json({ error: "チャットが見つかりません" }, 404);
-    if (!await canAccessRoom(env.DB, room, member))
+    if (!await canViewRoom(env.DB, room, member))
       return json({ error: "このチャットを閲覧する権限がありません" }, 403);
     await env.DB.prepare(`INSERT INTO chat_room_reads (room_id, member_id, last_read_at)
       VALUES (?, ?, ?) ON CONFLICT(room_id, member_id) DO UPDATE SET last_read_at = excluded.last_read_at`)
@@ -716,7 +726,7 @@ export async function handleChatContentRequest(
     if (!validRoomId(roomId)) return json({ error: "チャットIDが不正です" }, 400);
     const room = await ensureKnownRoom(env.DB, roomId, request.method === "POST");
     if (!room) return json({ error: "チャットが見つかりません" }, 404);
-    if (!await canAccessRoom(env.DB, room, member))
+    if (!await (request.method === "GET" ? canViewRoom(env.DB, room, member) : canAccessRoom(env.DB, room, member)))
       return json({ error: "このチャットを閲覧する権限がありません" }, 403);
 
     if (request.method === "GET") {
@@ -742,6 +752,11 @@ export async function handleChatContentRequest(
         VALUES (?, ?, ?, ?, ?, ?, ?)`).bind(
           id, roomId, member.id, content, imageUrl || null, now, now,
         ).run();
+      if (roomId === "board-introduction") {
+        await env.DB.prepare(`INSERT OR IGNORE INTO chat_message_reactions
+          (message_id, member_id, emoji, created_at) VALUES (?, ?, '🎉', ?)`)
+          .bind(id, member.id, now).run();
+      }
       if (requestedId) {
         const existing = await env.DB.prepare("SELECT room_id, sender_member_id FROM chat_messages WHERE id = ? LIMIT 1")
           .bind(id).first<{ room_id: string; sender_member_id: number }>();
@@ -754,29 +769,42 @@ export async function handleChatContentRequest(
         .bind(member.id).first<{ display_name: string }>();
       const notificationBody = `${author?.display_name || "メンバー"}: ${(content || "画像が送信されました").replace(/\s+/g, " ").slice(0, 160)}`;
       if (isFreeChatRoom(room)) {
-        // 全体・支部・部活のフリーチャットでは本人宛ての @メンションだけをベルへ送る。
+        // フリーチャットはメンション時だけ通知する。グループ宛てでも閲覧できない会員には送らない。
         if (content.includes("@")) {
+          const groups = freeChatMentionGroups(content, room.id);
           const recipients = await env.DB.prepare(`SELECT id, display_name, public_member_id, branches_json, role, access_role
             FROM members WHERE account_status = 'active' AND id != ?`)
             .bind(member.id).all<{ id: number; display_name: string; public_member_id: string | null; branches_json: string | null; role: string | null; access_role: string | null }>();
-          const mentioned = (recipients.results ?? [])
-            .filter((recipient) => mentionsViewer(content, [recipient.display_name, recipient.public_member_id ?? ""]));
-          const eligible = (await Promise.all(mentioned.map(async (recipient) => {
-            if (room.room_type === "club") return room.source_id && await canMemberAccessClub(env.DB!, room.source_id, recipient.id) ? recipient : null;
+          const mentioned = (recipients.results ?? []).filter((recipient) => {
+            if (groups.roomEveryone || mentionsViewer(content, [recipient.display_name, recipient.public_member_id ?? ""])) return true;
+            let branches: string[] = [];
+            try { branches = JSON.parse(recipient.branches_json ?? "[]") as string[]; } catch {}
+            const currentBranch = room.id === "branch-kanto-free" ? "kanto" : room.id === "branch-kansai-free" ? "kansai" : null;
+            return (groups.branchEveryone && currentBranch !== null && branches.includes(currentBranch)) ||
+              (groups.kanto && branches.includes("kanto")) || (groups.kansai && branches.includes("kansai"));
+          });
+          const clubMemberIds = room.room_type === "club"
+            ? new Set((await env.DB.prepare(`SELECT member_id FROM chat_room_members
+              WHERE room_id = ? AND left_at IS NULL`).bind(room.id).all<{ member_id: number }>()).results?.map((item) => item.member_id) ?? [])
+            : null;
+          const eligible = mentioned.filter((recipient) => {
+            if (clubMemberIds) return clubMemberIds.has(recipient.id);
             if (room.id === "branch-kanto-free" || room.id === "branch-kansai-free") {
-              if (recipient.role === "admin" || recipient.access_role === "admin" || recipient.access_role === "operator") return recipient;
               let branches: string[] = [];
               try { branches = JSON.parse(recipient.branches_json ?? "[]") as string[]; } catch {}
-              return branches.includes(room.id === "branch-kanto-free" ? "kanto" : "kansai") ? recipient : null;
+              if (branches.includes(room.id === "branch-kanto-free" ? "kanto" : "kansai")) return true;
+              const staff = recipient.role === "admin" || recipient.role === "operator" || recipient.access_role === "admin" || recipient.access_role === "operator";
+              return staff && mentionsViewer(content, [recipient.display_name, recipient.public_member_id ?? ""]);
             }
-            return recipient;
-          }))).filter((recipient): recipient is NonNullable<typeof recipient> => Boolean(recipient));
+            return true;
+          });
           const statements = eligible
             .map((recipient) => env.DB!.prepare(`INSERT OR IGNORE INTO in_app_notifications
               (id, target_member_id, type, title, body, chat_room_id, target_path, created_at)
               VALUES (?, ?, 'chat', ?, ?, ?, ?, ?)`)
               .bind(`chat-message:${id}:${recipient.id}`, recipient.id, room.name, notificationBody, roomId, `/chat?id=${encodeURIComponent(roomId)}`, now));
-          if (statements.length) await env.DB.batch(statements);
+          for (let start = 0; start < statements.length; start += 100)
+            await env.DB.batch(statements.slice(start, start + 100));
         }
       } else {
         await env.DB.prepare(`INSERT OR IGNORE INTO in_app_notifications
@@ -789,7 +817,8 @@ export async function handleChatContentRequest(
       await audit(env.DB, member.id, "chat.message_created", id);
       const rows = await messageRows(env.DB, roomId);
       const created = rows.find((item) => item.id === id);
-      return json({ message: created ? serializeMessage(created, []) : null }, 201);
+      const createdReactions = roomId === "board-introduction" ? await reactionRows(env.DB, [id]) : [];
+      return json({ message: created ? serializeMessage(created, createdReactions) : null }, 201);
     }
     return json({ error: "対応していない操作です" }, 405);
   }

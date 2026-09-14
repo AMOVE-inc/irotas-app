@@ -2,7 +2,9 @@ import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { CHAT_ROOMS, CURRENT_USER, DEFAULT_AVATAR, type ChatRoom } from "@/constants/mock-data";
 import { useAuthContext } from "@/lib/auth-context";
+import { isOperatorRole } from "@/lib/access-control";
 import { applyReadRoomState, getMyRooms, getRankRoomsForUser, loadDynamicRooms, markRoomRead } from "@/lib/chat-store";
+import { canAccessRankRoom } from "@/lib/chat-access";
 import { useColors } from "@/hooks/use-colors";
 import { Image } from "expo-image";
 import { useFocusEffect, useRouter } from "expo-router";
@@ -208,6 +210,7 @@ export default function ChatListScreen() {
   const activeViewerId = useRef(viewerMemberId);
   activeViewerId.current = viewerMemberId;
   const viewerRank = authUser?.memberRank ?? CURRENT_USER.rank;
+  const canViewAllChats = isOperatorRole(authUser?.role, authUser?.accessRole);
   const viewerBranches = authUser?.branches ?? [authUser?.branch ?? CURRENT_USER.branch];
   const [showCreateGroup, setShowCreateGroup] = useState(false);
   const [myRooms, setMyRooms] = useState<ChatRoom[]>(() => lastRoomLists.get(viewerMemberId)?.joined ?? []);
@@ -247,7 +250,7 @@ export default function ChatListScreen() {
     const branchRooms = CHAT_ROOMS.filter((room) => room.sourceId === "branch-kanto" ? viewerBranches.includes("kanto") : room.sourceId === "branch-kansai" ? viewerBranches.includes("kansai") : false);
     const localJoinedRooms = [...getMyRooms(viewerMemberId), ...branchRooms]
       .filter((room) => room.type !== "rank" && room.type !== "club" && !isFixtureRoom(room) && !isImportedEventChat(room) && !dismissedRooms.get(viewerMemberId)?.has(room.id));
-    const localRankRooms = getRankRoomsForUser(viewerRank);
+    const localRankRooms = getRankRoomsForUser(viewerRank, canViewAllChats);
     // Do not present the local subset as a complete list while shared rooms load.
     let sharedRooms: ChatRoom[] = [];
     try {
@@ -289,9 +292,9 @@ export default function ChatListScreen() {
       .map((room) => room.id === "board-announcement" && !sharedById.has(room.id)
         ? { ...room, lastMessage: "", lastMessageAt: undefined }
         : room);
-    const mergedRank = viewerRank === "regular" ? [] : [
+    const mergedRank = viewerRank === "regular" && !canViewAllChats ? [] : [
       ...localRankRooms.filter((room) => !sharedById.has(room.id)),
-      ...sharedRooms.filter((room) => room.type === "rank" && room.requiredRank === viewerRank),
+      ...sharedRooms.filter((room) => room.type === "rank" && (canViewAllChats || canAccessRankRoom(viewerRank, room.requiredRank))),
     ];
     const [sortedJoined, sortedRank] = await Promise.all([applyReadRoomState(mergedJoined), applyReadRoomState(mergedRank)]);
     if (activeViewerId.current !== viewerMemberId) return;
@@ -299,7 +302,7 @@ export default function ChatListScreen() {
     setRankRooms(sortedRank);
     lastRoomLists.set(viewerMemberId, { joined: sortedJoined, rank: sortedRank });
     setRoomsLoading(false);
-  }, [viewerBranches, viewerMemberId, viewerRank]);
+  }, [canViewAllChats, viewerBranches, viewerMemberId, viewerRank]);
 
   useFocusEffect(useCallback(() => {
     let active = true;
@@ -334,7 +337,7 @@ export default function ChatListScreen() {
         data={joinedChatRooms}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => <ChatRoomCard room={item} eventStarts={eventStarts} eventImages={eventImages} memberAvatars={memberAvatars} viewerMemberId={viewerMemberId} onOpened={clearUnreadImmediately} />}
-        ListHeaderComponent={<>{rankRooms.length > 0 ? <View><View style={{ paddingHorizontal: 16, paddingVertical: 8, backgroundColor: colors.surface }}><Text style={{ fontSize: 12, fontWeight: "700", color: colors.muted, letterSpacing: 0.5 }}>あなたのランク専用チャット</Text></View>{rankRooms.map((room) => <ChatRoomCard key={room.id} room={room} eventStarts={eventStarts} eventImages={eventImages} memberAvatars={memberAvatars} viewerMemberId={viewerMemberId} onOpened={clearUnreadImmediately} />)}</View> : null}{joinedChatRooms.length > 0 ? <View style={{ paddingHorizontal: 16, paddingVertical: 8, backgroundColor: colors.surface }}><Text style={{ fontSize: 12, fontWeight: "700", color: colors.muted, letterSpacing: 0.5 }}>参加中のチャット</Text></View> : null}</>}
+        ListHeaderComponent={<>{rankRooms.length > 0 ? <View><View style={{ paddingHorizontal: 16, paddingVertical: 8, backgroundColor: colors.surface }}><Text style={{ fontSize: 12, fontWeight: "700", color: colors.muted, letterSpacing: 0.5 }}>あなたのランク以下のチャット</Text></View>{rankRooms.map((room) => <ChatRoomCard key={room.id} room={room} eventStarts={eventStarts} eventImages={eventImages} memberAvatars={memberAvatars} viewerMemberId={viewerMemberId} onOpened={clearUnreadImmediately} />)}</View> : null}{joinedChatRooms.length > 0 ? <View style={{ paddingHorizontal: 16, paddingVertical: 8, backgroundColor: colors.surface }}><Text style={{ fontSize: 12, fontWeight: "700", color: colors.muted, letterSpacing: 0.5 }}>参加中のチャット</Text></View> : null}</>}
         showsVerticalScrollIndicator={false}
         style={{ flex: 1 }}
         contentContainerStyle={{ paddingBottom: 112, flexGrow: 1 }}

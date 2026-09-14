@@ -1,17 +1,25 @@
 import type { ChatRoom, MemberRank } from "@/constants/mock-data";
 
+const RANK_ORDER = ["regular", "silver", "gold", "platinum"] as const;
+
+export function canAccessRankRoom(memberRank: unknown, requiredRank: unknown): boolean {
+  const memberIndex = RANK_ORDER.findIndex((rank) => rank === memberRank);
+  const requiredIndex = RANK_ORDER.findIndex((rank) => rank === requiredRank);
+  return memberIndex >= 0 && requiredIndex >= 0 && memberIndex >= requiredIndex;
+}
+
 export function canAccessChatRoom(
   room: ChatRoom,
   memberId: string,
   memberRank: MemberRank,
-  isAdmin = false,
+  canViewAllChats = false,
 ): boolean {
-  // 個人間DMは、運営・管理者を含め当事者以外には一切表示しない。
+  if (canViewAllChats) return true;
   if (room.type === "dm") return room.participants.includes(memberId);
   if (room.type === "club") return room.participants.includes(memberId);
   if (room.id === "community-free-chat" || room.sourceId === "community-free-chat") return true;
   if (room.type === "rank") {
-    return room.requiredRank === memberRank && (room.participants.length === 0 || room.participants.includes(memberId));
+    return canAccessRankRoom(memberRank, room.requiredRank);
   }
-  return isAdmin || room.participants.includes(memberId);
+  return room.participants.includes(memberId);
 }

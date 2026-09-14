@@ -166,6 +166,7 @@ export interface Event {
   /** 本番APIが返す、閲覧者に固有の状態。端末内モックとの互換用に任意。 */
   viewerMemberId?: string;
   viewerParticipationStatus?: "applied" | "confirmed" | "cancel_requested" | null;
+  viewerPaymentState?: "awaiting_selection" | "awaiting_payment" | "completed" | null;
   isFavorite?: boolean;
   isOrganizer?: boolean;
   /** イベントが幹事により中止された場合も、通知から詳細と参加者チャットを確認できる。 */

@@ -5,8 +5,8 @@ const guide = readFileSync("docs/operations/existing-member-migration-guide.md",
 
 describe("existing member migration guide", () => {
   it("contains the production registration and login paths", () => {
-    expect(guide).toContain("chatgpt.site/register");
-    expect(guide).toContain("chatgpt.site/login");
+    expect(guide).toContain("app.irotas-community.com/register");
+    expect(guide).toContain("app.irotas-community.com/login");
     expect(guide).toContain("Square決済時のメールアドレス");
     expect(guide).toContain("6桁の認証コード");
     expect(guide).toContain("有効期限は10分");

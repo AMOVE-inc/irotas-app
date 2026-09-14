@@ -10,7 +10,7 @@
 - プライバシーポリシー: https://irotas-community.com/privacy
 - コミュニティ利用規約: https://irotas-community.com/terms
 - イベント参加規約: https://irotas-community.com/event-terms
-- アカウント削除URL: https://irotas-app-20260721.k1998915n.chatgpt.site/account-deletion
+- アカウント削除URL: https://app.irotas-community.com/account-deletion
 - 広告: なし
 - 広告目的の追跡: なし
 - データ販売: なし

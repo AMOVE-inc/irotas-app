@@ -1203,6 +1203,16 @@ export default function EventsScreen() {
           <View
             style={{ paddingHorizontal: 16, paddingTop: 8, paddingBottom: 14 }}
           >
+            {eventsLoadFailed ? (
+              <View accessibilityRole="alert" style={{ flexDirection: "row", alignItems: "center", gap: 12, padding: 12, marginBottom: 14, borderRadius: 12, backgroundColor: "#FFF1E8", borderWidth: 1, borderColor: "#F2C6AD" }}>
+                <Text style={{ flex: 1, color: "#7D3D25", fontSize: 13, lineHeight: 19 }}>
+                  {allEvents.length ? "最新のイベントを取得できませんでした。前回の一覧を表示しています。" : "イベントを読み込めませんでした。"}
+                </Text>
+                <Pressable accessibilityRole="button" accessibilityLabel="イベントを再読み込み" disabled={refreshing} onPress={() => { void onRefresh(); }} style={{ paddingVertical: 8, paddingHorizontal: 12, borderRadius: 8, backgroundColor: "#7D3D25", opacity: refreshing ? 0.55 : 1 }}>
+                  <Text style={{ color: "#FFF", fontSize: 13, fontWeight: "800" }}>{refreshing ? "読込中" : "再試行"}</Text>
+                </Pressable>
+              </View>
+            ) : null}
             <View style={{ flexDirection: "row", gap: 8, marginBottom: 18 }}>
               <View
                 style={{
@@ -1442,7 +1452,7 @@ export default function EventsScreen() {
           <View style={{ alignItems: "center", paddingVertical: 40 }}>
             <IconSymbol name="calendar" size={48} color={colors.border} />
             <Text style={{ fontSize: 15, color: colors.muted, marginTop: 12 }}>
-              {eventsLoadFailed ? "イベントを読み込めませんでした。画面を下に引いて再読み込みしてください。" : eventsLoaded ? "イベントがありません" : "イベントを読み込んでいます"}
+              {eventsLoadFailed ? "イベントを表示できません" : eventsLoaded ? "イベントがありません" : "イベントを読み込んでいます"}
             </Text>
             {hostedByMe ? (
               <Text
