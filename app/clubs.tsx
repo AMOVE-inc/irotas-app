@@ -545,16 +545,18 @@ function ClubPostDetailModal({
             onChangeText={setCommentText}
             placeholder="コメントを入力..."
             placeholderTextColor={colors.muted}
-            returnKeyType="done"
-            onSubmitEditing={handleComment}
+            multiline
+            submitBehavior="newline"
             style={{
               flex: 1,
+              maxHeight: 120,
               backgroundColor: colors.surface,
               borderRadius: 20,
               paddingHorizontal: 16,
               paddingVertical: 10,
               fontSize: 14,
               color: colors.foreground,
+              textAlignVertical: "top",
             }}
           />
           <Pressable onPress={handleComment} style={{ marginLeft: 10 }}>
