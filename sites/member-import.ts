@@ -5,6 +5,7 @@ import {
   normalizeEmail,
 } from "./auth";
 import type { D1Database, SitesEnv } from "./platform-types";
+import { syncStoredDiscordProfiles } from "./discord-profile-sync";
 
 const COMMIT_ENDPOINT = "/api/admin/member-import/commit";
 const READINESS_ENDPOINT = "/api/admin/member-import/readiness";
@@ -578,6 +579,7 @@ async function importMembers(
   try {
     await db.batch([
       ...rows.map((row) => memberStatement(db, row, now)),
+      ...rows.filter((row) => row.discordUserId).map((row) => syncStoredDiscordProfiles(db, now, [row.discordUserId!])),
       reconcileApprovedDiscordAccessRoles(db, now),
       linkApprovedDiscordAccessRoles(db, now),
       refreshClubLeaders(db, now),

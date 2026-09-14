@@ -34,6 +34,7 @@ type MemberRow = {
 };
 
 type SubscriptionRow = {
+  member_id?: number | null;
   billing_email: string;
   square_subscription_id?: string | null;
   square_status: string;
@@ -428,26 +429,33 @@ async function rateLimit(
 async function findSubscription(db: D1Database, email: string) {
   return db
     .prepare(
-      "SELECT billing_email, square_status, access_status, paid_until_date, grace_until_date FROM member_subscriptions WHERE LOWER(TRIM(billing_email)) = ?",
+      "SELECT member_id, billing_email, square_status, access_status, paid_until_date, grace_until_date FROM member_subscriptions WHERE LOWER(TRIM(billing_email)) = ?",
     )
     .bind(email)
     .first<SubscriptionRow>();
 }
 
-async function findMember(db: D1Database, email: string) {
-  return db
-    .prepare(
-      `SELECT m.id, m.email, m.password_hash, m.display_name, m.role, m.access_role,
+const memberSelect = `SELECT m.id, m.email, m.password_hash, m.display_name, m.role, m.access_role,
       m.branches_json, m.account_status, m.last_signed_in_at, m.password_set_at, m.public_member_id,
       m.member_term, m.member_rank, m.discord_roles_json, m.achievement_badges_json,
       m.profile_json, m.xp, m.participation_count, m.organizer_count,
       s.subscription_started_at
       FROM members m
-      LEFT JOIN member_subscriptions s ON s.member_id = m.id OR LOWER(TRIM(s.billing_email)) = LOWER(TRIM(m.email))
-      WHERE LOWER(TRIM(m.email)) = ? ORDER BY s.id DESC LIMIT 1`,
+      LEFT JOIN member_subscriptions s ON s.member_id = m.id OR LOWER(TRIM(s.billing_email)) = LOWER(TRIM(m.email))`;
+
+async function findMember(db: D1Database, email: string) {
+  return db
+    .prepare(
+      `${memberSelect} WHERE LOWER(TRIM(m.email)) = ? ORDER BY s.id DESC LIMIT 1`,
     )
     .bind(email)
     .first<MemberRow>();
+}
+
+async function findSubscriptionMember(db: D1Database, subscription: SubscriptionRow | null) {
+  if (!subscription?.member_id) return null;
+  return db.prepare(`${memberSelect} WHERE m.id = ? ORDER BY s.id DESC LIMIT 1`)
+    .bind(subscription.member_id).first<MemberRow>();
 }
 
 async function createSession(db: D1Database, memberId: number) {
@@ -637,6 +645,8 @@ async function register(request: Request, env: SitesEnv, db: D1Database) {
     return responseJson({ error: "入力内容をご確認ください" }, 400);
   let member = await findMember(db, email);
   let subscription = await findSubscription(db, email);
+  if (member && subscription?.member_id && subscription.member_id !== member.id)
+    return responseJson({ error: "会員アカウントの紐付けを確認できません" }, 409);
   // A previous setup can have stored the password successfully but failed
   // while issuing the session. Treat the exact same password as a safe,
   // idempotent retry instead of showing an error to the member.
@@ -747,6 +757,13 @@ async function register(request: Request, env: SitesEnv, db: D1Database) {
     await discoverSquareMembership(db, env, email);
     subscription = await findSubscription(db, email);
   }
+  if (member && subscription?.member_id && subscription.member_id !== member.id)
+    return responseJson({ error: "会員アカウントの紐付けを確認できません" }, 409);
+  if (!member && subscription?.member_id) {
+    const linked = await findSubscriptionMember(db, subscription);
+    if (linked?.password_hash) return responseJson({ error: "会員アカウントの紐付けを確認できません" }, 409);
+    if (linked) member = linked;
+  }
   const candidate = member ?? { role: "user" as const, access_role: "member" as const, account_status: "active" as const };
   if (!membershipAllowsAccess(subscription, candidate))
     return responseJson({ error: "有効な会員資格を確認できません。会費決済時のメールアドレスを確認し、運営にお問い合わせください。" }, 403);
@@ -761,6 +778,15 @@ async function register(request: Request, env: SitesEnv, db: D1Database) {
   }
   const passwordHash = await hashPassword(password, undefined, env.AUTH_SECRET);
   const now = new Date().toISOString();
+  if (normalizeEmail(member.email) !== email) {
+    const collision = await findMember(db, email);
+    if (collision) return responseJson({ error: "会員アカウントの紐付けを確認できません" }, 409);
+    const updatedEmail = await db.prepare("UPDATE members SET email = ?, updated_at = ? WHERE id = ? AND password_hash IS NULL")
+      .bind(email, now, member.id).run();
+    if (Number(updatedEmail.meta?.changes ?? 0) !== 1)
+      return responseJson({ error: "会員アカウントの紐付けを確認できません" }, 409);
+    member.email = email;
+  }
   await db.batch([
     db
       .prepare(
