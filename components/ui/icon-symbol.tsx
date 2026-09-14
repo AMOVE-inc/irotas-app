@@ -39,6 +39,8 @@ const MAPPING = {
   "xmark": "close",
   "ellipsis": "more-horiz",
   "photo.fill": "photo",
+  "video.fill": "videocam",
+  "chart.bar.fill": "bar-chart",
   "camera.fill": "camera-alt",
   "gift.fill": "card-giftcard",
   "ticket.fill": "confirmation-number",

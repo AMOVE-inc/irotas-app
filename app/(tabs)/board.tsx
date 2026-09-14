@@ -2933,6 +2933,7 @@ export default function BoardScreen() {
     else router.replace("/board");
   };
   const canViewActiveClubMembers = Boolean(activeClub && getClubViewerAccess(activeClub, authUser?.memberId, CURRENT_USER.id).isMember);
+  const canManageActiveClub = Boolean(activeClub && (getClubViewerAccess(activeClub, authUser?.memberId, CURRENT_USER.id).isLeader || userIsAdmin));
   const canReviewActiveClubApplications = Boolean(activeClub?.canReviewApplications || activeClub?.viewerIsLeader || userIsAdmin);
   const activeClubMemberIds = activeClub ? [...new Set([activeClub.leaderId, ...activeClub.memberIds])] : [];
   useEffect(() => {
@@ -2980,6 +2981,7 @@ export default function BoardScreen() {
                 {isClubIndexView ? "部活動" : activeCategoryLabel}
               </Text>
             </Pressable>
+            {canManageActiveClub && activeClub ? <Pressable onPress={() => router.push({ pathname: "/clubs", params: { clubId: activeClub.id, reviewApplications: "1" } })} accessibilityRole="button" accessibilityLabel="部活管理を開く" style={{ borderRadius: 9, backgroundColor: "#EAF3FA", paddingHorizontal: 10, paddingVertical: 7, marginRight: 6 }}><Text style={{ fontSize: 12, fontWeight: "900", color: "#39749D" }}>部活管理</Text></Pressable> : null}
             {canViewActiveClubMembers ? <Pressable onPress={() => setShowClubMembers(true)} accessibilityRole="button" accessibilityLabel="部員一覧を開く" style={{ borderRadius: 9, backgroundColor: "#EAF3FA", paddingHorizontal: 10, paddingVertical: 7 }}><Text style={{ fontSize: 12, fontWeight: "900", color: "#39749D" }}>部員一覧</Text></Pressable> : null}
           </>
         ) : (
