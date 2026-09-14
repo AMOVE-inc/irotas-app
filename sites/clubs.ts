@@ -218,6 +218,22 @@ export async function handleClubRequest(request: Request, env: SitesEnv): Promis
     return json({ club: serializeClub(row, memberships, member.id, elevated, applicationReviewer) });
   }
 
+  if (clubMatch && request.method === "PATCH") {
+    const id = decodeURIComponent(clubMatch[1]);
+    const row = await clubRow(env.DB, id);
+    if (!row || row.status !== "active") return json({ error: "部活が見つかりません" }, 404);
+    if (row.leader_member_id !== member.id && !elevated) return json({ error: "部長または管理者のみ編集できます" }, 403);
+    const input = await readBody(request);
+    const description = typeof input?.description === "string" ? input.description.trim() : "";
+    if (!description || description.length > 2000) return json({ error: "紹介文は1〜2000文字で入力してください" }, 400);
+    await env.DB.prepare("UPDATE clubs SET description = ?, updated_at = ? WHERE id = ?")
+      .bind(description, new Date().toISOString(), id).run();
+    await audit(env.DB, member.id, "club.description_updated", id);
+    const updated = await clubRow(env.DB, id);
+    const memberships = await membershipsForClubs(env.DB, [id]);
+    return json({ club: serializeClub(updated!, memberships, member.id, elevated, applicationReviewer) });
+  }
+
   if (applicationMatch && request.method === "POST") {
     const id = decodeURIComponent(applicationMatch[1]);
     const row = await clubRow(env.DB, id);

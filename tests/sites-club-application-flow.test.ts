@@ -136,6 +136,10 @@ class ClubFlowDatabase implements D1Database {
   }
 
   private run(sql: string, values: unknown[]) {
+    if (sql.startsWith("UPDATE clubs SET description")) {
+      this.club.description = String(values[0]);
+      return;
+    }
     if (sql.startsWith("INSERT INTO club_memberships")) {
       const [clubId, memberId, wantsToDo, messageToLeader, appliedAt] = values;
       this.memberships.set(this.membershipKey(String(clubId), Number(memberId)), {
@@ -197,6 +201,17 @@ describe("club application lifecycle", () => {
     db = new ClubFlowDatabase();
     env = { DB: db } as unknown as SitesEnv;
     authenticatedRequestMember.mockReset();
+  });
+
+  it("lets only the assigned leader or admin edit the club introduction", async () => {
+    authenticatedRequestMember.mockResolvedValue(sessionMember(30, "club_leader"));
+    const denied = await handleClubRequest(jsonRequest("/api/clubs/club-bread", "PATCH", { description: "別の部活の紹介" }), env);
+    expect(denied?.status).toBe(403);
+    authenticatedRequestMember.mockResolvedValue(sessionMember(20, "club_leader"));
+    const saved = await handleClubRequest(jsonRequest("/api/clubs/club-bread", "PATCH", { description: "新しいパン部の紹介です。" }), env);
+    expect(saved?.status).toBe(200);
+    expect(db.club.description).toBe("新しいパン部の紹介です。");
+    expect(await saved?.json()).toMatchObject({ club: { description: "新しいパン部の紹介です。" } });
   });
 
   it("prevents duplicate applications, limits approval to the assigned leader, and unlocks access after approval", async () => {

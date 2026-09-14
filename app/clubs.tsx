@@ -42,6 +42,7 @@ import {
   reviewClubApplication as reviewClubApplicationInStore,
   refreshClubs,
   submitClubApplication as submitClubApplicationToStore,
+  updateClubDescription as updateClubDescriptionInStore,
   updateClub as updateClubInStore,
   useClubs,
 } from "@/lib/club-store";
@@ -810,6 +811,10 @@ function ClubDetailModal({
   const [previewApplication, setPreviewApplication] = useState(false);
   const [showApplications, setShowApplications] = useState(false);
   const [showClubOverview, setShowClubOverview] = useState(false);
+  const [editingDescription, setEditingDescription] = useState(false);
+  const [descriptionDraft, setDescriptionDraft] = useState(club.description);
+  const [savingDescription, setSavingDescription] = useState(false);
+  useEffect(() => { setDescriptionDraft(club.description); setEditingDescription(false); }, [club.id, club.description]);
 
   const viewerAccess = getClubViewerAccess(
     { ...club, memberIds, applicantIds, applications, leaderId: currentLeaderId },
@@ -1152,7 +1157,8 @@ function ClubDetailModal({
                 </Pressable>
               </View>
               <ScrollView contentContainerStyle={{ padding: 18, paddingBottom: 24 }}>
-                <MentionText content={clubOverview} groups={CLUB_OVERVIEW_MENTION_GROUPS} />
+                <Text style={{ fontSize: 15, lineHeight: 23, color: colors.foreground }}>{club.description}</Text>
+                {clubOverview !== club.description ? <View style={{ marginTop: 18, paddingTop: 14, borderTopWidth: 1, borderTopColor: colors.border }}><Text style={{ fontSize: 12, fontWeight: "800", color: colors.muted, marginBottom: 8 }}>Discord移行時の紹介</Text><MentionText content={clubOverview} groups={CLUB_OVERVIEW_MENTION_GROUPS} /></View> : null}
               </ScrollView>
               <View style={{ paddingHorizontal: 18, paddingBottom: 18 }}>
                 <Pressable
@@ -1219,7 +1225,11 @@ function ClubDetailModal({
 
         {/* Description */}
         <View style={{ backgroundColor: colors.surface, borderRadius: 14, padding: 16, marginBottom: 16 }}>
-          <Text style={{ fontSize: 15, lineHeight: 22, color: colors.foreground }}>{club.description}</Text>
+          {editingDescription ? <>
+            <TextInput value={descriptionDraft} onChangeText={setDescriptionDraft} multiline maxLength={2000} placeholder="部活紹介文を入力" style={{ minHeight: 120, borderWidth: 1, borderColor: colors.border, borderRadius: 10, padding: 12, fontSize: 15, lineHeight: 22, color: colors.foreground, textAlignVertical: "top" }} />
+            <Text style={{ color: colors.muted, fontSize: 11, alignSelf: "flex-end", marginTop: 4 }}>{descriptionDraft.length}/2000</Text>
+            <View style={{ flexDirection: "row", justifyContent: "flex-end", gap: 14, marginTop: 10 }}><Pressable onPress={() => { setDescriptionDraft(club.description); setEditingDescription(false); }}><Text style={{ color: colors.muted, fontWeight: "800" }}>キャンセル</Text></Pressable><Pressable disabled={savingDescription || !descriptionDraft.trim()} onPress={async () => { setSavingDescription(true); try { const updated = await updateClubDescriptionInStore(club.id, descriptionDraft.trim()); onUpdateClub(updated); setEditingDescription(false); } catch (error) { Alert.alert("紹介文を保存できませんでした", error instanceof Error ? error.message : "もう一度お試しください。"); } finally { setSavingDescription(false); } }}><Text style={{ color: "#3478C7", fontWeight: "900" }}>{savingDescription ? "保存中…" : "保存"}</Text></Pressable></View>
+          </> : <><Text style={{ fontSize: 15, lineHeight: 22, color: colors.foreground }}>{club.description}</Text>{isLeader || userIsAdmin ? <Pressable onPress={() => setEditingDescription(true)} style={{ alignSelf: "flex-end", marginTop: 10 }}><Text style={{ color: "#3478C7", fontWeight: "800" }}>紹介文を編集</Text></Pressable> : null}</>}
         </View>
 
         {/* 部長 */}

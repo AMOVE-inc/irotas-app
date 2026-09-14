@@ -66,6 +66,12 @@ export async function submitClubApplication(clubId: string, wantsToDo: string, m
   return updated;
 }
 
+export async function updateClubDescription(clubId: string, description: string) {
+  const updated = asClub(await Api.updateClubDescription(clubId, description));
+  updateClub(updated);
+  return updated;
+}
+
 export async function reviewClubApplication(clubId: string, memberId: string, action: "approve" | "hold" | "reject") {
   const updated = asClub(await Api.reviewClubApplication(clubId, memberId, action));
   updateClub(updated);

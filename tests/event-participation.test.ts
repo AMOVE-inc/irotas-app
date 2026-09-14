@@ -21,6 +21,8 @@ describe("event participation labels", () => {
     expect(isEventOrganizer({ ...event, organizerProfileId: "organizer", isOrganizer: false }, "organizer")).toBe(true);
     expect(isEventOrganizer({ ...event, isOrganizer: true }, "other")).toBe(true);
     expect(isEventOrganizer(event, "other")).toBe(false);
+    expect(isEventOrganizer({ ...event, id: "discord-event-123", createdBy: "u1", organizerProfileId: "discord-123" }, "u1")).toBe(false);
+    expect(isEventOrganizer({ ...event, id: "discord-event-123", createdBy: "u1", organizerProfileId: "discord-123", isOrganizer: true }, "IRO0020")).toBe(true);
   });
 
   it("moves events dated before today in Japan into the past history", () => {

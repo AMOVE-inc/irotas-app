@@ -466,6 +466,18 @@ export async function handleBoardContentRequest(
     return json({ success: true, id });
   }
 
+  if (threadMatch && request.method === "GET") {
+    const id = decodeURIComponent(threadMatch[1]);
+    const stored = await db.prepare("SELECT title, category, deleted_at FROM board_threads WHERE id = ? LIMIT 1")
+      .bind(id).first<{ title: string; category: string; deleted_at: string | null }>();
+    const imported = (archive as RawDiscordBoardArchive).threads.find((item) => item.id === id);
+    const category = stored?.category ?? (imported ? normalizeDiscordBoardCategory(imported.category) : null);
+    if (stored?.deleted_at || !category || !validCategory(category) || !await canAccessBoardCategory(db, category, member) ||
+        (!stored && (!imported || isDiscordGourmetEventBoard(imported.category) || isRetiredMovieClubThread(imported))))
+      return json({ error: "スレッドが見つかりません" }, 404);
+    return json({ title: stored?.title ?? cleanDiscordBoardTitle(imported!.title), category });
+  }
+
   if (url.pathname === CONTENT_PATH && request.method === "GET") {
     const categoryParam = url.searchParams.get("category");
     const category = categoryParam ? validCategory(categoryParam) : null;

@@ -29,9 +29,11 @@ export interface R2Bucket {
     value: ArrayBuffer,
     options?: { httpMetadata?: { contentType?: string } },
   ): Promise<unknown>;
-  get(key: string): Promise<{
+  get(key: string, options?: { range?: Headers }): Promise<{
     body: ReadableStream;
     httpMetadata?: { contentType?: string };
+    size?: number;
+    range?: { offset: number; length: number };
   } | null>;
 }
 

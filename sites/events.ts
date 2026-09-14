@@ -510,6 +510,22 @@ async function memberIdFromPublicId(db: D1Database, value: string) {
   return row?.id ?? null;
 }
 
+async function reconcileImportedOrganizer(db: D1Database, memberId: number) {
+  const identity = await db.prepare("SELECT discord_user_id FROM members WHERE id = ? LIMIT 1")
+    .bind(memberId).first<{ discord_user_id: string | null }>();
+  const discordUserId = identity?.discord_user_id;
+  if (!discordUserId || !/^\d{17,20}$/.test(discordUserId)) return null;
+  // A migrated event may have been temporarily assigned to staff before its
+  // Discord organizer linked an account. Restore ownership only on exact ID match.
+  await db.prepare(`UPDATE events SET organizer_member_id = ?,
+      public_data_json = json_remove(public_data_json, '$.materializedOrganizerFallback'), updated_at = ?
+    WHERE id LIKE 'discord-event-%'
+      AND json_extract(public_data_json, '$.materializedOrganizerFallback') = 1
+      AND json_extract(public_data_json, '$.organizerProfileId') = ?`)
+    .bind(memberId, new Date().toISOString(), `discord-${discordUserId}`).run();
+  return `discord-${discordUserId}`;
+}
+
 async function audit(db: D1Database, actorId: number, action: string, eventId: string, metadata: Record<string, unknown> = {}) {
   await db.prepare(`INSERT INTO audit_logs (actor_user_id, action, entity_type, entity_id, metadata_json, created_at)
     VALUES (?, ?, 'event', ?, ?, ?)`).bind(String(actorId), action, eventId, JSON.stringify(metadata), new Date().toISOString()).run();
@@ -763,13 +779,21 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
     if (!env.UPLOADS) return responseJson({ error: "画像保存先に接続できません" }, 503);
     const key = decodeURIComponent(imageMatch[1]);
     if (!key.startsWith("events/")) return responseJson({ error: "not found" }, 404);
-    const object = await env.UPLOADS.get(key);
+    const wantsRange = /^bytes=(?:\d+-\d*|-\d+)$/.test(request.headers.get("range") ?? "");
+    const object = await env.UPLOADS.get(key, wantsRange ? { range: request.headers } : undefined);
     if (!object) return responseJson({ error: "not found" }, 404);
-    return new Response(object.body, { headers: { "content-type": object.httpMetadata?.contentType ?? "application/octet-stream", "cache-control": "private, max-age=86400" } });
+    const headers = new Headers({ "content-type": object.httpMetadata?.contentType ?? "application/octet-stream", "cache-control": "private, max-age=86400", vary: "Cookie, Authorization", "accept-ranges": "bytes" });
+    if (wantsRange && object.range && object.size) {
+      headers.set("content-range", `bytes ${object.range.offset}-${object.range.offset + object.range.length - 1}/${object.size}`);
+      headers.set("content-length", String(object.range.length));
+      return new Response(object.body, { status: 206, headers });
+    }
+    return new Response(object.body, { headers });
   }
   if (pathname === EVENTS_ENDPOINT && request.method === "POST")
     return createEvent(request, env.DB, member);
   if (pathname === EVENTS_ENDPOINT && request.method === "GET") {
+    const viewerDiscordId = await reconcileImportedOrganizer(env.DB, member.id);
     // なんでも掲示板で募集された3件を、既存のDiscord移行イベントとして登録する。
     // 個別に削除済みのIDはmaterializeImportedEvent内で除外される。
     const fallbackOrganizer = await env.DB.prepare("SELECT id FROM members WHERE access_role = 'admin' AND account_status = 'active' ORDER BY id LIMIT 1")
@@ -810,7 +834,7 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
       catch { return undefined; }
     }).filter((id): id is string => Boolean(id)));
     const events = await Promise.all(persistedRows.map(async (row) => {
-      if (row.event_type === "club" && row.club_id && !isImportedEventConfirmedParticipant(row, memberPublicId, participationsByEvent.get(row.id)) && !await canMemberAccessClub(env.DB!, row.club_id, member.id, admin))
+      if (row.event_type === "club" && row.club_id && row.organizer_member_id !== member.id && !isImportedEventConfirmedParticipant(row, memberPublicId, participationsByEvent.get(row.id)) && !await canMemberAccessClub(env.DB!, row.club_id, member.id, admin))
         return lockedClubEventPreview(row);
       return publicEvent(row, member.id, memberPublicId, elevated,
         participationsByEvent.get(row.id) ?? [], cancellationsByEvent.get(row.id) ?? [], favoriteIds.has(row.id));
@@ -818,12 +842,13 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
     // Keep the app-edited D1 row authoritative. Historical Discord event seeds
     // missing from D1 are listable without writing over titles, photos or dates.
     const missingImportedEvents = IMPORTED_DISCORD_EVENTS.filter((event) =>
-      event.eventType !== "club" && !persistedIds.has(event.id) && !persistedSourceThreadIds.has(event.sourceThreadId) &&
+      (event.eventType !== "club" || event.organizerProfileId === viewerDiscordId) && !persistedIds.has(event.id) && !persistedSourceThreadIds.has(event.sourceThreadId) &&
       !DELETED_EVENT_IDS.has(event.id) && !deletedIds.has(event.id),
-    ).map((event) => ({ ...event, recruitmentChannel: "discord" as const }));
+    ).map((event) => ({ ...event, recruitmentChannel: "discord" as const, isOrganizer: Boolean(viewerDiscordId && event.organizerProfileId === viewerDiscordId) }));
     return responseJson({ events: [...events, ...missingImportedEvents], deletedImportedEventIds: [...deletedIds] });
   }
   if (eventMatch && request.method === "GET") {
+    await reconcileImportedOrganizer(env.DB, member.id);
     const requestedEventId = decodeURIComponent(eventMatch[1]);
     if (DELETED_EVENT_IDS.has(requestedEventId) || await isDeletedImportedEvent(env.DB, requestedEventId)) return responseJson({ error: "イベントが見つかりません" }, 404);
     const fallbackOrganizer = await env.DB.prepare("SELECT id FROM members WHERE access_role = 'admin' AND account_status = 'active' ORDER BY id LIMIT 1")

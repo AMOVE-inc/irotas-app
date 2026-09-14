@@ -4,7 +4,7 @@ import { BOARD_THREADS, type Member , BoardThread, ChatRoom } from "@/constants/
 import type { MentionGroup } from "@/lib/mentions";
 import { extractMentionLabels, isGroupMention } from "@/lib/mentions";
 import { useColors } from "@/hooks/use-colors";
-import { parseInternalLink } from "@/lib/internal-links";
+import { parseInternalLink, type InternalLinkMention } from "@/lib/internal-links";
 import { getAllRooms } from "@/lib/chat-store";
 import { useRouter } from "expo-router";
 import { parseDiscordRichLines, tokenizeRichTextLinks, type DiscordTextFormat } from "@/lib/discord-rich-text";
@@ -33,6 +33,23 @@ function normalizeRenderedMentions(content: string) {
   return content.replace(/(@[^\s@]+)(?:\s*(?:[🍖⛳🏃🚶⚾💃🎭🏀🍷✈️🍳🍞🐭🍺]\s*)?[^\s【】]{1,20}部長)?(?:\s*[【[(（]\s*(?:🥈|🥇|💎)?\s*(?:SILVER|GOLD|PLATINUM|シルバー|ゴールド|プラチナ)(?:会員)?\s*[】\])）])?/giu, (_whole, mention: string) => `@${mentionDisplayName(mention)}`);
 }
 
+function InternalLinkLabel({ link }: { link: InternalLinkMention }) {
+  const [label, setLabel] = useState(link.label);
+  useEffect(() => {
+    setLabel(link.label);
+    if (link.label !== "#スレッド" && link.label !== "#チャット") return;
+    let active = true;
+    const request = link.pathname === "/board" && link.params.thread
+      ? Api.getSharedBoardThreadTitle(link.params.thread).then((result) => `#${result.title}`)
+      : link.pathname === "/chat" && link.params.id
+        ? Api.getSharedChatRoom(link.params.id).then((room) => `#${room.name}`)
+        : Promise.resolve(link.label);
+    void request.then((resolved) => { if (active) setLabel(resolved); }).catch(() => {});
+    return () => { active = false; };
+  }, [link.label, link.pathname, link.params.thread, link.params.id]);
+  return <Text>{label}</Text>;
+}
+
 export function MentionText({ content, outgoing = false, groups, rooms = getAllRooms(), threads = BOARD_THREADS, onOpenInternalLink, onMentionPress, onClubMentionPress }: { content: string; outgoing?: boolean; groups: MentionGroup[]; rooms?: ChatRoom[]; threads?: BoardThread[]; onOpenInternalLink?: (pathname: "/chat" | "/board" | "/event-detail", params: Record<string, string>) => void; onMentionPress?: (label: string) => void; onClubMentionPress?: (group: MentionGroup) => void }) {
   const colors = useColors();
   const router = useRouter();
@@ -54,7 +71,7 @@ export function MentionText({ content, outgoing = false, groups, rooms = getAllR
   const renderPlain = (value: string, keyPrefix: string) => tokenizeRichTextLinks(value).map((token, index) => {
     if (token.type === "text") return <Text key={`${keyPrefix}-${index}`}>{renderMentions(token.value, `${keyPrefix}-${index}-mention`)}</Text>;
     const internal = parseInternalLink(token.url, rooms, threads);
-    if (internal) return <Text key={`${keyPrefix}-${index}`}><Text accessibilityRole="link" onPress={() => openInternalLink(internal.pathname, internal.params)} style={{ fontWeight: "900", color: outgoing ? "#FFF3B0" : "#5B5A73", backgroundColor: outgoing ? "rgba(255,210,70,0.22)" : "#EEEAF7" }}>{internal.label}</Text>{token.suffix}</Text>;
+    if (internal) return <Text key={`${keyPrefix}-${index}`}><Text accessibilityRole="link" onPress={() => openInternalLink(internal.pathname, internal.params)} style={{ fontWeight: "900", color: outgoing ? "#FFF3B0" : "#5B5A73", backgroundColor: outgoing ? "rgba(255,210,70,0.22)" : "#EEEAF7" }}><InternalLinkLabel link={internal} /></Text>{token.suffix}</Text>;
     return <Text key={`${keyPrefix}-${index}`}><Text accessibilityRole="link" onPress={() => void Linking.openURL(token.url)} style={{ color: outgoing ? "#DCEBFF" : "#3478C7", textDecorationLine: "underline", fontWeight: "700" }}>{token.label}</Text>{token.suffix}</Text>;
   });
 

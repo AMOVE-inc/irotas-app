@@ -10,7 +10,11 @@ export function isPastEventDate(event: Event, now = new Date()): boolean {
 
 /** Prefer the server flag, while identity fields cover the initial event-store render. */
 export function isEventOrganizer(event: Event, memberId: string): boolean {
-  return event.isOrganizer === true || event.organizerProfileId === memberId || event.createdBy === memberId;
+  if (event.isOrganizer === true || event.organizerProfileId === memberId) return true;
+  // Imported Discord seeds use a generic createdBy placeholder, not the host's
+  // verified member ID. The API's viewer-specific isOrganizer flag handles them.
+  if (event.id.startsWith("discord-event-") && event.organizerProfileId?.startsWith("discord-")) return false;
+  return event.createdBy === memberId;
 }
 
 export function getEventParticipationStatus(event: Event, memberId: string): EventParticipationStatus {

@@ -467,6 +467,10 @@ export async function getSharedBoardContent(category?: string) {
   }>(`/api/board/content${query}`);
 }
 
+export async function getSharedBoardThreadTitle(threadId: string) {
+  return apiCall<{ title: string; category: string }>(`/api/board/threads/${encodeURIComponent(threadId)}`);
+}
+
 export async function getSharedBoardActivity(category?: string) {
   const query = category ? `?category=${encodeURIComponent(category)}` : "";
   return apiCall<{ revision: string }>(`/api/board/activity${query}`);
@@ -1051,6 +1055,14 @@ export async function getClub(clubId: string) {
   const result = await apiCall<{ club: ClubRecord }>(
     `/api/clubs/${encodeURIComponent(clubId)}`,
   );
+  return result.club;
+}
+
+export async function updateClubDescription(clubId: string, description: string) {
+  const result = await apiCall<{ club: ClubRecord }>(`/api/clubs/${encodeURIComponent(clubId)}`, {
+    method: "PATCH",
+    body: JSON.stringify({ description }),
+  });
   return result.club;
 }
 

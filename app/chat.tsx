@@ -24,6 +24,7 @@ import { useColors } from "@/hooks/use-colors";
 import { dismissChatRoomImmediately } from "@/components/chat-list-screen";
 import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
+import { useVideoPlayer, VideoView } from "expo-video";
 import * as Clipboard from "expo-clipboard";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
@@ -55,6 +56,7 @@ import { getDiscordAuthorById, getDiscordAuthorByName } from "@/lib/discord-auth
 import { displayMemberName } from "@/lib/display-name";
 import { importedIntroductionReactions, isUnidentifiedReaction, mergedIntroductionReactions } from "@/lib/introduction-reactions";
 import { replyReference } from "@/lib/reply-reference";
+import { reconcileOptimisticReactions } from "@/lib/chat-reactions";
 
 const REACTION_EMOJIS = ["👍", "❤️", "😂", "🎉", "😋", "🙏"] as const;
 const MORE_REACTION_EMOJIS = ["😀", "😃", "😄", "😁", "😆", "😅", "😂", "🤣", "😊", "😇", "🙂", "🙃", "😉", "😍", "🥰", "😘", "😋", "😛", "🤪", "🤔", "🫡", "😎", "🥳", "😮", "😢", "😭", "😡", "👍", "👎", "👏", "🙌", "🙏", "💪", "👀", "❤️", "🩷", "🧡", "💛", "💚", "💙", "💜", "🖤", "🤍", "🔥", "✨", "🎉", "💯", "✅", "❌", "💡", "📌", "🍽️", "🍣", "🍖", "🍜", "🍕", "🍰", "☕", "🍺", "🍷"] as const;
@@ -123,6 +125,16 @@ function ChatAttachmentImage({ uri, galleryUris, galleryIndex }: { uri: string; 
       }
     }}
   />;
+}
+
+function isVideoAttachment(uri: string) {
+  try { return /\.(?:mp4|mov|webm)(?:[?#]|$)/i.test(decodeURIComponent(uri)); }
+  catch { return false; }
+}
+
+function ChatAttachmentVideo({ uri }: { uri: string }) {
+  const player = useVideoPlayer(uri);
+  return <VideoView player={player} nativeControls style={{ width: 220, height: 300, maxWidth: "100%", backgroundColor: "#111" }} />;
 }
 
 function MessageBubble({ message, isMe, canDelete, readOnly, viewerId, viewerName, viewerAvatarUrl, myAvatarUri, senderMember, memberDirectory, onReact, mentionGroups, onOpenInternalLink, onOpenProfile, onOpenReactionProfile, onReply, onEdit, onDelete }: { message: ChatMessage; isMe: boolean; canDelete: boolean; readOnly?: boolean; viewerId: string; viewerName: string; viewerAvatarUrl?: string; myAvatarUri?: string | null; senderMember?: Api.PublicMember; memberDirectory: Api.PublicMember[]; onReact: (emoji: string, pollChoices?: string[], allowMultiple?: boolean) => void; mentionGroups: ReturnType<typeof getMentionGroups>; onOpenInternalLink: (pathname: "/chat" | "/board" | "/event-detail", params: Record<string, string>) => void; onOpenProfile: () => void; onOpenReactionProfile: (memberId: string, name: string, avatarUrl?: string) => void; onReply: () => void; onEdit: () => void; onDelete: () => void }) {
@@ -209,9 +221,9 @@ function MessageBubble({ message, isMe, canDelete, readOnly, viewerId, viewerNam
           {message.replyTo ? <View style={{ paddingHorizontal: 10, paddingTop: 8 }}><ReplyReferenceView reply={message.replyTo} outgoing={isMe} /></View> : null}
           {message.imageUri || message.attachmentUrls?.length ? (
             <View style={{ gap: 4 }}>
-              {(message.attachmentUrls?.length ? message.attachmentUrls : [message.imageUri!]).map((uri, index, gallery) => (
-                <ChatAttachmentImage key={`${uri}-${index}`} uri={uri} galleryUris={gallery} galleryIndex={index} />
-              ))}
+              {(message.attachmentUrls?.length ? message.attachmentUrls : [message.imageUri!]).map((uri, index, gallery) => isVideoAttachment(uri)
+                ? <ChatAttachmentVideo key={`${uri}-${index}`} uri={uri} />
+                : <ChatAttachmentImage key={`${uri}-${index}`} uri={uri} galleryUris={gallery.filter((item) => !isVideoAttachment(item))} galleryIndex={gallery.slice(0, index).filter((item) => !isVideoAttachment(item)).length} />)}
             </View>
           ) : null}
           {message.content ? (
@@ -385,6 +397,8 @@ export default function ChatScreen() {
     return groups;
   }, [mentionMembers, directory, room?.id, room?.type, room?.requiredRank, roomParticipants]);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const pendingReactionChoices = useRef(new Map<string, Map<string, boolean>>());
+  const sharedFetchSequence = useRef(0);
   const introductionChat = id === "board-introduction";
   // inverted リストではデータの先頭が入力欄側に置かれるため、最新メッセージを
   // 先頭にしておけばスクロール処理なしで最初から最新位置を描画できる。
@@ -433,6 +447,14 @@ export default function ChatScreen() {
   }, [id, displayedMessages.length]);
 
   const applySharedMessages = useCallback((shared: ChatMessage[]) => {
+    const resolved = shared.map((message) => {
+      const pending = pendingReactionChoices.current.get(message.id);
+      if (!pending?.size) return message;
+      const merged = reconcileOptimisticReactions(message.reactions, pending, viewerMemberId);
+      if (merged.remaining.size) pendingReactionChoices.current.set(message.id, merged.remaining);
+      else pendingReactionChoices.current.delete(message.id);
+      return { ...message, reactions: merged.reactions };
+    });
     setMessages((previous) => {
       // 自己紹介はDiscordアーカイブ由来の履歴と共有チャットの新規投稿だけを表示し、テスト用ローカル履歴を混在させない。
       const archivePrefix = id === "board-introduction" ? "discord-introduction-" : null;
@@ -441,12 +463,12 @@ export default function ChatScreen() {
         : archivePrefix
         ? previous.filter((message) => message.id.startsWith(archivePrefix))
         : [...getMessages(id ?? ""), ...previous.filter((message) => !message.shared)];
-      return [...localMessages, ...shared]
+      return [...localMessages, ...resolved]
         .filter((message, index, all) => all.findIndex((candidate) => candidate.id === message.id) === index)
         .filter((message) => !isRetiredAnnouncement(message))
         .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
     });
-  }, [id]);
+  }, [id, viewerMemberId]);
 
   // 初回起動時: プロフィール画像と永続化メッセージを読み込む
   useEffect(() => {
@@ -476,7 +498,9 @@ export default function ChatScreen() {
     }).catch((error) => {
       if (id.startsWith("club-chat-") && error instanceof Api.ApiError && (error.statusCode === 403 || error.statusCode === 404)) setClubAccessDenied(true);
     }).finally(() => setIsLoadingRoom(false));
-    void Api.getSharedChatMessages(id).then(applySharedMessages).catch(async (error) => {
+    const fetchSequence = ++sharedFetchSequence.current;
+    void Api.getSharedChatMessages(id).then((shared) => { if (fetchSequence === sharedFetchSequence.current) applySharedMessages(shared); }).catch(async (error) => {
+      if (fetchSequence !== sharedFetchSequence.current) return;
       if (id.startsWith("club-chat-")) {
         setMessages([]);
         if (error instanceof Api.ApiError && (error.statusCode === 403 || error.statusCode === 404)) setClubAccessDenied(true);
@@ -525,7 +549,8 @@ export default function ChatScreen() {
   // 共有メッセージの編集・削除・リアクションを、参加者全員の画面へ反映する。
   useEffect(() => {
     if (!id) return;
-    const refresh = () => { void Api.getSharedChatMessages(id).then(applySharedMessages).catch((error) => {
+    const refresh = () => { const fetchSequence = ++sharedFetchSequence.current; void Api.getSharedChatMessages(id).then((shared) => { if (fetchSequence === sharedFetchSequence.current) applySharedMessages(shared); }).catch((error) => {
+      if (fetchSequence !== sharedFetchSequence.current) return;
       if (id.startsWith("club-chat-") && error instanceof Api.ApiError && (error.statusCode === 403 || error.statusCode === 404)) {
         setMessages([]);
         setClubAccessDenied(true);
@@ -559,6 +584,7 @@ export default function ChatScreen() {
 
   const insets = useSafeAreaInsets();
   const [pendingImages, setPendingImages] = useState<string[]>([]);
+  const [pendingVideos, setPendingVideos] = useState<{ uri: string; mimeType: string }[]>([]);
   const sendingRef = useRef(false);
   const pendingSendRef = useRef<{ signature: string; messageId: string } | null>(null);
   const [showAttachmentMenu, setShowAttachmentMenu] = useState(false);
@@ -571,7 +597,7 @@ export default function ChatScreen() {
   const [pollSending, setPollSending] = useState(false);
 
   const handlePickPhoto = useCallback(async () => {
-    if (pendingImages.length >= 10) return;
+    if (pendingImages.length + pendingVideos.length >= 10) return;
     if (Platform.OS !== "web") {
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (status !== "granted") {
@@ -582,29 +608,45 @@ export default function ChatScreen() {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ["images"],
       allowsMultipleSelection: true,
-      selectionLimit: 10 - pendingImages.length,
+      selectionLimit: 10 - pendingImages.length - pendingVideos.length,
       allowsEditing: false,
       quality: 0.8,
     });
     if (!result.canceled && result.assets.length > 0) {
-      setPendingImages((current) => [...current, ...result.assets.map((asset) => asset.uri)].slice(0, 10));
+      setPendingImages((current) => [...current, ...result.assets.map((asset) => asset.uri)].slice(0, 10 - pendingVideos.length));
     }
-  }, [pendingImages.length]);
+  }, [pendingImages.length, pendingVideos.length]);
+
+  const handlePickVideo = useCallback(async () => {
+    if (pendingImages.length + pendingVideos.length >= 10) return;
+    if (Platform.OS !== "web") {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== "granted") { Alert.alert("権限が必要です", "動画を送るには写真ライブラリへのアクセスを許可してください。"); return; }
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ["videos"], allowsMultipleSelection: true, selectionLimit: 10 - pendingImages.length - pendingVideos.length });
+    if (!result.canceled) setPendingVideos((current) => [...current, ...result.assets.map((asset) => ({
+      uri: asset.uri,
+      mimeType: asset.mimeType || (/\.mov(?:[?#]|$)/i.test(asset.uri) ? "video/quicktime" : /\.webm(?:[?#]|$)/i.test(asset.uri) ? "video/webm" : "video/mp4"),
+    }))].slice(0, 10 - pendingImages.length));
+  }, [pendingImages.length, pendingVideos.length]);
 
   const handleSend = useCallback(async () => {
     if (sendingRef.current) return;
     if (staffViewingOnly) return;
     if (!canPostToChat(authUser?.role, id ?? "", authUser?.accessRole)) return;
-    if (!messageText.trim() && !pendingImages.length) return;
+    if (!messageText.trim() && !pendingImages.length && !pendingVideos.length) return;
     const content = messageText.trim();
     if (!id) return;
     sendingRef.current = true;
-    const signature = JSON.stringify([id, content, pendingImages, replyToMessage?.id]);
+    const signature = JSON.stringify([id, content, pendingImages, pendingVideos, replyToMessage?.id]);
     if (pendingSendRef.current?.signature !== signature) {
       pendingSendRef.current = { signature, messageId: `cm_${Date.now()}_${Math.random().toString(36).slice(2)}` };
     }
     try {
-      const imageUrls = await Promise.all(pendingImages.map(async (uri) => (await Api.uploadEventImage(uri)).imageUrl));
+      const imageUrls = await Promise.all([
+        ...pendingImages.map(async (uri) => (await Api.uploadEventImage(uri)).imageUrl),
+        ...pendingVideos.map(async (video) => (await Api.uploadEventImage(video.uri, video.mimeType)).imageUrl),
+      ]);
       const newMessage = await Api.createSharedChatMessage(id, { content, imageUrls, clientMessageId: pendingSendRef.current.messageId, replyToId: replyToMessage?.id });
       pendingSendRef.current = null;
       setMessages((prev) => [...prev.filter((item) => item.id !== newMessage.id), newMessage]);
@@ -612,6 +654,7 @@ export default function ChatScreen() {
       setReplyToMessage(null);
       setMessageSelection({ start: 0, end: 0 });
       setPendingImages([]);
+      setPendingVideos([]);
       setMentionQuery(null);
 
     } catch (error) {
@@ -624,7 +667,7 @@ export default function ChatScreen() {
           externalAuthorName: authUser?.name ?? undefined,
           content,
           replyTo: replyToMessage ? replyReference(replyToMessage.id, replyToMessage.externalAuthorName ?? getMemberById(replyToMessage.senderId)?.name ?? "メンバー", replyToMessage.content, Boolean(replyToMessage.imageUri || replyToMessage.attachmentUrls?.length)) : undefined,
-          attachmentUrls: pendingImages.length ? pendingImages : undefined,
+          attachmentUrls: pendingImages.length || pendingVideos.length ? [...pendingImages, ...pendingVideos.map((video) => video.uri)] : undefined,
           createdAt: new Date().toISOString(),
         };
         setMessages((previous) => [...previous, legacyMessage]);
@@ -633,6 +676,7 @@ export default function ChatScreen() {
         setReplyToMessage(null);
         setMessageSelection({ start: 0, end: 0 });
         setPendingImages([]);
+        setPendingVideos([]);
         setMentionQuery(null);
         return;
       }
@@ -640,7 +684,7 @@ export default function ChatScreen() {
     } finally {
       sendingRef.current = false;
     }
-  }, [messageText, pendingImages, replyToMessage, id, authUser?.role, authUser?.accessRole, authUser?.name, viewerMemberId, staffViewingOnly]);
+  }, [messageText, pendingImages, pendingVideos, replyToMessage, id, authUser?.role, authUser?.accessRole, authUser?.name, viewerMemberId, staffViewingOnly]);
 
   const handleReaction = useCallback(async (messageId: string, emoji: string, pollChoices?: string[], allowMultiple = true) => {
     if (staffViewingOnly) return;
@@ -673,6 +717,10 @@ export default function ChatScreen() {
     if (sharedMessage) {
       const active = !(sharedMessage.reactions?.[emoji] ?? []).includes(viewerMemberId);
       const previousReactions = sharedMessage.reactions;
+      const pending = new Map(pendingReactionChoices.current.get(messageId) ?? []);
+      pending.set(emoji, active);
+      if (pollChoices && !allowMultiple) for (const choice of pollChoices) if (`🗳️${choice}` !== emoji) pending.set(`🗳️${choice}`, false);
+      pendingReactionChoices.current.set(messageId, pending);
       setMessages((current) => current.map((message) => {
         if (message.id !== messageId) return message;
         const reactions = Object.fromEntries(Object.entries(message.reactions ?? {}).map(([key, members]) => [key, [...members]])) as Record<string, string[]>;
@@ -696,6 +744,7 @@ export default function ChatScreen() {
         const result = await Api.setSharedChatReaction(messageId, emoji, active);
         setMessages((current) => current.map((message) => message.id === messageId ? { ...message, reactions: result.reactions } : message));
       } catch (error) {
+        pendingReactionChoices.current.delete(messageId);
         setMessages((current) => current.map((message) => message.id === messageId ? { ...message, reactions: previousReactions } : message));
         Alert.alert("リアクションできませんでした", error instanceof Error ? error.message : "もう一度お試しください。");
       }
@@ -967,9 +1016,10 @@ export default function ChatScreen() {
                   <TouchableOpacity onPress={() => setPendingImages((current) => current.filter((_, imageIndex) => imageIndex !== index))} accessibilityLabel={`${index + 1}枚目の写真を取り消す`} style={{ position: "absolute", top: -5, right: -5, backgroundColor: "#666", borderRadius: 11, width: 22, height: 22, alignItems: "center", justifyContent: "center" }}><IconSymbol name="xmark" size={12} color="#FFF" /></TouchableOpacity>
                 </View>)}
               </ScrollView>
-              <Text style={{ fontSize: 11, color: colors.muted, marginTop: 3 }}>{pendingImages.length} / 10枚</Text>
+              <Text style={{ fontSize: 11, color: colors.muted, marginTop: 3 }}>添付 {pendingImages.length + pendingVideos.length} / 10件</Text>
             </View>
           )}
+          {pendingVideos.length > 0 ? <View style={{ paddingHorizontal: 16, paddingBottom: 6, gap: 4 }}>{pendingVideos.map((video, index) => <View key={`${video.uri}-${index}`} style={{ flexDirection: "row", alignItems: "center", padding: 8, borderRadius: 8, backgroundColor: colors.surface }}><Text style={{ flex: 1, color: colors.foreground, fontSize: 12 }}>🎬 動画 {index + 1}</Text><Pressable onPress={() => setPendingVideos((current) => current.filter((_, videoIndex) => videoIndex !== index))}><Text style={{ color: colors.muted, fontWeight: "900" }}>×</Text></Pressable></View>)}</View> : null}
           <View
             style={{
               flexDirection: "row",
@@ -1020,14 +1070,14 @@ export default function ChatScreen() {
               <IconSymbol
                 name="paperplane.fill"
                 size={24}
-                color={(messageText.trim() || pendingImages.length) ? "#E8A0BF" : colors.muted}
+                color={(messageText.trim() || pendingImages.length || pendingVideos.length) ? "#E8A0BF" : colors.muted}
               />
             </Pressable>
           </View>
         </View> : <View style={{ borderTopWidth: 1, borderTopColor: colors.border, backgroundColor: colors.surface, paddingHorizontal: 18, paddingVertical: 14, alignItems: "center" }}><View style={{ flexDirection: "row", alignItems: "center" }}><IconSymbol name="lock.fill" size={15} color={colors.muted} /><Text style={{ marginLeft: 7, fontSize: 13, fontWeight: "800", color: colors.muted }}>{staffViewingOnly ? "閲覧のみ可能です" : "運営からのお知らせ専用です"}</Text></View><Text style={{ marginTop: 4, fontSize: 11, color: colors.muted }}>{staffViewingOnly ? "参加していないチャットには投稿できません" : "メンバーから返信することはできません"}</Text></View>}
       </KeyboardAvoidingView>
 
-      <Modal visible={showAttachmentMenu} transparent animationType="fade" onRequestClose={() => setShowAttachmentMenu(false)}><Pressable onPress={() => setShowAttachmentMenu(false)} style={{ flex: 1, backgroundColor: "rgba(20,18,24,0.38)", justifyContent: "flex-end" }}><Pressable onPress={() => {}} style={{ backgroundColor: colors.background, borderTopLeftRadius: 22, borderTopRightRadius: 22, padding: 18, paddingBottom: 34 }}><Text style={{ fontSize: 16, fontWeight: "900", color: colors.foreground, marginBottom: 10 }}>添付するものを選択</Text>{[{ label: "写真", icon: "photo.fill", action: () => { setShowAttachmentMenu(false); void handlePickPhoto(); } }, { label: "投票", icon: "chart.bar.fill", action: () => { setShowAttachmentMenu(false); setShowPollComposer(true); } }].map((item) => <Pressable key={item.label} onPress={item.action} style={{ minHeight: 54, flexDirection: "row", alignItems: "center", borderBottomWidth: 0.5, borderBottomColor: colors.border }}><View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: "#5865F218", alignItems: "center", justifyContent: "center" }}><IconSymbol name={item.icon as any} size={19} color="#5865F2" /></View><Text style={{ marginLeft: 12, fontSize: 15, fontWeight: "800", color: colors.foreground }}>{item.label}</Text></Pressable>)}</Pressable></Pressable></Modal>
+      <Modal visible={showAttachmentMenu} transparent animationType="fade" onRequestClose={() => setShowAttachmentMenu(false)}><Pressable onPress={() => setShowAttachmentMenu(false)} style={{ flex: 1, backgroundColor: "rgba(20,18,24,0.38)", justifyContent: "flex-end" }}><Pressable onPress={() => {}} style={{ backgroundColor: colors.background, borderTopLeftRadius: 22, borderTopRightRadius: 22, padding: 18, paddingBottom: 34 }}><Text style={{ fontSize: 16, fontWeight: "900", color: colors.foreground, marginBottom: 10 }}>添付するものを選択</Text>{[{ label: "写真", icon: "photo.fill", action: () => { setShowAttachmentMenu(false); void handlePickPhoto(); } }, { label: "動画", icon: "video.fill", action: () => { setShowAttachmentMenu(false); void handlePickVideo(); } }, { label: "投票", icon: "chart.bar.fill", action: () => { setShowAttachmentMenu(false); setShowPollComposer(true); } }].map((item) => <Pressable key={item.label} onPress={item.action} style={{ minHeight: 54, flexDirection: "row", alignItems: "center", borderBottomWidth: 0.5, borderBottomColor: colors.border }}><View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: "#5865F218", alignItems: "center", justifyContent: "center" }}><IconSymbol name={item.icon as any} size={19} color="#5865F2" /></View><Text style={{ marginLeft: 12, fontSize: 15, fontWeight: "800", color: colors.foreground }}>{item.label}</Text></Pressable>)}</Pressable></Pressable></Modal>
       <Modal visible={editingMessage !== null} transparent animationType="fade" onRequestClose={() => setEditingMessage(null)}><Pressable onPress={() => setEditingMessage(null)} style={{ flex: 1, backgroundColor: "rgba(20,18,24,0.48)", justifyContent: "center", padding: 24 }}><Pressable onPress={() => {}} style={{ backgroundColor: colors.background, borderRadius: 20, padding: 18 }}><Text style={{ fontSize: 17, fontWeight: "900", color: colors.foreground }}>メッセージを編集</Text><TextInput value={editingMessageText} onChangeText={setEditingMessageText} multiline autoFocus style={{ minHeight: 110, maxHeight: 260, marginTop: 14, borderWidth: 1, borderColor: colors.border, borderRadius: 12, padding: 12, fontSize: 15, lineHeight: 22, color: colors.foreground, textAlignVertical: "top" }} /><View style={{ flexDirection: "row", gap: 10, marginTop: 14 }}><Pressable onPress={() => setEditingMessage(null)} style={{ flex: 1, alignItems: "center", paddingVertical: 12, borderRadius: 10, backgroundColor: colors.surface }}><Text style={{ fontWeight: "800", color: colors.foreground }}>キャンセル</Text></Pressable><Pressable disabled={savingMessageEdit || !editingMessageText.trim()} onPress={async () => { if (!editingMessage) return; setSavingMessageEdit(true); try { const content = editingMessageText.trim(); if (editingMessage.shared) { const updated = await Api.updateSharedChatMessage(editingMessage.id, content); setMessages((current) => current.map((message) => message.id === updated.id ? updated : message)); } else { const updated = { ...editingMessage, content }; await saveMessagesToStorage(id ?? "", [updated]); setMessages((current) => current.map((message) => message.id === updated.id ? updated : message)); } setEditingMessage(null); } catch (error) { Alert.alert("編集できませんでした", error instanceof Error ? error.message : "もう一度お試しください。"); } finally { setSavingMessageEdit(false); } }} style={{ flex: 1, alignItems: "center", paddingVertical: 12, borderRadius: 10, backgroundColor: editingMessageText.trim() ? "#E8A0BF" : colors.border }}><Text style={{ fontWeight: "800", color: "#FFF" }}>{savingMessageEdit ? "保存中…" : "保存"}</Text></Pressable></View></Pressable></Pressable></Modal>
       <Modal visible={showPollComposer} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setShowPollComposer(false)}><KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ flex: 1, backgroundColor: colors.background }}><View style={{ flexDirection: "row", alignItems: "center", padding: 16, borderBottomWidth: 1, borderBottomColor: colors.border }}><Pressable onPress={() => setShowPollComposer(false)}><Text style={{ color: colors.muted }}>キャンセル</Text></Pressable><Text style={{ flex: 1, textAlign: "center", fontSize: 18, fontWeight: "900", color: colors.foreground }}>投票を作成</Text><Pressable disabled={pollSending || !pollQuestion.trim() || pollOptions.filter((v) => v.trim()).length < 2 || !pollDeadline.trim()} onPress={() => void createPoll()}><Text style={{ fontWeight: "900", color: pollQuestion.trim() && pollOptions.filter((v) => v.trim()).length >= 2 && pollDeadline.trim() ? "#5865F2" : colors.border }}>{pollSending ? "送信中…" : "作成"}</Text></Pressable></View><ScrollView contentContainerStyle={{ padding: 18, gap: 12 }} keyboardShouldPersistTaps="handled"><Text style={{ fontSize: 12, fontWeight: "800", color: colors.muted }}>質問</Text><TextInput value={pollQuestion} onChangeText={setPollQuestion} placeholder="質問を入力" placeholderTextColor={colors.muted} style={{ borderRadius: 10, backgroundColor: colors.surface, padding: 13, color: colors.foreground }} /><Text style={{ fontSize: 12, fontWeight: "800", color: colors.muted }}>選択肢</Text>{pollOptions.map((value, index) => <TextInput key={index} value={value} onChangeText={(text) => setPollOptions((items) => items.map((item, i) => i === index ? text : item))} placeholder={`選択肢 ${index + 1}`} placeholderTextColor={colors.muted} style={{ borderRadius: 10, backgroundColor: colors.surface, padding: 13, color: colors.foreground }} />)}{pollOptions.length < 10 ? <Pressable onPress={() => setPollOptions((items) => [...items, ""])}><Text style={{ color: "#5865F2", fontWeight: "800" }}>＋ 選択肢を追加</Text></Pressable> : null}<Text style={{ fontSize: 12, fontWeight: "800", color: colors.muted, marginTop: 8 }}>投票期限</Text><CalendarField label="投票期限" value={pollDeadline} onChange={setPollDeadline} /><Pressable accessibilityRole="checkbox" accessibilityState={{ checked: pollAllowMultiple }} onPress={() => setPollAllowMultiple((value) => !value)} style={{ flexDirection: "row", alignItems: "center", paddingVertical: 7 }}><View style={{ width: 21, height: 21, borderRadius: 5, borderWidth: 1.5, borderColor: pollAllowMultiple ? "#5865F2" : colors.border, backgroundColor: pollAllowMultiple ? "#5865F2" : colors.surface, alignItems: "center", justifyContent: "center" }}>{pollAllowMultiple ? <IconSymbol name="checkmark" size={14} color="#FFF" /> : null}</View><Text style={{ marginLeft: 8, fontSize: 13, fontWeight: "700", color: colors.foreground }}>複数回答を許可する</Text></Pressable></ScrollView></KeyboardAvoidingView></Modal>
 

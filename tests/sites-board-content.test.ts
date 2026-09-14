@@ -103,6 +103,17 @@ function request(path: string, method: string, body?: unknown) {
 }
 
 describe("shared board content API", () => {
+  it("resolves a shared thread title and enforces private club access", async () => {
+    const member = { id: 9, role: "user", access_role: "member", account_status: "active" } as const;
+    const publicThread = { id: "thread-1", author_member_id: 10, category: "free-chat", title: "料理教室の募集" };
+    const publicDb = testDatabase(member, false, undefined, publicThread);
+    const title = await handleBoardContentRequest(request("/api/board/threads/thread-1", "GET"), { DB: publicDb.db } as SitesEnv);
+    expect(await title?.json()).toMatchObject({ title: "料理教室の募集" });
+    const privateThread = { ...publicThread, category: "club-club-cooking-class" };
+    const privateDb = testDatabase(member, false, undefined, privateThread);
+    const denied = await handleBoardContentRequest(request("/api/board/threads/thread-1", "GET"), { DB: privateDb.db } as SitesEnv);
+    expect(denied?.status).toBe(404);
+  });
   it("restores a Discord board author's rank and avatar when no linked member row exists", () => {
     expect(discordAuthorFallbackFor("696624208532340756")).toMatchObject({
       displayName: "ゆい",
