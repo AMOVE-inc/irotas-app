@@ -56,6 +56,19 @@ describe("Discord board archive", () => {
     expect(archive.threads.find((thread) => thread.category === "gourmet-advice")?.gourmetAdvice).toBeTruthy();
   });
 
+  it("移行告知直前の3件の自己紹介も掲載する", () => {
+    const introductions = [
+      ["discord-board-1548262999624650803", "星愛", "せいあ"],
+      ["discord-board-1548555037813383239", "An", "杏奈"],
+      ["discord-board-1548671681944490047", "ka_no", "かーの"],
+    ];
+    for (const [id, author, name] of introductions) {
+      const thread = archive.threads.find((item) => item.id === id);
+      expect(thread).toMatchObject({ category: "introduction", author: { name: author } });
+      expect(thread?.selfIntroduction?.introduction).toContain(`名前：${name}`);
+    }
+  });
+
   it("移行したカスタムスタンプをDiscord画像として保持する", () => {
     const henderson = archive.threads.find((thread) => thread.id === "discord-board-1547395669915078667");
     expect(Object.keys(henderson?.reactions ?? {})).toEqual(expect.arrayContaining([
