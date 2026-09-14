@@ -137,7 +137,7 @@ function ChatAttachmentVideo({ uri }: { uri: string }) {
   return <VideoView player={player} nativeControls style={{ width: 220, height: 300, maxWidth: "100%", backgroundColor: "#111" }} />;
 }
 
-function MessageBubble({ message, isMe, canDelete, readOnly, viewerId, viewerName, viewerAvatarUrl, myAvatarUri, senderMember, memberDirectory, onReact, mentionGroups, onOpenInternalLink, onOpenProfile, onOpenReactionProfile, onReply, onEdit, onDelete }: { message: ChatMessage; isMe: boolean; canDelete: boolean; readOnly?: boolean; viewerId: string; viewerName: string; viewerAvatarUrl?: string; myAvatarUri?: string | null; senderMember?: Api.PublicMember; memberDirectory: Api.PublicMember[]; onReact: (emoji: string, pollChoices?: string[], allowMultiple?: boolean) => void; mentionGroups: ReturnType<typeof getMentionGroups>; onOpenInternalLink: (pathname: "/chat" | "/board" | "/event-detail", params: Record<string, string>) => void; onOpenProfile: () => void; onOpenReactionProfile: (memberId: string, name: string, avatarUrl?: string) => void; onReply: () => void; onEdit: () => void; onDelete: () => void }) {
+function MessageBubble({ message, isMe, canDelete, readOnly, viewerId, viewerName, viewerAvatarUrl, myAvatarUri, senderMember, memberDirectory, onReact, mentionGroups, onOpenInternalLink, onOpenProfile, onOpenReactionProfile, onOpenReply, highlighted, onReply, onEdit, onDelete }: { message: ChatMessage; isMe: boolean; canDelete: boolean; readOnly?: boolean; viewerId: string; viewerName: string; viewerAvatarUrl?: string; myAvatarUri?: string | null; senderMember?: Api.PublicMember; memberDirectory: Api.PublicMember[]; onReact: (emoji: string, pollChoices?: string[], allowMultiple?: boolean) => void; mentionGroups: ReturnType<typeof getMentionGroups>; onOpenInternalLink: (pathname: "/chat" | "/board" | "/event-detail", params: Record<string, string>) => void; onOpenProfile: () => void; onOpenReactionProfile: (memberId: string, name: string, avatarUrl?: string) => void; onOpenReply: (messageId: string) => void; highlighted?: boolean; onReply: () => void; onEdit: () => void; onDelete: () => void }) {
   const colors = useColors();
   const sender = getMemberById(message.senderId);
   const [showReactionPicker, setShowReactionPicker] = useState(false);
@@ -208,8 +208,8 @@ function MessageBubble({ message, isMe, canDelete, readOnly, viewerId, viewerNam
         <Pressable onLongPress={() => setShowActions(true)} delayLongPress={350}
           style={{
             backgroundColor: isMe ? "#E8A0BF" : "#ECECEF",
-            borderWidth: isMe ? 0 : 1,
-            borderColor: isMe ? "transparent" : "#D4D4D8",
+            borderWidth: highlighted ? 3 : isMe ? 0 : 1,
+            borderColor: highlighted ? "#3478C7" : isMe ? "transparent" : "#D4D4D8",
             borderRadius: 16,
             borderBottomRightRadius: isMe ? 4 : 16,
             // 相手の吹き出しはアイコン側（左上）から伸びるようにする。
@@ -218,7 +218,7 @@ function MessageBubble({ message, isMe, canDelete, readOnly, viewerId, viewerNam
             overflow: "hidden",
           }}
         >
-          {message.replyTo ? <View style={{ paddingHorizontal: 10, paddingTop: 8 }}><ReplyReferenceView reply={message.replyTo} outgoing={isMe} /></View> : null}
+          {message.replyTo ? <View style={{ paddingHorizontal: 10, paddingTop: 8 }}><ReplyReferenceView reply={message.replyTo} outgoing={isMe} onPress={() => onOpenReply(message.replyTo!.id)} /></View> : null}
           {message.imageUri || message.attachmentUrls?.length ? (
             <View style={{ gap: 4 }}>
               {(message.attachmentUrls?.length ? message.attachmentUrls : [message.imageUri!]).map((uri, index, gallery) => isVideoAttachment(uri)
@@ -323,6 +323,8 @@ export default function ChatScreen() {
   const flatListRef = useRef<FlatList>(null);
   const linkedScrollRetry = useRef(false);
   const linkedMessageScrolled = useRef<string | null>(null);
+  const highlightTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [highlightedMessageId, setHighlightedMessageId] = useState<string | null>(null);
   const inputRef = useRef<TextInput>(null);
   const [isNearLatest, setIsNearLatest] = useState(true);
   const [hasOpenedIntroduction, setHasOpenedIntroduction] = useState<boolean | null>(null);
@@ -419,6 +421,19 @@ export default function ChatScreen() {
     });
     return introductionChat ? unique.reverse() : unique;
   }, [introductionChat, messages, room?.type]);
+  const jumpToMessage = useCallback((messageId: string) => {
+    const index = displayedMessages.findIndex((item) => item.id === messageId);
+    if (index < 0) {
+      Alert.alert("返信元を表示できません", "返信元のメッセージが見つかりませんでした。");
+      return;
+    }
+    linkedScrollRetry.current = false;
+    flatListRef.current?.scrollToIndex({ index, animated: true, viewPosition: 0.5 });
+    setHighlightedMessageId(messageId);
+    if (highlightTimerRef.current) clearTimeout(highlightTimerRef.current);
+    highlightTimerRef.current = setTimeout(() => setHighlightedMessageId(null), 2200);
+  }, [displayedMessages]);
+  useEffect(() => () => { if (highlightTimerRef.current) clearTimeout(highlightTimerRef.current); }, []);
   useEffect(() => {
     if (!linkedMessageId || linkedMessageScrolled.current === linkedMessageId) return;
     const index = displayedMessages.findIndex((item) => item.id === linkedMessageId);
@@ -895,6 +910,8 @@ export default function ChatScreen() {
               {Number(unreadCountParam ?? 0) > 0 && index === firstUnreadIndex ? <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginVertical: 10, paddingHorizontal: 16 }}><View style={{ flex: 1, height: 1, backgroundColor: "#E8A0BF" }} /><Text style={{ fontSize: 11, fontWeight: "900", color: "#C05B88" }}>ここから未読メッセージ</Text><View style={{ flex: 1, height: 1, backgroundColor: "#E8A0BF" }} /></View> : null}
               <MessageBubble
                 message={item}
+                highlighted={item.id === highlightedMessageId}
+                onOpenReply={jumpToMessage}
                 readOnly={staffViewingOnly}
                 isMe={item.senderId === viewerMemberId || item.senderId === authUser?.memberId || (
                   Boolean(item.shared && item.externalAuthorName && authUser?.name) &&
@@ -1006,7 +1023,7 @@ export default function ChatScreen() {
               @を入力してメンション
             </Text>
           </View>
-          {replyToMessage ? <View style={{ paddingHorizontal: 16, paddingTop: 6 }}><ReplyReferenceView reply={replyReference(replyToMessage.id, replyToMessage.externalAuthorName ?? getMemberById(replyToMessage.senderId)?.name ?? "メンバー", replyToMessage.content, Boolean(replyToMessage.imageUri || replyToMessage.attachmentUrls?.length))} onCancel={() => setReplyToMessage(null)} /></View> : null}
+          {replyToMessage ? <View style={{ paddingHorizontal: 16, paddingTop: 6 }}><ReplyReferenceView reply={replyReference(replyToMessage.id, replyToMessage.externalAuthorName ?? getMemberById(replyToMessage.senderId)?.name ?? "メンバー", replyToMessage.content, Boolean(replyToMessage.imageUri || replyToMessage.attachmentUrls?.length))} onPress={() => jumpToMessage(replyToMessage.id)} onCancel={() => setReplyToMessage(null)} /></View> : null}
           {/* 画像プレビュー */}
           {pendingImages.length > 0 && (
             <View style={{ paddingHorizontal: 16, paddingBottom: 6 }}>

@@ -781,10 +781,27 @@ function ThreadDetailModal({
   const [showCommentAttachments, setShowCommentAttachments] = useState(false);
   const commentInputRef = useRef<TextInput>(null);
   const commentSendingRef = useRef(false);
+  const commentScrollRef = useRef<ScrollView>(null);
+  const commentsStartY = useRef(0);
+  const commentPositions = useRef(new Map<string, number>());
+  const commentHighlightTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [highlightedCommentId, setHighlightedCommentId] = useState<string | null>(null);
   const mentionGroups = useMemo(() => BOARD_MENTION_GROUPS, []);
   const [comments, setComments] = useState<BoardComment[]>(
     dedupeBoardComments([...BOARD_COMMENTS.filter((c) => c.threadId === thread.id), ...initialComments]),
   );
+  const jumpToComment = (commentId: string) => {
+    if (!comments.some((comment) => comment.id === commentId)) {
+      Alert.alert("返信元を表示できません", "返信元のコメントが見つかりませんでした。");
+      return;
+    }
+    const position = commentPositions.current.get(commentId);
+    if (position !== undefined) commentScrollRef.current?.scrollTo({ y: Math.max(0, commentsStartY.current + position - 16), animated: true });
+    setHighlightedCommentId(commentId);
+    if (commentHighlightTimer.current) clearTimeout(commentHighlightTimer.current);
+    commentHighlightTimer.current = setTimeout(() => setHighlightedCommentId(null), 2200);
+  };
+  useEffect(() => () => { if (commentHighlightTimer.current) clearTimeout(commentHighlightTimer.current); }, []);
   const [threadReactions, setThreadReactions] = useState(thread.reactions ?? {});
   const [showThreadEmojiPicker, setShowThreadEmojiPicker] = useState(false);
   const [commentEmojiPickerId, setCommentEmojiPickerId] = useState<string | null>(null);
@@ -1129,7 +1146,7 @@ function ThreadDetailModal({
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         keyboardVerticalOffset={Platform.OS === "ios" ? insets.top + 16 : 0}
       >
-        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16 }}>
+        <ScrollView ref={commentScrollRef} style={{ flex: 1 }} contentContainerStyle={{ padding: 16 }}>
           {/* Thread content */}
           <Pressable onPress={() => router.push({ pathname: "/member-profile", params: { id: thread.author.id, legacyName: thread.author.name } })} accessibilityLabel={`${stripRankFromName(thread.author.name)}のプロフィールを表示`} style={{ flexDirection: "row", alignItems: "center", marginBottom: 12 }}>
             {isThreadPinned(thread) ? <View style={{ marginRight: 7, borderRadius: 10, paddingHorizontal: 8, paddingVertical: 6, backgroundColor: "#FFF2C7" }}><Text style={{ fontSize: 11, fontWeight: "900", color: "#8A6512" }}>📌 固定</Text></View> : null}
@@ -1308,12 +1325,12 @@ function ThreadDetailModal({
           )}
 
           {/* Comments */}
-          <View style={{ borderTopWidth: 0.5, borderTopColor: colors.border, paddingTop: 16 }}>
+          <View onLayout={(event) => { commentsStartY.current = event.nativeEvent.layout.y; }} style={{ borderTopWidth: 0.5, borderTopColor: colors.border, paddingTop: 16 }}>
             <Text style={{ fontSize: 14, fontWeight: "700", color: colors.foreground, marginBottom: 12 }}>
               コメント ({comments.length})
             </Text>
             {comments.map((comment) => {
-              return <Pressable key={comment.id} onLongPress={() => setSelectedComment(comment)} delayLongPress={350} style={{ marginBottom: 14 }}>
+              return <Pressable key={comment.id} onLayout={(event) => { commentPositions.current.set(comment.id, event.nativeEvent.layout.y); }} onLongPress={() => setSelectedComment(comment)} delayLongPress={350} style={{ marginBottom: 14, borderRadius: 12, borderWidth: highlightedCommentId === comment.id ? 3 : 0, borderColor: "#3478C7" }}>
                 <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 4 }}>
                   <Pressable onPress={() => router.push({ pathname: "/member-profile", params: { id: comment.author.id, legacyName: comment.author.name } })} accessibilityLabel={`${stripRankFromName(comment.author.name)}のプロフィールを表示`}>
                     <Image source={comment.author.avatar} style={{ width: 24, height: 24, borderRadius: 12 }} contentFit="cover" />
@@ -1326,7 +1343,7 @@ function ThreadDetailModal({
                     {timeAgo(comment.createdAt)}
                   </Text>
                 </View>
-                {comment.replyTo ? <View style={{ marginLeft: 32, marginTop: 4 }}><ReplyReferenceView reply={comment.replyTo} /></View> : null}
+                {comment.replyTo ? <View style={{ marginLeft: 32, marginTop: 4 }}><ReplyReferenceView reply={comment.replyTo} onPress={() => jumpToComment(comment.replyTo!.id)} /></View> : null}
                 {editingCommentId === comment.id ? <View style={{ marginLeft: 32, gap: 7 }}><TextInput value={editingCommentText} onChangeText={setEditingCommentText} multiline autoFocus style={{ minHeight: 90, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: 10, padding: 10, fontSize: 14, color: colors.foreground }} /><View style={{ flexDirection: "row", gap: 8 }}><Pressable onPress={() => handleSaveCommentEdit(comment.id)} style={{ backgroundColor: "#3478C7", borderRadius: 8, paddingHorizontal: 13, paddingVertical: 7 }}><Text style={{ color: "#FFF", fontSize: 12, fontWeight: "800" }}>保存</Text></Pressable><Pressable onPress={() => handleDeleteComment(comment.id)} style={{ backgroundColor: "#FCE7E7", borderRadius: 8, paddingHorizontal: 13, paddingVertical: 7 }}><Text style={{ color: colors.error, fontSize: 12, fontWeight: "800" }}>削除</Text></Pressable><Pressable onPress={() => setEditingCommentId(null)} style={{ paddingHorizontal: 10, paddingVertical: 7 }}><Text style={{ color: colors.muted, fontSize: 12 }}>キャンセル</Text></Pressable></View></View> : <View style={{ marginLeft: 32 }}>{isContest ? (comment.isSystem ? <MentionText content={comment.content} groups={mentionGroups} /> : <LinkifiedText content={comment.content} />) : <MentionText content={comment.content} groups={mentionGroups} />}</View>}
                 {comment.poll ? <View style={{ marginLeft: 32 }}><PollCard ownerKey={`comment:${comment.id}`} poll={comment.poll} /></View> : null}
                 {comment.images?.length ? (
@@ -1365,7 +1382,7 @@ function ThreadDetailModal({
           <Text style={{ fontSize: 11, color: colors.muted, paddingHorizontal: 16, paddingTop: 6 }}>@を入力して個人・グループをメンション</Text>
           {showCommentAttachments ? <View style={{ flexDirection: "row", gap: 10, paddingHorizontal: 16, paddingTop: 9 }}><Pressable onPress={() => void handlePickCommentImages()} style={{ flexDirection: "row", alignItems: "center", borderRadius: 10, backgroundColor: "#5865F218", paddingHorizontal: 14, paddingVertical: 10 }}><IconSymbol name="photo.fill" size={17} color="#5865F2" /><Text style={{ color: "#5865F2", fontWeight: "800", marginLeft: 7 }}>写真</Text></Pressable>{pollAllowed ? <Pressable onPress={() => { setCommentPollEnabled(true); setShowCommentAttachments(false); }} style={{ flexDirection: "row", alignItems: "center", borderRadius: 10, backgroundColor: "#5865F218", paddingHorizontal: 14, paddingVertical: 10 }}><IconSymbol name="chart.bar.fill" size={17} color="#5865F2" /><Text style={{ color: "#5865F2", fontWeight: "800", marginLeft: 7 }}>投票</Text></Pressable> : null}</View> : null}
           {commentImages.length ? <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingHorizontal: 16, paddingTop: 9 }}>{commentImages.map((uri, index) => <Pressable key={`${uri}-${index}`} onPress={() => setCommentImages((items) => items.filter((_, itemIndex) => itemIndex !== index))}><Image source={{ uri }} style={{ width: 64, height: 64, borderRadius: 9 }} contentFit="cover" /></Pressable>)}</ScrollView> : null}
-          {commentReplyTo ? <View style={{ paddingHorizontal: 16, paddingTop: 7 }}><ReplyReferenceView reply={replyReference(commentReplyTo.id, stripRankFromName(commentReplyTo.author.name), commentReplyTo.content, Boolean(commentReplyTo.images?.length || commentReplyTo.videos?.length))} onCancel={() => setCommentReplyTo(null)} /></View> : null}
+          {commentReplyTo ? <View style={{ paddingHorizontal: 16, paddingTop: 7 }}><ReplyReferenceView reply={replyReference(commentReplyTo.id, stripRankFromName(commentReplyTo.author.name), commentReplyTo.content, Boolean(commentReplyTo.images?.length || commentReplyTo.videos?.length))} onPress={() => jumpToComment(commentReplyTo.id)} onCancel={() => setCommentReplyTo(null)} /></View> : null}
           {pollAllowed ? <View style={{ paddingHorizontal: 16 }}><PollComposer enabled={commentPollEnabled} setEnabled={setCommentPollEnabled} question={commentPollQuestion} setQuestion={setCommentPollQuestion} options={commentPollOptions} setOptions={setCommentPollOptions} deadline={commentPollDeadline} setDeadline={setCommentPollDeadline} allowMultiple={commentPollAllowMultiple} setAllowMultiple={setCommentPollAllowMultiple} /></View> : null}
           <View
           style={{
