@@ -19,7 +19,7 @@ describe("Discord benefit migration", () => {
     expect(gifts[0].createdAt! > gifts[1].createdAt!).toBe(true);
     expect(new Set(gifts.map((gift) => gift.id)).size).toBe(56);
     expect(gifts.filter((gift) => gift.imageUrl)).toHaveLength(51);
-    expect(gifts.every((gift) => !gift.imageUrl || existsSync(join(process.cwd(), "public", gift.imageUrl)))).toBe(true);
+    expect(gifts.every((gift) => !gift.imageUrl || existsSync(join(process.cwd(), "private-media", gift.imageUrl.replace(/^\//, ""))))).toBe(true);
   });
 });
 

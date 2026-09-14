@@ -14,7 +14,7 @@ from PIL import Image, ImageOps
 
 ROOT = Path(__file__).resolve().parents[1]
 ARCHIVE = ROOT / "data/discord-board-2026-08-29.json"
-MEDIA = ROOT / "public/discord-board/1468128865552568342"
+MEDIA = ROOT / "private-media/discord-board/1468128865552568342"
 CONFIG = ROOT / ".migration-private/discord-export.yaml"
 URL = re.compile(r"/attachments/(\d+)/(\d+)/")
 

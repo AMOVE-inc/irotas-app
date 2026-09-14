@@ -5,7 +5,7 @@ const inputPath = process.argv[2];
 if (!inputPath) throw new Error("Usage: node scripts/build-gourmet-contest-import.mjs <discord-export.json>");
 
 const root = process.cwd();
-const publicDir = path.join(root, "public", "discord-gourmet-contests");
+const publicDir = path.join(root, "private-media", "discord-gourmet-contests");
 const outputPath = path.join(root, "constants", "imported-gourmet-contests.ts");
 const source = JSON.parse(await readFile(inputPath, "utf8"));
 await mkdir(publicDir, { recursive: true });

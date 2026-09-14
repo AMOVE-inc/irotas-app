@@ -3,7 +3,7 @@ import path from "node:path";
 import sharp from "/Users/kondokanon/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/sharp/dist/index.mjs";
 
 const root = process.cwd();
-const assetDir = path.join(root, "public", "discord-gourmet-contests");
+const assetDir = path.join(root, "private-media", "discord-gourmet-contests");
 const dataPath = path.join(root, "constants", "imported-gourmet-contests.ts");
 const videoPattern = /\.(mov|mp4|m4v|webm)$/i;
 let data = await readFile(dataPath, "utf8");
