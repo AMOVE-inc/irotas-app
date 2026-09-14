@@ -574,6 +574,7 @@ export async function setIntroductionArchiveReaction(sourceId: string, emoji: st
   return apiCall<{ reactions: Record<string, Record<string, string[]>> }>("/api/board/introduction-reactions", {
     method: active ? "PUT" : "DELETE",
     body: JSON.stringify({ sourceId, emoji }),
+    suppressGlobalLoading: true,
   });
 }
 
