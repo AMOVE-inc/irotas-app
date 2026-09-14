@@ -101,6 +101,15 @@ async function reconcileDiscordClubMemberships(db: D1Database) {
     WHERE c.status = 'active' AND m.account_status = 'active'
       AND CAST(r.value AS TEXT) LIKE '%' || c.name || '%'
     ON CONFLICT(club_id, member_id) DO NOTHING`).bind(now, now, now).run();
+  // 本人確認後にDiscord IDが紐付いた会員の未反映所属を復元する。
+  await db.prepare(`INSERT INTO club_memberships
+    (club_id, member_id, status, source, applied_at, approved_at, updated_at)
+    SELECT s.club_id, m.id, 'approved', 'discord', ?, ?, ?
+    FROM discord_club_membership_staging s
+    JOIN members m ON m.discord_user_id = s.discord_user_id
+    JOIN clubs c ON c.id = s.club_id AND c.status = 'active'
+    WHERE m.account_status = 'active'
+    ON CONFLICT(club_id, member_id) DO NOTHING`).bind(now, now, now).run();
 }
 
 function serializeClub(row: ClubRow, memberships: MembershipRow[], viewerId: number, elevated: boolean, applicationReviewer = false) {

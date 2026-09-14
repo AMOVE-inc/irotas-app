@@ -70,8 +70,15 @@ export async function handleDiscordClubImportRequest(request: Request, env: Site
       matchedMemberCount: rows.length - unmatchedDiscordIds.length - inactiveDiscordIds.length,
       alreadyApproved, missingCount: missing.length, conflictCount: conflicts.length,
       unmatchedDiscordIds, inactiveDiscordIds, conflicts };
-    if (match[1] === "preview") return json({ ...summary, insertedCount: 0 });
+    if (match[1] === "preview") return json({ ...summary, insertedCount: 0, stagedCount: 0 });
     const now = new Date().toISOString();
+    const staged = rows.flatMap((row) => row.clubIds.map((clubId) => ({ discordUserId: row.discordUserId, clubId })));
+    for (let offset = 0; offset < staged.length; offset += 40) {
+      await env.DB.batch(staged.slice(offset, offset + 40).map((item) => env.DB!.prepare(`INSERT INTO discord_club_membership_staging
+        (discord_user_id, club_id, imported_at) VALUES (?, ?, ?)
+        ON CONFLICT(discord_user_id, club_id) DO UPDATE SET imported_at = excluded.imported_at`)
+        .bind(item.discordUserId, item.clubId, now)));
+    }
     let insertedCount = 0;
     for (let offset = 0; offset < missing.length; offset += 40) {
       const results = await env.DB.batch(missing.slice(offset, offset + 40).map((item) => env.DB!.prepare(`INSERT INTO club_memberships
@@ -82,9 +89,9 @@ export async function handleDiscordClubImportRequest(request: Request, env: Site
     }
     await env.DB.prepare(`INSERT INTO audit_logs (actor_user_id, action, entity_type, entity_id, metadata_json, created_at)
       VALUES (?, 'discord.club_memberships_imported', 'club_membership', ?, ?, ?)`)
-      .bind(String(actor.id), now, JSON.stringify({ sourceMemberCount: rows.length, insertedCount, conflictCount: conflicts.length,
+      .bind(String(actor.id), now, JSON.stringify({ sourceMemberCount: rows.length, stagedCount: staged.length, insertedCount, conflictCount: conflicts.length,
         unmatchedCount: unmatchedDiscordIds.length, inactiveCount: inactiveDiscordIds.length }), now).run();
-    return json({ ...summary, insertedCount });
+    return json({ ...summary, stagedCount: staged.length, insertedCount });
   } catch (error) {
     return json({ error: error instanceof Error ? error.message : "invalid_import" }, 400);
   }

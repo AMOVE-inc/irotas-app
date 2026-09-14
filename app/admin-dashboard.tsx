@@ -821,16 +821,16 @@ export default function AdminDashboardScreen() {
               setDiscordClubImporting(true);
               try {
                 const response = await fetch("/api/admin/discord-club-import/commit", { method: "POST", headers: { "content-type": "application/json" }, body: discordClubPayload });
-                const result = await response.json() as { error?: string; insertedCount?: number; conflictCount?: number; unmatchedDiscordIds?: string[] };
+                const result = await response.json() as { error?: string; stagedCount?: number; insertedCount?: number; conflictCount?: number; unmatchedDiscordIds?: string[] };
                 if (!response.ok) throw new Error(result.error ?? "反映に失敗しました");
-                const summary = `復元 ${result.insertedCount ?? 0}件／要確認 ${result.conflictCount ?? 0}件／ID未一致 ${result.unmatchedDiscordIds?.length ?? 0}名`;
+                const summary = `所属情報を保管 ${result.stagedCount ?? 0}件／アプリ会員への追加 ${result.insertedCount ?? 0}件／要確認 ${result.conflictCount ?? 0}件／本人確認待ち ${result.unmatchedDiscordIds?.length ?? 0}名`;
                 setDiscordClubPreview(summary);
                 setDiscordClubPayload(null);
                 await refreshClubs();
                 Alert.alert("部活所属の反映完了", summary);
               } catch (error) { Alert.alert("反映エラー", error instanceof Error ? error.message : "もう一度お試しください"); }
               finally { setDiscordClubImporting(false); }
-            }} style={{ minHeight: 48, borderRadius: 12, backgroundColor: discordClubImporting ? colors.border : "#237A3B", alignItems: "center", justifyContent: "center", marginTop: 10 }}><Text style={{ color: "#FFF", fontWeight: "800" }}>未反映の所属を復元</Text></Pressable> : null}
+            }} style={{ minHeight: 48, borderRadius: 12, backgroundColor: discordClubImporting ? colors.border : "#237A3B", alignItems: "center", justifyContent: "center", marginTop: 10 }}><Text style={{ color: "#FFF", fontWeight: "800" }}>所属情報を保管・復元</Text></Pressable> : null}
           </View>
         )}
         {activeTab === "overview" && (
