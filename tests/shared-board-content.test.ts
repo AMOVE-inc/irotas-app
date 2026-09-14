@@ -20,11 +20,12 @@ describe("shared board content mapping", () => {
   });
 
   it("round-trips shared comment metadata", () => {
-    const record: SharedBoardComment = { id: "comment-1", threadId: "shared-1", authorId: "IRO0099", authorName: "共有会員", content: "コメント", data: { poll: { question: "どちら？", deadline: "2026-09-01", options: [], allowMultiple: false } }, createdAt: "2026-08-23T00:00:00Z", updatedAt: "2026-08-23T00:00:00Z", reactions: {} };
+    const record: SharedBoardComment = { id: "comment-1", threadId: "shared-1", authorId: "IRO0099", authorName: "共有会員", content: "コメント", data: { poll: { question: "どちら？", deadline: "2026-09-01", options: [], allowMultiple: false }, replyTo: { id: "comment-original", authorName: "元の会員", excerpt: "元のコメント" } }, createdAt: "2026-08-23T00:00:00Z", updatedAt: "2026-08-23T00:00:00Z", reactions: {} };
     const comment = sharedCommentToBoardComment(record, "IRO0001");
     expect(comment.shared).toBe(true);
     expect(comment.poll?.question).toBe("どちら？");
     expect(boardCommentData(comment).poll).toEqual(comment.poll);
+    expect(boardCommentData(comment).replyTo).toEqual(record.data.replyTo);
   });
 
   it("keeps reacting member IDs for the reaction details sheet", () => {

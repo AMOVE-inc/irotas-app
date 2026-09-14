@@ -7,6 +7,7 @@ import { cleanDiscordBoardContent, cleanDiscordBoardTitle } from "../lib/discord
 import { inferImportedRecruitmentStatus } from "../lib/board-recruitment";
 import type { RawDiscordBoardArchive } from "../lib/discord-board-import";
 import { isDiscordGourmetEventBoard, isRetiredMovieClubThread, normalizeDiscordBoardCategory } from "../lib/board-category";
+import { replyReference, validReplyReference } from "../lib/reply-reference";
 
 const gourmetEventBoardThreadIds = new Set((archive as RawDiscordBoardArchive).threads
   .filter((thread) => isDiscordGourmetEventBoard(thread.category)).map((thread) => thread.id));
@@ -601,7 +602,26 @@ export async function handleBoardContentRequest(
       return json({ error: "この投稿にはコメントできません" }, 403);
     const input = await readBody(request);
     const content = text(input?.content, 10_000, true, true);
-    const data = safeData(input?.data);
+    if (input?.data !== undefined && (!input.data || typeof input.data !== "object" || Array.isArray(input.data)))
+      return json({ error: "コメント内容が不正です" }, 400);
+    const rawData = (input?.data ?? {}) as Record<string, unknown>;
+    let replyTo = null;
+    if (rawData.replyTo !== undefined) {
+      const replyId = rawData.replyTo && typeof rawData.replyTo === "object" && "id" in rawData.replyTo ? (rawData.replyTo as { id?: unknown }).id : null;
+      if (typeof replyId !== "string" || !replyId || replyId.length > 160)
+        return json({ error: "返信元が不正です" }, 400);
+      const source = await db.prepare(`SELECT bc.content, m.display_name FROM board_comments bc
+        JOIN members m ON m.id = bc.author_member_id
+        WHERE bc.id = ? AND bc.thread_id = ? AND bc.deleted_at IS NULL LIMIT 1`)
+        .bind(replyId, threadId).first<{ content: string; display_name: string }>();
+      if (source) replyTo = replyReference(replyId, source.display_name, source.content);
+      else {
+        const archived = (archive as RawDiscordBoardArchive).comments.find((comment) => comment.id === replyId && comment.threadId === threadId);
+        if (archived) replyTo = replyReference(replyId, archived.authorName, archived.content, archived.images.length > 0);
+      }
+      if (!replyTo) return json({ error: "返信元が見つかりません" }, 404);
+    }
+    const data = safeData({ ...rawData, ...(replyTo ? { replyTo } : {}) });
     if (!input || !content || data === null) return json({ error: "コメント内容が不正です" }, 400);
     const duplicateSince = new Date(Date.now() - 30_000).toISOString();
     const duplicate = await db.prepare(`SELECT id, created_at FROM board_comments
@@ -655,7 +675,11 @@ export async function handleBoardContentRequest(
     }
     const input = await readBody(request);
     const content = input?.content === undefined ? current.content : text(input.content, 10_000, true, true);
-    const data = input?.data === undefined ? current.data_json : safeData(input.data);
+    const previousReply = (parseData(current.data_json) as Record<string, unknown>).replyTo;
+    const data = input?.data === undefined ? current.data_json :
+      input.data && typeof input.data === "object" && !Array.isArray(input.data)
+        ? safeData({ ...input.data, replyTo: validReplyReference(previousReply) ? previousReply : undefined })
+        : null;
     if (!input || !content || data === null) return json({ error: "変更内容が不正です" }, 400);
     await db.prepare("UPDATE board_comments SET content = ?, data_json = ?, updated_at = ? WHERE id = ?")
       .bind(content, data, now, id).run();

@@ -1,5 +1,6 @@
 import { ScreenContainer } from "@/components/screen-container";
 import { ExpandableImage } from "@/components/expandable-image";
+import { ReplyReferenceView } from "@/components/reply-reference-view";
 import { NewMemberMark } from "@/components/new-member-mark";
 import { MemberRankBadge, MemberRoleBadge, stripRankFromName } from "@/components/member-rank-badge";
 import { MentionSuggestions, MentionText } from "@/components/mention-ui";
@@ -23,6 +24,8 @@ import {
   getMemberById,
 } from "@/constants/mock-data";
 import { useAuthContext } from "@/lib/auth-context";
+import { getMemberStaffRole } from "@/lib/member-staff-role";
+import { replyReference } from "@/lib/reply-reference";
 import { useColors } from "@/hooks/use-colors";
 import { createBoardChat } from "@/lib/chat-store";
 import { canManageBoardCategories, canManageGourmetContests, isOperatorRole } from "@/lib/access-control";
@@ -756,6 +759,8 @@ function ThreadDetailModal({
   const viewerMemberId = resolveViewerMemberId(authUser?.memberId, Boolean(authUser), CURRENT_USER.id);
   const viewerMember = memberFromAuthUser(authUser);
   const [commentText, setCommentText] = useState("");
+  const [commentReplyTo, setCommentReplyTo] = useState<BoardComment | null>(null);
+  useEffect(() => setCommentReplyTo(null), [thread.id]);
   const [contestRestaurant, setContestRestaurant] = useState("");
   const [contestMenu, setContestMenu] = useState("");
   const [contestPitch, setContestPitch] = useState("");
@@ -915,6 +920,7 @@ function ThreadDetailModal({
       threadId: thread.id,
       author: viewerMember,
       content,
+      replyTo: commentReplyTo ? replyReference(commentReplyTo.id, stripRankFromName(commentReplyTo.author.name), commentReplyTo.content, Boolean(commentReplyTo.images?.length || commentReplyTo.videos?.length)) : undefined,
       createdAt: new Date().toISOString(),
       images: isContest && contestImages.length ? contestImages : commentImages.length ? commentImages : undefined,
       poll: pollAllowed && commentPollEnabled ? { question: commentPollQuestion.trim(), deadline: commentPollDeadline, allowMultiple: commentPollAllowMultiple, options: commentPollOptions.filter((option) => option.trim()).map((option, index) => ({ id: `option_${index + 1}`, text: option.trim(), voterIds: [] })) } : undefined,
@@ -934,6 +940,7 @@ function ThreadDetailModal({
     setComments((current) => current.some((comment) => comment.id === newComment.id) ? current : [...current, newComment]);
     if (thread.category === "gourmet-contest") void recordHomeActivity({ id: `comment:${newComment.id}`, kind: "contest_comment", title: `${thread.title}にコメントが追加されました`, description: content, createdAt: newComment.createdAt, route: "/board", params: { category: "gourmet-contest", view: "threads" } });
     setCommentText("");
+    setCommentReplyTo(null);
     setCommentImages([]);
     setShowCommentAttachments(false);
     setContestRestaurant("");
@@ -1136,7 +1143,7 @@ function ThreadDetailModal({
                 <NewMemberMark member={thread.author} size={13} />
                 <OperatorOrRankBadge member={thread.author} />
               </View>
-              {thread.author.generation > 0 ? <Text style={{ fontSize: 11, color: colors.muted, marginTop: 2 }}>{thread.author.generation}期生</Text> : null}
+              {thread.author.generation > 0 && !getMemberStaffRole(thread.author.name, thread.author.role) ? <Text style={{ fontSize: 11, color: colors.muted, marginTop: 2 }}>{thread.author.generation}期生</Text> : null}
             </View>
           </Pressable>
 
@@ -1319,6 +1326,7 @@ function ThreadDetailModal({
                     {timeAgo(comment.createdAt)}
                   </Text>
                 </View>
+                {comment.replyTo ? <View style={{ marginLeft: 32, marginTop: 4 }}><ReplyReferenceView reply={comment.replyTo} /></View> : null}
                 {editingCommentId === comment.id ? <View style={{ marginLeft: 32, gap: 7 }}><TextInput value={editingCommentText} onChangeText={setEditingCommentText} multiline autoFocus style={{ minHeight: 90, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: 10, padding: 10, fontSize: 14, color: colors.foreground }} /><View style={{ flexDirection: "row", gap: 8 }}><Pressable onPress={() => handleSaveCommentEdit(comment.id)} style={{ backgroundColor: "#3478C7", borderRadius: 8, paddingHorizontal: 13, paddingVertical: 7 }}><Text style={{ color: "#FFF", fontSize: 12, fontWeight: "800" }}>保存</Text></Pressable><Pressable onPress={() => handleDeleteComment(comment.id)} style={{ backgroundColor: "#FCE7E7", borderRadius: 8, paddingHorizontal: 13, paddingVertical: 7 }}><Text style={{ color: colors.error, fontSize: 12, fontWeight: "800" }}>削除</Text></Pressable><Pressable onPress={() => setEditingCommentId(null)} style={{ paddingHorizontal: 10, paddingVertical: 7 }}><Text style={{ color: colors.muted, fontSize: 12 }}>キャンセル</Text></Pressable></View></View> : <View style={{ marginLeft: 32 }}>{isContest ? (comment.isSystem ? <MentionText content={comment.content} groups={mentionGroups} /> : <LinkifiedText content={comment.content} />) : <MentionText content={comment.content} groups={mentionGroups} />}</View>}
                 {comment.poll ? <View style={{ marginLeft: 32 }}><PollCard ownerKey={`comment:${comment.id}`} poll={comment.poll} /></View> : null}
                 {comment.images?.length ? (
@@ -1357,6 +1365,7 @@ function ThreadDetailModal({
           <Text style={{ fontSize: 11, color: colors.muted, paddingHorizontal: 16, paddingTop: 6 }}>@を入力して個人・グループをメンション</Text>
           {showCommentAttachments ? <View style={{ flexDirection: "row", gap: 10, paddingHorizontal: 16, paddingTop: 9 }}><Pressable onPress={() => void handlePickCommentImages()} style={{ flexDirection: "row", alignItems: "center", borderRadius: 10, backgroundColor: "#5865F218", paddingHorizontal: 14, paddingVertical: 10 }}><IconSymbol name="photo.fill" size={17} color="#5865F2" /><Text style={{ color: "#5865F2", fontWeight: "800", marginLeft: 7 }}>写真</Text></Pressable>{pollAllowed ? <Pressable onPress={() => { setCommentPollEnabled(true); setShowCommentAttachments(false); }} style={{ flexDirection: "row", alignItems: "center", borderRadius: 10, backgroundColor: "#5865F218", paddingHorizontal: 14, paddingVertical: 10 }}><IconSymbol name="chart.bar.fill" size={17} color="#5865F2" /><Text style={{ color: "#5865F2", fontWeight: "800", marginLeft: 7 }}>投票</Text></Pressable> : null}</View> : null}
           {commentImages.length ? <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingHorizontal: 16, paddingTop: 9 }}>{commentImages.map((uri, index) => <Pressable key={`${uri}-${index}`} onPress={() => setCommentImages((items) => items.filter((_, itemIndex) => itemIndex !== index))}><Image source={{ uri }} style={{ width: 64, height: 64, borderRadius: 9 }} contentFit="cover" /></Pressable>)}</ScrollView> : null}
+          {commentReplyTo ? <View style={{ paddingHorizontal: 16, paddingTop: 7 }}><ReplyReferenceView reply={replyReference(commentReplyTo.id, stripRankFromName(commentReplyTo.author.name), commentReplyTo.content, Boolean(commentReplyTo.images?.length || commentReplyTo.videos?.length))} onCancel={() => setCommentReplyTo(null)} /></View> : null}
           {pollAllowed ? <View style={{ paddingHorizontal: 16 }}><PollComposer enabled={commentPollEnabled} setEnabled={setCommentPollEnabled} question={commentPollQuestion} setQuestion={setCommentPollQuestion} options={commentPollOptions} setOptions={setCommentPollOptions} deadline={commentPollDeadline} setDeadline={setCommentPollDeadline} allowMultiple={commentPollAllowMultiple} setAllowMultiple={setCommentPollAllowMultiple} /></View> : null}
           <View
           style={{
@@ -1401,7 +1410,7 @@ function ThreadDetailModal({
           <View style={{ backgroundColor: colors.background, borderTopLeftRadius: 22, borderTopRightRadius: 22, padding: 18, paddingBottom: 32 }}>
             <Text style={{ fontSize: 16, fontWeight: "800", color: colors.foreground, marginBottom: 10 }}>コメントの操作</Text>
             {selectedComment ? ([
-              { label: "返信", action: () => { setCommentText(`@${stripRankFromName(selectedComment.author.name)} `); requestAnimationFrame(() => commentInputRef.current?.focus()); } },
+              { label: "返信", action: () => { setCommentReplyTo(selectedComment); setCommentText(`@${stripRankFromName(selectedComment.author.name)} `); requestAnimationFrame(() => commentInputRef.current?.focus()); } },
               { label: "コピー", action: () => { void Clipboard.setStringAsync(selectedComment.content); } },
               ...((selectedComment.author.id === viewerMemberId || canModerateAll) ? [
                 { label: "編集", action: () => { setEditingCommentId(selectedComment.id); setEditingCommentText(selectedComment.content); } },

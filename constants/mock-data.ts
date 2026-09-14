@@ -285,6 +285,7 @@ export interface BoardComment {
   threadId: string;
   author: Member;
   content: string;
+  replyTo?: import("../lib/reply-reference").ReplyReference;
   createdAt: string;
   images?: BoardImage[];
   videos?: string[];
@@ -317,6 +318,7 @@ export interface ChatMessage {
   chatId: string;
   senderId: string;
   content: string;
+  replyTo?: import("../lib/reply-reference").ReplyReference;
   imageUri?: string;
   attachmentUrls?: string[];
   externalMessageId?: string;

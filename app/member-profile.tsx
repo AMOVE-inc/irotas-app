@@ -14,6 +14,7 @@ import {
   type MemberRank,
 } from "@/constants/mock-data";
 import { useColors } from "@/hooks/use-colors";
+import { getMemberStaffRole } from "@/lib/member-staff-role";
 import { useClubs } from "@/lib/club-store";
 import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -279,7 +280,7 @@ export default function MemberProfileScreen() {
             <MemberRoleBadge name={selfName ?? member.name} role={databaseMember?.accessRole ?? member.role} leaderLabel={leaderLabel} />
           </View>
 
-          {member.role !== "admin" ? <View style={{ flexDirection: "row", alignItems: "center", marginTop: 8, gap: 12 }}>
+          {!getMemberStaffRole(member.name, databaseMember?.accessRole ?? member.role) ? <View style={{ flexDirection: "row", alignItems: "center", marginTop: 8, gap: 12 }}>
             <Text style={{ fontSize: 13, color: colors.muted }}>{member.branch === "kanto" ? "関東支部" : "関西支部"}</Text>
             <View style={{ flexDirection: "row", alignItems: "center" }}>
               <IconSymbol name="person.fill" size={14} color={colors.muted} />

@@ -22,6 +22,7 @@ function testDatabase(
   clubAllowed = false,
   recentIntroduction?: { id: string; created_at: string },
   thread?: { id: string; author_member_id: number; category: string; title: string },
+  replyComment?: { id: string; threadId: string; content: string; displayName: string },
 ) {
   const writes: { sql: string; values: unknown[] }[] = [];
   const db: D1Database = {
@@ -66,6 +67,11 @@ function testDatabase(
             return (thread ?? null) as T | null;
           if (sql.includes("SELECT display_name FROM members"))
             return { display_name: "テスト会員" } as T;
+          if (sql.includes("SELECT bc.content, m.display_name FROM board_comments bc")) {
+            if (replyComment && replyComment.id === values[0] && replyComment.threadId === values[1])
+              return { content: replyComment.content, display_name: replyComment.displayName } as T;
+            return null;
+          }
           return null;
         },
         async run() {
@@ -152,6 +158,18 @@ describe("shared board content API", () => {
     );
     expect(response?.status).toBe(201);
     expect(writes.some((item) => item.sql.includes("INSERT OR IGNORE INTO in_app_notifications") && item.values.includes(10))).toBe(true);
+  });
+
+  it("stores a verified reply preview from a comment in the same thread", async () => {
+    const thread = { id: "post-1", author_member_id: 10, category: "free-chat", title: "投稿" };
+    const source = { id: "comment-1", threadId: "post-1", content: "元のコメント", displayName: "投稿者" };
+    const { db, writes } = testDatabase({ id: 9, role: "user", access_role: "member", account_status: "active" }, false, undefined, thread, source);
+    const reply = await handleBoardContentRequest(request("/api/board/threads/post-1/comments", "POST", { content: "返信", data: { replyTo: { id: "comment-1", authorName: "偽の名前", excerpt: "偽の本文" } } }), { DB: db } as SitesEnv);
+    expect(reply?.status).toBe(201);
+    const saved = writes.find((item) => item.sql.includes("INSERT INTO board_comments"));
+    expect(JSON.parse(String(saved?.values[4])).replyTo).toEqual({ id: "comment-1", authorName: "投稿者", excerpt: "元のコメント" });
+    const invalid = await handleBoardContentRequest(request("/api/board/threads/post-1/comments", "POST", { content: "返信", data: { replyTo: { id: "other-thread" } } }), { DB: db } as SitesEnv);
+    expect(invalid?.status).toBe(404);
   });
 
   it("returns the recent self-introduction instead of creating it twice", async () => {

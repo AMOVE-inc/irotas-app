@@ -9,6 +9,7 @@ import {
 import type { SharedBoardComment, SharedBoardThread } from "./_core/api";
 import { cleanDiscordBoardContent, cleanDiscordBoardTitle } from "./discord-board-normalization";
 import { displayMemberName } from "./display-name";
+import { validReplyReference } from "./reply-reference";
 
 type ReactionSummary = Record<string, { count: number; reacted: boolean; memberIds?: string[] }>;
 
@@ -107,6 +108,7 @@ export function sharedThreadToBoardThread(record: SharedBoardThread, viewerId: s
 
 export function boardCommentData(comment: BoardComment): Record<string, unknown> {
   return {
+    replyTo: comment.replyTo,
     images: durableImages(comment.images),
     videos: comment.videos?.filter(durableUri),
     poll: comment.poll,
@@ -121,6 +123,7 @@ export function sharedCommentToBoardComment(record: SharedBoardComment, viewerId
     threadId: record.threadId,
     author: memberFor(record.authorId, record.authorName, { avatarUrl: record.authorAvatarUrl, memberTerm: record.authorMemberTerm, rank: record.authorRank }),
     content: record.content,
+    replyTo: validReplyReference(data.replyTo) ? data.replyTo : undefined,
     createdAt: record.createdAt,
     images: data.images,
     videos: data.videos,

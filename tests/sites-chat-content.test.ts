@@ -21,6 +21,7 @@ type Message = {
   content: string;
   image_url: string | null;
   image_urls_json?: string;
+  reply_to_json?: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -80,6 +81,10 @@ class ChatDatabase implements D1Database {
         }
         if (sql.includes("SELECT COUNT(*) AS count FROM chat_messages")) return { count: 0 } as T;
         if (sql.includes("SELECT content, image_url, created_at FROM chat_messages")) return null;
+        if (sql.includes("SELECT cm.content, cm.image_url, m.display_name")) {
+          const found = this.messages.find((message) => message.id === values[0] && message.room_id === values[1]);
+          return (found ? { content: found.content, image_url: found.image_url, display_name: found.sender_display_name } : null) as T;
+        }
         if (sql.includes("SELECT room_id, sender_member_id FROM chat_messages")) {
           const found = this.messages.find((message) => message.id === values[0]);
           return (found ? { room_id: found.room_id, sender_member_id: found.sender_member_id } : null) as T;
@@ -178,7 +183,8 @@ class ChatDatabase implements D1Database {
             sender_profile_json: JSON.stringify({ avatarUrl: "https://cdn.example/operator.png" }),
             content: String(values[3]), image_url: systemMessage ? null : values[4] ? String(values[4]) : null,
             image_urls_json: systemMessage ? "[]" : String(values[5] ?? "[]"),
-            created_at: String(values[systemMessage ? 4 : 6]), updated_at: String(values[systemMessage ? 5 : 7]),
+            reply_to_json: systemMessage ? null : values[6] ? String(values[6]) : null,
+            created_at: String(values[systemMessage ? 4 : 7]), updated_at: String(values[systemMessage ? 5 : 8]),
           });
         }
         return { success: true };
@@ -218,6 +224,21 @@ describe("shared chat content API", () => {
     expect(message.imageUri).toBeUndefined();
     expect(db.messages).toHaveLength(1);
     expect(db.messages[0].image_urls_json).toBe(JSON.stringify(imageUrls));
+  });
+
+  it("keeps the referenced message visible after a reply is saved and reloaded", async () => {
+    const original = await handleChatContentRequest(request("/api/chats/community-free-chat/messages", "POST", { content: "元のメッセージ" }), env);
+    const originalId = (await original?.json() as { message: { id: string } }).message.id;
+    const response = await handleChatContentRequest(request("/api/chats/community-free-chat/messages", "POST", { content: "返信です", replyToId: originalId }), env);
+    expect(response?.status).toBe(201);
+    const reply = (await response?.json() as { message: { replyTo?: { id: string; authorName: string; excerpt: string } } }).message.replyTo;
+    expect(reply).toEqual({ id: originalId, authorName: "運営テスト", excerpt: "元のメッセージ" });
+    const listing = await handleChatContentRequest(request("/api/chats/community-free-chat/messages"), env);
+    const messages = (await listing?.json() as { messages: Array<{ replyTo?: typeof reply }> }).messages;
+    expect(messages.find((message) => message.replyTo?.id === originalId)?.replyTo).toEqual(reply);
+    db.messages.push({ ...db.messages[0], id: "another-room-message", room_id: "branch-kanto-free" });
+    const invalid = await handleChatContentRequest(request("/api/chats/community-free-chat/messages", "POST", { content: "返信", replyToId: "another-room-message" }), env);
+    expect(invalid?.status).toBe(404);
   });
 
   it("rejects invalid image lists", async () => {

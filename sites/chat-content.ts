@@ -4,6 +4,9 @@ import { canMemberAccessClub } from "./clubs";
 import { mentionsViewer } from "../lib/mention-matching";
 import { freeChatMentionGroups } from "../lib/chat-group-mentions";
 import type { D1Database, SitesEnv } from "./platform-types";
+import archive from "../data/discord-board-2026-08-29.json";
+import type { RawDiscordBoardArchive } from "../lib/discord-board-import";
+import { replyReference, validReplyReference } from "../lib/reply-reference";
 
 const MESSAGES_PATH = /^\/api\/chats\/([^/]+)\/messages$/;
 const ROOMS_PATH = "/api/chats";
@@ -14,6 +17,11 @@ const READ_PATH = /^\/api\/chats\/([^/]+)\/read$/;
 const REACTIONS_PATH = "/api/chats/reactions";
 const MESSAGE_PATH = /^\/api\/chats\/messages\/([^/]+)$/;
 const MAX_BODY_BYTES = 64 * 1024;
+const introductionThreadIds = new Set((archive as RawDiscordBoardArchive).threads.filter((thread) => thread.category === "introduction").map((thread) => thread.id));
+const introductionReplies = new Map([
+  ...(archive as RawDiscordBoardArchive).threads.filter((thread) => introductionThreadIds.has(thread.id)),
+  ...(archive as RawDiscordBoardArchive).comments.filter((comment) => introductionThreadIds.has(comment.threadId)),
+].map((record) => [`discord-introduction-${record.id}`, record]));
 
 type Viewer = NonNullable<Awaited<ReturnType<typeof authenticatedRequestMember>>>;
 type RoomRow = {
@@ -34,6 +42,7 @@ type MessageRow = {
   content: string;
   image_url: string | null;
   image_urls_json: string;
+  reply_to_json?: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -391,6 +400,11 @@ function serializeMessage(row: MessageRow, reactions: ReactionRow[]) {
     const parsed = JSON.parse(row.image_urls_json || "[]");
     if (Array.isArray(parsed)) attachmentUrls = parsed.filter((url): url is string => typeof url === "string" && validImageUrl(url) === url).slice(0, 10);
   } catch {}
+  let replyTo;
+  try {
+    const parsed = JSON.parse(row.reply_to_json || "null");
+    if (validReplyReference(parsed)) replyTo = parsed;
+  } catch {}
   return {
     id: row.id,
     chatId: row.room_id,
@@ -398,6 +412,7 @@ function serializeMessage(row: MessageRow, reactions: ReactionRow[]) {
     externalAuthorName: (row.sender_display_name?.trim() || "メンバー").replace(/^deleted\s+user$/i, "未設定"),
     senderAvatar,
     content: row.content,
+    replyTo,
     imageUri: attachmentUrls.length > 1 ? undefined : row.image_url || attachmentUrls[0] || undefined,
     attachmentUrls: attachmentUrls.length > 1 ? attachmentUrls : undefined,
     reactions: reactionsFor(row.id, reactions),
@@ -422,7 +437,7 @@ async function ensureBranchRoomMembership(db: D1Database, room: RoomRow, member:
 async function messageRows(db: D1Database, roomId: string, visibleFrom?: string) {
   const result = await db.prepare(`SELECT cm.id, cm.room_id, cm.sender_member_id,
       m.public_member_id AS sender_public_member_id, m.display_name AS sender_display_name, m.profile_json AS sender_profile_json,
-      cm.content, cm.image_url, cm.image_urls_json, cm.created_at, cm.updated_at
+      cm.content, cm.image_url, cm.image_urls_json, cm.reply_to_json, cm.created_at, cm.updated_at
     FROM chat_messages cm JOIN members m ON m.id = cm.sender_member_id
     WHERE cm.room_id = ? AND cm.deleted_at IS NULL AND (? IS NULL OR cm.created_at >= ?)
     ORDER BY cm.created_at ASC LIMIT 500`).bind(roomId, visibleFrom ?? null, visibleFrom ?? null).all<MessageRow>();
@@ -850,16 +865,32 @@ export async function handleChatContentRequest(
       const imageUrls = validImageUrls(input?.imageUrls);
       const legacyImageUrl = validImageUrl(input?.imageUrl);
       const imageUrl = imageUrls?.[0] || legacyImageUrl;
+      const replyToId = input?.replyToId;
+      if (replyToId !== undefined && (typeof replyToId !== "string" || !replyToId || replyToId.length > 160))
+        return json({ error: "返信元が不正です" }, 400);
       if (!input || content.length > 10_000 || imageUrls === null || legacyImageUrl === null || (!content && !imageUrl))
         return json({ error: "メッセージ内容が不正です" }, 400);
+      let replyTo = null;
+      if (typeof replyToId === "string") {
+        const source = await env.DB.prepare(`SELECT cm.content, cm.image_url, m.display_name
+          FROM chat_messages cm JOIN members m ON m.id = cm.sender_member_id
+          WHERE cm.id = ? AND cm.room_id = ? AND cm.deleted_at IS NULL LIMIT 1`)
+          .bind(replyToId, roomId).first<{ content: string; image_url: string | null; display_name: string }>();
+        if (source) replyTo = replyReference(replyToId, source.display_name, source.content, Boolean(source.image_url));
+        else if (roomId === "board-introduction") {
+          const imported = introductionReplies.get(replyToId);
+          if (imported) replyTo = replyReference(replyToId, imported.authorName, imported.content, imported.images.length > 0);
+        }
+        if (!replyTo) return json({ error: "返信元が見つかりません" }, 404);
+      }
       const requestedId = typeof input.clientMessageId === "string" && /^cm_[a-zA-Z0-9_-]{12,80}$/.test(input.clientMessageId)
         ? input.clientMessageId : null;
       const id = requestedId ?? crypto.randomUUID();
       const now = new Date().toISOString();
       await env.DB.prepare(`INSERT OR IGNORE INTO chat_messages
-        (id, room_id, sender_member_id, content, image_url, image_urls_json, created_at, updated_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)`).bind(
-          id, roomId, member.id, content, imageUrl || null, JSON.stringify(imageUrls), now, now,
+        (id, room_id, sender_member_id, content, image_url, image_urls_json, reply_to_json, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`).bind(
+          id, roomId, member.id, content, imageUrl || null, JSON.stringify(imageUrls), replyTo ? JSON.stringify(replyTo) : null, now, now,
         ).run();
       if (roomId === "board-introduction") {
         await env.DB.prepare(`INSERT OR IGNORE INTO chat_message_reactions

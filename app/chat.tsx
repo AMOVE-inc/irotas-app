@@ -1,5 +1,6 @@
 import { ScreenContainer } from "@/components/screen-container";
 import { ExpandableImage } from "@/components/expandable-image";
+import { ReplyReferenceView } from "@/components/reply-reference-view";
 import { MemberClubLeaderBadges, MemberRankBadge, MemberRoleBadge, stripRankFromName } from "@/components/member-rank-badge";
 import { NewMemberMark } from "@/components/new-member-mark";
 import { MentionSuggestions, MentionText } from "@/components/mention-ui";
@@ -53,6 +54,7 @@ import * as Api from "@/lib/_core/api";
 import { getDiscordAuthorById, getDiscordAuthorByName } from "@/lib/discord-author-directory";
 import { displayMemberName } from "@/lib/display-name";
 import { importedIntroductionReactions, isUnidentifiedReaction, mergedIntroductionReactions } from "@/lib/introduction-reactions";
+import { replyReference } from "@/lib/reply-reference";
 
 const REACTION_EMOJIS = ["👍", "❤️", "😂", "🎉", "😋", "🙏"] as const;
 const MORE_REACTION_EMOJIS = ["😀", "😃", "😄", "😁", "😆", "😅", "😂", "🤣", "😊", "😇", "🙂", "🙃", "😉", "😍", "🥰", "😘", "😋", "😛", "🤪", "🤔", "🫡", "😎", "🥳", "😮", "😢", "😭", "😡", "👍", "👎", "👏", "🙌", "🙏", "💪", "👀", "❤️", "🩷", "🧡", "💛", "💚", "💙", "💜", "🖤", "🤍", "🔥", "✨", "🎉", "💯", "✅", "❌", "💡", "📌", "🍽️", "🍣", "🍖", "🍜", "🍕", "🍰", "☕", "🍺", "🍷"] as const;
@@ -204,6 +206,7 @@ function MessageBubble({ message, isMe, canDelete, readOnly, viewerId, viewerNam
             overflow: "hidden",
           }}
         >
+          {message.replyTo ? <View style={{ paddingHorizontal: 10, paddingTop: 8 }}><ReplyReferenceView reply={message.replyTo} outgoing={isMe} /></View> : null}
           {message.imageUri || message.attachmentUrls?.length ? (
             <View style={{ gap: 4 }}>
               {(message.attachmentUrls?.length ? message.attachmentUrls : [message.imageUri!]).map((uri, index, gallery) => (
@@ -298,6 +301,8 @@ export default function ChatScreen() {
   const canViewAllChats = isOperatorRole(authUser?.role, authUser?.accessRole);
   const { id, message: linkedMessageId, unreadCount: unreadCountParam } = useLocalSearchParams<{ id: string; message?: string; unreadCount?: string }>();
   const [messageText, setMessageText] = useState("");
+  const [replyToMessage, setReplyToMessage] = useState<ChatMessage | null>(null);
+  useEffect(() => setReplyToMessage(null), [id]);
   const [editingMessage, setEditingMessage] = useState<ChatMessage | null>(null);
   const [editingMessageText, setEditingMessageText] = useState("");
   const [savingMessageEdit, setSavingMessageEdit] = useState(false);
@@ -594,16 +599,17 @@ export default function ChatScreen() {
     const content = messageText.trim();
     if (!id) return;
     sendingRef.current = true;
-    const signature = JSON.stringify([id, content, pendingImages]);
+    const signature = JSON.stringify([id, content, pendingImages, replyToMessage?.id]);
     if (pendingSendRef.current?.signature !== signature) {
       pendingSendRef.current = { signature, messageId: `cm_${Date.now()}_${Math.random().toString(36).slice(2)}` };
     }
     try {
       const imageUrls = await Promise.all(pendingImages.map(async (uri) => (await Api.uploadEventImage(uri)).imageUrl));
-      const newMessage = await Api.createSharedChatMessage(id, { content, imageUrls, clientMessageId: pendingSendRef.current.messageId });
+      const newMessage = await Api.createSharedChatMessage(id, { content, imageUrls, clientMessageId: pendingSendRef.current.messageId, replyToId: replyToMessage?.id });
       pendingSendRef.current = null;
       setMessages((prev) => [...prev.filter((item) => item.id !== newMessage.id), newMessage]);
       setMessageText("");
+      setReplyToMessage(null);
       setMessageSelection({ start: 0, end: 0 });
       setPendingImages([]);
       setMentionQuery(null);
@@ -617,12 +623,14 @@ export default function ChatScreen() {
           senderId: viewerMemberId,
           externalAuthorName: authUser?.name ?? undefined,
           content,
+          replyTo: replyToMessage ? replyReference(replyToMessage.id, replyToMessage.externalAuthorName ?? getMemberById(replyToMessage.senderId)?.name ?? "メンバー", replyToMessage.content, Boolean(replyToMessage.imageUri || replyToMessage.attachmentUrls?.length)) : undefined,
           attachmentUrls: pendingImages.length ? pendingImages : undefined,
           createdAt: new Date().toISOString(),
         };
         setMessages((previous) => [...previous, legacyMessage]);
         await saveMessagesToStorage(id, [legacyMessage]);
         setMessageText("");
+        setReplyToMessage(null);
         setMessageSelection({ start: 0, end: 0 });
         setPendingImages([]);
         setMentionQuery(null);
@@ -632,7 +640,7 @@ export default function ChatScreen() {
     } finally {
       sendingRef.current = false;
     }
-  }, [messageText, pendingImages, id, authUser?.role, authUser?.accessRole, authUser?.name, viewerMemberId, staffViewingOnly]);
+  }, [messageText, pendingImages, replyToMessage, id, authUser?.role, authUser?.accessRole, authUser?.name, viewerMemberId, staffViewingOnly]);
 
   const handleReaction = useCallback(async (messageId: string, emoji: string, pollChoices?: string[], allowMultiple = true) => {
     if (staffViewingOnly) return;
@@ -875,7 +883,7 @@ export default function ChatScreen() {
                     openProfile(item.senderId ?? sender?.id ?? "");
                   }
                 }}
-                onReply={() => { const sender = getMemberById(item.senderId); setMessageText(`@${item.externalAuthorName ?? sender?.name ?? "メンバー"} `); inputRef.current?.focus(); }}
+                onReply={() => { const sender = getMemberById(item.senderId); setReplyToMessage(item); setMessageText(`@${item.externalAuthorName ?? sender?.name ?? "メンバー"} `); inputRef.current?.focus(); }}
                 onEdit={() => { setEditingMessage(item); setEditingMessageText(item.content); }}
                 onDelete={() => { const remove = async () => { try { if (item.shared) await Api.deleteSharedChatMessage(item.id); else await deleteMessageFromStorage(id ?? "", item.id); setMessages((current) => current.filter((message) => message.id !== item.id)); } catch (error) { Alert.alert("削除できませんでした", error instanceof Error ? error.message : "もう一度お試しください。"); } }; if (Platform.OS === "web") { void remove(); return; } Alert.alert("メッセージを削除", "このメッセージを削除しますか？", [{ text: "キャンセル", style: "cancel" }, { text: "削除", style: "destructive", onPress: remove }]); }}
               />
@@ -949,6 +957,7 @@ export default function ChatScreen() {
               @を入力してメンション
             </Text>
           </View>
+          {replyToMessage ? <View style={{ paddingHorizontal: 16, paddingTop: 6 }}><ReplyReferenceView reply={replyReference(replyToMessage.id, replyToMessage.externalAuthorName ?? getMemberById(replyToMessage.senderId)?.name ?? "メンバー", replyToMessage.content, Boolean(replyToMessage.imageUri || replyToMessage.attachmentUrls?.length))} onCancel={() => setReplyToMessage(null)} /></View> : null}
           {/* 画像プレビュー */}
           {pendingImages.length > 0 && (
             <View style={{ paddingHorizontal: 16, paddingBottom: 6 }}>
