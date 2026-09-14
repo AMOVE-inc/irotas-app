@@ -7,7 +7,7 @@ import { useColors } from "@/hooks/use-colors";
 import { parseInternalLink } from "@/lib/internal-links";
 import { getAllRooms } from "@/lib/chat-store";
 import { useRouter } from "expo-router";
-import { parseDiscordHeading, tokenizeRichTextLinks } from "@/lib/discord-rich-text";
+import { parseDiscordFormattedLines, tokenizeRichTextLinks } from "@/lib/discord-rich-text";
 import * as Api from "@/lib/_core/api";
 import { useEffect, useState } from "react";
 import { stripRankFromName } from "@/components/member-rank-badge";
@@ -67,8 +67,7 @@ export function MentionText({ content, outgoing = false, groups, rooms = getAllR
   };
   return (
     <Text style={{ fontSize: 14, lineHeight: 20, color: outgoing ? "#FFF" : colors.foreground }}>
-      {/\*\*\*?[\s\S]*?\n[\s\S]*?\*\*\*?/.test(content) ? renderRich(normalizeRenderedMentions(content), "multiline") : normalizeRenderedMentions(content).split("\n").map((line, index, lines) => {
-        const heading = parseDiscordHeading(line);
+      {parseDiscordFormattedLines(normalizeRenderedMentions(content)).map((heading, index, lines) => {
         const headingStyle: TextStyle = heading.level === 1
           ? { fontSize: 22, lineHeight: 30, fontWeight: "900" }
           : heading.level > 1

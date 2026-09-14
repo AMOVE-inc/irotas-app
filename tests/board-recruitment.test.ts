@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { inferImportedRecruitment, isClubSelfIntroduction, isRecruitmentBoardCategory, isThreadPinned, sortRecruitmentThreads } from "../lib/board-recruitment";
-import { parseDiscordHeading, tokenizeRichTextLinks } from "../lib/discord-rich-text";
+import { parseDiscordFormattedLines, parseDiscordHeading, tokenizeRichTextLinks } from "../lib/discord-rich-text";
 import type { BoardThread } from "../constants/mock-data";
 
 describe("Discord掲示板表示", () => {
@@ -8,6 +8,19 @@ describe("Discord掲示板表示", () => {
     expect(parseDiscordHeading("# 大見出し")).toEqual({ level: 1, content: "大見出し" });
     expect(parseDiscordHeading("## 中見出し")).toEqual({ level: 2, content: "中見出し" });
     expect(parseDiscordHeading("### 小見出し扱い")).toEqual({ level: 3, content: "小見出し扱い" });
+  });
+
+  it("複数行の太字と見出しを同時に解析する", () => {
+    const lines = parseDiscordFormattedLines("@everyone\n\n## 📣 今週のニュース\n**1行目\n2行目**\n## 次の項目");
+    expect(lines[2]).toEqual({ level: 2, content: "📣 今週のニュース" });
+    expect(lines[3]).toEqual({ level: 0, content: "**1行目**" });
+    expect(lines[4]).toEqual({ level: 0, content: "**2行目**" });
+    expect(lines[5]).toEqual({ level: 2, content: "次の項目" });
+  });
+
+  it("太字の途中にある見出しも認識する", () => {
+    expect(parseDiscordFormattedLines("**前の行\n# 大見出し\n後の行**")[1])
+      .toEqual({ level: 1, content: "**大見出し**" });
   });
 
   it("MarkdownリンクとURLをリンクとして抽出する", () => {

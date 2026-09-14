@@ -8,6 +8,24 @@ export function parseDiscordHeading(line: string): { level: 0 | 1 | 2 | 3; conte
   return { level: match[1].length as 1 | 2 | 3, content: match[2] };
 }
 
+/** Keep multiline bold markers paired while parsing headings on every line. */
+export function parseDiscordFormattedLines(content: string) {
+  let openMarker: "**" | "***" | null = null;
+  return content.split(/\r?\n/).map((line) => {
+    const heading = parseDiscordHeading(line);
+    const startedWith = openMarker;
+    for (const match of heading.content.matchAll(/(?<!\*)\*{2,3}(?!\*)/g)) {
+      const marker = match[0] as "**" | "***";
+      if (openMarker === marker) openMarker = null;
+      else if (openMarker === null) openMarker = marker;
+    }
+    return {
+      level: heading.level,
+      content: heading.content ? `${startedWith ?? ""}${heading.content}${openMarker ?? ""}` : "",
+    };
+  });
+}
+
 export function tokenizeRichTextLinks(value: string): RichTextToken[] {
   const tokens: RichTextToken[] = [];
   const pattern = /\[[^\]\n]+\]\(https?:\/\/[^\s)]+\)|https?:\/\/[^\s<]+/gi;
