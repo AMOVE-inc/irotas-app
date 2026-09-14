@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { inferImportedRecruitment, isClubSelfIntroduction, isRecruitmentBoardCategory, isThreadPinned, sortRecruitmentThreads } from "../lib/board-recruitment";
-import { parseDiscordFormattedLines, parseDiscordHeading, tokenizeRichTextLinks } from "../lib/discord-rich-text";
+import { parseDiscordRichLines, parseDiscordHeading, tokenizeRichTextLinks } from "../lib/discord-rich-text";
 import type { BoardThread } from "../constants/mock-data";
 
 describe("Discord掲示板表示", () => {
@@ -11,16 +11,24 @@ describe("Discord掲示板表示", () => {
   });
 
   it("複数行の太字と見出しを同時に解析する", () => {
-    const lines = parseDiscordFormattedLines("@everyone\n\n## 📣 今週のニュース\n**1行目\n2行目**\n## 次の項目");
-    expect(lines[2]).toEqual({ level: 2, content: "📣 今週のニュース" });
-    expect(lines[3]).toEqual({ level: 0, content: "**1行目**" });
-    expect(lines[4]).toEqual({ level: 0, content: "**2行目**" });
-    expect(lines[5]).toEqual({ level: 2, content: "次の項目" });
+    const lines = parseDiscordRichLines("@everyone\n\n## 📣 今週のニュース\n**1行目\n2行目**\n## 次の項目");
+    expect(lines[2]).toEqual({ level: 2, segments: [{ text: "📣 今週のニュース", formats: [] }] });
+    expect(lines[3]).toEqual({ level: 0, segments: [{ text: "1行目", formats: ["bold"] }] });
+    expect(lines[4]).toEqual({ level: 0, segments: [{ text: "2行目", formats: ["bold"] }] });
+    expect(lines[5]).toEqual({ level: 2, segments: [{ text: "次の項目", formats: [] }] });
   });
 
   it("太字の途中にある見出しも認識する", () => {
-    expect(parseDiscordFormattedLines("**前の行\n# 大見出し\n後の行**")[1])
-      .toEqual({ level: 1, content: "**大見出し**" });
+    expect(parseDiscordRichLines("**前の行\n# 大見出し\n後の行**")[1])
+      .toEqual({ level: 1, segments: [{ text: "大見出し", formats: ["bold"] }] });
+  });
+
+  it("見出しと同じ投稿内の複数の太字で記号を残さない", () => {
+    const lines = parseDiscordRichLines("@everyone\n\n## 1. 新アプリについて\n**プロフィール設定**をお願いします\n\n## 2. IRO+Party\n**募集開始**です");
+    expect(lines[2].level).toBe(2);
+    expect(lines[5].level).toBe(2);
+    expect(lines.flatMap((line) => line.segments).map((segment) => segment.text).join("")).not.toContain("**");
+    expect(lines[3].segments[0]).toEqual({ text: "プロフィール設定", formats: ["bold"] });
   });
 
   it("MarkdownリンクとURLをリンクとして抽出する", () => {

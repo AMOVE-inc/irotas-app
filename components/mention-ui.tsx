@@ -7,10 +7,21 @@ import { useColors } from "@/hooks/use-colors";
 import { parseInternalLink } from "@/lib/internal-links";
 import { getAllRooms } from "@/lib/chat-store";
 import { useRouter } from "expo-router";
-import { parseDiscordFormattedLines, tokenizeRichTextLinks } from "@/lib/discord-rich-text";
+import { parseDiscordRichLines, tokenizeRichTextLinks, type DiscordTextFormat } from "@/lib/discord-rich-text";
 import * as Api from "@/lib/_core/api";
 import { useEffect, useState } from "react";
 import { stripRankFromName } from "@/components/member-rank-badge";
+
+const DISCORD_FORMAT_STYLES: Record<DiscordTextFormat, TextStyle> = {
+  boldItalic: { fontWeight: "900", fontStyle: "italic" },
+  boldHeading: { fontSize: 18, lineHeight: 25, fontWeight: "900" },
+  bold: { fontWeight: "900" },
+  underline: { textDecorationLine: "underline" },
+  strikethrough: { textDecorationLine: "line-through" },
+  small: { fontSize: 16, lineHeight: 23 },
+  large: { fontSize: 18, lineHeight: 25 },
+  italic: { fontStyle: "italic" },
+};
 
 /** Mentions should show just a member name, never their rank or club-leader title. */
 export function mentionDisplayName(label: string) {
@@ -47,33 +58,15 @@ export function MentionText({ content, outgoing = false, groups, rooms = getAllR
     return <Text key={`${keyPrefix}-${index}`}><Text accessibilityRole="link" onPress={() => void Linking.openURL(token.url)} style={{ color: outgoing ? "#DCEBFF" : "#3478C7", textDecorationLine: "underline", fontWeight: "700" }}>{token.label}</Text>{token.suffix}</Text>;
   });
 
-  const renderRich = (value: string, keyPrefix: string): React.ReactNode => {
-    const pattern = /(\*\*\*([\s\S]+?)\*\*\*|\*\*# ([\s\S]+?)\*\*|\*\*([\s\S]+?)\*\*|__([\s\S]+?)__|~~([\s\S]+?)~~|\[small\]([\s\S]+?)\[\/small\]|\[large\]([\s\S]+?)\[\/large\]|(?<!\*)\*([^*\n]+)\*(?!\*))/;
-    const match = pattern.exec(value);
-    if (!match || match.index === undefined) return renderPlain(value, keyPrefix);
-    const before = value.slice(0, match.index);
-    const after = value.slice(match.index + match[0].length);
-    let inner = "";
-    let style: TextStyle = {};
-    if (match[2] !== undefined) { inner = match[2]; style = { fontWeight: "900", fontStyle: "italic" }; }
-    else if (match[3] !== undefined) { inner = match[3]; style = { fontSize: 18, lineHeight: 25, fontWeight: "900" }; }
-    else if (match[4] !== undefined) { inner = match[4]; style = { fontWeight: "900" }; }
-    else if (match[5] !== undefined) { inner = match[5]; style = { textDecorationLine: "underline" }; }
-    else if (match[6] !== undefined) { inner = match[6]; style = { textDecorationLine: "line-through" }; }
-    else if (match[7] !== undefined) { inner = match[7]; style = { fontSize: 16, lineHeight: 23 }; }
-    else if (match[8] !== undefined) { inner = match[8]; style = { fontSize: 18, lineHeight: 25 }; }
-    else { inner = match[9]; style = { fontStyle: "italic" }; }
-    return <>{renderRich(before, `${keyPrefix}-before`)}<Text key={`${keyPrefix}-formatted`} style={style}>{renderRich(inner, `${keyPrefix}-inner`)}</Text>{renderRich(after, `${keyPrefix}-after`)}</>;
-  };
   return (
     <Text style={{ fontSize: 14, lineHeight: 20, color: outgoing ? "#FFF" : colors.foreground }}>
-      {parseDiscordFormattedLines(normalizeRenderedMentions(content)).map((heading, index, lines) => {
+      {parseDiscordRichLines(normalizeRenderedMentions(content)).map((heading, index, lines) => {
         const headingStyle: TextStyle = heading.level === 1
           ? { fontSize: 22, lineHeight: 30, fontWeight: "900" }
           : heading.level > 1
             ? { fontSize: 17, lineHeight: 25, fontWeight: "900" }
             : {};
-        return <Text key={`line-${index}`} style={headingStyle}>{renderRich(heading.content, `line-${index}`)}{index < lines.length - 1 ? "\n" : ""}</Text>;
+        return <Text key={`line-${index}`} style={headingStyle}>{heading.segments.map((segment, segmentIndex) => <Text key={`segment-${segmentIndex}`} style={Object.assign({}, ...segment.formats.map((format) => DISCORD_FORMAT_STYLES[format]))}>{renderPlain(segment.text, `line-${index}-segment-${segmentIndex}`)}</Text>)}{index < lines.length - 1 ? "\n" : ""}</Text>;
       })}
     </Text>
   );

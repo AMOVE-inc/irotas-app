@@ -8,21 +8,48 @@ export function parseDiscordHeading(line: string): { level: 0 | 1 | 2 | 3; conte
   return { level: match[1].length as 1 | 2 | 3, content: match[2] };
 }
 
-/** Keep multiline bold markers paired while parsing headings on every line. */
-export function parseDiscordFormattedLines(content: string) {
-  let openMarker: "**" | "***" | null = null;
-  return content.split(/\r?\n/).map((line) => {
-    const heading = parseDiscordHeading(line);
-    const startedWith = openMarker;
-    for (const match of heading.content.matchAll(/(?<!\*)\*{2,3}(?!\*)/g)) {
-      const marker = match[0] as "**" | "***";
-      if (openMarker === marker) openMarker = null;
-      else if (openMarker === null) openMarker = marker;
-    }
-    return {
-      level: heading.level,
-      content: heading.content ? `${startedWith ?? ""}${heading.content}${openMarker ?? ""}` : "",
-    };
+export type DiscordTextFormat = "boldItalic" | "boldHeading" | "bold" | "underline" | "strikethrough" | "small" | "large" | "italic";
+export type DiscordTextSegment = { text: string; formats: DiscordTextFormat[] };
+
+/** Parse inline formatting first so multiline spans remain intact, then classify each line's heading. */
+export function parseDiscordRichLines(content: string) {
+  const parseSegments = (value: string, formats: DiscordTextFormat[] = []): DiscordTextSegment[] => {
+    const pattern = /(\*\*\*([\s\S]+?)\*\*\*|\*\*# ([\s\S]+?)\*\*|\*\*([\s\S]+?)\*\*|__([\s\S]+?)__|~~([\s\S]+?)~~|\[small\]([\s\S]+?)\[\/small\]|\[large\]([\s\S]+?)\[\/large\]|(?<!\*)\*([^*\n]+)\*(?!\*))/;
+    const match = pattern.exec(value);
+    if (!match || match.index === undefined) return [{ text: value, formats }];
+    const format: DiscordTextFormat = match[2] !== undefined ? "boldItalic"
+      : match[3] !== undefined ? "boldHeading"
+      : match[4] !== undefined ? "bold"
+      : match[5] !== undefined ? "underline"
+      : match[6] !== undefined ? "strikethrough"
+      : match[7] !== undefined ? "small"
+      : match[8] !== undefined ? "large" : "italic";
+    const inner = (match.slice(2).find((part) => part !== undefined) ?? "") as string;
+    return [
+      ...parseSegments(value.slice(0, match.index), formats),
+      ...parseSegments(inner, [...formats, format]),
+      ...parseSegments(value.slice(match.index + match[0].length), formats),
+    ];
+  };
+
+  const lines: DiscordTextSegment[][] = [[]];
+  for (const segment of parseSegments(content)) {
+    const parts = segment.text.split(/\r?\n/);
+    parts.forEach((part, index) => {
+      if (index > 0) lines.push([]);
+      if (part) lines[lines.length - 1].push({ text: part, formats: segment.formats });
+    });
+  }
+  return lines.map((segments) => {
+    const plain = segments.map((segment) => segment.text).join("");
+    const heading = parseDiscordHeading(plain);
+    let prefixLength = plain.length - heading.content.length;
+    const contentSegments = segments.flatMap((segment) => {
+      const trimmed = segment.text.slice(prefixLength);
+      prefixLength = Math.max(0, prefixLength - segment.text.length);
+      return trimmed ? [{ ...segment, text: trimmed }] : [];
+    });
+    return { level: heading.level, segments: contentSegments };
   });
 }
 
