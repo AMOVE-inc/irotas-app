@@ -895,6 +895,7 @@ export default function ChatScreen() {
           ref={flatListRef}
           key={`${id ?? "chat"}:${introductionChat ? "latest-first" : "default"}`}
           data={displayedMessages}
+          extraData={highlightedMessageId}
           inverted={introductionChat}
           initialScrollIndex={introductionChat ? undefined : messages.length ? (Number(unreadCountParam ?? 0) === 0 ? messages.length - 1 : Math.max(0, messages.length - Math.min(messages.length, Math.max(0, Number(unreadCountParam ?? 0)))) ) : undefined}
           keyExtractor={(item) => item.id}
