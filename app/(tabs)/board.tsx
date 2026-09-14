@@ -3018,7 +3018,13 @@ export default function BoardScreen() {
             mentionCount={mentionCount}
             onPress={() => { markThreadRead(item.id); setSelectedThread(item); router.setParams({ thread: item.id }); }}
             onEdit={item.author.id === viewerMemberId || userCanModerateAll ? () => setEditingThread(item) : undefined}
-            onDelete={item.author.id === viewerMemberId || userCanModerateAll ? () => Alert.alert("投稿を削除しますか？", "削除後は元に戻せません。", [{ text: "キャンセル", style: "cancel" }, { text: "削除", style: "destructive", onPress: () => { void deleteThread(item); } }]) : undefined}
+            onDelete={item.author.id === viewerMemberId || userCanModerateAll ? () => {
+              if (Platform.OS === "web") {
+                if (window.confirm("投稿を削除しますか？削除後は元に戻せません。")) void deleteThread(item);
+                return;
+              }
+              Alert.alert("投稿を削除しますか？", "削除後は元に戻せません。", [{ text: "キャンセル", style: "cancel" }, { text: "削除", style: "destructive", onPress: () => { void deleteThread(item); } }]);
+            } : undefined}
             onPin={canPinThread(item) || userCanModerateAll ? () => { void updateThreadManagement(item, { isRecruiting: item.isRecruiting, recruitmentStatus: item.recruitmentStatus, isPinned: !item.isPinned }); } : undefined}
             onChangeRecruitment={canChangeRecruitment(item) || canPinThread(item) ? () => promptRecruitmentStatus(item) : undefined}
           />;
