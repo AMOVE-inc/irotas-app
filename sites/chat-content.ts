@@ -205,7 +205,7 @@ async function ensureClubRooms(db: D1Database, memberId: number) {
       WHERE cm.club_id = c.id AND cm.member_id = ? AND cm.status = 'approved'))`)
     .bind(memberId, memberId)
     .all<{ id: string; name: string; leader_member_id: number | null }>();
-  for (const club of clubs.results ?? []) await syncClubRoom(db, club);
+  await Promise.all((clubs.results ?? []).map((club) => syncClubRoom(db, club)));
 }
 
 async function ensureKnownRoom(db: D1Database, roomId: string, syncClubMembers = false) {
@@ -508,6 +508,94 @@ async function serializeRoom(db: D1Database, room: RoomRow, member: Viewer, visi
   };
 }
 
+// The room list used to serialize every room with six separate database calls.
+// Fetch participants and summaries in bounded batches so opening the chat tab
+// does not wait for hundreds of round trips.
+async function serializeRoomList(db: D1Database, rooms: RoomRow[], member: Viewer) {
+  type Participant = { room_id: string; member_id: number; public_member_id: string | null; display_name: string };
+  type Summary = {
+    id: string; creator_public_member_id: string | null; cancelled_title: string | null;
+    last_content: string | null; last_image_url: string | null; last_created_at: string | null;
+    unread_count: number; mention_count: number;
+  };
+  const participantsByRoom = new Map<string, Participant[]>();
+  const summaryByRoom = new Map<string, Summary>();
+  const viewer = await db.prepare(`SELECT display_name, COALESCE(password_set_at, last_signed_in_at) AS started_at
+    FROM members WHERE id = ?`).bind(member.id).first<{ display_name: string; started_at: string | null }>();
+  for (let index = 0; index < rooms.length; index += 80) {
+    const ids = rooms.slice(index, index + 80).map((room) => room.id);
+    const placeholders = ids.map(() => "?").join(", ");
+    const [participants, summaries] = await Promise.all([
+      db.prepare(`SELECT crm.room_id, crm.member_id, m.public_member_id, m.display_name
+        FROM chat_room_members crm JOIN members m ON m.id = crm.member_id
+        WHERE crm.room_id IN (${placeholders}) AND crm.left_at IS NULL ORDER BY crm.joined_at`)
+        .bind(...ids).all<Participant>(),
+      db.prepare(`SELECT cr.id, creator.public_member_id AS creator_public_member_id,
+        cancelled.title AS cancelled_title,
+        (SELECT cm.content FROM chat_messages cm WHERE cm.room_id = cr.id AND cm.deleted_at IS NULL
+          AND (mine.joined_at IS NULL OR cr.id NOT IN ('branch-kanto-free', 'branch-kansai-free') OR cm.created_at >= mine.joined_at)
+          ORDER BY cm.created_at DESC LIMIT 1) AS last_content,
+        (SELECT cm.image_url FROM chat_messages cm WHERE cm.room_id = cr.id AND cm.deleted_at IS NULL
+          AND (mine.joined_at IS NULL OR cr.id NOT IN ('branch-kanto-free', 'branch-kansai-free') OR cm.created_at >= mine.joined_at)
+          ORDER BY cm.created_at DESC LIMIT 1) AS last_image_url,
+        (SELECT cm.created_at FROM chat_messages cm WHERE cm.room_id = cr.id AND cm.deleted_at IS NULL
+          AND (mine.joined_at IS NULL OR cr.id NOT IN ('branch-kanto-free', 'branch-kansai-free') OR cm.created_at >= mine.joined_at)
+          ORDER BY cm.created_at DESC LIMIT 1) AS last_created_at,
+        (SELECT COUNT(*) FROM chat_messages cm LEFT JOIN chat_room_reads crr
+          ON crr.room_id = cm.room_id AND crr.member_id = ?
+          WHERE cm.room_id = cr.id AND cm.deleted_at IS NULL AND cm.sender_member_id != ?
+          AND (mine.joined_at IS NULL OR cr.id NOT IN ('branch-kanto-free', 'branch-kansai-free') OR cm.created_at >= mine.joined_at)
+          AND julianday(cm.created_at) > julianday(COALESCE(?, ?))
+          AND (crr.last_read_at IS NULL OR cm.created_at > crr.last_read_at)) AS unread_count,
+        (SELECT COUNT(*) FROM chat_messages cm LEFT JOIN chat_room_reads crr
+          ON crr.room_id = cm.room_id AND crr.member_id = ?
+          WHERE cm.room_id = cr.id AND cm.deleted_at IS NULL AND cm.sender_member_id != ?
+          AND (mine.joined_at IS NULL OR cr.id NOT IN ('branch-kanto-free', 'branch-kansai-free') OR cm.created_at >= mine.joined_at)
+          AND julianday(cm.created_at) > julianday(COALESCE(?, ?))
+          AND (crr.last_read_at IS NULL OR cm.created_at > crr.last_read_at)
+          AND (cm.content LIKE ? OR cm.content LIKE '%@全員%' OR cm.content LIKE '%@everyone%' OR cm.content LIKE '%@here%')) AS mention_count
+        FROM chat_rooms cr
+        LEFT JOIN chat_room_members mine ON mine.room_id = cr.id AND mine.member_id = ? AND mine.left_at IS NULL
+        LEFT JOIN members creator ON creator.id = cr.created_by_member_id
+        LEFT JOIN events cancelled ON cancelled.id = cr.source_id AND cr.room_type = 'event' AND cancelled.status = 'cancelled'
+        WHERE cr.id IN (${placeholders})`)
+        .bind(member.id, member.id, viewer?.started_at ?? null, viewer?.started_at ?? null,
+          member.id, member.id, viewer?.started_at ?? null, viewer?.started_at ?? null,
+          `%@${viewer?.display_name ?? ""}%`, member.id, ...ids).all<Summary>(),
+    ]);
+    for (const participant of participants.results ?? []) {
+      const items = participantsByRoom.get(participant.room_id) ?? [];
+      items.push(participant);
+      participantsByRoom.set(participant.room_id, items);
+    }
+    for (const summary of summaries.results ?? []) summaryByRoom.set(summary.id, summary);
+  }
+  return rooms.map((room) => {
+    const participants = participantsByRoom.get(room.id) ?? [];
+    const summary = summaryByRoom.get(room.id);
+    const viewerIsParticipant = participants.some((item) => item.member_id === member.id);
+    const dmPartner = room.room_type === "dm" && viewerIsParticipant
+      ? participants.find((item) => item.member_id !== member.id) : null;
+    const dmName = room.room_type === "dm" && !viewerIsParticipant
+      ? participants.map((item) => item.display_name).join("・") || room.name : dmPartner?.display_name;
+    return {
+      id: room.id,
+      name: dmName || (summary?.cancelled_title ? `【開催中止】${summary.cancelled_title}` : room.name),
+      type: room.room_type === "announcement" ? "board" : room.room_type,
+      sourceId: room.source_id ?? room.id,
+      participants: participants.map((item) => publicMemberId(item.member_id, item.public_member_id)),
+      createdBy: room.created_by_member_id
+        ? publicMemberId(room.created_by_member_id, summary?.creator_public_member_id ?? null) : "system",
+      requiredRank: room.required_rank ?? undefined,
+      lastMessage: summary?.last_content || (summary?.last_image_url ? "画像が送信されました" : ""),
+      lastMessageAt: summary?.last_created_at ?? undefined,
+      unreadCount: summary?.unread_count ?? 0,
+      mentionCount: summary?.mention_count ?? 0,
+      shared: true,
+    };
+  });
+}
+
 export async function handleChatContentRequest(
   request: Request,
   env: SitesEnv,
@@ -535,6 +623,11 @@ export async function handleChatContentRequest(
     await ensureViewerEventRooms(env.DB, member);
     const result = await env.DB.prepare(`SELECT cr.id, cr.name, cr.room_type, cr.source_id, cr.required_rank, cr.created_by_member_id
       FROM chat_rooms cr WHERE cr.deleted_at IS NULL
+      -- A departed room stays hidden for that member, including operators who
+      -- can otherwise inspect all rooms. A new invitation clears left_at.
+      AND (cr.room_type NOT IN ('event', 'dm', 'group', 'board') OR NOT EXISTS
+        (SELECT 1 FROM chat_room_members departed
+         WHERE departed.room_id = cr.id AND departed.member_id = ? AND departed.left_at IS NOT NULL))
       AND (cr.room_type != 'event' OR (cr.source_id NOT LIKE 'discord-event-%' AND NOT EXISTS (
         SELECT 1 FROM events e WHERE e.id = cr.source_id AND json_extract(e.public_data_json, '$.recruitmentChannel') = 'discord')))
       AND (
@@ -544,13 +637,12 @@ export async function handleChatContentRequest(
         OR (cr.room_type = 'event' AND EXISTS (SELECT 1 FROM event_participations ep
           WHERE ep.event_id = cr.source_id AND ep.member_id = ? AND ep.status IN ('confirmed', 'cancel_requested')))
       ) ORDER BY CASE WHEN cr.room_type = 'club' THEN 0 ELSE 1 END, cr.updated_at DESC LIMIT 1000`)
-      .bind(elevated(member) ? 1 : 0, member.id, member.id).all<RoomRow>();
+      .bind(member.id, elevated(member) ? 1 : 0, member.id, member.id).all<RoomRow>();
     const access = await Promise.all((result.results ?? []).map((room) => canViewRoom(env.DB!, room, member)));
     const visible = (result.results ?? []).filter((_, index) => access[index]);
-    return json({ rooms: await Promise.all(visible.map(async (room) => {
-      const branchMembership = await ensureBranchRoomMembership(env.DB!, room, member);
-      return serializeRoom(env.DB!, room, member, branchMembership?.joined_at);
-    })) });
+    await Promise.all(visible.filter((room) => room.id === "branch-kanto-free" || room.id === "branch-kansai-free")
+      .map((room) => ensureBranchRoomMembership(env.DB!, room, member)));
+    return json({ rooms: await serializeRoomList(env.DB, visible, member) });
   }
 
   if (url.pathname === ROOMS_PATH && request.method === "POST") {

@@ -1,4 +1,5 @@
 import archive from "../data/discord-board-2026-08-29.json";
+import introductionMemberMetadata from "../data/discord-introduction-member-metadata.json";
 import { SEEDED_GOURMET_CONTESTS } from "../constants/imported-gourmet-contests";
 import type {
   RawDiscordBoardArchive,
@@ -11,6 +12,16 @@ import type { D1Database, SitesEnv } from "./platform-types";
 const ARCHIVE_PATH = "/api/board/archive";
 const INTRODUCTION_PROFILE_PATH = "/api/board/introduction-profile";
 const CONTESTS_PATH = "/api/board/contests";
+
+export function archivedIntroductionProfile(authorId: string) {
+  const introduction = (archive as RawDiscordBoardArchive).threads
+    .filter((thread) => thread.category === "introduction" && thread.authorId === authorId)
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))[0];
+  if (!introduction) return null;
+  const metadata = (introductionMemberMetadata as Record<string, { memberTerm?: string | null; joinedAt?: string | null }>)[authorId];
+  return { name: introduction.authorName, avatarUrl: introduction.authorAvatarUrl ?? "", bio: introduction.content,
+    memberTerm: metadata?.memberTerm ?? null, joinedAt: metadata?.joinedAt ?? null };
+}
 
 function isPrivateClubCategory(category: string) {
   return category.startsWith("club-club-");
@@ -76,11 +87,9 @@ export async function handleBoardArchiveRequest(
   if (url.pathname === INTRODUCTION_PROFILE_PATH) {
     const authorId = url.searchParams.get("authorId")?.replace(/^discord-/, "");
     if (!authorId || !/^\d{17,20}$/.test(authorId)) return Response.json({ error: "メンバーが見つかりません" }, { status: 404 });
-    const introduction = (archive as RawDiscordBoardArchive).threads
-      .filter((thread) => thread.category === "introduction" && thread.authorId === authorId)
-      .sort((a, b) => b.createdAt.localeCompare(a.createdAt))[0];
-    if (!introduction) return Response.json({ error: "メンバーが見つかりません" }, { status: 404 });
-    return Response.json({ name: introduction.authorName, avatarUrl: introduction.authorAvatarUrl ?? "", bio: introduction.content }, {
+    const profile = archivedIntroductionProfile(authorId);
+    if (!profile) return Response.json({ error: "メンバーが見つかりません" }, { status: 404 });
+    return Response.json(profile, {
       headers: { "cache-control": "private, no-store", vary: "Cookie, Authorization" },
     });
   }

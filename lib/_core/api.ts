@@ -1029,7 +1029,7 @@ export async function getBoardArchive(scope: "all" | "public" = "all") {
 }
 
 export async function getArchivedIntroductionProfile(authorId: string) {
-  return apiCall<{ name: string; avatarUrl: string; bio: string }>(
+  return apiCall<{ name: string; avatarUrl: string; bio: string; memberTerm: string | null; joinedAt: string | null }>(
     `/api/board/introduction-profile?authorId=${encodeURIComponent(authorId)}`,
   );
 }

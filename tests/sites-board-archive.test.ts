@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  archivedIntroductionProfile,
   allowedPrivateClubCategories,
   filterBoardArchive,
   handleBoardArchiveRequest,
@@ -15,6 +16,13 @@ describe("gourmet contest archive access", () => {
     );
     expect(response?.status).toBe(401);
     expect(await response?.text()).not.toContain("第1回 初デート");
+  });
+});
+
+describe("Discord introduction profile", () => {
+  it("returns the archived join term and date instead of a placeholder", () => {
+    const profile = archivedIntroductionProfile("1547145731641712714");
+    expect(profile).toMatchObject({ name: "ka_no", memberTerm: "第7期メンバー", joinedAt: "2026-09-10T10:55:17.846000Z" });
   });
 });
 

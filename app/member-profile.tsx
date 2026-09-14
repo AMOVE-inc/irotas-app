@@ -45,7 +45,7 @@ export default function MemberProfileScreen() {
 
   const mockMember = getMemberById(id || "");
   const [databaseMember, setDatabaseMember] = useState<Api.PublicMember | null>(null);
-  const [archivedIntroduction, setArchivedIntroduction] = useState<{ name: string; avatarUrl: string; bio: string } | null>(null);
+  const [archivedIntroduction, setArchivedIntroduction] = useState<{ name: string; avatarUrl: string; bio: string; memberTerm: string | null; joinedAt: string | null } | null>(null);
   const [databaseLookupComplete, setDatabaseLookupComplete] = useState(false);
   const [selfDetails, setSelfDetails] = useState<Partial<ProfileDetails> | null>(null);
   const [selfBio, setSelfBio] = useState<string | null>(null);
@@ -117,11 +117,11 @@ export default function MemberProfileScreen() {
         points: 0,
         level: 1,
         branch: "kanto",
-        generation: 0,
+        generation: Number(archivedIntroduction?.memberTerm?.match(/\d+/)?.[0] ?? 0),
         bio: archivedIntroduction?.bio ?? "",
         interests: [],
         role: "member",
-        joinedAt: "2024-01-01",
+        joinedAt: archivedIntroduction?.joinedAt ?? "",
       };
       return undefined;
     }

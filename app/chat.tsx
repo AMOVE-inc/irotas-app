@@ -305,6 +305,19 @@ export default function ChatScreen() {
     () => getRoomById(id ?? "")?.participants ?? []
   );
   const [directory, setDirectory] = useState<Api.PublicMember[]>([]);
+  const [directoryLoaded, setDirectoryLoaded] = useState(false);
+  useEffect(() => {
+    let active = true;
+    setDirectoryLoaded(false);
+    void Api.getMemberDirectory().then((members) => {
+      if (active) setDirectory(members);
+    }).catch(() => {
+      if (active) setDirectory([]);
+    }).finally(() => {
+      if (active) setDirectoryLoaded(true);
+    });
+    return () => { active = false; };
+  }, [authUser?.id]);
   const mentionMembers = useMemo(() => directory.length > 0
     ? directory.map((member) => ({
       id: member.id,
@@ -322,6 +335,7 @@ export default function ChatScreen() {
       : [];
     const roomMemberIds = branch ? branchMemberIds
       : room?.id === "community-free-chat" ? mentionMembers.map((member) => member.id)
+      : room?.type === "rank" ? directory.filter((member) => member.memberRank === room.requiredRank).map((member) => member.id)
       : roomParticipants;
     const groups = getMentionGroups(mentionMembers, CLUBS).map((group) => group.id === "everyone"
       ? { ...group, description: "このチャットの対象メンバー全員", memberIds: roomMemberIds }
@@ -332,7 +346,7 @@ export default function ChatScreen() {
     );
     if (branch) groups.push({ id: "current-branch", label: "支部全員", description: "この支部のメンバー全員", memberIds: branchMemberIds, category: "branch" });
     return groups;
-  }, [mentionMembers, directory, room?.id, roomParticipants]);
+  }, [mentionMembers, directory, room?.id, room?.type, room?.requiredRank, roomParticipants]);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const introductionChat = id === "board-introduction";
   // inverted リストではデータの先頭が入力欄側に置かれるため、最新メッセージを
@@ -440,7 +454,6 @@ export default function ChatScreen() {
             .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()));
         }).catch(() => setMessages((current) => current.filter((message) => message.shared))).finally(() => setIntroductionHydrated(true));
       }
-      Api.getMemberDirectory().then(setDirectory).catch(() => {});
     }).catch(() => setIsLoadingRoom(false));
     return () => clearTimeout(loadingFallback);
   }, [id, applySharedMessages]);
@@ -661,6 +674,9 @@ export default function ChatScreen() {
   const canInviteMembers = canManageRoom && room.type !== "rank" && room.type !== "event" && room.type !== "dm";
   const canPostAnnouncement = !staffViewingOnly && canPostToChat(authUser?.role, room.id, authUser?.accessRole);
   const sharedInviteCandidates = directory.filter((member) => member.id !== viewerMemberId && !roomParticipants.includes(member.id));
+  const listedParticipants = room.type === "rank"
+    ? directory.filter((member) => member.memberRank === room.requiredRank).map((member) => member.id)
+    : roomParticipants;
   const localInviteCandidates = (room.type === "group" ? getFriends(CURRENT_USER.id) : MEMBERS.filter((member) => member.id !== CURRENT_USER.id))
     .filter((member) => !roomParticipants.includes(member.id));
 
@@ -697,7 +713,7 @@ export default function ChatScreen() {
                 {typeLabel}
               </Text>
             </View>
-            {room.id !== "community-free-chat" && room.id !== "board-announcement" && room.id !== "board-introduction" && room.id !== "branch-kanto-free" && room.id !== "branch-kansai-free" ? (
+            {room.type !== "rank" && room.id !== "community-free-chat" && room.id !== "board-announcement" && room.id !== "board-introduction" && room.id !== "branch-kanto-free" && room.id !== "branch-kansai-free" ? (
               <Text style={{ fontSize: 11, color: colors.muted, marginLeft: 6 }}>
                 {roomParticipants.length}人参加中
               </Text>
@@ -957,7 +973,7 @@ export default function ChatScreen() {
             }}
           >
             <Text style={{ fontSize: 18, fontWeight: "700", color: colors.foreground }}>
-              参加者 ({roomParticipants.length})
+              {room.type === "rank" ? `${room.requiredRank === "platinum" ? "プラチナ" : room.requiredRank === "gold" ? "ゴールド" : "シルバー"}会員 (${listedParticipants.length})` : `参加者 (${roomParticipants.length})`}
             </Text>
             <Pressable onPress={() => setShowParticipants(false)}>
               <IconSymbol name="xmark" size={22} color={colors.muted} />
@@ -1065,7 +1081,7 @@ export default function ChatScreen() {
 
           {/* 参加者リスト */}
           <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 32 }}>
-            {roomParticipants.map((pid) => {
+            {listedParticipants.map((pid) => {
               const member = getMemberById(pid);
               const sharedMember = directory.find((item) => item.id === pid);
               if (!member && !sharedMember) return null;
@@ -1132,6 +1148,7 @@ export default function ChatScreen() {
                 </View>
               );
             })}
+            {room.type === "rank" && !directoryLoaded ? <Text style={{ color: colors.muted, paddingVertical: 20, textAlign: "center" }}>会員一覧を読み込んでいます…</Text> : null}
             {!staffViewingOnly && (room.type === "event" || room.type === "dm" || room.type === "group" || (room.type === "board" && !["community-free-chat", "board-introduction", "branch-kanto-free", "branch-kansai-free"].includes(room.id))) ? (
               <Pressable
                 onPress={() => {

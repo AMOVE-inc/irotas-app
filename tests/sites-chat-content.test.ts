@@ -49,6 +49,8 @@ class ChatDatabase implements D1Database {
     const statement: D1PreparedStatement = {
       bind: (...next) => { values = next; return statement; },
       first: async <T>() => {
+        if (sql.includes("COALESCE(password_set_at, last_signed_in_at) AS started_at"))
+          return { display_name: this.members.find((item) => item.id === Number(values[0]))?.display_name ?? "", started_at: "2026-01-01" } as T;
         if (sql.includes("FROM clubs WHERE id = ? AND status = 'active'"))
           return (this.clubs.find((club) => club.id === values[0]) ?? null) as T;
         if (sql.includes("SELECT COUNT(*) AS count FROM member_follows")) return { count: 2 } as T;
@@ -109,11 +111,20 @@ class ChatDatabase implements D1Database {
         if (sql.includes("FROM clubs c") && sql.includes("club_memberships cm"))
           return { success: true, results: this.clubs.filter((club) => club.leader_member_id === Number(values[0]) || this.approvedClubMemberIds.has(Number(values[1]))) as T[] };
         if (sql.includes("FROM chat_rooms cr WHERE cr.deleted_at IS NULL") && sql.includes("ORDER BY"))
-          return { success: true, results: [...this.rooms.values()] as T[] };
+          return { success: true, results: [...this.rooms.values()].filter((room) =>
+            !["event", "dm", "group", "board"].includes(room.room_type) || !this.roomMembers.some((item) =>
+              item.roomId === room.id && item.memberId === Number(values[0]) && item.left)) as T[] };
+        if (sql.includes("creator.public_member_id AS creator_public_member_id"))
+          return { success: true, results: [...this.rooms.values()].filter((room) => values.includes(room.id)).map((room) => ({
+            id: room.id,
+            creator_public_member_id: this.members.find((item) => item.id === room.created_by_member_id)?.public_member_id ?? null,
+            cancelled_title: null, last_content: null, last_image_url: null, last_created_at: null,
+            unread_count: 0, mention_count: 0,
+          })) as T[] };
         if (sql.includes("FROM chat_room_members crm JOIN members")) {
-          const result = this.roomMembers.filter((item) => item.roomId === values[0] && !item.left).map((item) => {
+          const result = this.roomMembers.filter((item) => values.includes(item.roomId) && !item.left).map((item) => {
             const member = this.members.find((entry) => entry.id === item.memberId)!;
-            return { member_id: item.memberId, public_member_id: member.public_member_id, display_name: member.display_name };
+            return { room_id: item.roomId, member_id: item.memberId, public_member_id: member.public_member_id, display_name: member.display_name };
           });
           return { success: true, results: result as T[] };
         }
@@ -269,6 +280,20 @@ describe("shared chat content API", () => {
       expect((await handleChatContentRequest(request("/api/chats/dm-private/messages", "POST", { content: "監視者の投稿" }), env))?.status).toBe(403);
       expect((await handleChatContentRequest(request("/api/chats/dm-private", "DELETE"), env))?.status).toBe(403);
     }
+  });
+
+  it("hides a departed chat from that member's list and restores it after a new invitation", async () => {
+    db.rooms.set("dm-departed", { id: "dm-departed", name: "DM", room_type: "dm", source_id: "dm-departed", required_rank: null, created_by_member_id: 10 });
+    db.roomMembers.push(
+      { roomId: "dm-departed", memberId: 9, role: "member", left: false },
+      { roomId: "dm-departed", memberId: 10, role: "owner", left: false },
+    );
+    expect((await handleChatContentRequest(request("/api/chats/dm-departed/members/IRO0009", "DELETE"), env))?.status).toBe(200);
+    const departed = await handleChatContentRequest(request("/api/chats"), env);
+    expect(((await departed?.json()) as { rooms: { id: string }[] }).rooms.some((room) => room.id === "dm-departed")).toBe(false);
+    db.roomMembers.find((item) => item.roomId === "dm-departed" && item.memberId === 9)!.left = false;
+    const invited = await handleChatContentRequest(request("/api/chats"), env);
+    expect(((await invited?.json()) as { rooms: { id: string }[] }).rooms.some((room) => room.id === "dm-departed")).toBe(true);
   });
 
   it("requires login and lets authenticated members read announcements", async () => {
