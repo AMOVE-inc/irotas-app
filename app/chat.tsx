@@ -109,6 +109,20 @@ function systemMessageText(content: string): string {
   return joined ? `${stripRankFromName(joined[1])}がチャットに参加しました` : text;
 }
 
+function ChatAttachmentImage({ uri, galleryUris, galleryIndex }: { uri: string; galleryUris: string[]; galleryIndex: number }) {
+  const [size, setSize] = useState({ width: 220, height: 180 });
+  return <ExpandableImage
+    source={{ uri }} uri={uri} galleryUris={galleryUris} galleryIndex={galleryIndex}
+    style={{ width: size.width, height: size.height, backgroundColor: "rgba(0,0,0,0.05)" }}
+    contentFit="contain"
+    onLoad={({ source }) => {
+      if (source.width > 0 && source.height > 0) {
+        setSize({ width: 220, height: Math.min(360, Math.max(120, Math.round(220 * source.height / source.width))) });
+      }
+    }}
+  />;
+}
+
 function MessageBubble({ message, isMe, canDelete, readOnly, viewerId, viewerName, viewerAvatarUrl, myAvatarUri, senderMember, memberDirectory, onReact, mentionGroups, onOpenInternalLink, onOpenProfile, onReply, onEdit, onDelete }: { message: ChatMessage; isMe: boolean; canDelete: boolean; readOnly?: boolean; viewerId: string; viewerName: string; viewerAvatarUrl?: string; myAvatarUri?: string | null; senderMember?: Api.PublicMember; memberDirectory: Api.PublicMember[]; onReact: (emoji: string, pollChoices?: string[], allowMultiple?: boolean) => void; mentionGroups: ReturnType<typeof getMentionGroups>; onOpenInternalLink: (pathname: "/chat" | "/board" | "/event-detail", params: Record<string, string>) => void; onOpenProfile: () => void; onReply: () => void; onEdit: () => void; onDelete: () => void }) {
   const colors = useColors();
   const sender = getMemberById(message.senderId);
@@ -190,17 +204,11 @@ function MessageBubble({ message, isMe, canDelete, readOnly, viewerId, viewerNam
             overflow: "hidden",
           }}
         >
-          {message.imageUri ? (
-            <ExpandableImage
-              source={{ uri: message.imageUri }}
-              uri={message.imageUri}
-              style={{ width: 220, height: 180 }}
-              contentFit="cover"
-            />
-          ) : null}
-          {message.attachmentUrls?.length ? (
+          {message.imageUri || message.attachmentUrls?.length ? (
             <View style={{ gap: 4 }}>
-              {message.attachmentUrls.map((uri, index) => <ExpandableImage key={uri} source={{ uri }} uri={uri} galleryUris={message.attachmentUrls} galleryIndex={index} style={{ width: 220, height: 180 }} contentFit="cover" />)}
+              {(message.attachmentUrls?.length ? message.attachmentUrls : [message.imageUri!]).map((uri, index, gallery) => (
+                <ChatAttachmentImage key={`${uri}-${index}`} uri={uri} galleryUris={gallery} galleryIndex={index} />
+              ))}
             </View>
           ) : null}
           {message.content ? (
@@ -504,7 +512,7 @@ export default function ChatScreen() {
   }, []);
 
   const insets = useSafeAreaInsets();
-  const [pendingImage, setPendingImage] = useState<string | null>(null);
+  const [pendingImages, setPendingImages] = useState<string[]>([]);
   const sendingRef = useRef(false);
   const pendingSendRef = useRef<{ signature: string; messageId: string } | null>(null);
   const [showAttachmentMenu, setShowAttachmentMenu] = useState(false);
@@ -517,43 +525,46 @@ export default function ChatScreen() {
   const [pollSending, setPollSending] = useState(false);
 
   const handlePickPhoto = useCallback(async () => {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== "granted") {
-      Alert.alert("権限が必要です", "写真を送るには写真ライブラリへのアクセスを許可してください。");
-      return;
+    if (pendingImages.length >= 10) return;
+    if (Platform.OS !== "web") {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== "granted") {
+        Alert.alert("権限が必要です", "写真を送るには写真ライブラリへのアクセスを許可してください。");
+        return;
+      }
     }
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ["images"],
+      allowsMultipleSelection: true,
+      selectionLimit: 10 - pendingImages.length,
       allowsEditing: false,
       quality: 0.8,
     });
     if (!result.canceled && result.assets.length > 0) {
-      setPendingImage(result.assets[0].uri);
+      setPendingImages((current) => [...current, ...result.assets.map((asset) => asset.uri)].slice(0, 10));
     }
-  }, []);
+  }, [pendingImages.length]);
 
   const handleSend = useCallback(async () => {
     if (sendingRef.current) return;
     if (staffViewingOnly) return;
     if (!canPostToChat(authUser?.role, id ?? "", authUser?.accessRole)) return;
-    if (!messageText.trim() && !pendingImage) return;
+    if (!messageText.trim() && !pendingImages.length) return;
     const content = messageText.trim();
     if (!id) return;
     sendingRef.current = true;
-    const signature = JSON.stringify([id, content, pendingImage]);
+    const signature = JSON.stringify([id, content, pendingImages]);
     if (pendingSendRef.current?.signature !== signature) {
       pendingSendRef.current = { signature, messageId: `cm_${Date.now()}_${Math.random().toString(36).slice(2)}` };
     }
     try {
-      let imageUrl: string | undefined;
-      const supportsSharedStorage = Boolean(room?.shared) || id === "board-announcement" || id.startsWith("rank-") || id.startsWith("event_chat_");
-      if (pendingImage && supportsSharedStorage) imageUrl = (await Api.uploadEventImage(pendingImage)).imageUrl;
-      const newMessage = await Api.createSharedChatMessage(id, { content, imageUrl, clientMessageId: pendingSendRef.current.messageId });
+      const imageUrls = await Promise.all(pendingImages.map(async (uri) => (await Api.uploadEventImage(uri)).imageUrl));
+      const newMessage = await Api.createSharedChatMessage(id, { content, imageUrls, clientMessageId: pendingSendRef.current.messageId });
       pendingSendRef.current = null;
       setMessages((prev) => [...prev.filter((item) => item.id !== newMessage.id), newMessage]);
       setMessageText("");
       setMessageSelection({ start: 0, end: 0 });
-      setPendingImage(null);
+      setPendingImages([]);
       setMentionQuery(null);
 
     } catch (error) {
@@ -565,14 +576,14 @@ export default function ChatScreen() {
           senderId: viewerMemberId,
           externalAuthorName: authUser?.name ?? undefined,
           content,
-          imageUri: pendingImage ?? undefined,
+          attachmentUrls: pendingImages.length ? pendingImages : undefined,
           createdAt: new Date().toISOString(),
         };
         setMessages((previous) => [...previous, legacyMessage]);
         await saveMessagesToStorage(id, [legacyMessage]);
         setMessageText("");
         setMessageSelection({ start: 0, end: 0 });
-        setPendingImage(null);
+        setPendingImages([]);
         setMentionQuery(null);
         return;
       }
@@ -580,7 +591,7 @@ export default function ChatScreen() {
     } finally {
       sendingRef.current = false;
     }
-  }, [messageText, pendingImage, id, room, authUser?.role, authUser?.accessRole, authUser?.name, viewerMemberId, staffViewingOnly]);
+  }, [messageText, pendingImages, id, authUser?.role, authUser?.accessRole, authUser?.name, viewerMemberId, staffViewingOnly]);
 
   const handleReaction = useCallback(async (messageId: string, emoji: string, pollChoices?: string[], allowMultiple = true) => {
     if (staffViewingOnly) return;
@@ -873,31 +884,15 @@ export default function ChatScreen() {
             </Text>
           </View>
           {/* 画像プレビュー */}
-          {pendingImage && (
+          {pendingImages.length > 0 && (
             <View style={{ paddingHorizontal: 16, paddingBottom: 6 }}>
-              <View style={{ position: "relative", alignSelf: "flex-start" }}>
-                <Image
-                  source={{ uri: pendingImage }}
-                  style={{ width: 80, height: 80, borderRadius: 10 }}
-                  contentFit="cover"
-                />
-                <TouchableOpacity
-                  onPress={() => setPendingImage(null)}
-                  style={{
-                    position: "absolute",
-                    top: -6,
-                    right: -6,
-                    backgroundColor: "#666",
-                    borderRadius: 10,
-                    width: 20,
-                    height: 20,
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  <IconSymbol name="xmark" size={12} color="#FFF" />
-                </TouchableOpacity>
-              </View>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 10, paddingTop: 6, paddingRight: 10 }}>
+                {pendingImages.map((uri, index) => <View key={`${uri}-${index}`} style={{ position: "relative" }}>
+                  <Image source={{ uri }} style={{ width: 72, height: 72, borderRadius: 10 }} contentFit="contain" />
+                  <TouchableOpacity onPress={() => setPendingImages((current) => current.filter((_, imageIndex) => imageIndex !== index))} accessibilityLabel={`${index + 1}枚目の写真を取り消す`} style={{ position: "absolute", top: -5, right: -5, backgroundColor: "#666", borderRadius: 11, width: 22, height: 22, alignItems: "center", justifyContent: "center" }}><IconSymbol name="xmark" size={12} color="#FFF" /></TouchableOpacity>
+                </View>)}
+              </ScrollView>
+              <Text style={{ fontSize: 11, color: colors.muted, marginTop: 3 }}>{pendingImages.length} / 10枚</Text>
             </View>
           )}
           <View
@@ -950,7 +945,7 @@ export default function ChatScreen() {
               <IconSymbol
                 name="paperplane.fill"
                 size={24}
-                color={(messageText.trim() || pendingImage) ? "#E8A0BF" : colors.muted}
+                color={(messageText.trim() || pendingImages.length) ? "#E8A0BF" : colors.muted}
               />
             </Pressable>
           </View>

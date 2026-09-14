@@ -211,6 +211,7 @@ export type SharedChatMessage = {
   senderAvatar?: string;
   content: string;
   imageUri?: string;
+  attachmentUrls?: string[];
   reactions: Record<string, string[]>;
   createdAt: string;
   updatedAt: string;
@@ -658,7 +659,7 @@ export async function markSharedChatRoomRead(roomId: string) {
 
 export async function createSharedChatMessage(
   roomId: string,
-  input: { content: string; imageUrl?: string; clientMessageId?: string },
+  input: { content: string; imageUrl?: string; imageUrls?: string[]; clientMessageId?: string },
 ) {
   const result = await apiCall<{ message: SharedChatMessage }>(
     `/api/chats/${encodeURIComponent(roomId)}/messages`,

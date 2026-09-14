@@ -3,7 +3,7 @@ import { Image, type ImageProps } from "expo-image";
 import { useEffect, useRef, useState } from "react";
 import { Alert, Linking, Modal, Platform, Pressable, Text, View } from "react-native";
 
-type ExpandableImageProps = Pick<ImageProps, "source" | "style" | "contentFit"> & {
+type ExpandableImageProps = Pick<ImageProps, "source" | "style" | "contentFit" | "onLoad"> & {
   uri?: string;
   accessibilityLabel?: string;
   galleryUris?: string[];
@@ -36,7 +36,7 @@ async function saveImage(uri: string) {
 }
 
 /** 投稿・コメント・チャットの画像を、タップで全画面表示して保存できるようにする。 */
-export function ExpandableImage({ source, style, contentFit = "cover", uri, galleryUris, galleryIndex = 0, accessibilityLabel = "画像を拡大表示" }: ExpandableImageProps) {
+export function ExpandableImage({ source, style, contentFit = "cover", onLoad, uri, galleryUris, galleryIndex = 0, accessibilityLabel = "画像を拡大表示" }: ExpandableImageProps) {
   const [visible, setVisible] = useState(false);
   const [imageFailed, setImageFailed] = useState(false);
   const [activeIndex, setActiveIndex] = useState(galleryIndex);
@@ -59,7 +59,7 @@ export function ExpandableImage({ source, style, contentFit = "cover", uri, gall
   return <>
     <Pressable onPress={(event) => { event.stopPropagation(); if (imageFailed) setImageFailed(false); else { setActiveIndex(galleryIndex); setVisible(true); } }} accessibilityRole="button" accessibilityLabel={imageFailed ? "画像を再読み込み" : accessibilityLabel} style={[style as any, { overflow: "hidden" }]}>
       {imageFailed ? <View style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: 8 }}><Text style={{ color: "#777", fontSize: 11 }}>画像を表示できません</Text></View>
-        : <Image source={source} onError={() => { setImageFailed(true); setVisible(false); }} style={{ width: "100%", height: "100%" }} contentFit={contentFit} />}
+        : <Image source={source} onLoad={onLoad} onError={() => { setImageFailed(true); setVisible(false); }} style={{ width: "100%", height: "100%" }} contentFit={contentFit} />}
     </Pressable>
     <Modal visible={visible} transparent animationType="fade" onRequestClose={() => setVisible(false)}>
       <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.94)" }} onTouchStart={(event) => { touchStartX.current = event.nativeEvent.pageX; }} onTouchEnd={(event) => { const delta = event.nativeEvent.pageX - touchStartX.current; if (Math.abs(delta) > 45) setActiveIndex((index) => Math.max(0, Math.min((galleryUris?.length ?? 1) - 1, index + (delta < 0 ? 1 : -1)))); }}>

@@ -33,6 +33,7 @@ type MessageRow = {
   sender_profile_json: string | null;
   content: string;
   image_url: string | null;
+  image_urls_json: string;
   created_at: string;
   updated_at: string;
 };
@@ -85,6 +86,14 @@ function validImageUrl(value: unknown) {
   if (typeof value !== "string" || value.length > 1000) return null;
   const image = value.trim();
   return image.startsWith("/api/event-images/") || /^https:\/\//i.test(image) ? image : null;
+}
+
+function validImageUrls(value: unknown): string[] | null {
+  if (value === undefined) return [];
+  if (!Array.isArray(value) || value.length > 10) return null;
+  const urls = value.map(validImageUrl);
+  if (urls.some((url) => !url)) return null;
+  return urls as string[];
 }
 
 async function roomById(db: D1Database, roomId: string) {
@@ -377,6 +386,11 @@ function serializeMessage(row: MessageRow, reactions: ReactionRow[]) {
     const profile = JSON.parse(row.sender_profile_json ?? "{}") as { avatarUrl?: unknown };
     if (typeof profile.avatarUrl === "string" && profile.avatarUrl.trim()) senderAvatar = profile.avatarUrl;
   } catch {}
+  let attachmentUrls: string[] = [];
+  try {
+    const parsed = JSON.parse(row.image_urls_json || "[]");
+    if (Array.isArray(parsed)) attachmentUrls = parsed.filter((url): url is string => typeof url === "string" && validImageUrl(url) === url).slice(0, 10);
+  } catch {}
   return {
     id: row.id,
     chatId: row.room_id,
@@ -384,7 +398,8 @@ function serializeMessage(row: MessageRow, reactions: ReactionRow[]) {
     externalAuthorName: (row.sender_display_name?.trim() || "メンバー").replace(/^deleted\s+user$/i, "未設定"),
     senderAvatar,
     content: row.content,
-    imageUri: row.image_url || undefined,
+    imageUri: attachmentUrls.length > 1 ? undefined : row.image_url || attachmentUrls[0] || undefined,
+    attachmentUrls: attachmentUrls.length > 1 ? attachmentUrls : undefined,
     reactions: reactionsFor(row.id, reactions),
     createdAt: row.created_at,
     updatedAt: row.updated_at,
@@ -407,7 +422,7 @@ async function ensureBranchRoomMembership(db: D1Database, room: RoomRow, member:
 async function messageRows(db: D1Database, roomId: string, visibleFrom?: string) {
   const result = await db.prepare(`SELECT cm.id, cm.room_id, cm.sender_member_id,
       m.public_member_id AS sender_public_member_id, m.display_name AS sender_display_name, m.profile_json AS sender_profile_json,
-      cm.content, cm.image_url, cm.created_at, cm.updated_at
+      cm.content, cm.image_url, cm.image_urls_json, cm.created_at, cm.updated_at
     FROM chat_messages cm JOIN members m ON m.id = cm.sender_member_id
     WHERE cm.room_id = ? AND cm.deleted_at IS NULL AND (? IS NULL OR cm.created_at >= ?)
     ORDER BY cm.created_at ASC LIMIT 500`).bind(roomId, visibleFrom ?? null, visibleFrom ?? null).all<MessageRow>();
@@ -832,17 +847,19 @@ export async function handleChatContentRequest(
       if (!canPost(room, member)) return json({ error: "運営メンバーのみ送信できます" }, 403);
       const input = await readBody(request);
       const content = typeof input?.content === "string" ? input.content.trim() : "";
-      const imageUrl = validImageUrl(input?.imageUrl);
-      if (!input || content.length > 10_000 || imageUrl === null || (!content && !imageUrl))
+      const imageUrls = validImageUrls(input?.imageUrls);
+      const legacyImageUrl = validImageUrl(input?.imageUrl);
+      const imageUrl = imageUrls?.[0] || legacyImageUrl;
+      if (!input || content.length > 10_000 || imageUrls === null || legacyImageUrl === null || (!content && !imageUrl))
         return json({ error: "メッセージ内容が不正です" }, 400);
       const requestedId = typeof input.clientMessageId === "string" && /^cm_[a-zA-Z0-9_-]{12,80}$/.test(input.clientMessageId)
         ? input.clientMessageId : null;
       const id = requestedId ?? crypto.randomUUID();
       const now = new Date().toISOString();
       await env.DB.prepare(`INSERT OR IGNORE INTO chat_messages
-        (id, room_id, sender_member_id, content, image_url, created_at, updated_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?)`).bind(
-          id, roomId, member.id, content, imageUrl || null, now, now,
+        (id, room_id, sender_member_id, content, image_url, image_urls_json, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)`).bind(
+          id, roomId, member.id, content, imageUrl || null, JSON.stringify(imageUrls), now, now,
         ).run();
       if (roomId === "board-introduction") {
         await env.DB.prepare(`INSERT OR IGNORE INTO chat_message_reactions

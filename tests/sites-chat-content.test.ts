@@ -20,6 +20,7 @@ type Message = {
   sender_profile_json?: string;
   content: string;
   image_url: string | null;
+  image_urls_json?: string;
   created_at: string;
   updated_at: string;
 };
@@ -176,7 +177,8 @@ class ChatDatabase implements D1Database {
             sender_public_member_id: "IRO0099", sender_display_name: "運営テスト",
             sender_profile_json: JSON.stringify({ avatarUrl: "https://cdn.example/operator.png" }),
             content: String(values[3]), image_url: systemMessage ? null : values[4] ? String(values[4]) : null,
-            created_at: String(values[systemMessage ? 4 : 5]), updated_at: String(values[systemMessage ? 5 : 6]),
+            image_urls_json: systemMessage ? "[]" : String(values[5] ?? "[]"),
+            created_at: String(values[systemMessage ? 4 : 6]), updated_at: String(values[systemMessage ? 5 : 7]),
           });
         }
         return { success: true };
@@ -205,6 +207,23 @@ describe("shared chat content API", () => {
     env = { DB: db } as unknown as SitesEnv;
     authenticatedRequestMember.mockResolvedValue({ id: 9, role: "user", access_role: "member", account_status: "active" });
     vi.mocked(canMemberAccessClub).mockImplementation(async (_database, clubId, memberId) => clubId === "club-travel" && (memberId === 10 || db.approvedClubMemberIds.has(memberId)));
+  });
+
+  it("stores and returns several images in one chat message", async () => {
+    const imageUrls = ["/api/event-images/chats%2Fone.jpg", "/api/event-images/chats%2Ftwo.jpg"];
+    const created = await handleChatContentRequest(request("/api/chats/community-free-chat/messages", "POST", { content: "", imageUrls }), env);
+    expect(created?.status).toBe(201);
+    const message = (await created?.json())?.message;
+    expect(message.attachmentUrls).toEqual(imageUrls);
+    expect(message.imageUri).toBeUndefined();
+    expect(db.messages).toHaveLength(1);
+    expect(db.messages[0].image_urls_json).toBe(JSON.stringify(imageUrls));
+  });
+
+  it("rejects invalid image lists", async () => {
+    const invalid = await handleChatContentRequest(request("/api/chats/community-free-chat/messages", "POST", { content: "", imageUrls: ["https://example.com/a.jpg", "javascript:bad"] }), env);
+    expect(invalid?.status).toBe(400);
+    expect(db.messages).toHaveLength(0);
   });
 
   it("notifies direct mentions and room-scoped group mentions in the global free chat", async () => {
