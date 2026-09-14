@@ -95,6 +95,7 @@ export type ClubRecord = {
   id: string;
   name: string;
   description: string;
+  overviewText: string | null;
   icon: string;
   leaderId: string;
   leaderName: string;
@@ -1063,6 +1064,14 @@ export async function updateClubDescription(clubId: string, description: string)
   const result = await apiCall<{ club: ClubRecord }>(`/api/clubs/${encodeURIComponent(clubId)}`, {
     method: "PATCH",
     body: JSON.stringify({ description }),
+  });
+  return result.club;
+}
+
+export async function updateClubOverview(clubId: string, overviewText: string) {
+  const result = await apiCall<{ club: ClubRecord }>(`/api/clubs/${encodeURIComponent(clubId)}/overview`, {
+    method: "PATCH",
+    body: JSON.stringify({ overviewText }),
   });
   return result.club;
 }

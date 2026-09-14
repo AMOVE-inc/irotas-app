@@ -3,6 +3,7 @@ import type { D1Database, SitesEnv } from "./platform-types";
 
 const CLUBS_PATH = "/api/clubs";
 const CLUB_PATH = /^\/api\/clubs\/([^/]+)$/;
+const OVERVIEW_PATH = /^\/api\/clubs\/([^/]+)\/overview$/;
 const APPLICATION_PATH = /^\/api\/clubs\/([^/]+)\/applications$/;
 const APPLICATION_REVIEW_PATH = /^\/api\/clubs\/([^/]+)\/applications\/([^/]+)$/;
 const MEMBERSHIP_PATH = /^\/api\/clubs\/([^/]+)\/membership$/;
@@ -13,6 +14,7 @@ type ClubRow = {
   id: string;
   name: string;
   description: string;
+  overview_text: string | null;
   icon: string;
   leader_member_id: number | null;
   leader_public_member_id: string | null;
@@ -44,6 +46,10 @@ function publicId(row: { member_id: number; public_member_id: string | null }) {
 
 function isAdmin(member: NonNullable<Awaited<ReturnType<typeof authenticatedRequestMember>>>) {
   return member.role === "admin" || member.access_role === "admin";
+}
+
+function isOperator(member: NonNullable<Awaited<ReturnType<typeof authenticatedRequestMember>>>) {
+  return isAdmin(member) || member.role === "operator" || member.access_role === "operator";
 }
 
 async function readBody(request: Request) {
@@ -94,11 +100,7 @@ async function reconcileDiscordClubMemberships(db: D1Database) {
     CROSS JOIN json_each(CASE WHEN json_valid(m.discord_roles_json) THEN m.discord_roles_json ELSE '[]' END) r
     WHERE c.status = 'active' AND m.account_status = 'active'
       AND CAST(r.value AS TEXT) LIKE '%' || c.name || '%'
-    ON CONFLICT(club_id, member_id) DO UPDATE SET
-      status = 'approved',
-      source = 'discord',
-      approved_at = COALESCE(club_memberships.approved_at, excluded.approved_at),
-      updated_at = excluded.updated_at`).bind(now, now, now).run();
+    ON CONFLICT(club_id, member_id) DO NOTHING`).bind(now, now, now).run();
 }
 
 function serializeClub(row: ClubRow, memberships: MembershipRow[], viewerId: number, elevated: boolean, applicationReviewer = false) {
@@ -113,6 +115,7 @@ function serializeClub(row: ClubRow, memberships: MembershipRow[], viewerId: num
     id: row.id,
     name: row.name,
     description: row.description,
+    overviewText: row.overview_text,
     icon: row.icon,
     leaderId: row.leader_public_member_id ?? "",
     leaderName: row.leader_display_name ?? "未設定",
@@ -188,11 +191,12 @@ export async function canMemberAccessClub(db: D1Database, clubId: string, member
 export async function handleClubRequest(request: Request, env: SitesEnv): Promise<Response | null> {
   const pathname = new URL(request.url).pathname;
   const clubMatch = CLUB_PATH.exec(pathname);
+  const overviewMatch = OVERVIEW_PATH.exec(pathname);
   const applicationMatch = APPLICATION_PATH.exec(pathname);
   const reviewMatch = APPLICATION_REVIEW_PATH.exec(pathname);
   const membershipMatch = MEMBERSHIP_PATH.exec(pathname);
   const memberMatch = MEMBER_PATH.exec(pathname);
-  if (pathname !== CLUBS_PATH && !clubMatch && !applicationMatch && !reviewMatch && !membershipMatch && !memberMatch) return null;
+  if (pathname !== CLUBS_PATH && !clubMatch && !overviewMatch && !applicationMatch && !reviewMatch && !membershipMatch && !memberMatch) return null;
   if (!env.DB) return json({ error: "データベースに接続できません" }, 503);
   const member = await authenticatedRequestMember(request, env);
   if (!member) return json({ error: "ログインが必要です" }, 401);
@@ -229,6 +233,22 @@ export async function handleClubRequest(request: Request, env: SitesEnv): Promis
     await env.DB.prepare("UPDATE clubs SET description = ?, updated_at = ? WHERE id = ?")
       .bind(description, new Date().toISOString(), id).run();
     await audit(env.DB, member.id, "club.description_updated", id);
+    const updated = await clubRow(env.DB, id);
+    const memberships = await membershipsForClubs(env.DB, [id]);
+    return json({ club: serializeClub(updated!, memberships, member.id, elevated, applicationReviewer) });
+  }
+
+  if (overviewMatch && request.method === "PATCH") {
+    const id = decodeURIComponent(overviewMatch[1]);
+    const row = await clubRow(env.DB, id);
+    if (!row || row.status !== "active") return json({ error: "部活が見つかりません" }, 404);
+    if (row.leader_member_id !== member.id && !isOperator(member)) return json({ error: "部長・運営・管理者のみ編集できます" }, 403);
+    const input = await readBody(request);
+    const overviewText = typeof input?.overviewText === "string" ? input.overviewText.trim() : "";
+    if (!overviewText || overviewText.length > 8000) return json({ error: "部活概要は1〜8000文字で入力してください" }, 400);
+    await env.DB.prepare("UPDATE clubs SET overview_text = ?, updated_at = ? WHERE id = ?")
+      .bind(overviewText, new Date().toISOString(), id).run();
+    await audit(env.DB, member.id, "club.overview_updated", id);
     const updated = await clubRow(env.DB, id);
     const memberships = await membershipsForClubs(env.DB, [id]);
     return json({ club: serializeClub(updated!, memberships, member.id, elevated, applicationReviewer) });

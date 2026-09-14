@@ -32,6 +32,7 @@ function asClub(record: Api.ClubRecord): Club {
     id: record.id,
     name: record.name,
     description: record.description,
+    overviewText: record.overviewText,
     icon: record.icon,
     leaderId: record.leaderId,
     leaderName: record.leaderName,
@@ -68,6 +69,12 @@ export async function submitClubApplication(clubId: string, wantsToDo: string, m
 
 export async function updateClubDescription(clubId: string, description: string) {
   const updated = asClub(await Api.updateClubDescription(clubId, description));
+  updateClub(updated);
+  return updated;
+}
+
+export async function updateClubOverview(clubId: string, overviewText: string) {
+  const updated = asClub(await Api.updateClubOverview(clubId, overviewText));
   updateClub(updated);
   return updated;
 }

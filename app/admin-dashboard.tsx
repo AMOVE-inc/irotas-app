@@ -39,7 +39,7 @@ import {
 } from "react-native";
 import { createCoupon, deleteCoupon, setCouponStatus, updateCoupon, updateCouponUsageType, useCoupons } from "@/lib/coupon-store";
 import { sendRankUpgradeWelcome } from "@/lib/chat-store";
-import { addClub, removeClub, updateClub, useClubs } from "@/lib/club-store";
+import { addClub, refreshClubs, removeClub, updateClub, useClubs } from "@/lib/club-store";
 import { sendLeaderAppointmentNotification } from "@/lib/notifications";
 import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
@@ -171,6 +171,9 @@ export default function AdminDashboardScreen() {
   const [squareSyncProgress, setSquareSyncProgress] = useState<string | null>(null);
   const [discordProfileImporting, setDiscordProfileImporting] = useState(false);
   const [discordProfileImportResult, setDiscordProfileImportResult] = useState<string | null>(null);
+  const [discordClubImporting, setDiscordClubImporting] = useState(false);
+  const [discordClubPayload, setDiscordClubPayload] = useState<string | null>(null);
+  const [discordClubPreview, setDiscordClubPreview] = useState<string | null>(null);
   const [mee6Members, setMee6Members] = useState<{ memberId: string; displayName: string; discordLinked: boolean; mee6Level: number | null; currentLevel: number; importedAt: string | null }[]>([]);
   const [mee6Loading, setMee6Loading] = useState(false);
   const [mee6Importing, setMee6Importing] = useState(false);
@@ -789,6 +792,45 @@ export default function AdminDashboardScreen() {
             <Text style={{ fontSize: 13, color: colors.foreground, marginTop: 10 }}>グルメマップ：2026年8月1日更新</Text>
             <Text style={{ fontSize: 13, color: colors.foreground, marginTop: 6 }}>Discord移行：2026年8月29日 17:25（日本時間）</Text>
             <Text style={{ fontSize: 11, lineHeight: 17, color: colors.muted, marginTop: 8 }}>CSV取り込みは管理者だけに表示されます。更新時刻はこの管理画面で確認できます。</Text>
+          </View>
+        )}
+        {activeTab === "overview" && (
+          <View style={{ backgroundColor: colors.surface, borderRadius: 14, borderWidth: 1, borderColor: colors.border, padding: 16, marginBottom: 14 }}>
+            <Text style={{ fontSize: 16, fontWeight: "800", color: colors.foreground }}>Discord部活所属の照合</Text>
+            <Text style={{ fontSize: 12, lineHeight: 19, color: colors.muted, marginTop: 6 }}>Discord IDが一致する現役会員の所属だけを復元します。退部・申請・却下の履歴は変更しません。</Text>
+            {discordClubPreview ? <Text style={{ fontSize: 12, lineHeight: 19, color: colors.foreground, marginTop: 10 }}>{discordClubPreview}</Text> : null}
+            <Pressable disabled={discordClubImporting} onPress={async () => {
+              setDiscordClubImporting(true);
+              setDiscordClubPayload(null);
+              setDiscordClubPreview(null);
+              try {
+                const selected = await selectJsonFile("Discord部活所属JSON");
+                const payload = JSON.stringify(JSON.parse(selected.text));
+                const response = await fetch("/api/admin/discord-club-import/preview", { method: "POST", headers: { "content-type": "application/json" }, body: payload });
+                const result = await response.json() as { error?: string; sourceMemberCount?: number; sourceMembershipCount?: number; matchedMemberCount?: number; missingCount?: number; conflictCount?: number; unmatchedDiscordIds?: string[]; inactiveDiscordIds?: string[] };
+                if (!response.ok) throw new Error(result.error ?? "照合に失敗しました");
+                setDiscordClubPayload(payload);
+                setDiscordClubPreview(`移行元 ${result.sourceMemberCount ?? 0}名・${result.sourceMembershipCount ?? 0}所属／会員一致 ${result.matchedMemberCount ?? 0}名／未反映 ${result.missingCount ?? 0}件／既存状態との衝突 ${result.conflictCount ?? 0}件／ID未一致 ${result.unmatchedDiscordIds?.length ?? 0}名／休止会員 ${result.inactiveDiscordIds?.length ?? 0}名`);
+              } catch (error) {
+                if (error instanceof Error && error.message !== "ファイルが選択されませんでした") Alert.alert("照合エラー", error.message);
+              } finally { setDiscordClubImporting(false); }
+            }} style={{ minHeight: 48, borderRadius: 12, backgroundColor: discordClubImporting ? colors.border : "#5865F2", alignItems: "center", justifyContent: "center", marginTop: 14 }}>
+              <Text style={{ color: "#FFF", fontWeight: "800" }}>{discordClubImporting ? "照合中…" : "所属JSONを選択して照合"}</Text>
+            </Pressable>
+            {discordClubPayload ? <Pressable disabled={discordClubImporting} onPress={async () => {
+              setDiscordClubImporting(true);
+              try {
+                const response = await fetch("/api/admin/discord-club-import/commit", { method: "POST", headers: { "content-type": "application/json" }, body: discordClubPayload });
+                const result = await response.json() as { error?: string; insertedCount?: number; conflictCount?: number; unmatchedDiscordIds?: string[] };
+                if (!response.ok) throw new Error(result.error ?? "反映に失敗しました");
+                const summary = `復元 ${result.insertedCount ?? 0}件／要確認 ${result.conflictCount ?? 0}件／ID未一致 ${result.unmatchedDiscordIds?.length ?? 0}名`;
+                setDiscordClubPreview(summary);
+                setDiscordClubPayload(null);
+                await refreshClubs();
+                Alert.alert("部活所属の反映完了", summary);
+              } catch (error) { Alert.alert("反映エラー", error instanceof Error ? error.message : "もう一度お試しください"); }
+              finally { setDiscordClubImporting(false); }
+            }} style={{ minHeight: 48, borderRadius: 12, backgroundColor: discordClubImporting ? colors.border : "#237A3B", alignItems: "center", justifyContent: "center", marginTop: 10 }}><Text style={{ color: "#FFF", fontWeight: "800" }}>未反映の所属を復元</Text></Pressable> : null}
           </View>
         )}
         {activeTab === "overview" && (

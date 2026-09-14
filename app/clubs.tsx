@@ -15,7 +15,7 @@ import {
 import { useAuthContext } from "@/lib/auth-context";
 import { useColors } from "@/hooks/use-colors";
 import { createBoardChat } from "@/lib/chat-store";
-import { canCreateClub, isAdminRole } from "@/lib/access-control";
+import { canCreateClub, isAdminRole, isOperatorRole } from "@/lib/access-control";
 import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
@@ -43,6 +43,7 @@ import {
   refreshClubs,
   submitClubApplication as submitClubApplicationToStore,
   updateClubDescription as updateClubDescriptionInStore,
+  updateClubOverview as updateClubOverviewInStore,
   updateClub as updateClubInStore,
   useClubs,
 } from "@/lib/club-store";
@@ -816,6 +817,9 @@ function ClubDetailModal({
   const [editingDescription, setEditingDescription] = useState(false);
   const [descriptionDraft, setDescriptionDraft] = useState(club.description);
   const [savingDescription, setSavingDescription] = useState(false);
+  const [editingOverview, setEditingOverview] = useState(false);
+  const [overviewDraft, setOverviewDraft] = useState("");
+  const [savingOverview, setSavingOverview] = useState(false);
   useEffect(() => { setDescriptionDraft(club.description); setEditingDescription(false); }, [club.id, club.description]);
 
   const viewerAccess = getClubViewerAccess(
@@ -826,6 +830,20 @@ function ClubDetailModal({
   const { isMember, hasApplied, isPending, isLeader } = viewerAccess;
   const canManageMembers = club.canReviewApplications === true || isLeader || userIsAdmin;
   const clubOverview = getClubIntroductionContent(club, archiveThreads);
+  const canEditOverview = isLeader || isOperatorRole(authUser?.role, authUser?.accessRole);
+  useEffect(() => { setOverviewDraft(clubOverview); setEditingOverview(false); }, [club.id, club.overviewText]);
+
+  const saveOverview = async () => {
+    if (!canEditOverview || !overviewDraft.trim()) return;
+    setSavingOverview(true);
+    try {
+      const updated = await updateClubOverviewInStore(club.id, overviewDraft.trim());
+      onUpdateClub(updated);
+      setEditingOverview(false);
+    } catch (error) {
+      Alert.alert("部活概要を保存できませんでした", error instanceof Error ? error.message : "もう一度お試しください。");
+    } finally { setSavingOverview(false); }
+  };
 
   const handleApply = async () => {
     if (hasApplied || isMember) return;
@@ -1160,7 +1178,14 @@ function ClubDetailModal({
               </View>
               <ScrollView contentContainerStyle={{ padding: 18, paddingBottom: 24 }}>
                 <Text style={{ fontSize: 15, lineHeight: 23, color: colors.foreground }}>{club.description}</Text>
-                {clubOverview !== club.description ? <View style={{ marginTop: 18, paddingTop: 14, borderTopWidth: 1, borderTopColor: colors.border }}><Text style={{ fontSize: 12, fontWeight: "800", color: colors.muted, marginBottom: 8 }}>Discord移行時の紹介</Text><MentionText content={clubOverview} groups={CLUB_OVERVIEW_MENTION_GROUPS} /></View> : null}
+                <View style={{ marginTop: 18, paddingTop: 14, borderTopWidth: 1, borderTopColor: colors.border }}>
+                  <Text style={{ fontSize: 12, fontWeight: "800", color: colors.muted, marginBottom: 8 }}>部活概要</Text>
+                  {editingOverview ? <>
+                    <TextInput value={overviewDraft} onChangeText={setOverviewDraft} multiline maxLength={8000} placeholder="部活概要を入力" style={{ minHeight: 180, borderWidth: 1, borderColor: colors.border, borderRadius: 10, padding: 12, fontSize: 15, lineHeight: 23, color: colors.foreground, textAlignVertical: "top" }} />
+                    <Text style={{ color: colors.muted, fontSize: 11, alignSelf: "flex-end" }}>{overviewDraft.length}/8000</Text>
+                    <View style={{ flexDirection: "row", justifyContent: "flex-end", gap: 18, marginTop: 10 }}><Pressable onPress={() => { setOverviewDraft(clubOverview); setEditingOverview(false); }}><Text style={{ color: colors.muted, fontWeight: "800" }}>キャンセル</Text></Pressable><Pressable disabled={savingOverview || !overviewDraft.trim()} onPress={() => void saveOverview()}><Text style={{ color: "#3478C7", fontWeight: "900" }}>{savingOverview ? "保存中…" : "保存"}</Text></Pressable></View>
+                  </> : <><MentionText content={clubOverview} groups={CLUB_OVERVIEW_MENTION_GROUPS} />{canEditOverview ? <Pressable onPress={() => setEditingOverview(true)} style={{ alignSelf: "flex-end", marginTop: 12 }}><Text style={{ color: "#3478C7", fontWeight: "800" }}>部活概要を編集</Text></Pressable> : null}</>}
+                </View>
               </ScrollView>
               <View style={{ paddingHorizontal: 18, paddingBottom: 18 }}>
                 <Pressable
@@ -1232,6 +1257,15 @@ function ClubDetailModal({
             <Text style={{ color: colors.muted, fontSize: 11, alignSelf: "flex-end", marginTop: 4 }}>{descriptionDraft.length}/2000</Text>
             <View style={{ flexDirection: "row", justifyContent: "flex-end", gap: 14, marginTop: 10 }}><Pressable onPress={() => { setDescriptionDraft(club.description); setEditingDescription(false); }}><Text style={{ color: colors.muted, fontWeight: "800" }}>キャンセル</Text></Pressable><Pressable disabled={savingDescription || !descriptionDraft.trim()} onPress={async () => { setSavingDescription(true); try { const updated = await updateClubDescriptionInStore(club.id, descriptionDraft.trim()); onUpdateClub(updated); setEditingDescription(false); } catch (error) { Alert.alert("紹介文を保存できませんでした", error instanceof Error ? error.message : "もう一度お試しください。"); } finally { setSavingDescription(false); } }}><Text style={{ color: "#3478C7", fontWeight: "900" }}>{savingDescription ? "保存中…" : "保存"}</Text></Pressable></View>
           </> : <><Text style={{ fontSize: 15, lineHeight: 22, color: colors.foreground }}>{club.description}</Text>{isLeader || userIsAdmin ? <Pressable onPress={() => setEditingDescription(true)} style={{ alignSelf: "flex-end", marginTop: 10 }}><Text style={{ color: "#3478C7", fontWeight: "800" }}>紹介文を編集</Text></Pressable> : null}</>}
+        </View>
+
+        <View style={{ backgroundColor: colors.surface, borderRadius: 14, padding: 16, marginBottom: 16 }}>
+          <Text style={{ fontSize: 15, fontWeight: "800", color: colors.foreground, marginBottom: 10 }}>部活概要</Text>
+          {editingOverview ? <>
+            <TextInput value={overviewDraft} onChangeText={setOverviewDraft} multiline maxLength={8000} placeholder="部活概要を入力" style={{ minHeight: 180, borderWidth: 1, borderColor: colors.border, borderRadius: 10, padding: 12, fontSize: 15, lineHeight: 23, color: colors.foreground, textAlignVertical: "top" }} />
+            <Text style={{ color: colors.muted, fontSize: 11, alignSelf: "flex-end" }}>{overviewDraft.length}/8000</Text>
+            <View style={{ flexDirection: "row", justifyContent: "flex-end", gap: 18, marginTop: 10 }}><Pressable onPress={() => { setOverviewDraft(clubOverview); setEditingOverview(false); }}><Text style={{ color: colors.muted, fontWeight: "800" }}>キャンセル</Text></Pressable><Pressable disabled={savingOverview || !overviewDraft.trim()} onPress={() => void saveOverview()}><Text style={{ color: "#3478C7", fontWeight: "900" }}>{savingOverview ? "保存中…" : "保存"}</Text></Pressable></View>
+          </> : <><MentionText content={clubOverview} groups={CLUB_OVERVIEW_MENTION_GROUPS} />{canEditOverview ? <Pressable onPress={() => setEditingOverview(true)} style={{ alignSelf: "flex-end", marginTop: 12 }}><Text style={{ color: "#3478C7", fontWeight: "800" }}>部活概要を編集</Text></Pressable> : null}</>}
         </View>
 
         {/* 部長 */}

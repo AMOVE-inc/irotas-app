@@ -370,6 +370,7 @@ export interface Club {
   id: string;
   name: string;
   description: string;
+  overviewText?: string | null;
   leaderId: string; // 部長（運営が任命）
   leaderName?: string;
   memberIds: string[];

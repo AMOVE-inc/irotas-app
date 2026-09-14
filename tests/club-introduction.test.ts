@@ -20,6 +20,11 @@ describe("club introduction", () => {
     expect(getClubIntroductionContent({ name: "テスト部", description: "テスト部の説明" })).toBe("テスト部の説明");
   });
 
+  it("uses the saved club overview ahead of the archived Discord text", () => {
+    const breadClub = CLUBS.find((club) => club.name === "パン部")!;
+    expect(getClubIntroductionContent({ ...breadClub, overviewText: "更新した部活概要" }, archiveThreads)).toBe("更新した部活概要");
+  });
+
   it("returns the latest club activity reports in descending order", () => {
     const reports = getLatestClubActivityReports(archiveThreads, 3);
 
