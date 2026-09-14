@@ -48,24 +48,26 @@ export function MentionText({ content, outgoing = false, groups, rooms = getAllR
   });
 
   const renderRich = (value: string, keyPrefix: string): React.ReactNode => {
-    const pattern = /(\*\*# ([\s\S]+?)\*\*|\*\*([\s\S]+?)\*\*|__([\s\S]+?)__|~~([\s\S]+?)~~|\[small\]([\s\S]+?)\[\/small\]|\[large\]([\s\S]+?)\[\/large\])/;
+    const pattern = /(\*\*\*([\s\S]+?)\*\*\*|\*\*# ([\s\S]+?)\*\*|\*\*([\s\S]+?)\*\*|__([\s\S]+?)__|~~([\s\S]+?)~~|\[small\]([\s\S]+?)\[\/small\]|\[large\]([\s\S]+?)\[\/large\]|(?<!\*)\*([^*\n]+)\*(?!\*))/;
     const match = pattern.exec(value);
     if (!match || match.index === undefined) return renderPlain(value, keyPrefix);
     const before = value.slice(0, match.index);
     const after = value.slice(match.index + match[0].length);
     let inner = "";
     let style: TextStyle = {};
-    if (match[2] !== undefined) { inner = match[2]; style = { fontSize: 18, lineHeight: 25, fontWeight: "900" }; }
-    else if (match[3] !== undefined) { inner = match[3]; style = { fontWeight: "900" }; }
-    else if (match[4] !== undefined) { inner = match[4]; style = { textDecorationLine: "underline" }; }
-    else if (match[5] !== undefined) { inner = match[5]; style = { textDecorationLine: "line-through" }; }
-    else if (match[6] !== undefined) { inner = match[6]; style = { fontSize: 16, lineHeight: 23 }; }
-    else { inner = match[7]; style = { fontSize: 18, lineHeight: 25 }; }
+    if (match[2] !== undefined) { inner = match[2]; style = { fontWeight: "900", fontStyle: "italic" }; }
+    else if (match[3] !== undefined) { inner = match[3]; style = { fontSize: 18, lineHeight: 25, fontWeight: "900" }; }
+    else if (match[4] !== undefined) { inner = match[4]; style = { fontWeight: "900" }; }
+    else if (match[5] !== undefined) { inner = match[5]; style = { textDecorationLine: "underline" }; }
+    else if (match[6] !== undefined) { inner = match[6]; style = { textDecorationLine: "line-through" }; }
+    else if (match[7] !== undefined) { inner = match[7]; style = { fontSize: 16, lineHeight: 23 }; }
+    else if (match[8] !== undefined) { inner = match[8]; style = { fontSize: 18, lineHeight: 25 }; }
+    else { inner = match[9]; style = { fontStyle: "italic" }; }
     return <>{renderRich(before, `${keyPrefix}-before`)}<Text key={`${keyPrefix}-formatted`} style={style}>{renderRich(inner, `${keyPrefix}-inner`)}</Text>{renderRich(after, `${keyPrefix}-after`)}</>;
   };
   return (
     <Text style={{ fontSize: 14, lineHeight: 20, color: outgoing ? "#FFF" : colors.foreground }}>
-      {normalizeRenderedMentions(content).split("\n").map((line, index, lines) => {
+      {/\*\*\*?[\s\S]*?\n[\s\S]*?\*\*\*?/.test(content) ? renderRich(normalizeRenderedMentions(content), "multiline") : normalizeRenderedMentions(content).split("\n").map((line, index, lines) => {
         const heading = parseDiscordHeading(line);
         const headingStyle: TextStyle = heading.level === 1
           ? { fontSize: 22, lineHeight: 30, fontWeight: "900" }
@@ -78,7 +80,7 @@ export function MentionText({ content, outgoing = false, groups, rooms = getAllR
   );
 }
 
-export function MentionSuggestions({ query, groups, members: _members, memberIds, onSelect }: { query: string; groups: MentionGroup[]; members: Member[]; memberIds?: readonly string[]; onSelect: (label: string) => void }) {
+export function MentionSuggestions({ query, groups, members, memberIds, onSelect }: { query: string; groups: MentionGroup[]; members: Member[]; memberIds?: readonly string[]; onSelect: (label: string) => void }) {
   const colors = useColors();
   const [directory, setDirectory] = useState<Api.PublicMember[] | null>(null);
   useEffect(() => {
@@ -89,7 +91,8 @@ export function MentionSuggestions({ query, groups, members: _members, memberIds
   const normalized = query.toLowerCase();
   const filteredGroups = groups.filter((group) => !query || group.label.toLowerCase().includes(normalized) || group.description.includes(query));
   const allowedMemberIds = memberIds ? new Set(memberIds) : null;
-  const filteredMembers = (directory ?? [])
+  const candidates = directory?.length ? directory : members.map((member) => ({ id: member.id, displayName: member.name, profile: {} as Api.PublicMember["profile"], memberTerm: member.generation ? String(member.generation) : null })) as Api.PublicMember[];
+  const filteredMembers = candidates
     .filter((member) => !allowedMemberIds || allowedMemberIds.has(member.id))
     .filter((member) => !query || member.displayName.toLowerCase().includes(normalized) || member.id.toLowerCase().includes(normalized))
     .slice(0, 8);

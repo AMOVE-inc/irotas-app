@@ -831,7 +831,7 @@ export async function handleChatContentRequest(
     if (request.method === "POST") {
       if (!canPost(room, member)) return json({ error: "運営メンバーのみ送信できます" }, 403);
       const input = await readBody(request);
-      const content = typeof input?.content === "string" ? input.content.normalize("NFKC").trim() : "";
+      const content = typeof input?.content === "string" ? input.content.trim() : "";
       const imageUrl = validImageUrl(input?.imageUrl);
       if (!input || content.length > 10_000 || imageUrl === null || (!content && !imageUrl))
         return json({ error: "メッセージ内容が不正です" }, 400);
@@ -937,7 +937,7 @@ export async function handleChatContentRequest(
       return json({ success: true });
     }
     const input = await readBody(request);
-    const content = typeof input?.content === "string" ? input.content.normalize("NFKC").trim() : "";
+    const content = typeof input?.content === "string" ? input.content.trim() : "";
     if (!content || content.length > 10_000) return json({ error: "メッセージ内容を確認してください" }, 400);
     await env.DB.batch([
       env.DB.prepare("UPDATE chat_messages SET content = ?, updated_at = ? WHERE id = ?").bind(content, now, messageId),

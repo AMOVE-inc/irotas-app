@@ -23,6 +23,7 @@ const EVENT_CANCELLATION_PREVIEW_PATH = /^\/api\/events\/([^/]+)\/cancellation-p
 const EVENT_IMAGE_PATH = /^\/api\/event-images\/([^/]+)$/;
 const MAX_EVENT_BODY_BYTES = 96 * 1024;
 const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
+const MAX_VIDEO_BYTES = 30 * 1024 * 1024;
 const DELETED_EVENT_IDS = new Set(["discord-event-1504772980851478548"]);
 const BOARD_EVENTS_TO_REGISTER = [
   "discord-event-1545026554533249044", // LA'S TOKYO
@@ -718,14 +719,16 @@ async function createEvent(request: Request, db: D1Database, member: Awaited<Ret
 async function uploadImage(request: Request, env: SitesEnv, memberId: number) {
   if (!env.UPLOADS) return responseJson({ error: "画像保存先に接続できません" }, 503);
   const declared = Number(request.headers.get("content-length") ?? 0);
-  if (declared > MAX_IMAGE_BYTES) return responseJson({ error: "画像は8MB以内にしてください" }, 413);
   const contentType = (request.headers.get("content-type") ?? "").split(";")[0];
-  if (!/^image\/(jpeg|png|webp|gif)$/i.test(contentType))
-    return responseJson({ error: "JPEG・PNG・WebP・GIF画像を選択してください" }, 415);
+  const isVideo = /^video\/(mp4|quicktime|webm)$/i.test(contentType);
+  if (!isVideo && !/^image\/(jpeg|png|webp|gif)$/i.test(contentType))
+    return responseJson({ error: "JPEG・PNG・WebP・GIF画像、MP4・MOV・WebM動画を選択してください" }, 415);
+  const maxBytes = isVideo ? MAX_VIDEO_BYTES : MAX_IMAGE_BYTES;
+  if (declared > maxBytes) return responseJson({ error: isVideo ? "動画は30MB以内にしてください" : "画像は8MB以内にしてください" }, 413);
   const bytes = await request.arrayBuffer();
-  if (!bytes.byteLength || bytes.byteLength > MAX_IMAGE_BYTES)
-    return responseJson({ error: "画像は8MB以内にしてください" }, 413);
-  const extension = contentType.split("/")[1].replace("jpeg", "jpg");
+  if (!bytes.byteLength || bytes.byteLength > maxBytes)
+    return responseJson({ error: isVideo ? "動画は30MB以内にしてください" : "画像は8MB以内にしてください" }, 413);
+  const extension = contentType === "video/quicktime" ? "mov" : contentType.split("/")[1].replace("jpeg", "jpg");
   const key = `events/${memberId}/${crypto.randomUUID()}.${extension}`;
   await env.UPLOADS.put(key, bytes, { httpMetadata: { contentType } });
   return responseJson({ imageUrl: `/api/event-images/${encodeURIComponent(key)}` }, 201);

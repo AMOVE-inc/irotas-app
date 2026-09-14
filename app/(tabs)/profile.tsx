@@ -971,9 +971,10 @@ export default function ProfileScreen() {
           {/* Member ID */}
           {memberId && !userIsAdmin ? (
             <Pressable
-              onPress={() => {
-                Clipboard.setStringAsync(memberId);
-                Alert.alert("コピー完了", `会員IDをコピーしました`);
+              onPress={async () => {
+                await Clipboard.setStringAsync(memberId);
+                if (Platform.OS === "web") window.alert("会員IDをコピーしました");
+                else Alert.alert("コピーしました", "会員IDをコピーしました");
               }}
               style={({ pressed }) => ({
                 flexDirection: "row",

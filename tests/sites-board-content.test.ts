@@ -131,6 +131,14 @@ describe("shared board content API", () => {
     expect(writes.some((item) => item.sql.includes("INSERT INTO audit_logs"))).toBe(true);
   });
 
+  it("preserves circled list numbers and multiline formatting in post text", async () => {
+    const { db, writes } = testDatabase({ id: 9, role: "user", access_role: "member", account_status: "active" });
+    const content = "**① 最初の項目\n② 次の項目**";
+    const response = await handleBoardContentRequest(request("/api/board/threads", "POST", { category: "free-chat", title: "箇条書き", content }), { DB: db } as SitesEnv);
+    expect(response?.status).toBe(201);
+    expect(writes.find((item) => item.sql.includes("INSERT INTO board_threads"))?.values).toContain(content);
+  });
+
   it("notifies the post author when another member comments", async () => {
     const { db, writes } = testDatabase(
       { id: 9, role: "user", access_role: "member", account_status: "active" },

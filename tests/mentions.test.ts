@@ -30,6 +30,7 @@ describe("group mentions", () => {
 
   it("detects a mention query and inserts the selected label", () => {
     expect(getMentionQuery("確認お願いします @関東")).toBe("関東");
+    expect(getMentionQuery("確認お願いします @山田 太郎")).toBe("山田 太郎");
     expect(insertMention("確認お願いします @関東", "関東支部")).toBe("確認お願いします @関東支部 ");
   });
 

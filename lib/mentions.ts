@@ -51,7 +51,7 @@ export function getMentionQuery(text: string): string | null {
   const atIndex = text.lastIndexOf("@");
   if (atIndex < 0) return null;
   const query = text.slice(atIndex + 1);
-  return /\s/.test(query) ? null : query;
+  return /[\r\n]/.test(query) || query.length > 80 ? null : query;
 }
 
 export function insertMention(text: string, label: string): string {

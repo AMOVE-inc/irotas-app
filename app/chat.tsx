@@ -177,7 +177,7 @@ function MessageBubble({ message, isMe, canDelete, readOnly, viewerId, viewerNam
             <MemberClubLeaderBadges roles={senderMember?.discordRoles} compact />
           </View>
         ) : null}
-        <Pressable onLongPress={() => readOnly ? void Clipboard.setStringAsync(message.content) : setShowActions(true)} delayLongPress={350}
+        <Pressable onLongPress={() => setShowActions(true)} delayLongPress={350}
           style={{
             backgroundColor: isMe ? "#E8A0BF" : "#ECECEF",
             borderWidth: isMe ? 0 : 1,
@@ -200,7 +200,7 @@ function MessageBubble({ message, isMe, canDelete, readOnly, viewerId, viewerNam
           ) : null}
           {message.attachmentUrls?.length ? (
             <View style={{ gap: 4 }}>
-              {message.attachmentUrls.map((uri) => <ExpandableImage key={uri} source={{ uri }} uri={uri} style={{ width: 220, height: 180 }} contentFit="cover" />)}
+              {message.attachmentUrls.map((uri, index) => <ExpandableImage key={uri} source={{ uri }} uri={uri} galleryUris={message.attachmentUrls} galleryIndex={index} style={{ width: 220, height: 180 }} contentFit="cover" />)}
             </View>
           ) : null}
           {message.content ? (
@@ -224,13 +224,12 @@ function MessageBubble({ message, isMe, canDelete, readOnly, viewerId, viewerNam
           {Object.entries(message.reactions ?? {}).filter(([emoji]) => !emoji.startsWith("🗳️")).map(([emoji, memberIds]) => (
             <Pressable
               key={emoji}
-              disabled={readOnly}
               onPress={() => {
                 if (reactionLongPress.current) {
                   reactionLongPress.current = false;
                   return;
                 }
-                onReact(emoji);
+                if (!readOnly) onReact(emoji);
               }}
               onLongPress={() => {
                 reactionLongPress.current = true;
@@ -254,7 +253,7 @@ function MessageBubble({ message, isMe, canDelete, readOnly, viewerId, viewerNam
             {showMoreReactions ? <View style={{ width: "100%", flexDirection: "row", flexWrap: "wrap", marginTop: 4 }}>{MORE_REACTION_EMOJIS.map((emoji) => <Pressable key={emoji} onPress={() => { onReact(emoji); setShowReactionPicker(false); setShowMoreReactions(false); }} style={{ width: 34, height: 32, alignItems: "center", justifyContent: "center" }}><Text style={{ fontSize: 19 }}>{emoji}</Text></Pressable>)}</View> : null}
           </View>
         ) : null}
-        <Modal visible={showActions} transparent animationType="fade" onRequestClose={() => setShowActions(false)}><Pressable onPress={() => setShowActions(false)} style={{ flex: 1, backgroundColor: "rgba(20,18,24,0.48)", justifyContent: "flex-end" }}><Pressable onPress={() => {}} style={{ backgroundColor: colors.background, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 16, paddingBottom: 30 }}><View style={{ flexDirection: "row", justifyContent: "space-around", backgroundColor: colors.surface, borderRadius: 16, padding: 10, marginBottom: 10 }}>{REACTION_EMOJIS.map((emoji) => <Pressable key={emoji} onPress={() => { onReact(emoji); setShowActions(false); }} style={{ padding: 7 }}><Text style={{ fontSize: 24 }}>{emoji}</Text></Pressable>)}</View>{[{ label: "返信", icon: "arrowshape.turn.up.left", action: onReply }, { label: "テキストをコピー", icon: "doc.on.doc", action: () => { void Clipboard.setStringAsync(message.content); } }, ...(isMe ? [{ label: "メッセージを編集", icon: "pencil", action: onEdit }] : []), ...(canDelete ? [{ label: "メッセージを削除", icon: "trash", action: onDelete }] : []), { label: "メッセージをピン留め", icon: "pin.fill", action: () => Alert.alert("ピン留めしました") }].map((item) => <Pressable key={item.label} onPress={() => { item.action(); setShowActions(false); }} style={{ minHeight: 48, flexDirection: "row", alignItems: "center", paddingHorizontal: 12, borderBottomWidth: 0.5, borderBottomColor: colors.border }}><IconSymbol name={item.icon as any} size={19} color={item.label.includes("削除") ? colors.error : colors.foreground} /><Text style={{ marginLeft: 12, fontSize: 15, fontWeight: "700", color: item.label.includes("削除") ? colors.error : colors.foreground }}>{item.label}</Text></Pressable>)}</Pressable></Pressable></Modal>
+        <Modal visible={showActions} transparent animationType="fade" onRequestClose={() => setShowActions(false)}><Pressable onPress={() => setShowActions(false)} style={{ flex: 1, backgroundColor: "rgba(20,18,24,0.48)", justifyContent: "flex-end" }}><Pressable onPress={() => {}} style={{ backgroundColor: colors.background, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 16, paddingBottom: 30 }}><View style={{ flexDirection: "row", justifyContent: "space-around", backgroundColor: colors.surface, borderRadius: 16, padding: 10, marginBottom: 10 }}>{REACTION_EMOJIS.map((emoji) => <Pressable key={emoji} onPress={() => { onReact(emoji); setShowActions(false); }} style={{ padding: 7 }}><Text style={{ fontSize: 24 }}>{emoji}</Text></Pressable>)}</View>{[{ label: "返信", icon: "arrowshape.turn.up.left", action: onReply }, { label: "リンクをコピー", icon: "link", action: () => { void Clipboard.setStringAsync(`https://app.irotas-community.com/chat?id=${encodeURIComponent(message.chatId)}&message=${encodeURIComponent(message.id)}`); } }, { label: "テキストをコピー", icon: "doc.on.doc", action: () => { void Clipboard.setStringAsync(message.content); } }, ...(isMe && !readOnly ? [{ label: "メッセージを編集", icon: "pencil", action: onEdit }] : []), ...(canDelete ? [{ label: "メッセージを削除", icon: "trash", action: onDelete }] : [])].map((item) => <Pressable key={item.label} onPress={() => { item.action(); setShowActions(false); }} style={{ minHeight: 48, flexDirection: "row", alignItems: "center", paddingHorizontal: 12, borderBottomWidth: 0.5, borderBottomColor: colors.border }}><IconSymbol name={item.icon as any} size={19} color={item.label.includes("削除") ? colors.error : colors.foreground} /><Text style={{ marginLeft: 12, fontSize: 15, fontWeight: "700", color: item.label.includes("削除") ? colors.error : colors.foreground }}>{item.label}</Text></Pressable>)}</Pressable></Pressable></Modal>
         <Modal visible={reactionDetails !== null} transparent animationType="fade" onRequestClose={() => setReactionDetails(null)}><Pressable onPress={() => setReactionDetails(null)} style={{ flex: 1, backgroundColor: "rgba(20,18,24,0.48)", justifyContent: "center", padding: 28 }}><Pressable onPress={() => {}} style={{ maxHeight: "72%", backgroundColor: colors.background, borderRadius: 20, padding: 18 }}><View style={{ flexDirection: "row", alignItems: "center", marginBottom: 12 }}><Text style={{ fontSize: 21 }}>{reactionDetails?.emoji}</Text><Text style={{ marginLeft: 8, fontSize: 16, fontWeight: "900", color: colors.foreground }}>リアクションした人</Text><Pressable onPress={() => setReactionDetails(null)} style={{ marginLeft: "auto", padding: 4 }}><IconSymbol name="xmark" size={19} color={colors.muted} /></Pressable></View><ScrollView>{reactionDetails?.memberIds.map((memberId) => { const isViewer = memberId === viewerId; const sharedMember = memberDirectory.find((member) => member.id === memberId); const localMember = getMemberById(memberId); const name = isViewer ? displayMemberName(viewerName) : sharedMember?.displayName ?? localMember?.name ?? "メンバー"; const avatarUrl = isViewer ? viewerAvatarUrl : sharedMember?.profile?.avatarUrl; const discordAvatar = getDiscordAuthorByName(name)?.avatarUrl; const avatar = isViewer && myAvatarUri ? { uri: myAvatarUri } : typeof avatarUrl === "string" && avatarUrl ? { uri: avatarUrl } : discordAvatar ? { uri: discordAvatar } : localMember?.avatar ?? DEFAULT_AVATAR; return <View key={memberId} style={{ flexDirection: "row", alignItems: "center", paddingVertical: 9 }}><Image source={avatar} style={{ width: 34, height: 34, borderRadius: 17 }} contentFit="cover" /><Text style={{ marginLeft: 10, fontSize: 15, fontWeight: "700", color: colors.foreground }}>{name}</Text></View>; })}</ScrollView></Pressable></Pressable></Modal>
       </View>
     </View>
@@ -268,7 +267,7 @@ export default function ChatScreen() {
   const viewerMemberId = authUser?.memberId ?? (authUser?.id ? `member-${authUser.id}` : CURRENT_USER.id);
   const userIsAdmin = isAdminRole(authUser?.role, authUser?.accessRole);
   const canViewAllChats = isOperatorRole(authUser?.role, authUser?.accessRole);
-  const { id, unreadCount: unreadCountParam } = useLocalSearchParams<{ id: string; unreadCount?: string }>();
+  const { id, message: linkedMessageId, unreadCount: unreadCountParam } = useLocalSearchParams<{ id: string; message?: string; unreadCount?: string }>();
   const [messageText, setMessageText] = useState("");
   const [editingMessage, setEditingMessage] = useState<ChatMessage | null>(null);
   const [editingMessageText, setEditingMessageText] = useState("");
@@ -276,6 +275,8 @@ export default function ChatScreen() {
   const [mentionQuery, setMentionQuery] = useState<string | null>(null);
   const [messageSelection, setMessageSelection] = useState<TextSelection>({ start: 0, end: 0 });
   const flatListRef = useRef<FlatList>(null);
+  const linkedScrollRetry = useRef(false);
+  const linkedMessageScrolled = useRef<string | null>(null);
   const inputRef = useRef<TextInput>(null);
   const [isNearLatest, setIsNearLatest] = useState(true);
   const [hasOpenedIntroduction, setHasOpenedIntroduction] = useState<boolean | null>(null);
@@ -368,6 +369,15 @@ export default function ChatScreen() {
     });
     return introductionChat ? unique.reverse() : unique;
   }, [introductionChat, messages, room?.type]);
+  useEffect(() => {
+    if (!linkedMessageId || linkedMessageScrolled.current === linkedMessageId) return;
+    const index = displayedMessages.findIndex((item) => item.id === linkedMessageId);
+    if (index < 0) return;
+    linkedMessageScrolled.current = linkedMessageId;
+    linkedScrollRetry.current = false;
+    const timer = setTimeout(() => flatListRef.current?.scrollToIndex({ index, animated: true, viewPosition: 0.5 }), 250);
+    return () => clearTimeout(timer);
+  }, [linkedMessageId, displayedMessages]);
   // 自分のプロフィール画像（AsyncStorageから読み込み）
   const [myAvatarUri, setMyAvatarUri] = useState<string | null>(null);
   const scrollToLatest = useCallback((animated = false) => {
@@ -805,7 +815,7 @@ export default function ChatScreen() {
             setIsNearLatest(introductionChat ? contentOffset.y <= 80 : contentOffset.y + layoutMeasurement.height >= contentSize.height - 80);
           }}
           scrollEventThrottle={80}
-          onScrollToIndexFailed={() => introductionChat ? flatListRef.current?.scrollToOffset({ offset: 0, animated: false }) : flatListRef.current?.scrollToEnd({ animated: false })}
+          onScrollToIndexFailed={(info) => { if (linkedScrollRetry.current) return; linkedScrollRetry.current = true; flatListRef.current?.scrollToOffset({ offset: Math.max(0, info.averageItemLength * info.index), animated: false }); setTimeout(() => flatListRef.current?.scrollToIndex({ index: info.index, animated: true, viewPosition: 0.5 }), 120); }}
           ListEmptyComponent={
             <View style={{ alignItems: "center", paddingVertical: 40 }}>
               <IconSymbol name="message.fill" size={36} color={colors.border} />
@@ -834,8 +844,8 @@ export default function ChatScreen() {
           <MentionSuggestions
             query={mentionQuery}
             groups={mentionGroups}
-            members={MEMBERS.filter((member) => member.id !== CURRENT_USER.id && room.participants.includes(member.id))}
-            memberIds={roomParticipants.filter((memberId) => memberId !== viewerMemberId)}
+            members={mentionMembers.filter((member) => member.id !== viewerMemberId)}
+            memberIds={room.type === "dm" ? roomParticipants.filter((memberId) => memberId !== viewerMemberId) : undefined}
             onSelect={handleSelectMention}
           />
         )}

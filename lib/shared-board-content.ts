@@ -63,7 +63,7 @@ export function boardThreadData(thread: BoardThread): Record<string, unknown> {
     chatId: thread.chatId,
     eventDate: thread.eventDate,
     images: durableImages(thread.images),
-    videos: thread.videos?.filter((url) => /^https:\/\//i.test(url)),
+    videos: thread.videos?.filter(durableUri),
     mealReport: thread.mealReport,
     gourmetAdvice: thread.gourmetAdvice,
     selfIntroduction: thread.selfIntroduction,
@@ -108,7 +108,7 @@ export function sharedThreadToBoardThread(record: SharedBoardThread, viewerId: s
 export function boardCommentData(comment: BoardComment): Record<string, unknown> {
   return {
     images: durableImages(comment.images),
-    videos: comment.videos?.filter((url) => /^https:\/\//i.test(url)),
+    videos: comment.videos?.filter(durableUri),
     poll: comment.poll,
     isSystem: comment.isSystem,
   };

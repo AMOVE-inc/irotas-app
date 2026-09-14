@@ -343,8 +343,9 @@ function SelfIntroductionMessage({ thread }: { thread: BoardThread }) {
   </View>;
 }
 
-function ThreadCard({ thread, onPress, onEdit, onDelete, onPin, onChangeRecruitment, unreadCount = 0, mentionCount = 0, showMenu = true, comments = [] }: { thread: BoardThread; onPress: () => void; onEdit?: () => void; onDelete?: () => void; onPin?: () => void; onChangeRecruitment?: () => void; unreadCount?: number; mentionCount?: number; showMenu?: boolean; comments?: BoardComment[] }) {
+function ThreadCard({ thread, viewerId, onPress, onEdit, onDelete, onPin, onChangeRecruitment, unreadCount = 0, mentionCount = 0, showMenu = true, comments = [] }: { thread: BoardThread; viewerId: string; onPress: () => void; onEdit?: () => void; onDelete?: () => void; onPin?: () => void; onChangeRecruitment?: () => void; unreadCount?: number; mentionCount?: number; showMenu?: boolean; comments?: BoardComment[] }) {
   const colors = useColors();
+  const [showActions, setShowActions] = useState(false);
   const router = useRouter();
   const isParticipant = thread.recruitParticipants?.includes(CURRENT_USER.id);
   const [cardReactions, setCardReactions] = useState(thread.reactions ?? {});
@@ -360,8 +361,10 @@ function ThreadCard({ thread, onPress, onEdit, onDelete, onPin, onChangeRecruitm
   useEffect(() => { void loadThreadReactions(thread.id, thread.reactions).then(setCardReactions); }, [thread.id, thread.reactions]);
   const toggleCardReaction = () => {
     if (!cardEmoji) return;
-    const next = toggleReactionMember(cardReactions, cardEmoji, CURRENT_USER.id);
-    setCardReactions(next); void saveThreadReactions(thread.id, next);
+    const next = toggleReactionMember(cardReactions, cardEmoji, viewerId);
+    setCardReactions(next);
+    if (thread.shared) void Api.setSharedBoardReaction({ targetType: "thread", targetId: thread.id, emoji: cardEmoji }, next[cardEmoji]?.includes(viewerId) ?? false).catch(() => setCardReactions(cardReactions));
+    else void saveThreadReactions(thread.id, next);
   };
   const showsRightPreview =
     thread.category === "gourmet-contest" ||
@@ -381,6 +384,7 @@ function ThreadCard({ thread, onPress, onEdit, onDelete, onPin, onChangeRecruitm
   }, []);
   const openThreadActions = useCallback(() => {
     longPressHandled.current = true;
+    if (Platform.OS === "web") { setShowActions(true); return; }
     Alert.alert(thread.title, "操作を選択してください", [
       { text: "リンクをコピー", onPress: () => { void Clipboard.setStringAsync(`https://app.irotas-community.com/board?category=${encodeURIComponent(thread.category)}&view=threads&thread=${encodeURIComponent(thread.id)}`); } },
       ...(onPin ? [{ text: pinned ? "固定表示を解除" : "固定表示にする", onPress: onPin }] : []),
@@ -390,7 +394,7 @@ function ThreadCard({ thread, onPress, onEdit, onDelete, onPin, onChangeRecruitm
     ]);
   }, [onDelete, onEdit, onPin, pinned, thread.category, thread.id, thread.title]);
 
-  return (
+  return <>
     <Pressable
       onPress={() => { if (longPressHandled.current) { longPressHandled.current = false; return; } onPress(); }}
       onLongPress={openThreadActions}
@@ -520,7 +524,7 @@ function ThreadCard({ thread, onPress, onEdit, onDelete, onPin, onChangeRecruitm
       {/* Footer */}
       <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
         <View style={{ flexDirection: "row", alignItems: "center" }}>
-          {cardEmoji ? <Pressable onPress={(event) => { event.stopPropagation?.(); toggleCardReaction(); }} accessibilityLabel={`${cardEmoji}スタンプ`} style={{ flexDirection: "row", alignItems: "center", marginRight: 11, borderRadius: 13, paddingHorizontal: 7, paddingVertical: 3, backgroundColor: (cardReactions[cardEmoji] ?? []).includes(CURRENT_USER.id) ? "#F4E5EE" : "#F3F1F3" }}><Text style={{ fontSize: 15 }}>{cardEmoji}</Text>{(cardReactions[cardEmoji]?.length ?? 0) > 0 ? <Text style={{ fontSize: 10, fontWeight: "800", color: colors.muted, marginLeft: 3 }}>{cardReactions[cardEmoji].length}</Text> : null}</Pressable> : null}
+          {cardEmoji ? <Pressable onPress={(event) => { event.stopPropagation?.(); toggleCardReaction(); }} accessibilityLabel={`${cardEmoji}スタンプ`} style={{ flexDirection: "row", alignItems: "center", marginRight: 11, borderRadius: 13, paddingHorizontal: 7, paddingVertical: 3, backgroundColor: (cardReactions[cardEmoji] ?? []).includes(viewerId) ? "#F4E5EE" : "#F3F1F3" }}><Text style={{ fontSize: 15 }}>{cardEmoji}</Text>{(cardReactions[cardEmoji]?.length ?? 0) > 0 ? <Text style={{ fontSize: 10, fontWeight: "800", color: colors.muted, marginLeft: 3 }}>{cardReactions[cardEmoji].length}</Text> : null}</Pressable> : null}
           <IconSymbol name="bubble.left.fill" size={14} color={colors.muted} />
           <Text style={{ fontSize: 12, color: colors.muted, marginLeft: 4 }}>
             {thread.commentCount}件のコメント
@@ -550,7 +554,8 @@ function ThreadCard({ thread, onPress, onEdit, onDelete, onPin, onChangeRecruitm
         )}
       </View>
     </Pressable>
-  );
+    <Modal visible={showActions} transparent animationType="fade" onRequestClose={() => setShowActions(false)}><Pressable onPress={() => setShowActions(false)} style={{ flex: 1, justifyContent: "flex-end", backgroundColor: "rgba(20,18,24,0.48)" }}><View style={{ backgroundColor: colors.background, borderTopLeftRadius: 22, borderTopRightRadius: 22, padding: 18, paddingBottom: 32 }}><Text style={{ fontSize: 16, fontWeight: "800", color: colors.foreground, marginBottom: 10 }}>投稿の操作</Text>{[{ label: "リンクをコピー", action: () => { void Clipboard.setStringAsync(`https://app.irotas-community.com/board?category=${encodeURIComponent(thread.category)}&view=threads&thread=${encodeURIComponent(thread.id)}`); } }, ...(onEdit ? [{ label: "編集", action: onEdit }] : []), ...(onDelete ? [{ label: "削除", action: onDelete }] : [])].map((item) => <Pressable key={item.label} onPress={() => { setShowActions(false); item.action(); }} style={{ paddingVertical: 13, borderBottomWidth: 0.5, borderBottomColor: colors.border }}><Text style={{ fontSize: 15, fontWeight: "700", color: item.label === "削除" ? colors.error : colors.foreground }}>{item.label}</Text></Pressable>)}<Pressable onPress={() => setShowActions(false)} style={{ paddingVertical: 14 }}><Text style={{ color: colors.muted, textAlign: "center" }}>キャンセル</Text></Pressable></View></Pressable></Modal>
+  </>;
 }
 
 // ============================================================
@@ -986,8 +991,8 @@ function ThreadDetailModal({
 
   const handleThreadReaction = (emoji: string) => {
     setThreadReactions((current) => {
-      const next = toggleReactionMember(current, emoji, CURRENT_USER.id);
-      if (thread.shared) void Api.setSharedBoardReaction({ targetType: "thread", targetId: thread.id, emoji }, next[emoji]?.includes(CURRENT_USER.id) ?? false).catch(() => setThreadReactions(current));
+      const next = toggleReactionMember(current, emoji, viewerMemberId);
+      if (thread.shared) void Api.setSharedBoardReaction({ targetType: "thread", targetId: thread.id, emoji }, next[emoji]?.includes(viewerMemberId) ?? false).catch(() => setThreadReactions(current));
       else void saveThreadReactions(thread.id, next);
       return next;
     });
@@ -1149,8 +1154,8 @@ function ThreadDetailModal({
             <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 7, marginBottom: 16 }}>
               {(thread.selfIntroduction ? ["🎉"] : Array.from(new Set(["❤️", ...Object.keys(threadReactions)]))).map((emoji) => {
                 const memberIds = threadReactions[emoji] ?? [];
-                const selected = memberIds.includes(CURRENT_USER.id);
-                return <Pressable key={emoji} onPress={() => handleThreadReaction(emoji)} accessibilityLabel={boardReactionAccessibilityLabel(emoji)} style={{ flexDirection: "row", alignItems: "center", backgroundColor: selected ? "#F0E7F7" : colors.surface, borderWidth: 1, borderColor: selected ? "#7D6A92" : colors.border, borderRadius: 16, paddingHorizontal: 10, paddingVertical: 5 }}><BoardReactionIcon emoji={emoji} size={22} />{memberIds.length > 0 ? <Text style={{ fontSize: 11, fontWeight: "800", color: colors.muted, marginLeft: 4 }}>{memberIds.length}</Text> : null}</Pressable>;
+                const selected = memberIds.includes(viewerMemberId);
+                return <Pressable key={emoji} onPress={() => { if (reactionLongPress.current) { reactionLongPress.current = false; return; } handleThreadReaction(emoji); }} onLongPress={() => { reactionLongPress.current = true; setReactionDetails({ emoji, memberIds }); }} delayLongPress={350} accessibilityLabel={boardReactionAccessibilityLabel(emoji)} style={{ flexDirection: "row", alignItems: "center", backgroundColor: selected ? "#F0E7F7" : colors.surface, borderWidth: 1, borderColor: selected ? "#7D6A92" : colors.border, borderRadius: 16, paddingHorizontal: 10, paddingVertical: 5 }}><BoardReactionIcon emoji={emoji} size={22} />{memberIds.length > 0 ? <Text style={{ fontSize: 11, fontWeight: "800", color: colors.muted, marginLeft: 4 }}>{memberIds.length}</Text> : null}</Pressable>;
               })}
               <Pressable accessibilityLabel="別の絵文字を追加" onPress={() => setShowThreadEmojiPicker((current) => !current)} style={{ width: 34, height: 31, borderRadius: 16, alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface }}><IconSymbol name="plus" size={16} color={colors.muted} /></Pressable>
               {showThreadEmojiPicker ? <View style={{ width: "100%", flexDirection: "row", flexWrap: "wrap", gap: 7, paddingTop: 3 }}>{THREAD_REACTION_EMOJIS.map((emoji) => <Pressable key={emoji} onPress={() => { handleThreadReaction(emoji); setShowThreadEmojiPicker(false); }} style={{ width: 38, height: 34, borderRadius: 17, alignItems: "center", justifyContent: "center", backgroundColor: "#F4F1F3" }}><Text style={{ fontSize: 19 }}>{emoji}</Text></Pressable>)}</View> : null}
@@ -1165,6 +1170,8 @@ function ThreadDetailModal({
                   key={i}
                   source={boardImageSource(uri)}
                   uri={boardImageUri(uri)}
+                  galleryUris={thread.images?.map(boardImageUri).filter((value): value is string => Boolean(value))}
+                  galleryIndex={i}
                   style={isContest ? { width: "100%", aspectRatio: 1, borderRadius: 14, backgroundColor: colors.surface } : { width: 100, height: 100, borderRadius: 10 }}
                   contentFit={isContest ? "contain" : "cover"}
                 />
@@ -1175,8 +1182,8 @@ function ThreadDetailModal({
           {thread.mealReport ? <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 7, marginBottom: 16 }}>
             {Array.from(new Set(["❤️", ...Object.keys(threadReactions)])).map((emoji) => {
               const memberIds = threadReactions[emoji] ?? [];
-              const selected = memberIds.includes(CURRENT_USER.id);
-              return <Pressable key={emoji} onPress={() => handleThreadReaction(emoji)} accessibilityLabel={boardReactionAccessibilityLabel(emoji)} style={{ flexDirection: "row", alignItems: "center", backgroundColor: selected ? "#F0E7F7" : colors.surface, borderWidth: 1, borderColor: selected ? "#7D6A92" : colors.border, borderRadius: 16, paddingHorizontal: 10, paddingVertical: 5 }}><BoardReactionIcon emoji={emoji} size={22} />{memberIds.length > 0 ? <Text style={{ fontSize: 11, fontWeight: "800", color: colors.muted, marginLeft: 4 }}>{memberIds.length}</Text> : null}</Pressable>;
+              const selected = memberIds.includes(viewerMemberId);
+              return <Pressable key={emoji} onPress={() => { if (reactionLongPress.current) { reactionLongPress.current = false; return; } handleThreadReaction(emoji); }} onLongPress={() => { reactionLongPress.current = true; setReactionDetails({ emoji, memberIds }); }} delayLongPress={350} accessibilityLabel={boardReactionAccessibilityLabel(emoji)} style={{ flexDirection: "row", alignItems: "center", backgroundColor: selected ? "#F0E7F7" : colors.surface, borderWidth: 1, borderColor: selected ? "#7D6A92" : colors.border, borderRadius: 16, paddingHorizontal: 10, paddingVertical: 5 }}><BoardReactionIcon emoji={emoji} size={22} />{memberIds.length > 0 ? <Text style={{ fontSize: 11, fontWeight: "800", color: colors.muted, marginLeft: 4 }}>{memberIds.length}</Text> : null}</Pressable>;
             })}
             <Pressable accessibilityLabel="別の絵文字を追加" onPress={() => setShowThreadEmojiPicker((current) => !current)} style={{ width: 34, height: 31, borderRadius: 16, alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface }}><IconSymbol name="plus" size={16} color={colors.muted} /></Pressable>
             {showThreadEmojiPicker ? <View style={{ width: "100%", flexDirection: "row", flexWrap: "wrap", gap: 7, paddingTop: 3 }}>{THREAD_REACTION_EMOJIS.map((emoji) => <Pressable key={emoji} onPress={() => { handleThreadReaction(emoji); setShowThreadEmojiPicker(false); }} style={{ width: 38, height: 34, borderRadius: 17, alignItems: "center", justifyContent: "center", backgroundColor: "#F4F1F3" }}><Text style={{ fontSize: 19 }}>{emoji}</Text></Pressable>)}</View> : null}
@@ -1292,7 +1299,7 @@ function ThreadDetailModal({
                 {comment.poll ? <View style={{ marginLeft: 32 }}><PollCard ownerKey={`comment:${comment.id}`} poll={comment.poll} /></View> : null}
                 {comment.images?.length ? (
                   <View style={{ marginLeft: 32, marginTop: 8, flexDirection: "row", flexWrap: "wrap", gap: 7 }}>
-                    {comment.images.map((uri, index) => <ExpandableImage key={`${comment.id}-image-${index}`} source={boardImageSource(uri)} uri={boardImageUri(uri)} style={{ width: 104, height: 104, borderRadius: 10, backgroundColor: colors.surface }} contentFit="cover" />)}
+                    {comment.images.map((uri, index) => <ExpandableImage key={`${comment.id}-image-${index}`} source={boardImageSource(uri)} uri={boardImageUri(uri)} galleryUris={comment.images?.map(boardImageUri).filter((value): value is string => Boolean(value))} galleryIndex={index} style={{ width: 104, height: 104, borderRadius: 10, backgroundColor: colors.surface }} contentFit="cover" />)}
                   </View>
                 ) : null}
                 {comment.videos?.length ? <View style={{ marginLeft: 32, marginTop: 8, gap: 8 }}>{comment.videos.map((uri) => <BoardVideo key={uri} uri={uri} />)}</View> : null}
@@ -1858,6 +1865,7 @@ function CreateThreadModal({
   const [isRecruiting, setIsRecruiting] = useState(false);
   const [capacity, setCapacity] = useState("");
   const [images, setImages] = useState<string[]>([]);
+  const [videos, setVideos] = useState<string[]>([]);
   const [restaurantName, setRestaurantName] = useState("");
   const [mealTitle, setMealTitle] = useState("");
   const [prefecture, setPrefecture] = useState("");
@@ -1921,6 +1929,15 @@ function CreateThreadModal({
       const uris = result.assets.map((a) => a.uri);
       setImages((prev) => [...prev, ...uris].slice(0, 10));
     }
+  };
+
+  const handlePickVideo = async () => {
+    if (Platform.OS !== "web") {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== "granted") { Alert.alert("権限が必要です", "動画ライブラリへのアクセスを許可してください"); return; }
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ["videos"], allowsMultipleSelection: true, selectionLimit: Math.max(1, 3 - videos.length) });
+    if (!result.canceled) setVideos((current) => [...current, ...result.assets.map((asset) => asset.uri)].slice(0, 3));
   };
 
   const detectMealReportArea = async () => {
@@ -1987,6 +2004,7 @@ function CreateThreadModal({
       recruitParticipants: [],
       recruitApplicants: [],
       images: images.length > 0 ? images : undefined,
+      videos: videos.length > 0 ? videos : undefined,
       mealReport: isMealReport
         ? {
             postTitle: mealTitle.trim() || undefined,
@@ -2019,6 +2037,10 @@ function CreateThreadModal({
         return;
       }
     }
+    if (newThread.videos?.length) {
+      try { newThread = { ...newThread, videos: await Promise.all(newThread.videos.map(async (uri) => (await Api.uploadEventImage(uri)).imageUrl)) }; }
+      catch (error) { setFormError(error instanceof Error ? error.message : "動画を保存できませんでした。もう一度お試しください。"); return; }
+    }
     let savedThread: BoardThread;
     try {
       savedThread = await onAdd(newThread);
@@ -2047,6 +2069,7 @@ function CreateThreadModal({
     setIsRecruiting(false);
     setCapacity("");
     setImages([]);
+    setVideos([]);
     setRestaurantName("");
     setMealTitle("");
     setPrefecture("");
@@ -2358,6 +2381,12 @@ function CreateThreadModal({
                 </Pressable>
               )}
             </View>
+          </View>
+
+          <View style={{ marginBottom: 16 }}>
+            <Text style={{ fontSize: 13, fontWeight: "600", color: colors.muted, marginBottom: 8 }}>動画（最大3本・各30MBまで）</Text>
+            {videos.map((uri, index) => <View key={`${uri}-${index}`} style={{ flexDirection: "row", alignItems: "center", paddingVertical: 7 }}><Text style={{ flex: 1, color: colors.foreground }} numberOfLines={1}>動画 {index + 1}</Text><Pressable accessibilityLabel={`動画${index + 1}を削除`} onPress={() => setVideos((current) => current.filter((_, i) => i !== index))}><Text style={{ color: colors.error, fontWeight: "800" }}>削除</Text></Pressable></View>)}
+            {videos.length < 3 ? <Pressable onPress={() => void handlePickVideo()} style={{ alignSelf: "flex-start", borderRadius: 10, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface, paddingHorizontal: 14, paddingVertical: 10 }}><Text style={{ color: colors.foreground, fontWeight: "800" }}>＋ 動画を追加</Text></Pressable> : null}
           </View>
 
           {pollAllowed ? <View style={{ marginBottom: 16 }}>
@@ -2982,6 +3011,7 @@ export default function BoardScreen() {
             const mentionCount = unreadComments.filter((comment) => mentionsViewer(comment.content, viewerMentionLabels)).length + (postMention ? 1 : 0);
             return <ThreadCard
             thread={item}
+            viewerId={viewerMemberId}
             comments={comments}
             showMenu={item.category !== "introduction"}
             unreadCount={unreadComments.length + (newThread ? 1 : 0)}

@@ -31,7 +31,8 @@ export function parseInternalLink(rawValue: string, rooms: ChatRoom[], threads: 
     const id = url.searchParams.get("id");
     const room = rooms.find((item) => item.id === id);
     if (!id) return null;
-    return { raw, label: `#${room?.name ?? "チャット"}`, pathname: "/chat", params: { id } };
+    const message = url.searchParams.get("message");
+    return { raw, label: `#${room?.name ?? "チャット"}`, pathname: "/chat", params: { id, ...(message ? { message } : {}) } };
   }
   if (pathname === "/board") {
     const threadId = url.searchParams.get("thread");

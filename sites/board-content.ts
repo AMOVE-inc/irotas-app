@@ -127,9 +127,9 @@ async function readBody(request: Request) {
   }
 }
 
-function text(value: unknown, maximum: number, required = false) {
+function text(value: unknown, maximum: number, required = false, preserveUnicode = false) {
   if (typeof value !== "string") return required ? null : "";
-  const normalized = value.normalize("NFKC").trim();
+  const normalized = (preserveUnicode ? value : value.normalize("NFKC")).trim();
   if ((required && !normalized) || normalized.length > maximum) return null;
   return normalized;
 }
@@ -524,7 +524,7 @@ export async function handleBoardContentRequest(
     const input = await readBody(request);
     const category = validCategory(input?.category);
     const title = text(input?.title, 200, true);
-    const content = text(input?.content, 10_000, true);
+    const content = text(input?.content, 10_000, true, true);
     const data = safeData(input?.data);
     const status = input?.status === "closed" || input?.status === "none" ? input.status : "open";
     if (!input || !category || !title || !content || data === null)
@@ -576,7 +576,7 @@ export async function handleBoardContentRequest(
     const input = await readBody(request);
     if (!input) return json({ error: "変更内容が不正です" }, 400);
     const title = input.title === undefined ? current.title : text(input.title, 200, true);
-    const content = input.content === undefined ? current.content : text(input.content, 10_000, true);
+    const content = input.content === undefined ? current.content : text(input.content, 10_000, true, true);
     const status = input.status === undefined ? current.status :
       input.status === "open" || input.status === "closed" || input.status === "none" ? input.status : null;
     const pinned = input.pinned === undefined ? current.pinned : input.pinned === true ? 1 : input.pinned === false ? 0 : null;
@@ -600,7 +600,7 @@ export async function handleBoardContentRequest(
     if (!await canAccessBoardCategory(db, thread.category, member))
       return json({ error: "この投稿にはコメントできません" }, 403);
     const input = await readBody(request);
-    const content = text(input?.content, 10_000, true);
+    const content = text(input?.content, 10_000, true, true);
     const data = safeData(input?.data);
     if (!input || !content || data === null) return json({ error: "コメント内容が不正です" }, 400);
     const duplicateSince = new Date(Date.now() - 30_000).toISOString();
@@ -654,7 +654,7 @@ export async function handleBoardContentRequest(
       return json({ success: true });
     }
     const input = await readBody(request);
-    const content = input?.content === undefined ? current.content : text(input.content, 10_000, true);
+    const content = input?.content === undefined ? current.content : text(input.content, 10_000, true, true);
     const data = input?.data === undefined ? current.data_json : safeData(input.data);
     if (!input || !content || data === null) return json({ error: "変更内容が不正です" }, 400);
     await db.prepare("UPDATE board_comments SET content = ?, data_json = ?, updated_at = ? WHERE id = ?")
