@@ -810,7 +810,7 @@ export default function AdminDashboardScreen() {
                 const result = await response.json() as { error?: string; sourceMemberCount?: number; sourceMembershipCount?: number; matchedMemberCount?: number; missingCount?: number; conflictCount?: number; unmatchedDiscordIds?: string[]; inactiveDiscordIds?: string[] };
                 if (!response.ok) throw new Error(result.error ?? "照合に失敗しました");
                 setDiscordClubPayload(payload);
-                setDiscordClubPreview(`移行元 ${result.sourceMemberCount ?? 0}名・${result.sourceMembershipCount ?? 0}所属／会員一致 ${result.matchedMemberCount ?? 0}名／未反映 ${result.missingCount ?? 0}件／既存状態との衝突 ${result.conflictCount ?? 0}件／ID未一致 ${result.unmatchedDiscordIds?.length ?? 0}名／休止会員 ${result.inactiveDiscordIds?.length ?? 0}名`);
+                setDiscordClubPreview(`移行元 ${result.sourceMemberCount ?? 0}名・${result.sourceMembershipCount ?? 0}所属／会員一致 ${result.matchedMemberCount ?? 0}名／未反映 ${result.missingCount ?? 0}件／既存状態との衝突 ${result.conflictCount ?? 0}件／ID未一致 ${result.unmatchedDiscordIds?.length ?? 0}名／休止会員 ${result.inactiveDiscordIds?.length ?? 0}名${result.unmatchedDiscordIds?.length ? `\nID未一致（本人確認用）: ${result.unmatchedDiscordIds.join("、")}` : ""}`);
               } catch (error) {
                 if (error instanceof Error && error.message !== "ファイルが選択されませんでした") Alert.alert("照合エラー", error.message);
               } finally { setDiscordClubImporting(false); }
