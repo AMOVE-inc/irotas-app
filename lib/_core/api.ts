@@ -561,6 +561,17 @@ export async function getSharedBoardReactions(threadId: string) {
   );
 }
 
+export async function getIntroductionArchiveReactions() {
+  return apiCall<{ reactions: Record<string, Record<string, string[]>> }>("/api/board/introduction-reactions");
+}
+
+export async function setIntroductionArchiveReaction(sourceId: string, emoji: string, active: boolean) {
+  return apiCall<{ reactions: Record<string, Record<string, string[]>> }>("/api/board/introduction-reactions", {
+    method: active ? "PUT" : "DELETE",
+    body: JSON.stringify({ sourceId, emoji }),
+  });
+}
+
 export async function getSharedBoardPoll(
   ownerType: "thread" | "comment",
   ownerId: string,

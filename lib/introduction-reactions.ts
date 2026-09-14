@@ -15,3 +15,20 @@ export function importedIntroductionReactions(messageId: string, source: Record<
   if (!result["🎉"]?.length) result["🎉"] = [`discord-reaction-default-${messageId}`];
   return result;
 }
+
+export function mergedIntroductionReactions(
+  archived: Record<string, string[]>,
+  current: Record<string, string[]> | undefined,
+): Record<string, string[]> {
+  const result = Object.fromEntries(Object.entries(archived).map(([emoji, ids]) => [emoji, [...ids]]));
+  for (const [emoji, ids] of Object.entries(current ?? {})) {
+    result[emoji] = [...new Set([...(result[emoji] ?? []), ...ids])];
+  }
+  return result;
+}
+
+export function isUnidentifiedReaction(memberId: string): boolean {
+  return memberId.startsWith("discord-reaction-unresolved-") ||
+    memberId.startsWith("discord-reaction-default-") ||
+    memberId.startsWith("shared-reaction-");
+}

@@ -50,9 +50,9 @@ import { getFriends } from "@/lib/friendship";
 import { getMentionGroups, getMentionQuery, insertMention } from "@/lib/mentions";
 import { type TextSelection } from "@/lib/text-formatting";
 import * as Api from "@/lib/_core/api";
-import { getDiscordAuthorByName } from "@/lib/discord-author-directory";
+import { getDiscordAuthorById, getDiscordAuthorByName } from "@/lib/discord-author-directory";
 import { displayMemberName } from "@/lib/display-name";
-import { importedIntroductionReactions } from "@/lib/introduction-reactions";
+import { importedIntroductionReactions, isUnidentifiedReaction, mergedIntroductionReactions } from "@/lib/introduction-reactions";
 
 const REACTION_EMOJIS = ["👍", "❤️", "😂", "🎉", "😋", "🙏"] as const;
 const MORE_REACTION_EMOJIS = ["😀", "😃", "😄", "😁", "😆", "😅", "😂", "🤣", "😊", "😇", "🙂", "🙃", "😉", "😍", "🥰", "😘", "😋", "😛", "🤪", "🤔", "🫡", "😎", "🥳", "😮", "😢", "😭", "😡", "👍", "👎", "👏", "🙌", "🙏", "💪", "👀", "❤️", "🩷", "🧡", "💛", "💚", "💙", "💜", "🖤", "🤍", "🔥", "✨", "🎉", "💯", "✅", "❌", "💡", "📌", "🍽️", "🍣", "🍖", "🍜", "🍕", "🍰", "☕", "🍺", "🍷"] as const;
@@ -82,7 +82,7 @@ const formatJapanTime = (value: string) => new Intl.DateTimeFormat("ja-JP", {
   hourCycle: "h23",
 }).format(new Date(value));
 
-function importedIntroductionMessages(archive: Awaited<ReturnType<typeof Api.getBoardArchive>>): ChatMessage[] {
+function importedIntroductionMessages(archive: Awaited<ReturnType<typeof Api.getBoardArchive>>, currentReactions: Record<string, Record<string, string[]>> = {}): ChatMessage[] {
   const introductionThreads = archive.threads.filter((thread) => thread.category === "introduction");
   const introductionIds = new Set(introductionThreads.map((thread) => thread.id));
   const records = [...introductionThreads, ...archive.comments.filter((comment) => introductionIds.has(comment.threadId))];
@@ -96,7 +96,7 @@ function importedIntroductionMessages(archive: Awaited<ReturnType<typeof Api.get
     content: record.content,
     createdAt: record.createdAt,
     attachmentUrls: record.images,
-    reactions: importedIntroductionReactions(record.id, record.reactions),
+    reactions: mergedIntroductionReactions(importedIntroductionReactions(record.id, record.reactions), currentReactions[record.id]),
   })).filter((message) => message.content.trim().length > 0)
     .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
 }
@@ -123,7 +123,7 @@ function ChatAttachmentImage({ uri, galleryUris, galleryIndex }: { uri: string; 
   />;
 }
 
-function MessageBubble({ message, isMe, canDelete, readOnly, viewerId, viewerName, viewerAvatarUrl, myAvatarUri, senderMember, memberDirectory, onReact, mentionGroups, onOpenInternalLink, onOpenProfile, onReply, onEdit, onDelete }: { message: ChatMessage; isMe: boolean; canDelete: boolean; readOnly?: boolean; viewerId: string; viewerName: string; viewerAvatarUrl?: string; myAvatarUri?: string | null; senderMember?: Api.PublicMember; memberDirectory: Api.PublicMember[]; onReact: (emoji: string, pollChoices?: string[], allowMultiple?: boolean) => void; mentionGroups: ReturnType<typeof getMentionGroups>; onOpenInternalLink: (pathname: "/chat" | "/board" | "/event-detail", params: Record<string, string>) => void; onOpenProfile: () => void; onReply: () => void; onEdit: () => void; onDelete: () => void }) {
+function MessageBubble({ message, isMe, canDelete, readOnly, viewerId, viewerName, viewerAvatarUrl, myAvatarUri, senderMember, memberDirectory, onReact, mentionGroups, onOpenInternalLink, onOpenProfile, onOpenReactionProfile, onReply, onEdit, onDelete }: { message: ChatMessage; isMe: boolean; canDelete: boolean; readOnly?: boolean; viewerId: string; viewerName: string; viewerAvatarUrl?: string; myAvatarUri?: string | null; senderMember?: Api.PublicMember; memberDirectory: Api.PublicMember[]; onReact: (emoji: string, pollChoices?: string[], allowMultiple?: boolean) => void; mentionGroups: ReturnType<typeof getMentionGroups>; onOpenInternalLink: (pathname: "/chat" | "/board" | "/event-detail", params: Record<string, string>) => void; onOpenProfile: () => void; onOpenReactionProfile: (memberId: string, name: string, avatarUrl?: string) => void; onReply: () => void; onEdit: () => void; onDelete: () => void }) {
   const colors = useColors();
   const sender = getMemberById(message.senderId);
   const [showReactionPicker, setShowReactionPicker] = useState(false);
@@ -262,7 +262,28 @@ function MessageBubble({ message, isMe, canDelete, readOnly, viewerId, viewerNam
           </View>
         ) : null}
         <Modal visible={showActions} transparent animationType="fade" onRequestClose={() => setShowActions(false)}><Pressable onPress={() => setShowActions(false)} style={{ flex: 1, backgroundColor: "rgba(20,18,24,0.48)", justifyContent: "flex-end" }}><Pressable onPress={() => {}} style={{ backgroundColor: colors.background, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 16, paddingBottom: 30 }}><View style={{ flexDirection: "row", justifyContent: "space-around", backgroundColor: colors.surface, borderRadius: 16, padding: 10, marginBottom: 10 }}>{REACTION_EMOJIS.map((emoji) => <Pressable key={emoji} onPress={() => { onReact(emoji); setShowActions(false); }} style={{ padding: 7 }}><Text style={{ fontSize: 24 }}>{emoji}</Text></Pressable>)}</View>{[{ label: "返信", icon: "arrowshape.turn.up.left", action: onReply }, { label: "リンクをコピー", icon: "link", action: () => { void Clipboard.setStringAsync(`https://app.irotas-community.com/chat?id=${encodeURIComponent(message.chatId)}&message=${encodeURIComponent(message.id)}`); } }, { label: "テキストをコピー", icon: "doc.on.doc", action: () => { void Clipboard.setStringAsync(message.content); } }, ...(isMe && !readOnly ? [{ label: "メッセージを編集", icon: "pencil", action: onEdit }] : []), ...(canDelete ? [{ label: "メッセージを削除", icon: "trash", action: onDelete }] : [])].map((item) => <Pressable key={item.label} onPress={() => { item.action(); setShowActions(false); }} style={{ minHeight: 48, flexDirection: "row", alignItems: "center", paddingHorizontal: 12, borderBottomWidth: 0.5, borderBottomColor: colors.border }}><IconSymbol name={item.icon as any} size={19} color={item.label.includes("削除") ? colors.error : colors.foreground} /><Text style={{ marginLeft: 12, fontSize: 15, fontWeight: "700", color: item.label.includes("削除") ? colors.error : colors.foreground }}>{item.label}</Text></Pressable>)}</Pressable></Pressable></Modal>
-        <Modal visible={reactionDetails !== null} transparent animationType="fade" onRequestClose={() => setReactionDetails(null)}><Pressable onPress={() => setReactionDetails(null)} style={{ flex: 1, backgroundColor: "rgba(20,18,24,0.48)", justifyContent: "center", padding: 28 }}><Pressable onPress={() => {}} style={{ maxHeight: "72%", backgroundColor: colors.background, borderRadius: 20, padding: 18 }}><View style={{ flexDirection: "row", alignItems: "center", marginBottom: 12 }}><Text style={{ fontSize: 21 }}>{reactionDetails?.emoji}</Text><Text style={{ marginLeft: 8, fontSize: 16, fontWeight: "900", color: colors.foreground }}>リアクションした人</Text><Pressable onPress={() => setReactionDetails(null)} style={{ marginLeft: "auto", padding: 4 }}><IconSymbol name="xmark" size={19} color={colors.muted} /></Pressable></View><ScrollView>{reactionDetails?.memberIds.map((memberId) => { const isViewer = memberId === viewerId; const sharedMember = memberDirectory.find((member) => member.id === memberId); const localMember = getMemberById(memberId); const name = isViewer ? displayMemberName(viewerName) : sharedMember?.displayName ?? localMember?.name ?? "メンバー"; const avatarUrl = isViewer ? viewerAvatarUrl : sharedMember?.profile?.avatarUrl; const discordAvatar = getDiscordAuthorByName(name)?.avatarUrl; const avatar = isViewer && myAvatarUri ? { uri: myAvatarUri } : typeof avatarUrl === "string" && avatarUrl ? { uri: avatarUrl } : discordAvatar ? { uri: discordAvatar } : localMember?.avatar ?? DEFAULT_AVATAR; return <View key={memberId} style={{ flexDirection: "row", alignItems: "center", paddingVertical: 9 }}><Image source={avatar} style={{ width: 34, height: 34, borderRadius: 17 }} contentFit="cover" /><Text style={{ marginLeft: 10, fontSize: 15, fontWeight: "700", color: colors.foreground }}>{name}</Text></View>; })}</ScrollView></Pressable></Pressable></Modal>
+        <Modal visible={reactionDetails !== null} transparent animationType="fade" onRequestClose={() => setReactionDetails(null)}>
+          <Pressable onPress={() => setReactionDetails(null)} style={{ flex: 1, backgroundColor: "rgba(20,18,24,0.48)", justifyContent: "center", padding: 28 }}>
+            <Pressable onPress={() => {}} style={{ maxHeight: "72%", backgroundColor: colors.background, borderRadius: 20, padding: 18 }}>
+              <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 12 }}><Text style={{ fontSize: 21 }}>{reactionDetails?.emoji}</Text><Text style={{ marginLeft: 8, fontSize: 16, fontWeight: "900", color: colors.foreground }}>リアクションした人</Text><Pressable onPress={() => setReactionDetails(null)} style={{ marginLeft: "auto", padding: 4 }}><IconSymbol name="xmark" size={19} color={colors.muted} /></Pressable></View>
+              <ScrollView>
+                {reactionDetails?.memberIds.filter((memberId) => !isUnidentifiedReaction(memberId)).map((memberId) => {
+                  const isViewer = memberId === viewerId;
+                  const sharedMember = memberDirectory.find((member) => member.id === memberId);
+                  const localMember = getMemberById(memberId);
+                  const discordMember = getDiscordAuthorById(memberId);
+                  const name = isViewer ? displayMemberName(viewerName) : sharedMember?.displayName ?? localMember?.name ?? discordMember?.name;
+                  if (!name) return null;
+                  const avatarUrl = isViewer ? viewerAvatarUrl : sharedMember?.profile?.avatarUrl;
+                  const photoUrl = typeof avatarUrl === "string" && avatarUrl ? avatarUrl : discordMember?.avatarUrl;
+                  const avatar = isViewer && myAvatarUri ? { uri: myAvatarUri } : photoUrl ? { uri: photoUrl } : localMember?.avatar ?? DEFAULT_AVATAR;
+                  return <Pressable key={memberId} accessibilityRole="button" accessibilityLabel={`${name}のプロフィールを開く`} onPress={() => { setReactionDetails(null); onOpenReactionProfile(memberId, name, photoUrl); }} style={{ flexDirection: "row", alignItems: "center", paddingVertical: 9 }}><Image source={avatar} style={{ width: 34, height: 34, borderRadius: 17 }} contentFit="cover" /><Text style={{ marginLeft: 10, fontSize: 15, fontWeight: "700", color: colors.foreground }}>{name}</Text></Pressable>;
+                })}
+                {reactionDetails && reactionDetails.memberIds.filter((memberId) => isUnidentifiedReaction(memberId) || (!memberDirectory.some((member) => member.id === memberId) && !getMemberById(memberId) && !getDiscordAuthorById(memberId) && memberId !== viewerId)).length > 0 ? <Text style={{ color: colors.muted, paddingVertical: 9 }}>過去の記録では、ほか{reactionDetails.memberIds.filter((memberId) => isUnidentifiedReaction(memberId) || (!memberDirectory.some((member) => member.id === memberId) && !getMemberById(memberId) && !getDiscordAuthorById(memberId) && memberId !== viewerId)).length}件の押した人を特定できません</Text> : null}
+              </ScrollView>
+            </Pressable>
+          </Pressable>
+        </Modal>
       </View>
     </View>
   );
@@ -289,6 +310,8 @@ export default function ChatScreen() {
   const [isNearLatest, setIsNearLatest] = useState(true);
   const [hasOpenedIntroduction, setHasOpenedIntroduction] = useState<boolean | null>(null);
   const [introductionHydrated, setIntroductionHydrated] = useState(false);
+  const introductionArchiveBase = useRef<Record<string, Record<string, string[]>>>({});
+  const introductionReactionPending = useRef(false);
 
   // 参加者モーダル
   const [showParticipants, setShowParticipants] = useState(false);
@@ -465,8 +488,10 @@ export default function ChatScreen() {
         setRoom((current) => current?.shared && current.id === id ? current : r);
       }
       if (id === "board-introduction") {
-        Api.getBoardArchive("all").then((archive) => {
-          const imported = importedIntroductionMessages(archive);
+        Api.getBoardArchive("all").then(async (archive) => {
+          const currentReactions = await Api.getIntroductionArchiveReactions().then((result) => result.reactions).catch(() => ({}));
+          const imported = importedIntroductionMessages(archive, currentReactions);
+          introductionArchiveBase.current = Object.fromEntries(imported.map((message) => [message.externalMessageId!, Object.fromEntries(Object.entries(message.reactions ?? {}).map(([emoji, ids]) => [emoji, ids.filter((memberId) => memberId.startsWith("discord-"))]))]));
           setMessages((current) => [...imported, ...current.filter((message) => message.shared)]
             .filter((message, index, all) => all.findIndex((candidate) => candidate.id === message.id) === index)
             .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()));
@@ -475,6 +500,22 @@ export default function ChatScreen() {
     }).catch(() => setIsLoadingRoom(false));
     return () => clearTimeout(loadingFallback);
   }, [id, applySharedMessages]);
+
+  useEffect(() => {
+    if (id !== "board-introduction" || !introductionHydrated) return;
+    const refresh = () => {
+      if (introductionReactionPending.current || (Platform.OS === "web" && document.visibilityState === "hidden")) return;
+      void Api.getIntroductionArchiveReactions().then(({ reactions }) => {
+        if (introductionReactionPending.current) return;
+        setMessages((current) => current.map((message) => message.externalMessageId && message.id.startsWith("discord-introduction-") ? {
+          ...message,
+          reactions: mergedIntroductionReactions(introductionArchiveBase.current[message.externalMessageId] ?? {}, reactions[message.externalMessageId]),
+        } : message));
+      }).catch(() => {});
+    };
+    const timer = setInterval(refresh, 5000);
+    return () => clearInterval(timer);
+  }, [id, introductionHydrated]);
 
   // 共有メッセージの編集・削除・リアクションを、参加者全員の画面へ反映する。
   useEffect(() => {
@@ -596,6 +637,30 @@ export default function ChatScreen() {
   const handleReaction = useCallback(async (messageId: string, emoji: string, pollChoices?: string[], allowMultiple = true) => {
     if (staffViewingOnly) return;
     if (!id) return;
+    const importedMessage = messages.find((item) => item.id === messageId && item.externalMessageId && item.id.startsWith("discord-introduction-"));
+    if (importedMessage?.externalMessageId) {
+      if (introductionReactionPending.current) return;
+      introductionReactionPending.current = true;
+      const active = !(importedMessage.reactions?.[emoji] ?? []).includes(viewerMemberId);
+      const previousReactions = importedMessage.reactions;
+      setMessages((current) => current.map((message) => message.id === messageId ? {
+        ...message,
+        reactions: { ...message.reactions, [emoji]: active
+          ? [...new Set([...(message.reactions?.[emoji] ?? []), viewerMemberId])]
+          : (message.reactions?.[emoji] ?? []).filter((memberId) => memberId !== viewerMemberId) },
+      } : message));
+      try {
+        const result = await Api.setIntroductionArchiveReaction(importedMessage.externalMessageId, emoji, active);
+        setMessages((current) => current.map((message) => message.id === messageId ? {
+          ...message,
+          reactions: mergedIntroductionReactions(introductionArchiveBase.current[importedMessage.externalMessageId!] ?? {}, result.reactions[importedMessage.externalMessageId!]),
+        } : message));
+      } catch (error) {
+        setMessages((current) => current.map((message) => message.id === messageId ? { ...message, reactions: previousReactions } : message));
+        Alert.alert("リアクションできませんでした", error instanceof Error ? error.message : "もう一度お試しください。");
+      } finally { introductionReactionPending.current = false; }
+      return;
+    }
     const sharedMessage = messages.find((item) => item.id === messageId && item.shared);
     if (sharedMessage) {
       const active = !(sharedMessage.reactions?.[emoji] ?? []).includes(viewerMemberId);
@@ -791,6 +856,7 @@ export default function ChatScreen() {
                 onReact={(emoji) => handleReaction(item.id, emoji)}
                 mentionGroups={mentionGroups}
                 onOpenInternalLink={(pathname, params) => router.push({ pathname, params } as any)}
+                onOpenReactionProfile={(memberId, name, avatarUrl) => router.push({ pathname: "/member-profile", params: { id: memberId, legacyName: name, legacyAvatar: avatarUrl ?? "" } })}
                 onOpenProfile={() => {
                   const sender = getMemberById(item.senderId);
                   const legacyName = item.externalAuthorName ?? sender?.name ?? "旧Discordメンバー";

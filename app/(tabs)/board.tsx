@@ -38,6 +38,8 @@ import { getMentionGroups, getMentionQuery, getMentionedMemberIds, insertMention
 import { sendClubApplicationNotification, sendMentionNotification } from "@/lib/notifications";
 import { type TextSelection } from "@/lib/text-formatting";
 import { toggleReactionMember } from "@/lib/chat-reactions";
+import { getDiscordAuthorById } from "@/lib/discord-author-directory";
+import { isUnidentifiedReaction } from "@/lib/introduction-reactions";
 import { awardContestWinnerOnce, buildContestEntryContent, createContestAwardComment, getContestWinner, isContestCommentingOpen, isContestEntryValid } from "@/lib/gourmet-contest";
 import { loadImportedGourmetContests } from "@/lib/gourmet-contest-import";
 import { parseDiscordBoardArchive } from "@/lib/discord-board-import";
@@ -349,6 +351,9 @@ function ThreadCard({ thread, viewerId, onPress, onEdit, onDelete, onPin, onChan
   const router = useRouter();
   const isParticipant = thread.recruitParticipants?.includes(CURRENT_USER.id);
   const [cardReactions, setCardReactions] = useState(thread.reactions ?? {});
+  const [cardReactionDetails, setCardReactionDetails] = useState(false);
+  const [cardReactionMembers, setCardReactionMembers] = useState<Api.PublicMember[]>([]);
+  const cardReactionLongPress = useRef(false);
   const cardEmoji = thread.selfIntroduction ? "🎉" : thread.mealReport ? "❤️" : null;
   const contestOpen = thread.gourmetContest ? isContestCommentingOpen(thread) : false;
   const clubSelfIntroduction = isClubSelfIntroduction(thread);
@@ -359,6 +364,7 @@ function ThreadCard({ thread, viewerId, onPress, onEdit, onDelete, onPin, onChan
   // 過去の選手権も通常のカードとして表示し、開催中だけを緑のワッペンで区別する。
   const visuallyClosed = false;
   useEffect(() => { void loadThreadReactions(thread.id, thread.reactions).then(setCardReactions); }, [thread.id, thread.reactions]);
+  useEffect(() => { if (cardReactionDetails) void Api.getMemberDirectory().then(setCardReactionMembers).catch(() => {}); }, [cardReactionDetails]);
   const toggleCardReaction = () => {
     if (!cardEmoji) return;
     const next = toggleReactionMember(cardReactions, cardEmoji, viewerId);
@@ -524,7 +530,7 @@ function ThreadCard({ thread, viewerId, onPress, onEdit, onDelete, onPin, onChan
       {/* Footer */}
       <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
         <View style={{ flexDirection: "row", alignItems: "center" }}>
-          {cardEmoji ? <Pressable onPress={(event) => { event.stopPropagation?.(); toggleCardReaction(); }} accessibilityLabel={`${cardEmoji}スタンプ`} style={{ flexDirection: "row", alignItems: "center", marginRight: 11, borderRadius: 13, paddingHorizontal: 7, paddingVertical: 3, backgroundColor: (cardReactions[cardEmoji] ?? []).includes(viewerId) ? "#F4E5EE" : "#F3F1F3" }}><Text style={{ fontSize: 15 }}>{cardEmoji}</Text>{(cardReactions[cardEmoji]?.length ?? 0) > 0 ? <Text style={{ fontSize: 10, fontWeight: "800", color: colors.muted, marginLeft: 3 }}>{cardReactions[cardEmoji].length}</Text> : null}</Pressable> : null}
+          {cardEmoji ? <Pressable onPress={(event) => { event.stopPropagation?.(); if (cardReactionLongPress.current) { cardReactionLongPress.current = false; return; } toggleCardReaction(); }} onLongPress={(event) => { event.stopPropagation?.(); cardReactionLongPress.current = true; setCardReactionDetails(true); }} delayLongPress={350} accessibilityLabel={`${cardEmoji}スタンプ`} style={{ flexDirection: "row", alignItems: "center", marginRight: 11, borderRadius: 13, paddingHorizontal: 7, paddingVertical: 3, backgroundColor: (cardReactions[cardEmoji] ?? []).includes(viewerId) ? "#F4E5EE" : "#F3F1F3" }}><Text style={{ fontSize: 15 }}>{cardEmoji}</Text>{(cardReactions[cardEmoji]?.length ?? 0) > 0 ? <Text style={{ fontSize: 10, fontWeight: "800", color: colors.muted, marginLeft: 3 }}>{cardReactions[cardEmoji].length}</Text> : null}</Pressable> : null}
           <IconSymbol name="bubble.left.fill" size={14} color={colors.muted} />
           <Text style={{ fontSize: 12, color: colors.muted, marginLeft: 4 }}>
             {thread.commentCount}件のコメント
@@ -555,6 +561,24 @@ function ThreadCard({ thread, viewerId, onPress, onEdit, onDelete, onPin, onChan
       </View>
     </Pressable>
     <Modal visible={showActions} transparent animationType="fade" onRequestClose={() => setShowActions(false)}><Pressable onPress={() => setShowActions(false)} style={{ flex: 1, justifyContent: "flex-end", backgroundColor: "rgba(20,18,24,0.48)" }}><View style={{ backgroundColor: colors.background, borderTopLeftRadius: 22, borderTopRightRadius: 22, padding: 18, paddingBottom: 32 }}><Text style={{ fontSize: 16, fontWeight: "800", color: colors.foreground, marginBottom: 10 }}>投稿の操作</Text>{[{ label: "リンクをコピー", action: () => { void Clipboard.setStringAsync(`https://app.irotas-community.com/board?category=${encodeURIComponent(thread.category)}&view=threads&thread=${encodeURIComponent(thread.id)}`); } }, ...(onEdit ? [{ label: "編集", action: onEdit }] : []), ...(onDelete ? [{ label: "削除", action: onDelete }] : [])].map((item) => <Pressable key={item.label} onPress={() => { setShowActions(false); item.action(); }} style={{ paddingVertical: 13, borderBottomWidth: 0.5, borderBottomColor: colors.border }}><Text style={{ fontSize: 15, fontWeight: "700", color: item.label === "削除" ? colors.error : colors.foreground }}>{item.label}</Text></Pressable>)}<Pressable onPress={() => setShowActions(false)} style={{ paddingVertical: 14 }}><Text style={{ color: colors.muted, textAlign: "center" }}>キャンセル</Text></Pressable></View></Pressable></Modal>
+    <Modal visible={cardReactionDetails} transparent animationType="fade" onRequestClose={() => setCardReactionDetails(false)}>
+      <Pressable onPress={() => setCardReactionDetails(false)} style={{ flex: 1, backgroundColor: "rgba(20,18,24,0.48)", justifyContent: "center", padding: 28 }}>
+        <Pressable onPress={() => {}} style={{ maxHeight: "72%", backgroundColor: colors.background, borderRadius: 20, padding: 18 }}>
+          <Text style={{ fontSize: 16, fontWeight: "900", color: colors.foreground, marginBottom: 12 }}>{cardEmoji} スタンプを押した人</Text>
+          <ScrollView>{(cardReactions[cardEmoji ?? ""] ?? []).filter((memberId) => !isUnidentifiedReaction(memberId)).map((memberId) => {
+            const directoryMember = cardReactionMembers.find((member) => member.id === memberId);
+            const localMember = getMemberById(memberId);
+            const discordMember = getDiscordAuthorById(memberId);
+            const name = directoryMember?.displayName ?? localMember?.name ?? discordMember?.name;
+            if (!name) return null;
+            const avatarUrl = directoryMember?.profile?.avatarUrl;
+            const photoUrl = typeof avatarUrl === "string" && avatarUrl ? avatarUrl : discordMember?.avatarUrl;
+            return <Pressable key={memberId} onPress={() => { setCardReactionDetails(false); router.push({ pathname: "/member-profile", params: { id: memberId, legacyName: name, legacyAvatar: photoUrl ?? "" } }); }} accessibilityRole="button" accessibilityLabel={`${name}のプロフィールを開く`} style={{ flexDirection: "row", alignItems: "center", paddingVertical: 9 }}><Image source={photoUrl ? { uri: photoUrl } : localMember?.avatar ?? DEFAULT_AVATAR} style={{ width: 34, height: 34, borderRadius: 17 }} contentFit="cover" /><Text style={{ marginLeft: 10, color: colors.foreground, fontWeight: "700" }}>{name}</Text></Pressable>;
+          })}</ScrollView>
+          {(cardReactions[cardEmoji ?? ""] ?? []).some(isUnidentifiedReaction) ? <Text style={{ color: colors.muted, marginTop: 8 }}>過去の記録では、ほか{(cardReactions[cardEmoji ?? ""] ?? []).filter(isUnidentifiedReaction).length}件の押した人を特定できません</Text> : null}
+        </Pressable>
+      </Pressable>
+    </Modal>
   </>;
 }
 
@@ -1417,14 +1441,18 @@ function ThreadDetailModal({
               <Pressable onPress={() => setReactionDetails(null)} style={{ marginLeft: "auto", padding: 4 }}><IconSymbol name="xmark" size={19} color={colors.muted} /></Pressable>
             </View>
             <ScrollView>
-              {reactionDetails?.memberIds.filter((memberId) => !memberId.startsWith("shared-reaction-")).map((memberId) => {
+              {reactionDetails?.memberIds.filter((memberId) => !isUnidentifiedReaction(memberId)).map((memberId) => {
                 const directoryMember = reactionMembers.find((member) => member.id === memberId);
                 const localMember = getMemberById(memberId);
+                const discordMember = getDiscordAuthorById(memberId);
                 const avatarUrl = directoryMember?.profile?.avatarUrl;
-                const avatar = typeof avatarUrl === "string" && avatarUrl ? { uri: avatarUrl } : localMember?.avatar ?? DEFAULT_AVATAR;
-                const name = memberId === viewerMemberId ? viewerMember.name : directoryMember?.displayName ?? localMember?.name ?? "メンバー";
-                return <View key={memberId} style={{ flexDirection: "row", alignItems: "center", paddingVertical: 9 }}><Image source={avatar} style={{ width: 34, height: 34, borderRadius: 17 }} contentFit="cover" /><Text style={{ marginLeft: 10, fontSize: 15, fontWeight: "700", color: colors.foreground }}>{name}</Text></View>;
+                const photoUrl = typeof avatarUrl === "string" && avatarUrl ? avatarUrl : discordMember?.avatarUrl;
+                const avatar = photoUrl ? { uri: photoUrl } : localMember?.avatar ?? DEFAULT_AVATAR;
+                const name = memberId === viewerMemberId ? viewerMember.name : directoryMember?.displayName ?? localMember?.name ?? discordMember?.name;
+                if (!name) return null;
+                return <Pressable key={memberId} accessibilityRole="button" accessibilityLabel={`${name}のプロフィールを開く`} onPress={() => { setReactionDetails(null); router.push({ pathname: "/member-profile", params: { id: memberId, legacyName: name, legacyAvatar: photoUrl ?? "" } }); }} style={{ flexDirection: "row", alignItems: "center", paddingVertical: 9 }}><Image source={avatar} style={{ width: 34, height: 34, borderRadius: 17 }} contentFit="cover" /><Text style={{ marginLeft: 10, fontSize: 15, fontWeight: "700", color: colors.foreground }}>{name}</Text></Pressable>;
               })}
+              {reactionDetails && reactionDetails.memberIds.some(isUnidentifiedReaction) ? <Text style={{ color: colors.muted, paddingVertical: 9 }}>過去の記録では、ほか{reactionDetails.memberIds.filter(isUnidentifiedReaction).length}件の押した人を特定できません</Text> : null}
             </ScrollView>
           </Pressable>
         </Pressable>

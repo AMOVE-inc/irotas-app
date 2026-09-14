@@ -11,7 +11,15 @@ import type { D1Database, SitesEnv } from "./platform-types";
 
 const ARCHIVE_PATH = "/api/board/archive";
 const INTRODUCTION_PROFILE_PATH = "/api/board/introduction-profile";
+const INTRODUCTION_REACTIONS_PATH = "/api/board/introduction-reactions";
 const CONTESTS_PATH = "/api/board/contests";
+
+const introductionThreads = (archive as RawDiscordBoardArchive).threads.filter((thread) => thread.category === "introduction");
+const introductionThreadIds = new Set(introductionThreads.map((thread) => thread.id));
+const introductionRecordIds = new Set([
+  ...introductionThreadIds,
+  ...(archive as RawDiscordBoardArchive).comments.filter((comment) => introductionThreadIds.has(comment.threadId)).map((comment) => comment.id),
+]);
 
 export function archivedIntroductionProfile(authorId: string) {
   const introduction = (archive as RawDiscordBoardArchive).threads
@@ -66,8 +74,8 @@ export async function handleBoardArchiveRequest(
   env: SitesEnv,
 ): Promise<Response | null> {
   const url = new URL(request.url);
-  if (url.pathname !== ARCHIVE_PATH && url.pathname !== CONTESTS_PATH && url.pathname !== INTRODUCTION_PROFILE_PATH) return null;
-  if (request.method !== "GET") {
+  if (url.pathname !== ARCHIVE_PATH && url.pathname !== CONTESTS_PATH && url.pathname !== INTRODUCTION_PROFILE_PATH && url.pathname !== INTRODUCTION_REACTIONS_PATH) return null;
+  if (request.method !== "GET" && !(url.pathname === INTRODUCTION_REACTIONS_PATH && ["PUT", "DELETE"].includes(request.method))) {
     return Response.json({ error: "許可されていない操作です" }, { status: 405 });
   }
   if (!env.DB) {
@@ -76,6 +84,51 @@ export async function handleBoardArchiveRequest(
   const member = await authenticatedRequestMember(request, env);
   if (!member) {
     return Response.json({ error: "ログインが必要です" }, { status: 401 });
+  }
+
+  if (url.pathname === INTRODUCTION_REACTIONS_PATH) {
+    const headers = { "cache-control": "private, no-store", vary: "Cookie, Authorization" };
+    if (request.method !== "GET") {
+      if (Number(request.headers.get("content-length") ?? 0) > 4096)
+        return Response.json({ error: "入力が長すぎます" }, { status: 413, headers });
+      let input: { sourceId?: unknown; emoji?: unknown };
+      try {
+        const raw = await request.text();
+        if (raw.length > 4096) return Response.json({ error: "入力が長すぎます" }, { status: 413, headers });
+        const parsed = JSON.parse(raw);
+        if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw new Error("invalid_body");
+        input = parsed as { sourceId?: unknown; emoji?: unknown };
+      }
+      catch { return Response.json({ error: "入力が不正です" }, { status: 400, headers }); }
+      const sourceId = typeof input.sourceId === "string" ? input.sourceId : "";
+      const emoji = typeof input.emoji === "string" ? input.emoji.trim() : "";
+      if (!introductionRecordIds.has(sourceId) || !emoji || [...emoji].length > 12)
+        return Response.json({ error: "リアクションが不正です" }, { status: 400, headers });
+      const sourceThreadId = introductionThreadIds.has(sourceId) ? sourceId :
+        (archive as RawDiscordBoardArchive).comments.find((comment) => comment.id === sourceId)?.threadId;
+      const deleted = await env.DB.prepare("SELECT deleted_at FROM board_threads WHERE id = ? LIMIT 1")
+        .bind(sourceThreadId).first<{ deleted_at: string | null }>();
+      if (deleted?.deleted_at) return Response.json({ error: "投稿が見つかりません" }, { status: 404, headers });
+      if (request.method === "PUT") {
+        await env.DB.prepare(`INSERT OR IGNORE INTO introduction_archive_reactions
+          (source_id, member_id, emoji, created_at) VALUES (?, ?, ?, ?)`).bind(sourceId, member.id, emoji, new Date().toISOString()).run();
+      } else {
+        await env.DB.prepare("DELETE FROM introduction_archive_reactions WHERE source_id = ? AND member_id = ? AND emoji = ?")
+          .bind(sourceId, member.id, emoji).run();
+      }
+    }
+    const rows = await env.DB.prepare(`SELECT ir.source_id, ir.emoji, ir.member_id, m.public_member_id
+      FROM introduction_archive_reactions ir JOIN members m ON m.id = ir.member_id`).all<{
+      source_id: string; emoji: string; member_id: number; public_member_id: string | null;
+    }>();
+    const reactions: Record<string, Record<string, string[]>> = {};
+    for (const row of rows.results ?? []) {
+      if (!introductionRecordIds.has(row.source_id)) continue;
+      reactions[row.source_id] ??= {};
+      reactions[row.source_id][row.emoji] ??= [];
+      reactions[row.source_id][row.emoji].push(row.public_member_id ?? `member-${row.member_id}`);
+    }
+    return Response.json({ reactions }, { headers });
   }
 
   if (url.pathname === CONTESTS_PATH) {
