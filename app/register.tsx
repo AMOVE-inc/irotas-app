@@ -211,6 +211,7 @@ export default function RegisterScreen() {
                 onPress={async () => {
                   setError("");
                   setCodeLoading(true);
+                  setCodeSent(false);
                   try {
                     await Api.requestSetupCode(email.trim());
                     setCodeSent(true);
@@ -270,7 +271,7 @@ export default function RegisterScreen() {
                     textAlign: "center",
                   }}
                 >
-                  登録済みのメールアドレスへ送信しました。有効期限は10分です。
+                  リクエストを受け付けました。会員登録を確認できたメールアドレスに認証コードを送信します。有効期限は10分です。届かない場合は迷惑メールと会費決済時のメールアドレスを確認し、運営にお問い合わせください。
                 </Text>
               ) : null}
             </View>

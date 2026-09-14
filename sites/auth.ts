@@ -574,12 +574,18 @@ async function requestSetupCode(
       { error: "有効なメールアドレスを入力してください" },
       400,
     );
+  const emailKey = await hmacSha256(env.AUTH_SECRET, `setup-diagnostic:${email}`);
+  const recordOutcome = (outcome: string, details: Record<string, unknown> = {}) => {
+    // Never record the recipient, code, credentials, or provider response body.
+    console.info(JSON.stringify({ event: "auth.setup_code", emailKey, outcome, ...details }));
+  };
   const ip = request.headers.get("cf-connecting-ip") ?? "unknown";
-  if (
-    !(await rateLimit(db, `setup-email:${email}`, 5, 60)) ||
-    !(await rateLimit(db, `setup-ip:${ip}`, 20, 60))
-  )
-    return responseJson({ success: true });
+  const emailAllowed = await rateLimit(db, `setup-email:${email}`, 5, 60);
+  const ipAllowed = emailAllowed && await rateLimit(db, `setup-ip:${ip}`, 20, 60);
+  if (!emailAllowed || !ipAllowed) {
+    recordOutcome(emailAllowed ? "ip_rate_limited" : "email_rate_limited");
+    return responseJson({ error: "認証コードの送信回数が上限に達しました。しばらく時間をおいて再度お試しください。" }, 429);
+  }
   const subscription = await findSubscription(db, email);
   let member = await findMember(db, email);
   if (isBootstrapAdminEmail(env, email)) {
@@ -625,7 +631,16 @@ async function requestSetupCode(
         subscription.access_status !== "suspended" &&
         subscription.access_status !== "pending",
       );
-  if (!eligible) return responseJson({ success: true });
+  if (!eligible) {
+    recordOutcome("membership_not_eligible", {
+      memberFound: Boolean(member), subscriptionFound: Boolean(subscription),
+      accountStatus: member?.account_status ?? null,
+      accessStatus: subscription?.access_status ?? null,
+      subscriptionStatus: subscription?.square_status ?? null,
+    });
+    // Keep the public response indistinguishable to prevent account enumeration.
+    return responseJson({ success: true });
+  }
   if (!member) {
     const now = new Date().toISOString();
     await db
@@ -676,7 +691,9 @@ async function requestSetupCode(
     .run();
   try {
     await sendCode(env, email, code);
+    recordOutcome("provider_accepted");
   } catch (error) {
+    recordOutcome("delivery_failed");
     await db
       .prepare(
         "DELETE FROM email_verification_codes WHERE email = ? AND code_hash = ?",
@@ -1138,6 +1155,8 @@ export async function handleAuthRequest(
     return responseJson({ error: "not found" }, 404);
   } catch (error) {
     const message = error instanceof Error ? error.message : "unknown";
+    if (message === "email_delivery_failed" || message === "email_not_configured")
+      return responseJson({ error: "認証メールを送信できませんでした。時間をおいて再試行し、届かない場合は運営にお問い合わせください。" }, 503);
     if (message === "request_too_large")
       return responseJson({ error: "リクエストが大きすぎます" }, 413);
     if (message === "unsupported_media_type")
