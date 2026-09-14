@@ -13,6 +13,13 @@ export type DiscordTextSegment = { text: string; formats: DiscordTextFormat[] };
 
 /** Parse inline formatting first so multiline spans remain intact, then classify each line's heading. */
 export function parseDiscordRichLines(content: string) {
+  // Some imported headings end with a lone **. Treat it as an orphan marker so
+  // it cannot consume the opening ** of a later, valid bold phrase.
+  const normalizedContent = content.split(/\r?\n/).map((line) => {
+    if (parseDiscordHeading(line).level === 0) return line;
+    const markers = [...line.matchAll(/(?<!\*)\*\*(?!\*)/g)];
+    return markers.length === 1 && markers[0].index === line.length - 2 ? line.slice(0, -2) : line;
+  }).join("\n");
   const parseSegments = (value: string, formats: DiscordTextFormat[] = []): DiscordTextSegment[] => {
     const pattern = /(\*\*\*([\s\S]+?)\*\*\*|\*\*# ([\s\S]+?)\*\*|\*\*([\s\S]+?)\*\*|__([\s\S]+?)__|~~([\s\S]+?)~~|\[small\]([\s\S]+?)\[\/small\]|\[large\]([\s\S]+?)\[\/large\]|(?<!\*)\*([^*\n]+)\*(?!\*))/;
     const match = pattern.exec(value);
@@ -33,7 +40,7 @@ export function parseDiscordRichLines(content: string) {
   };
 
   const lines: DiscordTextSegment[][] = [[]];
-  for (const segment of parseSegments(content)) {
+  for (const segment of parseSegments(normalizedContent)) {
     const parts = segment.text.split(/\r?\n/);
     parts.forEach((part, index) => {
       if (index > 0) lines.push([]);

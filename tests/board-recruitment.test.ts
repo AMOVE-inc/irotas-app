@@ -31,6 +31,15 @@ describe("Discord掲示板表示", () => {
     expect(lines[3].segments[0]).toEqual({ text: "プロフィール設定", formats: ["bold"] });
   });
 
+  it("古い投稿の見出し末尾にある孤立した太字記号を後続の太字に結び付けない", () => {
+    const lines = parseDiscordRichLines("## 2. 10/14(水)19:30〜IRO+Party**\n明日から募集します\n\n## 3. 今週のテーマは**「お好み焼き」**");
+    expect(lines[0]).toEqual({ level: 2, segments: [{ text: "2. 10/14(水)19:30〜IRO+Party", formats: [] }] });
+    expect(lines[3]).toEqual({ level: 2, segments: [
+      { text: "3. 今週のテーマは", formats: [] },
+      { text: "「お好み焼き」", formats: ["bold"] },
+    ] });
+  });
+
   it("MarkdownリンクとURLをリンクとして抽出する", () => {
     expect(tokenizeRichTextLinks("[食べログ](https://tabelog.com/a) を確認")[0]).toMatchObject({ type: "link", label: "食べログ", url: "https://tabelog.com/a" });
     expect(tokenizeRichTextLinks("地図 https://maps.app.goo.gl/abc。 ")[1]).toMatchObject({ type: "link", url: "https://maps.app.goo.gl/abc", suffix: "。" });
