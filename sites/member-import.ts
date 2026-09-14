@@ -399,7 +399,7 @@ function memberStatement(
       VALUES (?, ?, ?, NULL, 'user', 'member', ?, ?, ?, ?, ?, ?, 'active', ?, ?)
       ON CONFLICT(email) DO UPDATE SET
         display_name = excluded.display_name,
-        discord_user_id = excluded.discord_user_id,
+        discord_user_id = COALESCE(excluded.discord_user_id, members.discord_user_id),
         branches_json = excluded.branches_json,
         member_term = excluded.member_term,
         member_rank = excluded.member_rank,
