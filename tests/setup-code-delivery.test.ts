@@ -36,14 +36,15 @@ describe("setup code delivery outcomes", () => {
     expect(f.send).not.toHaveBeenCalled();
     expect(f.log.mock.calls[0][0]).toContain("email_rate_limited");
   });
-  it("records missing membership without publicly revealing account existence", async () => {
+  it("sends verification even when membership has not been imported", async () => {
     const f = fixture("ineligible");
+    f.send.mockResolvedValue(new Response(null, { status: 202 }));
     const response = await f.run();
     expect(await response?.json()).toEqual({ success: true });
-    expect(f.send).not.toHaveBeenCalled();
-    expect(f.log.mock.calls[0][0]).toContain("membership_not_eligible");
+    expect(f.send).toHaveBeenCalledOnce();
+    expect(f.log.mock.calls[0][0]).toContain("provider_accepted");
     expect(f.log.mock.calls[0][0]).not.toContain("member@example.test");
-    expect(f.queries.some(q => q.includes("INSERT INTO email_verification_codes"))).toBe(false);
+    expect(f.queries.some(q => q.includes("INSERT INTO email_verification_codes"))).toBe(true);
   });
   it("reports delivery failure and removes the unusable code", async () => {
     const f = fixture("delivery-failure");

@@ -1,3 +1,4 @@
+import { discoverSquareMembership } from "./square-membership-discovery";
 import type { D1Database, SitesEnv } from "./platform-types";
 
 const encoder = new TextEncoder();
@@ -586,93 +587,8 @@ async function requestSetupCode(
     recordOutcome(emailAllowed ? "ip_rate_limited" : "email_rate_limited");
     return responseJson({ error: "認証コードの送信回数が上限に達しました。しばらく時間をおいて再度お試しください。" }, 429);
   }
-  const subscription = await findSubscription(db, email);
-  let member = await findMember(db, email);
-  if (isBootstrapAdminEmail(env, email)) {
-    const needsBootstrap =
-      !member ||
-      member.role !== "admin" ||
-      member.access_role !== "admin" ||
-      member.account_status !== "active";
-    if (needsBootstrap) {
-      const now = new Date().toISOString();
-      await db
-        .prepare(
-          `INSERT INTO members
-          (email, display_name, role, access_role, branches_json, account_status, created_at, updated_at)
-          VALUES (?, '', 'admin', 'admin', '[]', 'active', ?, ?)
-          ON CONFLICT(email) DO UPDATE SET
-            role = 'admin',
-            access_role = 'admin',
-            account_status = 'active',
-            updated_at = excluded.updated_at`,
-        )
-        .bind(email, now, now)
-        .run();
-      member = await findMember(db, email);
-      await db
-        .prepare(
-          `INSERT INTO audit_logs
-          (actor_user_id, action, entity_type, entity_id, metadata_json, created_at)
-          VALUES (NULL, 'auth.bootstrap_admin', 'member', ?, ?, ?)`,
-        )
-        .bind(
-          member ? String(member.id) : null,
-          JSON.stringify({ source: "BOOTSTRAP_ADMIN_EMAIL" }),
-          now,
-        )
-        .run();
-    }
-  }
-  const eligible = member
-    ? membershipAllowsAccess(subscription, member)
-    : Boolean(
-        subscription &&
-        subscription.access_status !== "suspended" &&
-        subscription.access_status !== "pending",
-      );
-  if (!eligible) {
-    recordOutcome("membership_not_eligible", {
-      memberFound: Boolean(member), subscriptionFound: Boolean(subscription),
-      accountStatus: member?.account_status ?? null,
-      accessStatus: subscription?.access_status ?? null,
-      subscriptionStatus: subscription?.square_status ?? null,
-    });
-    // Keep the public response indistinguishable to prevent account enumeration.
-    return responseJson({ success: true });
-  }
-  if (!member) {
-    const now = new Date().toISOString();
-    await db
-      .prepare(
-        `INSERT INTO members
-        (email, display_name, role, access_role, branches_json, account_status, created_at, updated_at)
-        VALUES (?, ?, 'user', 'member', '[]', 'active', ?, ?)`,
-      )
-      .bind(email, email.split("@")[0], now, now)
-      .run();
-    member = await findMember(db, email);
-    if (!member)
-      return responseJson(
-        { error: "会員アカウントを作成できませんでした" },
-        500,
-      );
-    await db
-      .prepare(
-        `INSERT INTO audit_logs
-        (actor_user_id, action, entity_type, entity_id, metadata_json, created_at)
-        VALUES (NULL, 'member.auto_created_from_square', 'member', ?, ?, ?)`,
-      )
-      .bind(
-        String(member.id),
-        JSON.stringify({
-          billingEmail: email,
-          publicMemberId: member.public_member_id,
-        }),
-        now,
-      )
-      .run();
-  }
+  // Mailbox verification is independent of membership imports. Authorization
+  // remains enforced in register/login; sending a code never grants access.
   const code = String(
     crypto.getRandomValues(new Uint32Array(1))[0] % 1_000_000,
   ).padStart(6, "0");
@@ -719,14 +635,14 @@ async function register(request: Request, env: SitesEnv, db: D1Database) {
     !/^\d{6}$/.test(code)
   )
     return responseJson({ error: "入力内容をご確認ください" }, 400);
-  const member = await findMember(db, email);
-  const subscription = await findSubscription(db, email);
-  if (!member || !membershipAllowsAccess(subscription, member))
-    return responseJson({ error: "有効な会員資格を確認できません" }, 403);
+  let member = await findMember(db, email);
+  let subscription = await findSubscription(db, email);
   // A previous setup can have stored the password successfully but failed
   // while issuing the session. Treat the exact same password as a safe,
   // idempotent retry instead of showing an error to the member.
-  if (member.password_hash) {
+  if (member?.password_hash) {
+    if (!membershipAllowsAccess(subscription, member))
+      return responseJson({ error: "有効な会員資格を確認できません" }, 403);
     if (await verifyPassword(password, member.password_hash, env.AUTH_SECRET)) {
       const now = new Date().toISOString();
       await db
@@ -788,6 +704,60 @@ async function register(request: Request, env: SitesEnv, db: D1Database) {
       { error: "認証コードが正しくないか、有効期限が切れています" },
       400,
     );
+  }
+  if (isBootstrapAdminEmail(env, email)) {
+    const needsBootstrap =
+      !member ||
+      member.role !== "admin" ||
+      member.access_role !== "admin" ||
+      member.account_status !== "active";
+    if (needsBootstrap) {
+      const now = new Date().toISOString();
+      await db
+        .prepare(
+          `INSERT INTO members
+          (email, display_name, role, access_role, branches_json, account_status, created_at, updated_at)
+          VALUES (?, '', 'admin', 'admin', '[]', 'active', ?, ?)
+          ON CONFLICT(email) DO UPDATE SET
+            role = 'admin',
+            access_role = 'admin',
+            account_status = 'active',
+            updated_at = excluded.updated_at`,
+        )
+        .bind(email, now, now)
+        .run();
+      member = await findMember(db, email);
+      await db
+        .prepare(
+          `INSERT INTO audit_logs
+          (actor_user_id, action, entity_type, entity_id, metadata_json, created_at)
+          VALUES (NULL, 'auth.bootstrap_admin', 'member', ?, ?, ?)`,
+        )
+        .bind(
+          member ? String(member.id) : null,
+          JSON.stringify({ source: "BOOTSTRAP_ADMIN_EMAIL" }),
+          now,
+        )
+        .run();
+    }
+  }
+  if (member && member.account_status !== "active")
+    return responseJson({ error: "有効な会員資格を確認できません" }, 403);
+  if (!membershipAllowsAccess(subscription, member ?? { role: "user", access_role: "member", account_status: "active" })) {
+    await discoverSquareMembership(db, env, email);
+    subscription = await findSubscription(db, email);
+  }
+  const candidate = member ?? { role: "user" as const, access_role: "member" as const, account_status: "active" as const };
+  if (!membershipAllowsAccess(subscription, candidate))
+    return responseJson({ error: "有効な会員資格を確認できません。会費決済時のメールアドレスを確認し、運営にお問い合わせください。" }, 403);
+  if (!member) {
+    const createdAt = new Date().toISOString();
+    await db.prepare(`INSERT INTO members (email, display_name, role, access_role, branches_json, account_status, created_at, updated_at)
+      VALUES (?, ?, 'user', 'member', '[]', 'active', ?, ?) ON CONFLICT(email) DO NOTHING`)
+      .bind(email, email.split("@")[0], createdAt, createdAt).run();
+    member = await findMember(db, email);
+    if (!member || member.password_hash || !membershipAllowsAccess(subscription, member))
+      return responseJson({ error: "会員情報が更新されました。再度お試しください。" }, 409);
   }
   const passwordHash = await hashPassword(password, undefined, env.AUTH_SECRET);
   const now = new Date().toISOString();
@@ -1155,6 +1125,8 @@ export async function handleAuthRequest(
     return responseJson({ error: "not found" }, 404);
   } catch (error) {
     const message = error instanceof Error ? error.message : "unknown";
+    if (message === "square_lookup_failed")
+      return responseJson({ error: "Squareの会員情報を確認できませんでした。時間をおいて再試行し、解消しない場合は運営にお問い合わせください。" }, 503);
     if (message === "email_delivery_failed" || message === "email_not_configured")
       return responseJson({ error: "認証メールを送信できませんでした。時間をおいて再試行し、届かない場合は運営にお問い合わせください。" }, 503);
     if (message === "request_too_large")
