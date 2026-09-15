@@ -318,9 +318,9 @@ export default function LoginScreen() {
                   })}
                 >
                   <Text style={{ fontSize: 14, color: colors.muted }}>
-                    初めてアプリを利用する会員の方は{" "}
+                    初回利用・パスワードを再設定する方は{" "}
                     <Text style={{ color: "#D97FA8", fontWeight: "700" }}>
-                      パスワード設定
+                      設定・再設定
                     </Text>
                   </Text>
                 </Pressable>

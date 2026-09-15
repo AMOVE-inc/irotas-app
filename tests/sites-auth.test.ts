@@ -117,6 +117,89 @@ describe("Sites production authentication", () => {
     expect(await verifyPassword("wrong password", encoded)).toBe(false);
   });
 
+  it("lets a verified operator replace an existing password and revokes old sessions", async () => {
+    const secret = "test-secret";
+    const email = "operator@example.com";
+    const code = "123456";
+    const oldHash = await hashPassword("old-password", undefined, secret);
+    const verificationKey = await crypto.subtle.importKey(
+      "raw",
+      new TextEncoder().encode(secret),
+      { name: "HMAC", hash: "SHA-256" },
+      false,
+      ["sign"],
+    );
+    const verificationSignature = new Uint8Array(await crypto.subtle.sign(
+      "HMAC",
+      verificationKey,
+      new TextEncoder().encode(`${email}:initial_setup:${code}`),
+    ));
+    const verificationHash = Buffer.from(verificationSignature).toString("base64url");
+    const batchedQueries: string[] = [];
+    const db = {
+      prepare(query: string) {
+        return {
+          bind(..._values: unknown[]) {
+            return {
+              query,
+              async first() {
+                if (query.includes("FROM members m")) return {
+                  id: 86,
+                  email,
+                  password_hash: oldHash,
+                  display_name: "Operator",
+                  role: "operator",
+                  access_role: "operator",
+                  branches_json: "[]",
+                  account_status: "active",
+                  last_signed_in_at: null,
+                  password_set_at: "2026-09-01T00:00:00.000Z",
+                  public_member_id: "IRO0086",
+                  member_term: "第5期",
+                  member_rank: "regular",
+                  discord_roles_json: "[]",
+                  achievement_badges_json: "[]",
+                  profile_json: "{}",
+                  xp: 0,
+                  participation_count: 0,
+                  organizer_count: 0,
+                  subscription_started_at: null,
+                };
+                if (query.includes("FROM member_subscriptions")) return null;
+                if (query.includes("FROM email_verification_codes")) return {
+                  id: 250,
+                  code_hash: verificationHash,
+                  expires_at: "2999-01-01T00:00:00.000Z",
+                  failed_attempts: 0,
+                };
+                return null;
+              },
+              async run() { return { success: true }; },
+            };
+          },
+        };
+      },
+      async batch(statements: Array<{ query: string }>) {
+        batchedQueries.push(...statements.map((statement) => statement.query));
+        return statements.map(() => ({ success: true }));
+      },
+    };
+
+    const response = await handleAuthRequest(
+      new Request("https://app.example/api/auth/register", {
+        method: "POST",
+        headers: { origin: "https://app.example", "content-type": "application/json" },
+        body: JSON.stringify({ email, password: "new-password", verificationCode: code }),
+      }),
+      { DB: db, AUTH_SECRET: secret } as never,
+    );
+
+    expect(response?.status).toBe(200);
+    expect(batchedQueries.some((query) => query.includes("DELETE FROM member_sessions"))).toBe(true);
+    expect(batchedQueries.some((query) => query.includes("UPDATE members SET password_hash"))).toBe(true);
+    expect(batchedQueries.some((query) => query.includes("auth.password_reset"))).toBe(true);
+  });
+
   it("uses the server secret as a password pepper in production hashes", async () => {
     const encoded = await hashPassword(
       "correct horse battery staple",
