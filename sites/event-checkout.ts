@@ -112,6 +112,7 @@ export async function handleEventCheckoutRequest(request: Request, env: SitesEnv
   if (!match) return null;
   if (request.method !== "GET" && request.method !== "POST") return json({ error: "対応していない操作です" }, 405);
   if (!env.DB) return json({ error: "データベースに接続できません" }, 503);
+  if (env.EVENT_PAYMENTS_ENABLED !== "true") return json({ error: "公式イベントのアプリ内決済は現在停止しています" }, 503);
   const member = await authenticatedRequestMember(request, env);
   if (!member) return json({ error: "ログインが必要です" }, 401);
   const eventId = decodeURIComponent(match[1]);

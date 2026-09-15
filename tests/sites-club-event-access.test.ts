@@ -234,7 +234,7 @@ describe("club event access", () => {
     expect(confirmedBody.event).toMatchObject({ viewerParticipationStatus: "confirmed", chatId: "event_chat_event-club-1" });
   });
 
-  it("keeps paid first-come official applications pending until payment", async () => {
+  it("confirms a first-come official application without payment", async () => {
     db.row.event_type = "official";
     db.row.club_id = null;
     db.row.public_data_json = JSON.stringify({
@@ -253,29 +253,29 @@ describe("club event access", () => {
 
     expect(response?.status).toBe(201);
     expect(body.event).toMatchObject({
-      viewerParticipationStatus: "applied",
-      viewerPaymentState: "awaiting_payment",
+      viewerParticipationStatus: "confirmed",
+      viewerPaymentState: null,
     });
-    expect(db.notifications.some((notification) => notification.type === "event_confirmed")).toBe(false);
+    expect(db.notifications.some((notification) => notification.type === "event_confirmed")).toBe(true);
   });
 
-  it("moves a selected paid lottery applicant to payment pending", async () => {
+  it("confirms a selected official lottery applicant without payment", async () => {
     db.row.event_type = "official";
     db.row.club_id = null;
     db.row.public_data_json = JSON.stringify({ ...JSON.parse(eventRow.public_data_json), eventType: "official", selectionMethod: "lottery" });
     const applied = await handleEventRequest(new Request("https://app.example/api/events/event-club-1/applications", {
       method: "POST", body: JSON.stringify({ termsAccepted: true }),
     }), env);
-    expect((await applied?.json()).event.viewerPaymentState).toBe("awaiting_selection");
+    expect((await applied?.json()).event.viewerPaymentState).toBeNull();
     authenticatedRequestMember.mockResolvedValue({ id: 20, role: "operator", access_role: "operator" });
     const selected = await handleEventRequest(new Request("https://app.example/api/events/event-club-1/participants/IRO0010", {
       method: "PATCH", body: JSON.stringify({ action: "approve" }),
     }), env);
     expect(selected?.status).toBe(200);
-    expect(db.participationStatus).toBe("applied");
-    expect(db.paymentState).toBe("awaiting_payment");
-    expect(db.notifications.some((notification) => notification.type === "event_payment_ready")).toBe(true);
-    expect(db.notifications.some((notification) => notification.type === "event_confirmed")).toBe(false);
+    expect(db.participationStatus).toBe("confirmed");
+    expect(db.paymentState).toBeNull();
+    expect(db.notifications.some((notification) => notification.type === "event_payment_ready")).toBe(false);
+    expect(db.notifications.some((notification) => notification.type === "event_confirmed")).toBe(true);
   });
 
   it("notifies the organizer once for a cancellation request and the member after review", async () => {

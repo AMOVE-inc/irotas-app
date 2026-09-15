@@ -96,9 +96,16 @@ describe("official event Square checkout foundation", () => {
     expect(eventCheckoutAmount({ price: "500円" }, "regular", 600)).toBeNull();
   });
 
+  it("keeps the checkout endpoint disabled unless event payments are explicitly enabled", async () => {
+    const { db } = database();
+    const response = await handleEventCheckoutRequest(new Request(path, { method: "POST" }), { DB: db } as SitesEnv);
+    expect(response?.status).toBe(503);
+    expect(await response?.json()).toEqual({ error: "公式イベントのアプリ内決済は現在停止しています" });
+  });
+
   it("requires sign-in and a confirmed participant before contacting Square", async () => {
     const { db, state } = database();
-    const env = { DB: db, SQUARE_ACCESS_TOKEN: "test-token", SQUARE_LOCATION_ID: "test-location" } as SitesEnv;
+    const env = { DB: db, SQUARE_ACCESS_TOKEN: "test-token", SQUARE_LOCATION_ID: "test-location", EVENT_PAYMENTS_ENABLED: "true" } as SitesEnv;
     const fetcher = vi.spyOn(globalThis, "fetch");
     authenticatedRequestMember.mockResolvedValueOnce(null);
     expect((await handleEventCheckoutRequest(new Request(path, { method: "POST" }), env))?.status).toBe(401);
@@ -120,7 +127,7 @@ describe("official event Square checkout foundation", () => {
 
   it("skips Square for a zero-yen balance and reuses one checkout for retries", async () => {
     const { db, state } = database();
-    const env = { DB: db, SQUARE_ACCESS_TOKEN: "test-token", SQUARE_LOCATION_ID: "test-location" } as SitesEnv;
+    const env = { DB: db, SQUARE_ACCESS_TOKEN: "test-token", SQUARE_LOCATION_ID: "test-location", EVENT_PAYMENTS_ENABLED: "true" } as SitesEnv;
     const fetcher = vi.spyOn(globalThis, "fetch").mockResolvedValue(Response.json({ payment_link: { id: "link-1", order_id: "order-1", url: "https://square.link/u/example" } }));
     state.pointsUsed = 5_000;
     expect(await (await handleEventCheckoutRequest(new Request(path, { method: "POST" }), env))?.json()).toMatchObject({ status: "free", amountYen: 0 });
@@ -139,7 +146,7 @@ describe("official event Square checkout foundation", () => {
 
   it("discovers an active Square location when the environment does not specify one", async () => {
     const { db } = database();
-    const env = { DB: db, SQUARE_ACCESS_TOKEN: "different-test-token" } as SitesEnv;
+    const env = { DB: db, SQUARE_ACCESS_TOKEN: "different-test-token", EVENT_PAYMENTS_ENABLED: "true" } as SitesEnv;
     const fetcher = vi.spyOn(globalThis, "fetch")
       .mockResolvedValueOnce(Response.json({ locations: [{ id: "auto-location", status: "ACTIVE", capabilities: ["CREDIT_CARD_PROCESSING"] }] }))
       .mockResolvedValueOnce(Response.json({ payment_link: { id: "link-auto", order_id: "order-auto", url: "https://square.link/u/auto" } }));
@@ -154,7 +161,7 @@ describe("official event Square checkout foundation", () => {
     const { db, state } = database();
     state.checkout = { id: "checkout-1", event_id: "event-1", member_id: 7, item_name: "公式イベント", amount_yen: 4_000, points_used: 1_000, status: "paid", square_order_id: "order-1", checkout_url: "https://square.link/u/example" };
     state.price = "料金未定";
-    const response = await handleEventCheckoutRequest(new Request(path), { DB: db } as SitesEnv);
+    const response = await handleEventCheckoutRequest(new Request(path), { DB: db, EVENT_PAYMENTS_ENABLED: "true" } as SitesEnv);
     expect(response?.status).toBe(200);
     expect(await response?.json()).toMatchObject({ status: "paid", amountYen: 4_000, pointsUsed: 1_000 });
   });
@@ -173,7 +180,7 @@ describe("official event Square checkout foundation", () => {
     state.participation = "applied";
     state.paymentState = "awaiting_payment";
     state.checkout = { id: "checkout-1", event_id: "event-1", member_id: 7, item_name: "公式イベント", amount_yen: 4_000, points_used: 1_000, status: "ready", square_order_id: "order-1", checkout_url: "https://square.link/u/example" };
-    const env = { DB: db, SQUARE_WEBHOOK_SIGNATURE_KEY: "signature-key", SQUARE_WEBHOOK_NOTIFICATION_URL: "https://app.example/api/webhooks/square" } as SitesEnv;
+    const env = { DB: db, SQUARE_WEBHOOK_SIGNATURE_KEY: "signature-key", SQUARE_WEBHOOK_NOTIFICATION_URL: "https://app.example/api/webhooks/square", EVENT_PAYMENTS_ENABLED: "true" } as SitesEnv;
     expect(await (await handleEventCheckoutRequest(new Request(path), env))?.json()).toMatchObject({ status: "ready", amountYen: 4_000 });
     const body = JSON.stringify({ event_id: "paid-event", type: "payment.updated", data: { object: { payment: { id: "payment-1", order_id: "order-1", status: "COMPLETED", amount_money: { amount: 4_000, currency: "JPY" } } } } });
     const signature = await squareSignature(body, env.SQUARE_WEBHOOK_SIGNATURE_KEY!, env.SQUARE_WEBHOOK_NOTIFICATION_URL!);

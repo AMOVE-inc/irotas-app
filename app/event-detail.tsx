@@ -52,6 +52,7 @@ import {
 } from "react-native";
 
 type EventComment = Api.SharedEventComment;
+const OFFICIAL_EVENT_PAYMENTS_ENABLED = false;
 
 const eventCommentsKey = (eventId: string) => `irotas_event_comments_v1:${eventId}`;
 const deletedEventCommentsKey = (eventId: string) => `irotas_deleted_event_comments_v1:${eventId}`;
@@ -282,7 +283,7 @@ export default function EventDetailScreen() {
   }, [authenticatedViewerMemberId, event]);
 
   useEffect(() => {
-    if (!event || !authUser || event.eventType !== "official" ||
+    if (!OFFICIAL_EVENT_PAYMENTS_ENABLED || !event || !authUser || event.eventType !== "official" ||
       !(event.viewerPaymentState === "awaiting_payment" || ["confirmed", "cancel_requested"].includes(event.viewerParticipationStatus ?? "")) ||
       eventRecruitmentChannel(event) === "discord") {
       setEventCheckout(null);
@@ -399,7 +400,7 @@ export default function EventDetailScreen() {
   };
   const priceNum = parsePriceNumber(effectivePrice);
   const isOfficialEvent = event.eventType === "official";
-  const pointsToUse = usePoints && isOfficialEvent ? Math.min(irotasPoints, priceNum) : 0;
+  const pointsToUse = OFFICIAL_EVENT_PAYMENTS_ENABLED && usePoints && isOfficialEvent ? Math.min(irotasPoints, priceNum) : 0;
   const finalPrice = Math.max(0, priceNum - pointsToUse);
   const organizerId = event.organizerProfileId ?? event.createdBy;
   const companionIds = [...new Set(event.companionIds ?? [])].filter((memberId) => memberId !== organizerId);
@@ -533,7 +534,7 @@ export default function EventDetailScreen() {
         : effectivePrice;
     showApplicationConfirmation(
       "参加申込の確認",
-      `「${event.title}」に申し込みますか？\n${requiresOrganizerApproval ? "幹事の承認後に参加確定となり、参加者チャットへ入れます。" : event.selectionMethod === "lottery" ? (isOfficialEvent && finalPrice > 0 ? "抽選イベントです。当選後に決済し、支払い完了で参加確定となります。" : "抽選イベントです。申込後、参加確定をお待ちください。") : (isOfficialEvent && finalPrice > 0 ? `参加費: ${priceLabel}。決済完了後に参加確定します。` : `参加費: ${priceLabel}`)}`,
+      `「${event.title}」に申し込みますか？\n${requiresOrganizerApproval ? "幹事の承認後に参加確定となり、参加者チャットへ入れます。" : event.selectionMethod === "lottery" ? "抽選イベントです。申込後、参加確定をお待ちください。" : isOfficialEvent ? `参加費: ${priceLabel}。現在、アプリ内決済は行いません。` : `参加費: ${priceLabel}`}`,
       [
         { text: "キャンセル", style: "cancel" },
         {
@@ -542,7 +543,7 @@ export default function EventDetailScreen() {
             // 連打防止ロック
             if (joiningRef.current) return;
             joiningRef.current = true;
-            const confirmedPointsToUse = usePointsRef.current && isOfficialEvent ? Math.min(irotasPoints, priceNum) : 0;
+            const confirmedPointsToUse = OFFICIAL_EVENT_PAYMENTS_ENABLED && usePointsRef.current && isOfficialEvent ? Math.min(irotasPoints, priceNum) : 0;
             const confirmedFinalPrice = Math.max(0, priceNum - confirmedPointsToUse);
             try {
               if (event.viewerMemberId) {
@@ -605,13 +606,15 @@ export default function EventDetailScreen() {
               await recordActivityEvent({ userId: CURRENT_USER.id, eventName: "event_confirmed", entityType: "event", entityId: event.id });
 
               // 支払いレコードを作成
-              await createPaymentRecord({
-                eventId: event.id,
-                userId: CURRENT_USER.id,
-                userName: CURRENT_USER.name,
-                userRank: CURRENT_USER.rank,
-                amount: confirmedFinalPrice,
-              });
+              if (OFFICIAL_EVENT_PAYMENTS_ENABLED) {
+                await createPaymentRecord({
+                  eventId: event.id,
+                  userId: CURRENT_USER.id,
+                  userName: CURRENT_USER.name,
+                  userRank: CURRENT_USER.rank,
+                  amount: confirmedFinalPrice,
+                });
+              }
 
               // チャットルームに参加（なければ作成）
               const room = joinEventChat(
@@ -1202,7 +1205,7 @@ export default function EventDetailScreen() {
           </View>
 
           {/* イロタスポイント割引トグル */}
-          {isOfficialEvent && priceNum > 0 && irotasPoints > 0 && !isJoined && (
+          {OFFICIAL_EVENT_PAYMENTS_ENABLED && isOfficialEvent && priceNum > 0 && irotasPoints > 0 && !isJoined && (
             <View
               style={{
                 marginTop: 12,
@@ -1233,7 +1236,7 @@ export default function EventDetailScreen() {
           )}
         </View>
 
-        {isOfficialEvent && (event.viewerPaymentState === "awaiting_payment" || ["confirmed", "cancel_requested"].includes(event.viewerParticipationStatus ?? "")) &&
+        {OFFICIAL_EVENT_PAYMENTS_ENABLED && isOfficialEvent && (event.viewerPaymentState === "awaiting_payment" || ["confirmed", "cancel_requested"].includes(event.viewerParticipationStatus ?? "")) &&
           eventRecruitmentChannel(event) !== "discord" ? (
           <View style={{ backgroundColor: colors.surface, borderRadius: 14, padding: 16, marginBottom: 16 }}>
             <Text style={{ fontSize: 15, fontWeight: "800", color: colors.foreground }}>参加費のお支払い</Text>
@@ -1460,7 +1463,7 @@ export default function EventDetailScreen() {
               <Text style={{ textAlign: "center", fontSize: 15, lineHeight: 22, fontWeight: "800", color: colors.foreground, marginTop: 12 }}>{event.title}</Text>
               <Text style={{ textAlign: "center", fontSize: 13, fontWeight: "800", color: "#5865F2", marginTop: 8 }}>{event.date}　{event.time}</Text>
               <Text style={{ textAlign: "center", fontSize: 12, lineHeight: 19, color: colors.muted, marginTop: 8 }}>{applicationConfirmation?.message}</Text>
-              {isOfficialEvent && priceNum > 0 && irotasPoints > 0 ? <View style={{ marginTop: 18, borderRadius: 16, padding: 14, backgroundColor: "#FFF7E8", borderWidth: 1, borderColor: "#F4D89D" }}><View style={{ flexDirection: "row", alignItems: "center" }}><View style={{ flex: 1 }}><Text style={{ fontSize: 14, fontWeight: "900", color: "#A56712" }}>イロタスポイントを使う</Text><Text style={{ fontSize: 11, color: colors.muted, marginTop: 3 }}>保有 {irotasPoints.toLocaleString()}pt</Text></View><Switch value={usePoints} onValueChange={(value) => { usePointsRef.current = value; setUsePoints(value); }} trackColor={{ false: colors.border, true: "#FF9500" }} thumbColor="#FFF" /></View>{usePoints ? <Text style={{ marginTop: 10, fontSize: 13, fontWeight: "900", color: "#2E8B57" }}>{pointsToUse.toLocaleString()}pt利用 → お支払い {finalPrice.toLocaleString()}円</Text> : null}</View> : null}
+              {OFFICIAL_EVENT_PAYMENTS_ENABLED && isOfficialEvent && priceNum > 0 && irotasPoints > 0 ? <View style={{ marginTop: 18, borderRadius: 16, padding: 14, backgroundColor: "#FFF7E8", borderWidth: 1, borderColor: "#F4D89D" }}><View style={{ flexDirection: "row", alignItems: "center" }}><View style={{ flex: 1 }}><Text style={{ fontSize: 14, fontWeight: "900", color: "#A56712" }}>イロタスポイントを使う</Text><Text style={{ fontSize: 11, color: colors.muted, marginTop: 3 }}>保有 {irotasPoints.toLocaleString()}pt</Text></View><Switch value={usePoints} onValueChange={(value) => { usePointsRef.current = value; setUsePoints(value); }} trackColor={{ false: colors.border, true: "#FF9500" }} thumbColor="#FFF" /></View>{usePoints ? <Text style={{ marginTop: 10, fontSize: 13, fontWeight: "900", color: "#2E8B57" }}>{pointsToUse.toLocaleString()}pt利用 → お支払い {finalPrice.toLocaleString()}円</Text> : null}</View> : null}
               <View style={{ flexDirection: "row", gap: 10, marginTop: 22 }}>{applicationConfirmation?.buttons.map((button) => { const cancel = button.style === "cancel"; const destructive = button.style === "destructive"; return <Pressable key={button.text} onPress={() => { setApplicationConfirmation(null); if (!cancel) button.onPress?.(); }} style={{ flex: 1, minHeight: 50, borderRadius: 14, alignItems: "center", justifyContent: "center", backgroundColor: cancel ? colors.surface : destructive ? "#D94C55" : isOfficialEvent ? "#D65E8D" : "#5B9BD5", borderWidth: cancel ? 1 : 0, borderColor: colors.border }}><Text style={{ fontSize: 15, fontWeight: "900", color: cancel ? colors.foreground : "#FFF" }}>{button.text}</Text></Pressable>; })}</View>
             </View>
           </View>

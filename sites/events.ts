@@ -1225,6 +1225,9 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
     const requestedPoints = Number(input?.pointsToUse ?? 0);
     if (!Number.isInteger(requestedPoints) || requestedPoints < 0 || requestedPoints > 300_000)
       return responseJson({ error: "利用ポイントを確認してください" }, 400);
+    const eventPaymentsEnabled = env.EVENT_PAYMENTS_ENABLED === "true";
+    if (requestedPoints > 0 && !eventPaymentsEnabled)
+      return responseJson({ error: "アプリ内決済の停止中は参加費にポイントを利用できません" }, 400);
     if (requestedPoints > 0 && row.event_type !== "official")
       return responseJson({ error: "イロタスポイントは公式イベントの参加費にのみ利用できます" }, 400);
     const rankRow = await env.DB.prepare("SELECT member_rank, discord_roles_json FROM members WHERE id = ?").bind(member.id).first<{ member_rank: string | null; discord_roles_json: string | null }>();
@@ -1232,7 +1235,7 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
     const memberRank = effectiveMemberRank(rankRow?.member_rank, rankRow?.discord_roles_json) ?? "regular";
     const eventPrice = priceNumber(rankPrices[memberRank] ?? data.price);
     if (requestedPoints > eventPrice) return responseJson({ error: "参加費を超えるポイントは利用できません" }, 400);
-    const appOfficial = row.event_type === "official" && data.recruitmentChannel !== "discord" && !id.startsWith("discord-event-");
+    const appOfficial = eventPaymentsEnabled && row.event_type === "official" && data.recruitmentChannel !== "discord" && !id.startsWith("discord-event-");
     const amountDue = appOfficial ? eventCheckoutAmount(data, memberRank, requestedPoints) : 0;
     if (appOfficial && amountDue === null) return responseJson({ error: "参加費を確認できません" }, 409);
     const paymentState = appOfficial && amountDue! > 0 ? immediate ? "awaiting_payment" : "awaiting_selection" : null;
@@ -1380,7 +1383,7 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
       const count = await env.DB.prepare(`SELECT COUNT(*) AS count FROM event_participations WHERE event_id = ?
         AND (status IN ('confirmed','cancel_requested') OR (status = 'applied' AND payment_state = 'awaiting_payment'))`).bind(id).first<{ count: number }>();
       if (!["undecided", "unlimited"].includes(String(data.capacityMode)) && (count?.count ?? 0) >= capacity) return responseJson({ error: "満席のため承認できません" }, 409);
-      if (row.event_type === "official" && data.recruitmentChannel !== "discord" && !id.startsWith("discord-event-")) {
+      if (env.EVENT_PAYMENTS_ENABLED === "true" && row.event_type === "official" && data.recruitmentChannel !== "discord" && !id.startsWith("discord-event-")) {
         const targetRank = await env.DB.prepare("SELECT member_rank, discord_roles_json FROM members WHERE id = ?")
           .bind(targetId).first<{ member_rank: string | null; discord_roles_json: string | null }>();
         const usedPoints = await env.DB.prepare("SELECT amount FROM event_point_usages WHERE event_id = ? AND member_id = ? AND status = 'applied'")
