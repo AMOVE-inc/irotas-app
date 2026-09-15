@@ -645,38 +645,12 @@ async function register(request: Request, env: SitesEnv, db: D1Database) {
     return responseJson({ error: "入力内容をご確認ください" }, 400);
   let member = await findMember(db, email);
   let subscription = await findSubscription(db, email);
+  const replacingExistingPassword = Boolean(member?.password_hash);
   if (member && subscription?.member_id && subscription.member_id !== member.id)
     return responseJson({ error: "会員アカウントの紐付けを確認できません" }, 409);
-  // A previous setup can have stored the password successfully but failed
-  // while issuing the session. Treat the exact same password as a safe,
-  // idempotent retry instead of showing an error to the member.
-  if (member?.password_hash) {
-    if (!membershipAllowsAccess(subscription, member))
-      return responseJson({ error: "有効な会員資格を確認できません" }, 403);
-    if (await verifyPassword(password, member.password_hash, env.AUTH_SECRET)) {
-      const now = new Date().toISOString();
-      await db
-        .prepare(
-          "UPDATE members SET last_signed_in_at = ?, updated_at = ? WHERE id = ?",
-        )
-        .bind(now, now, member.id)
-        .run();
-      const session = await createSession(db, member.id);
-      return responseJson(
-        {
-          success: true,
-          sessionToken: session.token,
-          user: memberPayload({ ...member, last_signed_in_at: now }),
-        },
-        200,
-        { "set-cookie": sessionCookie(session.token, session.expires) },
-      );
-    }
-    return responseJson(
-      { error: "初回設定済みです。ログインしてください" },
-      409,
-    );
-  }
+  // A fresh email code authorizes both first-time setup and recovery of an
+  // existing password. Verification stays mandatory on this endpoint so it
+  // cannot become an unthrottled second login path.
   const verification = await db
     .prepare(
       "SELECT id, code_hash, expires_at, failed_attempts FROM email_verification_codes WHERE email = ? AND purpose = 'initial_setup' AND consumed_at IS NULL ORDER BY created_at DESC LIMIT 1",
@@ -773,7 +747,7 @@ async function register(request: Request, env: SitesEnv, db: D1Database) {
       VALUES (?, ?, 'user', 'member', '[]', 'active', ?, ?) ON CONFLICT(email) DO NOTHING`)
       .bind(email, email.split("@")[0], createdAt, createdAt).run();
     member = await findMember(db, email);
-    if (!member || member.password_hash || !membershipAllowsAccess(subscription, member))
+    if (!member || !membershipAllowsAccess(subscription, member))
       return responseJson({ error: "会員情報が更新されました。再度お試しください。" }, 409);
   }
   const passwordHash = await hashPassword(password, undefined, env.AUTH_SECRET);
@@ -788,6 +762,9 @@ async function register(request: Request, env: SitesEnv, db: D1Database) {
     member.email = email;
   }
   await db.batch([
+    ...(replacingExistingPassword
+      ? [db.prepare("DELETE FROM member_sessions WHERE member_id = ?").bind(member.id)]
+      : []),
     db
       .prepare(
         "UPDATE members SET password_hash = ?, display_name = CASE WHEN display_name = '' THEN ? ELSE display_name END, password_set_at = ?, last_signed_in_at = ?, updated_at = ? WHERE id = ?",
@@ -810,6 +787,15 @@ async function register(request: Request, env: SitesEnv, db: D1Database) {
         "UPDATE member_subscriptions SET member_id = ?, updated_at = ? WHERE LOWER(TRIM(billing_email)) = ?",
       )
       .bind(member.id, now, email),
+    ...(replacingExistingPassword
+      ? [
+          db.prepare(
+            `INSERT INTO audit_logs
+             (actor_user_id, action, entity_type, entity_id, metadata_json, created_at)
+             VALUES (?, 'auth.password_reset', 'member', ?, '{}', ?)`,
+          ).bind(member.id, String(member.id), now),
+        ]
+      : []),
   ]);
   const updated = {
     ...member,

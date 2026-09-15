@@ -137,7 +137,7 @@ export default function RegisterScreen() {
                   color: colors.foreground,
                 }}
               >
-                初回パスワード設定
+                パスワード設定・再設定
               </Text>
               <Text
                 style={{
@@ -148,7 +148,7 @@ export default function RegisterScreen() {
                   lineHeight: 20,
                 }}
               >
-                IRO+にご登録のメールアドレスを入力してください。その後メールで届く認証コードを入力し、パスワードを設定してください。
+                IRO+にご登録のメールアドレスを入力してください。その後メールで届く認証コードを入力し、新しいパスワードを設定してください。
               </Text>
             </View>
 
