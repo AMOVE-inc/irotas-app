@@ -7,6 +7,7 @@ import { EVENT_XP, awardEventReward, reverseEventRewards } from "./event-rewards
 import type { D1Database, SitesEnv } from "./platform-types";
 import { displayEventTitle } from "../lib/event-title";
 import { IMPORTED_DISCORD_EVENTS } from "../constants/imported-discord-events";
+import { mentionsViewer } from "../lib/mention-matching";
 
 const EVENTS_ENDPOINT = "/api/events";
 const EVENT_PATH = /^\/api\/events\/([^/]+)$/;
@@ -228,6 +229,74 @@ function text(value: unknown, maximum: number, required = false) {
   const normalized = value.normalize("NFKC").trim();
   if ((required && !normalized) || normalized.length > maximum) return null;
   return normalized;
+}
+
+type EventMentionMember = { id: number; display_name: string; public_member_id: string | null };
+
+function eventMentionDisplayName(value: string) {
+  return value
+    .replace(/\s*[【[(（]\s*(?:🥈|🥇|💎)?\s*(?:REGULAR|SILVER|GOLD|PLATINUM|レギュラー|シルバー|ゴールド|プラチナ)(?:会員)?\s*[】\])）]/giu, "")
+    .replace(/\s*[【[(（]\s*(?:運営(?:メンバー)?|管理者|admin)\s*[】\])）]/giu, "")
+    .replace(/(?:🎞️?\s*)?映画[・･]?ドラマ鑑賞部長$/u, "")
+    .replace(/(?:[🍖⛳🏃🚶⚾💃🎭🏀🍷✈️🍳🍞🐭🍺]\s*)?[^\s【】]{1,20}部長$/u, "")
+    .trim();
+}
+
+/** Resolve individual event mentions safely. Ambiguous display names are ignored. */
+export function eventMentionRecipientIds(
+  content: string,
+  previousContent: string,
+  members: EventMentionMember[],
+  actorMemberId: number,
+) {
+  const aliases = new Map<string, Set<number>>();
+  for (const member of members) {
+    if (member.id === actorMemberId) continue;
+    const labels = new Set([member.public_member_id ?? "", member.display_name, eventMentionDisplayName(member.display_name)]
+      .map((label) => label.normalize("NFKC").trim()).filter(Boolean));
+    for (const label of labels) aliases.set(label, new Set([...(aliases.get(label) ?? []), member.id]));
+  }
+  const resolve = (value: string) => {
+    const ids = new Set<number>();
+    for (const [label, candidates] of aliases) {
+      if (candidates.size === 1 && mentionsViewer(value, [label])) ids.add([...candidates][0]);
+    }
+    return ids;
+  };
+  const current = resolve(content);
+  const previous = resolve(previousContent);
+  return [...current].filter((id) => !previous.has(id));
+}
+
+async function eventMentionNotificationStatements(
+  db: D1Database,
+  input: { eventId: string; eventTitle: string; content: string; previousContent?: string; actorMemberId: number; now: string },
+) {
+  if (!input.content.includes("@")) return [];
+  const result = await db.prepare(`SELECT id, display_name, public_member_id FROM members
+    WHERE account_status = 'active' AND id != ?`).bind(input.actorMemberId).all<EventMentionMember>();
+  const recipientIds = eventMentionRecipientIds(input.content, input.previousContent ?? "", result.results ?? [], input.actorMemberId);
+  if (!recipientIds.length) return [];
+  const actorName = await eventChatMemberName(db, input.actorMemberId);
+  return recipientIds.map((targetMemberId) => db.prepare(`INSERT OR IGNORE INTO in_app_notifications
+    (id, target_member_id, type, title, body, event_id, created_at)
+    VALUES (?, ?, 'event_mention', ?, ?, ?, ?)`)
+    .bind(
+      `event-mention:${input.eventId}:${targetMemberId}:${crypto.randomUUID()}`,
+      targetMemberId,
+      "イベントでメンションされました",
+      `${actorName}さんが「${input.eventTitle}」の自由記述欄であなたをメンションしました。`,
+      input.eventId,
+      input.now,
+    ));
+}
+
+function eventMentionContent(data: Record<string, unknown>) {
+  return typeof data.publicNotes === "string" ? data.publicNotes : typeof data.description === "string" ? data.description : "";
+}
+
+function eventMentionsArePublished(eventType: EventRow["event_type"], data: Record<string, unknown>) {
+  return eventType !== "official" || data.recruitmentStatus !== "draft";
 }
 
 function number(value: unknown, minimum: number, maximum: number) {
@@ -727,6 +796,15 @@ async function createEvent(request: Request, db: D1Database, member: Awaited<Ret
   const privateMemo = text(input.privateMemo, 5000) || null;
   const id = `event_${crypto.randomUUID()}`;
   const now = new Date().toISOString();
+  const mentionNotifications = eventMentionsArePublished(event.eventType, event)
+    ? await eventMentionNotificationStatements(db, {
+      eventId: id,
+      eventTitle: event.title,
+      content: event.publicNotes ?? event.description,
+      actorMemberId: member.id,
+      now,
+    })
+    : [];
   await db.batch([
     db.prepare(`INSERT INTO events
       (id, organizer_member_id, event_type, club_id, event_date, status, title, public_data_json, private_memo, created_at, updated_at)
@@ -736,6 +814,7 @@ async function createEvent(request: Request, db: D1Database, member: Awaited<Ret
       (actor_user_id, action, entity_type, entity_id, metadata_json, created_at)
       VALUES (?, 'event.created', 'event', ?, ?, ?)`)
       .bind(String(member.id), id, JSON.stringify({ eventType: event.eventType }), now),
+    ...mentionNotifications,
   ]);
   // 公式イベントの主担当は対象外。その他のイベントは作成時に一度だけ付与する。
   // サーバー側で確定し、画面遷移・通信の再試行で重複しないようにする。
@@ -1013,12 +1092,23 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
       let data: Record<string, unknown> = {};
       try { data = JSON.parse(row.public_data_json) as Record<string, unknown>; } catch {}
       if (data.recruitmentStatus === recruitmentStatus) return responseJson({ event: await hydratedEvent(env.DB, row, member.id, elevated, memberPublicId) });
+      const previousRecruitmentStatus = data.recruitmentStatus;
       data.recruitmentStatus = recruitmentStatus;
       const now = new Date().toISOString();
+      const mentionNotifications = previousRecruitmentStatus === "draft" && recruitmentStatus === "open"
+        ? await eventMentionNotificationStatements(env.DB, {
+          eventId: id,
+          eventTitle: row.title,
+          content: eventMentionContent(data),
+          actorMemberId: member.id,
+          now,
+        })
+        : [];
       await env.DB.batch([
         env.DB.prepare("UPDATE events SET public_data_json = ?, updated_at = ? WHERE id = ?").bind(JSON.stringify(data), now, id),
         env.DB.prepare(`INSERT INTO audit_logs (actor_user_id, action, entity_type, entity_id, metadata_json, created_at)
           VALUES (?, 'event.recruitment_status_changed', 'event', ?, ?, ?)`).bind(String(member.id), id, JSON.stringify({ recruitmentStatus }), now),
+        ...mentionNotifications,
       ]);
       const updated = await eventRow(env.DB, id);
       return responseJson({ event: await hydratedEvent(env.DB, updated!, member.id, elevated, memberPublicId) });
@@ -1085,6 +1175,7 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
       if (priceMin !== undefined && priceMax !== undefined && priceMin > priceMax) return responseJson({ error: "予算の範囲が不正です" }, 400);
       let data: Record<string, unknown> = {};
       try { data = JSON.parse(row.public_data_json) as Record<string, unknown>; } catch {}
+      const previousData = { ...data };
       data.description = description;
       data.manualParticipantIds = participants;
       if (time !== undefined) data.time = time;
@@ -1116,12 +1207,24 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
       const effectiveTime = time ?? (typeof data.time === "string" && /^\d{2}:\d{2}$/.test(data.time) ? data.time : "00:00");
       const reopensFutureEvent = row.status === "ended" && new Date(`${effectiveDate}T${effectiveTime}:00+09:00`).getTime() > Date.now();
       const now = new Date().toISOString();
+      const mentionsWerePublished = eventMentionsArePublished(row.event_type, previousData);
+      const mentionNotifications = eventMentionsArePublished(eventType, data)
+        ? await eventMentionNotificationStatements(env.DB, {
+          eventId: id,
+          eventTitle: title,
+          content: eventMentionContent(data),
+          previousContent: mentionsWerePublished ? eventMentionContent(previousData) : "",
+          actorMemberId: member.id,
+          now,
+        })
+        : [];
       await env.DB.batch([
         env.DB.prepare("UPDATE events SET title = ?, event_type = ?, club_id = ?, event_date = ?, status = ?, public_data_json = ?, private_memo = COALESCE(?, private_memo), updated_at = ? WHERE id = ?").bind(title, eventType, eventType === "club" ? clubId : null, effectiveDate, reopensFutureEvent ? "open" : row.status, JSON.stringify(data), privateMemo, now, id),
         ...["title", "description", "eventType", "clubId", "restaurantName", "image", "genres", "companionIds", "rankPrices", "selectionMethod", "recruitmentStatus", "recruitmentChannel", "category", "prefecture", "tokyoArea", "publicNotes", "privateMemo", "event_date", "time", "location", "capacity", "capacityMode", "reservationCapacity", "price", "priceMin", "priceMax", "applicationDeadline", "cancellationPolicy", "tabelogUrl", "googleMapsUrl", "manualParticipantIds"].map((field) => env.DB!.prepare(`INSERT INTO event_import_field_edits (event_id, field_name, edited_at, actor_member_id)
           VALUES (?, ?, ?, ?) ON CONFLICT(event_id, field_name) DO UPDATE SET edited_at = excluded.edited_at, actor_member_id = excluded.actor_member_id`).bind(id, field, now, member.id)),
         env.DB.prepare(`INSERT INTO audit_logs (actor_user_id, action, entity_type, entity_id, metadata_json, created_at)
           VALUES (?, 'event.edited', 'event', ?, ?, ?)`).bind(String(member.id), id, JSON.stringify({ participants: participants.length }), now),
+        ...mentionNotifications,
       ]);
       const updated = await eventRow(env.DB, id);
       return responseJson({ event: await hydratedEvent(env.DB, updated!, member.id, elevated, memberPublicId) });

@@ -70,6 +70,7 @@ class EventAccessDatabase implements D1Database {
       bind: (...next: unknown[]) => { values = next; return statement; },
       first: async <T>() => {
         if (sql.includes("SELECT public_member_id FROM members")) return { public_member_id: "IRO0010" } as T;
+        if (sql.includes("SELECT display_name FROM members WHERE id = ?")) return { display_name: "主催者" } as T;
         if (sql.includes("SELECT id FROM members WHERE public_member_id")) return { id: 10 } as T;
         if (sql.includes("FROM events e JOIN members")) return db.row as T;
         if (sql.includes("FROM event_participations WHERE event_id = ? AND member_id = ?")) return db.participationStatus ? { status: db.participationStatus, payment_state: db.paymentState } as T : null;
@@ -79,6 +80,7 @@ class EventAccessDatabase implements D1Database {
         return null;
       },
       all: async <T>() => {
+        if (sql.includes("SELECT id, display_name, public_member_id FROM members")) return { results: [{ id: 21, display_name: "杏奈【GOLD会員】", public_member_id: "IRO0021" }] as T[] };
         if (sql.includes("FROM events e JOIN members")) return { results: [db.row] as T[] };
         if (sql.includes("FROM event_participations p JOIN members")) {
           return { results: db.participationStatus ? [{ event_id: db.row.id, member_id: 10, public_member_id: "IRO0010", status: db.participationStatus, payment_state: db.paymentState }] as T[] : [] };
@@ -103,7 +105,7 @@ class EventAccessDatabase implements D1Database {
         if (sql.includes("UPDATE event_participations SET status = 'cancel_requested'")) db.participationStatus = "cancel_requested";
         if (sql.includes("UPDATE event_participations SET status = 'cancelled'")) db.participationStatus = "cancelled";
         if (sql.includes("INTO in_app_notifications")) {
-          const type = sql.includes("'event_cancellation'") ? "event_cancellation" : sql.includes("'event_payment_ready'") ? "event_payment_ready" : "event_confirmed";
+          const type = sql.includes("'event_mention'") ? "event_mention" : sql.includes("'event_cancellation'") ? "event_cancellation" : sql.includes("'event_payment_ready'") ? "event_payment_ready" : "event_confirmed";
           db.notifications.push({ targetMemberId: Number(values[1]), type, eventId: String(values[4]) });
         }
         return { success: true };
@@ -137,6 +139,17 @@ describe("club event access", () => {
     expect(response?.status).toBe(200);
     expect(db.row.title).toBe("支部交流会 更新後");
     expect(JSON.parse(db.row.public_data_json).description).toBe("変更した内容");
+  });
+
+  it("creates an in-app notification for a newly added event description mention", async () => {
+    db.row = { ...db.row, organizer_member_id: 10, event_type: "official", club_id: null };
+    authenticatedRequestMember.mockResolvedValue({ id: 10, role: "admin", access_role: "admin" });
+    const response = await handleEventRequest(new Request(`https://app.example/api/events/${db.row.id}`, {
+      method: "PATCH",
+      body: JSON.stringify({ action: "edit", title: db.row.title, description: "@杏奈 ご確認ください", publicNotes: "@杏奈 ご確認ください", participants: [] }),
+    }), env);
+    expect(response?.status).toBe(200);
+    expect(db.notifications).toContainEqual({ targetMemberId: 21, type: "event_mention", eventId: db.row.id });
   });
 
   it("does not delete newly created events with テスト in their title when listing", async () => {

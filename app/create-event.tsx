@@ -1,6 +1,7 @@
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
-import { CURRENT_USER, DEFAULT_AVATAR, EVENTS, getRankFromPoints, type Event } from "@/constants/mock-data";
+import { CURRENT_USER, DEFAULT_AVATAR, EVENTS, MEMBERS, getRankFromPoints, type Event } from "@/constants/mock-data";
+import { MentionSuggestions } from "@/components/mention-ui";
 import { XpRewardPopup } from "@/components/xp-reward-popup";
 import type { XpReward } from "@/lib/xp-store";
 import { GOURMET_GENRES } from "@/constants/event-options";
@@ -21,6 +22,7 @@ import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
 import { recordHomeActivity } from "@/lib/home-activity-store";
 import * as Api from "@/lib/_core/api";
+import { getMentionQuery, insertMention } from "@/lib/mentions";
 
 const WEEKDAYS = ["日", "月", "火", "水", "木", "金", "土"];
 
@@ -175,6 +177,17 @@ export default function CreateEventScreen() {
   const [editLoading, setEditLoading] = useState(Boolean(editId && !initialEditingEvent));
   const [initialImageUri, setInitialImageUri] = useState(initialEditForm?.image ?? "");
   const extractedLocation = useMemo(() => extractEventLocation(address), [address]);
+  const eventMentionMembers = useMemo(() => memberDirectory.length > 0
+    ? memberDirectory.map((member) => ({
+      id: member.id,
+      name: member.displayName,
+      branch: member.branches.includes("kansai") ? "kansai" : "kanto",
+      generation: Number(member.memberTerm?.match(/\d+/)?.[0] ?? 0),
+      rank: member.memberRank,
+      role: member.accessRole === "admin" ? "admin" : member.accessRole === "operator" ? "operator" : "member",
+    })) as unknown as typeof MEMBERS
+    : MEMBERS, [memberDirectory]);
+  const publicNotesMentionQuery = getMentionQuery(publicNotes);
 
   useEffect(() => { void Api.getMemberDirectory().then(setMemberDirectory).catch(() => setMemberDirectory([])).finally(() => setMemberDirectoryLoading(false)); }, []);
 
@@ -320,7 +333,8 @@ export default function CreateEventScreen() {
         <FieldLabel>写真（任意）</FieldLabel><Pressable onPress={handlePickImage} style={{ height: 150, borderRadius: 14, overflow: "hidden", backgroundColor: colors.surface, borderWidth: 1, borderStyle: imageUri ? "solid" : "dashed", borderColor: colors.border, alignItems: "center", justifyContent: "center" }}>{imageUri ? <Image source={{ uri: imageUri }} style={{ width: "100%", height: "100%" }} contentFit="cover" /> : <><IconSymbol name="photo.fill" size={30} color={colors.muted} /><Text style={{ marginTop: 7, color: colors.muted, fontSize: 13 }}>写真を選択</Text></>}</Pressable>
         <FieldLabel>参加者決定の予定期日 *</FieldLabel><CalendarField label="参加者決定予定日" value={decisionDate} onChange={setDecisionDate} />
         <FieldLabel>キャンセルポリシー</FieldLabel><TextInput value={cancellationPolicy} onChangeText={setCancellationPolicy} multiline textAlignVertical="top" style={[inputStyle, { minHeight: 88 }]} />
-        <FieldLabel>自由記述欄</FieldLabel><TextInput value={publicNotes} onChangeText={setPublicNotes} placeholder="参加者に伝えたい内容" placeholderTextColor={colors.muted} multiline textAlignVertical="top" style={[inputStyle, { minHeight: 100 }]} />
+        <FieldLabel>自由記述欄</FieldLabel><TextInput value={publicNotes} onChangeText={setPublicNotes} placeholder="参加者に伝えたい内容。「@」でメンション" placeholderTextColor={colors.muted} multiline textAlignVertical="top" style={[inputStyle, { minHeight: 100 }]} />
+        {publicNotesMentionQuery !== null ? <MentionSuggestions query={publicNotesMentionQuery} groups={[]} members={eventMentionMembers} onSelect={(label) => setPublicNotes((value) => insertMention(value, label))} /> : null}
         <FieldLabel>自分用メモ</FieldLabel><TextInput value={privateMemo} onChangeText={setPrivateMemo} placeholder="他の人には公開されません" placeholderTextColor={colors.muted} multiline textAlignVertical="top" style={[inputStyle, { minHeight: 90 }]} />
         <View style={{ marginTop: 26, padding: 14, borderRadius: 14, backgroundColor: "#FFF8F0", borderWidth: 1, borderColor: "#EED9BF" }}><Text style={{ fontSize: 15, fontWeight: "900", color: colors.foreground, marginBottom: 10 }}>イベント開催時のルール</Text>{["イベントの日時・人数・場所などに誤りがないことを確認してください", "原則、参加者はIRO+メンバー限定としてください（やむをえず外部の方も参加される場合は、その旨を自由記述欄に記載してください）", "募集期日までに参加者を確定し、専用チャットにて参加確定連絡をお願いします"].map((rule) => <Text key={rule} style={{ fontSize: 12, lineHeight: 19, color: colors.foreground, marginBottom: 5 }}>・{rule}</Text>)}<Pressable onPress={() => setTermsAccepted((value) => !value)} style={{ flexDirection: "row", alignItems: "center", marginTop: 8 }}><View style={{ width: 24, height: 24, borderRadius: 6, backgroundColor: termsAccepted ? "#E8A0BF" : colors.surface, borderWidth: 1, borderColor: termsAccepted ? "#E8A0BF" : colors.border, alignItems: "center", justifyContent: "center" }}>{termsAccepted ? <IconSymbol name="checkmark" size={15} color="#FFF" /> : null}</View><Text style={{ flex: 1, marginLeft: 9, fontSize: 14, fontWeight: "800", color: colors.foreground }}>上記のルールを確認し、同意する <Text style={{ color: colors.error }}>必須</Text></Text></Pressable></View>
         {formError ? <Text accessibilityRole="alert" style={{ marginTop: 16, color: colors.error, fontSize: 13, fontWeight: "800" }}>{formError}</Text> : null}
