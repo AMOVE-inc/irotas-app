@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Event } from "../constants/mock-data";
-import { eventFormSaveFields, eventFormValuesFromEvent, hasOnlyCompanionChanges, minimumReservationCapacity, validateEventForm } from "../lib/event-form";
+import { EVENT_RANK_AMOUNT_OPTIONS, eventFormSaveFields, eventFormValuesFromEvent, hasOnlyCompanionChanges, minimumReservationCapacity, validateEventForm } from "../lib/event-form";
 
 const event: Event = {
   id: "event-1", title: "寿司会", restaurantName: "鮨いろた", description: "詳細", date: "2026-09-20", time: "19:00", location: "東京都渋谷区恵比寿1-1-1", image: "/api/event-images/event-1", capacity: 4, reservationCapacity: 6, attendees: 0, participants: [], companionIds: ["member-2"], price: "8,000円〜10,000円", priceMin: 8000, priceMax: 10000, genres: ["寿司"], category: "kanto", eventType: "gourmet", status: "open", createdBy: "member-1", applicationDeadline: "2026-09-18", cancellationPolicy: "キャンセル規約", selectionMethod: "first_come", tabelogUrl: "https://tabelog.com/example", googleMapsUrl: "https://maps.example.com", publicNotes: "公開メモ", privateMemo: "非公開メモ",
@@ -57,6 +57,17 @@ describe("event edit form values", () => {
     form.rankPrices = { regular: "14,000円", silver: "13,000円", gold: "12,000円", platinum: "11,000円" };
     expect(validateEventForm(form, { requireImage: false })).toBeNull();
     expect(eventFormSaveFields(form)).toMatchObject({ price: "11,000円〜14,000円", priceMin: 11000, priceMax: 14000 });
+  });
+
+  it("offers and enforces rank prices in 500 yen increments", () => {
+    expect(EVENT_RANK_AMOUNT_OPTIONS.slice(0, 3)).toEqual(["500円", "1,000円", "1,500円"]);
+    expect(EVENT_RANK_AMOUNT_OPTIONS.at(-1)).toBe("300,000円");
+    const form = eventFormValuesFromEvent({ ...event, eventType: "official" });
+    form.useRankPrices = true;
+    form.rankPrices = { regular: "4,500円", silver: "4,000円", gold: "3,500円", platinum: "3,000円" };
+    expect(validateEventForm(form, { requireImage: false })).toBeNull();
+    form.rankPrices.gold = "3,250円";
+    expect(validateEventForm(form, { requireImage: false })).toBe("ランク別料金は500円単位で設定してください");
   });
 
   it("round-trips an undecided budget", () => {

@@ -48,6 +48,14 @@ describe("production event validation", () => {
     expect(sanitizeEvent(validEvent({ applicationDeadline: "2026-09-21" }))).toBeNull();
   });
 
+  it("accepts only complete official rank prices in 500 yen increments", () => {
+    const rankPrices = { regular: "4,500円", silver: "4,000円", gold: "3,500円", platinum: "3,000円" };
+    expect(sanitizeEvent(validEvent({ eventType: "official", rankPrices }))).toMatchObject({ rankPrices });
+    expect(sanitizeEvent(validEvent({ eventType: "official", rankPrices: { ...rankPrices, gold: "3,250円" } }))).toBeNull();
+    expect(sanitizeEvent(validEvent({ eventType: "official", rankPrices: { regular: "4,500円" } }))).toBeNull();
+    expect(sanitizeEvent(validEvent({ eventType: "gourmet", rankPrices }))).toBeNull();
+  });
+
   it("keeps undecided and unlimited recruitment capacity distinct from a numeric limit", () => {
     for (const mode of ["undecided", "unlimited"] as const) {
       const accepted = sanitizeEvent(validEvent({ capacity: 0, capacityMode: mode }));

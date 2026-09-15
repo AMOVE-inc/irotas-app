@@ -14,6 +14,7 @@ export function eventCapacityLabel(event: Pick<Event, "capacity" | "capacityMode
   return event.capacityMode === "undecided" ? "未定" : event.capacityMode === "unlimited" ? "上限なし" : `${event.capacity}人`;
 }
 export const EVENT_AMOUNT_OPTIONS = Array.from({ length: 300 }, (_, index) => `${((index + 1) * 1000).toLocaleString()}円`);
+export const EVENT_RANK_AMOUNT_OPTIONS = Array.from({ length: 600 }, (_, index) => `${((index + 1) * 500).toLocaleString()}円`);
 export const EVENT_RANKS: MemberRank[] = ["regular", "silver", "gold", "platinum"];
 export const DEFAULT_CANCELLATION_POLICY = "1週間前より100%のキャンセル料が発生します。代理が見つかった場合はキャンセル料はかかりません";
 
@@ -151,6 +152,7 @@ export function validateEventForm(values: EventFormValues, options: { requireIma
   if (values.tabelogUrl && !/^https?:\/\//i.test(values.tabelogUrl)) return "食べログURLは http:// または https:// から入力してください";
   if (values.googleMapsUrl && !/^https?:\/\//i.test(values.googleMapsUrl)) return "GoogleマップURLは http:// または https:// から入力してください";
   if (values.eventType === "official" && values.useRankPrices && EVENT_RANKS.some((rank) => !values.rankPrices[rank])) return "ランク別料金を設定する場合は、すべてのランクの料金を選択してください";
+  if (values.eventType === "official" && values.useRankPrices && EVENT_RANKS.some((rank) => numericEventAmount(values.rankPrices[rank]) % 500 !== 0)) return "ランク別料金は500円単位で設定してください";
   return null;
 }
 

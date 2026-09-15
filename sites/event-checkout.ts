@@ -5,6 +5,7 @@ import { PUBLIC_APP_URL } from "../constants/external-links";
 const CHECKOUT_PATH = /^\/api\/events\/([^/]+)\/checkout$/;
 const ADMIN_PAYMENTS_PATH = "/api/admin/event-payments";
 const SQUARE_VERSION = "2026-08-19";
+let discoveredSquareLocationId: string | null = null;
 
 type CheckoutRow = {
   id: string;
@@ -37,6 +38,24 @@ export function eventCheckoutAmount(data: Record<string, unknown>, memberRank: s
   if (base === null || !Number.isInteger(base) || base < 0 || base > 300_000 ||
       !Number.isInteger(pointsUsed) || pointsUsed < 0 || pointsUsed > base) return null;
   return base - pointsUsed;
+}
+
+async function squareLocationId(env: SitesEnv) {
+  if (env.SQUARE_LOCATION_ID?.trim()) return env.SQUARE_LOCATION_ID.trim();
+  if (discoveredSquareLocationId) return discoveredSquareLocationId;
+  if (!env.SQUARE_ACCESS_TOKEN) return null;
+  let response: Response;
+  try {
+    response = await fetch("https://connect.squareup.com/v2/locations", {
+      headers: { authorization: `Bearer ${env.SQUARE_ACCESS_TOKEN}`, "square-version": SQUARE_VERSION },
+    });
+  } catch { return null; }
+  if (!response.ok) return null;
+  const result = await response.json().catch(() => ({})) as { locations?: Array<{ id?: string; status?: string; capabilities?: string[] }> };
+  const active = (result.locations ?? []).filter((location) => location.id && location.status !== "INACTIVE");
+  const paymentCapable = active.filter((location) => !location.capabilities || location.capabilities.includes("CREDIT_CARD_PROCESSING"));
+  discoveredSquareLocationId = paymentCapable[0]?.id ?? active[0]?.id ?? null;
+  return discoveredSquareLocationId;
 }
 
 export async function handleAdminEventPaymentsRequest(request: Request, env: SitesEnv): Promise<Response | null> {
@@ -131,8 +150,10 @@ export async function handleEventCheckoutRequest(request: Request, env: SitesEnv
   if (existing?.status === "ready" && existing.checkout_url)
     return json({ status: "ready", amountYen: amount, pointsUsed, checkoutUrl: existing.checkout_url });
   if (request.method === "GET") return json({ status: existing?.status ?? "unstarted", amountYen: amount, pointsUsed });
-  if (!env.SQUARE_ACCESS_TOKEN || !env.SQUARE_LOCATION_ID)
+  if (!env.SQUARE_ACCESS_TOKEN)
     return json({ error: "Square決済の設定が未完了です" }, 503);
+  const locationId = await squareLocationId(env);
+  if (!locationId) return json({ error: "Square決済店舗を確認できませんでした" }, 503);
 
   const now = new Date().toISOString();
   const itemName = `IRO+ ${event.title}`.slice(0, 255);
@@ -156,7 +177,7 @@ export async function handleEventCheckoutRequest(request: Request, env: SitesEnv
       headers: { authorization: `Bearer ${env.SQUARE_ACCESS_TOKEN}`, "square-version": SQUARE_VERSION, "content-type": "application/json" },
       body: JSON.stringify({
         idempotency_key: checkout.id,
-        quick_pay: { name: checkout.item_name, price_money: { amount: checkout.amount_yen, currency: "JPY" }, location_id: env.SQUARE_LOCATION_ID },
+        quick_pay: { name: checkout.item_name, price_money: { amount: checkout.amount_yen, currency: "JPY" }, location_id: locationId },
         checkout_options: { allow_tipping: false, ask_for_shipping_address: false, enable_coupon: false, enable_loyalty: false, redirect_url: returnUrl.toString() },
       }),
     });

@@ -137,6 +137,19 @@ describe("official event Square checkout foundation", () => {
     expect(fetcher).toHaveBeenCalledTimes(1);
   });
 
+  it("discovers an active Square location when the environment does not specify one", async () => {
+    const { db } = database();
+    const env = { DB: db, SQUARE_ACCESS_TOKEN: "different-test-token" } as SitesEnv;
+    const fetcher = vi.spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce(Response.json({ locations: [{ id: "auto-location", status: "ACTIVE", capabilities: ["CREDIT_CARD_PROCESSING"] }] }))
+      .mockResolvedValueOnce(Response.json({ payment_link: { id: "link-auto", order_id: "order-auto", url: "https://square.link/u/auto" } }));
+    const response = await handleEventCheckoutRequest(new Request(path, { method: "POST" }), env);
+    expect(response?.status).toBe(200);
+    expect(fetcher.mock.calls[0][0]).toBe("https://connect.squareup.com/v2/locations");
+    const sent = JSON.parse(String(fetcher.mock.calls[1][1]?.body)) as { quick_pay: { location_id: string } };
+    expect(sent.quick_pay.location_id).toBe("auto-location");
+  });
+
   it("keeps a completed payment visible after an event price edit", async () => {
     const { db, state } = database();
     state.checkout = { id: "checkout-1", event_id: "event-1", member_id: 7, item_name: "公式イベント", amount_yen: 4_000, points_used: 1_000, status: "paid", square_order_id: "order-1", checkout_url: "https://square.link/u/example" };

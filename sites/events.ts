@@ -241,6 +241,25 @@ function priceNumber(value: unknown) {
   return match ? Number(match[0]) : 0;
 }
 
+const EVENT_RANK_KEYS = ["regular", "silver", "gold", "platinum"] as const;
+
+function rankPrices(value: unknown): Record<(typeof EVENT_RANK_KEYS)[number], string> | Record<string, never> | null {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+  const input = value as Record<string, unknown>;
+  const populated = EVENT_RANK_KEYS.filter((rank) => input[rank] !== undefined && input[rank] !== "");
+  if (populated.length === 0) return {};
+  if (populated.length !== EVENT_RANK_KEYS.length || Object.keys(input).some((key) => !EVENT_RANK_KEYS.includes(key as (typeof EVENT_RANK_KEYS)[number]))) return null;
+  const result = {} as Record<(typeof EVENT_RANK_KEYS)[number], string>;
+  for (const rank of EVENT_RANK_KEYS) {
+    const normalized = String(input[rank]).normalize("NFKC").trim().replace(/,/g, "");
+    const match = normalized.match(/^¥?(\d+)円?$/);
+    const amount = match ? Number(match[1]) : 0;
+    if (!Number.isInteger(amount) || amount < 500 || amount > 300_000 || amount % 500 !== 0) return null;
+    result[rank] = `${amount.toLocaleString("ja-JP")}円`;
+  }
+  return result;
+}
+
 function stringArray(value: unknown, maximumItems: number, maximumLength = 80) {
   if (!Array.isArray(value) || value.length > maximumItems) return null;
   const result = value.map((item) => text(item, maximumLength, true));
@@ -270,7 +289,8 @@ export function sanitizeEvent(value: unknown) {
   if (!applicationDeadline || !/^\d{4}-\d{2}-\d{2}$/.test(applicationDeadline) || applicationDeadline > date) return null;
   const priceMin = number(input.priceMin, 0, 300_000);
   const priceMax = number(input.priceMax, 0, 300_000);
-  if (priceMin === null || priceMax === null || priceMin > priceMax) return null;
+  const normalizedRankPrices = input.rankPrices === undefined ? {} : rankPrices(input.rankPrices);
+  if (priceMin === null || priceMax === null || priceMin > priceMax || normalizedRankPrices === null || (eventType !== "official" && Object.keys(normalizedRankPrices).length > 0)) return null;
 
   return {
     eventType,
@@ -295,7 +315,7 @@ export function sanitizeEvent(value: unknown) {
     priceMin,
     priceMax,
     genres,
-    rankPrices: input.rankPrices && typeof input.rankPrices === "object" ? input.rankPrices : undefined,
+    rankPrices: normalizedRankPrices,
     category: ["all", "kanto", "kansai"].includes(String(input.category)) ? input.category : "all",
     status: "open" as const,
     recruitmentStatus: eventType === "official" && input.recruitmentStatus === "draft" ? "draft" as const : "open" as const,
@@ -1048,7 +1068,7 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
       const image = input.image === undefined ? undefined : text(input.image, 500, true);
       const genres = input.genres === undefined ? undefined : stringArray(input.genres, 20);
       const companionIds = input.companionIds === undefined ? undefined : stringArray(input.companionIds, 100, 40);
-      const rankPrices = input.rankPrices === undefined ? undefined : input.rankPrices && typeof input.rankPrices === "object" ? input.rankPrices : null;
+      const normalizedRankPrices = input.rankPrices === undefined ? undefined : rankPrices(input.rankPrices);
       const selectionMethod = input.selectionMethod === undefined ? undefined : input.selectionMethod === "lottery" ? "lottery" : input.selectionMethod === "first_come" ? "first_come" : null;
       const recruitmentStatus = input.recruitmentStatus === undefined ? undefined : input.recruitmentStatus === "draft" || input.recruitmentStatus === "open" ? input.recruitmentStatus : null;
       const recruitmentChannel = input.recruitmentChannel === undefined ? undefined : input.recruitmentChannel === "discord" || input.recruitmentChannel === "app" ? input.recruitmentChannel : null;
@@ -1057,9 +1077,10 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
       const tokyoArea = input.tokyoArea === undefined ? undefined : text(input.tokyoArea, 80);
       const publicNotes = input.publicNotes === undefined ? undefined : text(input.publicNotes, 5000);
       const privateMemo = input.privateMemo === undefined ? undefined : text(input.privateMemo, 5000);
-      if (!title || description === null || (date !== undefined && (typeof date !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(date))) || (time !== undefined && (typeof time !== "string" || !/^([01]\d|2[0-3]):(00|15|30|45)$/.test(time))) || location === null || capacity === null || capacityMode === false || (capacityMode && capacity !== undefined && capacity !== 0) || reservationCapacity === null || price === null || priceMin === null || priceMax === null || applicationDeadline === null || cancellationPolicy === null || tabelogUrl === null || googleMapsUrl === null || !eventType || clubId === null || restaurantName === null || (image !== undefined && (!image || !image.startsWith("/api/event-images/"))) || genres === null || companionIds === null || rankPrices === null || selectionMethod === null || recruitmentStatus === null || recruitmentChannel === null || category === null || prefecture === null || tokyoArea === null || publicNotes === null || privateMemo === null)
+      if (!title || description === null || (date !== undefined && (typeof date !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(date))) || (time !== undefined && (typeof time !== "string" || !/^([01]\d|2[0-3]):(00|15|30|45)$/.test(time))) || location === null || capacity === null || capacityMode === false || (capacityMode && capacity !== undefined && capacity !== 0) || reservationCapacity === null || price === null || priceMin === null || priceMax === null || applicationDeadline === null || cancellationPolicy === null || tabelogUrl === null || googleMapsUrl === null || !eventType || clubId === null || restaurantName === null || (image !== undefined && (!image || !image.startsWith("/api/event-images/"))) || genres === null || companionIds === null || normalizedRankPrices === null || selectionMethod === null || recruitmentStatus === null || recruitmentChannel === null || category === null || prefecture === null || tokyoArea === null || publicNotes === null || privateMemo === null)
         return responseJson({ error: "変更内容が不正です" }, 400);
       if (eventType === "official" && !elevated) return responseJson({ error: "公式イベントは運営メンバーのみ設定できます" }, 403);
+      if (eventType !== "official" && normalizedRankPrices && Object.keys(normalizedRankPrices).length > 0) return responseJson({ error: "ランク別料金は公式イベントのみ設定できます" }, 400);
       if (eventType === "club" && (!clubId || !await canMemberAccessClub(env.DB, clubId, member.id, admin))) return responseJson({ error: "所属している部活動のみ設定できます" }, 403);
       if (priceMin !== undefined && priceMax !== undefined && priceMin > priceMax) return responseJson({ error: "予算の範囲が不正です" }, 400);
       let data: Record<string, unknown> = {};
@@ -1082,7 +1103,7 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
       if (image !== undefined) data.image = image;
       if (genres !== undefined) data.genres = genres;
       if (companionIds !== undefined) data.companionIds = companionIds;
-      if (rankPrices !== undefined) data.rankPrices = rankPrices;
+      if (normalizedRankPrices !== undefined) data.rankPrices = normalizedRankPrices;
       if (selectionMethod !== undefined) data.selectionMethod = selectionMethod;
       if (eventType === "official" && recruitmentStatus !== undefined) data.recruitmentStatus = recruitmentStatus;
       if (recruitmentChannel !== undefined) data.recruitmentChannel = recruitmentChannel;

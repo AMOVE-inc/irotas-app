@@ -27,7 +27,7 @@ import { getDiscordAuthorById, getDiscordAuthorByName } from "@/lib/discord-auth
 import { findMentionedClub, findMentionedMemberId } from "@/lib/mention-targets";
 import { getConfirmedParticipantDisplayIds } from "@/lib/event-confirmed-participants";
 import { isEventOrganizer } from "@/lib/event-participation";
-import { EVENT_AMOUNT_OPTIONS, EVENT_CAPACITY_OPTIONS, EVENT_RESERVATION_CAPACITY_OPTIONS, EVENT_RANKS, EVENT_TIME_OPTIONS, eventCapacityLabel, eventCapacityOptionLabel, eventFormSaveFields, eventFormValuesFromEvent, hasOnlyCompanionChanges, minimumReservationCapacity, type EventFormValues, validateEventForm } from "@/lib/event-form";
+import { EVENT_AMOUNT_OPTIONS, EVENT_CAPACITY_OPTIONS, EVENT_RANK_AMOUNT_OPTIONS, EVENT_RESERVATION_CAPACITY_OPTIONS, EVENT_RANKS, EVENT_TIME_OPTIONS, eventCapacityLabel, eventCapacityOptionLabel, eventFormSaveFields, eventFormValuesFromEvent, hasOnlyCompanionChanges, minimumReservationCapacity, type EventFormValues, validateEventForm } from "@/lib/event-form";
 import { GOURMET_GENRES } from "@/constants/event-options";
 import { displayEventTitle } from "@/lib/event-title";
 import { Image } from "expo-image";
@@ -379,11 +379,14 @@ export default function EventDetailScreen() {
     const rankPrices = evt.rankPrices;
     return evt.eventType === "official" && Boolean(rankPrices && EVENT_RANKS.some((rank) => Boolean(rankPrices[rank])));
   };
+  const viewerRank = (["regular", "silver", "gold", "platinum"].includes(authUser?.memberRank ?? "")
+    ? authUser?.memberRank
+    : CURRENT_USER.rank) as MemberRank;
+  const viewerRankLabel = viewerRank === "regular" ? "レギュラー" : viewerRank === "silver" ? "シルバー" : viewerRank === "gold" ? "ゴールド" : "プラチナ";
   const getRankPrice = (evt: Event): string => {
     const fallbackPrice = evt.price ?? (typeof evt.priceMin === "number" ? `${evt.priceMin.toLocaleString()}円` : "未定");
     if (!eventHasRankPrices(evt)) return fallbackPrice;
-    const rank = (authUser?.memberRank ?? CURRENT_USER.rank) as "regular" | "silver" | "gold" | "platinum";
-    return evt.rankPrices?.[rank] ?? fallbackPrice;
+    return evt.rankPrices?.[viewerRank] ?? fallbackPrice;
   };
   const effectivePrice = getRankPrice(event);
   const hasRankPrices = eventHasRankPrices(event);
@@ -1175,10 +1178,10 @@ export default function EventDetailScreen() {
         >
           <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
             <View style={{ flex: 1 }}>
-              <Text style={{ fontSize: 15, fontWeight: "600", color: colors.foreground }}>{event.eventType === "gourmet" ? "予算" : "参加費"}</Text>
+              <Text style={{ fontSize: 15, fontWeight: "600", color: colors.foreground }}>{hasRankPrices ? "あなたの参加費" : event.eventType === "gourmet" ? "予算" : "参加費"}</Text>
               {hasRankPrices && (
                 <Text style={{ fontSize: 11, color: "#E8A0BF", marginTop: 2 }}>
-                  ランク別料金適用中（{CURRENT_USER.rank.toUpperCase()}）
+                  {viewerRankLabel}会員料金
                 </Text>
               )}
             </View>
@@ -1197,56 +1200,6 @@ export default function EventDetailScreen() {
               )}
             </View>
           </View>
-
-          {/* ランク別料金一覧 */}
-          {hasRankPrices && event.rankPrices && (
-            <View
-              style={{
-                marginTop: 12,
-                paddingTop: 12,
-                borderTopWidth: 0.5,
-                borderTopColor: colors.border,
-              }}
-            >
-              <Text style={{ fontSize: 12, fontWeight: "600", color: colors.muted, marginBottom: 8 }}>
-                ランク別料金
-              </Text>
-              <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6 }}>
-                {([
-                  { key: "regular", label: "レギュラー", color: "#8E8E93" },
-                  { key: "silver", label: "シルバー", color: "#8E8E93" },
-                  { key: "gold", label: "ゴールド", color: "#FF9500" },
-                  { key: "platinum", label: "プラチナ", color: "#A7C7E7" },
-                ] as const).map(({ key, label, color }) => {
-                  const rankPrice = event.rankPrices![key];
-                  if (!rankPrice) return null;
-                  const isCurrent = CURRENT_USER.rank === key;
-                  return (
-                    <View
-                      key={key}
-                      style={{
-                        flex: 1,
-                        minWidth: 70,
-                        backgroundColor: isCurrent ? `${color}20` : colors.background,
-                        borderRadius: 8,
-                        padding: 8,
-                        alignItems: "center",
-                        borderWidth: isCurrent ? 1.5 : 0.5,
-                        borderColor: isCurrent ? color : colors.border,
-                      }}
-                    >
-                      <Text style={{ fontSize: 10, color: isCurrent ? color : colors.muted, fontWeight: isCurrent ? "700" : "400" }}>
-                        {label}
-                      </Text>
-                      <Text style={{ fontSize: 13, fontWeight: "700", color: isCurrent ? color : colors.foreground, marginTop: 2 }}>
-                        {rankPrice}
-                      </Text>
-                    </View>
-                  );
-                })}
-              </View>
-            </View>
-          )}
 
           {/* イロタスポイント割引トグル */}
           {isOfficialEvent && priceNum > 0 && irotasPoints > 0 && !isJoined && (
@@ -1485,7 +1438,7 @@ export default function EventDetailScreen() {
               <Text style={{ marginTop: 12, fontSize: 12, fontWeight: "800", color: colors.muted }}>{adminEventType === "official" ? "参加費" : "予算"}</Text>
               <Pressable onPress={() => { const next = adminBudgetMin !== "未定"; setAdminFixedAmount(false); setAdminBudgetMin(next ? "未定" : ""); setAdminBudgetMax(next ? "未定" : ""); }} style={{ marginTop: 6 }}><Text style={{ color: adminBudgetMin === "未定" ? "#D65E8D" : colors.foreground, fontWeight: "800" }}>{adminBudgetMin === "未定" ? "✓ " : "□ "}未定</Text></Pressable>
               {adminBudgetMin !== "未定" ? <><Pressable onPress={() => { setAdminFixedAmount((value) => !value); setAdminBudgetMin(""); setAdminBudgetMax(""); }} style={{ marginTop: 6 }}><Text style={{ color: "#D65E8D", fontWeight: "800" }}>{adminFixedAmount ? "✓ 固定金額で設定" : "範囲で設定"}</Text></Pressable>{adminFixedAmount ? <TextInput value={adminBudgetMin} onChangeText={(value) => setAdminBudgetMin(value.replace(/[^0-9]/g, ""))} placeholder="例：8000" keyboardType="number-pad" style={{ marginTop: 6, borderWidth: 1, borderColor: colors.border, borderRadius: 10, padding: 11, color: colors.foreground }} /> : <View style={{ gap: 8, marginTop: 6 }}><SharedEventSelectField label="予算下限" value={adminBudgetMin} options={EVENT_AMOUNT_OPTIONS} onChange={setAdminBudgetMin} /><SharedEventSelectField label="予算上限" value={adminBudgetMax} options={EVENT_AMOUNT_OPTIONS} onChange={setAdminBudgetMax} /></View>}</> : null}
-              {adminEventType === "official" ? <><Pressable onPress={() => setAdminUseRankPrices((value) => !value)} style={{ marginTop: 12 }}><Text style={{ color: "#D65E8D", fontWeight: "800" }}>{adminUseRankPrices ? "✓ ランク別料金を設定" : "ランク別料金を設定する"}</Text></Pressable>{adminUseRankPrices ? EVENT_RANKS.map((rank) => <View key={rank}><Text style={{ marginTop: 8, fontSize: 12, color: colors.muted }}>{rank}</Text><SharedEventSelectField label={`${rank}料金`} value={adminRankPrices[rank]} options={EVENT_AMOUNT_OPTIONS} onChange={(value) => setAdminRankPrices((current) => ({ ...current, [rank]: value }))} /></View>) : null}</> : null}
+              {adminEventType === "official" ? <><Pressable onPress={() => setAdminUseRankPrices((value) => !value)} style={{ marginTop: 12 }}><Text style={{ color: "#D65E8D", fontWeight: "800" }}>{adminUseRankPrices ? "✓ ランク別料金を設定" : "ランク別料金を設定する"}</Text></Pressable>{adminUseRankPrices ? <><Text style={{ marginTop: 7, fontSize: 11, color: colors.muted }}>500円単位で設定できます</Text>{EVENT_RANKS.map((rank) => <View key={rank}><Text style={{ marginTop: 8, fontSize: 12, color: colors.muted }}>{rank}</Text><SharedEventSelectField label={`${rank}料金`} value={adminRankPrices[rank]} options={EVENT_RANK_AMOUNT_OPTIONS} onChange={(value) => setAdminRankPrices((current) => ({ ...current, [rank]: value }))} /></View>)}</> : null}</> : null}
               <EventMemberPicker label="同席者" selectedIds={adminCompanionIds} onChange={(ids) => { setAdminCompanionIds(ids); setAdminReservationCapacity((current) => String(Math.max(Number(current || 0), minimumReservationCapacity(adminCapacity, ids)))); }} members={memberDirectory} excludedIds={[organizerId]} />
               <Text style={{ marginTop: 12, fontSize: 12, fontWeight: "800", color: colors.muted }}>写真</Text><Pressable onPress={async () => { const permission = await ImagePicker.requestMediaLibraryPermissionsAsync(); if (!permission.granted) { Alert.alert("権限が必要です", "写真を選ぶには写真ライブラリへのアクセスを許可してください"); return; } const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images, quality: 0.8 }); if (!result.canceled && result.assets[0]) { setAdminImage(result.assets[0].uri); setAdminImageChanged(true); } }} style={{ marginTop: 5, height: 120, borderRadius: 10, overflow: "hidden", backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, alignItems: "center", justifyContent: "center" }}>{adminImage ? <Image source={{ uri: adminImage }} style={{ width: "100%", height: "100%" }} contentFit="cover" /> : <Text style={{ color: colors.muted }}>写真を選択</Text>}</Pressable>
               <Text style={{ marginTop: 12, fontSize: 12, fontWeight: "800", color: colors.muted }}>自由記述欄</Text><TextInput value={adminPublicNotes} onChangeText={setAdminPublicNotes} multiline style={{ marginTop: 5, minHeight: 100, borderWidth: 1, borderColor: colors.border, borderRadius: 10, padding: 11, color: colors.foreground, textAlignVertical: "top" }} />
