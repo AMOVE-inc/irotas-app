@@ -8,11 +8,12 @@ const MAX_ROWS = 50;
 
 type SourceRow = { discordUserId: string; discordUsername: string; displayName: string; memberTerm: string; birthDates: string[] };
 type Candidate = { id: number; public_member_id: string | null; display_name: string; member_term: string | null; profile_json: string | null };
-type MatchMethod = "name_term_birth_date" | "term_birth_date" | "name_term_missing_birth_date";
+type MatchMethod = "name_birth_date" | "unique_birth_date" | "name_term_missing_birth_date" | "name_missing_profile_fields";
 type Match = { row: SourceRow; candidate: Candidate; method: MatchMethod };
 
 const json = (body: unknown, status = 200) => Response.json(body, { status, headers: { "cache-control": "private, no-store" } });
 const normalized = (value: string) => value.normalize("NFKC").trim().replace(/[\s\u3000]+/g, "").toLocaleLowerCase("ja-JP");
+const termNumber = (value: string | null) => value?.match(/\d+/)?.[0] ?? null;
 
 function birthDateOf(candidate: Candidate): string | null {
   try {
@@ -48,23 +49,31 @@ export function validateDiscordIdentityLink(input: unknown): SourceRow[] {
 
 export function matchDiscordIdentities(rows: SourceRow[], candidates: Candidate[]) {
   const matched: Match[] = [];
-  const unresolved: { discordUsername: string; reason: "not_found" | "ambiguous"; candidateCount: number }[] = [];
+  const unresolved: { discordUsername: string; reason: "not_found" | "ambiguous"; candidateCount: number;
+    nameCandidateCount: number; birthDateCandidateCount: number; termCandidateCount: number }[] = [];
   const claimedMemberIds = new Set<number>();
   for (const row of rows) {
-    const termCandidates = candidates.filter((candidate) => candidate.member_term === row.memberTerm && !claimedMemberIds.has(candidate.id));
-    const sameName = termCandidates.filter((candidate) => normalized(candidate.display_name) === normalized(row.displayName));
-    const sameBirthDate = termCandidates.filter((candidate) => { const birthDate = birthDateOf(candidate); return birthDate !== null && row.birthDates.includes(birthDate); });
+    const available = candidates.filter((candidate) => !claimedMemberIds.has(candidate.id));
+    const termCandidates = available.filter((candidate) => termNumber(candidate.member_term) === termNumber(row.memberTerm));
+    const sameName = available.filter((candidate) => normalized(candidate.display_name) === normalized(row.displayName));
+    const sameBirthDate = available.filter((candidate) => { const birthDate = birthDateOf(candidate); return birthDate !== null && row.birthDates.includes(birthDate); });
     const strict = sameName.filter((candidate) => sameBirthDate.some((birthCandidate) => birthCandidate.id === candidate.id));
     let selected: Candidate[] = [];
     let method: MatchMethod | null = null;
-    if (strict.length === 1) { selected = strict; method = "name_term_birth_date"; }
-    else if (strict.length === 0 && sameBirthDate.length === 1) { selected = sameBirthDate; method = "term_birth_date"; }
+    if (strict.length === 1) { selected = strict; method = "name_birth_date"; }
+    else if (strict.length === 0 && sameBirthDate.length === 1) { selected = sameBirthDate; method = "unique_birth_date"; }
     else if (strict.length === 0 && sameBirthDate.length === 0) {
-      selected = sameName.filter((candidate) => birthDateOf(candidate) === null);
+      const nameWithoutBirthDate = sameName.filter((candidate) => birthDateOf(candidate) === null);
+      selected = nameWithoutBirthDate.filter((candidate) => termNumber(candidate.member_term) === termNumber(row.memberTerm));
       if (selected.length === 1) method = "name_term_missing_birth_date";
+      else if (selected.length === 0) {
+        selected = nameWithoutBirthDate.filter((candidate) => termNumber(candidate.member_term) === null);
+        if (selected.length === 1) method = "name_missing_profile_fields";
+      }
     } else selected = strict;
     if (selected.length !== 1 || !method) {
-      unresolved.push({ discordUsername: row.discordUsername, reason: selected.length > 1 ? "ambiguous" : "not_found", candidateCount: selected.length });
+      unresolved.push({ discordUsername: row.discordUsername, reason: selected.length > 1 ? "ambiguous" : "not_found", candidateCount: selected.length,
+        nameCandidateCount: sameName.length, birthDateCandidateCount: sameBirthDate.length, termCandidateCount: termCandidates.length });
       continue;
     }
     claimedMemberIds.add(selected[0].id);
