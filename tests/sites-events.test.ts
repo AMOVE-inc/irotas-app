@@ -49,6 +49,7 @@ describe("production event validation", () => {
       { id: 3, display_name: "きょういち", public_member_id: "IRO0003" },
     ];
     expect(eventMentionRecipientIds("@きょういち", "", members, 1)).toEqual([]);
+    expect(eventMentionRecipientIds("@きょういち（IRO0003）", "", members, 1)).toEqual([3]);
     expect(eventMentionRecipientIds("@IRO0003", "", members, 1)).toEqual([3]);
   });
 

@@ -250,6 +250,11 @@ export function eventMentionRecipientIds(
   actorMemberId: number,
 ) {
   const aliases = new Map<string, Set<number>>();
+  const identityMentions = (value: string) => new Set(members.filter((member) => {
+    if (member.id === actorMemberId || !member.public_member_id) return false;
+    const escaped = member.public_member_id.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    return new RegExp(`@[^\\r\\n@]{1,80}（${escaped}）(?=$|[\\s、。！？!?.,，．:：;；)）\\]｝}])`, "u").test(value);
+  }).map((member) => member.id));
   for (const member of members) {
     if (member.id === actorMemberId) continue;
     const labels = new Set([member.public_member_id ?? "", member.display_name, eventMentionDisplayName(member.display_name)]
@@ -265,6 +270,8 @@ export function eventMentionRecipientIds(
   };
   const current = resolve(content);
   const previous = resolve(previousContent);
+  for (const id of identityMentions(content)) current.add(id);
+  for (const id of identityMentions(previousContent)) previous.add(id);
   return [...current].filter((id) => !previous.has(id));
 }
 

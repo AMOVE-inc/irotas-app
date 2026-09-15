@@ -54,10 +54,11 @@ export function getMentionQuery(text: string): string | null {
   return /[\r\n]/.test(query) || query.length > 80 ? null : query;
 }
 
-export function insertMention(text: string, label: string): string {
+export function insertMention(text: string, label: string, memberId?: string): string {
   const atIndex = text.lastIndexOf("@");
-  if (atIndex < 0) return `${text}@${label} `;
-  return `${text.slice(0, atIndex)}@${label} `;
+  const mention = `@${label}${memberId ? `（${memberId}）` : ""} `;
+  if (atIndex < 0) return `${text}${mention}`;
+  return `${text.slice(0, atIndex)}${mention}`;
 }
 
 export function extractMentionLabels(content: string): string[] {
