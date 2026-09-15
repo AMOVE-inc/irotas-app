@@ -19,6 +19,7 @@ import { handleMemberHistoryImportRequest } from "./member-history-import";
 import { handleDiscordProfileImportRequest } from "./discord-profile-import";
 import { handleClubRequest } from "./clubs";
 import { handleDiscordClubImportRequest } from "./discord-club-import";
+import { handleDiscordIdentityLinkRequest } from "./discord-identity-link";
 import { handleNotificationRequest } from "./notifications";
 import { handleBoardArchiveRequest } from "./board-archive";
 import { handleImportedMediaRequest } from "./imported-media";
@@ -306,6 +307,8 @@ async function routeRequest(
   if (discordProfileImportResponse) return discordProfileImportResponse;
   const discordClubImportResponse = await handleDiscordClubImportRequest(request, env);
   if (discordClubImportResponse) return discordClubImportResponse;
+  const discordIdentityLinkResponse = await handleDiscordIdentityLinkRequest(request, env);
+  if (discordIdentityLinkResponse) return discordIdentityLinkResponse;
   const mee6LevelsResponse = await handleMee6LevelsRequest(request, env);
   if (mee6LevelsResponse) return mee6LevelsResponse;
   const memberDirectoryResponse = await handleMemberDirectoryRequest(request, env);

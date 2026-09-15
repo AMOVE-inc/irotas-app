@@ -174,6 +174,9 @@ export default function AdminDashboardScreen() {
   const [discordClubImporting, setDiscordClubImporting] = useState(false);
   const [discordClubPayload, setDiscordClubPayload] = useState<string | null>(null);
   const [discordClubPreview, setDiscordClubPreview] = useState<string | null>(null);
+  const [discordIdentityImporting, setDiscordIdentityImporting] = useState(false);
+  const [discordIdentityPayload, setDiscordIdentityPayload] = useState<string | null>(null);
+  const [discordIdentityPreview, setDiscordIdentityPreview] = useState<string | null>(null);
   const [mee6Members, setMee6Members] = useState<{ memberId: string; displayName: string; discordLinked: boolean; mee6Level: number | null; currentLevel: number; importedAt: string | null }[]>([]);
   const [mee6Loading, setMee6Loading] = useState(false);
   const [mee6Importing, setMee6Importing] = useState(false);
@@ -831,6 +834,48 @@ export default function AdminDashboardScreen() {
               } catch (error) { Alert.alert("反映エラー", error instanceof Error ? error.message : "もう一度お試しください"); }
               finally { setDiscordClubImporting(false); }
             }} style={{ minHeight: 48, borderRadius: 12, backgroundColor: discordClubImporting ? colors.border : "#237A3B", alignItems: "center", justifyContent: "center", marginTop: 10 }}><Text style={{ color: "#FFF", fontWeight: "800" }}>所属情報を保管・復元</Text></Pressable> : null}
+          </View>
+        )}
+        {activeTab === "overview" && (
+          <View style={{ backgroundColor: colors.surface, borderRadius: 14, borderWidth: 1, borderColor: colors.border, padding: 16, marginBottom: 14 }}>
+            <Text style={{ fontSize: 16, fontWeight: "800", color: colors.foreground }}>未連携Discord本人の照合</Text>
+            <Text style={{ fontSize: 12, lineHeight: 19, color: colors.muted, marginTop: 6 }}>部活申請フォームの表示名・会員期・生年月日を本番会員プロフィールと照合します。1名に確定できない行がある場合は反映しません。</Text>
+            {discordIdentityPreview ? <Text style={{ fontSize: 12, lineHeight: 19, color: colors.foreground, marginTop: 10 }}>{discordIdentityPreview}</Text> : null}
+            <Pressable disabled={discordIdentityImporting} onPress={async () => {
+              setDiscordIdentityImporting(true); setDiscordIdentityPayload(null); setDiscordIdentityPreview(null);
+              try {
+                const selected = await selectJsonFile("Discord本人照合JSON");
+                const payload = JSON.stringify(JSON.parse(selected.text));
+                const response = await fetch("/api/admin/discord-identity-link/preview", { method: "POST", headers: { "content-type": "application/json" }, body: payload });
+                const result = await response.json() as { error?: string; requestedCount?: number; matchedCount?: number;
+                  matches?: { discordUsername: string; memberDisplayName: string; memberId: string }[];
+                  unresolved?: { discordUsername: string; reason: string }[] };
+                if (!response.ok) throw new Error(result.error ?? "本人照合に失敗しました");
+                const matched = result.matches?.map((item) => `${item.discordUsername} → ${item.memberDisplayName}（${item.memberId}）`).join("\n") ?? "";
+                const unresolved = result.unresolved?.map((item) => `${item.discordUsername}（${item.reason === "ambiguous" ? "候補が複数" : "一致なし"}）`).join("、") ?? "";
+                setDiscordIdentityPayload((result.matchedCount ?? 0) === (result.requestedCount ?? -1) ? payload : null);
+                setDiscordIdentityPreview(`対象 ${result.requestedCount ?? 0}名／一意に一致 ${result.matchedCount ?? 0}名${matched ? `\n${matched}` : ""}${unresolved ? `\n未確定: ${unresolved}` : ""}`);
+              } catch (error) {
+                if (error instanceof SyntaxError) Alert.alert("読込エラー", "JSONファイルの形式を確認してください。");
+                else if (error instanceof Error && error.message !== "ファイルが選択されませんでした") Alert.alert("照合エラー", error.message);
+              } finally { setDiscordIdentityImporting(false); }
+            }} style={{ minHeight: 48, borderRadius: 12, backgroundColor: discordIdentityImporting ? colors.border : "#5865F2", alignItems: "center", justifyContent: "center", marginTop: 14 }}>
+              <Text style={{ color: "#FFF", fontWeight: "800" }}>{discordIdentityImporting ? "照合中…" : "本人照合JSONを選択"}</Text>
+            </Pressable>
+            {discordIdentityPayload ? <Pressable disabled={discordIdentityImporting} onPress={async () => {
+              setDiscordIdentityImporting(true);
+              try {
+                const response = await fetch("/api/admin/discord-identity-link/commit", { method: "POST", headers: { "content-type": "application/json" }, body: discordIdentityPayload });
+                const result = await response.json() as { error?: string; linkedCount?: number; membershipsInserted?: number };
+                if (!response.ok) throw new Error(result.error ?? "本人連携に失敗しました");
+                const summary = `Discord本人連携 ${result.linkedCount ?? 0}名／部活所属の追加 ${result.membershipsInserted ?? 0}件`;
+                setDiscordIdentityPreview(summary); setDiscordIdentityPayload(null);
+                await refreshClubs(); await loadMembershipSummary(); Alert.alert("本人連携が完了しました", summary);
+              } catch (error) { Alert.alert("反映エラー", error instanceof Error ? error.message : "もう一度お試しください"); }
+              finally { setDiscordIdentityImporting(false); }
+            }} style={{ minHeight: 48, borderRadius: 12, backgroundColor: discordIdentityImporting ? colors.border : "#237A3B", alignItems: "center", justifyContent: "center", marginTop: 10 }}>
+              <Text style={{ color: "#FFF", fontWeight: "800" }}>8名の本人連携を確定</Text>
+            </Pressable> : null}
           </View>
         )}
         {activeTab === "overview" && (
