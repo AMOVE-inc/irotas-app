@@ -96,7 +96,11 @@ describe("board category ordering", () => {
     const boardScreen = readFileSync(resolve(process.cwd(), "app/(tabs)/board.tsx"), "utf8");
     const profileScreen = readFileSync(resolve(process.cwd(), "app/member-profile.tsx"), "utf8");
     expect(boardScreen).toContain('returnToBoardThread: "1", boardCategory: thread.category, boardThreadId: thread.id');
+    expect(boardScreen).toContain('onOpenMemberProfile(profileParams(thread.author.id, thread.author.name))');
+    expect(boardScreen).toContain('returnToTimeline={fromHome === "1"}');
+    expect(boardScreen).toContain('setSelectedThread(null);');
     expect(profileScreen).toContain('returnToBoardThread === "1" && boardCategory && boardThreadId');
     expect(profileScreen).toContain('thread: boardThreadId');
+    expect(profileScreen).toContain('returnToTimeline === "1" ? { fromHome: "1" }');
   });
 });
