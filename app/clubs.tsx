@@ -676,6 +676,7 @@ function SelectMembersForChatModal({
 
 function ApplicationReviewDetails({ clubId, memberId, application }: { clubId: string; memberId: string; application?: ClubApplication }) {
   const colors = useColors();
+  const router = useRouter();
   const fallbackMember = getMemberById(memberId);
   const [review, setReview] = useState<Api.ClubApplicantReview | null>(null);
   const [loaded, setLoaded] = useState(Boolean(fallbackMember));
@@ -706,20 +707,23 @@ function ApplicationReviewDetails({ clubId, memberId, application }: { clubId: s
   const eventHistory = review?.eventHistory ?? fallbackHistory;
   const wantsToDo = review?.wantsToDo ?? application?.wantsToDo ?? "申請内容の詳細はありません";
   const messageToLeader = review?.messageToLeader ?? application?.messageToLeader ?? "メッセージはありません";
-  const joinedYear = new Date(review?.joinedAt ?? fallbackMember?.joinedAt ?? "").getFullYear();
+  const joinedDate = new Date(review?.joinedAt ?? fallbackMember?.joinedAt ?? "");
+  const joinedLabel = Number.isFinite(joinedDate.getTime()) ? `入会 ${joinedDate.getFullYear()}年${joinedDate.getMonth() + 1}月` : null;
   const rankLabel = RANK_LABELS[rank as keyof typeof RANK_LABELS] ?? rank;
+  const profileAvatar = typeof profile.avatarUrl === "string" && profile.avatarUrl ? { uri: profile.avatarUrl } : fallbackMember?.avatar ?? DEFAULT_AVATAR;
+  const openApplicantProfile = () => router.push({ pathname: "/member-profile", params: { id: memberId, legacyName: displayName, legacyAvatar: typeof profile.avatarUrl === "string" ? profile.avatarUrl : "", returnToClubManagement: "1", clubId } });
 
   return (
     <View style={{ backgroundColor: colors.background, borderRadius: 12, padding: 12, marginBottom: 10, gap: 10 }}>
-      <View style={{ flexDirection: "row", alignItems: "center" }}>
-        <Image source={fallbackMember?.avatar ?? DEFAULT_AVATAR} style={{ width: 38, height: 38, borderRadius: 19 }} contentFit="cover" />
+      <Pressable onPress={openApplicantProfile} accessibilityLabel={`${displayName}のプロフィールを開く`} style={{ flexDirection: "row", alignItems: "center" }}>
+        <Image source={profileAvatar} style={{ width: 38, height: 38, borderRadius: 19 }} contentFit="cover" />
         <View style={{ marginLeft: 10, flex: 1 }}>
           <Text style={{ fontSize: 14, fontWeight: "800", color: colors.foreground }}>{displayName}</Text>
           <Text style={{ fontSize: 11, color: colors.muted }}>会員ID {memberId}</Text>
         </View>
-      </View>
+      </Pressable>
       <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6 }}>
-        {[memberTerm, ...branches.map((branch) => branch === "kanto" ? "関東支部" : branch === "kansai" ? "関西支部" : branch), rankLabel, Number.isFinite(joinedYear) ? `入会 ${joinedYear}年` : null].filter((label): label is string => Boolean(label)).map((label) => (
+        {[memberTerm, ...branches.map((branch) => branch === "kanto" ? "関東支部" : branch === "kansai" ? "関西支部" : branch), rankLabel, joinedLabel].filter((label): label is string => Boolean(label)).map((label) => (
           <View key={label} style={{ backgroundColor: colors.surface, borderRadius: 8, paddingHorizontal: 8, paddingVertical: 4 }}>
             <Text style={{ fontSize: 11, fontWeight: "600", color: colors.foreground }}>{label}</Text>
           </View>

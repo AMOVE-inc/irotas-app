@@ -1192,7 +1192,7 @@ export async function getEvent(eventId: string) {
   return result.event;
 }
 
-export type SharedEventComment = { id: string; author: string; authorId?: string; text: string; createdAt: string; canEdit: boolean };
+export type SharedEventComment = { id: string; author: string; authorId?: string; text: string; createdAt: string; canEdit: boolean; reactions: Record<string, string[]> };
 
 export async function getEventComments(eventId: string) {
   const result = await apiCall<{ comments: SharedEventComment[] }>(`/api/events/${encodeURIComponent(eventId)}/comments`);
@@ -1215,6 +1215,12 @@ export async function updateEventComment(eventId: string, commentId: string, tex
 
 export async function deleteEventComment(eventId: string, commentId: string) {
   return apiCall<{ success: true }>(`/api/events/${encodeURIComponent(eventId)}/comments/${encodeURIComponent(commentId)}`, { method: "DELETE" });
+}
+
+export async function setEventCommentReaction(eventId: string, commentId: string, emoji: string, active: boolean) {
+  return apiCall<{ reactions: Record<string, string[]> }>(`/api/events/${encodeURIComponent(eventId)}/comments/${encodeURIComponent(commentId)}/reactions`, {
+    method: active ? "PUT" : "DELETE", body: JSON.stringify({ emoji }),
+  });
 }
 
 export async function saveEventFeedback(input: { eventId: string; overallRating: number; foodRating: number; venueRating: number; communityRating: number; wouldAttendAgain: boolean; goodTags: string[]; improvementTags: string[]; comment: string }) {

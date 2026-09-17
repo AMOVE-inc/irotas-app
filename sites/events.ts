@@ -13,6 +13,7 @@ const EVENTS_ENDPOINT = "/api/events";
 const EVENT_PATH = /^\/api\/events\/([^/]+)$/;
 const EVENT_COMMENTS_PATH = /^\/api\/events\/([^/]+)\/comments$/;
 const EVENT_COMMENT_PATH = /^\/api\/events\/([^/]+)\/comments\/([^/]+)$/;
+const EVENT_COMMENT_REACTION_PATH = /^\/api\/events\/([^/]+)\/comments\/([^/]+)\/reactions$/;
 const EVENT_FAVORITE_PATH = /^\/api\/events\/([^/]+)\/favorite$/;
 const EVENT_APPLICATION_PATH = /^\/api\/events\/([^/]+)\/applications$/;
 const EVENT_FINALIZE_PATH = /^\/api\/events\/([^/]+)\/finalize$/;
@@ -104,6 +105,7 @@ function importedEventComments(row: EventRow): ImportedEventComment[] {
 export function mergeEventComments(
   imported: ImportedEventComment[], stored: StoredEventComment[],
   viewer: { memberId: number; publicId: string; discordUserId: string | null; elevated: boolean },
+  reactions: Record<string, Record<string, string[]>> = {},
 ) {
   const overrides = new Map(stored.map((comment) => [comment.id, comment]));
   const importedIds = new Set(imported.map((comment) => comment.id));
@@ -124,6 +126,7 @@ export function mergeEventComments(
         id: comment.id, author: override?.author_name ?? comment.author,
         authorId: override?.author_public_id ?? comment.authorId,
         text: override?.content ?? comment.text, createdAt: comment.createdAt,
+        reactions: reactions[comment.id] ?? {},
         canEdit: viewer.elevated || Boolean(comment.authorId && (
           comment.authorId === viewer.publicId || (viewer.discordUserId && comment.authorId === `discord-${viewer.discordUserId}`)
         )),
@@ -132,6 +135,7 @@ export function mergeEventComments(
     ...stored.filter((comment) => !importedIds.has(comment.id) && !comment.deleted_at).map((comment) => ({
       id: comment.id, author: comment.author_name, authorId: comment.author_public_id ?? undefined,
       text: comment.content, createdAt: comment.created_at,
+      reactions: reactions[comment.id] ?? {},
       canEdit: viewer.elevated || comment.author_member_id === viewer.memberId,
     })),
   ].sort((a, b) => a.createdAt.localeCompare(b.createdAt) || a.id.localeCompare(b.id));
@@ -872,6 +876,7 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
   const eventMatch = EVENT_PATH.exec(pathname);
   const commentsMatch = EVENT_COMMENTS_PATH.exec(pathname);
   const commentMatch = EVENT_COMMENT_PATH.exec(pathname);
+  const commentReactionMatch = EVENT_COMMENT_REACTION_PATH.exec(pathname);
   const favoriteMatch = EVENT_FAVORITE_PATH.exec(pathname);
   const applicationMatch = EVENT_APPLICATION_PATH.exec(pathname);
   const finalizeMatch = EVENT_FINALIZE_PATH.exec(pathname);
@@ -881,7 +886,7 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
   const imageMatch = EVENT_IMAGE_PATH.exec(pathname);
   const attendanceMatch = EVENT_ATTENDANCE_PATH.exec(pathname);
   const cancellationPreviewMatch = EVENT_CANCELLATION_PREVIEW_PATH.exec(pathname);
-  if (pathname !== EVENTS_ENDPOINT && !eventMatch && !commentsMatch && !commentMatch && !favoriteMatch && !applicationMatch && !finalizeMatch && !participantMatch && !cancellationMatch && !cancellationReviewMatch && !attendanceMatch && !cancellationPreviewMatch && !imageMatch && pathname !== "/api/event-images") return null;
+  if (pathname !== EVENTS_ENDPOINT && !eventMatch && !commentsMatch && !commentMatch && !commentReactionMatch && !favoriteMatch && !applicationMatch && !finalizeMatch && !participantMatch && !cancellationMatch && !cancellationReviewMatch && !attendanceMatch && !cancellationPreviewMatch && !imageMatch && pathname !== "/api/event-images") return null;
   if (!env.DB) return responseJson({ error: "データベースに接続できません" }, 503);
   const member = await authenticatedRequestMember(request, env);
   if (!member) return responseJson({ error: "ログインが必要です" }, 401);
@@ -981,8 +986,8 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
     }
     return responseJson({ event: await hydratedEvent(env.DB, row, member.id, elevated, memberPublicId) });
   }
-  if (commentsMatch || commentMatch) {
-    const id = decodeURIComponent((commentsMatch ?? commentMatch)![1]);
+  if (commentsMatch || commentMatch || commentReactionMatch) {
+    const id = decodeURIComponent((commentsMatch ?? commentMatch ?? commentReactionMatch)![1]);
     if (DELETED_EVENT_IDS.has(id) || await isDeletedImportedEvent(env.DB, id)) return responseJson({ error: "イベントが見つかりません" }, 404);
     const row = await eventRow(env.DB, id) ?? await materializeImportedEvent(env.DB, id);
     if (!row) return responseJson({ error: "イベントが見つかりません" }, 404);
@@ -997,9 +1002,18 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
     if (commentsMatch && request.method === "GET") {
       const result = await env.DB.prepare("SELECT id, event_id, author_member_id, author_name, author_public_id, content, created_at, deleted_at FROM event_comments WHERE event_id = ? ORDER BY created_at, id")
         .bind(id).all<StoredEventComment>();
+      const reactionResult = await env.DB.prepare(`SELECT r.comment_id, r.emoji, m.public_member_id
+        FROM event_comment_reactions r JOIN members m ON m.id = r.member_id
+        WHERE r.event_id = ? ORDER BY r.created_at`).bind(id).all<{ comment_id: string; emoji: string; public_member_id: string }>();
+      const reactions: Record<string, Record<string, string[]>> = {};
+      for (const reaction of reactionResult.results ?? []) {
+        const commentReactions = reactions[reaction.comment_id] ?? (reactions[reaction.comment_id] = {});
+        const memberIds = commentReactions[reaction.emoji] ?? (commentReactions[reaction.emoji] = []);
+        if (!memberIds.includes(reaction.public_member_id)) memberIds.push(reaction.public_member_id);
+      }
       const comments = mergeEventComments(imported, result.results ?? [], {
         memberId: member.id, publicId: memberPublicId, discordUserId: identity?.discord_user_id ?? null, elevated,
-      });
+      }, reactions);
       return responseJson({ comments });
     }
     if (commentsMatch && request.method === "POST") {
@@ -1013,7 +1027,7 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
       const duplicate = await env.DB.prepare(`SELECT id, event_id, author_member_id, author_name, author_public_id, content, created_at, deleted_at FROM event_comments
         WHERE event_id = ? AND author_member_id = ? AND content = ? AND deleted_at IS NULL AND created_at >= ?
         ORDER BY created_at DESC LIMIT 1`).bind(id, member.id, content, duplicateSince).first<StoredEventComment>();
-      if (duplicate) return responseJson({ comment: { id: duplicate.id, author: duplicate.author_name, authorId: duplicate.author_public_id, text: duplicate.content, createdAt: duplicate.created_at, canEdit: true }, duplicate: true });
+      if (duplicate) return responseJson({ comment: { id: duplicate.id, author: duplicate.author_name, authorId: duplicate.author_public_id, text: duplicate.content, createdAt: duplicate.created_at, canEdit: true, reactions: {} }, duplicate: true });
       await env.DB.prepare(`INSERT OR IGNORE INTO event_comments
         (id, event_id, author_member_id, author_name, author_public_id, content, created_at, updated_at)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`).bind(commentId, id, member.id, identity?.display_name?.trim() || "メンバー", memberPublicId, content, now, now).run();
@@ -1030,7 +1044,31 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
         locationLabel: "コメント欄",
       });
       if (mentionNotifications.length) await env.DB.batch(mentionNotifications);
-      return responseJson({ comment: { id: saved.id, author: saved.author_name, authorId: saved.author_public_id, text: saved.content, createdAt: saved.created_at, canEdit: true } }, 201);
+      return responseJson({ comment: { id: saved.id, author: saved.author_name, authorId: saved.author_public_id, text: saved.content, createdAt: saved.created_at, canEdit: true, reactions: {} } }, 201);
+    }
+    if (commentReactionMatch && (request.method === "PUT" || request.method === "DELETE")) {
+      const commentId = decodeURIComponent(commentReactionMatch[2]);
+      const source = imported.find((comment) => comment.id === commentId);
+      const saved = await env.DB.prepare("SELECT id, deleted_at FROM event_comments WHERE id = ? AND event_id = ?")
+        .bind(commentId, id).first<{ id: string; deleted_at: string | null }>();
+      if ((!source && !saved) || saved?.deleted_at) return responseJson({ error: "コメントが見つかりません" }, 404);
+      const input = await readBody(request);
+      const emoji = text(input?.emoji, 32, true);
+      if (!emoji) return responseJson({ error: "スタンプを選択してください" }, 400);
+      if (request.method === "PUT") await env.DB.prepare(`INSERT OR IGNORE INTO event_comment_reactions
+        (event_id, comment_id, member_id, emoji, created_at) VALUES (?, ?, ?, ?, ?)`)
+        .bind(id, commentId, member.id, emoji, new Date().toISOString()).run();
+      else await env.DB.prepare("DELETE FROM event_comment_reactions WHERE event_id = ? AND comment_id = ? AND member_id = ? AND emoji = ?")
+        .bind(id, commentId, member.id, emoji).run();
+      const result = await env.DB.prepare(`SELECT r.emoji, m.public_member_id FROM event_comment_reactions r
+        JOIN members m ON m.id = r.member_id WHERE r.event_id = ? AND r.comment_id = ? ORDER BY r.created_at`)
+        .bind(id, commentId).all<{ emoji: string; public_member_id: string }>();
+      const reactions: Record<string, string[]> = {};
+      for (const reaction of result.results ?? []) {
+        const memberIds = reactions[reaction.emoji] ?? (reactions[reaction.emoji] = []);
+        if (!memberIds.includes(reaction.public_member_id)) memberIds.push(reaction.public_member_id);
+      }
+      return responseJson({ reactions });
     }
     if (commentMatch && (request.method === "PATCH" || request.method === "DELETE")) {
       const commentId = decodeURIComponent(commentMatch[2]);
@@ -1062,7 +1100,7 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
           locationLabel: "コメント欄",
         });
         if (mentionNotifications.length) await env.DB.batch(mentionNotifications);
-        return responseJson({ comment: { id: commentId, author: source?.author ?? saved?.author_name, authorId: source?.authorId ?? saved?.author_public_id, text: content, createdAt: source?.createdAt ?? saved?.created_at, canEdit: true } });
+        return responseJson({ comment: { id: commentId, author: source?.author ?? saved?.author_name, authorId: source?.authorId ?? saved?.author_public_id, text: content, createdAt: source?.createdAt ?? saved?.created_at, canEdit: true, reactions: {} } });
       }
       if (saved) await env.DB.prepare("UPDATE event_comments SET deleted_at = ?, updated_at = ? WHERE id = ? AND event_id = ? AND deleted_at IS NULL")
         .bind(now, now, commentId, id).run();

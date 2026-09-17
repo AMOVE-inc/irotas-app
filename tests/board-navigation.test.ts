@@ -74,6 +74,20 @@ describe("board category ordering", () => {
     expect(clubsScreen).toContain('returnToClubManagement: "1", clubId: club.id');
     expect(profileScreen).toContain('returnToClubManagement === "1" && clubId');
     expect(profileScreen).toContain('reviewApplications: "1"');
+    expect(clubsScreen).toContain("openApplicantProfile");
+    expect(clubsScreen).toContain("profile.avatarUrl");
+    expect(clubsScreen).toContain("joinedDate.getMonth() + 1");
+  });
+
+  it("opens chat messages and board comments at the first unread item", () => {
+    const boardScreen = readFileSync(resolve(process.cwd(), "app/(tabs)/board.tsx"), "utf8");
+    const chatScreen = readFileSync(resolve(process.cwd(), "app/chat.tsx"), "utf8");
+    expect(boardScreen).toContain("initialUnreadCommentIds");
+    expect(boardScreen).toContain("ここから未読コメント");
+    expect(boardScreen).toContain("commentScrollRef.current?.scrollTo");
+    expect(chatScreen).toContain("initiallyPositionedChat");
+    expect(chatScreen).toContain("ここから未読メッセージ");
+    expect(chatScreen).toContain("viewPosition: unreadCount > 0 ? 0.12 : 1");
   });
 
   it("returns from a meal-report profile to the exact report", () => {

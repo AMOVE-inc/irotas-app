@@ -37,6 +37,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import * as Api from "@/lib/_core/api";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Clipboard from "expo-clipboard";
+import { toggleReactionMember } from "@/lib/chat-reactions";
 import {
   Alert,
   type AlertButton,
@@ -53,6 +54,7 @@ import {
 
 type EventComment = Api.SharedEventComment;
 const OFFICIAL_EVENT_PAYMENTS_ENABLED = false;
+const EVENT_COMMENT_REACTION_EMOJIS = ["👍", "❤️", "😂", "🎉", "👏", "🙏", "👀", "🔥", "✨", "🍽️", "🍷"] as const;
 
 const eventCommentsKey = (eventId: string) => `irotas_event_comments_v1:${eventId}`;
 const deletedEventCommentsKey = (eventId: string) => `irotas_deleted_event_comments_v1:${eventId}`;
@@ -487,12 +489,28 @@ export default function EventDetailScreen() {
     }
   };
 
+  const handleEventCommentReaction = async (comment: EventComment, emoji: string) => {
+    const active = !(comment.reactions?.[emoji] ?? []).includes(viewerMemberId);
+    setEventComments((current) => current.map((item) => item.id === comment.id
+      ? { ...item, reactions: toggleReactionMember(item.reactions, emoji, viewerMemberId) }
+      : item));
+    try {
+      const result = await Api.setEventCommentReaction(event.id, comment.id, emoji, active);
+      setEventComments((current) => current.map((item) => item.id === comment.id ? { ...item, reactions: result.reactions } : item));
+    } catch (error) {
+      setEventComments((current) => current.map((item) => item.id === comment.id
+        ? { ...item, reactions: toggleReactionMember(item.reactions, emoji, viewerMemberId) }
+        : item));
+      Alert.alert("スタンプを保存できませんでした", error instanceof Error ? error.message : "通信状況を確認して再度お試しください。");
+    }
+  };
+
   const handleSaveEventCommentEdit = async () => {
     if (!editingEventCommentId || !editingEventCommentText.trim() || eventCommentBusy) return;
     setEventCommentBusy(true);
     try {
       const saved = await Api.updateEventComment(event.id, editingEventCommentId, editingEventCommentText.trim());
-      setEventComments((current) => current.map((comment) => comment.id === saved.id ? saved : comment));
+      setEventComments((current) => current.map((comment) => comment.id === saved.id ? { ...saved, reactions: comment.reactions } : comment));
       setEditingEventCommentId(null);
       setEditingEventCommentText("");
     } catch (error) {
@@ -1300,6 +1318,7 @@ export default function EventDetailScreen() {
                   <MemberRoleBadge name="" role={author.role} compact />
                 </View>
                 {editingEventCommentId === comment.id ? <View style={{ gap: 7 }}><TextInput value={editingEventCommentText} onChangeText={setEditingEventCommentText} multiline autoFocus style={{ minHeight: 84, backgroundColor: colors.background, borderWidth: 1, borderColor: colors.border, borderRadius: 10, padding: 10, fontSize: 14, color: colors.foreground }} /><View style={{ flexDirection: "row", gap: 8 }}><Pressable onPress={handleSaveEventCommentEdit} style={{ backgroundColor: "#3478C7", borderRadius: 8, paddingHorizontal: 13, paddingVertical: 7 }}><Text style={{ color: "#FFF", fontSize: 12, fontWeight: "800" }}>保存</Text></Pressable><Pressable onPress={() => setEventCommentDeleteTarget(comment)} style={{ backgroundColor: "#FCE7E7", borderRadius: 8, paddingHorizontal: 13, paddingVertical: 7 }}><Text style={{ color: colors.error, fontSize: 12, fontWeight: "800" }}>削除</Text></Pressable><Pressable onPress={() => setEditingEventCommentId(null)} style={{ paddingHorizontal: 10, paddingVertical: 7 }}><Text style={{ color: colors.muted, fontSize: 12 }}>キャンセル</Text></Pressable></View></View> : <MentionText content={comment.text} groups={eventMentionGroups} onMentionPress={(label) => { const normalized = mentionDisplayName(label); const targetId = getDiscordAuthorByName(normalized)?.id ?? memberDirectory.find((member) => mentionDisplayName(member.displayName) === normalized)?.id ?? findMentionedMemberId(normalized, MEMBERS); if (targetId) openMemberProfile(targetId); }} />}
+                {Object.entries(comment.reactions ?? {}).filter(([, ids]) => ids.length > 0).length ? <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6, marginTop: 7 }}>{Object.entries(comment.reactions ?? {}).filter(([, ids]) => ids.length > 0).map(([emoji, ids]) => <Pressable key={emoji} onPress={() => { void handleEventCommentReaction(comment, emoji); }} style={{ flexDirection: "row", alignItems: "center", borderRadius: 14, paddingHorizontal: 9, paddingVertical: 4, backgroundColor: ids.includes(viewerMemberId) ? "#FCE8F1" : colors.background, borderWidth: 1, borderColor: colors.border }}><Text style={{ fontSize: 16 }}>{emoji}</Text><Text style={{ marginLeft: 4, fontSize: 11, fontWeight: "800", color: colors.muted }}>{ids.length}</Text></Pressable>)}</View> : null}
               </View>
             </Pressable>;
           })}
@@ -1381,6 +1400,8 @@ export default function EventDetailScreen() {
           <View style={{ width: "100%", maxWidth: 520, alignSelf: "center", borderTopLeftRadius: 24, borderTopRightRadius: 24, backgroundColor: colors.background, paddingHorizontal: 18, paddingTop: 10, paddingBottom: 22 }}>
             <View style={{ width: 42, height: 5, borderRadius: 3, alignSelf: "center", backgroundColor: colors.border, marginBottom: 10 }} />
             <Text style={{ fontSize: 13, color: colors.muted, marginBottom: 5 }} numberOfLines={2}>{eventCommentActionTarget?.text}</Text>
+            <Text style={{ fontSize: 12, fontWeight: "800", color: colors.foreground, marginTop: 6, marginBottom: 8 }}>スタンプ</Text>
+            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 10 }}>{EVENT_COMMENT_REACTION_EMOJIS.map((emoji) => <Pressable key={emoji} accessibilityLabel={`${emoji}スタンプ`} onPress={() => { const target = eventCommentActionTarget; setEventCommentActionTarget(null); if (target) void handleEventCommentReaction(target, emoji); }} style={{ width: 42, height: 38, borderRadius: 19, alignItems: "center", justifyContent: "center", backgroundColor: (eventCommentActionTarget?.reactions?.[emoji] ?? []).includes(viewerMemberId) ? "#FCE8F1" : colors.surface }}><Text style={{ fontSize: 21 }}>{emoji}</Text></Pressable>)}</View>
             {[
               { label: "返信", icon: "arrowshape.turn.up.left.fill", action: () => { const target = eventCommentActionTarget; setEventCommentActionTarget(null); if (!target) return; setEventCommentText(`@${stripRankFromName(target.author)} `); requestAnimationFrame(() => eventCommentInputRef.current?.focus()); } },
               { label: "テキストをコピー", icon: "doc.on.doc", action: () => { const target = eventCommentActionTarget; setEventCommentActionTarget(null); if (target) void Clipboard.setStringAsync(target.text); } },

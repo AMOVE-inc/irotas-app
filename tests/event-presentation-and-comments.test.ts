@@ -49,6 +49,20 @@ describe("event presentation and comments", () => {
     expect(source("sites/events.ts")).toContain("canEdit:");
   });
 
+  it("lets members add persistent stamps to event comments without notifying the organizer", () => {
+    const detail = source("app/event-detail.tsx");
+    const api = source("lib/_core/api.ts");
+    const server = source("sites/events.ts");
+    const migration = source("drizzle/0054_event_comment_reactions.sql");
+    expect(detail).toContain("EVENT_COMMENT_REACTION_EMOJIS");
+    expect(detail).toContain("handleEventCommentReaction");
+    expect(api).toContain("setEventCommentReaction");
+    expect(server).toContain("EVENT_COMMENT_REACTION_PATH");
+    expect(migration).toContain("CREATE TABLE IF NOT EXISTS event_comment_reactions");
+    const favoriteHandler = server.slice(server.indexOf("if (favoriteMatch && request.method === \"PUT\")"), server.indexOf("if (applicationMatch && request.method === \"POST\")"));
+    expect(favoriteHandler).not.toContain("in_app_notifications");
+  });
+
   it("lets operators edit events imported from Discord", () => {
     const detail = source("app/event-detail.tsx");
     const create = source("app/create-event.tsx");

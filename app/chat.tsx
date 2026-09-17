@@ -323,6 +323,7 @@ export default function ChatScreen() {
   const flatListRef = useRef<FlatList>(null);
   const linkedScrollRetry = useRef(false);
   const linkedMessageScrolled = useRef<string | null>(null);
+  const initiallyPositionedChat = useRef<string | null>(null);
   const highlightTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [highlightedMessageId, setHighlightedMessageId] = useState<string | null>(null);
   const inputRef = useRef<TextInput>(null);
@@ -443,6 +444,17 @@ export default function ChatScreen() {
     const timer = setTimeout(() => flatListRef.current?.scrollToIndex({ index, animated: true, viewPosition: 0.5 }), 250);
     return () => clearTimeout(timer);
   }, [linkedMessageId, displayedMessages]);
+  useEffect(() => {
+    if (introductionChat || linkedMessageId || !displayedMessages.length) return;
+    const unreadCount = Math.min(displayedMessages.length, Math.max(0, Number(unreadCountParam ?? 0)));
+    const index = unreadCount > 0 ? displayedMessages.length - unreadCount : displayedMessages.length - 1;
+    const positionKey = `${id}:${unreadCount}:${displayedMessages[index]?.id ?? "empty"}`;
+    if (initiallyPositionedChat.current === positionKey) return;
+    initiallyPositionedChat.current = positionKey;
+    linkedScrollRetry.current = false;
+    const timer = setTimeout(() => flatListRef.current?.scrollToIndex({ index, animated: false, viewPosition: unreadCount > 0 ? 0.12 : 1 }), 80);
+    return () => clearTimeout(timer);
+  }, [displayedMessages.length, id, introductionChat, linkedMessageId, unreadCountParam]);
   // 自分のプロフィール画像（AsyncStorageから読み込み）
   const [myAvatarUri, setMyAvatarUri] = useState<string | null>(null);
   const scrollToLatest = useCallback((animated = false) => {
@@ -828,7 +840,7 @@ export default function ChatScreen() {
 
   const typeLabel = room.id === "board-announcement" ? "お知らせ" : ["community-free-chat", "branch-kanto-free", "branch-kansai-free"].includes(room.id) ? "チャット" : room.type === "event" ? "イベント" : room.type === "board" ? "掲示板" : room.type === "rank" ? "ランク専用" : room.type === "group" ? "友達グループ" : room.type === "dm" ? "DM" : "部活動";
   const typeColor = room.type === "event" ? "#E8A0BF" : room.type === "board" ? "#A7C7E7" : room.type === "rank" ? "#F59E0B" : room.type === "group" ? "#5B9BD5" : room.type === "dm" ? "#FF9500" : "#34C759";
-  const firstUnreadIndex = Math.max(0, messages.length - Math.min(messages.length, Math.max(0, Number(unreadCountParam ?? 0))));
+  const firstUnreadIndex = Math.max(0, displayedMessages.length - Math.min(displayedMessages.length, Math.max(0, Number(unreadCountParam ?? 0))));
   const canManageRoom = room.type !== "club" && !staffViewingOnly && (userIsAdmin || room.createdBy === viewerMemberId);
   const canInviteMembers = canManageRoom && room.type !== "rank" && room.type !== "event" && room.type !== "dm";
   const canPostAnnouncement = !staffViewingOnly && canPostToChat(authUser?.role, room.id, authUser?.accessRole);
@@ -898,7 +910,6 @@ export default function ChatScreen() {
           data={displayedMessages}
           extraData={highlightedMessageId}
           inverted={introductionChat}
-          initialScrollIndex={introductionChat ? undefined : messages.length ? (Number(unreadCountParam ?? 0) === 0 ? messages.length - 1 : Math.max(0, messages.length - Math.min(messages.length, Math.max(0, Number(unreadCountParam ?? 0)))) ) : undefined}
           keyExtractor={(item) => item.id}
           renderItem={({ item, index }) => {
             const previous = index > 0 ? displayedMessages[index - 1] : undefined;
