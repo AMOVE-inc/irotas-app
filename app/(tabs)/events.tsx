@@ -890,8 +890,10 @@ export default function EventsScreen() {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [refreshing, setRefreshing] = useState(false);
-  const [allEvents, setAllEvents] = useState<Event[]>([]);
-  const [eventsLoaded, setEventsLoaded] = useState(false);
+  // 公開イベントは同梱済みデータから即時表示し、認証後にDBの最新状態で差し替える。
+  // 部員限定イベントは権限確認前の初期表示には含めない。
+  const [allEvents, setAllEvents] = useState<Event[]>(() => getAllEvents(EVENTS).filter((event) => event.eventType !== "club"));
+  const [eventsLoaded, setEventsLoaded] = useState(true);
   const [eventsLoadFailed, setEventsLoadFailed] = useState(false);
   const favoriteEventIds = useEventFavorites();
   const effectiveFavoriteEventIds = useMemo(

@@ -67,4 +67,12 @@ describe("board category ordering", () => {
     expect(boardScreen).toContain('isIndividualClubBoard || activeCategory === "club-all") router.replace("/clubs")');
     expect(boardScreen).toContain('"部活一覧へ戻る"');
   });
+
+  it("returns from a managed club member profile to the same management screen", () => {
+    const clubsScreen = readFileSync(resolve(process.cwd(), "app/clubs.tsx"), "utf8");
+    const profileScreen = readFileSync(resolve(process.cwd(), "app/member-profile.tsx"), "utf8");
+    expect(clubsScreen).toContain('returnToClubManagement: "1", clubId: club.id');
+    expect(profileScreen).toContain('returnToClubManagement === "1" && clubId');
+    expect(profileScreen).toContain('reviewApplications: "1"');
+  });
 });

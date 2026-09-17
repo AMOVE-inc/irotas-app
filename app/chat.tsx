@@ -1,5 +1,6 @@
 import { ScreenContainer } from "@/components/screen-container";
 import { ExpandableImage } from "@/components/expandable-image";
+import { SaveableVideo } from "@/components/saveable-video";
 import { ReplyReferenceView } from "@/components/reply-reference-view";
 import { MemberClubLeaderBadges, MemberRankBadge, MemberRoleBadge, stripRankFromName } from "@/components/member-rank-badge";
 import { NewMemberMark } from "@/components/new-member-mark";
@@ -19,12 +20,12 @@ import {
 import { useAuthContext } from "@/lib/auth-context";
 import { isAdminRole, isOperatorRole, canPostToChat } from "@/lib/access-control";
 import { getAllRooms, getRoomById, getMessages, saveMessagesToStorage, deleteMessageFromStorage, loadMessagesFromStorage, loadDynamicRooms, markRoomRead, renameRoom, addMemberToRoom, removeMemberFromRoom, toggleMessageReaction } from "@/lib/chat-store";
+import { markChatRoomOptimisticallyRead } from "@/lib/chat-unread-sync";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useColors } from "@/hooks/use-colors";
 import { dismissChatRoomImmediately } from "@/components/chat-list-screen";
 import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
-import { useVideoPlayer, VideoView } from "expo-video";
 import * as Clipboard from "expo-clipboard";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
@@ -133,8 +134,7 @@ function isVideoAttachment(uri: string) {
 }
 
 function ChatAttachmentVideo({ uri }: { uri: string }) {
-  const player = useVideoPlayer(uri);
-  return <VideoView player={player} nativeControls style={{ width: 220, height: 300, maxWidth: "100%", backgroundColor: "#111" }} />;
+  return <SaveableVideo uri={uri} style={{ width: 220, height: 300, maxWidth: "100%" }} />;
 }
 
 function MessageBubble({ message, isMe, canDelete, readOnly, viewerId, viewerName, viewerAvatarUrl, myAvatarUri, senderMember, memberDirectory, onReact, mentionGroups, onOpenInternalLink, onOpenProfile, onOpenReactionProfile, onOpenReply, highlighted, onReply, onEdit, onDelete }: { message: ChatMessage; isMe: boolean; canDelete: boolean; readOnly?: boolean; viewerId: string; viewerName: string; viewerAvatarUrl?: string; myAvatarUri?: string | null; senderMember?: Api.PublicMember; memberDirectory: Api.PublicMember[]; onReact: (emoji: string, pollChoices?: string[], allowMultiple?: boolean) => void; mentionGroups: ReturnType<typeof getMentionGroups>; onOpenInternalLink: (pathname: "/chat" | "/board" | "/event-detail", params: Record<string, string>) => void; onOpenProfile: () => void; onOpenReactionProfile: (memberId: string, name: string, avatarUrl?: string) => void; onOpenReply: (messageId: string) => void; highlighted?: boolean; onReply: () => void; onEdit: () => void; onDelete: () => void }) {
@@ -496,6 +496,7 @@ export default function ChatScreen() {
       void AsyncStorage.getItem("irotas_introduction_chat_opened_v1").then((value) => setHasOpenedIntroduction(value === "1"));
     } else setHasOpenedIntroduction(true);
     // 一度開いたチャットはサーバー・端末の両方で即時既読にする。戻った直後に新着バッジが残らないようにする。
+    markChatRoomOptimisticallyRead(id, Math.max(0, Number(unreadCountParam ?? 0)));
     void markRoomRead(id);
     void Api.markSharedChatRoomRead(id).catch(() => {});
     setIsLoadingRoom(true);

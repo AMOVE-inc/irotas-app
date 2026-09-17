@@ -1278,7 +1278,7 @@ function ClubDetailModal({
           const currentLeaderAvatar = typeof currentDirectoryLeader?.profile.avatarUrl === "string" ? currentDirectoryLeader.profile.avatarUrl : currentStaticLeader?.avatar ?? DEFAULT_AVATAR;
           return currentLeaderProfileId ? (
             <Pressable
-              onPress={() => { onClose(); router.push({ pathname: "/member-profile", params: { id: currentLeaderProfileId } }); }}
+              onPress={() => { onClose(); router.push({ pathname: "/member-profile", params: { id: currentLeaderProfileId, returnToClubManagement: "1", clubId: club.id } }); }}
               style={{
                 flexDirection: "row",
                 alignItems: "center",
@@ -1469,7 +1469,7 @@ function ClubDetailModal({
               }}
             >
               <Pressable
-                onPress={() => { onClose(); router.push({ pathname: "/member-profile", params: { id: memberId } }); }}
+                onPress={() => { onClose(); router.push({ pathname: "/member-profile", params: { id: memberId, returnToClubManagement: "1", clubId: club.id } }); }}
                 style={{ flexDirection: "row", alignItems: "center", flex: 1 }}
               >
                 <Image source={avatar} style={{ width: 36, height: 36, borderRadius: 18 }} contentFit="cover" />

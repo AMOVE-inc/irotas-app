@@ -1,5 +1,6 @@
 import { ScreenContainer } from "@/components/screen-container";
 import { ExpandableImage } from "@/components/expandable-image";
+import { SaveableVideo } from "@/components/saveable-video";
 import { ReplyReferenceView } from "@/components/reply-reference-view";
 import { NewMemberMark } from "@/components/new-member-mark";
 import { MemberRankBadge, MemberRoleBadge, stripRankFromName } from "@/components/member-rank-badge";
@@ -51,7 +52,6 @@ import { boardCommentData, boardThreadData, sharedCommentToBoardComment, sharedT
 import { boardReactionAccessibilityLabel, boardReactionImageUrl, loadCommentReactions, loadThreadReactions, saveCommentReactions, saveThreadReactions } from "@/lib/board-reactions";
 import { applyBoardThreadEdits, loadBoardThreadEdits, saveBoardThreadEdit } from "@/lib/board-thread-edits";
 import { Image } from "expo-image";
-import { useVideoPlayer, VideoView } from "expo-video";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
 import { useState, useCallback, useEffect, useMemo, useRef } from "react";
@@ -176,8 +176,7 @@ function PollComposer({ enabled, setEnabled, question, setQuestion, options, set
 }
 
 function BoardVideo({ uri }: { uri: string }) {
-  const player = useVideoPlayer(uri);
-  return <VideoView player={player} nativeControls style={{ width: "100%", aspectRatio: 1, borderRadius: 14, backgroundColor: "#111" }} />;
+  return <SaveableVideo uri={uri} style={{ width: "100%", aspectRatio: 1, borderRadius: 14 }} />;
 }
 
 function LinkifiedText({ content }: { content: string }) {
@@ -778,6 +777,7 @@ function ThreadDetailModal({
   const [commentPollDeadline, setCommentPollDeadline] = useState("");
   const [commentPollAllowMultiple, setCommentPollAllowMultiple] = useState(false);
   const [commentImages, setCommentImages] = useState<string[]>([]);
+  const [commentVideos, setCommentVideos] = useState<{ uri: string; mimeType?: string }[]>([]);
   const [showCommentAttachments, setShowCommentAttachments] = useState(false);
   const commentInputRef = useRef<TextInput>(null);
   const commentSendingRef = useRef(false);
@@ -930,7 +930,7 @@ function ThreadDetailModal({
     const content = isContest
       ? buildContestEntryContent({ restaurant: contestRestaurant, menu: contestMenu, pitch: contestPitch, referenceUrl: contestReferenceUrl })
       : commentText.trim();
-    if (isContest ? !contestRestaurant.trim() || !contestMenu.trim() || !contestPitch.trim() : (!content && !commentPollEnabled) || !commentPollValid) return;
+    if (isContest ? !contestRestaurant.trim() || !contestMenu.trim() || !contestPitch.trim() : (!content && !commentPollEnabled && !commentImages.length && !commentVideos.length) || !commentPollValid) return;
     commentSendingRef.current = true;
     let newComment: BoardComment = {
       id: `bc_new_${Date.now()}`,
@@ -940,12 +940,19 @@ function ThreadDetailModal({
       replyTo: commentReplyTo ? replyReference(commentReplyTo.id, stripRankFromName(commentReplyTo.author.name), commentReplyTo.content, Boolean(commentReplyTo.images?.length || commentReplyTo.videos?.length)) : undefined,
       createdAt: new Date().toISOString(),
       images: isContest && contestImages.length ? contestImages : commentImages.length ? commentImages : undefined,
+      videos: !isContest && commentVideos.length ? commentVideos.map((video) => video.uri) : undefined,
       poll: pollAllowed && commentPollEnabled ? { question: commentPollQuestion.trim(), deadline: commentPollDeadline, allowMultiple: commentPollAllowMultiple, options: commentPollOptions.filter((option) => option.trim()).map((option, index) => ({ id: `option_${index + 1}`, text: option.trim(), voterIds: [] })) } : undefined,
     };
     if (persistedThread) {
       try {
         if (!thread.shared) await Api.ensureSharedImportedBoardThread(thread.id);
-        newComment = { ...newComment, images: await uploadBoardImages(newComment.images) };
+        newComment = {
+          ...newComment,
+          images: await uploadBoardImages(newComment.images),
+          videos: newComment.videos?.length
+            ? await Promise.all(newComment.videos.map(async (uri, index) => (await Api.uploadEventImage(uri, commentVideos[index]?.mimeType)).imageUrl))
+            : undefined,
+        };
         const saved = await Api.createSharedBoardComment(thread.id, { content, data: boardCommentData(newComment) });
         newComment = { ...newComment, id: saved.id, createdAt: saved.createdAt, shared: true };
       } catch (error) {
@@ -959,6 +966,7 @@ function ThreadDetailModal({
     setCommentText("");
     setCommentReplyTo(null);
     setCommentImages([]);
+    setCommentVideos([]);
     setShowCommentAttachments(false);
     setContestRestaurant("");
     setContestMenu("");
@@ -996,13 +1004,24 @@ function ThreadDetailModal({
   };
 
   const handlePickCommentImages = async () => {
-    if (commentImages.length >= 5) return;
+    if (commentImages.length + commentVideos.length >= 5) return;
     if (Platform.OS !== "web") {
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (status !== "granted") return Alert.alert("権限が必要です", "写真ライブラリへのアクセスを許可してください");
     }
-    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ["images"], allowsMultipleSelection: true, quality: 0.8, selectionLimit: 5 - commentImages.length });
-    if (!result.canceled) setCommentImages((current) => [...current, ...result.assets.map((asset) => asset.uri)].slice(0, 5));
+    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ["images"], allowsMultipleSelection: true, quality: 0.8, selectionLimit: 5 - commentImages.length - commentVideos.length });
+    if (!result.canceled) setCommentImages((current) => [...current, ...result.assets.map((asset) => asset.uri)].slice(0, 5 - commentVideos.length));
+    setShowCommentAttachments(false);
+  };
+
+  const handlePickCommentVideos = async () => {
+    if (commentImages.length + commentVideos.length >= 5) return;
+    if (Platform.OS !== "web") {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== "granted") return Alert.alert("権限が必要です", "動画を送るには写真ライブラリへのアクセスを許可してください");
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ["videos"], allowsMultipleSelection: true, selectionLimit: 5 - commentImages.length - commentVideos.length });
+    if (!result.canceled) setCommentVideos((current) => [...current, ...result.assets.map((asset) => ({ uri: asset.uri, mimeType: asset.mimeType }))].slice(0, 5 - commentImages.length));
     setShowCommentAttachments(false);
   };
 
@@ -1220,8 +1239,12 @@ function ThreadDetailModal({
                   uri={boardImageUri(uri)}
                   galleryUris={thread.images?.map(boardImageUri).filter((value): value is string => Boolean(value))}
                   galleryIndex={i}
-                  style={isContest ? { width: "100%", aspectRatio: 1, borderRadius: 14, backgroundColor: colors.surface } : { width: 100, height: 100, borderRadius: 10 }}
-                  contentFit={isContest ? "contain" : "cover"}
+                  style={isContest
+                    ? { width: "100%", aspectRatio: 1, borderRadius: 14, backgroundColor: colors.surface }
+                    : thread.images!.length === 1
+                      ? { width: "100%", maxWidth: 520, aspectRatio: 4 / 3, borderRadius: 14, backgroundColor: colors.surface }
+                      : { width: "48%", aspectRatio: 1, borderRadius: 12, backgroundColor: colors.surface }}
+                  contentFit="contain"
                 />
               ))}
             </View>
@@ -1380,8 +1403,9 @@ function ThreadDetailModal({
           </View> : <>
           {mentionQuery !== null ? <MentionSuggestions query={mentionQuery} groups={mentionGroups} members={MEMBERS.filter((member) => member.id !== CURRENT_USER.id)} onSelect={handleCommentMention} /> : null}
           <Text style={{ fontSize: 11, color: colors.muted, paddingHorizontal: 16, paddingTop: 6 }}>@を入力して個人・グループをメンション</Text>
-          {showCommentAttachments ? <View style={{ flexDirection: "row", gap: 10, paddingHorizontal: 16, paddingTop: 9 }}><Pressable onPress={() => void handlePickCommentImages()} style={{ flexDirection: "row", alignItems: "center", borderRadius: 10, backgroundColor: "#5865F218", paddingHorizontal: 14, paddingVertical: 10 }}><IconSymbol name="photo.fill" size={17} color="#5865F2" /><Text style={{ color: "#5865F2", fontWeight: "800", marginLeft: 7 }}>写真</Text></Pressable>{pollAllowed ? <Pressable onPress={() => { setCommentPollEnabled(true); setShowCommentAttachments(false); }} style={{ flexDirection: "row", alignItems: "center", borderRadius: 10, backgroundColor: "#5865F218", paddingHorizontal: 14, paddingVertical: 10 }}><IconSymbol name="chart.bar.fill" size={17} color="#5865F2" /><Text style={{ color: "#5865F2", fontWeight: "800", marginLeft: 7 }}>投票</Text></Pressable> : null}</View> : null}
+          {showCommentAttachments ? <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10, paddingHorizontal: 16, paddingTop: 9 }}><Pressable onPress={() => void handlePickCommentImages()} style={{ flexDirection: "row", alignItems: "center", borderRadius: 10, backgroundColor: "#5865F218", paddingHorizontal: 14, paddingVertical: 10 }}><IconSymbol name="photo.fill" size={17} color="#5865F2" /><Text style={{ color: "#5865F2", fontWeight: "800", marginLeft: 7 }}>写真</Text></Pressable><Pressable onPress={() => void handlePickCommentVideos()} style={{ flexDirection: "row", alignItems: "center", borderRadius: 10, backgroundColor: "#5865F218", paddingHorizontal: 14, paddingVertical: 10 }}><IconSymbol name="video.fill" size={17} color="#5865F2" /><Text style={{ color: "#5865F2", fontWeight: "800", marginLeft: 7 }}>動画</Text></Pressable>{pollAllowed ? <Pressable onPress={() => { setCommentPollEnabled(true); setShowCommentAttachments(false); }} style={{ flexDirection: "row", alignItems: "center", borderRadius: 10, backgroundColor: "#5865F218", paddingHorizontal: 14, paddingVertical: 10 }}><IconSymbol name="chart.bar.fill" size={17} color="#5865F2" /><Text style={{ color: "#5865F2", fontWeight: "800", marginLeft: 7 }}>投票</Text></Pressable> : null}</View> : null}
           {commentImages.length ? <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingHorizontal: 16, paddingTop: 9 }}>{commentImages.map((uri, index) => <Pressable key={`${uri}-${index}`} onPress={() => setCommentImages((items) => items.filter((_, itemIndex) => itemIndex !== index))}><Image source={{ uri }} style={{ width: 64, height: 64, borderRadius: 9 }} contentFit="cover" /></Pressable>)}</ScrollView> : null}
+          {commentVideos.length ? <View style={{ gap: 5, paddingHorizontal: 16, paddingTop: 9 }}>{commentVideos.map((video, index) => <View key={`${video.uri}-${index}`} style={{ flexDirection: "row", alignItems: "center" }}><Text style={{ flex: 1, fontSize: 12, color: colors.foreground }} numberOfLines={1}>動画 {index + 1}</Text><Pressable accessibilityLabel={`動画${index + 1}を削除`} onPress={() => setCommentVideos((items) => items.filter((_, itemIndex) => itemIndex !== index))}><Text style={{ color: colors.error, fontWeight: "800" }}>削除</Text></Pressable></View>)}</View> : null}
           {commentReplyTo ? <View style={{ paddingHorizontal: 16, paddingTop: 7 }}><ReplyReferenceView reply={replyReference(commentReplyTo.id, stripRankFromName(commentReplyTo.author.name), commentReplyTo.content, Boolean(commentReplyTo.images?.length || commentReplyTo.videos?.length))} onPress={() => jumpToComment(commentReplyTo.id)} onCancel={() => setCommentReplyTo(null)} /></View> : null}
           {pollAllowed ? <View style={{ paddingHorizontal: 16 }}><PollComposer enabled={commentPollEnabled} setEnabled={setCommentPollEnabled} question={commentPollQuestion} setQuestion={setCommentPollQuestion} options={commentPollOptions} setOptions={setCommentPollOptions} deadline={commentPollDeadline} setDeadline={setCommentPollDeadline} allowMultiple={commentPollAllowMultiple} setAllowMultiple={setCommentPollAllowMultiple} /></View> : null}
           <View
@@ -1393,7 +1417,7 @@ function ThreadDetailModal({
             paddingBottom: Platform.OS === "ios" ? Math.max(insets.bottom, 10) : 10,
           }}
         >
-          <Pressable accessibilityLabel="写真または投票を追加" onPress={() => setShowCommentAttachments((value) => !value)} style={{ width: 36, height: 36, borderRadius: 18, alignItems: "center", justifyContent: "center", backgroundColor: "#5865F218", marginRight: 8 }}><IconSymbol name="plus" size={20} color="#5865F2" /></Pressable>
+          <Pressable accessibilityLabel="写真、動画または投票を追加" onPress={() => setShowCommentAttachments((value) => !value)} style={{ width: 36, height: 36, borderRadius: 18, alignItems: "center", justifyContent: "center", backgroundColor: "#5865F218", marginRight: 8 }}><IconSymbol name="plus" size={20} color="#5865F2" /></Pressable>
           <TextInput
             ref={commentInputRef}
             value={commentText}
@@ -1417,7 +1441,7 @@ function ThreadDetailModal({
             }}
           />
           <Pressable onPress={handleComment} style={{ marginLeft: 10 }}>
-            <IconSymbol name="paperplane.fill" size={24} color={(commentText.trim() || (commentPollEnabled && commentPollValid)) ? "#E8A0BF" : colors.muted} />
+            <IconSymbol name="paperplane.fill" size={24} color={(commentText.trim() || commentImages.length || commentVideos.length || (commentPollEnabled && commentPollValid)) ? "#E8A0BF" : colors.muted} />
           </Pressable>
           </View>
           </>}

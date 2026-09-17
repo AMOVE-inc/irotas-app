@@ -40,7 +40,7 @@ import {
 export default function MemberProfileScreen() {
   const colors = useColors();
   const router = useRouter();
-  const { id, legacyName, legacyAvatar, returnToClubRoster, clubCategory } = useLocalSearchParams<{ id: string; legacyName?: string; legacyAvatar?: string; returnToClubRoster?: string; clubCategory?: string }>();
+  const { id, legacyName, legacyAvatar, returnToClubRoster, clubCategory, returnToClubManagement, clubId } = useLocalSearchParams<{ id: string; legacyName?: string; legacyAvatar?: string; returnToClubRoster?: string; clubCategory?: string; returnToClubManagement?: string; clubId?: string }>();
   const clubs = useClubs();
   const { user: authUser } = useAuthContext();
 
@@ -251,7 +251,11 @@ export default function MemberProfileScreen() {
           borderBottomColor: colors.border,
         }}
       >
-        <Pressable onPress={() => returnToClubRoster === "1" && clubCategory ? router.replace({ pathname: "/board", params: { category: clubCategory, view: "threads", openClubMembers: "1" } }) : router.back()}>
+        <Pressable onPress={() => returnToClubManagement === "1" && clubId
+          ? router.replace({ pathname: "/clubs", params: { clubId, reviewApplications: "1" } })
+          : returnToClubRoster === "1" && clubCategory
+            ? router.replace({ pathname: "/board", params: { category: clubCategory, view: "threads", openClubMembers: "1" } })
+            : router.back()}>
           <IconSymbol name="arrow.left" size={22} color={colors.foreground} />
         </Pressable>
         <Text style={{ fontSize: 17, fontWeight: "700", color: colors.foreground, marginLeft: 12 }}>

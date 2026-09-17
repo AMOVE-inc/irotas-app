@@ -613,10 +613,11 @@ export async function handleBoardContentRequest(
     if (!await canAccessBoardCategory(db, thread.category, member))
       return json({ error: "この投稿にはコメントできません" }, 403);
     const input = await readBody(request);
-    const content = text(input?.content, 10_000, true, true);
+    const content = text(input?.content, 10_000, false, true);
     if (input?.data !== undefined && (!input.data || typeof input.data !== "object" || Array.isArray(input.data)))
       return json({ error: "コメント内容が不正です" }, 400);
     const rawData = (input?.data ?? {}) as Record<string, unknown>;
+    const hasMedia = [rawData.images, rawData.videos].some((value) => Array.isArray(value) && value.length > 0);
     let replyTo = null;
     if (rawData.replyTo !== undefined) {
       const replyId = rawData.replyTo && typeof rawData.replyTo === "object" && "id" in rawData.replyTo ? (rawData.replyTo as { id?: unknown }).id : null;
@@ -634,7 +635,7 @@ export async function handleBoardContentRequest(
       if (!replyTo) return json({ error: "返信元が見つかりません" }, 404);
     }
     const data = safeData({ ...rawData, ...(replyTo ? { replyTo } : {}) });
-    if (!input || !content || data === null) return json({ error: "コメント内容が不正です" }, 400);
+    if (!input || (!content && !hasMedia) || data === null) return json({ error: "コメント内容が不正です" }, 400);
     const duplicateSince = new Date(Date.now() - 30_000).toISOString();
     const duplicate = await db.prepare(`SELECT id, created_at FROM board_comments
       WHERE thread_id = ? AND author_member_id = ? AND content = ? AND data_json = ?
@@ -658,7 +659,7 @@ export async function handleBoardContentRequest(
           `board-comment:${id}:${thread.author_member_id}`,
           thread.author_member_id,
           `「${thread.title.slice(0, 80)}」にコメントが届きました`,
-          `${author?.display_name || "メンバー"}: ${content.replace(/\s+/g, " ").slice(0, 160)}`,
+          `${author?.display_name || "メンバー"}: ${content ? content.replace(/\s+/g, " ").slice(0, 160) : "写真・動画が届きました"}`,
           targetPath,
           now,
         ).run();

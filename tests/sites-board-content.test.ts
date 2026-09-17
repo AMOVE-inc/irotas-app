@@ -171,6 +171,22 @@ describe("shared board content API", () => {
     expect(writes.some((item) => item.sql.includes("INSERT OR IGNORE INTO in_app_notifications") && item.values.includes(10))).toBe(true);
   });
 
+  it("accepts a media-only comment and describes it in the notification", async () => {
+    const { db, writes } = testDatabase(
+      { id: 9, role: "user", access_role: "member", account_status: "active" },
+      false,
+      undefined,
+      { id: "post-1", author_member_id: 10, category: "free-chat", title: "投稿" },
+    );
+    const response = await handleBoardContentRequest(
+      request("/api/board/threads/post-1/comments", "POST", { content: "", data: { videos: ["/api/event-images/video-1"] } }),
+      { DB: db } as SitesEnv,
+    );
+    expect(response?.status).toBe(201);
+    expect(writes.find((item) => item.sql.includes("INSERT INTO board_comments"))?.values[3]).toBe("");
+    expect(writes.find((item) => item.sql.includes("INSERT OR IGNORE INTO in_app_notifications"))?.values).toContain("テスト会員: 写真・動画が届きました");
+  });
+
   it("stores a verified reply preview from a comment in the same thread", async () => {
     const thread = { id: "post-1", author_member_id: 10, category: "free-chat", title: "投稿" };
     const source = { id: "comment-1", threadId: "post-1", content: "元のコメント", displayName: "投稿者" };

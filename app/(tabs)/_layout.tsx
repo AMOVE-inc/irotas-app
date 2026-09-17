@@ -7,7 +7,8 @@ import { Platform, useWindowDimensions } from "react-native";
 import { useColors } from "@/hooks/use-colors";
 import { useAuthContext } from "@/lib/auth-context";
 import * as Api from "@/lib/_core/api";
-import { useEffect, useState } from "react";
+import { effectiveUnreadTotal, subscribeToOptimisticChatReads } from "@/lib/chat-unread-sync";
+import { useEffect, useRef, useState } from "react";
 
 export default function TabLayout() {
   const colors = useColors();
@@ -19,6 +20,7 @@ export default function TabLayout() {
   const tabBarHeight = isMobileWeb ? 78 : 62 + bottomPadding;
   const tabBarBottomMargin = isMobileWeb ? 0 : Platform.OS === "web" ? 10 : 6;
   const [unreadTotal, setUnreadTotal] = useState(0);
+  const latestRooms = useRef<Awaited<ReturnType<typeof Api.getSharedChatRooms>>>([]);
   const { user } = useAuthContext();
 
   useEffect(() => {
@@ -28,7 +30,10 @@ export default function TabLayout() {
       if (pending) return;
       pending = true;
       void Api.getSharedChatRooms()
-        .then((rooms) => setUnreadTotal(rooms.reduce((total, room) => total + Math.max(0, room.unreadCount ?? 0), 0)))
+        .then((rooms) => {
+          latestRooms.current = rooms;
+          setUnreadTotal(effectiveUnreadTotal(rooms));
+        })
         .catch(() => {})
         .finally(() => { pending = false; });
     };
@@ -36,6 +41,11 @@ export default function TabLayout() {
     const timer = setInterval(refresh, 15000);
     return () => clearInterval(timer);
   }, [user?.memberId]);
+
+  useEffect(() => subscribeToOptimisticChatReads((_roomId, clearedCount) => {
+    if (latestRooms.current.length) setUnreadTotal(effectiveUnreadTotal(latestRooms.current));
+    else setUnreadTotal((current) => Math.max(0, current - clearedCount));
+  }), []);
 
   useEffect(() => {
     if (!user?.id) return;

@@ -15,6 +15,12 @@ const LINK_ENDPOINT = "/api/admin/discord-profile-import/link";
 const NORI_TERM_CORRECTION_ENDPOINT = "/api/admin/discord-profile-import/sync-nori-20260902";
 type Rank = "regular" | "silver" | "gold" | "platinum";
 type ImportRow = { discordUserId: string; displayName: string; avatarUrl: string; bio: string; hasProfileBio: boolean; discordJoinedAt: string | null; discordRoles: string[]; memberTerm: string | null; memberRank: Rank };
+
+export function explicitMemberTermFromBio(value: string): string | null {
+  const normalized = value.normalize("NFKC");
+  const match = normalized.match(/(?:^|[。！!\n])\s*(?:こんばんは|こんにちは|はじめまして)?\s*[!！、, ]*(?:第\s*)?(\d{1,2})\s*期(?:生)?(?:の[^。\n]{0,24}(?:です|と申します)|です|として(?:参加|入会))/m);
+  return match ? `第${Number(match[1])}期` : null;
+}
 const json = (body: unknown, status = 200) => Response.json(body, { status, headers: { "cache-control": "no-store" } });
 const discordAvatarById = new Map(
   DISCORD_AUTHOR_DIRECTORY
@@ -43,16 +49,18 @@ export function validateDiscordProfileImport(body: unknown): ImportRow[] {
     const avatar = suppliedAvatar || discordAvatarById.get(discordUserId) || "";
     const avatarUrl = /^https:\/\/(?:cdn\.|media\.)?discord(?:app)?\.(?:com|net)\//i.test(avatar) ? avatar.slice(0, 2000) : "";
     const discordJoinedAt = typeof row.discordJoinedAt === "string" && !Number.isNaN(Date.parse(row.discordJoinedAt)) ? row.discordJoinedAt : null;
+    const bio = typeof row.bio === "string" ? row.bio.trim().slice(0, 4000) : "";
     const rawTerm = typeof row.memberTerm === "string" ? row.memberTerm.trim() : "";
+    const explicitBioTerm = explicitMemberTermFromBio(bio);
     return {
       discordUserId,
       displayName: typeof row.displayName === "string" ? row.displayName.trim().slice(0, 120) : "",
       avatarUrl,
-      bio: typeof row.bio === "string" ? row.bio.trim().slice(0, 4000) : "",
+      bio,
       hasProfileBio: row.hasProfileBio === true,
       discordJoinedAt,
       discordRoles: Array.isArray(row.discordRoles) ? row.discordRoles.filter((item): item is string => typeof item === "string").map((item) => item.slice(0, 120)).slice(0, 150) : [],
-      memberTerm: /^第?\d+期$/.test(rawTerm) ? rawTerm.replace(/^(?!第)/, "第") : null,
+      memberTerm: explicitBioTerm ?? (/^第?\d+期$/.test(rawTerm) ? rawTerm.replace(/^(?!第)/, "第") : null),
       memberRank,
     };
   });
