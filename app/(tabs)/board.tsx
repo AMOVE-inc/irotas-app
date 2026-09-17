@@ -2626,6 +2626,7 @@ export default function BoardScreen() {
   const [sharedLoading, setSharedLoading] = useState(true);
   const [selectedThread, setSelectedThread] = useState<BoardThread | null>(null);
   const [selectedThreadUnreadCommentIds, setSelectedThreadUnreadCommentIds] = useState<string[]>([]);
+  const leavingThreadDetailRef = useRef(false);
   const [showCreateThread, setShowCreateThread] = useState(false);
   const [showAddCategory, setShowAddCategory] = useState(false);
   const [showClubMembers, setShowClubMembers] = useState(false);
@@ -2921,7 +2922,7 @@ export default function BoardScreen() {
     ] as any);
   };
   useEffect(() => {
-    if (!threadParam) return;
+    if (!threadParam || leavingThreadDetailRef.current) return;
     const linkedThread = allThreads.find((item) => item.id === threadParam);
     if (linkedThread && selectedThread?.id !== linkedThread.id) {
       const comments = importedComments[linkedThread.id] ?? [];
@@ -2930,6 +2931,15 @@ export default function BoardScreen() {
       markThreadRead(linkedThread.id);
     }
   }, [threadParam, allThreads, importedComments, markThreadRead, selectedThread?.id, threadReadCounts, viewerMemberId]);
+  const leaveThreadDetail = useCallback((navigate?: () => void) => {
+    leavingThreadDetailRef.current = true;
+    setSelectedThread(null);
+    router.setParams({ thread: "" });
+    requestAnimationFrame(() => {
+      navigate?.();
+      requestAnimationFrame(() => { leavingThreadDetailRef.current = false; });
+    });
+  }, [router]);
   const visibleCategories = categories
     .filter((category) => category.group === (isClubIndexView ? "club" : "all") && canAccessCategory(category))
     .sort((a, b) => {
@@ -3188,9 +3198,7 @@ export default function BoardScreen() {
         animationType="slide"
         presentationStyle="pageSheet"
         onRequestClose={() => {
-          setSelectedThread(null);
-          if (fromHome === "1") router.replace("/(tabs)" as any);
-          else router.setParams({ thread: "" });
+          leaveThreadDetail(fromHome === "1" ? () => router.replace("/" as any) : undefined);
         }}
       >
         {selectedThread && (
@@ -3200,14 +3208,10 @@ export default function BoardScreen() {
             initialUnreadCommentIds={selectedThreadUnreadCommentIds}
             returnToTimeline={fromHome === "1"}
             onOpenMemberProfile={(params) => {
-              setSelectedThread(null);
-              router.setParams({ thread: "" });
-              requestAnimationFrame(() => router.push({ pathname: "/member-profile", params }));
+              leaveThreadDetail(() => router.push({ pathname: "/member-profile", params }));
             }}
             onClose={() => {
-              setSelectedThread(null);
-              if (fromHome === "1") router.replace("/(tabs)" as any);
-              else router.setParams({ thread: "" });
+              leaveThreadDetail(fromHome === "1" ? () => router.replace("/" as any) : undefined);
             }}
             onEditThread={selectedThread.author.id === viewerMemberId || userCanModerateAll ? () => { setEditingThread(selectedThread); setSelectedThread(null); router.setParams({ thread: "" }); } : undefined}
             onChangeRecruitment={canChangeRecruitment(selectedThread) || canPinThread(selectedThread) ? () => promptRecruitmentStatus(selectedThread) : undefined}
