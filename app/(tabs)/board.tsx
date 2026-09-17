@@ -3201,7 +3201,8 @@ export default function BoardScreen() {
             returnToTimeline={fromHome === "1"}
             onOpenMemberProfile={(params) => {
               setSelectedThread(null);
-              router.push({ pathname: "/member-profile", params });
+              router.setParams({ thread: "" });
+              requestAnimationFrame(() => router.push({ pathname: "/member-profile", params }));
             }}
             onClose={() => {
               setSelectedThread(null);

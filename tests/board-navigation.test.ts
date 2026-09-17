@@ -99,6 +99,8 @@ describe("board category ordering", () => {
     expect(boardScreen).toContain('onOpenMemberProfile(profileParams(thread.author.id, thread.author.name))');
     expect(boardScreen).toContain('returnToTimeline={fromHome === "1"}');
     expect(boardScreen).toContain('setSelectedThread(null);');
+    expect(boardScreen).toContain('router.setParams({ thread: "" });');
+    expect(boardScreen).toContain('requestAnimationFrame(() => router.push({ pathname: "/member-profile", params }))');
     expect(profileScreen).toContain('returnToBoardThread === "1" && boardCategory && boardThreadId');
     expect(profileScreen).toContain('thread: boardThreadId');
     expect(profileScreen).toContain('returnToTimeline === "1" ? { fromHome: "1" }');
