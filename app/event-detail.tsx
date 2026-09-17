@@ -54,7 +54,8 @@ import {
 
 type EventComment = Api.SharedEventComment;
 const OFFICIAL_EVENT_PAYMENTS_ENABLED = false;
-const EVENT_COMMENT_REACTION_EMOJIS = ["👍", "❤️", "😂", "🎉", "👏", "🙏", "👀", "🔥", "✨", "🍽️", "🍷"] as const;
+const EVENT_COMMENT_QUICK_REACTIONS = ["👍", "❤️", "😂", "🎉", "👏"] as const;
+const EVENT_COMMENT_REACTION_EMOJIS = ["😀", "😃", "😄", "😁", "😆", "😅", "😂", "🤣", "😊", "😇", "🙂", "🙃", "😉", "😍", "🥰", "😘", "😋", "😛", "🤪", "🤔", "🫡", "😎", "🥳", "😮", "😢", "😭", "😡", "👍", "👎", "👏", "🙌", "🙏", "💪", "👀", "❤️", "🩷", "🧡", "💛", "💚", "💙", "💜", "🖤", "🤍", "🔥", "✨", "🎉", "💯", "✅", "❌", "💡", "📌", "🍽️", "🍣", "🍖", "🍜", "🍕", "🍰", "☕", "🍺", "🍷"] as const;
 
 const eventCommentsKey = (eventId: string) => `irotas_event_comments_v1:${eventId}`;
 const deletedEventCommentsKey = (eventId: string) => `irotas_deleted_event_comments_v1:${eventId}`;
@@ -154,6 +155,7 @@ export default function EventDetailScreen() {
   const [editingEventCommentText, setEditingEventCommentText] = useState("");
   const [eventCommentBusy, setEventCommentBusy] = useState(false);
   const [eventCommentActionTarget, setEventCommentActionTarget] = useState<EventComment | null>(null);
+  const [eventCommentShowAllReactions, setEventCommentShowAllReactions] = useState(false);
   const [eventCommentDeleteTarget, setEventCommentDeleteTarget] = useState<EventComment | null>(null);
   const [eventCommentFocused, setEventCommentFocused] = useState(false);
   const [showAdminEdit, setShowAdminEdit] = useState(false);
@@ -1308,7 +1310,7 @@ export default function EventDetailScreen() {
               ?? memberDirectory.find((member) => stripRankFromName(member.displayName) === stripRankFromName(comment.author))?.id
               ?? getDiscordAuthorByName(comment.author)?.id;
             const openAuthor = () => { if (profileId) openMemberProfile(profileId, comment.author); };
-            return <Pressable key={comment.id} onLongPress={() => setEventCommentActionTarget(comment)} delayLongPress={350} accessibilityHint="長押しするとコメントの操作メニューを開きます" style={{ flexDirection: "row", marginTop: 12, paddingTop: 12, borderTopWidth: 0.5, borderTopColor: colors.border }}>
+            return <Pressable key={comment.id} onLongPress={() => { setEventCommentShowAllReactions(false); setEventCommentActionTarget(comment); }} delayLongPress={350} accessibilityHint="長押しするとコメントの操作メニューを開きます" style={{ flexDirection: "row", marginTop: 12, paddingTop: 12, borderTopWidth: 0.5, borderTopColor: colors.border }}>
               <Pressable onPress={openAuthor} disabled={!profileId}><Image source={author.avatar} style={{ width: 32, height: 32, borderRadius: 16, marginRight: 9 }} contentFit="cover" /></Pressable>
               <View style={{ flex: 1 }}>
                 <View style={{ flexDirection: "row", alignItems: "center", flexWrap: "wrap", marginBottom: 3 }}>
@@ -1401,7 +1403,10 @@ export default function EventDetailScreen() {
             <View style={{ width: 42, height: 5, borderRadius: 3, alignSelf: "center", backgroundColor: colors.border, marginBottom: 10 }} />
             <Text style={{ fontSize: 13, color: colors.muted, marginBottom: 5 }} numberOfLines={2}>{eventCommentActionTarget?.text}</Text>
             <Text style={{ fontSize: 12, fontWeight: "800", color: colors.foreground, marginTop: 6, marginBottom: 8 }}>スタンプ</Text>
-            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 10 }}>{EVENT_COMMENT_REACTION_EMOJIS.map((emoji) => <Pressable key={emoji} accessibilityLabel={`${emoji}スタンプ`} onPress={() => { const target = eventCommentActionTarget; setEventCommentActionTarget(null); if (target) void handleEventCommentReaction(target, emoji); }} style={{ width: 42, height: 38, borderRadius: 19, alignItems: "center", justifyContent: "center", backgroundColor: (eventCommentActionTarget?.reactions?.[emoji] ?? []).includes(viewerMemberId) ? "#FCE8F1" : colors.surface }}><Text style={{ fontSize: 21 }}>{emoji}</Text></Pressable>)}</View>
+            <ScrollView style={{ maxHeight: eventCommentShowAllReactions ? 250 : 48, marginBottom: 10 }} contentContainerStyle={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }} showsVerticalScrollIndicator={eventCommentShowAllReactions}>
+              {(eventCommentShowAllReactions ? EVENT_COMMENT_REACTION_EMOJIS : EVENT_COMMENT_QUICK_REACTIONS).map((emoji) => <Pressable key={emoji} accessibilityLabel={`${emoji}スタンプ`} onPress={() => { const target = eventCommentActionTarget; setEventCommentActionTarget(null); setEventCommentShowAllReactions(false); if (target) void handleEventCommentReaction(target, emoji); }} style={{ width: 42, height: 38, borderRadius: 19, alignItems: "center", justifyContent: "center", backgroundColor: (eventCommentActionTarget?.reactions?.[emoji] ?? []).includes(viewerMemberId) ? "#FCE8F1" : colors.surface }}><Text style={{ fontSize: 21 }}>{emoji}</Text></Pressable>)}
+              {!eventCommentShowAllReactions ? <Pressable accessibilityLabel="他のスタンプを表示" onPress={() => setEventCommentShowAllReactions(true)} style={{ width: 42, height: 38, borderRadius: 19, alignItems: "center", justifyContent: "center", backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border }}><IconSymbol name="plus" size={19} color={colors.muted} /></Pressable> : null}
+            </ScrollView>
             {[
               { label: "返信", icon: "arrowshape.turn.up.left.fill", action: () => { const target = eventCommentActionTarget; setEventCommentActionTarget(null); if (!target) return; setEventCommentText(`@${stripRankFromName(target.author)} `); requestAnimationFrame(() => eventCommentInputRef.current?.focus()); } },
               { label: "テキストをコピー", icon: "doc.on.doc", action: () => { const target = eventCommentActionTarget; setEventCommentActionTarget(null); if (target) void Clipboard.setStringAsync(target.text); } },

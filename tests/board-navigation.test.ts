@@ -75,6 +75,8 @@ describe("board category ordering", () => {
     expect(profileScreen).toContain('returnToClubManagement === "1" && clubId');
     expect(profileScreen).toContain('reviewApplications: "1"');
     expect(clubsScreen).toContain("openApplicantProfile");
+    expect(clubsScreen).toContain("onOpenProfile();");
+    expect(clubsScreen).toContain("requestAnimationFrame(() => router.push");
     expect(clubsScreen).toContain("profile.avatarUrl");
     expect(clubsScreen).toContain("joinedDate.getMonth() + 1");
   });

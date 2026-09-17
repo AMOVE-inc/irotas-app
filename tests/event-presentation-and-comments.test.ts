@@ -39,7 +39,7 @@ describe("event presentation and comments", () => {
 
   it("opens an in-app long-press menu for event comment actions", () => {
     const detail = source("app/event-detail.tsx");
-    expect(detail).toContain("onLongPress={() => setEventCommentActionTarget(comment)}");
+    expect(detail).toContain("onLongPress={() => { setEventCommentShowAllReactions(false); setEventCommentActionTarget(comment); }}");
     expect(detail).toContain('label: "返信"');
     expect(detail).toContain('label: "テキストをコピー"');
     expect(detail).toContain('label: "メッセージリンクをコピー"');
@@ -55,6 +55,9 @@ describe("event presentation and comments", () => {
     const server = source("sites/events.ts");
     const migration = source("drizzle/0054_event_comment_reactions.sql");
     expect(detail).toContain("EVENT_COMMENT_REACTION_EMOJIS");
+    expect(detail).toContain("EVENT_COMMENT_QUICK_REACTIONS");
+    expect(detail).toContain('accessibilityLabel="他のスタンプを表示"');
+    expect(detail).toContain("setEventCommentShowAllReactions(true)");
     expect(detail).toContain("handleEventCommentReaction");
     expect(api).toContain("setEventCommentReaction");
     expect(server).toContain("EVENT_COMMENT_REACTION_PATH");
