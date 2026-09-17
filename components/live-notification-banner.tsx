@@ -55,7 +55,7 @@ export function LiveNotificationBanner() {
           const path = latest.targetPath;
           setLatest(null);
           void Api.markNotificationRead(latest.id).catch(() => {});
-          router.push(path?.startsWith("/board?") || path?.startsWith("/chat?") ? path as any : "/notifications");
+          router.push(path?.startsWith("/board?") || path?.startsWith("/chat?") || path?.startsWith("/event-detail?") ? path as any : "/notifications");
         }}
         accessibilityRole="button"
         accessibilityLabel={`${latest.title}。通知を開く`}

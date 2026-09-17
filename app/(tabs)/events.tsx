@@ -41,7 +41,7 @@ import {
   stripRankFromName,
 } from "@/components/member-rank-badge";
 import { useFocusEffect, useRouter } from "expo-router";
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import * as Api from "@/lib/_core/api";
 import {
   FlatList,
@@ -66,6 +66,8 @@ const WEEKDAYS = ["日", "月", "火", "水", "木", "金", "土"];
 const BUDGET_VALUES = Array.from({ length: 300 }, (_, index) =>
   String((index + 1) * 1000),
 );
+
+const eventListCache = new Map<number, Event[]>();
 
 function BudgetSelect({
   label,
@@ -890,10 +892,10 @@ export default function EventsScreen() {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [refreshing, setRefreshing] = useState(false);
-  // 公開イベントは同梱済みデータから即時表示し、認証後にDBの最新状態で差し替える。
-  // 部員限定イベントは権限確認前の初期表示には含めない。
-  const [allEvents, setAllEvents] = useState<Event[]>(() => getAllEvents(EVENTS).filter((event) => event.eventType !== "club"));
-  const [eventsLoaded, setEventsLoaded] = useState(true);
+  // Bundled EVENTS are development fixtures. Only show the authenticated
+  // member's last API result while the latest database state is loading.
+  const [allEvents, setAllEvents] = useState<Event[]>([]);
+  const [eventsLoaded, setEventsLoaded] = useState(false);
   const [eventsLoadFailed, setEventsLoadFailed] = useState(false);
   const favoriteEventIds = useEventFavorites();
   const effectiveFavoriteEventIds = useMemo(
@@ -918,6 +920,11 @@ export default function EventsScreen() {
     CURRENT_USER.id,
   );
   const userIsAdmin = isAdminRole(authUser?.role, authUser?.accessRole);
+  useEffect(() => {
+    const cached = authUser?.id ? eventListCache.get(authUser.id) : undefined;
+    setAllEvents(cached ?? []);
+    setEventsLoaded(Boolean(cached));
+  }, [authUser?.id]);
   const canAccessClubEvent = useCallback(
     (clubId?: string) => {
       const club = clubs.find((candidate) => candidate.id === clubId);
@@ -941,12 +948,14 @@ export default function EventsScreen() {
     try {
       const { events: databaseEvents } = await Api.getEventsWithDeletedImportedIds();
       const importedById = new Map(getAllEvents(EVENTS).map((event) => [event.id, event]));
-      setAllEvents([
+      const nextEvents = [
         ...databaseEvents.map((event) => {
           const imported = importedById.get(event.id);
           return imported ? { ...event, organizerProfileId: imported.organizerProfileId || event.organizerProfileId, organizerName: imported.organizerName || event.organizerName, organizerAvatar: imported.organizerAvatar || event.organizerAvatar, organizerRank: imported.organizerRank || event.organizerRank } : event;
         }),
-      ]);
+      ];
+      eventListCache.set(authUser.id, nextEvents);
+      setAllEvents(nextEvents);
       setEventsLoadFailed(false);
     } catch {
       setEventsLoadFailed(true);

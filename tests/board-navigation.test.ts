@@ -75,4 +75,12 @@ describe("board category ordering", () => {
     expect(profileScreen).toContain('returnToClubManagement === "1" && clubId');
     expect(profileScreen).toContain('reviewApplications: "1"');
   });
+
+  it("returns from a meal-report profile to the exact report", () => {
+    const boardScreen = readFileSync(resolve(process.cwd(), "app/(tabs)/board.tsx"), "utf8");
+    const profileScreen = readFileSync(resolve(process.cwd(), "app/member-profile.tsx"), "utf8");
+    expect(boardScreen).toContain('returnToBoardThread: "1", boardCategory: thread.category, boardThreadId: thread.id');
+    expect(profileScreen).toContain('returnToBoardThread === "1" && boardCategory && boardThreadId');
+    expect(profileScreen).toContain('thread: boardThreadId');
+  });
 });

@@ -381,6 +381,11 @@ function ThreadCard({ thread, viewerId, onPress, onEdit, onDelete, onPin, onChan
     thread.category === "kansai-branch" ||
     thread.category.startsWith("club-");
   const rightPreviewImage = showsRightPreview ? thread.images?.[0] : undefined;
+  const authorProfileParams = {
+    id: thread.author.id,
+    legacyName: thread.author.name,
+    ...(thread.mealReport ? { returnToBoardThread: "1", boardCategory: thread.category, boardThreadId: thread.id } : {}),
+  };
 
   const timeAgo = useCallback((dateStr: string) => {
     const diff = Date.now() - new Date(dateStr).getTime();
@@ -420,7 +425,7 @@ function ThreadCard({ thread, viewerId, onPress, onEdit, onDelete, onPin, onChan
     >
       {/* Author */}
       <Pressable
-        onPress={() => router.push({ pathname: "/member-profile", params: { id: thread.author.id, legacyName: thread.author.name } })}
+        onPress={() => router.push({ pathname: "/member-profile", params: authorProfileParams })}
         style={{ flexDirection: "row", alignItems: "center", marginBottom: 8 }}
       >
         {unreadCount > 0 && mentionCount === 0 ? <View style={{ marginRight: 7, backgroundColor: "#3478C7", borderRadius: 7, paddingHorizontal: 7, paddingVertical: 3 }}><Text style={{ color: "#FFFFFF", fontSize: 10, fontWeight: "900" }}>NEW</Text></View> : null}
@@ -864,6 +869,11 @@ function ThreadDetailModal({
     : null;
   const clubApplicationPending = Boolean(applicationAccess?.hasApplied);
   const clubApplicationMember = Boolean(applicationAccess?.isMember);
+  const profileParams = (memberId: string, memberName: string) => ({
+    id: memberId,
+    legacyName: memberName,
+    ...(thread.mealReport ? { returnToBoardThread: "1", boardCategory: thread.category, boardThreadId: thread.id } : {}),
+  });
 
   const submitClubApplication = async () => {
     if (!applicationClub || !clubWantsToDo.trim() || !clubLeaderMessage.trim()) return;
@@ -1167,7 +1177,7 @@ function ThreadDetailModal({
       >
         <ScrollView ref={commentScrollRef} style={{ flex: 1 }} contentContainerStyle={{ padding: 16 }}>
           {/* Thread content */}
-          <Pressable onPress={() => router.push({ pathname: "/member-profile", params: { id: thread.author.id, legacyName: thread.author.name } })} accessibilityLabel={`${stripRankFromName(thread.author.name)}のプロフィールを表示`} style={{ flexDirection: "row", alignItems: "center", marginBottom: 12 }}>
+          <Pressable onPress={() => router.push({ pathname: "/member-profile", params: profileParams(thread.author.id, thread.author.name) })} accessibilityLabel={`${stripRankFromName(thread.author.name)}のプロフィールを表示`} style={{ flexDirection: "row", alignItems: "center", marginBottom: 12 }}>
             {isThreadPinned(thread) ? <View style={{ marginRight: 7, borderRadius: 10, paddingHorizontal: 8, paddingVertical: 6, backgroundColor: "#FFF2C7" }}><Text style={{ fontSize: 11, fontWeight: "900", color: "#8A6512" }}>📌 固定</Text></View> : null}
             {recruitmentManaged ? <RecruitmentStatusBadge status={recruitmentStatus} /> : null}
             <Image source={thread.author.avatar} style={{ width: 36, height: 36, borderRadius: 18 }} contentFit="cover" />
@@ -1355,10 +1365,10 @@ function ThreadDetailModal({
             {comments.map((comment) => {
               return <Pressable key={comment.id} onLayout={(event) => { commentPositions.current.set(comment.id, event.nativeEvent.layout.y); }} onLongPress={() => setSelectedComment(comment)} delayLongPress={350} style={{ marginBottom: 14, borderRadius: 12, borderWidth: highlightedCommentId === comment.id ? 3 : 0, borderColor: "#3478C7" }}>
                 <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 4 }}>
-                  <Pressable onPress={() => router.push({ pathname: "/member-profile", params: { id: comment.author.id, legacyName: comment.author.name } })} accessibilityLabel={`${stripRankFromName(comment.author.name)}のプロフィールを表示`}>
+                  <Pressable onPress={() => router.push({ pathname: "/member-profile", params: profileParams(comment.author.id, comment.author.name) })} accessibilityLabel={`${stripRankFromName(comment.author.name)}のプロフィールを表示`}>
                     <Image source={comment.author.avatar} style={{ width: 24, height: 24, borderRadius: 12 }} contentFit="cover" />
                   </Pressable>
-                  <Pressable onPress={() => router.push({ pathname: "/member-profile", params: { id: comment.author.id, legacyName: comment.author.name } })} accessibilityLabel={`${stripRankFromName(comment.author.name)}のプロフィールを表示`}><Text style={{ fontSize: 13, fontWeight: "600", color: colors.foreground, marginLeft: 8 }}>
+                  <Pressable onPress={() => router.push({ pathname: "/member-profile", params: profileParams(comment.author.id, comment.author.name) })} accessibilityLabel={`${stripRankFromName(comment.author.name)}のプロフィールを表示`}><Text style={{ fontSize: 13, fontWeight: "600", color: colors.foreground, marginLeft: 8 }}>
                     {stripRankFromName(comment.author.name)}
                   </Text></Pressable>
                   <OperatorOrRankBadge member={comment.author} />

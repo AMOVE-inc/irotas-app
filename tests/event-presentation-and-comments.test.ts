@@ -30,7 +30,7 @@ describe("event presentation and comments", () => {
 
   it("allows event comments to select and open individual member mentions", () => {
     const detail = source("app/event-detail.tsx");
-    expect(detail).toContain("members={MEMBERS}");
+    expect(detail).toContain("members={eventMentionMembers}");
     expect(detail).toContain("memberDirectory.find");
     expect(detail).toContain("@で会員・部活・支部をメンションできます。");
     expect(detail).toContain("displayCommentAuthor");

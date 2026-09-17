@@ -62,6 +62,7 @@ class EventAccessDatabase implements D1Database {
   cancellationPending = false;
   mutationQueries: string[] = [];
   notifications: { targetMemberId: number; type: string; eventId: string }[] = [];
+  comments = new Map<string, { id: string; event_id: string; author_member_id: number; author_name: string; author_public_id: string; content: string; created_at: string; deleted_at: null }>();
 
   prepare(sql: string): D1PreparedStatement {
     const db = this;
@@ -70,6 +71,7 @@ class EventAccessDatabase implements D1Database {
       bind: (...next: unknown[]) => { values = next; return statement; },
       first: async <T>() => {
         if (sql.includes("SELECT public_member_id FROM members")) return { public_member_id: "IRO0010" } as T;
+        if (sql.includes("SELECT display_name, discord_user_id FROM members")) return { display_name: "主催者", discord_user_id: null } as T;
         if (sql.includes("SELECT display_name FROM members WHERE id = ?")) return { display_name: "主催者" } as T;
         if (sql.includes("SELECT id FROM members WHERE public_member_id")) return { id: 10 } as T;
         if (sql.includes("FROM events e JOIN members")) return db.row as T;
@@ -77,6 +79,7 @@ class EventAccessDatabase implements D1Database {
         if (sql.includes("FROM event_cancellation_requests") && sql.includes("status = 'pending'")) return db.cancellationPending ? { id: "cancel-1" } as T : null;
         if (sql.includes("COUNT(*) AS count FROM event_participations")) return { count: db.participationStatus === "confirmed" ? 1 : 0 } as T;
         if (sql.includes("FROM event_favorites")) return null;
+        if (sql.includes("FROM event_comments") && sql.includes("WHERE id = ?")) return (db.comments.get(String(values[0])) ?? null) as T | null;
         return null;
       },
       all: async <T>() => {
@@ -104,6 +107,10 @@ class EventAccessDatabase implements D1Database {
         if (sql.includes("UPDATE event_participations SET status = ?")) db.participationStatus = String(values[0]);
         if (sql.includes("UPDATE event_participations SET status = 'cancel_requested'")) db.participationStatus = "cancel_requested";
         if (sql.includes("UPDATE event_participations SET status = 'cancelled'")) db.participationStatus = "cancelled";
+        if (sql.includes("INSERT OR IGNORE INTO event_comments")) db.comments.set(String(values[0]), {
+          id: String(values[0]), event_id: String(values[1]), author_member_id: Number(values[2]), author_name: String(values[3]),
+          author_public_id: String(values[4]), content: String(values[5]), created_at: String(values[6]), deleted_at: null,
+        });
         if (sql.includes("INTO in_app_notifications")) {
           const type = sql.includes("'event_mention'") ? "event_mention" : sql.includes("'event_cancellation'") ? "event_cancellation" : sql.includes("'event_payment_ready'") ? "event_payment_ready" : "event_confirmed";
           db.notifications.push({ targetMemberId: Number(values[1]), type, eventId: String(values[4]) });
@@ -149,6 +156,16 @@ describe("club event access", () => {
       body: JSON.stringify({ action: "edit", title: db.row.title, description: "@杏奈 ご確認ください", publicNotes: "@杏奈 ご確認ください", participants: [] }),
     }), env);
     expect(response?.status).toBe(200);
+    expect(db.notifications).toContainEqual({ targetMemberId: 21, type: "event_mention", eventId: db.row.id });
+  });
+
+  it("creates an in-app notification when an event comment mentions a member", async () => {
+    db.row = { ...db.row, event_type: "official", club_id: null };
+    const response = await handleEventRequest(new Request(`https://app.example/api/events/${db.row.id}/comments`, {
+      method: "POST",
+      body: JSON.stringify({ text: "@杏奈 ご確認ください" }),
+    }), env);
+    expect(response?.status).toBe(201);
     expect(db.notifications).toContainEqual({ targetMemberId: 21, type: "event_mention", eventId: db.row.id });
   });
 

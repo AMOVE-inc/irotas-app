@@ -17,6 +17,9 @@ export function subscribeToOptimisticChatReads(listener: Listener) {
 
 export function effectiveUnreadTotal(rooms: UnreadRoom[], now = Date.now()) {
   return rooms.reduce((total, room) => {
+    // These rooms are intentionally absent from the chat list. Counting them
+    // produces a badge that the member has no screen from which to clear.
+    if (room.id === "board-introduction") return total;
     const count = Math.max(0, room.unreadCount ?? 0);
     const expiresAt = optimisticReads.get(room.id);
     if (count === 0) optimisticReads.delete(room.id);

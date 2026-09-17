@@ -474,7 +474,7 @@ export default function EventDetailScreen() {
     setEventCommentBusy(false);
     eventCommentSendingRef.current = false;
     const preview = content.length > 50 ? `${content.slice(0, 50)}...` : content;
-    const mentionedMemberIds = new Set(getMentionedMemberIds(content, MEMBERS, eventMentionGroups));
+    const mentionedMemberIds = new Set(getMentionedMemberIds(content, eventMentionMembers, eventMentionGroups));
     for (const label of extractMentionLabels(content)) {
       const directoryMember = memberDirectory.find((member) => stripRankFromName(member.displayName) === stripRankFromName(label));
       if (directoryMember) mentionedMemberIds.add(directoryMember.id);
@@ -1303,7 +1303,7 @@ export default function EventDetailScreen() {
               </View>
             </Pressable>;
           })}
-          {eventMentionQuery !== null ? <MentionSuggestions query={eventMentionQuery} groups={eventMentionGroups} members={MEMBERS} onSelect={(label) => setEventCommentText((value) => insertMention(value, label))} /> : null}
+          {eventMentionQuery !== null ? <MentionSuggestions query={eventMentionQuery} groups={eventMentionGroups} members={eventMentionMembers} onSelect={(label, memberId) => setEventCommentText((value) => insertMention(value, label, memberId))} /> : null}
           <View style={{ flexDirection: "row", alignItems: "flex-end", marginTop: 14 }}><TextInput ref={eventCommentInputRef} value={eventCommentText} onChangeText={(value) => setEventCommentText(value.replace(/@everyone\b/gi, ""))} onFocus={() => setEventCommentFocused(true)} onBlur={() => setEventCommentFocused(false)} placeholder="質問やコメントを入力" placeholderTextColor={colors.muted} multiline style={{ flex: 1, minHeight: 44, maxHeight: 100, borderRadius: 14, backgroundColor: colors.background, borderWidth: 1, borderColor: colors.border, paddingHorizontal: 12, paddingVertical: 10, color: colors.foreground }} /><Pressable disabled={!eventCommentText.trim() || eventCommentBusy} onPress={() => { void handleEventComment(); }} style={{ width: 44, height: 44, borderRadius: 22, marginLeft: 8, alignItems: "center", justifyContent: "center", backgroundColor: eventCommentText.trim() && !eventCommentBusy ? "#D65E8D" : colors.border }}><IconSymbol name="paperplane.fill" size={19} color="#FFF" /></Pressable></View>
         </View>
 

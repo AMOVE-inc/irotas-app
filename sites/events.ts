@@ -277,7 +277,16 @@ export function eventMentionRecipientIds(
 
 async function eventMentionNotificationStatements(
   db: D1Database,
-  input: { eventId: string; eventTitle: string; content: string; previousContent?: string; actorMemberId: number; now: string },
+  input: {
+    eventId: string;
+    eventTitle: string;
+    content: string;
+    previousContent?: string;
+    actorMemberId: number;
+    now: string;
+    notificationScope?: string;
+    locationLabel?: string;
+  },
 ) {
   if (!input.content.includes("@")) return [];
   const result = await db.prepare(`SELECT id, display_name, public_member_id FROM members
@@ -286,14 +295,15 @@ async function eventMentionNotificationStatements(
   if (!recipientIds.length) return [];
   const actorName = await eventChatMemberName(db, input.actorMemberId);
   return recipientIds.map((targetMemberId) => db.prepare(`INSERT OR IGNORE INTO in_app_notifications
-    (id, target_member_id, type, title, body, event_id, created_at)
-    VALUES (?, ?, 'event_mention', ?, ?, ?, ?)`)
+    (id, target_member_id, type, title, body, event_id, target_path, created_at)
+    VALUES (?, ?, 'event_mention', ?, ?, ?, ?, ?)`)
     .bind(
-      `event-mention:${input.eventId}:${targetMemberId}:${crypto.randomUUID()}`,
+      `event-mention:${input.eventId}:${input.notificationScope ?? crypto.randomUUID()}:${targetMemberId}`,
       targetMemberId,
       "イベントでメンションされました",
-      `${actorName}さんが「${input.eventTitle}」の自由記述欄であなたをメンションしました。`,
+      `${actorName}さんが「${input.eventTitle}」の${input.locationLabel ?? "自由記述欄"}であなたをメンションしました。`,
       input.eventId,
+      `/event-detail?id=${encodeURIComponent(input.eventId)}`,
       input.now,
     ));
 }
@@ -1010,6 +1020,16 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
       const saved = await env.DB.prepare("SELECT id, event_id, author_member_id, author_name, author_public_id, content, created_at, deleted_at FROM event_comments WHERE id = ?")
         .bind(commentId).first<StoredEventComment>();
       if (!saved || saved.event_id !== id || saved.author_member_id !== member.id || saved.deleted_at) return responseJson({ error: "コメントを保存できませんでした" }, 409);
+      const mentionNotifications = await eventMentionNotificationStatements(env.DB, {
+        eventId: id,
+        eventTitle: row.title,
+        content,
+        actorMemberId: member.id,
+        now,
+        notificationScope: `comment:${commentId}`,
+        locationLabel: "コメント欄",
+      });
+      if (mentionNotifications.length) await env.DB.batch(mentionNotifications);
       return responseJson({ comment: { id: saved.id, author: saved.author_name, authorId: saved.author_public_id, text: saved.content, createdAt: saved.created_at, canEdit: true } }, 201);
     }
     if (commentMatch && (request.method === "PATCH" || request.method === "DELETE")) {
@@ -1025,11 +1045,23 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
         const input = await readBody(request);
         const content = text(input?.text, 5000, true);
         if (!content) return responseJson({ error: "コメントを入力してください" }, 400);
+        const previousContent = source?.text ?? saved?.content ?? "";
         if (saved) await env.DB.prepare("UPDATE event_comments SET content = ?, updated_at = ? WHERE id = ? AND event_id = ? AND deleted_at IS NULL")
           .bind(content, now, commentId, id).run();
         else await env.DB.prepare(`INSERT INTO event_comments
           (id, event_id, author_member_id, author_name, author_public_id, content, created_at, updated_at)
           VALUES (?, ?, NULL, ?, ?, ?, ?, ?)`).bind(commentId, id, source!.author, source!.authorId ?? null, content, source!.createdAt, now).run();
+        const mentionNotifications = await eventMentionNotificationStatements(env.DB, {
+          eventId: id,
+          eventTitle: row.title,
+          content,
+          previousContent,
+          actorMemberId: member.id,
+          now,
+          notificationScope: `comment:${commentId}`,
+          locationLabel: "コメント欄",
+        });
+        if (mentionNotifications.length) await env.DB.batch(mentionNotifications);
         return responseJson({ comment: { id: commentId, author: source?.author ?? saved?.author_name, authorId: source?.authorId ?? saved?.author_public_id, text: content, createdAt: source?.createdAt ?? saved?.created_at, canEdit: true } });
       }
       if (saved) await env.DB.prepare("UPDATE event_comments SET deleted_at = ?, updated_at = ? WHERE id = ? AND event_id = ? AND deleted_at IS NULL")
