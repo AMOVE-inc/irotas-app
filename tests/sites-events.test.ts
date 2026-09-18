@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
-import { eventMentionRecipientIds, lockedClubEventPreview, sanitizeEvent } from "../sites/events";
+import { eventMentionRecipientIds, isAllowedEditedEventTime, lockedClubEventPreview, sanitizeEvent } from "../sites/events";
 import { eventCapacityLabel, eventFormSaveFields, eventFormValuesFromEvent, validateEventForm } from "../lib/event-form";
 import type { Event } from "../constants/mock-data";
 
@@ -75,6 +75,14 @@ describe("production event validation", () => {
     expect(sanitizeEvent(validEvent({ eventType: "official", rankPrices: { ...rankPrices, gold: "3,250円" } }))).toBeNull();
     expect(sanitizeEvent(validEvent({ eventType: "official", rankPrices: { regular: "4,500円" } }))).toBeNull();
     expect(sanitizeEvent(validEvent({ eventType: "gourmet", rankPrices }))).toBeNull();
+  });
+
+  it("preserves the exact non-quarter-hour time of a migrated Discord event during edits", () => {
+    const stored = JSON.stringify({ time: "08:50" });
+    expect(isAllowedEditedEventTime("08:50", "discord-event-1543905701859033089", stored)).toBe(true);
+    expect(isAllowedEditedEventTime("08:55", "discord-event-1543905701859033089", stored)).toBe(false);
+    expect(isAllowedEditedEventTime("08:50", "event-native", stored)).toBe(false);
+    expect(isAllowedEditedEventTime("09:15", "event-native", stored)).toBe(true);
   });
 
   it("keeps undecided and unlimited recruitment capacity distinct from a numeric limit", () => {

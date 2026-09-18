@@ -1024,7 +1024,14 @@ export default function EventsScreen() {
       viewerMemberId,
     ],
   );
-  const visibleEvents = filteredEvents;
+  const visibleEvents = useMemo(
+    () =>
+      filteredEvents.filter(
+        (event) =>
+          event.eventType !== "official" || !isPastEventDate(event),
+      ),
+    [filteredEvents],
+  );
   const firstPastEventIndex = useMemo(
     () => visibleEvents.findIndex((event) => isPastEventDate(event)),
     [visibleEvents],

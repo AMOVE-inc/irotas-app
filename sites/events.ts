@@ -356,6 +356,25 @@ function stringArray(value: unknown, maximumItems: number, maximumLength = 80) {
   return result.every((item): item is string => item !== null) ? result : null;
 }
 
+const QUARTER_HOUR_TIME = /^([01]\d|2[0-3]):(00|15|30|45)$/;
+const CLOCK_TIME = /^([01]\d|2[0-3]):[0-5]\d$/;
+
+/**
+ * New event times stay on 15-minute boundaries. Discord imports can contain a
+ * more precise legacy time, so a full edit may preserve that exact stored
+ * value without making every other field impossible to save.
+ */
+export function isAllowedEditedEventTime(time: string, eventId: string, publicDataJson: string) {
+  if (QUARTER_HOUR_TIME.test(time)) return true;
+  if (!eventId.startsWith("discord-event-") || !CLOCK_TIME.test(time)) return false;
+  try {
+    const data = JSON.parse(publicDataJson) as { time?: unknown };
+    return data.time === time;
+  } catch {
+    return false;
+  }
+}
+
 export function sanitizeEvent(value: unknown) {
   if (!value || typeof value !== "object") return null;
   const input = value as Record<string, unknown>;
@@ -369,7 +388,7 @@ export function sanitizeEvent(value: unknown) {
   const capacity = number(input.capacity, capacityMode ? 0 : 1, 100);
   const reservationCapacity = number(input.reservationCapacity, 0, 101);
   const genres = stringArray(input.genres, 20);
-  if (!eventType || !title || !date || !/^\d{4}-\d{2}-\d{2}$/.test(date) || !time || !/^([01]\d|2[0-3]):(00|15|30|45)$/.test(time) || capacity === null || (capacityMode && capacity !== 0) || reservationCapacity === null || genres === null)
+  if (!eventType || !title || !date || !/^\d{4}-\d{2}-\d{2}$/.test(date) || !time || !QUARTER_HOUR_TIME.test(time) || capacity === null || (capacityMode && capacity !== 0) || reservationCapacity === null || genres === null)
     return null;
   const clubId = text(input.clubId, 80);
   if (eventType === "club" && !clubId) return null;
@@ -1244,7 +1263,7 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
       const tokyoArea = input.tokyoArea === undefined ? undefined : text(input.tokyoArea, 80);
       const publicNotes = input.publicNotes === undefined ? undefined : text(input.publicNotes, 5000);
       const privateMemo = input.privateMemo === undefined ? undefined : text(input.privateMemo, 5000);
-      if (!title || description === null || (date !== undefined && (typeof date !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(date))) || (time !== undefined && (typeof time !== "string" || !/^([01]\d|2[0-3]):(00|15|30|45)$/.test(time))) || location === null || capacity === null || capacityMode === false || (capacityMode && capacity !== undefined && capacity !== 0) || reservationCapacity === null || price === null || priceMin === null || priceMax === null || applicationDeadline === null || cancellationPolicy === null || tabelogUrl === null || googleMapsUrl === null || !eventType || clubId === null || restaurantName === null || (image !== undefined && (!image || !image.startsWith("/api/event-images/"))) || genres === null || companionIds === null || normalizedRankPrices === null || selectionMethod === null || recruitmentStatus === null || recruitmentChannel === null || category === null || prefecture === null || tokyoArea === null || publicNotes === null || privateMemo === null)
+      if (!title || description === null || (date !== undefined && (typeof date !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(date))) || (time !== undefined && (typeof time !== "string" || !isAllowedEditedEventTime(time, id, row.public_data_json))) || location === null || capacity === null || capacityMode === false || (capacityMode && capacity !== undefined && capacity !== 0) || reservationCapacity === null || price === null || priceMin === null || priceMax === null || applicationDeadline === null || cancellationPolicy === null || tabelogUrl === null || googleMapsUrl === null || !eventType || clubId === null || restaurantName === null || (image !== undefined && (!image || !image.startsWith("/api/event-images/"))) || genres === null || companionIds === null || normalizedRankPrices === null || selectionMethod === null || recruitmentStatus === null || recruitmentChannel === null || category === null || prefecture === null || tokyoArea === null || publicNotes === null || privateMemo === null)
         return responseJson({ error: "変更内容が不正です" }, 400);
       if (eventType === "official" && !elevated) return responseJson({ error: "公式イベントは運営メンバーのみ設定できます" }, 403);
       if (eventType !== "official" && normalizedRankPrices && Object.keys(normalizedRankPrices).length > 0) return responseJson({ error: "ランク別料金は公式イベントのみ設定できます" }, 400);

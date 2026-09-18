@@ -11,9 +11,9 @@ describe("event presentation and comments", () => {
     expect(events).toContain('label: "空席あり"');
   });
 
-  it("keeps past official events in the public event history", () => {
+  it("hides past official events from the public event list", () => {
     const events = source("app/(tabs)/events.tsx");
-    expect(events).toContain("const visibleEvents = filteredEvents");
+    expect(events).toContain('event.eventType !== "official" || !isPastEventDate(event)');
     expect(events).toContain("isPastEventDate(event)");
     expect(events).toContain("data={visibleEvents}");
   });
