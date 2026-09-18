@@ -89,7 +89,8 @@ describe("board category ordering", () => {
     expect(boardScreen).toContain("commentScrollRef.current?.scrollTo");
     expect(chatScreen).toContain("initiallyPositionedChat");
     expect(chatScreen).toContain("ここから未読メッセージ");
-    expect(chatScreen).toContain("viewPosition: unreadCount > 0 ? 0.12 : 1");
+    expect(chatScreen).toContain("effectiveUnreadCount > 0 ? 0.12 : 1");
+    expect(chatScreen).toContain("introductionFirstUnreadIndex");
   });
 
   it("returns from a meal-report profile to the exact report", () => {

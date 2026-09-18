@@ -73,6 +73,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { boardActivityForThread, recordHomeActivity } from "@/lib/home-activity-store";
 import { GOURMET_GENRES } from "@/constants/event-options";
+import { createInitialBoardReadCounts, supportsBoardNewBadge } from "@/lib/board-unread";
 import { boardPollResult, finalizeBoardPollOnce, isBoardPollOpen, loadBoardPoll, voteBoardPoll } from "@/lib/board-polls";
 import { addInAppNotification } from "@/lib/in-app-notifications-store";
 import { deleteBoardComment, deleteBoardThread, loadBoardCommentEdits, loadDeletedBoardCommentIds, loadDeletedBoardThreadIds, saveBoardCommentEdit } from "@/lib/board-content-store";
@@ -347,7 +348,7 @@ function SelfIntroductionMessage({ thread }: { thread: BoardThread }) {
   </View>;
 }
 
-function ThreadCard({ thread, viewerId, onPress, onEdit, onDelete, onPin, onChangeRecruitment, unreadCount = 0, mentionCount = 0, showMenu = true, comments = [] }: { thread: BoardThread; viewerId: string; onPress: () => void; onEdit?: () => void; onDelete?: () => void; onPin?: () => void; onChangeRecruitment?: () => void; unreadCount?: number; mentionCount?: number; showMenu?: boolean; comments?: BoardComment[] }) {
+function ThreadCard({ thread, viewerId, onPress, onEdit, onDelete, onPin, onChangeRecruitment, unreadCount = 0, mentionCount = 0, isNewPost = false, showMenu = true, comments = [] }: { thread: BoardThread; viewerId: string; onPress: () => void; onEdit?: () => void; onDelete?: () => void; onPin?: () => void; onChangeRecruitment?: () => void; unreadCount?: number; mentionCount?: number; isNewPost?: boolean; showMenu?: boolean; comments?: BoardComment[] }) {
   const colors = useColors();
   const [showActions, setShowActions] = useState(false);
   const router = useRouter();
@@ -428,7 +429,7 @@ function ThreadCard({ thread, viewerId, onPress, onEdit, onDelete, onPin, onChan
         onPress={() => router.push({ pathname: "/member-profile", params: authorProfileParams })}
         style={{ flexDirection: "row", alignItems: "center", marginBottom: 8 }}
       >
-        {unreadCount > 0 && mentionCount === 0 ? <View style={{ marginRight: 7, backgroundColor: "#3478C7", borderRadius: 7, paddingHorizontal: 7, paddingVertical: 3 }}><Text style={{ color: "#FFFFFF", fontSize: 10, fontWeight: "900" }}>NEW</Text></View> : null}
+        {isNewPost ? <View style={{ marginRight: 7, backgroundColor: "#3478C7", borderRadius: 7, paddingHorizontal: 7, paddingVertical: 3 }}><Text style={{ color: "#FFFFFF", fontSize: 10, fontWeight: "900" }}>new</Text></View> : null}
         {pinned ? <View style={{ marginRight: 7, borderRadius: 10, paddingHorizontal: 8, paddingVertical: 6, backgroundColor: "#FFF2C7" }}><Text style={{ fontSize: 11, fontWeight: "900", color: "#8A6512" }}>📌 固定</Text></View> : null}
         {recruitmentManaged ? <RecruitmentStatusBadge status={recruitmentStatus} /> : thread.gourmetContest && contestOpen ? <View style={{ marginRight: 9, borderRadius: 10, paddingHorizontal: 9, paddingVertical: 6, backgroundColor: "#DDF3E3" }}><Text style={{ fontSize: 11, fontWeight: "900", color: "#247A42" }}>開催中</Text></View> : null}
         <Image
@@ -2638,6 +2639,7 @@ export default function BoardScreen() {
   const [importedComments, setImportedComments] = useState<Record<string, BoardComment[]>>({});
   const [threadReadCounts, setThreadReadCounts] = useState<Record<string, number>>({});
   const [threadReadsHydrated, setThreadReadsHydrated] = useState(false);
+  const [needsInitialReadBaseline, setNeedsInitialReadBaseline] = useState(false);
   const [editedThreads, setEditedThreads] = useState<Record<string, BoardThread>>({});
   const [deletedThreadIds, setDeletedThreadIds] = useState<string[]>([]);
   const [editingThread, setEditingThread] = useState<BoardThread | null>(null);
@@ -2662,13 +2664,22 @@ export default function BoardScreen() {
       "here",
     ].filter(Boolean))];
   }, [authUser, clubs, viewerMember.branch, viewerMember.name, viewerMemberId]);
-  const boardReadKey = `irotas_board_thread_reads_v1:${viewerMemberId}`;
+  const boardReadKey = `irotas_board_thread_reads_v2:${viewerMemberId}`;
+  const longPressedCategoryRef = useRef<string | null>(null);
   useEffect(() => {
     setThreadReadsHydrated(false);
+    setNeedsInitialReadBaseline(false);
     void AsyncStorage.getItem(boardReadKey)
-      .then((raw) => setThreadReadCounts(raw ? JSON.parse(raw) : {}))
-      .catch(() => setThreadReadCounts({}))
-      .finally(() => setThreadReadsHydrated(true));
+      .then((raw) => {
+        if (raw) {
+          setThreadReadCounts(JSON.parse(raw));
+          setThreadReadsHydrated(true);
+        } else {
+          setThreadReadCounts({});
+          setNeedsInitialReadBaseline(true);
+        }
+      })
+      .catch(() => setNeedsInitialReadBaseline(true));
   }, [boardReadKey]);
   const markThreadRead = useCallback((threadId: string) => {
     const count = (importedComments[threadId] ?? []).length;
@@ -2698,7 +2709,9 @@ export default function BoardScreen() {
   // 自己紹介は通常チャットと同じ操作・未読・リアクション UI に統一する。
   useEffect(() => {
     if (isThreadView && categoryParam === "introduction") {
-      router.replace({ pathname: "/chat", params: { id: "board-introduction", unreadCount: "0" } });
+      void Api.getSharedChatRoom("board-introduction")
+        .then((room) => router.replace({ pathname: "/chat", params: { id: "board-introduction", unreadCount: String(room.unreadCount ?? 0) } }))
+        .catch(() => router.replace({ pathname: "/chat", params: { id: "board-introduction", unreadCount: "0" } }));
     }
   }, [categoryParam, isThreadView, router]);
 
@@ -2844,7 +2857,10 @@ export default function BoardScreen() {
     [authUser, dynamicThreads, editedThreads, deletedThreadIds],
   );
   const firstSignInTime = authUser?.firstSignedIn?.getTime() ?? authUser?.lastSignedIn?.getTime() ?? 0;
-  const postedAfterFirstSignIn = (createdAt: string | undefined) => Boolean(createdAt) && Date.parse(createdAt!) > firstSignInTime;
+  const postedAfterFirstSignIn = useCallback(
+    (createdAt: string | undefined) => Boolean(createdAt) && Date.parse(createdAt!) > firstSignInTime,
+    [firstSignInTime],
+  );
   const categoryUnreadStatus = useCallback((categoryKey: string): "mention" | "unread" | null => {
     if (!threadReadsHydrated) return null;
     let hasUnread = false;
@@ -2856,18 +2872,17 @@ export default function BoardScreen() {
       if (comments.length || newThread) hasUnread = true;
     }
     return hasUnread ? "unread" : null;
-  }, [allThreads, importedComments, threadReadCounts, threadReadsHydrated, viewerMemberId, viewerMentionLabels, firstSignInTime]);
-  const markCategoryRead = useCallback((categoryKey: string) => {
-    setThreadReadCounts((current) => {
-      const next = { ...current };
-      allThreads.filter((thread) => thread.category === categoryKey).forEach((thread) => {
-        next[thread.id] = (importedComments[thread.id] ?? []).length;
-      });
-      void AsyncStorage.setItem(boardReadKey, JSON.stringify(next));
-      return next;
-    });
-  }, [allThreads, boardReadKey, importedComments]);
+  }, [allThreads, importedComments, postedAfterFirstSignIn, threadReadCounts, threadReadsHydrated, viewerMemberId, viewerMentionLabels]);
   const boardLoading = Boolean(authUser) && (archiveLoading || sharedLoading);
+  useEffect(() => {
+    if (!needsInitialReadBaseline || boardLoading) return;
+    const commentCounts = Object.fromEntries(Object.entries(importedComments).map(([threadId, comments]) => [threadId, comments.length]));
+    const baseline = createInitialBoardReadCounts(allThreads.map((thread) => thread.id), commentCounts);
+    setThreadReadCounts(baseline);
+    setNeedsInitialReadBaseline(false);
+    setThreadReadsHydrated(true);
+    void AsyncStorage.setItem(boardReadKey, JSON.stringify(baseline));
+  }, [allThreads, boardLoading, boardReadKey, importedComments, needsInitialReadBaseline]);
   const filteredThreads = activeCategory === "meal-report"
     ? allThreads.filter((thread) => thread.category === activeCategory).sort((a, b) => Date.parse(b.lastUpdated) - Date.parse(a.lastUpdated))
     : sortRecruitmentThreads(allThreads.filter((t) => t.category === activeCategory));
@@ -2930,7 +2945,7 @@ export default function BoardScreen() {
       setSelectedThread(linkedThread);
       markThreadRead(linkedThread.id);
     }
-  }, [threadParam, allThreads, importedComments, markThreadRead, selectedThread?.id, threadReadCounts, viewerMemberId]);
+  }, [threadParam, allThreads, importedComments, markThreadRead, postedAfterFirstSignIn, selectedThread?.id, threadReadCounts, viewerMemberId]);
   const leaveThreadDetail = useCallback((navigate?: () => void) => {
     leavingThreadDetailRef.current = true;
     setSelectedThread(null);
@@ -2996,9 +3011,10 @@ export default function BoardScreen() {
   };
 
   const handleOpenCategory = (category: BoardCategory) => {
-    markCategoryRead(category.key);
     if (category.key === "introduction") {
-      router.push({ pathname: "/chat", params: { id: "board-introduction", unreadCount: "0" } });
+      void Api.getSharedChatRoom("board-introduction")
+        .then((room) => router.push({ pathname: "/chat", params: { id: "board-introduction", unreadCount: String(room.unreadCount ?? 0) } }))
+        .catch(() => router.push({ pathname: "/chat", params: { id: "board-introduction", unreadCount: "0" } }));
       return;
     }
     if (category.key === "gourmet-map") {
@@ -3041,15 +3057,29 @@ export default function BoardScreen() {
   const renderCategoryRow = (cat: BoardCategory) => {
     const presentation = categoryPresentation(cat);
     const unreadStatus = categoryUnreadStatus(cat.key);
+    const shareUrl = cat.key === "gourmet-map"
+      ? "https://app.irotas-community.com/gourmet-map"
+      : `https://app.irotas-community.com/board?category=${encodeURIComponent(cat.key)}&view=threads&label=${encodeURIComponent(cat.label)}`;
+    const copyCategoryLink = () => {
+      longPressedCategoryRef.current = cat.key;
+      void Clipboard.setStringAsync(shareUrl).then(() => {
+        const message = `貼り付けると「#${cat.label}」と表示されます。`;
+        if (Platform.OS === "web") window.alert(`リンクをコピーしました\n${message}`);
+        else Alert.alert("リンクをコピーしました", message);
+      });
+    };
     return (
       <Pressable
         key={cat.key}
-        onPress={() => handleOpenCategory(cat)}
+        onPress={() => { if (longPressedCategoryRef.current === cat.key) { longPressedCategoryRef.current = null; return; } handleOpenCategory(cat); }}
+        onLongPress={copyCategoryLink}
+        delayLongPress={450}
+        accessibilityLabel={`${cat.label}を開く。長押しでリンクをコピー`}
         style={{ flexDirection: "row", alignItems: "center", minHeight: 62, borderRadius: 14, paddingHorizontal: 13, paddingVertical: 9, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border }}
       >
         <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: `${presentation.accent}20`, alignItems: "center", justifyContent: "center" }}><IconSymbol name={presentation.icon as any} size={21} color={presentation.accent} /></View>
         <View style={{ flex: 1, marginLeft: 11 }}><Text style={{ fontSize: 15, fontWeight: "900", color: colors.foreground }}>{cat.label}</Text><Text style={{ fontSize: 11, color: colors.muted, marginTop: 3 }}>{presentation.description}</Text></View>
-        {unreadStatus ? <View style={{ backgroundColor: unreadStatus === "mention" ? "#D9363E" : "#3478C7", borderRadius: 9, paddingHorizontal: 7, paddingVertical: 3, marginRight: 8 }}><Text style={{ fontSize: 10, fontWeight: "900", color: "#FFFFFF" }}>{unreadStatus === "mention" ? "@メンション" : "新着"}</Text></View> : null}
+        {unreadStatus === "mention" || (unreadStatus === "unread" && supportsBoardNewBadge(cat.key)) ? <View style={{ backgroundColor: unreadStatus === "mention" ? "#D9363E" : "#3478C7", borderRadius: 9, paddingHorizontal: 7, paddingVertical: 3, marginRight: 8 }}><Text style={{ fontSize: 10, fontWeight: "900", color: "#FFFFFF" }}>{unreadStatus === "mention" ? "@メンション" : "new"}</Text></View> : null}
         <IconSymbol name="chevron.right" size={17} color={colors.muted} />
       </Pressable>
     );
@@ -3119,10 +3149,15 @@ export default function BoardScreen() {
       {!isThreadView && !isClubIndexView ? <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 12, paddingBottom: 92, gap: 8, backgroundColor: "#FBFDFF" }}>
         {BOARD_HOME_ORDER.map((categoryKey) => {
           if (categoryKey === "club") {
+            const clubUnreadStatus = categories
+              .filter((item) => item.group === "club" && canAccessCategory(item))
+              .map((item) => categoryUnreadStatus(item.key))
+              .find((status) => status === "mention") ?? (categories.some((item) => item.group === "club" && canAccessCategory(item) && categoryUnreadStatus(item.key) === "unread") ? "unread" : null);
             return (
-              <Pressable key="club" onPress={() => router.push("/clubs")} style={{ flexDirection: "row", alignItems: "center", minHeight: 62, borderRadius: 14, paddingHorizontal: 13, paddingVertical: 9, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border }}>
+              <Pressable key="club" onPress={() => { if (longPressedCategoryRef.current === "club") { longPressedCategoryRef.current = null; return; } router.push("/clubs"); }} onLongPress={() => { longPressedCategoryRef.current = "club"; void Clipboard.setStringAsync("https://app.irotas-community.com/clubs").then(() => { if (Platform.OS === "web") window.alert("リンクをコピーしました\n貼り付けると「#部活動」と表示されます。"); else Alert.alert("リンクをコピーしました", "貼り付けると「#部活動」と表示されます。"); }); }} delayLongPress={450} accessibilityLabel="部活動を開く。長押しでリンクをコピー" style={{ flexDirection: "row", alignItems: "center", minHeight: 62, borderRadius: 14, paddingHorizontal: 13, paddingVertical: 9, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border }}>
                 <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: "#5579A620", alignItems: "center", justifyContent: "center" }}><IconSymbol name="person.3.fill" size={21} color="#5579A6" /></View>
                 <View style={{ flex: 1, marginLeft: 11 }}><Text style={{ fontSize: 15, fontWeight: "900", color: colors.foreground }}>部活動</Text><Text style={{ fontSize: 11, color: colors.muted, marginTop: 3 }}>活動報告・入部中の部活動・部活動を探す</Text></View>
+                {clubUnreadStatus ? <View style={{ backgroundColor: clubUnreadStatus === "mention" ? "#D9363E" : "#3478C7", borderRadius: 9, paddingHorizontal: 7, paddingVertical: 3, marginRight: 8 }}><Text style={{ fontSize: 10, fontWeight: "900", color: "#FFFFFF" }}>{clubUnreadStatus === "mention" ? "@メンション" : "new"}</Text></View> : null}
                 <IconSymbol name="chevron.right" size={17} color={colors.muted} />
               </Pressable>
             );
@@ -3153,6 +3188,7 @@ export default function BoardScreen() {
             showMenu={item.category !== "introduction"}
             unreadCount={unreadComments.length + (newThread ? 1 : 0)}
             mentionCount={mentionCount}
+            isNewPost={newThread && supportsBoardNewBadge(item.category)}
             onPress={() => { setSelectedThreadUnreadCommentIds(unreadComments.map((comment) => comment.id)); markThreadRead(item.id); setSelectedThread(item); router.setParams({ thread: item.id }); }}
             onEdit={item.author.id === viewerMemberId || userCanModerateAll ? () => setEditingThread(item) : undefined}
             onDelete={item.author.id === viewerMemberId || userCanModerateAll ? () => {

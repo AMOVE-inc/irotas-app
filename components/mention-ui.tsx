@@ -4,7 +4,7 @@ import { BOARD_THREADS, type Member , BoardThread, ChatRoom } from "@/constants/
 import type { MentionGroup } from "@/lib/mentions";
 import { extractMentionLabels, isGroupMention } from "@/lib/mentions";
 import { useColors } from "@/hooks/use-colors";
-import { parseInternalLink, type InternalLinkMention } from "@/lib/internal-links";
+import { parseInternalLink, type InternalLinkMention, type InternalLinkPathname } from "@/lib/internal-links";
 import { getAllRooms } from "@/lib/chat-store";
 import { useRouter } from "expo-router";
 import { parseDiscordRichLines, tokenizeRichTextLinks, type DiscordTextFormat } from "@/lib/discord-rich-text";
@@ -52,10 +52,10 @@ function InternalLinkLabel({ link }: { link: InternalLinkMention }) {
   return <Text>{label}</Text>;
 }
 
-export function MentionText({ content, outgoing = false, groups, rooms = getAllRooms(), threads = BOARD_THREADS, onOpenInternalLink, onMentionPress, onClubMentionPress }: { content: string; outgoing?: boolean; groups: MentionGroup[]; rooms?: ChatRoom[]; threads?: BoardThread[]; onOpenInternalLink?: (pathname: "/chat" | "/board" | "/event-detail", params: Record<string, string>) => void; onMentionPress?: (label: string) => void; onClubMentionPress?: (group: MentionGroup) => void }) {
+export function MentionText({ content, outgoing = false, groups, rooms = getAllRooms(), threads = BOARD_THREADS, onOpenInternalLink, onMentionPress, onClubMentionPress }: { content: string; outgoing?: boolean; groups: MentionGroup[]; rooms?: ChatRoom[]; threads?: BoardThread[]; onOpenInternalLink?: (pathname: InternalLinkPathname, params: Record<string, string>) => void; onMentionPress?: (label: string) => void; onClubMentionPress?: (group: MentionGroup) => void }) {
   const colors = useColors();
   const router = useRouter();
-  const openInternalLink = onOpenInternalLink ?? ((pathname: "/chat" | "/board" | "/event-detail", params: Record<string, string>) => router.push({ pathname, params } as any));
+  const openInternalLink = onOpenInternalLink ?? ((pathname: InternalLinkPathname, params: Record<string, string>) => router.push({ pathname, params } as any));
   const renderMentions = (value: string, keyPrefix: string) => value.split(/(@[^\s@]+)/g).map((part, index) => {
     if (!part.startsWith("@")) return <Text key={`${keyPrefix}-${index}`}>{part}</Text>;
     const [rawLabel] = extractMentionLabels(part);

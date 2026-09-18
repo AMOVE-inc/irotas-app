@@ -10,8 +10,12 @@ import type {
   SitesEnv,
 } from "../sites/platform-types";
 
-function deletionDatabase(passwordHash: string) {
+function deletionDatabase(
+  passwordHash: string,
+  options: { missingSubscription?: boolean } = {},
+) {
   let pending: Record<string, unknown> | null = null;
+  let subscriptionDiscovered = false;
   const writes: string[] = [];
 
   const prepare = (sql: string): D1PreparedStatement => {
@@ -44,7 +48,10 @@ function deletionDatabase(passwordHash: string) {
             organizer_count: 0,
             subscription_started_at: "2024-08-01",
             billing_email: "member@example.com",
-            square_subscription_id: "subscription-21",
+            square_subscription_id:
+              options.missingSubscription && !subscriptionDiscovered
+                ? null
+                : "subscription-21",
             square_status: "ACTIVE",
             access_status: "active",
             paid_until_date: null,
@@ -56,6 +63,8 @@ function deletionDatabase(passwordHash: string) {
       },
       run: async () => {
         writes.push(sql);
+        if (sql.includes("INSERT INTO member_subscriptions"))
+          subscriptionDiscovered = true;
         return { success: true };
       },
       all: async () => ({ success: true, results: [] }),
@@ -182,5 +191,69 @@ describe("account deletion requests", () => {
         sql.includes("member.account_deletion_cancelled"),
       ),
     ).toBe(true);
+  });
+
+  it("discovers an older member's Square subscription before withdrawal", async () => {
+    const secret = "server-side-secret";
+    const store = deletionDatabase(
+      await hashPassword("correct-password", undefined, secret),
+      { missingSubscription: true },
+    );
+    const env = {
+      DB: store.db,
+      AUTH_SECRET: secret,
+      SQUARE_ACCESS_TOKEN: "square-token",
+    } as SitesEnv;
+    const square = vi.spyOn(globalThis, "fetch").mockImplementation(async (input) => {
+      const url = String(input);
+      if (url.endsWith("/customers/search"))
+        return Response.json({
+          customers: [
+            { id: "customer-21", email_address: "member@example.com" },
+          ],
+        });
+      if (url.endsWith("/subscriptions/search"))
+        return Response.json({
+          subscriptions: [
+            {
+              id: "subscription-21",
+              customer_id: "customer-21",
+              status: "ACTIVE",
+              start_date: "2024-08-01",
+            },
+          ],
+        });
+      if (url.endsWith("/subscriptions/subscription-21/cancel"))
+        return Response.json({
+          subscription: {
+            status: "ACTIVE",
+            charged_through_date: "2026-10-01",
+          },
+        });
+      return new Response("not found", { status: 404 });
+    });
+
+    const created = await handleAuthRequest(
+      request("POST", {
+        password: "correct-password",
+        requestType: "withdrawal",
+        reasons: [],
+        surveyComment: "",
+        understandSquareChange: true,
+        understandDataHandling: true,
+        source: "web",
+      }),
+      env,
+    );
+
+    expect(created?.status).toBe(202);
+    expect(
+      store.writes.some((sql) => sql.includes("INSERT INTO member_subscriptions")),
+    ).toBe(true);
+    expect(square).toHaveBeenCalledWith(
+      expect.stringContaining("/subscriptions/subscription-21/cancel"),
+      expect.objectContaining({ method: "POST" }),
+    );
+    square.mockRestore();
   });
 });

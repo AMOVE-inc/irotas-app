@@ -52,6 +52,7 @@ import { canAccessChatRoom } from "@/lib/chat-access";
 import { getFriends } from "@/lib/friendship";
 import { getMentionGroups, getMentionQuery, insertMention } from "@/lib/mentions";
 import { type TextSelection } from "@/lib/text-formatting";
+import type { InternalLinkPathname } from "@/lib/internal-links";
 import * as Api from "@/lib/_core/api";
 import { getDiscordAuthorById, getDiscordAuthorByName } from "@/lib/discord-author-directory";
 import { displayMemberName } from "@/lib/display-name";
@@ -137,7 +138,7 @@ function ChatAttachmentVideo({ uri }: { uri: string }) {
   return <SaveableVideo uri={uri} style={{ width: 220, height: 300, maxWidth: "100%" }} />;
 }
 
-function MessageBubble({ message, isMe, canDelete, readOnly, viewerId, viewerName, viewerAvatarUrl, myAvatarUri, senderMember, memberDirectory, onReact, mentionGroups, onOpenInternalLink, onOpenProfile, onOpenReactionProfile, onOpenReply, highlighted, onReply, onEdit, onDelete }: { message: ChatMessage; isMe: boolean; canDelete: boolean; readOnly?: boolean; viewerId: string; viewerName: string; viewerAvatarUrl?: string; myAvatarUri?: string | null; senderMember?: Api.PublicMember; memberDirectory: Api.PublicMember[]; onReact: (emoji: string, pollChoices?: string[], allowMultiple?: boolean) => void; mentionGroups: ReturnType<typeof getMentionGroups>; onOpenInternalLink: (pathname: "/chat" | "/board" | "/event-detail", params: Record<string, string>) => void; onOpenProfile: () => void; onOpenReactionProfile: (memberId: string, name: string, avatarUrl?: string) => void; onOpenReply: (messageId: string) => void; highlighted?: boolean; onReply: () => void; onEdit: () => void; onDelete: () => void }) {
+function MessageBubble({ message, isMe, canDelete, readOnly, viewerId, viewerName, viewerAvatarUrl, myAvatarUri, senderMember, memberDirectory, onReact, mentionGroups, onOpenInternalLink, onOpenProfile, onOpenReactionProfile, onOpenReply, highlighted, onReply, onEdit, onDelete }: { message: ChatMessage; isMe: boolean; canDelete: boolean; readOnly?: boolean; viewerId: string; viewerName: string; viewerAvatarUrl?: string; myAvatarUri?: string | null; senderMember?: Api.PublicMember; memberDirectory: Api.PublicMember[]; onReact: (emoji: string, pollChoices?: string[], allowMultiple?: boolean) => void; mentionGroups: ReturnType<typeof getMentionGroups>; onOpenInternalLink: (pathname: InternalLinkPathname, params: Record<string, string>) => void; onOpenProfile: () => void; onOpenReactionProfile: (memberId: string, name: string, avatarUrl?: string) => void; onOpenReply: (messageId: string) => void; highlighted?: boolean; onReply: () => void; onEdit: () => void; onDelete: () => void }) {
   const colors = useColors();
   const sender = getMemberById(message.senderId);
   const [showReactionPicker, setShowReactionPicker] = useState(false);
@@ -330,6 +331,7 @@ export default function ChatScreen() {
   const [isNearLatest, setIsNearLatest] = useState(true);
   const [hasOpenedIntroduction, setHasOpenedIntroduction] = useState<boolean | null>(null);
   const [introductionHydrated, setIntroductionHydrated] = useState(false);
+  const introductionOpenedKey = `irotas_introduction_chat_opened_v2:${viewerMemberId}`;
   const introductionArchiveBase = useRef<Record<string, Record<string, string[]>>>({});
   const introductionReactionPending = useRef(false);
 
@@ -445,16 +447,19 @@ export default function ChatScreen() {
     return () => clearTimeout(timer);
   }, [linkedMessageId, displayedMessages]);
   useEffect(() => {
-    if (introductionChat || linkedMessageId || !displayedMessages.length) return;
+    if (linkedMessageId || !displayedMessages.length || (introductionChat && (!introductionHydrated || hasOpenedIntroduction === null))) return;
     const unreadCount = Math.min(displayedMessages.length, Math.max(0, Number(unreadCountParam ?? 0)));
-    const index = unreadCount > 0 ? displayedMessages.length - unreadCount : displayedMessages.length - 1;
-    const positionKey = `${id}:${unreadCount}:${displayedMessages[index]?.id ?? "empty"}`;
+    const effectiveUnreadCount = introductionChat && !hasOpenedIntroduction ? 0 : unreadCount;
+    const index = introductionChat
+      ? effectiveUnreadCount > 0 ? effectiveUnreadCount - 1 : 0
+      : effectiveUnreadCount > 0 ? displayedMessages.length - effectiveUnreadCount : displayedMessages.length - 1;
+    const positionKey = `${id}:${effectiveUnreadCount}:${displayedMessages[index]?.id ?? "empty"}`;
     if (initiallyPositionedChat.current === positionKey) return;
     initiallyPositionedChat.current = positionKey;
     linkedScrollRetry.current = false;
-    const timer = setTimeout(() => flatListRef.current?.scrollToIndex({ index, animated: false, viewPosition: unreadCount > 0 ? 0.12 : 1 }), 80);
+    const timer = setTimeout(() => flatListRef.current?.scrollToIndex({ index, animated: false, viewPosition: introductionChat ? (effectiveUnreadCount > 0 ? 1 : 0) : effectiveUnreadCount > 0 ? 0.12 : 1 }), 80);
     return () => clearTimeout(timer);
-  }, [displayedMessages.length, id, introductionChat, linkedMessageId, unreadCountParam]);
+  }, [displayedMessages.length, hasOpenedIntroduction, id, introductionChat, introductionHydrated, linkedMessageId, unreadCountParam]);
   // 自分のプロフィール画像（AsyncStorageから読み込み）
   const [myAvatarUri, setMyAvatarUri] = useState<string | null>(null);
   const scrollToLatest = useCallback((animated = false) => {
@@ -505,7 +510,7 @@ export default function ChatScreen() {
     setIntroductionHydrated(id !== "board-introduction");
     if (id === "board-introduction") {
       setHasOpenedIntroduction(null);
-      void AsyncStorage.getItem("irotas_introduction_chat_opened_v1").then((value) => setHasOpenedIntroduction(value === "1"));
+      void AsyncStorage.getItem(introductionOpenedKey).then((value) => setHasOpenedIntroduction(value === "1"));
     } else setHasOpenedIntroduction(true);
     // 一度開いたチャットはサーバー・端末の両方で即時既読にする。戻った直後に新着バッジが残らないようにする。
     markChatRoomOptimisticallyRead(id, Math.max(0, Number(unreadCountParam ?? 0)));
@@ -556,7 +561,7 @@ export default function ChatScreen() {
       }
     }).catch(() => setIsLoadingRoom(false));
     return () => clearTimeout(loadingFallback);
-  }, [id, applySharedMessages]);
+  }, [id, applySharedMessages, introductionOpenedKey]);
 
   useEffect(() => {
     if (id !== "board-introduction" || !introductionHydrated) return;
@@ -807,9 +812,9 @@ export default function ChatScreen() {
 
   useEffect(() => {
     if (id === "board-introduction" && introductionHydrated && hasOpenedIntroduction !== null) {
-      void AsyncStorage.setItem("irotas_introduction_chat_opened_v1", "1");
+      void AsyncStorage.setItem(introductionOpenedKey, "1");
     }
-  }, [id, introductionHydrated, hasOpenedIntroduction]);
+  }, [id, introductionHydrated, hasOpenedIntroduction, introductionOpenedKey]);
 
   if ((!room || room.id !== id) && !clubAccessDenied) {
     return (
@@ -840,7 +845,10 @@ export default function ChatScreen() {
 
   const typeLabel = room.id === "board-announcement" ? "お知らせ" : ["community-free-chat", "branch-kanto-free", "branch-kansai-free"].includes(room.id) ? "チャット" : room.type === "event" ? "イベント" : room.type === "board" ? "掲示板" : room.type === "rank" ? "ランク専用" : room.type === "group" ? "友達グループ" : room.type === "dm" ? "DM" : "部活動";
   const typeColor = room.type === "event" ? "#E8A0BF" : room.type === "board" ? "#A7C7E7" : room.type === "rank" ? "#F59E0B" : room.type === "group" ? "#5B9BD5" : room.type === "dm" ? "#FF9500" : "#34C759";
-  const firstUnreadIndex = Math.max(0, displayedMessages.length - Math.min(displayedMessages.length, Math.max(0, Number(unreadCountParam ?? 0))));
+  const requestedUnreadCount = Math.min(displayedMessages.length, Math.max(0, Number(unreadCountParam ?? 0)));
+  const introductionUnreadCount = introductionChat && hasOpenedIntroduction ? requestedUnreadCount : 0;
+  const introductionFirstUnreadIndex = introductionUnreadCount > 0 ? introductionUnreadCount - 1 : null;
+  const firstUnreadIndex = Math.max(0, displayedMessages.length - requestedUnreadCount);
   const canManageRoom = room.type !== "club" && !staffViewingOnly && (userIsAdmin || room.createdBy === viewerMemberId);
   const canInviteMembers = canManageRoom && room.type !== "rank" && room.type !== "event" && room.type !== "dm";
   const canPostAnnouncement = !staffViewingOnly && canPostToChat(authUser?.role, room.id, authUser?.accessRole);
@@ -920,7 +928,7 @@ export default function ChatScreen() {
             const dateSeparator = <View style={{ alignItems: "center", marginVertical: 10 }}><View style={{ borderRadius: 12, backgroundColor: colors.surface, paddingHorizontal: 11, paddingVertical: 4 }}><Text style={{ fontSize: 11, fontWeight: "700", color: colors.muted }}>{day}</Text></View></View>;
             return <>
               {!introductionChat && day !== previousDay ? dateSeparator : null}
-              {Number(unreadCountParam ?? 0) > 0 && index === firstUnreadIndex ? <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginVertical: 10, paddingHorizontal: 16 }}><View style={{ flex: 1, height: 1, backgroundColor: "#E8A0BF" }} /><Text style={{ fontSize: 11, fontWeight: "900", color: "#C05B88" }}>ここから未読メッセージ</Text><View style={{ flex: 1, height: 1, backgroundColor: "#E8A0BF" }} /></View> : null}
+              {!introductionChat && requestedUnreadCount > 0 && index === firstUnreadIndex ? <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginVertical: 10, paddingHorizontal: 16 }}><View style={{ flex: 1, height: 1, backgroundColor: "#E8A0BF" }} /><Text style={{ fontSize: 11, fontWeight: "900", color: "#C05B88" }}>ここから未読メッセージ</Text><View style={{ flex: 1, height: 1, backgroundColor: "#E8A0BF" }} /></View> : null}
               <MessageBubble
                 message={item}
                 highlighted={item.id === highlightedMessageId}
@@ -966,6 +974,7 @@ export default function ChatScreen() {
                 onEdit={() => { setEditingMessage(item); setEditingMessageText(item.content); }}
                 onDelete={() => { const remove = async () => { try { if (item.shared) await Api.deleteSharedChatMessage(item.id); else await deleteMessageFromStorage(id ?? "", item.id); setMessages((current) => current.filter((message) => message.id !== item.id)); } catch (error) { Alert.alert("削除できませんでした", error instanceof Error ? error.message : "もう一度お試しください。"); } }; if (Platform.OS === "web") { void remove(); return; } Alert.alert("メッセージを削除", "このメッセージを削除しますか？", [{ text: "キャンセル", style: "cancel" }, { text: "削除", style: "destructive", onPress: remove }]); }}
               />
+              {introductionChat && introductionFirstUnreadIndex === index ? <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginVertical: 10, paddingHorizontal: 16 }}><View style={{ flex: 1, height: 1, backgroundColor: "#E8A0BF" }} /><Text style={{ fontSize: 11, fontWeight: "900", color: "#C05B88" }}>ここから未読メッセージ</Text><View style={{ flex: 1, height: 1, backgroundColor: "#E8A0BF" }} /></View> : null}
               {/* FlatList の inverted 表示では要素内の上下も反転するため、区切りを
                   メッセージの後ろに置くと画面上ではその日の先頭に表示される。 */}
               {introductionChat && day !== nextDay ? dateSeparator : null}

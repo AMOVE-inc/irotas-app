@@ -1016,11 +1016,22 @@ async function accountDeletion(
       .bind(member.id)
       .first<AccountDeletionRow>();
     if (existing) return responseJson({ success: true, request: deletionPayload(existing) });
-    if (!member.square_subscription_id) return responseJson({ error: "Squareの定期決済情報が見つかりません。運営へお問い合わせください" }, 409);
+
+    let squareSubscriptionId = member.square_subscription_id;
+    if (!squareSubscriptionId) {
+      // Older imports may have an active Square customer but no stored
+      // subscription ID. Resolve it from the already authenticated member's
+      // billing email before rejecting the request.
+      await discoverSquareMembership(db, env, normalizeEmail(member.email));
+      const refreshedMember = await sessionMember(db, token!);
+      squareSubscriptionId = refreshedMember?.square_subscription_id ?? null;
+    }
+    if (!squareSubscriptionId)
+      return responseJson({ error: "Squareの定期決済情報が見つかりません。運営へお問い合わせください" }, 409);
 
     let squareChange: { action: string; effectiveDate: string | null };
     try {
-      squareChange = await scheduleSquareMembershipChange(env, member.square_subscription_id, requestType, [...reasons, surveyComment].filter(Boolean).join(" / ") || "IRO+アプリからの手続き");
+      squareChange = await scheduleSquareMembershipChange(env, squareSubscriptionId, requestType, [...reasons, surveyComment].filter(Boolean).join(" / ") || "IRO+アプリからの手続き");
     } catch (error) {
       return responseJson({ error: error instanceof Error ? error.message : "Squareの定期決済を変更できませんでした" }, 502);
     }
