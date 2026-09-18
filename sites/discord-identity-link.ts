@@ -115,7 +115,7 @@ export async function handleDiscordIdentityLinkRequest(request: Request, env: Si
         VALUES (?, 'member.discord_identity_linked_from_club_form', 'member', ?, ?, ?)`).bind(String(actor.id), String(candidate.id),
           JSON.stringify({ discordUserId: row.discordUserId, discordUsername: row.discordUsername, method }), now),
     ]));
-    await syncStoredDiscordProfiles(env.DB, now, rows.map((row) => row.discordUserId)).run();
+    await syncStoredDiscordProfiles(env.DB, now, rows.map((row) => row.discordUserId), { overwriteDisplayName: true }).run();
     const membershipResult = await env.DB.prepare(`INSERT INTO club_memberships (club_id, member_id, status, source, applied_at, approved_at, updated_at)
       SELECT s.club_id, m.id, 'approved', 'discord', ?, ?, ? FROM discord_club_membership_staging s JOIN members m ON m.discord_user_id = s.discord_user_id
       WHERE s.discord_user_id IN (${rows.map(() => "?").join(",")}) ON CONFLICT(club_id, member_id) DO NOTHING`)

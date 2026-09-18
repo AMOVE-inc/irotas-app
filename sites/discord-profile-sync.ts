@@ -2,11 +2,16 @@ import type { D1Database } from "./platform-types";
 
 // Apply a previously imported Discord snapshot after a verified membership
 // import links its Discord ID. App-authored biography and avatar take priority.
-export function syncStoredDiscordProfiles(db: D1Database, now: string, discordIds: string[]) {
+export function syncStoredDiscordProfiles(
+  db: D1Database,
+  now: string,
+  discordIds: string[],
+  options: { overwriteDisplayName?: boolean } = {},
+) {
   if (!discordIds.length) throw new Error("discord_ids_required");
   const placeholders = discordIds.map(() => "?").join(", ");
   return db.prepare(`UPDATE members SET
-    display_name = CASE WHEN display_name = '' OR display_name = substr(email, 1, instr(email, '@') - 1)
+    display_name = CASE WHEN ? = 1 OR display_name = '' OR display_name = substr(email, 1, instr(email, '@') - 1)
       THEN (SELECT display_name FROM discord_profile_snapshots p WHERE p.discord_user_id = members.discord_user_id)
       ELSE display_name END,
     member_term = COALESCE((SELECT member_term FROM discord_profile_snapshots p WHERE p.discord_user_id = members.discord_user_id), member_term),
@@ -23,5 +28,5 @@ export function syncStoredDiscordProfiles(db: D1Database, now: string, discordId
     updated_at = ?
     WHERE discord_user_id IN (${placeholders}) AND EXISTS (
       SELECT 1 FROM discord_profile_snapshots p WHERE p.discord_user_id = members.discord_user_id
-    )`).bind(now, ...discordIds);
+    )`).bind(options.overwriteDisplayName ? 1 : 0, now, ...discordIds);
 }

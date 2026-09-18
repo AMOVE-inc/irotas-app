@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { explicitMemberTermFromBio, validateDiscordProfileImport } from "../sites/discord-profile-import";
+import { discordIntroductionDisplayName, explicitMemberTermFromBio, validateDiscordProfileImport } from "../sites/discord-profile-import";
 
 describe("Discord profile import", () => {
   const row = {
@@ -28,5 +28,10 @@ describe("Discord profile import", () => {
     const bio = "こんばんは！6期のまりこです😌\nよろしくお願いします。";
     expect(explicitMemberTermFromBio(bio)).toBe("第6期");
     expect(validateDiscordProfileImport({ confirmation: "IMPORT_DISCORD_PROFILES_1", rows: [{ ...row, bio, hasProfileBio: true }] })[0].memberTerm).toBe("第6期");
+  });
+
+  it("uses the name entered in a Discord self-introduction for an explicitly linked member", () => {
+    expect(discordIntroductionDisplayName("名前：たつや\n年齢：31", "長い夜")).toBe("たつや");
+    expect(discordIntroductionDisplayName("自己紹介です", " たつや ")).toBe("たつや");
   });
 });

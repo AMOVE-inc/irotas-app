@@ -16,6 +16,11 @@ const NORI_TERM_CORRECTION_ENDPOINT = "/api/admin/discord-profile-import/sync-no
 type Rank = "regular" | "silver" | "gold" | "platinum";
 type ImportRow = { discordUserId: string; displayName: string; avatarUrl: string; bio: string; hasProfileBio: boolean; discordJoinedAt: string | null; discordRoles: string[]; memberTerm: string | null; memberRank: Rank };
 
+export function discordIntroductionDisplayName(content: string, fallback: string): string {
+  const match = content.normalize("NFKC").match(/(?:^|\n)\s*名前\s*[:：]\s*([^\n]{1,120})/);
+  return match?.[1]?.trim() || fallback.trim();
+}
+
 export function explicitMemberTermFromBio(value: string): string | null {
   const normalized = value.normalize("NFKC");
   const match = normalized.match(/(?:^|[。！!\n])\s*(?:こんばんは|こんにちは|はじめまして)?\s*[!！、, ]*(?:第\s*)?(\d{1,2})\s*期(?:生)?(?:の[^。\n]{0,24}(?:です|と申します)|です|として(?:参加|入会))/m);
@@ -101,11 +106,12 @@ export async function handleDiscordProfileImportRequest(request: Request, env: S
           .sort((left, right) => right.createdAt.localeCompare(left.createdAt))[0];
         if (!introduction) return json({ error: "discord_profile_not_found" }, 404);
         const metadata = (introductionMemberMetadata as Record<string, { memberTerm?: string | null; joinedAt?: string | null }>)[discordUserId];
+        const displayName = discordIntroductionDisplayName(introduction.content, introduction.authorName);
         await env.DB.prepare(`INSERT INTO discord_profile_snapshots
           (discord_user_id, display_name, avatar_url, bio, has_profile_bio, discord_joined_at,
            discord_roles_json, member_term, member_rank, imported_at)
           VALUES (?, ?, ?, ?, 1, ?, '[]', ?, 'regular', ?)`)
-          .bind(discordUserId, introduction.authorName, introduction.authorAvatarUrl ?? "",
+          .bind(discordUserId, displayName, introduction.authorAvatarUrl ?? "",
             introduction.content, metadata?.joinedAt ?? null, metadata?.memberTerm ?? null, now).run();
       }
       await env.DB.batch([
@@ -115,7 +121,11 @@ export async function handleDiscordProfileImportRequest(request: Request, env: S
           VALUES (?, 'member.discord_identity_linked', 'member', ?, ?, ?)`)
           .bind(String(admin.id), String(target.id), JSON.stringify({ discordUserId }), now),
       ]);
-      await syncStoredDiscordProfiles(env.DB, now, [discordUserId]).run();
+      // This endpoint is used only after an administrator has verified the
+      // exact email-to-Discord-ID pairing, so the Discord display name is the
+      // authoritative migration value even when the billing import supplied
+      // a short or provisional name.
+      await syncStoredDiscordProfiles(env.DB, now, [discordUserId], { overwriteDisplayName: true }).run();
       return json({ success: true, memberId: target.id, discordUserId });
     }
     const rows = validateDiscordProfileImport(isNoriTermCorrection
