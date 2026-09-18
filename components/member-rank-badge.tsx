@@ -1,46 +1,17 @@
 import { RANK_COLORS, RANK_LABELS, type MemberRank } from "@/constants/mock-data";
 import { getMemberStaffRole, shouldShowMemberRank } from "@/lib/member-staff-role";
 import { displayMemberName } from "@/lib/display-name";
+import { clubLeaderBadge, clubLeaderBadgeForClub, clubLeaderBadgesForRoles, clubLeaderTerms } from "@/lib/club-leader-badges";
 import { Text, View } from "react-native";
 
-const CLUB_LEADER_BADGES = [
-  { term: "肉部長", label: "🍖肉部長" },
-  { term: "ゴルフ部長", label: "⛳ゴルフ部長" },
-  { term: "ランニング部長", label: "🏃ランニング部長" },
-  { term: "散歩部長", label: "🚶散歩部長" },
-  { term: "スポーツ観戦部長", label: "⚾スポーツ観戦部長" },
-  { term: "旅行部長", label: "✈️旅行部長" },
-  { term: "スイーツ部長", label: "🍰スイーツ部長" },
-  { term: "スポーツ部長", label: "🏀スポーツ部長" },
-  { term: "ディズニー部長", label: "🐭ディズニー部長" },
-  { term: "舞台鑑賞部長", label: "🎭舞台鑑賞部長" },
-  { term: "料理教室部長", label: "🍳料理教室部長" },
-  { term: "ワイン部長", label: "🍷ワイン部長" },
-  { term: "パン部長", label: "🍞パン部長" },
-  { term: "昼飲み部長", label: "🍺昼飲み部長" },
-];
+export { clubLeaderBadgeForClub };
 
-function clubLeaderBadge(name: string) {
-  return CLUB_LEADER_BADGES.find(({ term }) => name.includes(term));
-}
-
-/** Club names come from the server, while imported display names may not include a leader suffix. */
-export function clubLeaderBadgeForClub(clubName: string) {
-  const normalized = clubName.replace(/部$/, "");
-  return CLUB_LEADER_BADGES.find(({ term }) => term.replace(/部長$/, "") === normalized)?.label
-    ?? `${clubName}長`;
-}
-
-/** Return every club-leader label represented by imported Discord roles. */
-export function clubLeaderBadgesForRoles(roles?: readonly string[] | null) {
-  if (!roles?.length) return [];
-  return CLUB_LEADER_BADGES
-    .filter(({ term }) => roles.some((role) => role.includes(term)))
-    .map(({ label }) => label);
-}
-
-export function MemberClubLeaderBadges({ roles, name, compact = false }: { roles?: readonly string[] | null; name?: string; compact?: boolean }) {
-  const labels = [...new Set([...clubLeaderBadgesForRoles(roles), ...(name ? [clubLeaderBadge(name)?.label].filter((label): label is string => Boolean(label)) : [])])];
+export function MemberClubLeaderBadges({ roles, name, labels: explicitLabels, compact = false }: { roles?: readonly string[] | null; name?: string; labels?: readonly string[] | null; compact?: boolean }) {
+  const labels = [...new Set([
+    ...clubLeaderBadgesForRoles(roles),
+    ...(name ? [clubLeaderBadge(name)?.label].filter((label): label is string => Boolean(label)) : []),
+    ...(explicitLabels ?? []).filter(Boolean),
+  ])];
   if (!labels.length) return null;
   const paddingHorizontal = compact ? 6 : 9;
   const fontSize = compact ? 8 : 11;
@@ -59,7 +30,7 @@ export function stripRankFromName(name: string) {
     .replace(/\s*[【[(（]\s*(?:🥈|🥇|💎)?\s*(?:SILVER|GOLD|PLATINUM|シルバー|ゴールド|プラチナ)(?:会員)?\s*[】\])）]/gi, "")
     .replace(/\s*[【[(（]\s*(?:運営(?:メンバー)?|管理者|admin)\s*[】\])）]/gi, "");
   normalized = normalized.replace(/(?:🎞️?\s*)?映画[・･]?ドラマ鑑賞部長$/u, "");
-  for (const { term } of CLUB_LEADER_BADGES) {
+  for (const term of clubLeaderTerms()) {
     normalized = normalized.replace(new RegExp(`(?:[🍖⛳🏃🚶⚾💃🎭🏀🍷✈️🍳🍞🐭🍺]\\s*)?${term}$`, "u"), "");
   }
   return displayMemberName(normalized);

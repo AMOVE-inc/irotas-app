@@ -131,6 +131,8 @@ export interface Event {
   recruitmentChannel?: "discord" | "app";
   discordRecruitmentClosedAt?: string;
   clubId?: string;
+  /** API supplied display name so locked cards do not depend on client-side club hydration. */
+  clubName?: string;
   status: "open" | "full" | "ended";
   createdBy: string; // admin member id
   organizerProfileId?: string;
@@ -139,6 +141,8 @@ export interface Event {
   organizerRank?: MemberRank;
   /** 幹事本人の実際の運営権限。表示名から推測しない。 */
   organizerAccessRole?: "admin" | "operator" | "member";
+  /** Current clubs led by the organizer, resolved from the club master. */
+  organizerLeaderClubNames?: string[];
   chatId?: string; // private chat id
   applicationDeadline?: string; // 募集期日
   cancellationPolicy?: string; // イベント個別のキャンセルポリシー

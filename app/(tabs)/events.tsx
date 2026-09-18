@@ -36,10 +36,12 @@ import { useColors } from "@/hooks/use-colors";
 import { Image } from "expo-image";
 import { EventImage } from "@/components/event-image";
 import {
+  MemberClubLeaderBadges,
   MemberRankBadge,
   MemberRoleBadge,
   stripRankFromName,
 } from "@/components/member-rank-badge";
+import { clubLeaderBadgeForClub } from "@/lib/club-leader-badges";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useState, useCallback, useEffect, useMemo } from "react";
 import * as Api from "@/lib/_core/api";
@@ -515,6 +517,7 @@ function EventCard({
   onToggleFavorite,
   locked = false,
   clubName,
+  organizerLeaderLabels,
 }: {
   event: Event;
   onPress: () => void;
@@ -522,6 +525,7 @@ function EventCard({
   onToggleFavorite: () => void;
   locked?: boolean;
   clubName?: string;
+  organizerLeaderLabels?: string[];
 }) {
   const colors = useColors();
   const organizer = getMemberById(event.organizerProfileId ?? event.createdBy);
@@ -829,6 +833,7 @@ function EventCard({
                 {stripRankFromName(event.organizerName ?? organizer?.name ?? "メンバー")}
               </Text>
               {event.organizerRank ? <MemberRankBadge rank={event.organizerRank} name={event.organizerName} compact /> : null}
+              <MemberClubLeaderBadges labels={organizerLeaderLabels} name={event.organizerName} compact />
               <MemberRoleBadge name={event.organizerName} role={event.organizerAccessRole} compact />
               {organizer ? (
                 <NewMemberMark member={organizer} size={11} />
@@ -1184,7 +1189,11 @@ export default function EventsScreen() {
                 item.lockedClubEvent ||
                 (item.eventType === "club" && !canAccessClubEvent(item.clubId)),
               )}
-              clubName={clubs.find((club) => club.id === item.clubId)?.name}
+              clubName={item.clubName ?? clubs.find((club) => club.id === item.clubId)?.name}
+              organizerLeaderLabels={(item.organizerLeaderClubNames ?? clubs
+                .filter((club) => club.leaderId && club.leaderId === item.organizerProfileId)
+                .map((club) => club.name))
+                .map(clubLeaderBadgeForClub)}
               onPress={() => {
                 const club = clubs.find(
                   (candidate) => candidate.id === item.clubId,

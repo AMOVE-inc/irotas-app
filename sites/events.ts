@@ -42,6 +42,8 @@ type EventRow = {
   organizer_member_rank?: string | null;
   organizer_access_role?: "admin" | "operator" | "member" | null;
   organizer_profile_json?: string | null;
+  club_name?: string | null;
+  organizer_leader_club_names_json?: string | null;
   event_type: "official" | "gourmet" | "club";
   club_id: string | null;
   event_date: string;
@@ -451,6 +453,15 @@ function organizerProfile(row: EventRow) {
   }
 }
 
+function organizerLeaderClubNames(row: EventRow) {
+  try {
+    const value = JSON.parse(row.organizer_leader_club_names_json ?? "[]") as unknown;
+    return Array.isArray(value) ? value.filter((name): name is string => typeof name === "string" && Boolean(name.trim())) : [];
+  } catch {
+    return [];
+  }
+}
+
 function publicEvent(
   row: EventRow,
   viewerId: number,
@@ -493,6 +504,7 @@ function publicEvent(
     createdAt: row.created_at,
     eventType: row.event_type,
     clubId: row.club_id ?? undefined,
+    clubName: row.club_name ?? undefined,
     date: row.event_date,
     // 定員に達していても、幹事が参加者を確定するまでは受付を継続する。
     status: row.status === "cancelled" ? "ended" : row.status === "full" && !participantsFinalized && !data.discordRecruitmentClosedAt && data.recruitmentChannel !== "discord" && !row.id.startsWith("discord-event-") ? "open" : row.status,
@@ -504,6 +516,7 @@ function publicEvent(
     organizerAvatar: importedOrganizerAvatar ?? organizerProfile(row),
     organizerRank: importedOrganizerRank ?? row.organizer_member_rank ?? undefined,
     organizerAccessRole: usesImportedOrganizerFallback ? importedOrganizerAccessRole : row.organizer_access_role ?? undefined,
+    organizerLeaderClubNames: organizerLeaderClubNames(row),
     applicantIds: row.status === "cancelled" ? [] : active.map(publicId),
     participants: row.status === "cancelled" ? [] : participantIds,
     cancelledParticipantIds,
@@ -532,6 +545,7 @@ export function lockedClubEventPreview(row: EventRow) {
     createdAt: row.created_at,
     eventType: "club" as const,
     clubId: row.club_id ?? undefined,
+    clubName: row.club_name ?? undefined,
     date: row.event_date,
     status: row.status === "cancelled" ? "ended" as const : row.status,
     title: displayEventTitle(row.title),
@@ -563,8 +577,14 @@ const selectEvents = `SELECT e.*, m.public_member_id,
   m.display_name AS organizer_display_name,
   m.member_rank AS organizer_member_rank,
   m.access_role AS organizer_access_role,
-  m.profile_json AS organizer_profile_json
-  FROM events e JOIN members m ON m.id = e.organizer_member_id`;
+  m.profile_json AS organizer_profile_json,
+  event_club.name AS club_name,
+  COALESCE((SELECT json_group_array(leader_club.name)
+    FROM clubs leader_club
+    WHERE leader_club.leader_member_id = e.organizer_member_id
+      AND leader_club.status = 'active'), '[]') AS organizer_leader_club_names_json
+  FROM events e JOIN members m ON m.id = e.organizer_member_id
+  LEFT JOIN clubs event_club ON event_club.id = e.club_id`;
 
 function isElevated(member: NonNullable<Awaited<ReturnType<typeof authenticatedRequestMember>>>) {
   return member.access_role === "operator" || member.access_role === "admin" || member.role === "operator" || member.role === "admin";
@@ -656,6 +676,26 @@ async function reconcileImportedOrganizer(db: D1Database, memberId: number) {
       AND json_extract(public_data_json, '$.organizerProfileId') = ?`)
     .bind(memberId, new Date().toISOString(), `discord-${discordUserId}`).run();
   return `discord-${discordUserId}`;
+}
+
+/** Restore every imported event owner whose verified Discord identity is now linked. */
+async function reconcileAllImportedOrganizers(db: D1Database) {
+  await db.prepare(`UPDATE events
+    SET organizer_member_id = (
+      SELECT m.id FROM members m
+      WHERE m.discord_user_id = replace(json_extract(events.public_data_json, '$.organizerProfileId'), 'discord-', '')
+        AND m.account_status = 'active'
+      LIMIT 1
+    ),
+    public_data_json = json_remove(public_data_json, '$.materializedOrganizerFallback'),
+    updated_at = ?
+    WHERE id LIKE 'discord-event-%'
+      AND json_extract(public_data_json, '$.materializedOrganizerFallback') = 1
+      AND EXISTS (
+        SELECT 1 FROM members m
+        WHERE m.discord_user_id = replace(json_extract(events.public_data_json, '$.organizerProfileId'), 'discord-', '')
+          AND m.account_status = 'active'
+      )`).bind(new Date().toISOString()).run();
 }
 
 async function audit(db: D1Database, actorId: number, action: string, eventId: string, metadata: Record<string, unknown> = {}) {
@@ -937,6 +977,7 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
     return createEvent(request, env.DB, member);
   if (pathname === EVENTS_ENDPOINT && request.method === "GET") {
     const viewerDiscordId = await reconcileImportedOrganizer(env.DB, member.id);
+    await reconcileAllImportedOrganizers(env.DB);
     // なんでも掲示板で募集された3件を、既存のDiscord移行イベントとして登録する。
     // 個別に削除済みのIDはmaterializeImportedEvent内で除外される。
     const fallbackOrganizer = await env.DB.prepare("SELECT id FROM members WHERE access_role = 'admin' AND account_status = 'active' ORDER BY id LIMIT 1")
