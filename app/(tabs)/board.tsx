@@ -2913,7 +2913,7 @@ export default function BoardScreen() {
     const viewerIsLeader = Boolean(club && getClubViewerAccess(club, authUser?.memberId, CURRENT_USER.id).isLeader);
     return isRecruitmentBoardCategory(thread.category) && !isClubSelfIntroduction(thread) && (thread.author.id === viewerMemberId || userCanModerateRecruitment || viewerIsLeader);
   };
-  const canPinThread = (thread: BoardThread) => !isClubSelfIntroduction(thread) && (thread.author.id === viewerMemberId || Boolean(clubForThread(thread) && getClubViewerAccess(clubForThread(thread)!, authUser?.memberId, CURRENT_USER.id).isLeader) || userCanModerateRecruitment);
+  const canPinThread = (thread: BoardThread) => thread.author.id === viewerMemberId || Boolean(clubForThread(thread) && getClubViewerAccess(clubForThread(thread)!, authUser?.memberId, CURRENT_USER.id).isLeader) || userCanModerateRecruitment;
   const updateThreadManagement = async (thread: BoardThread, changes: Pick<BoardThread, "isRecruiting" | "isPinned" | "recruitmentStatus">) => {
     const updated = { ...thread, ...changes, lastUpdated: thread.lastUpdated };
     if (thread.shared || thread.id.startsWith("discord-board-")) {

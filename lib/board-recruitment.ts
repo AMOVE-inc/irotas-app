@@ -10,8 +10,8 @@ export function isClubSelfIntroduction(thread: Pick<BoardThread, "category" | "t
   return thread.category.startsWith("club-club-") && /自己紹介/.test(thread.title);
 }
 
-export function isThreadPinned(thread: Pick<BoardThread, "category" | "title" | "isPinned">): boolean {
-  return Boolean(thread.isPinned || isClubSelfIntroduction(thread));
+export function isThreadPinned(thread: Pick<BoardThread, "isPinned">): boolean {
+  return Boolean(thread.isPinned);
 }
 
 export function inferImportedRecruitment(category: string, title: string, content: string): boolean {

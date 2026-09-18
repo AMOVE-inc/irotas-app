@@ -74,13 +74,17 @@ describe("掲示板募集ステータス", () => {
     expect(displayBoardThreadTitle(imported)).toBe("【募集終了】映画会");
   });
 
-  it("部活の固定済み自己紹介を最上部に表示する", () => {
+  it("明示的に固定した部活の自己紹介を最上部に表示し、解除後は通常順へ戻す", () => {
     const base = { author: {} as BoardThread["author"], commentCount: 0, preview: "", category: "club-club-wine" };
     const open = { ...base, id: "open", title: "ワイン会", isRecruiting: true, lastUpdated: "2026-08-15T10:00:00Z" } as BoardThread;
-    const introduction = { ...base, id: "intro", title: "ワイン部 自己紹介", isRecruiting: false, lastUpdated: "2026-01-01T10:00:00Z" } as BoardThread;
+    const introduction = { ...base, id: "intro", title: "ワイン部 自己紹介", isRecruiting: false, isPinned: true, lastUpdated: "2026-01-01T10:00:00Z" } as BoardThread;
     expect(isClubSelfIntroduction(introduction)).toBe(true);
     expect(isThreadPinned(introduction)).toBe(true);
     expect(sortRecruitmentThreads([open, introduction]).map((item) => item.id)).toEqual(["intro", "open"]);
+
+    const unpinnedIntroduction = { ...introduction, isPinned: false };
+    expect(isThreadPinned(unpinnedIntroduction)).toBe(false);
+    expect(sortRecruitmentThreads([open, unpinnedIntroduction]).map((item) => item.id)).toEqual(["open", "intro"]);
   });
 
   it("クローズ済みの固定投稿は通常投稿の区切りより下に表示する", () => {

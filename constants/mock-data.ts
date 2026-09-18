@@ -234,7 +234,7 @@ export interface BoardThread {
   preview: string;
   isRecruiting: boolean; // 参加者募集中かどうか
   recruitmentStatus?: "open" | "closed" | "none"; // 掲示板上の募集ステータス（旧データはisRecruitingから補完）
-  isPinned?: boolean; // 一覧上部へ固定（部活の自己紹介は常に固定）
+  isPinned?: boolean; // 一覧上部へ固定
   recruitCapacity?: number;
   recruitAttendees?: number;
   recruitParticipants?: string[]; // 承認済み参加者 member ids
