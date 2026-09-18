@@ -2,8 +2,9 @@ import { describe, expect, it } from "vitest";
 import { cleanDiscordBoardContent, cleanDiscordBoardTitle } from "../lib/discord-board-normalization";
 
 describe("Discord board normalization", () => {
-  it("removes recruitment status from a migrated title", () => {
+  it("removes the open status but keeps the closed status in a migrated title", () => {
     expect(cleanDiscordBoardTitle("【募集中】 マーダーミステリー会")).toBe("マーダーミステリー会");
+    expect(cleanDiscordBoardTitle("【募集終了】 マーダーミステリー会")).toBe("【募集終了】 マーダーミステリー会");
   });
 
   it("removes gourmet contest status from a migrated title", () => {

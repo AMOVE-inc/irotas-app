@@ -328,7 +328,7 @@ async function ensureImportedThread(
   const now = new Date().toISOString();
   const normalizedTitle = cleanDiscordBoardTitle(raw.title || "移行済み投稿");
   const normalizedContent = cleanDiscordBoardContent(raw.title, raw.content || "移行済み投稿", category);
-  const initialStatus = inferImportedRecruitmentStatus(category, normalizedTitle, normalizedContent);
+  const initialStatus = inferImportedRecruitmentStatus(category, raw.title, normalizedContent);
   const linkedAuthor = raw.authorId ? await db.prepare("SELECT id FROM members WHERE discord_user_id = ? LIMIT 1")
     .bind(raw.authorId).first<{ id: number }>() : null;
   const authorMemberId = linkedAuthor?.id ?? member.id;

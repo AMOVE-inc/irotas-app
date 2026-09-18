@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { inferImportedRecruitment, isClubSelfIntroduction, isRecruitmentBoardCategory, isThreadPinned, sortRecruitmentThreads } from "../lib/board-recruitment";
+import { displayBoardThreadTitle, inferImportedRecruitment, isBoardThreadClosed, isClubSelfIntroduction, isRecruitmentBoardCategory, isThreadPinned, sortRecruitmentThreads } from "../lib/board-recruitment";
 import { parseDiscordRichLines, parseDiscordHeading, tokenizeRichTextLinks } from "../lib/discord-rich-text";
 import type { BoardThread } from "../constants/mock-data";
 
@@ -58,11 +58,20 @@ describe("掲示板募集ステータス", () => {
     expect(inferImportedRecruitment("club-club-wine", "ワイン会", "募集終了しました")).toBe(false);
   });
 
-  it("募集中を募集終了より上に並べる", () => {
+  it("通常投稿をクローズ済み投稿より上に並べる", () => {
     const base = { author: {} as BoardThread["author"], commentCount: 0, preview: "", category: "free-chat" };
     const closed = { ...base, id: "closed", title: "closed", isRecruiting: false, lastUpdated: "2026-08-15T10:00:00Z" } as BoardThread;
     const open = { ...base, id: "open", title: "open", isRecruiting: true, lastUpdated: "2026-08-14T10:00:00Z" } as BoardThread;
     expect(sortRecruitmentThreads([closed, open]).map((item) => item.id)).toEqual(["open", "closed"]);
+  });
+
+  it("クローズ済みのタイトルだけに募集終了を一度表示する", () => {
+    const base = { author: {} as BoardThread["author"], commentCount: 0, preview: "", category: "free-chat", lastUpdated: "2026-08-15T10:00:00Z" };
+    const closed = { ...base, id: "closed", title: "【募集終了】映画会", recruitmentStatus: "closed", isRecruiting: false } as BoardThread;
+    const open = { ...base, id: "open", title: "【募集終了】映画会", recruitmentStatus: "open", isRecruiting: false } as BoardThread;
+    expect(isBoardThreadClosed(closed)).toBe(true);
+    expect(displayBoardThreadTitle(closed)).toBe("【募集終了】映画会");
+    expect(displayBoardThreadTitle(open)).toBe("映画会");
   });
 
   it("募集中を固定済みの募集終了投稿より上に表示する", () => {

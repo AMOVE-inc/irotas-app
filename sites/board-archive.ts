@@ -5,6 +5,7 @@ import type {
   RawDiscordBoardArchive,
 } from "../lib/discord-board-import";
 import { isDiscordGourmetEventBoard, isRetiredMovieClubThread, normalizeDiscordBoardCategory } from "../lib/board-category";
+import { inferImportedRecruitmentStatus } from "../lib/board-recruitment";
 import { authenticatedRequestMember } from "./auth";
 import { importedMediaPaths } from "../lib/imported-media-path";
 import type { D1Database, SitesEnv } from "./platform-types";
@@ -173,12 +174,18 @@ export async function handleBoardArchiveRequest(
   const deletedIds = new Set((saved.results ?? []).filter((row) => row.deleted_at).map((row) => row.id));
   const threads = filtered.threads.filter((thread) => !deletedIds.has(thread.id));
   const liveIds = new Set(threads.map((thread) => thread.id));
+  const originalThreads = new Map(threads.map((thread) => [thread.id, thread]));
   const threadOverrides = Object.fromEntries((saved.results ?? [])
     .filter((row) => visibleIds.has(row.id) && !row.deleted_at)
-    .map((row) => [row.id, {
-      title: row.title, content: row.content, status: row.status, pinned: Boolean(row.pinned),
-      updatedAt: row.updated_at, data: JSON.parse(row.data_json || "{}"),
-    }]));
+    .map((row) => {
+      const original = originalThreads.get(row.id);
+      const category = original ? normalizeDiscordBoardCategory(original.category) : "";
+      const inferredStatus = original ? inferImportedRecruitmentStatus(category, original.title, original.content) : "none";
+      return [row.id, {
+        title: row.title, content: row.content, status: row.status === "none" && inferredStatus === "closed" ? "closed" : row.status, pinned: Boolean(row.pinned),
+        updatedAt: row.updated_at, data: JSON.parse(row.data_json || "{}"),
+      }];
+    }));
   return Response.json({ threads, comments: filtered.comments.filter((comment) => liveIds.has(comment.threadId)), threadOverrides }, {
     headers: {
       "cache-control": "private, no-store",

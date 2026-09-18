@@ -1,4 +1,4 @@
-const RECRUITMENT_PREFIX = /^\s*【\s*(?:募集中|募集終了|開催中|開催終了)\s*】\s*/;
+const RECRUITMENT_PREFIX = /^\s*【\s*(?:募集中|開催中|開催終了)\s*】\s*/;
 
 export function cleanDiscordBoardTitle(title: string): string {
   return title.replace(RECRUITMENT_PREFIX, "").trim();

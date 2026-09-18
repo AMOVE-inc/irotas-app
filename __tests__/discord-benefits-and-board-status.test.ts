@@ -30,14 +30,14 @@ describe("board recruitment status", () => {
     expect(inferImportedRecruitmentStatus("free-chat", "おすすめのお店", "共有します")).toBe("none");
   });
 
-  it("sorts open posts first and all other posts by last comment time", () => {
+  it("sorts regular posts by last comment time and closed posts last", () => {
     const base: BoardThread = { id: "base", title: "投稿", author: MEMBERS[0], category: "free-chat", commentCount: 0, lastUpdated: "2026-01-01T00:00:00Z", preview: "", isRecruiting: false };
     const threads = sortRecruitmentThreads([
       { ...base, id: "closed", recruitmentStatus: "closed", lastUpdated: "2026-01-03T00:00:00Z" },
       { ...base, id: "open", recruitmentStatus: "open", isRecruiting: true },
       { ...base, id: "none", recruitmentStatus: "none", lastUpdated: "2026-01-02T00:00:00Z" },
     ]);
-    expect(threads.map((thread) => thread.id)).toEqual(["open", "closed", "none"]);
+    expect(threads.map((thread) => thread.id)).toEqual(["none", "open", "closed"]);
   });
 });
 

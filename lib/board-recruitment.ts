@@ -32,10 +32,19 @@ export function getBoardRecruitmentStatus(thread: Pick<BoardThread, "category" |
   return thread.isRecruiting ? "open" : "closed";
 }
 
+export function isBoardThreadClosed(thread: Pick<BoardThread, "category" | "title" | "isRecruiting" | "recruitmentStatus">): boolean {
+  return isRecruitmentBoardCategory(thread.category) && getBoardRecruitmentStatus(thread) === "closed";
+}
+
+export function displayBoardThreadTitle(thread: Pick<BoardThread, "category" | "title" | "isRecruiting" | "recruitmentStatus">): string {
+  const title = thread.title.replace(/^\s*【\s*募集終了\s*】\s*/, "").trim();
+  return isBoardThreadClosed(thread) ? `【募集終了】${title}` : title;
+}
+
 export function sortRecruitmentThreads(threads: BoardThread[]): BoardThread[] {
   return [...threads].sort((left, right) => {
     if (isRecruitmentBoardCategory(left.category)) {
-      const statusDifference = Number(getBoardRecruitmentStatus(left) !== "open") - Number(getBoardRecruitmentStatus(right) !== "open");
+      const statusDifference = Number(isBoardThreadClosed(left)) - Number(isBoardThreadClosed(right));
       if (statusDifference) return statusDifference;
     }
     return Date.parse(right.lastUpdated) - Date.parse(left.lastUpdated);

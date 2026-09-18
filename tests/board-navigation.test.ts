@@ -107,4 +107,12 @@ describe("board category ordering", () => {
     expect(profileScreen).toContain('thread: boardThreadId');
     expect(profileScreen).toContain('returnToTimeline === "1" ? { fromHome: "1" }');
   });
+
+  it("manages board threads with open and close actions instead of a recruiting toggle", () => {
+    const boardScreen = readFileSync(resolve(process.cwd(), "app/(tabs)/board.tsx"), "utf8");
+    expect(boardScreen).toContain('"投稿をクローズする"');
+    expect(boardScreen).toContain('"投稿をオープンにする"');
+    expect(boardScreen).toContain("クローズ済みの投稿");
+    expect(boardScreen).not.toContain("募集中ステータス");
+  });
 });

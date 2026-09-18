@@ -79,7 +79,7 @@ import { boardPollResult, finalizeBoardPollOnce, isBoardPollOpen, loadBoardPoll,
 import { addInAppNotification } from "@/lib/in-app-notifications-store";
 import { deleteBoardComment, deleteBoardThread, loadBoardCommentEdits, loadDeletedBoardCommentIds, loadDeletedBoardThreadIds, saveBoardCommentEdit } from "@/lib/board-content-store";
 import { CalendarField } from "@/components/calendar-field";
-import { getBoardRecruitmentStatus, isClubSelfIntroduction, isRecruitmentBoardCategory, isThreadPinned, sortRecruitmentThreads, type BoardRecruitmentStatus } from "@/lib/board-recruitment";
+import { displayBoardThreadTitle, isBoardThreadClosed, isClubSelfIntroduction, isRecruitmentBoardCategory, isThreadPinned, sortRecruitmentThreads } from "@/lib/board-recruitment";
 import { memberFromAuthUser } from "@/lib/auth-member";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Clipboard from "expo-clipboard";
@@ -203,12 +203,6 @@ function BoardVideo({ uri }: { uri: string }) {
 function LinkifiedText({ content }: { content: string }) {
   return <MentionText content={content} groups={BOARD_MENTION_GROUPS} />;
 }
-
-function RecruitmentStatusBadge({ status }: { status: BoardRecruitmentStatus }) {
-  if (status !== "open") return null;
-  return <View style={{ marginRight: 9, borderRadius: 10, paddingHorizontal: 9, paddingVertical: 6, backgroundColor: "#DDF3E3" }}><Text style={{ fontSize: 11, fontWeight: "900", color: "#247A42" }}>募集中</Text></View>;
-}
-
 
 function MealReportContent({ thread, compact = false }: { thread: BoardThread; compact?: boolean }) {
   const colors = useColors();
@@ -368,7 +362,7 @@ function SelfIntroductionMessage({ thread }: { thread: BoardThread }) {
   </View>;
 }
 
-function ThreadCard({ thread, viewerId, onPress, onEdit, onDelete, onPin, onChangeRecruitment, unreadCount = 0, mentionCount = 0, isNewPost = false, showMenu = true, comments = [] }: { thread: BoardThread; viewerId: string; onPress: () => void; onEdit?: () => void; onDelete?: () => void; onPin?: () => void; onChangeRecruitment?: () => void; unreadCount?: number; mentionCount?: number; isNewPost?: boolean; showMenu?: boolean; comments?: BoardComment[] }) {
+function ThreadCard({ thread, viewerId, onPress, onEdit, onDelete, onPin, onToggleClosed, unreadCount = 0, mentionCount = 0, isNewPost = false, showMenu = true, comments = [] }: { thread: BoardThread; viewerId: string; onPress: () => void; onEdit?: () => void; onDelete?: () => void; onPin?: () => void; onToggleClosed?: () => void; unreadCount?: number; mentionCount?: number; isNewPost?: boolean; showMenu?: boolean; comments?: BoardComment[] }) {
   const colors = useColors();
   const [showActions, setShowActions] = useState(false);
   const router = useRouter();
@@ -381,7 +375,7 @@ function ThreadCard({ thread, viewerId, onPress, onEdit, onDelete, onPin, onChan
   const contestOpen = thread.gourmetContest ? isContestCommentingOpen(thread) : false;
   const clubSelfIntroduction = isClubSelfIntroduction(thread);
   const recruitmentManaged = isRecruitmentBoardCategory(thread.category) && !clubSelfIntroduction;
-  const recruitmentStatus = getBoardRecruitmentStatus(thread);
+  const closed = isBoardThreadClosed(thread);
   const pinned = isThreadPinned(thread);
   const longPressHandled = useRef(false);
   // 過去の選手権も通常のカードとして表示し、開催中だけを緑のワッペンで区別する。
@@ -419,14 +413,15 @@ function ThreadCard({ thread, viewerId, onPress, onEdit, onDelete, onPin, onChan
   const openThreadActions = useCallback(() => {
     longPressHandled.current = true;
     if (Platform.OS === "web") { setShowActions(true); return; }
-    Alert.alert(thread.title, "操作を選択してください", [
+    Alert.alert(displayBoardThreadTitle(thread), "操作を選択してください", [
       { text: "リンクをコピー", onPress: () => { void Clipboard.setStringAsync(`https://app.irotas-community.com/board?category=${encodeURIComponent(thread.category)}&view=threads&thread=${encodeURIComponent(thread.id)}`); } },
+      ...(onToggleClosed ? [{ text: closed ? "投稿をオープンにする" : "投稿をクローズする", onPress: onToggleClosed }] : []),
       ...(onPin ? [{ text: pinned ? "固定表示を解除" : "固定表示にする", onPress: onPin }] : []),
       ...(onEdit ? [{ text: "投稿を編集", onPress: onEdit }] : []),
       ...(onDelete ? [{ text: "投稿を削除", style: "destructive" as const, onPress: onDelete }] : []),
       { text: "キャンセル", style: "cancel" },
     ]);
-  }, [onDelete, onEdit, onPin, pinned, thread.category, thread.id, thread.title]);
+  }, [closed, onDelete, onEdit, onPin, onToggleClosed, pinned, thread]);
 
   return <>
     <Pressable
@@ -451,7 +446,7 @@ function ThreadCard({ thread, viewerId, onPress, onEdit, onDelete, onPin, onChan
       >
         {isNewPost ? <View style={{ marginRight: 7, backgroundColor: "#3478C7", borderRadius: 7, paddingHorizontal: 7, paddingVertical: 3 }}><Text style={{ color: "#FFFFFF", fontSize: 10, fontWeight: "900" }}>new</Text></View> : null}
         {pinned ? <View style={{ marginRight: 7, borderRadius: 10, paddingHorizontal: 8, paddingVertical: 6, backgroundColor: "#FFF2C7" }}><Text style={{ fontSize: 11, fontWeight: "900", color: "#8A6512" }}>📌 固定</Text></View> : null}
-        {recruitmentManaged ? <RecruitmentStatusBadge status={recruitmentStatus} /> : thread.gourmetContest && contestOpen ? <View style={{ marginRight: 9, borderRadius: 10, paddingHorizontal: 9, paddingVertical: 6, backgroundColor: "#DDF3E3" }}><Text style={{ fontSize: 11, fontWeight: "900", color: "#247A42" }}>開催中</Text></View> : null}
+        {thread.gourmetContest && contestOpen ? <View style={{ marginRight: 9, borderRadius: 10, paddingHorizontal: 9, paddingVertical: 6, backgroundColor: "#DDF3E3" }}><Text style={{ fontSize: 11, fontWeight: "900", color: "#247A42" }}>開催中</Text></View> : null}
         <Image
           source={thread.author.avatar}
           style={{ width: 30, height: 30, borderRadius: 15 }}
@@ -478,7 +473,7 @@ function ThreadCard({ thread, viewerId, onPress, onEdit, onDelete, onPin, onChan
             style={{ fontSize: 16, fontWeight: "700", color: colors.foreground, marginBottom: 4 }}
             numberOfLines={2}
           >
-            {thread.title}
+            {displayBoardThreadTitle(thread)}
           </Text> : null}
           {/* Preview */}
           {thread.mealReport ? (
@@ -588,7 +583,7 @@ function ThreadCard({ thread, viewerId, onPress, onEdit, onDelete, onPin, onChan
         )}
       </View>
     </Pressable>
-    <Modal visible={showActions} transparent animationType="fade" onRequestClose={() => setShowActions(false)}><Pressable onPress={() => setShowActions(false)} style={{ flex: 1, justifyContent: "flex-end", backgroundColor: "rgba(20,18,24,0.48)" }}><View style={{ backgroundColor: colors.background, borderTopLeftRadius: 22, borderTopRightRadius: 22, padding: 18, paddingBottom: 32 }}><Text style={{ fontSize: 16, fontWeight: "800", color: colors.foreground, marginBottom: 10 }}>投稿の操作</Text>{[{ label: "リンクをコピー", action: () => { void Clipboard.setStringAsync(`https://app.irotas-community.com/board?category=${encodeURIComponent(thread.category)}&view=threads&thread=${encodeURIComponent(thread.id)}`); } }, ...(onEdit ? [{ label: "編集", action: onEdit }] : []), ...(onDelete ? [{ label: "削除", action: onDelete }] : [])].map((item) => <Pressable key={item.label} onPress={() => { setShowActions(false); item.action(); }} style={{ paddingVertical: 13, borderBottomWidth: 0.5, borderBottomColor: colors.border }}><Text style={{ fontSize: 15, fontWeight: "700", color: item.label === "削除" ? colors.error : colors.foreground }}>{item.label}</Text></Pressable>)}<Pressable onPress={() => setShowActions(false)} style={{ paddingVertical: 14 }}><Text style={{ color: colors.muted, textAlign: "center" }}>キャンセル</Text></Pressable></View></Pressable></Modal>
+    <Modal visible={showActions} transparent animationType="fade" onRequestClose={() => setShowActions(false)}><Pressable onPress={() => setShowActions(false)} style={{ flex: 1, justifyContent: "flex-end", backgroundColor: "rgba(20,18,24,0.48)" }}><View style={{ backgroundColor: colors.background, borderTopLeftRadius: 22, borderTopRightRadius: 22, padding: 18, paddingBottom: 32 }}><Text style={{ fontSize: 16, fontWeight: "800", color: colors.foreground, marginBottom: 10 }}>投稿の操作</Text>{[{ label: "リンクをコピー", action: () => { void Clipboard.setStringAsync(`https://app.irotas-community.com/board?category=${encodeURIComponent(thread.category)}&view=threads&thread=${encodeURIComponent(thread.id)}`); } }, ...(onToggleClosed ? [{ label: closed ? "投稿をオープンにする" : "投稿をクローズする", action: onToggleClosed }] : []), ...(onEdit ? [{ label: "編集", action: onEdit }] : []), ...(onDelete ? [{ label: "削除", action: onDelete }] : [])].map((item) => <Pressable key={item.label} onPress={() => { setShowActions(false); item.action(); }} style={{ paddingVertical: 13, borderBottomWidth: 0.5, borderBottomColor: colors.border }}><Text style={{ fontSize: 15, fontWeight: "700", color: item.label === "削除" ? colors.error : colors.foreground }}>{item.label}</Text></Pressable>)}<Pressable onPress={() => setShowActions(false)} style={{ paddingVertical: 14 }}><Text style={{ color: colors.muted, textAlign: "center" }}>キャンセル</Text></Pressable></View></Pressable></Modal>
     <Modal visible={cardReactionDetails} transparent animationType="fade" onRequestClose={() => setCardReactionDetails(false)}>
       <Pressable onPress={() => setCardReactionDetails(false)} style={{ flex: 1, backgroundColor: "rgba(20,18,24,0.48)", justifyContent: "center", padding: 28 }}>
         <Pressable onPress={() => {}} style={{ maxHeight: "72%", backgroundColor: colors.background, borderRadius: 20, padding: 18 }}>
@@ -767,7 +762,6 @@ function ThreadDetailModal({
   onOpenMemberProfile,
   returnToTimeline = false,
   onEditThread,
-  onChangeRecruitment,
   canRegisterEvent = true,
   applicationClub,
   canModerateAll = false,
@@ -780,7 +774,6 @@ function ThreadDetailModal({
   onOpenMemberProfile: (params: Record<string, string>) => void;
   returnToTimeline?: boolean;
   onEditThread?: () => void;
-  onChangeRecruitment?: () => void;
   canRegisterEvent?: boolean;
   applicationClub?: Club;
   canModerateAll?: boolean;
@@ -910,7 +903,6 @@ function ThreadDetailModal({
   const isContest = Boolean(thread.gourmetContest);
   const clubSelfIntroduction = isClubSelfIntroduction(thread);
   const recruitmentManaged = isRecruitmentBoardCategory(thread.category) && !clubSelfIntroduction;
-  const recruitmentStatus = getBoardRecruitmentStatus(thread);
   const pollAllowed = !["introduction", "meal-report", "gourmet-contest", "gourmet-advice"].includes(thread.category);
   const contestCommentingOpen = isContest ? isContestCommentingOpen(thread) : true;
   const contestReferenceUrlValid = !contestReferenceUrl.trim() || /^https?:\/\/\S+$/i.test(contestReferenceUrl.trim());
@@ -1201,7 +1193,7 @@ function ThreadDetailModal({
           style={{ flex: 1, fontSize: 17, fontWeight: "700", color: colors.foreground, marginLeft: 12 }}
           numberOfLines={1}
         >
-          {thread.selfIntroduction ? "自己紹介" : thread.title}
+          {thread.selfIntroduction ? "自己紹介" : displayBoardThreadTitle(thread)}
         </Text>
         {onEditThread ? <Pressable onPress={onEditThread} style={{ paddingHorizontal: 10, paddingVertical: 6 }}><Text style={{ fontSize: 13, fontWeight: "800", color: "#C97813" }}>編集</Text></Pressable> : null}
         {(isParticipant || isAuthor) && chatRoomId && (
@@ -1237,7 +1229,6 @@ function ThreadDetailModal({
           {initialThreadUnread ? <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 14 }}><View style={{ flex: 1, height: 1, backgroundColor: "#E8A0BF" }} /><Text style={{ fontSize: 11, fontWeight: "900", color: "#C05B88" }}>ここから未読</Text><View style={{ flex: 1, height: 1, backgroundColor: "#E8A0BF" }} /></View> : null}
           <Pressable onPress={() => onOpenMemberProfile(profileParams(thread.author.id, thread.author.name))} accessibilityLabel={`${stripRankFromName(thread.author.name)}のプロフィールを表示`} style={{ flexDirection: "row", alignItems: "center", marginBottom: 12 }}>
             {isThreadPinned(thread) ? <View style={{ marginRight: 7, borderRadius: 10, paddingHorizontal: 8, paddingVertical: 6, backgroundColor: "#FFF2C7" }}><Text style={{ fontSize: 11, fontWeight: "900", color: "#8A6512" }}>📌 固定</Text></View> : null}
-            {recruitmentManaged ? <RecruitmentStatusBadge status={recruitmentStatus} /> : null}
             <Image source={thread.author.avatar} style={{ width: 36, height: 36, borderRadius: 18 }} contentFit="cover" />
             <View style={{ marginLeft: 10 }}>
               <View style={{ flexDirection: "row", alignItems: "center" }}>
@@ -1693,7 +1684,6 @@ function EditThreadModal({
   const [contestDeadline, setContestDeadline] = useState(thread.gourmetContest?.commentDeadline ?? "");
   const [contestPrizePoints, setContestPrizePoints] = useState(String(thread.gourmetContest?.prizePoints ?? ""));
   const [contestPrizeTitle, setContestPrizeTitle] = useState(thread.gourmetContest?.prizeTitle ?? "");
-  const [recruitmentStatus, setRecruitmentStatus] = useState<BoardRecruitmentStatus>(getBoardRecruitmentStatus(thread));
   const [confirmingDelete, setConfirmingDelete] = useState(false);
 
   const handlePickImage = async () => {
@@ -1725,8 +1715,8 @@ function EditThreadModal({
       preview: savedContent,
       mealReport: thread.mealReport ? { ...thread.mealReport, postTitle: title.trim() || undefined, restaurantName: mealRestaurantName.trim(), areaDisplay: mealArea.trim() || undefined, prefecture: mealArea.trim() || thread.mealReport.prefecture, budget: mealBudget.trim() || undefined, recommendedMenu: mealRecommendedMenu.trim() || undefined, rating: mealRating, comment: savedContent, googleMapUrl: mealGoogleMapUrl.trim() || undefined, tabelogUrl: mealTabelogUrl.trim() || undefined } : undefined,
       gourmetAdvice: thread.gourmetAdvice ? { ...thread.gourmetAdvice, theme: title.trim(), genres: adviceGenres, area: adviceArea.trim() || "指定なし", scene: adviceScene.trim() || "指定なし", budget: adviceBudget.trim() || "指定なし", comment: savedContent } : undefined,
-      recruitmentStatus: isRecruitmentBoardCategory(thread.category) && !isClubSelfIntroduction(thread) ? recruitmentStatus : thread.recruitmentStatus,
-      isRecruiting: isRecruitmentBoardCategory(thread.category) && !isClubSelfIntroduction(thread) ? recruitmentStatus === "open" : thread.isRecruiting,
+      recruitmentStatus: thread.recruitmentStatus,
+      isRecruiting: thread.isRecruiting,
       selfIntroduction: thread.selfIntroduction ? { introduction: introductionText.trim(), wantToTry: wantToTry.trim() || undefined } : undefined,
       images: images.length > 0 ? images : undefined,
       gourmetContest: thread.gourmetContest ? {
@@ -1808,8 +1798,6 @@ function EditThreadModal({
               <View><Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground, marginBottom: 6 }}>Google Mapのリンク</Text><TextInput value={mealGoogleMapUrl} onChangeText={setMealGoogleMapUrl} placeholder="https://maps.app.goo.gl/..." placeholderTextColor={colors.muted} autoCapitalize="none" keyboardType="url" style={{ backgroundColor: colors.surface, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, color: colors.foreground }} /></View>
               <View><Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground, marginBottom: 6 }}>食べログのリンク</Text><TextInput value={mealTabelogUrl} onChangeText={setMealTabelogUrl} placeholder="https://tabelog.com/..." placeholderTextColor={colors.muted} autoCapitalize="none" keyboardType="url" style={{ backgroundColor: colors.surface, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, color: colors.foreground }} /></View>
             </View> : null}
-
-            {isRecruitmentBoardCategory(thread.category) && !isClubSelfIntroduction(thread) ? <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", borderRadius: 12, padding: 13, backgroundColor: "#F6FAF7", borderWidth: 1, borderColor: "#D8EADA" }}><View><Text style={{ fontSize: 14, fontWeight: "900", color: colors.foreground }}>募集中ステータスをオンにする</Text><Text style={{ fontSize: 11, color: colors.muted, marginTop: 3 }}>オンの投稿だけ一覧に「募集中」と表示されます。</Text></View><Pressable onPress={() => setRecruitmentStatus((current) => current === "open" ? "none" : "open")} accessibilityRole="switch" accessibilityState={{ checked: recruitmentStatus === "open" }} style={{ width: 48, height: 28, borderRadius: 14, backgroundColor: recruitmentStatus === "open" ? "#34C759" : "#C7C7CC", position: "relative" }}><View style={{ position: "absolute", top: 3, left: recruitmentStatus === "open" ? 23 : 3, width: 22, height: 22, borderRadius: 11, backgroundColor: "#FFF" }} /></Pressable></View> : null}
 
             {thread.gourmetContest ? <View style={{ gap: 12 }}>
               <Text style={{ fontSize: 15, fontWeight: "900", color: colors.foreground }}>大会設定</Text>
@@ -2148,8 +2136,8 @@ function CreateThreadModal({
       preview: isMealReport
         ? normalizedComment || normalizedMenu || `${resolvedArea}でいただきました。`
         : isGourmetAdvice ? adviceComment.trim() : isIntroduction ? introductionText.trim() : content.trim(),
-      isRecruiting: hasManagedRecruitmentStatus ? (category.startsWith("club-club-") && /自己紹介/.test(title.trim()) ? false : isRecruiting) : isMealReport || isGourmetAdvice || isIntroduction || isGourmetContest ? false : isRecruiting,
-      recruitmentStatus: hasManagedRecruitmentStatus ? (category.startsWith("club-club-") && /自己紹介/.test(title.trim()) ? "none" : isRecruiting ? "open" : "none") : undefined,
+      isRecruiting: hasManagedRecruitmentStatus ? false : isMealReport || isGourmetAdvice || isIntroduction || isGourmetContest ? false : isRecruiting,
+      recruitmentStatus: hasManagedRecruitmentStatus ? (category.startsWith("club-club-") && /自己紹介/.test(title.trim()) ? "none" : "open") : undefined,
       isPinned: category.startsWith("club-club-") && /自己紹介/.test(title.trim()) ? true : undefined,
       recruitCapacity: !hasManagedRecruitmentStatus && !isMealReport && !isGourmetAdvice && !isIntroduction && !isGourmetContest && isRecruiting ? parseInt(capacity || "10", 10) : undefined,
       recruitAttendees: 0,
@@ -2557,7 +2545,7 @@ function CreateThreadModal({
             {pollEnabled && !pollValid ? <Text style={{ fontSize: 12, color: colors.error, marginTop: 6 }}>質問・選択肢2つ以上・期限を入力してください</Text> : null}
           </View> : null}
 
-          {hasManagedRecruitmentStatus ? <Pressable onPress={() => setIsRecruiting((current) => !current)} accessibilityRole="switch" accessibilityState={{ checked: isRecruiting }} style={{ flexDirection: "row", alignItems: "center", backgroundColor: colors.surface, borderRadius: 12, padding: 14, marginBottom: 16, borderWidth: 1, borderColor: colors.border }}><IconSymbol name="person.badge.plus" size={20} color={isRecruiting ? "#34C759" : colors.muted} /><View style={{ flex: 1, marginLeft: 10 }}><Text style={{ fontSize: 15, fontWeight: "800", color: colors.foreground }}>募集中ステータス</Text><Text style={{ fontSize: 11, lineHeight: 16, color: colors.muted, marginTop: 2 }}>オンにすると一覧へ「募集中」と表示されます。</Text></View><View style={{ width: 48, height: 28, borderRadius: 14, backgroundColor: isRecruiting ? "#34C759" : "#C7C7CC", justifyContent: "center", paddingHorizontal: 2 }}><View style={{ width: 24, height: 24, borderRadius: 12, backgroundColor: "#FFF", alignSelf: isRecruiting ? "flex-end" : "flex-start" }} /></View></Pressable> : !isMealReport && !isGourmetAdvice && !isIntroduction && !isGourmetContest ? (
+          {!hasManagedRecruitmentStatus && !isMealReport && !isGourmetAdvice && !isIntroduction && !isGourmetContest ? (
             <>
               {/* Recruiting toggle */}
               <Pressable
@@ -2957,18 +2945,11 @@ export default function BoardScreen() {
       Alert.alert("削除できませんでした", error instanceof Error ? error.message : "もう一度お試しください。");
     }
   };
-  const promptRecruitmentStatus = (thread: BoardThread) => {
-    if (!canChangeRecruitment(thread) && !canPinThread(thread)) return;
-    Alert.alert("投稿の管理", "変更する項目を選択してください。", [
-      ...(canPinThread(thread) ? [{ text: isThreadPinned(thread) ? "固定表示を解除" : "一番上に固定", onPress: () => updateThreadManagement(thread, { isRecruiting: thread.isRecruiting, isPinned: !isThreadPinned(thread), recruitmentStatus: getBoardRecruitmentStatus(thread) }) }] : []),
-      ...(canChangeRecruitment(thread) ? [
-        { text: "募集中にする", onPress: () => updateThreadManagement(thread, { isRecruiting: true, isPinned: thread.isPinned, recruitmentStatus: "open" }) },
-        { text: "募集終了にする", onPress: () => updateThreadManagement(thread, { isRecruiting: false, isPinned: thread.isPinned, recruitmentStatus: "closed" }) },
-        { text: "ステータスなし", onPress: () => updateThreadManagement(thread, { isRecruiting: false, isPinned: thread.isPinned, recruitmentStatus: "none" }) },
-      ] : []),
-      { text: "キャンセル", style: "cancel" },
-    ] as any);
-  };
+  const toggleThreadClosed = (thread: BoardThread) => updateThreadManagement(thread, {
+    isRecruiting: false,
+    isPinned: thread.isPinned,
+    recruitmentStatus: isBoardThreadClosed(thread) ? "open" : "closed",
+  });
   useEffect(() => {
     if (!threadParam || leavingThreadDetailRef.current) return;
     if (!threadReadsHydrated) return;
@@ -3211,14 +3192,17 @@ export default function BoardScreen() {
       {isThreadView && !boardLoading ? <FlatList
         data={filteredThreads}
         keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
+        renderItem={({ item, index }) => (
           activeCategory === "introduction" ? <SelfIntroductionMessage thread={item} /> : (() => {
             const comments = importedComments[item.id] ?? [];
             const unreadComments = threadReadsHydrated ? comments.slice(threadReadCounts[item.id] ?? 0).filter((comment) => comment.author.id !== viewerMemberId && postedAfterFirstSignIn(comment.createdAt)) : [];
             const newThread = threadReadsHydrated && threadReadCounts[item.id] === undefined && item.author.id !== viewerMemberId && postedAfterFirstSignIn(item.createdAt);
             const postMention = newThread && mentionsViewer(`${item.title} ${item.preview}`, viewerMentionLabels);
             const mentionCount = unreadComments.filter((comment) => mentionsViewer(comment.content, viewerMentionLabels)).length + (postMention ? 1 : 0);
-            return <ThreadCard
+            const startsClosedSection = isBoardThreadClosed(item) && (index === 0 || !isBoardThreadClosed(filteredThreads[index - 1]));
+            return <>
+            {startsClosedSection ? <View style={{ flexDirection: "row", alignItems: "center", gap: 10, marginHorizontal: 16, marginTop: 12, marginBottom: 14 }}><View style={{ flex: 1, height: 1, backgroundColor: colors.border }} /><Text style={{ fontSize: 12, fontWeight: "900", color: colors.muted }}>クローズ済みの投稿</Text><View style={{ flex: 1, height: 1, backgroundColor: colors.border }} /></View> : null}
+            <ThreadCard
             thread={item}
             viewerId={viewerMemberId}
             comments={comments}
@@ -3236,8 +3220,8 @@ export default function BoardScreen() {
               Alert.alert("投稿を削除しますか？", "削除後は元に戻せません。", [{ text: "キャンセル", style: "cancel" }, { text: "削除", style: "destructive", onPress: () => { void deleteThread(item); } }]);
             } : undefined}
             onPin={canPinThread(item) || userCanModerateAll ? () => { void updateThreadManagement(item, { isRecruiting: item.isRecruiting, recruitmentStatus: item.recruitmentStatus, isPinned: !item.isPinned }); } : undefined}
-            onChangeRecruitment={canChangeRecruitment(item) || canPinThread(item) ? () => promptRecruitmentStatus(item) : undefined}
-          />;
+            onToggleClosed={canChangeRecruitment(item) ? () => { void toggleThreadClosed(item); } : undefined}
+          /></>;
           })()
         )}
         refreshControl={
@@ -3288,7 +3272,6 @@ export default function BoardScreen() {
               leaveThreadDetail(fromHome === "1" ? () => router.replace("/" as any) : undefined);
             }}
             onEditThread={selectedThread.author.id === viewerMemberId || userCanModerateAll ? () => { setEditingThread(selectedThread); setSelectedThread(null); router.setParams({ thread: "" }); } : undefined}
-            onChangeRecruitment={canChangeRecruitment(selectedThread) || canPinThread(selectedThread) ? () => promptRecruitmentStatus(selectedThread) : undefined}
             canRegisterEvent={selectedThread.author.id === viewerMemberId}
             applicationClub={applicationClubForThread(selectedThread)}
             canModerateAll={userCanModerateAll}
