@@ -1,6 +1,7 @@
 import { authenticatedRequestMember } from "./auth";
 import { mergeImportedEvent, type ImportEventShape } from "../lib/event-import-merge";
 import type { D1Database, SitesEnv } from "./platform-types";
+import { canonicalClubId } from "../lib/club-id";
 
 const ROOT = "/api/admin/event-import";
 const DRY_RUN = `${ROOT}/dry-run`;
@@ -44,7 +45,7 @@ function inputItem(value: unknown): IncomingItem | null {
     sourceThreadId: threadId,
     organizerMemberId: Number.isInteger(organizerMemberId) && organizerMemberId > 0 ? organizerMemberId : undefined,
     organizerDiscordUserId: organizerDiscordUserId && /^\d{17,20}$/.test(organizerDiscordUserId) ? organizerDiscordUserId : undefined,
-    event: { title, eventDate, eventType: eventType as ImportEventShape["eventType"], clubId: safeText(event?.clubId, 80), status: status as ImportEventShape["status"], publicData },
+    event: { title, eventDate, eventType: eventType as ImportEventShape["eventType"], clubId: canonicalClubId(safeText(event?.clubId, 80)), status: status as ImportEventShape["status"], publicData },
   };
 }
 

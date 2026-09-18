@@ -171,6 +171,11 @@ function importedCommentsFor(thread, date) {
 const clubEvent = (thread) => thread.category.startsWith("club-club-") && (/募集|開催|交流会|鑑賞会|食事会|ご飯会|飲み会|ツアー|合宿|イベント/.test(thread.title) || /\d{1,2}\s*[\/月]\s*\d{1,2}/.test(thread.title));
 const eventThreads = input.threads.filter((thread) => categories.has(thread.category) || clubEvent(thread));
 const seenTitles = new Set();
+const canonicalClubId = (clubId) => ({
+  "club-stage": "club-theater",
+  "club-sports-viewing": "club-sports-watch",
+  "club-cooking": "club-cooking-class",
+}[clubId] ?? clubId);
 const events = eventThreads.map((rawThread) => {
   const thread = completeThread(rawThread);
   const official = thread.category === "official-event" || thread.category.startsWith("branch-event-");
@@ -208,7 +213,7 @@ const events = eventThreads.map((rawThread) => {
     ...priceRange(price),
     category: kansai ? "kansai" : official && thread.category === "official-event" ? "all" : "kanto",
     eventType: club ? "club" : official ? "official" : "gourmet",
-    ...(club ? { clubId: thread.category.replace(/^club-/, "") } : {}),
+    ...(club ? { clubId: canonicalClubId(thread.category.replace(/^club-/, "")) } : {}),
     status: closed ? "full" : "open",
     createdBy: "u1",
     organizerProfileId: `discord-${thread.authorId}`,

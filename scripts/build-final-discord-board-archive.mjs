@@ -10,8 +10,8 @@ const categoryByForum = new Map([
   ["💬｜なんでも掲示板", "free-chat"], ["👑｜グルメ選手権", "gourmet-contest"], ["🙋‍♀️｜おしえてグルメ相談室", "gourmet-advice"],
   ["🎁｜プレゼント企画", "gift-campaign"], ["📸｜活動報告", "club-all"],
   ["🍷｜ワイン部", "club-club-wine"], ["🍞｜パン部", "club-club-bread"], ["🚶｜散歩部", "club-club-walk"], ["🏃｜ランニング部", "club-club-running"],
-  ["✈️｜旅行部", "club-club-travel"], ["⚾｜スポーツ観戦部", "club-club-sports-viewing"], ["🎞️｜映画・ドラマ鑑賞部", "club-club-movie"], ["🐭｜ディズニー部", "club-club-disney"],
-  ["🍰｜スイーツ部", "club-club-sweets"], ["🍳｜料理教室部", "club-club-cooking"], ["🍺｜昼飲み部", "club-club-day-drinking"], ["🎭｜舞台鑑賞部", "club-club-stage"],
+  ["✈️｜旅行部", "club-club-travel"], ["⚾｜スポーツ観戦部", "club-club-sports-watch"], ["🎞️｜映画・ドラマ鑑賞部", "club-club-movie"], ["🐭｜ディズニー部", "club-club-disney"],
+  ["🍰｜スイーツ部", "club-club-sweets"], ["🍳｜料理教室部", "club-club-cooking-class"], ["🍺｜昼飲み部", "club-club-day-drinking"], ["🎭｜舞台鑑賞部", "club-club-theater"],
   ["🏀｜スポーツ部", "club-club-sports"], ["⛳｜ゴルフ部", "club-club-golf"], ["🍖｜肉部", "club-club-meat"],
 ]);
 const imageUrls = (message) => (message.attachments ?? []).filter((attachment) => /^image\//.test(String(attachment.contentType ?? ""))).map((attachment) => attachment.url).filter(Boolean);

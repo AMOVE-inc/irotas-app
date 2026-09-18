@@ -6,6 +6,7 @@ import { cancelEventCheckout, eventCheckoutAmount } from "./event-checkout";
 import { EVENT_XP, awardEventReward, reverseEventRewards } from "./event-rewards";
 import type { D1Database, SitesEnv } from "./platform-types";
 import { displayEventTitle } from "../lib/event-title";
+import { canonicalClubId } from "../lib/club-id";
 import { IMPORTED_DISCORD_EVENTS } from "../constants/imported-discord-events";
 import { mentionsViewer } from "../lib/mention-matching";
 
@@ -624,11 +625,13 @@ async function materializeImportedEvent(db: D1Database, eventId: string, fallbac
   const organizerMemberId = organizer?.id ?? fallbackOrganizerMemberId;
   if (!organizerMemberId) return null;
   const now = new Date().toISOString();
-  const publicData = organizer ? imported : { ...imported, materializedOrganizerFallback: true };
+  const normalizedClubId = canonicalClubId(imported.clubId);
+  const normalizedImported = normalizedClubId === imported.clubId ? imported : { ...imported, clubId: normalizedClubId };
+  const publicData = organizer ? normalizedImported : { ...normalizedImported, materializedOrganizerFallback: true };
   await db.prepare(`INSERT OR IGNORE INTO events
     (id, organizer_member_id, event_type, club_id, event_date, status, title, public_data_json, created_at, updated_at)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
-    .bind(imported.id, organizerMemberId, imported.eventType, imported.clubId ?? null, imported.date, imported.status, displayEventTitle(imported.title), JSON.stringify(publicData), imported.createdAt ?? now, now).run();
+    .bind(imported.id, organizerMemberId, imported.eventType, normalizedClubId ?? null, imported.date, imported.status, displayEventTitle(imported.title), JSON.stringify(publicData), imported.createdAt ?? now, now).run();
   return eventRow(db, eventId);
 }
 
