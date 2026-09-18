@@ -14,8 +14,8 @@ export function canAccessChatRoom(
   memberRank: MemberRank,
   canViewAllChats = false,
 ): boolean {
-  if (canViewAllChats) return true;
   if (room.type === "dm") return room.participants.includes(memberId);
+  if (canViewAllChats) return true;
   if (room.type === "club") return room.participants.includes(memberId);
   if (room.id === "community-free-chat" || room.sourceId === "community-free-chat") return true;
   if (room.type === "rank") {

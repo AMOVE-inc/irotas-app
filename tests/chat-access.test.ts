@@ -41,10 +41,11 @@ describe("club chat access", () => {
 });
 
 describe("staff chat oversight", () => {
-  it("allows staff to view a DM without joining it", () => {
+  it("keeps a DM private from staff who are not participants", () => {
     const room = { id: "dm-private", name: "DM", type: "dm" as const, sourceId: "dm-private", participants: ["IRO0010", "IRO0011"], createdBy: "IRO0010" };
     expect(canAccessChatRoom(room, "IRO0009", "regular")).toBe(false);
-    expect(canAccessChatRoom(room, "IRO0009", "regular", true)).toBe(true);
+    expect(canAccessChatRoom(room, "IRO0009", "regular", true)).toBe(false);
+    expect(canAccessChatRoom(room, "IRO0010", "regular", true)).toBe(true);
   });
 });
 

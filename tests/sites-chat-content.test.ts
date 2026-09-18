@@ -321,7 +321,7 @@ describe("shared chat content API", () => {
     expect((await handleChatContentRequest(request("/api/chats/club-chat-club-travel/messages", "POST", { content: "運営の非参加投稿" }), env))?.status).toBe(403);
   });
 
-  it("lets administrators and operators view non-member DMs without posting or managing them", async () => {
+  it("keeps non-member DMs private from administrators and operators", async () => {
     db.rooms.set("dm-private", { id: "dm-private", name: "DM", room_type: "dm", source_id: "dm-private", required_rank: null, created_by_member_id: 10 });
     db.roomMembers.push(
       { roomId: "dm-private", memberId: 10, role: "owner", left: false },
@@ -332,9 +332,9 @@ describe("shared chat content API", () => {
       authenticatedRequestMember.mockResolvedValue({ id: 9, role, access_role: role, account_status: "active" });
       const list = await handleChatContentRequest(request("/api/chats"), env);
       const listed = await list?.json() as { rooms: { id: string; name: string }[] };
-      expect(listed.rooms).toContainEqual(expect.objectContaining({ id: "dm-private", name: "友達A・友達B" }));
-      expect((await handleChatContentRequest(request("/api/chats/dm-private"), env))?.status).toBe(200);
-      expect((await handleChatContentRequest(request("/api/chats/dm-private/messages"), env))?.status).toBe(200);
+      expect(listed.rooms.some((room) => room.id === "dm-private")).toBe(false);
+      expect((await handleChatContentRequest(request("/api/chats/dm-private"), env))?.status).toBe(403);
+      expect((await handleChatContentRequest(request("/api/chats/dm-private/messages"), env))?.status).toBe(403);
       expect((await handleChatContentRequest(request("/api/chats/dm-private/messages", "POST", { content: "監視者の投稿" }), env))?.status).toBe(403);
       expect((await handleChatContentRequest(request("/api/chats/dm-private", "DELETE"), env))?.status).toBe(403);
     }

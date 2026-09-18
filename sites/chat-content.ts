@@ -349,6 +349,8 @@ async function canAccessRoom(db: D1Database, room: RoomRow, member: Viewer) {
 }
 
 async function canViewRoom(db: D1Database, room: RoomRow, member: Viewer) {
+  // 個人間DMは運営・管理者を含め、当事者だけが閲覧できる。
+  if (room.room_type === "dm") return canAccessRoom(db, room, member);
   return elevated(member) || canAccessRoom(db, room, member);
 }
 
@@ -662,7 +664,7 @@ export async function handleChatContentRequest(
       AND (cr.room_type != 'event' OR (cr.source_id NOT LIKE 'discord-event-%' AND NOT EXISTS (
         SELECT 1 FROM events e WHERE e.id = cr.source_id AND json_extract(e.public_data_json, '$.recruitmentChannel') = 'discord')))
       AND (
-        ? = 1 OR cr.room_type IN ('announcement', 'rank', 'club')
+        (? = 1 AND cr.room_type != 'dm') OR cr.room_type IN ('announcement', 'rank', 'club')
         OR cr.id IN ('community-free-chat', 'branch-kanto-free', 'branch-kansai-free', 'board-introduction')
         OR EXISTS (SELECT 1 FROM chat_room_members crm WHERE crm.room_id = cr.id AND crm.member_id = ? AND crm.left_at IS NULL)
         OR (cr.room_type = 'event' AND EXISTS (SELECT 1 FROM event_participations ep

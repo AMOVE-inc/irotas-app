@@ -214,7 +214,9 @@ export default function ChatListScreen() {
   const canViewAllChats = isOperatorRole(authUser?.role, authUser?.accessRole);
   const viewerBranches = authUser?.branches ?? [authUser?.branch ?? CURRENT_USER.branch];
   const [showCreateGroup, setShowCreateGroup] = useState(false);
-  const [myRooms, setMyRooms] = useState<ChatRoom[]>(() => lastRoomLists.get(viewerMemberId)?.joined ?? []);
+  const [myRooms, setMyRooms] = useState<ChatRoom[]>(() =>
+    (lastRoomLists.get(viewerMemberId)?.joined ?? []).filter((room) => room.type !== "dm" || room.participants.includes(viewerMemberId)),
+  );
   const [rankRooms, setRankRooms] = useState<ChatRoom[]>(() => lastRoomLists.get(viewerMemberId)?.rank ?? []);
   const [eventStarts, setEventStarts] = useState<Record<string, string>>({});
   const [eventImages, setEventImages] = useState<Record<string, string>>({});
@@ -251,7 +253,7 @@ export default function ChatListScreen() {
     const isFixtureRoom = (room: ChatRoom) => /^chat\d+$/.test(room.id);
     const branchRooms = CHAT_ROOMS.filter((room) => room.sourceId === "branch-kanto" ? viewerBranches.includes("kanto") : room.sourceId === "branch-kansai" ? viewerBranches.includes("kansai") : false);
     const localJoinedRooms = [...getMyRooms(viewerMemberId), ...branchRooms]
-      .filter((room) => room.type !== "rank" && room.type !== "club" && !isFixtureRoom(room) && !isImportedEventChat(room) && !dismissedRooms.get(viewerMemberId)?.has(room.id));
+      .filter((room) => room.type !== "rank" && room.type !== "club" && (room.type !== "dm" || room.participants.includes(viewerMemberId)) && !isFixtureRoom(room) && !isImportedEventChat(room) && !dismissedRooms.get(viewerMemberId)?.has(room.id));
     const localRankRooms = getRankRoomsForUser(viewerRank, canViewAllChats);
     // Do not present the local subset as a complete list while shared rooms load.
     let sharedRooms: ChatRoom[] = [];
@@ -267,7 +269,7 @@ export default function ChatListScreen() {
         }
       }
       sharedRooms = rooms.map((room) => ({ ...room, requiredRank: room.requiredRank as ChatRoom["requiredRank"] }))
-        .filter((room) => !isImportedEventChat(room));
+        .filter((room) => !isImportedEventChat(room) && (room.type !== "dm" || room.participants.includes(viewerMemberId)));
       if (includeDetails) void Promise.all([
         Api.getEvents().catch(() => []),
         Api.getMemberDirectory().catch(() => []),
