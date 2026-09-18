@@ -1400,7 +1400,7 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
     const count = await env.DB.prepare(`SELECT COUNT(*) AS count FROM event_participations
       WHERE event_id = ? AND (status IN ('confirmed', 'cancel_requested') OR (status = 'applied' AND payment_state = 'awaiting_payment'))`).bind(id).first<{ count: number }>();
     const immediate = row.event_type === "official" && data.selectionMethod !== "lottery";
-    if (immediate && !["undecided", "unlimited"].includes(String(data.capacityMode)) && (count?.count ?? 0) >= capacity) return responseJson({ error: "満席です" }, 409);
+    if (immediate && !["undecided", "unlimited"].includes(String(data.capacityMode)) && (count?.count ?? 0) >= capacity) return responseJson({ error: "募集は終了しています" }, 409);
     const now = new Date().toISOString();
     const requestedPoints = Number(input?.pointsToUse ?? 0);
     if (!Number.isInteger(requestedPoints) || requestedPoints < 0 || requestedPoints > 300_000)
@@ -1460,7 +1460,7 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
       .bind(id, member.id).first<{ status: string; payment_state: string | null }>();
     if (reserved?.status !== status || (paymentState && reserved.payment_state !== paymentState)) {
       if (pointResult && !pointResult.duplicate) await refundEventPointDiscount(env.DB, id, member.id, row.title, now);
-      return responseJson({ error: "満席のため申込を受け付けられませんでした" }, 409);
+      return responseJson({ error: "募集終了のため申込を受け付けられませんでした" }, 409);
     }
     if (status === "confirmed") {
       await env.DB.prepare("UPDATE events SET public_data_json = ?, updated_at = ? WHERE id = ?")
@@ -1592,7 +1592,7 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
       const capacity = typeof data.capacity === "number" ? data.capacity : 0;
       const count = await env.DB.prepare(`SELECT COUNT(*) AS count FROM event_participations WHERE event_id = ?
         AND (status IN ('confirmed','cancel_requested') OR (status = 'applied' AND payment_state = 'awaiting_payment'))`).bind(id).first<{ count: number }>();
-      if (!["undecided", "unlimited"].includes(String(data.capacityMode)) && (count?.count ?? 0) >= capacity) return responseJson({ error: "満席のため承認できません" }, 409);
+      if (!["undecided", "unlimited"].includes(String(data.capacityMode)) && (count?.count ?? 0) >= capacity) return responseJson({ error: "募集終了のため承認できません" }, 409);
       if (env.EVENT_PAYMENTS_ENABLED === "true" && row.event_type === "official" && data.recruitmentChannel !== "discord" && !id.startsWith("discord-event-")) {
         const targetRank = await env.DB.prepare("SELECT member_rank, discord_roles_json FROM members WHERE id = ?")
           .bind(targetId).first<{ member_rank: string | null; discord_roles_json: string | null }>();
@@ -1630,7 +1630,7 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
           ]);
           const selected = await env.DB.prepare("SELECT payment_state FROM event_participations WHERE event_id = ? AND member_id = ?")
             .bind(id, targetId).first<{ payment_state: string | null }>();
-          if (selected?.payment_state !== "awaiting_payment") return responseJson({ error: "満席のため承認できません" }, 409);
+          if (selected?.payment_state !== "awaiting_payment") return responseJson({ error: "募集終了のため承認できません" }, 409);
           await audit(env.DB, member.id, "event.payment_requested", id, { targetId, amountDue });
           const updated = await eventRow(env.DB, id);
           return responseJson({ event: await hydratedEvent(env.DB, updated!, member.id, elevated, memberPublicId) });

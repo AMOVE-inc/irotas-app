@@ -342,7 +342,7 @@ function TodayEventsSection({
                       color: event.status === "full" ? colors.error : "#E8A0BF",
                     }}
                   >
-                    {event.status === "full" ? (event.participantsFinalizedAt || event.discordRecruitmentClosedAt ? "募集終了" : "満席") : event.capacityMode === "undecided" ? "募集人数 未定" : event.capacityMode === "unlimited" ? "募集人数 上限なし" : `${event.attendees}/${event.capacity}名`}
+                    {event.status === "full" ? "募集終了" : event.capacityMode === "undecided" ? "募集人数 未定" : event.capacityMode === "unlimited" ? "募集人数 上限なし" : `${event.attendees}/${event.capacity}名`}
                   </Text>
                 </View>
               </View>

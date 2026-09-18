@@ -1222,7 +1222,7 @@ export default function AdminDashboardScreen() {
               {[
                 { label: "総会員数", value: MEMBERS.length, icon: "person.2.fill", color: "#E8A0BF" },
                 { label: "開催中イベント", value: stats.openEvents, icon: "calendar", color: "#A7C7E7" },
-                { label: "満席イベント", value: stats.fullEvents, icon: "person.fill.checkmark", color: "#FF9500" },
+                { label: "募集終了イベント", value: stats.fullEvents, icon: "person.fill.checkmark", color: "#FF9500" },
                 { label: "延べ参加者", value: stats.totalParticipants, icon: "chart.bar.fill", color: "#34C759" },
                 { label: "部活動数", value: stats.activeClubs, icon: "person.3.fill", color: "#AF52DE" },
               ].map((kpi) => (
@@ -2289,7 +2289,7 @@ export default function AdminDashboardScreen() {
                         color: event.status === "open" ? "#34C759" : event.status === "full" ? "#FF9500" : "#8E8E93",
                       }}
                     >
-                      {event.status === "open" ? "受付中" : event.status === "full" ? (event.participantsFinalizedAt ? "募集終了" : "満席") : "終了"}
+                      {event.status === "open" ? "受付中" : event.status === "full" ? "募集終了" : "終了"}
                     </Text>
                   </View>
                 </View>

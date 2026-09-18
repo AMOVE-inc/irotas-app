@@ -538,7 +538,7 @@ export default function EventDetailScreen() {
 
   const handleJoin = () => {
     if (event.status === "full") {
-      Alert.alert("満席", "このイベントは満席です");
+      Alert.alert("募集終了", "このイベントの募集は終了しています");
       return;
     }
     // 連打防止: 既に処理中の場合はスキップ
@@ -1026,7 +1026,7 @@ export default function EventDetailScreen() {
             }}
           >
             <Text style={{ fontSize: 13, fontWeight: "700", color: "#FFF" }}>
-              {eventEnded ? "開催終了" : discordRecruitmentClosed ? "募集終了" : event.recruitmentStatus === "draft" ? "募集前" : discordRecruitmentOpen ? "Discord受付" : event.status === "open" ? "募集中" : event.status === "full" ? (event.participantsFinalizedAt ? "募集終了" : "満席") : "終了"}
+              {eventEnded ? "開催終了" : discordRecruitmentClosed ? "募集終了" : event.recruitmentStatus === "draft" ? "募集前" : discordRecruitmentOpen ? "Discord受付" : event.status === "open" ? "募集中" : event.status === "full" ? "募集終了" : "終了"}
             </Text>
           </View>
         </View>

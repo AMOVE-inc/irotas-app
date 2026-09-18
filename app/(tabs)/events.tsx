@@ -485,10 +485,10 @@ function CalendarDateField({
   );
 }
 
-function StatusBadge({ status, participantsFinalizedAt, discordRecruitment = false }: { status: Event["status"]; participantsFinalizedAt?: string; discordRecruitment?: boolean }) {
+function StatusBadge({ status, discordRecruitment = false }: { status: Event["status"]; discordRecruitment?: boolean }) {
   const config = {
     open: discordRecruitment ? { bg: "#EFE9FA", color: "#604C8C", label: "Discord受付" } : { bg: "#34C75920", color: "#34C759", label: "募集中" },
-    full: { bg: "#FF950020", color: "#FF9500", label: participantsFinalizedAt ? "募集終了" : "満席" },
+    full: { bg: "#FF950020", color: "#FF9500", label: "募集終了" },
     ended: { bg: "#8E8E9320", color: "#8E8E93", label: "終了" },
   };
   const c = config[status];
@@ -687,7 +687,7 @@ function EventCard({
             {locked ? "" : ` ${event.time}`}
           </Text>
           <View style={{ flexDirection: "row", gap: 4 }}>
-            <StatusBadge status={isPast ? "ended" : event.status} participantsFinalizedAt={event.participantsFinalizedAt} discordRecruitment={isDiscordRecruitmentOpen(event)} />
+            <StatusBadge status={isPast ? "ended" : event.status} discordRecruitment={isDiscordRecruitmentOpen(event)} />
             {isConfirmed ? (
               <Text
                 style={{
@@ -871,7 +871,7 @@ export default function EventsScreen() {
   const colors = useColors();
   const router = useRouter();
   const [eventType, setEventType] = useState<EventTypeFilter>("all");
-  // 新規作成したイベントも、募集前・満席などの状態に関係なく一覧で見つけられる。
+  // 新規作成したイベントも、募集前・募集終了などの状態に関係なく一覧で見つけられる。
   const [openOnly, setOpenOnly] = useState(false);
   const [hostedByMe, setHostedByMe] = useState(false);
   const [appliedOnly, setAppliedOnly] = useState(false);
