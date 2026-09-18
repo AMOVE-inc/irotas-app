@@ -123,7 +123,8 @@ async function ensureEventRoom(db: D1Database, roomId: string) {
   const event = await db.prepare(`SELECT id, title, organizer_member_id, public_data_json
     FROM events
     WHERE json_extract(public_data_json, '$.chatId') = ?
-    LIMIT 1`).bind(roomId).first<{ id: string; title: string; organizer_member_id: number; public_data_json: string }>();
+      OR id = (SELECT source_id FROM chat_rooms WHERE id = ? AND room_type = 'event')
+    LIMIT 1`).bind(roomId, roomId).first<{ id: string; title: string; organizer_member_id: number; public_data_json: string }>();
   if (!event) return null;
   if (event.id.startsWith("discord-event-")) return null;
   let origin: { recruitmentChannel?: string } = {};
@@ -135,9 +136,11 @@ async function ensureEventRoom(db: D1Database, roomId: string) {
     VALUES (?, ?, 'event', ?, ?, ?, ?)`).bind(
       roomId, event.title, event.id, event.organizer_member_id, now, now,
     ).run();
-  await db.prepare(`INSERT OR IGNORE INTO chat_room_members
-    (room_id, member_id, member_role, joined_at)
-    VALUES (?, ?, 'owner', ?)`).bind(roomId, event.organizer_member_id, now).run();
+  await db.prepare(`INSERT INTO chat_room_members
+    (room_id, member_id, member_role, joined_at, left_at)
+    VALUES (?, ?, 'owner', ?, NULL)
+    ON CONFLICT(room_id, member_id) DO UPDATE SET member_role = 'owner', left_at = NULL`)
+    .bind(roomId, event.organizer_member_id, now).run();
   const confirmed = await db.prepare(`SELECT member_id FROM event_participations
     WHERE event_id = ? AND status IN ('confirmed', 'cancel_requested')`)
     .bind(event.id).all<{ member_id: number }>();
@@ -145,7 +148,7 @@ async function ensureEventRoom(db: D1Database, roomId: string) {
     await db.batch(confirmed.results.map((item) => db.prepare(`INSERT INTO chat_room_members
       (room_id, member_id, member_role, joined_at, left_at)
       VALUES (?, ?, 'member', ?, NULL)
-      ON CONFLICT(room_id, member_id) DO NOTHING`)
+      ON CONFLICT(room_id, member_id) DO UPDATE SET member_role = 'member', left_at = NULL`)
       .bind(roomId, item.member_id, now)));
   }
   let data: { companionIds?: unknown } = {};
@@ -159,7 +162,7 @@ async function ensureEventRoom(db: D1Database, roomId: string) {
     await db.prepare(`INSERT INTO chat_room_members
       (room_id, member_id, member_role, joined_at, left_at)
       VALUES (?, ?, 'member', ?, NULL)
-      ON CONFLICT(room_id, member_id) DO NOTHING`)
+      ON CONFLICT(room_id, member_id) DO UPDATE SET member_role = 'member', left_at = NULL`)
       .bind(roomId, companion.id, now).run();
   }
   return roomById(db, roomId);
@@ -230,6 +233,8 @@ async function ensureKnownRoom(db: D1Database, roomId: string, syncClubMembers =
   if (roomId.startsWith("club-chat-")) return ensureClubRoom(db, roomId, syncClubMembers);
   const existing = await roomById(db, roomId);
   if (existing) {
+    // イベント参加状態を正として、過去の退出行や作成時の取りこぼしを開く前に修復する。
+    if (existing.room_type === "event") return ensureEventRoom(db, roomId);
     // 支部フリーチャットはDiscord移行時の履歴を引き継がない。v2へ切り替える一度だけ、
     // 保存済みメッセージも論理削除して新しい参加者の起点を揃える。
     if ((roomId === "branch-kanto-free" || roomId === "branch-kansai-free") && !existing.source_id?.endsWith("-v2")) {
@@ -295,10 +300,6 @@ async function canAccessRoom(db: D1Database, room: RoomRow, member: Viewer) {
     const origin = await db.prepare("SELECT json_extract(public_data_json, '$.recruitmentChannel') AS channel FROM events WHERE id = ? LIMIT 1")
       .bind(room.source_id).first<{ channel: string | null }>();
     if (origin?.channel === "discord") return false;
-    const departed = await db.prepare(`SELECT 1 AS left FROM chat_room_members
-      WHERE room_id = ? AND member_id = ? AND left_at IS NOT NULL LIMIT 1`)
-      .bind(room.id, member.id).first<{ left: number }>();
-    if (departed) return false;
   }
   // 通常の参加権限。運営・管理者による閲覧の例外は canViewRoom で扱う。
   if (room.room_type === "dm") {
@@ -331,14 +332,15 @@ async function canAccessRoom(db: D1Database, room: RoomRow, member: Viewer) {
     if (event.event_type === "club" && event.club_id &&
       !await canMemberAccessClub(db, event.club_id, member.id, admin)) return false;
     if (event.organizer_member_id === member.id || elevated(member)) return true;
+    const participation = await db.prepare(`SELECT status FROM event_participations
+      WHERE event_id = ? AND member_id = ? LIMIT 1`)
+      .bind(room.source_id, member.id).first<{ status: string }>();
+    if (participation) return participation.status === "confirmed" || participation.status === "cancel_requested";
+    // 同伴者はevent_participationsを持たないため、同期済みの参加行で判定する。
     const chatMembership = await db.prepare(`SELECT 1 AS allowed FROM chat_room_members
       WHERE room_id = ? AND member_id = ? AND left_at IS NULL LIMIT 1`)
       .bind(room.id, member.id).first<{ allowed: number }>();
-    if (chatMembership) return true;
-    const participation = await db.prepare(`SELECT 1 AS allowed FROM event_participations
-      WHERE event_id = ? AND member_id = ? AND status IN ('confirmed', 'cancel_requested') LIMIT 1`)
-      .bind(room.source_id, member.id).first<{ allowed: number }>();
-    return Boolean(participation);
+    return Boolean(chatMembership);
   }
   const membership = await db.prepare(`SELECT 1 AS allowed FROM chat_room_members
     WHERE room_id = ? AND member_id = ? AND left_at IS NULL LIMIT 1`)
@@ -470,7 +472,6 @@ async function ensureViewerEventRooms(db: D1Database, member: Viewer) {
       AND (organizer_member_id = ? OR EXISTS (
         SELECT 1 FROM event_participations ep WHERE ep.event_id = events.id
           AND ep.member_id = ? AND ep.status IN ('confirmed', 'cancel_requested')))
-      AND NOT EXISTS (SELECT 1 FROM chat_rooms cr WHERE cr.id = json_extract(events.public_data_json, '$.chatId') AND cr.deleted_at IS NULL)
     ORDER BY event_date DESC LIMIT 30`).bind(member.id, member.id).all<{
       id: string; title: string; organizer_member_id: number; chat_id: string;
     }>();

@@ -216,6 +216,13 @@ export interface BoardPoll {
   allowMultiple?: boolean;
 }
 
+export interface ImportedBoardPollSummary {
+  question: string;
+  winnerText?: string;
+  winnerVotes: number;
+  totalVotes: number;
+}
+
 export interface BoardThread {
   id: string;
   createdAt?: string;
@@ -291,6 +298,8 @@ export interface BoardComment {
   videos?: string[];
   reactions?: Record<string, string[]>;
   poll?: BoardPoll;
+  /** Discordの終了済み投票から取得できた集計結果。選択肢別の完全な内訳は含まない。 */
+  importedPollSummary?: ImportedBoardPollSummary;
   /** 締切後の結果発表など、運営が自動投稿したコメント。 */
   isSystem?: boolean;
   /** 端末保存ではなく共有DBに保存されたコメント。 */

@@ -1,4 +1,4 @@
-import { MEMBERS, type BoardComment, type BoardThread, type Member } from "../constants/mock-data";
+import { MEMBERS, type BoardComment, type BoardThread, type ImportedBoardPollSummary, type Member } from "../constants/mock-data";
 import { normalizeBoardReactions } from "./board-reactions";
 import { inferImportedRecruitmentStatus } from "./board-recruitment";
 import { cleanDiscordBoardContent, cleanDiscordBoardTitle } from "./discord-board-normalization";
@@ -115,6 +115,20 @@ export function stripLegacyClubApplicationBlock(content: string): string {
     .trim();
 }
 
+export function parseImportedDiscordPollSummary(content: string): ImportedBoardPollSummary | undefined {
+  const fields = new Map<string, string>();
+  for (const line of content.split(/\r?\n/)) {
+    const match = line.match(/^([a-z_]+):\s*(.*)$/i);
+    if (match) fields.set(match[1], match[2].trim());
+  }
+  const question = fields.get("poll_question_text")?.trim();
+  const winnerVotes = Number(fields.get("victor_answer_votes"));
+  const totalVotes = Number(fields.get("total_votes"));
+  if (!question || !Number.isInteger(winnerVotes) || winnerVotes < 0 || !Number.isInteger(totalVotes) || totalVotes < winnerVotes) return undefined;
+  const winnerText = fields.get("victor_answer_text")?.trim();
+  return { question, winnerVotes, totalVotes, ...(winnerText ? { winnerText } : {}) };
+}
+
 export function parseDiscordBoardArchive(archive: RawDiscordBoardArchive, directory: DiscordMemberDirectoryRecord[] = []): ImportedDiscordBoard {
   const authorFallbacks = new Map<string, { avatarUrl?: string; rank?: Member["rank"] }>();
   for (const record of [...archive.threads, ...archive.comments]) {
@@ -140,15 +154,17 @@ export function parseDiscordBoardArchive(archive: RawDiscordBoardArchive, direct
   const comments: Record<string, BoardComment[]> = {};
 
   rawComments.forEach((record) => {
+    const importedPollSummary = parseImportedDiscordPollSummary(record.content);
     const comment: BoardComment = {
       id: `discord-comment-${record.id}`,
       threadId: record.threadId,
       author: authorFor(record, directory, authorFallbacks),
-      content: record.content,
+      content: importedPollSummary ? "" : record.content,
       createdAt: record.createdAt,
       images: record.images.length ? record.images : undefined,
       videos: record.videos.length ? record.videos : undefined,
       reactions: record.reactions ? normalizeBoardReactions(record.reactions, record.id) : undefined,
+      importedPollSummary,
     };
     (comments[record.threadId] ??= []).push(comment);
   });

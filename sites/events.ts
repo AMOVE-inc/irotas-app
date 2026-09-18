@@ -1465,6 +1465,36 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
     if (status === "confirmed") {
       await env.DB.prepare("UPDATE events SET public_data_json = ?, updated_at = ? WHERE id = ?")
         .bind(JSON.stringify(data), now, id).run();
+      const chatId = typeof data.chatId === "string" ? data.chatId : "";
+      if (chatId && !id.startsWith("discord-event-") && data.recruitmentChannel !== "discord") {
+        const targetName = await eventChatMemberName(env.DB, member.id);
+        await env.DB.batch([
+          env.DB.prepare(`INSERT OR IGNORE INTO chat_rooms
+            (id, name, room_type, source_id, created_by_member_id, created_at, updated_at)
+            VALUES (?, ?, 'event', ?, ?, ?, ?)`)
+            .bind(chatId, row.title, id, row.organizer_member_id, now, now),
+          env.DB.prepare(`INSERT INTO chat_room_members
+            (room_id, member_id, member_role, joined_at, left_at)
+            VALUES (?, ?, 'owner', ?, NULL)
+            ON CONFLICT(room_id, member_id) DO UPDATE SET member_role = 'owner', left_at = NULL`)
+            .bind(chatId, row.organizer_member_id, now),
+          env.DB.prepare(`INSERT INTO chat_room_members
+            (room_id, member_id, member_role, joined_at, left_at)
+            VALUES (?, ?, 'member', ?, NULL)
+            ON CONFLICT(room_id, member_id) DO UPDATE SET member_role = 'member', left_at = NULL`)
+            .bind(chatId, member.id, now),
+          env.DB.prepare(`INSERT OR IGNORE INTO chat_messages
+            (id, room_id, sender_member_id, content, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?)`)
+            .bind(`event-chat-welcome:${id}`, chatId, row.organizer_member_id,
+              eventChatSystemContent(`「${row.title}」の参加者専用グループが作成されました`), now, now),
+          env.DB.prepare(`INSERT OR IGNORE INTO chat_messages
+            (id, room_id, sender_member_id, content, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?)`)
+            .bind(`event-chat-join:${id}:${member.id}`, chatId, row.organizer_member_id,
+              eventChatSystemContent(`${targetName}がチャットに参加しました`), now, now),
+        ]);
+      }
       await notifyEventConfirmation(env.DB, member.id, id, row.title);
     }
     await audit(env.DB, member.id, "event.application_submitted", id, { status });

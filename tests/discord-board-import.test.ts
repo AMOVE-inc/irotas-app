@@ -32,6 +32,25 @@ describe("Discord board archive", () => {
     expect(comments.filter((comment) => comment.content.includes("心強いです、、！"))).toHaveLength(1);
   });
 
+  it("Discordの終了済み投票を内部項目名ではなく投票結果として表示する", () => {
+    const importedComments = Object.values(archive.comments).flat();
+    const importedPolls = importedComments.filter((comment) => comment.importedPollSummary);
+    expect(importedPolls.length).toBeGreaterThan(0);
+    expect(importedComments.every((comment) => !comment.content.includes("poll_question_text:"))).toBe(true);
+    expect(importedPolls.every((comment) => comment.content === "")).toBe(true);
+    expect(importedPolls.find((comment) => comment.id === "discord-comment-1504430962912788522")?.importedPollSummary).toEqual({
+      question: "都合の良い日を教えてください🧞‍♂️",
+      winnerVotes: 1,
+      totalVotes: 2,
+    });
+    expect(importedPolls.find((comment) => comment.id === "discord-comment-1549287433286451240")?.importedPollSummary).toEqual({
+      question: "参加可能な日を教えてください（複数選択可）",
+      winnerText: "11/15(日)昼",
+      winnerVotes: 9,
+      totalVotes: 39,
+    });
+  });
+
   it("共有編集後の募集ステータス・本文を移行元より優先する", () => {
     const original = rawArchive.threads.find((thread) => thread.id === "discord-board-1228721098716221502")!;
     const result = parseDiscordBoardArchive({ threads: [original], comments: [], threadOverrides: {

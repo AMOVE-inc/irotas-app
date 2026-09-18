@@ -34,6 +34,8 @@ class ChatDatabase implements D1Database {
   discordRolesJson = "[]";
   approvedClubMemberIds = new Set([9]);
   clubs = [{ id: "club-travel", name: "旅行部", leader_member_id: 10 }];
+  events: Array<{ id: string; title: string; organizer_member_id: number; event_type: string; club_id: string | null; chatId: string; recruitmentChannel: string }> = [];
+  participations: Array<{ eventId: string; memberId: number; status: string }> = [];
   rooms = new Map<string, { id: string; name: string; room_type: string; source_id: string | null; required_rank: string | null; created_by_member_id: number | null }>([
     ["board-announcement", { id: "board-announcement", name: "運営アナウンス", room_type: "announcement", source_id: "announcement", required_rank: null, created_by_member_id: null }],
     ["rank-gold", { id: "rank-gold", name: "ゴールドメンバールーム", room_type: "rank", source_id: "rank-gold", required_rank: "gold", created_by_member_id: null }],
@@ -79,6 +81,20 @@ class ChatDatabase implements D1Database {
           const found = this.roomMembers.find((item) => item.roomId === values[0] && item.memberId === Number(values[1]) && item.left);
           return (found ? { left: 1 } : null) as T;
         }
+        if (sql.includes("FROM events") && sql.includes("json_extract(public_data_json, '$.chatId') = ?")) {
+          const event = this.events.find((item) => item.chatId === values[0]);
+          return (event ? { ...event, public_data_json: JSON.stringify({ chatId: event.chatId, recruitmentChannel: event.recruitmentChannel }) } : null) as T;
+        }
+        if (sql.includes("json_extract(public_data_json, '$.recruitmentChannel') AS channel FROM events")) {
+          const event = this.events.find((item) => item.id === values[0]);
+          return (event ? { channel: event.recruitmentChannel } : null) as T;
+        }
+        if (sql.includes("SELECT event_type, club_id, organizer_member_id") && sql.includes("FROM events"))
+          return (this.events.find((item) => item.id === values[0]) ?? null) as T;
+        if (sql.includes("SELECT status FROM event_participations")) {
+          const participation = this.participations.find((item) => item.eventId === values[0] && item.memberId === Number(values[1]));
+          return (participation ? { status: participation.status } : null) as T;
+        }
         if (sql.includes("SELECT COUNT(*) AS count FROM chat_messages")) return { count: 0 } as T;
         if (sql.includes("SELECT content, image_url, created_at FROM chat_messages")) return null;
         if (sql.includes("SELECT cm.content, cm.image_url, m.display_name")) {
@@ -116,6 +132,8 @@ class ChatDatabase implements D1Database {
           return { success: true, results: this.roomMembers.filter((item) => item.roomId === values[0] && !item.left).map((item) => ({ member_id: item.memberId, member_role: item.role })) as T[] };
         if (sql.includes("FROM clubs c") && sql.includes("club_memberships cm"))
           return { success: true, results: this.clubs.filter((club) => club.leader_member_id === Number(values[0]) || this.approvedClubMemberIds.has(Number(values[1]))) as T[] };
+        if (sql.includes("SELECT member_id FROM event_participations"))
+          return { success: true, results: this.participations.filter((item) => item.eventId === values[0] && ["confirmed", "cancel_requested"].includes(item.status)).map((item) => ({ member_id: item.memberId })) as T[] };
         if (sql.includes("FROM chat_rooms cr WHERE cr.deleted_at IS NULL") && sql.includes("ORDER BY"))
           return { success: true, results: [...this.rooms.values()].filter((room) =>
             !["event", "dm", "group", "board"].includes(room.room_type) || !this.roomMembers.some((item) =>
@@ -334,6 +352,33 @@ describe("shared chat content API", () => {
     db.roomMembers.find((item) => item.roomId === "dm-departed" && item.memberId === 9)!.left = false;
     const invited = await handleChatContentRequest(request("/api/chats"), env);
     expect(((await invited?.json()) as { rooms: { id: string }[] }).rooms.some((room) => room.id === "dm-departed")).toBe(true);
+  });
+
+  it("repairs a stale departed row for a confirmed event participant before opening the chat", async () => {
+    const eventId = "event-party";
+    const roomId = `event_chat_${eventId}`;
+    db.events.push({ id: eventId, title: "IRO+PARTY", organizer_member_id: 10, event_type: "official", club_id: null, chatId: roomId, recruitmentChannel: "app" });
+    db.participations.push({ eventId, memberId: 9, status: "confirmed" });
+    db.rooms.set(roomId, { id: roomId, name: "IRO+PARTY", room_type: "event", source_id: eventId, required_rank: null, created_by_member_id: 10 });
+    db.roomMembers.push({ roomId, memberId: 9, role: "member", left: true });
+
+    const response = await handleChatContentRequest(request(`/api/chats/${roomId}/messages`), env);
+
+    expect(response?.status).toBe(200);
+    expect(db.roomMembers.find((item) => item.roomId === roomId && item.memberId === 9)?.left).toBe(false);
+    expect(db.roomMembers).toContainEqual(expect.objectContaining({ roomId, memberId: 10, role: "owner", left: false }));
+  });
+
+  it("does not restore event chat access after the participation is cancelled", async () => {
+    const eventId = "event-cancelled";
+    const roomId = `event_chat_${eventId}`;
+    db.events.push({ id: eventId, title: "中止済み参加", organizer_member_id: 10, event_type: "official", club_id: null, chatId: roomId, recruitmentChannel: "app" });
+    db.participations.push({ eventId, memberId: 9, status: "cancelled" });
+    db.rooms.set(roomId, { id: roomId, name: "中止済み参加", room_type: "event", source_id: eventId, required_rank: null, created_by_member_id: 10 });
+    db.roomMembers.push({ roomId, memberId: 9, role: "member", left: true });
+
+    expect((await handleChatContentRequest(request(`/api/chats/${roomId}/messages`), env))?.status).toBe(403);
+    expect(db.roomMembers.find((item) => item.roomId === roomId && item.memberId === 9)?.left).toBe(true);
   });
 
   it("requires login and lets authenticated members read announcements", async () => {

@@ -20,6 +20,7 @@ import {
   type BoardImage,
   type BoardCategory,
   type BoardPoll,
+  type ImportedBoardPollSummary,
   type Club,
   type Member,
   getMemberById,
@@ -169,6 +170,25 @@ function PollCard({ ownerKey, poll }: { ownerKey: string; poll: BoardPoll }) {
   }, [current, open, ownerKey, shared]);
   const total = new Set(current.options.flatMap((option) => option.voterIds)).size;
   return <View style={{ marginTop: 12, borderRadius: 14, padding: 13, backgroundColor: "#F7F5FA", borderWidth: 1, borderColor: "#DED8E8" }}><View style={{ flexDirection: "row", alignItems: "center" }}><IconSymbol name="chart.bar.fill" size={17} color="#6D5B85" /><Text style={{ flex: 1, fontSize: 14, fontWeight: "900", color: colors.foreground, marginLeft: 7 }}>{current.question}</Text><View style={{ borderRadius: 9, paddingHorizontal: 7, paddingVertical: 3, backgroundColor: open ? "#E4F3E8" : "#E8E8EB" }}><Text style={{ fontSize: 10, fontWeight: "900", color: open ? "#277A40" : colors.muted }}>{open ? "投票受付中" : "終了"}</Text></View></View>{current.allowMultiple ? <Text style={{ fontSize: 10, fontWeight: "800", color: "#6D5B85", marginTop: 5 }}>複数回答可</Text> : null}<View style={{ gap: 7, marginTop: 11 }}>{current.options.map((option) => { const selected = option.voterIds.includes(viewerMemberId); const ratio = total ? option.voterIds.length / total : 0; return <Pressable key={option.id} disabled={!open} onPress={() => { const [ownerType, ownerId] = ownerKey.split(":", 2) as ["thread" | "comment", string]; void (shared ? Api.voteSharedBoardPoll(ownerType, ownerId, option.id).then((result) => { setCurrent(result.poll); setViewerMemberId(result.viewerMemberId); }) : voteBoardPoll(ownerKey, current, option.id, viewerMemberId).then(setCurrent)); }} style={{ overflow: "hidden", borderRadius: 10, borderWidth: 1, borderColor: selected ? "#725C8C" : colors.border, backgroundColor: colors.surface }}><View style={{ position: "absolute", inset: 0, width: `${Math.round(ratio * 100)}%`, backgroundColor: selected ? "#E8DDF1" : "#EEEAF2" }} /><View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 11, paddingVertical: 9 }}><Text style={{ flex: 1, fontSize: 13, fontWeight: selected ? "900" : "700", color: colors.foreground }}>{option.text}</Text><Text style={{ fontSize: 12, fontWeight: "900", color: colors.muted }}>{option.voterIds.length}票</Text></View></Pressable>; })}</View><Text style={{ fontSize: 11, color: colors.muted, marginTop: 9 }}>{open ? `期限：${current.deadline} 23:59` : `結果：${boardPollResult(current)}`}</Text></View>;
+}
+
+function ImportedPollResultCard({ summary }: { summary: ImportedBoardPollSummary }) {
+  const colors = useColors();
+  return <View style={{ marginTop: 8, borderRadius: 14, padding: 13, backgroundColor: "#F7F5FA", borderWidth: 1, borderColor: "#DED8E8" }}>
+    <View style={{ flexDirection: "row", alignItems: "center", gap: 7 }}>
+      <IconSymbol name="chart.bar.fill" size={17} color="#6D5B85" />
+      <Text style={{ flex: 1, fontSize: 14, lineHeight: 20, fontWeight: "900", color: colors.foreground }}>{summary.question}</Text>
+      <View style={{ borderRadius: 9, paddingHorizontal: 7, paddingVertical: 3, backgroundColor: "#E8E8EB" }}><Text style={{ fontSize: 10, fontWeight: "900", color: colors.muted }}>投票終了</Text></View>
+    </View>
+    <View style={{ marginTop: 11, borderRadius: 10, paddingHorizontal: 11, paddingVertical: 10, backgroundColor: "#E8DDF1" }}>
+      <Text style={{ fontSize: 10, fontWeight: "900", color: "#6D5B85" }}>{summary.winnerText ? "最多得票" : "最多得票数"}</Text>
+      <View style={{ flexDirection: "row", alignItems: "center", marginTop: 3 }}>
+        {summary.winnerText ? <Text style={{ flex: 1, fontSize: 13, fontWeight: "900", color: colors.foreground }}>{summary.winnerText}</Text> : <View style={{ flex: 1 }} />}
+        <Text style={{ fontSize: 12, fontWeight: "900", color: "#6D5B85" }}>{summary.winnerVotes}票</Text>
+      </View>
+    </View>
+    <Text style={{ fontSize: 11, color: colors.muted, marginTop: 9 }}>総投票数：{summary.totalVotes}票</Text>
+  </View>;
 }
 
 function PollComposer({ enabled, setEnabled, question, setQuestion, options, setOptions, deadline, setDeadline, allowMultiple, setAllowMultiple }: { enabled: boolean; setEnabled: (value: boolean) => void; question: string; setQuestion: (value: string) => void; options: string[]; setOptions: (value: string[]) => void; deadline: string; setDeadline: (value: string) => void; allowMultiple: boolean; setAllowMultiple: (value: boolean) => void }) {
@@ -1417,7 +1437,8 @@ function ThreadDetailModal({
                   </Text>
                 </View>
                 {comment.replyTo ? <View style={{ marginLeft: 32, marginTop: 4 }}><ReplyReferenceView reply={comment.replyTo} onPress={() => jumpToComment(comment.replyTo!.id)} /></View> : null}
-                {editingCommentId === comment.id ? <View style={{ marginLeft: 32, gap: 7 }}><TextInput value={editingCommentText} onChangeText={setEditingCommentText} multiline autoFocus style={{ minHeight: 90, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: 10, padding: 10, fontSize: 14, color: colors.foreground }} /><View style={{ flexDirection: "row", gap: 8 }}><Pressable onPress={() => handleSaveCommentEdit(comment.id)} style={{ backgroundColor: "#3478C7", borderRadius: 8, paddingHorizontal: 13, paddingVertical: 7 }}><Text style={{ color: "#FFF", fontSize: 12, fontWeight: "800" }}>保存</Text></Pressable><Pressable onPress={() => handleDeleteComment(comment.id)} style={{ backgroundColor: "#FCE7E7", borderRadius: 8, paddingHorizontal: 13, paddingVertical: 7 }}><Text style={{ color: colors.error, fontSize: 12, fontWeight: "800" }}>削除</Text></Pressable><Pressable onPress={() => setEditingCommentId(null)} style={{ paddingHorizontal: 10, paddingVertical: 7 }}><Text style={{ color: colors.muted, fontSize: 12 }}>キャンセル</Text></Pressable></View></View> : <View style={{ marginLeft: 32 }}>{isContest ? (comment.isSystem ? <MentionText content={comment.content} groups={mentionGroups} /> : <LinkifiedText content={comment.content} />) : <MentionText content={comment.content} groups={mentionGroups} />}</View>}
+                {editingCommentId === comment.id ? <View style={{ marginLeft: 32, gap: 7 }}><TextInput value={editingCommentText} onChangeText={setEditingCommentText} multiline autoFocus style={{ minHeight: 90, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: 10, padding: 10, fontSize: 14, color: colors.foreground }} /><View style={{ flexDirection: "row", gap: 8 }}><Pressable onPress={() => handleSaveCommentEdit(comment.id)} style={{ backgroundColor: "#3478C7", borderRadius: 8, paddingHorizontal: 13, paddingVertical: 7 }}><Text style={{ color: "#FFF", fontSize: 12, fontWeight: "800" }}>保存</Text></Pressable><Pressable onPress={() => handleDeleteComment(comment.id)} style={{ backgroundColor: "#FCE7E7", borderRadius: 8, paddingHorizontal: 13, paddingVertical: 7 }}><Text style={{ color: colors.error, fontSize: 12, fontWeight: "800" }}>削除</Text></Pressable><Pressable onPress={() => setEditingCommentId(null)} style={{ paddingHorizontal: 10, paddingVertical: 7 }}><Text style={{ color: colors.muted, fontSize: 12 }}>キャンセル</Text></Pressable></View></View> : comment.content ? <View style={{ marginLeft: 32 }}>{isContest ? (comment.isSystem ? <MentionText content={comment.content} groups={mentionGroups} /> : <LinkifiedText content={comment.content} />) : <MentionText content={comment.content} groups={mentionGroups} />}</View> : null}
+                {comment.importedPollSummary ? <View style={{ marginLeft: 32 }}><ImportedPollResultCard summary={comment.importedPollSummary} /></View> : null}
                 {comment.poll ? <View style={{ marginLeft: 32 }}><PollCard ownerKey={`comment:${comment.id}`} poll={comment.poll} /></View> : null}
                 {comment.images?.length ? (
                   <View style={{ marginLeft: 32, marginTop: 8, flexDirection: "row", flexWrap: "wrap", gap: 7 }}>
