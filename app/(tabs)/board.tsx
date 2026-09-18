@@ -26,6 +26,7 @@ import {
 import { useAuthContext } from "@/lib/auth-context";
 import { getMemberStaffRole } from "@/lib/member-staff-role";
 import { replyReference } from "@/lib/reply-reference";
+import { firstUnreadItemId } from "@/lib/unread-position";
 import { useColors } from "@/hooks/use-colors";
 import { createBoardChat } from "@/lib/chat-store";
 import { canManageBoardCategories, canManageGourmetContests, isOperatorRole } from "@/lib/access-control";
@@ -733,9 +734,12 @@ function dedupeBoardComments(comments: BoardComment[]): BoardComment[] {
   ));
 }
 
+type ThreadUnreadTarget = "thread" | string | null;
+
 function ThreadDetailModal({
   thread,
   initialComments = [],
+  initialUnreadTarget = null,
   onClose,
   onEditThread,
   onChangeRecruitment,
@@ -745,6 +749,7 @@ function ThreadDetailModal({
 }: {
   thread: BoardThread;
   initialComments?: BoardComment[];
+  initialUnreadTarget?: ThreadUnreadTarget;
   onClose: () => void;
   onEditThread?: () => void;
   onChangeRecruitment?: () => void;
@@ -784,12 +789,41 @@ function ThreadDetailModal({
   const commentScrollRef = useRef<ScrollView>(null);
   const commentsStartY = useRef(0);
   const commentPositions = useRef(new Map<string, number>());
+  const initialScrollApplied = useRef<string | null>(null);
+  const initialScrollTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const commentHighlightTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [highlightedCommentId, setHighlightedCommentId] = useState<string | null>(null);
   const mentionGroups = useMemo(() => BOARD_MENTION_GROUPS, []);
   const [comments, setComments] = useState<BoardComment[]>(
     dedupeBoardComments([...BOARD_COMMENTS.filter((c) => c.threadId === thread.id), ...initialComments]),
   );
+  useEffect(() => {
+    initialScrollApplied.current = null;
+    commentPositions.current.clear();
+    if (initialScrollTimer.current) clearTimeout(initialScrollTimer.current);
+  }, [thread.id]);
+  useEffect(() => () => {
+    if (initialScrollTimer.current) clearTimeout(initialScrollTimer.current);
+  }, []);
+  const scrollToInitialPosition = () => {
+    if (initialScrollApplied.current === thread.id) return;
+    if (initialUnreadTarget && initialUnreadTarget !== "thread" && !commentPositions.current.has(initialUnreadTarget)) return;
+    initialScrollApplied.current = thread.id;
+    const scroll = () => {
+      if (initialUnreadTarget === "thread") {
+        commentScrollRef.current?.scrollTo({ y: 0, animated: false });
+        return;
+      }
+      if (initialUnreadTarget) {
+        const position = commentPositions.current.get(initialUnreadTarget);
+        if (position !== undefined) commentScrollRef.current?.scrollTo({ y: Math.max(0, commentsStartY.current + position - 16), animated: false });
+        return;
+      }
+      commentScrollRef.current?.scrollToEnd({ animated: false });
+    };
+    requestAnimationFrame(scroll);
+    initialScrollTimer.current = setTimeout(scroll, 180);
+  };
   const jumpToComment = (commentId: string) => {
     if (!comments.some((comment) => comment.id === commentId)) {
       Alert.alert("返信元を表示できません", "返信元のコメントが見つかりませんでした。");
@@ -1146,8 +1180,9 @@ function ThreadDetailModal({
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         keyboardVerticalOffset={Platform.OS === "ios" ? insets.top + 16 : 0}
       >
-        <ScrollView ref={commentScrollRef} style={{ flex: 1 }} contentContainerStyle={{ padding: 16 }}>
+        <ScrollView ref={commentScrollRef} onContentSizeChange={scrollToInitialPosition} style={{ flex: 1 }} contentContainerStyle={{ padding: 16 }}>
           {/* Thread content */}
+          {initialUnreadTarget === "thread" ? <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 14 }}><View style={{ flex: 1, height: 1, backgroundColor: "#E8A0BF" }} /><Text style={{ color: "#D45470", fontSize: 12, fontWeight: "800", marginHorizontal: 10 }}>ここから未読</Text><View style={{ flex: 1, height: 1, backgroundColor: "#E8A0BF" }} /></View> : null}
           <Pressable onPress={() => router.push({ pathname: "/member-profile", params: { id: thread.author.id, legacyName: thread.author.name } })} accessibilityLabel={`${stripRankFromName(thread.author.name)}のプロフィールを表示`} style={{ flexDirection: "row", alignItems: "center", marginBottom: 12 }}>
             {isThreadPinned(thread) ? <View style={{ marginRight: 7, borderRadius: 10, paddingHorizontal: 8, paddingVertical: 6, backgroundColor: "#FFF2C7" }}><Text style={{ fontSize: 11, fontWeight: "900", color: "#8A6512" }}>📌 固定</Text></View> : null}
             {recruitmentManaged ? <RecruitmentStatusBadge status={recruitmentStatus} /> : null}
@@ -1330,7 +1365,9 @@ function ThreadDetailModal({
               コメント ({comments.length})
             </Text>
             {comments.map((comment) => {
-              return <Pressable key={comment.id} onLayout={(event) => { commentPositions.current.set(comment.id, event.nativeEvent.layout.y); }} onLongPress={() => setSelectedComment(comment)} delayLongPress={350} style={{ marginBottom: 14, borderRadius: 12, borderWidth: highlightedCommentId === comment.id ? 3 : 0, borderColor: "#3478C7" }}>
+              return <View key={comment.id} onLayout={(event) => { commentPositions.current.set(comment.id, event.nativeEvent.layout.y); }}>
+                {initialUnreadTarget === comment.id ? <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 12 }}><View style={{ flex: 1, height: 1, backgroundColor: "#E8A0BF" }} /><Text style={{ color: "#D45470", fontSize: 12, fontWeight: "800", marginHorizontal: 10 }}>ここから未読コメント</Text><View style={{ flex: 1, height: 1, backgroundColor: "#E8A0BF" }} /></View> : null}
+                <Pressable onLongPress={() => setSelectedComment(comment)} delayLongPress={350} style={{ marginBottom: 14, borderRadius: 12, borderWidth: highlightedCommentId === comment.id ? 3 : 0, borderColor: "#3478C7" }}>
                 <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 4 }}>
                   <Pressable onPress={() => router.push({ pathname: "/member-profile", params: { id: comment.author.id, legacyName: comment.author.name } })} accessibilityLabel={`${stripRankFromName(comment.author.name)}のプロフィールを表示`}>
                     <Image source={comment.author.avatar} style={{ width: 24, height: 24, borderRadius: 12 }} contentFit="cover" />
@@ -1368,7 +1405,8 @@ function ThreadDetailModal({
                   <Pressable accessibilityLabel="別の絵文字を追加" onPress={() => setCommentEmojiPickerId((current) => current === comment.id ? null : comment.id)} style={{ width: 31, height: 29, borderRadius: 15, alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface }}><IconSymbol name="plus" size={14} color={colors.muted} /></Pressable>
                   {commentEmojiPickerId === comment.id ? <View style={{ width: "100%", flexDirection: "row", flexWrap: "wrap", gap: 7, paddingTop: 3 }}>{THREAD_REACTION_EMOJIS.map((emoji) => <Pressable key={emoji} onPress={() => { handleCommentReaction(comment.id, emoji); setCommentEmojiPickerId(null); }} style={{ width: 38, height: 34, borderRadius: 17, alignItems: "center", justifyContent: "center", backgroundColor: "#F4F1F3" }}><Text style={{ fontSize: 19 }}>{emoji}</Text></Pressable>)}</View> : null}
                 </View> : null}
-              </Pressable>;
+                </Pressable>
+              </View>;
             })}
           </View>
         </ScrollView>
@@ -2562,6 +2600,7 @@ export default function BoardScreen() {
   const [archiveLoading, setArchiveLoading] = useState(true);
   const [sharedLoading, setSharedLoading] = useState(true);
   const [selectedThread, setSelectedThread] = useState<BoardThread | null>(null);
+  const [selectedThreadUnreadTarget, setSelectedThreadUnreadTarget] = useState<ThreadUnreadTarget>(null);
   const [showCreateThread, setShowCreateThread] = useState(false);
   const [showAddCategory, setShowAddCategory] = useState(false);
   const [showClubMembers, setShowClubMembers] = useState(false);
@@ -2780,6 +2819,22 @@ export default function BoardScreen() {
   );
   const firstSignInTime = authUser?.firstSignedIn?.getTime() ?? authUser?.lastSignedIn?.getTime() ?? 0;
   const postedAfterFirstSignIn = (createdAt: string | undefined) => Boolean(createdAt) && Date.parse(createdAt!) > firstSignInTime;
+  const unreadTargetForThread = useCallback((thread: BoardThread): ThreadUnreadTarget => {
+    if (!threadReadsHydrated) return null;
+    const readCount = threadReadCounts[thread.id];
+    if (readCount === undefined && thread.author.id !== viewerMemberId && postedAfterFirstSignIn(thread.createdAt)) return "thread";
+    return firstUnreadItemId(
+      (importedComments[thread.id] ?? []).map((comment) => ({ id: comment.id, authorId: comment.author.id, createdAt: comment.createdAt })),
+      readCount,
+      viewerMemberId,
+      firstSignInTime,
+    );
+  }, [firstSignInTime, importedComments, threadReadCounts, threadReadsHydrated, viewerMemberId]);
+  const openThread = useCallback((thread: BoardThread) => {
+    setSelectedThreadUnreadTarget(unreadTargetForThread(thread));
+    setSelectedThread(thread);
+    markThreadRead(thread.id);
+  }, [markThreadRead, unreadTargetForThread]);
   const categoryUnreadStatus = useCallback((categoryKey: string): "mention" | "unread" | null => {
     if (!threadReadsHydrated) return null;
     let hasUnread = false;
@@ -2857,10 +2912,10 @@ export default function BoardScreen() {
     ] as any);
   };
   useEffect(() => {
-    if (!threadParam) return;
+    if (!threadParam || !threadReadsHydrated) return;
     const linkedThread = allThreads.find((item) => item.id === threadParam);
-    if (linkedThread) setSelectedThread(linkedThread);
-  }, [threadParam, allThreads]);
+    if (linkedThread && selectedThread?.id !== linkedThread.id) openThread(linkedThread);
+  }, [threadParam, allThreads, openThread, selectedThread?.id, threadReadsHydrated]);
   const visibleCategories = categories
     .filter((category) => category.group === (isClubIndexView ? "club" : "all") && canAccessCategory(category))
     .sort((a, b) => {
@@ -3074,7 +3129,7 @@ export default function BoardScreen() {
             showMenu={item.category !== "introduction"}
             unreadCount={unreadComments.length + (newThread ? 1 : 0)}
             mentionCount={mentionCount}
-            onPress={() => { markThreadRead(item.id); setSelectedThread(item); router.setParams({ thread: item.id }); }}
+            onPress={() => { openThread(item); router.setParams({ thread: item.id }); }}
             onEdit={item.author.id === viewerMemberId || userCanModerateAll ? () => setEditingThread(item) : undefined}
             onDelete={item.author.id === viewerMemberId || userCanModerateAll ? () => {
               if (Platform.OS === "web") {
@@ -3120,6 +3175,7 @@ export default function BoardScreen() {
         presentationStyle="pageSheet"
         onRequestClose={() => {
           setSelectedThread(null);
+          setSelectedThreadUnreadTarget(null);
           if (fromHome === "1") router.replace("/(tabs)" as any);
           else router.setParams({ thread: "" });
         }}
@@ -3128,8 +3184,10 @@ export default function BoardScreen() {
           <ThreadDetailModal
             thread={selectedThread}
             initialComments={importedComments[selectedThread.id] ?? []}
+            initialUnreadTarget={selectedThreadUnreadTarget}
             onClose={() => {
               setSelectedThread(null);
+              setSelectedThreadUnreadTarget(null);
               if (fromHome === "1") router.replace("/(tabs)" as any);
               else router.setParams({ thread: "" });
             }}

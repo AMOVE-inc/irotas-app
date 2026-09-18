@@ -57,6 +57,7 @@ import { displayMemberName } from "@/lib/display-name";
 import { importedIntroductionReactions, isUnidentifiedReaction, mergedIntroductionReactions } from "@/lib/introduction-reactions";
 import { replyReference } from "@/lib/reply-reference";
 import { reconcileOptimisticReactions } from "@/lib/chat-reactions";
+import { initialMessageIndex, normalizedUnreadCount } from "@/lib/unread-position";
 
 const REACTION_EMOJIS = ["👍", "❤️", "😂", "🎉", "😋", "🙏"] as const;
 const MORE_REACTION_EMOJIS = ["😀", "😃", "😄", "😁", "😆", "😅", "😂", "🤣", "😊", "😇", "🙂", "🙃", "😉", "😍", "🥰", "😘", "😋", "😛", "🤪", "🤔", "🫡", "😎", "🥳", "😮", "😢", "😭", "😡", "👍", "👎", "👏", "🙌", "🙏", "💪", "👀", "❤️", "🩷", "🧡", "💛", "💚", "💙", "💜", "🖤", "🤍", "🔥", "✨", "🎉", "💯", "✅", "❌", "💡", "📌", "🍽️", "🍣", "🍖", "🍜", "🍕", "🍰", "☕", "🍺", "🍷"] as const;
@@ -312,6 +313,8 @@ export default function ChatScreen() {
   const userIsAdmin = isAdminRole(authUser?.role, authUser?.accessRole);
   const canViewAllChats = isOperatorRole(authUser?.role, authUser?.accessRole);
   const { id, message: linkedMessageId, unreadCount: unreadCountParam } = useLocalSearchParams<{ id: string; message?: string; unreadCount?: string }>();
+  const unreadCountFromRoute = unreadCountParam !== undefined && Number.isFinite(Number(unreadCountParam))
+    ? Math.max(0, Math.floor(Number(unreadCountParam))) : null;
   const [messageText, setMessageText] = useState("");
   const [replyToMessage, setReplyToMessage] = useState<ChatMessage | null>(null);
   useEffect(() => setReplyToMessage(null), [id]);
@@ -323,6 +326,7 @@ export default function ChatScreen() {
   const flatListRef = useRef<FlatList>(null);
   const linkedScrollRetry = useRef(false);
   const linkedMessageScrolled = useRef<string | null>(null);
+  const initialPositionRoom = useRef<string | null>(null);
   const highlightTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [highlightedMessageId, setHighlightedMessageId] = useState<string | null>(null);
   const inputRef = useRef<TextInput>(null);
@@ -350,6 +354,9 @@ export default function ChatScreen() {
   const [room, setRoom] = useState(() => getRoomById(id ?? "") ?? (id === "community-free-chat" ? {
     id, name: "フリーチャット", type: "board" as const, sourceId: "community-free-chat", participants: [], createdBy: "system", shared: true,
   } : undefined));
+  const [openingUnreadCount, setOpeningUnreadCount] = useState<number | null>(() =>
+    unreadCountFromRoute ?? getRoomById(id ?? "")?.unreadCount ?? null,
+  );
   const staffViewingOnly = Boolean(canViewAllChats && room && (room.type === "dm" || room.type === "club") && !room.participants.includes(viewerMemberId));
   const [clubAccessDenied, setClubAccessDenied] = useState(false);
   const [roomParticipants, setRoomParticipants] = useState<string[]>(
@@ -399,6 +406,7 @@ export default function ChatScreen() {
     return groups;
   }, [mentionMembers, directory, room?.id, room?.type, room?.requiredRank, roomParticipants]);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [messagesHydrated, setMessagesHydrated] = useState(false);
   const pendingReactionChoices = useRef(new Map<string, Map<string, boolean>>());
   const sharedFetchSequence = useRef(0);
   const introductionChat = id === "board-introduction";
@@ -488,6 +496,11 @@ export default function ChatScreen() {
   // 初回起動時: プロフィール画像と永続化メッセージを読み込む
   useEffect(() => {
     if (!id) return;
+    const cachedUnreadCount = getRoomById(id)?.unreadCount;
+    const openingCount = unreadCountFromRoute ?? cachedUnreadCount ?? null;
+    setOpeningUnreadCount(openingCount);
+    setMessagesHydrated(false);
+    initialPositionRoom.current = null;
     setClubAccessDenied(false);
     if (id.startsWith("club-chat-")) setMessages([]);
     setIntroductionHydrated(id !== "board-introduction");
@@ -495,9 +508,6 @@ export default function ChatScreen() {
       setHasOpenedIntroduction(null);
       void AsyncStorage.getItem("irotas_introduction_chat_opened_v1").then((value) => setHasOpenedIntroduction(value === "1"));
     } else setHasOpenedIntroduction(true);
-    // 一度開いたチャットはサーバー・端末の両方で即時既読にする。戻った直後に新着バッジが残らないようにする。
-    void markRoomRead(id);
-    void Api.markSharedChatRoomRead(id).catch(() => {});
     setIsLoadingRoom(true);
     const loadingFallback = setTimeout(() => setIsLoadingRoom(false), 2500);
     // プロフィール画像読み込み
@@ -507,12 +517,18 @@ export default function ChatScreen() {
     // 個別のチャット・メッセージを先に取得する。一覧全件の読み込みを画面表示の条件にしない。
     void Api.getSharedChatRoom(id).then((sharedRoom) => {
       const normalized = sharedRoom as unknown as ChatRoom;
+      if (openingCount === null) setOpeningUnreadCount(sharedRoom.unreadCount ?? 0);
       setRoom(normalized);
       setRoomParticipants([...normalized.participants]);
       setClubAccessDenied(false);
     }).catch((error) => {
       if (id.startsWith("club-chat-") && error instanceof Api.ApiError && (error.statusCode === 403 || error.statusCode === 404)) setClubAccessDenied(true);
-    }).finally(() => setIsLoadingRoom(false));
+    }).finally(() => {
+      // 未読件数を取得してから既読化し、初期表示位置を失わないようにする。
+      void markRoomRead(id);
+      void Api.markSharedChatRoomRead(id).catch(() => {});
+      setIsLoadingRoom(false);
+    });
     const fetchSequence = ++sharedFetchSequence.current;
     void Api.getSharedChatMessages(id).then((shared) => { if (fetchSequence === sharedFetchSequence.current) applySharedMessages(shared); }).catch(async (error) => {
       if (fetchSequence !== sharedFetchSequence.current) return;
@@ -525,11 +541,13 @@ export default function ChatScreen() {
       setMessages([...(id === "board-introduction" ? [] : getMessages(id)), ...stored]
         .filter((message, index, all) => all.findIndex((candidate) => candidate.id === message.id) === index)
         .filter((message) => !isRetiredAnnouncement(message)));
-    });
+    }).finally(() => { if (fetchSequence === sharedFetchSequence.current) setMessagesHydrated(true); });
     void loadDynamicRooms().then(() => {
       const r = getRoomById(id);
       if (r && !r.shared) {
+        if (openingCount === null) setOpeningUnreadCount(r.unreadCount ?? 0);
         setRoom((current) => current?.shared && current.id === id ? current : r);
+        void markRoomRead(id);
       }
       if (id === "board-introduction") {
         Api.getBoardArchive("all").then(async (archive) => {
@@ -544,6 +562,21 @@ export default function ChatScreen() {
     }).catch(() => setIsLoadingRoom(false));
     return () => clearTimeout(loadingFallback);
   }, [id, applySharedMessages]);
+
+  useEffect(() => {
+    if (!id || linkedMessageId || openingUnreadCount === null || !messagesHydrated || !displayedMessages.length) return;
+    if (id === "board-introduction" && !introductionHydrated) return;
+    if (initialPositionRoom.current === id) return;
+    const index = initialMessageIndex(displayedMessages.length, openingUnreadCount, introductionChat);
+    if (index === null) return;
+    initialPositionRoom.current = id;
+    linkedScrollRetry.current = false;
+    const viewPosition = openingUnreadCount > 0 ? 0.08 : introductionChat ? 0 : 1;
+    const scroll = () => flatListRef.current?.scrollToIndex({ index, animated: false, viewPosition });
+    const first = setTimeout(scroll, 0);
+    const retry = setTimeout(scroll, 220);
+    return () => { clearTimeout(first); clearTimeout(retry); };
+  }, [displayedMessages.length, id, introductionChat, introductionHydrated, linkedMessageId, messagesHydrated, openingUnreadCount]);
 
   useEffect(() => {
     if (id !== "board-introduction" || !introductionHydrated) return;
@@ -827,7 +860,8 @@ export default function ChatScreen() {
 
   const typeLabel = room.id === "board-announcement" ? "お知らせ" : ["community-free-chat", "branch-kanto-free", "branch-kansai-free"].includes(room.id) ? "チャット" : room.type === "event" ? "イベント" : room.type === "board" ? "掲示板" : room.type === "rank" ? "ランク専用" : room.type === "group" ? "友達グループ" : room.type === "dm" ? "DM" : "部活動";
   const typeColor = room.type === "event" ? "#E8A0BF" : room.type === "board" ? "#A7C7E7" : room.type === "rank" ? "#F59E0B" : room.type === "group" ? "#5B9BD5" : room.type === "dm" ? "#FF9500" : "#34C759";
-  const firstUnreadIndex = Math.max(0, messages.length - Math.min(messages.length, Math.max(0, Number(unreadCountParam ?? 0))));
+  const openingUnread = normalizedUnreadCount(openingUnreadCount, displayedMessages.length);
+  const firstUnreadIndex = initialMessageIndex(displayedMessages.length, openingUnread, introductionChat);
   const canManageRoom = room.type !== "club" && !staffViewingOnly && (userIsAdmin || room.createdBy === viewerMemberId);
   const canInviteMembers = canManageRoom && room.type !== "rank" && room.type !== "event" && room.type !== "dm";
   const canPostAnnouncement = !staffViewingOnly && canPostToChat(authUser?.role, room.id, authUser?.accessRole);
@@ -897,7 +931,6 @@ export default function ChatScreen() {
           data={displayedMessages}
           extraData={highlightedMessageId}
           inverted={introductionChat}
-          initialScrollIndex={introductionChat ? undefined : messages.length ? (Number(unreadCountParam ?? 0) === 0 ? messages.length - 1 : Math.max(0, messages.length - Math.min(messages.length, Math.max(0, Number(unreadCountParam ?? 0)))) ) : undefined}
           keyExtractor={(item) => item.id}
           renderItem={({ item, index }) => {
             const previous = index > 0 ? displayedMessages[index - 1] : undefined;
@@ -908,7 +941,7 @@ export default function ChatScreen() {
             const dateSeparator = <View style={{ alignItems: "center", marginVertical: 10 }}><View style={{ borderRadius: 12, backgroundColor: colors.surface, paddingHorizontal: 11, paddingVertical: 4 }}><Text style={{ fontSize: 11, fontWeight: "700", color: colors.muted }}>{day}</Text></View></View>;
             return <>
               {!introductionChat && day !== previousDay ? dateSeparator : null}
-              {Number(unreadCountParam ?? 0) > 0 && index === firstUnreadIndex ? <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginVertical: 10, paddingHorizontal: 16 }}><View style={{ flex: 1, height: 1, backgroundColor: "#E8A0BF" }} /><Text style={{ fontSize: 11, fontWeight: "900", color: "#C05B88" }}>ここから未読メッセージ</Text><View style={{ flex: 1, height: 1, backgroundColor: "#E8A0BF" }} /></View> : null}
+              {openingUnread > 0 && index === firstUnreadIndex ? <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginVertical: 10, paddingHorizontal: 16 }}><View style={{ flex: 1, height: 1, backgroundColor: "#E8A0BF" }} /><Text style={{ fontSize: 11, fontWeight: "900", color: "#C05B88" }}>ここから未読メッセージ</Text><View style={{ flex: 1, height: 1, backgroundColor: "#E8A0BF" }} /></View> : null}
               <MessageBubble
                 message={item}
                 highlighted={item.id === highlightedMessageId}

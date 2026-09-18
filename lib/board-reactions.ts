@@ -48,16 +48,23 @@ export function normalizeBoardReactionEmoji(value: string): string {
  * represented by the app's per-member reaction model, but it must never make
  * the whole imported board unreadable.
  */
-export function normalizeBoardReactions(reactions: Record<string, unknown> = {}): Record<string, string[]> {
+export function normalizeBoardReactions(reactions: Record<string, unknown> = {}, sourceId = "legacy"): Record<string, string[]> {
   const normalized: Record<string, string[]> = {};
   for (const [emoji, value] of Object.entries(reactions)) {
-    const memberIds = Array.isArray(value)
+    const knownMemberIds = Array.isArray(value)
       ? value.filter((memberId): memberId is string => typeof memberId === "string")
       : value && typeof value === "object" && Array.isArray((value as { users?: unknown }).users)
         ? (value as { users: unknown[] }).users.filter((memberId): memberId is string => typeof memberId === "string")
         : [];
     const key = normalizeBoardReactionEmoji(emoji);
-    normalized[key] = Array.from(new Set([...(normalized[key] ?? []), ...memberIds]));
+    const count = value && typeof value === "object" && "count" in value
+      ? Math.max(0, Math.min(10_000, Math.floor(Number((value as { count?: unknown }).count) || 0)))
+      : knownMemberIds.length;
+    const unresolved = Array.from(
+      { length: Math.max(0, count - knownMemberIds.length) },
+      (_, index) => `discord-reaction-unresolved-${sourceId}-${key}-${index}`,
+    );
+    normalized[key] = Array.from(new Set([...(normalized[key] ?? []), ...knownMemberIds, ...unresolved]));
   }
   return normalized;
 }

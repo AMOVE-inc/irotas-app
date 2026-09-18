@@ -148,7 +148,7 @@ export function parseDiscordBoardArchive(archive: RawDiscordBoardArchive, direct
       createdAt: record.createdAt,
       images: record.images.length ? record.images : undefined,
       videos: record.videos.length ? record.videos : undefined,
-      reactions: record.reactions ? normalizeBoardReactions(record.reactions) : undefined,
+      reactions: record.reactions ? normalizeBoardReactions(record.reactions, record.id) : undefined,
     };
     (comments[record.threadId] ??= []).push(comment);
   });
@@ -175,7 +175,7 @@ export function parseDiscordBoardArchive(archive: RawDiscordBoardArchive, direct
       isPinned: override?.pinned,
       images: record.images.length ? record.images : undefined,
       videos: record.videos.length ? record.videos : undefined,
-      reactions: record.reactions ? normalizeBoardReactions(record.reactions) : undefined,
+      reactions: record.reactions ? normalizeBoardReactions(record.reactions, record.id) : undefined,
       selfIntroduction: record.selfIntroduction,
       mealReport: record.mealReport,
       gourmetAdvice: category === "gourmet-advice" ? importedGourmetAdvice(record, preview) : undefined,

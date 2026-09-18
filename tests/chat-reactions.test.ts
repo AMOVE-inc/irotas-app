@@ -25,4 +25,12 @@ describe("chat emoji reactions", () => {
   it("IDが不明な旧識別名を画面に露出しない", () => {
     expect(normalizeBoardReactions({ emoji_999: ["u1"] })).toEqual({ "😊": ["u1"] });
   });
+
+  it("投稿者一覧がないDiscordリアクションも件数を保持する", () => {
+    expect(normalizeBoardReactions({ "🐭": { count: 3, users: null } }, "comment-1")["🐭"]).toEqual([
+      "discord-reaction-unresolved-comment-1-🐭-0",
+      "discord-reaction-unresolved-comment-1-🐭-1",
+      "discord-reaction-unresolved-comment-1-🐭-2",
+    ]);
+  });
 });

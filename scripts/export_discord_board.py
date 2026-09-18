@@ -7,6 +7,7 @@ import argparse
 import asyncio
 import io
 import json
+import os
 import re
 from pathlib import Path
 from urllib.parse import urlparse
@@ -85,6 +86,11 @@ async def reactions_for(message: discord.Message) -> dict[str, list[str]] | None
     react twice after migration.  Discord exposes the reactor list per emoji;
     retain those IDs so the import can be idempotent and auditable.
     """
+    if os.environ.get("IROTAS_DISCORD_AGGREGATE_REACTIONS") == "1":
+        return {
+            str(reaction.emoji): {"count": reaction.count, "users": None}
+            for reaction in message.reactions if reaction.count
+        } or None
     reactions = {}
     for reaction in message.reactions:
         try:
@@ -422,11 +428,11 @@ def merge_consecutive(records: list[dict]) -> list[dict]:
     return merged
 
 
-async def export_archive(guild: discord.Guild, output_path: Path, asset_root: Path, event_channels_only: bool = False) -> None:
+async def export_archive(guild: discord.Guild, output_path: Path, asset_root: Path, event_channels_only: bool = False, club_forums_only: bool = False) -> None:
     archive = {"exportedAt": isoformat(discord.utils.utcnow()), "threads": [], "comments": []}
     relative_root = Path("discord-board")
 
-    for channel_id, (category, label) in ({} if event_channels_only else TEXT_CHANNELS).items():
+    for channel_id, (category, label) in ({} if event_channels_only or club_forums_only else TEXT_CHANNELS).items():
         channel = guild.get_channel(channel_id)
         if not isinstance(channel, discord.TextChannel):
             continue
@@ -460,7 +466,9 @@ async def export_archive(guild: discord.Guild, output_path: Path, asset_root: Pa
 
     selected_forums = ({channel_id: FORUM_CHANNELS[channel_id] for channel_id in (
         1228983536988586044, 1332944923166507038, 1332959273394638911
-    )} if event_channels_only else FORUM_CHANNELS)
+    )} if event_channels_only else {
+        channel_id: value for channel_id, value in FORUM_CHANNELS.items() if value[0].startswith("club-")
+    } if club_forums_only else FORUM_CHANNELS)
     for channel_id, (category, label) in selected_forums.items():
         channel = guild.get_channel(channel_id)
         if not isinstance(channel, discord.ForumChannel):
@@ -532,6 +540,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--members-output")
     parser.add_argument("--raw-output")
     parser.add_argument("--event-channels-only", action="store_true")
+    parser.add_argument("--club-forums-only", action="store_true")
     return parser.parse_args()
 
 
@@ -691,7 +700,7 @@ async def main() -> None:
         elif args.output:
             if not args.assets:
                 raise ValueError("--assets is required with --output")
-            await export_archive(guild, Path(args.output), Path(args.assets), args.event_channels_only)
+            await export_archive(guild, Path(args.output), Path(args.assets), args.event_channels_only, args.club_forums_only)
         await client.close()
 
     await client.start(token)
