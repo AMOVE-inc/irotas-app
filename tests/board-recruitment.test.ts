@@ -65,13 +65,13 @@ describe("掲示板募集ステータス", () => {
     expect(sortRecruitmentThreads([closed, open]).map((item) => item.id)).toEqual(["open", "closed"]);
   });
 
-  it("クローズ済みのタイトルだけに募集終了を一度表示する", () => {
+  it("クローズ状態を切り替えてもタイトルを変更しない", () => {
     const base = { author: {} as BoardThread["author"], commentCount: 0, preview: "", category: "free-chat", lastUpdated: "2026-08-15T10:00:00Z" };
-    const closed = { ...base, id: "closed", title: "【募集終了】映画会", recruitmentStatus: "closed", isRecruiting: false } as BoardThread;
-    const open = { ...base, id: "open", title: "【募集終了】映画会", recruitmentStatus: "open", isRecruiting: false } as BoardThread;
+    const closed = { ...base, id: "closed", title: "【終了】映画会", recruitmentStatus: "closed", isRecruiting: false } as BoardThread;
+    const imported = { ...base, id: "imported", title: "【募集終了】映画会", recruitmentStatus: "closed", isRecruiting: false } as BoardThread;
     expect(isBoardThreadClosed(closed)).toBe(true);
-    expect(displayBoardThreadTitle(closed)).toBe("【募集終了】映画会");
-    expect(displayBoardThreadTitle(open)).toBe("映画会");
+    expect(displayBoardThreadTitle(closed)).toBe("【終了】映画会");
+    expect(displayBoardThreadTitle(imported)).toBe("【募集終了】映画会");
   });
 
   it("部活の固定済み自己紹介を最上部に表示する", () => {

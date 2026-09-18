@@ -37,8 +37,7 @@ export function isBoardThreadClosed(thread: Pick<BoardThread, "category" | "titl
 }
 
 export function displayBoardThreadTitle(thread: Pick<BoardThread, "category" | "title" | "isRecruiting" | "recruitmentStatus">): string {
-  const title = thread.title.replace(/^\s*【\s*募集終了\s*】\s*/, "").trim();
-  return isBoardThreadClosed(thread) ? `【募集終了】${title}` : title;
+  return thread.title.trim();
 }
 
 export function sortRecruitmentThreads(threads: BoardThread[]): BoardThread[] {
