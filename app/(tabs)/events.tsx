@@ -488,7 +488,7 @@ function CalendarDateField({
 function StatusBadge({ status, discordRecruitment = false }: { status: Event["status"]; discordRecruitment?: boolean }) {
   const config = {
     open: discordRecruitment ? { bg: "#EFE9FA", color: "#604C8C", label: "Discord受付" } : { bg: "#34C75920", color: "#34C759", label: "募集中" },
-    full: { bg: "#FF950020", color: "#FF9500", label: "募集終了" },
+    full: { bg: "#8E8E9320", color: "#8E8E93", label: "募集終了" },
     ended: { bg: "#8E8E9320", color: "#8E8E93", label: "終了" },
   };
   const c = config[status];

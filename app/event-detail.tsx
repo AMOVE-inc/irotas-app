@@ -1009,7 +1009,7 @@ export default function EventDetailScreen() {
           <View
             style={{
               backgroundColor:
-                eventEnded
+                eventEnded || discordRecruitmentClosed || event.status === "full"
                   ? "#8E8E93"
                   : event.recruitmentStatus === "draft"
                   ? "#7E6C9E"
@@ -1017,8 +1017,6 @@ export default function EventDetailScreen() {
                   ? "#604C8C"
                   : event.status === "open"
                   ? "#34C759"
-                  : event.status === "full"
-                  ? "#FF9500"
                   : "#8E8E93",
               borderRadius: 12,
               paddingHorizontal: 12,
