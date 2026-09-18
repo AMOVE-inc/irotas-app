@@ -23,6 +23,7 @@ function testDatabase(
   recentIntroduction?: { id: string; created_at: string },
   thread?: { id: string; author_member_id: number; category: string; title: string },
   replyComment?: { id: string; threadId: string; content: string; displayName: string },
+  clubLeader = false,
 ) {
   const writes: { sql: string; values: unknown[] }[] = [];
   const db: D1Database = {
@@ -59,6 +60,8 @@ function testDatabase(
               grace_until_date: null,
             } as T;
           }
+          if (sql.includes("FROM clubs\n    WHERE id = ? AND leader_member_id = ?"))
+            return (clubLeader ? { allowed: 1 } : null) as T | null;
           if (sql.includes("SELECT 1 AS allowed"))
             return (clubAllowed ? { allowed: 1 } : null) as T | null;
           if (sql.includes("category = 'introduction'"))
@@ -154,6 +157,54 @@ describe("shared board content API", () => {
     const response = await handleBoardContentRequest(request("/api/board/threads", "POST", { category: "free-chat", title: "箇条書き", content }), { DB: db } as SitesEnv);
     expect(response?.status).toBe(201);
     expect(writes.find((item) => item.sql.includes("INSERT INTO board_threads"))?.values).toContain(content);
+  });
+
+  it("lets the assigned club leader change only the closed and pinned state", async () => {
+    const member = { id: 9, role: "user", access_role: "club_leader", account_status: "active" } as const;
+    const thread = {
+      id: "club-post-1",
+      author_member_id: 10,
+      category: "club-club-cooking-class",
+      title: "料理教室のお知らせ",
+      content: "本文",
+      status: "open" as const,
+      pinned: 0,
+      data_json: "{}",
+    };
+    const leaderDb = testDatabase(member, true, undefined, thread, undefined, true);
+    const managementResponse = await handleBoardContentRequest(
+      request("/api/board/threads/club-post-1", "PATCH", { status: "closed", pinned: true }),
+      { DB: leaderDb.db } as SitesEnv,
+    );
+    expect(managementResponse?.status).toBe(200);
+    expect(leaderDb.writes.some((item) => item.sql.includes("UPDATE board_threads SET title"))).toBe(true);
+
+    const editDb = testDatabase(member, true, undefined, thread, undefined, true);
+    const editResponse = await handleBoardContentRequest(
+      request("/api/board/threads/club-post-1", "PATCH", { title: "勝手に変更" }),
+      { DB: editDb.db } as SitesEnv,
+    );
+    expect(editResponse?.status).toBe(403);
+  });
+
+  it("does not let another club member manage someone else's post", async () => {
+    const member = { id: 9, role: "user", access_role: "member", account_status: "active" } as const;
+    const thread = {
+      id: "club-post-1",
+      author_member_id: 10,
+      category: "club-club-cooking-class",
+      title: "料理教室のお知らせ",
+      content: "本文",
+      status: "open" as const,
+      pinned: 0,
+      data_json: "{}",
+    };
+    const { db } = testDatabase(member, true, undefined, thread);
+    const response = await handleBoardContentRequest(
+      request("/api/board/threads/club-post-1", "PATCH", { status: "closed", pinned: true }),
+      { DB: db } as SitesEnv,
+    );
+    expect(response?.status).toBe(403);
   });
 
   it("notifies the post author when another member comments", async () => {

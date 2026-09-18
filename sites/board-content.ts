@@ -222,6 +222,19 @@ export async function canAccessBoardCategory(
   return canMemberAccessClub(db, clubId, member.id, elevated(member));
 }
 
+async function isAssignedClubLeader(
+  db: D1Database,
+  category: string,
+  memberId: number,
+) {
+  const clubId = category.startsWith("club-club-") ? clubIdFromCategory(category) : null;
+  if (!clubId) return false;
+  const row = await db.prepare(`SELECT 1 AS allowed FROM clubs
+    WHERE id = ? AND leader_member_id = ? AND status = 'active' LIMIT 1`)
+    .bind(clubId, memberId).first<{ allowed: number }>();
+  return Boolean(row);
+}
+
 function serializeThread(row: ThreadRow, viewerId: number, reactions: ReactionRow[]) {
   const profile = parseData(row.author_profile_json ?? "{}");
   return {
@@ -577,10 +590,10 @@ export async function handleBoardContentRequest(
       : undefined;
     const viewerDiscordId = importedAuthorId ? await db.prepare("SELECT discord_user_id FROM members WHERE id = ?")
       .bind(member.id).first<{ discord_user_id: string | null }>() : null;
-    if (current.author_member_id !== member.id && !elevated(member) && (!importedAuthorId || viewerDiscordId?.discord_user_id !== importedAuthorId))
-      return json({ error: "投稿者本人または管理者のみ変更できます" }, 403);
+    const canManageWholeThread = current.author_member_id === member.id || elevated(member) || Boolean(importedAuthorId && viewerDiscordId?.discord_user_id === importedAuthorId);
     const now = new Date().toISOString();
     if (request.method === "DELETE") {
+      if (!canManageWholeThread) return json({ error: "投稿者本人または管理者のみ変更できます" }, 403);
       await db.prepare("UPDATE board_threads SET deleted_at = ?, updated_at = ? WHERE id = ?")
         .bind(now, now, id).run();
       await audit(db, member.id, "board.thread_deleted", "board_thread", id);
@@ -588,6 +601,10 @@ export async function handleBoardContentRequest(
     }
     const input = await readBody(request);
     if (!input) return json({ error: "変更内容が不正です" }, 400);
+    const leaderManagementOnly = await isAssignedClubLeader(db, current.category, member.id)
+      && Object.keys(input).every((key) => key === "status" || key === "pinned");
+    if (!canManageWholeThread && !leaderManagementOnly)
+      return json({ error: "投稿者本人、部長、運営または管理者のみ変更できます" }, 403);
     const title = input.title === undefined ? current.title : text(input.title, 200, true);
     const content = input.content === undefined ? current.content : text(input.content, 10_000, true, true);
     const status = input.status === undefined ? current.status :

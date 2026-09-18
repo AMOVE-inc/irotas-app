@@ -2919,7 +2919,7 @@ export default function BoardScreen() {
     if (thread.shared || thread.id.startsWith("discord-board-")) {
       try {
         if (!thread.shared) await Api.ensureSharedImportedBoardThread(thread.id);
-        await Api.updateSharedBoardThread(thread.id, { status: changes.recruitmentStatus ?? "none", pinned: Boolean(changes.isPinned), data: boardThreadData(updated) });
+        await Api.updateSharedBoardThread(thread.id, { status: changes.recruitmentStatus ?? "none", pinned: Boolean(changes.isPinned) });
       } catch (error) {
         Alert.alert("保存できませんでした", error instanceof Error ? error.message : "通信環境を確認して、もう一度お試しください。");
         return;
