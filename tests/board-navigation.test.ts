@@ -111,6 +111,9 @@ describe("board category ordering", () => {
   it("manages board threads with open and close actions instead of a recruiting toggle", () => {
     const boardScreen = readFileSync(resolve(process.cwd(), "app/(tabs)/board.tsx"), "utf8");
     expect(boardScreen).toContain('"投稿をクローズする"');
+    expect(boardScreen).toContain('"投稿を固定する"');
+    expect(boardScreen).toContain('"投稿の固定を解除する"');
+    expect(boardScreen).toContain("📌 固定");
     expect(boardScreen).toContain('"投稿をオープンにする"');
     expect(boardScreen).toContain("クローズ済みの投稿");
     expect(boardScreen).not.toContain("募集中ステータス");

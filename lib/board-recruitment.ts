@@ -47,6 +47,8 @@ export function sortRecruitmentThreads(threads: BoardThread[]): BoardThread[] {
       const statusDifference = Number(isBoardThreadClosed(left)) - Number(isBoardThreadClosed(right));
       if (statusDifference) return statusDifference;
     }
+    const pinnedDifference = Number(isThreadPinned(right)) - Number(isThreadPinned(left));
+    if (pinnedDifference) return pinnedDifference;
     return Date.parse(right.lastUpdated) - Date.parse(left.lastUpdated);
   });
 }

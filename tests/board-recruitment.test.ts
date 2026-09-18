@@ -74,20 +74,34 @@ describe("掲示板募集ステータス", () => {
     expect(displayBoardThreadTitle(open)).toBe("映画会");
   });
 
-  it("募集中を固定済みの募集終了投稿より上に表示する", () => {
+  it("部活の固定済み自己紹介を最上部に表示する", () => {
     const base = { author: {} as BoardThread["author"], commentCount: 0, preview: "", category: "club-club-wine" };
     const open = { ...base, id: "open", title: "ワイン会", isRecruiting: true, lastUpdated: "2026-08-15T10:00:00Z" } as BoardThread;
     const introduction = { ...base, id: "intro", title: "ワイン部 自己紹介", isRecruiting: false, lastUpdated: "2026-01-01T10:00:00Z" } as BoardThread;
     expect(isClubSelfIntroduction(introduction)).toBe(true);
     expect(isThreadPinned(introduction)).toBe(true);
-    expect(sortRecruitmentThreads([open, introduction]).map((item) => item.id)).toEqual(["open", "intro"]);
+    expect(sortRecruitmentThreads([open, introduction]).map((item) => item.id)).toEqual(["intro", "open"]);
   });
 
-  it("同じ募集状態では固定状態に関係なく最終コメントが新しい順にする", () => {
+  it("クローズ済みの固定投稿は通常投稿の区切りより下に表示する", () => {
+    const base = { author: {} as BoardThread["author"], commentCount: 0, preview: "", category: "club-club-wine" };
+    const open = { ...base, id: "open", title: "ワイン会", recruitmentStatus: "open" as const, lastUpdated: "2026-08-14T10:00:00Z" } as BoardThread;
+    const closedPinned = { ...base, id: "closed-pinned", title: "締め切った会", recruitmentStatus: "closed" as const, isPinned: true, lastUpdated: "2026-08-15T10:00:00Z" } as BoardThread;
+    expect(sortRecruitmentThreads([closedPinned, open]).map((item) => item.id)).toEqual(["open", "closed-pinned"]);
+  });
+
+  it("同じ募集状態では固定投稿を最上部に表示する", () => {
     const base = { author: {} as BoardThread["author"], commentCount: 0, preview: "", category: "free-chat", recruitmentStatus: "open" as const };
     const older = { ...base, id: "older", title: "older", lastUpdated: "2026-08-14T10:00:00Z" } as BoardThread;
     const newer = { ...base, id: "newer", title: "newer", lastUpdated: "2026-08-16T10:00:00Z" } as BoardThread;
     const pinned = { ...base, id: "pinned", title: "pinned", isPinned: true, lastUpdated: "2026-08-13T10:00:00Z" } as BoardThread;
-    expect(sortRecruitmentThreads([older, pinned, newer]).map((item) => item.id)).toEqual(["newer", "older", "pinned"]);
+    expect(sortRecruitmentThreads([older, pinned, newer]).map((item) => item.id)).toEqual(["pinned", "newer", "older"]);
+  });
+
+  it("募集掲示板以外でも固定投稿を最上部に表示する", () => {
+    const base = { author: {} as BoardThread["author"], commentCount: 0, preview: "", category: "announcements" };
+    const newer = { ...base, id: "newer", title: "newer", lastUpdated: "2026-08-16T10:00:00Z" } as BoardThread;
+    const pinned = { ...base, id: "pinned", title: "pinned", isPinned: true, lastUpdated: "2026-08-13T10:00:00Z" } as BoardThread;
+    expect(sortRecruitmentThreads([newer, pinned]).map((item) => item.id)).toEqual(["pinned", "newer"]);
   });
 });
