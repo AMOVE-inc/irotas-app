@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   archivedIntroductionProfile,
   allowedPrivateClubCategories,
+  canManageArchivedThread,
   filterBoardArchive,
   handleBoardArchiveRequest,
 } from "../sites/board-archive";
@@ -70,6 +71,14 @@ function membershipDatabase(options: {
 }
 
 describe("authenticated board archive filtering", () => {
+  it("marks only the imported Discord author or elevated staff as able to edit the thread", () => {
+    expect(canManageArchivedThread("1353587486604922921", "1353587486604922921", false)).toBe(true);
+    expect(canManageArchivedThread("1353587486604922921", "999999999999999999", false)).toBe(false);
+    expect(canManageArchivedThread("1353587486604922921", null, true)).toBe(true);
+    expect(canManageArchivedThread("1353587486604922921", null, false, "club-all", "【料理教室部】2026年9月 活動報告🍳", new Set(["料理教室部"]))).toBe(true);
+    expect(canManageArchivedThread("1353587486604922921", null, false, "club-all", "【料理教室部】2026年9月 活動報告🍳", new Set(["パン部"]))).toBe(false);
+  });
+
   it("未入部ユーザーには部員専用スレとコメントを返さない", () => {
     const result = filterBoardArchive(fixture, new Set());
     expect(result.threads.map((thread) => thread.id)).toEqual(["public"]);

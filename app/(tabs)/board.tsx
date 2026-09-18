@@ -3211,8 +3211,8 @@ export default function BoardScreen() {
             mentionCount={mentionCount}
             isNewPost={newThread && supportsBoardNewBadge(item.category)}
             onPress={() => { setSelectedThreadUnreadCommentIds(unreadComments.map((comment) => comment.id)); setSelectedThreadIsUnread(newThread); markThreadRead(item.id); setSelectedThread(item); router.setParams({ thread: item.id }); }}
-            onEdit={item.author.id === viewerMemberId || userCanModerateAll ? () => setEditingThread(item) : undefined}
-            onDelete={item.author.id === viewerMemberId || userCanModerateAll ? () => {
+            onEdit={item.viewerCanManage || item.author.id === viewerMemberId || userCanModerateAll ? () => setEditingThread(item) : undefined}
+            onDelete={item.viewerCanManage || item.author.id === viewerMemberId || userCanModerateAll ? () => {
               if (Platform.OS === "web") {
                 if (window.confirm("投稿を削除しますか？削除後は元に戻せません。")) void deleteThread(item);
                 return;
@@ -3271,7 +3271,7 @@ export default function BoardScreen() {
             onClose={() => {
               leaveThreadDetail(fromHome === "1" ? () => router.replace("/" as any) : undefined);
             }}
-            onEditThread={selectedThread.author.id === viewerMemberId || userCanModerateAll ? () => { setEditingThread(selectedThread); setSelectedThread(null); router.setParams({ thread: "" }); } : undefined}
+            onEditThread={selectedThread.viewerCanManage || selectedThread.author.id === viewerMemberId || userCanModerateAll ? () => { setEditingThread(selectedThread); setSelectedThread(null); router.setParams({ thread: "" }); } : undefined}
             canRegisterEvent={selectedThread.author.id === viewerMemberId}
             applicationClub={applicationClubForThread(selectedThread)}
             canModerateAll={userCanModerateAll}

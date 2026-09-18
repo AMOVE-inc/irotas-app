@@ -23,6 +23,7 @@ export interface RawDiscordBoardRecord {
 export interface RawDiscordBoardThread extends RawDiscordBoardRecord {
   category: string;
   title: string;
+  viewerCanManage?: boolean;
   selfIntroduction?: BoardThread["selfIntroduction"];
   mealReport?: BoardThread["mealReport"];
   gourmetAdvice?: BoardThread["gourmetAdvice"];
@@ -189,6 +190,7 @@ export function parseDiscordBoardArchive(archive: RawDiscordBoardArchive, direct
       isRecruiting: recruitmentStatus === "open",
       recruitmentStatus,
       isPinned: override?.pinned,
+      viewerCanManage: record.viewerCanManage,
       images: record.images.length ? record.images : undefined,
       videos: record.videos.length ? record.videos : undefined,
       reactions: record.reactions ? normalizeBoardReactions(record.reactions, record.id) : undefined,

@@ -50,6 +50,21 @@ export function filterBoardArchive(
   return { threads, comments };
 }
 
+export function canManageArchivedThread(
+  threadAuthorDiscordId: string,
+  viewerDiscordId: string | null | undefined,
+  viewerIsElevated: boolean,
+  threadCategory = "",
+  threadTitle = "",
+  viewerLedClubNames: ReadonlySet<string> = new Set(),
+) {
+  const activityReportClub = threadCategory === "club-all"
+    ? threadTitle.match(/^【([^】]+)】.*活動報告/)?.[1]?.trim()
+    : undefined;
+  return viewerIsElevated || Boolean(viewerDiscordId && viewerDiscordId === threadAuthorDiscordId) ||
+    Boolean(activityReportClub && viewerLedClubNames.has(activityReportClub));
+}
+
 export async function allowedPrivateClubCategories(
   db: D1Database,
   memberId: number,
@@ -165,6 +180,14 @@ export async function handleBoardArchiveRequest(
   }
 
   const filtered = filterBoardArchive(source, allowed);
+  const viewerIdentity = await env.DB.prepare("SELECT discord_user_id FROM members WHERE id = ? LIMIT 1")
+    .bind(member.id).first<{ discord_user_id: string | null }>();
+  const viewerIsElevated = member.role === "admin" || member.role === "operator" || member.access_role === "admin" || member.access_role === "operator";
+  const ledClubs = member.access_role === "club_leader"
+    ? await env.DB.prepare("SELECT name FROM clubs WHERE leader_member_id = ? AND status = 'active'")
+      .bind(member.id).all<{ name: string }>()
+    : { results: [] as { name: string }[] };
+  const viewerLedClubNames = new Set((ledClubs.results ?? []).map((club) => club.name.trim()));
   const visibleIds = new Set(filtered.threads.map((thread) => thread.id));
   const saved = await env.DB.prepare(`SELECT id, title, content, status, pinned, data_json, updated_at, deleted_at
     FROM board_threads WHERE id LIKE 'discord-board-%'`).all<{
@@ -172,7 +195,19 @@ export async function handleBoardArchiveRequest(
     pinned: number; data_json: string; updated_at: string; deleted_at: string | null;
   }>();
   const deletedIds = new Set((saved.results ?? []).filter((row) => row.deleted_at).map((row) => row.id));
-  const threads = filtered.threads.filter((thread) => !deletedIds.has(thread.id));
+  const threads = filtered.threads
+    .filter((thread) => !deletedIds.has(thread.id))
+    .map((thread) => ({
+      ...thread,
+      viewerCanManage: canManageArchivedThread(
+        thread.authorId,
+        viewerIdentity?.discord_user_id,
+        viewerIsElevated,
+        thread.category,
+        thread.title,
+        viewerLedClubNames,
+      ),
+    }));
   const liveIds = new Set(threads.map((thread) => thread.id));
   const originalThreads = new Map(threads.map((thread) => [thread.id, thread]));
   const threadOverrides = Object.fromEntries((saved.results ?? [])

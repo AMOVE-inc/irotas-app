@@ -235,6 +235,7 @@ export interface BoardThread {
   isRecruiting: boolean; // 参加者募集中かどうか
   recruitmentStatus?: "open" | "closed" | "none"; // 掲示板上の募集ステータス（旧データはisRecruitingから補完）
   isPinned?: boolean; // 一覧上部へ固定
+  viewerCanManage?: boolean; // APIで確認した投稿者本人・運営・管理者の編集権限
   recruitCapacity?: number;
   recruitAttendees?: number;
   recruitParticipants?: string[]; // 承認済み参加者 member ids

@@ -235,6 +235,20 @@ async function isAssignedClubLeader(
   return Boolean(row);
 }
 
+async function isAssignedClubActivityReportLeader(
+  db: D1Database,
+  category: string,
+  title: string,
+  memberId: number,
+) {
+  const clubName = category === "club-all" ? title.match(/^【([^】]+)】.*活動報告/)?.[1]?.trim() : undefined;
+  if (!clubName) return false;
+  const row = await db.prepare(`SELECT 1 AS allowed FROM clubs
+    WHERE name = ? AND leader_member_id = ? AND status = 'active' LIMIT 1`)
+    .bind(clubName, memberId).first<{ allowed: number }>();
+  return Boolean(row);
+}
+
 function serializeThread(row: ThreadRow, viewerId: number, reactions: ReactionRow[]) {
   const profile = parseData(row.author_profile_json ?? "{}");
   return {
@@ -590,7 +604,9 @@ export async function handleBoardContentRequest(
       : undefined;
     const viewerDiscordId = importedAuthorId ? await db.prepare("SELECT discord_user_id FROM members WHERE id = ?")
       .bind(member.id).first<{ discord_user_id: string | null }>() : null;
-    const canManageWholeThread = current.author_member_id === member.id || elevated(member) || Boolean(importedAuthorId && viewerDiscordId?.discord_user_id === importedAuthorId);
+    const canManageWholeThread = current.author_member_id === member.id || elevated(member) ||
+      Boolean(importedAuthorId && viewerDiscordId?.discord_user_id === importedAuthorId) ||
+      await isAssignedClubActivityReportLeader(db, current.category, current.title, member.id);
     const now = new Date().toISOString();
     if (request.method === "DELETE") {
       if (!canManageWholeThread) return json({ error: "投稿者本人または管理者のみ変更できます" }, 403);

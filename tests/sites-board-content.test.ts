@@ -62,6 +62,8 @@ function testDatabase(
           }
           if (sql.includes("FROM clubs\n    WHERE id = ? AND leader_member_id = ?"))
             return (clubLeader ? { allowed: 1 } : null) as T | null;
+          if (sql.includes("WHERE name = ? AND leader_member_id = ?"))
+            return (clubLeader && values[0] === "料理教室部" ? { allowed: 1 } : null) as T | null;
           if (sql.includes("SELECT 1 AS allowed"))
             return (clubAllowed ? { allowed: 1 } : null) as T | null;
           if (sql.includes("category = 'introduction'"))
@@ -205,6 +207,33 @@ describe("shared board content API", () => {
       { DB: db } as SitesEnv,
     );
     expect(response?.status).toBe(403);
+  });
+
+  it("lets the assigned club leader edit and delete their club activity report", async () => {
+    const member = { id: 9, role: "user", access_role: "club_leader", account_status: "active" } as const;
+    const thread = {
+      id: "discord-board-1548731641931899001",
+      author_member_id: 10,
+      category: "club-all",
+      title: "【料理教室部】2026年9月 活動報告🍳",
+      content: "本文",
+      status: "none" as const,
+      pinned: 0,
+      data_json: "{}",
+    };
+    const editDb = testDatabase(member, false, undefined, thread, undefined, true);
+    const edit = await handleBoardContentRequest(
+      request(`/api/board/threads/${thread.id}`, "PATCH", { title: thread.title, content: "更新後" }),
+      { DB: editDb.db } as SitesEnv,
+    );
+    expect(edit?.status).toBe(200);
+
+    const deleteDb = testDatabase(member, false, undefined, thread, undefined, true);
+    const deleted = await handleBoardContentRequest(
+      request(`/api/board/threads/${thread.id}`, "DELETE"),
+      { DB: deleteDb.db } as SitesEnv,
+    );
+    expect(deleted?.status).toBe(200);
   });
 
   it("notifies the post author when another member comments", async () => {
