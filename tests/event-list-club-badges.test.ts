@@ -15,6 +15,7 @@ describe("event list club labels and leader badges", () => {
     expect(source).toContain("clubName={item.clubName ??");
     expect(source).toContain("item.organizerLeaderClubNames");
     expect(source).toContain("<MemberClubLeaderBadges labels={organizerLeaderLabels}");
+    expect(source).toContain("leaderLabel={false}");
   });
 
   it("reconciles all verified imported organizers before listing events", () => {

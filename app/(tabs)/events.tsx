@@ -834,7 +834,7 @@ function EventCard({
               </Text>
               {event.organizerRank ? <MemberRankBadge rank={event.organizerRank} name={event.organizerName} compact /> : null}
               <MemberClubLeaderBadges labels={organizerLeaderLabels} name={event.organizerName} compact />
-              <MemberRoleBadge name={event.organizerName} role={event.organizerAccessRole} compact />
+              <MemberRoleBadge name={event.organizerName} role={event.organizerAccessRole} leaderLabel={false} compact />
               {organizer ? (
                 <NewMemberMark member={organizer} size={11} />
               ) : null}

@@ -36,12 +36,12 @@ export function stripRankFromName(name: string) {
   return displayMemberName(normalized);
 }
 
-export function MemberRoleBadge({ name, role, compact = false, leaderLabel }: { name?: string; role?: string; compact?: boolean; leaderLabel?: string | null }) {
+export function MemberRoleBadge({ name, role, compact = false, leaderLabel }: { name?: string; role?: string; compact?: boolean; leaderLabel?: string | null | false }) {
   const normalized = name ?? "";
   const staffRole = getMemberStaffRole(normalized, role);
   const admin = staffRole === "admin";
   const operator = staffRole === "operator";
-  const leader = leaderLabel ?? clubLeaderBadge(normalized)?.label;
+  const leader = leaderLabel === false ? undefined : leaderLabel ?? clubLeaderBadge(normalized)?.label;
   const paddingHorizontal = compact ? 6 : 9;
   const fontSize = compact ? 8 : 11;
   const badgeHeight = compact ? 19 : 24;
