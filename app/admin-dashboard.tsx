@@ -800,7 +800,7 @@ export default function AdminDashboardScreen() {
         {activeTab === "overview" && (
           <View style={{ backgroundColor: colors.surface, borderRadius: 14, borderWidth: 1, borderColor: colors.border, padding: 16, marginBottom: 14 }}>
             <Text style={{ fontSize: 16, fontWeight: "800", color: colors.foreground }}>Discord部活所属の照合</Text>
-            <Text style={{ fontSize: 12, lineHeight: 19, color: colors.muted, marginTop: 6 }}>Discord IDが一致する現役会員の所属だけを復元します。退部・申請・却下の履歴は変更しません。</Text>
+            <Text style={{ fontSize: 12, lineHeight: 19, color: colors.muted, marginTop: 6 }}>Discord IDが一致する現役会員の現在のロールを正として所属を復元します。未申請・退部・却下の状態でも、現在Discordにロールがある所属は承認済みに戻します。</Text>
             {discordClubPreview ? <Text style={{ fontSize: 12, lineHeight: 19, color: colors.foreground, marginTop: 10 }}>{discordClubPreview}</Text> : null}
             <Pressable disabled={discordClubImporting} onPress={async () => {
               setDiscordClubImporting(true);
@@ -824,9 +824,9 @@ export default function AdminDashboardScreen() {
               setDiscordClubImporting(true);
               try {
                 const response = await fetch("/api/admin/discord-club-import/commit", { method: "POST", headers: { "content-type": "application/json" }, body: discordClubPayload });
-                const result = await response.json() as { error?: string; stagedCount?: number; insertedCount?: number; conflictCount?: number; unmatchedDiscordIds?: string[] };
+                const result = await response.json() as { error?: string; stagedCount?: number; insertedCount?: number; restoredCount?: number; conflictCount?: number; unmatchedDiscordIds?: string[] };
                 if (!response.ok) throw new Error(result.error ?? "反映に失敗しました");
-                const summary = `所属情報を保管 ${result.stagedCount ?? 0}件／アプリ会員への追加 ${result.insertedCount ?? 0}件／要確認 ${result.conflictCount ?? 0}件／本人確認待ち ${result.unmatchedDiscordIds?.length ?? 0}名`;
+                const summary = `所属情報を保管 ${result.stagedCount ?? 0}件／新規追加 ${result.insertedCount ?? 0}件／既存状態から復元 ${result.restoredCount ?? 0}件／本人確認待ち ${result.unmatchedDiscordIds?.length ?? 0}名`;
                 setDiscordClubPreview(summary);
                 setDiscordClubPayload(null);
                 await refreshClubs();
