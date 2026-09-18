@@ -26,6 +26,12 @@ describe("internal link mentions", () => {
     });
   });
 
+  it("converts copied board category links into named mentions", () => {
+    expect(parseInternalLink("https://app.irotas-community.com/board?category=introduction&view=threads", CHAT_ROOMS, BOARD_THREADS)).toMatchObject({ label: "#自己紹介", pathname: "/board", params: { category: "introduction", view: "threads" } });
+    expect(parseInternalLink("https://app.irotas-community.com/clubs", CHAT_ROOMS, BOARD_THREADS)).toMatchObject({ label: "#部活動", pathname: "/clubs", params: {} });
+    expect(parseInternalLink("https://app.irotas-community.com/gourmet-map", CHAT_ROOMS, BOARD_THREADS)).toMatchObject({ label: "#グルメマップ", pathname: "/gourmet-map", params: {} });
+  });
+
   it("keeps surrounding message text", () => {
     expect(splitInternalLinks("こちら https://app.irotas-community.com/chat?id=chat1 を確認")).toHaveLength(3);
   });

@@ -14,9 +14,14 @@ describe("shared event comments", () => {
     ];
     const viewer = { memberId: 9, publicId: "IRO0009", discordUserId: null, elevated: false };
     expect(mergeEventComments(imported, stored, viewer)).toEqual([
-      { id: "discord-comment-1", author: "A", authorId: "discord-111", text: "edited", createdAt: "2026-09-01T00:00:00Z", canEdit: false },
+      { id: "discord-comment-1", author: "A", authorId: "discord-111", text: "edited", createdAt: "2026-09-01T00:00:00Z", canEdit: false, reactions: {} },
     ]);
     expect(mergeEventComments(imported, stored, { ...viewer, memberId: 1, discordUserId: "111" })[0].canEdit).toBe(true);
+  });
+
+  it("attaches persisted reactions to their comments", () => {
+    const viewer = { memberId: 9, publicId: "IRO0009", discordUserId: null, elevated: false };
+    expect(mergeEventComments(imported.slice(0, 1), [], viewer, { "discord-comment-1": { "👍": ["IRO0002"] } })[0].reactions).toEqual({ "👍": ["IRO0002"] });
   });
 
   it("shows server-created comments only to readers, with edit rights for their author", () => {

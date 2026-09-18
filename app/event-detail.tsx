@@ -27,7 +27,7 @@ import { getDiscordAuthorById, getDiscordAuthorByName } from "@/lib/discord-auth
 import { findMentionedClub, findMentionedMemberId } from "@/lib/mention-targets";
 import { getConfirmedParticipantDisplayIds } from "@/lib/event-confirmed-participants";
 import { isEventOrganizer } from "@/lib/event-participation";
-import { EVENT_AMOUNT_OPTIONS, EVENT_CAPACITY_OPTIONS, EVENT_RESERVATION_CAPACITY_OPTIONS, EVENT_RANKS, EVENT_TIME_OPTIONS, eventCapacityLabel, eventCapacityOptionLabel, eventFormSaveFields, eventFormValuesFromEvent, hasOnlyCompanionChanges, minimumReservationCapacity, type EventFormValues, validateEventForm } from "@/lib/event-form";
+import { EVENT_AMOUNT_OPTIONS, EVENT_CAPACITY_OPTIONS, EVENT_RANK_AMOUNT_OPTIONS, EVENT_RESERVATION_CAPACITY_OPTIONS, EVENT_RANKS, EVENT_TIME_OPTIONS, eventCapacityLabel, eventCapacityOptionLabel, eventFormSaveFields, eventFormValuesFromEvent, hasOnlyCompanionChanges, minimumReservationCapacity, type EventFormValues, validateEventForm } from "@/lib/event-form";
 import { GOURMET_GENRES } from "@/constants/event-options";
 import { displayEventTitle } from "@/lib/event-title";
 import { Image } from "expo-image";
@@ -37,6 +37,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import * as Api from "@/lib/_core/api";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Clipboard from "expo-clipboard";
+import { toggleReactionMember } from "@/lib/chat-reactions";
 import {
   Alert,
   type AlertButton,
@@ -52,6 +53,9 @@ import {
 } from "react-native";
 
 type EventComment = Api.SharedEventComment;
+const OFFICIAL_EVENT_PAYMENTS_ENABLED = false;
+const EVENT_COMMENT_QUICK_REACTIONS = ["👍", "❤️", "😂", "🎉", "👏"] as const;
+const EVENT_COMMENT_REACTION_EMOJIS = ["😀", "😃", "😄", "😁", "😆", "😅", "😂", "🤣", "😊", "😇", "🙂", "🙃", "😉", "😍", "🥰", "😘", "😋", "😛", "🤪", "🤔", "🫡", "😎", "🥳", "😮", "😢", "😭", "😡", "👍", "👎", "👏", "🙌", "🙏", "💪", "👀", "❤️", "🩷", "🧡", "💛", "💚", "💙", "💜", "🖤", "🤍", "🔥", "✨", "🎉", "💯", "✅", "❌", "💡", "📌", "🍽️", "🍣", "🍖", "🍜", "🍕", "🍰", "☕", "🍺", "🍷"] as const;
 
 const eventCommentsKey = (eventId: string) => `irotas_event_comments_v1:${eventId}`;
 const deletedEventCommentsKey = (eventId: string) => `irotas_deleted_event_comments_v1:${eventId}`;
@@ -151,6 +155,7 @@ export default function EventDetailScreen() {
   const [editingEventCommentText, setEditingEventCommentText] = useState("");
   const [eventCommentBusy, setEventCommentBusy] = useState(false);
   const [eventCommentActionTarget, setEventCommentActionTarget] = useState<EventComment | null>(null);
+  const [eventCommentShowAllReactions, setEventCommentShowAllReactions] = useState(false);
   const [eventCommentDeleteTarget, setEventCommentDeleteTarget] = useState<EventComment | null>(null);
   const [eventCommentFocused, setEventCommentFocused] = useState(false);
   const [showAdminEdit, setShowAdminEdit] = useState(false);
@@ -210,6 +215,7 @@ export default function EventDetailScreen() {
     : MEMBERS, [memberDirectory]);
   const eventMentionGroups = useMemo(() => getMentionGroups(eventMentionMembers, clubs), [eventMentionMembers, clubs]);
   const eventMentionQuery = getMentionQuery(eventCommentText);
+  const adminPublicNotesMentionQuery = getMentionQuery(adminPublicNotes);
 
   useEffect(() => {
     const fallback = eventId?.startsWith("discord-event-") ? undefined : allEvents.find((item) => item.id === eventId);
@@ -282,7 +288,7 @@ export default function EventDetailScreen() {
   }, [authenticatedViewerMemberId, event]);
 
   useEffect(() => {
-    if (!event || !authUser || event.eventType !== "official" ||
+    if (!OFFICIAL_EVENT_PAYMENTS_ENABLED || !event || !authUser || event.eventType !== "official" ||
       !(event.viewerPaymentState === "awaiting_payment" || ["confirmed", "cancel_requested"].includes(event.viewerParticipationStatus ?? "")) ||
       eventRecruitmentChannel(event) === "discord") {
       setEventCheckout(null);
@@ -379,11 +385,14 @@ export default function EventDetailScreen() {
     const rankPrices = evt.rankPrices;
     return evt.eventType === "official" && Boolean(rankPrices && EVENT_RANKS.some((rank) => Boolean(rankPrices[rank])));
   };
+  const viewerRank = (["regular", "silver", "gold", "platinum"].includes(authUser?.memberRank ?? "")
+    ? authUser?.memberRank
+    : CURRENT_USER.rank) as MemberRank;
+  const viewerRankLabel = viewerRank === "regular" ? "レギュラー" : viewerRank === "silver" ? "シルバー" : viewerRank === "gold" ? "ゴールド" : "プラチナ";
   const getRankPrice = (evt: Event): string => {
     const fallbackPrice = evt.price ?? (typeof evt.priceMin === "number" ? `${evt.priceMin.toLocaleString()}円` : "未定");
     if (!eventHasRankPrices(evt)) return fallbackPrice;
-    const rank = (authUser?.memberRank ?? CURRENT_USER.rank) as "regular" | "silver" | "gold" | "platinum";
-    return evt.rankPrices?.[rank] ?? fallbackPrice;
+    return evt.rankPrices?.[viewerRank] ?? fallbackPrice;
   };
   const effectivePrice = getRankPrice(event);
   const hasRankPrices = eventHasRankPrices(event);
@@ -396,7 +405,7 @@ export default function EventDetailScreen() {
   };
   const priceNum = parsePriceNumber(effectivePrice);
   const isOfficialEvent = event.eventType === "official";
-  const pointsToUse = usePoints && isOfficialEvent ? Math.min(irotasPoints, priceNum) : 0;
+  const pointsToUse = OFFICIAL_EVENT_PAYMENTS_ENABLED && usePoints && isOfficialEvent ? Math.min(irotasPoints, priceNum) : 0;
   const finalPrice = Math.max(0, priceNum - pointsToUse);
   const organizerId = event.organizerProfileId ?? event.createdBy;
   const companionIds = [...new Set(event.companionIds ?? [])].filter((memberId) => memberId !== organizerId);
@@ -469,7 +478,7 @@ export default function EventDetailScreen() {
     setEventCommentBusy(false);
     eventCommentSendingRef.current = false;
     const preview = content.length > 50 ? `${content.slice(0, 50)}...` : content;
-    const mentionedMemberIds = new Set(getMentionedMemberIds(content, MEMBERS, eventMentionGroups));
+    const mentionedMemberIds = new Set(getMentionedMemberIds(content, eventMentionMembers, eventMentionGroups));
     for (const label of extractMentionLabels(content)) {
       const directoryMember = memberDirectory.find((member) => stripRankFromName(member.displayName) === stripRankFromName(label));
       if (directoryMember) mentionedMemberIds.add(directoryMember.id);
@@ -482,12 +491,28 @@ export default function EventDetailScreen() {
     }
   };
 
+  const handleEventCommentReaction = async (comment: EventComment, emoji: string) => {
+    const active = !(comment.reactions?.[emoji] ?? []).includes(viewerMemberId);
+    setEventComments((current) => current.map((item) => item.id === comment.id
+      ? { ...item, reactions: toggleReactionMember(item.reactions, emoji, viewerMemberId) }
+      : item));
+    try {
+      const result = await Api.setEventCommentReaction(event.id, comment.id, emoji, active);
+      setEventComments((current) => current.map((item) => item.id === comment.id ? { ...item, reactions: result.reactions } : item));
+    } catch (error) {
+      setEventComments((current) => current.map((item) => item.id === comment.id
+        ? { ...item, reactions: toggleReactionMember(item.reactions, emoji, viewerMemberId) }
+        : item));
+      Alert.alert("スタンプを保存できませんでした", error instanceof Error ? error.message : "通信状況を確認して再度お試しください。");
+    }
+  };
+
   const handleSaveEventCommentEdit = async () => {
     if (!editingEventCommentId || !editingEventCommentText.trim() || eventCommentBusy) return;
     setEventCommentBusy(true);
     try {
       const saved = await Api.updateEventComment(event.id, editingEventCommentId, editingEventCommentText.trim());
-      setEventComments((current) => current.map((comment) => comment.id === saved.id ? saved : comment));
+      setEventComments((current) => current.map((comment) => comment.id === saved.id ? { ...saved, reactions: comment.reactions } : comment));
       setEditingEventCommentId(null);
       setEditingEventCommentText("");
     } catch (error) {
@@ -530,7 +555,7 @@ export default function EventDetailScreen() {
         : effectivePrice;
     showApplicationConfirmation(
       "参加申込の確認",
-      `「${event.title}」に申し込みますか？\n${requiresOrganizerApproval ? "幹事の承認後に参加確定となり、参加者チャットへ入れます。" : event.selectionMethod === "lottery" ? (isOfficialEvent && finalPrice > 0 ? "抽選イベントです。当選後に決済し、支払い完了で参加確定となります。" : "抽選イベントです。申込後、参加確定をお待ちください。") : (isOfficialEvent && finalPrice > 0 ? `参加費: ${priceLabel}。決済完了後に参加確定します。` : `参加費: ${priceLabel}`)}`,
+      `「${event.title}」に申し込みますか？\n${requiresOrganizerApproval ? "幹事の承認後に参加確定となり、参加者チャットへ入れます。" : event.selectionMethod === "lottery" ? "抽選イベントです。申込後、参加確定をお待ちください。" : isOfficialEvent ? `参加費: ${priceLabel}。現在、アプリ内決済は行いません。` : `参加費: ${priceLabel}`}`,
       [
         { text: "キャンセル", style: "cancel" },
         {
@@ -539,7 +564,7 @@ export default function EventDetailScreen() {
             // 連打防止ロック
             if (joiningRef.current) return;
             joiningRef.current = true;
-            const confirmedPointsToUse = usePointsRef.current && isOfficialEvent ? Math.min(irotasPoints, priceNum) : 0;
+            const confirmedPointsToUse = OFFICIAL_EVENT_PAYMENTS_ENABLED && usePointsRef.current && isOfficialEvent ? Math.min(irotasPoints, priceNum) : 0;
             const confirmedFinalPrice = Math.max(0, priceNum - confirmedPointsToUse);
             try {
               if (event.viewerMemberId) {
@@ -602,13 +627,15 @@ export default function EventDetailScreen() {
               await recordActivityEvent({ userId: CURRENT_USER.id, eventName: "event_confirmed", entityType: "event", entityId: event.id });
 
               // 支払いレコードを作成
-              await createPaymentRecord({
-                eventId: event.id,
-                userId: CURRENT_USER.id,
-                userName: CURRENT_USER.name,
-                userRank: CURRENT_USER.rank,
-                amount: confirmedFinalPrice,
-              });
+              if (OFFICIAL_EVENT_PAYMENTS_ENABLED) {
+                await createPaymentRecord({
+                  eventId: event.id,
+                  userId: CURRENT_USER.id,
+                  userName: CURRENT_USER.name,
+                  userRank: CURRENT_USER.rank,
+                  amount: confirmedFinalPrice,
+                });
+              }
 
               // チャットルームに参加（なければ作成）
               const room = joinEventChat(
@@ -1175,10 +1202,10 @@ export default function EventDetailScreen() {
         >
           <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
             <View style={{ flex: 1 }}>
-              <Text style={{ fontSize: 15, fontWeight: "600", color: colors.foreground }}>{event.eventType === "gourmet" ? "予算" : "参加費"}</Text>
+              <Text style={{ fontSize: 15, fontWeight: "600", color: colors.foreground }}>{hasRankPrices ? "あなたの参加費" : event.eventType === "gourmet" ? "予算" : "参加費"}</Text>
               {hasRankPrices && (
                 <Text style={{ fontSize: 11, color: "#E8A0BF", marginTop: 2 }}>
-                  ランク別料金適用中（{CURRENT_USER.rank.toUpperCase()}）
+                  {viewerRankLabel}会員料金
                 </Text>
               )}
             </View>
@@ -1198,58 +1225,8 @@ export default function EventDetailScreen() {
             </View>
           </View>
 
-          {/* ランク別料金一覧 */}
-          {hasRankPrices && event.rankPrices && (
-            <View
-              style={{
-                marginTop: 12,
-                paddingTop: 12,
-                borderTopWidth: 0.5,
-                borderTopColor: colors.border,
-              }}
-            >
-              <Text style={{ fontSize: 12, fontWeight: "600", color: colors.muted, marginBottom: 8 }}>
-                ランク別料金
-              </Text>
-              <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6 }}>
-                {([
-                  { key: "regular", label: "レギュラー", color: "#8E8E93" },
-                  { key: "silver", label: "シルバー", color: "#8E8E93" },
-                  { key: "gold", label: "ゴールド", color: "#FF9500" },
-                  { key: "platinum", label: "プラチナ", color: "#A7C7E7" },
-                ] as const).map(({ key, label, color }) => {
-                  const rankPrice = event.rankPrices![key];
-                  if (!rankPrice) return null;
-                  const isCurrent = CURRENT_USER.rank === key;
-                  return (
-                    <View
-                      key={key}
-                      style={{
-                        flex: 1,
-                        minWidth: 70,
-                        backgroundColor: isCurrent ? `${color}20` : colors.background,
-                        borderRadius: 8,
-                        padding: 8,
-                        alignItems: "center",
-                        borderWidth: isCurrent ? 1.5 : 0.5,
-                        borderColor: isCurrent ? color : colors.border,
-                      }}
-                    >
-                      <Text style={{ fontSize: 10, color: isCurrent ? color : colors.muted, fontWeight: isCurrent ? "700" : "400" }}>
-                        {label}
-                      </Text>
-                      <Text style={{ fontSize: 13, fontWeight: "700", color: isCurrent ? color : colors.foreground, marginTop: 2 }}>
-                        {rankPrice}
-                      </Text>
-                    </View>
-                  );
-                })}
-              </View>
-            </View>
-          )}
-
           {/* イロタスポイント割引トグル */}
-          {isOfficialEvent && priceNum > 0 && irotasPoints > 0 && !isJoined && (
+          {OFFICIAL_EVENT_PAYMENTS_ENABLED && isOfficialEvent && priceNum > 0 && irotasPoints > 0 && !isJoined && (
             <View
               style={{
                 marginTop: 12,
@@ -1280,7 +1257,7 @@ export default function EventDetailScreen() {
           )}
         </View>
 
-        {isOfficialEvent && (event.viewerPaymentState === "awaiting_payment" || ["confirmed", "cancel_requested"].includes(event.viewerParticipationStatus ?? "")) &&
+        {OFFICIAL_EVENT_PAYMENTS_ENABLED && isOfficialEvent && (event.viewerPaymentState === "awaiting_payment" || ["confirmed", "cancel_requested"].includes(event.viewerParticipationStatus ?? "")) &&
           eventRecruitmentChannel(event) !== "discord" ? (
           <View style={{ backgroundColor: colors.surface, borderRadius: 14, padding: 16, marginBottom: 16 }}>
             <Text style={{ fontSize: 15, fontWeight: "800", color: colors.foreground }}>参加費のお支払い</Text>
@@ -1333,7 +1310,7 @@ export default function EventDetailScreen() {
               ?? memberDirectory.find((member) => stripRankFromName(member.displayName) === stripRankFromName(comment.author))?.id
               ?? getDiscordAuthorByName(comment.author)?.id;
             const openAuthor = () => { if (profileId) openMemberProfile(profileId, comment.author); };
-            return <Pressable key={comment.id} onLongPress={() => setEventCommentActionTarget(comment)} delayLongPress={350} accessibilityHint="長押しするとコメントの操作メニューを開きます" style={{ flexDirection: "row", marginTop: 12, paddingTop: 12, borderTopWidth: 0.5, borderTopColor: colors.border }}>
+            return <Pressable key={comment.id} onLongPress={() => { setEventCommentShowAllReactions(false); setEventCommentActionTarget(comment); }} delayLongPress={350} accessibilityHint="長押しするとコメントの操作メニューを開きます" style={{ flexDirection: "row", marginTop: 12, paddingTop: 12, borderTopWidth: 0.5, borderTopColor: colors.border }}>
               <Pressable onPress={openAuthor} disabled={!profileId}><Image source={author.avatar} style={{ width: 32, height: 32, borderRadius: 16, marginRight: 9 }} contentFit="cover" /></Pressable>
               <View style={{ flex: 1 }}>
                 <View style={{ flexDirection: "row", alignItems: "center", flexWrap: "wrap", marginBottom: 3 }}>
@@ -1343,10 +1320,11 @@ export default function EventDetailScreen() {
                   <MemberRoleBadge name="" role={author.role} compact />
                 </View>
                 {editingEventCommentId === comment.id ? <View style={{ gap: 7 }}><TextInput value={editingEventCommentText} onChangeText={setEditingEventCommentText} multiline autoFocus style={{ minHeight: 84, backgroundColor: colors.background, borderWidth: 1, borderColor: colors.border, borderRadius: 10, padding: 10, fontSize: 14, color: colors.foreground }} /><View style={{ flexDirection: "row", gap: 8 }}><Pressable onPress={handleSaveEventCommentEdit} style={{ backgroundColor: "#3478C7", borderRadius: 8, paddingHorizontal: 13, paddingVertical: 7 }}><Text style={{ color: "#FFF", fontSize: 12, fontWeight: "800" }}>保存</Text></Pressable><Pressable onPress={() => setEventCommentDeleteTarget(comment)} style={{ backgroundColor: "#FCE7E7", borderRadius: 8, paddingHorizontal: 13, paddingVertical: 7 }}><Text style={{ color: colors.error, fontSize: 12, fontWeight: "800" }}>削除</Text></Pressable><Pressable onPress={() => setEditingEventCommentId(null)} style={{ paddingHorizontal: 10, paddingVertical: 7 }}><Text style={{ color: colors.muted, fontSize: 12 }}>キャンセル</Text></Pressable></View></View> : <MentionText content={comment.text} groups={eventMentionGroups} onMentionPress={(label) => { const normalized = mentionDisplayName(label); const targetId = getDiscordAuthorByName(normalized)?.id ?? memberDirectory.find((member) => mentionDisplayName(member.displayName) === normalized)?.id ?? findMentionedMemberId(normalized, MEMBERS); if (targetId) openMemberProfile(targetId); }} />}
+                {Object.entries(comment.reactions ?? {}).filter(([, ids]) => ids.length > 0).length ? <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6, marginTop: 7 }}>{Object.entries(comment.reactions ?? {}).filter(([, ids]) => ids.length > 0).map(([emoji, ids]) => <Pressable key={emoji} onPress={() => { void handleEventCommentReaction(comment, emoji); }} style={{ flexDirection: "row", alignItems: "center", borderRadius: 14, paddingHorizontal: 9, paddingVertical: 4, backgroundColor: ids.includes(viewerMemberId) ? "#FCE8F1" : colors.background, borderWidth: 1, borderColor: colors.border }}><Text style={{ fontSize: 16 }}>{emoji}</Text><Text style={{ marginLeft: 4, fontSize: 11, fontWeight: "800", color: colors.muted }}>{ids.length}</Text></Pressable>)}</View> : null}
               </View>
             </Pressable>;
           })}
-          {eventMentionQuery !== null ? <MentionSuggestions query={eventMentionQuery} groups={eventMentionGroups} members={MEMBERS} onSelect={(label) => setEventCommentText((value) => insertMention(value, label))} /> : null}
+          {eventMentionQuery !== null ? <MentionSuggestions query={eventMentionQuery} groups={eventMentionGroups} members={eventMentionMembers} onSelect={(label, memberId) => setEventCommentText((value) => insertMention(value, label, memberId))} /> : null}
           <View style={{ flexDirection: "row", alignItems: "flex-end", marginTop: 14 }}><TextInput ref={eventCommentInputRef} value={eventCommentText} onChangeText={(value) => setEventCommentText(value.replace(/@everyone\b/gi, ""))} onFocus={() => setEventCommentFocused(true)} onBlur={() => setEventCommentFocused(false)} placeholder="質問やコメントを入力" placeholderTextColor={colors.muted} multiline style={{ flex: 1, minHeight: 44, maxHeight: 100, borderRadius: 14, backgroundColor: colors.background, borderWidth: 1, borderColor: colors.border, paddingHorizontal: 12, paddingVertical: 10, color: colors.foreground }} /><Pressable disabled={!eventCommentText.trim() || eventCommentBusy} onPress={() => { void handleEventComment(); }} style={{ width: 44, height: 44, borderRadius: 22, marginLeft: 8, alignItems: "center", justifyContent: "center", backgroundColor: eventCommentText.trim() && !eventCommentBusy ? "#D65E8D" : colors.border }}><IconSymbol name="paperplane.fill" size={19} color="#FFF" /></Pressable></View>
         </View>
 
@@ -1424,6 +1402,11 @@ export default function EventDetailScreen() {
           <View style={{ width: "100%", maxWidth: 520, alignSelf: "center", borderTopLeftRadius: 24, borderTopRightRadius: 24, backgroundColor: colors.background, paddingHorizontal: 18, paddingTop: 10, paddingBottom: 22 }}>
             <View style={{ width: 42, height: 5, borderRadius: 3, alignSelf: "center", backgroundColor: colors.border, marginBottom: 10 }} />
             <Text style={{ fontSize: 13, color: colors.muted, marginBottom: 5 }} numberOfLines={2}>{eventCommentActionTarget?.text}</Text>
+            <Text style={{ fontSize: 12, fontWeight: "800", color: colors.foreground, marginTop: 6, marginBottom: 8 }}>スタンプ</Text>
+            <ScrollView style={{ maxHeight: eventCommentShowAllReactions ? 250 : 48, marginBottom: 10 }} contentContainerStyle={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }} showsVerticalScrollIndicator={eventCommentShowAllReactions}>
+              {(eventCommentShowAllReactions ? EVENT_COMMENT_REACTION_EMOJIS : EVENT_COMMENT_QUICK_REACTIONS).map((emoji) => <Pressable key={emoji} accessibilityLabel={`${emoji}スタンプ`} onPress={() => { const target = eventCommentActionTarget; setEventCommentActionTarget(null); setEventCommentShowAllReactions(false); if (target) void handleEventCommentReaction(target, emoji); }} style={{ width: 42, height: 38, borderRadius: 19, alignItems: "center", justifyContent: "center", backgroundColor: (eventCommentActionTarget?.reactions?.[emoji] ?? []).includes(viewerMemberId) ? "#FCE8F1" : colors.surface }}><Text style={{ fontSize: 21 }}>{emoji}</Text></Pressable>)}
+              {!eventCommentShowAllReactions ? <Pressable accessibilityLabel="他のスタンプを表示" onPress={() => setEventCommentShowAllReactions(true)} style={{ width: 42, height: 38, borderRadius: 19, alignItems: "center", justifyContent: "center", backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border }}><IconSymbol name="plus" size={19} color={colors.muted} /></Pressable> : null}
+            </ScrollView>
             {[
               { label: "返信", icon: "arrowshape.turn.up.left.fill", action: () => { const target = eventCommentActionTarget; setEventCommentActionTarget(null); if (!target) return; setEventCommentText(`@${stripRankFromName(target.author)} `); requestAnimationFrame(() => eventCommentInputRef.current?.focus()); } },
               { label: "テキストをコピー", icon: "doc.on.doc", action: () => { const target = eventCommentActionTarget; setEventCommentActionTarget(null); if (target) void Clipboard.setStringAsync(target.text); } },
@@ -1485,10 +1468,11 @@ export default function EventDetailScreen() {
               <Text style={{ marginTop: 12, fontSize: 12, fontWeight: "800", color: colors.muted }}>{adminEventType === "official" ? "参加費" : "予算"}</Text>
               <Pressable onPress={() => { const next = adminBudgetMin !== "未定"; setAdminFixedAmount(false); setAdminBudgetMin(next ? "未定" : ""); setAdminBudgetMax(next ? "未定" : ""); }} style={{ marginTop: 6 }}><Text style={{ color: adminBudgetMin === "未定" ? "#D65E8D" : colors.foreground, fontWeight: "800" }}>{adminBudgetMin === "未定" ? "✓ " : "□ "}未定</Text></Pressable>
               {adminBudgetMin !== "未定" ? <><Pressable onPress={() => { setAdminFixedAmount((value) => !value); setAdminBudgetMin(""); setAdminBudgetMax(""); }} style={{ marginTop: 6 }}><Text style={{ color: "#D65E8D", fontWeight: "800" }}>{adminFixedAmount ? "✓ 固定金額で設定" : "範囲で設定"}</Text></Pressable>{adminFixedAmount ? <TextInput value={adminBudgetMin} onChangeText={(value) => setAdminBudgetMin(value.replace(/[^0-9]/g, ""))} placeholder="例：8000" keyboardType="number-pad" style={{ marginTop: 6, borderWidth: 1, borderColor: colors.border, borderRadius: 10, padding: 11, color: colors.foreground }} /> : <View style={{ gap: 8, marginTop: 6 }}><SharedEventSelectField label="予算下限" value={adminBudgetMin} options={EVENT_AMOUNT_OPTIONS} onChange={setAdminBudgetMin} /><SharedEventSelectField label="予算上限" value={adminBudgetMax} options={EVENT_AMOUNT_OPTIONS} onChange={setAdminBudgetMax} /></View>}</> : null}
-              {adminEventType === "official" ? <><Pressable onPress={() => setAdminUseRankPrices((value) => !value)} style={{ marginTop: 12 }}><Text style={{ color: "#D65E8D", fontWeight: "800" }}>{adminUseRankPrices ? "✓ ランク別料金を設定" : "ランク別料金を設定する"}</Text></Pressable>{adminUseRankPrices ? EVENT_RANKS.map((rank) => <View key={rank}><Text style={{ marginTop: 8, fontSize: 12, color: colors.muted }}>{rank}</Text><SharedEventSelectField label={`${rank}料金`} value={adminRankPrices[rank]} options={EVENT_AMOUNT_OPTIONS} onChange={(value) => setAdminRankPrices((current) => ({ ...current, [rank]: value }))} /></View>) : null}</> : null}
+              {adminEventType === "official" ? <><Pressable onPress={() => setAdminUseRankPrices((value) => !value)} style={{ marginTop: 12 }}><Text style={{ color: "#D65E8D", fontWeight: "800" }}>{adminUseRankPrices ? "✓ ランク別料金を設定" : "ランク別料金を設定する"}</Text></Pressable>{adminUseRankPrices ? <><Text style={{ marginTop: 7, fontSize: 11, color: colors.muted }}>500円単位で設定できます</Text>{EVENT_RANKS.map((rank) => <View key={rank}><Text style={{ marginTop: 8, fontSize: 12, color: colors.muted }}>{rank}</Text><SharedEventSelectField label={`${rank}料金`} value={adminRankPrices[rank]} options={EVENT_RANK_AMOUNT_OPTIONS} onChange={(value) => setAdminRankPrices((current) => ({ ...current, [rank]: value }))} /></View>)}</> : null}</> : null}
               <EventMemberPicker label="同席者" selectedIds={adminCompanionIds} onChange={(ids) => { setAdminCompanionIds(ids); setAdminReservationCapacity((current) => String(Math.max(Number(current || 0), minimumReservationCapacity(adminCapacity, ids)))); }} members={memberDirectory} excludedIds={[organizerId]} />
               <Text style={{ marginTop: 12, fontSize: 12, fontWeight: "800", color: colors.muted }}>写真</Text><Pressable onPress={async () => { const permission = await ImagePicker.requestMediaLibraryPermissionsAsync(); if (!permission.granted) { Alert.alert("権限が必要です", "写真を選ぶには写真ライブラリへのアクセスを許可してください"); return; } const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images, quality: 0.8 }); if (!result.canceled && result.assets[0]) { setAdminImage(result.assets[0].uri); setAdminImageChanged(true); } }} style={{ marginTop: 5, height: 120, borderRadius: 10, overflow: "hidden", backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, alignItems: "center", justifyContent: "center" }}>{adminImage ? <Image source={{ uri: adminImage }} style={{ width: "100%", height: "100%" }} contentFit="cover" /> : <Text style={{ color: colors.muted }}>写真を選択</Text>}</Pressable>
-              <Text style={{ marginTop: 12, fontSize: 12, fontWeight: "800", color: colors.muted }}>自由記述欄</Text><TextInput value={adminPublicNotes} onChangeText={setAdminPublicNotes} multiline style={{ marginTop: 5, minHeight: 100, borderWidth: 1, borderColor: colors.border, borderRadius: 10, padding: 11, color: colors.foreground, textAlignVertical: "top" }} />
+              <Text style={{ marginTop: 12, fontSize: 12, fontWeight: "800", color: colors.muted }}>自由記述欄</Text><TextInput value={adminPublicNotes} onChangeText={setAdminPublicNotes} placeholder="「@」でメンション" placeholderTextColor={colors.muted} multiline style={{ marginTop: 5, minHeight: 100, borderWidth: 1, borderColor: colors.border, borderRadius: 10, padding: 11, color: colors.foreground, textAlignVertical: "top" }} />
+              {adminPublicNotesMentionQuery !== null ? <MentionSuggestions query={adminPublicNotesMentionQuery} groups={[]} members={eventMentionMembers} onSelect={(label, memberId) => setAdminPublicNotes((value) => insertMention(value, label, memberId))} /> : null}
               <Text style={{ marginTop: 12, fontSize: 12, fontWeight: "800", color: colors.muted }}>自分用メモ</Text><TextInput value={adminPrivateMemo} onChangeText={setAdminPrivateMemo} multiline style={{ marginTop: 5, minHeight: 80, borderWidth: 1, borderColor: colors.border, borderRadius: 10, padding: 11, color: colors.foreground, textAlignVertical: "top" }} />
               <EventMemberPicker label="参加確定者" selectedIds={selectedMemberIds(adminParticipants)} onChange={(ids) => setAdminParticipants(ids.join("\n"))} members={memberDirectory} excludedIds={[organizerId]} />
               <View style={{ flexDirection: "row", gap: 10, marginTop: 16 }}><Pressable onPress={() => setShowAdminEdit(false)} style={{ flex: 1, paddingVertical: 13, alignItems: "center", borderRadius: 11, backgroundColor: colors.surface }}><Text style={{ fontWeight: "800", color: colors.foreground }}>キャンセル</Text></Pressable><Pressable disabled={adminSaving} onPress={async () => { const form: EventFormValues = { eventType: adminEventType, clubId: adminClubId, restaurantName: adminRestaurantName, eventName: adminTitle, date: adminDate, time: adminTime, address: adminLocation, reservationCapacity: adminReservationCapacity, recruitCapacity: adminCapacity, fixedAmount: adminFixedAmount, budgetMin: adminBudgetMin, budgetMax: adminBudgetMax, tabelogUrl: adminTabelogUrl, googleMapsUrl: adminGoogleMapsUrl, companionIds: adminCompanionIds, image: adminImage, decisionDate: adminDeadline, publicNotes: adminPublicNotes, privateMemo: adminPrivateMemo, cancellationPolicy: adminCancellationPolicy, selectionMethod: adminSelectionMethod, useRankPrices: adminUseRankPrices, rankPrices: adminRankPrices, genres: adminGenres }; const validationError = validateEventForm(form, { requireImage: false, allowedClubIds: editableClubs.map((club) => club.id), allowEmptyGenres: true, allowPastDate: true }); if (validationError) { Alert.alert("入力エラー", validationError); return; } setAdminSaving(true); try { const fields = eventFormSaveFields(form); const uploadedImage = adminImageChanged ? (await Api.uploadEventImage(adminImage)).imageUrl : undefined; const companionOnly = !adminImageChanged && adminInitialForm !== null && hasOnlyCompanionChanges(adminInitialForm, form) && !(adminEventType === "official" && adminRecruitmentStatus !== (event.recruitmentStatus === "draft" ? "draft" : "open")); const updated = companionOnly ? await Api.updateEventCompanions(event.id, fields.companionIds ?? []) : await Api.updateEventDetails(event.id, { ...fields, recruitmentStatus: adminEventType === "official" ? adminRecruitmentStatus : undefined, image: uploadedImage, title: fields.title, description: fields.description, participants: selectedMemberIds(adminParticipants).filter((memberId) => memberId !== organizerId) }); setEvent(updated); setShowAdminEdit(false); Alert.alert("更新しました"); } catch (error) { Alert.alert("更新できませんでした", error instanceof Error ? error.message : "もう一度お試しください。"); } finally { setAdminSaving(false); } }} style={{ flex: 1, paddingVertical: 13, alignItems: "center", borderRadius: 11, backgroundColor: "#B42318", opacity: adminSaving ? 0.6 : 1 }}><Text style={{ fontWeight: "900", color: "#FFF" }}>{adminSaving ? "保存中…" : "保存"}</Text></Pressable></View>
@@ -1507,7 +1491,7 @@ export default function EventDetailScreen() {
               <Text style={{ textAlign: "center", fontSize: 15, lineHeight: 22, fontWeight: "800", color: colors.foreground, marginTop: 12 }}>{event.title}</Text>
               <Text style={{ textAlign: "center", fontSize: 13, fontWeight: "800", color: "#5865F2", marginTop: 8 }}>{event.date}　{event.time}</Text>
               <Text style={{ textAlign: "center", fontSize: 12, lineHeight: 19, color: colors.muted, marginTop: 8 }}>{applicationConfirmation?.message}</Text>
-              {isOfficialEvent && priceNum > 0 && irotasPoints > 0 ? <View style={{ marginTop: 18, borderRadius: 16, padding: 14, backgroundColor: "#FFF7E8", borderWidth: 1, borderColor: "#F4D89D" }}><View style={{ flexDirection: "row", alignItems: "center" }}><View style={{ flex: 1 }}><Text style={{ fontSize: 14, fontWeight: "900", color: "#A56712" }}>イロタスポイントを使う</Text><Text style={{ fontSize: 11, color: colors.muted, marginTop: 3 }}>保有 {irotasPoints.toLocaleString()}pt</Text></View><Switch value={usePoints} onValueChange={(value) => { usePointsRef.current = value; setUsePoints(value); }} trackColor={{ false: colors.border, true: "#FF9500" }} thumbColor="#FFF" /></View>{usePoints ? <Text style={{ marginTop: 10, fontSize: 13, fontWeight: "900", color: "#2E8B57" }}>{pointsToUse.toLocaleString()}pt利用 → お支払い {finalPrice.toLocaleString()}円</Text> : null}</View> : null}
+              {OFFICIAL_EVENT_PAYMENTS_ENABLED && isOfficialEvent && priceNum > 0 && irotasPoints > 0 ? <View style={{ marginTop: 18, borderRadius: 16, padding: 14, backgroundColor: "#FFF7E8", borderWidth: 1, borderColor: "#F4D89D" }}><View style={{ flexDirection: "row", alignItems: "center" }}><View style={{ flex: 1 }}><Text style={{ fontSize: 14, fontWeight: "900", color: "#A56712" }}>イロタスポイントを使う</Text><Text style={{ fontSize: 11, color: colors.muted, marginTop: 3 }}>保有 {irotasPoints.toLocaleString()}pt</Text></View><Switch value={usePoints} onValueChange={(value) => { usePointsRef.current = value; setUsePoints(value); }} trackColor={{ false: colors.border, true: "#FF9500" }} thumbColor="#FFF" /></View>{usePoints ? <Text style={{ marginTop: 10, fontSize: 13, fontWeight: "900", color: "#2E8B57" }}>{pointsToUse.toLocaleString()}pt利用 → お支払い {finalPrice.toLocaleString()}円</Text> : null}</View> : null}
               <View style={{ flexDirection: "row", gap: 10, marginTop: 22 }}>{applicationConfirmation?.buttons.map((button) => { const cancel = button.style === "cancel"; const destructive = button.style === "destructive"; return <Pressable key={button.text} onPress={() => { setApplicationConfirmation(null); if (!cancel) button.onPress?.(); }} style={{ flex: 1, minHeight: 50, borderRadius: 14, alignItems: "center", justifyContent: "center", backgroundColor: cancel ? colors.surface : destructive ? "#D94C55" : isOfficialEvent ? "#D65E8D" : "#5B9BD5", borderWidth: cancel ? 1 : 0, borderColor: colors.border }}><Text style={{ fontSize: 15, fontWeight: "900", color: cancel ? colors.foreground : "#FFF" }}>{button.text}</Text></Pressable>; })}</View>
             </View>
           </View>

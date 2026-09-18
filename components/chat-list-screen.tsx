@@ -4,6 +4,7 @@ import { CHAT_ROOMS, CURRENT_USER, DEFAULT_AVATAR, type ChatRoom } from "@/const
 import { useAuthContext } from "@/lib/auth-context";
 import { isOperatorRole } from "@/lib/access-control";
 import { applyReadRoomState, getMyRooms, getRankRoomsForUser, loadDynamicRooms, markRoomRead } from "@/lib/chat-store";
+import { markChatRoomOptimisticallyRead } from "@/lib/chat-unread-sync";
 import { canAccessRankRoom } from "@/lib/chat-access";
 import { useColors } from "@/hooks/use-colors";
 import { Image } from "expo-image";
@@ -46,7 +47,7 @@ function ChatRoomCard({ room, eventStarts, eventImages, memberAvatars, viewerMem
   eventImages: Record<string, string>;
   memberAvatars: Record<string, string>;
   viewerMemberId: string;
-  onOpened: (roomId: string) => void;
+  onOpened: (roomId: string, unreadCount: number) => void;
 }) {
   const colors = useColors();
   const router = useRouter();
@@ -84,7 +85,7 @@ function ChatRoomCard({ room, eventStarts, eventImages, memberAvatars, viewerMem
     <Pressable
       onPress={() => {
         const unreadCount = room.unreadCount ?? 0;
-        onOpened(room.id);
+        onOpened(room.id, unreadCount);
         void markRoomRead(room.id);
         void Api.markSharedChatRoomRead(room.id).catch(() => {});
         router.push({ pathname: "/chat", params: { id: room.id, unreadCount: String(unreadCount) } });
@@ -236,7 +237,8 @@ export default function ChatListScreen() {
     window.addEventListener("irotas-chat-dismissed", onDismissed);
     return () => window.removeEventListener("irotas-chat-dismissed", onDismissed);
   }, [viewerMemberId]);
-  const clearUnreadImmediately = useCallback((roomId: string) => {
+  const clearUnreadImmediately = useCallback((roomId: string, unreadCount: number) => {
+    markChatRoomOptimisticallyRead(roomId, unreadCount);
     const clear = (rooms: ChatRoom[]) => rooms.map((room) => room.id === roomId ? { ...room, unreadCount: 0, mentionCount: 0 } : room);
     setMyRooms(clear);
     setRankRooms(clear);

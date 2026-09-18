@@ -1,9 +1,22 @@
 import type { BoardThread, ChatRoom } from "@/constants/mock-data";
 
+const BOARD_CATEGORY_LABELS: Record<string, string> = {
+  introduction: "自己紹介",
+  "meal-report": "今日のごちそうさま報告",
+  "gourmet-contest": "グルメ選手権",
+  "gourmet-advice": "教えてグルメ相談室",
+  "free-chat": "なんでも掲示板",
+  "gourmet-map": "グルメマップ",
+  "club-introduction": "部活動紹介・入部申請",
+  "club-all": "活動報告",
+};
+
+export type InternalLinkPathname = "/chat" | "/board" | "/event-detail" | "/clubs" | "/gourmet-map";
+
 export type InternalLinkMention = {
   raw: string;
   label: string;
-  pathname: "/chat" | "/board" | "/event-detail";
+  pathname: InternalLinkPathname;
   params: Record<string, string>;
 };
 
@@ -39,8 +52,13 @@ export function parseInternalLink(rawValue: string, rooms: ChatRoom[], threads: 
     const thread = threads.find((item) => item.id === threadId);
     if (thread) return { raw, label: `#${thread.title}`, pathname: "/board", params: { category: thread.category, view: "threads", thread: thread.id } };
     const category = url.searchParams.get("category");
-    if (category) return { raw, label: `#${threadId ? "スレッド" : "掲示板"}`, pathname: "/board", params: { category, view: url.searchParams.get("view") ?? "threads", ...(threadId ? { thread: threadId } : {}) } };
+    if (category) {
+      const categoryLabel = url.searchParams.get("label") ?? BOARD_CATEGORY_LABELS[category] ?? (category.startsWith("club-") ? "部活動" : "掲示板");
+      return { raw, label: `#${threadId ? "スレッド" : categoryLabel}`, pathname: "/board", params: { category, view: url.searchParams.get("view") ?? "threads", ...(threadId ? { thread: threadId } : {}) } };
+    }
   }
+  if (pathname === "/clubs") return { raw, label: "#部活動", pathname: "/clubs", params: {} };
+  if (pathname === "/gourmet-map") return { raw, label: "#グルメマップ", pathname: "/gourmet-map", params: {} };
   return null;
 }
 

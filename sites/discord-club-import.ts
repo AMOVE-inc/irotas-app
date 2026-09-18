@@ -53,6 +53,7 @@ export async function handleDiscordClubImportRequest(request: Request, env: Site
     const unmatchedDiscordIds: string[] = [];
     const inactiveDiscordIds: string[] = [];
     const conflicts: { discordUserId: string; clubId: string; status: string }[] = [];
+    const restores: { memberId: number; clubId: string }[] = [];
     const missing: { memberId: number; clubId: string }[] = [];
     let alreadyApproved = 0;
     for (const row of rows) {
@@ -62,7 +63,10 @@ export async function handleDiscordClubImportRequest(request: Request, env: Site
       for (const clubId of row.clubIds) {
         const status = memberships.get(`${member.id}:${clubId}`);
         if (status === "approved") alreadyApproved++;
-        else if (status) conflicts.push({ discordUserId: row.discordUserId, clubId, status });
+        else if (status) {
+          conflicts.push({ discordUserId: row.discordUserId, clubId, status });
+          restores.push({ memberId: member.id, clubId });
+        }
         else missing.push({ memberId: member.id, clubId });
       }
     }
@@ -79,19 +83,26 @@ export async function handleDiscordClubImportRequest(request: Request, env: Site
         ON CONFLICT(discord_user_id, club_id) DO UPDATE SET imported_at = excluded.imported_at`)
         .bind(item.discordUserId, item.clubId, now)));
     }
-    let insertedCount = 0;
-    for (let offset = 0; offset < missing.length; offset += 40) {
-      const results = await env.DB.batch(missing.slice(offset, offset + 40).map((item) => env.DB!.prepare(`INSERT INTO club_memberships
+    let appliedCount = 0;
+    const reconciliations = [...missing, ...restores];
+    for (let offset = 0; offset < reconciliations.length; offset += 40) {
+      const results = await env.DB.batch(reconciliations.slice(offset, offset + 40).map((item) => env.DB!.prepare(`INSERT INTO club_memberships
         (club_id, member_id, status, source, applied_at, approved_at, updated_at)
-        VALUES (?, ?, 'approved', 'discord', ?, ?, ?) ON CONFLICT(club_id, member_id) DO NOTHING`)
+        VALUES (?, ?, 'approved', 'discord', ?, ?, ?)
+        ON CONFLICT(club_id, member_id) DO UPDATE SET
+          status = 'approved', source = 'discord',
+          approved_at = COALESCE(club_memberships.approved_at, excluded.approved_at),
+          updated_at = excluded.updated_at`)
         .bind(item.clubId, item.memberId, now, now, now)));
-      insertedCount += results.reduce((sum, result) => sum + Number(result.meta?.changes ?? 0), 0);
+      appliedCount += results.reduce((sum, result) => sum + Number(result.meta?.changes ?? 0), 0);
     }
     await env.DB.prepare(`INSERT INTO audit_logs (actor_user_id, action, entity_type, entity_id, metadata_json, created_at)
       VALUES (?, 'discord.club_memberships_imported', 'club_membership', ?, ?, ?)`)
-      .bind(String(actor.id), now, JSON.stringify({ sourceMemberCount: rows.length, stagedCount: staged.length, insertedCount, conflictCount: conflicts.length,
+      .bind(String(actor.id), now, JSON.stringify({ sourceMemberCount: rows.length, stagedCount: staged.length, insertedCount: missing.length,
+        restoredCount: restores.length, appliedCount, conflictCount: conflicts.length,
         unmatchedCount: unmatchedDiscordIds.length, inactiveCount: inactiveDiscordIds.length }), now).run();
-    return json({ ...summary, stagedCount: staged.length, insertedCount });
+    return json({ ...summary, stagedCount: staged.length, insertedCount: missing.length,
+      restoredCount: restores.length, appliedCount });
   } catch (error) {
     return json({ error: error instanceof Error ? error.message : "invalid_import" }, 400);
   }

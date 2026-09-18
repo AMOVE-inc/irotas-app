@@ -4,7 +4,7 @@ import { BOARD_THREADS, type Member , BoardThread, ChatRoom } from "@/constants/
 import type { MentionGroup } from "@/lib/mentions";
 import { extractMentionLabels, isGroupMention } from "@/lib/mentions";
 import { useColors } from "@/hooks/use-colors";
-import { parseInternalLink, type InternalLinkMention } from "@/lib/internal-links";
+import { parseInternalLink, type InternalLinkMention, type InternalLinkPathname } from "@/lib/internal-links";
 import { getAllRooms } from "@/lib/chat-store";
 import { useRouter } from "expo-router";
 import { parseDiscordRichLines, tokenizeRichTextLinks, type DiscordTextFormat } from "@/lib/discord-rich-text";
@@ -30,7 +30,9 @@ export function mentionDisplayName(label: string) {
 
 /** Imported Discord mentions occasionally put a space before the leader/rank suffix. */
 function normalizeRenderedMentions(content: string) {
-  return content.replace(/(@[^\s@]+)(?:\s*(?:[🍖⛳🏃🚶⚾💃🎭🏀🍷✈️🍳🍞🐭🍺]\s*)?[^\s【】]{1,20}部長)?(?:\s*[【[(（]\s*(?:🥈|🥇|💎)?\s*(?:SILVER|GOLD|PLATINUM|シルバー|ゴールド|プラチナ)(?:会員)?\s*[】\])）])?/giu, (_whole, mention: string) => `@${mentionDisplayName(mention)}`);
+  return content
+    .replace(/@([^\r\n@]{1,80}?)（(?:IRO\d+|member-[^)）]+|discord-[^)）]+)）/giu, "@$1")
+    .replace(/(@[^\s@]+)(?:\s*(?:[🍖⛳🏃🚶⚾💃🎭🏀🍷✈️🍳🍞🐭🍺]\s*)?[^\s【】]{1,20}部長)?(?:\s*[【[(（]\s*(?:🥈|🥇|💎)?\s*(?:SILVER|GOLD|PLATINUM|シルバー|ゴールド|プラチナ)(?:会員)?\s*[】\])）])?/giu, (_whole, mention: string) => `@${mentionDisplayName(mention)}`);
 }
 
 function InternalLinkLabel({ link }: { link: InternalLinkMention }) {
@@ -50,10 +52,10 @@ function InternalLinkLabel({ link }: { link: InternalLinkMention }) {
   return <Text>{label}</Text>;
 }
 
-export function MentionText({ content, outgoing = false, groups, rooms = getAllRooms(), threads = BOARD_THREADS, onOpenInternalLink, onMentionPress, onClubMentionPress }: { content: string; outgoing?: boolean; groups: MentionGroup[]; rooms?: ChatRoom[]; threads?: BoardThread[]; onOpenInternalLink?: (pathname: "/chat" | "/board" | "/event-detail", params: Record<string, string>) => void; onMentionPress?: (label: string) => void; onClubMentionPress?: (group: MentionGroup) => void }) {
+export function MentionText({ content, outgoing = false, groups, rooms = getAllRooms(), threads = BOARD_THREADS, onOpenInternalLink, onMentionPress, onClubMentionPress }: { content: string; outgoing?: boolean; groups: MentionGroup[]; rooms?: ChatRoom[]; threads?: BoardThread[]; onOpenInternalLink?: (pathname: InternalLinkPathname, params: Record<string, string>) => void; onMentionPress?: (label: string) => void; onClubMentionPress?: (group: MentionGroup) => void }) {
   const colors = useColors();
   const router = useRouter();
-  const openInternalLink = onOpenInternalLink ?? ((pathname: "/chat" | "/board" | "/event-detail", params: Record<string, string>) => router.push({ pathname, params } as any));
+  const openInternalLink = onOpenInternalLink ?? ((pathname: InternalLinkPathname, params: Record<string, string>) => router.push({ pathname, params } as any));
   const renderMentions = (value: string, keyPrefix: string) => value.split(/(@[^\s@]+)/g).map((part, index) => {
     if (!part.startsWith("@")) return <Text key={`${keyPrefix}-${index}`}>{part}</Text>;
     const [rawLabel] = extractMentionLabels(part);
@@ -89,7 +91,7 @@ export function MentionText({ content, outgoing = false, groups, rooms = getAllR
   );
 }
 
-export function MentionSuggestions({ query, groups, members, memberIds, onSelect }: { query: string; groups: MentionGroup[]; members: Member[]; memberIds?: readonly string[]; onSelect: (label: string) => void }) {
+export function MentionSuggestions({ query, groups, members, memberIds, onSelect }: { query: string; groups: MentionGroup[]; members: Member[]; memberIds?: readonly string[]; onSelect: (label: string, memberId?: string) => void }) {
   const colors = useColors();
   const [directory, setDirectory] = useState<Api.PublicMember[] | null>(null);
   useEffect(() => {
@@ -119,7 +121,7 @@ export function MentionSuggestions({ query, groups, members, memberIds, onSelect
         {filteredMembers.map((member) => {
           const avatarUrl = typeof member.profile.avatarUrl === "string" ? member.profile.avatarUrl : undefined;
           return (
-          <Pressable key={member.id} onPress={() => onSelect(mentionDisplayName(member.displayName))} style={({ pressed }) => ({ flexDirection: "row", alignItems: "center", paddingHorizontal: 16, paddingVertical: 10, borderBottomWidth: 0.5, borderBottomColor: colors.border, backgroundColor: pressed ? colors.surface : colors.background })}>
+          <Pressable key={member.id} onPress={() => onSelect(mentionDisplayName(member.displayName), member.id)} style={({ pressed }) => ({ flexDirection: "row", alignItems: "center", paddingHorizontal: 16, paddingVertical: 10, borderBottomWidth: 0.5, borderBottomColor: colors.border, backgroundColor: pressed ? colors.surface : colors.background })}>
             <Image source={avatarUrl ? { uri: avatarUrl } : require("@/assets/images/irotas-logo-square.png")} style={{ width: 32, height: 32, borderRadius: 16, marginRight: 10 }} contentFit="cover" />
             <View style={{ flex: 1 }}><Text style={{ fontSize: 14, fontWeight: "700", color: colors.foreground }}>@{mentionDisplayName(member.displayName)}</Text><Text style={{ fontSize: 11, color: colors.muted }}>{member.id}{member.memberTerm ? `・${formatMemberTerm(member.memberTerm)}` : ""}</Text></View>
           </Pressable>

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { validateDiscordProfileImport } from "../sites/discord-profile-import";
+import { explicitMemberTermFromBio, validateDiscordProfileImport } from "../sites/discord-profile-import";
 
 describe("Discord profile import", () => {
   const row = {
@@ -22,5 +22,11 @@ describe("Discord profile import", () => {
   it("rejects duplicate IDs and non-Discord avatar hosts", () => {
     expect(() => validateDiscordProfileImport({ confirmation: "IMPORT_DISCORD_PROFILES_2", rows: [row, row] })).toThrow("invalid_discord_id");
     expect(validateDiscordProfileImport({ confirmation: "IMPORT_DISCORD_PROFILES_1", rows: [{ ...row, avatarUrl: "https://example.com/avatar.png" }] })[0].avatarUrl).toBe("");
+  });
+
+  it("prefers an explicit self-introduction term over a stale Discord term role", () => {
+    const bio = "こんばんは！6期のまりこです😌\nよろしくお願いします。";
+    expect(explicitMemberTermFromBio(bio)).toBe("第6期");
+    expect(validateDiscordProfileImport({ confirmation: "IMPORT_DISCORD_PROFILES_1", rows: [{ ...row, bio, hasProfileBio: true }] })[0].memberTerm).toBe("第6期");
   });
 });

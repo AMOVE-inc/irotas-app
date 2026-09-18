@@ -57,7 +57,42 @@ export default function AccountDeletionScreen() {
       .finally(() => setLoading(false));
   }, [isAuthenticated]);
 
+  const performSubmission = async (type: "pause" | "withdrawal") => {
+    setLoading(true);
+    try {
+      const result = await Api.requestAccountDeletion({
+        password,
+        requestType: type,
+        reasons,
+        surveyComment,
+        satisfaction,
+        expectationsMet,
+        valuedFeatures,
+        continuationCondition,
+        understandSquareChange: subscriptionConfirmed,
+        understandDataHandling: dataConfirmed,
+        source: Platform.OS === "web" ? "web" : "app",
+      });
+      setRequest(result.request);
+      setPassword("");
+      Alert.alert(
+        "申請を受け付けました",
+        type === "pause"
+          ? "Squareの休止処理を予約しました。反映日はSquareの請求周期に従います。"
+          : "Squareの解約処理と退会手続きを受け付けました。",
+      );
+    } catch (error) {
+      Alert.alert(
+        "申請できませんでした",
+        error instanceof Error ? error.message : "もう一度お試しください。",
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const submit = async () => {
+    if (loading) return;
     if (!requestType || !password || !subscriptionConfirmed || !dataConfirmed) {
       Alert.alert(
         "入力内容を確認してください",
@@ -65,47 +100,33 @@ export default function AccountDeletionScreen() {
       );
       return;
     }
+
+    const title =
+      requestType === "pause" ? "休会を申請しますか？" : "退会を申請しますか？";
+    const message =
+      requestType === "pause"
+        ? "Squareの定期決済を休止する処理を行います。"
+        : "Squareの定期決済を解約予約し、退会処理を開始します。";
+
+    // React Native Web's multi-button Alert does not reliably invoke button
+    // callbacks in iOS in-app browsers. Use the browser's native confirm so
+    // the final action remains reachable on the public web app.
+    if (Platform.OS === "web") {
+      if (window.confirm(`${title}\n\n${message}`)) {
+        await performSubmission(requestType);
+      }
+      return;
+    }
+
     Alert.alert(
-      requestType === "pause" ? "休会を申請しますか？" : "退会を申請しますか？",
-      requestType === "pause" ? "Squareの定期決済を休止する処理を行います。" : "Squareの定期決済を解約予約し、退会処理を開始します。",
+      title,
+      message,
       [
         { text: "キャンセル", style: "cancel" },
         {
           text: requestType === "pause" ? "休会を申請する" : "退会を申請する",
           style: "destructive",
-          onPress: async () => {
-            setLoading(true);
-            try {
-              const result = await Api.requestAccountDeletion({
-                password,
-                requestType,
-                reasons,
-                surveyComment,
-                satisfaction,
-                expectationsMet,
-                valuedFeatures,
-                continuationCondition,
-                understandSquareChange: subscriptionConfirmed,
-                understandDataHandling: dataConfirmed,
-                source: Platform.OS === "web" ? "web" : "app",
-              });
-              setRequest(result.request);
-              setPassword("");
-              Alert.alert(
-                "申請を受け付けました",
-                requestType === "pause" ? "Squareの休止処理を予約しました。反映日はSquareの請求周期に従います。" : "Squareの解約処理と退会手続きを受け付けました。",
-              );
-            } catch (error) {
-              Alert.alert(
-                "申請できませんでした",
-                error instanceof Error
-                  ? error.message
-                  : "もう一度お試しください。",
-              );
-            } finally {
-              setLoading(false);
-            }
-          },
+          onPress: () => void performSubmission(requestType),
         },
       ],
     );
@@ -335,6 +356,7 @@ export default function AccountDeletionScreen() {
             </CheckRow>
             <Pressable
               onPress={() => void submit()}
+              disabled={loading}
               style={{
                 minHeight: 52,
                 marginTop: 22,

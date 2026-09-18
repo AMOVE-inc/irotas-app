@@ -1,5 +1,9 @@
 # 公式イベントのSquare決済：実装と公開前確認
 
+## 現在の運用状態
+
+公式イベントのアプリ内決済は一時停止中です。`EVENT_PAYMENTS_ENABLED` が本番環境に明示的に `true` で設定されていない限り、参加申込は決済なしで受け付け、決済APIも支払いリンクを作成しません。画面上のランク別参加費は案内として表示します。
+
 ## 今回の実装範囲
 
 - 有料の先着順公式イベントは申込を「決済待ち」として座席を確保し、Square決済完了後に参加確定する。抽選は当選後に決済待ちへ進む。0円の先着順は申込時、0円の抽選は当選時に確定する。
@@ -17,7 +21,7 @@ Squareの[CreatePaymentLink](https://developer.squareup.com/reference/square/che
 ## 本番適用順
 
 1. `drizzle/0043_event_payment_checkouts.sql`と`drizzle/0044_event_payment_confirmation.sql`を順番に本番D1に適用し、テーブル・索引・決済状態列を確認する。
-2. `SQUARE_ACCESS_TOKEN`、`SQUARE_LOCATION_ID`、既存のWebhook署名キー・通知URLが同じSquare本番アプリ／店舗を指すことを秘密値を表示せず確認する。
+2. `SQUARE_ACCESS_TOKEN`、既存のWebhook署名キー・通知URLが同じSquare本番アプリを指すことを秘密値を表示せず確認する。`SQUARE_LOCATION_ID`を設定した場合はその店舗を使い、未設定の場合はSquare APIからカード決済可能な有効店舗を取得する。
 3. SquareのSandboxで、0円・通常額・ポイント割引・先着／抽選・満席・重複クリック・決済失敗・決済完了・Webhook再送・申込取消・リンク削除・取消後の遅延決済を確認する。
 4. 一般会員と管理者で、決済リンクが自分の確定済み申込に限られ、カード番号や決済トークンがアプリDBやログに残らないことを確認する。
 5. 管理者ダッシュボードの旧端末内支払い台帳から共有DBへの表示切替と既存支払いの突合を完了してから公開判定する。

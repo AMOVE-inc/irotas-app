@@ -67,4 +67,44 @@ describe("board category ordering", () => {
     expect(boardScreen).toContain('isIndividualClubBoard || activeCategory === "club-all") router.replace("/clubs")');
     expect(boardScreen).toContain('"部活一覧へ戻る"');
   });
+
+  it("returns from a managed club member profile to the same management screen", () => {
+    const clubsScreen = readFileSync(resolve(process.cwd(), "app/clubs.tsx"), "utf8");
+    const profileScreen = readFileSync(resolve(process.cwd(), "app/member-profile.tsx"), "utf8");
+    expect(clubsScreen).toContain('returnToClubManagement: "1", clubId: club.id');
+    expect(profileScreen).toContain('returnToClubManagement === "1" && clubId');
+    expect(profileScreen).toContain('reviewApplications: "1"');
+    expect(clubsScreen).toContain("openApplicantProfile");
+    expect(clubsScreen).toContain("onOpenProfile();");
+    expect(clubsScreen).toContain("requestAnimationFrame(() => router.push");
+    expect(clubsScreen).toContain("profile.avatarUrl");
+    expect(clubsScreen).toContain("joinedDate.getMonth() + 1");
+  });
+
+  it("opens chat messages and board comments at the first unread item", () => {
+    const boardScreen = readFileSync(resolve(process.cwd(), "app/(tabs)/board.tsx"), "utf8");
+    const chatScreen = readFileSync(resolve(process.cwd(), "app/chat.tsx"), "utf8");
+    expect(boardScreen).toContain("initialUnreadCommentIds");
+    expect(boardScreen).toContain("ここから未読コメント");
+    expect(boardScreen).toContain("commentScrollRef.current?.scrollTo");
+    expect(chatScreen).toContain("initiallyPositionedChat");
+    expect(chatScreen).toContain("ここから未読メッセージ");
+    expect(chatScreen).toContain("effectiveUnreadCount > 0 ? 0.12 : 1");
+    expect(chatScreen).toContain("introductionFirstUnreadIndex");
+  });
+
+  it("returns from a meal-report profile to the exact report", () => {
+    const boardScreen = readFileSync(resolve(process.cwd(), "app/(tabs)/board.tsx"), "utf8");
+    const profileScreen = readFileSync(resolve(process.cwd(), "app/member-profile.tsx"), "utf8");
+    expect(boardScreen).toContain('returnToBoardThread: "1", boardCategory: thread.category, boardThreadId: thread.id');
+    expect(boardScreen).toContain('onOpenMemberProfile(profileParams(thread.author.id, thread.author.name))');
+    expect(boardScreen).toContain('returnToTimeline={fromHome === "1"}');
+    expect(boardScreen).toContain('leavingThreadDetailRef.current = true;');
+    expect(boardScreen).toContain('if (!threadParam || leavingThreadDetailRef.current) return;');
+    expect(boardScreen).toContain('leaveThreadDetail(fromHome === "1" ? () => router.replace("/" as any) : undefined)');
+    expect(boardScreen).toContain('leaveThreadDetail(() => router.push({ pathname: "/member-profile", params }))');
+    expect(profileScreen).toContain('returnToBoardThread === "1" && boardCategory && boardThreadId');
+    expect(profileScreen).toContain('thread: boardThreadId');
+    expect(profileScreen).toContain('returnToTimeline === "1" ? { fromHome: "1" }');
+  });
 });

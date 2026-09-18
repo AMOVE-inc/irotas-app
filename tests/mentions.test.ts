@@ -32,6 +32,7 @@ describe("group mentions", () => {
     expect(getMentionQuery("確認お願いします @関東")).toBe("関東");
     expect(getMentionQuery("確認お願いします @山田 太郎")).toBe("山田 太郎");
     expect(insertMention("確認お願いします @関東", "関東支部")).toBe("確認お願いします @関東支部 ");
+    expect(insertMention("確認お願いします @杏", "杏奈", "IRO0021")).toBe("確認お願いします @杏奈（IRO0021） ");
   });
 
   it("distinguishes exact personal, branch, and joined-club mentions", () => {

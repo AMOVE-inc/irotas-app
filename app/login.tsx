@@ -320,7 +320,7 @@ export default function LoginScreen() {
                   <Text style={{ fontSize: 14, color: colors.muted }}>
                     初回利用・パスワードを再設定する方は{" "}
                     <Text style={{ color: "#D97FA8", fontWeight: "700" }}>
-                      設定・再設定
+                      こちら
                     </Text>
                   </Text>
                 </Pressable>

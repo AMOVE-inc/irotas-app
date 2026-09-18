@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
-import { lockedClubEventPreview, sanitizeEvent } from "../sites/events";
+import { eventMentionRecipientIds, lockedClubEventPreview, sanitizeEvent } from "../sites/events";
 import { eventCapacityLabel, eventFormSaveFields, eventFormValuesFromEvent, validateEventForm } from "../lib/event-form";
 import type { Event } from "../constants/mock-data";
 
@@ -32,6 +32,27 @@ function validEvent(overrides: Record<string, unknown> = {}) {
 }
 
 describe("production event validation", () => {
+  it("notifies only newly mentioned active members and excludes the actor", () => {
+    const members = [
+      { id: 1, display_name: "主催者", public_member_id: "IRO0001" },
+      { id: 2, display_name: "杏奈【GOLD会員】", public_member_id: "IRO0002" },
+      { id: 3, display_name: "かーの 🍞パン部長", public_member_id: "IRO0003" },
+    ];
+    expect(eventMentionRecipientIds("@杏奈 @かーの @主催者", "", members, 1)).toEqual([2, 3]);
+    expect(eventMentionRecipientIds("@杏奈 @かーの", "@杏奈", members, 1)).toEqual([3]);
+    expect(eventMentionRecipientIds("@杏奈 @かーの", "@杏奈 @かーの", members, 1)).toEqual([]);
+  });
+
+  it("does not notify two members when a display-name mention is ambiguous", () => {
+    const members = [
+      { id: 2, display_name: "きょういち", public_member_id: "IRO0002" },
+      { id: 3, display_name: "きょういち", public_member_id: "IRO0003" },
+    ];
+    expect(eventMentionRecipientIds("@きょういち", "", members, 1)).toEqual([]);
+    expect(eventMentionRecipientIds("@きょういち（IRO0003）", "", members, 1)).toEqual([3]);
+    expect(eventMentionRecipientIds("@IRO0003", "", members, 1)).toEqual([3]);
+  });
+
   it("accepts a valid 15-minute event and resets participation state", () => {
     expect(sanitizeEvent(validEvent())).toMatchObject({
       title: "恵比寿グルメ会",
@@ -46,6 +67,14 @@ describe("production event validation", () => {
     expect(sanitizeEvent(validEvent({ time: "19:10" }))).toBeNull();
     expect(sanitizeEvent(validEvent({ image: "https://example.com/a.jpg" }))).toBeNull();
     expect(sanitizeEvent(validEvent({ applicationDeadline: "2026-09-21" }))).toBeNull();
+  });
+
+  it("accepts only complete official rank prices in 500 yen increments", () => {
+    const rankPrices = { regular: "4,500円", silver: "4,000円", gold: "3,500円", platinum: "3,000円" };
+    expect(sanitizeEvent(validEvent({ eventType: "official", rankPrices }))).toMatchObject({ rankPrices });
+    expect(sanitizeEvent(validEvent({ eventType: "official", rankPrices: { ...rankPrices, gold: "3,250円" } }))).toBeNull();
+    expect(sanitizeEvent(validEvent({ eventType: "official", rankPrices: { regular: "4,500円" } }))).toBeNull();
+    expect(sanitizeEvent(validEvent({ eventType: "gourmet", rankPrices }))).toBeNull();
   });
 
   it("keeps undecided and unlimited recruitment capacity distinct from a numeric limit", () => {

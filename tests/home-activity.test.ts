@@ -11,4 +11,10 @@ describe("home activity feed", () => {
   it("links new events to their detail screen", () => {
     expect(initialHomeActivities().filter((activity) => activity.kind === "event").every((activity) => activity.route === "/event-detail" && activity.params?.id)).toBe(true);
   });
+
+  it("links meal reports to the exact post", () => {
+    const reports = initialHomeActivities().filter((activity) => activity.kind === "meal_report");
+    expect(reports.length).toBeGreaterThan(0);
+    expect(reports.every((activity) => activity.params?.thread === activity.id.replace(/^thread:/, ""))).toBe(true);
+  });
 });

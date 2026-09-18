@@ -1,5 +1,6 @@
 import { ScreenContainer } from "@/components/screen-container";
 import { ExpandableImage } from "@/components/expandable-image";
+import { SaveableVideo } from "@/components/saveable-video";
 import { ReplyReferenceView } from "@/components/reply-reference-view";
 import { NewMemberMark } from "@/components/new-member-mark";
 import { MemberRankBadge, MemberRoleBadge, stripRankFromName } from "@/components/member-rank-badge";
@@ -26,7 +27,6 @@ import {
 import { useAuthContext } from "@/lib/auth-context";
 import { getMemberStaffRole } from "@/lib/member-staff-role";
 import { replyReference } from "@/lib/reply-reference";
-import { firstUnreadItemId } from "@/lib/unread-position";
 import { useColors } from "@/hooks/use-colors";
 import { createBoardChat } from "@/lib/chat-store";
 import { canManageBoardCategories, canManageGourmetContests, isOperatorRole } from "@/lib/access-control";
@@ -52,7 +52,6 @@ import { boardCommentData, boardThreadData, sharedCommentToBoardComment, sharedT
 import { boardReactionAccessibilityLabel, boardReactionImageUrl, loadCommentReactions, loadThreadReactions, saveCommentReactions, saveThreadReactions } from "@/lib/board-reactions";
 import { applyBoardThreadEdits, loadBoardThreadEdits, saveBoardThreadEdit } from "@/lib/board-thread-edits";
 import { Image } from "expo-image";
-import { useVideoPlayer, VideoView } from "expo-video";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
 import { useState, useCallback, useEffect, useMemo, useRef } from "react";
@@ -74,6 +73,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { boardActivityForThread, recordHomeActivity } from "@/lib/home-activity-store";
 import { GOURMET_GENRES } from "@/constants/event-options";
+import { createInitialBoardReadCounts, supportsBoardNewBadge } from "@/lib/board-unread";
 import { boardPollResult, finalizeBoardPollOnce, isBoardPollOpen, loadBoardPoll, voteBoardPoll } from "@/lib/board-polls";
 import { addInAppNotification } from "@/lib/in-app-notifications-store";
 import { deleteBoardComment, deleteBoardThread, loadBoardCommentEdits, loadDeletedBoardCommentIds, loadDeletedBoardThreadIds, saveBoardCommentEdit } from "@/lib/board-content-store";
@@ -177,8 +177,7 @@ function PollComposer({ enabled, setEnabled, question, setQuestion, options, set
 }
 
 function BoardVideo({ uri }: { uri: string }) {
-  const player = useVideoPlayer(uri);
-  return <VideoView player={player} nativeControls style={{ width: "100%", aspectRatio: 1, borderRadius: 14, backgroundColor: "#111" }} />;
+  return <SaveableVideo uri={uri} style={{ width: "100%", aspectRatio: 1, borderRadius: 14 }} />;
 }
 
 function LinkifiedText({ content }: { content: string }) {
@@ -349,7 +348,7 @@ function SelfIntroductionMessage({ thread }: { thread: BoardThread }) {
   </View>;
 }
 
-function ThreadCard({ thread, viewerId, onPress, onEdit, onDelete, onPin, onChangeRecruitment, unreadCount = 0, mentionCount = 0, showMenu = true, comments = [] }: { thread: BoardThread; viewerId: string; onPress: () => void; onEdit?: () => void; onDelete?: () => void; onPin?: () => void; onChangeRecruitment?: () => void; unreadCount?: number; mentionCount?: number; showMenu?: boolean; comments?: BoardComment[] }) {
+function ThreadCard({ thread, viewerId, onPress, onEdit, onDelete, onPin, onChangeRecruitment, unreadCount = 0, mentionCount = 0, isNewPost = false, showMenu = true, comments = [] }: { thread: BoardThread; viewerId: string; onPress: () => void; onEdit?: () => void; onDelete?: () => void; onPin?: () => void; onChangeRecruitment?: () => void; unreadCount?: number; mentionCount?: number; isNewPost?: boolean; showMenu?: boolean; comments?: BoardComment[] }) {
   const colors = useColors();
   const [showActions, setShowActions] = useState(false);
   const router = useRouter();
@@ -383,6 +382,11 @@ function ThreadCard({ thread, viewerId, onPress, onEdit, onDelete, onPin, onChan
     thread.category === "kansai-branch" ||
     thread.category.startsWith("club-");
   const rightPreviewImage = showsRightPreview ? thread.images?.[0] : undefined;
+  const authorProfileParams = {
+    id: thread.author.id,
+    legacyName: thread.author.name,
+    ...(thread.mealReport ? { returnToBoardThread: "1", boardCategory: thread.category, boardThreadId: thread.id } : {}),
+  };
 
   const timeAgo = useCallback((dateStr: string) => {
     const diff = Date.now() - new Date(dateStr).getTime();
@@ -422,10 +426,10 @@ function ThreadCard({ thread, viewerId, onPress, onEdit, onDelete, onPin, onChan
     >
       {/* Author */}
       <Pressable
-        onPress={() => router.push({ pathname: "/member-profile", params: { id: thread.author.id, legacyName: thread.author.name } })}
+        onPress={() => router.push({ pathname: "/member-profile", params: authorProfileParams })}
         style={{ flexDirection: "row", alignItems: "center", marginBottom: 8 }}
       >
-        {unreadCount > 0 && mentionCount === 0 ? <View style={{ marginRight: 7, backgroundColor: "#3478C7", borderRadius: 7, paddingHorizontal: 7, paddingVertical: 3 }}><Text style={{ color: "#FFFFFF", fontSize: 10, fontWeight: "900" }}>NEW</Text></View> : null}
+        {isNewPost ? <View style={{ marginRight: 7, backgroundColor: "#3478C7", borderRadius: 7, paddingHorizontal: 7, paddingVertical: 3 }}><Text style={{ color: "#FFFFFF", fontSize: 10, fontWeight: "900" }}>new</Text></View> : null}
         {pinned ? <View style={{ marginRight: 7, borderRadius: 10, paddingHorizontal: 8, paddingVertical: 6, backgroundColor: "#FFF2C7" }}><Text style={{ fontSize: 11, fontWeight: "900", color: "#8A6512" }}>📌 固定</Text></View> : null}
         {recruitmentManaged ? <RecruitmentStatusBadge status={recruitmentStatus} /> : thread.gourmetContest && contestOpen ? <View style={{ marginRight: 9, borderRadius: 10, paddingHorizontal: 9, paddingVertical: 6, backgroundColor: "#DDF3E3" }}><Text style={{ fontSize: 11, fontWeight: "900", color: "#247A42" }}>開催中</Text></View> : null}
         <Image
@@ -734,13 +738,14 @@ function dedupeBoardComments(comments: BoardComment[]): BoardComment[] {
   ));
 }
 
-type ThreadUnreadTarget = "thread" | string | null;
-
 function ThreadDetailModal({
   thread,
   initialComments = [],
-  initialUnreadTarget = null,
+  initialUnreadCommentIds = [],
+  initialThreadUnread = false,
   onClose,
+  onOpenMemberProfile,
+  returnToTimeline = false,
   onEditThread,
   onChangeRecruitment,
   canRegisterEvent = true,
@@ -749,8 +754,11 @@ function ThreadDetailModal({
 }: {
   thread: BoardThread;
   initialComments?: BoardComment[];
-  initialUnreadTarget?: ThreadUnreadTarget;
+  initialUnreadCommentIds?: string[];
+  initialThreadUnread?: boolean;
   onClose: () => void;
+  onOpenMemberProfile: (params: Record<string, string>) => void;
+  returnToTimeline?: boolean;
   onEditThread?: () => void;
   onChangeRecruitment?: () => void;
   canRegisterEvent?: boolean;
@@ -783,47 +791,42 @@ function ThreadDetailModal({
   const [commentPollDeadline, setCommentPollDeadline] = useState("");
   const [commentPollAllowMultiple, setCommentPollAllowMultiple] = useState(false);
   const [commentImages, setCommentImages] = useState<string[]>([]);
+  const [commentVideos, setCommentVideos] = useState<{ uri: string; mimeType?: string }[]>([]);
   const [showCommentAttachments, setShowCommentAttachments] = useState(false);
   const commentInputRef = useRef<TextInput>(null);
   const commentSendingRef = useRef(false);
   const commentScrollRef = useRef<ScrollView>(null);
   const commentsStartY = useRef(0);
   const commentPositions = useRef(new Map<string, number>());
-  const initialScrollApplied = useRef<string | null>(null);
-  const initialScrollTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const unreadPositionedKey = useRef<string | null>(null);
   const commentHighlightTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [highlightedCommentId, setHighlightedCommentId] = useState<string | null>(null);
   const mentionGroups = useMemo(() => BOARD_MENTION_GROUPS, []);
   const [comments, setComments] = useState<BoardComment[]>(
     dedupeBoardComments([...BOARD_COMMENTS.filter((c) => c.threadId === thread.id), ...initialComments]),
   );
+  const firstUnreadCommentId = initialUnreadCommentIds.find((commentId) => comments.some((comment) => comment.id === commentId));
   useEffect(() => {
-    initialScrollApplied.current = null;
-    commentPositions.current.clear();
-    if (initialScrollTimer.current) clearTimeout(initialScrollTimer.current);
-  }, [thread.id]);
-  useEffect(() => () => {
-    if (initialScrollTimer.current) clearTimeout(initialScrollTimer.current);
-  }, []);
-  const scrollToInitialPosition = () => {
-    if (initialScrollApplied.current === thread.id) return;
-    if (initialUnreadTarget && initialUnreadTarget !== "thread" && !commentPositions.current.has(initialUnreadTarget)) return;
-    initialScrollApplied.current = thread.id;
+    const target = initialThreadUnread ? "thread" : firstUnreadCommentId ?? "latest";
+    const key = `${thread.id}:${target}`;
+    if (unreadPositionedKey.current === key) return;
+    unreadPositionedKey.current = key;
     const scroll = () => {
-      if (initialUnreadTarget === "thread") {
+      if (initialThreadUnread) {
         commentScrollRef.current?.scrollTo({ y: 0, animated: false });
         return;
       }
-      if (initialUnreadTarget) {
-        const position = commentPositions.current.get(initialUnreadTarget);
-        if (position !== undefined) commentScrollRef.current?.scrollTo({ y: Math.max(0, commentsStartY.current + position - 16), animated: false });
+      const position = firstUnreadCommentId ? commentPositions.current.get(firstUnreadCommentId) : undefined;
+      if (firstUnreadCommentId && position !== undefined) {
+        commentScrollRef.current?.scrollTo({ y: Math.max(0, commentsStartY.current + position - 24), animated: false });
         return;
       }
-      commentScrollRef.current?.scrollToEnd({ animated: false });
+      if (!firstUnreadCommentId) commentScrollRef.current?.scrollToEnd({ animated: false });
     };
     requestAnimationFrame(scroll);
-    initialScrollTimer.current = setTimeout(scroll, 180);
-  };
+    const timers = [setTimeout(scroll, 120), setTimeout(scroll, 360)];
+    return () => timers.forEach(clearTimeout);
+  }, [firstUnreadCommentId, initialThreadUnread, thread.id, comments.length]);
   const jumpToComment = (commentId: string) => {
     if (!comments.some((comment) => comment.id === commentId)) {
       Alert.alert("返信元を表示できません", "返信元のコメントが見つかりませんでした。");
@@ -898,6 +901,16 @@ function ThreadDetailModal({
     : null;
   const clubApplicationPending = Boolean(applicationAccess?.hasApplied);
   const clubApplicationMember = Boolean(applicationAccess?.isMember);
+  const profileParams = (memberId: string, memberName: string) => ({
+    id: memberId,
+    legacyName: memberName,
+    ...(thread.mealReport ? {
+      returnToBoardThread: "1",
+      boardCategory: thread.category,
+      boardThreadId: thread.id,
+      ...(returnToTimeline ? { returnToTimeline: "1" } : {}),
+    } : {}),
+  });
 
   const submitClubApplication = async () => {
     if (!applicationClub || !clubWantsToDo.trim() || !clubLeaderMessage.trim()) return;
@@ -964,7 +977,7 @@ function ThreadDetailModal({
     const content = isContest
       ? buildContestEntryContent({ restaurant: contestRestaurant, menu: contestMenu, pitch: contestPitch, referenceUrl: contestReferenceUrl })
       : commentText.trim();
-    if (isContest ? !contestRestaurant.trim() || !contestMenu.trim() || !contestPitch.trim() : (!content && !commentPollEnabled) || !commentPollValid) return;
+    if (isContest ? !contestRestaurant.trim() || !contestMenu.trim() || !contestPitch.trim() : (!content && !commentPollEnabled && !commentImages.length && !commentVideos.length) || !commentPollValid) return;
     commentSendingRef.current = true;
     let newComment: BoardComment = {
       id: `bc_new_${Date.now()}`,
@@ -974,12 +987,19 @@ function ThreadDetailModal({
       replyTo: commentReplyTo ? replyReference(commentReplyTo.id, stripRankFromName(commentReplyTo.author.name), commentReplyTo.content, Boolean(commentReplyTo.images?.length || commentReplyTo.videos?.length)) : undefined,
       createdAt: new Date().toISOString(),
       images: isContest && contestImages.length ? contestImages : commentImages.length ? commentImages : undefined,
+      videos: !isContest && commentVideos.length ? commentVideos.map((video) => video.uri) : undefined,
       poll: pollAllowed && commentPollEnabled ? { question: commentPollQuestion.trim(), deadline: commentPollDeadline, allowMultiple: commentPollAllowMultiple, options: commentPollOptions.filter((option) => option.trim()).map((option, index) => ({ id: `option_${index + 1}`, text: option.trim(), voterIds: [] })) } : undefined,
     };
     if (persistedThread) {
       try {
         if (!thread.shared) await Api.ensureSharedImportedBoardThread(thread.id);
-        newComment = { ...newComment, images: await uploadBoardImages(newComment.images) };
+        newComment = {
+          ...newComment,
+          images: await uploadBoardImages(newComment.images),
+          videos: newComment.videos?.length
+            ? await Promise.all(newComment.videos.map(async (uri, index) => (await Api.uploadEventImage(uri, commentVideos[index]?.mimeType)).imageUrl))
+            : undefined,
+        };
         const saved = await Api.createSharedBoardComment(thread.id, { content, data: boardCommentData(newComment) });
         newComment = { ...newComment, id: saved.id, createdAt: saved.createdAt, shared: true };
       } catch (error) {
@@ -993,6 +1013,7 @@ function ThreadDetailModal({
     setCommentText("");
     setCommentReplyTo(null);
     setCommentImages([]);
+    setCommentVideos([]);
     setShowCommentAttachments(false);
     setContestRestaurant("");
     setContestMenu("");
@@ -1030,13 +1051,24 @@ function ThreadDetailModal({
   };
 
   const handlePickCommentImages = async () => {
-    if (commentImages.length >= 5) return;
+    if (commentImages.length + commentVideos.length >= 5) return;
     if (Platform.OS !== "web") {
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (status !== "granted") return Alert.alert("権限が必要です", "写真ライブラリへのアクセスを許可してください");
     }
-    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ["images"], allowsMultipleSelection: true, quality: 0.8, selectionLimit: 5 - commentImages.length });
-    if (!result.canceled) setCommentImages((current) => [...current, ...result.assets.map((asset) => asset.uri)].slice(0, 5));
+    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ["images"], allowsMultipleSelection: true, quality: 0.8, selectionLimit: 5 - commentImages.length - commentVideos.length });
+    if (!result.canceled) setCommentImages((current) => [...current, ...result.assets.map((asset) => asset.uri)].slice(0, 5 - commentVideos.length));
+    setShowCommentAttachments(false);
+  };
+
+  const handlePickCommentVideos = async () => {
+    if (commentImages.length + commentVideos.length >= 5) return;
+    if (Platform.OS !== "web") {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== "granted") return Alert.alert("権限が必要です", "動画を送るには写真ライブラリへのアクセスを許可してください");
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ["videos"], allowsMultipleSelection: true, selectionLimit: 5 - commentImages.length - commentVideos.length });
+    if (!result.canceled) setCommentVideos((current) => [...current, ...result.assets.map((asset) => ({ uri: asset.uri, mimeType: asset.mimeType }))].slice(0, 5 - commentImages.length));
     setShowCommentAttachments(false);
   };
 
@@ -1180,10 +1212,10 @@ function ThreadDetailModal({
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         keyboardVerticalOffset={Platform.OS === "ios" ? insets.top + 16 : 0}
       >
-        <ScrollView ref={commentScrollRef} onContentSizeChange={scrollToInitialPosition} style={{ flex: 1 }} contentContainerStyle={{ padding: 16 }}>
+        <ScrollView ref={commentScrollRef} style={{ flex: 1 }} contentContainerStyle={{ padding: 16 }}>
           {/* Thread content */}
-          {initialUnreadTarget === "thread" ? <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 14 }}><View style={{ flex: 1, height: 1, backgroundColor: "#E8A0BF" }} /><Text style={{ color: "#D45470", fontSize: 12, fontWeight: "800", marginHorizontal: 10 }}>ここから未読</Text><View style={{ flex: 1, height: 1, backgroundColor: "#E8A0BF" }} /></View> : null}
-          <Pressable onPress={() => router.push({ pathname: "/member-profile", params: { id: thread.author.id, legacyName: thread.author.name } })} accessibilityLabel={`${stripRankFromName(thread.author.name)}のプロフィールを表示`} style={{ flexDirection: "row", alignItems: "center", marginBottom: 12 }}>
+          {initialThreadUnread ? <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 14 }}><View style={{ flex: 1, height: 1, backgroundColor: "#E8A0BF" }} /><Text style={{ fontSize: 11, fontWeight: "900", color: "#C05B88" }}>ここから未読</Text><View style={{ flex: 1, height: 1, backgroundColor: "#E8A0BF" }} /></View> : null}
+          <Pressable onPress={() => onOpenMemberProfile(profileParams(thread.author.id, thread.author.name))} accessibilityLabel={`${stripRankFromName(thread.author.name)}のプロフィールを表示`} style={{ flexDirection: "row", alignItems: "center", marginBottom: 12 }}>
             {isThreadPinned(thread) ? <View style={{ marginRight: 7, borderRadius: 10, paddingHorizontal: 8, paddingVertical: 6, backgroundColor: "#FFF2C7" }}><Text style={{ fontSize: 11, fontWeight: "900", color: "#8A6512" }}>📌 固定</Text></View> : null}
             {recruitmentManaged ? <RecruitmentStatusBadge status={recruitmentStatus} /> : null}
             <Image source={thread.author.avatar} style={{ width: 36, height: 36, borderRadius: 18 }} contentFit="cover" />
@@ -1255,8 +1287,12 @@ function ThreadDetailModal({
                   uri={boardImageUri(uri)}
                   galleryUris={thread.images?.map(boardImageUri).filter((value): value is string => Boolean(value))}
                   galleryIndex={i}
-                  style={isContest ? { width: "100%", aspectRatio: 1, borderRadius: 14, backgroundColor: colors.surface } : { width: 100, height: 100, borderRadius: 10 }}
-                  contentFit={isContest ? "contain" : "cover"}
+                  style={isContest
+                    ? { width: "100%", aspectRatio: 1, borderRadius: 14, backgroundColor: colors.surface }
+                    : thread.images!.length === 1
+                      ? { width: "100%", maxWidth: 520, aspectRatio: 4 / 3, borderRadius: 14, backgroundColor: colors.surface }
+                      : { width: "48%", aspectRatio: 1, borderRadius: 12, backgroundColor: colors.surface }}
+                  contentFit="contain"
                 />
               ))}
             </View>
@@ -1366,13 +1402,13 @@ function ThreadDetailModal({
             </Text>
             {comments.map((comment) => {
               return <View key={comment.id} onLayout={(event) => { commentPositions.current.set(comment.id, event.nativeEvent.layout.y); }}>
-                {initialUnreadTarget === comment.id ? <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 12 }}><View style={{ flex: 1, height: 1, backgroundColor: "#E8A0BF" }} /><Text style={{ color: "#D45470", fontSize: 12, fontWeight: "800", marginHorizontal: 10 }}>ここから未読コメント</Text><View style={{ flex: 1, height: 1, backgroundColor: "#E8A0BF" }} /></View> : null}
+                {comment.id === firstUnreadCommentId ? <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 14 }}><View style={{ flex: 1, height: 1, backgroundColor: "#E8A0BF" }} /><Text style={{ fontSize: 11, fontWeight: "900", color: "#C05B88" }}>ここから未読コメント</Text><View style={{ flex: 1, height: 1, backgroundColor: "#E8A0BF" }} /></View> : null}
                 <Pressable onLongPress={() => setSelectedComment(comment)} delayLongPress={350} style={{ marginBottom: 14, borderRadius: 12, borderWidth: highlightedCommentId === comment.id ? 3 : 0, borderColor: "#3478C7" }}>
                 <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 4 }}>
-                  <Pressable onPress={() => router.push({ pathname: "/member-profile", params: { id: comment.author.id, legacyName: comment.author.name } })} accessibilityLabel={`${stripRankFromName(comment.author.name)}のプロフィールを表示`}>
+                  <Pressable onPress={() => onOpenMemberProfile(profileParams(comment.author.id, comment.author.name))} accessibilityLabel={`${stripRankFromName(comment.author.name)}のプロフィールを表示`}>
                     <Image source={comment.author.avatar} style={{ width: 24, height: 24, borderRadius: 12 }} contentFit="cover" />
                   </Pressable>
-                  <Pressable onPress={() => router.push({ pathname: "/member-profile", params: { id: comment.author.id, legacyName: comment.author.name } })} accessibilityLabel={`${stripRankFromName(comment.author.name)}のプロフィールを表示`}><Text style={{ fontSize: 13, fontWeight: "600", color: colors.foreground, marginLeft: 8 }}>
+                  <Pressable onPress={() => onOpenMemberProfile(profileParams(comment.author.id, comment.author.name))} accessibilityLabel={`${stripRankFromName(comment.author.name)}のプロフィールを表示`}><Text style={{ fontSize: 13, fontWeight: "600", color: colors.foreground, marginLeft: 8 }}>
                     {stripRankFromName(comment.author.name)}
                   </Text></Pressable>
                   <OperatorOrRankBadge member={comment.author} />
@@ -1418,8 +1454,9 @@ function ThreadDetailModal({
           </View> : <>
           {mentionQuery !== null ? <MentionSuggestions query={mentionQuery} groups={mentionGroups} members={MEMBERS.filter((member) => member.id !== CURRENT_USER.id)} onSelect={handleCommentMention} /> : null}
           <Text style={{ fontSize: 11, color: colors.muted, paddingHorizontal: 16, paddingTop: 6 }}>@を入力して個人・グループをメンション</Text>
-          {showCommentAttachments ? <View style={{ flexDirection: "row", gap: 10, paddingHorizontal: 16, paddingTop: 9 }}><Pressable onPress={() => void handlePickCommentImages()} style={{ flexDirection: "row", alignItems: "center", borderRadius: 10, backgroundColor: "#5865F218", paddingHorizontal: 14, paddingVertical: 10 }}><IconSymbol name="photo.fill" size={17} color="#5865F2" /><Text style={{ color: "#5865F2", fontWeight: "800", marginLeft: 7 }}>写真</Text></Pressable>{pollAllowed ? <Pressable onPress={() => { setCommentPollEnabled(true); setShowCommentAttachments(false); }} style={{ flexDirection: "row", alignItems: "center", borderRadius: 10, backgroundColor: "#5865F218", paddingHorizontal: 14, paddingVertical: 10 }}><IconSymbol name="chart.bar.fill" size={17} color="#5865F2" /><Text style={{ color: "#5865F2", fontWeight: "800", marginLeft: 7 }}>投票</Text></Pressable> : null}</View> : null}
+          {showCommentAttachments ? <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10, paddingHorizontal: 16, paddingTop: 9 }}><Pressable onPress={() => void handlePickCommentImages()} style={{ flexDirection: "row", alignItems: "center", borderRadius: 10, backgroundColor: "#5865F218", paddingHorizontal: 14, paddingVertical: 10 }}><IconSymbol name="photo.fill" size={17} color="#5865F2" /><Text style={{ color: "#5865F2", fontWeight: "800", marginLeft: 7 }}>写真</Text></Pressable><Pressable onPress={() => void handlePickCommentVideos()} style={{ flexDirection: "row", alignItems: "center", borderRadius: 10, backgroundColor: "#5865F218", paddingHorizontal: 14, paddingVertical: 10 }}><IconSymbol name="video.fill" size={17} color="#5865F2" /><Text style={{ color: "#5865F2", fontWeight: "800", marginLeft: 7 }}>動画</Text></Pressable>{pollAllowed ? <Pressable onPress={() => { setCommentPollEnabled(true); setShowCommentAttachments(false); }} style={{ flexDirection: "row", alignItems: "center", borderRadius: 10, backgroundColor: "#5865F218", paddingHorizontal: 14, paddingVertical: 10 }}><IconSymbol name="chart.bar.fill" size={17} color="#5865F2" /><Text style={{ color: "#5865F2", fontWeight: "800", marginLeft: 7 }}>投票</Text></Pressable> : null}</View> : null}
           {commentImages.length ? <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingHorizontal: 16, paddingTop: 9 }}>{commentImages.map((uri, index) => <Pressable key={`${uri}-${index}`} onPress={() => setCommentImages((items) => items.filter((_, itemIndex) => itemIndex !== index))}><Image source={{ uri }} style={{ width: 64, height: 64, borderRadius: 9 }} contentFit="cover" /></Pressable>)}</ScrollView> : null}
+          {commentVideos.length ? <View style={{ gap: 5, paddingHorizontal: 16, paddingTop: 9 }}>{commentVideos.map((video, index) => <View key={`${video.uri}-${index}`} style={{ flexDirection: "row", alignItems: "center" }}><Text style={{ flex: 1, fontSize: 12, color: colors.foreground }} numberOfLines={1}>動画 {index + 1}</Text><Pressable accessibilityLabel={`動画${index + 1}を削除`} onPress={() => setCommentVideos((items) => items.filter((_, itemIndex) => itemIndex !== index))}><Text style={{ color: colors.error, fontWeight: "800" }}>削除</Text></Pressable></View>)}</View> : null}
           {commentReplyTo ? <View style={{ paddingHorizontal: 16, paddingTop: 7 }}><ReplyReferenceView reply={replyReference(commentReplyTo.id, stripRankFromName(commentReplyTo.author.name), commentReplyTo.content, Boolean(commentReplyTo.images?.length || commentReplyTo.videos?.length))} onPress={() => jumpToComment(commentReplyTo.id)} onCancel={() => setCommentReplyTo(null)} /></View> : null}
           {pollAllowed ? <View style={{ paddingHorizontal: 16 }}><PollComposer enabled={commentPollEnabled} setEnabled={setCommentPollEnabled} question={commentPollQuestion} setQuestion={setCommentPollQuestion} options={commentPollOptions} setOptions={setCommentPollOptions} deadline={commentPollDeadline} setDeadline={setCommentPollDeadline} allowMultiple={commentPollAllowMultiple} setAllowMultiple={setCommentPollAllowMultiple} /></View> : null}
           <View
@@ -1431,7 +1468,7 @@ function ThreadDetailModal({
             paddingBottom: Platform.OS === "ios" ? Math.max(insets.bottom, 10) : 10,
           }}
         >
-          <Pressable accessibilityLabel="写真または投票を追加" onPress={() => setShowCommentAttachments((value) => !value)} style={{ width: 36, height: 36, borderRadius: 18, alignItems: "center", justifyContent: "center", backgroundColor: "#5865F218", marginRight: 8 }}><IconSymbol name="plus" size={20} color="#5865F2" /></Pressable>
+          <Pressable accessibilityLabel="写真、動画または投票を追加" onPress={() => setShowCommentAttachments((value) => !value)} style={{ width: 36, height: 36, borderRadius: 18, alignItems: "center", justifyContent: "center", backgroundColor: "#5865F218", marginRight: 8 }}><IconSymbol name="plus" size={20} color="#5865F2" /></Pressable>
           <TextInput
             ref={commentInputRef}
             value={commentText}
@@ -1455,7 +1492,7 @@ function ThreadDetailModal({
             }}
           />
           <Pressable onPress={handleComment} style={{ marginLeft: 10 }}>
-            <IconSymbol name="paperplane.fill" size={24} color={(commentText.trim() || (commentPollEnabled && commentPollValid)) ? "#E8A0BF" : colors.muted} />
+            <IconSymbol name="paperplane.fill" size={24} color={(commentText.trim() || commentImages.length || commentVideos.length || (commentPollEnabled && commentPollValid)) ? "#E8A0BF" : colors.muted} />
           </Pressable>
           </View>
           </>}
@@ -2600,7 +2637,9 @@ export default function BoardScreen() {
   const [archiveLoading, setArchiveLoading] = useState(true);
   const [sharedLoading, setSharedLoading] = useState(true);
   const [selectedThread, setSelectedThread] = useState<BoardThread | null>(null);
-  const [selectedThreadUnreadTarget, setSelectedThreadUnreadTarget] = useState<ThreadUnreadTarget>(null);
+  const [selectedThreadUnreadCommentIds, setSelectedThreadUnreadCommentIds] = useState<string[]>([]);
+  const [selectedThreadIsUnread, setSelectedThreadIsUnread] = useState(false);
+  const leavingThreadDetailRef = useRef(false);
   const [showCreateThread, setShowCreateThread] = useState(false);
   const [showAddCategory, setShowAddCategory] = useState(false);
   const [showClubMembers, setShowClubMembers] = useState(false);
@@ -2612,6 +2651,7 @@ export default function BoardScreen() {
   const [importedComments, setImportedComments] = useState<Record<string, BoardComment[]>>({});
   const [threadReadCounts, setThreadReadCounts] = useState<Record<string, number>>({});
   const [threadReadsHydrated, setThreadReadsHydrated] = useState(false);
+  const [needsInitialReadBaseline, setNeedsInitialReadBaseline] = useState(false);
   const [editedThreads, setEditedThreads] = useState<Record<string, BoardThread>>({});
   const [deletedThreadIds, setDeletedThreadIds] = useState<string[]>([]);
   const [editingThread, setEditingThread] = useState<BoardThread | null>(null);
@@ -2636,13 +2676,22 @@ export default function BoardScreen() {
       "here",
     ].filter(Boolean))];
   }, [authUser, clubs, viewerMember.branch, viewerMember.name, viewerMemberId]);
-  const boardReadKey = `irotas_board_thread_reads_v1:${viewerMemberId}`;
+  const boardReadKey = `irotas_board_thread_reads_v2:${viewerMemberId}`;
+  const longPressedCategoryRef = useRef<string | null>(null);
   useEffect(() => {
     setThreadReadsHydrated(false);
+    setNeedsInitialReadBaseline(false);
     void AsyncStorage.getItem(boardReadKey)
-      .then((raw) => setThreadReadCounts(raw ? JSON.parse(raw) : {}))
-      .catch(() => setThreadReadCounts({}))
-      .finally(() => setThreadReadsHydrated(true));
+      .then((raw) => {
+        if (raw) {
+          setThreadReadCounts(JSON.parse(raw));
+          setThreadReadsHydrated(true);
+        } else {
+          setThreadReadCounts({});
+          setNeedsInitialReadBaseline(true);
+        }
+      })
+      .catch(() => setNeedsInitialReadBaseline(true));
   }, [boardReadKey]);
   const markThreadRead = useCallback((threadId: string) => {
     const count = (importedComments[threadId] ?? []).length;
@@ -2672,7 +2721,9 @@ export default function BoardScreen() {
   // 自己紹介は通常チャットと同じ操作・未読・リアクション UI に統一する。
   useEffect(() => {
     if (isThreadView && categoryParam === "introduction") {
-      router.replace({ pathname: "/chat", params: { id: "board-introduction", unreadCount: "0" } });
+      void Api.getSharedChatRoom("board-introduction")
+        .then((room) => router.replace({ pathname: "/chat", params: { id: "board-introduction", unreadCount: String(room.unreadCount ?? 0) } }))
+        .catch(() => router.replace({ pathname: "/chat", params: { id: "board-introduction", unreadCount: "0" } }));
     }
   }, [categoryParam, isThreadView, router]);
 
@@ -2818,23 +2869,10 @@ export default function BoardScreen() {
     [authUser, dynamicThreads, editedThreads, deletedThreadIds],
   );
   const firstSignInTime = authUser?.firstSignedIn?.getTime() ?? authUser?.lastSignedIn?.getTime() ?? 0;
-  const postedAfterFirstSignIn = (createdAt: string | undefined) => Boolean(createdAt) && Date.parse(createdAt!) > firstSignInTime;
-  const unreadTargetForThread = useCallback((thread: BoardThread): ThreadUnreadTarget => {
-    if (!threadReadsHydrated) return null;
-    const readCount = threadReadCounts[thread.id];
-    if (readCount === undefined && thread.author.id !== viewerMemberId && postedAfterFirstSignIn(thread.createdAt)) return "thread";
-    return firstUnreadItemId(
-      (importedComments[thread.id] ?? []).map((comment) => ({ id: comment.id, authorId: comment.author.id, createdAt: comment.createdAt })),
-      readCount,
-      viewerMemberId,
-      firstSignInTime,
-    );
-  }, [firstSignInTime, importedComments, threadReadCounts, threadReadsHydrated, viewerMemberId]);
-  const openThread = useCallback((thread: BoardThread) => {
-    setSelectedThreadUnreadTarget(unreadTargetForThread(thread));
-    setSelectedThread(thread);
-    markThreadRead(thread.id);
-  }, [markThreadRead, unreadTargetForThread]);
+  const postedAfterFirstSignIn = useCallback(
+    (createdAt: string | undefined) => Boolean(createdAt) && Date.parse(createdAt!) > firstSignInTime,
+    [firstSignInTime],
+  );
   const categoryUnreadStatus = useCallback((categoryKey: string): "mention" | "unread" | null => {
     if (!threadReadsHydrated) return null;
     let hasUnread = false;
@@ -2846,18 +2884,17 @@ export default function BoardScreen() {
       if (comments.length || newThread) hasUnread = true;
     }
     return hasUnread ? "unread" : null;
-  }, [allThreads, importedComments, threadReadCounts, threadReadsHydrated, viewerMemberId, viewerMentionLabels, firstSignInTime]);
-  const markCategoryRead = useCallback((categoryKey: string) => {
-    setThreadReadCounts((current) => {
-      const next = { ...current };
-      allThreads.filter((thread) => thread.category === categoryKey).forEach((thread) => {
-        next[thread.id] = (importedComments[thread.id] ?? []).length;
-      });
-      void AsyncStorage.setItem(boardReadKey, JSON.stringify(next));
-      return next;
-    });
-  }, [allThreads, boardReadKey, importedComments]);
+  }, [allThreads, importedComments, postedAfterFirstSignIn, threadReadCounts, threadReadsHydrated, viewerMemberId, viewerMentionLabels]);
   const boardLoading = Boolean(authUser) && (archiveLoading || sharedLoading);
+  useEffect(() => {
+    if (!needsInitialReadBaseline || boardLoading) return;
+    const commentCounts = Object.fromEntries(Object.entries(importedComments).map(([threadId, comments]) => [threadId, comments.length]));
+    const baseline = createInitialBoardReadCounts(allThreads.map((thread) => thread.id), commentCounts);
+    setThreadReadCounts(baseline);
+    setNeedsInitialReadBaseline(false);
+    setThreadReadsHydrated(true);
+    void AsyncStorage.setItem(boardReadKey, JSON.stringify(baseline));
+  }, [allThreads, boardLoading, boardReadKey, importedComments, needsInitialReadBaseline]);
   const filteredThreads = activeCategory === "meal-report"
     ? allThreads.filter((thread) => thread.category === activeCategory).sort((a, b) => Date.parse(b.lastUpdated) - Date.parse(a.lastUpdated))
     : sortRecruitmentThreads(allThreads.filter((t) => t.category === activeCategory));
@@ -2912,10 +2949,28 @@ export default function BoardScreen() {
     ] as any);
   };
   useEffect(() => {
-    if (!threadParam || !threadReadsHydrated) return;
+    if (!threadParam || leavingThreadDetailRef.current) return;
+    if (!threadReadsHydrated) return;
     const linkedThread = allThreads.find((item) => item.id === threadParam);
-    if (linkedThread && selectedThread?.id !== linkedThread.id) openThread(linkedThread);
-  }, [threadParam, allThreads, openThread, selectedThread?.id, threadReadsHydrated]);
+    if (linkedThread && selectedThread?.id !== linkedThread.id) {
+      const comments = importedComments[linkedThread.id] ?? [];
+      setSelectedThreadUnreadCommentIds(comments.slice(threadReadCounts[linkedThread.id] ?? 0).filter((comment) => comment.author.id !== viewerMemberId && postedAfterFirstSignIn(comment.createdAt)).map((comment) => comment.id));
+      setSelectedThreadIsUnread(threadReadCounts[linkedThread.id] === undefined && linkedThread.author.id !== viewerMemberId && postedAfterFirstSignIn(linkedThread.createdAt));
+      setSelectedThread(linkedThread);
+      markThreadRead(linkedThread.id);
+    }
+  }, [threadParam, allThreads, importedComments, markThreadRead, postedAfterFirstSignIn, selectedThread?.id, threadReadCounts, threadReadsHydrated, viewerMemberId]);
+  const leaveThreadDetail = useCallback((navigate?: () => void) => {
+    leavingThreadDetailRef.current = true;
+    setSelectedThread(null);
+    setSelectedThreadUnreadCommentIds([]);
+    setSelectedThreadIsUnread(false);
+    router.setParams({ thread: "" });
+    requestAnimationFrame(() => {
+      navigate?.();
+      requestAnimationFrame(() => { leavingThreadDetailRef.current = false; });
+    });
+  }, [router]);
   const visibleCategories = categories
     .filter((category) => category.group === (isClubIndexView ? "club" : "all") && canAccessCategory(category))
     .sort((a, b) => {
@@ -2972,9 +3027,10 @@ export default function BoardScreen() {
   };
 
   const handleOpenCategory = (category: BoardCategory) => {
-    markCategoryRead(category.key);
     if (category.key === "introduction") {
-      router.push({ pathname: "/chat", params: { id: "board-introduction", unreadCount: "0" } });
+      void Api.getSharedChatRoom("board-introduction")
+        .then((room) => router.push({ pathname: "/chat", params: { id: "board-introduction", unreadCount: String(room.unreadCount ?? 0) } }))
+        .catch(() => router.push({ pathname: "/chat", params: { id: "board-introduction", unreadCount: "0" } }));
       return;
     }
     if (category.key === "gourmet-map") {
@@ -3017,15 +3073,29 @@ export default function BoardScreen() {
   const renderCategoryRow = (cat: BoardCategory) => {
     const presentation = categoryPresentation(cat);
     const unreadStatus = categoryUnreadStatus(cat.key);
+    const shareUrl = cat.key === "gourmet-map"
+      ? "https://app.irotas-community.com/gourmet-map"
+      : `https://app.irotas-community.com/board?category=${encodeURIComponent(cat.key)}&view=threads&label=${encodeURIComponent(cat.label)}`;
+    const copyCategoryLink = () => {
+      longPressedCategoryRef.current = cat.key;
+      void Clipboard.setStringAsync(shareUrl).then(() => {
+        const message = `貼り付けると「#${cat.label}」と表示されます。`;
+        if (Platform.OS === "web") window.alert(`リンクをコピーしました\n${message}`);
+        else Alert.alert("リンクをコピーしました", message);
+      });
+    };
     return (
       <Pressable
         key={cat.key}
-        onPress={() => handleOpenCategory(cat)}
+        onPress={() => { if (longPressedCategoryRef.current === cat.key) { longPressedCategoryRef.current = null; return; } handleOpenCategory(cat); }}
+        onLongPress={copyCategoryLink}
+        delayLongPress={450}
+        accessibilityLabel={`${cat.label}を開く。長押しでリンクをコピー`}
         style={{ flexDirection: "row", alignItems: "center", minHeight: 62, borderRadius: 14, paddingHorizontal: 13, paddingVertical: 9, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border }}
       >
         <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: `${presentation.accent}20`, alignItems: "center", justifyContent: "center" }}><IconSymbol name={presentation.icon as any} size={21} color={presentation.accent} /></View>
         <View style={{ flex: 1, marginLeft: 11 }}><Text style={{ fontSize: 15, fontWeight: "900", color: colors.foreground }}>{cat.label}</Text><Text style={{ fontSize: 11, color: colors.muted, marginTop: 3 }}>{presentation.description}</Text></View>
-        {unreadStatus ? <View style={{ backgroundColor: unreadStatus === "mention" ? "#D9363E" : "#3478C7", borderRadius: 9, paddingHorizontal: 7, paddingVertical: 3, marginRight: 8 }}><Text style={{ fontSize: 10, fontWeight: "900", color: "#FFFFFF" }}>{unreadStatus === "mention" ? "@メンション" : "新着"}</Text></View> : null}
+        {unreadStatus === "mention" || (unreadStatus === "unread" && supportsBoardNewBadge(cat.key)) ? <View style={{ backgroundColor: unreadStatus === "mention" ? "#D9363E" : "#3478C7", borderRadius: 9, paddingHorizontal: 7, paddingVertical: 3, marginRight: 8 }}><Text style={{ fontSize: 10, fontWeight: "900", color: "#FFFFFF" }}>{unreadStatus === "mention" ? "@メンション" : "new"}</Text></View> : null}
         <IconSymbol name="chevron.right" size={17} color={colors.muted} />
       </Pressable>
     );
@@ -3095,10 +3165,15 @@ export default function BoardScreen() {
       {!isThreadView && !isClubIndexView ? <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 12, paddingBottom: 92, gap: 8, backgroundColor: "#FBFDFF" }}>
         {BOARD_HOME_ORDER.map((categoryKey) => {
           if (categoryKey === "club") {
+            const clubUnreadStatus = categories
+              .filter((item) => item.group === "club" && canAccessCategory(item))
+              .map((item) => categoryUnreadStatus(item.key))
+              .find((status) => status === "mention") ?? (categories.some((item) => item.group === "club" && canAccessCategory(item) && categoryUnreadStatus(item.key) === "unread") ? "unread" : null);
             return (
-              <Pressable key="club" onPress={() => router.push("/clubs")} style={{ flexDirection: "row", alignItems: "center", minHeight: 62, borderRadius: 14, paddingHorizontal: 13, paddingVertical: 9, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border }}>
+              <Pressable key="club" onPress={() => { if (longPressedCategoryRef.current === "club") { longPressedCategoryRef.current = null; return; } router.push("/clubs"); }} onLongPress={() => { longPressedCategoryRef.current = "club"; void Clipboard.setStringAsync("https://app.irotas-community.com/clubs").then(() => { if (Platform.OS === "web") window.alert("リンクをコピーしました\n貼り付けると「#部活動」と表示されます。"); else Alert.alert("リンクをコピーしました", "貼り付けると「#部活動」と表示されます。"); }); }} delayLongPress={450} accessibilityLabel="部活動を開く。長押しでリンクをコピー" style={{ flexDirection: "row", alignItems: "center", minHeight: 62, borderRadius: 14, paddingHorizontal: 13, paddingVertical: 9, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border }}>
                 <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: "#5579A620", alignItems: "center", justifyContent: "center" }}><IconSymbol name="person.3.fill" size={21} color="#5579A6" /></View>
                 <View style={{ flex: 1, marginLeft: 11 }}><Text style={{ fontSize: 15, fontWeight: "900", color: colors.foreground }}>部活動</Text><Text style={{ fontSize: 11, color: colors.muted, marginTop: 3 }}>活動報告・入部中の部活動・部活動を探す</Text></View>
+                {clubUnreadStatus ? <View style={{ backgroundColor: clubUnreadStatus === "mention" ? "#D9363E" : "#3478C7", borderRadius: 9, paddingHorizontal: 7, paddingVertical: 3, marginRight: 8 }}><Text style={{ fontSize: 10, fontWeight: "900", color: "#FFFFFF" }}>{clubUnreadStatus === "mention" ? "@メンション" : "new"}</Text></View> : null}
                 <IconSymbol name="chevron.right" size={17} color={colors.muted} />
               </Pressable>
             );
@@ -3129,7 +3204,8 @@ export default function BoardScreen() {
             showMenu={item.category !== "introduction"}
             unreadCount={unreadComments.length + (newThread ? 1 : 0)}
             mentionCount={mentionCount}
-            onPress={() => { openThread(item); router.setParams({ thread: item.id }); }}
+            isNewPost={newThread && supportsBoardNewBadge(item.category)}
+            onPress={() => { setSelectedThreadUnreadCommentIds(unreadComments.map((comment) => comment.id)); setSelectedThreadIsUnread(newThread); markThreadRead(item.id); setSelectedThread(item); router.setParams({ thread: item.id }); }}
             onEdit={item.author.id === viewerMemberId || userCanModerateAll ? () => setEditingThread(item) : undefined}
             onDelete={item.author.id === viewerMemberId || userCanModerateAll ? () => {
               if (Platform.OS === "web") {
@@ -3174,22 +3250,21 @@ export default function BoardScreen() {
         animationType="slide"
         presentationStyle="pageSheet"
         onRequestClose={() => {
-          setSelectedThread(null);
-          setSelectedThreadUnreadTarget(null);
-          if (fromHome === "1") router.replace("/(tabs)" as any);
-          else router.setParams({ thread: "" });
+          leaveThreadDetail(fromHome === "1" ? () => router.replace("/" as any) : undefined);
         }}
       >
         {selectedThread && (
           <ThreadDetailModal
             thread={selectedThread}
             initialComments={importedComments[selectedThread.id] ?? []}
-            initialUnreadTarget={selectedThreadUnreadTarget}
+            initialUnreadCommentIds={selectedThreadUnreadCommentIds}
+            initialThreadUnread={selectedThreadIsUnread}
+            returnToTimeline={fromHome === "1"}
+            onOpenMemberProfile={(params) => {
+              leaveThreadDetail(() => router.push({ pathname: "/member-profile", params }));
+            }}
             onClose={() => {
-              setSelectedThread(null);
-              setSelectedThreadUnreadTarget(null);
-              if (fromHome === "1") router.replace("/(tabs)" as any);
-              else router.setParams({ thread: "" });
+              leaveThreadDetail(fromHome === "1" ? () => router.replace("/" as any) : undefined);
             }}
             onEditThread={selectedThread.author.id === viewerMemberId || userCanModerateAll ? () => { setEditingThread(selectedThread); setSelectedThread(null); router.setParams({ thread: "" }); } : undefined}
             onChangeRecruitment={canChangeRecruitment(selectedThread) || canPinThread(selectedThread) ? () => promptRecruitmentStatus(selectedThread) : undefined}

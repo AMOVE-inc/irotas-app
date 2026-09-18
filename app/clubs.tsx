@@ -674,8 +674,9 @@ function SelectMembersForChatModal({
   );
 }
 
-function ApplicationReviewDetails({ clubId, memberId, application }: { clubId: string; memberId: string; application?: ClubApplication }) {
+function ApplicationReviewDetails({ clubId, memberId, application, onOpenProfile }: { clubId: string; memberId: string; application?: ClubApplication; onOpenProfile: () => void }) {
   const colors = useColors();
+  const router = useRouter();
   const fallbackMember = getMemberById(memberId);
   const [review, setReview] = useState<Api.ClubApplicantReview | null>(null);
   const [loaded, setLoaded] = useState(Boolean(fallbackMember));
@@ -706,20 +707,26 @@ function ApplicationReviewDetails({ clubId, memberId, application }: { clubId: s
   const eventHistory = review?.eventHistory ?? fallbackHistory;
   const wantsToDo = review?.wantsToDo ?? application?.wantsToDo ?? "申請内容の詳細はありません";
   const messageToLeader = review?.messageToLeader ?? application?.messageToLeader ?? "メッセージはありません";
-  const joinedYear = new Date(review?.joinedAt ?? fallbackMember?.joinedAt ?? "").getFullYear();
+  const joinedDate = new Date(review?.joinedAt ?? fallbackMember?.joinedAt ?? "");
+  const joinedLabel = Number.isFinite(joinedDate.getTime()) ? `入会 ${joinedDate.getFullYear()}年${joinedDate.getMonth() + 1}月` : null;
   const rankLabel = RANK_LABELS[rank as keyof typeof RANK_LABELS] ?? rank;
+  const profileAvatar = typeof profile.avatarUrl === "string" && profile.avatarUrl ? { uri: profile.avatarUrl } : fallbackMember?.avatar ?? DEFAULT_AVATAR;
+  const openApplicantProfile = () => {
+    onOpenProfile();
+    requestAnimationFrame(() => router.push({ pathname: "/member-profile", params: { id: memberId, legacyName: displayName, legacyAvatar: typeof profile.avatarUrl === "string" ? profile.avatarUrl : "", returnToClubManagement: "1", clubId } }));
+  };
 
   return (
     <View style={{ backgroundColor: colors.background, borderRadius: 12, padding: 12, marginBottom: 10, gap: 10 }}>
-      <View style={{ flexDirection: "row", alignItems: "center" }}>
-        <Image source={fallbackMember?.avatar ?? DEFAULT_AVATAR} style={{ width: 38, height: 38, borderRadius: 19 }} contentFit="cover" />
+      <Pressable onPress={openApplicantProfile} accessibilityLabel={`${displayName}のプロフィールを開く`} style={{ flexDirection: "row", alignItems: "center" }}>
+        <Image source={profileAvatar} style={{ width: 38, height: 38, borderRadius: 19 }} contentFit="cover" />
         <View style={{ marginLeft: 10, flex: 1 }}>
           <Text style={{ fontSize: 14, fontWeight: "800", color: colors.foreground }}>{displayName}</Text>
           <Text style={{ fontSize: 11, color: colors.muted }}>会員ID {memberId}</Text>
         </View>
-      </View>
+      </Pressable>
       <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6 }}>
-        {[memberTerm, ...branches.map((branch) => branch === "kanto" ? "関東支部" : branch === "kansai" ? "関西支部" : branch), rankLabel, Number.isFinite(joinedYear) ? `入会 ${joinedYear}年` : null].filter((label): label is string => Boolean(label)).map((label) => (
+        {[memberTerm, ...branches.map((branch) => branch === "kanto" ? "関東支部" : branch === "kansai" ? "関西支部" : branch), rankLabel, joinedLabel].filter((label): label is string => Boolean(label)).map((label) => (
           <View key={label} style={{ backgroundColor: colors.surface, borderRadius: 8, paddingHorizontal: 8, paddingVertical: 4 }}>
             <Text style={{ fontSize: 11, fontWeight: "600", color: colors.foreground }}>{label}</Text>
           </View>
@@ -1019,12 +1026,14 @@ function ClubDetailModal({
     router.push({ pathname: "/chat", params: { id: chatId } });
   };
 
+  const closeAndOpenApplicantProfile = () => onClose();
+
   if (showApplications && canManageMembers) {
     const reviewRows = [
       ...applicantIds.map((memberId) => ({ memberId, status: "pending" as const })),
       ...pendingIds.map((memberId) => ({ memberId, status: "on_hold" as const })),
     ];
-    return <View style={{ flex: 1, backgroundColor: colors.background }}><View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 16, paddingTop: 16, paddingBottom: 12, borderBottomWidth: 0.5, borderBottomColor: colors.border }}><Pressable onPress={() => setShowApplications(false)} accessibilityLabel="部員一覧へ戻る"><IconSymbol name="chevron.left" size={22} color={colors.foreground} /></Pressable><Text style={{ flex: 1, fontSize: 17, fontWeight: "800", color: colors.foreground, marginLeft: 12 }}>入部申請一覧</Text></View><ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>{reviewRows.length === 0 ? <View style={{ alignItems: "center", paddingVertical: 52 }}><Text style={{ fontSize: 14, color: colors.muted }}>確認待ちの入部申請はありません。</Text></View> : reviewRows.map(({ memberId, status }) => <View key={memberId} style={{ backgroundColor: colors.surface, borderRadius: 12, padding: 12, marginBottom: 10, borderWidth: 1, borderColor: colors.border }}><Text style={{ marginBottom: 8, fontSize: 12, fontWeight: "800", color: status === "pending" ? "#C47718" : "#39749D" }}>{status === "pending" ? "新規申請" : "保留中"}</Text><ApplicationReviewDetails clubId={club.id} memberId={memberId} application={applications.find((application) => application.memberId === memberId)} /><View style={{ flexDirection: "row", gap: 8 }}><Pressable onPress={() => handleApprove(memberId)} style={{ flex: 1, backgroundColor: "#34C75920", borderRadius: 8, paddingVertical: 9, alignItems: "center" }}><Text style={{ fontSize: 13, fontWeight: "800", color: "#248A3D" }}>承認</Text></Pressable><Pressable onPress={() => handlePending(memberId)} style={{ flex: 1, backgroundColor: "#FF990015", borderRadius: 8, paddingVertical: 9, alignItems: "center" }}><Text style={{ fontSize: 13, fontWeight: "800", color: "#B86F16" }}>保留</Text></Pressable><Pressable onPress={() => handleReject(memberId)} style={{ flex: 1, backgroundColor: "#FFF0F0", borderRadius: 8, paddingVertical: 9, alignItems: "center" }}><Text style={{ fontSize: 13, fontWeight: "800", color: colors.error }}>却下</Text></Pressable></View></View>)}</ScrollView></View>;
+    return <View style={{ flex: 1, backgroundColor: colors.background }}><View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 16, paddingTop: 16, paddingBottom: 12, borderBottomWidth: 0.5, borderBottomColor: colors.border }}><Pressable onPress={() => setShowApplications(false)} accessibilityLabel="部員一覧へ戻る"><IconSymbol name="chevron.left" size={22} color={colors.foreground} /></Pressable><Text style={{ flex: 1, fontSize: 17, fontWeight: "800", color: colors.foreground, marginLeft: 12 }}>入部申請一覧</Text></View><ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>{reviewRows.length === 0 ? <View style={{ alignItems: "center", paddingVertical: 52 }}><Text style={{ fontSize: 14, color: colors.muted }}>確認待ちの入部申請はありません。</Text></View> : reviewRows.map(({ memberId, status }) => <View key={memberId} style={{ backgroundColor: colors.surface, borderRadius: 12, padding: 12, marginBottom: 10, borderWidth: 1, borderColor: colors.border }}><Text style={{ marginBottom: 8, fontSize: 12, fontWeight: "800", color: status === "pending" ? "#C47718" : "#39749D" }}>{status === "pending" ? "新規申請" : "保留中"}</Text><ApplicationReviewDetails clubId={club.id} memberId={memberId} application={applications.find((application) => application.memberId === memberId)} onOpenProfile={closeAndOpenApplicantProfile} /><View style={{ flexDirection: "row", gap: 8 }}><Pressable onPress={() => handleApprove(memberId)} style={{ flex: 1, backgroundColor: "#34C75920", borderRadius: 8, paddingVertical: 9, alignItems: "center" }}><Text style={{ fontSize: 13, fontWeight: "800", color: "#248A3D" }}>承認</Text></Pressable><Pressable onPress={() => handlePending(memberId)} style={{ flex: 1, backgroundColor: "#FF990015", borderRadius: 8, paddingVertical: 9, alignItems: "center" }}><Text style={{ fontSize: 13, fontWeight: "800", color: "#B86F16" }}>保留</Text></Pressable><Pressable onPress={() => handleReject(memberId)} style={{ flex: 1, backgroundColor: "#FFF0F0", borderRadius: 8, paddingVertical: 9, alignItems: "center" }}><Text style={{ fontSize: 13, fontWeight: "800", color: colors.error }}>却下</Text></Pressable></View></View>)}</ScrollView></View>;
   }
 
   // 部員でない場合は申請画面のみ表示
@@ -1278,7 +1287,7 @@ function ClubDetailModal({
           const currentLeaderAvatar = typeof currentDirectoryLeader?.profile.avatarUrl === "string" ? currentDirectoryLeader.profile.avatarUrl : currentStaticLeader?.avatar ?? DEFAULT_AVATAR;
           return currentLeaderProfileId ? (
             <Pressable
-              onPress={() => { onClose(); router.push({ pathname: "/member-profile", params: { id: currentLeaderProfileId } }); }}
+              onPress={() => { onClose(); router.push({ pathname: "/member-profile", params: { id: currentLeaderProfileId, returnToClubManagement: "1", clubId: club.id } }); }}
               style={{
                 flexDirection: "row",
                 alignItems: "center",
@@ -1328,6 +1337,7 @@ function ClubDetailModal({
                         clubId={club.id}
                         memberId={memberId}
                         application={applications.find((application) => application.memberId === memberId)}
+                        onOpenProfile={closeAndOpenApplicantProfile}
                       />
                       <View style={{ flexDirection: "row", gap: 8 }}>
                         <Pressable
@@ -1381,6 +1391,7 @@ function ClubDetailModal({
                         clubId={club.id}
                         memberId={memberId}
                         application={applications.find((application) => application.memberId === memberId)}
+                        onOpenProfile={closeAndOpenApplicantProfile}
                       />
                       <View style={{ flexDirection: "row", gap: 8 }}>
                         <Pressable
@@ -1469,7 +1480,7 @@ function ClubDetailModal({
               }}
             >
               <Pressable
-                onPress={() => { onClose(); router.push({ pathname: "/member-profile", params: { id: memberId } }); }}
+                onPress={() => { onClose(); router.push({ pathname: "/member-profile", params: { id: memberId, returnToClubManagement: "1", clubId: club.id } }); }}
                 style={{ flexDirection: "row", alignItems: "center", flex: 1 }}
               >
                 <Image source={avatar} style={{ width: 36, height: 36, borderRadius: 18 }} contentFit="cover" />

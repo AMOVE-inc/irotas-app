@@ -21,6 +21,7 @@ const ICON_MAP: Record<string, { icon: string; color: string }> = {
   event_confirmed: { icon: "checkmark.circle.fill", color: "#34C759" },
   event_deadline: { icon: "clock.fill", color: "#FF9500" },
   event_reminder: { icon: "calendar", color: "#5B9BD5" },
+  event_mention: { icon: "at", color: "#D65E8D" },
   event_cancellation: { icon: "exclamationmark.triangle.fill", color: "#D94C55" },
   event_feedback: { icon: "star.fill", color: "#D69A14" },
 };
@@ -129,7 +130,7 @@ export default function NotificationsScreen() {
       setNotifications((items) => items.map((item) => item.id === notification.id ? { ...item, read: true } : item));
       try { await Api.markNotificationRead(notification.id); } catch {}
     }
-    if (notification.targetPath?.startsWith("/board?") || notification.targetPath?.startsWith("/chat?") || notification.targetPath?.startsWith("/member-profile?")) {
+    if (notification.targetPath?.startsWith("/board?") || notification.targetPath?.startsWith("/chat?") || notification.targetPath?.startsWith("/member-profile?") || notification.targetPath?.startsWith("/event-detail?")) {
       router.push(notification.targetPath as any);
     } else if (notification.type === "club_application" || notification.type === "club_approval") {
       router.push("/clubs");
