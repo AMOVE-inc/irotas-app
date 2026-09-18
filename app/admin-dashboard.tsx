@@ -171,6 +171,9 @@ export default function AdminDashboardScreen() {
   const [squareSyncProgress, setSquareSyncProgress] = useState<string | null>(null);
   const [discordProfileImporting, setDiscordProfileImporting] = useState(false);
   const [discordProfileImportResult, setDiscordProfileImportResult] = useState<string | null>(null);
+  const [discordLinkEmail, setDiscordLinkEmail] = useState("");
+  const [discordLinkUserId, setDiscordLinkUserId] = useState("");
+  const [discordLinking, setDiscordLinking] = useState(false);
   const [discordClubImporting, setDiscordClubImporting] = useState(false);
   const [discordClubPayload, setDiscordClubPayload] = useState<string | null>(null);
   const [discordClubPreview, setDiscordClubPreview] = useState<string | null>(null);
@@ -902,6 +905,49 @@ export default function AdminDashboardScreen() {
               } finally { setDiscordProfileImporting(false); }
             }} style={{ minHeight: 48, borderRadius: 12, backgroundColor: discordProfileImporting ? colors.border : "#5865F2", alignItems: "center", justifyContent: "center", marginTop: 14 }}>
               {discordProfileImporting ? <ActivityIndicator color="#FFF" /> : <Text style={{ color: "#FFF", fontWeight: "800" }}>DiscordプロフィールJSONを選択して反映</Text>}
+            </Pressable>
+            <Text style={{ fontSize: 14, fontWeight: "800", color: colors.foreground, marginTop: 20 }}>未連携の会員を個別に紐付け</Text>
+            <Text style={{ fontSize: 11, lineHeight: 17, color: colors.muted, marginTop: 5 }}>本人確認済みの会員メールとDiscordユーザーIDを指定します。Discordの自己紹介から名前・画像を取得し、既存のアプリプロフィール項目は保持します。</Text>
+            <TextInput
+              accessibilityLabel="会員メールアドレス"
+              autoCapitalize="none"
+              keyboardType="email-address"
+              placeholder="会員メールアドレス"
+              placeholderTextColor={colors.muted}
+              value={discordLinkEmail}
+              onChangeText={setDiscordLinkEmail}
+              style={{ minHeight: 46, borderRadius: 10, borderWidth: 1, borderColor: colors.border, color: colors.foreground, paddingHorizontal: 12, marginTop: 10 }}
+            />
+            <TextInput
+              accessibilityLabel="DiscordユーザーID"
+              autoCapitalize="none"
+              keyboardType="number-pad"
+              placeholder="DiscordユーザーID（17〜20桁）"
+              placeholderTextColor={colors.muted}
+              value={discordLinkUserId}
+              onChangeText={setDiscordLinkUserId}
+              style={{ minHeight: 46, borderRadius: 10, borderWidth: 1, borderColor: colors.border, color: colors.foreground, paddingHorizontal: 12, marginTop: 8 }}
+            />
+            <Pressable disabled={discordLinking} onPress={async () => {
+              const email = discordLinkEmail.trim().toLowerCase();
+              const discordUserId = discordLinkUserId.trim();
+              if (!/^\S+@\S+\.\S+$/.test(email) || !/^\d{17,20}$/.test(discordUserId)) {
+                Alert.alert("入力を確認してください", "会員メールアドレスとDiscordユーザーIDを確認してください。");
+                return;
+              }
+              setDiscordLinking(true);
+              try {
+                const response = await fetch("/api/admin/discord-profile-import/link", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ email, discordUserId, confirmation: `LINK_DISCORD_${discordUserId}` }) });
+                const result = await response.json() as { error?: string };
+                if (!response.ok) throw new Error(result.error ?? "本人連携に失敗しました");
+                setDiscordProfileImportResult("1名のDiscordプロフィールを連携しました");
+                setDiscordLinkEmail(""); setDiscordLinkUserId("");
+                await loadMembershipSummary();
+                Alert.alert("本人連携が完了しました", "Discordの名前とアイコンを反映しました。");
+              } catch (error) { Alert.alert("連携エラー", error instanceof Error ? error.message : "もう一度お試しください"); }
+              finally { setDiscordLinking(false); }
+            }} style={{ minHeight: 48, borderRadius: 12, backgroundColor: discordLinking ? colors.border : "#237A3B", alignItems: "center", justifyContent: "center", marginTop: 10 }}>
+              {discordLinking ? <ActivityIndicator color="#FFF" /> : <Text style={{ color: "#FFF", fontWeight: "800" }}>本人確認済みとして連携</Text>}
             </Pressable>
           </View>
         )}
