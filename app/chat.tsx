@@ -411,6 +411,7 @@ export default function ChatScreen() {
   const [messagesHydrated, setMessagesHydrated] = useState(false);
   const pendingReactionChoices = useRef(new Map<string, Map<string, boolean>>());
   const sharedFetchSequence = useRef(0);
+  const sharedFetchInFlight = useRef(false);
   const introductionChat = id === "board-introduction";
   // inverted リストではデータの先頭が入力欄側に置かれるため、最新メッセージを
   // 先頭にしておけばスクロール処理なしで最初から最新位置を描画できる。
@@ -546,6 +547,7 @@ export default function ChatScreen() {
       setIsLoadingRoom(false);
     });
     const fetchSequence = ++sharedFetchSequence.current;
+    sharedFetchInFlight.current = true;
     void Api.getSharedChatMessages(id).then((shared) => { if (fetchSequence === sharedFetchSequence.current) applySharedMessages(shared); }).catch(async (error) => {
       if (fetchSequence !== sharedFetchSequence.current) return;
       if (id.startsWith("club-chat-")) {
@@ -557,7 +559,7 @@ export default function ChatScreen() {
       setMessages([...(id === "board-introduction" ? [] : getMessages(id)), ...stored]
         .filter((message, index, all) => all.findIndex((candidate) => candidate.id === message.id) === index)
         .filter((message) => !isRetiredAnnouncement(message)));
-    }).finally(() => { if (fetchSequence === sharedFetchSequence.current) setMessagesHydrated(true); });
+    }).finally(() => { if (fetchSequence === sharedFetchSequence.current) { sharedFetchInFlight.current = false; setMessagesHydrated(true); } });
     void loadDynamicRooms().then(() => {
       const r = getRoomById(id);
       if (r && !r.shared) {
@@ -598,13 +600,13 @@ export default function ChatScreen() {
   // 共有メッセージの編集・削除・リアクションを、参加者全員の画面へ反映する。
   useEffect(() => {
     if (!id) return;
-    const refresh = () => { const fetchSequence = ++sharedFetchSequence.current; void Api.getSharedChatMessages(id).then((shared) => { if (fetchSequence === sharedFetchSequence.current) applySharedMessages(shared); }).catch((error) => {
+    const refresh = () => { if (sharedFetchInFlight.current) return; const fetchSequence = ++sharedFetchSequence.current; sharedFetchInFlight.current = true; void Api.getSharedChatMessages(id).then((shared) => { if (fetchSequence === sharedFetchSequence.current) applySharedMessages(shared); }).catch((error) => {
       if (fetchSequence !== sharedFetchSequence.current) return;
       if (id.startsWith("club-chat-") && error instanceof Api.ApiError && (error.statusCode === 403 || error.statusCode === 404)) {
         setMessages([]);
         setClubAccessDenied(true);
       }
-    }); };
+    }).finally(() => { if (fetchSequence === sharedFetchSequence.current) sharedFetchInFlight.current = false; }); };
     const timer = setInterval(refresh, 1500);
     return () => clearInterval(timer);
   }, [id, applySharedMessages]);
@@ -1005,14 +1007,14 @@ export default function ChatScreen() {
           }}
           scrollEventThrottle={80}
           onScrollToIndexFailed={(info) => { if (linkedScrollRetry.current) return; linkedScrollRetry.current = true; flatListRef.current?.scrollToOffset({ offset: Math.max(0, info.averageItemLength * info.index), animated: false }); setTimeout(() => flatListRef.current?.scrollToIndex({ index: info.index, animated: true, viewPosition: 0.5 }), 120); }}
-          ListEmptyComponent={
+          ListEmptyComponent={messagesHydrated ?
             <View style={{ alignItems: "center", paddingVertical: 40 }}>
               <IconSymbol name="message.fill" size={36} color={colors.border} />
           <Text style={{ fontSize: 14, color: colors.muted, marginTop: 8 }}>
                 まだメッセージはありません
               </Text>
             </View>
-          }
+          : null}
         />}
 
         {!isNearLatest && messages.length > 0 ? (
