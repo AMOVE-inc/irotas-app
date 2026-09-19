@@ -59,6 +59,20 @@ describe("event list filtering and sorting", () => {
     expect(result.every((event) => event.attendees < event.capacity)).toBe(true);
   });
 
+  it("hides past events from the vacancy filter using the date in Japan", () => {
+    const referenceDate = new Date("2026-09-18T15:30:00.000Z"); // 9/19 00:30 JST
+    const candidates = [
+      makeEvent({ id: "yesterday", date: "2026-09-18", eventType: "gourmet", status: "open", capacityMode: "unlimited" }),
+      makeEvent({ id: "today", date: "2026-09-19", eventType: "gourmet", status: "open" }),
+      makeEvent({ id: "future", date: "2026-09-20", eventType: "gourmet", status: "open" }),
+      makeEvent({ id: "full", date: "2026-09-20", eventType: "gourmet", status: "full" }),
+    ];
+    expect(filterAndSortEvents(candidates, { area: "all", eventType: "all", openOnly: true }, referenceDate).map((event) => event.id))
+      .toEqual(["today", "future"]);
+    expect(filterAndSortEvents(candidates, { area: "all", eventType: "all", openOnly: false }, referenceDate).map((event) => event.id))
+      .toContain("yesterday");
+  });
+
   it("filters official, gourmet, and club events independently", () => {
     const official = filterAndSortEvents(events, { area: "all", eventType: "official", openOnly: false }, referenceDate);
     const gourmet = filterAndSortEvents(events, { area: "all", eventType: "gourmet", openOnly: false }, referenceDate);

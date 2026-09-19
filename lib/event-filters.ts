@@ -70,7 +70,7 @@ export function filterAndSortEvents(
     .filter((event) => filters.area === "all" || event.category === filters.area || event.category === "all")
     .filter((event) => filters.eventType === "all" || event.eventType === filters.eventType)
     .filter((event) => !filters.joinedClubOnly || (event.eventType === "club" && Boolean(event.clubId && filters.joinedClubIds?.includes(event.clubId))))
-    .filter((event) => !filters.openOnly || (event.status === "open" && (Boolean(event.capacityMode) || event.attendees < event.capacity)))
+    .filter((event) => !filters.openOnly || (event.date >= todayKey && event.status === "open" && (Boolean(event.capacityMode) || event.attendees < event.capacity)))
     .filter((event) => startBoundary === null || eventStart(event) >= startBoundary)
     .filter((event) => endBoundary === null || eventStart(event) <= endBoundary)
     .filter((event) => !filters.hostedByMemberId || event.isOrganizer === true || event.createdBy === filters.hostedByMemberId)
