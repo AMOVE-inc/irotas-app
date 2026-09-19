@@ -1260,9 +1260,9 @@ function ThreadDetailModal({
                 <Text style={{ fontSize: 14, fontWeight: "700", color: colors.foreground }}>
                   {stripRankFromName(thread.author.name)}
                 </Text>
-                {threadPostedAt ? <Text style={{ fontSize: 11, color: colors.muted, marginLeft: 8 }} accessibilityLabel={`投稿日時 ${threadPostedAt}`}>{threadPostedAt}</Text> : null}
                 <NewMemberMark member={thread.author} size={13} />
                 <OperatorOrRankBadge member={thread.author} />
+                {threadPostedAt ? <Text style={{ fontSize: 11, color: colors.muted, marginLeft: 8 }} accessibilityLabel={`投稿日時 ${threadPostedAt}`}>{threadPostedAt}</Text> : null}
               </View>
               {thread.author.generation > 0 && !getMemberStaffRole(thread.author.name, thread.author.role) ? <Text style={{ fontSize: 11, color: colors.muted, marginTop: 2 }}>{thread.author.generation}期生</Text> : null}
             </View>
