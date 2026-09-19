@@ -44,7 +44,7 @@ describe("production event validation", () => {
       "discord-event-1542148647565660321": ["2026-10-20", 3, 4],
       "discord-event-1545794805269798983": ["2026-10-24", 3, 4],
       "discord-event-1545132446675107870": ["2026-09-22", 6, 8],
-      "discord-event-1537390278665568327": ["2026-09-22", 9, 3],
+      "discord-event-1537390278665568327": ["2026-09-22", 3, 9],
     };
     for (const [id, [date, count, capacity]] of Object.entries(expected)) {
       const event = IMPORTED_DISCORD_EVENTS.find((item) => item.id === id);
