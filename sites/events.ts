@@ -361,6 +361,7 @@ function stringArray(value: unknown, maximumItems: number, maximumLength = 80) {
 
 const QUARTER_HOUR_TIME = /^([01]\d|2[0-3]):(00|15|30|45)$/;
 const CLOCK_TIME = /^([01]\d|2[0-3]):[0-5]\d$/;
+const UNDECIDED_EVENT_TIME = "時間未定";
 
 /**
  * New event times stay on 15-minute boundaries. Discord imports can contain a
@@ -368,7 +369,7 @@ const CLOCK_TIME = /^([01]\d|2[0-3]):[0-5]\d$/;
  * value without making every other field impossible to save.
  */
 export function isAllowedEditedEventTime(time: string, eventId: string, publicDataJson: string) {
-  if (QUARTER_HOUR_TIME.test(time)) return true;
+  if (time === UNDECIDED_EVENT_TIME || QUARTER_HOUR_TIME.test(time)) return true;
   if (!eventId.startsWith("discord-event-") || !CLOCK_TIME.test(time)) return false;
   try {
     const data = JSON.parse(publicDataJson) as { time?: unknown };
@@ -391,7 +392,7 @@ export function sanitizeEvent(value: unknown) {
   const capacity = number(input.capacity, capacityMode ? 0 : 1, 100);
   const reservationCapacity = number(input.reservationCapacity, 0, 101);
   const genres = stringArray(input.genres, 20);
-  if (!eventType || !title || !date || !/^\d{4}-\d{2}-\d{2}$/.test(date) || !time || !QUARTER_HOUR_TIME.test(time) || capacity === null || (capacityMode && capacity !== 0) || reservationCapacity === null || genres === null)
+  if (!eventType || !title || !date || !/^\d{4}-\d{2}-\d{2}$/.test(date) || !time || (time !== UNDECIDED_EVENT_TIME && !QUARTER_HOUR_TIME.test(time)) || capacity === null || (capacityMode && capacity !== 0) || reservationCapacity === null || genres === null)
     return null;
   const clubId = text(input.clubId, 80);
   if (eventType === "club" && !clubId) return null;

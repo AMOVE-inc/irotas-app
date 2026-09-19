@@ -311,7 +311,7 @@ export default function CreateEventScreen() {
 
         <FieldLabel>{eventType === "club" ? "店名・会場名（任意）" : "店名 *"}</FieldLabel><TextInput value={restaurantName} onChangeText={setRestaurantName} placeholder={eventType === "club" ? "例：代々木公園、〇〇スタジアム" : "店舗名"} placeholderTextColor={colors.muted} style={inputStyle} />
         <FieldLabel>{eventType === "club" ? "イベント名 *" : "イベント名（任意）"}</FieldLabel><TextInput value={eventName} onChangeText={setEventName} placeholder={eventType === "club" ? "例：朝の代々木公園ランニング" : "未入力の場合は店名を表示"} placeholderTextColor={colors.muted} style={inputStyle} />
-        <FieldLabel>日時 *</FieldLabel><View style={{ gap: 9 }}><CalendarField label="開催日" value={date} onChange={setDate} /><SelectField label="開始時間（15分単位）" value={time} options={EVENT_TIME_OPTIONS} onChange={setTime} /></View>
+        <FieldLabel>日時 *</FieldLabel><View style={{ gap: 9 }}><CalendarField label="開催日" value={date} onChange={setDate} /><SelectField label="開始時間" value={time} options={EVENT_TIME_OPTIONS} onChange={setTime} /></View>
         <FieldLabel>住所（任意）</FieldLabel><TextInput value={address} onChangeText={setAddress} placeholder="例：東京都渋谷区恵比寿1-1-1" placeholderTextColor={colors.muted} style={inputStyle} />
         {address.trim() ? <Text style={{ marginTop: 7, fontSize: 12, fontWeight: "700", color: extractedLocation.prefecture ? "#3E78A1" : colors.error }}>{extractedLocation.prefecture ? `抽出エリア：${formatEventArea(extractedLocation.prefecture, extractedLocation.tokyoArea, address)}` : "都道府県を住所に含めてください"}</Text> : null}
         <FieldLabel>食べログURL（任意）</FieldLabel><TextInput value={tabelogUrl} onChangeText={setTabelogUrl} placeholder="https://tabelog.com/..." placeholderTextColor={colors.muted} autoCapitalize="none" keyboardType="url" style={inputStyle} />

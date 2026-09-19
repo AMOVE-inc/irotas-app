@@ -35,8 +35,8 @@ const RELEVANT_BOARD_KINDS: Record<string, HomeActivityKind | undefined> = {
 export function initialHomeActivities(): HomeActivity[] {
   const eventActivities = EVENTS.map((event): HomeActivity => ({
     id: `event:${event.id}`, kind: "event", title: event.title,
-    description: `${event.eventType === "official" ? "新しい公式イベントが公開されました" : event.eventType === "club" ? "新しい部活動イベントが公開されました" : "新しいグルメ会が公開されました"}\n${event.date.replace(/-/g, "/")} ${event.time}〜`,
-    createdAt: event.createdAt ?? `${event.date}T${event.time}:00+09:00`, route: "/event-detail", params: { id: event.id },
+    description: `${event.eventType === "official" ? "新しい公式イベントが公開されました" : event.eventType === "club" ? "新しい部活動イベントが公開されました" : "新しいグルメ会が公開されました"}\n${event.date.replace(/-/g, "/")} ${event.time}${event.time === "時間未定" ? "" : "〜"}`,
+    createdAt: event.createdAt ?? `${event.date}T00:00:00+09:00`, route: "/event-detail", params: { id: event.id },
     authorId: event.organizerProfileId ?? event.createdBy,
     authorName: event.organizerName,
     authorAvatar: event.organizerAvatar,

@@ -63,6 +63,11 @@ describe("production event validation", () => {
     });
   });
 
+  it("accepts an undecided time for new and edited events", () => {
+    expect(sanitizeEvent(validEvent({ time: "時間未定" }))).toMatchObject({ time: "時間未定" });
+    expect(isAllowedEditedEventTime("時間未定", "event-native", "{}")).toBe(true);
+  });
+
   it("rejects invalid times, remote image URLs, and deadlines after the event", () => {
     expect(sanitizeEvent(validEvent({ time: "19:10" }))).toBeNull();
     expect(sanitizeEvent(validEvent({ image: "https://example.com/a.jpg" }))).toBeNull();

@@ -1,10 +1,14 @@
 import type { Event, MemberRank } from "../constants/mock-data";
 import { eventCategoryFromPrefecture, extractEventLocation } from "./event-location";
 
-export const EVENT_TIME_OPTIONS = Array.from(
-  { length: 96 },
-  (_, index) => `${String(Math.floor(index / 4)).padStart(2, "0")}:${String((index % 4) * 15).padStart(2, "0")}`,
-);
+export const EVENT_TIME_UNDECIDED = "時間未定";
+export const EVENT_TIME_OPTIONS = [
+  EVENT_TIME_UNDECIDED,
+  ...Array.from(
+    { length: 96 },
+    (_, index) => `${String(Math.floor(index / 4)).padStart(2, "0")}:${String((index % 4) * 15).padStart(2, "0")}`,
+  ),
+];
 export const EVENT_CAPACITY_OPTIONS = ["undecided", "unlimited", ...Array.from({ length: 100 }, (_, index) => String(index + 1))];
 export const EVENT_RESERVATION_CAPACITY_OPTIONS = ["undecided", ...EVENT_CAPACITY_OPTIONS.slice(2)];
 export function eventCapacityOptionLabel(value: string) {
