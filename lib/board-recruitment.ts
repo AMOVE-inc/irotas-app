@@ -10,6 +10,19 @@ export function isClubSelfIntroduction(thread: Pick<BoardThread, "category" | "t
   return thread.category.startsWith("club-club-") && /自己紹介/.test(thread.title);
 }
 
+/** Discord移行投稿の本人確認は、サーバーが付与した権限を使用する。 */
+export function canRegisterBoardThreadEvent(
+  thread: Pick<BoardThread, "id" | "category" | "title" | "author" | "viewerCanManage">,
+  viewerMemberId: string,
+  viewerIsOperator: boolean,
+): boolean {
+  if (!viewerMemberId || !isRecruitmentBoardCategory(thread.category) || isClubSelfIntroduction(thread)) return false;
+  const isAuthor = thread.id.startsWith("discord-board-")
+    ? Boolean(thread.viewerCanManage)
+    : thread.author.id === viewerMemberId;
+  return thread.category === "free-chat" ? isAuthor || viewerIsOperator : isAuthor;
+}
+
 export function isThreadPinned(thread: Pick<BoardThread, "isPinned">): boolean {
   return Boolean(thread.isPinned);
 }

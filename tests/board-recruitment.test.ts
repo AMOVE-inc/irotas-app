@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { displayBoardThreadTitle, inferImportedRecruitment, isBoardThreadClosed, isClubSelfIntroduction, isRecruitmentBoardCategory, isThreadPinned, sortRecruitmentThreads } from "../lib/board-recruitment";
+import { canRegisterBoardThreadEvent, displayBoardThreadTitle, inferImportedRecruitment, isBoardThreadClosed, isClubSelfIntroduction, isRecruitmentBoardCategory, isThreadPinned, sortRecruitmentThreads } from "../lib/board-recruitment";
 import { parseDiscordRichLines, parseDiscordHeading, tokenizeRichTextLinks } from "../lib/discord-rich-text";
 import type { BoardThread } from "../constants/mock-data";
 
@@ -47,6 +47,27 @@ describe("Discord掲示板表示", () => {
 });
 
 describe("掲示板募集ステータス", () => {
+  it("なんでも掲示板のイベント登録は投稿者・運営・管理者にだけ表示する", () => {
+    const thread = { id: "post-1", category: "free-chat", title: "食事会", author: { id: "IRO0100" } } as BoardThread;
+    expect(canRegisterBoardThreadEvent(thread, "IRO0100", false)).toBe(true);
+    expect(canRegisterBoardThreadEvent(thread, "IRO0200", true)).toBe(true);
+    expect(canRegisterBoardThreadEvent(thread, "IRO0200", false)).toBe(false);
+    expect(canRegisterBoardThreadEvent(thread, "", true)).toBe(false);
+  });
+
+  it("Discord移行投稿は名前が一致しても本人とみなさず、サーバーの権限を使う", () => {
+    const thread = { id: "discord-board-123", category: "free-chat", title: "食事会", author: { id: "IRO0100" } } as BoardThread;
+    expect(canRegisterBoardThreadEvent(thread, "IRO0100", false)).toBe(false);
+    expect(canRegisterBoardThreadEvent({ ...thread, viewerCanManage: true }, "IRO0200", false)).toBe(true);
+  });
+
+  it("運営でも他の掲示板の投稿をイベント化するボタンは増やさない", () => {
+    const thread = { id: "post-1", category: "club-club-wine", title: "ワイン会", author: { id: "IRO0100" } } as BoardThread;
+    expect(canRegisterBoardThreadEvent(thread, "IRO0200", true)).toBe(false);
+    expect(canRegisterBoardThreadEvent(thread, "IRO0100", false)).toBe(true);
+    expect(canRegisterBoardThreadEvent({ ...thread, category: "gourmet-advice" }, "IRO0100", true)).toBe(false);
+  });
+
   it("なんでも掲示板と個別部活だけを対象にする", () => {
     expect(isRecruitmentBoardCategory("free-chat")).toBe(true);
     expect(isRecruitmentBoardCategory("club-club-wine")).toBe(true);

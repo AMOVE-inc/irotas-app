@@ -79,7 +79,7 @@ import { boardPollResult, finalizeBoardPollOnce, isBoardPollOpen, loadBoardPoll,
 import { addInAppNotification } from "@/lib/in-app-notifications-store";
 import { deleteBoardComment, deleteBoardThread, loadBoardCommentEdits, loadDeletedBoardCommentIds, loadDeletedBoardThreadIds, saveBoardCommentEdit } from "@/lib/board-content-store";
 import { CalendarField } from "@/components/calendar-field";
-import { displayBoardThreadTitle, isBoardThreadClosed, isClubSelfIntroduction, isRecruitmentBoardCategory, isThreadPinned, sortRecruitmentThreads } from "@/lib/board-recruitment";
+import { canRegisterBoardThreadEvent, displayBoardThreadTitle, isBoardThreadClosed, isClubSelfIntroduction, isRecruitmentBoardCategory, isThreadPinned, sortRecruitmentThreads } from "@/lib/board-recruitment";
 import { memberFromAuthUser } from "@/lib/auth-member";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Clipboard from "expo-clipboard";
@@ -3286,7 +3286,7 @@ export default function BoardScreen() {
               leaveThreadDetail(fromHome === "1" ? () => router.replace("/" as any) : undefined);
             }}
             onEditThread={selectedThread.viewerCanManage || selectedThread.author.id === viewerMemberId || userCanModerateAll ? () => { setEditingThread(selectedThread); setSelectedThread(null); router.setParams({ thread: "" }); } : undefined}
-            canRegisterEvent={selectedThread.author.id === viewerMemberId}
+            canRegisterEvent={canRegisterBoardThreadEvent(selectedThread, viewerMemberId, userCanModerateAll)}
             applicationClub={applicationClubForThread(selectedThread)}
             canModerateAll={userCanModerateAll}
           />
