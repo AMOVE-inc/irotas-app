@@ -245,7 +245,7 @@ export function commentText(value: unknown) {
   return content && content.length <= 5000 ? content : null;
 }
 
-type EventMentionMember = { id: number; display_name: string; public_member_id: string | null };
+type EventMentionMember = { id: number; display_name: string; public_member_id: string | null; branches_json?: string | null };
 
 function eventMentionDisplayName(value: string) {
   return value
@@ -280,6 +280,14 @@ export function eventMentionRecipientIds(
     for (const [label, candidates] of aliases) {
       if (candidates.size === 1 && mentionsViewer(value, [label])) ids.add([...candidates][0]);
     }
+    const kantoMentioned = mentionsViewer(value, ["関東支部"]);
+    const kansaiMentioned = mentionsViewer(value, ["関西支部"]);
+    if (kantoMentioned || kansaiMentioned) for (const member of members) {
+      if (member.id === actorMemberId) continue;
+      let branches: string[] = [];
+      try { branches = JSON.parse(member.branches_json ?? "[]") as string[]; } catch {}
+      if ((kantoMentioned && branches.includes("kanto")) || (kansaiMentioned && branches.includes("kansai"))) ids.add(member.id);
+    }
     return ids;
   };
   const current = resolve(content);
@@ -303,7 +311,7 @@ async function eventMentionNotificationStatements(
   },
 ) {
   if (!input.content.includes("@")) return [];
-  const result = await db.prepare(`SELECT id, display_name, public_member_id FROM members
+  const result = await db.prepare(`SELECT id, display_name, public_member_id, branches_json FROM members
     WHERE account_status = 'active' AND id != ?`).bind(input.actorMemberId).all<EventMentionMember>();
   const recipientIds = eventMentionRecipientIds(input.content, input.previousContent ?? "", result.results ?? [], input.actorMemberId);
   if (!recipientIds.length) return [];

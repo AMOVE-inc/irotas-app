@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { CLUBS, MEMBERS } from "../constants/mock-data";
-import { getMentionGroups, getMentionQuery, getMentionedMemberIds, insertMention, mentionsViewer } from "../lib/mentions";
+import { getMentionGroups, getMentionQuery, getMentionedMemberIds, insertMention, mentionsViewer, selectedEventMentionLabels } from "../lib/mentions";
 
 const groups = getMentionGroups(MEMBERS, CLUBS);
 
@@ -33,6 +33,9 @@ describe("group mentions", () => {
     expect(getMentionQuery("確認お願いします @山田 太郎")).toBe("山田 太郎");
     expect(insertMention("確認お願いします @関東", "関東支部")).toBe("確認お願いします @関東支部 ");
     expect(insertMention("確認お願いします @杏", "杏奈", "IRO0021")).toBe("確認お願いします @杏奈（IRO0021） ");
+    expect(getMentionQuery("＠関東支部\n続き", 2)).toBe("関");
+    expect(insertMention("前半 ＠関 後半", "関東支部", undefined, 5)).toBe("前半 @関東支部  後半");
+    expect(selectedEventMentionLabels("@関東支部 @杏奈（IRO0021）", groups.filter((group) => group.category === "branch"))).toEqual(["@関東支部", "@杏奈"]);
   });
 
   it("distinguishes exact personal, branch, and joined-club mentions", () => {

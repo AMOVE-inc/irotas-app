@@ -82,6 +82,16 @@ describe("production event validation", () => {
     expect(eventMentionRecipientIds("@IRO0003", "", members, 1)).toEqual([3]);
   });
 
+  it("resolves an event branch mention only to active members in that branch", () => {
+    const members = [
+      { id: 1, display_name: "主催者", public_member_id: "IRO0001", branches_json: '["kanto"]' },
+      { id: 2, display_name: "関東会員", public_member_id: "IRO0002", branches_json: '["kanto"]' },
+      { id: 3, display_name: "関西会員", public_member_id: "IRO0003", branches_json: '["kansai"]' },
+    ];
+    expect(eventMentionRecipientIds("@関東支部 来月も募集します", "", members, 1)).toEqual([2]);
+    expect(eventMentionRecipientIds("@関東支部 来月も募集します", "@関東支部", members, 1)).toEqual([]);
+  });
+
   it("accepts a valid 15-minute event and resets participation state", () => {
     expect(sanitizeEvent(validEvent())).toMatchObject({
       title: "恵比寿グルメ会",

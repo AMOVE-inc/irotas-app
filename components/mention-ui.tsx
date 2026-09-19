@@ -2,7 +2,7 @@ import { Image } from "expo-image";
 import { Linking, Pressable, ScrollView, Text, View, type TextStyle } from "react-native";
 import { BOARD_THREADS, type Member , BoardThread, ChatRoom } from "@/constants/mock-data";
 import type { MentionGroup } from "@/lib/mentions";
-import { extractMentionLabels, isGroupMention } from "@/lib/mentions";
+import { extractMentionLabels, isGroupMention, selectedEventMentionLabels } from "@/lib/mentions";
 import { useColors } from "@/hooks/use-colors";
 import { formatEventLinkLabel, parseInternalLink, type InternalLinkMention, type InternalLinkPathname } from "@/lib/internal-links";
 import { getAllRooms } from "@/lib/chat-store";
@@ -132,6 +132,16 @@ export function MentionSuggestions({ query, groups, members, memberIds, onSelect
       </ScrollView>
     </View>
   );
+}
+
+export function EventMentionPreview({ content, groups }: { content: string; groups: MentionGroup[] }) {
+  const colors = useColors();
+  const labels = selectedEventMentionLabels(content, groups);
+  if (!labels.length) return null;
+  return <View accessibilityLabel={`メンション先: ${labels.join("、")}`} style={{ flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 6, marginTop: 8 }}>
+    <Text style={{ fontSize: 12, color: colors.muted }}>メンション先</Text>
+    {labels.map((label) => <Text key={label} style={{ fontSize: 12, fontWeight: "800", color: "#9A4A75", backgroundColor: "#FBE7F0", borderRadius: 7, paddingHorizontal: 8, paddingVertical: 5 }}>{label}</Text>)}
+  </View>;
 }
 function formatMemberTerm(memberTerm: string): string {
   const termNumber = memberTerm.match(/\d+/)?.[0];
