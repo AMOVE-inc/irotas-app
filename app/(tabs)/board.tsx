@@ -3340,21 +3340,26 @@ export default function BoardScreen() {
           thread={editingThread}
           onClose={() => setEditingThread(null)}
           onSave={(updated) => {
-            if (updated.shared || updated.id.startsWith("discord-board-")) {
-              void (async () => {
+            const previous = editingThread;
+            threadManagementRevision.current += 1;
+            threadManagementPending.current.add(updated.id);
+            setDynamicThreads((current) => current.map((item) => item.id === updated.id ? updated : item));
+            setSelectedThread((current) => current?.id === updated.id ? updated : current);
+            void (async () => {
+              if (updated.shared || updated.id.startsWith("discord-board-")) {
                 if (!updated.shared) await Api.ensureSharedImportedBoardThread(updated.id);
                 await Api.updateSharedBoardThread(updated.id, { title: updated.title, content: updated.preview, status: updated.recruitmentStatus ?? (updated.isRecruiting ? "open" : "none"), pinned: Boolean(updated.isPinned), data: boardThreadData(updated) });
-              })().then(() => {
-                setEditedThreads((prev) => ({ ...prev, [updated.id]: updated }));
-                setEditingThread(null);
-              }).catch((error) => Alert.alert("保存できませんでした", error instanceof Error ? error.message : "もう一度お試しください。"));
-              return;
-            }
-            setEditedThreads((prev) => ({ ...prev, [updated.id]: updated }));
-            void saveBoardThreadEdit(updated).catch(() => {
-              Alert.alert("保存できませんでした", "通信環境を確認して、もう一度お試しください。");
+              } else await saveBoardThreadEdit(updated);
+            })().then(() => {
+              setEditedThreads((current) => ({ ...current, [updated.id]: updated }));
+            }).catch((error) => {
+              threadManagementRevision.current += 1;
+              setDynamicThreads((current) => current.map((item) => item.id === updated.id ? previous : item));
+              setSelectedThread((current) => current?.id === updated.id ? previous : current);
+              Alert.alert("保存できませんでした", error instanceof Error ? error.message : "通信環境を確認して、もう一度お試しください。");
+            }).finally(() => {
+              threadManagementPending.current.delete(updated.id);
             });
-            setEditingThread(null);
           }}
           onDelete={async () => {
             const deletingId = editingThread.id;
