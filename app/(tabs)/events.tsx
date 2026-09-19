@@ -770,7 +770,7 @@ function EventCard({
               <Text
                 style={{ fontSize: 10, fontWeight: "900", color: "#34A853" }}
               >
-                {event.discordRecruitmentClosedAt ? "Discordでの募集は終了" : isDiscordRecruitmentOpen(event) ? "参加者はDiscordで確定" : event.capacityMode ? `募集人数 ${event.capacityMode === "undecided" ? "未定" : "上限なし"} ${event.status === "open" ? "募集中" : ""}` : `${remainingCapacity}名/${reservationCapacity === 0 ? "未定" : `${reservationCapacity}名`} ${event.status === "open" ? "募集中" : ""}`}
+                {isDiscordRecruitmentOpen(event) ? "参加者はDiscordで確定" : event.capacityMode ? `募集人数 ${event.capacityMode === "undecided" ? "未定" : "上限なし"} ${event.status === "open" ? "募集中" : ""}` : `${remainingCapacity}名/${reservationCapacity === 0 ? "未定" : `${reservationCapacity}名`} ${event.status === "open" ? "募集中" : ""}`}
               </Text>
             </View>
             <View
