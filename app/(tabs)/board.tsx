@@ -2657,6 +2657,8 @@ export default function BoardScreen() {
   const [xpReward, setXpReward] = useState<XpReward | null>(null);
 
   const [dynamicThreads, setDynamicThreads] = useState<BoardThread[]>([]);
+  const threadManagementRevision = useRef(0);
+  const threadManagementPending = useRef(new Set<string>());
   const [importedComments, setImportedComments] = useState<Record<string, BoardComment[]>>({});
   const [threadReadCounts, setThreadReadCounts] = useState<Record<string, number>>({});
   const [threadReadsHydrated, setThreadReadsHydrated] = useState(false);
@@ -2750,7 +2752,9 @@ export default function BoardScreen() {
   }, []);
 
   const loadBoardArchive = useCallback(async () => {
+    const revision = threadManagementRevision.current;
     const [rawArchive, directory] = await Promise.all([Api.getBoardArchive("all"), Api.getMemberDirectory().catch(() => [])]);
+    if (revision !== threadManagementRevision.current || threadManagementPending.current.size > 0) return;
     setMemberDirectory(directory);
     const archive = parseDiscordBoardArchive(rawArchive, directory);
     setDynamicThreads((current) => {
@@ -2769,7 +2773,9 @@ export default function BoardScreen() {
   }, [loadBoardArchive]);
 
   const loadSharedBoardContent = useCallback(async (category?: string) => {
+    const revision = threadManagementRevision.current;
     const result = await Api.getSharedBoardContent(category);
+    if (revision !== threadManagementRevision.current || threadManagementPending.current.size > 0) return;
     const commentsByThread = result.comments
       .map((comment) => sharedCommentToBoardComment(comment, viewerMemberId))
       .reduce<Record<string, BoardComment[]>>((groups, comment) => {
@@ -2915,19 +2921,27 @@ export default function BoardScreen() {
   };
   const canPinThread = (thread: BoardThread) => thread.author.id === viewerMemberId || Boolean(clubForThread(thread) && getClubViewerAccess(clubForThread(thread)!, authUser?.memberId, CURRENT_USER.id).isLeader) || userCanModerateRecruitment;
   const updateThreadManagement = async (thread: BoardThread, changes: Pick<BoardThread, "isRecruiting" | "isPinned" | "recruitmentStatus">) => {
+    if (threadManagementPending.current.has(thread.id)) return;
+    threadManagementPending.current.add(thread.id);
     const updated = { ...thread, ...changes, lastUpdated: thread.lastUpdated };
-    if (thread.shared || thread.id.startsWith("discord-board-")) {
-      try {
+    threadManagementRevision.current += 1;
+    setDynamicThreads((current) => current.map((item) => item.id === updated.id ? { ...item, ...changes } : item));
+    setSelectedThread((current) => current?.id === updated.id ? { ...current, ...changes } : current);
+    try {
+      if (thread.shared || thread.id.startsWith("discord-board-")) {
         if (!thread.shared) await Api.ensureSharedImportedBoardThread(thread.id);
         await Api.updateSharedBoardThread(thread.id, { status: changes.recruitmentStatus ?? "none", pinned: Boolean(changes.isPinned) });
-      } catch (error) {
-        Alert.alert("保存できませんでした", error instanceof Error ? error.message : "通信環境を確認して、もう一度お試しください。");
-        return;
-      }
+      } else await saveBoardThreadEdit(updated);
+      setEditedThreads((current) => ({ ...current, [updated.id]: updated }));
+    } catch (error) {
+      threadManagementRevision.current += 1;
+      const previous = { isRecruiting: thread.isRecruiting, isPinned: thread.isPinned, recruitmentStatus: thread.recruitmentStatus };
+      setDynamicThreads((current) => current.map((item) => item.id === thread.id ? { ...item, ...previous } : item));
+      setSelectedThread((current) => current?.id === thread.id ? { ...current, ...previous } : current);
+      Alert.alert("保存できませんでした", error instanceof Error ? error.message : "通信環境を確認して、もう一度お試しください。");
+    } finally {
+      threadManagementPending.current.delete(thread.id);
     }
-    setEditedThreads((current) => ({ ...current, [updated.id]: updated }));
-    setSelectedThread((current) => current?.id === updated.id ? updated : current);
-    if (!thread.shared && !thread.id.startsWith("discord-board-")) void saveBoardThreadEdit(updated).catch(() => Alert.alert("保存できませんでした", "通信環境を確認して、もう一度お試しください。"));
   };
   const deleteThread = async (thread: BoardThread) => {
     try {
@@ -2946,7 +2960,7 @@ export default function BoardScreen() {
     }
   };
   const toggleThreadClosed = (thread: BoardThread) => updateThreadManagement(thread, {
-    isRecruiting: false,
+    isRecruiting: isBoardThreadClosed(thread),
     isPinned: thread.isPinned,
     recruitmentStatus: isBoardThreadClosed(thread) ? "open" : "closed",
   });
