@@ -236,6 +236,7 @@ export interface BoardThread {
   commentCount: number;
   lastUpdated: string;
   preview: string;
+  importedLinkPreviews?: import("../lib/discord-link-preview").ImportedLinkPreview[];
   isRecruiting: boolean; // 参加者募集中かどうか
   recruitmentStatus?: "open" | "closed" | "none"; // 掲示板上の募集ステータス（旧データはisRecruitingから補完）
   isPinned?: boolean; // 一覧上部へ固定
@@ -297,6 +298,7 @@ export interface BoardComment {
   threadId: string;
   author: Member;
   content: string;
+  importedLinkPreviews?: import("../lib/discord-link-preview").ImportedLinkPreview[];
   replyTo?: import("../lib/reply-reference").ReplyReference;
   createdAt: string;
   images?: BoardImage[];

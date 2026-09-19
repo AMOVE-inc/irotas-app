@@ -1,5 +1,6 @@
 import { ScreenContainer } from "@/components/screen-container";
 import { ExpandableImage } from "@/components/expandable-image";
+import { BoardLinkPreviewCard } from "@/components/board-link-preview-card";
 import { SaveableVideo } from "@/components/saveable-video";
 import { ReplyReferenceView } from "@/components/reply-reference-view";
 import { NewMemberMark } from "@/components/new-member-mark";
@@ -943,7 +944,7 @@ function ThreadDetailModal({
       loadCommentReactions(sourceComments),
     ]).then(([savedThreadReactions, savedComments]) => {
       setThreadReactions(savedThreadReactions);
-      void Promise.all([loadBoardCommentEdits(), loadDeletedBoardCommentIds()]).then(([edits, deletedIds]) => setComments(dedupeBoardComments(savedComments.filter((comment) => !deletedIds.includes(comment.id)).map((comment) => edits[comment.id] ? { ...comment, content: edits[comment.id] } : comment))));
+      void Promise.all([loadBoardCommentEdits(), loadDeletedBoardCommentIds()]).then(([edits, deletedIds]) => setComments(dedupeBoardComments(savedComments.filter((comment) => !deletedIds.includes(comment.id)).map((comment) => edits[comment.id] ? { ...comment, content: edits[comment.id], importedLinkPreviews: undefined } : comment))));
       setReactionsHydrated(true);
     });
   // Rehydrate when a direct-linked Discord thread finishes loading its archive comments.
@@ -1095,7 +1096,7 @@ function ThreadDetailModal({
         return;
       }
     }
-    setComments((current) => current.map((comment) => comment.id === commentId ? { ...comment, content: editingCommentText.trim() } : comment));
+    setComments((current) => current.map((comment) => comment.id === commentId ? { ...comment, content: editingCommentText.trim(), importedLinkPreviews: undefined } : comment));
     if (!target?.shared) void saveBoardCommentEdit(commentId, editingCommentText.trim());
     setEditingCommentId(null);
     setEditingCommentText("");
@@ -1253,6 +1254,7 @@ function ThreadDetailModal({
           ) : (
             <View style={{ marginBottom: 16 }}><MentionText content={thread.preview} groups={mentionGroups} /></View>
           )}
+          {thread.importedLinkPreviews?.length ? <View style={{ marginBottom: 16 }}>{thread.importedLinkPreviews.map((preview) => <BoardLinkPreviewCard key={preview.url} preview={preview} />)}</View> : null}
 
           {recruitmentManaged && canRegisterEvent ? <Pressable onPress={() => {
             onClose();
@@ -1430,6 +1432,7 @@ function ThreadDetailModal({
                 {comment.replyTo ? <View style={{ marginLeft: 32, marginTop: 4 }}><ReplyReferenceView reply={comment.replyTo} onPress={() => jumpToComment(comment.replyTo!.id)} /></View> : null}
                 {editingCommentId === comment.id ? <View style={{ marginLeft: 32, gap: 7 }}><TextInput value={editingCommentText} onChangeText={setEditingCommentText} multiline autoFocus style={{ minHeight: 90, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: 10, padding: 10, fontSize: 14, color: colors.foreground }} /><View style={{ flexDirection: "row", gap: 8 }}><Pressable onPress={() => handleSaveCommentEdit(comment.id)} style={{ backgroundColor: "#3478C7", borderRadius: 8, paddingHorizontal: 13, paddingVertical: 7 }}><Text style={{ color: "#FFF", fontSize: 12, fontWeight: "800" }}>保存</Text></Pressable><Pressable onPress={() => handleDeleteComment(comment.id)} style={{ backgroundColor: "#FCE7E7", borderRadius: 8, paddingHorizontal: 13, paddingVertical: 7 }}><Text style={{ color: colors.error, fontSize: 12, fontWeight: "800" }}>削除</Text></Pressable><Pressable onPress={() => setEditingCommentId(null)} style={{ paddingHorizontal: 10, paddingVertical: 7 }}><Text style={{ color: colors.muted, fontSize: 12 }}>キャンセル</Text></Pressable></View></View> : comment.content ? <View style={{ marginLeft: 32 }}>{isContest ? (comment.isSystem ? <MentionText content={comment.content} groups={mentionGroups} /> : <LinkifiedText content={comment.content} />) : <MentionText content={comment.content} groups={mentionGroups} />}</View> : null}
                 {comment.importedPollSummary ? <View style={{ marginLeft: 32 }}><ImportedPollResultCard summary={comment.importedPollSummary} /></View> : null}
+                {editingCommentId !== comment.id && comment.importedLinkPreviews?.length ? <View style={{ marginLeft: 32 }}>{comment.importedLinkPreviews.map((preview) => <BoardLinkPreviewCard key={preview.url} preview={preview} />)}</View> : null}
                 {comment.poll ? <View style={{ marginLeft: 32 }}><PollCard ownerKey={`comment:${comment.id}`} poll={comment.poll} /></View> : null}
                 {comment.images?.length ? (
                   <View style={{ marginLeft: 32, marginTop: 8, flexDirection: "row", flexWrap: "wrap", gap: 7 }}>

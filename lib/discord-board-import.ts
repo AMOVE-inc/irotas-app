@@ -3,6 +3,7 @@ import { normalizeBoardReactions } from "./board-reactions";
 import { inferImportedRecruitmentStatus } from "./board-recruitment";
 import { cleanDiscordBoardContent, cleanDiscordBoardTitle } from "./discord-board-normalization";
 import { displayMemberName } from "./display-name";
+import { extractDiscordLinkPreviews } from "./discord-link-preview";
 import { isDiscordGourmetEventBoard, isRetiredMovieClubThread, normalizeDiscordBoardCategory } from "./board-category";
 export { isRetiredMovieClubThread, normalizeDiscordBoardCategory } from "./board-category";
 
@@ -172,11 +173,13 @@ export function parseDiscordBoardArchive(archive: RawDiscordBoardArchive, direct
   rawComments.forEach((record) => {
     if (mergedPollReplyIds.has(commentKey(record))) return;
     const importedPollSummary = pollResultsByOriginal.get(commentKey(record))?.summary ?? parseImportedDiscordPollSummary(record.content);
+    const extracted = extractDiscordLinkPreviews(record.content);
     const comment: BoardComment = {
       id: `discord-comment-${record.id}`,
       threadId: record.threadId,
       author: authorFor(record, directory, authorFallbacks),
-      content: importedPollSummary ? "" : record.content,
+      content: importedPollSummary ? "" : extracted.content,
+      importedLinkPreviews: extracted.previews.length ? extracted.previews : undefined,
       createdAt: record.createdAt,
       images: record.images.length ? record.images : undefined,
       videos: record.videos.length ? record.videos : undefined,
@@ -190,7 +193,8 @@ export function parseDiscordBoardArchive(archive: RawDiscordBoardArchive, direct
     const threadComments = comments[record.id] ?? [];
     const category = normalizeDiscordBoardCategory(record.category);
     const normalizedContent = cleanDiscordBoardContent(record.title, record.content, category);
-    const preview = category === "club-introduction" ? stripLegacyClubApplicationBlock(normalizedContent) : normalizedContent;
+    const extracted = extractDiscordLinkPreviews(normalizedContent);
+    const preview = category === "club-introduction" ? stripLegacyClubApplicationBlock(extracted.content) : extracted.content;
     const override = archive.threadOverrides?.[record.id];
     const recruitmentStatus = override?.status ?? inferImportedRecruitmentStatus(category, record.title, preview);
     return {
@@ -203,6 +207,7 @@ export function parseDiscordBoardArchive(archive: RawDiscordBoardArchive, direct
       // 募集状態などの編集日時ではなく、最後のコメントを活動日時とする。
       lastUpdated: threadComments.at(-1)?.createdAt ?? record.createdAt,
       preview: override?.content ?? preview,
+      importedLinkPreviews: override ? undefined : extracted.previews.length ? extracted.previews : undefined,
       isRecruiting: recruitmentStatus === "open",
       recruitmentStatus,
       isPinned: override?.pinned,

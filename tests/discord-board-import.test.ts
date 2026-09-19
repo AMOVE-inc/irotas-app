@@ -27,6 +27,26 @@ describe("Discord board archive", () => {
     expect(archive.threads.some((thread) => thread.images?.length)).toBe(true);
   });
 
+  it("Discordの食べログ・Googleマップ埋め込みを本文から分離する", () => {
+    const maps = archive.comments["discord-board-1545206532839309352"].find((comment) => comment.id.endsWith("1545232682584121404"))!;
+    expect(maps.content).toContain("https://maps.app.goo.gl/d6fLVxJ6n4NHDGvb7?g_st=ic");
+    expect(maps.content).not.toContain("Mediterranean restaurant");
+    expect(maps.importedLinkPreviews).toMatchObject([{ title: "La Mar Salada Restaurant", provider: "Google マップ" }]);
+
+    const tabelog = archive.comments["discord-board-1543137666009272340"].find((comment) => comment.id.endsWith("1543953736265633802"))!;
+    expect(tabelog.content).not.toContain("■予算(夜)");
+    expect(tabelog.importedLinkPreviews?.map((preview) => preview.title)).toEqual([
+      "魚三酒場 富岡店 (門前仲町/居酒屋)",
+      "トラットリア ブカ マッシモ (門前仲町/イタリアン)",
+      "Risosteria Trentatre (門前仲町/イタリアン)",
+    ]);
+    expect(tabelog.importedLinkPreviews?.map((preview) => preview.url)).toEqual([
+      "https://tabelog.com/tokyo/A1313/A131303/13003007/",
+      "https://tabelog.com/tokyo/A1313/A131303/13194455/",
+      "https://tabelog.com/tokyo/A1313/A131303/13265598/",
+    ]);
+  });
+
   it("DiscordコメントIDの別表記を同じコメントとして表示する", () => {
     const comments = archive.comments["discord-board-1228721098716221502"] ?? [];
     expect(comments.filter((comment) => comment.content.includes("心強いです、、！"))).toHaveLength(1);
