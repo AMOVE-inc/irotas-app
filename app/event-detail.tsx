@@ -271,14 +271,15 @@ export default function EventDetailScreen() {
     if (!event) return;
     const viewerId = event.viewerMemberId ?? authenticatedViewerMemberId;
     const status = event.viewerParticipationStatus;
-    setIsJoined(status ? status === "confirmed" || status === "cancel_requested" : event.participants.includes(viewerId));
+    const isCompanion = Boolean(event.companionIds?.includes(viewerId));
+    setIsJoined(isCompanion || (status ? status === "confirmed" || status === "cancel_requested" : event.participants.includes(viewerId)));
     setHasApplied(status ? status === "applied" || status === "confirmed" || status === "cancel_requested" : Boolean(event.applicantIds?.includes(viewerId)));
     if (event.id.startsWith("discord-event-") || event.recruitmentChannel === "discord") {
       setChatRoomId(null);
       return;
     }
     if (!event.viewerMemberId || !event.chatId) return;
-    if (isEventOrganizer(event, viewerId) || status === "confirmed" || status === "cancel_requested") {
+    if (isEventOrganizer(event, viewerId) || isCompanion || status === "confirmed" || status === "cancel_requested") {
       const room = joinEventChat(event.id, event.title, event.chatId, viewerId);
       setChatRoomId(room.id);
     } else {
@@ -419,6 +420,7 @@ export default function EventDetailScreen() {
   const organizerDirectoryMember = memberDirectory.find((member) => member.id === organizerId);
   const viewerMemberId = event.viewerMemberId ?? authenticatedViewerMemberId;
   const isOrganizer = isEventOrganizer(event, viewerMemberId);
+  const isCompanion = companionIds.includes(viewerMemberId);
   const pendingApplicantIds = event.isCancelled ? [] : getPendingGourmetApplicants(event);
   const confirmedParticipantCount = (event.participants ?? []).length;
   const canFinalizeParticipants = !event.participantsFinalizedAt && pendingApplicantIds.length === 0 && confirmedParticipantCount > 0;
@@ -1513,7 +1515,7 @@ export default function EventDetailScreen() {
         }}
       >
         {/* チャットボタン（参加済みの場合） */}
-        {(isJoined || isOrganizer) && chatRoomId && (
+        {(isJoined || isOrganizer || isCompanion) && chatRoomId && (
           <Pressable
             onPress={handleOpenChat}
             style={({ pressed }) => ({

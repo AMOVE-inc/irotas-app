@@ -98,9 +98,9 @@ describe("event presentation and comments", () => {
     expect(mentionUi).toContain("memberIds?: readonly string[]");
   });
 
-  it("gives organizers a stateful participant-chat CTA", () => {
+  it("gives organizers and companions a stateful participant-chat CTA", () => {
     const detail = source("app/event-detail.tsx");
-    expect(detail).toContain("(isJoined || isOrganizer) && chatRoomId");
+    expect(detail).toContain("(isJoined || isOrganizer || isCompanion) && chatRoomId");
     expect(detail).toContain("幹事イベント（参加者募集中）");
     expect(detail).toContain("幹事イベント（参加者確定済み）");
   });

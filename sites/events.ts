@@ -1,5 +1,6 @@
 import { authenticatedRequestMember, effectiveMemberRank } from "./auth";
 import { canMemberAccessClub } from "./clubs";
+import { ensureEventRoom } from "./chat-content";
 import { reverseCancelledEventHostXp } from "./event-host-xp";
 import { applyEventPointDiscount, refundEventPointDiscount } from "./event-points";
 import { cancelEventCheckout, eventCheckoutAmount } from "./event-checkout";
@@ -880,6 +881,7 @@ async function createEvent(request: Request, db: D1Database, member: Awaited<Ret
   const privateMemo = text(input.privateMemo, 5000) || null;
   const id = `event_${crypto.randomUUID()}`;
   const now = new Date().toISOString();
+  const chatId = eventChatId(id);
   const mentionNotifications = eventMentionsArePublished(event.eventType, event)
     ? await eventMentionNotificationStatements(db, {
       eventId: id,
@@ -893,13 +895,14 @@ async function createEvent(request: Request, db: D1Database, member: Awaited<Ret
     db.prepare(`INSERT INTO events
       (id, organizer_member_id, event_type, club_id, event_date, status, title, public_data_json, private_memo, created_at, updated_at)
       VALUES (?, ?, ?, ?, ?, 'open', ?, ?, ?, ?, ?)`)
-      .bind(id, member.id, event.eventType, event.clubId ?? null, event.date, event.title, JSON.stringify(event), privateMemo, now, now),
+      .bind(id, member.id, event.eventType, event.clubId ?? null, event.date, event.title, JSON.stringify({ ...event, chatId }), privateMemo, now, now),
     db.prepare(`INSERT INTO audit_logs
       (actor_user_id, action, entity_type, entity_id, metadata_json, created_at)
       VALUES (?, 'event.created', 'event', ?, ?, ?)`)
       .bind(String(member.id), id, JSON.stringify({ eventType: event.eventType }), now),
     ...mentionNotifications,
   ]);
+  await ensureEventRoom(db, chatId);
   // 公式イベントの主担当は対象外。その他のイベントは作成時に一度だけ付与する。
   // サーバー側で確定し、画面遷移・通信の再試行で重複しないようにする。
   if (event.eventType !== "official") {
@@ -1047,6 +1050,15 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
       const isConfirmed = isImportedEventConfirmedParticipant(row, memberPublicId) ||
         participation?.status === "confirmed" || participation?.status === "cancel_requested";
       if (!isConfirmed) return responseJson({ error: "この部活の部員のみ詳細を閲覧できます" }, 403);
+    }
+    if (!row.id.startsWith("discord-event-") && row.status !== "cancelled") {
+      let data: { recruitmentChannel?: string; chatId?: string } = {};
+      try { data = JSON.parse(row.public_data_json) as typeof data; } catch {}
+      if (data.recruitmentChannel !== "discord") {
+        await ensureEventRoom(env.DB, data.chatId || eventChatId(row.id));
+        const refreshed = await eventRow(env.DB, row.id);
+        if (refreshed) return responseJson({ event: await hydratedEvent(env.DB, refreshed, member.id, elevated, memberPublicId) });
+      }
     }
     return responseJson({ event: await hydratedEvent(env.DB, row, member.id, elevated, memberPublicId) });
   }
@@ -1269,6 +1281,7 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
         env.DB.prepare(`INSERT INTO audit_logs (actor_user_id, action, entity_type, entity_id, metadata_json, created_at)
           VALUES (?, 'event.companions_edited', 'event', ?, ?, ?)`).bind(String(member.id), id, JSON.stringify({ companionCount: companionIds.length }), now),
       ]);
+      if (!id.startsWith("discord-event-") && data.recruitmentChannel !== "discord") await ensureEventRoom(env.DB, typeof data.chatId === "string" && data.chatId ? data.chatId : eventChatId(id));
       const updated = await eventRow(env.DB, id);
       return responseJson({ event: await hydratedEvent(env.DB, updated!, member.id, elevated, memberPublicId) });
     }
@@ -1367,6 +1380,7 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
           VALUES (?, 'event.edited', 'event', ?, ?, ?)`).bind(String(member.id), id, JSON.stringify({ participants: participants.length }), now),
         ...mentionNotifications,
       ]);
+      if (!id.startsWith("discord-event-") && data.recruitmentChannel !== "discord") await ensureEventRoom(env.DB, typeof data.chatId === "string" && data.chatId ? data.chatId : eventChatId(id));
       const updated = await eventRow(env.DB, id);
       return responseJson({ event: await hydratedEvent(env.DB, updated!, member.id, elevated, memberPublicId) });
     }
