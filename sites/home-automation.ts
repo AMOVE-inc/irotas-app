@@ -4,6 +4,7 @@ import { displayEventTitle } from "../lib/event-title";
 import boardArchive from "../data/discord-board-2026-08-29.json";
 import { IMPORTED_DISCORD_EVENTS } from "../constants/imported-discord-events";
 import { firstImportedMediaPaths } from "../lib/imported-media-path";
+import { japanDateKey } from "../lib/japan-date";
 
 const archivedBoardThreads = new Map(boardArchive.threads.map((thread) => [thread.id, thread]));
 const importedEvents = new Map(IMPORTED_DISCORD_EVENTS.map((event) => [event.id, event]));
@@ -11,6 +12,14 @@ const DELETED_EVENT_IDS = new Set(["discord-event-1504772980851478548"]);
 
 const HOME_ACTIVITIES = "/api/home/activities";
 const DAY = 86_400_000;
+
+export function timelineEventPublishedAt(savedAt: string, originalPostedAt?: string): string {
+  return originalPostedAt && Number.isFinite(Date.parse(originalPostedAt)) ? originalPostedAt : savedAt;
+}
+
+export function timelineEventIsUpcoming(eventDate: string, today: string): boolean {
+  return /^\d{4}-\d{2}-\d{2}$/.test(eventDate) && eventDate >= today;
+}
 
 type EventRow = {
   id: string;
@@ -248,11 +257,13 @@ async function finalizeExpiredChatPolls(db: D1Database, now: Date) {
 }
 
 async function homeActivities(db: D1Database) {
+  const today = japanDateKey();
   const [events, threads, comments] = await Promise.all([
     db.prepare(`SELECT e.id, e.event_type, e.title, e.event_date, e.created_at, e.public_data_json, m.public_member_id, m.display_name,
         m.member_rank, m.profile_json
       FROM events e JOIN members m ON m.id = e.organizer_member_id
-      WHERE e.status != 'cancelled' ORDER BY e.created_at DESC LIMIT 30`).all<Record<string, unknown>>(),
+      WHERE e.status != 'cancelled' AND e.event_date >= ? ORDER BY e.created_at DESC LIMIT 100`)
+      .bind(today).all<Record<string, unknown>>(),
     db.prepare(`SELECT t.id, t.category, t.title, t.content, t.data_json, t.created_at, m.display_name,
         (SELECT COUNT(*) FROM board_comments bc WHERE bc.thread_id = t.id AND bc.deleted_at IS NULL) AS comment_count,
         m.public_member_id, m.member_term, m.member_rank, m.profile_json
@@ -266,7 +277,7 @@ async function homeActivities(db: D1Database) {
   ]);
   const kindByCategory: Record<string, string> = { "gourmet-contest": "contest_thread", "meal-report": "meal_report", "gourmet-advice": "gourmet_advice", "free-chat": "free_chat" };
   return [
-    ...(events.results ?? []).filter((row) => !DELETED_EVENT_IDS.has(String(row.id))).map((row) => { const profile = (() => { try { return JSON.parse(String(row.profile_json ?? "{}")) as { avatarUrl?: string }; } catch { return {}; } })(); const data = (() => { try { return JSON.parse(String(row.public_data_json ?? "{}")) as { image?: string; images?: string[]; organizerProfileId?: string; organizerName?: string; organizerAvatar?: string; organizerRank?: string; time?: string; tabelogUrl?: string; googleMapsUrl?: string }; } catch { return {}; } })(); const imported = importedEvents.get(String(row.id)); const archived = imported ? archivedBoardThreads.get(imported.sourceThreadId) : undefined; const eventTime = data.time || imported?.time || "時間未定"; return { id: `event:${row.id}`, kind: "event", title: displayEventTitle(String(row.title ?? "")), description: `${row.event_type === "official" ? "新しい公式イベントが公開されました" : row.event_type === "club" ? "新しい部活動イベントが公開されました" : "新しいグルメ会が公開されました"}\n${String(row.event_date ?? "").replace(/-/g, "/")} ${eventTime}${eventTime === "時間未定" ? "" : "〜"}`, createdAt: row.created_at, route: "/event-detail", params: { id: String(row.id) }, authorId: imported?.organizerProfileId || data.organizerProfileId || row.public_member_id, authorName: archived?.authorName || imported?.organizerName || data.organizerName || row.display_name, authorAvatar: archived?.authorAvatarUrl || imported?.organizerAvatar || data.organizerAvatar || profile.avatarUrl, authorRank: archived?.authorRank || imported?.organizerRank || data.organizerRank || row.member_rank, images: firstImportedMediaPaths(data.images, data.image ? [data.image] : undefined, imported?.image ? [imported.image] : undefined, archived?.images).slice(0, 4), eventPreviewUrl: data.tabelogUrl || data.googleMapsUrl || imported?.tabelogUrl || imported?.googleMapsUrl }; }),
+    ...(events.results ?? []).filter((row) => !DELETED_EVENT_IDS.has(String(row.id)) && timelineEventIsUpcoming(String(row.event_date), today)).map((row) => { const profile = (() => { try { return JSON.parse(String(row.profile_json ?? "{}")) as { avatarUrl?: string }; } catch { return {}; } })(); const data = (() => { try { return JSON.parse(String(row.public_data_json ?? "{}")) as { image?: string; images?: string[]; organizerProfileId?: string; organizerName?: string; organizerAvatar?: string; organizerRank?: string; time?: string; createdAt?: string; tabelogUrl?: string; googleMapsUrl?: string }; } catch { return {}; } })(); const imported = importedEvents.get(String(row.id)); const archived = imported ? archivedBoardThreads.get(imported.sourceThreadId) : undefined; const eventTime = data.time || imported?.time || "時間未定"; return { id: `event:${row.id}`, kind: "event", title: displayEventTitle(String(row.title ?? "")), description: `${row.event_type === "official" ? "新しい公式イベントが公開されました" : row.event_type === "club" ? "新しい部活動イベントが公開されました" : "新しいグルメ会が公開されました"}\n${String(row.event_date ?? "").replace(/-/g, "/")} ${eventTime}${eventTime === "時間未定" ? "" : "〜"}`, createdAt: timelineEventPublishedAt(String(row.created_at), imported?.createdAt ?? data.createdAt), route: "/event-detail", params: { id: String(row.id) }, authorId: imported?.organizerProfileId || data.organizerProfileId || row.public_member_id, authorName: archived?.authorName || imported?.organizerName || data.organizerName || row.display_name, authorAvatar: archived?.authorAvatarUrl || imported?.organizerAvatar || data.organizerAvatar || profile.avatarUrl, authorRank: archived?.authorRank || imported?.organizerRank || data.organizerRank || row.member_rank, images: firstImportedMediaPaths(data.images, data.image ? [data.image] : undefined, imported?.image ? [imported.image] : undefined, archived?.images).slice(0, 4), eventPreviewUrl: data.tabelogUrl || data.googleMapsUrl || imported?.tabelogUrl || imported?.googleMapsUrl }; }),
     ...(threads.results ?? []).map((row) => { const data = (() => { try { return JSON.parse(String(row.data_json ?? "{}")) as { images?: string[]; mealReport?: { restaurantName?: string; areaDisplay?: string; prefecture?: string; rating?: number } }; } catch { return {}; } })(); const profile = (() => { try { return JSON.parse(String(row.profile_json ?? "{}")) as { avatarUrl?: string }; } catch { return {}; } })(); const archived = archivedBoardThreads.get(String(row.id)); const images = firstImportedMediaPaths(data.images, archived?.images); const report = data.mealReport; const includesAuthor = row.category === "meal-report" || row.category === "gourmet-advice"; return { id: `thread:${row.id}`, kind: kindByCategory[String(row.category)], title: row.title, description: String(row.content ?? "").slice(0, 180), createdAt: row.created_at, route: "/board", params: { category: String(row.category), view: "threads", thread: String(row.id) }, images: images?.slice(0, 4), ...(includesAuthor ? { authorId: archived ? `discord-${archived.authorId}` : row.public_member_id, authorName: archived?.authorName || row.display_name, authorAvatar: archived?.authorAvatarUrl || profile.avatarUrl, authorMemberTerm: row.member_term, authorRank: archived?.authorRank || row.member_rank } : {}), ...(row.category === "meal-report" ? { commentCount: Number(row.comment_count ?? 0), mealReport: { restaurantName: report?.restaurantName || row.title, area: report?.areaDisplay || report?.prefecture || "エリア未設定", rating: Number(report?.rating ?? 0) } } : {}) }; }),
     ...(comments.results ?? []).map((row) => ({ id: `comment:discord-${row.id}`, kind: "contest_comment", title: `${row.title}にコメントが追加されました`, description: String(row.content ?? "").slice(0, 180), createdAt: row.created_at, route: "/board", params: { category: "gourmet-contest", view: "threads", thread: String(row.thread_id) } })),
   ].sort((a, b) => Date.parse(String(b.createdAt)) - Date.parse(String(a.createdAt))).slice(0, 100);
