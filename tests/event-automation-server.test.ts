@@ -16,11 +16,11 @@ describe("server event automation", () => {
     expect(migration).toContain("SET value = '16'");
   });
 
-  it("runs every fifteen minutes and also catches up when home loads", () => {
+  it("runs every fifteen minutes without blocking the home timeline", () => {
     expect(JSON.parse(wrangler).triggers.crons).toEqual(["*/15 * * * *"]);
     expect(worker).toContain("async scheduled");
     expect(worker).toContain("runEventAutomation(env.DB)");
-    expect(automation).toContain("await runEventAutomation(env.DB)");
+    expect(automation).not.toContain("await runEventAutomation(env.DB);\n  return json({ activities:");
   });
 
   it("creates organizer, favorite and participant reminders idempotently", () => {
@@ -38,7 +38,7 @@ describe("server event automation", () => {
     expect(automation).toContain("FROM board_threads");
     expect(automation).toContain("!DELETED_EVENT_IDS.has(String(row.id))");
     expect(automation).toContain("t.category IN ('gourmet-contest','meal-report','gourmet-advice','free-chat')");
-    expect(automation).toContain(".slice(0, 10)");
+    expect(automation).toContain(".slice(0, 100)");
     expect(home).toContain("Api.getHomeActivities()");
   });
 

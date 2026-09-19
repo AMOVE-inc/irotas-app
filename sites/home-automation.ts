@@ -278,6 +278,5 @@ export async function handleHomeAutomationRequest(request: Request, env: SitesEn
   const member = await authenticatedRequestMember(request, env);
   if (!member) return json({ error: "ログインが必要です" }, 401);
   if (request.method !== "GET") return json({ error: "method_not_allowed" }, 405);
-  await runEventAutomation(env.DB);
   return json({ activities: await homeActivities(env.DB) });
 }
