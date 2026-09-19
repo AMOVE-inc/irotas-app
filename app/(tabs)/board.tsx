@@ -1252,9 +1252,6 @@ function ThreadDetailModal({
         <ScrollView ref={commentScrollRef} style={{ flex: 1 }} contentContainerStyle={{ padding: 16 }}>
           {/* Thread content */}
           {showThreadUnread ? <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 14 }}><View style={{ flex: 1, height: 1, backgroundColor: "#E8A0BF" }} /><Text style={{ fontSize: 11, fontWeight: "900", color: "#C05B88" }}>ここから未読</Text><View style={{ flex: 1, height: 1, backgroundColor: "#E8A0BF" }} /></View> : null}
-          {threadPostedAt ? <Text style={{ fontSize: 12, color: colors.muted, marginBottom: 12 }} accessibilityLabel={`投稿日時 ${threadPostedAt}`}>
-            {threadPostedAt}
-          </Text> : null}
           <Pressable onPress={() => onOpenMemberProfile(profileParams(thread.author.id, thread.author.name))} accessibilityLabel={`${stripRankFromName(thread.author.name)}のプロフィールを表示`} style={{ flexDirection: "row", alignItems: "center", marginBottom: 12 }}>
             {isThreadPinned(thread) ? <View style={{ marginRight: 7, borderRadius: 10, paddingHorizontal: 8, paddingVertical: 6, backgroundColor: "#FFF2C7" }}><Text style={{ fontSize: 11, fontWeight: "900", color: "#8A6512" }}>📌 固定</Text></View> : null}
             <Image source={thread.author.avatar} style={{ width: 36, height: 36, borderRadius: 18 }} contentFit="cover" />
@@ -1263,6 +1260,7 @@ function ThreadDetailModal({
                 <Text style={{ fontSize: 14, fontWeight: "700", color: colors.foreground }}>
                   {stripRankFromName(thread.author.name)}
                 </Text>
+                {threadPostedAt ? <Text style={{ fontSize: 11, color: colors.muted, marginLeft: 8 }} accessibilityLabel={`投稿日時 ${threadPostedAt}`}>{threadPostedAt}</Text> : null}
                 <NewMemberMark member={thread.author} size={13} />
                 <OperatorOrRankBadge member={thread.author} />
               </View>
