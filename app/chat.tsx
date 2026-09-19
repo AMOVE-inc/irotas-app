@@ -26,7 +26,7 @@ import { getAllRooms, getRoomById, getMessages, saveMessagesToStorage, deleteMes
 import { markChatRoomOptimisticallyRead } from "@/lib/chat-unread-sync";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useColors } from "@/hooks/use-colors";
-import { dismissChatRoomImmediately } from "@/components/chat-list-screen";
+import { dismissChatRoomImmediately, showSentChatPreviewImmediately } from "@/components/chat-list-screen";
 import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
 import * as Clipboard from "expo-clipboard";
@@ -763,6 +763,7 @@ export default function ChatScreen() {
       ]);
       const newMessage = await Api.createSharedChatMessage(id, { content, imageUrls, clientMessageId: pendingSendRef.current.messageId, replyToId: replyToMessage?.id });
       pendingSendRef.current = null;
+      showSentChatPreviewImmediately(viewerMemberId, id, newMessage);
       setMessages((prev) => [...prev.filter((item) => item.id !== newMessage.id), newMessage]);
       setMessageText("");
       setReplyToMessage(null);
@@ -786,6 +787,7 @@ export default function ChatScreen() {
         };
         setMessages((previous) => [...previous, legacyMessage]);
         await saveMessagesToStorage(id, [legacyMessage]);
+        showSentChatPreviewImmediately(viewerMemberId, id, legacyMessage);
         setMessageText("");
         setReplyToMessage(null);
         setMessageSelection({ start: 0, end: 0 });
