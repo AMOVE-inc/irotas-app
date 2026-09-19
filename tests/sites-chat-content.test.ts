@@ -120,6 +120,8 @@ class ChatDatabase implements D1Database {
         return null;
       },
       all: async <T>() => {
+        if (sql.includes("SELECT m.id, m.display_name, m.public_member_id, m.branches_json") && sql.includes("FROM chat_room_members crm JOIN members"))
+          return { success: true, results: this.roomMembers.filter((item) => item.roomId === values[0] && !item.left && item.memberId !== Number(values[1])).map((item) => this.members.find((member) => member.id === item.memberId)!) as T[] };
         if (sql.includes("SELECT id, display_name, public_member_id, branches_json, role, access_role"))
           return { success: true, results: this.members.filter((member) => member.id !== Number(values[0])) as T[] };
         if (sql.includes("SELECT m.id AS member_id") && sql.includes("club_memberships cm")) {
@@ -305,7 +307,10 @@ describe("shared chat content API", () => {
   });
 
   it("notifies direct mentions and room-scoped group mentions in the global free chat", async () => {
-    // Global free chat can be read without joining chat_room_members first.
+    db.roomMembers.push(
+      { roomId: "community-free-chat", memberId: 10, role: "member", left: false },
+      { roomId: "community-free-chat", memberId: 11, role: "member", left: false },
+    );
     expect((await handleChatContentRequest(request("/api/chats/community-free-chat/messages", "POST", { content: "こんにちは" }), env))?.status).toBe(201);
     expect(db.notifiedMemberIds).toEqual([]);
     expect((await handleChatContentRequest(request("/api/chats/community-free-chat/messages", "POST", { content: "@everyone 集合です" }), env))?.status).toBe(201);
@@ -326,6 +331,7 @@ describe("shared chat content API", () => {
 
   it("keeps branch and club group mentions inside the room's access boundary", async () => {
     db.members.push({ id: 12, public_member_id: "IRO0012", display_name: "運営A", branches_json: "[]", role: "operator", access_role: "operator" });
+    db.roomMembers.push({ roomId: "branch-kanto-free", memberId: 10, role: "member", left: false });
     expect((await handleChatContentRequest(request("/api/chats/branch-kanto-free/messages", "POST", { content: "@支部全員 お知らせ" }), env))?.status).toBe(201);
     expect(db.notifiedMemberIds).toEqual([10]);
     db.notifiedMemberIds = [];
@@ -336,7 +342,7 @@ describe("shared chat content API", () => {
     expect(db.notifiedMemberIds).toEqual([10]);
     db.notifiedMemberIds = [];
     expect((await handleChatContentRequest(request("/api/chats/branch-kanto-free/messages", "POST", { content: "@運営A 確認お願いします" }), env))?.status).toBe(201);
-    expect(db.notifiedMemberIds).toEqual([12]);
+    expect(db.notifiedMemberIds).toEqual([]);
   });
 
   it("creates a room for each joined club and limits ordinary members to their clubs", async () => {

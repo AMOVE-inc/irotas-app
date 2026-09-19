@@ -389,8 +389,18 @@ describe("club application lifecycle", () => {
     expect(db.memberships.get("club-bread:10")?.status).toBe("approved");
 
     authenticatedRequestMember.mockResolvedValue(sessionMember(20, "club_leader"));
-    const removeResponse = await handleClubRequest(
+    const missingReasonResponse = await handleClubRequest(
       new Request("https://app.example/api/clubs/club-bread/members/IRO0010", { method: "DELETE" }),
+      env,
+    );
+    expect(missingReasonResponse?.status).toBe(400);
+    expect(db.memberships.get("club-bread:10")?.status).toBe("approved");
+    const removeResponse = await handleClubRequest(
+      new Request("https://app.example/api/clubs/club-bread/members/IRO0010", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reason: "部のルールに違反したため" }),
+      }),
       env,
     );
     expect(removeResponse?.status).toBe(200);

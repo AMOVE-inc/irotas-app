@@ -26,7 +26,7 @@ import { getAllRooms, getRoomById, getMessages, saveMessagesToStorage, deleteMes
 import { markChatRoomOptimisticallyRead } from "@/lib/chat-unread-sync";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useColors } from "@/hooks/use-colors";
-import { dismissChatRoomImmediately } from "@/components/chat-list-screen";
+import { dismissChatRoomImmediately, showSentChatPreviewImmediately } from "@/components/chat-list-screen";
 import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
 import * as Clipboard from "expo-clipboard";
@@ -54,6 +54,7 @@ import {
 import { canAccessChatRoom } from "@/lib/chat-access";
 import { getFriends } from "@/lib/friendship";
 import { getMentionGroups, getMentionQuery, insertMention } from "@/lib/mentions";
+import { chatMentionMemberIds } from "@/lib/chat-mention-scope";
 import { type TextSelection } from "@/lib/text-formatting";
 import type { InternalLinkPathname } from "@/lib/internal-links";
 import * as Api from "@/lib/_core/api";
@@ -442,14 +443,7 @@ export default function ChatScreen() {
     })) as unknown as typeof MEMBERS
     : MEMBERS, [directory]);
   const mentionGroups = useMemo(() => {
-    const branch = room?.id === "branch-kanto-free" ? "kanto" : room?.id === "branch-kansai-free" ? "kansai" : null;
-    const branchMemberIds = branch
-      ? directory.filter((member) => member.branches.includes(branch)).map((member) => member.id)
-      : [];
-    const roomMemberIds = branch ? branchMemberIds
-      : room?.id === "community-free-chat" ? mentionMembers.map((member) => member.id)
-      : room?.type === "rank" ? directory.filter((member) => member.memberRank === room.requiredRank).map((member) => member.id)
-      : roomParticipants;
+    const roomMemberIds = roomParticipants;
     const groups = getMentionGroups(mentionMembers, CLUBS).map((group) => group.id === "everyone"
       ? { ...group, description: "このチャットの対象メンバー全員", memberIds: roomMemberIds }
       : group);
@@ -457,9 +451,15 @@ export default function ChatScreen() {
       { id: "all-current-room", label: "全体", description: "このチャットの対象メンバー全員", memberIds: roomMemberIds, category: "everyone" },
       { id: "chat-participants", label: "チャット内の人全員", description: "このチャットの参加者全員", memberIds: roomMemberIds, category: "everyone" },
     );
-    if (branch) groups.push({ id: "current-branch", label: "支部全員", description: "この支部のメンバー全員", memberIds: branchMemberIds, category: "branch" });
     return groups;
-  }, [mentionMembers, directory, room?.id, room?.type, room?.requiredRank, roomParticipants]);
+  }, [mentionMembers, roomParticipants]);
+  const mentionScopeIds = useMemo(() => chatMentionMemberIds(roomParticipants), [roomParticipants]);
+  const mentionMemberIds = useMemo(() => mentionScopeIds.filter((memberId) => memberId !== viewerMemberId), [mentionScopeIds, viewerMemberId]);
+  const mentionSuggestionGroups = useMemo(() => {
+    const allowed = new Set(mentionScopeIds);
+    return mentionGroups.filter((group) => group.label === "everyone"
+      || (group.memberIds.length > 0 && group.memberIds.every((memberId) => allowed.has(memberId))));
+  }, [mentionGroups, mentionScopeIds]);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [messagesHydrated, setMessagesHydrated] = useState(false);
   const pendingReactionChoices = useRef(new Map<string, Map<string, boolean>>());
@@ -753,6 +753,7 @@ export default function ChatScreen() {
       ]);
       const newMessage = await Api.createSharedChatMessage(id, { content, imageUrls, clientMessageId: pendingSendRef.current.messageId, replyToId: replyToMessage?.id });
       pendingSendRef.current = null;
+      showSentChatPreviewImmediately(viewerMemberId, id, newMessage);
       setMessages((prev) => [...prev.filter((item) => item.id !== newMessage.id), newMessage]);
       setMessageText("");
       setReplyToMessage(null);
@@ -776,6 +777,7 @@ export default function ChatScreen() {
         };
         setMessages((previous) => [...previous, legacyMessage]);
         await saveMessagesToStorage(id, [legacyMessage]);
+        showSentChatPreviewImmediately(viewerMemberId, id, legacyMessage);
         setMessageText("");
         setReplyToMessage(null);
         setMessageSelection({ start: 0, end: 0 });
@@ -1090,9 +1092,9 @@ export default function ChatScreen() {
         {canPostAnnouncement && mentionQuery !== null && (
           <MentionSuggestions
             query={mentionQuery}
-            groups={mentionGroups}
+            groups={mentionSuggestionGroups}
             members={mentionMembers.filter((member) => member.id !== viewerMemberId)}
-            memberIds={room.type === "dm" ? roomParticipants.filter((memberId) => memberId !== viewerMemberId) : undefined}
+            memberIds={mentionMemberIds}
             onSelect={handleSelectMention}
           />
         )}

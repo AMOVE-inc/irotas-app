@@ -1,4 +1,5 @@
 import { RANK_LABELS, type Club, type Member, type MemberRank } from "../constants/mock-data";
+import { mentionsViewer } from "./mention-matching";
 export { mentionsViewer } from "./mention-matching";
 
 export type MentionGroup = {
@@ -47,22 +48,33 @@ export function getMentionGroups(members: Member[], clubs: Club[]): MentionGroup
   return groups;
 }
 
-export function getMentionQuery(text: string): string | null {
-  const atIndex = text.lastIndexOf("@");
+export function getMentionQuery(text: string, cursor = text.length): string | null {
+  const beforeCursor = text.slice(0, cursor);
+  const atIndex = Math.max(beforeCursor.lastIndexOf("@"), beforeCursor.lastIndexOf("＠"));
   if (atIndex < 0) return null;
-  const query = text.slice(atIndex + 1);
+  const query = beforeCursor.slice(atIndex + 1);
   return /[\r\n]/.test(query) || query.length > 80 ? null : query;
 }
 
-export function insertMention(text: string, label: string, memberId?: string): string {
-  const atIndex = text.lastIndexOf("@");
+export function insertMention(text: string, label: string, memberId?: string, cursor = text.length): string {
+  const beforeCursor = text.slice(0, cursor);
+  const atIndex = Math.max(beforeCursor.lastIndexOf("@"), beforeCursor.lastIndexOf("＠"));
   const mention = `@${label}${memberId ? `（${memberId}）` : ""} `;
-  if (atIndex < 0) return `${text}${mention}`;
-  return `${text.slice(0, atIndex)}${mention}`;
+  if (atIndex < 0) return `${beforeCursor}${mention}${text.slice(cursor)}`;
+  return `${text.slice(0, atIndex)}${mention}${text.slice(cursor)}`;
 }
 
 export function extractMentionLabels(content: string): string[] {
   return [...content.matchAll(/@([^\s@]+)/g)].map((match) => match[1].replace(/[、。！？!?.,，．]+$/g, ""));
+}
+
+/** Recognized event mentions shown below the free-text editor. */
+export function selectedEventMentionLabels(content: string, groups: readonly MentionGroup[]): string[] {
+  const labels = groups.filter((group) => mentionsViewer(content, [group.label])).map((group) => `@${group.label}`);
+  for (const match of content.matchAll(/@([^\r\n@]{1,80}?)（(?:IRO\d+|member-[^)）]+|discord-[^)）]+)）/gu)) {
+    labels.push(`@${match[1]}`);
+  }
+  return [...new Set(labels)];
 }
 
 export function getMentionedMemberIds(

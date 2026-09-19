@@ -245,7 +245,7 @@ export function commentText(value: unknown) {
   return content && content.length <= 5000 ? content : null;
 }
 
-type EventMentionMember = { id: number; display_name: string; public_member_id: string | null };
+type EventMentionMember = { id: number; display_name: string; public_member_id: string | null; branches_json?: string | null };
 
 function eventMentionDisplayName(value: string) {
   return value
@@ -280,6 +280,14 @@ export function eventMentionRecipientIds(
     for (const [label, candidates] of aliases) {
       if (candidates.size === 1 && mentionsViewer(value, [label])) ids.add([...candidates][0]);
     }
+    const kantoMentioned = mentionsViewer(value, ["関東支部"]);
+    const kansaiMentioned = mentionsViewer(value, ["関西支部"]);
+    if (kantoMentioned || kansaiMentioned) for (const member of members) {
+      if (member.id === actorMemberId) continue;
+      let branches: string[] = [];
+      try { branches = JSON.parse(member.branches_json ?? "[]") as string[]; } catch {}
+      if ((kantoMentioned && branches.includes("kanto")) || (kansaiMentioned && branches.includes("kansai"))) ids.add(member.id);
+    }
     return ids;
   };
   const current = resolve(content);
@@ -303,7 +311,7 @@ async function eventMentionNotificationStatements(
   },
 ) {
   if (!input.content.includes("@")) return [];
-  const result = await db.prepare(`SELECT id, display_name, public_member_id FROM members
+  const result = await db.prepare(`SELECT id, display_name, public_member_id, branches_json FROM members
     WHERE account_status = 'active' AND id != ?`).bind(input.actorMemberId).all<EventMentionMember>();
   const recipientIds = eventMentionRecipientIds(input.content, input.previousContent ?? "", result.results ?? [], input.actorMemberId);
   if (!recipientIds.length) return [];
@@ -399,7 +407,12 @@ export function sanitizeEvent(value: unknown) {
   const capacity = number(input.capacity, capacityMode ? 0 : 1, 100);
   const reservationCapacity = number(input.reservationCapacity, 0, 101);
   const genres = stringArray(input.genres, 20);
+  const organizerParticipates = input.organizerParticipates !== false;
+  const companionIds = stringArray(input.companionIds, 100, 40);
   if (!eventType || !title || !date || !/^\d{4}-\d{2}-\d{2}$/.test(date) || !time || (time !== UNDECIDED_EVENT_TIME && !QUARTER_HOUR_TIME.test(time)) || capacity === null || (capacityMode && capacity !== 0) || reservationCapacity === null || genres === null)
+    return null;
+  if ((input.organizerParticipates !== undefined && typeof input.organizerParticipates !== "boolean") || companionIds === null
+    || (reservationCapacity > 0 && !capacityMode && capacity + companionIds.length + Number(organizerParticipates) > reservationCapacity))
     return null;
   const clubId = text(input.clubId, 80);
   if (eventType === "club" && !clubId) return null;
@@ -427,10 +440,11 @@ export function sanitizeEvent(value: unknown) {
     capacity,
     capacityMode,
     reservationCapacity,
+    organizerParticipates,
     attendees: 0,
     applicantIds: [] as string[],
     participants: [] as string[],
-    companionIds: stringArray(input.companionIds, 100, 40) ?? [],
+    companionIds,
     price: text(input.price, 80) || "",
     priceMin,
     priceMax,
@@ -1303,6 +1317,7 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
       const capacityMode = input.capacityMode === undefined ? undefined : input.capacityMode === "undecided" || input.capacityMode === "unlimited" ? input.capacityMode : input.capacityMode === null ? null : false;
       const capacity = input.capacity === undefined ? undefined : number(input.capacity, capacityMode === "undecided" || capacityMode === "unlimited" ? 0 : 1, 100);
       const reservationCapacity = input.reservationCapacity === undefined ? undefined : number(input.reservationCapacity, 0, 101);
+      const organizerParticipates = input.organizerParticipates === undefined ? undefined : typeof input.organizerParticipates === "boolean" ? input.organizerParticipates : null;
       const price = input.price === undefined ? undefined : text(input.price, 80);
       const priceMin = input.priceMin === undefined ? undefined : number(input.priceMin, 0, 300_000);
       const priceMax = input.priceMax === undefined ? undefined : number(input.priceMax, 0, 300_000);
@@ -1327,7 +1342,7 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
       const tokyoArea = input.tokyoArea === undefined ? undefined : text(input.tokyoArea, 80);
       const publicNotes = input.publicNotes === undefined ? undefined : text(input.publicNotes, 5000);
       const privateMemo = input.privateMemo === undefined ? undefined : text(input.privateMemo, 5000);
-      if (!title || description === null || (date !== undefined && (typeof date !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(date))) || (time !== undefined && (typeof time !== "string" || !isAllowedEditedEventTime(time, id, row.public_data_json))) || location === null || capacity === null || capacityMode === false || (capacityMode && capacity !== undefined && capacity !== 0) || reservationCapacity === null || price === null || priceMin === null || priceMax === null || applicationDeadline === null || cancellationPolicy === null || tabelogUrl === null || googleMapsUrl === null || !eventType || clubId === null || restaurantName === null || (image !== undefined && (!image || !image.startsWith("/api/event-images/"))) || genres === null || companionIds === null || normalizedRankPrices === null || selectionMethod === null || recruitmentStatus === null || recruitmentChannel === null || category === null || prefecture === null || tokyoArea === null || publicNotes === null || privateMemo === null)
+      if (!title || description === null || (date !== undefined && (typeof date !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(date))) || (time !== undefined && (typeof time !== "string" || !isAllowedEditedEventTime(time, id, row.public_data_json))) || location === null || capacity === null || capacityMode === false || (capacityMode && capacity !== undefined && capacity !== 0) || reservationCapacity === null || organizerParticipates === null || price === null || priceMin === null || priceMax === null || applicationDeadline === null || cancellationPolicy === null || tabelogUrl === null || googleMapsUrl === null || !eventType || clubId === null || restaurantName === null || (image !== undefined && (!image || !image.startsWith("/api/event-images/"))) || genres === null || companionIds === null || normalizedRankPrices === null || selectionMethod === null || recruitmentStatus === null || recruitmentChannel === null || category === null || prefecture === null || tokyoArea === null || publicNotes === null || privateMemo === null)
         return responseJson({ error: "変更内容が不正です" }, 400);
       if (eventType === "official" && !elevated) return responseJson({ error: "公式イベントは運営メンバーのみ設定できます" }, 403);
       if (eventType !== "official" && normalizedRankPrices && Object.keys(normalizedRankPrices).length > 0) return responseJson({ error: "ランク別料金は公式イベントのみ設定できます" }, 400);
@@ -1343,6 +1358,7 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
       if (capacity !== undefined) data.capacity = capacity;
       if (capacityMode !== undefined) data.capacityMode = capacityMode || undefined;
       if (reservationCapacity !== undefined) data.reservationCapacity = reservationCapacity;
+      if (organizerParticipates !== undefined) data.organizerParticipates = organizerParticipates;
       if (price !== undefined) data.price = price;
       if (priceMin !== undefined) data.priceMin = priceMin;
       if (priceMax !== undefined) data.priceMax = priceMax;

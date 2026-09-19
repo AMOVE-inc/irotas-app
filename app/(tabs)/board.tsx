@@ -30,6 +30,7 @@ import {
 import { useAuthContext } from "@/lib/auth-context";
 import { getMemberStaffRole } from "@/lib/member-staff-role";
 import { replyReference } from "@/lib/reply-reference";
+import { formatCommentTimestamp } from "@/lib/comment-timestamp";
 import { useColors } from "@/hooks/use-colors";
 import { createBoardChat } from "@/lib/chat-store";
 import { canManageBoardCategories, canManageGourmetContests, isOperatorRole } from "@/lib/access-control";
@@ -1236,15 +1237,7 @@ function ThreadDetailModal({
   const handleCreateChat = (selectedIds: string[], newChatId: string) => {
     setChatRoomId(newChatId);
   };
-
-  const timeAgo = (dateStr: string) => {
-    const diff = Date.now() - new Date(dateStr).getTime();
-    const hours = Math.floor(diff / 3600000);
-    if (hours < 1) return "たった今";
-    if (hours < 24) return `${hours}時間前`;
-    const days = Math.floor(hours / 24);
-    return `${days}日前`;
-  };
+  const threadPostedAt = thread.createdAt ? formatCommentTimestamp(thread.createdAt) : "";
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
@@ -1310,6 +1303,7 @@ function ThreadDetailModal({
                 </Text>
                 <NewMemberMark member={thread.author} size={13} />
                 <OperatorOrRankBadge member={thread.author} />
+                {threadPostedAt ? <Text style={{ fontSize: 11, color: colors.muted, marginLeft: 8 }} accessibilityLabel={`投稿日時 ${threadPostedAt}`}>{threadPostedAt}</Text> : null}
               </View>
               {thread.author.generation > 0 && !getMemberStaffRole(thread.author.name, thread.author.role) ? <Text style={{ fontSize: 11, color: colors.muted, marginTop: 2 }}>{thread.author.generation}期生</Text> : null}
             </View>
@@ -1499,7 +1493,7 @@ function ThreadDetailModal({
                   </Text></Pressable>
                   <OperatorOrRankBadge member={comment.author} />
                   <Text style={{ fontSize: 11, color: colors.muted, marginLeft: 8 }}>
-                    {timeAgo(comment.createdAt)}
+                    {formatCommentTimestamp(comment.createdAt)}
                   </Text>
                 </View>
                 {comment.replyTo ? <View style={{ marginLeft: 32, marginTop: 4 }}><ReplyReferenceView reply={comment.replyTo} onPress={() => jumpToComment(comment.replyTo!.id)} /></View> : null}

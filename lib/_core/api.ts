@@ -1124,10 +1124,10 @@ export async function leaveClub(clubId: string) {
   return result.club;
 }
 
-export async function removeClubMember(clubId: string, memberId: string) {
+export async function removeClubMember(clubId: string, memberId: string, reason: string) {
   const result = await apiCall<{ club: ClubRecord }>(
     `/api/clubs/${encodeURIComponent(clubId)}/members/${encodeURIComponent(memberId)}`,
-    { method: "DELETE" },
+    { method: "DELETE", body: JSON.stringify({ reason }) },
   );
   return result.club;
 }
@@ -1446,6 +1446,7 @@ export async function updateEventDetails(eventId: string, input: {
   capacity?: number;
   capacityMode?: Event["capacityMode"] | null;
   reservationCapacity?: number;
+  organizerParticipates?: boolean;
   price?: string;
   priceMin?: number;
   priceMax?: number;

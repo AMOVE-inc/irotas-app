@@ -3,7 +3,7 @@ import { IconSymbol } from "@/components/ui/icon-symbol";
 import { CHAT_ROOMS, CURRENT_USER, DEFAULT_AVATAR, type ChatRoom } from "@/constants/mock-data";
 import { useAuthContext } from "@/lib/auth-context";
 import { isOperatorRole } from "@/lib/access-control";
-import { applyReadRoomState, getMyRooms, getRankRoomsForUser, loadDynamicRooms, markRoomRead } from "@/lib/chat-store";
+import { applyReadRoomState, getMyRooms, getRankRoomsForUser, loadDynamicRooms, markRoomRead, sortRoomsByRecent } from "@/lib/chat-store";
 import { markChatRoomOptimisticallyRead } from "@/lib/chat-unread-sync";
 import { canAccessRankRoom } from "@/lib/chat-access";
 import { useColors } from "@/hooks/use-colors";
@@ -14,6 +14,8 @@ import { FlatList, Modal, Platform, Pressable, ScrollView, Text, TextInput, View
 import * as Api from "@/lib/_core/api";
 import { stripRankFromName } from "@/components/member-rank-badge";
 import { getDiscordAuthorById, getDiscordAuthorByName } from "@/lib/discord-author-directory";
+import { mergeSentChatPreview, sentChatPreview, type SentChatPreview } from "@/lib/chat-list-preview";
+import type { ChatMessage } from "@/constants/mock-data";
 
 function formatEventStart(event: { date: string; time: string }) {
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(event.date);
@@ -23,8 +25,29 @@ function formatEventStart(event: { date: string; time: string }) {
 }
 
 const lastRoomLists = new Map<string, { joined: ChatRoom[]; rank: ChatRoom[] }>();
+const recentlySentPreviews = new Map<string, SentChatPreview>();
 const dismissedRooms = new Map<string, Set<string>>();
 const dismissedAt = new Map<string, number>();
+
+function withRecentlySentPreview(memberId: string, room: ChatRoom): ChatRoom {
+  const key = `${memberId}:${room.id}`;
+  const preview = recentlySentPreviews.get(key);
+  if (!preview) return room;
+  const merged = mergeSentChatPreview(room, preview);
+  if (merged === room) recentlySentPreviews.delete(key);
+  return merged;
+}
+
+export function showSentChatPreviewImmediately(memberId: string, roomId: string, message: ChatMessage) {
+  const preview = sentChatPreview(message);
+  recentlySentPreviews.set(`${memberId}:${roomId}`, preview);
+  const saved = lastRoomLists.get(memberId);
+  if (saved) lastRoomLists.set(memberId, {
+    joined: sortRoomsByRecent(saved.joined.map((room) => room.id === roomId ? mergeSentChatPreview(room, preview) : room)),
+    rank: sortRoomsByRecent(saved.rank.map((room) => room.id === roomId ? mergeSentChatPreview(room, preview) : room)),
+  });
+  if (typeof window !== "undefined") window.dispatchEvent(new CustomEvent("irotas-chat-message-sent", { detail: { memberId, roomId, preview } }));
+}
 
 export function dismissChatRoomImmediately(memberId: string, roomId: string) {
   const dismissed = dismissedRooms.get(memberId) ?? new Set<string>();
@@ -239,6 +262,19 @@ export default function ChatListScreen() {
     window.addEventListener("irotas-chat-dismissed", onDismissed);
     return () => window.removeEventListener("irotas-chat-dismissed", onDismissed);
   }, [viewerMemberId]);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const onSent = (event: Event) => {
+      const detail = (event as CustomEvent<{ memberId: string; roomId: string; preview: SentChatPreview }>).detail;
+      if (detail?.memberId !== viewerMemberId) return;
+      const update = (rooms: ChatRoom[]) => sortRoomsByRecent(rooms.map((room) => room.id === detail.roomId
+        ? mergeSentChatPreview(room, detail.preview) : room));
+      setMyRooms(update);
+      setRankRooms(update);
+    };
+    window.addEventListener("irotas-chat-message-sent", onSent);
+    return () => window.removeEventListener("irotas-chat-message-sent", onSent);
+  }, [viewerMemberId]);
   const clearUnreadImmediately = useCallback((roomId: string, unreadCount: number) => {
     markChatRoomOptimisticallyRead(roomId, unreadCount);
     const clear = (rooms: ChatRoom[]) => rooms.map((room) => room.id === roomId ? { ...room, unreadCount: 0, mentionCount: 0 } : room);
@@ -302,9 +338,11 @@ export default function ChatListScreen() {
     ];
     const [sortedJoined, sortedRank] = await Promise.all([applyReadRoomState(mergedJoined), applyReadRoomState(mergedRank)]);
     if (activeViewerId.current !== viewerMemberId) return;
-    setMyRooms(sortedJoined);
-    setRankRooms(sortedRank);
-    lastRoomLists.set(viewerMemberId, { joined: sortedJoined, rank: sortedRank });
+    const currentJoined = sortRoomsByRecent(sortedJoined.map((room) => withRecentlySentPreview(viewerMemberId, room)));
+    const currentRank = sortRoomsByRecent(sortedRank.map((room) => withRecentlySentPreview(viewerMemberId, room)));
+    setMyRooms(currentJoined);
+    setRankRooms(currentRank);
+    lastRoomLists.set(viewerMemberId, { joined: currentJoined, rank: currentRank });
     setRoomsLoading(false);
   }, [canViewAllChats, viewerBranches, viewerMemberId, viewerRank]);
 
