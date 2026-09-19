@@ -239,6 +239,12 @@ function text(value: unknown, maximum: number, required = false) {
   return normalized;
 }
 
+export function commentText(value: unknown) {
+  if (typeof value !== "string") return null;
+  const content = value.trim();
+  return content && content.length <= 5000 ? content : null;
+}
+
 type EventMentionMember = { id: number; display_name: string; public_member_id: string | null };
 
 function eventMentionDisplayName(value: string) {
@@ -1094,7 +1100,7 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
     }
     if (commentsMatch && request.method === "POST") {
       const input = await readBody(request);
-      const content = text(input?.text, 5000, true);
+      const content = commentText(input?.text);
       if (!content) return responseJson({ error: "コメントを入力してください" }, 400);
       const suppliedId = typeof input?.id === "string" && /^ec_\d{10,20}$/.test(input.id) ? input.id : null;
       const commentId = suppliedId ?? `ec_${crypto.randomUUID()}`;
@@ -1157,7 +1163,7 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
       const now = new Date().toISOString();
       if (request.method === "PATCH") {
         const input = await readBody(request);
-        const content = text(input?.text, 5000, true);
+        const content = commentText(input?.text);
         if (!content) return responseJson({ error: "コメントを入力してください" }, 400);
         const previousContent = source?.text ?? saved?.content ?? "";
         if (saved) await env.DB.prepare("UPDATE event_comments SET content = ?, updated_at = ? WHERE id = ? AND event_id = ? AND deleted_at IS NULL")

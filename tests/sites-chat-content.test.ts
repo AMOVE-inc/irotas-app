@@ -152,8 +152,8 @@ class ChatDatabase implements D1Database {
           });
           return { success: true, results: result as T[] };
         }
-        if (sql.includes("FROM chat_messages cm JOIN members"))
-          return { success: true, results: this.messages as T[] };
+        if (sql.includes("FROM chat_messages cm JOIN members") || sql.includes("FROM chat_messages cm LEFT JOIN members"))
+          return { success: true, results: (sql.includes("LEFT JOIN") ? this.messages : this.messages.filter((message) => this.members.some((member) => member.id === message.sender_member_id))) as T[] };
         return { success: true, results: [] as T[] };
       },
       run: async () => {
@@ -190,7 +190,9 @@ class ChatDatabase implements D1Database {
           else this.roomMembers.push({ roomId, memberId, role: sql.includes("'owner'") ? "owner" : "member", left: false });
         }
         if (sql.includes("UPDATE chat_room_members SET left_at") && !sql.includes("NOT IN")) {
-          const found = this.roomMembers.find((item) => item.roomId === values[1] && item.memberId === Number(values[2]));
+          const found = sql.includes("member_id != ?")
+            ? null
+            : this.roomMembers.find((item) => item.roomId === values[1] && item.memberId === Number(values[2]));
           if (found) found.left = true;
         }
         if (sql.includes("INTO chat_messages") && !this.messages.some((message) => message.id === values[0])) {
@@ -242,6 +244,19 @@ describe("shared chat content API", () => {
     expect(message.imageUri).toBeUndefined();
     expect(db.messages).toHaveLength(1);
     expect(db.messages[0].image_urls_json).toBe(JSON.stringify(imageUrls));
+  });
+
+  it("shows a message even if its sender account is no longer in the member table", async () => {
+    const posted = await handleChatContentRequest(request("/api/chats/community-free-chat/messages", "POST", { content: "パーティーのご案内" }), env);
+    expect(posted?.status).toBe(201);
+    db.messages[0].sender_member_id = 9999;
+    db.messages[0].sender_public_member_id = "";
+    db.messages[0].sender_display_name = "";
+
+    const response = await handleChatContentRequest(request("/api/chats/community-free-chat/messages"), env);
+    expect(response?.status).toBe(200);
+    expect((await response?.json() as { messages: Array<{ content: string; externalAuthorName: string }> }).messages)
+      .toEqual([expect.objectContaining({ content: "パーティーのご案内", externalAuthorName: "メンバー" })]);
   });
 
   it("keeps the referenced message visible after a reply is saved and reloaded", async () => {

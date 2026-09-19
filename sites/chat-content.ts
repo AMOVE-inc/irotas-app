@@ -457,7 +457,7 @@ async function messageRows(db: D1Database, roomId: string, visibleFrom?: string)
   const result = await db.prepare(`SELECT cm.id, cm.room_id, cm.sender_member_id,
       m.public_member_id AS sender_public_member_id, m.display_name AS sender_display_name, m.profile_json AS sender_profile_json,
       cm.content, cm.image_url, cm.image_urls_json, cm.reply_to_json, cm.created_at, cm.updated_at
-    FROM chat_messages cm JOIN members m ON m.id = cm.sender_member_id
+    FROM chat_messages cm LEFT JOIN members m ON m.id = cm.sender_member_id
     WHERE cm.room_id = ? AND cm.deleted_at IS NULL AND (? IS NULL OR cm.created_at >= ?)
     ORDER BY cm.created_at ASC LIMIT 500`).bind(roomId, visibleFrom ?? null, visibleFrom ?? null).all<MessageRow>();
   return result.results ?? [];
