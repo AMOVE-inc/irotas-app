@@ -1445,6 +1445,7 @@ export async function updateEventDetails(eventId: string, input: {
   capacity?: number;
   capacityMode?: Event["capacityMode"] | null;
   reservationCapacity?: number;
+  organizerParticipates?: boolean;
   price?: string;
   priceMin?: number;
   priceMax?: number;

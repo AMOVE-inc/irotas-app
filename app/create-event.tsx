@@ -155,6 +155,7 @@ export default function CreateEventScreen() {
   const [address, setAddress] = useState(initialEditForm?.address ?? "");
   const [reservationCapacity, setReservationCapacity] = useState(initialEditForm?.reservationCapacity ?? "");
   const [recruitCapacity, setRecruitCapacity] = useState(initialEditForm?.recruitCapacity ?? "");
+  const [organizerParticipates, setOrganizerParticipates] = useState(initialEditForm?.organizerParticipates ?? true);
   const [fixedAmount, setFixedAmount] = useState(initialEditForm?.fixedAmount ?? false);
   const [budgetMin, setBudgetMin] = useState(initialEditForm?.budgetMin ?? "");
   const [budgetMax, setBudgetMax] = useState(initialEditForm?.budgetMax ?? "");
@@ -213,7 +214,7 @@ export default function CreateEventScreen() {
       setEditingEvent(event);
       setEventType(form.eventType); setSelectedClubId(form.clubId); setRestaurantName(form.restaurantName);
       setEventName(form.eventName); setDate(form.date); setTime(form.time); setAddress(form.address);
-      setReservationCapacity(form.reservationCapacity); setRecruitCapacity(form.recruitCapacity);
+      setReservationCapacity(form.reservationCapacity); setRecruitCapacity(form.recruitCapacity); setOrganizerParticipates(form.organizerParticipates);
       setFixedAmount(form.fixedAmount); setBudgetMin(form.budgetMin); setBudgetMax(form.budgetMax);
       setTabelogUrl(form.tabelogUrl); setGoogleMapsUrl(form.googleMapsUrl); setCompanionIds(form.companionIds);
       setImageUri(form.image); setInitialImageUri(form.image); setDecisionDate(form.decisionDate);
@@ -243,7 +244,7 @@ export default function CreateEventScreen() {
     if (!result.canceled && result.assets[0]) setImageUri(result.assets[0].uri);
   };
   const handleCreate = async () => {
-    const form = { eventType, clubId: selectedClubId, restaurantName, eventName, date, time, address, reservationCapacity, recruitCapacity, fixedAmount, budgetMin, budgetMax, tabelogUrl, googleMapsUrl, companionIds, image: imageUri, decisionDate, publicNotes, privateMemo, cancellationPolicy, selectionMethod, useRankPrices, rankPrices, genres };
+    const form = { eventType, clubId: selectedClubId, restaurantName, eventName, date, time, address, reservationCapacity, recruitCapacity, organizerParticipates, fixedAmount, budgetMin, budgetMax, tabelogUrl, googleMapsUrl, companionIds, image: imageUri, decisionDate, publicNotes, privateMemo, cancellationPolicy, selectionMethod, useRankPrices, rankPrices, genres };
     const validationError = validateEventForm(form, { requireImage: false, requireTerms: true, termsAccepted, allowedClubIds: joinedClubs.map((club) => club.id), allowEmptyGenres: Boolean(editId), allowPastDate: Boolean(editId) });
     if (validationError) { setFormError(validationError); return; }
     setFormError("");
@@ -333,6 +334,11 @@ export default function CreateEventScreen() {
         {eventType !== "club" ? <><FieldLabel>グルメジャンル *（複数選択可）</FieldLabel><View style={{ flexDirection: "row", flexWrap: "wrap", gap: 7 }}>{GOURMET_GENRES.map((genre) => { const selected = genres.includes(genre); return <Pressable key={genre} onPress={() => setGenres((current) => selected ? current.filter((item) => item !== genre) : [...current, genre])} style={{ borderRadius: 18, paddingHorizontal: 11, paddingVertical: 7, backgroundColor: selected ? "#5D5C74" : colors.surface, borderWidth: 1, borderColor: selected ? "#5D5C74" : colors.border }}><Text style={{ fontSize: 12, fontWeight: "700", color: selected ? "#FFF" : colors.foreground }}>{genre}</Text></Pressable>; })}</View></> : null}
         <FieldLabel>予約人数 *</FieldLabel><SelectField label="予約人数" value={reservationCapacity} options={EVENT_RESERVATION_CAPACITY_OPTIONS} onChange={setReservationCapacity} />
         <FieldLabel>募集人数（自分以外） *</FieldLabel><SelectField label="募集人数" value={recruitCapacity} options={EVENT_CAPACITY_OPTIONS} onChange={setRecruitCapacity} />
+        <Pressable accessibilityRole="checkbox" accessibilityState={{ checked: organizerParticipates }} onPress={() => setOrganizerParticipates((value) => !value)} style={{ flexDirection: "row", alignItems: "center", marginTop: 12 }}>
+          <View style={{ width: 22, height: 22, borderRadius: 6, backgroundColor: organizerParticipates ? "#E8A0BF" : colors.surface, borderWidth: 1, borderColor: organizerParticipates ? "#E8A0BF" : colors.border, alignItems: "center", justifyContent: "center" }}>{organizerParticipates ? <IconSymbol name="checkmark" size={14} color="#FFF" /> : null}</View>
+          <Text style={{ marginLeft: 8, color: colors.foreground, fontSize: 13, fontWeight: "700" }}>自分も参加する</Text>
+        </Pressable>
+        {!organizerParticipates ? <Text style={{ marginTop: 6, color: colors.muted, fontSize: 12 }}>枠提供のみの場合、予約人数に自分を含めません。</Text> : null}
 
         <FieldLabel>{eventType === "official" ? useRankPrices ? "参加費（任意）" : "参加費 *" : "予算 *"}</FieldLabel>
         <Pressable onPress={() => { const next = budgetMin !== "未定"; setFixedAmount(false); setBudgetMin(next ? "未定" : ""); setBudgetMax(next ? "未定" : ""); }} style={{ marginBottom: 9 }}><Text style={{ color: budgetMin === "未定" ? "#D65E8D" : colors.foreground, fontWeight: "700" }}>{budgetMin === "未定" ? "✓ " : "□ "}未定</Text></Pressable>

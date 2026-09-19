@@ -92,6 +92,14 @@ describe("production event validation", () => {
     });
   });
 
+  it("reserves no seat for a slot-only organizer but still accounts for companions", () => {
+    const slotOnly = validEvent({ capacity: 7, reservationCapacity: 8, companionIds: ["IRO0002"], organizerParticipates: false });
+    expect(sanitizeEvent(slotOnly)).toMatchObject({ capacity: 7, reservationCapacity: 8, organizerParticipates: false });
+    expect(sanitizeEvent({ ...slotOnly, organizerParticipates: true })).toBeNull();
+    expect(sanitizeEvent({ ...slotOnly, reservationCapacity: 7 })).toBeNull();
+    expect(sanitizeEvent({ ...slotOnly, organizerParticipates: "false" })).toBeNull();
+  });
+
   it("accepts an undecided time for new and edited events", () => {
     expect(sanitizeEvent(validEvent({ time: "時間未定" }))).toMatchObject({ time: "時間未定" });
     expect(isAllowedEditedEventTime("時間未定", "event-native", "{}")).toBe(true);

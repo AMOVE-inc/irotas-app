@@ -149,6 +149,8 @@ export interface Event {
   selectionMethod?: "first_come" | "lottery";
   applicantIds?: string[];
   reservationCapacity?: number;
+  /** Whether the organizer occupies one of the reserved seats. Defaults to true for existing events. */
+  organizerParticipates?: boolean;
   companionIds?: string[];
   externalUrl?: string;
   publicNotes?: string;

@@ -48,6 +48,20 @@ describe("event edit form values", () => {
     expect(minimumReservationCapacity("3", ["member-2"])).toBe(5);
   });
 
+  it("allows a slot-only organizer when recruitment and companions fill the reservation", () => {
+    const form = eventFormValuesFromEvent(event);
+    form.reservationCapacity = "8";
+    form.recruitCapacity = "7";
+    form.companionIds = ["member-2"];
+    expect(validateEventForm(form, { requireImage: false })).toContain("予約人数");
+    form.organizerParticipates = false;
+    expect(minimumReservationCapacity(form.recruitCapacity, form.companionIds, false)).toBe(8);
+    expect(validateEventForm(form, { requireImage: false })).toBeNull();
+    const saved = eventFormSaveFields(form);
+    expect(saved.organizerParticipates).toBe(false);
+    expect(eventFormValuesFromEvent({ ...event, ...saved }).organizerParticipates).toBe(false);
+  });
+
   it("recognizes a companion-only edit so it can avoid revalidating legacy fields", () => {
     const before = eventFormValuesFromEvent(event);
     const after = { ...before, companionIds: ["member-2", "member-3"] };
