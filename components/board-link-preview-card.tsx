@@ -4,8 +4,9 @@ import { Linking, Pressable, Text, View } from "react-native";
 import type { ImportedLinkPreview } from "@/lib/discord-link-preview";
 
 export function BoardLinkPreviewCard({ preview }: { preview: ImportedLinkPreview }) {
-  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [imageUrl, setImageUrl] = useState<string | null>(preview.imageUrl ?? null);
   useEffect(() => {
+    if (preview.imageUrl) { setImageUrl(preview.imageUrl); return; }
     if (typeof window === "undefined") return;
     let active = true;
     const params = new URLSearchParams({ url: preview.url, query: preview.title });
@@ -14,7 +15,7 @@ export function BoardLinkPreviewCard({ preview }: { preview: ImportedLinkPreview
       .then((result) => { if (active) setImageUrl(typeof result.imageUrl === "string" ? result.imageUrl : null); })
       .catch(() => undefined);
     return () => { active = false; };
-  }, [preview.url, preview.title]);
+  }, [preview.url, preview.title, preview.imageUrl]);
 
   return <Pressable onPress={() => void Linking.openURL(preview.url)} accessibilityRole="link" accessibilityLabel={`${preview.provider}で${preview.title}を開く`} style={{ borderWidth: 1, borderColor: "#E2E3E8", borderLeftWidth: 4, borderRadius: 9, overflow: "hidden", marginTop: 8, flexDirection: "row", backgroundColor: "#FFF" }}>
     <View style={{ flex: 1, paddingHorizontal: 12, paddingVertical: 10, justifyContent: "center" }}>

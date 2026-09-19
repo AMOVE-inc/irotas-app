@@ -45,6 +45,14 @@ describe("Discord board archive", () => {
       "https://tabelog.com/tokyo/A1313/A131303/13194455/",
       "https://tabelog.com/tokyo/A1313/A131303/13265598/",
     ]);
+    expect(tabelog.importedLinkPreviews?.every((preview) => preview.imageUrl?.startsWith("https://tblg.k-img.com/"))).toBe(true);
+
+    const simpleMaps = archive.comments["discord-board-1543137666009272340"].find((comment) => comment.id.endsWith("1544145056922075267"))!;
+    expect(simpleMaps.content).not.toContain("lib(リブ) · Koto City");
+    expect(simpleMaps.importedLinkPreviews?.[0].title).toBe("lib(リブ)");
+    const posh = archive.comments["discord-board-1543137666009272340"].find((comment) => comment.id.endsWith("1544271734763687948"))!;
+    expect(posh.content).not.toContain("POSH · Koto City");
+    expect(posh.importedLinkPreviews?.[0].title).toBe("POSH");
   });
 
   it("DiscordコメントIDの別表記を同じコメントとして表示する", () => {
