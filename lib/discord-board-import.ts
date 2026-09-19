@@ -31,6 +31,7 @@ export interface RawDiscordBoardThread extends RawDiscordBoardRecord {
 
 export interface RawDiscordBoardComment extends RawDiscordBoardRecord {
   threadId: string;
+  parentMessageId?: string | null;
 }
 
 export interface RawDiscordBoardArchive {
@@ -144,18 +145,33 @@ export function parseDiscordBoardArchive(archive: RawDiscordBoardArchive, direct
     ["IRO+運営", "IRO＋運営"].includes(record.authorName.trim())
   ));
   const visibleThreadIds = new Set(rawThreads.map((record) => record.id));
-  const seenDiscordCommentIds = new Set<string>();
-  const rawComments = archive.comments.filter((record) => {
-    if (!visibleThreadIds.has(record.threadId)) return false;
-    const key = `${record.threadId}:${record.id.replace(/^(?:discord-comment-)+/, "")}`;
-    if (seenDiscordCommentIds.has(key)) return false;
-    seenDiscordCommentIds.add(key);
-    return true;
-  });
+  const commentKey = (record: RawDiscordBoardComment) => `${record.threadId}:${record.id.replace(/^(?:discord-comment-)+/, "")}`;
+  const commentsByKey = new Map<string, RawDiscordBoardComment>();
+  for (const record of archive.comments) {
+    if (!visibleThreadIds.has(record.threadId)) continue;
+    const key = commentKey(record);
+    const existing = commentsByKey.get(key);
+    // Discordの空メッセージより、同じIDで保存された投票結果を優先する。
+    if (!existing || (!existing.content.trim() && record.content.trim())) commentsByKey.set(key, record);
+  }
+  const rawComments = [...commentsByKey.values()];
+  const pollResultsByOriginal = new Map<string, { summary: ImportedBoardPollSummary; createdAt: string }>();
+  const mergedPollReplyIds = new Set<string>();
+  for (const record of rawComments) {
+    const summary = parseImportedDiscordPollSummary(record.content);
+    if (!summary || !record.parentMessageId) continue;
+    const originalKey = `${record.threadId}:${record.parentMessageId.replace(/^(?:discord-comment-)+/, "")}`;
+    const original = commentsByKey.get(originalKey);
+    if (!original || original.content.trim() || original.images.length || original.videos.length) continue;
+    const previous = pollResultsByOriginal.get(originalKey);
+    if (!previous || record.createdAt > previous.createdAt) pollResultsByOriginal.set(originalKey, { summary, createdAt: record.createdAt });
+    mergedPollReplyIds.add(commentKey(record));
+  }
   const comments: Record<string, BoardComment[]> = {};
 
   rawComments.forEach((record) => {
-    const importedPollSummary = parseImportedDiscordPollSummary(record.content);
+    if (mergedPollReplyIds.has(commentKey(record))) return;
+    const importedPollSummary = pollResultsByOriginal.get(commentKey(record))?.summary ?? parseImportedDiscordPollSummary(record.content);
     const comment: BoardComment = {
       id: `discord-comment-${record.id}`,
       threadId: record.threadId,

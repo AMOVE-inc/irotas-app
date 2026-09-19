@@ -38,17 +38,38 @@ describe("Discord board archive", () => {
     expect(importedPolls.length).toBeGreaterThan(0);
     expect(importedComments.every((comment) => !comment.content.includes("poll_question_text:"))).toBe(true);
     expect(importedPolls.every((comment) => comment.content === "")).toBe(true);
-    expect(importedPolls.find((comment) => comment.id === "discord-comment-1504430962912788522")?.importedPollSummary).toEqual({
+    expect(importedPolls.find((comment) => comment.importedPollSummary?.question === "都合の良い日を教えてください🧞‍♂️")?.importedPollSummary).toEqual({
       question: "都合の良い日を教えてください🧞‍♂️",
       winnerVotes: 1,
       totalVotes: 2,
     });
-    expect(importedPolls.find((comment) => comment.id === "discord-comment-1549287433286451240")?.importedPollSummary).toEqual({
+    expect(importedPolls.find((comment) => comment.importedPollSummary?.question === "参加可能な日を教えてください（複数選択可）")?.importedPollSummary).toEqual({
       question: "参加可能な日を教えてください（複数選択可）",
       winnerText: "11/15(日)昼",
       winnerVotes: 9,
       totalVotes: 39,
     });
+  });
+
+  it("MBTIアンケートの空の投票コメントにDiscordの結果を結び付ける", () => {
+    const comments = archive.comments["discord-board-1471860816906158080"] ?? [];
+    const polls = comments.filter((comment) => comment.importedPollSummary);
+    expect(polls).toHaveLength(5);
+    expect(polls.map((comment) => comment.id)).toEqual([
+      "discord-comment-1471861104626896906",
+      "discord-comment-1471861786050302013",
+      "discord-comment-1471862232043356377",
+      "discord-comment-1471862499623305283",
+      "discord-comment-1471862732667097149",
+    ]);
+    expect(polls.map((comment) => comment.importedPollSummary)).toEqual([
+      { question: "MBTIの色は？", winnerText: "緑🟩", winnerVotes: 41, totalVotes: 84 },
+      { question: "紫の人！何ですか？🟪", winnerText: "ENTJ", winnerVotes: 5, totalVotes: 13 },
+      { question: "緑の人！何ですか？🟩", winnerText: "ENFP", winnerVotes: 16, totalVotes: 40 },
+      { question: "青の人！何ですか？🟦", winnerText: "ESFJ", winnerVotes: 10, totalVotes: 19 },
+      { question: "黄色の人！何ですか？🟨", winnerVotes: 3, totalVotes: 11 },
+    ]);
+    expect(comments).toHaveLength(6);
   });
 
   it("共有編集後の募集ステータス・本文を移行元より優先する", () => {
