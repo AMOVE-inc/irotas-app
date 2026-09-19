@@ -715,6 +715,25 @@ export async function handleBoardContentRequest(
       FROM board_comments bc JOIN board_threads bt ON bt.id = bc.thread_id
       WHERE bc.id = ? AND bc.deleted_at IS NULL AND bt.deleted_at IS NULL LIMIT 1`)
       .bind(id).first<CommentRow & { category: string }>();
+    if (!current && request.method === "DELETE" && id.startsWith("discord-comment-")) {
+      const raw = (archive as RawDiscordBoardArchive).comments.find((comment) => `discord-comment-${comment.id}` === id);
+      if (!raw) return json({ error: "コメントが見つかりません" }, 404);
+      const viewer = await db.prepare("SELECT discord_user_id FROM members WHERE id = ? LIMIT 1")
+        .bind(member.id).first<{ discord_user_id: string | null }>();
+      if (!elevated(member) && viewer?.discord_user_id !== raw.authorId)
+        return json({ error: "投稿者本人または管理者のみ変更できます" }, 403);
+      const thread = await ensureImportedThread(db, raw.threadId, member);
+      if (!thread || !await canAccessBoardCategory(db, thread.category, member))
+        return json({ error: "コメントが見つかりません" }, 404);
+      const now = new Date().toISOString();
+      await db.prepare(`INSERT OR IGNORE INTO board_comments
+        (id, thread_id, author_member_id, content, data_json, created_at, updated_at, deleted_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)`).bind(
+        id, raw.threadId, member.id, raw.content || "", JSON.stringify({ archiveShadow: true }), raw.createdAt || now, now, now,
+      ).run();
+      await audit(db, member.id, "board.comment_deleted", "board_comment", id);
+      return json({ success: true });
+    }
     if (!current) return json({ error: "コメントが見つかりません" }, 404);
     if (!await canAccessBoardCategory(db, current.category, member))
       return json({ error: "このコメントを操作できません" }, 403);

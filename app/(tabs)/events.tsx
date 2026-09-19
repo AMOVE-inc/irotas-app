@@ -584,14 +584,13 @@ function EventCard({
         borderWidth: 1,
         borderColor: colors.border,
         flexDirection: "row",
-        height: 158,
+        minHeight: 158,
         opacity: cardMuted ? 0.56 : 1,
       }}
     >
       <View
         style={{
           width: 142,
-          height: 158,
           alignSelf: "stretch",
           overflow: "hidden",
         }}

@@ -4,7 +4,7 @@ import { BOARD_THREADS, type Member , BoardThread, ChatRoom } from "@/constants/
 import type { MentionGroup } from "@/lib/mentions";
 import { extractMentionLabels, isGroupMention } from "@/lib/mentions";
 import { useColors } from "@/hooks/use-colors";
-import { parseInternalLink, type InternalLinkMention, type InternalLinkPathname } from "@/lib/internal-links";
+import { formatEventLinkLabel, parseInternalLink, type InternalLinkMention, type InternalLinkPathname } from "@/lib/internal-links";
 import { getAllRooms } from "@/lib/chat-store";
 import { useRouter } from "expo-router";
 import { parseDiscordRichLines, tokenizeRichTextLinks, type DiscordTextFormat } from "@/lib/discord-rich-text";
@@ -39,9 +39,11 @@ function InternalLinkLabel({ link }: { link: InternalLinkMention }) {
   const [label, setLabel] = useState(link.label);
   useEffect(() => {
     setLabel(link.label);
-    if (link.label !== "#スレッド" && link.label !== "#チャット") return;
+    if (link.label !== "📅 イベント" && link.label !== "#スレッド" && link.label !== "#チャット") return;
     let active = true;
-    const request = link.pathname === "/board" && link.params.thread
+    const request = link.pathname === "/event-detail" && link.params.id
+      ? Api.getEvent(link.params.id).then(formatEventLinkLabel)
+      : link.pathname === "/board" && link.params.thread
       ? Api.getSharedBoardThreadTitle(link.params.thread).then((result) => `#${result.title}`)
       : link.pathname === "/chat" && link.params.id
         ? Api.getSharedChatRoom(link.params.id).then((room) => `#${room.name}`)
@@ -73,7 +75,7 @@ export function MentionText({ content, outgoing = false, groups, rooms = getAllR
   const renderPlain = (value: string, keyPrefix: string) => tokenizeRichTextLinks(value).map((token, index) => {
     if (token.type === "text") return <Text key={`${keyPrefix}-${index}`}>{renderMentions(token.value, `${keyPrefix}-${index}-mention`)}</Text>;
     const internal = parseInternalLink(token.url, rooms, threads);
-    if (internal) return <Text key={`${keyPrefix}-${index}`}><Text accessibilityRole="link" onPress={() => openInternalLink(internal.pathname, internal.params)} style={{ fontWeight: "900", color: outgoing ? "#FFF3B0" : "#5B5A73", backgroundColor: outgoing ? "rgba(255,210,70,0.22)" : "#EEEAF7" }}><InternalLinkLabel link={internal} /></Text>{token.suffix}</Text>;
+    if (internal) return <Text key={`${keyPrefix}-${index}`}><Text accessibilityRole="link" onPress={() => openInternalLink(internal.pathname, internal.params)} style={{ fontWeight: "800", color: outgoing ? "#164F91" : "#2065B7", textDecorationLine: "underline" }}><InternalLinkLabel link={internal} /></Text>{token.suffix}</Text>;
     return <Text key={`${keyPrefix}-${index}`}><Text accessibilityRole="link" onPress={() => void Linking.openURL(token.url)} style={{ color: outgoing ? "#DCEBFF" : "#3478C7", textDecorationLine: "underline", fontWeight: "700" }}>{token.label}</Text>{token.suffix}</Text>;
   });
 

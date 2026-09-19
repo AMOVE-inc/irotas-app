@@ -1,4 +1,20 @@
-const ALLOWED_HOSTS = /(^|\.)(tabelog\.com|maps\.app\.goo\.gl|goo\.gl|google\.[a-z.]+|maps\.google\.[a-z.]+)$/i;
+const ALLOWED_HOSTS = /(^|\.)(tabelog\.com|maps\.app\.goo\.gl|goo\.gl|google\.(?:[a-z]{2,3}|com\.[a-z]{2}|co\.[a-z]{2}))$/i;
+
+async function fetchAllowedPage(initialUrl: URL): Promise<Response | null> {
+  let target = initialUrl;
+  for (let hop = 0; hop < 4; hop++) {
+    if (target.protocol !== "https:" || !ALLOWED_HOSTS.test(target.hostname) || target.username || target.password) return null;
+    const response = await fetch(target, { redirect: "manual", headers: { accept: "text/html", "user-agent": "Mozilla/5.0 (compatible; IROPlusPreview/1.0)" } });
+    if (response.status >= 300 && response.status < 400) {
+      const location = response.headers.get("location");
+      if (!location) return null;
+      target = new URL(location, target);
+      continue;
+    }
+    return response;
+  }
+  return null;
+}
 
 function metaImage(html: string, baseUrl: string) {
   const tags = html.match(/<meta\s+[^>]*>/gi) ?? [];
@@ -38,8 +54,8 @@ export async function handleLinkPreviewRequest(request: Request, env: PreviewEnv
     if (rawUrl) {
       const target = new URL(rawUrl);
       if (target.protocol === "https:" && ALLOWED_HOSTS.test(target.hostname)) {
-        const response = await fetch(target, { redirect: "follow", headers: { accept: "text/html", "user-agent": "Mozilla/5.0 (compatible; IROPlusPreview/1.0)" } });
-        if (response.ok && response.headers.get("content-type")?.includes("text/html")) imageUrl = metaImage((await response.text()).slice(0, 1_500_000), response.url);
+        const response = await fetchAllowedPage(target);
+        if (response?.ok && response.headers.get("content-type")?.includes("text/html")) imageUrl = metaImage((await response.text()).slice(0, 1_500_000), response.url);
       }
     }
     imageUrl ??= await placesImage(requestUrl.searchParams.get("query") ?? "", env, requestUrl.origin);

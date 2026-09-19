@@ -209,6 +209,9 @@ export async function handleBoardArchiveRequest(
       ),
     }));
   const liveIds = new Set(threads.map((thread) => thread.id));
+  const deletedComments = await env.DB.prepare("SELECT id FROM board_comments WHERE deleted_at IS NOT NULL AND id LIKE 'discord-comment-%'")
+    .all<{ id: string }>();
+  const deletedCommentIds = new Set((deletedComments.results ?? []).map((row) => row.id));
   const originalThreads = new Map(threads.map((thread) => [thread.id, thread]));
   const threadOverrides = Object.fromEntries((saved.results ?? [])
     .filter((row) => visibleIds.has(row.id) && !row.deleted_at)
@@ -221,7 +224,7 @@ export async function handleBoardArchiveRequest(
         updatedAt: row.updated_at, data: JSON.parse(row.data_json || "{}"),
       }];
     }));
-  return Response.json({ threads, comments: filtered.comments.filter((comment) => liveIds.has(comment.threadId)), threadOverrides }, {
+  return Response.json({ threads, comments: filtered.comments.filter((comment) => liveIds.has(comment.threadId) && !deletedCommentIds.has(`discord-comment-${comment.id}`)), threadOverrides }, {
     headers: {
       "cache-control": "private, no-store",
       vary: "Cookie, Authorization",

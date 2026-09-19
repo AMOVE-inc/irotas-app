@@ -459,8 +459,8 @@ async function messageRows(db: D1Database, roomId: string, visibleFrom?: string)
       cm.content, cm.image_url, cm.image_urls_json, cm.reply_to_json, cm.created_at, cm.updated_at
     FROM chat_messages cm LEFT JOIN members m ON m.id = cm.sender_member_id
     WHERE cm.room_id = ? AND cm.deleted_at IS NULL AND (? IS NULL OR cm.created_at >= ?)
-    ORDER BY cm.created_at ASC LIMIT 500`).bind(roomId, visibleFrom ?? null, visibleFrom ?? null).all<MessageRow>();
-  return result.results ?? [];
+    ORDER BY cm.created_at DESC, cm.id DESC LIMIT 500`).bind(roomId, visibleFrom ?? null, visibleFrom ?? null).all<MessageRow>();
+  return (result.results ?? []).reverse();
 }
 
 async function reactionRows(db: D1Database, messageIds: string[]) {

@@ -3,7 +3,7 @@ export interface ImportedLinkPreview {
   title: string;
   description?: string;
   imageUrl?: string;
-  provider: "Google マップ" | "食べログ";
+  provider: string;
 }
 
 // These three archived Discord embeds have confirmed public OG thumbnails. The

@@ -1,14 +1,16 @@
 import { describe, expect, it } from "vitest";
 import { BOARD_THREADS, CHAT_ROOMS } from "../constants/mock-data";
-import { parseInternalLink, splitInternalLinks } from "../lib/internal-links";
+import { formatEventLinkLabel, parseInternalLink, splitInternalLinks } from "../lib/internal-links";
 
 describe("internal link mentions", () => {
-  it("links to an imported event without embedding its title in the client", () => {
+  it("links to an imported event and uses its shared title and start time", () => {
     expect(parseInternalLink("https://app.irotas-community.com/event-detail?id=discord-event-123", CHAT_ROOMS, BOARD_THREADS)).toMatchObject({
-      label: "📅 イベントを開く",
+      label: "📅 イベント",
       pathname: "/event-detail",
       params: { id: "discord-event-123" },
     });
+    expect(formatEventLinkLabel({ date: "2026-10-14", time: "19:30", title: "IRO+PARTY" }))
+      .toBe("📅 2026/10/14 19:30 IRO+PARTY");
   });
   it("converts a chat URL into a named mention", () => {
     expect(parseInternalLink("https://app.irotas-community.com/chat?id=board-announcement", CHAT_ROOMS, BOARD_THREADS)).toMatchObject({

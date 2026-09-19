@@ -152,8 +152,13 @@ class ChatDatabase implements D1Database {
           });
           return { success: true, results: result as T[] };
         }
-        if (sql.includes("FROM chat_messages cm JOIN members") || sql.includes("FROM chat_messages cm LEFT JOIN members"))
-          return { success: true, results: (sql.includes("LEFT JOIN") ? this.messages : this.messages.filter((message) => this.members.some((member) => member.id === message.sender_member_id))) as T[] };
+        if (sql.includes("FROM chat_messages cm LEFT JOIN members"))
+          return { success: true, results: [...this.messages]
+            .filter((message) => message.room_id === values[0] && (!values[1] || message.created_at >= String(values[1])))
+            .sort((left, right) => right.created_at.localeCompare(left.created_at) || right.id.localeCompare(left.id))
+            .slice(0, 500) as T[] };
+        if (sql.includes("FROM chat_messages cm JOIN members"))
+          return { success: true, results: this.messages.filter((message) => this.members.some((member) => member.id === message.sender_member_id)) as T[] };
         return { success: true, results: [] as T[] };
       },
       run: async () => {
@@ -257,6 +262,25 @@ describe("shared chat content API", () => {
     expect(response?.status).toBe(200);
     expect((await response?.json() as { messages: Array<{ content: string; externalAuthorName: string }> }).messages)
       .toEqual([expect.objectContaining({ content: "パーティーのご案内", externalAuthorName: "メンバー" })]);
+  });
+
+  it("returns the newest messages after a room exceeds the history limit", async () => {
+    db.messages = Array.from({ length: 502 }, (_, index) => ({
+      id: `message-${String(index).padStart(3, "0")}`,
+      room_id: "community-free-chat",
+      sender_member_id: 9,
+      sender_public_member_id: "IRO0009",
+      sender_display_name: "テスト本人",
+      content: `メッセージ ${index}`,
+      image_url: null,
+      created_at: new Date(Date.UTC(2026, 8, 19, 0, 0, index)).toISOString(),
+      updated_at: new Date(Date.UTC(2026, 8, 19, 0, 0, index)).toISOString(),
+    }));
+    const response = await handleChatContentRequest(request("/api/chats/community-free-chat/messages"), env);
+    const { messages } = await response!.json() as { messages: Array<{ id: string }> };
+    expect(messages).toHaveLength(500);
+    expect(messages[0].id).toBe("message-002");
+    expect(messages.at(-1)?.id).toBe("message-501");
   });
 
   it("keeps the referenced message visible after a reply is saved and reloaded", async () => {

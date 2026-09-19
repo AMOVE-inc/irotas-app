@@ -7,15 +7,17 @@ export function BoardLinkPreviewCard({ preview }: { preview: ImportedLinkPreview
   const [imageUrl, setImageUrl] = useState<string | null>(preview.imageUrl ?? null);
   useEffect(() => {
     if (preview.imageUrl) { setImageUrl(preview.imageUrl); return; }
+    if (preview.provider !== "Google マップ" && preview.provider !== "食べログ") return;
     if (typeof window === "undefined") return;
     let active = true;
-    const params = new URLSearchParams({ url: preview.url, query: preview.title });
+    const query = preview.title.endsWith("のリンクを開く") ? "" : preview.title;
+    const params = new URLSearchParams({ url: preview.url, query });
     void fetch(`/api/link-preview?${params}`)
       .then((response) => response.ok ? response.json() : { imageUrl: null })
       .then((result) => { if (active) setImageUrl(typeof result.imageUrl === "string" ? result.imageUrl : null); })
       .catch(() => undefined);
     return () => { active = false; };
-  }, [preview.url, preview.title, preview.imageUrl]);
+  }, [preview.url, preview.title, preview.imageUrl, preview.provider]);
 
   return <Pressable onPress={() => void Linking.openURL(preview.url)} accessibilityRole="link" accessibilityLabel={`${preview.provider}で${preview.title}を開く`} style={{ borderWidth: 1, borderColor: "#E2E3E8", borderLeftWidth: 4, borderRadius: 9, overflow: "hidden", marginTop: 8, flexDirection: "row", backgroundColor: "#FFF" }}>
     <View style={{ flex: 1, paddingHorizontal: 12, paddingVertical: 10, justifyContent: "center" }}>

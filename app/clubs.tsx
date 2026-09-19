@@ -1,4 +1,5 @@
 import { ScreenContainer } from "@/components/screen-container";
+import { MemberRankBadge, MemberRoleBadge, stripRankFromName } from "@/components/member-rank-badge";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import {
   CLUBS,
@@ -17,8 +18,8 @@ import { useColors } from "@/hooks/use-colors";
 import { createBoardChat } from "@/lib/chat-store";
 import { canCreateClub, isAdminRole, isOperatorRole } from "@/lib/access-control";
 import { Image } from "expo-image";
-import { useLocalSearchParams, useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
+import { useCallback, useEffect, useState } from "react";
 import * as Api from "@/lib/_core/api";
 import {
   Alert,
@@ -54,6 +55,8 @@ import {
 } from "@/lib/club-viewer-access";
 import { getClubIntroductionContent, getLatestClubActivityReports } from "@/lib/club-introduction";
 import { parseDiscordBoardArchive } from "@/lib/discord-board-import";
+import { displayBoardThreadTitle } from "@/lib/board-recruitment";
+import { sharedThreadToBoardThread } from "@/lib/shared-board-content";
 import { MentionText } from "@/components/mention-ui";
 import { getMentionGroups } from "@/lib/mentions";
 import { formatClubLeaderName, formatClubName } from "@/lib/club-display";
@@ -1870,7 +1873,11 @@ export default function ClubsScreen() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showClubFinder, setShowClubFinder] = useState(false);
   const [archiveThreads, setArchiveThreads] = useState<BoardThread[]>([]);
-  const activityReports = getLatestClubActivityReports(archiveThreads, 5);
+  const [sharedReportThreads, setSharedReportThreads] = useState<BoardThread[]>([]);
+  const activityReports = getLatestClubActivityReports(
+    [...new Map([...archiveThreads, ...sharedReportThreads].map((thread) => [thread.id, thread])).values()],
+    Number.POSITIVE_INFINITY,
+  );
 
   useEffect(() => {
     if (!selectedClub) return;
@@ -1894,7 +1901,7 @@ export default function ClubsScreen() {
     });
   }, [clubs]);
 
-  useEffect(() => {
+  useFocusEffect(useCallback(() => {
     let active = true;
     // 部員限定カテゴリも含めて移行済みスレを解決する。
     void Api.getBoardArchive("all").then((archive) => {
@@ -1902,8 +1909,21 @@ export default function ClubsScreen() {
     }).catch(() => {
       // 公開範囲の移行データが取得できない場合も、部活動一覧は利用できる。
     });
+    void Api.getSharedBoardContent("club-all").then(({ threads, comments }) => {
+      if (!active) return;
+      const commentCounts = new Map<string, number>();
+      for (const comment of comments) commentCounts.set(comment.threadId, (commentCounts.get(comment.threadId) ?? 0) + 1);
+      setSharedReportThreads(threads
+        .filter((thread) => thread.data.archiveShadow !== true && !thread.id.startsWith("discord-board-"))
+        .map((thread) => ({
+          ...sharedThreadToBoardThread(thread, authUser?.memberId ?? ""),
+          commentCount: commentCounts.get(thread.id) ?? 0,
+        })));
+    }).catch(() => {
+      // 移行済みの活動報告は引き続き表示する。
+    });
     return () => { active = false; };
-  }, []);
+  }, [authUser?.memberId]));
   const clubsWithAccess = clubs.map((club) => ({
     club,
     access: getClubViewerAccess(club, authUser?.memberId, CURRENT_USER.id),
@@ -2026,7 +2046,7 @@ export default function ClubsScreen() {
           <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 11 }}>
             <View style={{ flex: 1 }}>
               <Text style={{ fontSize: 19, fontWeight: "900", color: colors.foreground }}>活動報告</Text>
-              <Text style={{ fontSize: 12, color: colors.muted, marginTop: 3 }}>各部活動の最新レポート</Text>
+              <Text style={{ fontSize: 12, color: colors.muted, marginTop: 3 }}>各部活動の活動報告</Text>
             </View>
           </View>
           <View style={{ gap: 9 }}>
@@ -2037,36 +2057,40 @@ export default function ClubsScreen() {
                 accessibilityRole="button"
                 accessibilityLabel={report.title}
                 style={({ pressed }) => ({
-                  flexDirection: "row",
-                  alignItems: "center",
-                  minHeight: 78,
-                  padding: 11,
+                  padding: 14,
                   borderRadius: 15,
                   backgroundColor: pressed ? "#F2F0F3" : colors.surface,
                   borderWidth: 1,
                   borderColor: colors.border,
                 })}
               >
-                {report.images?.[0] ? (
-                  <Image source={report.images[0]} style={{ width: 56, height: 56, borderRadius: 11, marginRight: 11 }} contentFit="cover" />
-                ) : (
-                  <View style={{ width: 56, height: 56, borderRadius: 11, marginRight: 11, backgroundColor: "#EAF3FA", alignItems: "center", justifyContent: "center" }}>
-                    <IconSymbol name="doc.text.fill" size={23} color="#5579A6" />
+                <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 8 }}>
+                  <Image source={report.author.avatar ?? DEFAULT_AVATAR} style={{ width: 30, height: 30, borderRadius: 15 }} contentFit="cover" />
+                  <View style={{ flex: 1, flexDirection: "row", alignItems: "center", marginLeft: 8 }}>
+                    <Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground }} numberOfLines={1}>{stripRankFromName(report.author.name)}</Text>
+                    <MemberRankBadge rank={report.author.rank} name={report.author.name} compact />
+                    <MemberRoleBadge name={report.author.name} role={report.author.role} compact />
                   </View>
-                )}
-                <View style={{ flex: 1 }}>
-                  <View style={{ alignSelf: "flex-start", backgroundColor: "#3478C7", borderRadius: 7, paddingHorizontal: 6, paddingVertical: 2, marginBottom: 4 }}>
-                    <Text style={{ fontSize: 9, fontWeight: "900", color: "#FFFFFF" }}>NEW</Text>
-                  </View>
-                  <Text style={{ fontSize: 14, fontWeight: "800", color: colors.foreground, lineHeight: 20 }} numberOfLines={2}>{report.title}</Text>
-                  <Text style={{ fontSize: 11, color: colors.muted, marginTop: 4 }} numberOfLines={1}>
-                    {report.author.name} · {new Intl.DateTimeFormat("ja-JP", { timeZone: "Asia/Tokyo", month: "numeric", day: "numeric" }).format(new Date(report.lastUpdated))}
+                  <Text style={{ fontSize: 11, color: colors.muted, marginLeft: 6 }}>
+                    {(() => {
+                      const hours = Math.max(0, Math.floor((Date.now() - new Date(report.lastUpdated).getTime()) / 3600000));
+                      return hours < 1 ? "たった今" : hours < 24 ? `${hours}時間前` : `${Math.floor(hours / 24)}日前`;
+                    })()}
                   </Text>
                 </View>
-                <IconSymbol name="chevron.right" size={16} color={colors.muted} />
+                <View style={{ flexDirection: "row", alignItems: "flex-start" }}>
+                  <View style={{ flex: 1, minWidth: 0 }}>
+                    <Text style={{ fontSize: 16, fontWeight: "700", color: colors.foreground, marginBottom: 4 }} numberOfLines={2}>{displayBoardThreadTitle(report)}</Text>
+                    {report.preview ? <Text style={{ fontSize: 14, color: colors.foreground, lineHeight: 21 }} numberOfLines={2}>{report.preview}</Text> : null}
+                  </View>
+                  {report.images?.[0] ? <Image source={report.images[0]} style={{ width: 72, height: 72, borderRadius: 9, marginLeft: 10 }} contentFit="cover" /> : null}
+                </View>
+                <View style={{ flexDirection: "row", alignItems: "center", marginTop: 8 }}>
+                  <IconSymbol name="bubble.left.fill" size={14} color={colors.muted} />
+                  <Text style={{ fontSize: 12, color: colors.muted, marginLeft: 5 }}>{report.commentCount ?? 0}件のコメント</Text>
+                </View>
               </Pressable>
             ))}
-            {archiveThreads.filter((thread) => thread.category === "club-all").length > 5 ? <Pressable onPress={() => router.push({ pathname: "/board", params: { category: "club-all", view: "threads" } })} style={{ minHeight: 46, marginTop: 3, borderRadius: 12, alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: "#A7C7E7", backgroundColor: "#EAF3FA" }}><Text style={{ fontSize: 14, fontWeight: "900", color: "#39749D" }}>すべての投稿を見る</Text></Pressable> : null}
           </View>
         </View>
 

@@ -4,6 +4,7 @@ import {
   discordAuthorFallbackFor,
   handleBoardContentRequest,
 } from "../sites/board-content";
+import { handleBoardArchiveRequest } from "../sites/board-archive";
 import type {
   D1Database,
   D1PreparedStatement,
@@ -16,6 +17,7 @@ type Member = {
   role: "user" | "operator" | "admin";
   access_role: "member" | "club_leader" | "operator" | "admin";
   account_status: "active";
+  discord_user_id?: string;
 };
 
 function testDatabase(
@@ -26,6 +28,7 @@ function testDatabase(
   replyComment?: { id: string; threadId: string; content: string; displayName: string },
   clubLeader = false,
   contentThread?: { id: string; category: string },
+  deletedArchivedCommentIds: string[] = [],
 ) {
   const writes: { sql: string; values: unknown[] }[] = [];
   const db: D1Database = {
@@ -62,6 +65,8 @@ function testDatabase(
               grace_until_date: null,
             } as T;
           }
+          if (sql.includes("SELECT discord_user_id FROM members WHERE id = ?"))
+            return { discord_user_id: member.discord_user_id ?? null } as T;
           if (sql.includes("FROM clubs\n    WHERE id = ? AND leader_member_id = ?"))
             return (clubLeader ? { allowed: 1 } : null) as T | null;
           if (sql.includes("WHERE name = ? AND leader_member_id = ?"))
@@ -86,6 +91,8 @@ function testDatabase(
           return { success: true };
         },
         async all<T>() {
+          if (sql.includes("SELECT id FROM board_comments WHERE deleted_at IS NOT NULL"))
+            return { success: true, results: deletedArchivedCommentIds.map((id) => ({ id } as T)) };
           if (contentThread && sql.includes("WHERE bt.id = ? AND bt.category = ?") &&
               values[0] === contentThread.id && values[1] === contentThread.category)
             return { success: true, results: [{
@@ -145,6 +152,39 @@ describe("shared board content API", () => {
       { DB: db } as SitesEnv,
     );
     expect(response?.status).toBe(401);
+  });
+
+  it("records deletion of an imported gourmet advice comment in the shared database", async () => {
+    const member = { id: 9, role: "admin", access_role: "admin", account_status: "active" } as const;
+    const thread = { id: "discord-board-1543137666009272340", author_member_id: 10, category: "gourmet-advice", title: "おすすめのお店" };
+    const { db, writes } = testDatabase(member, false, undefined, thread);
+    const response = await handleBoardContentRequest(
+      request("/api/board/comments/discord-comment-1543820885625012275", "DELETE"), { DB: db } as SitesEnv,
+    );
+    expect(response?.status).toBe(200);
+    const tombstone = writes.find((item) => item.sql.includes("INSERT OR IGNORE INTO board_comments"));
+    expect(tombstone?.values.slice(0, 3)).toEqual(["discord-comment-1543820885625012275", thread.id, member.id]);
+    expect(tombstone?.values[7]).toBeTruthy();
+  });
+
+  it("rejects imported comment deletion by someone other than its author", async () => {
+    const member = { id: 9, role: "user", access_role: "member", account_status: "active", discord_user_id: "999999999999999999" } as const;
+    const { db, writes } = testDatabase(member);
+    const response = await handleBoardContentRequest(
+      request("/api/board/comments/discord-comment-1543820885625012275", "DELETE"), { DB: db } as SitesEnv,
+    );
+    expect(response?.status).toBe(403);
+    expect(writes.some((item) => item.sql.includes("INSERT OR IGNORE INTO board_comments"))).toBe(false);
+  });
+
+  it("hides a deleted imported comment when the archive is loaded again", async () => {
+    const member = { id: 9, role: "admin", access_role: "admin", account_status: "active" } as const;
+    const deletedId = "discord-comment-1543820885625012275";
+    const { db } = testDatabase(member, false, undefined, undefined, undefined, false, undefined, [deletedId]);
+    const response = await handleBoardArchiveRequest(request("/api/board/archive", "GET"), { DB: db } as SitesEnv);
+    expect(response?.status).toBe(200);
+    const result = await response?.json() as { comments: { id: string }[] };
+    expect(result.comments.some((comment) => comment.id === "1543820885625012275")).toBe(false);
   });
 
   it("loads a linked post by id even when it is outside the category list", async () => {

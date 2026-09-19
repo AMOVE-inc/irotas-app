@@ -5,6 +5,7 @@ import { EventImage } from "@/components/event-image";
 import { PersistentBottomNav } from "@/components/persistent-bottom-nav";
 import { MemberClubLeaderBadges, MemberRankBadge, MemberRoleBadge, stripRankFromName } from "@/components/member-rank-badge";
 import { MentionSuggestions, MentionText, mentionDisplayName } from "@/components/mention-ui";
+import { ContentLinkCards } from "@/components/content-link-cards";
 import { extractMentionLabels, getMentionGroups, getMentionQuery, getMentionedMemberIds, insertMention } from "@/lib/mentions";
 import { EVENT_TERMS_URL, PUBLIC_APP_URL } from "@/constants/external-links";
 import { joinEventChat, removeMemberFromRoom } from "@/lib/chat-store";
@@ -309,9 +310,11 @@ export default function EventDetailScreen() {
     if (!event?.id || authLoading) return;
     const currentEventId = event.id;
     let active = true;
+    let refreshSequence = 0;
     setEventComments([]);
     const refresh = async () => {
-      try { const comments = await Api.getEventComments(currentEventId); if (active) setEventComments(comments); }
+      const sequence = ++refreshSequence;
+      try { const comments = await Api.getEventComments(currentEventId); if (active && sequence === refreshSequence) setEventComments(comments); }
       catch { /* Keep the last confirmed server result during a temporary connection failure. */ }
     };
     const migrateDeviceComments = async () => {
@@ -339,8 +342,10 @@ export default function EventDetailScreen() {
     };
     void refresh();
     void migrateDeviceComments().catch(() => {}).finally(() => { if (active) void refresh(); });
-    const timer = setInterval(() => { void refresh(); }, 5000);
-    return () => { active = false; clearInterval(timer); };
+    const timer = setInterval(() => { void refresh(); }, Platform.OS === "web" ? 2000 : 5000);
+    const onVisible = () => { if (document.visibilityState === "visible") void refresh(); };
+    if (Platform.OS === "web") document.addEventListener("visibilitychange", onVisible);
+    return () => { active = false; clearInterval(timer); if (Platform.OS === "web") document.removeEventListener("visibilitychange", onVisible); };
   }, [event?.id, authLoading, authenticatedViewerMemberId]);
 
   if ((!event || event.id !== eventId) && (eventLoading || !eventResolved)) {
@@ -1285,6 +1290,7 @@ export default function EventDetailScreen() {
             イベント詳細
           </Text>
           <MentionText content={event.description} groups={eventMentionGroups} onClubMentionPress={(group) => { const club = findMentionedClub(group.label, clubs); if (!club) return; if (canViewerAccessClubContent(club, authUser?.memberId, CURRENT_USER.id, isAdminRole(authUser?.role, authUser?.accessRole))) { router.push({ pathname: "/board", params: { category: `club-${club.id}`, view: "threads" } }); return; } router.push({ pathname: "/clubs", params: { clubId: club.id } }); }} onMentionPress={(label) => { const normalized = mentionDisplayName(label); const targetId = getDiscordAuthorByName(normalized)?.id ?? findMentionedMemberId(normalized, [...memberDirectory.map((member) => ({ id: member.id, displayName: mentionDisplayName(member.displayName) })), ...MEMBERS.map((member) => ({ id: member.id, name: mentionDisplayName(member.name) }))]); if (targetId) openMemberProfile(targetId); }} />
+          <ContentLinkCards content={event.description} />
         </View>
 
         {event.applicationDeadline ? (
@@ -1320,6 +1326,7 @@ export default function EventDetailScreen() {
                   <MemberRoleBadge name="" role={author.role} compact />
                 </View>
                 {editingEventCommentId === comment.id ? <View style={{ gap: 7 }}><TextInput value={editingEventCommentText} onChangeText={setEditingEventCommentText} multiline autoFocus style={{ minHeight: 84, backgroundColor: colors.background, borderWidth: 1, borderColor: colors.border, borderRadius: 10, padding: 10, fontSize: 14, color: colors.foreground }} /><View style={{ flexDirection: "row", gap: 8 }}><Pressable onPress={handleSaveEventCommentEdit} style={{ backgroundColor: "#3478C7", borderRadius: 8, paddingHorizontal: 13, paddingVertical: 7 }}><Text style={{ color: "#FFF", fontSize: 12, fontWeight: "800" }}>保存</Text></Pressable><Pressable onPress={() => setEventCommentDeleteTarget(comment)} style={{ backgroundColor: "#FCE7E7", borderRadius: 8, paddingHorizontal: 13, paddingVertical: 7 }}><Text style={{ color: colors.error, fontSize: 12, fontWeight: "800" }}>削除</Text></Pressable><Pressable onPress={() => setEditingEventCommentId(null)} style={{ paddingHorizontal: 10, paddingVertical: 7 }}><Text style={{ color: colors.muted, fontSize: 12 }}>キャンセル</Text></Pressable></View></View> : <MentionText content={comment.text} groups={eventMentionGroups} onMentionPress={(label) => { const normalized = mentionDisplayName(label); const targetId = getDiscordAuthorByName(normalized)?.id ?? memberDirectory.find((member) => mentionDisplayName(member.displayName) === normalized)?.id ?? findMentionedMemberId(normalized, MEMBERS); if (targetId) openMemberProfile(targetId); }} />}
+                {editingEventCommentId !== comment.id ? <ContentLinkCards content={comment.text} /> : null}
                 {Object.entries(comment.reactions ?? {}).filter(([, ids]) => ids.length > 0).length ? <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6, marginTop: 7 }}>{Object.entries(comment.reactions ?? {}).filter(([, ids]) => ids.length > 0).map(([emoji, ids]) => <Pressable key={emoji} onPress={() => { void handleEventCommentReaction(comment, emoji); }} style={{ flexDirection: "row", alignItems: "center", borderRadius: 14, paddingHorizontal: 9, paddingVertical: 4, backgroundColor: ids.includes(viewerMemberId) ? "#FCE8F1" : colors.background, borderWidth: 1, borderColor: colors.border }}><Text style={{ fontSize: 16 }}>{emoji}</Text><Text style={{ marginLeft: 4, fontSize: 11, fontWeight: "800", color: colors.muted }}>{ids.length}</Text></Pressable>)}</View> : null}
               </View>
             </Pressable>;

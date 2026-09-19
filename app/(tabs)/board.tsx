@@ -1,6 +1,7 @@
 import { ScreenContainer } from "@/components/screen-container";
 import { ExpandableImage } from "@/components/expandable-image";
 import { BoardLinkPreviewCard } from "@/components/board-link-preview-card";
+import { ContentLinkCards } from "@/components/content-link-cards";
 import { SaveableVideo } from "@/components/saveable-video";
 import { ReplyReferenceView } from "@/components/reply-reference-view";
 import { NewMemberMark } from "@/components/new-member-mark";
@@ -756,6 +757,7 @@ function dedupeBoardComments(comments: BoardComment[]): BoardComment[] {
 
 function ThreadDetailModal({
   thread,
+  activityRevision,
   initialComments = [],
   initialUnreadCommentIds = [],
   initialThreadUnread = false,
@@ -763,11 +765,13 @@ function ThreadDetailModal({
   onOpenMemberProfile,
   returnToTimeline = false,
   onEditThread,
+  onCommentDeleted,
   canRegisterEvent = true,
   applicationClub,
   canModerateAll = false,
 }: {
   thread: BoardThread;
+  activityRevision: string;
   initialComments?: BoardComment[];
   initialUnreadCommentIds?: string[];
   initialThreadUnread?: boolean;
@@ -775,6 +779,7 @@ function ThreadDetailModal({
   onOpenMemberProfile: (params: Record<string, string>) => void;
   returnToTimeline?: boolean;
   onEditThread?: () => void;
+  onCommentDeleted?: (commentId: string) => void;
   canRegisterEvent?: boolean;
   applicationClub?: Club;
   canModerateAll?: boolean;
@@ -797,6 +802,8 @@ function ThreadDetailModal({
   const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
   const [editingCommentText, setEditingCommentText] = useState("");
   const [selectedComment, setSelectedComment] = useState<BoardComment | null>(null);
+  const [deletingCommentId, setDeletingCommentId] = useState<string | null>(null);
+  const [deleteCommentError, setDeleteCommentError] = useState<string | null>(null);
   const [mentionQuery, setMentionQuery] = useState<string | null>(null);
   const [commentSelection, setCommentSelection] = useState<TextSelection>({ start: 0, end: 0 });
   const [commentPollEnabled, setCommentPollEnabled] = useState(false);
@@ -820,13 +827,15 @@ function ThreadDetailModal({
     dedupeBoardComments([...BOARD_COMMENTS.filter((c) => c.threadId === thread.id), ...initialComments]),
   );
   const firstUnreadCommentId = initialUnreadCommentIds.find((commentId) => comments.some((comment) => comment.id === commentId));
+  const showThreadUnread = initialThreadUnread && thread.category !== "meal-report";
+  const scrollToThread = showThreadUnread || (thread.category === "meal-report" && !firstUnreadCommentId);
   useEffect(() => {
-    const target = initialThreadUnread ? "thread" : firstUnreadCommentId ?? "latest";
+    const target = scrollToThread ? "thread" : firstUnreadCommentId ?? "latest";
     const key = `${thread.id}:${target}`;
     if (unreadPositionedKey.current === key) return;
     unreadPositionedKey.current = key;
     const scroll = () => {
-      if (initialThreadUnread) {
+      if (scrollToThread) {
         commentScrollRef.current?.scrollTo({ y: 0, animated: false });
         return;
       }
@@ -840,7 +849,7 @@ function ThreadDetailModal({
     requestAnimationFrame(scroll);
     const timers = [setTimeout(scroll, 120), setTimeout(scroll, 360)];
     return () => timers.forEach(clearTimeout);
-  }, [firstUnreadCommentId, initialThreadUnread, thread.id, comments.length]);
+  }, [firstUnreadCommentId, scrollToThread, thread.id, comments.length]);
   const jumpToComment = (commentId: string) => {
     if (!comments.some((comment) => comment.id === commentId)) {
       Alert.alert("返信元を表示できません", "返信元のコメントが見つかりませんでした。");
@@ -938,15 +947,28 @@ function ThreadDetailModal({
   };
 
   useEffect(() => {
+    let active = true;
     const sourceComments = [...BOARD_COMMENTS.filter((comment) => comment.threadId === thread.id), ...initialComments];
     void Promise.all([
       loadThreadReactions(thread.id, thread.reactions),
       loadCommentReactions(sourceComments),
     ]).then(([savedThreadReactions, savedComments]) => {
+      if (!active) return;
       setThreadReactions(savedThreadReactions);
-      void Promise.all([loadBoardCommentEdits(), loadDeletedBoardCommentIds()]).then(([edits, deletedIds]) => setComments(dedupeBoardComments(savedComments.filter((comment) => !deletedIds.includes(comment.id)).map((comment) => edits[comment.id] ? { ...comment, content: edits[comment.id], importedLinkPreviews: undefined } : comment))));
+      void Promise.all([loadBoardCommentEdits(), loadDeletedBoardCommentIds()]).then(([edits, deletedIds]) => {
+        if (!active) return;
+        const archivedComments = savedComments.filter((comment) => !deletedIds.includes(comment.id)).map((comment) =>
+          edits[comment.id] ? { ...comment, content: edits[comment.id], importedLinkPreviews: undefined } : comment);
+        // The archive and the server load independently. Keep comments already
+        // confirmed by the server when the archive finishes loading later.
+        setComments((current) => dedupeBoardComments([
+          ...archivedComments,
+          ...current.filter((comment) => comment.shared && comment.threadId === thread.id),
+        ]));
+      });
       setReactionsHydrated(true);
     });
+    return () => { active = false; };
   // Rehydrate when a direct-linked Discord thread finishes loading its archive comments.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [thread.id, initialComments.length]);
@@ -954,20 +976,21 @@ function ThreadDetailModal({
   useEffect(() => {
     if (!persistedThread) return;
     let active = true;
-    void Api.getSharedBoardContent(thread.category).then((result) => {
+    // The category feed is capped; an older open thread needs its own comment query.
+    void Api.getSharedBoardContent(thread.category, thread.id).then((result) => {
       if (!active) return;
       const shared = result.comments
         .filter((comment) => comment.threadId === thread.id && comment.data.archiveShadow !== true)
         .map((comment) => sharedCommentToBoardComment(comment, viewerMemberId));
       setComments((current) => {
         const sharedIds = new Set(shared.map((comment) => comment.id));
-        return dedupeBoardComments([...current.filter((comment) => !comment.shared && !sharedIds.has(comment.id)), ...shared]);
+        return dedupeBoardComments([...current.filter((comment) => comment.threadId === thread.id && !comment.shared && !sharedIds.has(comment.id)), ...shared]);
       });
     }).catch(() => {
       // 移行済み本文は表示を続け、共有コメントだけ次回再取得する。
     });
     return () => { active = false; };
-  }, [persistedThread, thread.category, thread.id, viewerMemberId]);
+  }, [activityRevision, persistedThread, thread.category, thread.id, viewerMemberId]);
 
   useEffect(() => {
     if (!reactionsHydrated || !thread.gourmetContest || thread.gourmetContest.archived || contestCommentingOpen) return;
@@ -1103,17 +1126,25 @@ function ThreadDetailModal({
   };
 
   const handleDeleteComment = (commentId: string) => {
-    const removeComment = () => {
+    setDeleteCommentError(null);
+    setDeletingCommentId(commentId);
+  };
+
+  const confirmDeleteComment = async () => {
+    const commentId = deletingCommentId;
+    if (!commentId) return;
     const target = comments.find((comment) => comment.id === commentId);
-    const remove = () => setComments((current) => current.filter((comment) => comment.id !== commentId));
-    if (target?.shared) void Api.deleteSharedBoardComment(commentId).then(remove).catch((error) => Alert.alert("削除できませんでした", error instanceof Error ? error.message : "もう一度お試しください。"));
-    else { remove(); void deleteBoardComment(commentId); }
-    };
-    if (Platform.OS === "web") {
-      if (window.confirm("コメントを削除しますか？削除後は元に戻せません。")) removeComment();
-    } else Alert.alert("コメントを削除しますか？", "削除後は元に戻せません。", [
-      { text: "キャンセル", style: "cancel" }, { text: "削除", style: "destructive", onPress: removeComment },
-    ]);
+    if (!target) { setDeletingCommentId(null); return; }
+    try {
+      if (target.shared || commentId.startsWith("discord-comment-")) await Api.deleteSharedBoardComment(commentId);
+      else await deleteBoardComment(commentId);
+      setComments((current) => current.filter((comment) => comment.id !== commentId));
+      onCommentDeleted?.(commentId);
+      setDeletingCommentId(null);
+      setEditingCommentId(null);
+    } catch (error) {
+      setDeleteCommentError(error instanceof Error ? error.message : "もう一度お試しください。");
+    }
   };
 
   const handleThreadReaction = (emoji: string) => {
@@ -1227,7 +1258,7 @@ function ThreadDetailModal({
       >
         <ScrollView ref={commentScrollRef} style={{ flex: 1 }} contentContainerStyle={{ padding: 16 }}>
           {/* Thread content */}
-          {initialThreadUnread ? <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 14 }}><View style={{ flex: 1, height: 1, backgroundColor: "#E8A0BF" }} /><Text style={{ fontSize: 11, fontWeight: "900", color: "#C05B88" }}>ここから未読</Text><View style={{ flex: 1, height: 1, backgroundColor: "#E8A0BF" }} /></View> : null}
+          {showThreadUnread ? <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 14 }}><View style={{ flex: 1, height: 1, backgroundColor: "#E8A0BF" }} /><Text style={{ fontSize: 11, fontWeight: "900", color: "#C05B88" }}>ここから未読</Text><View style={{ flex: 1, height: 1, backgroundColor: "#E8A0BF" }} /></View> : null}
           <Pressable onPress={() => onOpenMemberProfile(profileParams(thread.author.id, thread.author.name))} accessibilityLabel={`${stripRankFromName(thread.author.name)}のプロフィールを表示`} style={{ flexDirection: "row", alignItems: "center", marginBottom: 12 }}>
             {isThreadPinned(thread) ? <View style={{ marginRight: 7, borderRadius: 10, paddingHorizontal: 8, paddingVertical: 6, backgroundColor: "#FFF2C7" }}><Text style={{ fontSize: 11, fontWeight: "900", color: "#8A6512" }}>📌 固定</Text></View> : null}
             <Image source={thread.author.avatar} style={{ width: 36, height: 36, borderRadius: 18 }} contentFit="cover" />
@@ -1255,6 +1286,7 @@ function ThreadDetailModal({
             <View style={{ marginBottom: 16 }}><MentionText content={thread.preview} groups={mentionGroups} /></View>
           )}
           {thread.importedLinkPreviews?.length ? <View style={{ marginBottom: 16 }}>{thread.importedLinkPreviews.map((preview) => <BoardLinkPreviewCard key={preview.url} preview={preview} />)}</View> : null}
+          <ContentLinkCards content={thread.preview} existing={thread.importedLinkPreviews} />
 
           {recruitmentManaged && canRegisterEvent ? <Pressable onPress={() => {
             onClose();
@@ -1433,6 +1465,7 @@ function ThreadDetailModal({
                 {editingCommentId === comment.id ? <View style={{ marginLeft: 32, gap: 7 }}><TextInput value={editingCommentText} onChangeText={setEditingCommentText} multiline autoFocus style={{ minHeight: 90, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: 10, padding: 10, fontSize: 14, color: colors.foreground }} /><View style={{ flexDirection: "row", gap: 8 }}><Pressable onPress={() => handleSaveCommentEdit(comment.id)} style={{ backgroundColor: "#3478C7", borderRadius: 8, paddingHorizontal: 13, paddingVertical: 7 }}><Text style={{ color: "#FFF", fontSize: 12, fontWeight: "800" }}>保存</Text></Pressable><Pressable onPress={() => handleDeleteComment(comment.id)} style={{ backgroundColor: "#FCE7E7", borderRadius: 8, paddingHorizontal: 13, paddingVertical: 7 }}><Text style={{ color: colors.error, fontSize: 12, fontWeight: "800" }}>削除</Text></Pressable><Pressable onPress={() => setEditingCommentId(null)} style={{ paddingHorizontal: 10, paddingVertical: 7 }}><Text style={{ color: colors.muted, fontSize: 12 }}>キャンセル</Text></Pressable></View></View> : comment.content ? <View style={{ marginLeft: 32 }}>{isContest ? (comment.isSystem ? <MentionText content={comment.content} groups={mentionGroups} /> : <LinkifiedText content={comment.content} />) : <MentionText content={comment.content} groups={mentionGroups} />}</View> : null}
                 {comment.importedPollSummary ? <View style={{ marginLeft: 32 }}><ImportedPollResultCard summary={comment.importedPollSummary} /></View> : null}
                 {editingCommentId !== comment.id && comment.importedLinkPreviews?.length ? <View style={{ marginLeft: 32 }}>{comment.importedLinkPreviews.map((preview) => <BoardLinkPreviewCard key={preview.url} preview={preview} />)}</View> : null}
+                {editingCommentId !== comment.id ? <View style={{ marginLeft: 32 }}><ContentLinkCards content={comment.content} existing={comment.importedLinkPreviews} /></View> : null}
                 {comment.poll ? <View style={{ marginLeft: 32 }}><PollCard ownerKey={`comment:${comment.id}`} poll={comment.poll} /></View> : null}
                 {comment.images?.length ? (
                   <View style={{ marginLeft: 32, marginTop: 8, flexDirection: "row", flexWrap: "wrap", gap: 7 }}>
@@ -1529,6 +1562,20 @@ function ThreadDetailModal({
             <Pressable onPress={() => setSelectedComment(null)} style={{ paddingVertical: 14 }}><Text style={{ color: colors.muted, textAlign: "center" }}>キャンセル</Text></Pressable>
           </View>
         </Pressable>
+      </Modal>
+
+      <Modal visible={deletingCommentId !== null} transparent animationType="fade" onRequestClose={() => setDeletingCommentId(null)}>
+        <View style={{ flex: 1, justifyContent: "center", padding: 24, backgroundColor: "rgba(20,18,24,0.48)" }}>
+          <View style={{ backgroundColor: colors.background, borderRadius: 18, padding: 20, gap: 14 }}>
+            <Text style={{ fontSize: 17, fontWeight: "800", color: colors.foreground }}>コメントを削除しますか？</Text>
+            <Text style={{ fontSize: 13, color: colors.muted }}>削除後は元に戻せません。</Text>
+            {deleteCommentError ? <Text style={{ color: colors.error, fontSize: 13 }}>{deleteCommentError}</Text> : null}
+            <View style={{ flexDirection: "row", justifyContent: "flex-end", gap: 16 }}>
+              <Pressable onPress={() => setDeletingCommentId(null)}><Text style={{ color: colors.muted, fontWeight: "700" }}>キャンセル</Text></Pressable>
+              <Pressable onPress={() => void confirmDeleteComment()}><Text style={{ color: colors.error, fontWeight: "800" }}>削除</Text></Pressable>
+            </View>
+          </View>
+        </View>
       </Modal>
 
       <Modal visible={showContestComposer} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setShowContestComposer(false)}>
@@ -2660,6 +2707,7 @@ export default function BoardScreen() {
   const [xpReward, setXpReward] = useState<XpReward | null>(null);
 
   const [dynamicThreads, setDynamicThreads] = useState<BoardThread[]>([]);
+  const [activityRevision, setActivityRevision] = useState("");
   const threadManagementRevision = useRef(0);
   const threadManagementPending = useRef(new Set<string>());
   const [importedComments, setImportedComments] = useState<Record<string, BoardComment[]>>({});
@@ -2764,7 +2812,13 @@ export default function BoardScreen() {
       const withoutDiscordArchive = current.filter((thread) => !thread.id.startsWith("discord-board-"));
       return [...archive.threads, ...withoutDiscordArchive];
     });
-    setImportedComments((current) => ({ ...current, ...archive.comments }));
+    setImportedComments((current) => ({
+      ...current,
+      ...Object.fromEntries(Object.entries(archive.comments).map(([threadId, comments]) => [
+        threadId,
+        dedupeBoardComments([...comments, ...(current[threadId] ?? []).filter((comment) => comment.shared)]),
+      ])),
+    }));
   }, []);
 
   useEffect(() => {
@@ -2799,7 +2853,10 @@ export default function BoardScreen() {
     });
     setImportedComments((current) => ({
       ...current,
-      ...Object.fromEntries(visibleRecords.map((thread) => [thread.id, commentsByThread[thread.id] ?? []])),
+      ...Object.fromEntries(result.threads.map((thread) => [thread.id, thread.data.archiveShadow === true
+        ? dedupeBoardComments([...(current[thread.id] ?? []).filter((comment) => !comment.shared), ...(commentsByThread[thread.id] ?? [])])
+        : commentsByThread[thread.id] ?? [],
+      ])),
     }));
   }, [viewerMemberId]);
 
@@ -2834,8 +2891,12 @@ export default function BoardScreen() {
       try {
         const activity = await Api.getSharedBoardActivity(watchedCategory);
         if (active && revision !== null && activity.revision !== revision) {
-          await loadSharedBoardContent(watchedCategory);
           await loadBoardArchive();
+          await loadSharedBoardContent(watchedCategory);
+          if (selectedThread?.id && watchedCategory === selectedThread.category) {
+            await loadSharedBoardContent(watchedCategory, selectedThread.id);
+          }
+          setActivityRevision(activity.revision);
         }
         if (active) revision = activity.revision;
       } catch {
@@ -2848,8 +2909,10 @@ export default function BoardScreen() {
     const timer = setInterval(() => {
       void check();
     }, 2000);
-    return () => { active = false; clearInterval(timer); };
-  }, [activeCategory, authUser, isThreadView, loadSharedBoardContent, loadBoardArchive]);
+    const onVisible = () => { if (document.visibilityState === "visible") void check(); };
+    if (Platform.OS === "web") document.addEventListener("visibilitychange", onVisible);
+    return () => { active = false; clearInterval(timer); if (Platform.OS === "web") document.removeEventListener("visibilitychange", onVisible); };
+  }, [activeCategory, authUser, isThreadView, loadSharedBoardContent, loadBoardArchive, selectedThread?.id, selectedThread?.category]);
 
   useEffect(() => {
     void loadBoardThreadEdits().then(setEditedThreads);
@@ -2886,9 +2949,17 @@ export default function BoardScreen() {
     setActiveCategory(selectedCategory.key);
   }, [canAccessCategory, categories, categoryParam, isThreadView, router]);
   const allThreads = useMemo(
-    () => (authUser ? dynamicThreads : applyBoardThreadEdits([...dynamicThreads, ...BOARD_THREADS], editedThreads)).filter((thread) => !deletedThreadIds.includes(thread.id)),
-    [authUser, dynamicThreads, editedThreads, deletedThreadIds],
+    () => (authUser ? dynamicThreads : applyBoardThreadEdits([...dynamicThreads, ...BOARD_THREADS], editedThreads))
+      .filter((thread) => !deletedThreadIds.includes(thread.id))
+      .map((thread) => importedComments[thread.id] ? { ...thread, commentCount: importedComments[thread.id].length } : thread),
+    [authUser, dynamicThreads, editedThreads, deletedThreadIds, importedComments],
   );
+  useEffect(() => {
+    setSelectedThread((current) => {
+      if (!current) return current;
+      return allThreads.find((thread) => thread.id === current.id) ?? current;
+    });
+  }, [allThreads]);
   const firstSignInTime = authUser?.firstSignedIn?.getTime() ?? authUser?.lastSignedIn?.getTime() ?? 0;
   const postedAfterFirstSignIn = useCallback(
     (createdAt: string | undefined) => Boolean(createdAt) && Date.parse(createdAt!) > firstSignInTime,
@@ -3281,6 +3352,7 @@ export default function BoardScreen() {
         {selectedThread && (
           <ThreadDetailModal
             thread={selectedThread}
+            activityRevision={activityRevision}
             initialComments={importedComments[selectedThread.id] ?? []}
             initialUnreadCommentIds={selectedThreadUnreadCommentIds}
             initialThreadUnread={selectedThreadIsUnread}
@@ -3292,6 +3364,7 @@ export default function BoardScreen() {
               leaveThreadDetail(fromHome === "1" ? () => router.replace("/" as any) : undefined);
             }}
             onEditThread={selectedThread.viewerCanManage || selectedThread.author.id === viewerMemberId || userCanModerateAll ? () => { setEditingThread(selectedThread); setSelectedThread(null); router.setParams({ thread: "" }); } : undefined}
+            onCommentDeleted={(commentId) => setImportedComments((current) => ({ ...current, [selectedThread.id]: (current[selectedThread.id] ?? []).filter((comment) => comment.id !== commentId) }))}
             canRegisterEvent={canRegisterBoardThreadEvent(selectedThread, viewerMemberId, userCanModerateAll)}
             applicationClub={applicationClubForThread(selectedThread)}
             canModerateAll={userCanModerateAll}

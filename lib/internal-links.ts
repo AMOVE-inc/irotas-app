@@ -1,4 +1,5 @@
 import type { BoardThread, ChatRoom } from "@/constants/mock-data";
+import { displayEventTitle } from "./event-title";
 
 const BOARD_CATEGORY_LABELS: Record<string, string> = {
   introduction: "自己紹介",
@@ -20,6 +21,11 @@ export type InternalLinkMention = {
   params: Record<string, string>;
 };
 
+export function formatEventLinkLabel(event: { date: string; time: string; title: string }) {
+  const date = event.date.replace(/-/g, "/");
+  return `📅 ${date}${event.time ? ` ${event.time}` : ""} ${displayEventTitle(event.title)}`;
+}
+
 const URL_PATTERN = /https?:\/\/[^\s<>]+/g;
 
 function trimTrailingPunctuation(value: string) {
@@ -38,7 +44,7 @@ export function parseInternalLink(rawValue: string, rooms: ChatRoom[], threads: 
   if (pathname === "/event-detail") {
     const id = url.searchParams.get("id");
     if (!id) return null;
-    return { raw, label: "📅 イベントを開く", pathname: "/event-detail", params: { id } };
+    return { raw, label: "📅 イベント", pathname: "/event-detail", params: { id } };
   }
   if (pathname === "/chat") {
     const id = url.searchParams.get("id");

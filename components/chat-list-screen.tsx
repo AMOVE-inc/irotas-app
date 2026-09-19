@@ -10,7 +10,7 @@ import { useColors } from "@/hooks/use-colors";
 import { Image } from "expo-image";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { FlatList, Modal, Pressable, ScrollView, Text, TextInput, View } from "react-native";
+import { FlatList, Modal, Platform, Pressable, ScrollView, Text, TextInput, View } from "react-native";
 import * as Api from "@/lib/_core/api";
 import { stripRankFromName } from "@/components/member-rank-badge";
 import { getDiscordAuthorById, getDiscordAuthorByName } from "@/lib/discord-author-directory";
@@ -310,15 +310,18 @@ export default function ChatListScreen() {
 
   useFocusEffect(useCallback(() => {
     let active = true;
-    let pending = false;
-    void refreshRooms();
+    let pending = true;
+    void refreshRooms().finally(() => { pending = false; });
     void loadDynamicRooms();
-    const timer = setInterval(() => {
+    const refresh = () => {
       if (!active || pending) return;
       pending = true;
       void refreshRooms(false).finally(() => { pending = false; });
-    }, 10000);
-    return () => { active = false; clearInterval(timer); };
+    };
+    const timer = setInterval(refresh, Platform.OS === "web" ? 2000 : 10000);
+    const onVisible = () => { if (document.visibilityState === "visible") refresh(); };
+    if (typeof document !== "undefined") document.addEventListener("visibilitychange", onVisible);
+    return () => { active = false; clearInterval(timer); if (typeof document !== "undefined") document.removeEventListener("visibilitychange", onVisible); };
   }, [refreshRooms]));
 
   const announcementRoom = myRooms.find((room) => room.id === "board-announcement");

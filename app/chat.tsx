@@ -1,10 +1,12 @@
 import { ScreenContainer } from "@/components/screen-container";
 import { ExpandableImage } from "@/components/expandable-image";
+import { EventImage } from "@/components/event-image";
 import { SaveableVideo } from "@/components/saveable-video";
 import { ReplyReferenceView } from "@/components/reply-reference-view";
 import { MemberClubLeaderBadges, MemberRankBadge, MemberRoleBadge, stripRankFromName } from "@/components/member-rank-badge";
 import { NewMemberMark } from "@/components/new-member-mark";
 import { MentionSuggestions, MentionText } from "@/components/mention-ui";
+import { ContentLinkCards } from "@/components/content-link-cards";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { CalendarField } from "@/components/calendar-field";
 import {
@@ -16,6 +18,7 @@ import {
   getMemberById,
   type ChatMessage,
   type ChatRoom,
+  type Event,
 } from "@/constants/mock-data";
 import { useAuthContext } from "@/lib/auth-context";
 import { isAdminRole, isOperatorRole, canPostToChat } from "@/lib/access-control";
@@ -56,6 +59,10 @@ import type { InternalLinkPathname } from "@/lib/internal-links";
 import * as Api from "@/lib/_core/api";
 import { getDiscordAuthorById, getDiscordAuthorByName } from "@/lib/discord-author-directory";
 import { displayMemberName } from "@/lib/display-name";
+import { displayEventTitle } from "@/lib/event-title";
+import { discordEventConfirmedCount, discordEventDisplayCapacity } from "@/lib/discord-event-attendance";
+import { getConfirmedRecruitParticipantCount } from "@/lib/event-participation";
+import { isDiscordRecruitmentOpen } from "@/lib/event-recruitment-channel";
 import { importedIntroductionReactions, isUnidentifiedReaction, mergedIntroductionReactions } from "@/lib/introduction-reactions";
 import { replyReference } from "@/lib/reply-reference";
 import { reconcileOptimisticReactions } from "@/lib/chat-reactions";
@@ -137,6 +144,43 @@ function isVideoAttachment(uri: string) {
 
 function ChatAttachmentVideo({ uri }: { uri: string }) {
   return <SaveableVideo uri={uri} style={{ width: 220, height: 300, maxWidth: "100%" }} />;
+}
+
+function EventChatCard({ event, onPress }: { event: Event; onPress: () => void }) {
+  const colors = useColors();
+  const isPast = Date.parse(`${event.date}T23:59:59`) < Date.now();
+  const status = isPast ? "終了" : event.status === "open" ? isDiscordRecruitmentOpen(event) ? "Discord受付" : "募集中" : "募集終了";
+  const confirmed = discordEventConfirmedCount(event);
+  const capacity = event.reservationCapacity ?? event.capacity + 1;
+  const attendance = confirmed !== null
+    ? `${confirmed}名/${discordEventDisplayCapacity(event)}名`
+    : event.capacityMode ? null
+      : `${Math.max(event.capacity - getConfirmedRecruitParticipantCount(event), 0)}名/${capacity}名`;
+  return <Pressable
+    accessibilityRole="link"
+    accessibilityLabel={`${event.date} ${event.time} ${displayEventTitle(event.title)}の詳細を開く`}
+    onPress={onPress}
+    style={{ marginHorizontal: 16, marginBottom: 16, minHeight: 130, flexDirection: "row", borderRadius: 16, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface, overflow: "hidden" }}
+  >
+    <View style={{ width: 116, alignSelf: "stretch" }}>
+      <EventImage event={event} style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }} />
+    </View>
+    <View style={{ flex: 1, paddingHorizontal: 11, paddingVertical: 10, justifyContent: "center" }}>
+      <View style={{ flexDirection: "row", alignItems: "center", flexWrap: "wrap", gap: 5 }}>
+        <Text style={{ fontSize: 12, fontWeight: "900", color: colors.foreground }}>
+          {event.date.replace(/-/g, "/")} {event.time}
+        </Text>
+        <Text style={{ fontSize: 10, fontWeight: "800", color: status === "募集中" ? "#248A3D" : status === "Discord受付" ? "#604C8C" : colors.muted, backgroundColor: status === "募集中" ? "#E7F8ED" : status === "Discord受付" ? "#EFE9FA" : "#F0F0F2", borderRadius: 8, paddingHorizontal: 7, paddingVertical: 3 }}>{status}</Text>
+      </View>
+      <Text style={{ fontSize: 14, lineHeight: 19, fontWeight: "900", color: colors.foreground, marginTop: 6 }}>
+        {displayEventTitle(event.title)}
+      </Text>
+      {event.restaurantName && event.restaurantName !== event.title ? <Text numberOfLines={1} style={{ fontSize: 11, fontWeight: "700", color: colors.foreground, marginTop: 5 }}>{event.restaurantName}</Text> : null}
+      <Text numberOfLines={1} style={{ fontSize: 11, color: colors.muted, marginTop: 3 }}>{event.location}</Text>
+      {attendance ? <Text style={{ fontSize: 11, fontWeight: "800", color: "#34A853", marginTop: 5 }}>{attendance}</Text> : null}
+      <Text style={{ fontSize: 11, fontWeight: "800", color: "#2065B7", marginTop: 6 }}>イベント詳細を見る ›</Text>
+    </View>
+  </Pressable>;
 }
 
 function MessageBubble({ message, isMe, canDelete, readOnly, viewerId, viewerName, viewerAvatarUrl, myAvatarUri, senderMember, memberDirectory, onReact, mentionGroups, onOpenInternalLink, onOpenProfile, onOpenReactionProfile, onOpenReply, highlighted, onReply, onEdit, onDelete }: { message: ChatMessage; isMe: boolean; canDelete: boolean; readOnly?: boolean; viewerId: string; viewerName: string; viewerAvatarUrl?: string; myAvatarUri?: string | null; senderMember?: Api.PublicMember; memberDirectory: Api.PublicMember[]; onReact: (emoji: string, pollChoices?: string[], allowMultiple?: boolean) => void; mentionGroups: ReturnType<typeof getMentionGroups>; onOpenInternalLink: (pathname: InternalLinkPathname, params: Record<string, string>) => void; onOpenProfile: () => void; onOpenReactionProfile: (memberId: string, name: string, avatarUrl?: string) => void; onOpenReply: (messageId: string) => void; highlighted?: boolean; onReply: () => void; onEdit: () => void; onDelete: () => void }) {
@@ -230,7 +274,7 @@ function MessageBubble({ message, isMe, canDelete, readOnly, viewerId, viewerNam
           ) : null}
           {message.content ? (
             <View style={{ paddingHorizontal: 14, paddingVertical: 10 }}>
-              {pollChoices.length >= 2 ? <View style={{ minWidth: 220 }}><MentionText content={pollLines[0].replace(/^📊 /, "")} outgoing={isMe} groups={mentionGroups} /><Text style={{ fontSize: 10, fontWeight: "800", color: isMe ? "#FFF" : colors.muted, marginTop: 5 }}>{pollAllowsMultiple ? "複数回答可" : "1つ選択"}</Text><View style={{ gap: 7, marginTop: 10 }}>{pollChoices.map((choice) => { const voteKey = `🗳️${choice}`; const voters = message.reactions?.[voteKey] ?? []; const selected = voters.includes(viewerId); return <Pressable key={choice} disabled={readOnly} onPress={() => onReact(voteKey, pollChoices, pollAllowsMultiple)} style={{ borderRadius: 8, paddingHorizontal: 10, paddingVertical: 9, borderWidth: 1, borderColor: selected ? "#5865F2" : isMe ? "#FFF8" : colors.border, backgroundColor: selected ? "#5865F228" : "transparent" }}><Text style={{ fontSize: 13, fontWeight: "800", color: isMe ? "#FFF" : colors.foreground }}>{selected ? "●" : "○"} {choice}　{voters.length}</Text></Pressable>; })}</View><Text style={{ fontSize: 10, color: isMe ? "#FFF" : colors.muted, marginTop: 9 }}>{pollLines.find((line) => line.startsWith("⏱"))}</Text></View> : <MentionText content={message.content} outgoing={isMe} groups={mentionGroups} rooms={getAllRooms()} threads={BOARD_THREADS} onOpenInternalLink={onOpenInternalLink} />}
+              {pollChoices.length >= 2 ? <View style={{ minWidth: 220 }}><MentionText content={pollLines[0].replace(/^📊 /, "")} outgoing={isMe} groups={mentionGroups} /><Text style={{ fontSize: 10, fontWeight: "800", color: isMe ? "#FFF" : colors.muted, marginTop: 5 }}>{pollAllowsMultiple ? "複数回答可" : "1つ選択"}</Text><View style={{ gap: 7, marginTop: 10 }}>{pollChoices.map((choice) => { const voteKey = `🗳️${choice}`; const voters = message.reactions?.[voteKey] ?? []; const selected = voters.includes(viewerId); return <Pressable key={choice} disabled={readOnly} onPress={() => onReact(voteKey, pollChoices, pollAllowsMultiple)} style={{ borderRadius: 8, paddingHorizontal: 10, paddingVertical: 9, borderWidth: 1, borderColor: selected ? "#5865F2" : isMe ? "#FFF8" : colors.border, backgroundColor: selected ? "#5865F228" : "transparent" }}><Text style={{ fontSize: 13, fontWeight: "800", color: isMe ? "#FFF" : colors.foreground }}>{selected ? "●" : "○"} {choice}　{voters.length}</Text></Pressable>; })}</View><Text style={{ fontSize: 10, color: isMe ? "#FFF" : colors.muted, marginTop: 9 }}>{pollLines.find((line) => line.startsWith("⏱"))}</Text></View> : <><MentionText content={message.content} outgoing={isMe} groups={mentionGroups} rooms={getAllRooms()} threads={BOARD_THREADS} onOpenInternalLink={onOpenInternalLink} /><ContentLinkCards content={message.content} /></>}
             </View>
           ) : null}
         </Pressable>
@@ -356,6 +400,15 @@ export default function ChatScreen() {
   const [room, setRoom] = useState(() => getRoomById(id ?? "") ?? (id === "community-free-chat" ? {
     id, name: "フリーチャット", type: "board" as const, sourceId: "community-free-chat", participants: [], createdBy: "system", shared: true,
   } : undefined));
+  const [roomEvent, setRoomEvent] = useState<Event | null>(null);
+  useEffect(() => {
+    const eventId = room?.type === "event" ? room.sourceId : null;
+    setRoomEvent(null);
+    if (!eventId) return;
+    let active = true;
+    void Api.getEvent(eventId).then((event) => { if (active) setRoomEvent(event); }).catch(() => {});
+    return () => { active = false; };
+  }, [room?.type, room?.sourceId]);
   const [openingUnreadCount, setOpeningUnreadCount] = useState<number | null>(() =>
     unreadCountFromRoute ?? getRoomById(id ?? "")?.unreadCount ?? null,
   );
@@ -937,6 +990,9 @@ export default function ChatScreen() {
           extraData={highlightedMessageId}
           inverted={introductionChat}
           keyExtractor={(item) => item.id}
+          ListHeaderComponent={room?.type === "event" && roomEvent
+            ? <EventChatCard event={roomEvent} onPress={() => router.push({ pathname: "/event-detail", params: { id: roomEvent.id } })} />
+            : null}
           renderItem={({ item, index }) => {
             const previous = index > 0 ? displayedMessages[index - 1] : undefined;
             const next = index + 1 < displayedMessages.length ? displayedMessages[index + 1] : undefined;
