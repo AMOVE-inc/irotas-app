@@ -54,6 +54,7 @@ import {
 import { canAccessChatRoom } from "@/lib/chat-access";
 import { getFriends } from "@/lib/friendship";
 import { getMentionGroups, getMentionQuery, insertMention } from "@/lib/mentions";
+import { chatMentionMemberIds } from "@/lib/chat-mention-scope";
 import { type TextSelection } from "@/lib/text-formatting";
 import type { InternalLinkPathname } from "@/lib/internal-links";
 import * as Api from "@/lib/_core/api";
@@ -460,6 +461,15 @@ export default function ChatScreen() {
     if (branch) groups.push({ id: "current-branch", label: "支部全員", description: "この支部のメンバー全員", memberIds: branchMemberIds, category: "branch" });
     return groups;
   }, [mentionMembers, directory, room?.id, room?.type, room?.requiredRank, roomParticipants]);
+  const mentionScopeIds = useMemo(() => room
+    ? chatMentionMemberIds(room, roomParticipants, directory)
+    : [], [room?.id, room?.type, room?.requiredRank, roomParticipants, directory]);
+  const mentionMemberIds = useMemo(() => mentionScopeIds.filter((memberId) => memberId !== viewerMemberId), [mentionScopeIds, viewerMemberId]);
+  const mentionSuggestionGroups = useMemo(() => {
+    const allowed = new Set(mentionScopeIds);
+    return mentionGroups.filter((group) => group.label === "everyone"
+      || (group.memberIds.length > 0 && group.memberIds.every((memberId) => allowed.has(memberId))));
+  }, [mentionGroups, mentionScopeIds]);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [messagesHydrated, setMessagesHydrated] = useState(false);
   const pendingReactionChoices = useRef(new Map<string, Map<string, boolean>>());
@@ -1090,9 +1100,9 @@ export default function ChatScreen() {
         {canPostAnnouncement && mentionQuery !== null && (
           <MentionSuggestions
             query={mentionQuery}
-            groups={mentionGroups}
+            groups={mentionSuggestionGroups}
             members={mentionMembers.filter((member) => member.id !== viewerMemberId)}
-            memberIds={room.type === "dm" ? roomParticipants.filter((memberId) => memberId !== viewerMemberId) : undefined}
+            memberIds={mentionMemberIds}
             onSelect={handleSelectMention}
           />
         )}
