@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { commentText, eventMentionRecipientIds, isAllowedEditedEventTime, lockedClubEventPreview, sanitizeEvent } from "../sites/events";
-import { discordEventConfirmedCount } from "../lib/discord-event-attendance";
+import { discordEventConfirmedCount, discordEventDisplayCapacity } from "../lib/discord-event-attendance";
 import { IMPORTED_DISCORD_EVENTS } from "../constants/imported-discord-events";
 import { eventCapacityLabel, eventFormSaveFields, eventFormValuesFromEvent, validateEventForm } from "../lib/event-form";
 import type { Event } from "../constants/mock-data";
@@ -34,7 +34,7 @@ function validEvent(overrides: Record<string, unknown> = {}) {
 }
 
 describe("production event validation", () => {
-  it("keeps the seven confirmed Discord attendance counts attached to their exact imported events", () => {
+  it("keeps confirmed Discord attendance counts attached to their exact imported events", () => {
     const expected: Record<string, [string, number, number]> = {
       "discord-event-1544896603603738664": ["2026-10-02", 7, 8],
       "discord-event-1545430214082039808": ["2026-10-04", 3, 8],
@@ -43,13 +43,18 @@ describe("production event validation", () => {
       "discord-event-1547564106469613568": ["2026-10-17", 3, 4],
       "discord-event-1542148647565660321": ["2026-10-20", 3, 4],
       "discord-event-1545794805269798983": ["2026-10-24", 3, 4],
+      "discord-event-1545132446675107870": ["2026-09-22", 6, 8],
+      "discord-event-1537390278665568327": ["2026-09-22", 9, 3],
     };
     for (const [id, [date, count, capacity]] of Object.entries(expected)) {
       const event = IMPORTED_DISCORD_EVENTS.find((item) => item.id === id);
-      expect(event).toMatchObject({ date, reservationCapacity: capacity });
+      expect(event).toMatchObject({ date });
       expect(discordEventConfirmedCount(event as Event)).toBe(count);
+      expect(discordEventDisplayCapacity(event as Event)).toBe(capacity);
       expect(discordEventConfirmedCount({ ...event, participants: ["IRO0001", "IRO0002"] } as Event)).toBe(count);
     }
+    expect(IMPORTED_DISCORD_EVENTS.find((event) => event.id === "discord-event-1545132446675107870")?.title).toContain("RistoPizza by Napoli sta ca");
+    expect(IMPORTED_DISCORD_EVENTS.find((event) => event.id === "discord-event-1537390278665568327")?.title).toContain("赤坂迎賓館ナイトウォーク");
   });
 
   it("preserves fullwidth punctuation in event comments", () => {

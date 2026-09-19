@@ -15,4 +15,10 @@ describe("event location", () => {
     expect(eventCategoryFromPrefecture("大阪府")).toBe("kansai");
     expect(eventCategoryFromPrefecture("福岡県")).toBe("all");
   });
+
+  it("keeps 町 at the end of a Tokyo neighborhood name", () => {
+    const address = "東京都世田谷区新町2-6-18";
+    expect(extractTokyoLocalArea(address)).toBe("新町");
+    expect(formatEventArea("東京都", "other", address)).toBe("新町");
+  });
 });

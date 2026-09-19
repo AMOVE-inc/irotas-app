@@ -23,8 +23,8 @@ export function extractTokyoLocalArea(address: string): string | undefined {
     .flatMap((area) => area.key === "other" ? [] : area.keywords)
     .find((candidate) => normalized.includes(candidate));
   if (keyword) return keyword;
-  const district = normalized.match(/東京都[^区市町村]{1,12}[区市町村]([^0-9０-９丁目番地号-]{1,12})/)?.[1];
-  return district?.replace(/[都道府県区市町村]$/, "") || undefined;
+  const district = normalized.match(/東京都[^区市町村]{1,12}[区市町村]([^0-9０-９丁番地号-]{1,12})/)?.[1];
+  return district || undefined;
 }
 
 export function extractEventLocation(address: string): { prefecture?: string; tokyoArea?: TokyoEventAreaKey } {

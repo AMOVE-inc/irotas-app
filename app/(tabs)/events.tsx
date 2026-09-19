@@ -19,7 +19,7 @@ import {
 } from "@/lib/club-viewer-access";
 import { getAllEvents } from "@/lib/event-store";
 import { isDiscordRecruitmentOpen } from "@/lib/event-recruitment-channel";
-import { discordEventConfirmedCount } from "@/lib/discord-event-attendance";
+import { discordEventConfirmedCount, discordEventDisplayCapacity } from "@/lib/discord-event-attendance";
 import {
   DEFAULT_EVENT_SORT_ORDER,
   filterAndSortEvents,
@@ -772,7 +772,7 @@ function EventCard({
               <Text
                 style={{ fontSize: 10, fontWeight: "900", color: "#34A853" }}
               >
-                {discordConfirmedCount !== null ? `${discordConfirmedCount}名/${reservationCapacity}名` : isDiscordRecruitmentOpen(event) ? "参加者はDiscordで確定" : event.capacityMode ? `募集人数 ${event.capacityMode === "undecided" ? "未定" : "上限なし"} ${event.status === "open" ? "募集中" : ""}` : `${remainingCapacity}名/${reservationCapacity === 0 ? "未定" : `${reservationCapacity}名`} ${event.status === "open" ? "募集中" : ""}`}
+                {discordConfirmedCount !== null ? `${discordConfirmedCount}名/${discordEventDisplayCapacity(event)}名` : isDiscordRecruitmentOpen(event) ? "参加者はDiscordで確定" : event.capacityMode ? `募集人数 ${event.capacityMode === "undecided" ? "未定" : "上限なし"} ${event.status === "open" ? "募集中" : ""}` : `${remainingCapacity}名/${reservationCapacity === 0 ? "未定" : `${reservationCapacity}名`} ${event.status === "open" ? "募集中" : ""}`}
               </Text>
             </View>
             <View
