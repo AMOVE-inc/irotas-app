@@ -1,7 +1,7 @@
 import type { Event } from "../constants/mock-data";
 
 // Discordで確定した人数を、移行元のイベントIDに紐づけて保持する。
-// アプリで確定者が登録された場合は、その最新の参加者一覧を優先する。
+// アプリの参加者配列には幹事・同席者などが含まれ、Discord側の確定人数と一致しない。
 const importedConfirmedCounts: Record<string, number> = {
   "discord-event-1544896603603738664": 7, // 10/2 野毛みかん
   "discord-event-1545430214082039808": 3, // 10/4 日本酒イベント
@@ -14,7 +14,5 @@ const importedConfirmedCounts: Record<string, number> = {
 
 export function discordEventConfirmedCount(event: Event): number | null {
   const imported = importedConfirmedCounts[event.id];
-  if (imported === undefined) return null;
-  const confirmedIds = new Set(event.participants ?? []);
-  return confirmedIds.size > 0 ? confirmedIds.size : imported;
+  return imported === undefined ? null : imported;
 }

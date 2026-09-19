@@ -48,6 +48,7 @@ describe("production event validation", () => {
       const event = IMPORTED_DISCORD_EVENTS.find((item) => item.id === id);
       expect(event).toMatchObject({ date, reservationCapacity: capacity });
       expect(discordEventConfirmedCount(event as Event)).toBe(count);
+      expect(discordEventConfirmedCount({ ...event, participants: ["IRO0001", "IRO0002"] } as Event)).toBe(count);
     }
   });
 
