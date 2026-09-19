@@ -30,6 +30,7 @@ import {
 import { useAuthContext } from "@/lib/auth-context";
 import { getMemberStaffRole } from "@/lib/member-staff-role";
 import { replyReference } from "@/lib/reply-reference";
+import { formatCommentTimestamp } from "@/lib/comment-timestamp";
 import { useColors } from "@/hooks/use-colors";
 import { createBoardChat } from "@/lib/chat-store";
 import { canManageBoardCategories, canManageGourmetContests, isOperatorRole } from "@/lib/access-control";
@@ -1196,15 +1197,6 @@ function ThreadDetailModal({
     setChatRoomId(newChatId);
   };
 
-  const timeAgo = (dateStr: string) => {
-    const diff = Date.now() - new Date(dateStr).getTime();
-    const hours = Math.floor(diff / 3600000);
-    if (hours < 1) return "たった今";
-    if (hours < 24) return `${hours}時間前`;
-    const days = Math.floor(hours / 24);
-    return `${days}日前`;
-  };
-
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       {/* Header */}
@@ -1458,7 +1450,7 @@ function ThreadDetailModal({
                   </Text></Pressable>
                   <OperatorOrRankBadge member={comment.author} />
                   <Text style={{ fontSize: 11, color: colors.muted, marginLeft: 8 }}>
-                    {timeAgo(comment.createdAt)}
+                    {formatCommentTimestamp(comment.createdAt)}
                   </Text>
                 </View>
                 {comment.replyTo ? <View style={{ marginLeft: 32, marginTop: 4 }}><ReplyReferenceView reply={comment.replyTo} onPress={() => jumpToComment(comment.replyTo!.id)} /></View> : null}
