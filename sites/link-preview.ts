@@ -16,14 +16,31 @@ async function fetchAllowedPage(initialUrl: URL): Promise<Response | null> {
   return null;
 }
 
-function metaImage(html: string, baseUrl: string) {
+function decodeMeta(value: string) {
+  return value.replace(/&(?:amp|quot|#39|lt|gt|#(\d+)|#x([0-9a-f]+));/gi, (entity, decimal, hex) => {
+    if (decimal || hex) return String.fromCodePoint(parseInt(decimal ?? hex, hex ? 16 : 10));
+    return ({ "&amp;": "&", "&quot;": '"', "&#39;": "'", "&lt;": "<", "&gt;": ">" } as Record<string, string>)[entity.toLowerCase()] ?? entity;
+  });
+}
+
+export function pagePreviewMetadata(html: string, baseUrl: string): { title: string | null; description: string | null; imageUrl: string | null } {
   const tags = html.match(/<meta\s+[^>]*>/gi) ?? [];
+  const values: Record<string, string> = {};
   for (const tag of tags) {
-    if (!/(?:property|name)=["'](?:og:image|twitter:image)["']/i.test(tag)) continue;
-    const content = tag.match(/content=["']([^"']+)["']/i)?.[1];
-    if (content) return new URL(content.replace(/&amp;/g, "&"), baseUrl).toString();
+    const name = tag.match(/(?:property|name)\s*=\s*["']([^"']+)["']/i)?.[1]?.toLowerCase();
+    const content = tag.match(/content\s*=\s*["']([^"']+)["']/i)?.[1];
+    if (name && content) values[name] = decodeMeta(content).trim();
   }
-  return null;
+  let imageUrl: string | null = null;
+  try {
+    const candidate = new URL(values["og:image"] ?? values["twitter:image"], baseUrl);
+    if (candidate.protocol === "https:") imageUrl = candidate.toString();
+  } catch { /* A page without an image can still supply a title. */ }
+  return {
+    title: values["og:title"] ?? values["twitter:title"] ?? null,
+    description: values["og:description"] ?? values.description ?? null,
+    imageUrl,
+  };
 }
 
 type PreviewEnv = { GOOGLE_MAPS_API_KEY?: string };
@@ -50,17 +67,17 @@ export async function handleLinkPreviewRequest(request: Request, env: PreviewEnv
       return value.photoUri ? Response.redirect(value.photoUri, 302) : new Response(null, { status: 404 });
     }
     const rawUrl = requestUrl.searchParams.get("url");
-    let imageUrl: string | null = null;
+    let metadata: ReturnType<typeof pagePreviewMetadata> = { title: null, description: null, imageUrl: null };
     if (rawUrl) {
       const target = new URL(rawUrl);
       if (target.protocol === "https:" && ALLOWED_HOSTS.test(target.hostname)) {
         const response = await fetchAllowedPage(target);
-        if (response?.ok && response.headers.get("content-type")?.includes("text/html")) imageUrl = metaImage((await response.text()).slice(0, 1_500_000), response.url);
+        if (response?.ok && response.headers.get("content-type")?.includes("text/html")) metadata = pagePreviewMetadata((await response.text()).slice(0, 1_500_000), response.url || target.toString());
       }
     }
-    imageUrl ??= await placesImage(requestUrl.searchParams.get("query") ?? "", env, requestUrl.origin);
-    return Response.json({ imageUrl }, { headers: { "cache-control": imageUrl ? "public, max-age=3600" : "public, max-age=300" } });
+    metadata.imageUrl ??= await placesImage(requestUrl.searchParams.get("query") ?? "", env, requestUrl.origin);
+    return Response.json(metadata, { headers: { "cache-control": metadata.title || metadata.imageUrl ? "public, max-age=3600" : "public, max-age=300" } });
   } catch {
-    return Response.json({ imageUrl: null });
+    return Response.json({ title: null, description: null, imageUrl: null });
   }
 }

@@ -468,7 +468,7 @@ export async function getSharedBoardContent(category?: string, threadId?: string
   return apiCall<{
     threads: SharedBoardThread[];
     comments: SharedBoardComment[];
-  }>(`/api/board/content${query}`);
+  }>(`/api/board/content${query}`, { cache: "no-store" });
 }
 
 export async function getSharedBoardThreadTitle(threadId: string) {
@@ -477,7 +477,7 @@ export async function getSharedBoardThreadTitle(threadId: string) {
 
 export async function getSharedBoardActivity(category?: string) {
   const query = category ? `?category=${encodeURIComponent(category)}` : "";
-  return apiCall<{ revision: string }>(`/api/board/activity${query}`);
+  return apiCall<{ revision: string }>(`/api/board/activity${query}`, { cache: "no-store" });
 }
 
 export async function createSharedBoardThread(input: {
@@ -561,6 +561,7 @@ export async function setSharedBoardReaction(
   return apiCall<{ success: true }>("/api/board/reactions", {
     method: active ? "PUT" : "DELETE",
     body: JSON.stringify(input),
+    suppressGlobalLoading: true,
   });
 }
 

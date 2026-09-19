@@ -2,6 +2,13 @@
 @tailwind components;
 @tailwind utilities;
 
+/* User-uploaded and imported media can contain HDR highlights. Keep all web
+   content at SDR reference brightness so loading or scrolling past an HDR
+   image/video cannot make part of the screen suddenly much brighter. */
+html, img, video, canvas {
+  dynamic-range-limit: standard;
+}
+
 /* Ensure the web preview fills the entire viewport */
 html, body, #root {
   width: 100%;

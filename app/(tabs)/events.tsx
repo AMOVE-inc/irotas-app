@@ -715,6 +715,7 @@ function EventCard({
           style={{
             fontSize: 14,
             lineHeight: 19,
+            minHeight: event.eventType === "gourmet" ? 38 : undefined,
             fontWeight: "900",
             color: colors.foreground,
           }}
@@ -736,7 +737,7 @@ function EventCard({
         ) : null}
         {!locked ? (
           <>
-            {event.restaurantName && event.restaurantName !== event.title ? (
+            {event.eventType !== "gourmet" && event.restaurantName && event.restaurantName !== event.title ? (
               <Text
                 numberOfLines={1}
                 style={{
