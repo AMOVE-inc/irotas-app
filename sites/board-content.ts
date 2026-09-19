@@ -508,14 +508,22 @@ export async function handleBoardContentRequest(
   if (url.pathname === CONTENT_PATH && request.method === "GET") {
     const categoryParam = url.searchParams.get("category");
     const category = categoryParam ? validCategory(categoryParam) : null;
+    const threadId = url.searchParams.get("thread");
     if (categoryParam && !category) return json({ error: "カテゴリが不正です" }, 400);
+    if (threadId && (!category || threadId.length > 120)) return json({ error: "スレッドが不正です" }, 400);
     if (category && !await canAccessBoardCategory(db, category, member))
       return json({ error: "この部活動の部員のみ閲覧できます" }, 403);
     const limit = Math.min(Math.max(Number(url.searchParams.get("limit")) || 100, 1), 200);
     // Previously materialized Discord event threads still have category=free-chat in D1.
     // Read past them without deleting or altering any app-managed data.
     const candidateLimit = limit + gourmetEventBoardThreadIds.size;
-    const rows = category
+    const rows = threadId
+      ? await db.prepare(`SELECT bt.*, m.public_member_id AS author_public_member_id,
+          m.display_name AS author_display_name, m.member_term AS author_member_term,
+          m.member_rank AS author_member_rank, m.profile_json AS author_profile_json
+        FROM board_threads bt JOIN members m ON m.id = bt.author_member_id
+        WHERE bt.id = ? AND bt.category = ? AND bt.deleted_at IS NULL LIMIT 1`).bind(threadId, category).all<ThreadRow>()
+      : category
       ? await db.prepare(`SELECT bt.*, m.public_member_id AS author_public_member_id,
           m.display_name AS author_display_name, m.member_term AS author_member_term,
           m.member_rank AS author_member_rank, m.profile_json AS author_profile_json

@@ -2775,9 +2775,9 @@ export default function BoardScreen() {
     return () => { active = false; };
   }, [loadBoardArchive]);
 
-  const loadSharedBoardContent = useCallback(async (category?: string) => {
+  const loadSharedBoardContent = useCallback(async (category?: string, threadId?: string) => {
     const revision = threadManagementRevision.current;
-    const result = await Api.getSharedBoardContent(category);
+    const result = await Api.getSharedBoardContent(category, threadId);
     if (revision !== threadManagementRevision.current || threadManagementPending.current.size > 0) return;
     const commentsByThread = result.comments
       .map((comment) => sharedCommentToBoardComment(comment, viewerMemberId))
@@ -2792,7 +2792,7 @@ export default function BoardScreen() {
     }));
     setDynamicThreads((current) => {
       const incomingIds = new Set(threads.map((thread) => thread.id));
-      const retained = category
+      const retained = threadId ? current : category
         ? current.filter((thread) => !(thread.shared && thread.category === category && !incomingIds.has(thread.id)))
         : current.filter((thread) => !thread.shared || thread.category.startsWith("club-club-"));
       return [...threads, ...retained.filter((thread) => !incomingIds.has(thread.id))];
@@ -2810,11 +2810,14 @@ export default function BoardScreen() {
   }, [loadSharedBoardContent]);
 
   useEffect(() => {
-    if (!activeCategory.startsWith("club-club-") || !canAccessCategory(categories.find((item) => item.key === activeCategory) ?? { key: activeCategory, label: "部活動", group: "club", createdByAdmin: true })) return;
-    void loadSharedBoardContent(activeCategory).catch(() => {
-      // 非部員・通信失敗時は共有投稿を表示しない。
+    if (!isThreadView || sharedLoading || !canAccessCategory(categories.find((item) => item.key === activeCategory) ?? { key: activeCategory, label: "部活動", group: "club", createdByAdmin: true })) return;
+    void (async () => {
+      try { await loadSharedBoardContent(activeCategory); } catch { /* Direct links can still load their thread. */ }
+      if (threadParam && activeCategory === categoryParam) await loadSharedBoardContent(activeCategory, threadParam);
+    })().catch(() => {
+      // 権限または通信に失敗した場合は、取得済みの投稿を表示する。
     });
-  }, [activeCategory, canAccessCategory, categories, loadSharedBoardContent]);
+  }, [activeCategory, canAccessCategory, categories, categoryParam, isThreadView, loadSharedBoardContent, sharedLoading, threadParam]);
 
   // Keep the open thread list and its unread-comment badges current while the
   // page remains visible. The selected category avoids repeatedly fetching

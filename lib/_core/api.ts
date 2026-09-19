@@ -460,8 +460,11 @@ export async function logout(): Promise<void> {
   });
 }
 
-export async function getSharedBoardContent(category?: string) {
-  const query = category ? `?category=${encodeURIComponent(category)}` : "";
+export async function getSharedBoardContent(category?: string, threadId?: string) {
+  const params = new URLSearchParams();
+  if (category) params.set("category", category);
+  if (threadId) params.set("thread", threadId);
+  const query = params.size ? `?${params.toString()}` : "";
   return apiCall<{
     threads: SharedBoardThread[];
     comments: SharedBoardComment[];

@@ -7,6 +7,7 @@ import {
 import type {
   D1Database,
   D1PreparedStatement,
+  D1Result,
   SitesEnv,
 } from "../sites/platform-types";
 
@@ -24,6 +25,7 @@ function testDatabase(
   thread?: { id: string; author_member_id: number; category: string; title: string },
   replyComment?: { id: string; threadId: string; content: string; displayName: string },
   clubLeader = false,
+  contentThread?: { id: string; category: string },
 ) {
   const writes: { sql: string; values: unknown[] }[] = [];
   const db: D1Database = {
@@ -83,7 +85,16 @@ function testDatabase(
           writes.push({ sql, values });
           return { success: true };
         },
-        async all() {
+        async all<T>() {
+          if (contentThread && sql.includes("WHERE bt.id = ? AND bt.category = ?") &&
+              values[0] === contentThread.id && values[1] === contentThread.category)
+            return { success: true, results: [{
+              id: contentThread.id, category: contentThread.category, author_member_id: member.id,
+              author_public_member_id: "IRO0099", author_display_name: "テスト会員",
+              author_member_term: "1期生", author_member_rank: "regular", author_profile_json: "{}",
+              title: "対象の投稿", content: "投稿本文", status: "open", pinned: 0,
+              data_json: "{}", created_at: "2026-09-19T01:00:00.000Z", updated_at: "2026-09-19T01:00:00.000Z",
+            }] } as D1Result<T>;
           return { success: true, results: [] };
         },
       };
@@ -134,6 +145,23 @@ describe("shared board content API", () => {
       { DB: db } as SitesEnv,
     );
     expect(response?.status).toBe(401);
+  });
+
+  it("loads a linked post by id even when it is outside the category list", async () => {
+    const member = { id: 9, role: "user", access_role: "member", account_status: "active" } as const;
+    const { db } = testDatabase(member, false, undefined, undefined, undefined, false, { id: "linked-post", category: "meal-report" });
+    const response = await handleBoardContentRequest(
+      request("/api/board/content?category=meal-report&thread=linked-post", "GET"),
+      { DB: db } as SitesEnv,
+    );
+    expect(response?.status).toBe(200);
+    expect(await response?.json()).toMatchObject({ threads: [{ id: "linked-post", title: "対象の投稿" }] });
+
+    const wrongCategory = await handleBoardContentRequest(
+      request("/api/board/content?category=gourmet-advice&thread=linked-post", "GET"),
+      { DB: db } as SitesEnv,
+    );
+    expect(await wrongCategory?.json()).toMatchObject({ threads: [] });
   });
 
   it("persists a valid public thread and writes an audit record", async () => {
