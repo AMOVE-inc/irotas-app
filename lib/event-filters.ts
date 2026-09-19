@@ -1,6 +1,7 @@
 import type { Event } from "../constants/mock-data";
 import { PREFECTURE_TO_REGION } from "../constants/event-areas";
 import { getEventSearchText, resolveEventGenres, resolveEventLocation } from "./event-metadata";
+import { getEventParticipationStatus } from "./event-participation";
 import { japanDateKey } from "./japan-date";
 
 export type EventAreaFilter = "all" | "kanto" | "kansai";
@@ -76,15 +77,9 @@ export function filterAndSortEvents(
     .filter((event) => !filters.hostedByMemberId || event.isOrganizer === true || event.createdBy === filters.hostedByMemberId)
     .filter((event) => {
       if (filters.participationStatuses?.length) {
-        if (event.viewerParticipationStatus !== undefined) {
-          const normalized = event.viewerParticipationStatus === "cancel_requested" ? "confirmed" : event.viewerParticipationStatus;
-          return normalized !== null && filters.participationStatuses.includes(normalized);
-        }
-        if (!filters.participatingMemberId) return false;
-        const memberId = filters.participatingMemberId;
-        const confirmed = event.participants.includes(memberId) || Boolean(event.companionIds?.includes(memberId));
-        const applied = Boolean(event.applicantIds?.includes(memberId)) && !confirmed;
-        return filters.participationStatuses.some((status) => status === "confirmed" ? confirmed : applied);
+        const memberId = filters.participatingMemberId || event.viewerMemberId || "";
+        const status = getEventParticipationStatus(event, memberId);
+        return status !== null && filters.participationStatuses.includes(status);
       }
       if (!filters.participatingMemberId) return true;
       const memberId = filters.participatingMemberId;

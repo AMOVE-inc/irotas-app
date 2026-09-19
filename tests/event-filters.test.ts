@@ -145,6 +145,21 @@ describe("event list filtering and sorting", () => {
     expect(filterAndSortEvents(memberEvents, { area: "all", eventType: "all", openOnly: false, favoriteOnly: true, favoriteEventIds: ["other"] }, referenceDate).map((event) => event.id)).toEqual(["other"]);
   });
 
+  it("finds imported Discord confirmations without an application record", () => {
+    const imported = makeEvent({
+      id: "imported-confirmed",
+      recruitmentChannel: "discord",
+      participants: ["IRO0002"],
+      applicantIds: [],
+      viewerMemberId: "IRO0002",
+      viewerParticipationStatus: null,
+    });
+    const filters = { area: "all" as const, eventType: "all" as const, openOnly: false,
+      participatingMemberId: "IRO0002", participationStatuses: ["confirmed" as const] };
+    expect(filterAndSortEvents([imported], filters, referenceDate).map((event) => event.id)).toEqual(["imported-confirmed"]);
+    expect(filterAndSortEvents([imported], { ...filters, participatingMemberId: "IRO0003" }, referenceDate)).toEqual([]);
+  });
+
   it("filters by any selected genre and overlapping budget", () => {
     const gourmetEvents = [
       makeEvent({ id: "sushi", genres: ["寿司"], priceMin: 8000, priceMax: 12000 }),
