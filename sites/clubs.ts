@@ -391,17 +391,20 @@ export async function handleClubRequest(request: Request, env: SitesEnv): Promis
     const current = await env.DB.prepare("SELECT status FROM club_memberships WHERE club_id = ? AND member_id = ?")
       .bind(id, targetId).first<{ status: string }>();
     if (current?.status !== "approved") return json({ error: "入部中のメンバーではありません" }, 409);
+    const input = await readBody(request);
+    const reason = requiredText(input?.reason, 500);
+    if (!reason) return json({ error: "退部の理由を入力してください" }, 400);
     const now = new Date().toISOString();
     await env.DB.prepare(`UPDATE club_memberships SET status = 'left', decided_at = ?, decided_by_member_id = ?, updated_at = ?
       WHERE club_id = ? AND member_id = ?`).bind(now, member.id, now, id, targetId).run();
-    await audit(env.DB, member.id, "club.membership_removed", id, { targetMemberId: targetId });
+    await audit(env.DB, member.id, "club.membership_removed", id, { targetMemberId: targetId, reason });
     const actorName = await memberDisplayName(env.DB, member.id);
     await notifyClubMember(
       env.DB,
       targetId,
       "club_membership",
       `${row.name}から退部となりました`,
-      `${actorName}さんが部員登録を解除しました。詳細は運営または部長へお問い合わせください。`,
+      `${actorName}さんが部員登録を解除しました。理由：${reason}`,
       id,
     );
     const memberships = await membershipsForClubs(env.DB, [id]);

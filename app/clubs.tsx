@@ -34,9 +34,6 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
-  sendLeaderAppointmentNotification,
-} from "@/lib/notifications";
-import {
   addClub as addClubToStore,
   leaveClub as leaveClubInStore,
   removeClubMember as removeClubMemberInStore,
@@ -808,6 +805,10 @@ function ClubDetailModal({
     club.applications.filter((application) => application.status === "on_hold").map((application) => application.memberId),
   );
   const [currentLeaderId, setCurrentLeaderId] = useState(club.leaderId);
+  const [removeTargetId, setRemoveTargetId] = useState<string | null>(null);
+  const [removalReason, setRemovalReason] = useState("");
+  const [removingMember, setRemovingMember] = useState(false);
+  const [removalError, setRemovalError] = useState("");
   useEffect(() => {
     setMemberIds(club.memberIds);
     setApplicantIds(club.applicantIds);
@@ -986,42 +987,26 @@ function ClubDetailModal({
     ]);
   };
 
-  // 部長・管理者がメンバーを退会させる
-  const handleRemoveMember = (memberId: string) => {
-    const member = getMemberById(memberId);
-    Alert.alert("メンバー退会", `${member?.name ?? ""}さんを退会させますか？`, [
-      { text: "キャンセル", style: "cancel" },
-      {
-        text: "退会させる",
-        style: "destructive",
-        onPress: async () => {
-          try {
-            const updated = await removeClubMemberInStore(club.id, memberId);
-            setMemberIds(updated.memberIds);
-            onUpdateClub(updated);
-            Alert.alert("退会完了", `${member?.name ?? ""}さんを退会させました。`);
-          } catch (error) {
-            Alert.alert("退会処理に失敗しました", error instanceof Error ? error.message : "もう一度お試しください。");
-          }
-        },
-      },
-    ]);
-  };
-
-  // 管理者が部長を任命
-  const handleAppointLeader = (memberId: string) => {
-    const member = getMemberById(memberId);
-    Alert.alert("部長任命", `${member?.name ?? ""}さんを部長に任命しますか？`, [
-      { text: "キャンセル", style: "cancel" },
-      {
-        text: "任命する",
-        onPress: () => {
-          setCurrentLeaderId(memberId);
-          sendLeaderAppointmentNotification(club.name, CURRENT_USER.name);
-          Alert.alert("任命完了", `${member?.name ?? ""}さんを${club.name}の部長に任命しました。`);
-        },
-      },
-    ]);
+  const handleRemoveMember = async () => {
+    if (!removeTargetId || removingMember) return;
+    const reason = removalReason.trim();
+    if (!reason) {
+      setRemovalError("退部の理由を入力してください。");
+      return;
+    }
+    setRemovingMember(true);
+    setRemovalError("");
+    try {
+      const updated = await removeClubMemberInStore(club.id, removeTargetId, reason);
+      setMemberIds(updated.memberIds);
+      onUpdateClub(updated);
+      setRemoveTargetId(null);
+      setRemovalReason("");
+    } catch (error) {
+      setRemovalError(error instanceof Error ? error.message : "退部処理に失敗しました。もう一度お試しください。");
+    } finally {
+      setRemovingMember(false);
+    }
   };
 
   const handleOpenChat = (chatId: string) => {
@@ -1460,7 +1445,7 @@ function ClubDetailModal({
             メンバー ({memberIds.length}人)
           </Text>
         </View>
-        {memberIds.map((memberId) => {
+        {[...memberIds].sort((a, b) => Number(b === currentLeaderId) - Number(a === currentLeaderId)).map((memberId) => {
           const member = getMemberById(memberId);
           const directoryMember = memberDirectory.find((item) => item.id === memberId);
           const clubMember = club.members?.find((item) => item.id === memberId);
@@ -1470,7 +1455,7 @@ function ClubDetailModal({
           const memberTerm = clubMember?.memberTerm ?? directoryMember?.memberTerm ?? (member ? `${member.generation}期生` : null);
           const branch = (clubMember?.branches ?? directoryMember?.branches)?.map((item) => item === "kanto" ? "関東支部" : item === "kansai" ? "関西支部" : item).join("・") ?? (member ? `${member.branch}支部` : "");
           const isCurrentLeader = memberId === currentLeaderId;
-          const isCurrentUser = memberId === CURRENT_USER.id;
+          const isCurrentUser = memberId === (authUser?.memberId ?? CURRENT_USER.id);
           return (
             <View
               key={memberId}
@@ -1498,19 +1483,11 @@ function ClubDetailModal({
                 </View>
               ) : canManageMembers && !isCurrentUser ? (
                 <View style={{ flexDirection: "row", gap: 6, marginRight: 6 }}>
-                  {userIsAdmin && (
-                    <Pressable
-                      onPress={() => handleAppointLeader(memberId)}
-                      style={{ backgroundColor: "#FF950015", borderRadius: 8, paddingHorizontal: 8, paddingVertical: 4, borderWidth: 1, borderColor: "#FF950030" }}
-                    >
-                      <Text style={{ fontSize: 11, fontWeight: "700", color: "#FF9500" }}>部長に任命</Text>
-                    </Pressable>
-                  )}
                   <Pressable
-                    onPress={() => handleRemoveMember(memberId)}
+                    onPress={() => { setRemoveTargetId(memberId); setRemovalReason(""); setRemovalError(""); }}
                     style={{ backgroundColor: "#FF3B3015", borderRadius: 8, paddingHorizontal: 8, paddingVertical: 4, borderWidth: 1, borderColor: "#FF3B3030" }}
                   >
-                    <Text style={{ fontSize: 11, fontWeight: "700", color: "#FF3B30" }}>退会</Text>
+                    <Text style={{ fontSize: 11, fontWeight: "700", color: "#FF3B30" }}>強制退部</Text>
                   </Pressable>
                 </View>
               ) : null}
@@ -1538,6 +1515,37 @@ function ClubDetailModal({
           </Pressable>
         )}
       </ScrollView>
+
+      <Modal visible={removeTargetId !== null} transparent animationType="fade" onRequestClose={() => { if (!removingMember) setRemoveTargetId(null); }}>
+        <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ flex: 1, justifyContent: "center", backgroundColor: "#0008", padding: 20 }}>
+          <View style={{ backgroundColor: colors.background, borderRadius: 16, padding: 20 }}>
+            <Text style={{ fontSize: 18, fontWeight: "800", color: colors.foreground, marginBottom: 8 }}>強制退部</Text>
+            <Text style={{ fontSize: 13, color: colors.muted, marginBottom: 16 }}>
+              {club.members?.find((item) => item.id === removeTargetId)?.displayName ?? memberDirectory.find((item) => item.id === removeTargetId)?.displayName ?? "このメンバー"}さんを{club.name}から退部させます。
+            </Text>
+            <Text style={{ fontSize: 14, fontWeight: "700", color: colors.foreground, marginBottom: 8 }}>退部の理由（必須）</Text>
+            <TextInput
+              value={removalReason}
+              onChangeText={(value) => { setRemovalReason(value); setRemovalError(""); }}
+              placeholder="退部の理由を入力してください"
+              placeholderTextColor={colors.muted}
+              multiline
+              maxLength={500}
+              style={{ minHeight: 100, borderWidth: 1, borderColor: colors.border, borderRadius: 10, padding: 12, color: colors.foreground, textAlignVertical: "top" }}
+              accessibilityLabel="退部の理由（必須）"
+            />
+            {!!removalError && <Text style={{ color: colors.error, fontSize: 13, marginTop: 8 }}>{removalError}</Text>}
+            <View style={{ flexDirection: "row", gap: 12, marginTop: 20 }}>
+              <Pressable disabled={removingMember} onPress={() => setRemoveTargetId(null)} style={{ flex: 1, paddingVertical: 12, alignItems: "center", borderWidth: 1, borderColor: colors.border, borderRadius: 10 }}>
+                <Text style={{ color: colors.foreground, fontWeight: "700" }}>キャンセル</Text>
+              </Pressable>
+              <Pressable disabled={removingMember} onPress={() => void handleRemoveMember()} style={{ flex: 1, paddingVertical: 12, alignItems: "center", backgroundColor: colors.error, borderRadius: 10, opacity: removingMember ? 0.6 : 1 }}>
+                <Text style={{ color: "#fff", fontWeight: "700" }}>{removingMember ? "処理中…" : "退部"}</Text>
+              </Pressable>
+            </View>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
 
       {/* 投稿詳細モーダル */}
       {selectedPost && (

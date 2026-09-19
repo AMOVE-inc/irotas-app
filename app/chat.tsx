@@ -443,14 +443,7 @@ export default function ChatScreen() {
     })) as unknown as typeof MEMBERS
     : MEMBERS, [directory]);
   const mentionGroups = useMemo(() => {
-    const branch = room?.id === "branch-kanto-free" ? "kanto" : room?.id === "branch-kansai-free" ? "kansai" : null;
-    const branchMemberIds = branch
-      ? directory.filter((member) => member.branches.includes(branch)).map((member) => member.id)
-      : [];
-    const roomMemberIds = branch ? branchMemberIds
-      : room?.id === "community-free-chat" ? mentionMembers.map((member) => member.id)
-      : room?.type === "rank" ? directory.filter((member) => member.memberRank === room.requiredRank).map((member) => member.id)
-      : roomParticipants;
+    const roomMemberIds = roomParticipants;
     const groups = getMentionGroups(mentionMembers, CLUBS).map((group) => group.id === "everyone"
       ? { ...group, description: "このチャットの対象メンバー全員", memberIds: roomMemberIds }
       : group);
@@ -458,12 +451,9 @@ export default function ChatScreen() {
       { id: "all-current-room", label: "全体", description: "このチャットの対象メンバー全員", memberIds: roomMemberIds, category: "everyone" },
       { id: "chat-participants", label: "チャット内の人全員", description: "このチャットの参加者全員", memberIds: roomMemberIds, category: "everyone" },
     );
-    if (branch) groups.push({ id: "current-branch", label: "支部全員", description: "この支部のメンバー全員", memberIds: branchMemberIds, category: "branch" });
     return groups;
-  }, [mentionMembers, directory, room?.id, room?.type, room?.requiredRank, roomParticipants]);
-  const mentionScopeIds = useMemo(() => room
-    ? chatMentionMemberIds(room, roomParticipants, directory)
-    : [], [room?.id, room?.type, room?.requiredRank, roomParticipants, directory]);
+  }, [mentionMembers, roomParticipants]);
+  const mentionScopeIds = useMemo(() => chatMentionMemberIds(roomParticipants), [roomParticipants]);
   const mentionMemberIds = useMemo(() => mentionScopeIds.filter((memberId) => memberId !== viewerMemberId), [mentionScopeIds, viewerMemberId]);
   const mentionSuggestionGroups = useMemo(() => {
     const allowed = new Set(mentionScopeIds);

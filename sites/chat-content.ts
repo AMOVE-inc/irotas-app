@@ -933,9 +933,10 @@ export async function handleChatContentRequest(
         // フリーチャットはメンション時だけ通知する。グループ宛てでも閲覧できない会員には送らない。
         if (content.includes("@")) {
           const groups = freeChatMentionGroups(content, room.id);
-          const recipients = await env.DB.prepare(`SELECT id, display_name, public_member_id, branches_json, role, access_role
-            FROM members WHERE account_status = 'active' AND id != ?`)
-            .bind(member.id).all<{ id: number; display_name: string; public_member_id: string | null; branches_json: string | null; role: string | null; access_role: string | null }>();
+          const recipients = await env.DB.prepare(`SELECT m.id, m.display_name, m.public_member_id, m.branches_json
+            FROM chat_room_members crm JOIN members m ON m.id = crm.member_id
+            WHERE crm.room_id = ? AND crm.left_at IS NULL AND m.account_status = 'active' AND m.id != ?`)
+            .bind(room.id, member.id).all<{ id: number; display_name: string; public_member_id: string | null; branches_json: string | null }>();
           const mentioned = (recipients.results ?? []).filter((recipient) => {
             if (groups.roomEveryone || mentionsViewer(content, [recipient.display_name, recipient.public_member_id ?? ""])) return true;
             let branches: string[] = [];
@@ -944,22 +945,7 @@ export async function handleChatContentRequest(
             return (groups.branchEveryone && currentBranch !== null && branches.includes(currentBranch)) ||
               (groups.kanto && branches.includes("kanto")) || (groups.kansai && branches.includes("kansai"));
           });
-          const clubMemberIds = room.room_type === "club"
-            ? new Set((await env.DB.prepare(`SELECT member_id FROM chat_room_members
-              WHERE room_id = ? AND left_at IS NULL`).bind(room.id).all<{ member_id: number }>()).results?.map((item) => item.member_id) ?? [])
-            : null;
-          const eligible = mentioned.filter((recipient) => {
-            if (clubMemberIds) return clubMemberIds.has(recipient.id);
-            if (room.id === "branch-kanto-free" || room.id === "branch-kansai-free") {
-              let branches: string[] = [];
-              try { branches = JSON.parse(recipient.branches_json ?? "[]") as string[]; } catch {}
-              if (branches.includes(room.id === "branch-kanto-free" ? "kanto" : "kansai")) return true;
-              const staff = recipient.role === "admin" || recipient.role === "operator" || recipient.access_role === "admin" || recipient.access_role === "operator";
-              return staff && mentionsViewer(content, [recipient.display_name, recipient.public_member_id ?? ""]);
-            }
-            return true;
-          });
-          const statements = eligible
+          const statements = mentioned
             .map((recipient) => env.DB!.prepare(`INSERT OR IGNORE INTO in_app_notifications
               (id, target_member_id, type, title, body, chat_room_id, target_path, created_at)
               VALUES (?, ?, 'chat', ?, ?, ?, ?, ?)`)

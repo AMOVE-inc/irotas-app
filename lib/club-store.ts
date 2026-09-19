@@ -91,8 +91,8 @@ export async function leaveClub(clubId: string) {
   return updated;
 }
 
-export async function removeClubMember(clubId: string, memberId: string) {
-  const updated = asClub(await Api.removeClubMember(clubId, memberId));
+export async function removeClubMember(clubId: string, memberId: string, reason: string) {
+  const updated = asClub(await Api.removeClubMember(clubId, memberId, reason));
   updateClub(updated);
   return updated;
 }
