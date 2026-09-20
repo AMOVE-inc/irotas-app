@@ -47,6 +47,7 @@ export default function AccountDeletionScreen() {
   const [continuationCondition, setContinuationCondition] = useState("");
   const [subscriptionConfirmed, setSubscriptionConfirmed] = useState(false);
   const [dataConfirmed, setDataConfirmed] = useState(false);
+  const [formError, setFormError] = useState("");
 
   useEffect(() => {
     if (!isAuthenticated) return;
@@ -59,6 +60,7 @@ export default function AccountDeletionScreen() {
 
   const performSubmission = async (type: "pause" | "withdrawal") => {
     setLoading(true);
+    setFormError("");
     try {
       const result = await Api.requestAccountDeletion({
         password,
@@ -82,10 +84,9 @@ export default function AccountDeletionScreen() {
           : "Squareの解約処理と退会手続きを受け付けました。",
       );
     } catch (error) {
-      Alert.alert(
-        "申請できませんでした",
-        error instanceof Error ? error.message : "もう一度お試しください。",
-      );
+      const message = error instanceof Error ? error.message : "もう一度お試しください。";
+      if (Platform.OS === "web") setFormError(message);
+      else Alert.alert("申請できませんでした", message);
     } finally {
       setLoading(false);
     }
@@ -94,12 +95,18 @@ export default function AccountDeletionScreen() {
   const submit = async () => {
     if (loading) return;
     if (!requestType || !password || !subscriptionConfirmed || !dataConfirmed) {
-      Alert.alert(
-        "入力内容を確認してください",
-        "手続きの種類、パスワード、2つの確認項目を入力してください。",
-      );
+      const missing = [
+        !requestType && "手続きの種類",
+        !password && "現在のパスワード",
+        !subscriptionConfirmed && "Squareの定期決済に関する確認",
+        !dataConfirmed && "退会後のデータに関する確認",
+      ].filter(Boolean).join("、");
+      const message = `${missing}を入力・確認してください。`;
+      if (Platform.OS === "web") setFormError(message);
+      else Alert.alert("入力内容を確認してください", message);
       return;
     }
+    setFormError("");
 
     const title =
       requestType === "pause" ? "休会を申請しますか？" : "退会を申請しますか？";
@@ -357,14 +364,13 @@ export default function AccountDeletionScreen() {
             <Pressable
               onPress={() => void submit()}
               disabled={loading}
+              accessibilityRole="button"
+              accessibilityLabel={requestType === "pause" ? "休会を申請する" : "退会を申請する"}
               style={{
                 minHeight: 52,
                 marginTop: 22,
                 borderRadius: 14,
-                backgroundColor:
-                  requestType && password && subscriptionConfirmed && dataConfirmed
-                    ? "#C94F7C"
-                    : "#E8D8DE",
+                backgroundColor: "#C94F7C",
                 alignItems: "center",
                 justifyContent: "center",
               }}
@@ -375,6 +381,7 @@ export default function AccountDeletionScreen() {
                 {requestType === "pause" ? "休会を申請する" : requestType === "withdrawal" ? "退会を申請する" : "手続きの種類を選択してください"}
               </Text>
             </Pressable>
+            {formError ? <Text accessibilityRole="alert" style={{ marginTop: 10, fontSize: 13, lineHeight: 20, color: "#B42318" }}>{formError}</Text> : null}
           </View>
         )}
 

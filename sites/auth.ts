@@ -952,8 +952,12 @@ async function scheduleSquareMembershipChange(env: SitesEnv, subscriptionId: str
     headers: { authorization: `Bearer ${env.SQUARE_ACCESS_TOKEN}`, "square-version": "2026-08-19", "content-type": "application/json" },
     body,
   });
-  const result = await response.json().catch(() => ({})) as { subscription?: { canceled_date?: string; charged_through_date?: string }; errors?: Array<{ detail?: string }> };
+  const result = await response.json().catch(() => ({})) as { subscription?: { id?: string; canceled_date?: string; charged_through_date?: string }; errors?: Array<{ detail?: string }> };
   if (!response.ok) throw new Error(result.errors?.[0]?.detail ?? "Squareの定期決済を変更できませんでした");
+  if (!result.subscription || (result.subscription.id && result.subscription.id !== subscriptionId))
+    throw new Error("Squareの処理結果を確認できませんでした。運営へお問い合わせください");
+  if (requestType === "withdrawal" && !result.subscription.canceled_date)
+    throw new Error("Squareの解約予約を確認できませんでした。運営へお問い合わせください");
   return { action: requestType === "pause" ? "pause_scheduled" : "cancel_scheduled", effectiveDate: result.subscription?.canceled_date ?? result.subscription?.charged_through_date ?? null };
 }
 

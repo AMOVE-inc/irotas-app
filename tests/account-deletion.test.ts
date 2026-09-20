@@ -150,7 +150,7 @@ describe("account deletion requests", () => {
       await hashPassword("correct-password", undefined, secret),
     );
     const env = { DB: store.db, AUTH_SECRET: secret, SQUARE_ACCESS_TOKEN: "square-token" } as SitesEnv;
-    const square = vi.spyOn(globalThis, "fetch").mockResolvedValue(Response.json({ subscription: { status: "ACTIVE", charged_through_date: "2026-09-01" } }));
+    const square = vi.spyOn(globalThis, "fetch").mockResolvedValue(Response.json({ subscription: { id: "subscription-21", status: "ACTIVE", canceled_date: "2026-09-01" } }));
 
     const created = await handleAuthRequest(
       request("POST", {
@@ -226,8 +226,9 @@ describe("account deletion requests", () => {
       if (url.endsWith("/subscriptions/subscription-21/cancel"))
         return Response.json({
           subscription: {
+            id: "subscription-21",
             status: "ACTIVE",
-            charged_through_date: "2026-10-01",
+            canceled_date: "2026-10-01",
           },
         });
       return new Response("not found", { status: 404 });
@@ -254,6 +255,25 @@ describe("account deletion requests", () => {
       expect.stringContaining("/subscriptions/subscription-21/cancel"),
       expect.objectContaining({ method: "POST" }),
     );
+    square.mockRestore();
+  });
+
+  it("does not accept a withdrawal when Square has not confirmed cancellation", async () => {
+    const secret = "server-side-secret";
+    const store = deletionDatabase(await hashPassword("correct-password", undefined, secret));
+    const env = { DB: store.db, AUTH_SECRET: secret, SQUARE_ACCESS_TOKEN: "square-token" } as SitesEnv;
+    const square = vi.spyOn(globalThis, "fetch").mockResolvedValue(Response.json({ subscription: { id: "subscription-21", status: "ACTIVE" } }));
+
+    const response = await handleAuthRequest(request("POST", {
+      password: "correct-password",
+      requestType: "withdrawal",
+      understandSquareChange: true,
+      understandDataHandling: true,
+    }), env);
+
+    expect(response?.status).toBe(502);
+    expect(store.pending()).toBeNull();
+    expect(store.writes.some((sql) => sql.includes("INSERT INTO account_deletion_requests"))).toBe(false);
     square.mockRestore();
   });
 });
