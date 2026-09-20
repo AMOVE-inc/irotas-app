@@ -166,9 +166,9 @@ export async function handleBoardArchiveRequest(
   const source = archive as RawDiscordBoardArchive;
   const publicOnly = url.searchParams.get("scope") === "public";
   const allowed = new Set<string>();
-  const isAdmin = member.role === "admin" || member.access_role === "admin";
+  const canViewAllClubs = member.role === "admin" || member.role === "operator" || member.access_role === "admin" || member.access_role === "operator";
   if (!publicOnly) {
-    if (isAdmin) {
+    if (canViewAllClubs) {
       source.threads.forEach((thread) => {
         const category = normalizeDiscordBoardCategory(thread.category);
         if (isPrivateClubCategory(category) && !isRetiredMovieClubThread(thread)) allowed.add(category);

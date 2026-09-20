@@ -78,14 +78,14 @@ export function canCreateClub(role: unknown, accessRole?: unknown): boolean {
   return isAdminRole(role, accessRole);
 }
 
-/** Club threads are private to approved members, with administrator access for moderation. */
-export function canViewClubThread(role: unknown, memberId: string, approvedMemberIds: string[]): boolean {
-  return isAdminRole(role) || approvedMemberIds.includes(memberId);
+/** Approved members and staff can read club threads. */
+export function canViewClubThread(role: unknown, memberId: string, approvedMemberIds: string[], accessRole?: unknown): boolean {
+  return isOperatorRole(role, accessRole) || approvedMemberIds.includes(memberId);
 }
 
-/** 部活イベントの詳細は所属部員のみ。管理者は安全管理のため閲覧できる。 */
-export function canViewClubEvent(role: unknown, memberId: string, approvedMemberIds: string[]): boolean {
-  return isAdminRole(role) || approvedMemberIds.includes(memberId);
+/** 部活イベントは所属部員と運営・管理者が閲覧できる。 */
+export function canViewClubEvent(role: unknown, memberId: string, approvedMemberIds: string[], accessRole?: unknown): boolean {
+  return isOperatorRole(role, accessRole) || approvedMemberIds.includes(memberId);
 }
 
 /** 部活イベントを登録できるのは承認済み部員または部長のみ。 */

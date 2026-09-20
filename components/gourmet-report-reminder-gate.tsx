@@ -1,53 +1,27 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { EVENTS, CURRENT_USER, type Event } from "@/constants/mock-data";
-import { getAllEvents } from "@/lib/event-store";
-import { getEventParticipationStatus } from "@/lib/event-participation";
+import { type Event } from "@/constants/mock-data";
+import { eligibleGourmetReportEvents, gourmetReportReminderKey } from "@/lib/gourmet-report-reminder";
+import { isOperatorRole } from "@/lib/access-control";
+import { japanDateKey } from "@/lib/japan-date";
 import * as Api from "@/lib/_core/api";
 import { useAuthContext } from "@/lib/auth-context";
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
-import { Modal, Pressable, Text, View } from "react-native";
+import { AppState, Modal, Pressable, Text, View } from "react-native";
 
-const DISMISSED_KEY_PREFIX = "irotas_gourmet_report_reminder_dismissed";
 const REPORT_XP = 8;
 
-function getTokyoDate(offsetDays = 0): string {
-  const formatter = new Intl.DateTimeFormat("en-CA", {
-    timeZone: "Asia/Tokyo",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  });
-  const format = (date: Date) => {
-    const parts = formatter.formatToParts(date);
-    const value = (type: Intl.DateTimeFormatPartTypes) => parts.find((part) => part.type === type)?.value ?? "";
-    return `${value("year")}-${value("month")}-${value("day")}`;
-  };
-  const today = format(new Date());
-  const value = new Date(`${today}T12:00:00+09:00`);
-  value.setDate(value.getDate() + offsetDays);
-  return format(value);
-}
-
-function getEligibleEvents(events: Event[], memberId: string): Event[] {
-  const yesterday = getTokyoDate(-1);
-  return events.filter((event) => (
-    event.eventType === "gourmet"
-    && event.date === yesterday
-    && getEventParticipationStatus(event, memberId) === "confirmed"
-  ));
-}
-
-/** 開催翌日に、グルメ会の参加確定者だけへごちそうさま報告を案内する。 */
+/** 開催翌日から、グルメ会の参加者へごちそうさま報告を案内する。 */
 export function GourmetReportReminderGate() {
   const router = useRouter();
   const { user } = useAuthContext();
   const [event, setEvent] = useState<Event | null>(null);
-  const memberId = user?.memberId ?? (user ? CURRENT_USER.id : null);
+  const memberId = user?.memberId ?? null;
+  const earnsXp = !isOperatorRole(user?.role, user?.accessRole);
 
   const dismiss = useCallback(async (eventId?: string) => {
     if (memberId && eventId) {
-      await AsyncStorage.setItem(`${DISMISSED_KEY_PREFIX}:${memberId}:${eventId}`, "1");
+      await AsyncStorage.setItem(gourmetReportReminderKey(memberId, eventId), japanDateKey());
     }
     setEvent(null);
   }, [memberId]);
@@ -58,26 +32,28 @@ export function GourmetReportReminderGate() {
       return;
     }
     let active = true;
-    void (async () => {
-      let events = getAllEvents(EVENTS);
+    const refresh = async () => {
       try {
-        const sharedEvents = await Api.getEvents();
-        const sharedIds = new Set(sharedEvents.map((item) => item.id));
-        events = [...sharedEvents, ...events.filter((item) => !sharedIds.has(item.id))];
-      } catch {
-        // オフライン時もローカルイベントを使って案内できる。
-      }
-      const candidates = getEligibleEvents(events, memberId);
-      for (const candidate of candidates) {
-        const dismissed = await AsyncStorage.getItem(`${DISMISSED_KEY_PREFIX}:${memberId}:${candidate.id}`);
-        if (active && !dismissed) {
-          setEvent(candidate);
-          return;
+        // Only authenticated server participation may trigger a reminder.
+        const events = await Api.getEvents();
+        const candidates = eligibleGourmetReportEvents(events, memberId);
+        for (const candidate of candidates) {
+          const dismissed = await AsyncStorage.getItem(gourmetReportReminderKey(memberId, candidate.id));
+          if (active && dismissed !== "1" && dismissed !== japanDateKey()) {
+            setEvent(candidate);
+            return;
+          }
         }
+        if (active) setEvent(null);
+      } catch {
+        // Do not infer attendance from bundled fixtures when offline.
+        if (active) setEvent(null);
       }
-      if (active) setEvent(null);
-    })();
-    return () => { active = false; };
+    };
+    void refresh();
+    const timer = setInterval(() => { void refresh(); }, 60 * 60_000);
+    const subscription = AppState.addEventListener("change", (state) => { if (state === "active") void refresh(); });
+    return () => { active = false; clearInterval(timer); subscription.remove(); };
   }, [memberId]);
 
   if (!event) return null;
@@ -88,20 +64,20 @@ export function GourmetReportReminderGate() {
         <View style={{ backgroundColor: "#FFF", borderRadius: 24, padding: 24 }}>
           <Text style={{ fontSize: 30, textAlign: "center", marginBottom: 10 }}>🍽️</Text>
           <Text style={{ color: "#202124", fontSize: 20, fontWeight: "800", textAlign: "center" }}>
-            昨日のグルメ会はいかがでしたか？
+            グルメ会はいかがでしたか？
           </Text>
           <Text style={{ color: "#5F6368", fontSize: 14, lineHeight: 21, textAlign: "center", marginTop: 12 }}>
             「{event.title}」でのごちそうを、写真と一緒にみんなへシェアしませんか？
           </Text>
-          <View style={{ backgroundColor: "#FFF5E8", borderRadius: 14, padding: 13, marginTop: 18 }}>
+          {earnsXp ? <View style={{ backgroundColor: "#FFF5E8", borderRadius: 14, padding: 13, marginTop: 18 }}>
             <Text style={{ color: "#B56B00", fontSize: 14, fontWeight: "800", textAlign: "center" }}>
               ごちそうさま報告を投稿すると +{REPORT_XP} XP を獲得できます
             </Text>
-          </View>
+          </View> : null}
           <Pressable
             onPress={() => {
               void dismiss(event.id);
-              router.push({ pathname: "/board", params: { compose: "meal-report" } });
+              router.push({ pathname: "/board", params: { compose: "meal-report", reminderEventId: event.id } });
             }}
             style={{ backgroundColor: "#D97FA8", borderRadius: 14, paddingVertical: 15, alignItems: "center", marginTop: 18 }}
           >

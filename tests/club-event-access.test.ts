@@ -8,13 +8,14 @@ describe("club event access", () => {
     expect(canViewClubEvent("user", "member-1", approvedMemberIds)).toBe(true);
   });
 
-  it("keeps club event details private from non-members", () => {
+  it("keeps club event details private from regular non-members", () => {
     expect(canViewClubEvent("user", "outsider", approvedMemberIds)).toBe(false);
-    expect(canViewClubEvent("operator", "outsider", approvedMemberIds)).toBe(false);
   });
 
-  it("allows administrators to moderate every club event", () => {
+  it("allows operators and administrators to view every club event", () => {
     expect(canViewClubEvent("admin", "admin-1", approvedMemberIds)).toBe(true);
+    expect(canViewClubEvent("operator", "operator-1", approvedMemberIds)).toBe(true);
+    expect(canViewClubEvent("user", "operator-1", approvedMemberIds, "operator")).toBe(true);
   });
 
   it("allows only club members or the leader to register a club event", () => {

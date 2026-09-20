@@ -840,6 +840,7 @@ function ClubDetailModal({
   );
   const { isMember, hasApplied, isPending, isLeader } = viewerAccess;
   const canManageMembers = club.canReviewApplications === true || isLeader || userIsAdmin;
+  const canViewClubContent = isMember || isLeader || isOperatorRole(authUser?.role, authUser?.accessRole);
   const clubOverview = getClubIntroductionContent(club, archiveThreads);
   const canEditOverview = isLeader || isOperatorRole(authUser?.role, authUser?.accessRole);
   useEffect(() => { setOverviewDraft(clubOverview); setEditingOverview(false); }, [club.id, club.overviewText]);
@@ -1025,7 +1026,7 @@ function ClubDetailModal({
   }
 
   // 部員でない場合は申請画面のみ表示
-  if ((!isMember && !canManageMembers) || previewApplication) {
+  if ((!canViewClubContent && !canManageMembers) || previewApplication) {
     return (
       <View style={{ flex: 1, backgroundColor: colors.background }}>
         <View

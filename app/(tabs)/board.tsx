@@ -87,6 +87,7 @@ import { CalendarField } from "@/components/calendar-field";
 import { canRegisterBoardThreadEvent, displayBoardThreadTitle, isBoardThreadClosed, isClubSelfIntroduction, isRecruitmentBoardCategory, isThreadPinned, sortRecruitmentThreads } from "@/lib/board-recruitment";
 import { memberFromAuthUser } from "@/lib/auth-member";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { gourmetReportReminderKey } from "@/lib/gourmet-report-reminder";
 import * as Clipboard from "expo-clipboard";
 
 const BOARD_MENTION_GROUPS = getMentionGroups(MEMBERS, CLUBS);
@@ -2717,10 +2718,11 @@ function CreateThreadModal({
 export default function BoardScreen() {
   const colors = useColors();
   const router = useRouter();
-  const { compose, category: categoryParam, view, thread: threadParam, fromHome, fromProfile, openClubMembers } = useLocalSearchParams<{ compose?: string; category?: string; view?: string; thread?: string; fromHome?: string; fromProfile?: string; openClubMembers?: string }>();
+  const { compose, reminderEventId, category: categoryParam, view, thread: threadParam, fromHome, fromProfile, openClubMembers } = useLocalSearchParams<{ compose?: string; reminderEventId?: string; category?: string; view?: string; thread?: string; fromHome?: string; fromProfile?: string; openClubMembers?: string }>();
   const { user: authUser } = useAuthContext();
   const userIsAdmin = canManageBoardCategories(authUser?.role, authUser?.accessRole);
   const userCanModerateAll = isOperatorRole(authUser?.role, authUser?.accessRole);
+  const userCanViewAllClubContent = isOperatorRole(authUser?.role, authUser?.accessRole);
   const userCanManageContests = canManageGourmetContests(authUser?.role, authUser?.accessRole);
   const userCanModerateRecruitment = isOperatorRole(authUser?.role, authUser?.accessRole);
   const clubs = useClubs();
@@ -2800,16 +2802,16 @@ export default function BoardScreen() {
   }, [boardReadKey, importedComments]);
 
   const canAccessCategory = useCallback((category: BoardCategory) => {
-    if (category.group !== "club" || userIsAdmin) return true;
+    if (category.group !== "club" || userCanViewAllClubContent) return true;
     if (category.key === "club-all" || category.key === "club-introduction") return true;
     const club = clubs.find((item) => `club-${item.id}` === category.key);
     return Boolean(club && canViewerAccessClubContent(
       club,
       authUser?.memberId,
       CURRENT_USER.id,
-      userIsAdmin,
+      userCanViewAllClubContent,
     ));
-  }, [authUser?.memberId, clubs, userIsAdmin]);
+  }, [authUser?.memberId, clubs, userCanViewAllClubContent]);
 
   useEffect(() => {
     if (isClubIndexView) router.replace("/clubs");
@@ -3428,6 +3430,10 @@ export default function BoardScreen() {
             status: thread.recruitmentStatus ?? (thread.isRecruiting ? "open" : "none"),
             data: boardThreadData(thread),
           });
+          if (thread.category === "meal-report" && reminderEventId && authUser?.memberId) {
+            void AsyncStorage.setItem(gourmetReportReminderKey(authUser.memberId, reminderEventId), "1");
+            router.setParams({ reminderEventId: "" });
+          }
           const sharedThread = { ...thread, id: saved.id, lastUpdated: saved.createdAt, shared: true };
           setDynamicThreads((prev) => [sharedThread, ...prev]);
           setImportedComments((current) => ({ ...current, [sharedThread.id]: [] }));

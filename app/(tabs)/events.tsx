@@ -11,7 +11,7 @@ import {
 import { GOURMET_GENRES } from "@/constants/event-options";
 import { useAuthContext } from "@/lib/auth-context";
 import { useClubs } from "@/lib/club-store";
-import { isAdminRole } from "@/lib/access-control";
+import { isOperatorRole } from "@/lib/access-control";
 import {
   canViewerAccessClubContent,
   getClubViewerAccess,
@@ -926,7 +926,7 @@ export default function EventsScreen() {
     Boolean(authUser),
     CURRENT_USER.id,
   );
-  const userIsAdmin = isAdminRole(authUser?.role, authUser?.accessRole);
+  const userCanViewAllClubEvents = isOperatorRole(authUser?.role, authUser?.accessRole);
   useEffect(() => {
     const cached = authUser?.id ? eventListCache.get(authUser.id) : undefined;
     setAllEvents(cached ?? []);
@@ -941,11 +941,11 @@ export default function EventsScreen() {
           club,
           authUser?.memberId,
           CURRENT_USER.id,
-          userIsAdmin,
+          userCanViewAllClubEvents,
         ),
       );
     },
-    [authUser?.memberId, clubs, userIsAdmin],
+    [authUser?.memberId, clubs, userCanViewAllClubEvents],
   );
 
   const refreshEvents = useCallback(async () => {

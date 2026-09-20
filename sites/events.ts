@@ -1042,7 +1042,7 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
       catch { return undefined; }
     }).filter((id): id is string => Boolean(id)));
     const events = await Promise.all(persistedRows.map(async (row) => {
-      if (row.event_type === "club" && row.club_id && row.organizer_member_id !== member.id && !isImportedEventConfirmedParticipant(row, memberPublicId, participationsByEvent.get(row.id)) && !await canMemberAccessClub(env.DB!, row.club_id, member.id, admin))
+      if (row.event_type === "club" && row.club_id && row.organizer_member_id !== member.id && !isImportedEventConfirmedParticipant(row, memberPublicId, participationsByEvent.get(row.id)) && !await canMemberAccessClub(env.DB!, row.club_id, member.id, elevated))
         return lockedClubEventPreview(row);
       return publicEvent(row, member.id, memberPublicId, elevated,
         participationsByEvent.get(row.id) ?? [], cancellationsByEvent.get(row.id) ?? [], favoriteIds.has(row.id));
@@ -1050,7 +1050,7 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
     // Keep the app-edited D1 row authoritative. Historical Discord event seeds
     // missing from D1 are listable without writing over titles, photos or dates.
     const missingImportedEvents = IMPORTED_DISCORD_EVENTS.filter((event) =>
-      (event.eventType !== "club" || event.organizerProfileId === viewerDiscordId) && !persistedIds.has(event.id) && !persistedSourceThreadIds.has(event.sourceThreadId) &&
+      (event.eventType !== "club" || elevated || event.organizerProfileId === viewerDiscordId) && !persistedIds.has(event.id) && !persistedSourceThreadIds.has(event.sourceThreadId) &&
       !DELETED_EVENT_IDS.has(event.id) && !deletedIds.has(event.id),
     ).map((event) => ({ ...event, recruitmentChannel: "discord" as const, isOrganizer: Boolean(viewerDiscordId && event.organizerProfileId === viewerDiscordId) }));
     return responseJson({ events: [...events, ...missingImportedEvents], deletedImportedEventIds: [...deletedIds] });
@@ -1063,7 +1063,7 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
       .first<{ id: number }>();
     const row = await eventRow(env.DB, requestedEventId) ?? await materializeImportedEvent(env.DB, requestedEventId, fallbackOrganizer?.id);
     if (!row) return responseJson({ error: "イベントが見つかりません" }, 404);
-    if (row.event_type === "club" && row.club_id && !await canMemberAccessClub(env.DB, row.club_id, member.id, admin)) {
+    if (row.event_type === "club" && row.club_id && !await canMemberAccessClub(env.DB, row.club_id, member.id, elevated)) {
       const participation = row.id.startsWith("discord-event-")
         ? await env.DB.prepare("SELECT status FROM event_participations WHERE event_id = ? AND member_id = ? LIMIT 1")
           .bind(row.id, member.id).first<{ status: ParticipationRow["status"] }>() : null;
@@ -1087,7 +1087,7 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
     if (DELETED_EVENT_IDS.has(id) || await isDeletedImportedEvent(env.DB, id)) return responseJson({ error: "イベントが見つかりません" }, 404);
     const row = await eventRow(env.DB, id) ?? await materializeImportedEvent(env.DB, id);
     if (!row) return responseJson({ error: "イベントが見つかりません" }, 404);
-    if (row.event_type === "club" && row.club_id && !await canMemberAccessClub(env.DB, row.club_id, member.id, admin))
+    if (row.event_type === "club" && row.club_id && !await canMemberAccessClub(env.DB, row.club_id, member.id, request.method === "GET" ? elevated : admin))
       return responseJson({ error: "この部活の部員のみコメントを閲覧できます" }, 403);
     const identity = await env.DB.prepare("SELECT display_name, discord_user_id FROM members WHERE id = ?")
       .bind(member.id).first<{ display_name: string; discord_user_id: string | null }>();

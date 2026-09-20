@@ -102,6 +102,8 @@ describe("access control", () => {
     expect(canViewClubThread("user", "u1", ["u1", "u2"])).toBe(true);
     expect(canViewClubThread("user", "u3", ["u1", "u2"])).toBe(false);
     expect(canViewClubThread("admin", "u3", ["u1", "u2"])).toBe(true);
+    expect(canViewClubThread("operator", "u3", ["u1", "u2"])).toBe(true);
+    expect(canViewClubThread("user", "u3", ["u1", "u2"], "operator")).toBe(true);
   });
 
   it("makes the announcement chat operator-send-only", () => {
