@@ -370,9 +370,10 @@ export default function ChatScreen() {
   const [mentionQuery, setMentionQuery] = useState<string | null>(null);
   const [messageSelection, setMessageSelection] = useState<TextSelection>({ start: 0, end: 0 });
   const flatListRef = useRef<FlatList>(null);
-  const linkedScrollRetry = useRef(false);
+  const linkedScrollRetry = useRef(0);
   const linkedMessageScrolled = useRef<string | null>(null);
   const initiallyPositionedChat = useRef<string | null>(null);
+  const positionInitialMessagesRef = useRef<(() => void) | null>(null);
   const highlightTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [highlightedMessageId, setHighlightedMessageId] = useState<string | null>(null);
   const inputRef = useRef<TextInput>(null);
@@ -491,7 +492,7 @@ export default function ChatScreen() {
       Alert.alert("返信元を表示できません", "返信元のメッセージが見つかりませんでした。");
       return;
     }
-    linkedScrollRetry.current = false;
+    linkedScrollRetry.current = 0;
     flatListRef.current?.scrollToIndex({ index, animated: true, viewPosition: 0.5 });
     setHighlightedMessageId(messageId);
     if (highlightTimerRef.current) clearTimeout(highlightTimerRef.current);
@@ -503,7 +504,7 @@ export default function ChatScreen() {
     const index = displayedMessages.findIndex((item) => item.id === linkedMessageId);
     if (index < 0) return;
     linkedMessageScrolled.current = linkedMessageId;
-    linkedScrollRetry.current = false;
+    linkedScrollRetry.current = 0;
     const timer = setTimeout(() => flatListRef.current?.scrollToIndex({ index, animated: true, viewPosition: 0.5 }), 250);
     return () => clearTimeout(timer);
   }, [linkedMessageId, displayedMessages]);
@@ -515,10 +516,36 @@ export default function ChatScreen() {
     if (index === null) return;
     const positionKey = `${id}:${effectiveUnreadCount}`;
     if (initiallyPositionedChat.current === positionKey) return;
-    initiallyPositionedChat.current = positionKey;
-    linkedScrollRetry.current = false;
-    const timer = setTimeout(() => flatListRef.current?.scrollToIndex({ index, animated: false, viewPosition: introductionChat ? (effectiveUnreadCount > 0 ? 1 : 0) : effectiveUnreadCount > 0 ? 0.12 : 1 }), 80);
-    return () => clearTimeout(timer);
+    linkedScrollRetry.current = 0;
+    const positionMessages = () => {
+      if (initiallyPositionedChat.current === positionKey) return;
+      if (Platform.OS === "web" && !introductionChat) {
+        const scrollNode = flatListRef.current?.getScrollableNode() as HTMLElement | null | undefined;
+        if (scrollNode) {
+          if (effectiveUnreadCount === 0) {
+            scrollNode.scrollTop = scrollNode.scrollHeight;
+            initiallyPositionedChat.current = positionKey;
+            return;
+          }
+          const unreadMarker = scrollNode.querySelector<HTMLElement>('[data-testid="chat-first-unread-marker"]');
+          if (unreadMarker) {
+            scrollNode.scrollTop += unreadMarker.getBoundingClientRect().top - scrollNode.getBoundingClientRect().top - 12;
+            initiallyPositionedChat.current = positionKey;
+            return;
+          }
+        }
+      }
+      flatListRef.current?.scrollToIndex({ index, animated: false, viewPosition: introductionChat ? (effectiveUnreadCount > 0 ? 1 : 0) : effectiveUnreadCount > 0 ? 0.12 : 1 });
+      if (Platform.OS !== "web" || introductionChat) initiallyPositionedChat.current = positionKey;
+    };
+    positionInitialMessagesRef.current = positionMessages;
+    const frame = requestAnimationFrame(positionMessages);
+    const timers = [80, 250, 600].map((delay) => setTimeout(positionMessages, delay));
+    return () => {
+      positionInitialMessagesRef.current = null;
+      cancelAnimationFrame(frame);
+      timers.forEach(clearTimeout);
+    };
   }, [displayedMessages.length, hasOpenedIntroduction, id, introductionChat, introductionHydrated, linkedMessageId, messagesHydrated, openingUnreadCount]);
   // 自分のプロフィール画像（AsyncStorageから読み込み）
   const [myAvatarUri, setMyAvatarUri] = useState<string | null>(null);
@@ -570,6 +597,7 @@ export default function ChatScreen() {
     setOpeningUnreadCount(openingCount);
     setMessagesHydrated(false);
     initiallyPositionedChat.current = null;
+    positionInitialMessagesRef.current = null;
     setClubAccessDenied(false);
     if (id.startsWith("club-chat-")) setMessages([]);
     setIntroductionHydrated(id !== "board-introduction");
@@ -1004,7 +1032,7 @@ export default function ChatScreen() {
             const dateSeparator = <View style={{ alignItems: "center", marginVertical: 10 }}><View style={{ borderRadius: 12, backgroundColor: colors.surface, paddingHorizontal: 11, paddingVertical: 4 }}><Text style={{ fontSize: 11, fontWeight: "700", color: colors.muted }}>{day}</Text></View></View>;
             return <>
               {!introductionChat && day !== previousDay ? dateSeparator : null}
-              {!introductionChat && requestedUnreadCount > 0 && index === firstUnreadIndex ? <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginVertical: 10, paddingHorizontal: 16 }}><View style={{ flex: 1, height: 1, backgroundColor: "#E8A0BF" }} /><Text style={{ fontSize: 11, fontWeight: "900", color: "#C05B88" }}>ここから未読メッセージ</Text><View style={{ flex: 1, height: 1, backgroundColor: "#E8A0BF" }} /></View> : null}
+              {!introductionChat && requestedUnreadCount > 0 && index === firstUnreadIndex ? <View testID="chat-first-unread-marker" style={{ flexDirection: "row", alignItems: "center", gap: 8, marginVertical: 10, paddingHorizontal: 16 }}><View style={{ flex: 1, height: 1, backgroundColor: "#E8A0BF" }} /><Text style={{ fontSize: 11, fontWeight: "900", color: "#C05B88" }}>ここから未読メッセージ</Text><View style={{ flex: 1, height: 1, backgroundColor: "#E8A0BF" }} /></View> : null}
               <MessageBubble
                 message={item}
                 highlighted={item.id === highlightedMessageId}
@@ -1059,12 +1087,13 @@ export default function ChatScreen() {
           style={{ flex: 1 }}
           contentContainerStyle={{ paddingVertical: 16, paddingBottom: 120, flexGrow: 1 }}
           showsVerticalScrollIndicator={false}
+          onContentSizeChange={() => requestAnimationFrame(() => positionInitialMessagesRef.current?.())}
           onScroll={(event) => {
             const { contentOffset, contentSize, layoutMeasurement } = event.nativeEvent;
             setIsNearLatest(introductionChat ? contentOffset.y <= 80 : contentOffset.y + layoutMeasurement.height >= contentSize.height - 80);
           }}
           scrollEventThrottle={80}
-          onScrollToIndexFailed={(info) => { if (linkedScrollRetry.current) return; linkedScrollRetry.current = true; flatListRef.current?.scrollToOffset({ offset: Math.max(0, info.averageItemLength * info.index), animated: false }); setTimeout(() => flatListRef.current?.scrollToIndex({ index: info.index, animated: true, viewPosition: 0.5 }), 120); }}
+          onScrollToIndexFailed={(info) => { if (linkedScrollRetry.current >= 8) return; linkedScrollRetry.current += 1; flatListRef.current?.scrollToOffset({ offset: Math.max(0, info.averageItemLength * info.index), animated: false }); setTimeout(() => flatListRef.current?.scrollToIndex({ index: info.index, animated: false, viewPosition: 0.5 }), 120); }}
           ListEmptyComponent={messagesHydrated ?
             <View style={{ alignItems: "center", paddingVertical: 40 }}>
               <IconSymbol name="message.fill" size={36} color={colors.border} />
