@@ -551,6 +551,7 @@ function EventCard({
   );
   const isPast = Date.parse(`${event.date}T23:59:59`) < Date.now();
   const cardMuted = locked || isPast;
+  const cardTitle = event.title?.trim() || event.restaurantName?.trim() || "イベント";
 
   const formatDate = (dateStr: string) => {
     const d = new Date(dateStr);
@@ -584,7 +585,7 @@ function EventCard({
         borderWidth: 1,
         borderColor: colors.border,
         flexDirection: "row",
-        minHeight: 158,
+        height: 150,
         opacity: cardMuted ? 0.56 : 1,
       }}
     >
@@ -672,7 +673,7 @@ function EventCard({
           </View>
         ) : null}
       </View>
-      <View style={{ flex: 1, paddingHorizontal: 11, paddingVertical: 9 }}>
+      <View style={{ flex: 1, paddingHorizontal: 11, paddingVertical: 9, justifyContent: "space-between" }}>
         <View
           style={{
             flexDirection: "row",
@@ -711,16 +712,16 @@ function EventCard({
           </View>
         </View>
         <Text
-          numberOfLines={2}
+          numberOfLines={1}
+          ellipsizeMode="tail"
           style={{
             fontSize: 14,
             lineHeight: 19,
-            minHeight: event.eventType === "gourmet" ? 38 : undefined,
             fontWeight: "900",
             color: colors.foreground,
           }}
         >
-          {displayEventTitle(event.title)}
+          {displayEventTitle(cardTitle)}
         </Text>
         {locked ? (
           <Text
@@ -737,20 +738,6 @@ function EventCard({
         ) : null}
         {!locked ? (
           <>
-            {event.eventType !== "gourmet" && event.restaurantName && event.restaurantName !== event.title ? (
-              <Text
-                numberOfLines={1}
-                style={{
-                  fontSize: 11,
-                  lineHeight: 16,
-                  fontWeight: "700",
-                  color: colors.foreground,
-                  marginTop: 3,
-                }}
-              >
-                {event.restaurantName}
-              </Text>
-            ) : null}
             <Text
               numberOfLines={1}
               style={{
