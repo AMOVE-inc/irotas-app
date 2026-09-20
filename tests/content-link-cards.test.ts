@@ -18,6 +18,7 @@ describe("content link cards", () => {
   it("uses a nearby restaurant name for a Tabelog link when no page metadata is available", () => {
     const cards = contentLinkCards("Bistro yen 050-3595-0835 東京都中央区日本橋蛎殻町6-7\nhttps://tabelog.com/tokyo/A1302/A130203/13279853/");
     expect(cards[0].title).toBe("Bistro yen");
+    expect(cards[0].imageUrl).toMatch(/^https:\/\/tblg\.k-img\.com\//);
   });
 
   it("uses a separate restaurant name for each link in a list", () => {

@@ -8,10 +8,16 @@ export interface ImportedLinkPreview {
 
 // These three archived Discord embeds have confirmed public OG thumbnails. The
 // source export kept their text but discarded Discord's original image fields.
-const archivedTabelogImages: Record<string, string> = {
+export const archivedTabelogImages: Record<string, string> = {
   "https://tabelog.com/tokyo/A1313/A131303/13003007/": "https://tblg.k-img.com/resize/640x640c/restaurant/images/Rvw/70016/70016263.jpg?token=77e8c5d&api=v2",
   "https://tabelog.com/tokyo/A1313/A131303/13194455/": "https://tblg.k-img.com/resize/640x640c/restaurant/images/Rvw/365479/addc380ea6d3f6df73a213fe10ede31d.jpg?token=c8d2d8d&api=v2",
   "https://tabelog.com/tokyo/A1313/A131303/13265598/": "https://tblg.k-img.com/resize/640x640c/restaurant/images/Rvw/268498/b8e7104115a1f496aa6a514a9076a892.jpg?token=dbb8198&api=v2",
+  "https://tabelog.com/tokyo/A1302/A130204/13297159/": "https://tblg.k-img.com/resize/640x640c/restaurant/images/Rvw/254433/3e5906bc72e2e57a36b7aa4abf13e993.jpg?token=4898f5f&api=v2",
+  "https://tabelog.com/tokyo/A1302/A130204/13160351/": "https://tblg.k-img.com/resize/640x640c/restaurant/images/Rvw/221916/9e22b8521ca1d0eba258af29f73a384b.jpg?token=107ebee&api=v2",
+  "https://tabelog.com/tokyo/A1302/A130202/13310410/": "https://tblg.k-img.com/resize/640x640c/restaurant/images/Rvw/326821/7a9be3e3be9c8019cba090d3b81f9055.jpg?token=21cf704&api=v2",
+  "https://tabelog.com/tokyo/A1302/A130202/13284333/": "https://tblg.k-img.com/resize/640x640c/restaurant/images/Rvw/204066/0bffccb43a3f0e766a130eba90f60cf7.jpg?token=202f7c4&api=v2",
+  "https://tabelog.com/tokyo/A1302/A130203/13279853/": "https://tblg.k-img.com/resize/640x640c/restaurant/images/Rvw/284442/8494a3496700b65a5dc30941a3184717.jpg?token=9460dfa&api=v2",
+  "https://tabelog.com/tokyo/A1302/A130203/13246794/": "https://tblg.k-img.com/resize/640x640c/restaurant/images/Rvw/246118/96c591e20032b99ce9f5cf3b286bea6c.jpg?token=f2197a9&api=v2",
 };
 
 const LINK = /https:\/\/(?:maps\.app\.goo\.gl|(?:www\.)?google\.[^\s/]+\/maps|(?:www\.)?tabelog\.com)\/[^\s<>]+/gi;
