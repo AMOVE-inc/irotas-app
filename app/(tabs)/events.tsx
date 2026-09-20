@@ -775,7 +775,7 @@ function EventCard({
                 {discordConfirmedCount !== null ? `${discordConfirmedCount}名/${discordEventDisplayCapacity(event)}名` : isDiscordRecruitmentOpen(event) ? "参加者はDiscordで確定" : event.capacityMode ? `募集人数 ${event.capacityMode === "undecided" ? "未定" : "上限なし"} ${event.status === "open" ? "募集中" : ""}` : `${remainingCapacity}名/${reservationCapacity === 0 ? "未定" : `${reservationCapacity}名`} ${event.status === "open" ? "募集中" : ""}`}
               </Text>
             </View>
-            <View
+            {(event.eventType === "official" && event.selectionMethod || isApplied) ? <View
               style={{
                 flexDirection: "row",
                 alignItems: "center",
@@ -810,7 +810,7 @@ function EventCard({
                   申込中
                 </Text>
               ) : null}
-            </View>
+            </View> : null}
           </>
         ) : null}
         <View

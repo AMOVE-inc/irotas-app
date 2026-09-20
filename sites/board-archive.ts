@@ -195,10 +195,15 @@ export async function handleBoardArchiveRequest(
     pinned: number; data_json: string; updated_at: string; deleted_at: string | null;
   }>();
   const deletedIds = new Set((saved.results ?? []).filter((row) => row.deleted_at).map((row) => row.id));
+  const appCommentDates = await env.DB.prepare(`SELECT thread_id, MAX(created_at) AS last_comment_at
+    FROM board_comments WHERE thread_id LIKE 'discord-board-%' AND deleted_at IS NULL GROUP BY thread_id`)
+    .all<{ thread_id: string; last_comment_at: string }>();
+  const latestAppCommentAt = new Map((appCommentDates.results ?? []).map((row) => [row.thread_id, row.last_comment_at]));
   const threads = filtered.threads
     .filter((thread) => !deletedIds.has(thread.id))
     .map((thread) => ({
       ...thread,
+      lastActivityAt: latestAppCommentAt.get(thread.id),
       viewerCanManage: canManageArchivedThread(
         thread.authorId,
         viewerIdentity?.discord_user_id,

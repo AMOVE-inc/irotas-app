@@ -24,6 +24,7 @@ export interface RawDiscordBoardRecord {
 export interface RawDiscordBoardThread extends RawDiscordBoardRecord {
   category: string;
   title: string;
+  lastActivityAt?: string;
   viewerCanManage?: boolean;
   selfIntroduction?: BoardThread["selfIntroduction"];
   mealReport?: BoardThread["mealReport"];
@@ -205,7 +206,8 @@ export function parseDiscordBoardArchive(archive: RawDiscordBoardArchive, direct
       category,
       commentCount: threadComments.length,
       // 募集状態などの編集日時ではなく、最後のコメントを活動日時とする。
-      lastUpdated: threadComments.at(-1)?.createdAt ?? record.createdAt,
+      lastUpdated: [record.lastActivityAt, threadComments.at(-1)?.createdAt, record.createdAt].filter((value): value is string => Boolean(value)).sort().at(-1)!,
+      lastCommentAt: [record.lastActivityAt, threadComments.at(-1)?.createdAt].filter((value): value is string => Boolean(value)).sort().at(-1),
       preview: override?.content ?? preview,
       importedLinkPreviews: override ? undefined : extracted.previews.length ? extracted.previews : undefined,
       isRecruiting: recruitmentStatus === "open",

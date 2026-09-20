@@ -237,6 +237,7 @@ export interface BoardThread {
   category: string;
   commentCount: number;
   lastUpdated: string;
+  lastCommentAt?: string;
   preview: string;
   importedLinkPreviews?: import("../lib/discord-link-preview").ImportedLinkPreview[];
   isRecruiting: boolean; // 参加者募集中かどうか

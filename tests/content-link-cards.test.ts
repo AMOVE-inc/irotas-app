@@ -14,4 +14,14 @@ describe("content link cards", () => {
     ]);
     expect(cards).toMatchObject([{ provider: "example.com", title: "おすすめのお店" }]);
   });
+
+  it("uses a nearby restaurant name for a Tabelog link when no page metadata is available", () => {
+    const cards = contentLinkCards("Bistro yen 050-3595-0835 東京都中央区日本橋蛎殻町6-7\nhttps://tabelog.com/tokyo/A1302/A130203/13279853/");
+    expect(cards[0].title).toBe("Bistro yen");
+  });
+
+  it("uses a separate restaurant name for each link in a list", () => {
+    const cards = contentLinkCards("魚三酒場 富岡店\n03-3641-8071\n東京都江東区富岡1-5-4\nhttps://tabelog.com/tokyo/A1313/A131303/13003007/\n\nトラットリア ブカ マッシモ\n03-5809-9022\n東京都江東区富岡1-24-11\nhttps://tabelog.com/tokyo/A1313/A131303/13194455/");
+    expect(cards.map((card) => card.title)).toEqual(["魚三酒場 富岡店", "トラットリア ブカ マッシモ"]);
+  });
 });

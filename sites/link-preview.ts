@@ -4,7 +4,7 @@ async function fetchAllowedPage(initialUrl: URL): Promise<Response | null> {
   let target = initialUrl;
   for (let hop = 0; hop < 4; hop++) {
     if (target.protocol !== "https:" || !ALLOWED_HOSTS.test(target.hostname) || target.username || target.password) return null;
-    const response = await fetch(target, { redirect: "manual", headers: { accept: "text/html", "user-agent": "Mozilla/5.0 (compatible; IROPlusPreview/1.0)" } });
+    const response = await fetch(target, { redirect: "manual", headers: { accept: "text/html", "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36" } });
     if (response.status >= 300 && response.status < 400) {
       const location = response.headers.get("location");
       if (!location) return null;
