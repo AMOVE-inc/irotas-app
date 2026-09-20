@@ -585,7 +585,7 @@ function EventCard({
         borderWidth: 1,
         borderColor: colors.border,
         flexDirection: "row",
-        height: 150,
+        height: 136,
         opacity: cardMuted ? 0.56 : 1,
       }}
     >
@@ -673,12 +673,12 @@ function EventCard({
           </View>
         ) : null}
       </View>
-      <View style={{ flex: 1, paddingHorizontal: 11, paddingVertical: 9, justifyContent: "space-between" }}>
+      <View style={{ flex: 1, paddingHorizontal: 11, paddingVertical: 8 }}>
         <View
           style={{
             flexDirection: "row",
             alignItems: "center",
-            marginBottom: 5,
+            marginBottom: 4,
           }}
         >
           <Text
@@ -753,7 +753,7 @@ function EventCard({
               style={{
                 flexDirection: "row",
                 alignItems: "center",
-                marginTop: 5,
+                marginTop: 2,
               }}
             >
               <Text
@@ -768,7 +768,7 @@ function EventCard({
                 alignItems: "center",
                 flexWrap: "wrap",
                 gap: 5,
-                marginTop: 5,
+                marginTop: 2,
               }}
             >
               {event.eventType === "official" && event.selectionMethod ? (
@@ -801,7 +801,7 @@ function EventCard({
           </>
         ) : null}
         <View
-          style={{ flexDirection: "row", alignItems: "center", marginTop: 5 }}
+          style={{ flexDirection: "row", alignItems: "center", marginTop: 6 }}
         >
           {!locked ? (
             <>

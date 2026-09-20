@@ -1,3 +1,5 @@
+import { archivedTabelogImages, archivedTabelogTitles, canonicalTabelogUrl } from "../lib/discord-link-preview";
+
 const ALLOWED_HOSTS = /(^|\.)(tabelog\.com|maps\.app\.goo\.gl|goo\.gl|google\.(?:[a-z]{2,3}|com\.[a-z]{2}|co\.[a-z]{2}))$/i;
 
 async function fetchAllowedPage(initialUrl: URL): Promise<Response | null> {
@@ -73,6 +75,11 @@ export async function handleLinkPreviewRequest(request: Request, env: PreviewEnv
       if (target.protocol === "https:" && ALLOWED_HOSTS.test(target.hostname)) {
         const response = await fetchAllowedPage(target);
         if (response?.ok && response.headers.get("content-type")?.includes("text/html")) metadata = pagePreviewMetadata((await response.text()).slice(0, 1_500_000), response.url || target.toString());
+        const knownUrl = canonicalTabelogUrl(target.toString());
+        if (knownUrl) {
+          metadata.title ??= archivedTabelogTitles[knownUrl] ?? null;
+          metadata.imageUrl ??= archivedTabelogImages[knownUrl] ?? null;
+        }
       }
     }
     metadata.imageUrl ??= await placesImage(requestUrl.searchParams.get("query") ?? "", env, requestUrl.origin);

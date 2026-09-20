@@ -21,6 +21,12 @@ describe("content link cards", () => {
     expect(cards[0].imageUrl).toMatch(/^https:\/\/tblg\.k-img\.com\//);
   });
 
+  it("shows the known restaurant name for a bare Tabelog link in chat", () => {
+    const cards = contentLinkCards("https://tabelog.com/tokyo/A1302/A130202/13284333/?ref=chat");
+    expect(cards[0]).toMatchObject({ title: "Fruits Bistro SABLIER", provider: "食べログ" });
+    expect(cards[0].imageUrl).toMatch(/^https:\/\/tblg\.k-img\.com\//);
+  });
+
   it("uses a separate restaurant name for each link in a list", () => {
     const cards = contentLinkCards("魚三酒場 富岡店\n03-3641-8071\n東京都江東区富岡1-5-4\nhttps://tabelog.com/tokyo/A1313/A131303/13003007/\n\nトラットリア ブカ マッシモ\n03-5809-9022\n東京都江東区富岡1-24-11\nhttps://tabelog.com/tokyo/A1313/A131303/13194455/");
     expect(cards.map((card) => card.title)).toEqual(["魚三酒場 富岡店", "トラットリア ブカ マッシモ"]);

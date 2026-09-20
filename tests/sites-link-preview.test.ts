@@ -27,4 +27,10 @@ describe("link preview fetch", () => {
     const response = await handleLinkPreviewRequest(new Request("https://app.example/api/link-preview?url=https%3A%2F%2Ftabelog.com%2Ftokyo%2FA1303%2FA130301%2F13296149%2F"), {});
     expect(await response?.json()).toEqual({ title: "Henderson (神泉/ビストロ)", description: null, imageUrl: "https://tblg.k-img.com/henderson.jpg" });
   });
+
+  it("uses a known restaurant name when Tabelog blocks metadata requests", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => new Response(null, { status: 403 })));
+    const response = await handleLinkPreviewRequest(new Request("https://app.example/api/link-preview?url=https%3A%2F%2Ftabelog.com%2Ftokyo%2FA1302%2FA130202%2F13284333%2F"), {});
+    expect(await response?.json()).toMatchObject({ title: "Fruits Bistro SABLIER" });
+  });
 });

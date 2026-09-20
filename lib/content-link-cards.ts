@@ -1,5 +1,5 @@
 import { tokenizeRichTextLinks } from "./discord-rich-text";
-import { archivedTabelogImages, type ImportedLinkPreview } from "./discord-link-preview";
+import { archivedTabelogImages, archivedTabelogTitles, canonicalTabelogUrl, type ImportedLinkPreview } from "./discord-link-preview";
 
 function nearbyRestaurantName(content: string, urlStart: number): string {
   const lines = content.slice(Math.max(0, urlStart - 350), urlStart).split(/\r?\n/).slice(-5).reverse();
@@ -29,7 +29,9 @@ export function contentLinkCards(content: string, existing: readonly ImportedLin
       : url.hostname.replace(/^www\./i, "");
     const explicitTitle = token.label !== token.url ? token.label : "";
     const nearbyName = provider === "食べログ" && urlStart >= 0 ? nearbyRestaurantName(content, urlStart) : "";
-    cards.push({ url: url.href, provider, title: explicitTitle || nearbyName || `${provider}のリンクを開く`, description: explicitTitle || nearbyName ? url.hostname : url.href, imageUrl: archivedTabelogImages[url.href] });
+    const knownUrl = provider === "食べログ" ? canonicalTabelogUrl(url.href) : null;
+    const title = explicitTitle || nearbyName || (knownUrl ? archivedTabelogTitles[knownUrl] : "") || `${provider}のリンクを開く`;
+    cards.push({ url: url.href, provider, title, description: title.endsWith("のリンクを開く") ? url.href : url.hostname, imageUrl: knownUrl ? archivedTabelogImages[knownUrl] : undefined });
   }
   return cards;
 }

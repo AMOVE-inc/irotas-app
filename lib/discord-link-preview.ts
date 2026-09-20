@@ -20,6 +20,28 @@ export const archivedTabelogImages: Record<string, string> = {
   "https://tabelog.com/tokyo/A1302/A130203/13246794/": "https://tblg.k-img.com/resize/640x640c/restaurant/images/Rvw/246118/96c591e20032b99ce9f5cf3b286bea6c.jpg?token=f2197a9&api=v2",
 };
 
+// Known restaurant names from imported community links. Tabelog can block
+// server-side metadata requests, so these names also cover bare links in chat.
+export const archivedTabelogTitles: Record<string, string> = {
+  "https://tabelog.com/tokyo/A1313/A131303/13003007/": "魚三酒場 富岡店",
+  "https://tabelog.com/tokyo/A1313/A131303/13194455/": "トラットリア ブカ マッシモ",
+  "https://tabelog.com/tokyo/A1313/A131303/13265598/": "Risosteria Trentatre",
+  "https://tabelog.com/tokyo/A1302/A130204/13297159/": "Papier",
+  "https://tabelog.com/tokyo/A1302/A130204/13160351/": "イレール人形町",
+  "https://tabelog.com/tokyo/A1302/A130202/13310410/": "ラペティ",
+  "https://tabelog.com/tokyo/A1302/A130202/13284333/": "Fruits Bistro SABLIER",
+  "https://tabelog.com/tokyo/A1302/A130203/13279853/": "Bistro yen",
+  "https://tabelog.com/tokyo/A1302/A130203/13246794/": "Neki",
+};
+
+export function canonicalTabelogUrl(rawUrl: string): string | null {
+  try {
+    const url = new URL(rawUrl);
+    if (url.protocol !== "https:" || !/(^|\.)tabelog\.com$/i.test(url.hostname)) return null;
+    return `https://tabelog.com${url.pathname.replace(/\/*$/, "/")}`;
+  } catch { return null; }
+}
+
 const LINK = /https:\/\/(?:maps\.app\.goo\.gl|(?:www\.)?google\.[^\s/]+\/maps|(?:www\.)?tabelog\.com)\/[^\s<>]+/gi;
 const TABELOG_DETAIL = /^★[★☆]+\d(?:\.\d+)?\s+■/;
 const MAPS_DETAIL = /^(.+?)\s+·\s+[\d.]+★(?:\([\d,]+\))?\s+·\s+(.+)$/;
