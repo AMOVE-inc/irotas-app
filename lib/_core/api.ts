@@ -1556,6 +1556,7 @@ export type MemberOnboardingRecord = {
     nextFollowUpAt: string | null;
     ownerName: string;
     issueNote: string;
+    excludedFromFollowUp: boolean;
   };
 };
 
@@ -1573,6 +1574,7 @@ export async function saveMemberOnboardingFollowUp(input: {
   nextFollowUpAt: string | null;
   ownerName: string;
   issueNote: string;
+  excludedFromFollowUp: boolean;
 }) {
   return apiCall<{ success: true }>("/api/admin/member-onboarding/follow-up", {
     method: "PUT", body: JSON.stringify(input),
