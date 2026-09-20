@@ -374,6 +374,8 @@ export default function ChatScreen() {
   const linkedMessageScrolled = useRef<string | null>(null);
   const initiallyPositionedChat = useRef<string | null>(null);
   const positionInitialMessagesRef = useRef<(() => void) | null>(null);
+  const openingLatestScrollUntil = useRef(0);
+  const lastAutomaticScrollTop = useRef(0);
   const highlightTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [highlightedMessageId, setHighlightedMessageId] = useState<string | null>(null);
   const inputRef = useRef<TextInput>(null);
@@ -517,13 +519,25 @@ export default function ChatScreen() {
     const positionKey = `${id}:${effectiveUnreadCount}`;
     if (initiallyPositionedChat.current === positionKey) return;
     linkedScrollRetry.current = 0;
+    openingLatestScrollUntil.current = !introductionChat && effectiveUnreadCount === 0 ? Date.now() + 2500 : 0;
+    const keepLatestInView = () => {
+      if (Platform.OS !== "web" || Date.now() > openingLatestScrollUntil.current) return;
+      const scrollNode = flatListRef.current?.getScrollableNode() as HTMLElement | null | undefined;
+      if (!scrollNode) return;
+      scrollNode.scrollTop = scrollNode.scrollHeight;
+      lastAutomaticScrollTop.current = scrollNode.scrollTop;
+    };
     const positionMessages = () => {
-      if (initiallyPositionedChat.current === positionKey) return;
+      if (initiallyPositionedChat.current === positionKey) {
+        keepLatestInView();
+        return;
+      }
       if (Platform.OS === "web" && !introductionChat) {
         const scrollNode = flatListRef.current?.getScrollableNode() as HTMLElement | null | undefined;
         if (scrollNode) {
           if (effectiveUnreadCount === 0) {
             scrollNode.scrollTop = scrollNode.scrollHeight;
+            lastAutomaticScrollTop.current = scrollNode.scrollTop;
             initiallyPositionedChat.current = positionKey;
             return;
           }
@@ -540,7 +554,7 @@ export default function ChatScreen() {
     };
     positionInitialMessagesRef.current = positionMessages;
     const frame = requestAnimationFrame(positionMessages);
-    const timers = [80, 250, 600].map((delay) => setTimeout(positionMessages, delay));
+    const timers = [80, 250, 600, 1200, 2400].map((delay) => setTimeout(positionMessages, delay));
     return () => {
       positionInitialMessagesRef.current = null;
       cancelAnimationFrame(frame);
@@ -598,6 +612,8 @@ export default function ChatScreen() {
     setMessagesHydrated(false);
     initiallyPositionedChat.current = null;
     positionInitialMessagesRef.current = null;
+    openingLatestScrollUntil.current = 0;
+    lastAutomaticScrollTop.current = 0;
     setClubAccessDenied(false);
     if (id.startsWith("club-chat-")) setMessages([]);
     setIntroductionHydrated(id !== "board-introduction");
@@ -1088,8 +1104,12 @@ export default function ChatScreen() {
           contentContainerStyle={{ paddingVertical: 16, paddingBottom: 120, flexGrow: 1 }}
           showsVerticalScrollIndicator={false}
           onContentSizeChange={() => requestAnimationFrame(() => positionInitialMessagesRef.current?.())}
+          onScrollBeginDrag={() => { openingLatestScrollUntil.current = 0; }}
           onScroll={(event) => {
             const { contentOffset, contentSize, layoutMeasurement } = event.nativeEvent;
+            if (openingLatestScrollUntil.current > Date.now() && contentOffset.y < lastAutomaticScrollTop.current - 30) {
+              openingLatestScrollUntil.current = 0;
+            }
             setIsNearLatest(introductionChat ? contentOffset.y <= 80 : contentOffset.y + layoutMeasurement.height >= contentSize.height - 80);
           }}
           scrollEventThrottle={80}
