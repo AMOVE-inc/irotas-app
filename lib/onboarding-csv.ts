@@ -1,7 +1,7 @@
 import type { MemberOnboardingRecord } from "@/lib/_core/api";
 
 export function isPendingOnboarding(record: MemberOnboardingRecord) {
-  return record.loginStatus !== "logged_in" || record.linkIssue;
+  return !record.followUp.excludedFromFollowUp && (record.loginStatus !== "logged_in" || record.linkIssue);
 }
 
 function csvCell(value: string | number | null | undefined) {

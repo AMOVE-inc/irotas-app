@@ -27,6 +27,7 @@ type OnboardingRow = {
   next_follow_up_at: string | null;
   owner_name: string | null;
   issue_note: string | null;
+  excluded_from_follow_up: number | null;
 };
 
 function json(body: unknown, status = 200) {
@@ -83,6 +84,7 @@ function memberPayload(row: OnboardingRow) {
       nextFollowUpAt: row.next_follow_up_at,
       ownerName: row.owner_name ?? "",
       issueNote: row.issue_note ?? "",
+      excludedFromFollowUp: row.excluded_from_follow_up === 1,
     },
   };
 }
@@ -108,7 +110,7 @@ export async function handleMemberOnboardingRequest(request: Request, env: Sites
               WHERE LOWER(TRIM(c.email)) = LOWER(TRIM(s.billing_email))
                 AND c.purpose = 'initial_setup') AS code_issued_at,
              f.outreach_status, f.sent_at, f.last_contact_at, f.next_follow_up_at,
-             f.owner_name, f.issue_note
+             f.owner_name, f.issue_note, f.excluded_from_follow_up
       FROM member_subscriptions s
       LEFT JOIN members m ON m.id = s.member_id OR (s.member_id IS NULL AND LOWER(TRIM(m.email)) = LOWER(TRIM(s.billing_email)))
       LEFT JOIN member_onboarding_followups f ON f.billing_email = LOWER(TRIM(s.billing_email))
@@ -132,9 +134,10 @@ export async function handleMemberOnboardingRequest(request: Request, env: Sites
   const nextFollowUpAt = optionalDate(input.nextFollowUpAt);
   const ownerName = typeof input.ownerName === "string" ? input.ownerName.trim() : "";
   const issueNote = typeof input.issueNote === "string" ? input.issueNote.trim() : "";
+  const excludedFromFollowUp = input.excludedFromFollowUp;
   if (!/^\S+@\S+\.\S+$/.test(email) || !["not_sent", "sent", "follow_up"].includes(String(status)) ||
       sentAt === undefined || lastContactAt === undefined || nextFollowUpAt === undefined ||
-      ownerName.length > 80 || issueNote.length > 1000)
+      ownerName.length > 80 || issueNote.length > 1000 || typeof excludedFromFollowUp !== "boolean")
     return json({ error: "入力内容を確認してください" }, 400);
   const eligible = await env.DB.prepare(`SELECT 1 AS found FROM member_subscriptions
     WHERE LOWER(TRIM(billing_email)) = ? AND access_status IN ('active', 'grace')
@@ -142,12 +145,13 @@ export async function handleMemberOnboardingRequest(request: Request, env: Sites
   if (!eligible) return json({ error: "対象の有効なサブスクが見つかりません" }, 404);
   const now = new Date().toISOString();
   await env.DB.prepare(`INSERT INTO member_onboarding_followups
-    (billing_email, outreach_status, sent_at, last_contact_at, next_follow_up_at, owner_name, issue_note, updated_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    (billing_email, outreach_status, sent_at, last_contact_at, next_follow_up_at, owner_name, issue_note, excluded_from_follow_up, updated_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     ON CONFLICT(billing_email) DO UPDATE SET
       outreach_status = excluded.outreach_status, sent_at = excluded.sent_at,
       last_contact_at = excluded.last_contact_at, next_follow_up_at = excluded.next_follow_up_at,
-      owner_name = excluded.owner_name, issue_note = excluded.issue_note, updated_at = excluded.updated_at`)
-    .bind(email, status, sentAt, lastContactAt, nextFollowUpAt, ownerName, issueNote, now).run();
+      owner_name = excluded.owner_name, issue_note = excluded.issue_note,
+      excluded_from_follow_up = excluded.excluded_from_follow_up, updated_at = excluded.updated_at`)
+    .bind(email, status, sentAt, lastContactAt, nextFollowUpAt, ownerName, issueNote, excludedFromFollowUp ? 1 : 0, now).run();
   return json({ success: true });
 }

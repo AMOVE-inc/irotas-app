@@ -8,7 +8,7 @@ import {
   type MemberOnboardingRecord,
 } from "@/lib/_core/api";
 
-type Filter = "pending" | "not_sent" | "attention" | "done" | "all";
+type Filter = "pending" | "not_sent" | "attention" | "done" | "excluded" | "all";
 type FollowUp = MemberOnboardingRecord["followUp"];
 
 const ink = "#25232b";
@@ -86,14 +86,16 @@ export function AdminOnboardingProgress() {
   const done = records.filter((record) => record.loginStatus === "logged_in" && !record.linkIssue).length;
   const attention = records.filter(needsAttention).length;
   const pending = records.filter(isPendingOnboarding).length;
-  const notSent = records.filter((record) => (record.loginStatus !== "logged_in" || record.linkIssue) && record.followUp.outreachStatus === "not_sent").length;
+  const notSent = records.filter((record) => isPendingOnboarding(record) && record.followUp.outreachStatus === "not_sent").length;
+  const excluded = records.filter((record) => record.followUp.excludedFromFollowUp).length;
   const visible = useMemo(() => {
     const normalized = query.trim().toLowerCase();
     return records.filter((record) => {
-      if (filter === "pending" && record.loginStatus === "logged_in" && !record.linkIssue) return false;
-      if (filter === "not_sent" && (record.loginStatus === "logged_in" && !record.linkIssue || record.followUp.outreachStatus !== "not_sent")) return false;
+      if (filter === "pending" && !isPendingOnboarding(record)) return false;
+      if (filter === "not_sent" && (!isPendingOnboarding(record) || record.followUp.outreachStatus !== "not_sent")) return false;
       if (filter === "done" && (record.loginStatus !== "logged_in" || record.linkIssue)) return false;
       if (filter === "attention" && !needsAttention(record)) return false;
+      if (filter === "excluded" && !record.followUp.excludedFromFollowUp) return false;
       return !normalized || record.billingEmail.toLowerCase().includes(normalized) || (record.displayName ?? "").toLowerCase().includes(normalized);
     }).sort((a, b) => {
       const aDate = a.followUp.nextFollowUpAt ?? "9999-12-31";
@@ -108,6 +110,7 @@ export function AdminOnboardingProgress() {
     try {
       await saveMemberOnboardingFollowUp({ billingEmail: record.billingEmail, ...next });
       setRecords((previous) => previous.map((item) => item.billingEmail === record.billingEmail ? { ...item, followUp: next } : item));
+      if (next.excludedFromFollowUp) setFilter("excluded");
       setSelectedEmail(null);
       setDraft(null);
     } catch (cause) {
@@ -170,22 +173,23 @@ export function AdminOnboardingProgress() {
     <Text style={{ fontSize: 20, fontWeight: "800", color: ink }}>初回ログイン進捗</Text>
     <Text style={{ fontSize: 13, lineHeight: 20, color: muted }}>サブスク有効・猶予中の契約メールをすべて表示します。ログイン完了は実際のログイン記録で判定します。契約と会員の紐付けに問題がある場合も一覧に残します。画面を開いている間は30秒ごとに更新します。</Text>
     <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
-      {[["対象契約", records.length], ["ログイン済み", done], ["未完了・要確認", pending], ["案内未記録", notSent], ["紐付け等の要確認", attention]].map(([label, count]) => <View key={label} style={{ minWidth: 125, flexGrow: 1, padding: 12, borderRadius: 12, borderWidth: 1, borderColor: border, backgroundColor: "#fff" }}>
+      {[["対象契約", records.length], ["ログイン済み", done], ["フォロー対象", pending], ["案内未記録", notSent], ["フォロー除外", excluded], ["紐付け等の要確認", attention]].map(([label, count]) => <View key={label} style={{ minWidth: 125, flexGrow: 1, padding: 12, borderRadius: 12, borderWidth: 1, borderColor: border, backgroundColor: "#fff" }}>
         <Text style={{ color: muted, fontSize: 12 }}>{label}</Text><Text style={{ color: ink, fontSize: 24, fontWeight: "800" }}>{count}</Text>
       </View>)}
     </View>
     <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
-      {smallButton(`未完了 ${pending}`, () => setFilter("pending"), filter === "pending")}
+      {smallButton(`フォロー対象 ${pending}`, () => setFilter("pending"), filter === "pending")}
       {smallButton(`案内未記録 ${notSent}`, () => setFilter("not_sent"), filter === "not_sent")}
       {smallButton(`要確認 ${attention}`, () => setFilter("attention"), filter === "attention")}
       {smallButton(`完了 ${done}`, () => setFilter("done"), filter === "done")}
+      {smallButton(`フォロー除外 ${excluded}`, () => setFilter("excluded"), filter === "excluded")}
       {smallButton("すべて", () => setFilter("all"), filter === "all")}
     </View>
     <TextInput value={query} onChangeText={setQuery} placeholder="名前・メールアドレスで検索" autoCapitalize="none" style={{ borderWidth: 1, borderColor: border, borderRadius: 10, padding: 12, color: ink, backgroundColor: "#fff" }} />
     <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
       {smallButton("最新状態に更新", () => { void reload(true); })}
-      {smallButton("未完了者のメールをコピー", () => { void copyPendingEmails(); })}
-      {smallButton(downloading ? "CSVを準備中…" : "未完了者をCSVでダウンロード", () => { void downloadPendingCsv(); })}
+      {smallButton("フォロー対象のメールをコピー", () => { void copyPendingEmails(); })}
+      {smallButton(downloading ? "CSVを準備中…" : "フォロー対象をCSVでダウンロード", () => { void downloadPendingCsv(); })}
     </View>
     {loading && <ActivityIndicator color="#E8A0BF" />}
     {!!error && <Text style={{ color: "#bd3848" }}>{error}</Text>}
@@ -201,12 +205,14 @@ export function AdminOnboardingProgress() {
         <Text style={{ color: muted, fontSize: 12 }}>パスワード設定: {dateLabel(record.passwordSetAt)} / 最終ログイン: {dateLabel(record.lastSignedInAt)}</Text>
         {record.codeIssuedAt && record.loginStatus !== "logged_in" && <Text style={{ color: muted, fontSize: 12 }}>認証コード発行: {dateLabel(record.codeIssuedAt)}</Text>}
         <Text style={{ color: muted, fontSize: 12 }}>案内: {record.followUp.outreachStatus === "not_sent" ? "未記録" : record.followUp.outreachStatus === "sent" ? "案内済み" : "フォロー中"} / 次回: {record.followUp.nextFollowUpAt || "未設定"} / 担当: {record.followUp.ownerName || "未設定"}</Text>
+        {record.followUp.excludedFromFollowUp && <Text style={{ color: "#a33c44", fontSize: 12, fontWeight: "700" }}>フォローメール対象外</Text>}
         {!!record.followUp.issueNote && <Text style={{ color: muted, fontSize: 12 }}>メモ: {record.followUp.issueNote}</Text>}
         <Pressable onPress={() => { setSelectedEmail(selected ? null : record.billingEmail); setDraft(selected ? null : { ...record.followUp }); }} style={{ marginTop: 5, alignSelf: "flex-start", paddingVertical: 8, paddingHorizontal: 12, backgroundColor: "#f6eef3", borderRadius: 9 }}>
           <Text style={{ color: "#9b4e72", fontWeight: "700" }}>連絡状況を{selected ? "閉じる" : "記録・編集"}</Text>
         </Pressable>
         {selected && draft && <View style={{ marginTop: 8, gap: 8 }}>
           <Text style={{ color: ink, fontWeight: "700" }}>連絡状況</Text>
+          {smallButton(draft.excludedFromFollowUp ? "フォロー対象外（解除する）" : "フォローメール対象から除外", () => setDraft({ ...draft, excludedFromFollowUp: !draft.excludedFromFollowUp, nextFollowUpAt: !draft.excludedFromFollowUp ? null : draft.nextFollowUpAt }), draft.excludedFromFollowUp)}
           <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
             {(["not_sent", "sent", "follow_up"] as const).map((status) => smallButton(({ not_sent: "未案内", sent: "案内済み", follow_up: "フォロー中" })[status], () => setDraft({ ...draft, outreachStatus: status, sentAt: status === "not_sent" ? null : draft.sentAt ?? new Date().toISOString(), lastContactAt: status === "follow_up" ? new Date().toISOString() : draft.lastContactAt }), draft.outreachStatus === status))}
           </View>

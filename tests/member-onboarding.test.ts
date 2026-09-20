@@ -48,6 +48,7 @@ describe("pending onboarding CSV", () => {
       nextFollowUpAt: null,
       ownerName: "",
       issueNote: '確認,"要連絡"',
+      excludedFromFollowUp: false,
     },
   };
 
@@ -58,5 +59,15 @@ describe("pending onboarding CSV", () => {
     expect(result.csv).not.toContain("done@example.com");
     expect(result.csv).toContain('"\'=危険な名前"');
     expect(result.csv).toContain('"確認,""要連絡"""');
+  });
+
+  it("excludes opted-out members from follow-up exports", () => {
+    const result = buildPendingOnboardingCsv([record, {
+      ...record,
+      billingEmail: "withdrawn@example.com",
+      followUp: { ...record.followUp, excludedFromFollowUp: true },
+    }]);
+    expect(result.count).toBe(1);
+    expect(result.csv).not.toContain("withdrawn@example.com");
   });
 });
