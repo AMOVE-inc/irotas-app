@@ -1346,18 +1346,6 @@ function ThreadDetailModal({
             </View>
           ) : null}
 
-          {!thread.mealReport && (
-            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 7, marginBottom: 16 }}>
-              {(thread.selfIntroduction ? ["🎉"] : Array.from(new Set(["❤️", ...Object.keys(threadReactions)]))).map((emoji) => {
-                const memberIds = threadReactions[emoji] ?? [];
-                const selected = memberIds.includes(viewerMemberId);
-                return <Pressable key={emoji} onPress={() => { if (reactionLongPress.current) { reactionLongPress.current = false; return; } handleThreadReaction(emoji); }} onLongPress={() => { reactionLongPress.current = true; setReactionDetails({ emoji, memberIds }); }} delayLongPress={350} accessibilityLabel={boardReactionAccessibilityLabel(emoji)} style={{ flexDirection: "row", alignItems: "center", backgroundColor: selected ? "#F0E7F7" : colors.surface, borderWidth: 1, borderColor: selected ? "#7D6A92" : colors.border, borderRadius: 16, paddingHorizontal: 10, paddingVertical: 5 }}><BoardReactionIcon emoji={emoji} size={22} />{memberIds.length > 0 ? <Text style={{ fontSize: 11, fontWeight: "800", color: colors.muted, marginLeft: 4 }}>{memberIds.length}</Text> : null}</Pressable>;
-              })}
-              <Pressable accessibilityLabel="別の絵文字を追加" onPress={() => setShowThreadEmojiPicker((current) => !current)} style={{ width: 34, height: 31, borderRadius: 16, alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface }}><IconSymbol name="plus" size={16} color={colors.muted} /></Pressable>
-              {showThreadEmojiPicker ? <View style={{ width: "100%", flexDirection: "row", flexWrap: "wrap", gap: 7, paddingTop: 3 }}>{THREAD_REACTION_EMOJIS.map((emoji) => <Pressable key={emoji} onPress={() => { handleThreadReaction(emoji); setShowThreadEmojiPicker(false); }} style={{ width: 38, height: 34, borderRadius: 17, alignItems: "center", justifyContent: "center", backgroundColor: "#F4F1F3" }}><Text style={{ fontSize: 19 }}>{emoji}</Text></Pressable>)}</View> : null}
-            </View>
-          )}
-
           {/* 画像 */}
           {thread.images && thread.images.length > 0 && (
             <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 20 }}>
@@ -1368,26 +1356,26 @@ function ThreadDetailModal({
                   uri={boardImageUri(uri)}
                   galleryUris={thread.images?.map(boardImageUri).filter((value): value is string => Boolean(value))}
                   galleryIndex={i}
-                  style={isContest
+                  style={isContest && thread.images!.length === 1
                     ? { width: "100%", aspectRatio: 1, borderRadius: 14, backgroundColor: colors.surface }
                     : thread.images!.length === 1
                       ? { width: "100%", maxWidth: 520, aspectRatio: 4 / 3, borderRadius: 14, backgroundColor: colors.surface }
-                      : { width: "48%", aspectRatio: 1, borderRadius: 12, backgroundColor: colors.surface }}
-                  contentFit="contain"
+                      : { width: "31.5%", aspectRatio: 1, borderRadius: 10, backgroundColor: colors.surface }}
+                  contentFit={thread.images!.length > 1 ? "cover" : "contain"}
                 />
               ))}
             </View>
           )}
           {thread.videos?.map((uri) => <View key={uri} style={{ marginBottom: 20 }}><BoardVideo uri={uri} /></View>)}
-          {thread.mealReport ? <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 7, marginBottom: 16 }}>
-            {Array.from(new Set(["❤️", ...Object.keys(threadReactions)])).map((emoji) => {
+          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 7, marginBottom: 16 }}>
+            {(thread.selfIntroduction ? ["🎉"] : Array.from(new Set(["❤️", ...Object.keys(threadReactions)]))).map((emoji) => {
               const memberIds = threadReactions[emoji] ?? [];
               const selected = memberIds.includes(viewerMemberId);
               return <Pressable key={emoji} onPress={() => { if (reactionLongPress.current) { reactionLongPress.current = false; return; } handleThreadReaction(emoji); }} onLongPress={() => { reactionLongPress.current = true; setReactionDetails({ emoji, memberIds }); }} delayLongPress={350} accessibilityLabel={boardReactionAccessibilityLabel(emoji)} style={{ flexDirection: "row", alignItems: "center", backgroundColor: selected ? "#F0E7F7" : colors.surface, borderWidth: 1, borderColor: selected ? "#7D6A92" : colors.border, borderRadius: 16, paddingHorizontal: 10, paddingVertical: 5 }}><BoardReactionIcon emoji={emoji} size={22} />{memberIds.length > 0 ? <Text style={{ fontSize: 11, fontWeight: "800", color: colors.muted, marginLeft: 4 }}>{memberIds.length}</Text> : null}</Pressable>;
             })}
             <Pressable accessibilityLabel="別の絵文字を追加" onPress={() => setShowThreadEmojiPicker((current) => !current)} style={{ width: 34, height: 31, borderRadius: 16, alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface }}><IconSymbol name="plus" size={16} color={colors.muted} /></Pressable>
             {showThreadEmojiPicker ? <View style={{ width: "100%", flexDirection: "row", flexWrap: "wrap", gap: 7, paddingTop: 3 }}>{THREAD_REACTION_EMOJIS.map((emoji) => <Pressable key={emoji} onPress={() => { handleThreadReaction(emoji); setShowThreadEmojiPicker(false); }} style={{ width: 38, height: 34, borderRadius: 17, alignItems: "center", justifyContent: "center", backgroundColor: "#F4F1F3" }}><Text style={{ fontSize: 19 }}>{emoji}</Text></Pressable>)}</View> : null}
-          </View> : null}
+          </View>
 
           {/* 募集中バナー（投稿者向け：チャット作成ボタン付き） */}
           {thread.isRecruiting && !recruitmentManaged && (
@@ -2732,6 +2720,7 @@ export default function BoardScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [archiveLoading, setArchiveLoading] = useState(true);
   const [sharedLoading, setSharedLoading] = useState(true);
+  const [categoryLoading, setCategoryLoading] = useState(false);
   const [selectedThread, setSelectedThread] = useState<BoardThread | null>(null);
   const [selectedThreadUnreadCommentIds, setSelectedThreadUnreadCommentIds] = useState<string[]>([]);
   const [selectedThreadIsUnread, setSelectedThreadIsUnread] = useState(false);
@@ -2905,12 +2894,15 @@ export default function BoardScreen() {
 
   useEffect(() => {
     if (!isThreadView || sharedLoading || !canAccessCategory(categories.find((item) => item.key === activeCategory) ?? { key: activeCategory, label: "部活動", group: "club", createdByAdmin: true })) return;
+    let active = true;
+    setCategoryLoading(true);
     void (async () => {
       try { await loadSharedBoardContent(activeCategory); } catch { /* Direct links can still load their thread. */ }
       if (threadParam && activeCategory === categoryParam) await loadSharedBoardContent(activeCategory, threadParam);
     })().catch(() => {
       // 権限または通信に失敗した場合は、取得済みの投稿を表示する。
-    });
+    }).finally(() => { if (active) setCategoryLoading(false); });
+    return () => { active = false; };
   }, [activeCategory, canAccessCategory, categories, categoryParam, isThreadView, loadSharedBoardContent, sharedLoading, threadParam]);
 
   // Keep the open thread list and its unread-comment badges current while the
@@ -3014,7 +3006,7 @@ export default function BoardScreen() {
     }
     return hasUnread ? "unread" : null;
   }, [allThreads, importedComments, postedAfterFirstSignIn, threadReadCounts, threadReadsHydrated, viewerMemberId, viewerMentionLabels]);
-  const boardLoading = Boolean(authUser) && (archiveLoading || sharedLoading);
+  const boardLoading = Boolean(authUser) && (archiveLoading || sharedLoading || categoryLoading);
   useEffect(() => {
     if (!needsInitialReadBaseline || boardLoading) return;
     const commentCounts = Object.fromEntries(Object.entries(importedComments).map(([threadId, comments]) => [threadId, comments.length]));

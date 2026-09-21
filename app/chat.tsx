@@ -124,12 +124,12 @@ function systemMessageText(content: string): string {
   return joined ? `${stripRankFromName(joined[1])}がチャットに参加しました` : text;
 }
 
-function ChatAttachmentImage({ uri, galleryUris, galleryIndex }: { uri: string; galleryUris: string[]; galleryIndex: number }) {
+function ChatAttachmentImage({ uri, galleryUris, galleryIndex, tiled = false }: { uri: string; galleryUris: string[]; galleryIndex: number; tiled?: boolean }) {
   const [size, setSize] = useState({ width: 220, height: 180 });
   return <ExpandableImage
     source={{ uri }} uri={uri} galleryUris={galleryUris} galleryIndex={galleryIndex}
-    style={{ width: size.width, height: size.height, backgroundColor: "rgba(0,0,0,0.05)" }}
-    contentFit="contain"
+    style={tiled ? { width: 108, height: 108, backgroundColor: "rgba(0,0,0,0.05)" } : { width: size.width, height: size.height, backgroundColor: "rgba(0,0,0,0.05)" }}
+    contentFit={tiled ? "cover" : "contain"}
     onLoad={({ source }) => {
       if (source.width > 0 && source.height > 0) {
         setSize({ width: 220, height: Math.min(360, Math.max(120, Math.round(220 * source.height / source.width))) });
@@ -267,10 +267,10 @@ function MessageBubble({ message, isMe, canDelete, readOnly, viewerId, viewerNam
         >
           {message.replyTo ? <View style={{ paddingHorizontal: 10, paddingTop: 8 }}><ReplyReferenceView reply={message.replyTo} outgoing={isMe} onPress={() => onOpenReply(message.replyTo!.id)} /></View> : null}
           {message.imageUri || message.attachmentUrls?.length ? (
-            <View style={{ gap: 4 }}>
+            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 4, width: (message.attachmentUrls?.length ?? 1) > 1 ? 220 : undefined }}>
               {(message.attachmentUrls?.length ? message.attachmentUrls : [message.imageUri!]).map((uri, index, gallery) => isVideoAttachment(uri)
                 ? <ChatAttachmentVideo key={`${uri}-${index}`} uri={uri} />
-                : <ChatAttachmentImage key={`${uri}-${index}`} uri={uri} galleryUris={gallery.filter((item) => !isVideoAttachment(item))} galleryIndex={gallery.slice(0, index).filter((item) => !isVideoAttachment(item)).length} />)}
+                : <ChatAttachmentImage key={`${uri}-${index}`} uri={uri} galleryUris={gallery.filter((item) => !isVideoAttachment(item))} galleryIndex={gallery.slice(0, index).filter((item) => !isVideoAttachment(item)).length} tiled={gallery.filter((item) => !isVideoAttachment(item)).length > 1} />)}
             </View>
           ) : null}
           {message.content ? (

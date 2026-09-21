@@ -1155,23 +1155,21 @@ export default function EventsScreen() {
               onToggleFavorite={() => {
                 const favorite =
                   item.isFavorite ?? favoriteEventIds.includes(item.id);
+                const applyFavorite = (value: boolean) => {
+                  setAllEvents((current) => {
+                    const next = current.map((event) =>
+                      event.id === item.id ? { ...event, isFavorite: value } : event,
+                    );
+                    if (authUser?.id) eventListCache.set(authUser.id, next);
+                    return next;
+                  });
+                };
+                // Reflect the tap before persistence/network work starts.
+                applyFavorite(!favorite);
                 if (item.viewerMemberId) {
-                  setAllEvents((current) =>
-                    current.map((event) =>
-                      event.id === item.id
-                        ? { ...event, isFavorite: !favorite }
-                        : event,
-                    ),
-                  );
                   void Api.setEventFavorite(item.id, !favorite).catch(
                     (error) => {
-                      setAllEvents((current) =>
-                        current.map((event) =>
-                          event.id === item.id
-                            ? { ...event, isFavorite: favorite }
-                            : event,
-                        ),
-                      );
+                      applyFavorite(favorite);
                       Alert.alert(
                         "更新できませんでした",
                         error instanceof Error
@@ -1184,7 +1182,7 @@ export default function EventsScreen() {
                   void toggleEventFavoriteWithNotifications(
                     item,
                     CURRENT_USER.id,
-                  );
+                  ).catch(() => applyFavorite(favorite));
                 }
               }}
               locked={Boolean(
