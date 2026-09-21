@@ -44,7 +44,16 @@ describe("chat list identity presentation", () => {
     expect(chatList).toContain("/^chat\\d+$/.test(room.id)");
     expect(chatList).toContain('room.id === "board-announcement" ? "お知らせ"');
     expect(chatList).toContain('Api.getSharedChatMessages("board-announcement")');
+    expect(chatList).toContain('const announcementMessages = await Api.getSharedChatMessages("board-announcement")');
+    expect(chatList).not.toContain('? { ...room, lastMessage: "", lastMessageAt: undefined }');
     expect(chatList).toContain("contentContainerStyle={{ paddingBottom: 112, flexGrow: 1 }}");
+  });
+
+  it("offers the locked event's club application route", () => {
+    const events = source("app/(tabs)/events.tsx");
+    expect(events).toContain("入部後にご確認をお願いします。");
+    expect(events).toContain("へ入部する");
+    expect(events).toContain('router.push({ pathname: "/clubs", params: { clubId: prompt.id } })');
   });
 
   it("uses member and event images when available and removes imported role suffixes", () => {

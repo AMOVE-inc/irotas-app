@@ -293,6 +293,7 @@ export default function ChatListScreen() {
     const localRankRooms = getRankRoomsForUser(viewerRank, canViewAllChats);
     // Do not present the local subset as a complete list while shared rooms load.
     let sharedRooms: ChatRoom[] = [];
+    let latestAnnouncement: ChatMessage | undefined;
     try {
       // 一覧表示に必要なのはルーム一覧だけ。重い補助情報は後段で補完する。
       const rooms = await Api.getSharedChatRooms();
@@ -306,32 +307,36 @@ export default function ChatListScreen() {
       }
       sharedRooms = rooms.map((room) => ({ ...room, requiredRank: room.requiredRank as ChatRoom["requiredRank"] }))
         .filter((room) => !isImportedEventChat(room) && (room.type !== "dm" || room.participants.includes(viewerMemberId)));
-      if (includeDetails) void Promise.all([
-        Api.getEvents().catch(() => []),
-        Api.getMemberDirectory().catch(() => []),
-        Api.getSharedChatMessages("board-announcement").catch(() => []),
-      ]).then(([events, members, announcementMessages]) => {
-        const latestAnnouncement = [...announcementMessages].sort((left, right) => Date.parse(left.createdAt) - Date.parse(right.createdAt)).at(-1);
-        if (latestAnnouncement) setMyRooms((current) => current.map((room) => room.id === "board-announcement"
-          ? { ...room, lastMessage: latestAnnouncement.content.replace(/^【IRO\+\s*システム】\s*/, "").replace(/\s+/g, " ").trim(), lastMessageAt: latestAnnouncement.createdAt }
-          : room));
-        setEventStarts(Object.fromEntries(events.map((event) => [event.id, formatEventStart(event)])));
-        setEventImages(Object.fromEntries(events.flatMap((event) => typeof event.image === "string" && event.image ? [[event.id, event.image]] : [])));
-        setMemberAvatars(Object.fromEntries(members.flatMap((member) => {
-          const avatar = member.profile.avatarUrl;
-          return typeof avatar === "string" && avatar ? [[member.id, avatar]] : [];
-        })));
-      });
+      if (includeDetails) {
+        // Resolve the announcement preview before rendering the first room list.
+        // Rendering the room first used to flash "メッセージはまだありません".
+        const announcementMessages = await Api.getSharedChatMessages("board-announcement").catch(() => []);
+        latestAnnouncement = [...announcementMessages].sort((left, right) => Date.parse(left.createdAt) - Date.parse(right.createdAt)).at(-1);
+        void Promise.all([
+          Api.getEvents().catch(() => []),
+          Api.getMemberDirectory().catch(() => []),
+        ]).then(([events, members]) => {
+          setEventStarts(Object.fromEntries(events.map((event) => [event.id, formatEventStart(event)])));
+          setEventImages(Object.fromEntries(events.flatMap((event) => typeof event.image === "string" && event.image ? [[event.id, event.image]] : [])));
+          setMemberAvatars(Object.fromEntries(members.flatMap((member) => {
+            const avatar = member.profile.avatarUrl;
+            return typeof avatar === "string" && avatar ? [[member.id, avatar]] : [];
+          })));
+        });
+      }
     } catch {
       // オフライン時も端末内の移行済みチャット一覧は利用できる。
     }
     const sharedById = new Map(sharedRooms.map((room) => [room.id, room]));
+    const cachedAnnouncement = lastRoomLists.get(viewerMemberId)?.joined.find((room) => room.id === "board-announcement");
     const mergedJoined = [...localJoinedRooms.filter((room) => !sharedById.has(room.id)), ...sharedRooms.filter((room) => room.type !== "rank" && !isFixtureRoom(room))]
       .filter((room) => !dismissedRooms.get(viewerMemberId)?.has(room.id))
       .filter((room, index, all) => all.findIndex((candidate) => candidate.id === room.id) === index)
-      .map((room) => room.id === "board-announcement" && !sharedById.has(room.id)
-        ? { ...room, lastMessage: "", lastMessageAt: undefined }
-        : room);
+      .map((room) => room.id === "board-announcement" && latestAnnouncement
+        ? { ...room, lastMessage: latestAnnouncement.content.replace(/^【IRO\+\s*システム】\s*/, "").replace(/\s+/g, " ").trim(), lastMessageAt: latestAnnouncement.createdAt }
+        : room.id === "board-announcement" && !room.lastMessage && cachedAnnouncement?.lastMessage
+          ? { ...room, lastMessage: cachedAnnouncement.lastMessage, lastMessageAt: cachedAnnouncement.lastMessageAt }
+          : room);
     const mergedRank = viewerRank === "regular" && !canViewAllChats ? [] : [
       ...localRankRooms.filter((room) => !sharedById.has(room.id)),
       ...sharedRooms.filter((room) => room.type === "rank" && (canViewAllChats || canAccessRankRoom(viewerRank, room.requiredRank))),

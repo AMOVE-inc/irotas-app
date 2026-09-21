@@ -877,6 +877,7 @@ export default function EventsScreen() {
   );
   const [sortMenuVisible, setSortMenuVisible] = useState(false);
   const [migrationNoticeVisible, setMigrationNoticeVisible] = useState(false);
+  const [lockedClubPrompt, setLockedClubPrompt] = useState<{ id: string; name: string } | null>(null);
   const [detailSearchVisible, setDetailSearchVisible] = useState(false);
   const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
   const [budgetMin, setBudgetMin] = useState("none");
@@ -1073,6 +1074,18 @@ export default function EventsScreen() {
 
   return (
     <ScreenContainer>
+      <Modal transparent visible={Boolean(lockedClubPrompt)} animationType="fade" onRequestClose={() => setLockedClubPrompt(null)}>
+        <Pressable onPress={() => setLockedClubPrompt(null)} style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.42)", alignItems: "center", justifyContent: "center", padding: 24 }}>
+          <Pressable onPress={(event) => event.stopPropagation?.()} style={{ width: "100%", maxWidth: 420, borderRadius: 18, backgroundColor: colors.background, padding: 22 }}>
+            <Text style={{ fontSize: 18, fontWeight: "900", color: colors.foreground, textAlign: "center" }}>部員限定イベント</Text>
+            <Text style={{ marginTop: 12, fontSize: 15, lineHeight: 23, color: colors.foreground, textAlign: "center" }}>{`このイベントは${lockedClubPrompt?.name ?? "この部活動"}限定です。入部後にご確認をお願いします。`}</Text>
+            <Pressable disabled={!lockedClubPrompt?.id} onPress={() => { const prompt = lockedClubPrompt; setLockedClubPrompt(null); if (prompt?.id) router.push({ pathname: "/clubs", params: { clubId: prompt.id } }); }} style={{ marginTop: 20, borderRadius: 12, paddingVertical: 13, alignItems: "center", backgroundColor: "#E8A0BF", opacity: lockedClubPrompt?.id ? 1 : 0.5 }}>
+              <Text style={{ color: "#FFF", fontSize: 15, fontWeight: "900" }}>{`${lockedClubPrompt?.name ?? "部活動"}へ入部する`}</Text>
+            </Pressable>
+            <Pressable onPress={() => setLockedClubPrompt(null)} style={{ marginTop: 10, paddingVertical: 10, alignItems: "center" }}><Text style={{ color: colors.muted, fontSize: 14, fontWeight: "700" }}>閉じる</Text></Pressable>
+          </Pressable>
+        </Pressable>
+      </Modal>
       {/* Header */}
       <View
         style={{
@@ -1192,10 +1205,7 @@ export default function EventsScreen() {
                   (item.eventType === "club" &&
                     !canAccessClubEvent(item.clubId))
                 ) {
-                  Alert.alert(
-                    "部員限定イベント",
-                    `${club?.name ?? "この部活動"}に入部すると、詳細の確認と参加申込ができます。`,
-                  );
+                  setLockedClubPrompt({ id: item.clubId ?? club?.id ?? "", name: club?.name ?? item.clubName ?? "この部活動" });
                   return;
                 }
                 router.push({
