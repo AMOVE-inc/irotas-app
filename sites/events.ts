@@ -1433,10 +1433,13 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
   }
   if (eventMatch && request.method === "DELETE") {
     const id = decodeURIComponent(eventMatch[1]);
-    if (!admin) return responseJson({ error: "イベントの削除は管理者のみ実行できます" }, 403);
     const row = await eventRow(env.DB, id);
     const imported = id.startsWith("discord-event-") && IMPORTED_DISCORD_EVENTS.some((event) => event.id === id);
     if (!row && !imported && !await isDeletedImportedEvent(env.DB, id)) return responseJson({ error: "イベントが見つかりません" }, 404);
+    const canDeleteImportedClubEvent = imported && row?.event_type === "club" &&
+      (elevated || row.organizer_member_id === member.id);
+    if (!admin && !canDeleteImportedClubEvent)
+      return responseJson({ error: "このイベントを削除する権限がありません" }, 403);
     const payment = await env.DB.prepare("SELECT 1 AS exists FROM event_payment_checkouts WHERE event_id = ? LIMIT 1")
       .bind(id).first<{ exists: number }>();
     if (payment) return responseJson({ error: "決済記録のあるイベントは削除できません。中止処理と返金確認を行ってください" }, 409);

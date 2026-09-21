@@ -469,6 +469,7 @@ export default function EventDetailScreen() {
   const isDiscordImportedEvent = event.id.startsWith("discord-event-");
   const editableClubs = clubs.filter((club) => canViewerAccessClubContent(club, authUser?.memberId, CURRENT_USER.id, canAdminEdit));
   const canManageEvent = canAdminEdit || isOrganizer || (isDiscordImportedEvent && userIsOperator);
+  const canDeleteEvent = canAdminEdit || (isDiscordImportedEvent && event.eventType === "club" && (isOrganizer || userIsOperator));
   const showApplicationConfirmation = (title: string, message: string, buttons: AlertButton[]) => setApplicationConfirmation({ title, message, buttons });
 
   const handleEventComment = async () => {
@@ -1164,7 +1165,7 @@ export default function EventDetailScreen() {
         {eventRecruitmentChannel(event) === "discord" ? <View style={{ borderRadius: 12, borderWidth: 1, borderColor: "#D7C9EB", backgroundColor: "#F7F3FC", padding: 14, marginBottom: 16 }}><Text style={{ fontSize: 14, fontWeight: "900", color: "#604C8C" }}>{discordRecruitmentClosed ? "Discordでの募集は終了しました" : "このイベントはDiscordで受付中"}</Text><Text style={{ fontSize: 12, lineHeight: 19, color: colors.foreground, marginTop: 5 }}>{discordRecruitmentClosed ? "本イベントはDiscordから移行したイベントです。募集内容・参加者確定などの詳細は元のDiscordの募集投稿をご確認ください。アプリからは申し込めません。" : "本イベントはDiscordから移行したイベントです。参加希望は元のDiscordの募集投稿へお願いします。参加者もDiscord側で確定するため、アプリからは申し込めません。確定後、幹事・運営が編集画面で参加者を記録できます。"}</Text></View> : null}
         {canManageEvent && eventRecruitmentChannel(event) === "discord" && !discordRecruitmentClosed && event.status === "open" && !event.isCancelled ? <Pressable onPress={handleCloseDiscordRecruitment} style={{ marginTop: -6, marginBottom: 16, borderRadius: 12, paddingVertical: 12, alignItems: "center", backgroundColor: "#6B5A96" }}><Text style={{ color: "#FFF", fontSize: 14, fontWeight: "900" }}>Discordでの募集を終了</Text></Pressable> : null}
         {canAdminEdit && event.eventType === "official" && eventRecruitmentChannel(event) === "app" && !event.isCancelled ? <Pressable onPress={() => { void handleSetRecruitmentStatus(event.recruitmentStatus === "draft" ? "open" : "draft"); }} style={{ marginTop: -6, marginBottom: 16, borderRadius: 12, paddingVertical: 12, alignItems: "center", backgroundColor: "#5B9BD5" }}><Text style={{ color: "#FFF", fontSize: 14, fontWeight: "900" }}>{event.recruitmentStatus === "draft" ? "管理者：募集を開始" : "管理者：募集前に戻す"}</Text></Pressable> : null}
-        {canAdminEdit ? <Pressable onPress={handleDeleteEvent} style={{ marginTop: -6, marginBottom: 16, borderRadius: 12, paddingVertical: 12, alignItems: "center", borderWidth: 1, borderColor: "#D94C55" }}><Text style={{ color: "#D94C55", fontSize: 14, fontWeight: "900" }}>管理者：イベントを完全に削除</Text></Pressable> : null}
+        {canDeleteEvent ? <Pressable onPress={handleDeleteEvent} style={{ marginTop: -6, marginBottom: 16, borderRadius: 12, paddingVertical: 12, alignItems: "center", borderWidth: 1, borderColor: "#D94C55" }}><Text style={{ color: "#D94C55", fontSize: 14, fontWeight: "900" }}>{canAdminEdit ? "管理者：イベントを完全に削除" : "移行イベントを完全に削除"}</Text></Pressable> : null}
 
         {isOrganizer ? (
           <View style={{ backgroundColor: "#F5F8FC", borderRadius: 14, padding: 14, marginBottom: 16, borderWidth: 1, borderColor: "#DCE7F2" }}>

@@ -6,10 +6,10 @@ vi.mock("../sites/auth", () => ({ authenticatedRequestMember }));
 
 import { handleEventRequest } from "../sites/events";
 
-function fakeDatabase() {
+function fakeDatabase(eventType: "gourmet" | "club" = "gourmet") {
   const id = "discord-event-1547552751800553543";
   let row: Record<string, unknown> | null = {
-    id, organizer_member_id: 7, event_type: "gourmet", club_id: null,
+    id, organizer_member_id: 7, event_type: eventType, club_id: eventType === "club" ? "club-walk" : null,
     event_date: "2026-09-26", status: "open", title: "イベント",
     public_data_json: JSON.stringify({ title: "イベント", date: "2026-09-26", time: "19:30", capacity: 2, recruitmentChannel: "discord" }),
     created_at: "2026-09-01T00:00:00.000Z", updated_at: "2026-09-01T00:00:00.000Z",
@@ -62,5 +62,24 @@ describe("Discord-imported event lifecycle", () => {
     expect(response?.status).toBe(200);
     expect((await response!.json()).event.status).toBe("full");
     expect(JSON.parse(String(state.readRow()?.public_data_json)).discordRecruitmentClosedAt).toBeTruthy();
+  });
+
+  it("lets the club leader delete their imported club event", async () => {
+    const state = fakeDatabase("club");
+    authenticatedRequestMember.mockResolvedValue({ id: 7, role: "user", access_role: "member", account_status: "active" });
+    const env = { DB: state.db } as SitesEnv;
+    const response = await handleEventRequest(new Request(`https://example.test/api/events/${state.id}`, { method: "DELETE" }), env);
+    expect(response?.status).toBe(200);
+    expect(state.deleted.has(state.id)).toBe(true);
+    expect(state.readRow()).toBeNull();
+  });
+
+  it("does not let another member delete an imported club event", async () => {
+    const state = fakeDatabase("club");
+    authenticatedRequestMember.mockResolvedValue({ id: 8, role: "user", access_role: "member", account_status: "active" });
+    const env = { DB: state.db } as SitesEnv;
+    const response = await handleEventRequest(new Request(`https://example.test/api/events/${state.id}`, { method: "DELETE" }), env);
+    expect(response?.status).toBe(403);
+    expect(state.readRow()).not.toBeNull();
   });
 });
