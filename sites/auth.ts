@@ -788,8 +788,10 @@ async function register(request: Request, env: SitesEnv, db: D1Database) {
   }
   if (member && member.account_status !== "active")
     return responseJson({ error: "有効な会員資格を確認できません" }, 403);
-  if (!membershipAllowsAccess(subscription, member ?? { role: "user", access_role: "member", account_status: "active" })) {
-    await discoverSquareMembership(db, env, email);
+  let discoveredMemberTerm: string | null = null;
+  if (!membershipAllowsAccess(subscription, member ?? { role: "user", access_role: "member", account_status: "active" }) || (member && !member.member_term)) {
+    const discovery = await discoverSquareMembership(db, env, email);
+    discoveredMemberTerm = discovery.memberTerm;
     subscription = await findSubscription(db, email);
   }
   if (member && subscription?.member_id && subscription.member_id !== member.id)
@@ -815,6 +817,12 @@ async function register(request: Request, env: SitesEnv, db: D1Database) {
     member = await findMember(db, email);
     if (!member || !membershipAllowsAccess(subscription, member))
       return responseJson({ error: "会員情報が更新されました。再度お試しください。" }, 409);
+  }
+  if (discoveredMemberTerm && !member.member_term) {
+    const updatedAt = new Date().toISOString();
+    await db.prepare("UPDATE members SET member_term = ?, updated_at = ? WHERE id = ? AND (member_term IS NULL OR TRIM(member_term) = '')")
+      .bind(discoveredMemberTerm, updatedAt, member.id).run();
+    member.member_term = discoveredMemberTerm;
   }
   member = await applyStoredDiscordIdentityClaim(
     db,

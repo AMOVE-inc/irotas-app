@@ -15,7 +15,8 @@ it("verifies the mailbox before discovering and registering an unimported Square
     async run() {
       if (query.includes("INSERT INTO email_verification_codes")) storedCode = { id: 1, code_hash: values[1], expires_at: values[2], failed_attempts: 0 };
       if (query.includes("INSERT INTO member_subscriptions")) subscription = { square_status: "ACTIVE", access_status: "active" };
-      if (query.includes("INSERT INTO members")) member = { id: 1, email: values[0], display_name: values[1], role: "user", access_role: "member", account_status: "active", branches_json: "[]" };
+      if (query.includes("INSERT INTO members")) member = { id: 1, email: values[0], display_name: values[1], role: "user", access_role: "member", account_status: "active", branches_json: "[]", member_term: null };
+      if (query.includes("UPDATE members SET member_term") && member) member.member_term = values[0];
       return { success: true };
     },
   }; } }; }, async batch(statements: any[]) { return Promise.all(statements.map(s => s.run())); } };
@@ -26,6 +27,7 @@ it("verifies the mailbox before discovering and registering an unimported Square
       return Response.json({ id: "mail-1" });
     }
     if (String(url).includes("customers/search")) return Response.json({ customers: [{ id: "customer-1", email_address: "member@example.test" }] });
+    if (String(url).includes("catalog/object")) return Response.json({ object: { subscription_plan_variation_data: { name: "月ごと" } }, related_objects: [{ subscription_plan_data: { name: "IRO+（第7期）" } }] });
     return Response.json({ subscriptions: [{ id: "sub-1", customer_id: "customer-1", status: "ACTIVE", plan_variation_id: "membership" }] });
   });
   vi.spyOn(console, "info").mockImplementation(() => {});
@@ -40,8 +42,9 @@ it("verifies the mailbox before discovering and registering an unimported Square
   const result = await request("register", { email: "member@example.test", verificationCode: code, password: "test-password" });
   expect(result?.status).toBe(200);
   expect(result?.headers.get("set-cookie")).toContain("__Host-irotas_session");
-  expect(fetch).toHaveBeenCalledTimes(3);
+  expect(fetch).toHaveBeenCalledTimes(4);
   expect(member.role).toBe("user");
+  expect(member.member_term).toBe("第7期");
 });
 
 it("keeps a passwordless Discord member linked through Square when its billing email changes", async () => {
