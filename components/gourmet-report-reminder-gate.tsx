@@ -64,14 +64,14 @@ export function GourmetReportReminderGate() {
         <View style={{ backgroundColor: "#FFF", borderRadius: 24, padding: 24 }}>
           <Text style={{ fontSize: 30, textAlign: "center", marginBottom: 10 }}>🍽️</Text>
           <Text style={{ color: "#202124", fontSize: 20, fontWeight: "800", textAlign: "center" }}>
-            グルメ会はいかがでしたか？
+            ごちそうさま報告をしませんか？
           </Text>
           <Text style={{ color: "#5F6368", fontSize: 14, lineHeight: 21, textAlign: "center", marginTop: 12 }}>
             「{event.title}」でのごちそうを、写真と一緒にみんなへシェアしませんか？
           </Text>
           {earnsXp ? <View style={{ backgroundColor: "#FFF5E8", borderRadius: 14, padding: 13, marginTop: 18 }}>
             <Text style={{ color: "#B56B00", fontSize: 14, fontWeight: "800", textAlign: "center" }}>
-              ごちそうさま報告を投稿すると +{REPORT_XP} XP を獲得できます
+              写真付きのごちそうさま報告を投稿すると +{REPORT_XP} XP を獲得できます
             </Text>
           </View> : null}
           <Pressable

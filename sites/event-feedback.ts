@@ -1,6 +1,7 @@
 import { authenticatedRequestMember } from "./auth";
 import { EVENT_XP, awardEventReward } from "./event-rewards";
 import type { SitesEnv } from "./platform-types";
+import { isEventParticipant } from "./event-participants";
 
 const FEEDBACK_PATH = /^\/api\/events\/([^/]+)\/feedback$/;
 const json = (body: unknown, status = 200) => Response.json(body, { status, headers: { "cache-control": "private, no-store" } });
@@ -14,9 +15,14 @@ export async function handleEventFeedbackRequest(request: Request, env: SitesEnv
   const member = await authenticatedRequestMember(request, env);
   if (!member) return json({ error: "ログインが必要です" }, 401);
   const eventId = decodeURIComponent(match[1]);
-  const participant = await env.DB.prepare("SELECT 1 AS allowed FROM event_attendance_confirmations WHERE event_id = ? AND member_id = ? AND status = 'attended' LIMIT 1").bind(eventId, member.id).first<{ allowed: number }>();
+  const event = await env.DB.prepare(`SELECT id, organizer_member_id, event_date, public_data_json
+    FROM events WHERE id = ? LIMIT 1`).bind(eventId).first<{ id: string; organizer_member_id: number; event_date: string; public_data_json: string }>();
+  if (!event) return json({ error: "イベントが見つかりません" }, 404);
+  const attendance = await env.DB.prepare("SELECT status FROM event_attendance_confirmations WHERE event_id = ? AND member_id = ? LIMIT 1")
+    .bind(eventId, member.id).first<{ status: "attended" | "absent" }>();
+  const participant = attendance?.status === "attended" ||
+    (!attendance && event.id.startsWith("discord-event-") && await isEventParticipant(env.DB, event, member.id));
   if (!participant) return json({ error: "参加したイベントのみ回答できます" }, 403);
-  const event = await env.DB.prepare("SELECT event_date, public_data_json FROM events WHERE id = ? LIMIT 1").bind(eventId).first<{ event_date: string; public_data_json: string }>();
   let eventTime = "00:00";
   try { const data = JSON.parse(event?.public_data_json ?? "{}") as Record<string, unknown>; if (typeof data.time === "string") eventTime = data.time; } catch {}
   const closesAt = new Date(`${event?.event_date ?? "1970-01-01"}T${eventTime}:00+09:00`).getTime() + 72 * 60 * 60_000;

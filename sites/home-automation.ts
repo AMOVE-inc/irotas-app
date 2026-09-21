@@ -5,6 +5,7 @@ import boardArchive from "../data/discord-board-2026-08-29.json";
 import { IMPORTED_DISCORD_EVENTS } from "../constants/imported-discord-events";
 import { firstImportedMediaPaths } from "../lib/imported-media-path";
 import { japanDateKey } from "../lib/japan-date";
+import { eventParticipantMemberIds } from "./event-participants";
 
 const archivedBoardThreads = new Map(boardArchive.threads.map((thread) => [thread.id, thread]));
 const importedEvents = new Map(IMPORTED_DISCORD_EVENTS.map((event) => [event.id, event]));
@@ -145,8 +146,39 @@ export async function runEventAutomation(db: D1Database, now = new Date()) {
   let delivered = 0;
   for (const reminder of await pendingReminders(db, now)) if (await deliverReminder(db, reminder, now)) delivered += 1;
   delivered += await completePastEvents(db, now);
+  delivered += await deliverRecentImportedEventFeedback(db, now);
   delivered += await finalizeExpiredBoardPolls(db, now);
   delivered += await finalizeExpiredChatPolls(db, now);
+  return delivered;
+}
+
+async function deliverEventFeedback(db: D1Database, event: EventRow, timestamp: string) {
+  let delivered = 0;
+  for (const participantMemberId of await eventParticipantMemberIds(db, event)) {
+    const result = await db.prepare(`INSERT OR IGNORE INTO in_app_notifications
+      (id,target_member_id,type,title,body,event_id,created_at) VALUES (?,?, 'event_feedback','イベント参加アンケート',?, ?, ?)`)
+      .bind(`event-feedback:${event.id}:${participantMemberId}`, participantMemberId, `「${event.title}」はいかがでしたか？簡単なアンケートにご協力ください。`, event.id, timestamp).run();
+    delivered += Number(result.meta?.changes ?? 0);
+  }
+  return delivered;
+}
+
+/** Backfill surveys for migrated events that ended before this behavior was released. */
+async function deliverRecentImportedEventFeedback(db: D1Database, now: Date) {
+  const oldestDate = japanDateKey(new Date(now.getTime() - 72 * 60 * 60_000));
+  const events = await db.prepare(`SELECT id, organizer_member_id, event_type, event_date, status, title, public_data_json
+    FROM events WHERE id LIKE 'discord-event-%' AND status = 'ended' AND event_date >= ?`)
+    .bind(oldestDate).all<EventRow>();
+  let delivered = 0;
+  for (const event of events.results ?? []) {
+    const data = eventData(event);
+    const start = tokyoDateTime(event.event_date, typeof data.time === "string" ? data.time : "00:00");
+    if (!start) continue;
+    const explicitEnd = typeof data.endTime === "string" ? tokyoDateTime(event.event_date, data.endTime) : null;
+    const end = explicitEnd && explicitEnd > start ? explicitEnd : new Date(start.getTime() + 3 * 60 * 60_000);
+    if (now < end || now.getTime() > start.getTime() + 72 * 60 * 60_000) continue;
+    delivered += await deliverEventFeedback(db, event, now.toISOString());
+  }
   return delivered;
 }
 
@@ -164,11 +196,8 @@ async function completePastEvents(db: D1Database, now: Date) {
     const timestamp = now.toISOString();
     await db.prepare("UPDATE events SET status = 'ended', updated_at = ? WHERE id = ? AND status IN ('open', 'full')")
       .bind(timestamp, event.id).run();
-    if (event.event_type === "official") {
-      const participants = await db.prepare("SELECT member_id FROM event_participations WHERE event_id = ? AND status IN ('confirmed','cancel_requested')").bind(event.id).all<{ member_id: number }>();
-      for (const participant of participants.results ?? []) await db.prepare(`INSERT OR IGNORE INTO in_app_notifications
-        (id,target_member_id,type,title,body,event_id,created_at) VALUES (?,?, 'event_feedback','イベント参加アンケート',?, ?, ?)`)
-        .bind(`event-feedback:${event.id}:${participant.member_id}`, participant.member_id, `「${event.title}」はいかがでしたか？簡単なアンケートにご協力ください。`, event.id, timestamp).run();
+    if (event.event_type === "official" || event.id.startsWith("discord-event-")) {
+      completed += await deliverEventFeedback(db, event, timestamp);
     }
     // XPは幹事が実出欠を確定した時点でのみ付与する。
   }

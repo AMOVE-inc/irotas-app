@@ -27,4 +27,9 @@ describe("gourmet report reminder", () => {
   it("scopes completion to a member and event", () => {
     expect(gourmetReportReminderKey("member-1", "event-1")).not.toBe(gourmetReportReminderKey("member-2", "event-1"));
   });
+
+  it("prompts a confirmed participant of a Discord-migrated gourmet event", () => {
+    const migrated = event("discord-event-1", { recruitmentChannel: "discord", participants: ["member-1"] });
+    expect(eligibleGourmetReportEvents([migrated], "member-1", now)).toEqual([migrated]);
+  });
 });
