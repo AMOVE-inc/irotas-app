@@ -1,7 +1,7 @@
 -- Reconcile active members created from Square email-only login with their verified Discord identities.
 -- Evidence: admission email/handle, live Discord username/unique active 7th-term display name,
 -- and the current Discord role snapshot captured on 2026-09-20.
-CREATE TEMP TABLE IF NOT EXISTS verified_discord_identity_links (
+CREATE TABLE IF NOT EXISTS discord_identity_claims (
   email TEXT PRIMARY KEY,
   discord_user_id TEXT NOT NULL UNIQUE,
   display_name TEXT NOT NULL,
@@ -11,10 +11,16 @@ CREATE TEMP TABLE IF NOT EXISTS verified_discord_identity_links (
   discord_joined_at TEXT,
   discord_roles_json TEXT NOT NULL,
   member_term TEXT,
-  member_rank TEXT NOT NULL
+  member_rank TEXT NOT NULL,
+  source TEXT NOT NULL DEFAULT 'admin_verified',
+  verified_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  consumed_at TEXT
 );
 
-INSERT OR REPLACE INTO verified_discord_identity_links VALUES
+INSERT OR REPLACE INTO discord_identity_claims
+  (email, discord_user_id, display_name, avatar_url, bio, has_profile_bio,
+   discord_joined_at, discord_roles_json, member_term, member_rank)
+VALUES
   ('mykmmmm@gmail.com','1540341083819741194','Miyako','https://cdn.discordapp.com/avatars/1540341083819741194/d0584a5c07f1e4e32a87e997a7db880c.png?size=512','名前：みやこ
 年齢：33
 在住：東京 
@@ -141,7 +147,7 @@ INSERT INTO discord_profile_snapshots
    discord_roles_json, member_term, member_rank, imported_at)
 SELECT discord_user_id, display_name, avatar_url, bio, has_profile_bio, discord_joined_at,
        discord_roles_json, member_term, member_rank, CURRENT_TIMESTAMP
-FROM verified_discord_identity_links
+FROM discord_identity_claims
 WHERE 1
 ON CONFLICT(discord_user_id) DO UPDATE SET
   display_name = excluded.display_name,
@@ -155,35 +161,35 @@ ON CONFLICT(discord_user_id) DO UPDATE SET
   imported_at = excluded.imported_at;
 
 UPDATE members
-SET discord_user_id = (SELECT v.discord_user_id FROM verified_discord_identity_links v WHERE LOWER(v.email) = LOWER(members.email)),
+SET discord_user_id = (SELECT v.discord_user_id FROM discord_identity_claims v WHERE LOWER(v.email) = LOWER(members.email)),
     display_name = CASE
       WHEN display_name = '' OR LOWER(display_name) = LOWER(substr(email, 1, instr(email, '@') - 1))
-      THEN (SELECT v.display_name FROM verified_discord_identity_links v WHERE LOWER(v.email) = LOWER(members.email))
+      THEN (SELECT v.display_name FROM discord_identity_claims v WHERE LOWER(v.email) = LOWER(members.email))
       ELSE display_name END,
-    member_term = COALESCE((SELECT v.member_term FROM verified_discord_identity_links v WHERE LOWER(v.email) = LOWER(members.email)), member_term),
-    member_rank = COALESCE((SELECT v.member_rank FROM verified_discord_identity_links v WHERE LOWER(v.email) = LOWER(members.email)), member_rank),
-    discord_roles_json = COALESCE((SELECT v.discord_roles_json FROM verified_discord_identity_links v WHERE LOWER(v.email) = LOWER(members.email)), discord_roles_json),
-    discord_joined_at = COALESCE((SELECT v.discord_joined_at FROM verified_discord_identity_links v WHERE LOWER(v.email) = LOWER(members.email)), discord_joined_at),
+    member_term = COALESCE((SELECT v.member_term FROM discord_identity_claims v WHERE LOWER(v.email) = LOWER(members.email)), member_term),
+    member_rank = COALESCE((SELECT v.member_rank FROM discord_identity_claims v WHERE LOWER(v.email) = LOWER(members.email)), member_rank),
+    discord_roles_json = COALESCE((SELECT v.discord_roles_json FROM discord_identity_claims v WHERE LOWER(v.email) = LOWER(members.email)), discord_roles_json),
+    discord_joined_at = COALESCE((SELECT v.discord_joined_at FROM discord_identity_claims v WHERE LOWER(v.email) = LOWER(members.email)), discord_joined_at),
     profile_json = json_set(CASE WHEN json_valid(profile_json) THEN profile_json ELSE '{}' END,
       '$.bio', CASE WHEN COALESCE(json_extract(CASE WHEN json_valid(profile_json) THEN profile_json ELSE '{}' END, '$.bio'), '') = ''
-        THEN COALESCE((SELECT CASE WHEN v.has_profile_bio = 1 THEN v.bio ELSE '' END FROM verified_discord_identity_links v WHERE LOWER(v.email) = LOWER(members.email)), '')
+        THEN COALESCE((SELECT CASE WHEN v.has_profile_bio = 1 THEN v.bio ELSE '' END FROM discord_identity_claims v WHERE LOWER(v.email) = LOWER(members.email)), '')
         ELSE json_extract(profile_json, '$.bio') END,
       '$.avatarUrl', CASE WHEN COALESCE(json_extract(CASE WHEN json_valid(profile_json) THEN profile_json ELSE '{}' END, '$.avatarUrl'), '') = ''
-        THEN COALESCE((SELECT v.avatar_url FROM verified_discord_identity_links v WHERE LOWER(v.email) = LOWER(members.email)), '')
+        THEN COALESCE((SELECT v.avatar_url FROM discord_identity_claims v WHERE LOWER(v.email) = LOWER(members.email)), '')
         ELSE json_extract(profile_json, '$.avatarUrl') END),
     updated_at = CURRENT_TIMESTAMP
 WHERE account_status = 'active'
   AND (discord_user_id IS NULL OR TRIM(discord_user_id) = '')
-  AND EXISTS (SELECT 1 FROM verified_discord_identity_links v WHERE LOWER(v.email) = LOWER(members.email))
+  AND EXISTS (SELECT 1 FROM discord_identity_claims v WHERE LOWER(v.email) = LOWER(members.email))
   AND NOT EXISTS (
     SELECT 1 FROM members owner
-    JOIN verified_discord_identity_links v ON v.discord_user_id = owner.discord_user_id
+    JOIN discord_identity_claims v ON v.discord_user_id = owner.discord_user_id
     WHERE LOWER(v.email) = LOWER(members.email) AND owner.id <> members.id
   );
 
 INSERT INTO club_memberships (club_id, member_id, status, source, applied_at, approved_at, updated_at)
 SELECT c.id, m.id, 'approved', 'discord', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
-FROM verified_discord_identity_links v
+FROM discord_identity_claims v
 JOIN members m ON LOWER(m.email) = LOWER(v.email) AND m.discord_user_id = v.discord_user_id
 JOIN clubs c
 CROSS JOIN json_each(CASE WHEN json_valid(v.discord_roles_json) THEN v.discord_roles_json ELSE '[]' END) role
@@ -195,7 +201,7 @@ ON CONFLICT(club_id, member_id) DO UPDATE SET
 INSERT INTO audit_logs (actor_user_id, action, entity_type, entity_id, metadata_json, created_at)
 SELECT NULL, 'member.discord_identity_reconciled', 'member', CAST(m.id AS TEXT),
        json_object('discordUserId', m.discord_user_id, 'source', 'verified_2026-09-21_reconciliation'), CURRENT_TIMESTAMP
-FROM members m JOIN verified_discord_identity_links v ON LOWER(v.email) = LOWER(m.email)
+FROM members m JOIN discord_identity_claims v ON LOWER(v.email) = LOWER(m.email)
 WHERE m.discord_user_id = v.discord_user_id
   AND NOT EXISTS (
     SELECT 1 FROM audit_logs a WHERE a.action = 'member.discord_identity_reconciled'
@@ -207,7 +213,13 @@ INSERT OR REPLACE INTO migration_runs
   (id, migration_type, source_filename, status, imported_count, skipped_count, error_count, summary_json, started_at, completed_at)
 SELECT 'discord-identity-reconcile-20260921', 'discord_profiles', 'verified-discord-links-20260921', 'completed',
        COUNT(*), 0, 0, json_object('verifiedLinks', COUNT(*)), CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
-FROM members m JOIN verified_discord_identity_links v ON LOWER(v.email) = LOWER(m.email) AND m.discord_user_id = v.discord_user_id;
+FROM members m JOIN discord_identity_claims v ON LOWER(v.email) = LOWER(m.email) AND m.discord_user_id = v.discord_user_id;
 
-DROP TABLE verified_discord_identity_links;
+UPDATE discord_identity_claims
+SET consumed_at = CURRENT_TIMESTAMP
+WHERE EXISTS (
+  SELECT 1 FROM members m
+  WHERE LOWER(m.email) = LOWER(discord_identity_claims.email)
+    AND m.discord_user_id = discord_identity_claims.discord_user_id
+);
 PRAGMA optimize;

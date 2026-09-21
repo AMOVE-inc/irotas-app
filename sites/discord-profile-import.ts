@@ -126,6 +126,28 @@ export async function handleDiscordProfileImportRequest(request: Request, env: S
       // authoritative migration value even when the billing import supplied
       // a short or provisional name.
       await syncStoredDiscordProfiles(env.DB, now, [discordUserId], { overwriteDisplayName: true }).run();
+      await env.DB.prepare(`INSERT INTO discord_identity_claims
+        (email, discord_user_id, display_name, avatar_url, bio, has_profile_bio,
+         discord_joined_at, discord_roles_json, member_term, member_rank, source,
+         verified_at, consumed_at)
+        SELECT ?, p.discord_user_id, p.display_name, p.avatar_url, p.bio, p.has_profile_bio,
+          p.discord_joined_at, p.discord_roles_json, p.member_term, p.member_rank,
+          'admin_verified', ?, ?
+        FROM discord_profile_snapshots p WHERE p.discord_user_id = ?
+        ON CONFLICT(email) DO UPDATE SET
+          discord_user_id = excluded.discord_user_id,
+          display_name = excluded.display_name,
+          avatar_url = excluded.avatar_url,
+          bio = excluded.bio,
+          has_profile_bio = excluded.has_profile_bio,
+          discord_joined_at = excluded.discord_joined_at,
+          discord_roles_json = excluded.discord_roles_json,
+          member_term = excluded.member_term,
+          member_rank = excluded.member_rank,
+          source = excluded.source,
+          verified_at = excluded.verified_at,
+          consumed_at = excluded.consumed_at`)
+        .bind(email, now, now, discordUserId).run();
       return json({ success: true, memberId: target.id, discordUserId });
     }
     const rows = validateDiscordProfileImport(isNoriTermCorrection

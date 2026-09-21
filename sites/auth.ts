@@ -1,5 +1,6 @@
 import { discoverSquareMembership } from "./square-membership-discovery";
 import type { D1Database, SitesEnv } from "./platform-types";
+import { syncStoredDiscordProfiles } from "./discord-profile-sync";
 
 const encoder = new TextEncoder();
 const SESSION_COOKIE = "__Host-irotas_session";
@@ -460,6 +461,53 @@ async function findSubscriptionMember(db: D1Database, subscription: Subscription
     .bind(subscription.member_id).first<MemberRow>();
 }
 
+async function applyStoredDiscordIdentityClaim(
+  db: D1Database,
+  member: MemberRow,
+  now: string,
+) {
+  const claim = await db.prepare(
+    `SELECT discord_user_id FROM discord_identity_claims
+     WHERE LOWER(TRIM(email)) = LOWER(TRIM(?))`,
+  ).bind(member.email).first<{ discord_user_id: string }>();
+  if (!claim) return member;
+  const owner = await db.prepare(
+    "SELECT id FROM members WHERE discord_user_id = ? AND id <> ?",
+  ).bind(claim.discord_user_id, member.id).first<{ id: number }>();
+  if (owner) return member;
+
+  const linked = await db.prepare(
+    `UPDATE members SET discord_user_id = ?, updated_at = ?
+     WHERE id = ? AND (discord_user_id IS NULL OR TRIM(discord_user_id) = '' OR discord_user_id = ?)`,
+  ).bind(claim.discord_user_id, now, member.id, claim.discord_user_id).run();
+  if (Number(linked.meta?.changes ?? 0) !== 1) return member;
+
+  await syncStoredDiscordProfiles(db, now, [claim.discord_user_id], {
+    overwriteDisplayName: false,
+  }).run();
+  await db.batch([
+    db.prepare(`INSERT INTO club_memberships
+      (club_id, member_id, status, source, applied_at, approved_at, updated_at)
+      SELECT c.id, ?, 'approved', 'discord', ?, ?, ?
+      FROM discord_profile_snapshots p
+      JOIN clubs c
+      CROSS JOIN json_each(CASE WHEN json_valid(p.discord_roles_json) THEN p.discord_roles_json ELSE '[]' END) role
+      WHERE p.discord_user_id = ? AND CAST(role.value AS TEXT) LIKE '%' || c.name || '%'
+      ON CONFLICT(club_id, member_id) DO UPDATE SET
+        status = 'approved', source = 'discord',
+        approved_at = COALESCE(club_memberships.approved_at, excluded.approved_at),
+        updated_at = excluded.updated_at`)
+      .bind(member.id, now, now, now, claim.discord_user_id),
+    db.prepare("UPDATE discord_identity_claims SET consumed_at = ? WHERE LOWER(TRIM(email)) = LOWER(TRIM(?))")
+      .bind(now, member.email),
+    db.prepare(`INSERT INTO audit_logs
+      (actor_user_id, action, entity_type, entity_id, metadata_json, created_at)
+      VALUES (NULL, 'member.discord_identity_claim_consumed', 'member', ?, ?, ?)`)
+      .bind(String(member.id), JSON.stringify({ discordUserId: claim.discord_user_id }), now),
+  ]);
+  return (await findMember(db, member.email)) ?? member;
+}
+
 async function createSession(db: D1Database, memberId: number) {
   const token = toBase64Url(crypto.getRandomValues(new Uint8Array(32)));
   const tokenHash = await sha256(token);
@@ -759,6 +807,11 @@ async function register(request: Request, env: SitesEnv, db: D1Database) {
     if (!member || !membershipAllowsAccess(subscription, member))
       return responseJson({ error: "会員情報が更新されました。再度お試しください。" }, 409);
   }
+  member = await applyStoredDiscordIdentityClaim(
+    db,
+    member,
+    new Date().toISOString(),
+  );
   const passwordHash = await hashPassword(password, undefined, env.AUTH_SECRET);
   const now = new Date().toISOString();
   if (normalizeEmail(member.email) !== email) {
