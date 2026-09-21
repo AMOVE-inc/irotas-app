@@ -47,6 +47,9 @@ import * as Clipboard from "expo-clipboard";
 import { loadImportedGourmetContests, type ImportedGourmetContest } from "@/lib/gourmet-contest-import";
 import {
   getMembershipSummary,
+  getBillingOverdueMembers,
+  syncBillingOverdue,
+  sendBillingOverdueFollowUp,
   getMemberReconciliationReport,
   getOperatorMembers,
   getSystemMonitoring,
@@ -65,6 +68,7 @@ import {
   getAdminEventPayments,
   updateOperatorMemberTerm,
   type MembershipSummary,
+  type BillingOverdueMember,
   type MemberReconciliationReport,
   type OperatorMember,
   type SystemAuditLog,
@@ -192,6 +196,9 @@ export default function AdminDashboardScreen() {
   const [discordEventChatPurgeResult, setDiscordEventChatPurgeResult] = useState<string | null>(null);
   const [discordEventChatPurgePreview, setDiscordEventChatPurgePreview] = useState<{ messages: number; rooms: number } | null>(null);
   const [membershipSummary, setMembershipSummary] = useState<MembershipSummary | null>(null);
+  const [billingOverdueMembers, setBillingOverdueMembers] = useState<BillingOverdueMember[]>([]);
+  const [billingOverdueSyncing, setBillingOverdueSyncing] = useState(false);
+  const [billingFollowUpSending, setBillingFollowUpSending] = useState<string | null>(null);
   const [memberReconciliation, setMemberReconciliation] = useState<MemberReconciliationReport | null>(null);
   const [membershipSummaryLoading, setMembershipSummaryLoading] = useState(false);
   const [operatorMembers, setOperatorMembers] = useState<OperatorMember[]>([]);
@@ -231,6 +238,12 @@ export default function AdminDashboardScreen() {
   };
   useEffect(() => {
     if (userIsAdmin && activeTab === "overview") void loadMembershipSummary();
+  }, [userIsAdmin, activeTab]);
+  useEffect(() => {
+    if (!userIsAdmin || activeTab !== "overview") return;
+    void getBillingOverdueMembers().then((result) => {
+      setBillingOverdueMembers(result.members);
+    }).catch(() => setBillingOverdueMembers([]));
   }, [userIsAdmin, activeTab]);
   const loadMee6Members = async () => {
     setMee6Loading(true);
@@ -1176,6 +1189,60 @@ export default function AdminDashboardScreen() {
                   {squareSyncProgress}
                 </Text>
               )}
+            </View>
+
+            <View style={{ backgroundColor: colors.surface, borderRadius: 14, padding: 16, marginBottom: 20, borderWidth: 1, borderColor: colors.border }}>
+              <Text style={{ fontSize: 16, fontWeight: "700", color: colors.foreground }}>会費の期限超過</Text>
+              <Text style={{ fontSize: 12, lineHeight: 18, color: colors.muted, marginTop: 5 }}>
+                Squareの会費サブスクに紐づく未払い請求書を、支払期限後に照合します。期限超過の会員はアプリを閲覧できず、入金または請求書の取消し後に自動復旧します。
+              </Text>
+              <Pressable disabled={billingOverdueSyncing} onPress={async () => {
+                setBillingOverdueSyncing(true);
+                try {
+                  const result = await syncBillingOverdue();
+                  const current = await getBillingOverdueMembers();
+                  setBillingOverdueMembers(current.members);
+                  Alert.alert("照合完了", `${result.scannedInvoices}件の請求書を確認しました。自動フォローメール送信 ${result.sentFollowUps}件。`);
+                } catch (error) {
+                  Alert.alert("照合できませんでした", error instanceof Error ? error.message : "時間をおいて再度お試しください。");
+                } finally { setBillingOverdueSyncing(false); }
+              }} style={{ marginTop: 12, padding: 12, borderRadius: 10, backgroundColor: "#E8A0BF", alignItems: "center" }}>
+                <Text style={{ color: "#FFF", fontWeight: "800" }}>{billingOverdueSyncing ? "照合中…" : "期限超過を今すぐ確認"}</Text>
+              </Pressable>
+              <Text style={{ fontSize: 13, fontWeight: "800", color: colors.foreground, marginTop: 14 }}>
+                フォロー対象 {billingOverdueMembers.length}人
+              </Text>
+              {billingOverdueMembers.map((item) => (
+                <View key={item.square_subscription_id} style={{ paddingVertical: 9, borderBottomWidth: 1, borderBottomColor: colors.border }}>
+                  <Text style={{ color: colors.foreground, fontWeight: "700" }}>{item.display_name || item.billing_email}{item.public_member_id ? `（${item.public_member_id}）` : ""}</Text>
+                  <Text style={{ color: colors.muted, fontSize: 12 }}>{item.billing_email} ・ {item.billing_status === "PAYMENT_FAILED" ? "決済失敗を検知・閲覧可能" : `期限超過開始 ${item.overdue_since?.slice(0, 10) || "確認中"}・閲覧停止`}</Text>
+                  <View style={{ flexDirection: "row", gap: 16, marginTop: 5 }}>
+                    <Pressable onPress={() => { void Clipboard.setStringAsync(item.billing_email); }} style={{ paddingVertical: 5 }}>
+                      <Text style={{ color: "#34699A", fontSize: 12, fontWeight: "700" }}>メールアドレスをコピー</Text>
+                    </Pressable>
+                    <Pressable disabled={billingFollowUpSending === item.square_subscription_id} onPress={() => {
+                      const send = async () => {
+                        setBillingFollowUpSending(item.square_subscription_id);
+                        try {
+                          await sendBillingOverdueFollowUp(item.square_subscription_id);
+                          Alert.alert("送信しました", `${item.billing_email} に支払い方法の確認メールを送信しました。`);
+                        } catch (error) {
+                          Alert.alert("送信できませんでした", error instanceof Error ? error.message : "時間をおいて再度お試しください。");
+                        } finally { setBillingFollowUpSending(null); }
+                      };
+                      if (Platform.OS === "web") {
+                        if (window.confirm(`${item.billing_email} に期限超過のフォローメールを送信しますか？`)) void send();
+                      } else Alert.alert("フォローメールを送信", `${item.billing_email} に送信しますか？`, [
+                        { text: "キャンセル", style: "cancel" }, { text: "送信", onPress: () => { void send(); } },
+                      ]);
+                    }} style={{ paddingVertical: 5 }}>
+                      <Text style={{ color: "#C44C77", fontSize: 12, fontWeight: "800" }}>
+                        {billingFollowUpSending === item.square_subscription_id ? "送信中…" : "フォローメールを送る"}
+                      </Text>
+                    </Pressable>
+                  </View>
+                </View>
+              ))}
             </View>
 
             <View style={{ backgroundColor: colors.surface, borderRadius: 14, padding: 16, marginBottom: 20, borderWidth: 1, borderColor: colors.border }}>

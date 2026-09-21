@@ -47,12 +47,6 @@ function safeEqual(left: string, right: string) {
   return difference === 0;
 }
 
-function addGraceDays(value: Date, days = 7) {
-  return new Date(value.getTime() + days * 86_400_000)
-    .toISOString()
-    .slice(0, 10);
-}
-
 function accessStatus(status: string) {
   if (status === "ACTIVE") return "active";
   if (status === "PENDING") return "pending";
@@ -184,29 +178,16 @@ async function processEvent(db: D1Database, event: Record<string, any>) {
     return;
   }
   if (action.kind === "overdue") {
-    await db
-      .prepare(
-        `UPDATE member_subscriptions
-      SET billing_status = 'OVERDUE', access_status = 'grace', overdue_since = ?, grace_until_date = ?, updated_at = ?
-      WHERE square_customer_id = ? AND square_status = 'ACTIVE'`,
-      )
-      .bind(
-        now.toISOString(),
-        addGraceDays(now),
-        now.toISOString(),
-        action.customerId,
-      )
-      .run();
+    // A failed charge can occur before the invoice due date. Record it for
+    // follow-up, but let full invoice reconciliation decide access blocking.
+    const timestamp = new Date().toISOString();
+    await db.prepare(`UPDATE member_subscriptions SET billing_status = 'PAYMENT_FAILED',
+      last_verified_at = ?, updated_at = ?
+      WHERE square_customer_id = ? AND square_status = 'ACTIVE' AND COALESCE(billing_status, '') <> 'OVERDUE_BLOCKED'`)
+      .bind(timestamp, timestamp, action.customerId).run();
   } else if (action.kind === "paid") {
-    await db
-      .prepare(
-        `UPDATE member_subscriptions
-      SET billing_status = 'PAID', access_status = CASE WHEN square_status = 'ACTIVE' THEN 'active' ELSE access_status END,
-          overdue_since = NULL, grace_until_date = NULL, last_verified_at = ?, updated_at = ?
-      WHERE square_customer_id = ?`,
-      )
-      .bind(now.toISOString(), now.toISOString(), action.customerId)
-      .run();
+    // One payment does not prove that all older invoices are current. The
+    // scheduled full reconciliation is the source of access restoration.
   }
 }
 

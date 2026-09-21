@@ -1533,6 +1533,36 @@ export async function getMembershipSummary() {
   return apiCall<MembershipSummary>("/api/admin/membership-summary");
 }
 
+export type BillingOverdueMember = {
+  member_id: number | null;
+  display_name: string | null;
+  public_member_id: string | null;
+  billing_email: string;
+  square_subscription_id: string;
+  square_status: string;
+  billing_status: string | null;
+  access_status: string;
+  overdue_since: string | null;
+  last_verified_at: string | null;
+};
+
+export function getBillingOverdueMembers() {
+  return apiCall<{ members: BillingOverdueMember[] }>("/api/admin/billing-overdue");
+}
+
+export function syncBillingOverdue() {
+  return apiCall<{ scannedInvoices: number; overdueSubscriptions: number; updatedSubscriptions: number; sentFollowUps: number }>(
+    "/api/admin/billing-overdue", { method: "POST" },
+  );
+}
+
+export function sendBillingOverdueFollowUp(subscriptionId: string) {
+  return apiCall<{ success: true; sentAt: string }>("/api/admin/billing-overdue/follow-up", {
+    method: "POST",
+    body: JSON.stringify({ subscriptionId }),
+  });
+}
+
 export type MemberOnboardingRecord = {
   subscriptionId: number;
   billingEmail: string;

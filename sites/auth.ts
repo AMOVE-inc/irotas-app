@@ -38,6 +38,7 @@ type SubscriptionRow = {
   billing_email: string;
   square_subscription_id?: string | null;
   square_status: string;
+  billing_status?: string | null;
   access_status: "pending" | "active" | "grace" | "suspended";
   paid_until_date: string | null;
   grace_until_date: string | null;
@@ -223,6 +224,7 @@ export function membershipAllowsAccess(
     hasDiscordStaffRole(member.discord_roles_json)
   )
     return true;
+  if (subscription?.billing_status === "OVERDUE_BLOCKED") return false;
   if (
     !subscription ||
     subscription.access_status === "pending" ||
@@ -429,7 +431,7 @@ async function rateLimit(
 async function findSubscription(db: D1Database, email: string) {
   return db
     .prepare(
-      "SELECT member_id, billing_email, square_status, access_status, paid_until_date, grace_until_date FROM member_subscriptions WHERE LOWER(TRIM(billing_email)) = ?",
+      "SELECT member_id, billing_email, square_status, billing_status, access_status, paid_until_date, grace_until_date FROM member_subscriptions WHERE LOWER(TRIM(billing_email)) = ?",
     )
     .bind(email)
     .first<SubscriptionRow>();
@@ -479,7 +481,7 @@ async function sessionMember(db: D1Database, token: string) {
     m.public_member_id, m.member_term, m.member_rank, m.discord_roles_json,
     m.achievement_badges_json, m.profile_json, m.xp, m.participation_count,
     m.organizer_count, s.subscription_started_at,
-    s.billing_email, s.square_subscription_id, s.square_status, s.access_status, s.paid_until_date, s.grace_until_date
+    s.billing_email, s.square_subscription_id, s.square_status, s.billing_status, s.access_status, s.paid_until_date, s.grace_until_date
     FROM member_sessions ms
     JOIN members m ON m.id = ms.member_id
     LEFT JOIN member_subscriptions s ON s.member_id = m.id OR LOWER(TRIM(s.billing_email)) = LOWER(TRIM(m.email))
@@ -536,11 +538,11 @@ export function emailDeliveryConfigured(env: SitesEnv) {
   );
 }
 
-async function sendCode(env: SitesEnv, email: string, code: string) {
+export async function sendTransactionalEmail(
+  env: SitesEnv,
+  input: { to: string; subject: string; text: string; idempotencyKey: string },
+) {
   if (!emailDeliveryConfigured(env)) throw new Error("email_not_configured");
-  const subject = "IRO+ 初回認証コード";
-  const text = `認証コードは ${code} です。有効期限は10分です。心当たりがない場合は、このメールを破棄してください。`;
-  const idempotencyKey = await sha256(`initial-setup:${email}:${code}`);
   const response = env.EMAIL_DELIVERY_WEBHOOK_URL
     ? await fetch(env.EMAIL_DELIVERY_WEBHOOK_URL, {
         method: "POST",
@@ -550,23 +552,29 @@ async function sendCode(env: SitesEnv, email: string, code: string) {
             ? { authorization: `Bearer ${env.EMAIL_DELIVERY_WEBHOOK_TOKEN}` }
             : {}),
         },
-        body: JSON.stringify({ to: email, subject, text }),
+        body: JSON.stringify({ to: input.to, subject: input.subject, text: input.text }),
       })
     : await fetch("https://api.resend.com/emails", {
         method: "POST",
         headers: {
           "content-type": "application/json",
           authorization: `Bearer ${env.RESEND_API_KEY}`,
-          "idempotency-key": idempotencyKey,
+          "idempotency-key": await sha256(input.idempotencyKey),
         },
         body: JSON.stringify({
           from: env.AUTH_EMAIL_FROM,
-          to: [email],
-          subject,
-          text,
+          to: [input.to],
+          subject: input.subject,
+          text: input.text,
         }),
       });
   if (!response.ok) throw new Error("email_delivery_failed");
+}
+
+async function sendCode(env: SitesEnv, email: string, code: string) {
+  const subject = "IRO+ 初回認証コード";
+  const text = `認証コードは ${code} です。有効期限は10分です。心当たりがない場合は、このメールを破棄してください。`;
+  await sendTransactionalEmail(env, { to: email, subject, text, idempotencyKey: `initial-setup:${email}:${code}` });
 }
 
 async function requestSetupCode(
@@ -594,6 +602,7 @@ async function requestSetupCode(
   if (!emailAllowed || !ipAllowed) {
     recordOutcome(emailAllowed ? "ip_rate_limited" : "email_rate_limited");
     return responseJson({ error: "認証コードの送信回数が上限に達しました。しばらく時間をおいて再度お試しください。" }, 429);
+
   }
   // Mailbox verification is independent of membership imports. Authorization
   // remains enforced in register/login; sending a code never grants access.

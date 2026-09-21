@@ -8,6 +8,7 @@ import type { SitesEnv } from "./platform-types";
 import { handleMemberImportRequest } from "./member-import";
 import { handleSquareWebhook } from "./square-webhook";
 import { handleSquareSyncRequest } from "./square-sync";
+import { handleBillingOverdueRequest, reconcileOverdueInvoices } from "./billing-overdue";
 import { handleMemberDirectoryRequest } from "./member-directory";
 import { handleEventRequest } from "./events";
 import { handleEventImportRequest } from "./event-import";
@@ -281,6 +282,8 @@ async function routeRequest(
   if (squareResponse) return squareResponse;
   const squareSyncResponse = await handleSquareSyncRequest(request, env);
   if (squareSyncResponse) return squareSyncResponse;
+  const billingOverdueResponse = await handleBillingOverdueRequest(request, env);
+  if (billingOverdueResponse) return billingOverdueResponse;
   const analyticsResponse = await handleAnalyticsRequest(request, env);
   if (analyticsResponse) return analyticsResponse;
   const memberImportResponse = await handleMemberImportRequest(request, env);
@@ -613,6 +616,16 @@ export default {
     }
   },
   async scheduled(_controller: unknown, env: SitesEnv): Promise<void> {
-    if (env.DB) await runEventAutomation(env.DB);
+    if (env.DB) {
+      const jobs = [runEventAutomation(env.DB), reconcileOverdueInvoices(env)];
+      const results = await Promise.allSettled(jobs);
+      for (let index = 0; index < results.length; index += 1) {
+        const result = results[index];
+        if (result.status === "rejected") {
+          const path = index === 0 ? "events" : "billing-overdue";
+          await recordApplicationError(env.DB, new Request(`https://app.irotas-community.com/internal/scheduled/${path}`), crypto.randomUUID(), result.reason);
+        }
+      }
+    }
   },
 };

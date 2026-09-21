@@ -326,6 +326,17 @@ describe("Sites production authentication", () => {
     }, new Date("2026-09-13T12:00:00+09:00"))).toBe(true);
   });
 
+  it("blocks an overdue paying member while exempting unpaid staff roles", () => {
+    const subscription = {
+      billing_email: "member@example.com", square_status: "ACTIVE",
+      billing_status: "OVERDUE_BLOCKED", access_status: "active" as const,
+      paid_until_date: null, grace_until_date: null,
+    };
+    expect(membershipAllowsAccess(subscription, { role: "user", access_role: "member", account_status: "active" })).toBe(false);
+    expect(membershipAllowsAccess(subscription, { role: "user", access_role: "club_leader", account_status: "active" })).toBe(true);
+    expect(membershipAllowsAccess(subscription, { role: "admin", access_role: "admin", account_status: "active" })).toBe(true);
+  });
+
   it("does not clear payment-failure grace on a later active subscription update", () => {
     expect(preserveOverdueGrace("active", "grace", "2026-08-25")).toEqual({
       accessStatus: "grace",
