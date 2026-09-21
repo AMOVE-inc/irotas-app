@@ -1874,7 +1874,7 @@ function AddClubModal({
 export default function ClubsScreen() {
   const colors = useColors();
   const router = useRouter();
-  const { clubId, reviewApplications } = useLocalSearchParams<{ clubId?: string; reviewApplications?: string }>();
+  const { clubId, reviewApplications, returnTo } = useLocalSearchParams<{ clubId?: string; reviewApplications?: string; returnTo?: string }>();
   const { user: authUser } = useAuthContext();
   const userIsAdmin = canCreateClub(authUser?.role, authUser?.accessRole);
   const clubs = useClubs();
@@ -1974,6 +1974,11 @@ export default function ClubsScreen() {
   const handleUpdateClub = (updated: Club) => {
     updateClubInStore(updated);
     if (selectedClub?.id === updated.id) setSelectedClub(updated);
+  };
+
+  const closeSelectedClub = () => {
+    setSelectedClub(null);
+    if (returnTo === "events") router.replace("/events");
   };
 
   const handleAddClub = (club: Club) => {
@@ -2139,12 +2144,12 @@ export default function ClubsScreen() {
           visible={!!selectedClub}
           animationType="slide"
           presentationStyle="pageSheet"
-          onRequestClose={() => setSelectedClub(null)}
+          onRequestClose={closeSelectedClub}
         >
           <ClubDetailModal
             club={selectedClub}
             archiveThreads={archiveThreads}
-            onClose={() => setSelectedClub(null)}
+            onClose={closeSelectedClub}
             onApply={handleApply}
             onLeave={handleLeave}
             onUpdateClub={handleUpdateClub}

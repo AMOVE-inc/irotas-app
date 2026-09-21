@@ -53,7 +53,11 @@ describe("chat list identity presentation", () => {
     const events = source("app/(tabs)/events.tsx");
     expect(events).toContain("入部後にご確認をお願いします。");
     expect(events).toContain("へ入部する");
-    expect(events).toContain('router.push({ pathname: "/clubs", params: { clubId: prompt.id } })');
+    expect(events).toContain('router.push({ pathname: "/clubs", params: { clubId: prompt.id, returnTo: "events" } })');
+    const clubs = source("app/clubs.tsx");
+    expect(clubs).toContain('if (returnTo === "events") router.replace("/events")');
+    expect(clubs).toContain("onRequestClose={closeSelectedClub}");
+    expect(clubs).toContain("onClose={closeSelectedClub}");
   });
 
   it("uses member and event images when available and removes imported role suffixes", () => {
