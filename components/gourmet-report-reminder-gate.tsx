@@ -2,7 +2,6 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { type Event } from "@/constants/mock-data";
 import { eligibleGourmetReportEvents, gourmetReportReminderKey } from "@/lib/gourmet-report-reminder";
 import { isOperatorRole } from "@/lib/access-control";
-import { japanDateKey } from "@/lib/japan-date";
 import * as Api from "@/lib/_core/api";
 import { useAuthContext } from "@/lib/auth-context";
 import { useRouter } from "expo-router";
@@ -21,7 +20,7 @@ export function GourmetReportReminderGate() {
 
   const dismiss = useCallback(async (eventId?: string) => {
     if (memberId && eventId) {
-      await AsyncStorage.setItem(gourmetReportReminderKey(memberId, eventId), japanDateKey());
+      await AsyncStorage.setItem(gourmetReportReminderKey(memberId, eventId), "1");
     }
     setEvent(null);
   }, [memberId]);
@@ -39,7 +38,7 @@ export function GourmetReportReminderGate() {
         const candidates = eligibleGourmetReportEvents(events, memberId);
         for (const candidate of candidates) {
           const dismissed = await AsyncStorage.getItem(gourmetReportReminderKey(memberId, candidate.id));
-          if (active && dismissed !== "1" && dismissed !== japanDateKey()) {
+          if (active && dismissed !== "1") {
             setEvent(candidate);
             return;
           }
