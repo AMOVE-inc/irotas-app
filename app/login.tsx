@@ -125,7 +125,12 @@ export default function LoginScreen() {
       }
     } catch (err: any) {
       logger.error("Login failed", err);
-      const userMessage = logger.getUserMessage(err);
+      const userMessage =
+        err instanceof Api.ApiError &&
+        err.statusCode === 403 &&
+        (err.message.startsWith("入会審査") || err.message.startsWith("会費"))
+          ? err.message
+          : logger.getUserMessage(err);
       setError(userMessage);
     } finally {
       setLoading(false);

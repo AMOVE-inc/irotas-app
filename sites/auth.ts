@@ -1,6 +1,10 @@
 import { discoverSquareMembership } from "./square-membership-discovery";
 import type { D1Database, SitesEnv } from "./platform-types";
 import { syncStoredDiscordProfiles } from "./discord-profile-sync";
+import {
+  admissionAccessError,
+  findAdmissionReviewStatus,
+} from "./admission-status";
 
 const encoder = new TextEncoder();
 const SESSION_COOKIE = "__Host-irotas_session";
@@ -796,8 +800,13 @@ async function register(request: Request, env: SitesEnv, db: D1Database) {
     if (linked) member = linked;
   }
   const candidate = member ?? { role: "user" as const, access_role: "member" as const, account_status: "active" as const };
-  if (!membershipAllowsAccess(subscription, candidate))
-    return responseJson({ error: "有効な会員資格を確認できません。会費決済時のメールアドレスを確認し、運営にお問い合わせください。" }, 403);
+  if (!membershipAllowsAccess(subscription, candidate)) {
+    const failure = admissionAccessError(
+      await findAdmissionReviewStatus(db, email),
+      subscription,
+    );
+    return responseJson({ error: failure.message, code: failure.code }, 403);
+  }
   if (!member) {
     const createdAt = new Date().toISOString();
     await db.prepare(`INSERT INTO members (email, display_name, role, access_role, branches_json, account_status, created_at, updated_at)
@@ -898,11 +907,13 @@ async function login(request: Request, env: SitesEnv, db: D1Database) {
       401,
     );
   const subscription = await findSubscription(db, email);
-  if (!membershipAllowsAccess(subscription, member))
-    return responseJson(
-      { error: "会員資格を確認できないためログインできません" },
-      403,
+  if (!membershipAllowsAccess(subscription, member)) {
+    const failure = admissionAccessError(
+      await findAdmissionReviewStatus(db, email),
+      subscription,
     );
+    return responseJson({ error: failure.message, code: failure.code }, 403);
+  }
   const now = new Date().toISOString();
   await db
     .prepare(

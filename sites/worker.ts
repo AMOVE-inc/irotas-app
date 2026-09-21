@@ -45,6 +45,7 @@ import { handleBackupRequest } from "./backups";
 import { handleLinkPreviewRequest } from "./link-preview";
 import { handleAnalyticsRequest } from "./analytics";
 import { handleAdminEventPaymentsRequest, handleEventCheckoutRequest } from "./event-checkout";
+import { handleAdmissionStatusRequest } from "./admission-status";
 
 type CommunitySubmission = {
   reportId: string;
@@ -346,6 +347,8 @@ async function routeRequest(
   if (eventCheckoutResponse) return eventCheckoutResponse;
   const adminEventPaymentsResponse = await handleAdminEventPaymentsRequest(request, env);
   if (adminEventPaymentsResponse) return adminEventPaymentsResponse;
+  const admissionStatusResponse = await handleAdmissionStatusRequest(request, env);
+  if (admissionStatusResponse) return admissionStatusResponse;
   const eventResponse = await handleEventRequest(request, env);
   if (eventResponse) return eventResponse;
   const eventFeedbackResponse = await handleEventFeedbackRequest(request, env);
