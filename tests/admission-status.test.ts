@@ -3,6 +3,7 @@ import {
   admissionAccessError,
   handleAdmissionStatusRequest,
 } from "../sites/admission-status";
+import { getMembershipAccessMessage } from "../lib/_core/logger";
 
 describe("admission status and membership guidance", () => {
   it("distinguishes an applicant who has not passed review", () => {
@@ -25,6 +26,21 @@ describe("admission status and membership guidance", () => {
       message:
         "入会審査は通過していますが、会費の決済完了を確認できません。合格メールの決済リンクからお支払いください。",
     });
+  });
+
+  it("shows the payment-required API message on the password setup screen", () => {
+    const message =
+      "入会審査は通過していますが、会費の決済完了を確認できません。合格メールの決済リンクからお支払いください。";
+    expect(
+      getMembershipAccessMessage(Object.assign(new Error(message), { statusCode: 403 })),
+    ).toBe(message);
+    expect(
+      getMembershipAccessMessage(
+        Object.assign(new Error("管理画面へのアクセスは禁止されています"), {
+          statusCode: 403,
+        }),
+      ),
+    ).toBeNull();
   });
 
   it("does not treat an expired approval as payment pending", () => {

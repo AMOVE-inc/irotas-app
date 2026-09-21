@@ -3,7 +3,7 @@ import { useColors } from "@/hooks/use-colors";
 import * as Auth from "@/lib/_core/auth";
 import * as Api from "@/lib/_core/api";
 import { refreshClubs } from "@/lib/club-store";
-import { logger } from "@/lib/_core/logger";
+import { getMembershipAccessMessage, logger } from "@/lib/_core/logger";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
@@ -126,11 +126,7 @@ export default function LoginScreen() {
     } catch (err: any) {
       logger.error("Login failed", err);
       const userMessage =
-        err instanceof Api.ApiError &&
-        err.statusCode === 403 &&
-        (err.message.startsWith("入会審査") || err.message.startsWith("会費"))
-          ? err.message
-          : logger.getUserMessage(err);
+        getMembershipAccessMessage(err) ?? logger.getUserMessage(err);
       setError(userMessage);
     } finally {
       setLoading(false);

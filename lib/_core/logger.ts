@@ -17,6 +17,17 @@ function getStatusCode(error: unknown): number | undefined {
   return typeof value === "number" ? value : undefined;
 }
 
+/**
+ * Membership admission/payment errors are safe, intentional messages returned
+ * by our own auth API. Keep other 403 responses generic in production.
+ */
+export function getMembershipAccessMessage(error: unknown): string | null {
+  if (getStatusCode(error) !== 403 || !(error instanceof Error)) return null;
+  return error.message.startsWith("入会審査") || error.message.startsWith("会費")
+    ? error.message
+    : null;
+}
+
 export const logger = {
   /**
    * デバッグログ（本番環境では出力しない）
