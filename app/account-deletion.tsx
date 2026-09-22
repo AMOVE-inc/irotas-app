@@ -337,6 +337,7 @@ export default function AccountDeletionScreen() {
                 fontSize: 14,
                 fontWeight: "900",
                 color: colors.foreground,
+                marginTop: 20,
               }}
             >
               現在のパスワード
