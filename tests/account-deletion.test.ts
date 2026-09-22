@@ -88,6 +88,7 @@ function deletionDatabase(
             scheduled_for: values[5],
             request_type: values[7],
             square_action: values[9],
+            square_effective_date: values[10],
           };
         }
         if (statement.__sql.includes("UPDATE account_deletion_requests"))
@@ -170,12 +171,15 @@ describe("account deletion requests", () => {
     expect((await created?.json())?.request).toMatchObject({
       status: "pending",
       source: "web",
+      squareAction: "cancel_scheduled",
+      squareEffectiveDate: "2026-09-01",
     });
     expect(store.pending()).not.toBeNull();
 
     const status = await handleAuthRequest(request("GET"), env);
     expect((await status?.json())?.request).toMatchObject({
       status: "pending",
+      squareEffectiveDate: "2026-09-01",
     });
 
     const cancelled = await handleAuthRequest(request("DELETE"), env);

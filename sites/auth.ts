@@ -1008,6 +1008,7 @@ type AccountDeletionRow = {
   scheduled_for: string;
   request_type?: "pause" | "withdrawal";
   square_action?: string | null;
+  square_effective_date?: string | null;
 };
 
 function deletionPayload(row: AccountDeletionRow | null) {
@@ -1020,6 +1021,7 @@ function deletionPayload(row: AccountDeletionRow | null) {
         scheduledFor: row.scheduled_for,
         requestType: row.request_type ?? "withdrawal",
         squareAction: row.square_action ?? null,
+        squareEffectiveDate: row.square_effective_date ?? null,
       }
     : null;
 }
@@ -1055,7 +1057,7 @@ async function accountDeletion(
   if (request.method === "GET") {
     const pending = await db
       .prepare(
-        `SELECT id, status, source, requested_at, scheduled_for, request_type, square_action
+        `SELECT id, status, source, requested_at, scheduled_for, request_type, square_action, square_effective_date
          FROM account_deletion_requests
          WHERE member_id = ? AND status IN ('pending', 'completed')
          ORDER BY requested_at DESC LIMIT 1`,
@@ -1094,7 +1096,7 @@ async function accountDeletion(
       );
     const existing = await db
       .prepare(
-        `SELECT id, status, source, requested_at, scheduled_for, request_type, square_action
+        `SELECT id, status, source, requested_at, scheduled_for, request_type, square_action, square_effective_date
          FROM account_deletion_requests
          WHERE member_id = ? AND status = 'pending'
          ORDER BY requested_at DESC LIMIT 1`,
@@ -1159,6 +1161,7 @@ async function accountDeletion(
           scheduled_for: scheduledFor,
           request_type: requestType,
           square_action: squareChange.action,
+          square_effective_date: squareChange.effectiveDate,
         }),
       },
       202,
@@ -1168,7 +1171,7 @@ async function accountDeletion(
   if (request.method === "DELETE") {
     const pending = await db
       .prepare(
-        `SELECT id, status, source, requested_at, scheduled_for, request_type, square_action
+        `SELECT id, status, source, requested_at, scheduled_for, request_type, square_action, square_effective_date
          FROM account_deletion_requests
          WHERE member_id = ? AND status = 'pending'
          ORDER BY requested_at DESC LIMIT 1`,

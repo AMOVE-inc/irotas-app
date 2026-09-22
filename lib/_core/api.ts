@@ -785,6 +785,7 @@ export type AccountDeletionRequest = {
   scheduledFor: string;
   requestType: "pause" | "withdrawal";
   squareAction: string | null;
+  squareEffectiveDate: string | null;
 };
 
 export type AdminAccountDeletionRequest = AccountDeletionRequest & {

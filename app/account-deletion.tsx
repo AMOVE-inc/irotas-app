@@ -302,7 +302,9 @@ export default function AccountDeletionScreen() {
             }}
           >
             <Text style={{ fontSize: 18, fontWeight: "900", color: "#A46400" }}>
-              {request.requestType === "pause" ? "休会申請を受付済みです" : "退会申請を受付済みです"}
+              {request.requestType === "pause"
+                ? "休会手続きは完了しています"
+                : "退会手続きは完了しています"}
             </Text>
             <Text
               style={{
@@ -313,9 +315,26 @@ export default function AccountDeletionScreen() {
               }}
             >
               申請日：{formatDate(request.requestedAt)}
-              {"\n"}処理予定期限：{formatDate(request.scheduledFor)}
+              {request.squareEffectiveDate
+                ? `\nサブスク停止日：${formatDate(request.squareEffectiveDate)}`
+                : ""}
+              {request.requestType === "withdrawal" && request.squareEffectiveDate
+                ? `\nアプリ利用期限：${formatDate(request.squareEffectiveDate)}`
+                : ""}
+              {request.requestType === "withdrawal"
+                ? `\nアカウント処理期限：${formatDate(request.scheduledFor)}`
+                : ""}
             </Text>
-            <Text style={{ marginTop: 12, fontSize: 12, lineHeight: 19, color: colors.muted }}>Square側の予約を含むため、変更や取り消しは運営へお問い合わせください。</Text>
+            <Text style={{ marginTop: 12, fontSize: 13, lineHeight: 20, color: colors.foreground }}>
+              {request.squareAction === "cancel_scheduled" && request.squareEffectiveDate
+                ? `${formatDate(request.squareEffectiveDate)}まではアプリをご利用いただけます。Squareのサブスクリプションは解約予約済みのため、次回更新は行われません。`
+                : request.requestType === "pause"
+                  ? "Squareのサブスクリプション休止処理は予約済みです。反映日はSquareの請求周期に従います。"
+                  : "Squareのサブスクリプション解約処理を受け付けています。"}
+            </Text>
+            <Text style={{ marginTop: 8, fontSize: 12, lineHeight: 19, color: colors.muted }}>
+              アカウント処理期限までにプロフィールとログイン情報の退会処理を行います。変更や取り消しは運営へお問い合わせください。
+            </Text>
           </View>
         ) : (
           <View style={{ marginTop: 22 }}>
