@@ -12,6 +12,10 @@ describe("account deletion satisfaction survey", () => {
     expect(screen).toContain('{ value: 5, label: "とても満足" }');
     expect(screen).toContain("setSatisfaction(option.value)");
     expect(screen).toContain('accessibilityRole="radio"');
+    expect(screen.indexOf('{ value: 5, label: "とても満足" }')).toBeLessThan(screen.indexOf('{ value: 4, label: "満足" }'));
+    expect(screen.indexOf('{ value: 4, label: "満足" }')).toBeLessThan(screen.indexOf('{ value: 3, label: "普通" }'));
+    expect(screen.indexOf('{ value: 3, label: "普通" }')).toBeLessThan(screen.indexOf('{ value: 2, label: "不満" }'));
+    expect(screen.indexOf('{ value: 2, label: "不満" }')).toBeLessThan(screen.indexOf('{ value: 1, label: "とても不満" }'));
   });
 
   it("uses the revised withdrawal copy and asks for an optional satisfaction reason", () => {

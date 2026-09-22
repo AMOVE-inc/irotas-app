@@ -31,11 +31,11 @@ function formatDate(value: string) {
 }
 
 const SATISFACTION_OPTIONS = [
-  { value: 1, label: "とても不満" },
-  { value: 2, label: "不満" },
-  { value: 3, label: "普通" },
-  { value: 4, label: "満足" },
   { value: 5, label: "とても満足" },
+  { value: 4, label: "満足" },
+  { value: 3, label: "普通" },
+  { value: 2, label: "不満" },
+  { value: 1, label: "とても不満" },
 ] as const;
 
 export default function AccountDeletionScreen() {
