@@ -1,3 +1,4 @@
+import { openExternalUrl } from "@/lib/open-external-url";
 import { ScreenContainer } from "@/components/screen-container";
 import { NewMemberMark } from "@/components/new-member-mark";
 import { MemberRankBadge, MemberRoleBadge, clubLeaderBadgeForClub, stripRankFromName } from "@/components/member-rank-badge";
@@ -1098,8 +1099,8 @@ export default function ProfileScreen() {
               { label: "お気に入りのお店", value: profileDetails.favoriteRestaurants }, { label: "行ってみたいお店", value: profileDetails.desiredRestaurants },
             ].filter((item) => item.value).map((item) => <View key={item.label} style={{ width: "50%", paddingRight: 8 }}><Text style={{ fontSize: 10, color: colors.muted }}>{item.label}</Text><Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground, marginTop: 2 }}>{item.value}</Text></View>)}
           </View>
-          {profileDetails.instagramUrl ? <Pressable onPress={() => Linking.openURL(profileDetails.instagramUrl)} style={{ flexDirection: "row", alignItems: "center", marginTop: 14, paddingTop: 12, borderTopWidth: 0.5, borderTopColor: colors.border }}><IconSymbol name="camera.fill" size={17} color="#C13584" /><Text style={{ flex: 1, marginLeft: 7, fontSize: 13, fontWeight: "700", color: "#C13584" }}>Instagramを見る</Text><IconSymbol name="chevron.right" size={15} color="#C13584" /></Pressable> : null}
-          {profileDetails.tabelogUrl ? <Pressable onPress={() => Linking.openURL(profileDetails.tabelogUrl)} style={{ flexDirection: "row", alignItems: "center", marginTop: 12, paddingTop: 12, borderTopWidth: 0.5, borderTopColor: colors.border }}><IconSymbol name="fork.knife" size={17} color="#E06B24" /><Text style={{ flex: 1, marginLeft: 7, fontSize: 13, fontWeight: "700", color: "#E06B24" }}>食べログを見る</Text><IconSymbol name="chevron.right" size={15} color="#E06B24" /></Pressable> : null}
+          {profileDetails.instagramUrl ? <Pressable onPress={() => openExternalUrl(profileDetails.instagramUrl)} style={{ flexDirection: "row", alignItems: "center", marginTop: 14, paddingTop: 12, borderTopWidth: 0.5, borderTopColor: colors.border }}><IconSymbol name="camera.fill" size={17} color="#C13584" /><Text style={{ flex: 1, marginLeft: 7, fontSize: 13, fontWeight: "700", color: "#C13584" }}>Instagramを見る</Text><IconSymbol name="chevron.right" size={15} color="#C13584" /></Pressable> : null}
+          {profileDetails.tabelogUrl ? <Pressable onPress={() => openExternalUrl(profileDetails.tabelogUrl)} style={{ flexDirection: "row", alignItems: "center", marginTop: 12, paddingTop: 12, borderTopWidth: 0.5, borderTopColor: colors.border }}><IconSymbol name="fork.knife" size={17} color="#E06B24" /><Text style={{ flex: 1, marginLeft: 7, fontSize: 13, fontWeight: "700", color: "#E06B24" }}>食べログを見る</Text><IconSymbol name="chevron.right" size={15} color="#E06B24" /></Pressable> : null}
           {profileDetails.googleLocalGuideLevel ? <View style={{ marginTop: 12, paddingTop: 12, borderTopWidth: 0.5, borderTopColor: colors.border }}><Text style={{ fontSize: 10, color: colors.muted }}>Googleローカルガイドレベル</Text><Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground, marginTop: 2 }}>{profileDetails.googleLocalGuideLevel}</Text></View> : null}
         </View>
 
@@ -1329,7 +1330,7 @@ export default function ProfileScreen() {
               color: "#E1306C",
               onPress: async () => {
                 try {
-                  await Linking.openURL(OFFICIAL_INSTAGRAM_URL);
+                  await openExternalUrl(OFFICIAL_INSTAGRAM_URL);
                 } catch {
                   Alert.alert("リンクを開けませんでした", OFFICIAL_INSTAGRAM_URL);
                 }

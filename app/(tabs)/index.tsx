@@ -1,3 +1,4 @@
+import { openExternalUrl } from "@/lib/open-external-url";
 import { ScreenContainer } from "@/components/screen-container";
 import { NewMemberMark } from "@/components/new-member-mark";
 import { BrandLogo } from "@/components/brand-logo";
@@ -67,7 +68,7 @@ function LinkifiedText({ content, style }: { content: string; style: any }) {
         <Text
           key={`${part}-${index}`}
           accessibilityRole="link"
-          onPress={() => void Linking.openURL(part)}
+          onPress={() => void openExternalUrl(part)}
           style={{ color: "#3686BD", textDecorationLine: "underline", fontWeight: "700" }}
         >
           {part}

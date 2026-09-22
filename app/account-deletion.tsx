@@ -1,3 +1,4 @@
+import { openExternalUrl } from "@/lib/open-external-url";
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import {
@@ -401,12 +402,12 @@ export default function AccountDeletionScreen() {
             gap: 18,
           }}
         >
-          <Pressable onPress={() => void Linking.openURL(PRIVACY_POLICY_URL)}>
+          <Pressable onPress={() => void openExternalUrl(PRIVACY_POLICY_URL)}>
             <Text style={{ color: "#5B78A5", textDecorationLine: "underline" }}>
               プライバシーポリシー
             </Text>
           </Pressable>
-          <Pressable onPress={() => void Linking.openURL(OFFICIAL_LINE_URL)}>
+          <Pressable onPress={() => void openExternalUrl(OFFICIAL_LINE_URL)}>
             <Text style={{ color: "#5B78A5", textDecorationLine: "underline" }}>
               運営へ問い合わせる
             </Text>

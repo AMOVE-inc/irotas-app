@@ -1,3 +1,4 @@
+import { openExternalUrl } from "@/lib/open-external-url";
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { COMMUNITY_TERMS_URL, EVENT_TERMS_URL, REPORT_FORM_URL } from "@/constants/external-links";
@@ -96,7 +97,7 @@ function LinkButton({ label, url }: { label: string; url: string }) {
   return (
     <Pressable
       accessibilityRole="link"
-      onPress={() => void Linking.openURL(url)}
+      onPress={() => void openExternalUrl(url)}
       style={({ pressed }) => ({
         flexDirection: "row",
         alignItems: "center",
@@ -153,7 +154,7 @@ export default function CommunityRulesScreen() {
             </Text>
             <Pressable
               accessibilityRole="link"
-              onPress={() => void Linking.openURL(REPORT_FORM_URL)}
+              onPress={() => void openExternalUrl(REPORT_FORM_URL)}
               style={({ pressed }) => ({ alignSelf: "flex-start", marginTop: 8, paddingHorizontal: 13, paddingVertical: 9, borderRadius: 10, backgroundColor: "#5B5A73", opacity: pressed ? 0.75 : 1 })}
             >
               <Text style={{ fontSize: 13, fontWeight: "800", color: "#FFFFFF" }}>相談・通報フォームを開く</Text>

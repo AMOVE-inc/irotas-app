@@ -1,3 +1,4 @@
+import { openExternalUrl } from "@/lib/open-external-url";
 import { Image } from "expo-image";
 import { useEffect, useState } from "react";
 import { Linking, Pressable, Text, View } from "react-native";
@@ -23,7 +24,7 @@ export function BoardLinkPreviewCard({ preview }: { preview: ImportedLinkPreview
   const description = preview.description === preview.url ? metadata.description ?? preview.description : preview.description ?? metadata.description;
   const imageUrl = metadata.imageUrl;
 
-  return <Pressable onPress={() => void Linking.openURL(preview.url)} accessibilityRole="link" accessibilityLabel={`${preview.provider}で${title}を開く`} style={{ borderWidth: 1, borderColor: "#E2E3E8", borderLeftWidth: 4, borderRadius: 9, overflow: "hidden", marginTop: 8, flexDirection: "row", backgroundColor: "#FFF" }}>
+  return <Pressable onPress={() => void openExternalUrl(preview.url)} accessibilityRole="link" accessibilityLabel={`${preview.provider}で${title}を開く`} style={{ borderWidth: 1, borderColor: "#E2E3E8", borderLeftWidth: 4, borderRadius: 9, overflow: "hidden", marginTop: 8, flexDirection: "row", backgroundColor: "#FFF" }}>
     <View style={{ flex: 1, paddingHorizontal: 12, paddingVertical: 10, justifyContent: "center" }}>
       <Text style={{ color: "#6D7080", fontSize: 11, fontWeight: "700" }}>{preview.provider}</Text>
       <Text numberOfLines={2} style={{ color: "#2065B7", fontSize: 14, fontWeight: "800", marginTop: 3 }}>{title}</Text>

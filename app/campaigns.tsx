@@ -1,3 +1,4 @@
+import { openExternalUrl } from "@/lib/open-external-url";
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { useColors } from "@/hooks/use-colors";
@@ -18,7 +19,7 @@ function CampaignDescription({ description, color }: { description: string; colo
         <Text
           key={`${index}-${part.text}`}
           accessibilityRole={part.url ? "link" : undefined}
-          onPress={part.url ? () => { void Linking.openURL(part.url!).catch(() => Alert.alert("リンクを開けませんでした")); } : undefined}
+          onPress={part.url ? () => { void openExternalUrl(part.url!).catch(() => Alert.alert("リンクを開けませんでした")); } : undefined}
           style={{ color: part.url ? "#3478C7" : color, textDecorationLine: part.url ? "underline" : "none" }}
         >
           {part.text}

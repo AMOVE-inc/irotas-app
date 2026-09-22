@@ -1,3 +1,4 @@
+import { openExternalUrl } from "@/lib/open-external-url";
 import { Image } from "expo-image";
 import { Linking, Pressable, ScrollView, Text, View, type TextStyle } from "react-native";
 import { BOARD_THREADS, type Member , BoardThread, ChatRoom } from "@/constants/mock-data";
@@ -76,7 +77,7 @@ export function MentionText({ content, outgoing = false, groups, rooms = getAllR
     if (token.type === "text") return <Text key={`${keyPrefix}-${index}`}>{renderMentions(token.value, `${keyPrefix}-${index}-mention`)}</Text>;
     const internal = parseInternalLink(token.url, rooms, threads);
     if (internal) return <Text key={`${keyPrefix}-${index}`}><Text accessibilityRole="link" onPress={() => openInternalLink(internal.pathname, internal.params)} style={{ fontWeight: "800", color: outgoing ? "#164F91" : "#2065B7", textDecorationLine: "underline" }}><InternalLinkLabel link={internal} /></Text>{token.suffix}</Text>;
-    return <Text key={`${keyPrefix}-${index}`}><Text accessibilityRole="link" onPress={() => void Linking.openURL(token.url)} style={{ color: outgoing ? "#DCEBFF" : "#3478C7", textDecorationLine: "underline", fontWeight: "700" }}>{token.label}</Text>{token.suffix}</Text>;
+    return <Text key={`${keyPrefix}-${index}`}><Text accessibilityRole="link" onPress={() => void openExternalUrl(token.url)} style={{ color: outgoing ? "#DCEBFF" : "#3478C7", textDecorationLine: "underline", fontWeight: "700" }}>{token.label}</Text>{token.suffix}</Text>;
   });
 
   return (

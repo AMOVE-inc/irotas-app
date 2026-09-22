@@ -1,3 +1,4 @@
+import { openExternalUrl } from "@/lib/open-external-url";
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import {
@@ -236,7 +237,7 @@ function RestaurantDetail({
         )}
         {restaurant.googleMapsUrl ? (
           <Pressable
-            onPress={() => Linking.openURL(restaurant.googleMapsUrl!)}
+            onPress={() => openExternalUrl(restaurant.googleMapsUrl!)}
             style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", backgroundColor: "#4285F4", borderRadius: 14, paddingVertical: 14, marginBottom: 24 }}
           >
             <IconSymbol name="map.fill" size={18} color="#FFF" />
@@ -499,7 +500,7 @@ export default function GourmetMapScreen() {
               key={label}
               onPress={async () => {
                 try {
-                  await Linking.openURL(url);
+                  await openExternalUrl(url);
                 } catch {
                   Alert.alert("リンクを開けませんでした", "運営へお問い合わせください。");
                 }

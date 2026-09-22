@@ -1,3 +1,4 @@
+import { openExternalUrl } from "@/lib/open-external-url";
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { EVENTS, CURRENT_USER, DEFAULT_AVATAR, MEMBERS, getMemberById, type Event, type MemberRank } from "@/constants/mock-data";
@@ -694,7 +695,7 @@ export default function EventDetailScreen() {
     try {
       const checkout = await Api.createEventCheckout(event.id);
       setEventCheckout(checkout);
-      if (checkout.status === "ready" && checkout.checkoutUrl) await Linking.openURL(checkout.checkoutUrl);
+      if (checkout.status === "ready" && checkout.checkoutUrl) await openExternalUrl(checkout.checkoutUrl);
     } catch (error) {
       Alert.alert("決済ページを開けませんでした", error instanceof Error ? error.message : "時間をおいて再度お試しください。");
     } finally {
@@ -981,16 +982,16 @@ export default function EventDetailScreen() {
   };
 
   const handleOpenMap = () => {
-    if (event.googleMapsUrl) { void Linking.openURL(/^https?:\/\//i.test(event.googleMapsUrl) ? event.googleMapsUrl : `https://${event.googleMapsUrl}`); return; }
+    if (event.googleMapsUrl) { void openExternalUrl(/^https?:\/\//i.test(event.googleMapsUrl) ? event.googleMapsUrl : `https://${event.googleMapsUrl}`); return; }
     const query = encodeURIComponent(event.location);
     const url = Platform.OS === "ios"
       ? `maps:?q=${query}`
       : `https://maps.google.com/?q=${query}`;
     Linking.canOpenURL(url).then((supported) => {
       if (supported) {
-        Linking.openURL(url);
+        openExternalUrl(url);
       } else {
-        Linking.openURL(`https://maps.google.com/?q=${query}`);
+        openExternalUrl(`https://maps.google.com/?q=${query}`);
       }
     });
   };
@@ -1131,10 +1132,10 @@ export default function EventDetailScreen() {
               </Text>
             </View>
           </View>
-          {event.tabelogUrl ? <Pressable onPress={() => Linking.openURL(/^https?:\/\//i.test(event.tabelogUrl!) ? event.tabelogUrl! : `https://${event.tabelogUrl!}`)} style={{ flexDirection: "row", alignItems: "center", marginTop: 14, paddingTop: 14, borderTopWidth: 0.5, borderTopColor: colors.border }}><View style={{ width: 40, height: 40, borderRadius: 12, backgroundColor: "#FFF1E8", alignItems: "center", justifyContent: "center" }}><IconSymbol name="link" size={19} color="#E67A31" /></View><View style={{ flex: 1, marginLeft: 12 }}><Text style={{ fontSize: 15, fontWeight: "700", color: colors.foreground }}>食べログ</Text><Text style={{ fontSize: 13, color: "#E67A31" }}>タップして食べログを開く ↗</Text></View><IconSymbol name="chevron.right" size={16} color="#E67A31" /></Pressable> : null}
+          {event.tabelogUrl ? <Pressable onPress={() => openExternalUrl(/^https?:\/\//i.test(event.tabelogUrl!) ? event.tabelogUrl! : `https://${event.tabelogUrl!}`)} style={{ flexDirection: "row", alignItems: "center", marginTop: 14, paddingTop: 14, borderTopWidth: 0.5, borderTopColor: colors.border }}><View style={{ width: 40, height: 40, borderRadius: 12, backgroundColor: "#FFF1E8", alignItems: "center", justifyContent: "center" }}><IconSymbol name="link" size={19} color="#E67A31" /></View><View style={{ flex: 1, marginLeft: 12 }}><Text style={{ fontSize: 15, fontWeight: "700", color: colors.foreground }}>食べログ</Text><Text style={{ fontSize: 13, color: "#E67A31" }}>タップして食べログを開く ↗</Text></View><IconSymbol name="chevron.right" size={16} color="#E67A31" /></Pressable> : null}
           <View style={{ flexDirection: "row", gap: 8, marginTop: 16, paddingTop: 14, borderTopWidth: 0.5, borderTopColor: colors.border }}>
-            <Pressable onPress={() => Linking.openURL(getGoogleCalendarUrl(event))} style={{ flex: 1, minHeight: 42, borderRadius: 10, backgroundColor: "#F4F6F8", alignItems: "center", justifyContent: "center", flexDirection: "row" }}><IconSymbol name="calendar" size={16} color="#4285F4" /><Text style={{ marginLeft: 6, fontSize: 12, fontWeight: "800", color: colors.foreground }}>Googleカレンダー</Text></Pressable>
-            <Pressable onPress={() => Linking.openURL(getOutlookCalendarUrl(event))} style={{ flex: 1, minHeight: 42, borderRadius: 10, backgroundColor: "#F4F6F8", alignItems: "center", justifyContent: "center", flexDirection: "row" }}><IconSymbol name="calendar" size={16} color="#0078D4" /><Text style={{ marginLeft: 6, fontSize: 12, fontWeight: "800", color: colors.foreground }}>Outlook</Text></Pressable>
+            <Pressable onPress={() => openExternalUrl(getGoogleCalendarUrl(event))} style={{ flex: 1, minHeight: 42, borderRadius: 10, backgroundColor: "#F4F6F8", alignItems: "center", justifyContent: "center", flexDirection: "row" }}><IconSymbol name="calendar" size={16} color="#4285F4" /><Text style={{ marginLeft: 6, fontSize: 12, fontWeight: "800", color: colors.foreground }}>Googleカレンダー</Text></Pressable>
+            <Pressable onPress={() => openExternalUrl(getOutlookCalendarUrl(event))} style={{ flex: 1, minHeight: 42, borderRadius: 10, backgroundColor: "#F4F6F8", alignItems: "center", justifyContent: "center", flexDirection: "row" }}><IconSymbol name="calendar" size={16} color="#0078D4" /><Text style={{ marginLeft: 6, fontSize: 12, fontWeight: "800", color: colors.foreground }}>Outlook</Text></Pressable>
           </View>
         </View>
 
@@ -1355,7 +1356,7 @@ export default function EventDetailScreen() {
               <View style={{ width: 24, height: 24, borderRadius: 6, backgroundColor: termsAccepted ? "#E8A0BF" : colors.surface, borderWidth: 1, borderColor: termsAccepted ? "#E8A0BF" : colors.border, alignItems: "center", justifyContent: "center" }}>{termsAccepted ? <IconSymbol name="checkmark" size={15} color="#FFF" /> : null}</View>
               <Text style={{ flex: 1, marginLeft: 9, fontSize: 14, fontWeight: "800", color: colors.foreground }}>イベント参加規約に同意する</Text>
             </Pressable>
-            <Pressable onPress={() => Linking.openURL(EVENT_TERMS_URL)} style={{ marginLeft: 33, marginTop: 7 }}><Text style={{ fontSize: 13, color: "#5B9BD5", textDecorationLine: "underline" }}>イベント参加規約を確認する</Text></Pressable>
+            <Pressable onPress={() => openExternalUrl(EVENT_TERMS_URL)} style={{ marginLeft: 33, marginTop: 7 }}><Text style={{ fontSize: 13, color: "#5B9BD5", textDecorationLine: "underline" }}>イベント参加規約を確認する</Text></Pressable>
           </View>
         ) : null}
 

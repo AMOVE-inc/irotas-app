@@ -1,3 +1,4 @@
+import { openExternalUrl } from "@/lib/open-external-url";
 import { ScreenContainer } from "@/components/screen-container";
 import { ExpandableImage } from "@/components/expandable-image";
 import { BoardLinkPreviewCard } from "@/components/board-link-preview-card";
@@ -258,7 +259,7 @@ function MealReportContent({ thread, compact = false }: { thread: BoardThread; c
         {report.googleMapUrl ? <Pressable
           onPress={async (event) => {
             event.stopPropagation?.();
-            await Linking.openURL(report.googleMapUrl!);
+            await openExternalUrl(report.googleMapUrl!);
           }}
           style={{
             flexDirection: "row",
@@ -278,7 +279,7 @@ function MealReportContent({ thread, compact = false }: { thread: BoardThread; c
         {report.tabelogUrl ? <Pressable
           onPress={async (event) => {
             event.stopPropagation?.();
-            await Linking.openURL(report.tabelogUrl!);
+            await openExternalUrl(report.tabelogUrl!);
           }}
           style={{ flexDirection: "row", alignItems: "center", alignSelf: "flex-start", backgroundColor: "#FFF0E6", borderRadius: 10, paddingHorizontal: 12, paddingVertical: 8 }}
         >

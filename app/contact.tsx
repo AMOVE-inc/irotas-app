@@ -1,9 +1,10 @@
+import { openExternalUrl } from "@/lib/open-external-url";
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { OFFICIAL_LINE_URL, REPORT_FORM_URL } from "@/constants/external-links";
 import { useColors } from "@/hooks/use-colors";
 import { useRouter } from "expo-router";
-import { Alert, Linking, Pressable, ScrollView, Text, View } from "react-native";
+import { Alert, Pressable, ScrollView, Text, View } from "react-native";
 
 const REPORT_EXAMPLES = [
   "他の会員から不快な言動を受けた",
@@ -12,9 +13,9 @@ const REPORT_EXAMPLES = [
   "運営に相談したいことがある",
 ] as const;
 
-async function openExternalUrl(url: string) {
+async function openExternalUrlSafely(url: string) {
   try {
-    await Linking.openURL(url);
+    await openExternalUrl(url);
   } catch {
     Alert.alert("リンクを開けませんでした", "時間をおいて、もう一度お試しください。");
   }
@@ -24,7 +25,7 @@ function ContactButton({ label, url, color }: { label: string; url: string; colo
   return (
     <Pressable
       accessibilityRole="link"
-      onPress={() => void openExternalUrl(url)}
+      onPress={() => void openExternalUrlSafely(url)}
       style={({ pressed }) => ({ flexDirection: "row", alignItems: "center", justifyContent: "center", minHeight: 48, borderRadius: 13, backgroundColor: color, paddingHorizontal: 16, opacity: pressed ? 0.75 : 1 })}
     >
       <Text style={{ fontSize: 15, fontWeight: "900", color: "#FFFFFF" }}>{label}</Text>

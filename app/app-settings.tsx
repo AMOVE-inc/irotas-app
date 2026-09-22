@@ -1,3 +1,4 @@
+import { openExternalUrl } from "@/lib/open-external-url";
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { useColors } from "@/hooks/use-colors";
@@ -342,13 +343,13 @@ export default function AppSettingsScreen() {
           icon="doc.text.fill"
           iconColor="#8E8E93"
           label="利用規約"
-          onPress={() => void Linking.openURL(COMMUNITY_TERMS_URL)}
+          onPress={() => void openExternalUrl(COMMUNITY_TERMS_URL)}
         />
         <SettingRow
           icon="lock.fill"
           iconColor="#8E8E93"
           label="プライバシーポリシー"
-          onPress={() => void Linking.openURL(PRIVACY_POLICY_URL)}
+          onPress={() => void openExternalUrl(PRIVACY_POLICY_URL)}
         />
         <SettingRow
           icon="trash.fill"

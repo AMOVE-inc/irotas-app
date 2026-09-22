@@ -1,3 +1,4 @@
+import { openExternalUrl } from "@/lib/open-external-url";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { CURRENT_USER, RANK_COLORS, RANK_LABELS, type Coupon } from "@/constants/mock-data";
 import { useColors } from "@/hooks/use-colors";
@@ -56,7 +57,7 @@ function CouponDescriptionText({ description, color }: { description: string; co
         <Text
           key={`${index}-${part.text}`}
           accessibilityRole={part.url ? "link" : undefined}
-          onPress={part.url ? () => { void Linking.openURL(part.url!).catch(() => Alert.alert("リンクを開けませんでした")); } : undefined}
+          onPress={part.url ? () => { void openExternalUrl(part.url!).catch(() => Alert.alert("リンクを開けませんでした")); } : undefined}
           style={{ fontWeight: part.bold ? "800" : "400", color: part.url ? "#3478C7" : color, textDecorationLine: part.url ? "underline" : "none" }}
         >
           {part.text}
