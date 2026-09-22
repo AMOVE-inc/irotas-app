@@ -12,6 +12,12 @@ describe("external link navigation", () => {
     expect(helper.slice(helper.indexOf("window.open"), helper.indexOf("await Linking.openURL"))).toContain("return;");
   });
 
+  it("does not create an about:blank tab for Tabelog app handoff", () => {
+    expect(helper).toContain('hostname === "tabelog.com" || hostname.endsWith(".tabelog.com")');
+    expect(helper).toContain("window.location.assign(url)");
+    expect(helper.indexOf("window.location.assign(url)")).toBeLessThan(helper.indexOf('window.open(url, "_blank"'));
+  });
+
   it("uses the shared opener for links in posts and event details", () => {
     expect(mentionUi).toContain("openExternalUrl(token.url)");
     expect(eventDetail).toContain("openExternalUrl(/^https?:\\/\\//i.test(event.tabelogUrl!)");
