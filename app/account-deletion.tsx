@@ -51,7 +51,7 @@ export default function AccountDeletionScreen() {
   const [reasons, setReasons] = useState<string[]>([]);
   const [surveyComment, setSurveyComment] = useState("");
   const [satisfaction, setSatisfaction] = useState<number | null>(null);
-  const [expectationsMet, setExpectationsMet] = useState("");
+  const [satisfactionReason, setSatisfactionReason] = useState("");
   const [valuedFeatures, setValuedFeatures] = useState<string[]>([]);
   const [continuationCondition, setContinuationCondition] = useState("");
   const [subscriptionConfirmed, setSubscriptionConfirmed] = useState(false);
@@ -77,7 +77,7 @@ export default function AccountDeletionScreen() {
         reasons,
         surveyComment,
         satisfaction,
-        expectationsMet,
+        satisfactionReason,
         valuedFeatures,
         continuationCondition,
         understandSquareChange: subscriptionConfirmed,
@@ -223,7 +223,7 @@ export default function AccountDeletionScreen() {
         <Text
           style={{ fontSize: 14, lineHeight: 23, color: colors.foreground }}
         >
-          アプリから休会または退会を申請できます。アンケート送信時に、連携済みのSquare定期決済も自動で休止または解約予約します。
+          アプリから休会または退会を申請できます。アンケート送信時に、サブスクリプション決済も自動で休止または解約予約します。
         </Text>
 
         <View
@@ -247,9 +247,9 @@ export default function AccountDeletionScreen() {
               color: colors.foreground,
             }}
           >
-            ・休会はSquareの定期決済を次回請求周期から休止します。退会は現在の請求期間終了時に解約されます。
+            ・休会はSquareのサブスクリプション決済を次回請求周期から休止します。退会は現在の請求期間終了時に解約されます。
             {"\n"}
-            ・休会・退会とも、現在の決済期間が終了するとDiscordへアクセスできなくなります。
+            ・休会・退会とも、現在の決済期間が終了するとアプリへアクセスできなくなります。
             {"\n"}
             ・プロフィールやログイン情報は削除対象です。法令、会計、不正防止、トラブル対応に必要な取引・監査記録は、必要な期間に限り保持する場合があります。
             {"\n"}
@@ -321,13 +321,13 @@ export default function AccountDeletionScreen() {
           <View style={{ marginTop: 22 }}>
             <Text style={{ fontSize: 14, fontWeight: "900", color: colors.foreground, marginBottom: 9 }}>手続きの種類</Text>
             <View style={{ flexDirection: "row", gap: 10, marginBottom: 18 }}>{(["pause", "withdrawal"] as const).map((type) => <Pressable key={type} onPress={() => setRequestType(type)} style={{ flex: 1, minHeight: 48, borderRadius: 13, alignItems: "center", justifyContent: "center", backgroundColor: requestType === type ? "#C94F7C" : colors.surface, borderWidth: 1, borderColor: requestType === type ? "#C94F7C" : colors.border }}><Text style={{ fontSize: 15, fontWeight: "900", color: requestType === type ? "#FFF" : colors.foreground }}>{type === "pause" ? "休会" : "退会"}</Text></Pressable>)}</View>
-            <Text style={{ fontSize: 14, fontWeight: "900", color: colors.foreground }}>アンケート（複数選択可）</Text>
+            <Text style={{ fontSize: 14, fontWeight: "900", color: colors.foreground }}>休会・退会理由（複数選択可）</Text>
             {['仕事や家庭の都合', '参加する時間が取れない', '費用を見直したい', '利用したい機能が少ない', 'その他'].map((reason) => <CheckRow key={reason} checked={reasons.includes(reason)} onPress={() => setReasons((current) => current.includes(reason) ? current.filter((item) => item !== reason) : [...current, reason])}>{reason}</CheckRow>)}
             <TextInput value={surveyComment} onChangeText={setSurveyComment} multiline placeholder="ご意見や再開条件など（任意）" placeholderTextColor={colors.muted} style={{ minHeight: 96, marginTop: 14, borderRadius: 13, borderWidth: 1, borderColor: colors.border, padding: 13, color: colors.foreground, textAlignVertical: "top" }} />
-            <Text style={{ fontSize: 14, fontWeight: "900", color: colors.foreground, marginTop: 20 }}>入会前の期待は満たされましたか？</Text>
-            {['期待以上だった', 'だいたい期待通りだった', '一部期待通りではなかった', 'ほとんど期待通りではなかった'].map((option) => <Pressable key={option} onPress={() => setExpectationsMet(option)} style={{ flexDirection: "row", alignItems: "center", marginTop: 10 }}><View style={{ width: 20, height: 20, borderRadius: 10, borderWidth: 2, borderColor: expectationsMet === option ? "#C94F7C" : colors.border, alignItems: "center", justifyContent: "center" }}>{expectationsMet === option ? <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: "#C94F7C" }} /> : null}</View><Text style={{ marginLeft: 9, fontSize: 13, color: colors.foreground }}>{option}</Text></Pressable>)}
             <Text style={{ fontSize: 14, fontWeight: "900", color: colors.foreground, marginTop: 20 }}>総合満足度</Text>
             <View style={{ gap: 8, marginTop: 10 }}>{SATISFACTION_OPTIONS.map((option) => <Pressable key={option.value} accessibilityRole="radio" accessibilityState={{ checked: satisfaction === option.value }} onPress={() => setSatisfaction(option.value)} style={{ minHeight: 46, borderRadius: 10, paddingHorizontal: 14, flexDirection: "row", alignItems: "center", backgroundColor: satisfaction === option.value ? "#FBE8F0" : colors.surface, borderWidth: 1, borderColor: satisfaction === option.value ? "#C94F7C" : colors.border }}><View style={{ width: 20, height: 20, borderRadius: 10, borderWidth: 2, borderColor: satisfaction === option.value ? "#C94F7C" : colors.border, alignItems: "center", justifyContent: "center" }}>{satisfaction === option.value ? <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: "#C94F7C" }} /> : null}</View><Text style={{ marginLeft: 10, fontSize: 14, fontWeight: "700", color: colors.foreground }}>{option.label}</Text></Pressable>)}</View>
+            <Text style={{ fontSize: 14, fontWeight: "900", color: colors.foreground, marginTop: 20 }}>よろしければ上記の理由をお聞かせください。（任意）</Text>
+            <TextInput value={satisfactionReason} onChangeText={setSatisfactionReason} multiline placeholder="理由を入力してください" placeholderTextColor={colors.muted} style={{ minHeight: 88, marginTop: 10, borderRadius: 13, borderWidth: 1, borderColor: colors.border, padding: 13, color: colors.foreground, textAlignVertical: "top" }} />
             <Text style={{ fontSize: 14, fontWeight: "900", color: colors.foreground, marginTop: 20 }}>良かったサービス（複数選択可）</Text>
             {['公式イベント', 'グルメ会（メンバー主催）', '部活動', '会員限定クーポン', 'プレゼント企画', '共有グルメマップ', 'メンバー間の交流'].map((feature) => <CheckRow key={feature} checked={valuedFeatures.includes(feature)} onPress={() => setValuedFeatures((current) => current.includes(feature) ? current.filter((item) => item !== feature) : [...current, feature])}>{feature}</CheckRow>)}
             <TextInput value={continuationCondition} onChangeText={setContinuationCondition} multiline placeholder="どのような内容があれば継続・再開を検討しますか？（任意）" placeholderTextColor={colors.muted} style={{ minHeight: 88, marginTop: 14, borderRadius: 13, borderWidth: 1, borderColor: colors.border, padding: 13, color: colors.foreground, textAlignVertical: "top" }} />
@@ -362,13 +362,13 @@ export default function AccountDeletionScreen() {
               checked={subscriptionConfirmed}
               onPress={() => setSubscriptionConfirmed((value) => !value)}
             >
-              送信するとSquareの定期決済が自動で{requestType === "pause" ? "休止予約" : "解約予約"}されることを確認しました。
+              送信するとサブスクリプション決済が自動で{requestType === "pause" ? "休止予約" : "解約予約"}されることを確認しました。
             </CheckRow>
             <CheckRow
               checked={dataConfirmed}
               onPress={() => setDataConfirmed((value) => !value)}
             >
-              {requestType === "pause" ? "決済期間終了後はDiscordと会員機能へアクセスできません。再開には運営への連絡が必要です。" : "決済期間終了後はDiscordへアクセスできません。退会後は元に戻せず、必要な記録が一定期間保持される場合があります。"}
+              {requestType === "pause" ? "決済期間終了後はアプリへアクセスできません。再開には運営への連絡が必要です。" : "決済期間終了後はアプリへアクセスできません。退会後は元に戻せず、必要な記録が一定期間保持される場合があります。"}
             </CheckRow>
             <Pressable
               onPress={() => void submit()}

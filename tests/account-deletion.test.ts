@@ -158,6 +158,8 @@ describe("account deletion requests", () => {
         requestType: "withdrawal",
         reasons: ["参加する時間が取れない"],
         surveyComment: "再開予定あり",
+        satisfaction: 4,
+        satisfactionReason: "イベントには満足していたため",
         understandSquareChange: true,
         understandDataHandling: true,
         source: "web",

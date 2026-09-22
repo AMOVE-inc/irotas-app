@@ -1073,6 +1073,7 @@ async function accountDeletion(
     const surveyComment = typeof input.surveyComment === "string" ? input.surveyComment.trim().slice(0, 1000) : "";
     const satisfactionValue = Number(input.satisfaction);
     const satisfaction = Number.isInteger(satisfactionValue) && satisfactionValue >= 1 && satisfactionValue <= 5 ? satisfactionValue : null;
+    const satisfactionReason = typeof input.satisfactionReason === "string" ? input.satisfactionReason.trim().slice(0, 1000) : "";
     const expectationsMet = typeof input.expectationsMet === "string" ? input.expectationsMet.slice(0, 100) : "";
     const valuedFeatures = Array.isArray(input.valuedFeatures) ? input.valuedFeatures.filter((value: unknown): value is string => typeof value === "string").slice(0, 12) : [];
     const continuationCondition = typeof input.continuationCondition === "string" ? input.continuationCondition.trim().slice(0, 1000) : "";
@@ -1133,7 +1134,7 @@ async function accountDeletion(
            (id, member_id, status, source, requested_at, scheduled_for, updated_at, request_type, survey_json, square_action, square_effective_date)
            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         )
-        .bind(id, member.id, requestType === "pause" ? "completed" : "pending", source, requestedAt, scheduledFor, requestedAt, requestType, JSON.stringify({ reasons, comment: surveyComment, satisfaction, expectationsMet, valuedFeatures, continuationCondition }), squareChange.action, squareChange.effectiveDate),
+        .bind(id, member.id, requestType === "pause" ? "completed" : "pending", source, requestedAt, scheduledFor, requestedAt, requestType, JSON.stringify({ reasons, comment: surveyComment, satisfaction, satisfactionReason, expectationsMet, valuedFeatures, continuationCondition }), squareChange.action, squareChange.effectiveDate),
       db
         .prepare(
           `INSERT INTO audit_logs

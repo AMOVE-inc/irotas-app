@@ -900,7 +900,7 @@ export async function requestAccountDeletion(input: {
   reasons: string[];
   surveyComment: string;
   satisfaction: number | null;
-  expectationsMet: string;
+  satisfactionReason: string;
   valuedFeatures: string[];
   continuationCondition: string;
   understandSquareChange: boolean;
