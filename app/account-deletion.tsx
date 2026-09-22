@@ -321,9 +321,6 @@ export default function AccountDeletionScreen() {
               {request.requestType === "withdrawal" && request.squareEffectiveDate
                 ? `\nアプリ利用期限：${formatDate(request.squareEffectiveDate)}`
                 : ""}
-              {request.requestType === "withdrawal"
-                ? `\nアカウント処理期限：${formatDate(request.scheduledFor)}`
-                : ""}
             </Text>
             <Text style={{ marginTop: 12, fontSize: 13, lineHeight: 20, color: colors.foreground }}>
               {request.squareAction === "cancel_scheduled" && request.squareEffectiveDate
@@ -333,7 +330,7 @@ export default function AccountDeletionScreen() {
                   : "Squareのサブスクリプション解約処理を受け付けています。"}
             </Text>
             <Text style={{ marginTop: 8, fontSize: 12, lineHeight: 19, color: colors.muted }}>
-              アカウント処理期限までにプロフィールとログイン情報の退会処理を行います。変更や取り消しは運営へお問い合わせください。
+              プロフィールとログイン情報は退会処理に伴い削除されます。変更や取り消しは運営へお問い合わせください。
             </Text>
           </View>
         ) : (
