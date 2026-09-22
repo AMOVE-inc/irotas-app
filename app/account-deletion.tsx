@@ -29,6 +29,14 @@ function formatDate(value: string) {
   }).format(new Date(value));
 }
 
+const SATISFACTION_OPTIONS = [
+  { value: 1, label: "とても不満" },
+  { value: 2, label: "不満" },
+  { value: 3, label: "普通" },
+  { value: 4, label: "満足" },
+  { value: 5, label: "とても満足" },
+] as const;
+
 export default function AccountDeletionScreen() {
   const colors = useColors();
   const router = useRouter();
@@ -318,7 +326,7 @@ export default function AccountDeletionScreen() {
             <Text style={{ fontSize: 14, fontWeight: "900", color: colors.foreground, marginTop: 20 }}>入会前の期待は満たされましたか？</Text>
             {['期待以上だった', 'だいたい期待通りだった', '一部期待通りではなかった', 'ほとんど期待通りではなかった'].map((option) => <Pressable key={option} onPress={() => setExpectationsMet(option)} style={{ flexDirection: "row", alignItems: "center", marginTop: 10 }}><View style={{ width: 20, height: 20, borderRadius: 10, borderWidth: 2, borderColor: expectationsMet === option ? "#C94F7C" : colors.border, alignItems: "center", justifyContent: "center" }}>{expectationsMet === option ? <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: "#C94F7C" }} /> : null}</View><Text style={{ marginLeft: 9, fontSize: 13, color: colors.foreground }}>{option}</Text></Pressable>)}
             <Text style={{ fontSize: 14, fontWeight: "900", color: colors.foreground, marginTop: 20 }}>総合満足度</Text>
-            <View style={{ flexDirection: "row", gap: 8, marginTop: 10 }}>{[1,2,3,4,5].map((value) => <Pressable key={value} onPress={() => setSatisfaction(value)} style={{ flex: 1, minHeight: 42, borderRadius: 10, alignItems: "center", justifyContent: "center", backgroundColor: satisfaction === value ? "#C94F7C" : colors.surface, borderWidth: 1, borderColor: satisfaction === value ? "#C94F7C" : colors.border }}><Text style={{ fontWeight: "900", color: satisfaction === value ? "#FFF" : colors.foreground }}>{value}</Text></Pressable>)}</View>
+            <View style={{ gap: 8, marginTop: 10 }}>{SATISFACTION_OPTIONS.map((option) => <Pressable key={option.value} accessibilityRole="radio" accessibilityState={{ checked: satisfaction === option.value }} onPress={() => setSatisfaction(option.value)} style={{ minHeight: 46, borderRadius: 10, paddingHorizontal: 14, flexDirection: "row", alignItems: "center", backgroundColor: satisfaction === option.value ? "#FBE8F0" : colors.surface, borderWidth: 1, borderColor: satisfaction === option.value ? "#C94F7C" : colors.border }}><View style={{ width: 20, height: 20, borderRadius: 10, borderWidth: 2, borderColor: satisfaction === option.value ? "#C94F7C" : colors.border, alignItems: "center", justifyContent: "center" }}>{satisfaction === option.value ? <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: "#C94F7C" }} /> : null}</View><Text style={{ marginLeft: 10, fontSize: 14, fontWeight: "700", color: colors.foreground }}>{option.label}</Text></Pressable>)}</View>
             <Text style={{ fontSize: 14, fontWeight: "900", color: colors.foreground, marginTop: 20 }}>良かったサービス（複数選択可）</Text>
             {['公式イベント', 'グルメ会（メンバー主催）', '部活動', '会員限定クーポン', 'プレゼント企画', '共有グルメマップ', 'メンバー間の交流'].map((feature) => <CheckRow key={feature} checked={valuedFeatures.includes(feature)} onPress={() => setValuedFeatures((current) => current.includes(feature) ? current.filter((item) => item !== feature) : [...current, feature])}>{feature}</CheckRow>)}
             <TextInput value={continuationCondition} onChangeText={setContinuationCondition} multiline placeholder="どのような内容があれば継続・再開を検討しますか？（任意）" placeholderTextColor={colors.muted} style={{ minHeight: 88, marginTop: 14, borderRadius: 13, borderWidth: 1, borderColor: colors.border, padding: 13, color: colors.foreground, textAlignVertical: "top" }} />
