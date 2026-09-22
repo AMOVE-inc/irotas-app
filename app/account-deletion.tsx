@@ -330,7 +330,8 @@ export default function AccountDeletionScreen() {
             <TextInput value={satisfactionReason} onChangeText={setSatisfactionReason} multiline placeholder="理由を入力してください" placeholderTextColor={colors.muted} style={{ minHeight: 88, marginTop: 10, borderRadius: 13, borderWidth: 1, borderColor: colors.border, padding: 13, color: colors.foreground, textAlignVertical: "top" }} />
             <Text style={{ fontSize: 14, fontWeight: "900", color: colors.foreground, marginTop: 20 }}>良かったサービス（複数選択可）</Text>
             {['公式イベント', 'グルメ会（メンバー主催）', '部活動', '会員限定クーポン', 'プレゼント企画', '共有グルメマップ', 'メンバー間の交流'].map((feature) => <CheckRow key={feature} checked={valuedFeatures.includes(feature)} onPress={() => setValuedFeatures((current) => current.includes(feature) ? current.filter((item) => item !== feature) : [...current, feature])}>{feature}</CheckRow>)}
-            <TextInput value={continuationCondition} onChangeText={setContinuationCondition} multiline placeholder="どのような内容があれば継続・再開を検討しますか？（任意）" placeholderTextColor={colors.muted} style={{ minHeight: 88, marginTop: 14, borderRadius: 13, borderWidth: 1, borderColor: colors.border, padding: 13, color: colors.foreground, textAlignVertical: "top" }} />
+            <Text style={{ fontSize: 14, fontWeight: "900", color: colors.foreground, marginTop: 20 }}>どのような内容があれば継続・再開を検討しますか？（任意）</Text>
+            <TextInput value={continuationCondition} onChangeText={setContinuationCondition} multiline placeholder="内容を入力してください" placeholderTextColor={colors.muted} style={{ minHeight: 88, marginTop: 10, borderRadius: 13, borderWidth: 1, borderColor: colors.border, padding: 13, color: colors.foreground, textAlignVertical: "top" }} />
             <Text
               style={{
                 fontSize: 14,

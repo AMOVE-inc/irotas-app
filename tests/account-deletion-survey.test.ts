@@ -21,6 +21,8 @@ describe("account deletion satisfaction survey", () => {
     expect(screen).toContain("休会・退会理由（複数選択可）");
     expect(screen).toContain("よろしければ上記の理由をお聞かせください。（任意）");
     expect(screen).toContain("value={satisfactionReason}");
+    expect(screen).toContain('>どのような内容があれば継続・再開を検討しますか？（任意）</Text>');
+    expect(screen).toContain('value={continuationCondition} onChangeText={setContinuationCondition} multiline placeholder="内容を入力してください"');
     expect(screen).not.toContain("入会前の期待は満たされましたか？");
     expect(screen).not.toContain("Discordへアクセスできません");
   });
