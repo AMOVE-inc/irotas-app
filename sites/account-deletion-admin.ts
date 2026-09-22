@@ -2,6 +2,7 @@ import { authenticatedRequestMember } from "./auth";
 import type { SitesEnv } from "./platform-types";
 
 const LIST_PATH = "/api/admin/account-deletions";
+const EXPORT_PATH = "/api/admin/account-deletions/export";
 const COMPLETE_PATH = /^\/api\/admin\/account-deletions\/([^/]+)\/complete$/;
 
 type DeletionRequestRow = {
@@ -16,12 +17,50 @@ type DeletionRequestRow = {
   public_member_id: string | null;
 };
 
+type SurveyExportRow = DeletionRequestRow & {
+  request_type: "pause" | "withdrawal";
+  survey_json: string | null;
+};
+
+type SurveyAnswers = {
+  reasons?: unknown;
+  comment?: unknown;
+  satisfaction?: unknown;
+  satisfactionReason?: unknown;
+  valuedFeatures?: unknown;
+  continuationCondition?: unknown;
+};
+
 function json(body: unknown, status = 200) {
   return Response.json(body, { status, headers: { "cache-control": "no-store" } });
 }
 
 function strictAdmin(member: { role: string; access_role: string }) {
   return member.role === "admin" || member.access_role === "admin";
+}
+
+function csvCell(value: unknown) {
+  const text = Array.isArray(value) ? value.map(String).join("、") : value == null ? "" : String(value);
+  const safe = /^[=+\-@]/.test(text) ? `'${text}` : text;
+  return `"${safe.replace(/"/g, '""')}"`;
+}
+
+function surveyAnswers(value: string | null): SurveyAnswers {
+  try {
+    const parsed = JSON.parse(value ?? "{}");
+    return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed as SurveyAnswers : {};
+  } catch {
+    return {};
+  }
+}
+
+export function buildAccountDeletionSurveyCsv(rows: SurveyExportRow[]) {
+  const header = ["申請ID", "会員ID", "表示名", "手続き", "状況", "申請元", "申請日時", "処理予定日", "休会・退会理由", "自由記述", "総合満足度", "満足度の理由", "良かったサービス", "継続・再開を検討する条件"];
+  const lines = rows.map((row) => {
+    const survey = surveyAnswers(row.survey_json);
+    return [row.id, row.public_member_id ?? `内部ID ${row.member_id}`, row.display_name, row.request_type === "pause" ? "休会" : "退会", row.status === "pending" ? "処理待ち" : row.status === "completed" ? "完了" : "取消済み", row.source === "app" ? "アプリ" : "Web", row.requested_at, row.scheduled_for, survey.reasons, survey.comment, survey.satisfaction, survey.satisfactionReason, survey.valuedFeatures, survey.continuationCondition].map(csvCell).join(",");
+  });
+  return `\uFEFF${[header.map(csvCell).join(","), ...lines].join("\r\n")}`;
 }
 
 function payload(row: DeletionRequestRow) {
@@ -44,12 +83,32 @@ export async function handleAccountDeletionAdminRequest(
 ): Promise<Response | null> {
   const pathname = new URL(request.url).pathname;
   const completeMatch = COMPLETE_PATH.exec(pathname);
-  if (pathname !== LIST_PATH && !completeMatch) return null;
+  if (pathname !== LIST_PATH && pathname !== EXPORT_PATH && !completeMatch) return null;
   if (!env.DB) return json({ error: "データベースに接続できません" }, 503);
 
   const admin = await authenticatedRequestMember(request, env);
   if (!admin) return json({ error: "ログインが必要です" }, 401);
   if (!strictAdmin(admin)) return json({ error: "管理者のみ操作できます" }, 403);
+
+  if (pathname === EXPORT_PATH) {
+    if (request.method !== "GET") return json({ error: "method_not_allowed" }, 405);
+    const rows = await env.DB.prepare(
+      `SELECT r.id, r.member_id, r.status, r.source, r.requested_at,
+              r.scheduled_for, r.completed_at, r.request_type, r.survey_json,
+              m.display_name, m.public_member_id
+       FROM account_deletion_requests r
+       JOIN members m ON m.id = r.member_id
+       ORDER BY r.requested_at DESC
+       LIMIT 10000`,
+    ).all<SurveyExportRow>();
+    return new Response(buildAccountDeletionSurveyCsv(rows.results ?? []), {
+      headers: {
+        "content-type": "text/csv;charset=utf-8",
+        "content-disposition": `attachment; filename="iro-membership-survey-${new Date().toISOString().slice(0, 10)}.csv"`,
+        "cache-control": "private, no-store",
+      },
+    });
+  }
 
   if (pathname === LIST_PATH) {
     if (request.method !== "GET") return json({ error: "method_not_allowed" }, 405);

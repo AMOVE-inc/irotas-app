@@ -4,7 +4,7 @@ import type { D1Database, D1PreparedStatement, SitesEnv } from "../sites/platfor
 
 function database(accessRole: "member" | "admin") {
   const writes: string[] = [];
-  const row = { id: "delete-1", member_id: 45, status: "pending", source: "app", requested_at: "2026-08-24T00:00:00.000Z", scheduled_for: "2026-09-23T00:00:00.000Z", completed_at: null, display_name: "削除希望会員", public_member_id: "IRO0045" };
+  const row = { id: "delete-1", member_id: 45, status: "pending", source: "app", requested_at: "2026-08-24T00:00:00.000Z", scheduled_for: "2026-09-23T00:00:00.000Z", completed_at: null, display_name: "削除希望会員", public_member_id: "IRO0045", request_type: "withdrawal", survey_json: JSON.stringify({ reasons: ["費用を見直したい"], satisfaction: 2, satisfactionReason: "=危険", valuedFeatures: ["部活動"], continuationCondition: "新企画" }) };
   const prepare = (sql: string): D1PreparedStatement => {
     let values: unknown[] = [];
     const statement: D1PreparedStatement = {
@@ -54,5 +54,16 @@ describe("admin account deletion processing", () => {
     expect(store.writes.some((sql) => sql.includes("DELETE FROM member_sessions"))).toBe(true);
     expect(store.writes.some((sql) => sql.includes("display_name = '退会済みユーザー'"))).toBe(true);
     expect(store.writes.some((sql) => sql.includes("admin.account_deletion_completed"))).toBe(true);
+  });
+
+  it("exports all survey answers as a spreadsheet-safe CSV", async () => {
+    const store = database("admin");
+    const response = await handleAccountDeletionAdminRequest(request("/api/admin/account-deletions/export"), { DB: store.db, AUTH_SECRET: "secret" } as SitesEnv);
+    expect(response?.headers.get("content-type")).toContain("text/csv");
+    const csv = await response?.text();
+    expect(csv).toContain('"休会・退会理由"');
+    expect(csv).toContain('"費用を見直したい"');
+    expect(csv).toContain('"\'=危険"');
+    expect(csv).toContain('"新企画"');
   });
 });

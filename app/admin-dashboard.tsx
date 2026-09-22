@@ -1001,9 +1001,22 @@ export default function AdminDashboardScreen() {
                 <Text style={{ fontSize: 18, fontWeight: "800", color: colors.foreground }}>退会・アカウント削除申請</Text>
                 <Text style={{ fontSize: 12, lineHeight: 18, color: colors.muted, marginTop: 4 }}>完了するとログインを停止し、プロフィール等の個人情報を匿名化します。Square契約の停止は別途確認してください。</Text>
               </View>
-              <Pressable onPress={() => void loadDeletionRequests()} style={{ borderRadius: 12, backgroundColor: "#E8A0BF", paddingHorizontal: 13, paddingVertical: 9 }}>
-                <Text style={{ color: "#FFF", fontSize: 12, fontWeight: "800" }}>更新</Text>
-              </Pressable>
+              <View style={{ flexDirection: "row", gap: 8 }}>
+                {Platform.OS === "web" ? <Pressable onPress={() => {
+                  if (typeof document === "undefined") return;
+                  const link = document.createElement("a");
+                  link.href = "/api/admin/account-deletions/export";
+                  link.download = "";
+                  document.body.appendChild(link);
+                  link.click();
+                  link.remove();
+                }} style={{ borderRadius: 12, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, paddingHorizontal: 13, paddingVertical: 9 }}>
+                  <Text style={{ color: colors.foreground, fontSize: 12, fontWeight: "800" }}>アンケートCSV</Text>
+                </Pressable> : null}
+                <Pressable onPress={() => void loadDeletionRequests()} style={{ borderRadius: 12, backgroundColor: "#E8A0BF", paddingHorizontal: 13, paddingVertical: 9 }}>
+                  <Text style={{ color: "#FFF", fontSize: 12, fontWeight: "800" }}>更新</Text>
+                </Pressable>
+              </View>
             </View>
             {deletionsLoading ? <ActivityIndicator color="#E8A0BF" style={{ marginVertical: 28 }} /> : deletionRequests.length === 0 ? (
               <Text style={{ color: colors.muted, textAlign: "center", marginVertical: 40 }}>削除申請はありません。</Text>
