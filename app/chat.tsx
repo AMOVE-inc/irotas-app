@@ -252,7 +252,14 @@ function MessageBubble({ message, isMe, canDelete, readOnly, viewerId, viewerNam
             <MemberClubLeaderBadges roles={senderMember?.discordRoles} compact />
           </View>
         ) : null}
-        <Pressable onLongPress={() => setShowActions(true)} delayLongPress={350}
+        {message.imageUri || message.attachmentUrls?.length ? (
+          <Pressable onLongPress={() => setShowActions(true)} delayLongPress={350} style={{ flexDirection: "row", flexWrap: "wrap", gap: 4, width: (message.attachmentUrls?.length ?? 1) > 1 ? 220 : undefined, overflow: "hidden", borderRadius: 12 }}>
+            {(message.attachmentUrls?.length ? message.attachmentUrls : [message.imageUri!]).map((uri, index, gallery) => isVideoAttachment(uri)
+              ? <ChatAttachmentVideo key={`${uri}-${index}`} uri={uri} />
+              : <ChatAttachmentImage key={`${uri}-${index}`} uri={uri} galleryUris={gallery.filter((item) => !isVideoAttachment(item))} galleryIndex={gallery.slice(0, index).filter((item) => !isVideoAttachment(item)).length} tiled={gallery.filter((item) => !isVideoAttachment(item)).length > 1} />)}
+          </Pressable>
+        ) : null}
+        {message.replyTo || message.content ? <Pressable onLongPress={() => setShowActions(true)} delayLongPress={350}
           style={{
             backgroundColor: isMe ? "#E8A0BF" : "#ECECEF",
             borderWidth: highlighted ? 3 : isMe ? 0 : 1,
@@ -266,19 +273,12 @@ function MessageBubble({ message, isMe, canDelete, readOnly, viewerId, viewerNam
           }}
         >
           {message.replyTo ? <View style={{ paddingHorizontal: 10, paddingTop: 8 }}><ReplyReferenceView reply={message.replyTo} outgoing={isMe} onPress={() => onOpenReply(message.replyTo!.id)} /></View> : null}
-          {message.imageUri || message.attachmentUrls?.length ? (
-            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 4, width: (message.attachmentUrls?.length ?? 1) > 1 ? 220 : undefined }}>
-              {(message.attachmentUrls?.length ? message.attachmentUrls : [message.imageUri!]).map((uri, index, gallery) => isVideoAttachment(uri)
-                ? <ChatAttachmentVideo key={`${uri}-${index}`} uri={uri} />
-                : <ChatAttachmentImage key={`${uri}-${index}`} uri={uri} galleryUris={gallery.filter((item) => !isVideoAttachment(item))} galleryIndex={gallery.slice(0, index).filter((item) => !isVideoAttachment(item)).length} tiled={gallery.filter((item) => !isVideoAttachment(item)).length > 1} />)}
-            </View>
-          ) : null}
           {message.content ? (
             <View style={{ paddingHorizontal: 14, paddingVertical: 10 }}>
               {pollChoices.length >= 2 ? <View style={{ minWidth: 220 }}><MentionText content={pollLines[0].replace(/^📊 /, "")} outgoing={isMe} groups={mentionGroups} /><Text style={{ fontSize: 10, fontWeight: "800", color: isMe ? "#FFF" : colors.muted, marginTop: 5 }}>{pollAllowsMultiple ? "複数回答可" : "1つ選択"}</Text><View style={{ gap: 7, marginTop: 10 }}>{pollChoices.map((choice) => { const voteKey = `🗳️${choice}`; const voters = message.reactions?.[voteKey] ?? []; const selected = voters.includes(viewerId); return <Pressable key={choice} disabled={readOnly} onPress={() => onReact(voteKey, pollChoices, pollAllowsMultiple)} style={{ borderRadius: 8, paddingHorizontal: 10, paddingVertical: 9, borderWidth: 1, borderColor: selected ? "#5865F2" : isMe ? "#FFF8" : colors.border, backgroundColor: selected ? "#5865F228" : "transparent" }}><Text style={{ fontSize: 13, fontWeight: "800", color: isMe ? "#FFF" : colors.foreground }}>{selected ? "●" : "○"} {choice}　{voters.length}</Text></Pressable>; })}</View><Text style={{ fontSize: 10, color: isMe ? "#FFF" : colors.muted, marginTop: 9 }}>{pollLines.find((line) => line.startsWith("⏱"))}</Text></View> : <><MentionText content={message.content} outgoing={isMe} groups={mentionGroups} rooms={getAllRooms()} threads={BOARD_THREADS} onOpenInternalLink={onOpenInternalLink} /><ContentLinkCards content={message.content} /></>}
             </View>
           ) : null}
-        </Pressable>
+        </Pressable> : null}
         <Text
           style={{
             fontSize: 10,

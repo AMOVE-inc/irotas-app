@@ -44,7 +44,7 @@ import {
 } from "@/components/member-rank-badge";
 import { clubLeaderBadgeForClub } from "@/lib/club-leader-badges";
 import { useFocusEffect, useRouter } from "expo-router";
-import { useState, useCallback, useEffect, useMemo } from "react";
+import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import * as Api from "@/lib/_core/api";
 import {
   FlatList,
@@ -529,6 +529,7 @@ function EventCard({
   organizerLeaderLabels?: string[];
 }) {
   const colors = useColors();
+  const favoritePressRef = useRef(false);
   const organizer = getMemberById(event.organizerProfileId ?? event.createdBy);
   const confirmedCount = getConfirmedRecruitParticipantCount(event);
   const participationStatus =
@@ -575,7 +576,13 @@ function EventCard({
 
   return (
     <Pressable
-      onPress={onPress}
+      onPress={() => {
+        if (favoritePressRef.current) {
+          favoritePressRef.current = false;
+          return;
+        }
+        onPress();
+      }}
       style={{
         marginHorizontal: 16,
         marginBottom: 12,
@@ -832,9 +839,12 @@ function EventCard({
           <View style={{ flex: 1 }} />
           {!locked ? (
             <Pressable
+              onPressIn={() => { favoritePressRef.current = true; }}
               onPress={(pressEvent) => {
+                favoritePressRef.current = true;
                 pressEvent.stopPropagation?.();
                 onToggleFavorite();
+                setTimeout(() => { favoritePressRef.current = false; }, 0);
               }}
               accessibilityLabel={
                 isFavorite ? "お気に入りから削除" : "お気に入りに追加"
@@ -890,6 +900,7 @@ export default function EventsScreen() {
   // Bundled EVENTS are development fixtures. Only show the authenticated
   // member's last API result while the latest database state is loading.
   const [allEvents, setAllEvents] = useState<Event[]>([]);
+  const [favoriteOverrides, setFavoriteOverrides] = useState<Record<string, boolean>>({});
   const [eventsLoaded, setEventsLoaded] = useState(false);
   const [eventsLoadFailed, setEventsLoadFailed] = useState(false);
   const favoriteEventIds = useEventFavorites();
@@ -1151,11 +1162,12 @@ export default function EventsScreen() {
             ) : null}
             <EventCard
               event={item}
-              isFavorite={item.isFavorite ?? favoriteEventIds.includes(item.id)}
+              isFavorite={favoriteOverrides[item.id] ?? item.isFavorite ?? favoriteEventIds.includes(item.id)}
               onToggleFavorite={() => {
                 const favorite =
-                  item.isFavorite ?? favoriteEventIds.includes(item.id);
+                  favoriteOverrides[item.id] ?? item.isFavorite ?? favoriteEventIds.includes(item.id);
                 const applyFavorite = (value: boolean) => {
+                  setFavoriteOverrides((current) => ({ ...current, [item.id]: value }));
                   setAllEvents((current) => {
                     const next = current.map((event) =>
                       event.id === item.id ? { ...event, isFavorite: value } : event,
