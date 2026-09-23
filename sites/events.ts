@@ -1440,8 +1440,15 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
       (elevated || row.organizer_member_id === member.id);
     if (!admin && !canDeleteImportedClubEvent)
       return responseJson({ error: "このイベントを削除する権限がありません" }, 403);
-    const payment = await env.DB.prepare("SELECT 1 AS exists FROM event_payment_checkouts WHERE event_id = ? LIMIT 1")
-      .bind(id).first<{ exists: number }>();
+    let payment: { exists: number } | null = null;
+    try {
+      payment = await env.DB.prepare("SELECT 1 AS exists FROM event_payment_checkouts WHERE event_id = ? LIMIT 1")
+        .bind(id).first<{ exists: number }>();
+    } catch (cause) {
+      // Older production databases predate payment checkout tracking. Deletion must remain
+      // compatible there while still surfacing every other database failure.
+      if (!String(cause).includes("no such table: event_payment_checkouts")) throw cause;
+    }
     if (payment) return responseJson({ error: "決済記録のあるイベントは削除できません。中止処理と返金確認を行ってください" }, 409);
     const now = new Date().toISOString();
     // Discord移行イベントはトゥームストーンで非表示にする。移行済みの行を物理削除すると、

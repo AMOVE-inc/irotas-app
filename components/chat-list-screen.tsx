@@ -10,7 +10,8 @@ import { useColors } from "@/hooks/use-colors";
 import { AuthenticatedImage as Image } from "@/components/authenticated-image";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { AppState, FlatList, Modal, Platform, Pressable, ScrollView, Text, TextInput, View } from "react-native";
+import { Alert, AppState, FlatList, Modal, Platform, Pressable, ScrollView, Text, TextInput, View } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Api from "@/lib/_core/api";
 import { stripRankFromName } from "@/components/member-rank-badge";
 import { getDiscordAuthorById, getDiscordAuthorByName } from "@/lib/discord-author-directory";
@@ -28,6 +29,23 @@ const lastRoomLists = new Map<string, { joined: ChatRoom[]; rank: ChatRoom[] }>(
 const recentlySentPreviews = new Map<string, SentChatPreview>();
 const dismissedRooms = new Map<string, Set<string>>();
 const dismissedAt = new Map<string, number>();
+type ChatListPreferences = { pinnedRoomIds: string[]; hiddenRoomIds: string[] };
+
+function chatListPreferencesKey(memberId: string) {
+  return `irotas_chat_list_preferences_v1:${memberId}`;
+}
+
+async function loadChatListPreferences(memberId: string): Promise<ChatListPreferences> {
+  try {
+    const value = JSON.parse(await AsyncStorage.getItem(chatListPreferencesKey(memberId)) ?? "{}") as Partial<ChatListPreferences>;
+    return {
+      pinnedRoomIds: Array.isArray(value.pinnedRoomIds) ? value.pinnedRoomIds.filter((id): id is string => typeof id === "string") : [],
+      hiddenRoomIds: Array.isArray(value.hiddenRoomIds) ? value.hiddenRoomIds.filter((id): id is string => typeof id === "string") : [],
+    };
+  } catch {
+    return { pinnedRoomIds: [], hiddenRoomIds: [] };
+  }
+}
 
 function withRecentlySentPreview(memberId: string, room: ChatRoom): ChatRoom {
   const key = `${memberId}:${room.id}`;
@@ -64,16 +82,19 @@ export function dismissChatRoomImmediately(memberId: string, roomId: string) {
 
 const isImportedEventChat = (room: ChatRoom) => room.type === "event" && typeof room.sourceId === "string" && room.sourceId.startsWith("discord-event-");
 
-function ChatRoomCard({ room, eventStarts, eventImages, memberAvatars, viewerMemberId, onOpened }: {
+function ChatRoomCard({ room, eventStarts, eventImages, memberAvatars, viewerMemberId, onOpened, onLongPress, pinned }: {
   room: ChatRoom;
   eventStarts: Record<string, string>;
   eventImages: Record<string, string>;
   memberAvatars: Record<string, string>;
   viewerMemberId: string;
   onOpened: (roomId: string, unreadCount: number) => void;
+  onLongPress?: (room: ChatRoom) => void;
+  pinned?: boolean;
 }) {
   const colors = useColors();
   const router = useRouter();
+  const longPressHandled = useRef(false);
   const isDM = room.type === "dm";
   const isGroup = room.type === "group";
   const isRank = room.type === "rank";
@@ -107,12 +128,22 @@ function ChatRoomCard({ room, eventStarts, eventImages, memberAvatars, viewerMem
   return (
     <Pressable
       onPress={() => {
+        if (longPressHandled.current) {
+          longPressHandled.current = false;
+          return;
+        }
         const unreadCount = room.unreadCount ?? 0;
         onOpened(room.id, unreadCount);
         void markRoomRead(room.id);
         void Api.markSharedChatRoomRead(room.id).catch(() => {});
         router.push({ pathname: "/chat", params: { id: room.id, unreadCount: String(unreadCount) } });
       }}
+      onLongPress={() => {
+        if (!onLongPress) return;
+        longPressHandled.current = true;
+        onLongPress(room);
+      }}
+      delayLongPress={350}
       style={({ pressed }) => ({ flexDirection: "row", alignItems: "center", paddingHorizontal: 16, paddingVertical: 14, borderBottomWidth: 0.5, borderBottomColor: colors.border, opacity: pressed ? 0.7 : 1 })}
     >
       {announcementIcon ? <Image source={require("@/assets/images/irotas-logo-square.png")} style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: typeColor + "20" }} contentFit="cover" /> : imageUri ? <Image source={{ uri: imageUri }} style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: typeColor + "20" }} contentFit="cover" /> : isDM ? <Image source={DEFAULT_AVATAR} style={{ width: 48, height: 48, borderRadius: 24 }} contentFit="cover" /> : (
@@ -126,6 +157,7 @@ function ChatRoomCard({ room, eventStarts, eventImages, memberAvatars, viewerMem
       )}
       <View style={{ flex: 1, marginLeft: 12 }}>
         <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 3 }}>
+          {pinned ? <IconSymbol name="pin.fill" size={14} color="#E8A0BF" style={{ marginRight: 4 }} /> : null}
           <Text style={{ fontSize: 15, fontWeight: "700", color: colors.foreground, flex: 1 }} numberOfLines={1}>{displayName}</Text>
           <Text style={{ fontSize: 11, color: colors.muted }}>{timeAgo(room.lastMessageAt)}</Text>
           {mentionCount > 0 ? <View style={{ minHeight: 22, borderRadius: 11, backgroundColor: "#ED4245", alignItems: "center", justifyContent: "center", paddingHorizontal: 8, marginLeft: 7 }}><Text style={{ fontSize: 10, fontWeight: "900", color: "#FFF" }}>@ メンション {Math.min(mentionCount, 99)}</Text></View> : unreadCount > 0 ? <View style={{ minHeight: 22, borderRadius: 11, backgroundColor: "#5865F2", alignItems: "center", justifyContent: "center", paddingHorizontal: 8, marginLeft: 7 }}><Text style={{ fontSize: 10, fontWeight: "900", color: "#FFF" }}>新着 {Math.min(unreadCount, 99)}</Text></View> : null}
@@ -248,12 +280,16 @@ export default function ChatListScreen() {
   const [announcementPreviewReady, setAnnouncementPreviewReady] = useState(() =>
     Boolean(lastRoomLists.get(viewerMemberId)?.joined.find((room) => room.id === "board-announcement")?.lastMessage),
   );
+  const [chatListPreferences, setChatListPreferences] = useState<ChatListPreferences>({ pinnedRoomIds: [], hiddenRoomIds: [] });
   useEffect(() => {
     const saved = lastRoomLists.get(viewerMemberId);
     setMyRooms(saved?.joined ?? []);
     setRankRooms(saved?.rank ?? []);
     setRoomsLoading(!saved);
     setAnnouncementPreviewReady(Boolean(saved?.joined.find((room) => room.id === "board-announcement")?.lastMessage));
+    let active = true;
+    void loadChatListPreferences(viewerMemberId).then((preferences) => { if (active) setChatListPreferences(preferences); });
+    return () => { active = false; };
   }, [viewerMemberId]);
   useEffect(() => {
     if (Platform.OS !== "web" || typeof window === "undefined" || typeof window.addEventListener !== "function") return;
@@ -285,6 +321,36 @@ export default function ChatListScreen() {
     setMyRooms(clear);
     setRankRooms(clear);
   }, []);
+
+  const updateChatListPreferences = useCallback((update: (current: ChatListPreferences) => ChatListPreferences) => {
+    setChatListPreferences((current) => {
+      const next = update(current);
+      void AsyncStorage.setItem(chatListPreferencesKey(viewerMemberId), JSON.stringify(next));
+      return next;
+    });
+  }, [viewerMemberId]);
+
+  const openRoomActions = useCallback((room: ChatRoom) => {
+    const pinned = chatListPreferences.pinnedRoomIds.includes(room.id);
+    const togglePin = () => updateChatListPreferences((current) => ({
+      ...current,
+      pinnedRoomIds: pinned
+        ? current.pinnedRoomIds.filter((id) => id !== room.id)
+        : [room.id, ...current.pinnedRoomIds.filter((id) => id !== room.id)],
+    }));
+    const hideRoom = () => updateChatListPreferences((current) => ({
+      pinnedRoomIds: current.pinnedRoomIds.filter((id) => id !== room.id),
+      hiddenRoomIds: [room.id, ...current.hiddenRoomIds.filter((id) => id !== room.id)],
+    }));
+    Alert.alert(stripRankFromName(room.name), "操作を選択してください", [
+      { text: pinned ? "ピン留めを解除" : "チャットをピン留め", onPress: togglePin },
+      { text: "削除", style: "destructive", onPress: () => Alert.alert("チャットを削除", "このチャットを一覧から削除しますか？", [
+        { text: "キャンセル", style: "cancel" },
+        { text: "削除", style: "destructive", onPress: hideRoom },
+      ]) },
+      { text: "キャンセル", style: "cancel" },
+    ]);
+  }, [chatListPreferences.pinnedRoomIds, updateChatListPreferences]);
 
   const refreshRooms = useCallback(async (includeDetails = true) => {
     const refreshStartedAt = Date.now();
@@ -373,9 +439,22 @@ export default function ChatListScreen() {
     return () => { active = false; clearInterval(timer); appStateSubscription?.remove(); if (typeof document !== "undefined") document.removeEventListener("visibilitychange", onVisible); };
   }, [refreshRooms]));
 
-  const announcementRoom = myRooms.find((room) => room.id === "board-announcement");
+  const visibleRoom = (room: ChatRoom) => !chatListPreferences.hiddenRoomIds.includes(room.id);
+  const pinOrder = (room: ChatRoom) => {
+    const index = chatListPreferences.pinnedRoomIds.indexOf(room.id);
+    return index < 0 ? Number.MAX_SAFE_INTEGER : index;
+  };
+  const isPinned = (room: ChatRoom) => chatListPreferences.pinnedRoomIds.includes(room.id);
+  const announcementRoom = myRooms.find((room) => room.id === "board-announcement" && visibleRoom(room));
   // 自己紹介は掲示板から開く導線に統一し、通常のチャット一覧には表示しない。
-  const joinedChatRooms = myRooms.filter((room) => room.id !== "board-announcement" && room.id !== "board-introduction");
+  const allJoinedChatRooms = myRooms
+    .filter((room) => room.id !== "board-announcement" && room.id !== "board-introduction" && visibleRoom(room));
+  const allVisibleRankRooms = rankRooms.filter(visibleRoom);
+  const pinnedRooms = [...allJoinedChatRooms, ...allVisibleRankRooms]
+    .filter((room, index, rooms) => isPinned(room) && rooms.findIndex((candidate) => candidate.id === room.id) === index)
+    .sort((left, right) => pinOrder(left) - pinOrder(right));
+  const joinedChatRooms = allJoinedChatRooms.filter((room) => !isPinned(room));
+  const visibleRankRooms = allVisibleRankRooms.filter((room) => !isPinned(room));
 
   return (
     <ScreenContainer edges={["top", "left", "right", "bottom"]}>
@@ -392,12 +471,12 @@ export default function ChatListScreen() {
       <FlatList
         data={joinedChatRooms}
         keyExtractor={(item) => item.id}
-        renderItem={({ item }) => <ChatRoomCard room={item} eventStarts={eventStarts} eventImages={eventImages} memberAvatars={memberAvatars} viewerMemberId={viewerMemberId} onOpened={clearUnreadImmediately} />}
-        ListHeaderComponent={<>{rankRooms.length > 0 ? <View><View style={{ paddingHorizontal: 16, paddingVertical: 8, backgroundColor: colors.surface }}><Text style={{ fontSize: 12, fontWeight: "700", color: colors.muted, letterSpacing: 0.5 }}>あなたのランク以下のチャット</Text></View>{rankRooms.map((room) => <ChatRoomCard key={room.id} room={room} eventStarts={eventStarts} eventImages={eventImages} memberAvatars={memberAvatars} viewerMemberId={viewerMemberId} onOpened={clearUnreadImmediately} />)}</View> : null}{joinedChatRooms.length > 0 ? <View style={{ paddingHorizontal: 16, paddingVertical: 8, backgroundColor: colors.surface }}><Text style={{ fontSize: 12, fontWeight: "700", color: colors.muted, letterSpacing: 0.5 }}>参加中のチャット</Text></View> : null}</>}
+        renderItem={({ item }) => <ChatRoomCard room={item} eventStarts={eventStarts} eventImages={eventImages} memberAvatars={memberAvatars} viewerMemberId={viewerMemberId} onOpened={clearUnreadImmediately} onLongPress={openRoomActions} pinned={isPinned(item)} />}
+        ListHeaderComponent={<>{pinnedRooms.length > 0 ? <View><View style={{ paddingHorizontal: 16, paddingVertical: 8, backgroundColor: colors.surface }}><Text style={{ fontSize: 12, fontWeight: "700", color: colors.muted, letterSpacing: 0.5 }}>ピン留め</Text></View>{pinnedRooms.map((room) => <ChatRoomCard key={room.id} room={room} eventStarts={eventStarts} eventImages={eventImages} memberAvatars={memberAvatars} viewerMemberId={viewerMemberId} onOpened={clearUnreadImmediately} onLongPress={openRoomActions} pinned />)}</View> : null}{visibleRankRooms.length > 0 ? <View><View style={{ paddingHorizontal: 16, paddingVertical: 8, backgroundColor: colors.surface }}><Text style={{ fontSize: 12, fontWeight: "700", color: colors.muted, letterSpacing: 0.5 }}>あなたのランク以下のチャット</Text></View>{visibleRankRooms.map((room) => <ChatRoomCard key={room.id} room={room} eventStarts={eventStarts} eventImages={eventImages} memberAvatars={memberAvatars} viewerMemberId={viewerMemberId} onOpened={clearUnreadImmediately} onLongPress={openRoomActions} />)}</View> : null}{joinedChatRooms.length > 0 ? <View style={{ paddingHorizontal: 16, paddingVertical: 8, backgroundColor: colors.surface }}><Text style={{ fontSize: 12, fontWeight: "700", color: colors.muted, letterSpacing: 0.5 }}>参加中のチャット</Text></View> : null}</>}
         showsVerticalScrollIndicator={false}
         style={{ flex: 1 }}
         contentContainerStyle={{ paddingBottom: 112, flexGrow: 1 }}
-        ListEmptyComponent={<View style={{ flex: 1, alignItems: "center", justifyContent: "center", paddingVertical: 80 }}><Text style={{ fontSize: 14, color: colors.muted }}>{roomsLoading ? "読み込み中…" : "参加中のチャットはありません"}</Text></View>}
+        ListEmptyComponent={pinnedRooms.length || visibleRankRooms.length ? null : <View style={{ flex: 1, alignItems: "center", justifyContent: "center", paddingVertical: 80 }}><Text style={{ fontSize: 14, color: colors.muted }}>{roomsLoading ? "読み込み中…" : "参加中のチャットはありません"}</Text></View>}
       />
       <CreateFriendGroupModal visible={showCreateGroup} onClose={() => setShowCreateGroup(false)} onCreated={(room) => { void refreshRooms(); router.push({ pathname: "/chat", params: { id: room.id } }); }} />
     </ScreenContainer>
