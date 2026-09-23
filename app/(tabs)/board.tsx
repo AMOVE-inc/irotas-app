@@ -55,7 +55,7 @@ import { awardContestWinnerOnce, buildContestEntryContent, createContestAwardCom
 import { loadImportedGourmetContests } from "@/lib/gourmet-contest-import";
 import { parseDiscordBoardArchive } from "@/lib/discord-board-import";
 import * as Api from "@/lib/_core/api";
-import { boardCommentData, boardThreadData, sharedCommentToBoardComment, sharedThreadToBoardThread } from "@/lib/shared-board-content";
+import { boardCommentData, boardThreadData, mergeSharedBoardThreads, sharedCommentToBoardComment, sharedThreadToBoardThread } from "@/lib/shared-board-content";
 import { boardReactionAccessibilityLabel, boardReactionImageUrl, loadCommentReactions, loadThreadReactions, saveCommentReactions, saveThreadReactions } from "@/lib/board-reactions";
 import { applyBoardThreadEdits, loadBoardThreadEdits, saveBoardThreadEdit } from "@/lib/board-thread-edits";
 import { Image } from "expo-image";
@@ -2871,13 +2871,7 @@ export default function BoardScreen() {
       ...sharedThreadToBoardThread(thread, viewerMemberId),
       commentCount: commentsByThread[thread.id]?.length ?? 0,
     }));
-    setDynamicThreads((current) => {
-      const incomingIds = new Set(threads.map((thread) => thread.id));
-      const retained = threadId ? current : category
-        ? current.filter((thread) => !(thread.shared && thread.category === category && !incomingIds.has(thread.id)))
-        : current.filter((thread) => !thread.shared || thread.category.startsWith("club-club-"));
-      return [...threads, ...retained.filter((thread) => !incomingIds.has(thread.id))];
-    });
+    setDynamicThreads((current) => mergeSharedBoardThreads(current, threads, { category, threadId }));
     setImportedComments((current) => ({
       ...current,
       ...Object.fromEntries(result.threads.map((thread) => [thread.id, thread.data.archiveShadow === true

@@ -107,6 +107,22 @@ export function sharedThreadToBoardThread(record: SharedBoardThread, viewerId: s
   };
 }
 
+export function mergeSharedBoardThreads(
+  current: BoardThread[],
+  incoming: BoardThread[],
+  scope: { category?: string; threadId?: string } = {},
+): BoardThread[] {
+  const incomingIds = new Set(incoming.map((thread) => thread.id));
+  const retained = scope.threadId
+    ? current
+    : scope.category
+      ? current.filter((thread) => !(thread.shared && thread.category === scope.category && !incomingIds.has(thread.id)))
+      // The unfiltered endpoint is capped. It is not an authoritative snapshot of
+      // every category, so keep category-specific records that finished loading first.
+      : current;
+  return [...incoming, ...retained.filter((thread) => !incomingIds.has(thread.id))];
+}
+
 export function boardCommentData(comment: BoardComment): Record<string, unknown> {
   return {
     replyTo: comment.replyTo,
