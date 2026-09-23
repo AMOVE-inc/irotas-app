@@ -1,0 +1,56 @@
+# Keep this aligned with .gitignore. EAS uses this file instead of .gitignore
+# when it exists.
+
+# dependencies and local tooling
+node_modules/
+.expo/
+.cache/
+.git/
+.vscode/
+.idea/
+
+# local environment and credentials
+.env
+.env.*
+!.env.example
+.migration-private/
+.venv-discord-export/
+private-media/
+*.pem
+*.key
+*.p8
+*.p12
+*.jks
+*.mobileprovision
+
+# generated web/native build output
+dist/
+dist */
+web-build/
+ios/
+android/
+outputs/
+logs/
+*.log
+*.tgz
+*.tar.gz
+*.tsbuildinfo
+scripts/__pycache__/
+
+# Web-only Discord archive assets are served by the production backend and
+# must not be copied into the signed mobile binary or EAS upload.
+public/discord-board/
+public/discord-benefits/
+public/discord-gourmet-contests/
+
+# Historical Discord source exports are used by the Web worker/import tools.
+# Mobile clients read the resulting shared data through authenticated APIs.
+data/discord-board-2026-08-14.json
+data/discord-board-2026-08-29.json
+data/discord-board-2026-08-29-delta.json
+
+# local metadata
+.DS_Store
+.webdev/
+.project-config.json
+app-example/
