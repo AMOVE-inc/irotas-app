@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { SharedBoardComment, SharedBoardThread } from "../lib/_core/api";
 import { boardCommentData, boardThreadData, mergeSharedBoardThreads, sharedCommentToBoardComment, sharedThreadToBoardThread } from "../lib/shared-board-content";
 import { CURRENT_USER, type BoardThread } from "../constants/mock-data";
+import { chunkBoardContentIds } from "../sites/board-content";
 
 describe("shared board content mapping", () => {
   it("restores a shared thread and preserves the viewer reaction", () => {
@@ -50,5 +51,12 @@ describe("shared board content mapping", () => {
     expect(mergeSharedBoardThreads([staleFreeChat, mealReport], [], { category: "free-chat" }).map((thread) => thread.id)).toEqual([
       "meal-report",
     ]);
+  });
+
+  it("batches a large category below the D1 reaction-query parameter limit", () => {
+    const batches = chunkBoardContentIds(Array.from({ length: 98 }, (_, index) => `thread-${index}`));
+
+    expect(batches.map((batch) => batch.length)).toEqual([40, 40, 18]);
+    expect(Math.max(...batches.map((batch) => batch.length * 2))).toBeLessThanOrEqual(80);
   });
 });
