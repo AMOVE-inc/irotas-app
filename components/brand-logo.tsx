@@ -1,4 +1,4 @@
-import { Image } from "expo-image";
+import { AuthenticatedImage as Image } from "@/components/authenticated-image";
 import { StyleSheet, View, type ViewStyle } from "react-native";
 
 type BrandLogoProps = {

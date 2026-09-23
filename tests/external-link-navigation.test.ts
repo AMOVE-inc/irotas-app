@@ -21,6 +21,7 @@ describe("external link navigation", () => {
   it("uses the shared opener for links in posts and event details", () => {
     expect(mentionUi).toContain("openExternalUrl(token.url)");
     expect(eventDetail).toContain("openExternalUrl(/^https?:\\/\\//i.test(event.tabelogUrl!)");
-    expect(eventDetail).not.toContain("Linking.openURL");
+    expect(eventDetail).toContain("Linking.openURL(appUrl)");
+    expect(eventDetail).toContain("openExternalUrl(webUrl)");
   });
 });

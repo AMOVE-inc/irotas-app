@@ -443,8 +443,17 @@ export async function loadDynamicRooms(): Promise<void> {
     // 既に存在するIDは追加しない
     const existingIds = new Set(dynamicRooms.map((r) => r.id));
     for (const room of rooms) {
-      if (!existingIds.has(room.id)) {
-        dynamicRooms.push(room);
+      if (!room || typeof room.id !== "string" || !room.id || existingIds.has(room.id)) continue;
+      const normalizedRoom: ChatRoom = {
+        ...room,
+        name: typeof room.name === "string" ? room.name : "チャット",
+        sourceId: typeof room.sourceId === "string" ? room.sourceId : room.id,
+        createdBy: typeof room.createdBy === "string" ? room.createdBy : "system",
+        participants: Array.isArray(room.participants) ? room.participants.filter((id): id is string => typeof id === "string") : [],
+      };
+      if (!existingIds.has(normalizedRoom.id)) {
+        dynamicRooms.push(normalizedRoom);
+        existingIds.add(normalizedRoom.id);
       }
     }
     const participantRaw = await AsyncStorage.getItem(ROOM_PARTICIPANTS_KEY);

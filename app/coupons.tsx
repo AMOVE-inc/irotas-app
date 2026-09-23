@@ -8,7 +8,7 @@ import { recordCouponPresentation, redeemCoupon, useCoupons, useCouponUsages } f
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import { Alert, Linking, Modal, Platform, Pressable, ScrollView, Text, View } from "react-native";
-import { Image } from "expo-image";
+import { AuthenticatedImage as Image } from "@/components/authenticated-image";
 import { useAuthContext } from "@/lib/auth-context";
 import { isOperatorRole } from "@/lib/access-control";
 

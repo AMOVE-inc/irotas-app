@@ -1,8 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { SharedBoardComment, SharedBoardThread } from "../lib/_core/api";
-import { boardCommentData, boardThreadData, mergeSharedBoardThreads, sharedCommentToBoardComment, sharedThreadToBoardThread } from "../lib/shared-board-content";
+import { boardCommentData, boardThreadData, sharedCommentToBoardComment, sharedThreadToBoardThread } from "../lib/shared-board-content";
 import { CURRENT_USER, type BoardThread } from "../constants/mock-data";
-import { chunkBoardContentIds } from "../sites/board-content";
 
 describe("shared board content mapping", () => {
   it("restores a shared thread and preserves the viewer reaction", () => {
@@ -32,31 +31,5 @@ describe("shared board content mapping", () => {
   it("keeps reacting member IDs for the reaction details sheet", () => {
     const record: SharedBoardComment = { id: "comment-2", threadId: "shared-1", authorId: "IRO0099", authorName: "共有会員", content: "コメント", data: {}, createdAt: "2026-08-23T00:00:00Z", updatedAt: "2026-08-23T00:00:00Z", reactions: { "🎉": { count: 2, reacted: true, memberIds: ["IRO0001", "IRO0002"] } } };
     expect(sharedCommentToBoardComment(record, "IRO0001").reactions?.["🎉"]).toEqual(["IRO0001", "IRO0002"]);
-  });
-
-  it("keeps category-loaded posts when the capped all-category request finishes later", () => {
-    const recentFreeChat = { id: "recent-free-chat", title: "最近の投稿", author: CURRENT_USER, category: "free-chat", commentCount: 0, lastUpdated: "2026-09-22T00:00:00Z", preview: "本文", isRecruiting: false, shared: true } satisfies BoardThread;
-    const globalPageThread = { ...recentFreeChat, id: "global-page-thread", category: "meal-report" } satisfies BoardThread;
-
-    expect(mergeSharedBoardThreads([recentFreeChat], [globalPageThread]).map((thread) => thread.id)).toEqual([
-      "global-page-thread",
-      "recent-free-chat",
-    ]);
-  });
-
-  it("still treats a category-specific response as authoritative for that category", () => {
-    const staleFreeChat = { id: "stale-free-chat", title: "削除済み", author: CURRENT_USER, category: "free-chat", commentCount: 0, lastUpdated: "2026-09-01T00:00:00Z", preview: "本文", isRecruiting: false, shared: true } satisfies BoardThread;
-    const mealReport = { ...staleFreeChat, id: "meal-report", category: "meal-report" } satisfies BoardThread;
-
-    expect(mergeSharedBoardThreads([staleFreeChat, mealReport], [], { category: "free-chat" }).map((thread) => thread.id)).toEqual([
-      "meal-report",
-    ]);
-  });
-
-  it("batches a large category below the D1 reaction-query parameter limit", () => {
-    const batches = chunkBoardContentIds(Array.from({ length: 98 }, (_, index) => `thread-${index}`));
-
-    expect(batches.map((batch) => batch.length)).toEqual([40, 40, 18]);
-    expect(Math.max(...batches.map((batch) => batch.length * 2))).toBeLessThanOrEqual(80);
   });
 });

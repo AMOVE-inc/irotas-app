@@ -1,5 +1,5 @@
 import { openExternalUrl } from "@/lib/open-external-url";
-import { Image } from "expo-image";
+import { AuthenticatedImage as Image } from "@/components/authenticated-image";
 import { Linking, Pressable, ScrollView, Text, View, type TextStyle } from "react-native";
 import { BOARD_THREADS, type Member , BoardThread, ChatRoom } from "@/constants/mock-data";
 import type { MentionGroup } from "@/lib/mentions";

@@ -41,7 +41,7 @@ import { createCoupon, deleteCoupon, setCouponStatus, updateCoupon, updateCoupon
 import { sendRankUpgradeWelcome } from "@/lib/chat-store";
 import { addClub, refreshClubs, removeClub, updateClub, useClubs } from "@/lib/club-store";
 import { sendLeaderAppointmentNotification } from "@/lib/notifications";
-import { Image } from "expo-image";
+import { AuthenticatedImage as Image } from "@/components/authenticated-image";
 import * as ImagePicker from "expo-image-picker";
 import * as Clipboard from "expo-clipboard";
 import { loadImportedGourmetContests, type ImportedGourmetContest } from "@/lib/gourmet-contest-import";

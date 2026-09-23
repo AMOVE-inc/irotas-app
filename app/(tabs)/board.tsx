@@ -43,8 +43,8 @@ import { XpRewardPopup } from "@/components/xp-reward-popup";
 import { awardXp, type XpReward } from "@/lib/xp-store";
 import { POINT_ACTIONS } from "@/constants/mock-data";
 import { submitClubApplication as submitClubApplicationToStore, useClubs } from "@/lib/club-store";
-import { getMentionGroups, getMentionQuery, getMentionedMemberIds, insertMention, mentionsViewer } from "@/lib/mentions";
-import { sendClubApplicationNotification, sendMentionNotification } from "@/lib/notifications";
+import { getMentionGroups, getMentionQuery, insertMention, mentionsViewer } from "@/lib/mentions";
+import { sendClubApplicationNotification } from "@/lib/notifications";
 import { type TextSelection } from "@/lib/text-formatting";
 import { toggleReactionMember } from "@/lib/chat-reactions";
 import { getDiscordAuthorById, getDiscordAuthorByName } from "@/lib/discord-author-directory";
@@ -55,16 +55,17 @@ import { awardContestWinnerOnce, buildContestEntryContent, createContestAwardCom
 import { loadImportedGourmetContests } from "@/lib/gourmet-contest-import";
 import { parseDiscordBoardArchive } from "@/lib/discord-board-import";
 import * as Api from "@/lib/_core/api";
-import { boardCommentData, boardThreadData, mergeSharedBoardThreads, sharedCommentToBoardComment, sharedThreadToBoardThread } from "@/lib/shared-board-content";
+import { boardCommentData, boardThreadData, sharedCommentToBoardComment, sharedThreadToBoardThread } from "@/lib/shared-board-content";
 import { boardReactionAccessibilityLabel, boardReactionImageUrl, loadCommentReactions, loadThreadReactions, saveCommentReactions, saveThreadReactions } from "@/lib/board-reactions";
 import { applyBoardThreadEdits, loadBoardThreadEdits, saveBoardThreadEdit } from "@/lib/board-thread-edits";
-import { Image } from "expo-image";
+import { AuthenticatedImage as Image } from "@/components/authenticated-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
 import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import {
   Alert,
   ActivityIndicator,
+  AppState,
   FlatList,
   KeyboardAvoidingView,
   Linking,
@@ -160,14 +161,26 @@ function PollCard({ ownerKey, poll }: { ownerKey: string; poll: BoardPoll }) {
   const [shared, setShared] = useState(false);
   const open = isBoardPollOpen(current);
   useEffect(() => {
+    let active = true;
+    let pending = false;
     setShared(false);
     setViewerMemberId(CURRENT_USER.id);
     const [ownerType, ownerId] = ownerKey.split(":", 2) as ["thread" | "comment", string];
-    void Api.getSharedBoardPoll(ownerType, ownerId).then((result) => {
-      setCurrent(result.poll);
-      setViewerMemberId(result.viewerMemberId);
-      setShared(true);
-    }).catch(() => void loadBoardPoll(ownerKey, poll).then(setCurrent));
+    const refresh = () => {
+      if (pending || (Platform.OS === "web" && document.visibilityState === "hidden")) return;
+      pending = true;
+      void Api.getSharedBoardPoll(ownerType, ownerId).then((result) => {
+        if (!active) return;
+        setCurrent(result.poll);
+        setViewerMemberId(result.viewerMemberId);
+        setShared(true);
+      }).catch(() => void loadBoardPoll(ownerKey, poll).then((next) => { if (active) setCurrent(next); }))
+        .finally(() => { pending = false; });
+    };
+    refresh();
+    const timer = setInterval(refresh, 3000);
+    const appStateSubscription = Platform.OS === "web" ? null : AppState.addEventListener("change", (state) => { if (state === "active") refresh(); });
+    return () => { active = false; clearInterval(timer); appStateSubscription?.remove(); };
   }, [ownerKey, poll]);
   useEffect(() => {
     if (open || shared) return;
@@ -919,7 +932,8 @@ function ThreadDetailModal({
       finally { pending = false; }
     };
     const timer = setInterval(() => { void refresh(); }, 2000);
-    return () => { active = false; clearInterval(timer); };
+    const appStateSubscription = Platform.OS === "web" ? null : AppState.addEventListener("change", (state) => { if (state === "active") void refresh(); });
+    return () => { active = false; clearInterval(timer); appStateSubscription?.remove(); };
   }, [persistedThread, thread.id, thread.shared]);
 
   const isAuthor = thread.author.id === viewerMemberId;
@@ -1024,7 +1038,8 @@ function ThreadDetailModal({
     const timer = setInterval(() => { void refresh(); }, 2000);
     const onVisible = () => { if (document.visibilityState === "visible") void refresh(); };
     if (Platform.OS === "web") document.addEventListener("visibilitychange", onVisible);
-    return () => { active = false; clearInterval(timer); if (Platform.OS === "web") document.removeEventListener("visibilitychange", onVisible); };
+    const appStateSubscription = Platform.OS === "web" ? null : AppState.addEventListener("change", (state) => { if (state === "active") void refresh(); });
+    return () => { active = false; clearInterval(timer); appStateSubscription?.remove(); if (Platform.OS === "web") document.removeEventListener("visibilitychange", onVisible); };
   }, [activityRevision, persistedThread, thread.category, thread.id, viewerMemberId]);
 
   useEffect(() => {
@@ -1096,11 +1111,6 @@ function ThreadDetailModal({
     setCommentSelection({ start: 0, end: 0 });
     setMentionQuery(null);
     setCommentPollEnabled(false); setCommentPollQuestion(""); setCommentPollOptions(["", ""]); setCommentPollDeadline(""); setCommentPollAllowMultiple(false);
-    const preview = content.length > 50 ? `${content.slice(0, 50)}...` : content;
-    for (const memberId of getMentionedMemberIds(content, MEMBERS, mentionGroups).filter((id) => id !== CURRENT_USER.id)) {
-      const member = MEMBERS.find((item) => item.id === memberId);
-      if (member) void sendMentionNotification(member.name, viewerMember.name, thread.title || "自己紹介", preview);
-    }
     commentSendingRef.current = false;
   };
 
@@ -1294,7 +1304,6 @@ function ThreadDetailModal({
       >
         <ScrollView ref={commentScrollRef} style={{ flex: 1 }} contentContainerStyle={{ padding: 16 }}>
           {/* Thread content */}
-          {showThreadUnread ? <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 14 }}><View style={{ flex: 1, height: 1, backgroundColor: "#E8A0BF" }} /><Text style={{ fontSize: 11, fontWeight: "900", color: "#C05B88" }}>ここから未読</Text><View style={{ flex: 1, height: 1, backgroundColor: "#E8A0BF" }} /></View> : null}
           <Pressable onPress={() => onOpenMemberProfile(profileParams(thread.author.id, thread.author.name))} accessibilityLabel={`${stripRankFromName(thread.author.name)}のプロフィールを表示`} style={{ flexDirection: "row", alignItems: "center", marginBottom: 12 }}>
             {isThreadPinned(thread) ? <View style={{ marginRight: 7, borderRadius: 10, paddingHorizontal: 8, paddingVertical: 6, backgroundColor: "#FFF2C7" }}><Text style={{ fontSize: 11, fontWeight: "900", color: "#8A6512" }}>📌 固定</Text></View> : null}
             <Image source={thread.author.avatar} style={{ width: 36, height: 36, borderRadius: 18 }} contentFit="cover" />
@@ -1577,7 +1586,7 @@ function ThreadDetailModal({
           <View style={{ backgroundColor: colors.background, borderTopLeftRadius: 22, borderTopRightRadius: 22, padding: 18, paddingBottom: 32 }}>
             <Text style={{ fontSize: 16, fontWeight: "800", color: colors.foreground, marginBottom: 10 }}>コメントの操作</Text>
             {selectedComment ? ([
-              { label: "返信", action: () => { setCommentReplyTo(selectedComment); setCommentText(`@${stripRankFromName(selectedComment.author.name)} `); requestAnimationFrame(() => commentInputRef.current?.focus()); } },
+              { label: "返信", action: () => { const text = `@${stripRankFromName(selectedComment.author.name)} `; setCommentReplyTo(selectedComment); setCommentText(text); setCommentSelection({ start: text.length, end: text.length }); requestAnimationFrame(() => commentInputRef.current?.focus()); } },
               { label: "コピー", action: () => { void Clipboard.setStringAsync(selectedComment.content); } },
               ...((selectedComment.author.id === viewerMemberId || canModerateAll) ? [
                 { label: "編集", action: () => { setEditingCommentId(selectedComment.id); setEditingCommentText(selectedComment.content); } },
@@ -2265,15 +2274,6 @@ function CreateThreadModal({
     }
     const homeActivity = boardActivityForThread(savedThread);
     if (homeActivity) void recordHomeActivity(homeActivity);
-    if (!isMealReport && !isGourmetAdvice) {
-      const mentionContent = isIntroduction ? `${introductionText} ${wantToTry}` : content;
-      const preview = mentionContent.length > 50 ? `${mentionContent.slice(0, 50)}...` : mentionContent;
-      const boardName = categories.find((item) => item.key === category)?.label ?? "掲示板";
-      for (const memberId of getMentionedMemberIds(mentionContent, MEMBERS, BOARD_MENTION_GROUPS).filter((id) => id !== CURRENT_USER.id)) {
-        const member = MEMBERS.find((item) => item.id === memberId);
-        if (member) void sendMentionNotification(member.name, author.name, boardName, preview);
-      }
-    }
     onClose();
     setTitle("");
     setContent("");
@@ -2871,7 +2871,13 @@ export default function BoardScreen() {
       ...sharedThreadToBoardThread(thread, viewerMemberId),
       commentCount: commentsByThread[thread.id]?.length ?? 0,
     }));
-    setDynamicThreads((current) => mergeSharedBoardThreads(current, threads, { category, threadId }));
+    setDynamicThreads((current) => {
+      const incomingIds = new Set(threads.map((thread) => thread.id));
+      const retained = threadId ? current : category
+        ? current.filter((thread) => !(thread.shared && thread.category === category && !incomingIds.has(thread.id)))
+        : current.filter((thread) => !thread.shared || thread.category.startsWith("club-club-"));
+      return [...threads, ...retained.filter((thread) => !incomingIds.has(thread.id))];
+    });
     setImportedComments((current) => ({
       ...current,
       ...Object.fromEntries(result.threads.map((thread) => [thread.id, thread.data.archiveShadow === true
@@ -2899,6 +2905,16 @@ export default function BoardScreen() {
     }).finally(() => { if (active) setCategoryLoading(false); });
     return () => { active = false; };
   }, [activeCategory, canAccessCategory, categories, categoryParam, isThreadView, loadSharedBoardContent, sharedLoading, threadParam]);
+
+  // Home timeline links can point to a post newer than the board list cached on
+  // the device. Fetch that exact post immediately instead of waiting for the
+  // category list request to finish.
+  useEffect(() => {
+    if (!isThreadView || !categoryParam || !threadParam) return;
+    void loadSharedBoardContent(categoryParam, threadParam).catch(() => {
+      // The normal category load keeps the board usable if the direct fetch fails.
+    });
+  }, [categoryParam, isThreadView, loadSharedBoardContent, threadParam]);
 
   // Keep the open thread list and its unread-comment badges current while the
   // page remains visible. The selected category avoids repeatedly fetching
@@ -2935,7 +2951,8 @@ export default function BoardScreen() {
     }, 2000);
     const onVisible = () => { if (document.visibilityState === "visible") void check(); };
     if (Platform.OS === "web") document.addEventListener("visibilitychange", onVisible);
-    return () => { active = false; clearInterval(timer); if (Platform.OS === "web") document.removeEventListener("visibilitychange", onVisible); };
+    const appStateSubscription = Platform.OS === "web" ? null : AppState.addEventListener("change", (state) => { if (state === "active") void check(); });
+    return () => { active = false; clearInterval(timer); appStateSubscription?.remove(); if (Platform.OS === "web") document.removeEventListener("visibilitychange", onVisible); };
   }, [activeCategory, authUser, isThreadView, loadSharedBoardContent, loadBoardArchive, selectedThread?.id, selectedThread?.category]);
 
   useEffect(() => {
@@ -3067,7 +3084,6 @@ export default function BoardScreen() {
   });
   useEffect(() => {
     if (!threadParam || leavingThreadDetailRef.current) return;
-    if (!threadReadsHydrated) return;
     const linkedThread = allThreads.find((item) => item.id === threadParam);
     if (linkedThread && selectedThread?.id !== linkedThread.id) {
       const comments = importedComments[linkedThread.id] ?? [];
@@ -3076,7 +3092,7 @@ export default function BoardScreen() {
       setSelectedThread(linkedThread);
       markThreadRead(linkedThread.id);
     }
-  }, [threadParam, allThreads, importedComments, markThreadRead, postedAfterFirstSignIn, selectedThread?.id, threadReadCounts, threadReadsHydrated, viewerMemberId]);
+  }, [threadParam, allThreads, importedComments, markThreadRead, postedAfterFirstSignIn, selectedThread?.id, threadReadCounts, viewerMemberId]);
   const leaveThreadDetail = useCallback((navigate?: () => void) => {
     leavingThreadDetailRef.current = true;
     setSelectedThread(null);

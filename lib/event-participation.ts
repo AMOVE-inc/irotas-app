@@ -39,3 +39,16 @@ export function getConfirmedRecruitParticipantCount(event: Event): number {
   return [...new Set(event.participants ?? [])]
     .filter((memberId) => memberId !== organizerId && !companionIds.has(memberId)).length;
 }
+
+/** Event-card count: remaining recruit slots / restaurant reservation seats. */
+export function getEventCapacitySummary(event: Event, confirmedCount = getConfirmedRecruitParticipantCount(event)): string {
+  if (event.capacityMode) {
+    return `残り${event.capacityMode === "undecided" ? "未定" : "上限なし"}`;
+  }
+  const recruitCapacity = Math.max(0, event.capacity ?? 0);
+  const remaining = Math.max(0, recruitCapacity - confirmedCount);
+  const reservationCapacity = event.reservationCapacity && event.reservationCapacity > 0
+    ? event.reservationCapacity
+    : recruitCapacity + 1;
+  return `残り${remaining}名 / 予約${reservationCapacity}名`;
+}

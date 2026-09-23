@@ -3,11 +3,11 @@ import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { EVENTS, CURRENT_USER, DEFAULT_AVATAR, MEMBERS, getMemberById, type Event, type MemberRank } from "@/constants/mock-data";
 import { EventImage } from "@/components/event-image";
-import { PersistentBottomNav } from "@/components/persistent-bottom-nav";
+import { PERSISTENT_BOTTOM_NAV_HEIGHT, PersistentBottomNav } from "@/components/persistent-bottom-nav";
 import { MemberClubLeaderBadges, MemberRankBadge, MemberRoleBadge, stripRankFromName } from "@/components/member-rank-badge";
 import { EventMentionPreview, MentionSuggestions, MentionText, mentionDisplayName } from "@/components/mention-ui";
 import { ContentLinkCards } from "@/components/content-link-cards";
-import { extractMentionLabels, getMentionGroups, getMentionQuery, getMentionedMemberIds, insertMention } from "@/lib/mentions";
+import { getMentionGroups, getMentionQuery, insertMention } from "@/lib/mentions";
 import { EVENT_TERMS_URL, PUBLIC_APP_URL } from "@/constants/external-links";
 import { joinEventChat, removeMemberFromRoom } from "@/lib/chat-store";
 import { getAllEvents } from "@/lib/event-store";
@@ -15,9 +15,9 @@ import { eventRecruitmentChannel, isDiscordRecruitmentOpen } from "@/lib/event-r
 import { approveGourmetApplication, cancelGourmetParticipation, getPendingGourmetApplicants, reopenGourmetRecruitment, submitGourmetApplication } from "@/lib/gourmet-event";
 import { getIrotasPoints, adjustIrotasPoints } from "@/lib/irotas-points-store";
 import { createPaymentRecord } from "@/lib/payment-store";
-import { getGoogleCalendarUrl, getOutlookCalendarUrl } from "@/lib/calendar-links";
+import { getGoogleCalendarAppUrl, getGoogleCalendarUrl, getOutlookCalendarAppUrl, getOutlookCalendarUrl } from "@/lib/calendar-links";
 import { toggleEventFavoriteWithNotifications, useEventFavorites } from "@/lib/event-favorites-store";
-import { cancelOrganizerDeadlineNotifications, notifyEventCancellationRequest, notifyEventConfirmation, scheduleEventReminders, sendMentionNotification } from "@/lib/notifications";
+import { cancelOrganizerDeadlineNotifications, notifyEventCancellationRequest, notifyEventConfirmation, scheduleEventReminders } from "@/lib/notifications";
 import { approveEventCancellationRequest, getPendingCancellationRequests, submitEventCancellationRequest } from "@/lib/event-cancellation";
 import { useColors } from "@/hooks/use-colors";
 import { useAuthContext } from "@/lib/auth-context";
@@ -33,7 +33,7 @@ import { EVENT_AMOUNT_OPTIONS, EVENT_CAPACITY_OPTIONS, EVENT_RANK_AMOUNT_OPTIONS
 import { GOURMET_GENRES } from "@/constants/event-options";
 import { displayEventTitle } from "@/lib/event-title";
 import { formatCommentTimestamp } from "@/lib/comment-timestamp";
-import { Image } from "expo-image";
+import { AuthenticatedImage as Image } from "@/components/authenticated-image";
 import * as ImagePicker from "expo-image-picker";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -44,6 +44,7 @@ import { toggleReactionMember } from "@/lib/chat-reactions";
 import {
   Alert,
   type AlertButton,
+  AppState,
   Linking,
   Modal,
   Platform,
@@ -54,11 +55,31 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 type EventComment = Api.SharedEventComment;
 const OFFICIAL_EVENT_PAYMENTS_ENABLED = false;
 const EVENT_COMMENT_QUICK_REACTIONS = ["👍", "❤️", "😂", "🎉", "👏"] as const;
 const EVENT_COMMENT_REACTION_EMOJIS = ["😀", "😃", "😄", "😁", "😆", "😅", "😂", "🤣", "😊", "😇", "🙂", "🙃", "😉", "😍", "🥰", "😘", "😋", "😛", "🤪", "🤔", "🫡", "😎", "🥳", "😮", "😢", "😭", "😡", "👍", "👎", "👏", "🙌", "🙏", "💪", "👀", "❤️", "🩷", "🧡", "💛", "💚", "💙", "💜", "🖤", "🤍", "🔥", "✨", "🎉", "💯", "✅", "❌", "💡", "📌", "🍽️", "🍣", "🍖", "🍜", "🍕", "🍰", "☕", "🍺", "🍷"] as const;
+
+async function openCalendarComposer(appUrl: string, webUrl: string, appName: string) {
+  if (Platform.OS === "web") {
+    await openExternalUrl(webUrl);
+    return;
+  }
+  try {
+    await Linking.openURL(appUrl);
+  } catch {
+    Alert.alert(
+      `${appName}アプリを開けませんでした`,
+      `${appName}アプリがインストールされていないため、ブラウザで予定作成画面を開きます。`,
+      [
+        { text: "キャンセル", style: "cancel" },
+        { text: "ブラウザで開く", onPress: () => { void openExternalUrl(webUrl); } },
+      ],
+    );
+  }
+}
 
 const eventCommentsKey = (eventId: string) => `irotas_event_comments_v1:${eventId}`;
 const deletedEventCommentsKey = (eventId: string) => `irotas_deleted_event_comments_v1:${eventId}`;
@@ -118,6 +139,7 @@ function EventMemberPicker({
 }
 
 export default function EventDetailScreen() {
+  const insets = useSafeAreaInsets();
   const colors = useColors();
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string | string[] }>();
@@ -204,6 +226,7 @@ export default function EventDetailScreen() {
   const joiningRef = useRef(false);
   const checkoutBusyRef = useRef(false);
   const eventCommentInputRef = useRef<TextInput>(null);
+  const [eventCommentSelection, setEventCommentSelection] = useState({ start: 0, end: 0 });
   const eventCommentSendingRef = useRef(false);
   const usePointsRef = useRef(false);
   const favoriteEventIds = useEventFavorites();
@@ -350,7 +373,8 @@ export default function EventDetailScreen() {
     const timer = setInterval(() => { void refresh(); }, Platform.OS === "web" ? 2000 : 5000);
     const onVisible = () => { if (document.visibilityState === "visible") void refresh(); };
     if (Platform.OS === "web") document.addEventListener("visibilitychange", onVisible);
-    return () => { active = false; clearInterval(timer); if (Platform.OS === "web") document.removeEventListener("visibilitychange", onVisible); };
+    const appStateSubscription = Platform.OS === "web" ? null : AppState.addEventListener("change", (state) => { if (state === "active") void refresh(); });
+    return () => { active = false; clearInterval(timer); appStateSubscription?.remove(); if (Platform.OS === "web") document.removeEventListener("visibilitychange", onVisible); };
   }, [event?.id, authLoading, authenticatedViewerMemberId]);
 
   if ((!event || event.id !== eventId) && (eventLoading || !eventResolved)) {
@@ -490,18 +514,6 @@ export default function EventDetailScreen() {
     }
     setEventCommentBusy(false);
     eventCommentSendingRef.current = false;
-    const preview = content.length > 50 ? `${content.slice(0, 50)}...` : content;
-    const mentionedMemberIds = new Set(getMentionedMemberIds(content, eventMentionMembers, eventMentionGroups));
-    for (const label of extractMentionLabels(content)) {
-      const directoryMember = memberDirectory.find((member) => stripRankFromName(member.displayName) === stripRankFromName(label));
-      if (directoryMember) mentionedMemberIds.add(directoryMember.id);
-    }
-    for (const memberId of mentionedMemberIds) {
-      if (memberId === viewerMemberId) continue;
-      const directoryMember = memberDirectory.find((member) => member.id === memberId);
-      const member = getMemberById(memberId);
-      if (directoryMember || member) void sendMentionNotification(directoryMember?.displayName ?? member?.name ?? "会員", authUser?.name ?? CURRENT_USER.name, event.title, preview);
-    }
   };
 
   const handleEventCommentReaction = async (comment: EventComment, emoji: string) => {
@@ -999,12 +1011,12 @@ export default function EventDetailScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       {/* Header controls */}
-      <View pointerEvents="box-none" style={{ position: "absolute", top: 0, left: 0, right: 0, height: 140, zIndex: 10 }}>
+      <View pointerEvents="box-none" style={{ position: "absolute", top: 0, left: 0, right: 0, height: insets.top + 140, zIndex: 10 }}>
         <Pressable
           onPress={() => router.back()}
           style={{
             position: "absolute",
-            top: 14,
+            top: insets.top + 8,
             left: 16,
             width: 36,
             height: 36,
@@ -1018,7 +1030,7 @@ export default function EventDetailScreen() {
         </Pressable>
 
         {/* Status badge */}
-        <View style={{ position: "absolute", top: 14, right: 16 }}>
+        <View style={{ position: "absolute", top: insets.top + 8, right: 16 }}>
           <View
             style={{
               backgroundColor:
@@ -1041,16 +1053,16 @@ export default function EventDetailScreen() {
             </Text>
           </View>
         </View>
-        <Pressable onPress={() => { const favorite = event.isFavorite ?? favoriteEventIds.includes(event.id); if (event.viewerMemberId) { void Api.setEventFavorite(event.id, !favorite).then(() => setEvent({ ...event, isFavorite: !favorite })).catch((error) => Alert.alert("更新できませんでした", error instanceof Error ? error.message : "もう一度お試しください。")); } else { void toggleEventFavoriteWithNotifications(event, CURRENT_USER.id); } if (!favorite) void recordActivityEvent({ userId: CURRENT_USER.id, eventName: "event_favorited", entityType: "event", entityId: event.id }); }} accessibilityLabel={(event.isFavorite ?? favoriteEventIds.includes(event.id)) ? "お気に入りから削除" : "お気に入りに追加"} style={{ position: "absolute", top: 56, right: 16, width: 38, height: 38, borderRadius: 19, backgroundColor: "rgba(0,0,0,0.5)", alignItems: "center", justifyContent: "center" }}>
+        <Pressable onPress={() => { const favorite = event.isFavorite ?? favoriteEventIds.includes(event.id); if (event.viewerMemberId) { void Api.setEventFavorite(event.id, !favorite).then(() => setEvent({ ...event, isFavorite: !favorite })).catch((error) => Alert.alert("更新できませんでした", error instanceof Error ? error.message : "もう一度お試しください。")); } else { void toggleEventFavoriteWithNotifications(event, CURRENT_USER.id); } if (!favorite) void recordActivityEvent({ userId: CURRENT_USER.id, eventName: "event_favorited", entityType: "event", entityId: event.id }); }} accessibilityLabel={(event.isFavorite ?? favoriteEventIds.includes(event.id)) ? "お気に入りから削除" : "お気に入りに追加"} style={{ position: "absolute", top: insets.top + 50, right: 16, width: 38, height: 38, borderRadius: 19, backgroundColor: "rgba(0,0,0,0.5)", alignItems: "center", justifyContent: "center" }}>
           <IconSymbol name={(event.isFavorite ?? favoriteEventIds.includes(event.id)) ? "heart.fill" : "heart"} size={20} color={(event.isFavorite ?? favoriteEventIds.includes(event.id)) ? "#F59AB9" : "#FFF"} />
         </Pressable>
-        <Pressable onPress={() => { void Clipboard.setStringAsync(`${PUBLIC_APP_URL}/event-detail?id=${encodeURIComponent(event.id)}`).finally(() => { setLinkCopied(true); setTimeout(() => setLinkCopied(false), 2200); }); }} accessibilityLabel="イベントリンクをコピー" style={{ position: "absolute", top: 100, right: 16, width: 38, height: 38, borderRadius: 19, backgroundColor: "rgba(0,0,0,0.5)", alignItems: "center", justifyContent: "center" }}>
+        <Pressable onPress={() => { void Clipboard.setStringAsync(`${PUBLIC_APP_URL}/event-detail?id=${encodeURIComponent(event.id)}`).finally(() => { setLinkCopied(true); setTimeout(() => setLinkCopied(false), 2200); }); }} accessibilityLabel="イベントリンクをコピー" style={{ position: "absolute", top: insets.top + 94, right: 16, width: 38, height: 38, borderRadius: 19, backgroundColor: "rgba(0,0,0,0.5)", alignItems: "center", justifyContent: "center" }}>
           <IconSymbol name="square.and.arrow.up" size={19} color="#FFF" />
         </Pressable>
-        {linkCopied ? <View style={{ position: "absolute", top: 146, right: 16, borderRadius: 10, backgroundColor: "rgba(25,25,28,0.92)", paddingHorizontal: 12, paddingVertical: 9 }}><Text style={{ color: "#FFF", fontSize: 12, fontWeight: "800" }}>リンクをコピーしました</Text></View> : null}
+        {linkCopied ? <View style={{ position: "absolute", top: insets.top + 140, right: 16, borderRadius: 10, backgroundColor: "rgba(25,25,28,0.92)", paddingHorizontal: 12, paddingVertical: 9 }}><Text style={{ color: "#FFF", fontSize: 12, fontWeight: "800" }}>リンクをコピーしました</Text></View> : null}
       </View>
 
-      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16, paddingBottom: 236 }} keyboardShouldPersistTaps="handled" keyboardDismissMode="interactive">
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16, paddingTop: insets.top + 8, paddingBottom: 236 + insets.bottom }} keyboardShouldPersistTaps="handled" keyboardDismissMode="interactive">
         <EventImage event={event} style={{ width: "100%", height: 250, borderRadius: 16, marginBottom: 16 }} />
         {/* Title */}
         <Text style={{ fontSize: 26, fontWeight: "800", color: colors.foreground, marginBottom: 12 }}>
@@ -1134,8 +1146,8 @@ export default function EventDetailScreen() {
           </View>
           {event.tabelogUrl ? <Pressable onPress={() => openExternalUrl(/^https?:\/\//i.test(event.tabelogUrl!) ? event.tabelogUrl! : `https://${event.tabelogUrl!}`)} style={{ flexDirection: "row", alignItems: "center", marginTop: 14, paddingTop: 14, borderTopWidth: 0.5, borderTopColor: colors.border }}><View style={{ width: 40, height: 40, borderRadius: 12, backgroundColor: "#FFF1E8", alignItems: "center", justifyContent: "center" }}><IconSymbol name="link" size={19} color="#E67A31" /></View><View style={{ flex: 1, marginLeft: 12 }}><Text style={{ fontSize: 15, fontWeight: "700", color: colors.foreground }}>食べログ</Text><Text style={{ fontSize: 13, color: "#E67A31" }}>タップして食べログを開く ↗</Text></View><IconSymbol name="chevron.right" size={16} color="#E67A31" /></Pressable> : null}
           <View style={{ flexDirection: "row", gap: 8, marginTop: 16, paddingTop: 14, borderTopWidth: 0.5, borderTopColor: colors.border }}>
-            <Pressable onPress={() => openExternalUrl(getGoogleCalendarUrl(event))} style={{ flex: 1, minHeight: 42, borderRadius: 10, backgroundColor: "#F4F6F8", alignItems: "center", justifyContent: "center", flexDirection: "row" }}><IconSymbol name="calendar" size={16} color="#4285F4" /><Text style={{ marginLeft: 6, fontSize: 12, fontWeight: "800", color: colors.foreground }}>Googleカレンダー</Text></Pressable>
-            <Pressable onPress={() => openExternalUrl(getOutlookCalendarUrl(event))} style={{ flex: 1, minHeight: 42, borderRadius: 10, backgroundColor: "#F4F6F8", alignItems: "center", justifyContent: "center", flexDirection: "row" }}><IconSymbol name="calendar" size={16} color="#0078D4" /><Text style={{ marginLeft: 6, fontSize: 12, fontWeight: "800", color: colors.foreground }}>Outlook</Text></Pressable>
+            <Pressable onPress={() => void openCalendarComposer(getGoogleCalendarAppUrl(event), getGoogleCalendarUrl(event), "Googleカレンダー")} style={{ flex: 1, minHeight: 42, borderRadius: 10, backgroundColor: "#F4F6F8", alignItems: "center", justifyContent: "center", flexDirection: "row" }}><IconSymbol name="calendar" size={16} color="#4285F4" /><Text style={{ marginLeft: 6, fontSize: 12, fontWeight: "800", color: colors.foreground }}>Googleカレンダー</Text></Pressable>
+            <Pressable onPress={() => void openCalendarComposer(getOutlookCalendarAppUrl(event), getOutlookCalendarUrl(event), "Outlook")} style={{ flex: 1, minHeight: 42, borderRadius: 10, backgroundColor: "#F4F6F8", alignItems: "center", justifyContent: "center", flexDirection: "row" }}><IconSymbol name="calendar" size={16} color="#0078D4" /><Text style={{ marginLeft: 6, fontSize: 12, fontWeight: "800", color: colors.foreground }}>Outlook</Text></Pressable>
           </View>
         </View>
 
@@ -1339,7 +1351,7 @@ export default function EventDetailScreen() {
             </Pressable>;
           })}
           {eventMentionQuery !== null ? <MentionSuggestions query={eventMentionQuery} groups={eventMentionGroups} members={eventMentionMembers} onSelect={(label, memberId) => setEventCommentText((value) => insertMention(value, label, memberId))} /> : null}
-          <View style={{ flexDirection: "row", alignItems: "flex-end", marginTop: 14 }}><TextInput ref={eventCommentInputRef} value={eventCommentText} onChangeText={(value) => setEventCommentText(value.replace(/@everyone\b/gi, ""))} onFocus={() => setEventCommentFocused(true)} onBlur={() => setEventCommentFocused(false)} placeholder="質問やコメントを入力" placeholderTextColor={colors.muted} multiline style={{ flex: 1, minHeight: 44, maxHeight: 100, borderRadius: 14, backgroundColor: colors.background, borderWidth: 1, borderColor: colors.border, paddingHorizontal: 12, paddingVertical: 10, color: colors.foreground }} /><Pressable disabled={!eventCommentText.trim() || eventCommentBusy} onPress={() => { void handleEventComment(); }} style={{ width: 44, height: 44, borderRadius: 22, marginLeft: 8, alignItems: "center", justifyContent: "center", backgroundColor: eventCommentText.trim() && !eventCommentBusy ? "#D65E8D" : colors.border }}><IconSymbol name="paperplane.fill" size={19} color="#FFF" /></Pressable></View>
+          <View style={{ flexDirection: "row", alignItems: "flex-end", marginTop: 14 }}><TextInput ref={eventCommentInputRef} value={eventCommentText} selection={eventCommentSelection} onSelectionChange={(event) => setEventCommentSelection(event.nativeEvent.selection)} onChangeText={(value) => setEventCommentText(value.replace(/@everyone\b/gi, ""))} onFocus={() => setEventCommentFocused(true)} onBlur={() => setEventCommentFocused(false)} placeholder="質問やコメントを入力" placeholderTextColor={colors.muted} multiline style={{ flex: 1, minHeight: 44, maxHeight: 100, borderRadius: 14, backgroundColor: colors.background, borderWidth: 1, borderColor: colors.border, paddingHorizontal: 12, paddingVertical: 10, color: colors.foreground }} /><Pressable disabled={!eventCommentText.trim() || eventCommentBusy} onPress={() => { void handleEventComment(); }} style={{ width: 44, height: 44, borderRadius: 22, marginLeft: 8, alignItems: "center", justifyContent: "center", backgroundColor: eventCommentText.trim() && !eventCommentBusy ? "#D65E8D" : colors.border }}><IconSymbol name="paperplane.fill" size={19} color="#FFF" /></Pressable></View>
         </View>
 
         {(isJoined || hasApplied) && !isOrganizer ? (
@@ -1422,7 +1434,7 @@ export default function EventDetailScreen() {
               {!eventCommentShowAllReactions ? <Pressable accessibilityLabel="他のスタンプを表示" onPress={() => setEventCommentShowAllReactions(true)} style={{ width: 42, height: 38, borderRadius: 19, alignItems: "center", justifyContent: "center", backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border }}><IconSymbol name="plus" size={19} color={colors.muted} /></Pressable> : null}
             </ScrollView>
             {[
-              { label: "返信", icon: "arrowshape.turn.up.left.fill", action: () => { const target = eventCommentActionTarget; setEventCommentActionTarget(null); if (!target) return; setEventCommentText(`@${stripRankFromName(target.author)} `); requestAnimationFrame(() => eventCommentInputRef.current?.focus()); } },
+              { label: "返信", icon: "arrowshape.turn.up.left.fill", action: () => { const target = eventCommentActionTarget; setEventCommentActionTarget(null); if (!target) return; const text = `@${stripRankFromName(target.author)} `; setEventCommentText(text); setEventCommentSelection({ start: text.length, end: text.length }); requestAnimationFrame(() => eventCommentInputRef.current?.focus()); } },
               { label: "テキストをコピー", icon: "doc.on.doc", action: () => { const target = eventCommentActionTarget; setEventCommentActionTarget(null); if (target) void Clipboard.setStringAsync(target.text); } },
               { label: "メッセージリンクをコピー", icon: "link", action: () => { const target = eventCommentActionTarget; setEventCommentActionTarget(null); if (target) void Clipboard.setStringAsync(`${PUBLIC_APP_URL}/event-detail?id=${encodeURIComponent(event.id)}&comment=${encodeURIComponent(target.id)}`); } },
               ...((eventCommentActionTarget?.canEdit) ? [
@@ -1518,7 +1530,7 @@ export default function EventDetailScreen() {
       {!eventCommentFocused ? <View
         style={{
           position: "absolute",
-          bottom: Platform.OS === "web" ? 72 : 82,
+          bottom: PERSISTENT_BOTTOM_NAV_HEIGHT + (Platform.OS === "web" ? 0 : insets.bottom),
           left: 0,
           right: 0,
           backgroundColor: colors.background,
@@ -1526,7 +1538,7 @@ export default function EventDetailScreen() {
           borderTopColor: colors.border,
           paddingHorizontal: 16,
           paddingTop: 12,
-          paddingBottom: Platform.OS === "web" ? 16 : 34,
+          paddingBottom: 12,
           gap: 10,
         }}
       >

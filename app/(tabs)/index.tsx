@@ -20,7 +20,7 @@ import { useColors } from "@/hooks/use-colors";
 import { useAuthContext } from "@/lib/auth-context";
 import { getMemberStaffRole } from "@/lib/member-staff-role";
 import { japanDateKey } from "@/lib/japan-date";
-import { Image } from "expo-image";
+import { AuthenticatedImage as Image } from "@/components/authenticated-image";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useRef, useState, useCallback, useEffect, useMemo } from "react";
 import {

@@ -86,6 +86,7 @@ describe("board category ordering", () => {
     const chatScreen = readFileSync(resolve(process.cwd(), "app/chat.tsx"), "utf8");
     expect(boardScreen).toContain("initialUnreadCommentIds");
     expect(boardScreen).toContain("ここから未読コメント");
+    expect(boardScreen).not.toContain(">ここから未読</Text>");
     expect(boardScreen).toContain("commentScrollRef.current?.scrollTo");
     expect(chatScreen).toContain("initiallyPositionedChat");
     expect(chatScreen).toContain("ここから未読メッセージ");
@@ -101,6 +102,7 @@ describe("board category ordering", () => {
     expect(boardScreen).toContain('returnToTimeline={fromHome === "1"}');
     expect(boardScreen).toContain('leavingThreadDetailRef.current = true;');
     expect(boardScreen).toContain('if (!threadParam || leavingThreadDetailRef.current) return;');
+    expect(boardScreen).toContain('loadSharedBoardContent(categoryParam, threadParam)');
     expect(boardScreen).toContain('leaveThreadDetail(fromHome === "1" ? () => router.replace("/" as any) : undefined)');
     expect(boardScreen).toContain('leaveThreadDetail(() => router.push({ pathname: "/member-profile", params }))');
     expect(profileScreen).toContain('returnToBoardThread === "1" && boardCategory && boardThreadId');

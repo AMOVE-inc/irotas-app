@@ -1,7 +1,8 @@
-import { Image } from "expo-image";
+import { AuthenticatedImage as Image } from "@/components/authenticated-image";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Text, View, type ViewStyle } from "react-native";
 import { getEventImageQuery, getEventPreviewUrl, type EventImageSource } from "@/lib/event-image-source";
+import { sharedJsonRequest } from "@/lib/shared-request";
 
 export function EventImage({ event, style }: { event: EventImageSource; style: ViewStyle }) {
   const [resolved, setResolved] = useState(event.image || "");
@@ -13,8 +14,7 @@ export function EventImage({ event, style }: { event: EventImageSource; style: V
     let active = true;
     setLoading(true);
     const parameters = new URLSearchParams({ query: getEventImageQuery(event), url: sourceUrl });
-    void fetch(`/api/link-preview?${parameters.toString()}`)
-      .then((response) => response.ok ? response.json() : { imageUrl: null })
+    void sharedJsonRequest<{ imageUrl?: string | null }>(`/api/link-preview?${parameters.toString()}`)
       .then((value) => { if (active && typeof value.imageUrl === "string") setResolved(value.imageUrl); })
       .catch(() => undefined)
       .finally(() => { if (active) setLoading(false); });

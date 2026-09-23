@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Event } from "../constants/mock-data";
-import { getConfirmedRecruitParticipantCount, getEventParticipationStatus, isEventOrganizer, isPastEventDate } from "../lib/event-participation";
+import { getConfirmedRecruitParticipantCount, getEventCapacitySummary, getEventParticipationStatus, isEventOrganizer, isPastEventDate } from "../lib/event-participation";
 
 const event: Event = { id: "e", title: "会", description: "", date: "2026-08-01", time: "18:00", location: "東京", image: "", capacity: 5, attendees: 3, participants: ["confirmed"], applicantIds: ["confirmed", "applied"], companionIds: ["companion"], price: "5,000円", category: "kanto", eventType: "gourmet", status: "open", createdBy: "host" };
 
@@ -33,5 +33,9 @@ describe("event participation labels", () => {
 
   it("does not count the organizer or companions against the recruiting capacity", () => {
     expect(getConfirmedRecruitParticipantCount({ ...event, participants: ["host", "confirmed", "companion", "second"], companionIds: ["companion"] })).toBe(2);
+  });
+
+  it("shows remaining recruit slots against the restaurant reservation count", () => {
+    expect(getEventCapacitySummary({ ...event, capacity: 5, reservationCapacity: 7, participants: ["host", "confirmed", "companion", "second"], companionIds: ["companion"] })).toBe("残り3名 / 予約7名");
   });
 });

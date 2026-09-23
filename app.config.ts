@@ -74,7 +74,10 @@ const config: ExpoConfig = {
     package: env.androidPackage,
     versionCode: 1,
     permissions: ["POST_NOTIFICATIONS"],
-    blockedPermissions: ["android.permission.RECORD_AUDIO"],
+    blockedPermissions: [
+      "android.permission.RECORD_AUDIO",
+      "android.permission.SYSTEM_ALERT_WINDOW",
+    ],
     intentFilters: [
       {
         action: "VIEW",
@@ -129,7 +132,7 @@ const config: ExpoConfig = {
     [
       "expo-splash-screen",
       {
-        image: "./assets/images/splash-icon.png",
+        image: "./assets/images/irotas-logo-square.png",
         imageWidth: 200,
         resizeMode: "contain",
         backgroundColor: "#ffffff",

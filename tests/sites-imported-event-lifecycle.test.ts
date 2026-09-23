@@ -71,7 +71,8 @@ describe("Discord-imported event lifecycle", () => {
     const response = await handleEventRequest(new Request(`https://example.test/api/events/${state.id}`, { method: "DELETE" }), env);
     expect(response?.status).toBe(200);
     expect(state.deleted.has(state.id)).toBe(true);
-    expect(state.readRow()).toBeNull();
+    // Imported events are hidden by a tombstone while their linked history remains intact.
+    expect(state.readRow()).not.toBeNull();
   });
 
   it("does not let another member delete an imported club event", async () => {

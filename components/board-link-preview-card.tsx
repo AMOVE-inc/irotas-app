@@ -1,20 +1,19 @@
 import { openExternalUrl } from "@/lib/open-external-url";
-import { Image } from "expo-image";
+import { AuthenticatedImage as Image } from "@/components/authenticated-image";
 import { useEffect, useState } from "react";
-import { Linking, Pressable, Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import type { ImportedLinkPreview } from "@/lib/discord-link-preview";
+import { sharedJsonRequest } from "@/lib/shared-request";
 
 export function BoardLinkPreviewCard({ preview }: { preview: ImportedLinkPreview }) {
   const [metadata, setMetadata] = useState<{ title: string | null; description: string | null; imageUrl: string | null }>({ title: null, description: null, imageUrl: preview.imageUrl ?? null });
   useEffect(() => {
     setMetadata({ title: null, description: null, imageUrl: preview.imageUrl ?? null });
     if (preview.provider !== "Google マップ" && preview.provider !== "食べログ") return;
-    if (typeof window === "undefined") return;
     let active = true;
     const query = preview.title.endsWith("のリンクを開く") ? "" : preview.title;
     const params = new URLSearchParams({ url: preview.url, query });
-    void fetch(`/api/link-preview?${params}`)
-      .then((response) => response.ok ? response.json() : null)
+    void sharedJsonRequest<{ title?: string | null; description?: string | null; imageUrl?: string | null }>(`/api/link-preview?${params}`)
       .then((result) => { if (active && result) setMetadata({ title: typeof result.title === "string" ? result.title : null, description: typeof result.description === "string" ? result.description : null, imageUrl: typeof result.imageUrl === "string" ? result.imageUrl : preview.imageUrl ?? null }); })
       .catch(() => undefined);
     return () => { active = false; };

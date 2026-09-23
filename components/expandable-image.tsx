@@ -1,5 +1,6 @@
 import { IconSymbol } from "@/components/ui/icon-symbol";
-import { Image, type ImageProps } from "expo-image";
+import type { ImageProps } from "expo-image";
+import { AuthenticatedImage as Image, resolveMediaUrl } from "@/components/authenticated-image";
 import { useEffect, useRef, useState } from "react";
 import { Alert, Linking, Modal, Platform, Pressable, Text, View } from "react-native";
 
@@ -41,8 +42,9 @@ export function ExpandableImage({ source, style, contentFit = "cover", onLoad, u
   const [imageFailed, setImageFailed] = useState(false);
   const [activeIndex, setActiveIndex] = useState(galleryIndex);
   const touchStartX = useRef(0);
-  const resolvedUri = uri ?? (source && typeof source === "object" && !Array.isArray(source) && "uri" in source && typeof source.uri === "string" ? source.uri : undefined);
-  const activeUri = galleryUris?.[activeIndex] ?? resolvedUri;
+  const rawUri = uri ?? (typeof source === "string" ? source : source && typeof source === "object" && !Array.isArray(source) && "uri" in source && typeof source.uri === "string" ? source.uri : undefined);
+  const resolvedUri = rawUri ? resolveMediaUrl(rawUri) : undefined;
+  const activeUri = galleryUris?.[activeIndex] ? resolveMediaUrl(galleryUris[activeIndex]) : resolvedUri;
   const activeSource = activeUri ? { uri: activeUri } : source;
   useEffect(() => { setImageFailed(false); }, [resolvedUri]);
   useEffect(() => {

@@ -39,6 +39,31 @@ function adminPreviewUser(): Auth.User {
   };
 }
 
+function toAuthUser(apiUser: Api.AuthApiUser): Auth.User {
+  return {
+    id: apiUser.id,
+    openId: apiUser.openId,
+    name: apiUser.name,
+    email: apiUser.email,
+    loginMethod: apiUser.loginMethod,
+    lastSignedIn: new Date(apiUser.lastSignedIn),
+    firstSignedIn: new Date(apiUser.firstSignedIn ?? apiUser.lastSignedIn),
+    role: Auth.normalizeUserRole(apiUser.role),
+    accessRole: Auth.normalizeAccessRole(apiUser.accessRole),
+    branch: Auth.normalizeBranchRole(apiUser.branch),
+    branches: Auth.normalizeBranchRoles(apiUser.branches, apiUser.branch),
+    memberId: apiUser.memberId,
+    memberTerm: apiUser.memberTerm,
+    memberRank: apiUser.memberRank,
+    joinedAt: apiUser.joinedAt,
+    achievementBadges: apiUser.achievementBadges,
+    profile: apiUser.profile,
+    xp: apiUser.xp,
+    participationCount: apiUser.participationCount,
+    organizerCount: apiUser.organizerCount,
+  };
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<Auth.User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -51,28 +76,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (Platform.OS === "web") {
         const apiUser = await Api.getMe();
         if (apiUser) {
-          const userInfo: Auth.User = {
-            id: apiUser.id,
-            openId: apiUser.openId,
-            name: apiUser.name,
-            email: apiUser.email,
-            loginMethod: apiUser.loginMethod,
-            lastSignedIn: new Date(apiUser.lastSignedIn),
-            firstSignedIn: new Date(apiUser.firstSignedIn ?? apiUser.lastSignedIn),
-            role: Auth.normalizeUserRole(apiUser.role),
-            accessRole: Auth.normalizeAccessRole(apiUser.accessRole),
-            branch: Auth.normalizeBranchRole(apiUser.branch),
-            branches: Auth.normalizeBranchRoles(apiUser.branches, apiUser.branch),
-            memberId: apiUser.memberId,
-            memberTerm: apiUser.memberTerm,
-            memberRank: apiUser.memberRank,
-            joinedAt: apiUser.joinedAt,
-            achievementBadges: apiUser.achievementBadges,
-            profile: apiUser.profile,
-            xp: apiUser.xp,
-            participationCount: apiUser.participationCount,
-            organizerCount: apiUser.organizerCount,
-          };
+          const userInfo = toAuthUser(apiUser);
           setUser(userInfo);
           await Auth.setUserInfo(userInfo);
         } else if (
@@ -92,17 +96,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           await Auth.clearUserInfo();
         }
       } else {
-        // Native: check token first
+        // Native: render cached data first, then reconcile membership and
+        // permissions with the shared server used by Web/PWA.
         const sessionToken = await Auth.getSessionToken();
         if (!sessionToken) {
           setUser(null);
+          await Auth.clearUserInfo();
           return;
         }
         const cachedUser = await Auth.getUserInfo();
-        if (cachedUser) {
-          setUser(cachedUser);
-        } else {
-          setUser(null);
+        setUser(cachedUser);
+        try {
+          const apiUser = await Api.getMeStrict();
+          if (!apiUser) {
+            await Auth.removeSessionToken();
+            await Auth.clearUserInfo();
+            setUser(null);
+            return;
+          }
+          const userInfo = toAuthUser(apiUser);
+          await Auth.setUserInfo(userInfo);
+          setUser(userInfo);
+        } catch (error) {
+          logger.warn("Unable to reconcile the native session; keeping the cached user", error);
+          if (!cachedUser) {
+            setUser(null);
+          }
         }
       }
     } catch (err) {

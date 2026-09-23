@@ -1,4 +1,5 @@
 import type { Member, Restaurant } from "../constants/mock-data";
+import { sharedJsonRequest } from "./shared-request";
 
 export type GourmetMapFeedRestaurant = Omit<Restaurant, "registeredBy">;
 
@@ -34,11 +35,10 @@ export function mergeGourmetMapFeed(
 }
 
 export async function fetchGourmetMapFeed(): Promise<GourmetMapFeed | null> {
-  const response = await fetch("/api/gourmet-map/feed", {
-    headers: { accept: "application/json" },
-    cache: "no-store",
-  });
-  if (!response.ok) return null;
-  const feed = (await response.json()) as GourmetMapFeed;
-  return Array.isArray(feed.restaurants) ? feed : null;
+  try {
+    const feed = await sharedJsonRequest<GourmetMapFeed>("/api/gourmet-map/feed", { cache: "no-store" });
+    return Array.isArray(feed.restaurants) ? feed : null;
+  } catch {
+    return null;
+  }
 }

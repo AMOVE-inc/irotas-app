@@ -19,7 +19,7 @@ import { getMyRooms } from "@/lib/chat-store";
 import { getAllEvents } from "@/lib/event-store";
 import { getEventParticipationStatus, isEventOrganizer, isPastEventDate } from "@/lib/event-participation";
 import { getIrotasPoints } from "@/lib/irotas-points-store";
-import { Image } from "expo-image";
+import { AuthenticatedImage as Image } from "@/components/authenticated-image";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {

@@ -10,8 +10,13 @@ function eventDates(event: Event): { start: Date; end: Date } {
   return { start: safeStart, end: new Date(safeStart.getTime() + 2 * 60 * 60 * 1000) };
 }
 
-export function getGoogleCalendarUrl(event: Event): string {
+function calendarFields(event: Event) {
   const { start, end } = eventDates(event);
+  return { start, end, title: event.title, description: event.description, location: event.location };
+}
+
+export function getGoogleCalendarUrl(event: Event): string {
+  const { start, end } = calendarFields(event);
   const params = new URLSearchParams({
     action: "TEMPLATE",
     text: event.title,
@@ -22,8 +27,13 @@ export function getGoogleCalendarUrl(event: Event): string {
   return `https://calendar.google.com/calendar/render?${params.toString()}`;
 }
 
+export function getGoogleCalendarAppUrl(event: Event): string {
+  const [, query = ""] = getGoogleCalendarUrl(event).split("?");
+  return `comgooglecalendar://calendar/r/eventedit?${query}`;
+}
+
 export function getOutlookCalendarUrl(event: Event): string {
-  const { start, end } = eventDates(event);
+  const { start, end } = calendarFields(event);
   const params = new URLSearchParams({
     path: "/calendar/action/compose",
     rru: "addevent",
@@ -34,4 +44,16 @@ export function getOutlookCalendarUrl(event: Event): string {
     location: event.location,
   });
   return `https://outlook.live.com/calendar/0/deeplink/compose?${params.toString()}`;
+}
+
+export function getOutlookCalendarAppUrl(event: Event): string {
+  const { start, end, title, description, location } = calendarFields(event);
+  const params = new URLSearchParams({
+    title,
+    description,
+    location,
+    startdt: start.toISOString(),
+    enddt: end.toISOString(),
+  });
+  return `ms-outlook://events/new?${params.toString()}`;
 }

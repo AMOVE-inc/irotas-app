@@ -18,6 +18,7 @@ type ClubRow = {
   icon: string;
   leader_member_id: number | null;
   leader_public_member_id: string | null;
+  leader_discord_user_id: string | null;
   leader_display_name: string | null;
   status: "active" | "archived";
 };
@@ -71,6 +72,7 @@ async function viewerPublicId(db: D1Database, memberId: number) {
 
 async function clubRow(db: D1Database, id: string) {
   return db.prepare(`SELECT c.*, leader.public_member_id AS leader_public_member_id,
+      leader.discord_user_id AS leader_discord_user_id,
       leader.display_name AS leader_display_name
     FROM clubs c LEFT JOIN members leader ON leader.id = c.leader_member_id
     WHERE c.id = ? LIMIT 1`).bind(id).first<ClubRow>();
@@ -127,6 +129,7 @@ function serializeClub(row: ClubRow, memberships: MembershipRow[], viewerId: num
     overviewText: row.overview_text,
     icon: row.icon,
     leaderId: row.leader_public_member_id ?? "",
+    leaderDiscordUserId: row.leader_discord_user_id ?? undefined,
     leaderName: row.leader_display_name ?? "未設定",
     memberIds: approved.map(publicId),
     members: approved.map((item) => {
@@ -215,6 +218,7 @@ export async function handleClubRequest(request: Request, env: SitesEnv): Promis
   if (pathname === CLUBS_PATH && request.method === "GET") {
     await reconcileDiscordClubMemberships(env.DB);
     const rows = await env.DB.prepare(`SELECT c.*, leader.public_member_id AS leader_public_member_id,
+        leader.discord_user_id AS leader_discord_user_id,
         leader.display_name AS leader_display_name
       FROM clubs c LEFT JOIN members leader ON leader.id = c.leader_member_id
       WHERE c.status = 'active' ORDER BY c.created_at, c.name`).all<ClubRow>();

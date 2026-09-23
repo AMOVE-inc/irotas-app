@@ -7,10 +7,10 @@ import { applyReadRoomState, getMyRooms, getRankRoomsForUser, loadDynamicRooms, 
 import { markChatRoomOptimisticallyRead } from "@/lib/chat-unread-sync";
 import { canAccessRankRoom } from "@/lib/chat-access";
 import { useColors } from "@/hooks/use-colors";
-import { Image } from "expo-image";
+import { AuthenticatedImage as Image } from "@/components/authenticated-image";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { FlatList, Modal, Platform, Pressable, ScrollView, Text, TextInput, View } from "react-native";
+import { AppState, FlatList, Modal, Platform, Pressable, ScrollView, Text, TextInput, View } from "react-native";
 import * as Api from "@/lib/_core/api";
 import { stripRankFromName } from "@/components/member-rank-badge";
 import { getDiscordAuthorById, getDiscordAuthorByName } from "@/lib/discord-author-directory";
@@ -46,7 +46,7 @@ export function showSentChatPreviewImmediately(memberId: string, roomId: string,
     joined: sortRoomsByRecent(saved.joined.map((room) => room.id === roomId ? mergeSentChatPreview(room, preview) : room)),
     rank: sortRoomsByRecent(saved.rank.map((room) => room.id === roomId ? mergeSentChatPreview(room, preview) : room)),
   });
-  if (typeof window !== "undefined") window.dispatchEvent(new CustomEvent("irotas-chat-message-sent", { detail: { memberId, roomId, preview } }));
+  if (Platform.OS === "web" && typeof window !== "undefined") window.dispatchEvent(new CustomEvent("irotas-chat-message-sent", { detail: { memberId, roomId, preview } }));
 }
 
 export function dismissChatRoomImmediately(memberId: string, roomId: string) {
@@ -59,10 +59,10 @@ export function dismissChatRoomImmediately(memberId: string, roomId: string) {
     joined: saved.joined.filter((room) => room.id !== roomId),
     rank: saved.rank.filter((room) => room.id !== roomId),
   });
-  if (typeof window !== "undefined") window.dispatchEvent(new CustomEvent("irotas-chat-dismissed", { detail: { memberId, roomId } }));
+  if (Platform.OS === "web" && typeof window !== "undefined") window.dispatchEvent(new CustomEvent("irotas-chat-dismissed", { detail: { memberId, roomId } }));
 }
 
-const isImportedEventChat = (room: ChatRoom) => room.type === "event" && room.sourceId.startsWith("discord-event-");
+const isImportedEventChat = (room: ChatRoom) => room.type === "event" && typeof room.sourceId === "string" && room.sourceId.startsWith("discord-event-");
 
 function ChatRoomCard({ room, eventStarts, eventImages, memberAvatars, viewerMemberId, onOpened }: {
   room: ChatRoom;
@@ -245,14 +245,18 @@ export default function ChatListScreen() {
   const [eventImages, setEventImages] = useState<Record<string, string>>({});
   const [memberAvatars, setMemberAvatars] = useState<Record<string, string>>({});
   const [roomsLoading, setRoomsLoading] = useState(() => !lastRoomLists.has(viewerMemberId));
+  const [announcementPreviewReady, setAnnouncementPreviewReady] = useState(() =>
+    Boolean(lastRoomLists.get(viewerMemberId)?.joined.find((room) => room.id === "board-announcement")?.lastMessage),
+  );
   useEffect(() => {
     const saved = lastRoomLists.get(viewerMemberId);
     setMyRooms(saved?.joined ?? []);
     setRankRooms(saved?.rank ?? []);
     setRoomsLoading(!saved);
+    setAnnouncementPreviewReady(Boolean(saved?.joined.find((room) => room.id === "board-announcement")?.lastMessage));
   }, [viewerMemberId]);
   useEffect(() => {
-    if (typeof window === "undefined") return;
+    if (Platform.OS !== "web" || typeof window === "undefined" || typeof window.addEventListener !== "function") return;
     const onDismissed = (event: Event) => {
       const detail = (event as CustomEvent<{ memberId: string; roomId: string }>).detail;
       if (detail?.memberId !== viewerMemberId) return;
@@ -263,7 +267,7 @@ export default function ChatListScreen() {
     return () => window.removeEventListener("irotas-chat-dismissed", onDismissed);
   }, [viewerMemberId]);
   useEffect(() => {
-    if (typeof window === "undefined") return;
+    if (Platform.OS !== "web" || typeof window === "undefined" || typeof window.addEventListener !== "function") return;
     const onSent = (event: Event) => {
       const detail = (event as CustomEvent<{ memberId: string; roomId: string; preview: SentChatPreview }>).detail;
       if (detail?.memberId !== viewerMemberId) return;
@@ -310,8 +314,9 @@ export default function ChatListScreen() {
       if (includeDetails) {
         // Resolve the announcement preview before rendering the first room list.
         // Rendering the room first used to flash "メッセージはまだありません".
-        const announcementMessages = await Api.getSharedChatMessages("board-announcement").catch(() => []);
+        const announcementMessages = await Api.getSharedChatMessages("board-announcement");
         latestAnnouncement = [...announcementMessages].sort((left, right) => Date.parse(left.createdAt) - Date.parse(right.createdAt)).at(-1);
+        if (activeViewerId.current === viewerMemberId) setAnnouncementPreviewReady(true);
         void Promise.all([
           Api.getEvents().catch(() => []),
           Api.getMemberDirectory().catch(() => []),
@@ -361,10 +366,11 @@ export default function ChatListScreen() {
       pending = true;
       void refreshRooms(false).finally(() => { pending = false; });
     };
-    const timer = setInterval(refresh, Platform.OS === "web" ? 2000 : 10000);
+    const timer = setInterval(refresh, Platform.OS === "web" ? 2000 : 3000);
     const onVisible = () => { if (document.visibilityState === "visible") refresh(); };
     if (typeof document !== "undefined") document.addEventListener("visibilitychange", onVisible);
-    return () => { active = false; clearInterval(timer); if (typeof document !== "undefined") document.removeEventListener("visibilitychange", onVisible); };
+    const appStateSubscription = Platform.OS === "web" ? null : AppState.addEventListener("change", (state) => { if (state === "active") refresh(); });
+    return () => { active = false; clearInterval(timer); appStateSubscription?.remove(); if (typeof document !== "undefined") document.removeEventListener("visibilitychange", onVisible); };
   }, [refreshRooms]));
 
   const announcementRoom = myRooms.find((room) => room.id === "board-announcement");
@@ -382,7 +388,7 @@ export default function ChatListScreen() {
         </Pressable>
       </View>
 
-      {announcementRoom ? <ChatRoomCard room={announcementRoom} eventStarts={eventStarts} eventImages={eventImages} memberAvatars={memberAvatars} viewerMemberId={viewerMemberId} onOpened={clearUnreadImmediately} /> : null}
+      {announcementRoom && (announcementRoom.lastMessage || announcementPreviewReady) ? <ChatRoomCard room={announcementRoom} eventStarts={eventStarts} eventImages={eventImages} memberAvatars={memberAvatars} viewerMemberId={viewerMemberId} onOpened={clearUnreadImmediately} /> : null}
       <FlatList
         data={joinedChatRooms}
         keyExtractor={(item) => item.id}

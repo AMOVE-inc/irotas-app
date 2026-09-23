@@ -18,8 +18,10 @@ describe("event presentation and comments", () => {
     expect(events).toContain("data={visibleEvents}");
   });
 
-  it("shows selection method only for official event cards", () => {
-    expect(source("app/(tabs)/events.tsx")).toContain('event.eventType === "official" && event.selectionMethod');
+  it("does not show selection method on official event cards", () => {
+    const events = source("app/(tabs)/events.tsx");
+    expect(events).not.toContain('event.selectionMethod === "lottery" ? "抽選" : "先着順"');
+    expect(events).not.toContain("minHeight: 138");
   });
 
   it("does not render empty rank price data as rank pricing", () => {
@@ -47,6 +49,24 @@ describe("event presentation and comments", () => {
     expect(detail).toContain('label: "コメントを削除"');
     expect(detail).toContain("eventCommentActionTarget?.canEdit");
     expect(source("sites/events.ts")).toContain("canEdit:");
+  });
+
+  it("places the reply cursor after the inserted mention", () => {
+    const detail = source("app/event-detail.tsx");
+    const board = source("app/(tabs)/board.tsx");
+    const chat = source("app/chat.tsx");
+    expect(detail).toContain("setEventCommentSelection({ start: text.length, end: text.length })");
+    expect(board).toContain("setCommentSelection({ start: text.length, end: text.length })");
+    expect(chat).toContain("setMessageSelection({ start: text.length, end: text.length })");
+  });
+
+  it("does not schedule sender-side local notifications for server-owned mentions", () => {
+    expect(source("app/event-detail.tsx")).not.toContain("sendMentionNotification");
+    expect(source("app/(tabs)/board.tsx")).not.toContain("sendMentionNotification");
+  });
+
+  it("uses a light gray background for reply references", () => {
+    expect(source("components/reply-reference-view.tsx")).toContain('backgroundColor: "#F1F2F4"');
   });
 
   it("lets members add persistent stamps to event comments without notifying the organizer", () => {

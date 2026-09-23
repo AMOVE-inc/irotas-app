@@ -6,7 +6,7 @@ import * as Api from "@/lib/_core/api";
 import { useAuthContext } from "@/lib/auth-context";
 import { getAllEvents } from "@/lib/event-store";
 import { getEventParticipationStatus, isEventOrganizer, isPastEventDate } from "@/lib/event-participation";
-import { Image } from "expo-image";
+import { AuthenticatedImage as Image } from "@/components/authenticated-image";
 import { useRouter } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";

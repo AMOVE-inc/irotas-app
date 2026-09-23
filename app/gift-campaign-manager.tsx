@@ -8,7 +8,7 @@ import type { MemberRank } from "@/constants/mock-data";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { Alert, Modal, Pressable, ScrollView, Text, TextInput, View } from "react-native";
-import { Image } from "expo-image";
+import { AuthenticatedImage as Image } from "@/components/authenticated-image";
 import * as ImagePicker from "expo-image-picker";
 import * as Api from "@/lib/_core/api";
 import { deleteSharedGift, saveSharedGift } from "@/lib/benefits-api";

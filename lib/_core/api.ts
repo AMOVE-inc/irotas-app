@@ -98,6 +98,7 @@ export type ClubRecord = {
   overviewText: string | null;
   icon: string;
   leaderId: string;
+  leaderDiscordUserId?: string;
   leaderName: string;
   memberIds: string[];
   members: { id: string; displayName: string; avatarUrl?: string; memberTerm: string | null; branches: string[] }[];
@@ -234,6 +235,37 @@ export type SharedChatRoom = {
   mentionCount: number;
   shared: true;
 };
+
+function normalizedChatRoom(room: SharedChatRoom): SharedChatRoom {
+  return {
+    ...room,
+    id: typeof room?.id === "string" ? room.id : "",
+    name: typeof room?.name === "string" ? room.name : "チャット",
+    sourceId: typeof room?.sourceId === "string" ? room.sourceId : (typeof room?.id === "string" ? room.id : ""),
+    createdBy: typeof room?.createdBy === "string" ? room.createdBy : "system",
+    participants: Array.isArray(room.participants) ? room.participants.filter((item): item is string => typeof item === "string") : [],
+    unreadCount: Number.isFinite(room.unreadCount) ? room.unreadCount : 0,
+    mentionCount: Number.isFinite(room.mentionCount) ? room.mentionCount : 0,
+  };
+}
+
+function normalizedChatMessage(message: SharedChatMessage): SharedChatMessage {
+  return {
+    ...message,
+    attachmentUrls: Array.isArray(message.attachmentUrls) ? message.attachmentUrls : [],
+    reactions: message.reactions && typeof message.reactions === "object" ? message.reactions : {},
+  };
+}
+
+function normalizedEvent(event: Event): Event {
+  return {
+    ...event,
+    participants: Array.isArray(event.participants) ? event.participants : [],
+    applicantIds: Array.isArray(event.applicantIds) ? event.applicantIds : [],
+    companionIds: Array.isArray(event.companionIds) ? event.companionIds : [],
+    genres: Array.isArray(event.genres) ? event.genres : [],
+  };
+}
 
 export class ApiError extends Error {
   constructor(
@@ -568,11 +600,12 @@ export async function setSharedBoardReaction(
 export async function getSharedBoardReactions(threadId: string) {
   return apiCall<{ reactions: Record<string, Record<string, string[]>> }>(
     `/api/board/reactions?threadId=${encodeURIComponent(threadId)}`,
+    { cache: "no-store" },
   );
 }
 
 export async function getIntroductionArchiveReactions() {
-  return apiCall<{ reactions: Record<string, Record<string, string[]>> }>("/api/board/introduction-reactions");
+  return apiCall<{ reactions: Record<string, Record<string, string[]>> }>("/api/board/introduction-reactions", { cache: "no-store" });
 }
 
 export async function setIntroductionArchiveReaction(sourceId: string, emoji: string, active: boolean) {
@@ -589,6 +622,7 @@ export async function getSharedBoardPoll(
 ) {
   return apiCall<{ poll: BoardPoll; viewerMemberId: string }>(
     `/api/board/polls/${ownerType}/${encodeURIComponent(ownerId)}`,
+    { cache: "no-store" },
   );
 }
 
@@ -606,18 +640,19 @@ export async function voteSharedBoardPoll(
 export async function getSharedChatMessages(roomId: string) {
   const result = await apiCall<{ messages: SharedChatMessage[] }>(
     `/api/chats/${encodeURIComponent(roomId)}/messages`,
+    { cache: "no-store" },
   );
-  return result.messages;
+  return (Array.isArray(result.messages) ? result.messages : []).map(normalizedChatMessage);
 }
 
 export async function getSharedChatRooms() {
-  const result = await apiCall<{ rooms: SharedChatRoom[] }>("/api/chats");
-  return result.rooms;
+  const result = await apiCall<{ rooms: SharedChatRoom[] }>("/api/chats", { cache: "no-store" });
+  return (Array.isArray(result.rooms) ? result.rooms : []).map(normalizedChatRoom).filter((room) => room.id);
 }
 
 export async function getSharedChatRoom(roomId: string) {
-  const result = await apiCall<{ room: SharedChatRoom }>(`/api/chats/${encodeURIComponent(roomId)}`);
-  return result.room;
+  const result = await apiCall<{ room: SharedChatRoom }>(`/api/chats/${encodeURIComponent(roomId)}`, { cache: "no-store" });
+  return normalizedChatRoom(result.room);
 }
 
 export async function createSharedChatRoom(input: {
@@ -932,6 +967,11 @@ export async function getMe(): Promise<AuthApiUser | null> {
   }
 }
 
+export async function getMeStrict(): Promise<AuthApiUser | null> {
+  const result = await apiCall<{ user: AuthApiUser | null }>("/api/auth/me");
+  return result.user || null;
+}
+
 const memberDirectorySnapshots = new Map<string, PublicMember[]>();
 const memberDirectoryRequests = new Map<string, Promise<PublicMember[]>>();
 
@@ -1171,7 +1211,7 @@ export async function setPrivateMemberNote(memberId: string, note: string) {
 
 export async function getEvents(options?: { includeCancelled?: boolean }) {
   const result = await apiCall<{ events: Event[] }>(`/api/events${options?.includeCancelled ? "?includeCancelled=1" : ""}`, { cache: "no-store" });
-  return result.events;
+  return (Array.isArray(result.events) ? result.events : []).map(normalizedEvent);
 }
 
 export type AdminAnalytics = {
@@ -1187,20 +1227,21 @@ export async function getAdminAnalytics() {
 }
 
 export async function getEventsWithDeletedImportedIds(options?: { includeCancelled?: boolean }) {
-  return apiCall<{ events: Event[]; deletedImportedEventIds: string[] }>(`/api/events${options?.includeCancelled ? "?includeCancelled=1" : ""}`, { cache: "no-store" });
+  const result = await apiCall<{ events: Event[]; deletedImportedEventIds: string[] }>(`/api/events${options?.includeCancelled ? "?includeCancelled=1" : ""}`, { cache: "no-store" });
+  return { ...result, events: (Array.isArray(result.events) ? result.events : []).map(normalizedEvent) };
 }
 
 export async function getEvent(eventId: string) {
   const result = await apiCall<{ event: Event }>(
     `/api/events/${encodeURIComponent(eventId)}`,
   );
-  return result.event;
+  return normalizedEvent(result.event);
 }
 
 export type SharedEventComment = { id: string; author: string; authorId?: string; text: string; createdAt: string; canEdit: boolean; reactions: Record<string, string[]> };
 
 export async function getEventComments(eventId: string) {
-  const result = await apiCall<{ comments: SharedEventComment[] }>(`/api/events/${encodeURIComponent(eventId)}/comments`);
+  const result = await apiCall<{ comments: SharedEventComment[] }>(`/api/events/${encodeURIComponent(eventId)}/comments`, { cache: "no-store" });
   return result.comments;
 }
 

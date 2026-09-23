@@ -4,7 +4,7 @@ import { MemberClubLeaderBadges, MemberRankBadge, MemberRoleBadge, stripRankFrom
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { MEMBERS, CURRENT_USER, DEFAULT_AVATAR, type MemberRank } from "@/constants/mock-data";
 import { useColors } from "@/hooks/use-colors";
-import { Image } from "expo-image";
+import { AuthenticatedImage as Image } from "@/components/authenticated-image";
 import { useRouter } from "expo-router";
 import { useEffect, useState, useMemo } from "react";
 import { ActivityIndicator, FlatList, Pressable, Text, TextInput, View } from "react-native";

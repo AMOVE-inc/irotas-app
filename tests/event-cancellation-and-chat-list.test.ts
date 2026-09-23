@@ -39,12 +39,20 @@ describe("event cancellation lifecycle", () => {
 });
 
 describe("chat list identity presentation", () => {
+  it("keeps browser-only events out of the native chat tab", () => {
+    const chatList = source("components/chat-list-screen.tsx");
+    expect(chatList).toContain('Platform.OS === "web" && typeof window !== "undefined"');
+    expect(chatList).toContain('Platform.OS !== "web" || typeof window === "undefined" || typeof window.addEventListener !== "function"');
+  });
+
   it("excludes legacy fixture rooms and previews the latest announcement", () => {
     const chatList = source("components/chat-list-screen.tsx");
     expect(chatList).toContain("/^chat\\d+$/.test(room.id)");
     expect(chatList).toContain('room.id === "board-announcement" ? "お知らせ"');
     expect(chatList).toContain('Api.getSharedChatMessages("board-announcement")');
     expect(chatList).toContain('const announcementMessages = await Api.getSharedChatMessages("board-announcement")');
+    expect(chatList).toContain("announcementPreviewReady");
+    expect(chatList).toContain("announcementRoom.lastMessage || announcementPreviewReady");
     expect(chatList).not.toContain('? { ...room, lastMessage: "", lastMessageAt: undefined }');
     expect(chatList).toContain("contentContainerStyle={{ paddingBottom: 112, flexGrow: 1 }}");
   });
@@ -66,5 +74,10 @@ describe("chat list identity presentation", () => {
     expect(chatList).toContain("member.profile.avatarUrl");
     expect(chatList).toContain("eventImages[room.sourceId]");
     expect(chatList).toContain("dmPartnerId");
+  });
+
+  it("uses the canonical Discord leader id for imported activity reports", () => {
+    expect(source("sites/clubs.ts")).toContain("leader.discord_user_id AS leader_discord_user_id");
+    expect(source("app/clubs.tsx")).toContain("club.leaderDiscordUserId === report.author.id");
   });
 });

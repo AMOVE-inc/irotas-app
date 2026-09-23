@@ -1,6 +1,9 @@
 import { IconSymbol } from "@/components/ui/icon-symbol";
-import { useVideoPlayer, VideoView } from "expo-video";
+import { useVideoPlayer, VideoView, type VideoSource } from "expo-video";
+import { useEffect, useState } from "react";
 import { Alert, Linking, Platform, Pressable, View, type ViewStyle } from "react-native";
+import { resolveMediaUrl } from "@/components/authenticated-image";
+import { getSessionToken } from "@/lib/_core/auth";
 
 async function saveVideo(uri: string) {
   try {
@@ -24,7 +27,7 @@ async function saveVideo(uri: string) {
       window.setTimeout(() => URL.revokeObjectURL(url), 30_000);
       return;
     }
-    await Linking.openURL(uri);
+    await Linking.openURL(resolveMediaUrl(uri));
   } catch (error) {
     if (error instanceof Error && error.name === "AbortError") return;
     if (Platform.OS === "web") window.open(uri, "_blank", "noopener,noreferrer");
@@ -33,7 +36,17 @@ async function saveVideo(uri: string) {
 }
 
 export function SaveableVideo({ uri, style }: { uri: string; style: ViewStyle }) {
-  const player = useVideoPlayer(uri);
+  const [source, setSource] = useState<VideoSource | null>(Platform.OS === "web" ? uri : null);
+  useEffect(() => {
+    let active = true;
+    if (Platform.OS === "web") { setSource(uri); return; }
+    void getSessionToken().then((token) => {
+      if (!active) return;
+      setSource({ uri: resolveMediaUrl(uri), headers: token ? { Authorization: `Bearer ${token}` } : undefined });
+    });
+    return () => { active = false; };
+  }, [uri]);
+  const player = useVideoPlayer(source);
   return (
     <View style={[style, { overflow: "hidden", position: "relative", backgroundColor: "#111" }]}>
       <VideoView player={player} nativeControls style={{ width: "100%", height: "100%" }} />

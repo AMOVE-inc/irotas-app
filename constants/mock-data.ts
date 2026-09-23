@@ -391,6 +391,7 @@ export interface Club {
   description: string;
   overviewText?: string | null;
   leaderId: string; // 部長（運営が任命）
+  leaderDiscordUserId?: string;
   leaderName?: string;
   memberIds: string[];
   members?: { id: string; displayName: string; avatarUrl?: string; memberTerm: string | null; branches: string[] }[];

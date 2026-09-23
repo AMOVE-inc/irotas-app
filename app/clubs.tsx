@@ -1,5 +1,5 @@
 import { ScreenContainer } from "@/components/screen-container";
-import { MemberRankBadge, MemberRoleBadge, stripRankFromName } from "@/components/member-rank-badge";
+import { clubLeaderBadgeForClub, MemberRankBadge, MemberRoleBadge, stripRankFromName } from "@/components/member-rank-badge";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import {
   CLUBS,
@@ -17,7 +17,7 @@ import { useAuthContext } from "@/lib/auth-context";
 import { useColors } from "@/hooks/use-colors";
 import { createBoardChat } from "@/lib/chat-store";
 import { canCreateClub, isAdminRole, isOperatorRole } from "@/lib/access-control";
-import { Image } from "expo-image";
+import { AuthenticatedImage as Image } from "@/components/authenticated-image";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import * as Api from "@/lib/_core/api";
@@ -1048,8 +1048,11 @@ function ClubDetailModal({
           </Text>
         </View>
         <ScrollView
+          style={{ flex: 1 }}
           contentContainerStyle={{ alignItems: "center", padding: 24, paddingBottom: 48 }}
           keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="interactive"
+          automaticallyAdjustKeyboardInsets={Platform.OS === "ios"}
         >
           <Text style={{ fontSize: 48, marginBottom: 16 }}>{club.icon}</Text>
           <Text style={{ fontSize: 22, fontWeight: "800", color: colors.foreground, marginBottom: 8 }}>
@@ -2064,7 +2067,10 @@ export default function ClubsScreen() {
             </View>
           </View>
           <View style={{ gap: 9 }}>
-            {activityReports.map((report) => (
+            {activityReports.map((report) => {
+              const reportClub = clubs.find((club) =>
+                (club.leaderId === report.author.id || club.leaderDiscordUserId === report.author.id) && report.title.includes(club.name));
+              return (
               <Pressable
                 key={report.id}
                 onPress={() => router.push({ pathname: "/board", params: { category: "club-all", view: "threads", thread: report.id } })}
@@ -2083,7 +2089,7 @@ export default function ClubsScreen() {
                   <View style={{ flex: 1, flexDirection: "row", alignItems: "center", marginLeft: 8 }}>
                     <Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground }} numberOfLines={1}>{stripRankFromName(report.author.name)}</Text>
                     <MemberRankBadge rank={report.author.rank} name={report.author.name} compact />
-                    <MemberRoleBadge name={report.author.name} role={report.author.role} compact />
+                    <MemberRoleBadge name={report.author.name} role={report.author.role} leaderLabel={reportClub ? clubLeaderBadgeForClub(reportClub.name) : undefined} compact />
                   </View>
                   <Text style={{ fontSize: 11, color: colors.muted, marginLeft: 6 }}>
                     {(() => {
@@ -2104,7 +2110,8 @@ export default function ClubsScreen() {
                   <Text style={{ fontSize: 12, color: colors.muted, marginLeft: 5 }}>{report.commentCount ?? 0}件のコメント</Text>
                 </View>
               </Pressable>
-            ))}
+              );
+            })}
           </View>
         </View>
 

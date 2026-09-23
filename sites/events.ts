@@ -1444,10 +1444,14 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
       .bind(id).first<{ exists: number }>();
     if (payment) return responseJson({ error: "決済記録のあるイベントは削除できません。中止処理と返金確認を行ってください" }, 409);
     const now = new Date().toISOString();
-    // event_id の外部キーは ON DELETE CASCADE。中止と異なり履歴も含めて完全に削除する。
+    // Discord移行イベントはトゥームストーンで非表示にする。移行済みの行を物理削除すると、
+    // 過去の参加・コメント・通知との外部キー関係が本番DBの世代差で削除を妨げることがある。
+    // アプリ作成イベントだけは従来どおり物理削除する。
+    const importedDelete = id.startsWith("discord-event-");
     await env.DB.batch([
-      ...(id.startsWith("discord-event-") ? [env.DB.prepare("INSERT OR IGNORE INTO deleted_imported_events (event_id, deleted_at, deleted_by_member_id) VALUES (?, ?, ?)").bind(id, now, member.id)] : []),
-      env.DB.prepare("DELETE FROM events WHERE id = ?").bind(id),
+      ...(importedDelete
+        ? [env.DB.prepare("INSERT OR IGNORE INTO deleted_imported_events (event_id, deleted_at, deleted_by_member_id) VALUES (?, ?, ?)").bind(id, now, member.id)]
+        : [env.DB.prepare("DELETE FROM events WHERE id = ?").bind(id)]),
       env.DB.prepare(`INSERT INTO audit_logs (actor_user_id, action, entity_type, entity_id, metadata_json, created_at)
         VALUES (?, 'event.deleted', 'event', ?, ?, ?)`).bind(String(member.id), id, JSON.stringify({ title: row?.title ?? "Discord移行イベント" }), now),
     ]);

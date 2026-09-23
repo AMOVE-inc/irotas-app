@@ -16,9 +16,8 @@ export default function TabLayout() {
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
   const isMobileWeb = Platform.OS === "web" && width <= 768;
-  const bottomPadding = Platform.OS === "web" ? 10 : Math.max(insets.bottom, 8);
-  const tabBarHeight = isMobileWeb ? 78 : 62 + bottomPadding;
-  const tabBarBottomMargin = isMobileWeb ? 0 : Platform.OS === "web" ? 10 : 6;
+  const bottomPadding = Platform.OS === "web" ? 0 : insets.bottom;
+  const tabBarHeight = 72 + bottomPadding;
   const [unreadTotal, setUnreadTotal] = useState(0);
   const latestRooms = useRef<Awaited<ReturnType<typeof Api.getSharedChatRooms>>>([]);
   const { user } = useAuthContext();
@@ -64,21 +63,19 @@ export default function TabLayout() {
           position: "absolute",
           left: 0,
           right: 0,
-          bottom: isMobileWeb ? 0 : undefined,
-          marginHorizontal: 12,
-          marginBottom: tabBarBottomMargin,
-          paddingTop: isMobileWeb ? 7 : 8,
+          bottom: 0,
+          marginHorizontal: 0,
+          marginBottom: 0,
+          paddingTop: 8,
           paddingBottom: bottomPadding,
           height: tabBarHeight,
           backgroundColor: colors.surface,
           borderColor: colors.border,
-          borderWidth: 1,
           borderTopWidth: 1,
-          borderRadius: 24,
           shadowColor: "#6E5260",
-          shadowOffset: { width: 0, height: 8 },
-          shadowOpacity: 0.13,
-          shadowRadius: 18,
+          shadowOffset: { width: 0, height: -3 },
+          shadowOpacity: 0.08,
+          shadowRadius: 10,
           elevation: 10,
         },
         tabBarLabelStyle: {

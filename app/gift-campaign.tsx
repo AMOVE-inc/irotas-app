@@ -7,7 +7,7 @@ import { isGiftCampaignOpen } from "@/lib/gift-campaign-status";
 import { useRouter } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import { Alert, Modal, Pressable, ScrollView, Text, View } from "react-native";
-import { Image } from "expo-image";
+import { AuthenticatedImage as Image } from "@/components/authenticated-image";
 import { useAuthContext } from "@/lib/auth-context";
 
 const RANK_ORDER = { regular: 0, silver: 1, gold: 2, platinum: 3 };

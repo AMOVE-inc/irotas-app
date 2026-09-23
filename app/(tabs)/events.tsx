@@ -19,14 +19,13 @@ import {
 } from "@/lib/club-viewer-access";
 import { getAllEvents } from "@/lib/event-store";
 import { isDiscordRecruitmentOpen } from "@/lib/event-recruitment-channel";
-import { discordEventConfirmedCount, discordEventDisplayCapacity } from "@/lib/discord-event-attendance";
 import {
   DEFAULT_EVENT_SORT_ORDER,
   filterAndSortEvents,
   type EventSortOrder,
   type EventTypeFilter,
 } from "@/lib/event-filters";
-import { getConfirmedRecruitParticipantCount, getEventParticipationStatus, isPastEventDate } from "@/lib/event-participation";
+import { getConfirmedRecruitParticipantCount, getEventCapacitySummary, getEventParticipationStatus, isPastEventDate } from "@/lib/event-participation";
 import {
   toggleEventFavoriteWithNotifications,
   useEventFavorites,
@@ -34,7 +33,7 @@ import {
 import { formatEventArea, TOKYO_EVENT_AREAS } from "@/lib/event-location";
 import { displayEventTitle } from "@/lib/event-title";
 import { useColors } from "@/hooks/use-colors";
-import { Image } from "expo-image";
+import { AuthenticatedImage as Image } from "@/components/authenticated-image";
 import { EventImage } from "@/components/event-image";
 import {
   MemberClubLeaderBadges,
@@ -542,9 +541,6 @@ function EventCard({
         ));
   const isConfirmed = participationStatus === "confirmed";
   const isApplied = participationStatus === "applied";
-  const remainingCapacity = Math.max(event.capacity - confirmedCount, 0);
-  const reservationCapacity = event.reservationCapacity ?? event.capacity + 1;
-  const discordConfirmedCount = discordEventConfirmedCount(event);
   const locationLabel = formatEventArea(
     event.prefecture,
     event.tokyoArea,
@@ -592,13 +588,12 @@ function EventCard({
         borderWidth: 1,
         borderColor: colors.border,
         flexDirection: "row",
-        height: 136,
         opacity: cardMuted ? 0.56 : 1,
       }}
     >
       <View
         style={{
-          width: 142,
+          width: 112,
           alignSelf: "stretch",
           overflow: "hidden",
         }}
@@ -680,7 +675,7 @@ function EventCard({
           </View>
         ) : null}
       </View>
-      <View style={{ flex: 1, paddingHorizontal: 11, paddingVertical: 8 }}>
+      <View style={{ flex: 1, paddingHorizontal: 10, paddingVertical: 8 }}>
         <View
           style={{
             flexDirection: "row",
@@ -719,7 +714,7 @@ function EventCard({
           </View>
         </View>
         <Text
-          numberOfLines={1}
+          numberOfLines={2}
           ellipsizeMode="tail"
           style={{
             fontSize: 14,
@@ -766,10 +761,10 @@ function EventCard({
               <Text
                 style={{ fontSize: 10, fontWeight: "900", color: "#34A853" }}
               >
-                {discordConfirmedCount !== null ? `${discordConfirmedCount}名/${discordEventDisplayCapacity(event)}名` : isDiscordRecruitmentOpen(event) ? "参加者はDiscordで確定" : event.capacityMode ? `募集人数 ${event.capacityMode === "undecided" ? "未定" : "上限なし"} ${event.status === "open" ? "募集中" : ""}` : `${remainingCapacity}名/${reservationCapacity === 0 ? "未定" : `${reservationCapacity}名`} ${event.status === "open" ? "募集中" : ""}`}
+                {getEventCapacitySummary(event, confirmedCount)}
               </Text>
             </View>
-            {(event.eventType === "official" && event.selectionMethod || isApplied) ? <View
+            {isApplied ? <View
               style={{
                 flexDirection: "row",
                 alignItems: "center",
@@ -778,17 +773,6 @@ function EventCard({
                 marginTop: 2,
               }}
             >
-              {event.eventType === "official" && event.selectionMethod ? (
-                <Text
-                  style={{
-                    fontSize: 9,
-                    fontWeight: "700",
-                    color: colors.muted,
-                  }}
-                >
-                  {event.selectionMethod === "lottery" ? "抽選" : "先着順"}
-                </Text>
-              ) : null}
               {isApplied ? (
                 <Text
                   style={{
@@ -817,26 +801,18 @@ function EventCard({
                 style={{ width: 18, height: 18, borderRadius: 9 }}
                 contentFit="cover"
               />
-              <Text
-                style={{
-                  marginLeft: 5,
-                  fontSize: 10,
-                  fontWeight: "700",
-                  color: colors.muted,
-                }}
-                numberOfLines={1}
-              >
-                {stripRankFromName(event.organizerName ?? organizer?.name ?? "メンバー")}
-              </Text>
-              {event.organizerRank ? <MemberRankBadge rank={event.organizerRank} name={event.organizerName} compact /> : null}
-              <MemberClubLeaderBadges labels={organizerLeaderLabels} name={event.organizerName} compact />
-              <MemberRoleBadge name={event.organizerName} role={event.organizerAccessRole} leaderLabel={false} compact />
-              {organizer ? (
-                <NewMemberMark member={organizer} size={11} />
-              ) : null}
+              <View style={{ flex: 1, minWidth: 0, flexDirection: "row", alignItems: "center", overflow: "hidden" }}>
+                <Text style={{ flexShrink: 1, marginLeft: 5, fontSize: 10, fontWeight: "700", color: colors.muted }} numberOfLines={1}>
+                  {stripRankFromName(event.organizerName ?? organizer?.name ?? "メンバー")}
+                </Text>
+                {organizerLeaderLabels?.length
+                  ? <MemberClubLeaderBadges labels={organizerLeaderLabels} name={event.organizerName} compact />
+                  : event.organizerRank ? <MemberRankBadge rank={event.organizerRank} name={event.organizerName} compact /> : null}
+                {!organizerLeaderLabels?.length ? <MemberRoleBadge name={event.organizerName} role={event.organizerAccessRole} leaderLabel={false} compact /> : null}
+                {organizer ? <NewMemberMark member={organizer} size={11} /> : null}
+              </View>
             </>
           ) : null}
-          <View style={{ flex: 1 }} />
           {!locked ? (
             <Pressable
               onPressIn={() => { favoritePressRef.current = true; }}
@@ -1205,7 +1181,8 @@ export default function EventsScreen() {
               organizerLeaderLabels={(item.organizerLeaderClubNames ?? clubs
                 .filter((club) => club.leaderId && club.leaderId === item.organizerProfileId)
                 .map((club) => club.name))
-                .map(clubLeaderBadgeForClub)}
+                .map(clubLeaderBadgeForClub)
+                .slice(0, 1)}
               onPress={() => {
                 const club = clubs.find(
                   (candidate) => candidate.id === item.clubId,

@@ -35,6 +35,7 @@ function asClub(record: Api.ClubRecord): Club {
     overviewText: record.overviewText,
     icon: record.icon,
     leaderId: record.leaderId,
+    leaderDiscordUserId: record.leaderDiscordUserId,
     leaderName: record.leaderName,
     memberIds: [...record.memberIds],
     members: record.members?.map((member) => ({ ...member, branches: [...member.branches] })),

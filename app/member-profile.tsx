@@ -17,7 +17,7 @@ import {
 import { useColors } from "@/hooks/use-colors";
 import { getMemberStaffRole } from "@/lib/member-staff-role";
 import { useClubs } from "@/lib/club-store";
-import { Image } from "expo-image";
+import { AuthenticatedImage as Image } from "@/components/authenticated-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { PROFILE_DETAILS_STORAGE_KEY, type ProfileDetails } from "@/constants/profile-options";

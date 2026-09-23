@@ -1,4 +1,5 @@
 import { eventCategoryFromPrefecture, extractEventLocation, TOKYO_EVENT_AREAS } from "./event-location";
+import { sharedJsonRequest } from "./shared-request";
 
 type RestaurantLocationInput = {
   restaurantName: string;
@@ -45,13 +46,10 @@ export function mealReportDisplayAreaFromAddress(address: string): string {
 export async function resolveRestaurantLocation(input: RestaurantLocationInput): Promise<{ area: string; areaDisplay: string; formattedAddress?: string } | null> {
   if (!input.googleMapsUrl?.trim() && !input.tabelogUrl?.trim()) return null;
   try {
-    const response = await fetch("/api/restaurant-location", {
+    const result = await sharedJsonRequest<RestaurantLocationResponse>("/api/restaurant-location", {
       method: "POST",
-      headers: { "content-type": "application/json" },
       body: JSON.stringify(input),
     });
-    if (!response.ok) return null;
-    const result = await response.json() as RestaurantLocationResponse;
     if (!result.success || !result.formattedAddress) return null;
     return { area: mealReportAreaFromAddress(result.formattedAddress), areaDisplay: mealReportDisplayAreaFromAddress(result.formattedAddress), formattedAddress: result.formattedAddress };
   } catch {

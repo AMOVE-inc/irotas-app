@@ -27,7 +27,7 @@ import { markChatRoomOptimisticallyRead } from "@/lib/chat-unread-sync";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useColors } from "@/hooks/use-colors";
 import { dismissChatRoomImmediately, showSentChatPreviewImmediately } from "@/components/chat-list-screen";
-import { Image } from "expo-image";
+import { AuthenticatedImage as Image } from "@/components/authenticated-image";
 import * as ImagePicker from "expo-image-picker";
 import * as Clipboard from "expo-clipboard";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -35,6 +35,7 @@ import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import {
   Alert,
   ActivityIndicator,
+  AppState,
   FlatList,
   KeyboardAvoidingView,
   Keyboard,
@@ -691,7 +692,9 @@ export default function ChatScreen() {
       }).catch(() => {});
     };
     const timer = setInterval(refresh, 5000);
-    return () => clearInterval(timer);
+    refresh();
+    const appStateSubscription = Platform.OS === "web" ? null : AppState.addEventListener("change", (state) => { if (state === "active") refresh(); });
+    return () => { clearInterval(timer); appStateSubscription?.remove(); };
   }, [id, introductionHydrated]);
 
   // 共有メッセージの編集・削除・リアクションを、参加者全員の画面へ反映する。
@@ -704,8 +707,18 @@ export default function ChatScreen() {
         setClubAccessDenied(true);
       }
     }).finally(() => { if (fetchSequence === sharedFetchSequence.current) sharedFetchInFlight.current = false; }); };
+    const refreshRoom = () => { void Api.getSharedChatRoom(id).then((sharedRoom) => {
+      const normalized = sharedRoom as unknown as ChatRoom;
+      setRoom(normalized);
+      setRoomParticipants([...normalized.participants]);
+      setClubAccessDenied(false);
+    }).catch((error) => {
+      if (id.startsWith("club-chat-") && error instanceof Api.ApiError && (error.statusCode === 403 || error.statusCode === 404)) setClubAccessDenied(true);
+    }); };
     const timer = setInterval(refresh, 1500);
-    return () => clearInterval(timer);
+    const roomTimer = setInterval(refreshRoom, 10000);
+    const appStateSubscription = Platform.OS === "web" ? null : AppState.addEventListener("change", (state) => { if (state === "active") { refresh(); refreshRoom(); } });
+    return () => { clearInterval(timer); clearInterval(roomTimer); appStateSubscription?.remove(); };
   }, [id, applySharedMessages]);
 
   // @入力を検出してメンション候補を表示
@@ -1090,7 +1103,7 @@ export default function ChatScreen() {
                     openProfile(item.senderId ?? sender?.id ?? "");
                   }
                 }}
-                onReply={() => { const sender = getMemberById(item.senderId); setReplyToMessage(item); setMessageText(`@${item.externalAuthorName ?? sender?.name ?? "メンバー"} `); inputRef.current?.focus(); }}
+                onReply={() => { const sender = getMemberById(item.senderId); const text = `@${item.externalAuthorName ?? sender?.name ?? "メンバー"} `; setReplyToMessage(item); setMessageText(text); setMessageSelection({ start: text.length, end: text.length }); requestAnimationFrame(() => inputRef.current?.focus()); }}
                 onEdit={() => { setEditingMessage(item); setEditingMessageText(item.content); }}
                 onDelete={() => { const remove = async () => { try { if (item.shared) await Api.deleteSharedChatMessage(item.id); else await deleteMessageFromStorage(id ?? "", item.id); setMessages((current) => current.filter((message) => message.id !== item.id)); } catch (error) { Alert.alert("削除できませんでした", error instanceof Error ? error.message : "もう一度お試しください。"); } }; if (Platform.OS === "web") { void remove(); return; } Alert.alert("メッセージを削除", "このメッセージを削除しますか？", [{ text: "キャンセル", style: "cancel" }, { text: "削除", style: "destructive", onPress: remove }]); }}
               />

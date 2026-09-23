@@ -1,4 +1,5 @@
 import type { BoardThread } from "../constants/mock-data";
+import { sharedJsonRequest } from "./shared-request";
 
 export type CommunityRestaurantSubmission = {
   reportId: string;
@@ -29,20 +30,15 @@ export function communityRestaurantFromMealReport(
 }
 
 export async function registerCommunityRestaurant(submission: CommunityRestaurantSubmission) {
-  const response = await fetch("/api/gourmet-map/community", {
+  return sharedJsonRequest<{ success: true; duplicate: boolean }>("/api/gourmet-map/community", {
     method: "POST",
-    headers: { "content-type": "application/json" },
     body: JSON.stringify(submission),
-  });
-  if (!response.ok) throw new Error("グルメマップへ登録できませんでした");
-  return response.json() as Promise<{ success: true; duplicate: boolean }>;
+  }, "グルメマップへ登録できませんでした");
 }
 
 export async function setCommunityRestaurantPublished(id: string, published: boolean) {
-  const response = await fetch("/api/gourmet-map/community", {
+  await sharedJsonRequest<{ success: true }>("/api/gourmet-map/community", {
     method: "PATCH",
-    headers: { "content-type": "application/json" },
     body: JSON.stringify({ id, published }),
-  });
-  if (!response.ok) throw new Error("掲載状態を変更できませんでした");
+  }, "掲載状態を変更できませんでした");
 }

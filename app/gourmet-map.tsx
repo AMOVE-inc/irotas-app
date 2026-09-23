@@ -12,7 +12,7 @@ import { mergeGourmetMapRestaurants, previewGourmetMapCsv, type GourmetMapImport
 import { fetchGourmetMapFeed, mergeGourmetMapFeed } from "@/lib/gourmet-map-feed";
 import { setCommunityRestaurantPublished } from "@/lib/gourmet-map-community";
 import { useColors } from "@/hooks/use-colors";
-import { Image } from "expo-image";
+import { AuthenticatedImage as Image } from "@/components/authenticated-image";
 import { useRouter } from "expo-router";
 import { useState, useCallback, useEffect, useMemo } from "react";
 import {
