@@ -6,6 +6,7 @@ for await (const chunk of process.stdin) {
 
 const status = JSON.parse(input);
 const latestBuild = status?.ios?.testFlightBuilds?.[0];
+const requireExternal = process.argv.includes("--require-external");
 
 if (!latestBuild) {
   throw new Error("TestFlight build status was not returned by EAS.");
@@ -21,9 +22,13 @@ if (latestBuild.internalState !== "IN_BETA_TESTING") {
   failures.push(`internalState=${latestBuild.internalState ?? "missing"}`);
 }
 
+if (requireExternal && latestBuild.externalState !== "IN_BETA_TESTING") {
+  failures.push(`externalState=${latestBuild.externalState ?? "missing"}`);
+}
+
 if (failures.length > 0) {
   throw new Error(
-    `Latest TestFlight build ${latestBuild.appVersion} (${latestBuild.buildNumber}) is not available to internal testers: ${failures.join(", ")}`,
+    `Latest TestFlight build ${latestBuild.appVersion} (${latestBuild.buildNumber}) is not available to all required tester groups: ${failures.join(", ")}`,
   );
 }
 

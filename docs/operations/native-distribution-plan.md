@@ -23,10 +23,25 @@
 
 ### TestFlight提出の完了条件
 
-- iOSの提出は `pnpm release:ios:testflight` を使用する。このコマンドは最新のproductionビルドを提出し、`IRO+ 内部テスト` グループ、テスト内容、テスター通知を設定する。
+- iOSの提出は `pnpm release:ios:testflight` を使用する。このコマンドは最新のproductionビルドを提出し、`IRO+ 内部テスト` グループへ割り当てる。
 - EAS Submitの `Succeeded` だけでは完了扱いにしない。`eas submit:status --platform ios --json` で最新ビルドが `processingState=VALID` かつ `internalState=IN_BETA_TESTING` になったことを確認する。
-- 外部テスターへ配布する場合は、App Store Connectで `IRO+ 外部テスト` グループを追加し、Beta App Reviewへ提出する。`externalState=IN_BETA_TESTING` とTestFlightアプリでの表示を確認して完了とする。
+- 修正後のテスト配布では毎回、App Store Connectで同じビルドを `IRO+ 外部テスト` にも追加し、必要に応じてBeta App Reviewへ提出する。`pnpm verify:ios:testflight` が `internalState=IN_BETA_TESTING` と `externalState=IN_BETA_TESTING` の両方を確認し、内部・外部TestFlightアプリで最新ビルドが表示されて初めて完了とする。
 - ビルドが `READY_FOR_BETA_TESTING` のままの場合は処理済みでもグループ未割当であり、テスターには表示されない。
+
+### Android内部テストの完了条件
+
+- Androidは `pnpm release:android:internal` で最新のproductionビルドをGoogle Playの内部テストへ提出する。
+- `pnpm verify:android:internal` が最新提出について `status=FINISHED`、`track=internal`、`releaseStatus=COMPLETED` を確認して初めて完了とする。
+
+### 修正後の固定リリース順
+
+1. Web本番を公開し、`pnpm smoke:production` を実行する。
+2. iOSのproductionビルドを作成し、`pnpm release:ios:testflight` を実行する。
+3. App Store Connectで同じビルドを `IRO+ 外部テスト` に追加する。
+4. `pnpm verify:ios:testflight` で内部・外部の両方が `IN_BETA_TESTING` であることを確認する。
+5. Androidのproductionビルドを作成し、`pnpm release:android:internal` を実行する。
+6. `pnpm verify:android:internal` でGoogle Play内部テストへの反映を確認する。
+7. TestFlightとAndroid実機で最新ビルド番号が表示されることを確認する。
 
 ## 開発者アカウント
 

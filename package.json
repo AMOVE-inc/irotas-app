@@ -23,7 +23,10 @@
     "backup:verify": "node scripts/verify-backup-manifest.mjs",
     "smoke:production": "node scripts/production-smoke.mjs",
     "verify:production-env": "node scripts/validate-production-env.mjs",
-    "release:ios:testflight": "bash scripts/submit-ios-testflight.sh"
+    "release:ios:testflight": "bash scripts/submit-ios-testflight.sh",
+    "verify:ios:testflight": "pnpm dlx eas-cli submit:status --platform ios --json | node scripts/verify-testflight-status.mjs --require-external",
+    "release:android:internal": "bash scripts/submit-android-internal.sh",
+    "verify:android:internal": "pnpm dlx eas-cli submit:list --platform android --limit 1 --json --non-interactive | node scripts/verify-android-internal-status.mjs"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",
