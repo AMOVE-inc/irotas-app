@@ -2,7 +2,7 @@ import { ScreenContainer } from "@/components/screen-container";
 import { NewMemberMark } from "@/components/new-member-mark";
 import { MemberClubLeaderBadges, MemberRankBadge, MemberRoleBadge, stripRankFromName } from "@/components/member-rank-badge";
 import { IconSymbol } from "@/components/ui/icon-symbol";
-import { MEMBERS, CURRENT_USER, DEFAULT_AVATAR, type MemberRank } from "@/constants/mock-data";
+import { DEFAULT_AVATAR, type MemberRank } from "@/constants/mock-data";
 import { useColors } from "@/hooks/use-colors";
 import { AuthenticatedImage as Image } from "@/components/authenticated-image";
 import { useRouter } from "expo-router";
@@ -44,6 +44,7 @@ export default function MembersScreen() {
     id: member.id,
     name: stripRankFromName(member.displayName),
     rawName: member.displayName,
+    publicUserId: member.publicUserId,
     rank: normalizeRank(member.memberRank),
     accessRole: member.accessRole,
     discordRoles: member.discordRoles,
@@ -51,13 +52,44 @@ export default function MembersScreen() {
     avatar: typeof member.profile.avatarUrl === "string" ? { uri: member.profile.avatarUrl } : DEFAULT_AVATAR,
     bio: typeof member.profile.bio === "string" ? member.profile.bio : "",
     joinedAt: member.joinedAt,
+    xp: member.xp,
+    participationCount: member.participationCount,
+    isFollowing: member.isFollowing,
     isCurrentUser: member.userId === authUser?.id,
     isDatabaseMember: true,
   })) : [], [authUser?.id, directory]);
 
   const filteredMembers = useMemo(() => {
-    return searchableMembers.filter((member) => matchesAllSearchWords(searchText, [member.name, member.id]));
+    return searchableMembers.filter((member) => matchesAllSearchWords(searchText, [member.name, member.publicUserId ?? ""]));
   }, [searchText, searchableMembers]);
+  const listRows = useMemo(() => {
+    if (searchText.trim()) return filteredMembers;
+    const rankScore: Record<MemberRank, number> = { regular: 0, silver: 1, gold: 2, platinum: 3 };
+    const featured = [...searchableMembers]
+      .filter((member) => !member.isCurrentUser)
+      .sort((left, right) => rankScore[right.rank] - rankScore[left.rank] || right.xp - left.xp || right.participationCount - left.participationCount)
+      .slice(0, 10);
+    const newest = [...searchableMembers]
+      .filter((member) => !member.isCurrentUser)
+      .sort((left, right) => Date.parse(right.joinedAt) - Date.parse(left.joinedAt))
+      .slice(0, 10);
+    return [
+      { id: "section-featured", sectionTitle: "注目メンバー", sectionDescription: "会員ランクが上位の10名" },
+      ...featured,
+      { id: "section-new", sectionTitle: "新規メンバー", sectionDescription: "入会日が新しい10名" },
+      ...newest,
+    ];
+  }, [filteredMembers, searchText, searchableMembers]);
+
+  const toggleFollow = async (memberId: string, following: boolean) => {
+    setDirectory((current) => current?.map((member) => member.id === memberId ? { ...member, isFollowing: following, followerCount: Math.max(0, member.followerCount + (following ? 1 : -1)) } : member) ?? current);
+    try {
+      const updated = await Api.setMemberFollow(memberId, following);
+      setDirectory((current) => current?.map((member) => member.id === memberId ? updated : member) ?? current);
+    } catch {
+      setDirectory((current) => current?.map((member) => member.id === memberId ? { ...member, isFollowing: !following, followerCount: Math.max(0, member.followerCount + (following ? -1 : 1)) } : member) ?? current);
+    }
+  };
 
   return (
     <ScreenContainer>
@@ -97,7 +129,7 @@ export default function MembersScreen() {
           <TextInput
             value={searchText}
             onChangeText={setSearchText}
-            placeholder="名前または会員IDで検索"
+            placeholder="名前または公開ユーザーIDで検索"
             placeholderTextColor={colors.muted}
             style={{ flex: 1, marginLeft: 8, fontSize: 14, color: colors.foreground }}
           />
@@ -111,9 +143,10 @@ export default function MembersScreen() {
 
       {/* Member list */}
       <FlatList
-        data={filteredMembers}
+        data={listRows}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => {
+          if ("sectionTitle" in item) return <View style={{ paddingHorizontal: 16, paddingTop: 18, paddingBottom: 8, backgroundColor: colors.background }}><Text style={{ fontSize: 17, fontWeight: "900", color: colors.foreground }}>{item.sectionTitle}</Text><Text style={{ marginTop: 2, fontSize: 12, color: colors.muted }}>{item.sectionDescription}</Text></View>;
           const isMe = item.isCurrentUser;
           return (
             <Pressable
@@ -158,7 +191,7 @@ export default function MembersScreen() {
                   <MemberClubLeaderBadges roles={item.discordRoles} compact />
                 </View>
                 <Text style={{ fontSize: 12, color: colors.muted, marginTop: 2 }}>
-                  ID: {item.id}{item.generation > 0 ? ` · ${item.generation}期生` : ""}
+                  {item.publicUserId ? `@${item.publicUserId}` : "公開ユーザーID未設定"}{item.generation > 0 ? ` · ${item.generation}期生` : ""}
                 </Text>
                 {item.bio && (
                   <Text
@@ -169,7 +202,7 @@ export default function MembersScreen() {
                   </Text>
                 )}
               </View>
-              <IconSymbol name="chevron.right" size={16} color={colors.muted} />
+              {!isMe ? <Pressable onPress={(event) => { event.stopPropagation(); void toggleFollow(item.id, !item.isFollowing); }} style={{ borderRadius: 16, paddingHorizontal: 11, paddingVertical: 7, backgroundColor: item.isFollowing ? colors.surface : "#E8A0BF" }}><Text style={{ fontSize: 12, fontWeight: "800", color: item.isFollowing ? colors.muted : "#FFF" }}>{item.isFollowing ? "フォロー中" : "＋フォロー"}</Text></Pressable> : null}
             </Pressable>
           );
         }}

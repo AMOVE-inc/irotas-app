@@ -18,6 +18,7 @@ import { useColors } from "@/hooks/use-colors";
 import { getMemberStaffRole } from "@/lib/member-staff-role";
 import { useClubs } from "@/lib/club-store";
 import { AuthenticatedImage as Image } from "@/components/authenticated-image";
+import { EventImage } from "@/components/event-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { PROFILE_DETAILS_STORAGE_KEY, type ProfileDetails } from "@/constants/profile-options";
@@ -30,7 +31,9 @@ import * as Api from "@/lib/_core/api";
 import { getDiscordAuthorById } from "@/lib/discord-author-directory";
 import {
   Alert,
+  KeyboardAvoidingView,
   Linking,
+  Platform,
   Pressable,
   ScrollView,
   Text,
@@ -102,11 +105,13 @@ export default function MemberProfileScreen() {
   useEffect(() => {
     if (!authUser || !id) { setConfirmedEvents([]); return; }
     let active = true;
+    const targetId = databaseMember?.id ?? id;
+    const today = new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Tokyo" });
     void Api.getEvents()
-      .then((events) => { if (active) setConfirmedEvents(events.filter((event) => event.participants?.includes(id))); })
+      .then((events) => { if (active) setConfirmedEvents(events.filter((event) => event.date >= today && event.participants?.includes(targetId))); })
       .catch(() => { if (active) setConfirmedEvents([]); });
     return () => { active = false; };
-  }, [authUser, id]);
+  }, [authUser, databaseMember?.id, id]);
 
   const member = useMemo<Member | undefined>(() => {
     if (!databaseMember) {
@@ -228,11 +233,19 @@ export default function MemberProfileScreen() {
 
   const handleToggleFollow = async () => {
     if (!databaseMember || followSaving) return;
+    const previous = databaseMember;
+    const following = !previous.isFollowing;
+    setDatabaseMember({
+      ...previous,
+      isFollowing: following,
+      followerCount: Math.max(0, previous.followerCount + (following ? 1 : -1)),
+    });
     setFollowSaving(true);
     try {
-      const updated = await Api.setMemberFollow(databaseMember.id, !databaseMember.isFollowing);
+      const updated = await Api.setMemberFollow(previous.id, following);
       setDatabaseMember(updated);
     } catch (error) {
+      setDatabaseMember(previous);
       Alert.alert("フォロー設定を変更できませんでした", error instanceof Error ? error.message : "もう一度お試しください。");
     } finally {
       setFollowSaving(false);
@@ -266,7 +279,8 @@ export default function MemberProfileScreen() {
         </Text>
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 }}>
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : "height"} keyboardVerticalOffset={Platform.OS === "ios" ? 52 : 0}>
+      <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingBottom: 160 }}>
         {/* Profile Header */}
         <View style={{ alignItems: "center", paddingVertical: 24 }}>
           <View style={{ position: "relative" }}>
@@ -286,6 +300,7 @@ export default function MemberProfileScreen() {
             <MemberRankBadge rank={member.rank} name={member.name} role={member.role} />
             <MemberRoleBadge name={selfName ?? member.name} role={databaseMember?.accessRole ?? member.role} leaderLabel={leaderLabel} />
           </View>
+          {databaseMember?.publicUserId ? <Text style={{ marginTop: 7, fontSize: 13, fontWeight: "700", color: colors.muted }}>@{databaseMember.publicUserId}</Text> : null}
 
           {!getMemberStaffRole(member.name, databaseMember?.accessRole ?? member.role) ? <View style={{ flexDirection: "row", alignItems: "center", marginTop: 8, gap: 12 }}>
             <Text style={{ fontSize: 13, color: colors.muted }}>{member.branch === "kanto" ? "関東支部" : "関西支部"}</Text>
@@ -447,7 +462,8 @@ export default function MemberProfileScreen() {
             <Text style={{ fontSize: 14, fontWeight: "700", color: colors.foreground, marginBottom: 8 }}>参加確定しているイベント</Text>
             <View style={{ backgroundColor: colors.surface, borderRadius: 14, overflow: "hidden" }}>
               {confirmedEvents.sort((a, b) => a.date.localeCompare(b.date)).map((confirmedEvent, index) => (
-                <Pressable key={confirmedEvent.id} onPress={() => router.push({ pathname: "/event-detail", params: { id: confirmedEvent.id } })} style={{ flexDirection: "row", alignItems: "center", padding: 14, borderTopWidth: index ? 0.5 : 0, borderTopColor: colors.border }}>
+                <Pressable key={confirmedEvent.id} onPress={() => router.push({ pathname: "/event-detail", params: { id: confirmedEvent.id } })} style={{ flexDirection: "row", alignItems: "center", padding: 10, borderTopWidth: index ? 0.5 : 0, borderTopColor: colors.border }}>
+                  <EventImage event={confirmedEvent} style={{ width: 76, height: 76, borderRadius: 10, marginRight: 11 }} />
                   <View style={{ flex: 1 }}>
                     <Text style={{ fontSize: 14, fontWeight: "800", color: colors.foreground }} numberOfLines={2}>{confirmedEvent.title}</Text>
                     <Text style={{ fontSize: 12, color: colors.muted, marginTop: 4 }}>{confirmedEvent.date} {confirmedEvent.time}</Text>
@@ -535,6 +551,7 @@ export default function MemberProfileScreen() {
           </View>
         ) : null}
       </ScrollView>
+      </KeyboardAvoidingView>
       <SocialMemberListModal visible={socialList !== null} kind={socialList ?? "followers"} memberId={databaseMember?.id ?? member.id} onClose={() => setSocialList(null)} />
     </ScreenContainer>
   );

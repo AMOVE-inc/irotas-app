@@ -29,15 +29,12 @@ export default function AppSettingsScreen() {
     pushNotifications: true,
     mentionNotifications: true,
     eventReminders: true,
-    newMemberNotifications: false,
     clubActivityNotifications: true,
     soundEnabled: true,
     vibrationEnabled: true,
     autoPlayRadio: false,
-    showOnlineStatus: true,
     allowMentions: true,
     language: "ja",
-    fontSize: "medium" as "small" | "medium" | "large",
   });
 
   const toggle = (key: keyof typeof settings) => {
@@ -232,14 +229,6 @@ export default function AppSettingsScreen() {
           onToggle={() => toggle("eventReminders")}
         />
         <SettingRow
-          icon="person.badge.plus"
-          iconColor="#34C759"
-          label="新規メンバー通知"
-          sublabel="新しいメンバーが参加したときに通知"
-          value={settings.newMemberNotifications}
-          onToggle={() => toggle("newMemberNotifications")}
-        />
-        <SettingRow
           icon="person.3.fill"
           iconColor="#AF52DE"
           label="部活動通知"
@@ -268,67 +257,12 @@ export default function AppSettingsScreen() {
         {/* プライバシー */}
         <SectionHeader title="プライバシー" />
         <SettingRow
-          icon="eye.fill"
-          iconColor="#34C759"
-          label="オンラインステータスを表示"
-          sublabel="他のメンバーにオンライン状態を表示"
-          value={settings.showOnlineStatus}
-          onToggle={() => toggle("showOnlineStatus")}
-        />
-        <SettingRow
           icon="at"
           iconColor="#A7C7E7"
           label="メンションを許可"
           sublabel="他のメンバーから@メンションを受け取る"
           value={settings.allowMentions}
           onToggle={() => toggle("allowMentions")}
-        />
-
-        {/* 表示 */}
-        <SectionHeader title="表示" />
-        <SettingRow
-          icon="textformat.size"
-          iconColor="#FF9500"
-          label="文字サイズ"
-          onPress={() =>
-            Alert.alert("文字サイズ", "文字サイズを選択してください", [
-              {
-                text: "小",
-                onPress: () =>
-                  setSettings((p) => ({ ...p, fontSize: "small" })),
-              },
-              {
-                text: "中（標準）",
-                onPress: () =>
-                  setSettings((p) => ({ ...p, fontSize: "medium" })),
-              },
-              {
-                text: "大",
-                onPress: () =>
-                  setSettings((p) => ({ ...p, fontSize: "large" })),
-              },
-              { text: "キャンセル", style: "cancel" },
-            ])
-          }
-          rightLabel={
-            settings.fontSize === "small"
-              ? "小"
-              : settings.fontSize === "large"
-                ? "大"
-                : "中"
-          }
-        />
-        <SettingRow
-          icon="moon.fill"
-          iconColor="#AF52DE"
-          label="テーマ"
-          rightLabel="ライト"
-          onPress={() =>
-            Alert.alert(
-              "テーマ設定",
-              "IROTASは白を基調としたライトテーマを使用します。",
-            )
-          }
         />
 
         {/* アプリ情報 */}

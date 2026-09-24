@@ -53,6 +53,7 @@ function toAuthUser(apiUser: Api.AuthApiUser): Auth.User {
     branch: Auth.normalizeBranchRole(apiUser.branch),
     branches: Auth.normalizeBranchRoles(apiUser.branches, apiUser.branch),
     memberId: apiUser.memberId,
+    publicUserId: apiUser.publicUserId,
     memberTerm: apiUser.memberTerm,
     memberRank: apiUser.memberRank,
     joinedAt: apiUser.joinedAt,

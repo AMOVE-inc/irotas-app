@@ -4,9 +4,9 @@ import { CURRENT_USER, RANK_COLORS, RANK_LABELS, type Coupon } from "@/constants
 import { useColors } from "@/hooks/use-colors";
 import { formatCouponTimestamp, getCouponAvailability, type CouponUsage } from "@/lib/coupon-rules";
 import { parseCouponDescription } from "@/lib/coupon-description";
-import { recordCouponPresentation, redeemCoupon, useCoupons, useCouponUsages } from "@/lib/coupon-store";
-import { useRouter } from "expo-router";
-import { useState } from "react";
+import { recordCouponPresentation, redeemCoupon, refreshCoupons, useCoupons, useCouponUsages } from "@/lib/coupon-store";
+import { useFocusEffect, useRouter } from "expo-router";
+import { useCallback, useState } from "react";
 import { Alert, Linking, Modal, Platform, Pressable, ScrollView, Text, View } from "react-native";
 import { AuthenticatedImage as Image } from "@/components/authenticated-image";
 import { useAuthContext } from "@/lib/auth-context";
@@ -115,6 +115,7 @@ export default function CouponsScreen() {
   const usages = useCouponUsages(memberId);
   const [presentingCoupon, setPresentingCoupon] = useState<Coupon | null>(null);
   const [selectedCoupon, setSelectedCoupon] = useState<Coupon | null>(null);
+  useFocusEffect(useCallback(() => { void refreshCoupons(); }, []));
 
   const handlePresent = async (coupon: Coupon) => {
     if (getCouponAvailability(coupon, memberRank, usages[coupon.id], new Date(), memberId) !== "available") return;

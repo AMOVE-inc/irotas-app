@@ -35,6 +35,7 @@ export type User = {
   branch: BranchRole | null;
   branches: BranchRole[];
   memberId?: string | null;
+  publicUserId?: string | null;
   memberTerm?: string | null;
   memberRank?: string;
   joinedAt?: string | null;
@@ -68,6 +69,7 @@ function deserializeUser(value: string): User | null {
     branch: normalizeBranchRole(candidate.branch),
     branches: normalizeBranchRoles(candidate.branches, candidate.branch),
     memberId: typeof candidate.memberId === "string" ? candidate.memberId : null,
+    publicUserId: typeof candidate.publicUserId === "string" ? candidate.publicUserId : null,
     memberTerm: typeof candidate.memberTerm === "string" ? candidate.memberTerm : null,
     memberRank: typeof candidate.memberRank === "string" ? candidate.memberRank : "regular",
     joinedAt: typeof candidate.joinedAt === "string" ? candidate.joinedAt : null,

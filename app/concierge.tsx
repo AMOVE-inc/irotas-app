@@ -132,12 +132,17 @@ export default function ConciergeScreen() {
       timestamp: new Date(),
     };
 
-    const updatedMessages = [...messages, userMessage];
+    const replyId = `m${Date.now()}-assistant`;
+    const immediateReply: Message = { id: replyId, role: "assistant", content: localConciergeReply(userMessage.content), timestamp: new Date() };
+    const updatedMessages = [...messages, userMessage, immediateReply];
     setMessages(updatedMessages);
     setInputText("");
 
     setIsSending(true);
-    void Api.askConcierge(userMessage.content).then((data) => setMessages((current) => [...current, { id: `m${Date.now()}`, role: "assistant", content: data.reply, timestamp: new Date() }])).catch(() => setMessages((current) => [...current, { id: `m${Date.now()}-fallback`, role: "assistant", content: localConciergeReply(userMessage.content), timestamp: new Date() }])).finally(() => setIsSending(false));
+    void Api.askConcierge(userMessage.content)
+      .then((data) => setMessages((current) => current.map((message) => message.id === replyId ? { ...message, content: data.reply } : message)))
+      .catch(() => { /* The immediate local answer remains visible while offline. */ })
+      .finally(() => setIsSending(false));
   }, [inputText, messages, isSending]);
 
   const isTyping = isSending;

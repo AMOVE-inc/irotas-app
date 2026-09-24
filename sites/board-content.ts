@@ -35,6 +35,18 @@ const PUBLIC_CATEGORIES = new Set([
   "club-introduction",
 ]);
 
+function canonicalCategory(value: string) {
+  if (value === "gourmet-report") return "meal-report";
+  if (value === "gourmet-consultation") return "gourmet-advice";
+  return value;
+}
+
+function categoryVariants(category: string) {
+  if (category === "meal-report") return ["meal-report", "gourmet-report"] as const;
+  if (category === "gourmet-advice") return ["gourmet-advice", "gourmet-consultation"] as const;
+  return [category] as const;
+}
+
 type BoardMember = NonNullable<Awaited<ReturnType<typeof authenticatedRequestMember>>>;
 type ThreadRow = {
   id: string;
@@ -200,7 +212,7 @@ async function hydratedPoll(db: D1Database, ownerType: "thread" | "comment", own
 function validCategory(value: unknown) {
   if (typeof value !== "string") return null;
   const category = value.trim();
-  if (PUBLIC_CATEGORIES.has(category)) return category;
+  if (PUBLIC_CATEGORIES.has(category)) return canonicalCategory(category);
   return /^club-club-[a-z0-9-]{1,48}$/.test(category) ? category : null;
 }
 
@@ -258,7 +270,7 @@ function serializeThread(row: ThreadRow, viewerId: number, reactions: ReactionRo
     authorAvatarUrl: typeof profile.avatarUrl === "string" ? profile.avatarUrl : undefined,
     authorMemberTerm: row.author_member_term ?? undefined,
     authorRank: row.author_member_rank ?? "regular",
-    category: row.category,
+    category: canonicalCategory(row.category),
     title: row.title,
     content: row.content,
     status: row.status,
@@ -446,13 +458,14 @@ export async function handleBoardContentRequest(
     if (categoryParam && !category) return json({ error: "カテゴリが不正です" }, 400);
     if (category && !await canAccessBoardCategory(db, category, member))
       return json({ error: "この部活動の部員のみ閲覧できます" }, 403);
+    const variants = category ? categoryVariants(category) : [];
     const [threads, comments] = await Promise.all([
       category
-        ? db.prepare("SELECT COUNT(*) AS count, MAX(updated_at) AS latest FROM board_threads WHERE category = ? AND deleted_at IS NULL").bind(category).first<{ count: number; latest: string | null }>()
+        ? db.prepare(`SELECT COUNT(*) AS count, MAX(updated_at) AS latest FROM board_threads WHERE category IN (${variants.map(() => "?").join(",")}) AND deleted_at IS NULL`).bind(...variants).first<{ count: number; latest: string | null }>()
         : db.prepare("SELECT COUNT(*) AS count, MAX(updated_at) AS latest FROM board_threads WHERE category NOT LIKE 'club-club-%' AND deleted_at IS NULL").first<{ count: number; latest: string | null }>(),
       category
         ? db.prepare(`SELECT COUNT(*) AS count, MAX(bc.updated_at) AS latest FROM board_comments bc JOIN board_threads bt ON bt.id = bc.thread_id
-            WHERE bt.category = ? AND bt.deleted_at IS NULL AND bc.deleted_at IS NULL`).bind(category).first<{ count: number; latest: string | null }>()
+            WHERE bt.category IN (${variants.map(() => "?").join(",")}) AND bt.deleted_at IS NULL AND bc.deleted_at IS NULL`).bind(...variants).first<{ count: number; latest: string | null }>()
         : db.prepare(`SELECT COUNT(*) AS count, MAX(bc.updated_at) AS latest FROM board_comments bc JOIN board_threads bt ON bt.id = bc.thread_id
             WHERE bt.category NOT LIKE 'club-club-%' AND bt.deleted_at IS NULL AND bc.deleted_at IS NULL`).first<{ count: number; latest: string | null }>(),
     ]);
@@ -517,19 +530,20 @@ export async function handleBoardContentRequest(
     // Previously materialized Discord event threads still have category=free-chat in D1.
     // Read past them without deleting or altering any app-managed data.
     const candidateLimit = limit + gourmetEventBoardThreadIds.size;
+    const variants = category ? categoryVariants(category) : [];
     const rows = threadId
       ? await db.prepare(`SELECT bt.*, m.public_member_id AS author_public_member_id,
           m.display_name AS author_display_name, m.member_term AS author_member_term,
           m.member_rank AS author_member_rank, m.profile_json AS author_profile_json
         FROM board_threads bt JOIN members m ON m.id = bt.author_member_id
-        WHERE bt.id = ? AND bt.category = ? AND bt.deleted_at IS NULL LIMIT 1`).bind(threadId, category).all<ThreadRow>()
+        WHERE bt.id = ? AND bt.category IN (${variants.map(() => "?").join(",")}) AND bt.deleted_at IS NULL LIMIT 1`).bind(threadId, ...variants).all<ThreadRow>()
       : category
       ? await db.prepare(`SELECT bt.*, m.public_member_id AS author_public_member_id,
           m.display_name AS author_display_name, m.member_term AS author_member_term,
           m.member_rank AS author_member_rank, m.profile_json AS author_profile_json
         FROM board_threads bt JOIN members m ON m.id = bt.author_member_id
-        WHERE bt.category = ? AND bt.deleted_at IS NULL
-        ORDER BY bt.pinned DESC, bt.created_at DESC LIMIT ?`).bind(category, candidateLimit).all<ThreadRow>()
+        WHERE bt.category IN (${variants.map(() => "?").join(",")}) AND bt.deleted_at IS NULL
+        ORDER BY bt.pinned DESC, bt.created_at DESC LIMIT ?`).bind(...variants, candidateLimit).all<ThreadRow>()
       : await db.prepare(`SELECT bt.*, m.public_member_id AS author_public_member_id,
           m.display_name AS author_display_name, m.member_term AS author_member_term,
           m.member_rank AS author_member_rank, m.profile_json AS author_profile_json

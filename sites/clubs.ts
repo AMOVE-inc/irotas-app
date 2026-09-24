@@ -348,12 +348,12 @@ export async function handleClubRequest(request: Request, env: SitesEnv): Promis
       FROM club_memberships WHERE club_id = ? AND member_id = ? AND status IN ('pending', 'on_hold')`)
       .bind(id, targetId).first<{ status: string; wants_to_do: string; message_to_leader: string; applied_at: string }>();
     if (!application) return json({ error: "審査対象の申請が見つかりません" }, 404);
-    const applicant = await env.DB.prepare(`SELECT m.public_member_id, m.display_name, m.member_term, m.member_rank,
+    const applicant = await env.DB.prepare(`SELECT m.public_member_id, m.user_handle, m.display_name, m.member_term, m.member_rank,
         m.branches_json, m.profile_json, m.participation_count, m.organizer_count,
         COALESCE(s.subscription_started_at, m.discord_joined_at, m.created_at) AS joined_at
       FROM members m LEFT JOIN member_subscriptions s ON s.member_id = m.id
       WHERE m.id = ? AND m.account_status = 'active' LIMIT 1`).bind(targetId).first<{
-        public_member_id: string | null; display_name: string; member_term: string | null; member_rank: string;
+        public_member_id: string | null; user_handle: string | null; display_name: string; member_term: string | null; member_rank: string;
         branches_json: string; profile_json: string; participation_count: number; organizer_count: number; joined_at: string;
       }>();
     if (!applicant) return json({ error: "メンバーが見つかりません" }, 404);
@@ -367,6 +367,7 @@ export async function handleClubRequest(request: Request, env: SitesEnv): Promis
     try { profile = JSON.parse(applicant.profile_json) as Record<string, unknown>; } catch {}
     return json({ review: {
       memberId: applicant.public_member_id ?? `member-${targetId}`,
+      publicUserId: applicant.user_handle,
       displayName: applicant.display_name,
       memberTerm: applicant.member_term,
       memberRank: applicant.member_rank,

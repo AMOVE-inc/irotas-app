@@ -747,6 +747,7 @@ export default function ChatScreen() {
   const [pendingImages, setPendingImages] = useState<string[]>([]);
   const [pendingVideos, setPendingVideos] = useState<{ uri: string; mimeType: string }[]>([]);
   const sendingRef = useRef(false);
+  const [isSendingMessage, setIsSendingMessage] = useState(false);
   const pendingSendRef = useRef<{ signature: string; messageId: string } | null>(null);
   const [showAttachmentMenu, setShowAttachmentMenu] = useState(false);
   const [, setIsLoadingRoom] = useState(true);
@@ -799,53 +800,60 @@ export default function ChatScreen() {
     const content = messageText.trim();
     if (!id) return;
     sendingRef.current = true;
+    setIsSendingMessage(true);
     const signature = JSON.stringify([id, content, pendingImages, pendingVideos, replyToMessage?.id]);
     if (pendingSendRef.current?.signature !== signature) {
       pendingSendRef.current = { signature, messageId: `cm_${Date.now()}_${Math.random().toString(36).slice(2)}` };
     }
+    const clientMessageId = pendingSendRef.current.messageId;
+    const draftText = messageText;
+    const draftImages = [...pendingImages];
+    const draftVideos = [...pendingVideos];
+    const draftReply = replyToMessage;
+    const optimisticMessage: ChatMessage = {
+      id: clientMessageId,
+      chatId: id,
+      senderId: viewerMemberId,
+      externalAuthorName: authUser?.name ?? undefined,
+      content,
+      replyTo: draftReply ? replyReference(draftReply.id, draftReply.externalAuthorName ?? getMemberById(draftReply.senderId)?.name ?? "メンバー", draftReply.content, Boolean(draftReply.imageUri || draftReply.attachmentUrls?.length)) : undefined,
+      attachmentUrls: draftImages.length || draftVideos.length ? [...draftImages, ...draftVideos.map((video) => video.uri)] : undefined,
+      createdAt: new Date().toISOString(),
+    };
+    setMessages((previous) => [...previous.filter((item) => item.id !== clientMessageId), optimisticMessage]);
+    showSentChatPreviewImmediately(viewerMemberId, id, optimisticMessage);
+    setMessageText("");
+    setReplyToMessage(null);
+    setMessageSelection({ start: 0, end: 0 });
+    setPendingImages([]);
+    setPendingVideos([]);
+    setMentionQuery(null);
     try {
       const imageUrls = await Promise.all([
-        ...pendingImages.map(async (uri) => (await Api.uploadEventImage(uri)).imageUrl),
-        ...pendingVideos.map(async (video) => (await Api.uploadEventImage(video.uri, video.mimeType)).imageUrl),
+        ...draftImages.map(async (uri) => (await Api.uploadEventImage(uri)).imageUrl),
+        ...draftVideos.map(async (video) => (await Api.uploadEventImage(video.uri, video.mimeType)).imageUrl),
       ]);
-      const newMessage = await Api.createSharedChatMessage(id, { content, imageUrls, clientMessageId: pendingSendRef.current.messageId, replyToId: replyToMessage?.id });
+      const newMessage = await Api.createSharedChatMessage(id, { content, imageUrls, clientMessageId, replyToId: draftReply?.id });
       pendingSendRef.current = null;
+      setMessages((previous) => [...previous.filter((item) => item.id !== clientMessageId && item.id !== newMessage.id), newMessage]);
       showSentChatPreviewImmediately(viewerMemberId, id, newMessage);
-      setMessages((prev) => [...prev.filter((item) => item.id !== newMessage.id), newMessage]);
-      setMessageText("");
-      setReplyToMessage(null);
-      setMessageSelection({ start: 0, end: 0 });
-      setPendingImages([]);
-      setPendingVideos([]);
-      setMentionQuery(null);
-
     } catch (error) {
       if (error instanceof Api.ApiError && error.statusCode === 404) {
         pendingSendRef.current = null;
-        const legacyMessage: ChatMessage = {
-          id: `m_new_${Date.now()}`,
-          chatId: id,
-          senderId: viewerMemberId,
-          externalAuthorName: authUser?.name ?? undefined,
-          content,
-          replyTo: replyToMessage ? replyReference(replyToMessage.id, replyToMessage.externalAuthorName ?? getMemberById(replyToMessage.senderId)?.name ?? "メンバー", replyToMessage.content, Boolean(replyToMessage.imageUri || replyToMessage.attachmentUrls?.length)) : undefined,
-          attachmentUrls: pendingImages.length || pendingVideos.length ? [...pendingImages, ...pendingVideos.map((video) => video.uri)] : undefined,
-          createdAt: new Date().toISOString(),
-        };
-        setMessages((previous) => [...previous, legacyMessage]);
-        await saveMessagesToStorage(id, [legacyMessage]);
-        showSentChatPreviewImmediately(viewerMemberId, id, legacyMessage);
-        setMessageText("");
-        setReplyToMessage(null);
-        setMessageSelection({ start: 0, end: 0 });
-        setPendingImages([]);
-        setPendingVideos([]);
-        setMentionQuery(null);
+        await saveMessagesToStorage(id, [optimisticMessage]);
+        showSentChatPreviewImmediately(viewerMemberId, id, optimisticMessage);
         return;
       }
+      setMessages((previous) => previous.filter((item) => item.id !== clientMessageId));
+      setMessageText(draftText);
+      setReplyToMessage(draftReply);
+      setMessageSelection({ start: draftText.length, end: draftText.length });
+      setPendingImages(draftImages);
+      setPendingVideos(draftVideos);
       Alert.alert("送信できませんでした", error instanceof Error ? error.message : "通信状況を確認してもう一度お試しください。");
     } finally {
       sendingRef.current = false;
+      setIsSendingMessage(false);
     }
   }, [messageText, pendingImages, pendingVideos, replyToMessage, id, authUser?.role, authUser?.accessRole, authUser?.name, viewerMemberId, staffViewingOnly]);
 
@@ -1242,13 +1250,13 @@ export default function ChatScreen() {
             />
             <Pressable
               onPress={handleSend}
+              disabled={isSendingMessage || (!messageText.trim() && !pendingImages.length && !pendingVideos.length)}
               style={{ marginLeft: 10 }}
             >
               <IconSymbol
                 name="paperplane.fill"
                 size={24}
-                color={(messageText.trim() || pendingImages.length || pendingVideos.length) ? "#E8A0BF" : colors.muted}
-              />
+                color={!isSendingMessage && (messageText.trim() || pendingImages.length || pendingVideos.length) ? "#E8A0BF" : colors.muted}              />
             </Pressable>
           </View>
         </View> : <View style={{ borderTopWidth: 1, borderTopColor: colors.border, backgroundColor: colors.surface, paddingHorizontal: 18, paddingVertical: 14, alignItems: "center" }}><View style={{ flexDirection: "row", alignItems: "center" }}><IconSymbol name="lock.fill" size={15} color={colors.muted} /><Text style={{ marginLeft: 7, fontSize: 13, fontWeight: "800", color: colors.muted }}>{staffViewingOnly ? "閲覧のみ可能です" : "運営からのお知らせ専用です"}</Text></View><Text style={{ marginTop: 4, fontSize: 11, color: colors.muted }}>{staffViewingOnly ? "参加していないチャットには投稿できません" : "メンバーから返信することはできません"}</Text></View>}

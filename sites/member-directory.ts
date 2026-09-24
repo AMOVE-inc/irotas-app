@@ -64,12 +64,20 @@ export function sanitizeProfileUpdate(input: unknown) {
     if (typeof value === "string" && value && !/^https?:\/\//i.test(value) && !(key === "avatarUrl" && value.startsWith("/api/event-images/")))
       throw new Error(`${key}は有効なURLを入力してください`);
   }
-  return { displayName, profile };
+  let publicUserId: string | undefined;
+  if (source.publicUserId !== undefined) {
+    if (typeof source.publicUserId !== "string") throw new Error("公開ユーザーIDを確認してください");
+    publicUserId = source.publicUserId.trim().replace(/^@+/, "").toLowerCase();
+    if (!/^[a-z0-9][a-z0-9._]{2,23}$/.test(publicUserId) || publicUserId.endsWith("."))
+      throw new Error("公開ユーザーIDは3〜24文字の半角英小文字・数字・ピリオド・アンダーバーで入力してください");
+  }
+  return { displayName, profile, publicUserId };
 }
 
 type MemberDirectoryRow = {
   id: number;
   public_member_id: string | null;
+  user_handle: string | null;
   display_name: string;
   access_role: "member" | "club_leader" | "operator" | "admin";
   branches_json: string;
@@ -113,6 +121,7 @@ function jsonObject(value: string) {
 export function publicMemberFromRow(row: MemberDirectoryRow, relationship: { isFollowing?: boolean; followsViewer?: boolean } = {}) {
   return {
     id: row.public_member_id ?? `member-${row.id}`,
+    publicUserId: row.user_handle ?? null,
     userId: row.id,
     displayName: row.display_name,
     accessRole: row.access_role,
@@ -143,7 +152,7 @@ function responseJson(body: unknown, status = 200) {
 }
 
 const publicMemberSelect = `
-  SELECT m.id, m.public_member_id, m.display_name, m.access_role, m.branches_json,
+  SELECT m.id, m.public_member_id, m.user_handle, m.display_name, m.access_role, m.branches_json,
          m.member_term, m.member_rank, m.discord_roles_json, m.achievement_badges_json,
          m.discord_joined_at, m.profile_json, m.xp, m.participation_count,
          m.organizer_count, m.created_at, s.subscription_started_at,
@@ -162,10 +171,10 @@ async function findPublicMember(db: D1Database, key: string) {
   return db
     .prepare(
       `${publicMemberSelect}
-       AND (m.public_member_id = ? OR m.id = ? OR m.discord_user_id = ?)
+       AND (m.public_member_id = ? OR m.id = ? OR m.discord_user_id = ? OR LOWER(m.user_handle) = LOWER(?))
        ORDER BY s.id DESC LIMIT 1`,
     )
-    .bind(key, numericId, discordId)
+    .bind(key, numericId, discordId, key.replace(/^@/, ""))
     .first<MemberDirectoryRow>();
 }
 
@@ -220,15 +229,27 @@ async function updateSelfProfile(request: Request, db: D1Database, memberId: num
   } catch (error) {
     return responseJson({ error: error instanceof Error ? error.message : "プロフィール情報を確認してください" }, 400);
   }
-  const current = await db.prepare("SELECT profile_json FROM members WHERE id = ?").bind(memberId).first<{ profile_json: string | null }>();
+  const current = await db.prepare("SELECT profile_json, user_handle FROM members WHERE id = ?").bind(memberId).first<{ profile_json: string | null; user_handle: string | null }>();
   if (!current) return responseJson({ error: "メンバーが見つかりません" }, 404);
+  const publicUserId = update.publicUserId === undefined ? current.user_handle : update.publicUserId;
+  if (publicUserId) {
+    const occupied = await db.prepare("SELECT id FROM members WHERE LOWER(user_handle) = LOWER(?) AND id <> ? LIMIT 1")
+      .bind(publicUserId, memberId).first<{ id: number }>();
+    if (occupied) return responseJson({ error: "この公開ユーザーIDはすでに使用されています" }, 409);
+  }
   const mergedProfile = { ...jsonObject(current.profile_json ?? "{}"), ...update.profile };
   const now = new Date().toISOString();
-  await db.prepare("UPDATE members SET display_name = ?, profile_json = ?, updated_at = ? WHERE id = ?")
-    .bind(update.displayName, JSON.stringify(mergedProfile), now, memberId).run();
+  try {
+    await db.prepare("UPDATE members SET display_name = ?, user_handle = ?, profile_json = ?, updated_at = ? WHERE id = ?")
+      .bind(update.displayName, publicUserId, JSON.stringify(mergedProfile), now, memberId).run();
+  } catch (error) {
+    if (error instanceof Error && /unique constraint|idx_members_user_handle_unique/i.test(error.message))
+      return responseJson({ error: "この公開ユーザーIDはすでに使用されています" }, 409);
+    throw error;
+  }
   await db.prepare(`INSERT INTO audit_logs (actor_user_id, action, entity_type, entity_id, metadata_json, created_at)
     VALUES (?, 'member.profile_updated', 'member', ?, '{}', ?)`).bind(memberId, String(memberId), now).run();
-  return responseJson({ success: true, displayName: update.displayName, profile: mergedProfile, updatedAt: now });
+  return responseJson({ success: true, displayName: update.displayName, publicUserId, profile: mergedProfile, updatedAt: now });
 }
 
 export async function handleMemberDirectoryRequest(

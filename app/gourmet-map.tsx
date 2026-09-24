@@ -415,7 +415,6 @@ export default function GourmetMapScreen() {
   const userCanImport = isOperatorRole(authUser?.role, authUser?.accessRole);
 
   useEffect(() => {
-    if (Platform.OS !== "web") return;
     let active = true;
     fetchGourmetMapFeed()
       .then((feed) => {

@@ -51,6 +51,18 @@ function ensureHydrated() {
   return hydrationPromise;
 }
 
+export async function refreshCoupons() {
+  try {
+    const shared = await getSharedBenefits();
+    coupons = shared.coupons;
+    usages = { ...usages, current: shared.usages };
+    hydrated = true;
+    emitChange();
+  } catch {
+    // Keep the last confirmed snapshot while temporarily offline.
+  }
+}
+
 export async function awardCoupon(coupon: Coupon): Promise<boolean> {
   await ensureHydrated();
   if (coupons.some((item) => item.id === coupon.id)) return false;

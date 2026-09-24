@@ -722,7 +722,7 @@ function ApplicationReviewDetails({ clubId, memberId, application, onOpenProfile
         <Image source={profileAvatar} style={{ width: 38, height: 38, borderRadius: 19 }} contentFit="cover" />
         <View style={{ marginLeft: 10, flex: 1 }}>
           <Text style={{ fontSize: 14, fontWeight: "800", color: colors.foreground }}>{displayName}</Text>
-          <Text style={{ fontSize: 11, color: colors.muted }}>会員ID {memberId}</Text>
+          {review?.publicUserId ? <Text style={{ fontSize: 11, color: colors.muted }}>@{review.publicUserId}</Text> : null}
         </View>
       </Pressable>
       <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6 }}>

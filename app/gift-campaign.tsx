@@ -4,8 +4,8 @@ import { CURRENT_USER, RANK_LABELS } from "@/constants/mock-data";
 import { useColors } from "@/hooks/use-colors";
 import { applyForGift, getGiftApplications, getGiftCampaigns, type GiftCampaign } from "@/lib/gift-campaign-store";
 import { isGiftCampaignOpen } from "@/lib/gift-campaign-status";
-import { useRouter } from "expo-router";
-import { useEffect, useMemo, useState } from "react";
+import { useFocusEffect, useRouter } from "expo-router";
+import { useCallback, useMemo, useState } from "react";
 import { Alert, Modal, Pressable, ScrollView, Text, View } from "react-native";
 import { AuthenticatedImage as Image } from "@/components/authenticated-image";
 import { useAuthContext } from "@/lib/auth-context";
@@ -22,12 +22,15 @@ export default function GiftCampaignScreen() {
   const [appliedIds, setAppliedIds] = useState<string[]>([]);
   const [selectedCampaign, setSelectedCampaign] = useState<GiftCampaign | null>(null);
 
-  useEffect(() => {
+  useFocusEffect(useCallback(() => {
+    let active = true;
     Promise.all([getGiftCampaigns(), getGiftApplications()]).then(([items, applications]) => {
+      if (!active) return;
       setCampaigns(items);
       setAppliedIds(applications.filter((item) => item.memberId === memberId).map((item) => item.campaignId));
     });
-  }, [memberId]);
+    return () => { active = false; };
+  }, [memberId]));
 
   const visibleCampaigns = useMemo(() => [...campaigns]
     .sort((a, b) => b.deadline.localeCompare(a.deadline) || (b.createdAt ?? "").localeCompare(a.createdAt ?? "")), [campaigns]);

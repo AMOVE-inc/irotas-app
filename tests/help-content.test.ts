@@ -40,7 +40,7 @@ describe("FAQ, rules and manual", () => {
   it("uses the official policy and report destinations", () => {
     expect(COMMUNITY_TERMS_URL).toBe("https://irotas-community.com/terms");
     expect(EVENT_TERMS_URL).toBe("https://irotas-community.com/event-terms");
-    expect(PRIVACY_POLICY_URL).toBe("https://irotas-community.com/privacy");
+    expect(PRIVACY_POLICY_URL).toBe("https://irotas-community.com/privacy-policy");
     expect(OFFICIAL_LINE_URL).toBe("https://lin.ee/Rr00sCb");
     expect(REPORT_FORM_URL).toContain("docs.google.com/forms/");
     expect(rules).toContain("REPORT_FORM_URL");

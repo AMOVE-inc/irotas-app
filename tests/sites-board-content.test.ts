@@ -93,8 +93,8 @@ function testDatabase(
         async all<T>() {
           if (sql.includes("SELECT id FROM board_comments WHERE deleted_at IS NOT NULL"))
             return { success: true, results: deletedArchivedCommentIds.map((id) => ({ id } as T)) };
-          if (contentThread && sql.includes("WHERE bt.id = ? AND bt.category = ?") &&
-              values[0] === contentThread.id && values[1] === contentThread.category)
+          if (contentThread && sql.includes("WHERE bt.id = ? AND bt.category IN") &&
+              values[0] === contentThread.id && values.slice(1).includes(contentThread.category))
             return { success: true, results: [{
               id: contentThread.id, category: contentThread.category, author_member_id: member.id,
               author_public_member_id: "IRO0099", author_display_name: "テスト会員",
@@ -375,6 +375,19 @@ describe("shared board content API", () => {
       { DB: db } as SitesEnv,
     );
     expect(response?.status).toBe(201);
+  });
+
+  it.each([
+    ["gourmet-report", "meal-report"],
+    ["gourmet-consultation", "gourmet-advice"],
+  ])("normalizes the legacy category %s to %s", async (legacyCategory, canonicalCategory) => {
+    const { db, writes } = testDatabase({ id: 9, role: "user", access_role: "member", account_status: "active" });
+    const response = await handleBoardContentRequest(
+      request("/api/board/threads", "POST", { category: legacyCategory, title: "投稿", content: "本文", status: "none" }),
+      { DB: db } as SitesEnv,
+    );
+    expect(response?.status).toBe(201);
+    expect(writes.find((item) => item.sql.includes("INSERT INTO board_threads"))?.values).toContain(canonicalCategory);
   });
 
   it("allows only operators to create gourmet contests", async () => {

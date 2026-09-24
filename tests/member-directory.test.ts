@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { readFileSync } from "node:fs";
 import { publicMemberFromRow, sanitizeProfileUpdate } from "../sites/member-directory";
 
 describe("member directory privacy", () => {
@@ -6,6 +7,7 @@ describe("member directory privacy", () => {
     const member = publicMemberFromRow({
       id: 12,
       public_member_id: "IRO0012",
+      user_handle: "test.member",
       display_name: "テスト会員",
       access_role: "member",
       branches_json: '["kanto"]',
@@ -23,6 +25,7 @@ describe("member directory privacy", () => {
 
     expect(member).toMatchObject({
       id: "IRO0012",
+      publicUserId: "test.member",
       displayName: "テスト会員",
       branches: ["kanto"],
       achievementBadges: ["イベント大賞"],
@@ -36,7 +39,7 @@ describe("member directory privacy", () => {
 
   it("exposes only relationship state needed by member-facing screens", () => {
     const member = publicMemberFromRow({
-      id: 12, public_member_id: "IRO0012", display_name: "友達", access_role: "member",
+      id: 12, public_member_id: "IRO0012", user_handle: null, display_name: "友達", access_role: "member",
       branches_json: "[]", member_term: null, member_rank: "regular", achievement_badges_json: "[]",
       discord_joined_at: null, profile_json: "{}", xp: 0, participation_count: 0, organizer_count: 0,
       created_at: "2026-01-01", subscription_started_at: null, follower_count: 2, following_count: 3,
@@ -49,6 +52,7 @@ describe("member profile updates", () => {
   it("keeps only public profile fields and normalizes values", () => {
     expect(sanitizeProfileUpdate({
       displayName: "  Aoi  ",
+      publicUserId: "@Aoi.Test",
       profile: {
         bio: " よろしくお願いします ",
         favoriteCuisines: ["寿司", "寿司", ""],
@@ -59,6 +63,7 @@ describe("member profile updates", () => {
       },
     })).toEqual({
       displayName: "Aoi",
+      publicUserId: "aoi.test",
       profile: {
         bio: "よろしくお願いします",
         favoriteCuisines: ["寿司"],
@@ -72,5 +77,21 @@ describe("member profile updates", () => {
     expect(() => sanitizeProfileUpdate({ displayName: "", profile: {} })).toThrow();
     expect(() => sanitizeProfileUpdate({ displayName: "会員", profile: { showAge: "yes" } })).toThrow();
     expect(() => sanitizeProfileUpdate({ displayName: "会員", profile: { instagramUrl: "javascript:alert(1)" } })).toThrow();
+    expect(() => sanitizeProfileUpdate({ displayName: "会員", publicUserId: "invalid id", profile: {} })).toThrow();
+  });
+
+  it("keeps the public user id omitted for older app clients", () => {
+    expect(sanitizeProfileUpdate({ displayName: "会員", profile: {} })).toEqual({
+      displayName: "会員",
+      profile: {},
+      publicUserId: undefined,
+    });
+  });
+
+  it("adds a case-insensitive unique public user id column", () => {
+    const migration = readFileSync("drizzle/0061_public_user_handles.sql", "utf8");
+    expect(migration).toContain("ADD COLUMN user_handle TEXT");
+    expect(migration).toContain("UNIQUE INDEX");
+    expect(migration).toContain("LOWER(user_handle)");
   });
 });

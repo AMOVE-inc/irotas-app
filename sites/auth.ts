@@ -27,6 +27,7 @@ type MemberRow = {
   last_signed_in_at: string | null;
   password_set_at?: string | null;
   public_member_id: string | null;
+  user_handle: string | null;
   member_term: string | null;
   member_rank: string | null;
   discord_roles_json: string | null;
@@ -350,6 +351,7 @@ function memberPayload(row: MemberRow) {
     branch: branches[0] ?? null,
     branches,
     memberId: row.public_member_id,
+    publicUserId: row.user_handle,
     memberTerm: row.member_term,
     memberRank: effectiveMemberRank(row.member_rank, row.discord_roles_json),
     joinedAt: row.subscription_started_at ?? null,
@@ -443,7 +445,7 @@ async function findSubscription(db: D1Database, email: string) {
 }
 
 const memberSelect = `SELECT m.id, m.email, m.password_hash, m.display_name, m.role, m.access_role,
-      m.branches_json, m.account_status, m.last_signed_in_at, m.password_set_at, m.public_member_id,
+      m.branches_json, m.account_status, m.last_signed_in_at, m.password_set_at, m.public_member_id, m.user_handle,
       m.member_term, m.member_rank, m.discord_roles_json, m.achievement_badges_json,
       m.profile_json, m.xp, m.participation_count, m.organizer_count,
       s.subscription_started_at
@@ -530,7 +532,7 @@ async function sessionMember(db: D1Database, token: string) {
   return db
     .prepare(
       `SELECT m.id, m.email, m.password_hash, m.display_name, m.role, m.access_role, m.branches_json, m.account_status, m.last_signed_in_at, m.password_set_at,
-    m.public_member_id, m.member_term, m.member_rank, m.discord_roles_json,
+    m.public_member_id, m.user_handle, m.member_term, m.member_rank, m.discord_roles_json,
     m.achievement_badges_json, m.profile_json, m.xp, m.participation_count,
     m.organizer_count, s.subscription_started_at,
     s.billing_email, s.square_subscription_id, s.square_status, s.billing_status, s.access_status, s.paid_until_date, s.grace_until_date

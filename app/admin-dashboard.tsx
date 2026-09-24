@@ -1436,7 +1436,7 @@ export default function AdminDashboardScreen() {
                         <Text style={{ fontSize: 10, fontWeight: "900", color: "#C92A2A" }}>運営メンバー</Text>
                       </View>
                     </View>
-                    {operator.memberId ? <Text style={{ fontSize: 11, color: colors.muted, marginTop: 4 }}>会員ID {operator.memberId}</Text> : null}
+                    {operator.memberId ? <Text style={{ fontSize: 11, color: colors.muted, marginTop: 4 }}>内部会員ID {operator.memberId}</Text> : null}
                   </View>
                   <Text style={{ fontSize: 12, fontWeight: "700", color: colors.muted }}>{operator.memberTerm ?? "期設定なし"}</Text>
                 </View>
@@ -1538,9 +1538,9 @@ export default function AdminDashboardScreen() {
         {activeTab === "members" && (
           <>
             {nonMemberId && <View style={{ backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: 12, padding: 14, marginBottom: 16 }}>
-              <Text style={{ fontSize: 15, fontWeight: "800", color: colors.foreground }}>Non代表の会員ID</Text>
+              <Text style={{ fontSize: 15, fontWeight: "800", color: colors.foreground }}>Non代表の内部会員ID</Text>
               <Text style={{ marginTop: 6, color: colors.muted }}>{nonMemberId.name}：{nonMemberId.currentId ?? "未設定"}</Text>
-              {nonMemberId.currentId === "IRO-TEST-001" && nonMemberId.nextId ? <Pressable disabled={nonMemberIdSaving} onPress={async () => { setNonMemberIdSaving(true); try { const corrected = await correctNonMemberId(); setNonMemberId(corrected); Alert.alert("会員IDを修正しました", `${corrected.name}：${corrected.currentId}`); } catch (error) { Alert.alert("修正できませんでした", error instanceof Error ? error.message : "もう一度お試しください"); } finally { setNonMemberIdSaving(false); } }} style={{ backgroundColor: "#5865F2", borderRadius: 10, padding: 12, alignItems: "center", marginTop: 10, opacity: nonMemberIdSaving ? 0.6 : 1 }}><Text style={{ color: "#FFF", fontWeight: "800" }}>{nonMemberIdSaving ? "修正中…" : `${nonMemberId.nextId}に修正`}</Text></Pressable> : null}
+              {nonMemberId.currentId === "IRO-TEST-001" && nonMemberId.nextId ? <Pressable disabled={nonMemberIdSaving} onPress={async () => { setNonMemberIdSaving(true); try { const corrected = await correctNonMemberId(); setNonMemberId(corrected); Alert.alert("内部会員IDを修正しました", `${corrected.name}：${corrected.currentId}`); } catch (error) { Alert.alert("修正できませんでした", error instanceof Error ? error.message : "もう一度お試しください"); } finally { setNonMemberIdSaving(false); } }} style={{ backgroundColor: "#5865F2", borderRadius: 10, padding: 12, alignItems: "center", marginTop: 10, opacity: nonMemberIdSaving ? 0.6 : 1 }}><Text style={{ color: "#FFF", fontWeight: "800" }}>{nonMemberIdSaving ? "修正中…" : `${nonMemberId.nextId}に修正`}</Text></Pressable> : null}
             </View>}
             <Text style={{ fontSize: 16, fontWeight: "700", color: colors.foreground, marginBottom: 12 }}>
               会員一覧 ({MEMBERS.length}名)

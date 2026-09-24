@@ -24,6 +24,7 @@ export type AuthApiUser = {
   branch: Auth.BranchRole | null;
   branches: Auth.BranchRole[] | null;
   memberId: string | null;
+  publicUserId?: string | null;
   memberTerm: string | null;
   memberRank: string;
   joinedAt: string | null;
@@ -36,6 +37,7 @@ export type AuthApiUser = {
 
 export type PublicMember = {
   id: string;
+  publicUserId?: string | null;
   userId: number;
   displayName: string;
   accessRole: "member" | "club_leader" | "operator" | "admin";
@@ -121,6 +123,7 @@ export type ClubRecord = {
 
 export type ClubApplicantReview = {
   memberId: string;
+  publicUserId?: string | null;
   displayName: string;
   memberTerm: string | null;
   memberRank: string;
@@ -1032,11 +1035,13 @@ export async function getMySocialSummary() {
 
 export async function updateMyProfile(input: {
   displayName: string;
+  publicUserId?: string;
   profile: Record<string, unknown>;
 }) {
   return apiCall<{
     success: boolean;
     displayName: string;
+    publicUserId: string | null;
     profile: Record<string, unknown>;
     updatedAt: string;
   }>("/api/members/me/profile", {

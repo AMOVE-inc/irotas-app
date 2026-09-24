@@ -281,6 +281,7 @@ export default function ChatListScreen() {
     Boolean(lastRoomLists.get(viewerMemberId)?.joined.find((room) => room.id === "board-announcement")?.lastMessage),
   );
   const [chatListPreferences, setChatListPreferences] = useState<ChatListPreferences>({ pinnedRoomIds: [], hiddenRoomIds: [] });
+  const [actionRoom, setActionRoom] = useState<ChatRoom | null>(null);
   useEffect(() => {
     const saved = lastRoomLists.get(viewerMemberId);
     setMyRooms(saved?.joined ?? []);
@@ -331,26 +332,8 @@ export default function ChatListScreen() {
   }, [viewerMemberId]);
 
   const openRoomActions = useCallback((room: ChatRoom) => {
-    const pinned = chatListPreferences.pinnedRoomIds.includes(room.id);
-    const togglePin = () => updateChatListPreferences((current) => ({
-      ...current,
-      pinnedRoomIds: pinned
-        ? current.pinnedRoomIds.filter((id) => id !== room.id)
-        : [room.id, ...current.pinnedRoomIds.filter((id) => id !== room.id)],
-    }));
-    const hideRoom = () => updateChatListPreferences((current) => ({
-      pinnedRoomIds: current.pinnedRoomIds.filter((id) => id !== room.id),
-      hiddenRoomIds: [room.id, ...current.hiddenRoomIds.filter((id) => id !== room.id)],
-    }));
-    Alert.alert(stripRankFromName(room.name), "操作を選択してください", [
-      { text: pinned ? "ピン留めを解除" : "チャットをピン留め", onPress: togglePin },
-      { text: "削除", style: "destructive", onPress: () => Alert.alert("チャットを削除", "このチャットを一覧から削除しますか？", [
-        { text: "キャンセル", style: "cancel" },
-        { text: "削除", style: "destructive", onPress: hideRoom },
-      ]) },
-      { text: "キャンセル", style: "cancel" },
-    ]);
-  }, [chatListPreferences.pinnedRoomIds, updateChatListPreferences]);
+    setActionRoom(room);
+  }, []);
 
   const refreshRooms = useCallback(async (includeDetails = true) => {
     const refreshStartedAt = Date.now();
@@ -478,6 +461,43 @@ export default function ChatListScreen() {
         contentContainerStyle={{ paddingBottom: 112, flexGrow: 1 }}
         ListEmptyComponent={pinnedRooms.length || visibleRankRooms.length ? null : <View style={{ flex: 1, alignItems: "center", justifyContent: "center", paddingVertical: 80 }}><Text style={{ fontSize: 14, color: colors.muted }}>{roomsLoading ? "読み込み中…" : "参加中のチャットはありません"}</Text></View>}
       />
+      <Modal visible={actionRoom !== null} transparent animationType="fade" onRequestClose={() => setActionRoom(null)}>
+        <Pressable onPress={() => setActionRoom(null)} style={{ flex: 1, backgroundColor: "rgba(20,18,24,0.42)", justifyContent: "flex-end" }}>
+          <Pressable onPress={() => {}} style={{ backgroundColor: colors.background, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 18, paddingBottom: 34 }}>
+            <Text numberOfLines={1} style={{ fontSize: 16, fontWeight: "900", color: colors.foreground, marginBottom: 10 }}>{actionRoom?.name}</Text>
+            <Pressable onPress={() => {
+              if (!actionRoom) return;
+              const pinned = chatListPreferences.pinnedRoomIds.includes(actionRoom.id);
+              updateChatListPreferences((current) => ({
+                ...current,
+                pinnedRoomIds: pinned ? current.pinnedRoomIds.filter((id) => id !== actionRoom.id) : [actionRoom.id, ...current.pinnedRoomIds.filter((id) => id !== actionRoom.id)],
+              }));
+              setActionRoom(null);
+            }} style={{ minHeight: 56, flexDirection: "row", alignItems: "center", borderBottomWidth: 0.5, borderBottomColor: colors.border }}>
+              <IconSymbol name="pin.fill" size={19} color={colors.foreground} />
+              <Text style={{ marginLeft: 12, fontSize: 15, fontWeight: "800", color: colors.foreground }}>{actionRoom && chatListPreferences.pinnedRoomIds.includes(actionRoom.id) ? "ピン留めを解除" : "チャットをピン留め"}</Text>
+            </Pressable>
+            <Pressable onPress={() => {
+              if (!actionRoom) return;
+              const room = actionRoom;
+              setActionRoom(null);
+              Alert.alert("チャットを削除", "この端末のチャット一覧から削除します。", [
+                { text: "キャンセル", style: "cancel" },
+                { text: "削除", style: "destructive", onPress: () => updateChatListPreferences((current) => ({
+                  pinnedRoomIds: current.pinnedRoomIds.filter((id) => id !== room.id),
+                  hiddenRoomIds: [room.id, ...current.hiddenRoomIds.filter((id) => id !== room.id)],
+                })) },
+              ]);
+            }} style={{ minHeight: 56, flexDirection: "row", alignItems: "center" }}>
+              <IconSymbol name="trash.fill" size={19} color="#D94C55" />
+              <Text style={{ marginLeft: 12, fontSize: 15, fontWeight: "800", color: "#D94C55" }}>削除</Text>
+            </Pressable>
+            <Pressable onPress={() => setActionRoom(null)} style={{ marginTop: 8, minHeight: 48, alignItems: "center", justifyContent: "center", borderRadius: 12, backgroundColor: colors.surface }}>
+              <Text style={{ fontSize: 15, fontWeight: "800", color: colors.foreground }}>キャンセル</Text>
+            </Pressable>
+          </Pressable>
+        </Pressable>
+      </Modal>
       <CreateFriendGroupModal visible={showCreateGroup} onClose={() => setShowCreateGroup(false)} onCreated={(room) => { void refreshRooms(); router.push({ pathname: "/chat", params: { id: room.id } }); }} />
     </ScreenContainer>
   );

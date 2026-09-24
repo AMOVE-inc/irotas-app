@@ -22,7 +22,7 @@ describe("native distribution readiness", () => {
   });
 
   it("links the published privacy policy from settings", () => {
-    expect(PRIVACY_POLICY_URL).toBe("https://irotas-community.com/privacy");
+    expect(PRIVACY_POLICY_URL).toBe("https://irotas-community.com/privacy-policy");
     expect(settings).toContain("Linking.openURL(PRIVACY_POLICY_URL)");
   });
 

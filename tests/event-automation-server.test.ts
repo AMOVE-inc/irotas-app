@@ -37,7 +37,7 @@ describe("server event automation", () => {
     expect(automation).toContain('/api/home/activities');
     expect(automation).toContain("FROM board_threads");
     expect(automation).toContain("!DELETED_EVENT_IDS.has(String(row.id))");
-    expect(automation).toContain("t.category IN ('gourmet-contest','meal-report','gourmet-advice','free-chat')");
+    expect(automation).toContain("t.category IN ('gourmet-contest','meal-report','gourmet-report','gourmet-advice','gourmet-consultation','free-chat')");
     expect(automation).toContain(".slice(0, 100)");
     expect(home).toContain("Api.getHomeActivities()");
   });

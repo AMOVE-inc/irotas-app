@@ -2866,7 +2866,10 @@ export default function BoardScreen() {
         (groups[comment.threadId] ??= []).push(comment);
         return groups;
       }, {});
-    const visibleRecords = result.threads.filter((thread) => thread.data.archiveShadow !== true && !thread.id.startsWith("discord-board-"));
+    // Only archive shadows are duplicates of the bundled Discord snapshot.
+    // Discord-origin posts imported after that snapshot also use a
+    // `discord-board-*` ID and must remain visible on every client.
+    const visibleRecords = result.threads.filter((thread) => thread.data.archiveShadow !== true);
     const threads = visibleRecords.map((thread) => ({
       ...sharedThreadToBoardThread(thread, viewerMemberId),
       commentCount: commentsByThread[thread.id]?.length ?? 0,

@@ -61,7 +61,21 @@ type EventComment = Api.SharedEventComment;
 const OFFICIAL_EVENT_PAYMENTS_ENABLED = false;
 const EVENT_COMMENT_QUICK_REACTIONS = ["👍", "❤️", "😂", "🎉", "👏"] as const;
 const EVENT_COMMENT_REACTION_EMOJIS = ["😀", "😃", "😄", "😁", "😆", "😅", "😂", "🤣", "😊", "😇", "🙂", "🙃", "😉", "😍", "🥰", "😘", "😋", "😛", "🤪", "🤔", "🫡", "😎", "🥳", "😮", "😢", "😭", "😡", "👍", "👎", "👏", "🙌", "🙏", "💪", "👀", "❤️", "🩷", "🧡", "💛", "💚", "💙", "💜", "🖤", "🤍", "🔥", "✨", "🎉", "💯", "✅", "❌", "💡", "📌", "🍽️", "🍣", "🍖", "🍜", "🍕", "🍰", "☕", "🍺", "🍷"] as const;
+type EventCommentReply = { id: string; author: string; text: string };
 
+function parseEventCommentReply(text: string): { reply?: EventCommentReply; body: string } {
+  const match = /^\[\[irotas-reply:([^\]]+)\]\]\n?/.exec(text);
+  if (!match) return { body: text };
+  try {
+    return { reply: JSON.parse(decodeURIComponent(match[1])) as EventCommentReply, body: text.slice(match[0].length) };
+  } catch {
+    return { body: text };
+  }
+}
+
+function withEventCommentReply(text: string, reply: EventCommentReply | null) {
+  return reply ? `[[irotas-reply:${encodeURIComponent(JSON.stringify(reply))}]]\n${text}` : text;
+}
 async function openCalendarComposer(appUrl: string, webUrl: string, appName: string) {
   if (Platform.OS === "web") {
     await openExternalUrl(webUrl);
@@ -112,17 +126,17 @@ function EventMemberPicker({
   const excluded = new Set(excludedIds);
   const normalizedIds = [...new Set(selectedIds)].filter((id) => !excluded.has(id));
   const candidates = query.trim()
-    ? members.filter((member) => !excluded.has(member.id) && !normalizedIds.includes(member.id) && `${member.displayName} ${member.id}`.toLowerCase().includes(query.trim().toLowerCase())).slice(0, 8)
+    ? members.filter((member) => !excluded.has(member.id) && !normalizedIds.includes(member.id) && `${member.displayName} ${member.publicUserId ?? ""}`.toLowerCase().includes(query.trim().replace(/^@/, "").toLowerCase())).slice(0, 8)
     : [];
   const selected = normalizedIds.map((id) => ({ id, member: members.find((member) => member.id === id) }));
   return <View>
-    <Text style={{ marginTop: 12, fontSize: 12, fontWeight: "800", color: colors.muted }}>{label}（名前または会員IDで検索）</Text>
-    <TextInput value={query} onChangeText={setQuery} placeholder="名前または会員IDを入力" placeholderTextColor={colors.muted} style={{ marginTop: 5, borderWidth: 1, borderColor: colors.border, borderRadius: 10, padding: 11, color: colors.foreground }} />
+    <Text style={{ marginTop: 12, fontSize: 12, fontWeight: "800", color: colors.muted }}>{label}（名前または公開ユーザーIDで検索）</Text>
+    <TextInput value={query} onChangeText={setQuery} placeholder="名前または公開ユーザーIDを入力" placeholderTextColor={colors.muted} autoCapitalize="none" style={{ marginTop: 5, borderWidth: 1, borderColor: colors.border, borderRadius: 10, padding: 11, color: colors.foreground }} />
     {candidates.map((member) => {
       const avatar = typeof member.profile.avatarUrl === "string" ? member.profile.avatarUrl : undefined;
       return <Pressable key={member.id} onPress={() => { onChange([...normalizedIds, member.id]); setQuery(""); }} style={{ flexDirection: "row", alignItems: "center", paddingVertical: 8, borderBottomWidth: 0.5, borderBottomColor: colors.border }}>
         <Image source={avatar ? { uri: avatar } : DEFAULT_AVATAR} style={{ width: 28, height: 28, borderRadius: 14 }} contentFit="cover" />
-        <Text style={{ marginLeft: 8, fontSize: 13, color: colors.foreground }}>{stripRankFromName(member.displayName)}　{member.id}</Text>
+        <Text style={{ marginLeft: 8, fontSize: 13, color: colors.foreground }}>{stripRankFromName(member.displayName)}{member.publicUserId ? `　@${member.publicUserId}` : ""}</Text>
       </Pressable>;
     })}
     {selected.length ? <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 7, marginTop: 8 }}>
@@ -130,7 +144,7 @@ function EventMemberPicker({
         const avatar = typeof member?.profile.avatarUrl === "string" ? member.profile.avatarUrl : undefined;
         return <Pressable key={id} onPress={() => onChange(normalizedIds.filter((selectedId) => selectedId !== id))} accessibilityLabel={`${member?.displayName ?? "会員"}を解除`} style={{ flexDirection: "row", alignItems: "center", maxWidth: "100%", borderWidth: 1, borderColor: colors.border, borderRadius: 16, paddingVertical: 4, paddingLeft: 5, paddingRight: 9, backgroundColor: colors.surface }}>
           <Image source={avatar ? { uri: avatar } : DEFAULT_AVATAR} style={{ width: 22, height: 22, borderRadius: 11 }} contentFit="cover" />
-          <Text numberOfLines={1} style={{ marginLeft: 5, maxWidth: 170, fontSize: 12, fontWeight: "800", color: colors.foreground }}>{member ? stripRankFromName(member.displayName) : `会員ID ${id}`}</Text>
+          <Text numberOfLines={1} style={{ marginLeft: 5, maxWidth: 170, fontSize: 12, fontWeight: "800", color: colors.foreground }}>{member ? stripRankFromName(member.displayName) : "メンバー"}</Text>
           <Text style={{ marginLeft: 5, color: colors.muted }}>×</Text>
         </Pressable>;
       })}
@@ -176,6 +190,7 @@ export default function EventDetailScreen() {
   const [applicationConfirmation, setApplicationConfirmation] = useState<{ title: string; message: string; buttons: AlertButton[] } | null>(null);
   const [eventComments, setEventComments] = useState<EventComment[]>([]);
   const [eventCommentText, setEventCommentText] = useState("");
+  const [replyingToEventComment, setReplyingToEventComment] = useState<EventCommentReply | null>(null);
   const [editingEventCommentId, setEditingEventCommentId] = useState<string | null>(null);
   const [editingEventCommentText, setEditingEventCommentText] = useState("");
   const [eventCommentBusy, setEventCommentBusy] = useState(false);
@@ -463,7 +478,7 @@ export default function EventDetailScreen() {
     const staticMember = getMemberById(memberId);
     const discordAuthor = getDiscordAuthorById(memberId);
     return {
-      name: stripRankFromName(directoryMember?.displayName ?? staticMember?.name ?? discordAuthor?.name ?? `会員ID ${memberId}`),
+      name: stripRankFromName(directoryMember?.displayName ?? staticMember?.name ?? discordAuthor?.name ?? "メンバー"),
       badgeName: directoryMember?.displayName ?? staticMember?.name ?? discordAuthor?.name ?? "",
       avatar: typeof directoryMember?.profile.avatarUrl === "string" ? directoryMember.profile.avatarUrl : staticMember?.avatar ?? discordAuthor?.avatarUrl ?? DEFAULT_AVATAR,
       rank: (directoryMember?.memberRank ?? staticMember?.rank ?? discordAuthor?.rank) as MemberRank | undefined,
@@ -498,14 +513,16 @@ export default function EventDetailScreen() {
   const showApplicationConfirmation = (title: string, message: string, buttons: AlertButton[]) => setApplicationConfirmation({ title, message, buttons });
 
   const handleEventComment = async () => {
-    const content = eventCommentText.trim();
-    if (!content || eventCommentBusy || eventCommentSendingRef.current) return;
+    const body = eventCommentText.trim();
+    if (!body || eventCommentBusy || eventCommentSendingRef.current) return;
+    const content = withEventCommentReply(body, replyingToEventComment);
     eventCommentSendingRef.current = true;
     setEventCommentBusy(true);
     try {
       const saved = await Api.createEventComment(event.id, content);
       setEventComments((current) => [...current.filter((comment) => comment.id !== saved.id), saved].sort((a, b) => a.createdAt.localeCompare(b.createdAt)));
       setEventCommentText("");
+      setReplyingToEventComment(null);
     } catch (error) {
       Alert.alert("コメントを送信できませんでした", error instanceof Error ? error.message : "通信状況を確認して再度お試しください。");
       setEventCommentBusy(false);
@@ -528,15 +545,15 @@ export default function EventDetailScreen() {
       setEventComments((current) => current.map((item) => item.id === comment.id
         ? { ...item, reactions: toggleReactionMember(item.reactions, emoji, viewerMemberId) }
         : item));
-      Alert.alert("スタンプを保存できませんでした", error instanceof Error ? error.message : "通信状況を確認して再度お試しください。");
-    }
+      Alert.alert("スタンプを保存できませんでした", error instanceof Error ? error.message : "通信状況を確認して再度お試しください。");    }
   };
 
   const handleSaveEventCommentEdit = async () => {
     if (!editingEventCommentId || !editingEventCommentText.trim() || eventCommentBusy) return;
     setEventCommentBusy(true);
     try {
-      const saved = await Api.updateEventComment(event.id, editingEventCommentId, editingEventCommentText.trim());
+      const existing = eventComments.find((comment) => comment.id === editingEventCommentId);
+      const saved = await Api.updateEventComment(event.id, editingEventCommentId, withEventCommentReply(editingEventCommentText.trim(), existing ? parseEventCommentReply(existing.text).reply ?? null : null));
       setEventComments((current) => current.map((comment) => comment.id === saved.id ? { ...saved, reactions: comment.reactions } : comment));
       setEditingEventCommentId(null);
       setEditingEventCommentText("");
@@ -1330,6 +1347,7 @@ export default function EventDetailScreen() {
           <Text style={{ fontSize: 11, color: colors.muted, marginTop: 4 }}>参加申込前でも閲覧・コメントできます。@で会員・部活・支部をメンションできます。</Text>
           {eventComments.map((comment) => {
             const author = displayCommentAuthor(comment);
+            const parsedComment = parseEventCommentReply(comment.text);
             const profileId = comment.authorId
               ?? memberDirectory.find((member) => stripRankFromName(member.displayName) === stripRankFromName(comment.author))?.id
               ?? getDiscordAuthorByName(comment.author)?.id;
@@ -1344,15 +1362,15 @@ export default function EventDetailScreen() {
                   <MemberRoleBadge name="" role={author.role} compact />
                   <Text style={{ fontSize: 11, color: colors.muted, marginLeft: 8 }}>{formatCommentTimestamp(comment.createdAt)}</Text>
                 </View>
-                {editingEventCommentId === comment.id ? <View style={{ gap: 7 }}><TextInput value={editingEventCommentText} onChangeText={setEditingEventCommentText} multiline autoFocus style={{ minHeight: 84, backgroundColor: colors.background, borderWidth: 1, borderColor: colors.border, borderRadius: 10, padding: 10, fontSize: 14, color: colors.foreground }} /><View style={{ flexDirection: "row", gap: 8 }}><Pressable onPress={handleSaveEventCommentEdit} style={{ backgroundColor: "#3478C7", borderRadius: 8, paddingHorizontal: 13, paddingVertical: 7 }}><Text style={{ color: "#FFF", fontSize: 12, fontWeight: "800" }}>保存</Text></Pressable><Pressable onPress={() => setEventCommentDeleteTarget(comment)} style={{ backgroundColor: "#FCE7E7", borderRadius: 8, paddingHorizontal: 13, paddingVertical: 7 }}><Text style={{ color: colors.error, fontSize: 12, fontWeight: "800" }}>削除</Text></Pressable><Pressable onPress={() => setEditingEventCommentId(null)} style={{ paddingHorizontal: 10, paddingVertical: 7 }}><Text style={{ color: colors.muted, fontSize: 12 }}>キャンセル</Text></Pressable></View></View> : <MentionText content={comment.text} groups={eventMentionGroups} onMentionPress={(label) => { const normalized = mentionDisplayName(label); const targetId = getDiscordAuthorByName(normalized)?.id ?? memberDirectory.find((member) => mentionDisplayName(member.displayName) === normalized)?.id ?? findMentionedMemberId(normalized, MEMBERS); if (targetId) openMemberProfile(targetId); }} />}
-                {editingEventCommentId !== comment.id ? <ContentLinkCards content={comment.text} /> : null}
-                {Object.entries(comment.reactions ?? {}).filter(([, ids]) => ids.length > 0).length ? <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6, marginTop: 7 }}>{Object.entries(comment.reactions ?? {}).filter(([, ids]) => ids.length > 0).map(([emoji, ids]) => <Pressable key={emoji} onPress={() => { void handleEventCommentReaction(comment, emoji); }} style={{ flexDirection: "row", alignItems: "center", borderRadius: 14, paddingHorizontal: 9, paddingVertical: 4, backgroundColor: ids.includes(viewerMemberId) ? "#FCE8F1" : colors.background, borderWidth: 1, borderColor: colors.border }}><Text style={{ fontSize: 16 }}>{emoji}</Text><Text style={{ marginLeft: 4, fontSize: 11, fontWeight: "800", color: colors.muted }}>{ids.length}</Text></Pressable>)}</View> : null}
-              </View>
+                {parsedComment.reply ? <View style={{ backgroundColor: "#ECEDEF", borderRadius: 9, paddingHorizontal: 10, paddingVertical: 8, marginBottom: 7 }}><Text numberOfLines={1} style={{ fontSize: 11, fontWeight: "800", color: "#62636A" }}>↪ {parsedComment.reply.author} に返信</Text><Text numberOfLines={2} style={{ marginTop: 2, fontSize: 12, color: "#74757C" }}>{parsedComment.reply.text}</Text></View> : null}
+                {editingEventCommentId === comment.id ? <View style={{ gap: 7 }}><TextInput value={editingEventCommentText} onChangeText={setEditingEventCommentText} multiline autoFocus style={{ minHeight: 84, backgroundColor: colors.background, borderWidth: 1, borderColor: colors.border, borderRadius: 10, padding: 10, fontSize: 14, color: colors.foreground }} /><View style={{ flexDirection: "row", gap: 8 }}><Pressable onPress={handleSaveEventCommentEdit} style={{ backgroundColor: "#3478C7", borderRadius: 8, paddingHorizontal: 13, paddingVertical: 7 }}><Text style={{ color: "#FFF", fontSize: 12, fontWeight: "800" }}>保存</Text></Pressable><Pressable onPress={() => setEventCommentDeleteTarget(comment)} style={{ backgroundColor: "#FCE7E7", borderRadius: 8, paddingHorizontal: 13, paddingVertical: 7 }}><Text style={{ color: colors.error, fontSize: 12, fontWeight: "800" }}>削除</Text></Pressable><Pressable onPress={() => setEditingEventCommentId(null)} style={{ paddingHorizontal: 10, paddingVertical: 7 }}><Text style={{ color: colors.muted, fontSize: 12 }}>キャンセル</Text></Pressable></View></View> : <MentionText content={parsedComment.body} groups={eventMentionGroups} onMentionPress={(label) => { const normalized = mentionDisplayName(label); const targetId = getDiscordAuthorByName(normalized)?.id ?? memberDirectory.find((member) => mentionDisplayName(member.displayName) === normalized)?.id ?? findMentionedMemberId(normalized, MEMBERS); if (targetId) openMemberProfile(targetId); }} />}
+                {editingEventCommentId !== comment.id ? <ContentLinkCards content={parsedComment.body} /> : null}
+                {Object.entries(comment.reactions ?? {}).filter(([, ids]) => ids.length > 0).length ? <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6, marginTop: 7 }}>{Object.entries(comment.reactions ?? {}).filter(([, ids]) => ids.length > 0).map(([emoji, ids]) => <Pressable key={emoji} onPress={() => { void handleEventCommentReaction(comment, emoji); }} style={{ flexDirection: "row", alignItems: "center", borderRadius: 14, paddingHorizontal: 9, paddingVertical: 4, backgroundColor: ids.includes(viewerMemberId) ? "#FCE8F1" : colors.background, borderWidth: 1, borderColor: colors.border }}><Text style={{ fontSize: 16 }}>{emoji}</Text><Text style={{ marginLeft: 4, fontSize: 11, fontWeight: "800", color: colors.muted }}>{ids.length}</Text></Pressable>)}</View> : null}              </View>
             </Pressable>;
           })}
           {eventMentionQuery !== null ? <MentionSuggestions query={eventMentionQuery} groups={eventMentionGroups} members={eventMentionMembers} onSelect={(label, memberId) => setEventCommentText((value) => insertMention(value, label, memberId))} /> : null}
-          <View style={{ flexDirection: "row", alignItems: "flex-end", marginTop: 14 }}><TextInput ref={eventCommentInputRef} value={eventCommentText} selection={eventCommentSelection} onSelectionChange={(event) => setEventCommentSelection(event.nativeEvent.selection)} onChangeText={(value) => setEventCommentText(value.replace(/@everyone\b/gi, ""))} onFocus={() => setEventCommentFocused(true)} onBlur={() => setEventCommentFocused(false)} placeholder="質問やコメントを入力" placeholderTextColor={colors.muted} multiline style={{ flex: 1, minHeight: 44, maxHeight: 100, borderRadius: 14, backgroundColor: colors.background, borderWidth: 1, borderColor: colors.border, paddingHorizontal: 12, paddingVertical: 10, color: colors.foreground }} /><Pressable disabled={!eventCommentText.trim() || eventCommentBusy} onPress={() => { void handleEventComment(); }} style={{ width: 44, height: 44, borderRadius: 22, marginLeft: 8, alignItems: "center", justifyContent: "center", backgroundColor: eventCommentText.trim() && !eventCommentBusy ? "#D65E8D" : colors.border }}><IconSymbol name="paperplane.fill" size={19} color="#FFF" /></Pressable></View>
-        </View>
+          {replyingToEventComment ? <View style={{ marginTop: 12, backgroundColor: "#ECEDEF", borderRadius: 10, padding: 10, flexDirection: "row", alignItems: "center" }}><View style={{ flex: 1 }}><Text style={{ fontSize: 11, fontWeight: "800", color: "#62636A" }}>↪ {replyingToEventComment.author} に返信</Text><Text numberOfLines={1} style={{ marginTop: 2, fontSize: 12, color: "#74757C" }}>{replyingToEventComment.text}</Text></View><Pressable onPress={() => setReplyingToEventComment(null)}><IconSymbol name="xmark" size={17} color="#74757C" /></Pressable></View> : null}
+          <View style={{ flexDirection: "row", alignItems: "flex-end", marginTop: 14 }}><TextInput ref={eventCommentInputRef} value={eventCommentText} selection={eventCommentSelection} onSelectionChange={(event) => setEventCommentSelection(event.nativeEvent.selection)} onChangeText={(value) => setEventCommentText(value.replace(/@everyone\b/gi, ""))} onFocus={() => setEventCommentFocused(true)} onBlur={() => setEventCommentFocused(false)} placeholder="質問やコメントを入力" placeholderTextColor={colors.muted} multiline style={{ flex: 1, minHeight: 44, maxHeight: 100, borderRadius: 14, backgroundColor: colors.background, borderWidth: 1, borderColor: colors.border, paddingHorizontal: 12, paddingVertical: 10, color: colors.foreground }} /><Pressable disabled={!eventCommentText.trim() || eventCommentBusy} onPress={() => { void handleEventComment(); }} style={{ width: 44, height: 44, borderRadius: 22, marginLeft: 8, alignItems: "center", justifyContent: "center", backgroundColor: eventCommentText.trim() && !eventCommentBusy ? "#D65E8D" : colors.border }}><IconSymbol name="paperplane.fill" size={19} color="#FFF" /></Pressable></View>        </View>
 
         {(isJoined || hasApplied) && !isOrganizer ? (
           <View style={{ backgroundColor: "#FFF4F2", borderRadius: 14, padding: 14, marginBottom: 16, borderWidth: 1, borderColor: "#F3D0CA" }}>
@@ -1384,7 +1402,7 @@ export default function EventDetailScreen() {
                 const directoryMember = memberDirectory.find((item) => item.id === uid);
                 const member = getMemberById(uid);
                 const discordAuthor = getDiscordAuthorById(uid);
-                const memberName = directoryMember?.displayName ?? member?.name ?? discordAuthor?.name ?? `会員ID ${uid}`;
+                const memberName = directoryMember?.displayName ?? member?.name ?? discordAuthor?.name ?? "メンバー";
                 const directoryAvatar = typeof directoryMember?.profile?.avatarUrl === "string" ? directoryMember.profile.avatarUrl : undefined;
                 const rawRank = directoryMember?.memberRank ?? member?.rank ?? discordAuthor?.rank ?? "regular";
                 const memberRank = (["regular", "silver", "gold", "platinum"].includes(rawRank) ? rawRank : "regular") as MemberRank;
@@ -1434,11 +1452,10 @@ export default function EventDetailScreen() {
               {!eventCommentShowAllReactions ? <Pressable accessibilityLabel="他のスタンプを表示" onPress={() => setEventCommentShowAllReactions(true)} style={{ width: 42, height: 38, borderRadius: 19, alignItems: "center", justifyContent: "center", backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border }}><IconSymbol name="plus" size={19} color={colors.muted} /></Pressable> : null}
             </ScrollView>
             {[
-              { label: "返信", icon: "arrowshape.turn.up.left.fill", action: () => { const target = eventCommentActionTarget; setEventCommentActionTarget(null); if (!target) return; const text = `@${stripRankFromName(target.author)} `; setEventCommentText(text); setEventCommentSelection({ start: text.length, end: text.length }); requestAnimationFrame(() => eventCommentInputRef.current?.focus()); } },
-              { label: "テキストをコピー", icon: "doc.on.doc", action: () => { const target = eventCommentActionTarget; setEventCommentActionTarget(null); if (target) void Clipboard.setStringAsync(target.text); } },
+              { label: "返信", icon: "arrowshape.turn.up.left.fill", action: () => { const target = eventCommentActionTarget; setEventCommentActionTarget(null); if (!target) return; const parsed = parseEventCommentReply(target.text); const author = stripRankFromName(target.author); const text = `@${author} `; setReplyingToEventComment({ id: target.id, author, text: parsed.body.slice(0, 160) }); setEventCommentText(text); setEventCommentSelection({ start: text.length, end: text.length }); requestAnimationFrame(() => eventCommentInputRef.current?.focus()); } },              { label: "テキストをコピー", icon: "doc.on.doc", action: () => { const target = eventCommentActionTarget; setEventCommentActionTarget(null); if (target) void Clipboard.setStringAsync(target.text); } },
               { label: "メッセージリンクをコピー", icon: "link", action: () => { const target = eventCommentActionTarget; setEventCommentActionTarget(null); if (target) void Clipboard.setStringAsync(`${PUBLIC_APP_URL}/event-detail?id=${encodeURIComponent(event.id)}&comment=${encodeURIComponent(target.id)}`); } },
               ...((eventCommentActionTarget?.canEdit) ? [
-                { label: "コメントを編集", icon: "pencil", action: () => { const target = eventCommentActionTarget; setEventCommentActionTarget(null); if (!target) return; setEditingEventCommentId(target.id); setEditingEventCommentText(target.text); } },
+                { label: "コメントを編集", icon: "pencil", action: () => { const target = eventCommentActionTarget; setEventCommentActionTarget(null); if (!target) return; setEditingEventCommentId(target.id); setEditingEventCommentText(parseEventCommentReply(target.text).body); } },
                 { label: "コメントを削除", icon: "trash", destructive: true, action: () => { const target = eventCommentActionTarget; setEventCommentActionTarget(null); if (target) setEventCommentDeleteTarget(target); } },
               ] : []),
             ].map((item) => <Pressable key={item.label} onPress={item.action} style={{ minHeight: 50, flexDirection: "row", alignItems: "center", borderTopWidth: 0.5, borderTopColor: colors.border }}><IconSymbol name={item.icon as any} size={20} color={("destructive" in item && item.destructive) ? colors.error : colors.foreground} /><Text style={{ marginLeft: 12, fontSize: 15, fontWeight: "700", color: ("destructive" in item && item.destructive) ? colors.error : colors.foreground }}>{item.label}</Text></Pressable>)}

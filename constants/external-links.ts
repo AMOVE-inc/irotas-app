@@ -6,7 +6,7 @@ export const OFFICIAL_INSTAGRAM_URL =
   "https://www.instagram.com/irotas_community_official";
 export const COMMUNITY_TERMS_URL = "https://irotas-community.com/terms";
 export const EVENT_TERMS_URL = "https://irotas-community.com/event-terms";
-export const PRIVACY_POLICY_URL = "https://irotas-community.com/privacy";
+export const PRIVACY_POLICY_URL = "https://irotas-community.com/privacy-policy";
 
 export const GOOGLE_GOURMET_MAP_LISTS = [
   ["居酒屋", "https://maps.app.goo.gl/7ajz64U2NqnXMhx3A"],

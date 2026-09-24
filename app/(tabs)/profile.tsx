@@ -86,7 +86,7 @@ function ProfileSelectField({ label, value, options, onChange }: { label: string
   return <><Pressable onPress={() => setVisible(true)} style={{ minHeight: 46, borderRadius: 12, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, paddingHorizontal: 13, flexDirection: "row", alignItems: "center" }}><Text style={{ flex: 1, fontSize: 14, color: value ? colors.foreground : colors.muted }}>{value || label}</Text><IconSymbol name="chevron.down" size={16} color={colors.muted} /></Pressable><Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setVisible(false)}><View style={{ flex: 1, backgroundColor: colors.background }}><View style={{ flexDirection: "row", alignItems: "center", padding: 16, borderBottomWidth: 0.5, borderBottomColor: colors.border }}><Text style={{ flex: 1, fontSize: 18, fontWeight: "800", color: colors.foreground }}>{label}</Text><Pressable onPress={() => setVisible(false)}><Text style={{ color: "#E8A0BF", fontWeight: "800" }}>閉じる</Text></Pressable></View><ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 30 }}>{value ? <Pressable onPress={() => { onChange(""); setVisible(false); }} style={{ flexDirection: "row", alignItems: "center", paddingVertical: 14, borderBottomWidth: 0.5, borderBottomColor: colors.border }}><Text style={{ flex: 1, fontSize: 15, color: colors.muted }}>未設定にする</Text></Pressable> : null}{options.map((option) => <Pressable key={option} onPress={() => { onChange(option); setVisible(false); }} style={{ flexDirection: "row", alignItems: "center", paddingVertical: 14, borderBottomWidth: 0.5, borderBottomColor: colors.border }}><Text style={{ flex: 1, fontSize: 15, color: colors.foreground }}>{option}</Text>{value === option ? <IconSymbol name="checkmark" size={18} color="#E8A0BF" /> : null}</Pressable>)}</ScrollView></View></Modal></>;
 }
 
-function PointsProgressCard({ points, rank, showRank = true }: { points: number; rank: MemberRank; showRank?: boolean }) {
+function PointsProgressCard({ points, rank, showRank = true, onExplain }: { points: number; rank: MemberRank; showRank?: boolean; onExplain?: () => void }) {
   const colors = useColors();
   const rankColor = RANK_COLORS[rank];
   const nextInfo = getNextLevelInfo(points);
@@ -167,6 +167,7 @@ function PointsProgressCard({ points, rank, showRank = true }: { points: number;
           </View>
         </View>
       ) : null}
+      {showRank && onExplain ? <Pressable onPress={onExplain} style={{ marginTop: 14, alignSelf: "flex-start", borderRadius: 14, paddingHorizontal: 12, paddingVertical: 7, backgroundColor: rankColor + "18" }}><Text style={{ fontSize: 12, fontWeight: "800", color: rankColor }}>会員ランクとは</Text></Pressable> : null}
     </View>
   );
 }
@@ -350,9 +351,11 @@ function EditProfileModal({
   onBioChange,
   onInterestsChange,
   onNameChange,
+  onPublicUserIdChange,
   onDetailsChange,
   storageNamespace,
   initialName,
+  initialPublicUserId,
   initialBio,
   initialInterests,
   initialDetails,
@@ -367,9 +370,11 @@ function EditProfileModal({
   onBioChange?: (bio: string) => void;
   onInterestsChange?: (interests: string[]) => void;
   onNameChange?: (name: string) => void;
+  onPublicUserIdChange?: (value: string) => void;
   onDetailsChange?: (details: ProfileDetails) => void;
   storageNamespace: string;
   initialName: string;
+  initialPublicUserId: string;
   initialBio: string;
   initialInterests: string[];
   initialDetails: ProfileDetails;
@@ -380,6 +385,7 @@ function EditProfileModal({
 }) {
   const colors = useColors();
   const [name, setName] = useState("");
+  const [publicUserId, setPublicUserId] = useState("");
   const [bio, setBio] = useState("");
   const [interests, setInterests] = useState<string[]>([]);
   const [avatarUri, setAvatarUri] = useState<string | null>(null);
@@ -415,6 +421,7 @@ function EditProfileModal({
         AsyncStorage.getItem(`${storageNamespace}:details`),
       ]).then(([savedName, savedBio, savedInterests, savedAvatar, savedGender, savedDetails]) => {
         setName(serverBacked ? initialName : (savedName ?? initialName));
+        setPublicUserId(initialPublicUserId);
         setBio(serverBacked ? initialBio : (savedBio ?? initialBio));
         const storedInterests = savedInterests?.split(",").map((item) => item.trim()).filter(Boolean);
         setInterests(serverBacked ? initialInterests : (storedInterests?.length ? storedInterests : initialInterests));
@@ -440,7 +447,7 @@ function EditProfileModal({
         setGoogleLocalGuideLevel(details.googleLocalGuideLevel ?? initialDetails.googleLocalGuideLevel ?? "");
       });
     });
-  }, [visible, storageNamespace, initialName, initialBio, initialInterests, initialDetails, initialAvatar, initialGender, serverBacked]);
+  }, [visible, storageNamespace, initialName, initialPublicUserId, initialBio, initialInterests, initialDetails, initialAvatar, initialGender, serverBacked]);
 
   const handlePickPhoto = async () => {
     // 権限を事前にリクエスト（初回のみ許可ダイアログが表示される）
@@ -463,6 +470,11 @@ function EditProfileModal({
   const handleSave = async () => {
     if (!name.trim()) {
       Alert.alert("エラー", "名前を入力してください。");
+      return;
+    }
+    const normalizedPublicUserId = publicUserId.trim().replace(/^@+/, "").toLowerCase();
+    if (serverBacked && (!normalizedPublicUserId || !/^[a-z0-9][a-z0-9._]{2,23}$/.test(normalizedPublicUserId) || normalizedPublicUserId.endsWith("."))) {
+      Alert.alert("公開ユーザーIDを確認してください", "3〜24文字の半角英小文字・数字・ピリオド・アンダーバーで入力してください。");
       return;
     }
     if (showAge && (!birthYear || !birthMonth || !birthDay)) {
@@ -508,6 +520,7 @@ function EditProfileModal({
       if (serverBacked) {
         await Api.updateMyProfile({
           displayName: name.trim(),
+          publicUserId: normalizedPublicUserId,
           profile: { ...details, bio, gender, favoriteCuisines: interestList, avatarUrl: savedAvatarUri },
         });
         await onServerSaved?.();
@@ -522,6 +535,7 @@ function EditProfileModal({
       onAvatarChange?.(savedAvatarUri);
     }
     onNameChange?.(name.trim());
+    onPublicUserIdChange?.(normalizedPublicUserId);
     onBioChange?.(bio);
     onInterestsChange?.(interestList);
     onDetailsChange?.(details);
@@ -601,6 +615,8 @@ function EditProfileModal({
               marginBottom: 16,
             }}
           />
+
+          {serverBacked ? <><Text style={{ fontSize: 13, fontWeight: "600", color: colors.muted, marginBottom: 6 }}>公開ユーザーID</Text><View style={{ flexDirection: "row", alignItems: "center", backgroundColor: colors.surface, borderRadius: 12, paddingHorizontal: 14, marginBottom: 5 }}><Text style={{ fontSize: 15, color: colors.muted }}>@</Text><TextInput value={publicUserId} onChangeText={(value) => setPublicUserId(value.replace(/^@+/, "").toLowerCase().replace(/[^a-z0-9._]/g, "").slice(0, 24))} placeholder="your.name" placeholderTextColor={colors.muted} autoCapitalize="none" autoCorrect={false} style={{ flex: 1, paddingVertical: 12, fontSize: 15, color: colors.foreground }} /></View><Text style={{ fontSize: 11, lineHeight: 16, color: colors.muted, marginBottom: 16 }}>プロフィールや検索で表示されます。3〜24文字、半角英小文字・数字・.・_ が使用できます。</Text></> : null}
 
           <Text style={{ fontSize: 13, fontWeight: "600", color: colors.muted, marginBottom: 6 }}>生年月日</Text>
           <View style={{ flexDirection: "row", gap: 7, marginBottom: 10 }}><View style={{ flex: 1.35 }}><ProfileSelectField label="年" value={birthYear} options={BIRTH_YEARS} onChange={setBirthYear} /></View><View style={{ flex: 1 }}><ProfileSelectField label="月" value={birthMonth} options={MONTHS} onChange={setBirthMonth} /></View><View style={{ flex: 1 }}><ProfileSelectField label="日" value={birthDay} options={DAYS} onChange={setBirthDay} /></View></View>
@@ -805,6 +821,7 @@ export default function ProfileScreen() {
     .map((branch) => (branch === "kanto" ? "関東支部" : "関西支部"))
     .join("・");
   const [showEditProfile, setShowEditProfile] = useState(false);
+  const [showRankExplanation, setShowRankExplanation] = useState(false);
   const [socialList, setSocialList] = useState<"followers" | "following" | null>(null);
   // DBから取得したroleで管理者判定（モックデータのCURRENT_USERではなく実際のログインユーザーを使用）
   const userIsAdmin = isAdminRole(authUser?.role, authUser?.accessRole);
@@ -814,6 +831,7 @@ export default function ProfileScreen() {
   const [participatingEventsLoading, setParticipatingEventsLoading] = useState(true);
   const [avatarUri, setAvatarUri] = useState<string | null>(null);
   const [profileName, setProfileName] = useState<string>("");
+  const [publicUserId, setPublicUserId] = useState(authUser?.publicUserId ?? "");
   const [profileBio, setProfileBio] = useState<string>("");
   const [profileInterests, setProfileInterests] = useState<string[]>([]);
   const [profileDetails, setProfileDetails] = useState<ProfileDetails>(profileDetailsFromRecord({}));
@@ -823,7 +841,8 @@ export default function ProfileScreen() {
     if (authUser?.memberId) setMemberId(authUser.memberId);
     else if (memberIdentity?.memberId) setMemberId(memberIdentity.memberId);
     if (memberIdentity?.displayName) setProfileName((current) => current || memberIdentity.displayName || "");
-  }, [authUser?.memberId, memberIdentity]);
+    setPublicUserId(authUser?.publicUserId ?? "");
+  }, [authUser?.memberId, authUser?.publicUserId, memberIdentity]);
   useFocusEffect(useCallback(() => {
     if (!isRealMember || !authUser) return;
     let active = true;
@@ -969,13 +988,14 @@ export default function ProfileScreen() {
             </View>
           </View> : null}
 
-          {/* Member ID */}
-          {memberId && !userIsAdmin ? (
+          {/* Public user ID. The stable IRO member ID stays internal. */}
+          {!userIsAdmin ? (
             <Pressable
               onPress={async () => {
-                await Clipboard.setStringAsync(memberId);
-                if (Platform.OS === "web") window.alert("会員IDをコピーしました");
-                else Alert.alert("コピーしました", "会員IDをコピーしました");
+                if (!publicUserId) { setShowEditProfile(true); return; }
+                await Clipboard.setStringAsync(`@${publicUserId}`);
+                if (Platform.OS === "web") window.alert("公開ユーザーIDをコピーしました");
+                else Alert.alert("コピー完了", "公開ユーザーIDをコピーしました");
               }}
               style={({ pressed }) => ({
                 flexDirection: "row",
@@ -990,9 +1010,9 @@ export default function ProfileScreen() {
                 opacity: pressed ? 0.7 : 1,
               })}
             >
-              <Text style={{ fontSize: 12, color: colors.muted, marginRight: 6 }}>会員ID</Text>
-              <Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground, letterSpacing: 1 }}>{memberId}</Text>
-              <IconSymbol name="doc.on.doc" size={13} color={colors.muted} style={{ marginLeft: 6 }} />
+              <Text style={{ fontSize: 12, color: colors.muted, marginRight: 6 }}>{publicUserId ? "公開ユーザーID" : "公開ユーザーIDを設定"}</Text>
+              {publicUserId ? <Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground }}>@{publicUserId}</Text> : null}
+              <IconSymbol name={publicUserId ? "doc.on.doc" : "chevron.right"} size={13} color={colors.muted} style={{ marginLeft: 6 }} />
             </Pressable>
           ) : null}
 
@@ -1173,7 +1193,7 @@ export default function ProfileScreen() {
         </Pressable> : null}
 
         {/* Points Progress */}
-        {!userIsOperator ? <PointsProgressCard points={user.points} rank={user.rank} /> : null}
+        {!userIsOperator ? <PointsProgressCard points={user.points} rank={user.rank} onExplain={() => setShowRankExplanation(true)} /> : null}
 
         {/* イロタスポイントカード */}
         <View
@@ -1389,17 +1409,26 @@ export default function ProfileScreen() {
         </View>
       </ScrollView>
 
+      <Modal visible={showRankExplanation} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setShowRankExplanation(false)}>
+        <View style={{ flex: 1, backgroundColor: colors.background }}>
+          <View style={{ flexDirection: "row", alignItems: "center", padding: 16, borderBottomWidth: 0.5, borderBottomColor: colors.border }}><Text style={{ flex: 1, fontSize: 19, fontWeight: "900", color: colors.foreground }}>会員ランクとは</Text><Pressable onPress={() => setShowRankExplanation(false)}><IconSymbol name="xmark" size={22} color={colors.foreground} /></Pressable></View>
+          <ScrollView contentContainerStyle={{ paddingTop: 16, paddingBottom: 40 }}><Text style={{ marginHorizontal: 16, marginBottom: 14, fontSize: 14, lineHeight: 21, color: colors.foreground }}>IRO＋での活動に応じてXPが貯まり、会員ランクが上がります。ランクごとに利用できる特典が増えます。</Text><RankTiersCard /><PointActionsCard />{(["regular", "silver", "gold", "platinum"] as MemberRank[]).map((rank) => <RankCard key={rank} rank={rank} />)}</ScrollView>
+        </View>
+      </Modal>
+
       {/* Edit Profile Modal */}
       <EditProfileModal
         visible={showEditProfile}
         onClose={() => setShowEditProfile(false)}
         onAvatarChange={(uri) => setAvatarUri(uri)}
         onNameChange={(n) => setProfileName(n)}
+        onPublicUserIdChange={setPublicUserId}
         onBioChange={(bio) => setProfileBio(bio)}
         onInterestsChange={(list) => setProfileInterests(list)}
         onDetailsChange={(details) => setProfileDetails(details)}
         storageNamespace={storageNamespace}
         initialName={profileName || user.name}
+        initialPublicUserId={publicUserId}
         initialBio={profileBio}
         initialInterests={profileInterests}
         initialDetails={profileDetails}

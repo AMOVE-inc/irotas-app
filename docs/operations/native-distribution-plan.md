@@ -21,6 +21,13 @@
 - ストア公開後はアプリIDを変更しない。
 - `preview` は内部配布、`production` はストア提出用として `eas.json` で分離する。
 
+### TestFlight提出の完了条件
+
+- iOSの提出は `pnpm release:ios:testflight` を使用する。このコマンドは最新のproductionビルドを提出し、`IRO+ 内部テスト` グループ、テスト内容、テスター通知を設定する。
+- EAS Submitの `Succeeded` だけでは完了扱いにしない。`eas submit:status --platform ios --json` で最新ビルドが `processingState=VALID` かつ `internalState=IN_BETA_TESTING` になったことを確認する。
+- 外部テスターへ配布する場合は、App Store Connectで `IRO+ 外部テスト` グループを追加し、Beta App Reviewへ提出する。`externalState=IN_BETA_TESTING` とTestFlightアプリでの表示を確認して完了とする。
+- ビルドが `READY_FOR_BETA_TESTING` のままの場合は処理済みでもグループ未割当であり、テスターには表示されない。
+
 ## 開発者アカウント
 
 | 項目                    | 方針                                                            | 担当        |
