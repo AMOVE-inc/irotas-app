@@ -35,6 +35,7 @@ import { dispatchDueEventActions } from "@/lib/event-automation-store";
 import { GourmetReportReminderGate } from "@/components/gourmet-report-reminder-gate";
 import { GlobalLoadingOverlay } from "@/components/global-loading-overlay";
 import { LiveNotificationBanner } from "@/components/live-notification-banner";
+import { hasCompletedNativeProfileSetup } from "@/lib/native-profile-setup";
 
 // Mobile browsers already exclude the status bar from their visual viewport.
 // Keep only a small breathing space instead of adding a native-sized 44px inset.
@@ -78,6 +79,24 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
   const hasSelectedBranch = Boolean(
     user && (user.branches.length > 0 || user.branch),
   );
+  const [profileGateReady, setProfileGateReady] = useState(Platform.OS === "web");
+  const [profileGateComplete, setProfileGateComplete] = useState(Platform.OS === "web");
+
+  useEffect(() => {
+    if (Platform.OS === "web" || !user?.memberId) {
+      setProfileGateReady(true);
+      setProfileGateComplete(true);
+      return;
+    }
+    let active = true;
+    setProfileGateReady(false);
+    void hasCompletedNativeProfileSetup(user.id).then((completed) => {
+      if (!active) return;
+      setProfileGateComplete(completed && Boolean(user.name?.trim()) && Boolean(user.publicUserId?.trim()));
+      setProfileGateReady(true);
+    });
+    return () => { active = false; };
+  }, [currentRoute, user?.id, user?.memberId, user?.name, user?.publicUserId]);
 
   useEffect(() => {
     if (loading) return;
@@ -86,6 +105,7 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
     const inOAuthCallback = segments[0] === "oauth";
     const inPublicAccountDeletion = String(segments[0]) === "account-deletion";
     const inBranchSelection = String(segments[0]) === "select-branch";
+    const inProfileSetup = String(segments[0]) === "profile-setup";
 
     if (
       !isAuthenticated &&
@@ -102,6 +122,8 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
       !inOAuthCallback
     ) {
       router.replace("/select-branch" as any);
+    } else if (isAuthenticated && hasSelectedBranch && profileGateReady && !profileGateComplete && !inProfileSetup && !inOAuthCallback) {
+      router.replace("/profile-setup" as any);
     } else if (isAuthenticated && hasSelectedBranch && inAuthGroup) {
       // Redirect to home if already logged in
       router.replace("/(tabs)");
@@ -110,6 +132,8 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
     }
   }, [
     hasSelectedBranch,
+    profileGateComplete,
+    profileGateReady,
     isAuthenticated,
     isForbidden,
     loading,
@@ -117,7 +141,7 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
     router,
   ]);
 
-  if (loading) {
+  if (loading || (isAuthenticated && !profileGateReady)) {
     return (
       <View
         style={{
@@ -278,6 +302,7 @@ export default function RootLayout() {
                   name="select-branch"
                   options={{ presentation: "fullScreenModal" }}
                 />
+                <Stack.Screen name="profile-setup" options={{ presentation: "fullScreenModal", gestureEnabled: false }} />
                 <Stack.Screen name="(tabs)" />
                 <Stack.Screen
                   name="event-detail"

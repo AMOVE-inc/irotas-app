@@ -1055,6 +1055,7 @@ export async function setMemberFollow(memberId: string, following: boolean) {
     `/api/members/${encodeURIComponent(memberId)}/follow`,
     {
       method: following ? "PUT" : "DELETE",
+      suppressGlobalLoading: true,
     },
   );
   return result.member;

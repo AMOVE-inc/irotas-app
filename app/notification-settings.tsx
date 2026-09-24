@@ -2,7 +2,7 @@ import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { useColors } from "@/hooks/use-colors";
 import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Alert,
   Pressable,
@@ -12,6 +12,7 @@ import {
   View,
 } from "react-native";
 import { requestNotificationPermissions } from "@/lib/notifications";
+import { DEFAULT_NOTIFICATION_PREFERENCES, getNotificationPreferences, saveNotificationPreferences, type NotificationPreferenceId } from "@/lib/notification-preferences";
 
 interface NotificationSetting {
   id: string;
@@ -73,7 +74,7 @@ export default function NotificationSettingsScreen() {
       iconColor: "#A7C7E7",
       label: "掲示板への返信",
       description: "自分の投稿にコメントが付いたときに通知",
-      enabled: false,
+      enabled: true,
     },
     {
       id: "board_approved",
@@ -89,7 +90,7 @@ export default function NotificationSettingsScreen() {
       iconColor: "#E8A0BF",
       label: "新規イベント",
       description: "新しいイベントが公開されたときに通知",
-      enabled: false,
+      enabled: true,
     },
     {
       id: "points",
@@ -111,10 +112,21 @@ export default function NotificationSettingsScreen() {
 
   const [permissionGranted, setPermissionGranted] = useState(true);
 
+  useEffect(() => {
+    void getNotificationPreferences().then((saved) => {
+      setSettings((current) => current.map((setting) => ({ ...setting, enabled: saved[setting.id as NotificationPreferenceId] })));
+    });
+  }, []);
+
+  const persist = (next: NotificationSetting[]) => {
+    const value = { ...DEFAULT_NOTIFICATION_PREFERENCES };
+    next.forEach((setting) => { value[setting.id as NotificationPreferenceId] = setting.enabled; });
+    void saveNotificationPreferences(value);
+    return next;
+  };
+
   const toggleSetting = (id: string) => {
-    setSettings((prev) =>
-      prev.map((s) => (s.id === id ? { ...s, enabled: !s.enabled } : s)),
-    );
+    setSettings((prev) => persist(prev.map((s) => (s.id === id ? { ...s, enabled: !s.enabled } : s))));
   };
 
   const handleRequestPermission = async () => {
@@ -205,7 +217,7 @@ export default function NotificationSettingsScreen() {
           <Switch
             value={settings.every((s) => s.enabled)}
             onValueChange={(val) =>
-              setSettings((prev) => prev.map((s) => ({ ...s, enabled: val })))
+              setSettings((prev) => persist(prev.map((s) => ({ ...s, enabled: val }))))
             }
             trackColor={{ false: colors.border, true: "#E8A0BF" }}
             thumbColor="#FFF"

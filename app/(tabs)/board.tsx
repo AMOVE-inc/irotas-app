@@ -59,7 +59,7 @@ import { boardCommentData, boardThreadData, sharedCommentToBoardComment, sharedT
 import { boardReactionAccessibilityLabel, boardReactionImageUrl, loadCommentReactions, loadThreadReactions, saveCommentReactions, saveThreadReactions } from "@/lib/board-reactions";
 import { applyBoardThreadEdits, loadBoardThreadEdits, saveBoardThreadEdit } from "@/lib/board-thread-edits";
 import { AuthenticatedImage as Image } from "@/components/authenticated-image";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
 import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import {
@@ -399,7 +399,7 @@ function ThreadCard({ thread, viewerId, onPress, onEdit, onDelete, onPin, onTogg
   const pinned = isThreadPinned(thread);
   const longPressHandled = useRef(false);
   // 過去の選手権も通常のカードとして表示し、開催中だけを緑のワッペンで区別する。
-  const visuallyClosed = false;
+  const visuallyClosed = closed;
   useEffect(() => { void loadThreadReactions(thread.id, thread.reactions).then(setCardReactions); }, [thread.id, thread.reactions]);
   useEffect(() => { if (cardReactionDetails) void Api.getMemberDirectory().then(setCardReactionMembers).catch(() => {}); }, [cardReactionDetails]);
   const toggleCardReaction = () => {
@@ -2758,6 +2758,7 @@ export default function BoardScreen() {
     return [...new Set([
       viewerMember.name,
       authUser?.name ?? "",
+      authUser?.publicUserId ?? "",
       branch === "kansai" ? "関西支部" : "関東支部",
       ...joinedClubs.map((club) => club.name),
       "everyone",
@@ -2895,6 +2896,12 @@ export default function BoardScreen() {
       // 既存の移行データは表示を続け、共有DBの再取得は更新操作時に再試行する。
     }).finally(() => setSharedLoading(false));
   }, [loadSharedBoardContent]);
+
+  useFocusEffect(useCallback(() => {
+    void loadSharedBoardContent(isThreadView ? activeCategory : undefined).catch(() => {
+      // Keep the last confirmed snapshot if the shared service is temporarily unavailable.
+    });
+  }, [activeCategory, isThreadView, loadSharedBoardContent]));
 
   useEffect(() => {
     if (!isThreadView || sharedLoading || !canAccessCategory(categories.find((item) => item.key === activeCategory) ?? { key: activeCategory, label: "部活動", group: "club", createdByAdmin: true })) return;

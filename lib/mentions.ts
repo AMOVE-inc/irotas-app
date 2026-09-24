@@ -56,10 +56,11 @@ export function getMentionQuery(text: string, cursor = text.length): string | nu
   return /[\r\n]/.test(query) || query.length > 80 ? null : query;
 }
 
-export function insertMention(text: string, label: string, memberId?: string, cursor = text.length): string {
+export function insertMention(text: string, label: string, _memberId?: string, cursor = text.length): string {
   const beforeCursor = text.slice(0, cursor);
   const atIndex = Math.max(beforeCursor.lastIndexOf("@"), beforeCursor.lastIndexOf("＠"));
-  const mention = `@${label}${memberId ? `（${memberId}）` : ""} `;
+  // Internal member IDs stay in application state and are never written into visible message text.
+  const mention = `@${label} `;
   if (atIndex < 0) return `${beforeCursor}${mention}${text.slice(cursor)}`;
   return `${text.slice(0, atIndex)}${mention}${text.slice(cursor)}`;
 }

@@ -1,4 +1,5 @@
 import { IconSymbol } from "@/components/ui/icon-symbol";
+import { openExternalUrl } from "@/lib/open-external-url";
 import { restaurantsForConciergeQuery } from "@/lib/concierge-restaurants";
 import { useColors } from "@/hooks/use-colors";
 import * as Api from "@/lib/_core/api";
@@ -26,7 +27,7 @@ const INITIAL_MESSAGE: Message = {
   id: "m0",
   role: "assistant",
   content:
-    "こんにちは！IRO＋グルメコンシェルジュです。\n\nエリアやジャンル、シチュエーションを教えていただければ、AIがおすすめのお店をご提案します。\n\n例えば：\n・「渋谷でおすすめの焼肉屋は？」\n・「デートにぴったりなイタリアンを教えて」\n・「大阪で安くて美味しいお店は？」",
+    "こんにちは！IRO＋グルメコンシェルジュです。\n\nIRO＋グルメマップをもとに、おすすめのお店をご提案します。店舗データは日々更新していますが、条件によっては候補が見つからない場合があります。\n\n例えば：\n・「渋谷でおすすめの焼肉屋は？」\n・「デートにぴったりなイタリアンを教えて」\n・「大阪で安くて美味しいお店は？」",
   timestamp: new Date(),
 };
 const CONCIERGE_HISTORY_KEY = "irotas_concierge_history_v1";
@@ -93,7 +94,9 @@ function ChatBubble({ message }: { message: Message }) {
             color: isUser ? "#FFF" : colors.foreground,
           }}
         >
-          {message.content}
+          {message.content.split(/(https?:\/\/[^\s]+)/g).map((part, index) => /^https?:\/\//.test(part)
+            ? <Text key={index} onPress={() => void openExternalUrl(part)} style={{ color: isUser ? "#FFF" : "#3478C7", textDecorationLine: "underline" }}>{part}</Text>
+            : <Text key={index}>{part}</Text>)}
         </Text>
       </View>
     </View>

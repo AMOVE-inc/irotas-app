@@ -1768,6 +1768,7 @@ export default function EventsScreen() {
                   選択解除
                 </Text>
               </Pressable>
+            </View>
             <View
               style={{
                 flexDirection: "row",
@@ -1810,8 +1811,6 @@ export default function EventsScreen() {
                   </Pressable>
                 );
               })}
-            </View>
-
             </View>
             <View
               style={{

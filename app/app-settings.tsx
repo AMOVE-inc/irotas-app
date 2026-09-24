@@ -25,17 +25,7 @@ export default function AppSettingsScreen() {
   const router = useRouter();
   const { logout } = useAuthContext();
 
-  const [settings, setSettings] = useState({
-    pushNotifications: true,
-    mentionNotifications: true,
-    eventReminders: true,
-    clubActivityNotifications: true,
-    soundEnabled: true,
-    vibrationEnabled: true,
-    autoPlayRadio: false,
-    allowMentions: true,
-    language: "ja",
-  });
+  const [settings, setSettings] = useState({ allowMentions: true });
 
   const toggle = (key: keyof typeof settings) => {
     setSettings((prev) => ({ ...prev, [key]: !prev[key] }));
@@ -202,56 +192,14 @@ export default function AppSettingsScreen() {
       <ScrollView
         contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 40 }}
       >
-        {/* 通知設定 */}
+        {/* 通知設定は1画面に集約 */}
         <SectionHeader title="通知" />
         <SettingRow
           icon="bell.fill"
           iconColor="#E8A0BF"
-          label="プッシュ通知"
-          sublabel="アプリからの通知を受け取る"
-          value={settings.pushNotifications}
-          onToggle={() => toggle("pushNotifications")}
-        />
-        <SettingRow
-          icon="at"
-          iconColor="#A7C7E7"
-          label="メンション通知"
-          sublabel="@メンションされたときに通知"
-          value={settings.mentionNotifications}
-          onToggle={() => toggle("mentionNotifications")}
-        />
-        <SettingRow
-          icon="calendar.badge.clock"
-          iconColor="#FF9500"
-          label="イベントリマインダー"
-          sublabel="参加イベントの前日に通知"
-          value={settings.eventReminders}
-          onToggle={() => toggle("eventReminders")}
-        />
-        <SettingRow
-          icon="person.3.fill"
-          iconColor="#AF52DE"
-          label="部活動通知"
-          sublabel="参加中の部活動の更新を通知"
-          value={settings.clubActivityNotifications}
-          onToggle={() => toggle("clubActivityNotifications")}
-        />
-
-        {/* サウンド・バイブ */}
-        <SectionHeader title="サウンド・バイブレーション" />
-        <SettingRow
-          icon="speaker.wave.2.fill"
-          iconColor="#E8A0BF"
-          label="通知音"
-          value={settings.soundEnabled}
-          onToggle={() => toggle("soundEnabled")}
-        />
-        <SettingRow
-          icon="iphone.radiowaves.left.and.right"
-          iconColor="#A7C7E7"
-          label="バイブレーション"
-          value={settings.vibrationEnabled}
-          onToggle={() => toggle("vibrationEnabled")}
+          label="通知設定"
+          sublabel="通知の種類と端末の通知許可を設定"
+          onPress={() => router.push("/notification-settings" as any)}
         />
 
         {/* プライバシー */}

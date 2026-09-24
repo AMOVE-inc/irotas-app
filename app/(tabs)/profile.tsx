@@ -12,7 +12,7 @@ import {
   type Event,
   type MemberRank,
 } from "@/constants/mock-data";
-import { getNextLevelInfo, levelFromXp } from "@/lib/xp-levels";
+import { getNextLevelInfo, levelFromXp, totalXpForLevel } from "@/lib/xp-levels";
 import { useColors } from "@/hooks/use-colors";
 import { refreshClubs, useClubs } from "@/lib/club-store";
 import { getMyRooms } from "@/lib/chat-store";
@@ -167,7 +167,7 @@ function PointsProgressCard({ points, rank, showRank = true, onExplain }: { poin
           </View>
         </View>
       ) : null}
-      {showRank && onExplain ? <Pressable onPress={onExplain} style={{ marginTop: 14, alignSelf: "flex-start", borderRadius: 14, paddingHorizontal: 12, paddingVertical: 7, backgroundColor: rankColor + "18" }}><Text style={{ fontSize: 12, fontWeight: "800", color: rankColor }}>会員ランクとは</Text></Pressable> : null}
+      {showRank && onExplain ? <Pressable onPress={onExplain} style={{ marginTop: 14, alignSelf: "flex-start", borderRadius: 14, paddingHorizontal: 15, paddingVertical: 10, backgroundColor: "#F7DDE8", borderWidth: 1, borderColor: "#D56591" }}><Text style={{ fontSize: 13, fontWeight: "900", color: "#A83F6B" }}>会員ランクについてはこちら</Text></Pressable> : null}
     </View>
   );
 }
@@ -222,10 +222,10 @@ function RankCard({ rank }: { rank: MemberRank }) {
   const rankLabel = RANK_LABELS[rank];
 
   const rankBenefits: Record<MemberRank, string[]> = {
-    regular: ["基本イベント参加", "グルメマップ閲覧"],
-    silver: ["レギュラー特典すべて", "掲示板投稿", "部活動参加"],
-    gold: ["シルバー特典すべて", "ゴールド限定クーポン", "優先イベント予約", "グルメコンシェルジュ"],
-    platinum: ["ゴールド特典すべて", "プラチナ限定特別コース", "VIPイベント招待", "1対1コンシェルジュ", "会費無料"],
+    regular: ["ランク特典はありません"],
+    silver: ["非公開チャットへのご招待", "イベント割引特典"],
+    gold: ["非公開チャットへのご招待", "イベント割引特典", "シークレットイベントへの参加権"],
+    platinum: ["非公開チャットへのご招待", "イベント割引特典", "シークレットイベントへの参加権", "VIPイベントへのご招待"],
   };
 
   return (
@@ -252,7 +252,7 @@ function RankCard({ rank }: { rank: MemberRank }) {
           </Text>
         </View>
         <Text style={{ fontSize: 13, color: colors.muted, marginBottom: 12 }}>
-          現在のランク特典
+          ランク特典
         </Text>
         {rankBenefits[rank].map((benefit, i) => (
           <View key={i} style={{ flexDirection: "row", alignItems: "center", marginBottom: 6 }}>
@@ -277,10 +277,10 @@ function RankTiersCard() {
   const colors = useColors();
 
   const tiers = [
-    { rank: "regular" as MemberRank, points: "0 XP〜", benefits: "基本機能" },
-    { rank: "silver" as MemberRank, points: "100 XP〜", benefits: "掲示板・部活動" },
-    { rank: "gold" as MemberRank, points: "500 XP〜", benefits: "限定クーポン・コンシェルジュ" },
-    { rank: "platinum" as MemberRank, points: "1,000 XP〜", benefits: "VIP特典・会費無料" },
+    { rank: "regular" as MemberRank, points: "Lv.0〜（0 XP〜）" },
+    { rank: "silver" as MemberRank, points: `Lv.5〜（${totalXpForLevel(5).toLocaleString()} XP〜）` },
+    { rank: "gold" as MemberRank, points: `Lv.10〜（${totalXpForLevel(10).toLocaleString()} XP〜）` },
+    { rank: "platinum" as MemberRank, points: `Lv.15〜（${totalXpForLevel(15).toLocaleString()} XP〜）` },
   ];
 
   return (
@@ -331,7 +331,6 @@ function RankTiersCard() {
                 </Text>
               )}
             </View>
-            <Text style={{ fontSize: 11, color: colors.muted }}>{tier.benefits}</Text>
           </View>
           <Text style={{ fontSize: 13, fontWeight: "600", color: colors.muted }}>
             {tier.points}
@@ -1411,7 +1410,7 @@ export default function ProfileScreen() {
 
       <Modal visible={showRankExplanation} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setShowRankExplanation(false)}>
         <View style={{ flex: 1, backgroundColor: colors.background }}>
-          <View style={{ flexDirection: "row", alignItems: "center", padding: 16, borderBottomWidth: 0.5, borderBottomColor: colors.border }}><Text style={{ flex: 1, fontSize: 19, fontWeight: "900", color: colors.foreground }}>会員ランクとは</Text><Pressable onPress={() => setShowRankExplanation(false)}><IconSymbol name="xmark" size={22} color={colors.foreground} /></Pressable></View>
+          <View style={{ flexDirection: "row", alignItems: "center", padding: 16, borderBottomWidth: 0.5, borderBottomColor: colors.border }}><Text style={{ flex: 1, fontSize: 19, fontWeight: "900", color: colors.foreground }}>会員ランクについて</Text><Pressable onPress={() => setShowRankExplanation(false)}><IconSymbol name="xmark" size={22} color={colors.foreground} /></Pressable></View>
           <ScrollView contentContainerStyle={{ paddingTop: 16, paddingBottom: 40 }}><Text style={{ marginHorizontal: 16, marginBottom: 14, fontSize: 14, lineHeight: 21, color: colors.foreground }}>IRO＋での活動に応じてXPが貯まり、会員ランクが上がります。ランクごとに利用できる特典が増えます。</Text><RankTiersCard /><PointActionsCard />{(["regular", "silver", "gold", "platinum"] as MemberRank[]).map((rank) => <RankCard key={rank} rank={rank} />)}</ScrollView>
         </View>
       </Modal>

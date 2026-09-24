@@ -108,7 +108,7 @@ export function MentionSuggestions({ query, groups, members, memberIds, onSelect
   const candidates = directory?.length ? directory : members.map((member) => ({ id: member.id, displayName: member.name, profile: {} as Api.PublicMember["profile"], memberTerm: member.generation ? String(member.generation) : null })) as Api.PublicMember[];
   const filteredMembers = candidates
     .filter((member) => !allowedMemberIds || allowedMemberIds.has(member.id))
-    .filter((member) => !query || member.displayName.toLowerCase().includes(normalized) || member.id.toLowerCase().includes(normalized))
+    .filter((member) => !query || member.displayName.toLowerCase().includes(normalized) || (member.publicUserId ?? "").toLowerCase().includes(normalized))
     .slice(0, 8);
   if (!filteredGroups.length && !filteredMembers.length) return null;
 
@@ -124,9 +124,9 @@ export function MentionSuggestions({ query, groups, members, memberIds, onSelect
         {filteredMembers.map((member) => {
           const avatarUrl = typeof member.profile.avatarUrl === "string" ? member.profile.avatarUrl : undefined;
           return (
-          <Pressable key={member.id} onPress={() => onSelect(mentionDisplayName(member.displayName), member.id)} style={({ pressed }) => ({ flexDirection: "row", alignItems: "center", paddingHorizontal: 16, paddingVertical: 10, borderBottomWidth: 0.5, borderBottomColor: colors.border, backgroundColor: pressed ? colors.surface : colors.background })}>
+          <Pressable key={member.id} onPress={() => onSelect(member.publicUserId || mentionDisplayName(member.displayName))} style={({ pressed }) => ({ flexDirection: "row", alignItems: "center", paddingHorizontal: 16, paddingVertical: 10, borderBottomWidth: 0.5, borderBottomColor: colors.border, backgroundColor: pressed ? colors.surface : colors.background })}>
             <Image source={avatarUrl ? { uri: avatarUrl } : require("@/assets/images/irotas-logo-square.png")} style={{ width: 32, height: 32, borderRadius: 16, marginRight: 10 }} contentFit="cover" />
-            <View style={{ flex: 1 }}><Text style={{ fontSize: 14, fontWeight: "700", color: colors.foreground }}>@{mentionDisplayName(member.displayName)}</Text><Text style={{ fontSize: 11, color: colors.muted }}>{member.id}{member.memberTerm ? `・${formatMemberTerm(member.memberTerm)}` : ""}</Text></View>
+            <View style={{ flex: 1 }}><Text style={{ fontSize: 14, fontWeight: "700", color: colors.foreground }}>{mentionDisplayName(member.displayName)}</Text>{member.publicUserId ? <Text style={{ fontSize: 11, color: colors.muted }}>@{member.publicUserId}</Text> : null}</View>
           </Pressable>
           );
         })}
@@ -143,8 +143,4 @@ export function EventMentionPreview({ content, groups }: { content: string; grou
     <Text style={{ fontSize: 12, color: colors.muted }}>メンション先</Text>
     {labels.map((label) => <Text key={label} style={{ fontSize: 12, fontWeight: "800", color: "#9A4A75", backgroundColor: "#FBE7F0", borderRadius: 7, paddingHorizontal: 8, paddingVertical: 5 }}>{label}</Text>)}
   </View>;
-}
-function formatMemberTerm(memberTerm: string): string {
-  const termNumber = memberTerm.match(/\d+/)?.[0];
-  return termNumber ? `第${termNumber}期生` : memberTerm;
 }

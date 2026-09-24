@@ -4,6 +4,7 @@ import { addInAppNotification } from "@/lib/in-app-notifications-store";
 import type { Event } from "@/constants/mock-data";
 import { buildEventReminderPlans, buildFavoriteDeadlineReminderPlans, buildOrganizerReminderPlans } from "@/lib/event-reminders";
 import { cancelFavoriteDeadlinePlans, cancelOrganizerDeadlinePlans, persistFavoriteDeadlinePlans, persistOrganizerDeadlinePlan, persistParticipantReminderPlans } from "@/lib/event-automation-store";
+import { notificationEnabled } from "@/lib/notification-preferences";
 
 const organizerNotificationIds = new Map<string, string[]>();
 const favoriteNotificationIds = new Map<string, string[]>();
@@ -46,6 +47,7 @@ export async function requestNotificationPermissions(): Promise<boolean> {
 export async function notifyEventConfirmation(event: Event, memberId: string, chatRoomId: string): Promise<void> {
   addInAppNotification({ targetMemberId: memberId, type: "event_confirmed", title: "イベント参加が確定しました", body: `「${event.title}」の参加者チャットを作成しました。`, eventId: event.id, chatRoomId });
   if (Platform.OS === "web") return;
+  if (!await notificationEnabled("event_approved")) return;
   await Notifications.scheduleNotificationAsync({ content: { title: "イベント参加が確定しました", body: `「${event.title}」の参加者チャットを確認してください。`, data: { type: "event_confirmed", eventId: event.id, chatRoomId }, sound: true }, trigger: null });
 }
 
@@ -59,6 +61,7 @@ export async function notifyEventCancellationRequest(event: Event, memberId: str
 export async function scheduleEventReminders(event: Event, memberId: string, chatRoomId: string): Promise<void> {
   await persistParticipantReminderPlans(event, memberId, chatRoomId);
   const now = Date.now();
+  if (!await notificationEnabled("event_reminder")) return;
   for (const plan of buildEventReminderPlans(event)) {
     if (plan.scheduledAt.getTime() <= now || Platform.OS === "web") continue;
     const label = plan.kind === "seven_days" ? "1週間前" : "2日前";
@@ -110,6 +113,7 @@ export async function sendMentionNotification(
   messagePreview: string,
 ): Promise<void> {
   if (Platform.OS === "web") return;
+  if (!await notificationEnabled("mention")) return;
 
   try {
     await Notifications.scheduleNotificationAsync({
@@ -142,6 +146,7 @@ export async function sendClubApprovalNotification(
     clubId,
   });
   if (Platform.OS === "web") return;
+  if (!await notificationEnabled("board_approved")) return;
 
   try {
     await Notifications.scheduleNotificationAsync({
@@ -164,6 +169,7 @@ export async function sendLeaderAppointmentNotification(
   adminName: string,
 ): Promise<void> {
   if (Platform.OS === "web") return;
+  if (!await notificationEnabled("club_leader")) return;
 
   try {
     await Notifications.scheduleNotificationAsync({
@@ -195,6 +201,7 @@ export async function sendClubApplicationNotification(
     clubId,
   });
   if (Platform.OS === "web") return;
+  if (!await notificationEnabled("club_join")) return;
 
   try {
     await Notifications.scheduleNotificationAsync({

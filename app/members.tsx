@@ -74,7 +74,7 @@ export default function MembersScreen() {
       .sort((left, right) => Date.parse(right.joinedAt) - Date.parse(left.joinedAt))
       .slice(0, 10);
     return [
-      { id: "section-featured", sectionTitle: "注目メンバー", sectionDescription: "会員ランクが上位の10名" },
+      { id: "section-featured", sectionTitle: "注目メンバー" },
       ...featured,
       { id: "section-new", sectionTitle: "新規メンバー", sectionDescription: "入会日が新しい10名" },
       ...newest,
@@ -146,7 +146,7 @@ export default function MembersScreen() {
         data={listRows}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => {
-          if ("sectionTitle" in item) return <View style={{ paddingHorizontal: 16, paddingTop: 18, paddingBottom: 8, backgroundColor: colors.background }}><Text style={{ fontSize: 17, fontWeight: "900", color: colors.foreground }}>{item.sectionTitle}</Text><Text style={{ marginTop: 2, fontSize: 12, color: colors.muted }}>{item.sectionDescription}</Text></View>;
+          if ("sectionTitle" in item) return <View style={{ paddingHorizontal: 16, paddingTop: 18, paddingBottom: 8, backgroundColor: colors.background }}><Text style={{ fontSize: 17, fontWeight: "900", color: colors.foreground }}>{item.sectionTitle}</Text>{item.sectionDescription ? <Text style={{ marginTop: 2, fontSize: 12, color: colors.muted }}>{item.sectionDescription}</Text> : null}</View>;
           const isMe = item.isCurrentUser;
           return (
             <Pressable
@@ -190,9 +190,6 @@ export default function MembersScreen() {
                   <MemberRoleBadge name={item.accessRole === "club_leader" ? "" : item.rawName} role={item.accessRole} compact />
                   <MemberClubLeaderBadges roles={item.discordRoles} compact />
                 </View>
-                <Text style={{ fontSize: 12, color: colors.muted, marginTop: 2 }}>
-                  {item.publicUserId ? `@${item.publicUserId}` : "公開ユーザーID未設定"}{item.generation > 0 ? ` · ${item.generation}期生` : ""}
-                </Text>
                 {item.bio && (
                   <Text
                     style={{ fontSize: 12, color: colors.muted, marginTop: 2 }}

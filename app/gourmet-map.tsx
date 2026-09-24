@@ -48,7 +48,7 @@ const GENRE_ICONS: Record<string, string> = {
 /** Google Maps が返す写真 URL はブラウザから直接読むと拒否されることがあるため、
  * 同一オリジンの安全な画像プロキシを経由して表示する。 */
 function restaurantImageSource(image: string) {
-  if (/^https:\/\/lh3\.googleusercontent\.com\//.test(image)) {
+  if (Platform.OS === "web" && /^https:\/\/lh3\.googleusercontent\.com\//.test(image)) {
     return { uri: `/api/gourmet-map/image?url=${encodeURIComponent(image)}` };
   }
   return { uri: image };
