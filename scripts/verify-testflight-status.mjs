@@ -5,11 +5,23 @@ for await (const chunk of process.stdin) {
 }
 
 const status = JSON.parse(input);
-const latestBuild = status?.ios?.testFlightBuilds?.[0];
+const buildNumberIndex = process.argv.indexOf("--build-number");
+const expectedBuildNumber =
+  buildNumberIndex >= 0 ? process.argv[buildNumberIndex + 1] : undefined;
+const builds = status?.ios?.testFlightBuilds ?? [];
+const latestBuild = expectedBuildNumber
+  ? builds.find(
+      (build) => String(build?.buildNumber) === String(expectedBuildNumber),
+    )
+  : builds[0];
 const requireExternal = process.argv.includes("--require-external");
 
 if (!latestBuild) {
-  throw new Error("TestFlight build status was not returned by EAS.");
+  throw new Error(
+    expectedBuildNumber
+      ? `TestFlight build ${expectedBuildNumber} was not returned by EAS.`
+      : "TestFlight build status was not returned by EAS.",
+  );
 }
 
 const failures = [];

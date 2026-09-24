@@ -5,10 +5,23 @@ for await (const chunk of process.stdin) {
 }
 
 const submissions = JSON.parse(input);
-const latest = submissions?.[0];
+const buildNumberIndex = process.argv.indexOf("--build-number");
+const expectedBuildNumber =
+  buildNumberIndex >= 0 ? process.argv[buildNumberIndex + 1] : undefined;
+const latest = expectedBuildNumber
+  ? submissions.find(
+      (submission) =>
+        String(submission?.submittedBuild?.appBuildVersion) ===
+        String(expectedBuildNumber),
+    )
+  : submissions?.[0];
 
 if (!latest) {
-  throw new Error("Android submission status was not returned by EAS.");
+  throw new Error(
+    expectedBuildNumber
+      ? `Android submission for build ${expectedBuildNumber} was not returned by EAS.`
+      : "Android submission status was not returned by EAS.",
+  );
 }
 
 const failures = [];
