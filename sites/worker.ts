@@ -46,6 +46,7 @@ import { handleLinkPreviewRequest } from "./link-preview";
 import { handleAnalyticsRequest } from "./analytics";
 import { handleAdminEventPaymentsRequest, handleEventCheckoutRequest } from "./event-checkout";
 import { handleAdmissionStatusRequest } from "./admission-status";
+import { reserveGoogleMapsRequest } from "./google-maps-cost-control";
 
 type CommunitySubmission = {
   reportId: string;
@@ -84,8 +85,8 @@ function validCommunitySubmission(
   );
 }
 
-async function enrichWithPlaces(input: CommunitySubmission, apiKey?: string) {
-  if (!apiKey) return input;
+async function enrichWithPlaces(input: CommunitySubmission, env: SitesEnv) {
+  if (!env.GOOGLE_MAPS_API_KEY || !(await reserveGoogleMapsRequest(env, "search"))) return input;
   try {
     const response = await fetch(
       "https://places.googleapis.com/v1/places:searchText",
@@ -93,7 +94,7 @@ async function enrichWithPlaces(input: CommunitySubmission, apiKey?: string) {
         method: "POST",
         headers: {
           "content-type": "application/json",
-          "x-goog-api-key": apiKey,
+          "x-goog-api-key": env.GOOGLE_MAPS_API_KEY,
           "x-goog-fieldmask":
             "places.id,places.displayName,places.formattedAddress,places.location,places.rating,places.userRatingCount,places.googleMapsUri,places.photos",
         },
@@ -164,7 +165,7 @@ async function locationHintFromUrl(rawUrl?: string) {
 
 async function resolveRestaurantAddress(
   input: Record<string, unknown>,
-  apiKey?: string,
+  env: SitesEnv,
 ) {
   const restaurantName =
     typeof input.restaurantName === "string"
@@ -174,8 +175,9 @@ async function resolveRestaurantAddress(
     typeof input.googleMapsUrl === "string" ? input.googleMapsUrl.trim() : "";
   const tabelogUrl =
     typeof input.tabelogUrl === "string" ? input.tabelogUrl.trim() : "";
-  if (!restaurantName || (!googleMapsUrl && !tabelogUrl) || !apiKey)
+  if (!restaurantName || (!googleMapsUrl && !tabelogUrl) || !env.GOOGLE_MAPS_API_KEY)
     return null;
+  if (!(await reserveGoogleMapsRequest(env, "search"))) return null;
   const hint = await locationHintFromUrl(googleMapsUrl || tabelogUrl);
   const response = await fetch(
     "https://places.googleapis.com/v1/places:searchText",
@@ -183,7 +185,7 @@ async function resolveRestaurantAddress(
       method: "POST",
       headers: {
         "content-type": "application/json",
-        "x-goog-api-key": apiKey,
+        "x-goog-api-key": env.GOOGLE_MAPS_API_KEY,
         "x-goog-fieldmask":
           "places.displayName,places.formattedAddress,places.googleMapsUri",
       },
@@ -355,7 +357,7 @@ async function routeRequest(
   if (eventFeedbackResponse) return eventFeedbackResponse;
   const conciergeResponse = await handleConciergeRequest(request, env);
   if (conciergeResponse) return conciergeResponse;
-  const linkPreviewResponse = await handleLinkPreviewRequest(request, env);
+  const linkPreviewResponse = await handleLinkPreviewRequest(request);
   if (linkPreviewResponse) return linkPreviewResponse;
   if (pathname === "/api/platform/health" && request.method === "GET") {
     const startedAt = Date.now();
@@ -440,6 +442,8 @@ async function routeRequest(
   }
 
   if (pathname === "/api/gourmet-map/image" && request.method === "GET") {
+    const denied = await protectedWhenAuthEnabled(request, env);
+    if (denied) return denied;
     const sourceUrl = routeUrl.searchParams.get("url");
     if (!sourceUrl) return Response.json({ error: "画像URLが指定されていません" }, { status: 400 });
     let imageUrl: URL;
@@ -460,7 +464,9 @@ async function routeRequest(
       return new Response(imageResponse.body, {
         headers: {
           "content-type": imageResponse.headers.get("content-type") ?? "image/jpeg",
-          "cache-control": "public, max-age=86400",
+          // Google Maps content must not be cached or rehosted. This endpoint is
+          // retained only for old records while their images are migrated.
+          "cache-control": "private, no-store",
         },
       });
     } catch {
@@ -469,9 +475,17 @@ async function routeRequest(
   }
 
   if (pathname === "/api/gourmet-map/photo" && request.method === "GET") {
+    const denied = await protectedWhenAuthEnabled(request, env);
+    if (denied) return denied;
     const placeId = routeUrl.searchParams.get("placeId") ?? "";
-    if (!/^[A-Za-z0-9_-]{15,128}$/.test(placeId) || !env.GOOGLE_MAPS_API_KEY)
+    if (
+      !/^[A-Za-z0-9_-]{15,128}$/.test(placeId) ||
+      !env.GOOGLE_MAPS_API_KEY ||
+      env.GOOGLE_MAPS_PHOTOS_ENABLED === "false"
+    )
       return new Response(null, { status: 404 });
+    if (!(await reserveGoogleMapsRequest(env, "photo")))
+      return new Response(null, { status: 429, headers: { "retry-after": "86400" } });
     try {
       const details = await fetch(`https://places.googleapis.com/v1/places/${encodeURIComponent(placeId)}`, {
         headers: { "x-goog-api-key": env.GOOGLE_MAPS_API_KEY, "x-goog-fieldmask": "photos" },
@@ -490,7 +504,9 @@ async function routeRequest(
       if (!image.ok) return new Response(null, { status: 502 });
       return new Response(image.body, { headers: {
         "content-type": image.headers.get("content-type") ?? "image/jpeg",
-        "cache-control": "public, max-age=86400",
+        // Places photos and their URIs may not be cached. Cost is controlled by
+        // requesting them only from the restaurant detail view.
+        "cache-control": "private, no-store",
       } });
     } catch {
       return new Response(null, { status: 502 });
@@ -504,7 +520,7 @@ async function routeRequest(
       const input = (await request.json()) as Record<string, unknown>;
       const place = await resolveRestaurantAddress(
         input,
-        env.GOOGLE_MAPS_API_KEY,
+        env,
       );
       if (!place?.formattedAddress)
         return Response.json({ success: false }, { status: 404 });
@@ -554,7 +570,7 @@ async function routeRequest(
         request.method === "POST"
           ? await enrichWithPlaces(
               body as CommunitySubmission,
-              env.GOOGLE_MAPS_API_KEY,
+              env,
             )
           : body;
       const feedResponse = await fetch(env.GOURMET_MAP_FEED_URL, {

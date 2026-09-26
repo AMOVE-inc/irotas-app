@@ -18,7 +18,6 @@ import { useState, useCallback, useEffect, useMemo } from "react";
 import {
   Alert,
   FlatList,
-  Linking,
   Modal,
   Platform,
   Pressable,
@@ -54,15 +53,29 @@ function restaurantImageSource(image: string) {
   return { uri: image };
 }
 
-function RestaurantPhoto({ restaurant, style }: { restaurant: Restaurant; style: any }) {
+function isGoogleMapsPhoto(image?: string) {
+  return Boolean(image && /^https:\/\/lh3\.googleusercontent\.com\//.test(image));
+}
+
+function RestaurantPhoto({
+  restaurant,
+  style,
+  allowGooglePhoto = false,
+}: {
+  restaurant: Restaurant;
+  style: any;
+  allowGooglePhoto?: boolean;
+}) {
   const [googlePhotoUnavailable, setGooglePhotoUnavailable] = useState(false);
   const [legacyPhotoUnavailable, setLegacyPhotoUnavailable] = useState(false);
   useEffect(() => { setGooglePhotoUnavailable(false); setLegacyPhotoUnavailable(false); }, [restaurant.placeId, restaurant.image]);
-  if (legacyPhotoUnavailable) return <View style={[style, { backgroundColor: "#F3F4F6", alignItems: "center", justifyContent: "center" }]}><IconSymbol name="photo.fill" size={28} color="#A1A1AA" /></View>;
-  const source = restaurant.placeId && !googlePhotoUnavailable
-    ? { uri: `/api/gourmet-map/photo?placeId=${encodeURIComponent(restaurant.placeId)}` }
-    : restaurantImageSource(restaurant.image);
-  return <Image source={source} style={style} contentFit="cover" transition={300}
+  const ownedImage = restaurant.image && !isGoogleMapsPhoto(restaurant.image) ? restaurant.image : "";
+  const canRequestGooglePhoto = allowGooglePhoto && restaurant.placeId && !googlePhotoUnavailable;
+  if ((!canRequestGooglePhoto && !ownedImage) || legacyPhotoUnavailable) return <View style={[style, { backgroundColor: "#F3F4F6", alignItems: "center", justifyContent: "center" }]}><IconSymbol name="photo.fill" size={28} color="#A1A1AA" /></View>;
+  const source = canRequestGooglePhoto
+    ? { uri: `/api/gourmet-map/photo?placeId=${encodeURIComponent(restaurant.placeId!)}` }
+    : restaurantImageSource(ownedImage);
+  return <Image source={source} style={style} contentFit="cover" transition={300} cachePolicy={canRequestGooglePhoto ? "none" : "disk"}
     onError={() => { if (!googlePhotoUnavailable) setGooglePhotoUnavailable(true); else setLegacyPhotoUnavailable(true); }} />;
 }
 
@@ -144,7 +157,7 @@ function RestaurantDetail({
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       {/* Header image */}
       <View>
-        <RestaurantPhoto restaurant={restaurant} style={{ width: "100%", height: 220 }} />
+        <RestaurantPhoto restaurant={restaurant} allowGooglePhoto style={{ width: "100%", height: 220 }} />
         <Pressable
           onPress={onClose}
           style={{
@@ -243,6 +256,11 @@ function RestaurantDetail({
             <IconSymbol name="map.fill" size={18} color="#FFF" />
             <Text style={{ color: "#FFF", fontSize: 15, fontWeight: "800", marginLeft: 8 }}>Googleマップで見る</Text>
           </Pressable>
+        ) : null}
+        {restaurant.placeId ? (
+          <Text style={{ marginTop: -16, marginBottom: 20, textAlign: "center", color: colors.muted, fontSize: 11 }}>
+            店舗写真提供: Google Maps
+          </Text>
         ) : null}
         {restaurant.sourceType === "meal_report" ? (
           <View style={{ marginTop: -12, marginBottom: 24 }}>

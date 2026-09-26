@@ -43,6 +43,9 @@ export interface SitesEnv {
   UPLOADS?: R2Bucket;
   GOURMET_MAP_FEED_URL?: string;
   GOOGLE_MAPS_API_KEY?: string;
+  GOOGLE_MAPS_PHOTOS_ENABLED?: string;
+  GOOGLE_MAPS_PHOTO_MONTHLY_LIMIT?: string;
+  GOOGLE_MAPS_SEARCH_MONTHLY_LIMIT?: string;
   AUTH_SECRET?: string;
   ADMISSION_SYNC_TOKEN?: string;
   BOOTSTRAP_ADMIN_EMAIL?: string;

@@ -45,29 +45,10 @@ export function pagePreviewMetadata(html: string, baseUrl: string): { title: str
   };
 }
 
-type PreviewEnv = { GOOGLE_MAPS_API_KEY?: string };
-
-async function placesImage(query: string, env: PreviewEnv, origin: string) {
-  if (!query || !env.GOOGLE_MAPS_API_KEY) return null;
-  const response = await fetch("https://places.googleapis.com/v1/places:searchText", { method: "POST", headers: { "content-type": "application/json", "x-goog-api-key": env.GOOGLE_MAPS_API_KEY, "x-goog-fieldmask": "places.photos" }, body: JSON.stringify({ textQuery: query, languageCode: "ja", maxResultCount: 1 }) });
-  if (!response.ok) return null;
-  const value = await response.json() as { places?: { photos?: { name?: string }[] }[] };
-  const name = value.places?.[0]?.photos?.[0]?.name;
-  return name ? `${origin}/api/link-preview/image?name=${encodeURIComponent(name)}` : null;
-}
-
-export async function handleLinkPreviewRequest(request: Request, env: PreviewEnv): Promise<Response | null> {
+export async function handleLinkPreviewRequest(request: Request, _env?: unknown): Promise<Response | null> {
   const requestUrl = new URL(request.url);
   if (!requestUrl.pathname.startsWith("/api/link-preview") || request.method !== "GET") return null;
   try {
-    if (requestUrl.pathname === "/api/link-preview/image") {
-      const name = requestUrl.searchParams.get("name") ?? "";
-      if (!/^places\/[A-Za-z0-9_-]+\/photos\/[A-Za-z0-9_-]+$/.test(name) || !env.GOOGLE_MAPS_API_KEY) return new Response(null, { status: 404 });
-      const photo = await fetch(`https://places.googleapis.com/v1/${name}/media?maxWidthPx=1200&skipHttpRedirect=true`, { headers: { "x-goog-api-key": env.GOOGLE_MAPS_API_KEY } });
-      if (!photo.ok) return new Response(null, { status: 404 });
-      const value = await photo.json() as { photoUri?: string };
-      return value.photoUri ? Response.redirect(value.photoUri, 302) : new Response(null, { status: 404 });
-    }
     const rawUrl = requestUrl.searchParams.get("url");
     let metadata: ReturnType<typeof pagePreviewMetadata> = { title: null, description: null, imageUrl: null };
     if (rawUrl) {
@@ -82,7 +63,6 @@ export async function handleLinkPreviewRequest(request: Request, env: PreviewEnv
         }
       }
     }
-    metadata.imageUrl ??= await placesImage(requestUrl.searchParams.get("query") ?? "", env, requestUrl.origin);
     return Response.json(metadata, { headers: { "cache-control": metadata.title || metadata.imageUrl ? "public, max-age=3600" : "public, max-age=300" } });
   } catch {
     return Response.json({ title: null, description: null, imageUrl: null });
