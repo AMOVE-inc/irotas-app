@@ -168,7 +168,7 @@ function PointsProgressCard({ points, rank, showRank = true, onExplain }: { poin
           </View>
         </View>
       ) : null}
-      {showRank && onExplain ? <Pressable onPress={onExplain} style={{ marginTop: 14, alignSelf: "flex-start", borderRadius: 14, paddingHorizontal: 15, paddingVertical: 10, backgroundColor: "#F7DDE8", borderWidth: 1, borderColor: "#D56591" }}><Text style={{ fontSize: 13, fontWeight: "900", color: "#A83F6B" }}>会員ランクについてはこちら</Text></Pressable> : null}
+      {showRank && onExplain ? <Pressable onPress={onExplain} style={{ marginTop: 14, alignSelf: "flex-start", borderRadius: 14, paddingHorizontal: 15, paddingVertical: 10, backgroundColor: "#EFEFF1", borderWidth: 1, borderColor: "#B7B7BC" }}><Text style={{ fontSize: 13, fontWeight: "900", color: "#66666B" }}>会員ランクについてはこちら</Text></Pressable> : null}
     </View>
   );
 }

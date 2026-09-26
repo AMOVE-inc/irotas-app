@@ -57,7 +57,7 @@ import { sharedThreadToBoardThread } from "@/lib/shared-board-content";
 import { MentionText } from "@/components/mention-ui";
 import { getMentionGroups } from "@/lib/mentions";
 import { formatClubLeaderName, formatClubName } from "@/lib/club-display";
-import { clubBoardHref } from "@/lib/community-navigation";
+import { clubBoardRoute } from "@/lib/community-navigation";
 
 const CLUB_OVERVIEW_MENTION_GROUPS = getMentionGroups(MEMBERS, CLUBS);
 
@@ -1995,7 +1995,7 @@ export default function ClubsScreen() {
   };
 
   const openJoinedClub = (club: Club) => {
-    router.push(clubBoardHref(club.id) as any);
+    router.navigate(clubBoardRoute(club.id) as any);
   };
 
   return (

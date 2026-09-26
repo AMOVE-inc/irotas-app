@@ -75,7 +75,8 @@ describe("board category ordering", () => {
     expect(boardScreen).toContain("useClubStoreStatus");
     expect(waitForCatalog).toBeGreaterThan(-1);
     expect(fallbackRedirect).toBeGreaterThan(waitForCatalog);
-    expect(boardScreen).toContain('clubStoreStatus === "loaded" && !canAccessCategory(selectedCategory)');
+    expect(boardScreen).not.toContain('clubStoreStatus === "loaded" && !canAccessCategory(selectedCategory)');
+    expect(boardScreen).toContain('if (!selectedCategory)');
     expect(boardScreen).toContain('category.group !== "club" || userCanViewAllClubContent');
   });
 
@@ -116,7 +117,7 @@ describe("board category ordering", () => {
     expect(boardScreen).toContain('boardRouteRequests(requestCategory, threadParam)');
     expect(boardScreen).toContain('await loadSharedBoardContent(watchedCategory, undefined, watchedCategory ? 200 : 40)');
     expect(boardScreen).toContain('onClose={() => {');
-    expect(boardScreen).toContain('leaveThreadDetail();');
+    expect(boardScreen).toContain('leaveThreadDetail(fromHome === "1" ? () => router.replace("/(tabs)" as any) : undefined);');
     expect(boardScreen).toContain('leaveThreadDetail(() => router.push({ pathname: "/member-profile", params }))');
     expect(profileScreen).toContain('returnToBoardThread === "1" && boardCategory && boardThreadId');
     expect(profileScreen).toContain('thread: boardThreadId');

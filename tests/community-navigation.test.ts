@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { boardRouteRequests, boardThreadHref, chatRoomHref, clubBoardHref } from "../lib/community-navigation";
+import { boardRouteRequests, boardThreadHref, chatRoomHref, chatRoomRoute, clubBoardHref, clubBoardRoute, introductionChatRoute } from "../lib/community-navigation";
 
 describe("community navigation", () => {
   it("opens the exact free-chat and meal-report posts from the timeline", () => {
@@ -19,10 +19,13 @@ describe("community navigation", () => {
   it("opens joined clubs without duplicating or dropping the club prefix", () => {
     expect(clubBoardHref("club-golf")).toBe("/(tabs)/board?category=club-club-golf&view=threads");
     expect(clubBoardHref("golf")).toBe("/(tabs)/board?category=club-club-golf&view=threads");
+    expect(clubBoardRoute("club-golf")).toEqual({ pathname: "/(tabs)/board", params: { category: "club-club-golf", view: "threads" } });
   });
 
   it("keeps all room context in an explicit chat URL", () => {
     expect(chatRoomHref({ id: "room 1", name: "運営 アナウンス", type: "board", sourceId: "announcement", participants: ["a", "b"], unreadCount: 2 }))
       .toBe("/chat?id=room+1&unreadCount=2&roomName=%E9%81%8B%E5%96%B6+%E3%82%A2%E3%83%8A%E3%82%A6%E3%83%B3%E3%82%B9&roomType=board&sourceId=announcement&participants=a%2Cb");
+    expect(chatRoomRoute({ id: "room 1", name: "運営 アナウンス", type: "board", sourceId: "announcement", participants: ["a", "b"], unreadCount: 2 })).toEqual({ pathname: "/chat", params: { id: "room 1", unreadCount: "2", roomName: "運営 アナウンス", roomType: "board", sourceId: "announcement", participants: "a,b" } });
+    expect(introductionChatRoute()).toMatchObject({ pathname: "/chat", params: { id: "board-introduction", roomName: "自己紹介" } });
   });
 });

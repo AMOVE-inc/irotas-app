@@ -1,5 +1,10 @@
 import type { ChatRoom } from "@/constants/mock-data";
 
+export type AppRoute = {
+  pathname: string;
+  params: Record<string, string>;
+};
+
 function queryPath(pathname: string, params: Record<string, string | number | undefined>) {
   const query = new URLSearchParams();
   Object.entries(params).forEach(([key, value]) => {
@@ -23,6 +28,18 @@ export function clubBoardHref(clubId: string, fromProfile = false) {
   return boardThreadHref({ category: `club-${normalizedClubId}`, fromProfile });
 }
 
+export function clubBoardRoute(clubId: string, fromProfile = false): AppRoute {
+  const normalizedClubId = clubId.startsWith("club-") ? clubId : `club-${clubId}`;
+  return {
+    pathname: "/(tabs)/board",
+    params: {
+      category: `club-${normalizedClubId}`,
+      view: "threads",
+      ...(fromProfile ? { fromProfile: "1" } : {}),
+    },
+  };
+}
+
 export function chatRoomHref(room: Pick<ChatRoom, "id" | "name" | "type" | "sourceId" | "participants" | "unreadCount">) {
   return queryPath("/chat", {
     id: room.id,
@@ -32,6 +49,34 @@ export function chatRoomHref(room: Pick<ChatRoom, "id" | "name" | "type" | "sour
     sourceId: room.sourceId,
     participants: room.participants.join(","),
   });
+}
+
+export function chatRoomRoute(room: Pick<ChatRoom, "id" | "name" | "type" | "sourceId" | "participants" | "unreadCount">): AppRoute {
+  return {
+    pathname: "/chat",
+    params: {
+      id: room.id,
+      unreadCount: String(Math.max(0, room.unreadCount ?? 0)),
+      roomName: room.name,
+      roomType: room.type,
+      sourceId: room.sourceId,
+      participants: room.participants.join(","),
+    },
+  };
+}
+
+export function introductionChatRoute(unreadCount = 0): AppRoute {
+  return {
+    pathname: "/chat",
+    params: {
+      id: "board-introduction",
+      unreadCount: String(Math.max(0, unreadCount)),
+      roomName: "自己紹介",
+      roomType: "board",
+      sourceId: "introduction",
+      participants: "",
+    },
+  };
 }
 
 export function boardRouteRequests(category: string, threadId?: string) {

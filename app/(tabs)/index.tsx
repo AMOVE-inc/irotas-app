@@ -310,13 +310,16 @@ function TodayEventsSection({
             key={event.id}
             onPress={() => router.push({ pathname: "/event-detail", params: { id: event.id } })}
             style={{
-              width: 220,
+              width: 148,
               backgroundColor: colors.surface,
               borderRadius: 14,
               overflow: "hidden",
             }}
           >
-            <EventImage event={event} style={{ width: 220, height: 100 }} />
+            <View style={{ width: 148, height: 92, backgroundColor: event.eventType === "club" ? "#8E8E93" : colors.surface }}>
+              <EventImage event={event} style={{ width: 148, height: 92, opacity: event.eventType === "club" ? 0.48 : 1 }} />
+              {event.eventType === "club" ? <View style={{ position: "absolute", inset: 0, backgroundColor: "rgba(80,80,84,0.38)", alignItems: "center", justifyContent: "center", paddingHorizontal: 8 }}><Text style={{ color: "#FFF", fontSize: 11, lineHeight: 15, fontWeight: "900", textAlign: "center" }}>{event.clubName ? `${event.clubName.replace(/部$/, "")}部員限定` : "部員限定"}</Text></View> : null}
+            </View>
             <View style={{ padding: 10 }}>
               <Text
                 style={{ fontSize: 13, fontWeight: "700", color: colors.foreground, marginBottom: 4 }}
@@ -364,13 +367,13 @@ function TodayEventsSection({
           <Pressable
             key={thread.id}
             style={{
-              width: 220,
+              width: 148,
               backgroundColor: colors.surface,
               borderRadius: 14,
               overflow: "hidden",
             }}
           >
-            <View style={{ backgroundColor: "#A7C7E720", height: 100, justifyContent: "center", alignItems: "center" }}>
+            <View style={{ backgroundColor: "#A7C7E720", height: 92, justifyContent: "center", alignItems: "center" }}>
               <IconSymbol name="person.2.fill" size={36} color="#A7C7E7" />
               <Text style={{ fontSize: 11, color: "#A7C7E7", fontWeight: "600", marginTop: 4 }}>
                 掲示板イベント

@@ -55,7 +55,7 @@ import { awardContestWinnerOnce, buildContestEntryContent, createContestAwardCom
 import { loadImportedGourmetContests } from "@/lib/gourmet-contest-import";
 import { parseDiscordBoardArchive } from "@/lib/discord-board-import";
 import { normalizeDiscordBoardCategory } from "@/lib/board-category";
-import { boardRouteRequests } from "@/lib/community-navigation";
+import { boardRouteRequests, introductionChatRoute } from "@/lib/community-navigation";
 import * as Api from "@/lib/_core/api";
 import { boardCommentData, boardThreadData, sharedCommentToBoardComment, sharedThreadToBoardThread } from "@/lib/shared-board-content";
 import { boardReactionAccessibilityLabel, boardReactionImageUrl, loadCommentReactions, loadThreadReactions, saveCommentReactions, saveThreadReactions } from "@/lib/board-reactions";
@@ -2816,9 +2816,7 @@ export default function BoardScreen() {
   // 自己紹介は通常チャットと同じ操作・未読・リアクション UI に統一する。
   useEffect(() => {
     if (isThreadView && categoryParam === "introduction") {
-      void Api.getSharedChatRoom("board-introduction")
-        .then((room) => router.replace({ pathname: "/chat", params: { id: "board-introduction", unreadCount: String(room.unreadCount ?? 0) } }))
-        .catch(() => router.replace({ pathname: "/chat", params: { id: "board-introduction", unreadCount: "0" } }));
+      router.replace(introductionChatRoute() as any);
     }
   }, [categoryParam, isThreadView, router]);
 
@@ -2987,7 +2985,7 @@ export default function BoardScreen() {
         : isIndividualClubCategory && clubStoreStatus === "error"
           ? { key: normalizedCategory, label: "部活動", group: "club" as const, createdByAdmin: true }
           : undefined);
-    if (!selectedCategory || (clubStoreStatus === "loaded" && !canAccessCategory(selectedCategory))) {
+    if (!selectedCategory) {
       router.replace("/board");
       return;
     }
@@ -3172,9 +3170,7 @@ export default function BoardScreen() {
 
   const handleOpenCategory = (category: BoardCategory) => {
     if (category.key === "introduction") {
-      void Api.getSharedChatRoom("board-introduction")
-        .then((room) => router.push({ pathname: "/chat", params: { id: "board-introduction", unreadCount: String(room.unreadCount ?? 0) } }))
-        .catch(() => router.push({ pathname: "/chat", params: { id: "board-introduction", unreadCount: "0" } }));
+      router.navigate(introductionChatRoute() as any);
       return;
     }
     if (category.key === "gourmet-map") {
@@ -3397,7 +3393,7 @@ export default function BoardScreen() {
         animationType="slide"
         presentationStyle="pageSheet"
         onRequestClose={() => {
-          leaveThreadDetail();
+          leaveThreadDetail(fromHome === "1" ? () => router.replace("/(tabs)" as any) : undefined);
         }}
       >
         {selectedThread && (
@@ -3413,7 +3409,7 @@ export default function BoardScreen() {
             }}
             memberDirectory={memberDirectory}
             onClose={() => {
-              leaveThreadDetail();
+              leaveThreadDetail(fromHome === "1" ? () => router.replace("/(tabs)" as any) : undefined);
             }}
             onEditThread={selectedThread.viewerCanManage || selectedThread.author.id === viewerMemberId || userCanModerateAll ? () => { setEditingThread(selectedThread); setSelectedThread(null); router.setParams({ thread: "" }); } : undefined}
             onCommentDeleted={(commentId) => setImportedComments((current) => ({ ...current, [selectedThread.id]: (current[selectedThread.id] ?? []).filter((comment) => comment.id !== commentId) }))}
