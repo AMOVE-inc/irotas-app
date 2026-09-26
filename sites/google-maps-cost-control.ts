@@ -19,14 +19,32 @@ export async function reserveGoogleMapsRequest(env: SitesEnv, kind: GoogleMapsUs
   if (!env.DB) return true;
   const now = new Date().toISOString();
   const monthKey = now.slice(0, 7);
-  const reserved = await env.DB.prepare(
-    `INSERT INTO google_maps_api_usage (usage_kind, month_key, request_count, updated_at)
-     VALUES (?, ?, 1, ?)
-     ON CONFLICT(usage_kind, month_key) DO UPDATE SET
-       request_count = google_maps_api_usage.request_count + 1,
-       updated_at = excluded.updated_at
-     WHERE google_maps_api_usage.request_count < ?
-     RETURNING request_count`,
-  ).bind(kind, monthKey, now, limit).first<{ request_count: number }>();
+  const reserve = () => env.DB!.prepare(
+      `INSERT INTO google_maps_api_usage (usage_kind, month_key, request_count, updated_at)
+       VALUES (?, ?, 1, ?)
+       ON CONFLICT(usage_kind, month_key) DO UPDATE SET
+         request_count = google_maps_api_usage.request_count + 1,
+         updated_at = excluded.updated_at
+       WHERE google_maps_api_usage.request_count < ?
+       RETURNING request_count`,
+    ).bind(kind, monthKey, now, limit).first<{ request_count: number }>();
+  let reserved;
+  try {
+    reserved = await reserve();
+  } catch (error) {
+    // Sites deployments can make the Worker live before a newly packaged D1
+    // migration is visible. Create only this bounded counter table, then retry.
+    if (!String(error).includes("google_maps_api_usage")) throw error;
+    await env.DB.prepare(
+      `CREATE TABLE IF NOT EXISTS google_maps_api_usage (
+         usage_kind TEXT NOT NULL CHECK (usage_kind IN ('photo', 'search')),
+         month_key TEXT NOT NULL,
+         request_count INTEGER NOT NULL DEFAULT 0 CHECK (request_count >= 0),
+         updated_at TEXT NOT NULL,
+         PRIMARY KEY (usage_kind, month_key)
+       )`,
+    ).run();
+    reserved = await reserve();
+  }
   return Boolean(reserved);
 }

@@ -26,6 +26,7 @@ describe("Google Maps photo cost controls", () => {
     expect(controls).toContain('GOOGLE_MAPS_SEARCH_MONTHLY_LIMIT ?? "1000"');
     expect(controls).toContain("WHERE google_maps_api_usage.request_count < ?");
     expect(controls).toContain("RETURNING request_count");
+    expect(controls).toContain("CREATE TABLE IF NOT EXISTS google_maps_api_usage");
     expect(migration).toContain("PRIMARY KEY");
   });
 
