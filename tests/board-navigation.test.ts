@@ -102,7 +102,8 @@ describe("board category ordering", () => {
     expect(boardScreen).toContain('returnToTimeline={false}');
     expect(boardScreen).toContain('leavingThreadDetailRef.current = true;');
     expect(boardScreen).toContain('if (!threadParam || leavingThreadDetailRef.current) return;');
-    expect(boardScreen).toContain('loadSharedBoardContent(isThreadView ? activeCategory : undefined, isThreadView && threadParam ? threadParam : undefined)');
+    expect(boardScreen).toContain('boardRouteRequests(requestCategory, threadParam)');
+    expect(boardScreen).toContain('await loadSharedBoardContent(watchedCategory, undefined, watchedCategory ? 200 : 40)');
     expect(boardScreen).toContain('onClose={() => {');
     expect(boardScreen).toContain('leaveThreadDetail();');
     expect(boardScreen).toContain('leaveThreadDetail(() => router.push({ pathname: "/member-profile", params }))');

@@ -16,6 +16,7 @@ import * as Api from "@/lib/_core/api";
 import { stripRankFromName } from "@/components/member-rank-badge";
 import { getDiscordAuthorById, getDiscordAuthorByName } from "@/lib/discord-author-directory";
 import { mergeSentChatPreview, sentChatPreview, type SentChatPreview } from "@/lib/chat-list-preview";
+import { chatRoomHref } from "@/lib/community-navigation";
 
 function formatEventStart(event: { date: string; time: string }) {
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(event.date);
@@ -135,7 +136,7 @@ function ChatRoomCard({ room, eventStarts, eventImages, memberAvatars, viewerMem
         onOpened(room.id, unreadCount);
         void markRoomRead(room.id);
         void Api.markSharedChatRoomRead(room.id).catch(() => {});
-        router.push({ pathname: "/chat", params: { id: room.id, unreadCount: String(unreadCount), roomName: room.name, roomType: room.type, sourceId: room.sourceId, participants: room.participants.join(",") } });
+        router.push(chatRoomHref({ ...room, unreadCount }) as any);
       }}
       onLongPress={() => {
         if (!onLongPress) return;
@@ -455,7 +456,7 @@ export default function ChatListScreen() {
         contentContainerStyle={{ paddingBottom: 112, flexGrow: 1 }}
         ListEmptyComponent={pinnedRooms.length || visibleRankRooms.length ? null : <View style={{ flex: 1, alignItems: "center", justifyContent: "center", paddingVertical: 80 }}><Text style={{ fontSize: 14, color: colors.muted }}>{roomsLoading ? "読み込み中…" : "参加中のチャットはありません"}</Text></View>}
       />
-      <Modal visible={actionRoom !== null} transparent animationType="slide" onRequestClose={() => setActionRoom(null)}>
+      <Modal visible={actionRoom !== null} transparent statusBarTranslucent presentationStyle="overFullScreen" animationType="slide" onRequestClose={() => setActionRoom(null)}>
         <Pressable onPress={() => setActionRoom(null)} style={{ flex: 1, backgroundColor: "rgba(20,18,24,0.42)", justifyContent: "flex-end" }}>
           <Pressable onPress={() => {}} style={{ backgroundColor: colors.background, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 18, paddingBottom: 34 }}>
             <Text numberOfLines={1} style={{ fontSize: 16, fontWeight: "900", color: colors.foreground, marginBottom: 10 }}>{actionRoom?.name}</Text>

@@ -54,6 +54,8 @@ import { isUnidentifiedReaction } from "@/lib/introduction-reactions";
 import { awardContestWinnerOnce, buildContestEntryContent, createContestAwardComment, getContestWinner, isContestCommentingOpen, isContestEntryValid } from "@/lib/gourmet-contest";
 import { loadImportedGourmetContests } from "@/lib/gourmet-contest-import";
 import { parseDiscordBoardArchive } from "@/lib/discord-board-import";
+import { normalizeDiscordBoardCategory } from "@/lib/board-category";
+import { boardRouteRequests } from "@/lib/community-navigation";
 import * as Api from "@/lib/_core/api";
 import { boardCommentData, boardThreadData, sharedCommentToBoardComment, sharedThreadToBoardThread } from "@/lib/shared-board-content";
 import { boardReactionAccessibilityLabel, boardReactionImageUrl, loadCommentReactions, loadThreadReactions, saveCommentReactions, saveThreadReactions } from "@/lib/board-reactions";
@@ -603,7 +605,7 @@ function ThreadCard({ thread, viewerId, onPress, onEdit, onDelete, onPin, onTogg
         )}
       </View>
     </Pressable>
-    <Modal visible={showActions} transparent animationType="slide" onRequestClose={() => setShowActions(false)}><Pressable onPress={() => setShowActions(false)} style={{ flex: 1, justifyContent: "flex-end", backgroundColor: "rgba(20,18,24,0.48)" }}><View style={{ backgroundColor: colors.background, borderTopLeftRadius: 22, borderTopRightRadius: 22, padding: 18, paddingBottom: 32 }}><Text style={{ fontSize: 16, fontWeight: "800", color: colors.foreground, marginBottom: 10 }}>投稿の操作</Text>{[{ label: "リンクをコピー", action: () => { void Clipboard.setStringAsync(`https://app.irotas-community.com/board?category=${encodeURIComponent(thread.category)}&view=threads&thread=${encodeURIComponent(thread.id)}`); } }, ...(onToggleClosed ? [{ label: closed ? "投稿をオープンにする" : "投稿をクローズする", action: onToggleClosed }] : []), ...(onPin ? [{ label: pinned ? "投稿の固定を解除する" : "投稿を固定する", action: onPin }] : []), ...(onEdit ? [{ label: "編集", action: onEdit }] : []), ...(onDelete ? [{ label: "削除", action: onDelete }] : [])].map((item) => <Pressable key={item.label} onPress={() => { setShowActions(false); item.action(); }} style={{ paddingVertical: 13, borderBottomWidth: 0.5, borderBottomColor: colors.border }}><Text style={{ fontSize: 15, fontWeight: "700", color: item.label === "削除" ? colors.error : colors.foreground }}>{item.label}</Text></Pressable>)}<Pressable onPress={() => setShowActions(false)} style={{ paddingVertical: 14 }}><Text style={{ color: colors.muted, textAlign: "center" }}>キャンセル</Text></Pressable></View></Pressable></Modal>
+    <Modal visible={showActions} transparent statusBarTranslucent presentationStyle="overFullScreen" animationType="slide" onRequestClose={() => setShowActions(false)}><Pressable onPress={() => setShowActions(false)} style={{ flex: 1, justifyContent: "flex-end", backgroundColor: "rgba(20,18,24,0.48)" }}><View style={{ backgroundColor: colors.background, borderTopLeftRadius: 22, borderTopRightRadius: 22, padding: 18, paddingBottom: 32 }}><Text style={{ fontSize: 16, fontWeight: "800", color: colors.foreground, marginBottom: 10 }}>投稿の操作</Text>{[{ label: "リンクをコピー", action: () => { void Clipboard.setStringAsync(`https://app.irotas-community.com/board?category=${encodeURIComponent(thread.category)}&view=threads&thread=${encodeURIComponent(thread.id)}`); } }, ...(onToggleClosed ? [{ label: closed ? "投稿をオープンにする" : "投稿をクローズする", action: onToggleClosed }] : []), ...(onPin ? [{ label: pinned ? "投稿の固定を解除する" : "投稿を固定する", action: onPin }] : []), ...(onEdit ? [{ label: "編集", action: onEdit }] : []), ...(onDelete ? [{ label: "削除", action: onDelete }] : [])].map((item) => <Pressable key={item.label} onPress={() => { setShowActions(false); item.action(); }} style={{ paddingVertical: 13, borderBottomWidth: 0.5, borderBottomColor: colors.border }}><Text style={{ fontSize: 15, fontWeight: "700", color: item.label === "削除" ? colors.error : colors.foreground }}>{item.label}</Text></Pressable>)}<Pressable onPress={() => setShowActions(false)} style={{ paddingVertical: 14 }}><Text style={{ color: colors.muted, textAlign: "center" }}>キャンセル</Text></Pressable></View></Pressable></Modal>
     <Modal visible={cardReactionDetails} transparent animationType="fade" onRequestClose={() => setCardReactionDetails(false)}>
       <Pressable onPress={() => setCardReactionDetails(false)} style={{ flex: 1, backgroundColor: "rgba(20,18,24,0.48)", justifyContent: "center", padding: 28 }}>
         <Pressable onPress={() => {}} style={{ maxHeight: "72%", backgroundColor: colors.background, borderRadius: 20, padding: 18 }}>
@@ -1581,7 +1583,7 @@ function ThreadDetailModal({
         </View> : <View style={{ padding: 14, backgroundColor: colors.surface, borderTopWidth: 1, borderTopColor: colors.border }}><Text style={{ textAlign: "center", fontSize: 13, fontWeight: "700", color: colors.muted }}>コメント募集は終了しました</Text></View>}
       </KeyboardAvoidingView>
 
-      <Modal visible={selectedComment !== null} transparent animationType="fade" onRequestClose={() => setSelectedComment(null)}>
+      <Modal visible={selectedComment !== null} transparent statusBarTranslucent presentationStyle="overFullScreen" animationType="slide" onRequestClose={() => setSelectedComment(null)}>
         <Pressable onPress={() => setSelectedComment(null)} style={{ flex: 1, justifyContent: "flex-end", backgroundColor: "rgba(20,18,24,0.48)" }}>
           <View style={{ backgroundColor: colors.background, borderTopLeftRadius: 22, borderTopRightRadius: 22, padding: 18, paddingBottom: 32 }}>
             <Text style={{ fontSize: 16, fontWeight: "800", color: colors.foreground, marginBottom: 10 }}>コメントの操作</Text>
@@ -2717,7 +2719,8 @@ export default function BoardScreen() {
   const clubs = useClubs();
   const [categories, setCategories] = useState<BoardCategory[]>(BOARD_CATEGORIES);
   const [activeGroup, setActiveGroup] = useState<BoardCategory["group"]>("all");
-  const [activeCategory, setActiveCategory] = useState<string>(BOARD_CATEGORIES[0].key);
+  const requestedCategory = categoryParam ? normalizeDiscordBoardCategory(categoryParam) : undefined;
+  const [activeCategory, setActiveCategory] = useState<string>(() => requestedCategory ?? BOARD_CATEGORIES[0].key);
   const [refreshing, setRefreshing] = useState(false);
   const [archiveLoading, setArchiveLoading] = useState(true);
   const [sharedLoading, setSharedLoading] = useState(true);
@@ -2859,12 +2862,12 @@ export default function BoardScreen() {
     return () => { active = false; };
   }, [loadBoardArchive]);
 
-  const loadSharedBoardContent = useCallback(async (category?: string, threadId?: string) => {
+  const loadSharedBoardContent = useCallback(async (category?: string, threadId?: string, limit = 40) => {
     const requestKey = threadId ? `${category ?? "all"}:${threadId}` : category ?? "all";
     const requestSequence = (sharedRequestSequence.current[requestKey] ?? 0) + 1;
     sharedRequestSequence.current[requestKey] = requestSequence;
     const revision = threadManagementRevision.current;
-    const result = await Api.getSharedBoardContent(category, threadId);
+    const result = await Api.getSharedBoardContent(category, threadId, limit);
     if (requestSequence !== sharedRequestSequence.current[requestKey] || revision !== threadManagementRevision.current || threadManagementPending.current.size > 0) return;
     const commentsByThread = result.comments
       .map((comment) => sharedCommentToBoardComment(comment, viewerMemberId))
@@ -2899,18 +2902,24 @@ export default function BoardScreen() {
   useFocusEffect(useCallback(() => {
     let active = true;
     if (isThreadView) setCategoryLoading(true);
-    void loadSharedBoardContent(isThreadView ? activeCategory : undefined, isThreadView && threadParam ? threadParam : undefined).catch(() => {
+    const requestCategory = isThreadView ? requestedCategory : undefined;
+    const requests = requestCategory ? boardRouteRequests(requestCategory, threadParam) : [{ category: undefined, limit: 40 }];
+    void requests.reduce<Promise<void>>((pending, request) => pending.then(() => loadSharedBoardContent(
+      request.category,
+      "threadId" in request ? request.threadId : undefined,
+      "limit" in request ? request.limit : 40,
+    )), Promise.resolve()).catch(() => {
       // Keep the last confirmed snapshot if the shared service is temporarily unavailable.
     }).finally(() => { if (active) { setSharedLoading(false); setCategoryLoading(false); } });
     return () => { active = false; };
-  }, [activeCategory, isThreadView, loadSharedBoardContent, threadParam]));
+  }, [isThreadView, loadSharedBoardContent, requestedCategory, threadParam]));
 
   // Keep the open thread list and its unread-comment badges current while the
   // page remains visible. The selected category avoids repeatedly fetching
   // every board comment in the community.
   useEffect(() => {
     if (!authUser) return;
-    const watchedCategory = isThreadView ? activeCategory : undefined;
+    const watchedCategory = isThreadView ? requestedCategory : undefined;
     let pending = false;
     let active = true;
     let revision: string | null = null;
@@ -2921,7 +2930,7 @@ export default function BoardScreen() {
         const activity = await Api.getSharedBoardActivity(watchedCategory);
         if (active && revision !== null && activity.revision !== revision) {
           await loadBoardArchive();
-          await loadSharedBoardContent(watchedCategory);
+          await loadSharedBoardContent(watchedCategory, undefined, watchedCategory ? 200 : 40);
           if (selectedThread?.id && watchedCategory === selectedThread.category) {
             await loadSharedBoardContent(watchedCategory, selectedThread.id);
           }
@@ -2942,7 +2951,7 @@ export default function BoardScreen() {
     if (Platform.OS === "web") document.addEventListener("visibilitychange", onVisible);
     const appStateSubscription = Platform.OS === "web" ? null : AppState.addEventListener("change", (state) => { if (state === "active") void check(); });
     return () => { active = false; clearInterval(timer); appStateSubscription?.remove(); if (Platform.OS === "web") document.removeEventListener("visibilitychange", onVisible); };
-  }, [activeCategory, authUser, isThreadView, loadSharedBoardContent, loadBoardArchive, selectedThread?.id, selectedThread?.category]);
+  }, [authUser, isThreadView, loadSharedBoardContent, loadBoardArchive, requestedCategory, selectedThread?.id, selectedThread?.category]);
 
   useEffect(() => {
     void loadBoardThreadEdits().then(setEditedThreads);
@@ -2974,8 +2983,9 @@ export default function BoardScreen() {
 
   useEffect(() => {
     if (!isThreadView || !categoryParam) return;
-    const matchedClub = categoryParam.startsWith("club-") ? clubs.find((club) => `club-${club.id}` === categoryParam) : undefined;
-    const selectedCategory = categories.find((category) => category.key === categoryParam)
+    const normalizedCategory = normalizeDiscordBoardCategory(categoryParam);
+    const matchedClub = normalizedCategory.startsWith("club-") ? clubs.find((club) => `club-${club.id}` === normalizedCategory) : undefined;
+    const selectedCategory = categories.find((category) => category.key === normalizedCategory)
       ?? (matchedClub ? { key: `club-${matchedClub.id}`, label: matchedClub.name, group: "club" as const, createdByAdmin: true } : undefined);
     if (!selectedCategory && categoryParam.startsWith("club-") && !clubsReady) return;
     if (!selectedCategory || !canAccessCategory(selectedCategory)) {
