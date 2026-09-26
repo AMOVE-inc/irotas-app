@@ -49,8 +49,8 @@ describe("chat list identity presentation", () => {
     const chatList = source("components/chat-list-screen.tsx");
     expect(chatList).toContain("/^chat\\d+$/.test(room.id)");
     expect(chatList).toContain('room.id === "board-announcement" ? "お知らせ"');
-    expect(chatList).toContain('Api.getSharedChatMessages("board-announcement")');
-    expect(chatList).toContain('const announcementMessages = await Api.getSharedChatMessages("board-announcement")');
+    expect(chatList).toContain("The room list already carries the authoritative latest-message preview");
+    expect(chatList).not.toContain('Api.getSharedChatMessages("board-announcement")');
     expect(chatList).toContain("announcementPreviewReady");
     expect(chatList).toContain("announcementRoom.lastMessage || announcementPreviewReady");
     expect(chatList).not.toContain('? { ...room, lastMessage: "", lastMessageAt: undefined }');

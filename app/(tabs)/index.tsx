@@ -331,7 +331,7 @@ function TodayEventsSection({
               <View style={{ flexDirection: "row", alignItems: "center", marginTop: 6 }}>
                 <View
                   style={{
-                    backgroundColor: event.status === "full" ? colors.error + "20" : "#E8A0BF20",
+                    backgroundColor: event.status === "full" ? "#8E8E9320" : "#E8A0BF20",
                     borderRadius: 6,
                     paddingHorizontal: 6,
                     paddingVertical: 2,
@@ -341,7 +341,7 @@ function TodayEventsSection({
                     style={{
                       fontSize: 10,
                       fontWeight: "600",
-                      color: event.status === "full" ? colors.error : "#E8A0BF",
+                      color: event.status === "full" ? "#8E8E93" : "#E8A0BF",
                     }}
                   >
                     {event.status === "full" ? "募集終了" : event.capacityMode === "undecided" ? "募集人数 未定" : event.capacityMode === "unlimited" ? "募集人数 上限なし" : `${event.attendees}/${event.capacity}名`}

@@ -453,13 +453,13 @@ async function ensureBranchRoomMembership(db: D1Database, room: RoomRow, member:
     .bind(room.id, member.id).first<{ joined_at: string }>();
 }
 
-async function messageRows(db: D1Database, roomId: string, visibleFrom?: string) {
+async function messageRows(db: D1Database, roomId: string, visibleFrom?: string, limit = 100) {
   const result = await db.prepare(`SELECT cm.id, cm.room_id, cm.sender_member_id,
       m.public_member_id AS sender_public_member_id, m.display_name AS sender_display_name, m.profile_json AS sender_profile_json,
       cm.content, cm.image_url, cm.image_urls_json, cm.reply_to_json, cm.created_at, cm.updated_at
     FROM chat_messages cm LEFT JOIN members m ON m.id = cm.sender_member_id
     WHERE cm.room_id = ? AND cm.deleted_at IS NULL AND (? IS NULL OR cm.created_at >= ?)
-    ORDER BY cm.created_at DESC, cm.id DESC LIMIT 500`).bind(roomId, visibleFrom ?? null, visibleFrom ?? null).all<MessageRow>();
+    ORDER BY cm.created_at DESC, cm.id DESC LIMIT ?`).bind(roomId, visibleFrom ?? null, visibleFrom ?? null, limit).all<MessageRow>();
   return (result.results ?? []).reverse();
 }
 
@@ -874,7 +874,8 @@ export async function handleChatContentRequest(
 
     if (request.method === "GET") {
       const branchMembership = await ensureBranchRoomMembership(env.DB, room, member);
-      const messages = await messageRows(env.DB, roomId, branchMembership?.joined_at);
+      const limit = Math.min(Math.max(Number(url.searchParams.get("limit")) || 100, 1), 500);
+      const messages = await messageRows(env.DB, roomId, branchMembership?.joined_at, limit);
       const reactions = await reactionRows(env.DB, messages.map((item) => item.id));
       return json({ messages: messages.map((item) => serializeMessage(item, reactions)) });
     }

@@ -447,7 +447,7 @@ export function adjustSharedIrotasPoints(input: {
 }
 
 export function awardSharedXp(
-  action: "event_create" | "board_post" | "meal_report_post",
+  action: "event_create" | "board_post" | "meal_report_post" | "chat_message",
   sourceId: string,
 ) {
   return apiCall<{
@@ -466,6 +466,7 @@ export function awardSharedXp(
   }>("/api/xp/award", {
     method: "POST",
     body: JSON.stringify({ action, sourceId }),
+    suppressGlobalLoading: true,
   });
 }
 
@@ -495,10 +496,11 @@ export async function logout(): Promise<void> {
   });
 }
 
-export async function getSharedBoardContent(category?: string, threadId?: string) {
+export async function getSharedBoardContent(category?: string, threadId?: string, limit = 40) {
   const params = new URLSearchParams();
   if (category) params.set("category", category);
   if (threadId) params.set("thread", threadId);
+  if (!threadId) params.set("limit", String(limit));
   const query = params.size ? `?${params.toString()}` : "";
   return apiCall<{
     threads: SharedBoardThread[];
@@ -640,9 +642,9 @@ export async function voteSharedBoardPoll(
   );
 }
 
-export async function getSharedChatMessages(roomId: string) {
+export async function getSharedChatMessages(roomId: string, limit = 100) {
   const result = await apiCall<{ messages: SharedChatMessage[] }>(
-    `/api/chats/${encodeURIComponent(roomId)}/messages`,
+    `/api/chats/${encodeURIComponent(roomId)}/messages?limit=${Math.max(1, Math.min(500, Math.floor(limit)))}`,
     { cache: "no-store" },
   );
   return (Array.isArray(result.messages) ? result.messages : []).map(normalizedChatMessage);
@@ -713,6 +715,7 @@ export async function markSharedChatRoomRead(roomId: string) {
     `/api/chats/${encodeURIComponent(roomId)}/read`,
     {
       method: "PUT",
+      suppressGlobalLoading: true,
     },
   );
 }

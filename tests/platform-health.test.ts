@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import worker from "../sites/worker";
 import type { SitesEnv } from "../sites/platform-types";
 
-function environment(options?: { database?: boolean; uploads?: boolean }) {
+function environment(options?: { database?: boolean; uploads?: boolean; googleMaps?: boolean }) {
   const database = options?.database ?? true;
   const uploads = options?.uploads ?? true;
   return {
@@ -16,6 +16,7 @@ function environment(options?: { database?: boolean; uploads?: boolean }) {
         }
       : undefined,
     UPLOADS: uploads ? { list: async () => ({ objects: [] }) } : undefined,
+    GOOGLE_MAPS_API_KEY: options?.googleMaps === false ? undefined : "test-google-maps-key",
   } as unknown as SitesEnv;
 }
 
@@ -36,6 +37,7 @@ describe("platform health endpoint", () => {
     expect(await response.json()).toMatchObject({
       status: "ok",
       services: { database: "ok", uploads: "ok" },
+      configuration: { googleMaps: true },
       schemaVersion: "1",
     });
     expect(response.headers.get("strict-transport-security")).toContain("max-age=");
@@ -43,6 +45,16 @@ describe("platform health endpoint", () => {
     expect(response.headers.get("x-frame-options")).toBe("DENY");
     expect(response.headers.get("content-security-policy")).toContain("frame-ancestors 'none'");
     expect(response.headers.get("cache-control")).toBe("no-store");
+  });
+
+  it("reports whether the server-only Google Maps key is configured without exposing it", async () => {
+    const response = await worker.fetch(
+      new Request("https://example.com/api/platform/health"),
+      environment({ googleMaps: false }),
+    );
+    const body = await response.json() as { configuration: { googleMaps: boolean } };
+    expect(body.configuration.googleMaps).toBe(false);
+    expect(JSON.stringify(body)).not.toContain("test-google-maps-key");
   });
 
   it("reports degraded without a storage binding", async () => {

@@ -1740,6 +1740,8 @@ export default function EventsScreen() {
 
             <View
               style={{
+                width: "100%",
+                alignSelf: "stretch",
                 flexDirection: "row",
                 justifyContent: "space-between",
                 alignItems: "center",
@@ -1771,6 +1773,8 @@ export default function EventsScreen() {
             </View>
             <View
               style={{
+                width: "100%",
+                alignSelf: "stretch",
                 flexDirection: "row",
                 flexWrap: "wrap",
                 gap: 7,

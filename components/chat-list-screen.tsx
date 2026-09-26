@@ -1,6 +1,6 @@
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
-import { CHAT_ROOMS, CURRENT_USER, DEFAULT_AVATAR, type ChatRoom } from "@/constants/mock-data";
+import { CHAT_ROOMS, CURRENT_USER, DEFAULT_AVATAR, type ChatMessage, type ChatRoom } from "@/constants/mock-data";
 import { useAuthContext } from "@/lib/auth-context";
 import { isOperatorRole } from "@/lib/access-control";
 import { applyReadRoomState, getMyRooms, getRankRoomsForUser, loadDynamicRooms, markRoomRead, sortRoomsByRecent } from "@/lib/chat-store";
@@ -16,7 +16,6 @@ import * as Api from "@/lib/_core/api";
 import { stripRankFromName } from "@/components/member-rank-badge";
 import { getDiscordAuthorById, getDiscordAuthorByName } from "@/lib/discord-author-directory";
 import { mergeSentChatPreview, sentChatPreview, type SentChatPreview } from "@/lib/chat-list-preview";
-import type { ChatMessage } from "@/constants/mock-data";
 
 function formatEventStart(event: { date: string; time: string }) {
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(event.date);
@@ -136,7 +135,7 @@ function ChatRoomCard({ room, eventStarts, eventImages, memberAvatars, viewerMem
         onOpened(room.id, unreadCount);
         void markRoomRead(room.id);
         void Api.markSharedChatRoomRead(room.id).catch(() => {});
-        router.push({ pathname: "/chat", params: { id: room.id, unreadCount: String(unreadCount) } });
+        router.push({ pathname: "/chat", params: { id: room.id, unreadCount: String(unreadCount), roomName: room.name, roomType: room.type, sourceId: room.sourceId, participants: room.participants.join(",") } });
       }}
       onLongPress={() => {
         if (!onLongPress) return;
@@ -346,7 +345,6 @@ export default function ChatListScreen() {
     const localRankRooms = getRankRoomsForUser(viewerRank, canViewAllChats);
     // Do not present the local subset as a complete list while shared rooms load.
     let sharedRooms: ChatRoom[] = [];
-    let latestAnnouncement: ChatMessage | undefined;
     try {
       // 一覧表示に必要なのはルーム一覧だけ。重い補助情報は後段で補完する。
       const rooms = await Api.getSharedChatRooms();
@@ -361,10 +359,8 @@ export default function ChatListScreen() {
       sharedRooms = rooms.map((room) => ({ ...room, requiredRank: room.requiredRank as ChatRoom["requiredRank"] }))
         .filter((room) => !isImportedEventChat(room) && (room.type !== "dm" || room.participants.includes(viewerMemberId)));
       if (includeDetails) {
-        // Resolve the announcement preview before rendering the first room list.
-        // Rendering the room first used to flash "メッセージはまだありません".
-        const announcementMessages = await Api.getSharedChatMessages("board-announcement");
-        latestAnnouncement = [...announcementMessages].sort((left, right) => Date.parse(left.createdAt) - Date.parse(right.createdAt)).at(-1);
+        // The room list already carries the authoritative latest-message preview.
+        // Keep secondary event/avatar decoration off the first-render critical path.
         if (activeViewerId.current === viewerMemberId) setAnnouncementPreviewReady(true);
         void Promise.all([
           Api.getEvents().catch(() => []),
@@ -386,9 +382,7 @@ export default function ChatListScreen() {
     const mergedJoined = [...localJoinedRooms.filter((room) => !sharedById.has(room.id)), ...sharedRooms.filter((room) => room.type !== "rank" && !isFixtureRoom(room))]
       .filter((room) => !dismissedRooms.get(viewerMemberId)?.has(room.id))
       .filter((room, index, all) => all.findIndex((candidate) => candidate.id === room.id) === index)
-      .map((room) => room.id === "board-announcement" && latestAnnouncement
-        ? { ...room, lastMessage: latestAnnouncement.content.replace(/^【IRO\+\s*システム】\s*/, "").replace(/\s+/g, " ").trim(), lastMessageAt: latestAnnouncement.createdAt }
-        : room.id === "board-announcement" && !room.lastMessage && cachedAnnouncement?.lastMessage
+      .map((room) => room.id === "board-announcement" && !room.lastMessage && cachedAnnouncement?.lastMessage
           ? { ...room, lastMessage: cachedAnnouncement.lastMessage, lastMessageAt: cachedAnnouncement.lastMessageAt }
           : room);
     const mergedRank = viewerRank === "regular" && !canViewAllChats ? [] : [
@@ -415,7 +409,7 @@ export default function ChatListScreen() {
       pending = true;
       void refreshRooms(false).finally(() => { pending = false; });
     };
-    const timer = setInterval(refresh, Platform.OS === "web" ? 2000 : 3000);
+    const timer = setInterval(refresh, 15000);
     const onVisible = () => { if (document.visibilityState === "visible") refresh(); };
     if (typeof document !== "undefined") document.addEventListener("visibilitychange", onVisible);
     const appStateSubscription = Platform.OS === "web" ? null : AppState.addEventListener("change", (state) => { if (state === "active") refresh(); });
@@ -461,7 +455,7 @@ export default function ChatListScreen() {
         contentContainerStyle={{ paddingBottom: 112, flexGrow: 1 }}
         ListEmptyComponent={pinnedRooms.length || visibleRankRooms.length ? null : <View style={{ flex: 1, alignItems: "center", justifyContent: "center", paddingVertical: 80 }}><Text style={{ fontSize: 14, color: colors.muted }}>{roomsLoading ? "読み込み中…" : "参加中のチャットはありません"}</Text></View>}
       />
-      <Modal visible={actionRoom !== null} transparent animationType="fade" onRequestClose={() => setActionRoom(null)}>
+      <Modal visible={actionRoom !== null} transparent animationType="slide" onRequestClose={() => setActionRoom(null)}>
         <Pressable onPress={() => setActionRoom(null)} style={{ flex: 1, backgroundColor: "rgba(20,18,24,0.42)", justifyContent: "flex-end" }}>
           <Pressable onPress={() => {}} style={{ backgroundColor: colors.background, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 18, paddingBottom: 34 }}>
             <Text numberOfLines={1} style={{ fontSize: 16, fontWeight: "900", color: colors.foreground, marginBottom: 10 }}>{actionRoom?.name}</Text>

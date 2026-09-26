@@ -9,6 +9,7 @@ import { useAuthContext } from "@/lib/auth-context";
 import * as Api from "@/lib/_core/api";
 import { effectiveUnreadTotal, subscribeToOptimisticChatReads } from "@/lib/chat-unread-sync";
 import { useEffect, useRef, useState } from "react";
+import { BOTTOM_NAV_CONTENT_HEIGHT } from "@/constants/layout";
 
 export default function TabLayout() {
   const colors = useColors();
@@ -17,7 +18,7 @@ export default function TabLayout() {
   const { width } = useWindowDimensions();
   const isMobileWeb = Platform.OS === "web" && width <= 768;
   const bottomPadding = Platform.OS === "web" ? 0 : insets.bottom;
-  const tabBarHeight = 72 + bottomPadding;
+  const tabBarHeight = BOTTOM_NAV_CONTENT_HEIGHT + bottomPadding;
   const [unreadTotal, setUnreadTotal] = useState(0);
   const latestRooms = useRef<Awaited<ReturnType<typeof Api.getSharedChatRooms>>>([]);
   const { user } = useAuthContext();
@@ -66,7 +67,7 @@ export default function TabLayout() {
           bottom: 0,
           marginHorizontal: 0,
           marginBottom: 0,
-          paddingTop: 8,
+          paddingTop: 5,
           paddingBottom: bottomPadding,
           height: tabBarHeight,
           backgroundColor: colors.surface,

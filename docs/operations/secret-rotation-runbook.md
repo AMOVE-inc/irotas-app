@@ -30,6 +30,7 @@
 3. Sitesの本番環境変数へ新しい値を保存する。
 4. 新しいサイトバージョンを公開し、次の確認を行う。
    - `/api/platform/health` がHTTP 200
+   - Google Places変更時はレスポンスの `configuration.googleMaps` が `true`（秘密値自体は返さない）
    - ログインと認証コード送信が成功
    - Square同期または署名済みWebhookが成功
    - 対象機能のWorkerエラーが0件

@@ -324,7 +324,7 @@ function MessageBubble({ message, isMe, canDelete, readOnly, viewerId, viewerNam
             {showMoreReactions ? <View style={{ width: "100%", flexDirection: "row", flexWrap: "wrap", marginTop: 4 }}>{MORE_REACTION_EMOJIS.map((emoji) => <Pressable key={emoji} onPress={() => { onReact(emoji); setShowReactionPicker(false); setShowMoreReactions(false); }} style={{ width: 34, height: 32, alignItems: "center", justifyContent: "center" }}><Text style={{ fontSize: 19 }}>{emoji}</Text></Pressable>)}</View> : null}
           </View>
         ) : null}
-        <Modal visible={showActions} transparent animationType="fade" onRequestClose={() => setShowActions(false)}><Pressable onPress={() => setShowActions(false)} style={{ flex: 1, backgroundColor: "rgba(20,18,24,0.48)", justifyContent: "flex-end" }}><Pressable onPress={() => {}} style={{ backgroundColor: colors.background, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 16, paddingBottom: 30 }}><View style={{ flexDirection: "row", justifyContent: "space-around", backgroundColor: colors.surface, borderRadius: 16, padding: 10, marginBottom: 10 }}>{REACTION_EMOJIS.map((emoji) => <Pressable key={emoji} onPress={() => { onReact(emoji); setShowActions(false); }} style={{ padding: 7 }}><Text style={{ fontSize: 24 }}>{emoji}</Text></Pressable>)}</View>{[{ label: "返信", icon: "arrowshape.turn.up.left", action: onReply }, { label: "リンクをコピー", icon: "link", action: () => { void Clipboard.setStringAsync(`https://app.irotas-community.com/chat?id=${encodeURIComponent(message.chatId)}&message=${encodeURIComponent(message.id)}`); } }, { label: "テキストをコピー", icon: "doc.on.doc", action: () => { void Clipboard.setStringAsync(message.content); } }, ...(isMe && !readOnly ? [{ label: "メッセージを編集", icon: "pencil", action: onEdit }] : []), ...(canDelete ? [{ label: "メッセージを削除", icon: "trash", action: onDelete }] : [])].map((item) => <Pressable key={item.label} onPress={() => { item.action(); setShowActions(false); }} style={{ minHeight: 48, flexDirection: "row", alignItems: "center", paddingHorizontal: 12, borderBottomWidth: 0.5, borderBottomColor: colors.border }}><IconSymbol name={item.icon as any} size={19} color={item.label.includes("削除") ? colors.error : colors.foreground} /><Text style={{ marginLeft: 12, fontSize: 15, fontWeight: "700", color: item.label.includes("削除") ? colors.error : colors.foreground }}>{item.label}</Text></Pressable>)}</Pressable></Pressable></Modal>
+        <Modal visible={showActions} transparent animationType="slide" onRequestClose={() => setShowActions(false)}><Pressable onPress={() => setShowActions(false)} style={{ flex: 1, backgroundColor: "rgba(20,18,24,0.48)", justifyContent: "flex-end" }}><Pressable onPress={() => {}} style={{ backgroundColor: colors.background, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 16, paddingBottom: 30 }}><View style={{ flexDirection: "row", justifyContent: "space-around", backgroundColor: colors.surface, borderRadius: 16, padding: 10, marginBottom: 10 }}>{REACTION_EMOJIS.map((emoji) => <Pressable key={emoji} onPress={() => { onReact(emoji); setShowActions(false); }} style={{ padding: 7 }}><Text style={{ fontSize: 24 }}>{emoji}</Text></Pressable>)}</View>{[{ label: "返信", icon: "arrowshape.turn.up.left", action: onReply }, { label: "リンクをコピー", icon: "link", action: () => { void Clipboard.setStringAsync(`https://app.irotas-community.com/chat?id=${encodeURIComponent(message.chatId)}&message=${encodeURIComponent(message.id)}`); } }, { label: "テキストをコピー", icon: "doc.on.doc", action: () => { void Clipboard.setStringAsync(message.content); } }, ...(isMe && !readOnly ? [{ label: "メッセージを編集", icon: "pencil", action: onEdit }] : []), ...(canDelete ? [{ label: "メッセージを削除", icon: "trash", action: onDelete }] : [])].map((item) => <Pressable key={item.label} onPress={() => { item.action(); setShowActions(false); }} style={{ minHeight: 48, flexDirection: "row", alignItems: "center", paddingHorizontal: 12, borderBottomWidth: 0.5, borderBottomColor: colors.border }}><IconSymbol name={item.icon as any} size={19} color={item.label.includes("削除") ? colors.error : colors.foreground} /><Text style={{ marginLeft: 12, fontSize: 15, fontWeight: "700", color: item.label.includes("削除") ? colors.error : colors.foreground }}>{item.label}</Text></Pressable>)}</Pressable></Pressable></Modal>
         <Modal visible={reactionDetails !== null} transparent animationType="fade" onRequestClose={() => setReactionDetails(null)}>
           <Pressable onPress={() => setReactionDetails(null)} style={{ flex: 1, backgroundColor: "rgba(20,18,24,0.48)", justifyContent: "center", padding: 28 }}>
             <Pressable onPress={() => {}} style={{ maxHeight: "72%", backgroundColor: colors.background, borderRadius: 20, padding: 18 }}>
@@ -359,7 +359,7 @@ export default function ChatScreen() {
   const viewerMemberId = authUser?.memberId ?? (authUser?.id ? `member-${authUser.id}` : CURRENT_USER.id);
   const userIsAdmin = isAdminRole(authUser?.role, authUser?.accessRole);
   const canViewAllChats = isOperatorRole(authUser?.role, authUser?.accessRole);
-  const { id, message: linkedMessageId, unreadCount: unreadCountParam } = useLocalSearchParams<{ id: string; message?: string; unreadCount?: string }>();
+  const { id, message: linkedMessageId, unreadCount: unreadCountParam, roomName, roomType, sourceId, participants: participantsParam } = useLocalSearchParams<{ id: string; message?: string; unreadCount?: string; roomName?: string; roomType?: ChatRoom["type"]; sourceId?: string; participants?: string }>();
   const unreadCountFromRoute = unreadCountParam !== undefined && Number.isFinite(Number(unreadCountParam))
     ? Math.max(0, Math.floor(Number(unreadCountParam))) : null;
   const [messageText, setMessageText] = useState("");
@@ -402,7 +402,16 @@ export default function ChatScreen() {
     return () => { show.remove(); hide.remove(); };
   }, []);
 
-  const [room, setRoom] = useState(() => getRoomById(id ?? "") ?? (id === "community-free-chat" ? {
+  const routedRoom = useMemo<ChatRoom | undefined>(() => id ? {
+    id,
+    name: roomName || "チャット",
+    type: roomType ?? (id.startsWith("club-chat-") ? "club" : id.startsWith("board-") || id === "community-free-chat" ? "board" : "group"),
+    sourceId: sourceId ?? "",
+    participants: participantsParam?.split(",").filter(Boolean) ?? [viewerMemberId],
+    createdBy: "system",
+    shared: true,
+  } : undefined, [id, participantsParam, roomName, roomType, sourceId, viewerMemberId]);
+  const [room, setRoom] = useState(() => getRoomById(id ?? "") ?? routedRoom ?? (id === "community-free-chat" ? {
     id, name: "フリーチャット", type: "board" as const, sourceId: "community-free-chat", participants: [], createdBy: "system", shared: true,
   } : undefined));
   const [roomEvent, setRoomEvent] = useState<Event | null>(null);
@@ -624,7 +633,12 @@ export default function ChatScreen() {
     } else setHasOpenedIntroduction(true);
     // 一覧のバッジは即時に消し、サーバー既読化は未読件数を取得してから行う。
     markChatRoomOptimisticallyRead(id, Math.max(0, Number(unreadCountParam ?? 0)));
-    setIsLoadingRoom(true);
+    const immediateRoom = getRoomById(id) ?? routedRoom;
+    if (immediateRoom) {
+      setRoom(immediateRoom);
+      setRoomParticipants([...immediateRoom.participants]);
+    }
+    setIsLoadingRoom(!immediateRoom);
     const loadingFallback = setTimeout(() => setIsLoadingRoom(false), 2500);
     // プロフィール画像読み込み
     AsyncStorage.getItem("profile_avatar_uri").then((uri) => {
@@ -677,7 +691,7 @@ export default function ChatScreen() {
       }
     }).catch(() => setIsLoadingRoom(false));
     return () => clearTimeout(loadingFallback);
-  }, [id, applySharedMessages, introductionOpenedKey]);
+  }, [id, applySharedMessages, introductionOpenedKey, routedRoom]);
 
   useEffect(() => {
     if (id !== "board-introduction" || !introductionHydrated) return;
@@ -715,8 +729,8 @@ export default function ChatScreen() {
     }).catch((error) => {
       if (id.startsWith("club-chat-") && error instanceof Api.ApiError && (error.statusCode === 403 || error.statusCode === 404)) setClubAccessDenied(true);
     }); };
-    const timer = setInterval(refresh, 1500);
-    const roomTimer = setInterval(refreshRoom, 10000);
+    const timer = setInterval(refresh, 10000);
+    const roomTimer = setInterval(refreshRoom, 30000);
     const appStateSubscription = Platform.OS === "web" ? null : AppState.addEventListener("change", (state) => { if (state === "active") { refresh(); refreshRoom(); } });
     return () => { clearInterval(timer); clearInterval(roomTimer); appStateSubscription?.remove(); };
   }, [id, applySharedMessages]);
@@ -834,6 +848,7 @@ export default function ChatScreen() {
         ...draftVideos.map(async (video) => (await Api.uploadEventImage(video.uri, video.mimeType)).imageUrl),
       ]);
       const newMessage = await Api.createSharedChatMessage(id, { content, imageUrls, clientMessageId, replyToId: draftReply?.id });
+      if (content.replace(/\s/g, "").length >= 10) void Api.awardSharedXp("chat_message", newMessage.id).catch(() => {});
       pendingSendRef.current = null;
       setMessages((previous) => [...previous.filter((item) => item.id !== clientMessageId && item.id !== newMessage.id), newMessage]);
       showSentChatPreviewImmediately(viewerMemberId, id, newMessage);
@@ -957,8 +972,9 @@ export default function ChatScreen() {
   if ((!room || room.id !== id) && !clubAccessDenied) {
     return (
       <ScreenContainer edges={["top", "left", "right"]}>
-        <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-          <ActivityIndicator size="large" color="#E8A0BF" /><Text style={{ fontSize: 14, color: colors.muted, marginTop: 12 }}>チャットを読み込んでいます…</Text>
+        <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 16, paddingVertical: 10, borderBottomWidth: 0.5, borderBottomColor: colors.border }}>
+          <Pressable onPress={() => router.back()}><IconSymbol name="arrow.left" size={22} color={colors.foreground} /></Pressable>
+          <Text numberOfLines={1} style={{ flex: 1, marginLeft: 12, fontSize: 16, fontWeight: "700", color: colors.foreground }}>{routedRoom?.name ?? "チャット"}</Text>
         </View>
       </ScreenContainer>
     );

@@ -49,6 +49,7 @@ export const POINT_ACTIONS = {
   comment: { points: 2, label: "コメント投稿" },
   clubActivity: { points: 3, label: "部活動参加" },
   mealReportPost: { points: 8, label: "ごちそうさま報告投稿" },
+  chatMessage: { points: 1, label: "チャット投稿（1日5回まで）" },
   eventOrganize: { points: 20, label: "イベント幹事（開催完了時）" },
 } as const;
 
@@ -903,7 +904,7 @@ export const RANK_BENEFITS: RankBenefit[] = [
 ];
 
 export const RANK_COLORS: Record<MemberRank, string> = {
-  regular: "#8B8B8B",
+  regular: "#8DBB3E",
   silver: "#C0C0C0",
   gold: "#FFD700",
   platinum: "#171717",

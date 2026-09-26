@@ -393,6 +393,7 @@ async function routeRequest(
         services: { database, uploads },
         configuration: {
           auth: Boolean(env.AUTH_SECRET && emailDeliveryConfigured(env)),
+          googleMaps: Boolean(env.GOOGLE_MAPS_API_KEY),
           square: Boolean(
             env.SQUARE_WEBHOOK_SIGNATURE_KEY &&
             env.SQUARE_WEBHOOK_NOTIFICATION_URL,

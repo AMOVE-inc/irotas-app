@@ -2,6 +2,7 @@ import { openExternalUrl } from "@/lib/open-external-url";
 import { ScreenContainer } from "@/components/screen-container";
 import { NewMemberMark } from "@/components/new-member-mark";
 import { MemberRankBadge, MemberRoleBadge, clubLeaderBadgeForClub, stripRankFromName } from "@/components/member-rank-badge";
+import { levelFromXp } from "@/lib/xp-levels";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import {
   RANK_COLORS,
@@ -298,6 +299,7 @@ export default function MemberProfileScreen() {
 
           <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", flexWrap: "wrap", marginTop: 6 }}>
             <MemberRankBadge rank={member.rank} name={member.name} role={member.role} />
+            <Text style={{ marginLeft: 7, fontSize: 12, fontWeight: "800", color: rankColor }}>Lv.{levelFromXp(member.points)}</Text>
             <MemberRoleBadge name={selfName ?? member.name} role={databaseMember?.accessRole ?? member.role} leaderLabel={leaderLabel} />
           </View>
           {databaseMember?.publicUserId ? <Text style={{ marginTop: 7, fontSize: 13, fontWeight: "700", color: colors.muted }}>@{databaseMember.publicUserId}</Text> : null}

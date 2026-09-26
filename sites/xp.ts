@@ -8,6 +8,7 @@ const REWARDS = {
   event_create: { amount: 10, reason: "イベントの新規作成" },
   board_post: { amount: 5, reason: "掲示板投稿" },
   meal_report_post: { amount: 8, reason: "ごちそうさま報告投稿" },
+  chat_message: { amount: 1, reason: "チャット投稿" },
 } as const;
 
 type XpAction = keyof typeof REWARDS;
@@ -25,6 +26,12 @@ async function validSource(db: D1Database, viewer: Viewer, action: XpAction, sou
   if (action === "event_create") {
     return Boolean(await db.prepare("SELECT id FROM events WHERE id = ? AND organizer_member_id = ? LIMIT 1")
       .bind(sourceId, viewer.id).first());
+  }
+  if (action === "chat_message") {
+    const message = await db.prepare(`SELECT content FROM chat_messages
+      WHERE id = ? AND sender_member_id = ? AND deleted_at IS NULL LIMIT 1`)
+      .bind(sourceId, viewer.id).first<{ content: string }>();
+    return Boolean(message && !message.content.startsWith("【IRO+ システム】") && message.content.replace(/\s/g, "").length >= 10);
   }
   const row = await db.prepare("SELECT category FROM board_threads WHERE id = ? AND author_member_id = ? AND deleted_at IS NULL LIMIT 1")
     .bind(sourceId, viewer.id).first<{ category: string }>();
@@ -55,6 +62,17 @@ async function award(request: Request, db: D1Database, viewer: Viewer) {
     return json({ error: "イベント作成XPはイベント作成時に自動反映されます" }, 409);
   if (!await validSource(db, viewer, action, sourceId))
     return json({ error: "XP付与対象を確認できません" }, 403);
+
+  if (action === "chat_message") {
+    const today = new Intl.DateTimeFormat("sv-SE", { timeZone: "Asia/Tokyo" }).format(new Date());
+    const start = new Date(`${today}T00:00:00+09:00`);
+    const end = new Date(start.getTime() + 24 * 60 * 60_000);
+    const daily = await db.prepare(`SELECT COUNT(*) AS count FROM xp_operation_requests
+      WHERE member_id = ? AND action = 'chat_message' AND status = 'applied'
+        AND created_at >= ? AND created_at < ?`)
+      .bind(viewer.id, start.toISOString(), end.toISOString()).first<{ count: number }>();
+    if (Number(daily?.count ?? 0) >= 5) return json({ error: "本日のチャットXP上限に達しました" }, 429);
+  }
 
   const reward = REWARDS[action];
   const member = await db.prepare("SELECT xp, member_rank FROM members WHERE id = ?").bind(viewer.id)

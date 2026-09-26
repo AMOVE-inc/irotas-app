@@ -192,16 +192,6 @@ export default function AppSettingsScreen() {
       <ScrollView
         contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 40 }}
       >
-        {/* 通知設定は1画面に集約 */}
-        <SectionHeader title="通知" />
-        <SettingRow
-          icon="bell.fill"
-          iconColor="#E8A0BF"
-          label="通知設定"
-          sublabel="通知の種類と端末の通知許可を設定"
-          onPress={() => router.push("/notification-settings" as any)}
-        />
-
         {/* プライバシー */}
         <SectionHeader title="プライバシー" />
         <SettingRow

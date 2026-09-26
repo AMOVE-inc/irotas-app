@@ -27,6 +27,13 @@ describe("shared XP", () => {
     expect(migration).toContain("'18'");
   });
 
+  it("awards chat XP only for eligible messages and caps daily rewards", () => {
+    const source = fs.readFileSync(path.join(process.cwd(), "sites/xp.ts"), "utf8");
+    expect(source).toContain('chat_message: { amount: 1');
+    expect(source).toContain('message.content.replace(/\\s/g, "").length >= 10');
+    expect(source).toContain('Number(daily?.count ?? 0) >= 5');
+  });
+
   it("awards 20 XP to a completed event host and can reverse it on cancellation", () => {
     const migration = fs.readFileSync(path.join(process.cwd(), "drizzle/0018_event_host_xp.sql"), "utf8");
     const hostXp = fs.readFileSync(path.join(process.cwd(), "sites/event-host-xp.ts"), "utf8");

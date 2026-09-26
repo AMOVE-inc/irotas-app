@@ -129,7 +129,7 @@ export default function MembersScreen() {
           <TextInput
             value={searchText}
             onChangeText={setSearchText}
-            placeholder="名前または公開ユーザーIDで検索"
+            placeholder="名前またはユーザーIDで検索"
             placeholderTextColor={colors.muted}
             style={{ flex: 1, marginLeft: 8, fontSize: 14, color: colors.foreground }}
           />

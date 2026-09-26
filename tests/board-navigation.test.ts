@@ -99,11 +99,12 @@ describe("board category ordering", () => {
     const profileScreen = readFileSync(resolve(process.cwd(), "app/member-profile.tsx"), "utf8");
     expect(boardScreen).toContain('returnToBoardThread: "1", boardCategory: thread.category, boardThreadId: thread.id');
     expect(boardScreen).toContain('onOpenMemberProfile(profileParams(thread.author.id, thread.author.name))');
-    expect(boardScreen).toContain('returnToTimeline={fromHome === "1"}');
+    expect(boardScreen).toContain('returnToTimeline={false}');
     expect(boardScreen).toContain('leavingThreadDetailRef.current = true;');
     expect(boardScreen).toContain('if (!threadParam || leavingThreadDetailRef.current) return;');
-    expect(boardScreen).toContain('loadSharedBoardContent(categoryParam, threadParam)');
-    expect(boardScreen).toContain('leaveThreadDetail(fromHome === "1" ? () => router.replace("/" as any) : undefined)');
+    expect(boardScreen).toContain('loadSharedBoardContent(isThreadView ? activeCategory : undefined, isThreadView && threadParam ? threadParam : undefined)');
+    expect(boardScreen).toContain('onClose={() => {');
+    expect(boardScreen).toContain('leaveThreadDetail();');
     expect(boardScreen).toContain('leaveThreadDetail(() => router.push({ pathname: "/member-profile", params }))');
     expect(profileScreen).toContain('returnToBoardThread === "1" && boardCategory && boardThreadId');
     expect(profileScreen).toContain('thread: boardThreadId');

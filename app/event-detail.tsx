@@ -130,8 +130,8 @@ function EventMemberPicker({
     : [];
   const selected = normalizedIds.map((id) => ({ id, member: members.find((member) => member.id === id) }));
   return <View>
-    <Text style={{ marginTop: 12, fontSize: 12, fontWeight: "800", color: colors.muted }}>{label}（名前または公開ユーザーIDで検索）</Text>
-    <TextInput value={query} onChangeText={setQuery} placeholder="名前または公開ユーザーIDを入力" placeholderTextColor={colors.muted} autoCapitalize="none" style={{ marginTop: 5, borderWidth: 1, borderColor: colors.border, borderRadius: 10, padding: 11, color: colors.foreground }} />
+    <Text style={{ marginTop: 12, fontSize: 12, fontWeight: "800", color: colors.muted }}>{label}（名前またはユーザーIDで検索）</Text>
+    <TextInput value={query} onChangeText={setQuery} placeholder="名前またはユーザーIDを入力" placeholderTextColor={colors.muted} autoCapitalize="none" style={{ marginTop: 5, borderWidth: 1, borderColor: colors.border, borderRadius: 10, padding: 11, color: colors.foreground }} />
     {candidates.map((member) => {
       const avatar = typeof member.profile.avatarUrl === "string" ? member.profile.avatarUrl : undefined;
       return <Pressable key={member.id} onPress={() => { onChange([...normalizedIds, member.id]); setQuery(""); }} style={{ flexDirection: "row", alignItems: "center", paddingVertical: 8, borderBottomWidth: 0.5, borderBottomColor: colors.border }}>
@@ -198,6 +198,7 @@ export default function EventDetailScreen() {
   const [eventCommentShowAllReactions, setEventCommentShowAllReactions] = useState(false);
   const [eventCommentDeleteTarget, setEventCommentDeleteTarget] = useState<EventComment | null>(null);
   const [eventCommentFocused, setEventCommentFocused] = useState(false);
+  const [bottomCtaHeight, setBottomCtaHeight] = useState(0);
   const [showAdminEdit, setShowAdminEdit] = useState(false);
   const [adminTitle, setAdminTitle] = useState(event?.title ?? "");
   const [adminParticipants, setAdminParticipants] = useState((event?.participants ?? []).join("\n"));
@@ -1079,7 +1080,7 @@ export default function EventDetailScreen() {
         {linkCopied ? <View style={{ position: "absolute", top: insets.top + 140, right: 16, borderRadius: 10, backgroundColor: "rgba(25,25,28,0.92)", paddingHorizontal: 12, paddingVertical: 9 }}><Text style={{ color: "#FFF", fontSize: 12, fontWeight: "800" }}>リンクをコピーしました</Text></View> : null}
       </View>
 
-      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16, paddingTop: insets.top + 8, paddingBottom: 236 + insets.bottom }} keyboardShouldPersistTaps="handled" keyboardDismissMode="interactive">
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16, paddingTop: insets.top + 8, paddingBottom: PERSISTENT_BOTTOM_NAV_HEIGHT + (Platform.OS === "web" ? 0 : insets.bottom) + bottomCtaHeight + 16 }} keyboardShouldPersistTaps="handled" keyboardDismissMode="interactive">
         <EventImage event={event} style={{ width: "100%", height: 250, borderRadius: 16, marginBottom: 16 }} />
         {/* Title */}
         <Text style={{ fontSize: 26, fontWeight: "800", color: colors.foreground, marginBottom: 12 }}>
@@ -1545,6 +1546,7 @@ export default function EventDetailScreen() {
 
       {/* Bottom CTA */}
       {!eventCommentFocused ? <View
+        onLayout={(event) => setBottomCtaHeight(event.nativeEvent.layout.height)}
         style={{
           position: "absolute",
           bottom: PERSISTENT_BOTTOM_NAV_HEIGHT + (Platform.OS === "web" ? 0 : insets.bottom),

@@ -273,7 +273,7 @@ function RankCard({ rank }: { rank: MemberRank }) {
   );
 }
 
-function RankTiersCard() {
+function RankTiersCard({ currentRank }: { currentRank: MemberRank }) {
   const colors = useColors();
 
   const tiers = [
@@ -308,7 +308,7 @@ function RankTiersCard() {
             paddingVertical: 10,
             borderTopWidth: 0.5,
             borderTopColor: colors.border,
-            backgroundColor: tier.rank === CURRENT_USER.rank ? RANK_COLORS[tier.rank] + "08" : "transparent",
+            backgroundColor: tier.rank === currentRank ? RANK_COLORS[tier.rank] + "12" : "transparent",
           }}
         >
           <View
@@ -325,7 +325,7 @@ function RankTiersCard() {
               <Text style={{ fontSize: 14, fontWeight: "700", color: RANK_COLORS[tier.rank] }}>
                 {RANK_LABELS[tier.rank]}
               </Text>
-              {tier.rank === CURRENT_USER.rank && (
+              {tier.rank === currentRank && (
                 <Text style={{ fontSize: 10, fontWeight: "600", color: "#E8A0BF", marginLeft: 6 }}>
                   ← 現在
                 </Text>
@@ -340,8 +340,6 @@ function RankTiersCard() {
     </View>
   );
 }
-
-void RankTiersCard;
 
 function EditProfileModal({
   visible,
@@ -473,7 +471,7 @@ function EditProfileModal({
     }
     const normalizedPublicUserId = publicUserId.trim().replace(/^@+/, "").toLowerCase();
     if (serverBacked && (!normalizedPublicUserId || !/^[a-z0-9][a-z0-9._]{2,23}$/.test(normalizedPublicUserId) || normalizedPublicUserId.endsWith("."))) {
-      Alert.alert("公開ユーザーIDを確認してください", "3〜24文字の半角英小文字・数字・ピリオド・アンダーバーで入力してください。");
+      Alert.alert("ユーザーIDを確認してください", "3〜24文字の半角英小文字・数字・ピリオド・アンダーバーで入力してください。");
       return;
     }
     if (showAge && (!birthYear || !birthMonth || !birthDay)) {
@@ -615,7 +613,7 @@ function EditProfileModal({
             }}
           />
 
-          {serverBacked ? <><Text style={{ fontSize: 13, fontWeight: "600", color: colors.muted, marginBottom: 6 }}>公開ユーザーID</Text><View style={{ flexDirection: "row", alignItems: "center", backgroundColor: colors.surface, borderRadius: 12, paddingHorizontal: 14, marginBottom: 5 }}><Text style={{ fontSize: 15, color: colors.muted }}>@</Text><TextInput value={publicUserId} onChangeText={(value) => setPublicUserId(value.replace(/^@+/, "").toLowerCase().replace(/[^a-z0-9._]/g, "").slice(0, 24))} placeholder="your.name" placeholderTextColor={colors.muted} autoCapitalize="none" autoCorrect={false} style={{ flex: 1, paddingVertical: 12, fontSize: 15, color: colors.foreground }} /></View><Text style={{ fontSize: 11, lineHeight: 16, color: colors.muted, marginBottom: 16 }}>プロフィールや検索で表示されます。3〜24文字、半角英小文字・数字・.・_ が使用できます。</Text></> : null}
+          {serverBacked ? <><Text style={{ fontSize: 13, fontWeight: "600", color: colors.muted, marginBottom: 6 }}>ユーザーID</Text><View style={{ flexDirection: "row", alignItems: "center", backgroundColor: colors.surface, borderRadius: 12, paddingHorizontal: 14, marginBottom: 5 }}><Text style={{ fontSize: 15, color: colors.muted }}>@</Text><TextInput value={publicUserId} onChangeText={(value) => setPublicUserId(value.replace(/^@+/, "").toLowerCase().replace(/[^a-z0-9._]/g, "").slice(0, 24))} placeholder="your.name" placeholderTextColor={colors.muted} autoCapitalize="none" autoCorrect={false} style={{ flex: 1, paddingVertical: 12, fontSize: 15, color: colors.foreground }} /></View><Text style={{ fontSize: 11, lineHeight: 16, color: colors.muted, marginBottom: 16 }}>プロフィールや検索で表示されます。3〜24文字、半角英小文字・数字・.・_ が使用できます。</Text></> : null}
 
           <Text style={{ fontSize: 13, fontWeight: "600", color: colors.muted, marginBottom: 6 }}>生年月日</Text>
           <View style={{ flexDirection: "row", gap: 7, marginBottom: 10 }}><View style={{ flex: 1.35 }}><ProfileSelectField label="年" value={birthYear} options={BIRTH_YEARS} onChange={setBirthYear} /></View><View style={{ flex: 1 }}><ProfileSelectField label="月" value={birthMonth} options={MONTHS} onChange={setBirthMonth} /></View><View style={{ flex: 1 }}><ProfileSelectField label="日" value={birthDay} options={DAYS} onChange={setBirthDay} /></View></View>
@@ -993,8 +991,8 @@ export default function ProfileScreen() {
               onPress={async () => {
                 if (!publicUserId) { setShowEditProfile(true); return; }
                 await Clipboard.setStringAsync(`@${publicUserId}`);
-                if (Platform.OS === "web") window.alert("公開ユーザーIDをコピーしました");
-                else Alert.alert("コピー完了", "公開ユーザーIDをコピーしました");
+                if (Platform.OS === "web") window.alert("ユーザーIDをコピーしました");
+                else Alert.alert("コピー完了", "ユーザーIDをコピーしました");
               }}
               style={({ pressed }) => ({
                 flexDirection: "row",
@@ -1009,7 +1007,7 @@ export default function ProfileScreen() {
                 opacity: pressed ? 0.7 : 1,
               })}
             >
-              <Text style={{ fontSize: 12, color: colors.muted, marginRight: 6 }}>{publicUserId ? "公開ユーザーID" : "公開ユーザーIDを設定"}</Text>
+              <Text style={{ fontSize: 12, color: colors.muted, marginRight: 6 }}>{publicUserId ? "ユーザーID" : "ユーザーIDを設定"}</Text>
               {publicUserId ? <Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground }}>@{publicUserId}</Text> : null}
               <IconSymbol name={publicUserId ? "doc.on.doc" : "chevron.right"} size={13} color={colors.muted} style={{ marginLeft: 6 }} />
             </Pressable>
@@ -1411,7 +1409,7 @@ export default function ProfileScreen() {
       <Modal visible={showRankExplanation} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setShowRankExplanation(false)}>
         <View style={{ flex: 1, backgroundColor: colors.background }}>
           <View style={{ flexDirection: "row", alignItems: "center", padding: 16, borderBottomWidth: 0.5, borderBottomColor: colors.border }}><Text style={{ flex: 1, fontSize: 19, fontWeight: "900", color: colors.foreground }}>会員ランクについて</Text><Pressable onPress={() => setShowRankExplanation(false)}><IconSymbol name="xmark" size={22} color={colors.foreground} /></Pressable></View>
-          <ScrollView contentContainerStyle={{ paddingTop: 16, paddingBottom: 40 }}><Text style={{ marginHorizontal: 16, marginBottom: 14, fontSize: 14, lineHeight: 21, color: colors.foreground }}>IRO＋での活動に応じてXPが貯まり、会員ランクが上がります。ランクごとに利用できる特典が増えます。</Text><RankTiersCard /><PointActionsCard />{(["regular", "silver", "gold", "platinum"] as MemberRank[]).map((rank) => <RankCard key={rank} rank={rank} />)}</ScrollView>
+          <ScrollView contentContainerStyle={{ paddingTop: 16, paddingBottom: 40 }}><Text style={{ marginHorizontal: 16, marginBottom: 14, fontSize: 14, lineHeight: 21, color: colors.foreground }}>IRO＋での活動に応じてXPが貯まり、会員ランクが上がります。ランクごとに利用できる特典が増えます。</Text><RankTiersCard currentRank={user.rank} /><PointActionsCard />{(["regular", "silver", "gold", "platinum"] as MemberRank[]).map((rank) => <RankCard key={rank} rank={rank} />)}</ScrollView>
         </View>
       </Modal>
 

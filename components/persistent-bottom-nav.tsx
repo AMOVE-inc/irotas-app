@@ -3,9 +3,10 @@ import { useColors } from "@/hooks/use-colors";
 import { useRouter } from "expo-router";
 import { Platform, Pressable, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { BOTTOM_NAV_CONTENT_HEIGHT } from "@/constants/layout";
 
 const items = [["ホーム", "house.fill", "/"], ["イベント", "calendar", "/events"], ["掲示板", "doc.text.fill", "/board"], ["チャット", "bubble.left.and.bubble.right.fill", "/chats"], ["マイページ", "person.fill", "/profile"]] as const;
-export const PERSISTENT_BOTTOM_NAV_HEIGHT = 72;
+export const PERSISTENT_BOTTOM_NAV_HEIGHT = BOTTOM_NAV_CONTENT_HEIGHT;
 export function PersistentBottomNav({ active }: { active?: string }) {
   const colors = useColors(); const router = useRouter(); const insets = useSafeAreaInsets();
   const safeBottom = Platform.OS === "web" ? 0 : insets.bottom;

@@ -42,7 +42,7 @@ import { formatMealReportArea, resolveRestaurantLocation } from "@/lib/restauran
 import { XpRewardPopup } from "@/components/xp-reward-popup";
 import { awardXp, type XpReward } from "@/lib/xp-store";
 import { POINT_ACTIONS } from "@/constants/mock-data";
-import { submitClubApplication as submitClubApplicationToStore, useClubs } from "@/lib/club-store";
+import { refreshClubs, submitClubApplication as submitClubApplicationToStore, useClubs } from "@/lib/club-store";
 import { getMentionGroups, getMentionQuery, insertMention, mentionsViewer } from "@/lib/mentions";
 import { sendClubApplicationNotification } from "@/lib/notifications";
 import { type TextSelection } from "@/lib/text-formatting";
@@ -603,7 +603,7 @@ function ThreadCard({ thread, viewerId, onPress, onEdit, onDelete, onPin, onTogg
         )}
       </View>
     </Pressable>
-    <Modal visible={showActions} transparent animationType="fade" onRequestClose={() => setShowActions(false)}><Pressable onPress={() => setShowActions(false)} style={{ flex: 1, justifyContent: "flex-end", backgroundColor: "rgba(20,18,24,0.48)" }}><View style={{ backgroundColor: colors.background, borderTopLeftRadius: 22, borderTopRightRadius: 22, padding: 18, paddingBottom: 32 }}><Text style={{ fontSize: 16, fontWeight: "800", color: colors.foreground, marginBottom: 10 }}>投稿の操作</Text>{[{ label: "リンクをコピー", action: () => { void Clipboard.setStringAsync(`https://app.irotas-community.com/board?category=${encodeURIComponent(thread.category)}&view=threads&thread=${encodeURIComponent(thread.id)}`); } }, ...(onToggleClosed ? [{ label: closed ? "投稿をオープンにする" : "投稿をクローズする", action: onToggleClosed }] : []), ...(onPin ? [{ label: pinned ? "投稿の固定を解除する" : "投稿を固定する", action: onPin }] : []), ...(onEdit ? [{ label: "編集", action: onEdit }] : []), ...(onDelete ? [{ label: "削除", action: onDelete }] : [])].map((item) => <Pressable key={item.label} onPress={() => { setShowActions(false); item.action(); }} style={{ paddingVertical: 13, borderBottomWidth: 0.5, borderBottomColor: colors.border }}><Text style={{ fontSize: 15, fontWeight: "700", color: item.label === "削除" ? colors.error : colors.foreground }}>{item.label}</Text></Pressable>)}<Pressable onPress={() => setShowActions(false)} style={{ paddingVertical: 14 }}><Text style={{ color: colors.muted, textAlign: "center" }}>キャンセル</Text></Pressable></View></Pressable></Modal>
+    <Modal visible={showActions} transparent animationType="slide" onRequestClose={() => setShowActions(false)}><Pressable onPress={() => setShowActions(false)} style={{ flex: 1, justifyContent: "flex-end", backgroundColor: "rgba(20,18,24,0.48)" }}><View style={{ backgroundColor: colors.background, borderTopLeftRadius: 22, borderTopRightRadius: 22, padding: 18, paddingBottom: 32 }}><Text style={{ fontSize: 16, fontWeight: "800", color: colors.foreground, marginBottom: 10 }}>投稿の操作</Text>{[{ label: "リンクをコピー", action: () => { void Clipboard.setStringAsync(`https://app.irotas-community.com/board?category=${encodeURIComponent(thread.category)}&view=threads&thread=${encodeURIComponent(thread.id)}`); } }, ...(onToggleClosed ? [{ label: closed ? "投稿をオープンにする" : "投稿をクローズする", action: onToggleClosed }] : []), ...(onPin ? [{ label: pinned ? "投稿の固定を解除する" : "投稿を固定する", action: onPin }] : []), ...(onEdit ? [{ label: "編集", action: onEdit }] : []), ...(onDelete ? [{ label: "削除", action: onDelete }] : [])].map((item) => <Pressable key={item.label} onPress={() => { setShowActions(false); item.action(); }} style={{ paddingVertical: 13, borderBottomWidth: 0.5, borderBottomColor: colors.border }}><Text style={{ fontSize: 15, fontWeight: "700", color: item.label === "削除" ? colors.error : colors.foreground }}>{item.label}</Text></Pressable>)}<Pressable onPress={() => setShowActions(false)} style={{ paddingVertical: 14 }}><Text style={{ color: colors.muted, textAlign: "center" }}>キャンセル</Text></Pressable></View></Pressable></Modal>
     <Modal visible={cardReactionDetails} transparent animationType="fade" onRequestClose={() => setCardReactionDetails(false)}>
       <Pressable onPress={() => setCardReactionDetails(false)} style={{ flex: 1, backgroundColor: "rgba(20,18,24,0.48)", justifyContent: "center", padding: 28 }}>
         <Pressable onPress={() => {}} style={{ maxHeight: "72%", backgroundColor: colors.background, borderRadius: 20, padding: 18 }}>
@@ -2725,6 +2725,8 @@ export default function BoardScreen() {
   const [selectedThread, setSelectedThread] = useState<BoardThread | null>(null);
   const [selectedThreadUnreadCommentIds, setSelectedThreadUnreadCommentIds] = useState<string[]>([]);
   const [selectedThreadIsUnread, setSelectedThreadIsUnread] = useState(false);
+  const [clubsReady, setClubsReady] = useState(false);
+  const sharedRequestSequence = useRef<Record<string, number>>({});
   const leavingThreadDetailRef = useRef(false);
   const [showCreateThread, setShowCreateThread] = useState(false);
   const [showAddCategory, setShowAddCategory] = useState(false);
@@ -2858,9 +2860,12 @@ export default function BoardScreen() {
   }, [loadBoardArchive]);
 
   const loadSharedBoardContent = useCallback(async (category?: string, threadId?: string) => {
+    const requestKey = threadId ? `${category ?? "all"}:${threadId}` : category ?? "all";
+    const requestSequence = (sharedRequestSequence.current[requestKey] ?? 0) + 1;
+    sharedRequestSequence.current[requestKey] = requestSequence;
     const revision = threadManagementRevision.current;
     const result = await Api.getSharedBoardContent(category, threadId);
-    if (revision !== threadManagementRevision.current || threadManagementPending.current.size > 0) return;
+    if (requestSequence !== sharedRequestSequence.current[requestKey] || revision !== threadManagementRevision.current || threadManagementPending.current.size > 0) return;
     const commentsByThread = result.comments
       .map((comment) => sharedCommentToBoardComment(comment, viewerMemberId))
       .reduce<Record<string, BoardComment[]>>((groups, comment) => {
@@ -2891,40 +2896,14 @@ export default function BoardScreen() {
     }));
   }, [viewerMemberId]);
 
-  useEffect(() => {
-    void loadSharedBoardContent().catch(() => {
-      // 既存の移行データは表示を続け、共有DBの再取得は更新操作時に再試行する。
-    }).finally(() => setSharedLoading(false));
-  }, [loadSharedBoardContent]);
-
   useFocusEffect(useCallback(() => {
-    void loadSharedBoardContent(isThreadView ? activeCategory : undefined).catch(() => {
-      // Keep the last confirmed snapshot if the shared service is temporarily unavailable.
-    });
-  }, [activeCategory, isThreadView, loadSharedBoardContent]));
-
-  useEffect(() => {
-    if (!isThreadView || sharedLoading || !canAccessCategory(categories.find((item) => item.key === activeCategory) ?? { key: activeCategory, label: "部活動", group: "club", createdByAdmin: true })) return;
     let active = true;
-    setCategoryLoading(true);
-    void (async () => {
-      try { await loadSharedBoardContent(activeCategory); } catch { /* Direct links can still load their thread. */ }
-      if (threadParam && activeCategory === categoryParam) await loadSharedBoardContent(activeCategory, threadParam);
-    })().catch(() => {
-      // 権限または通信に失敗した場合は、取得済みの投稿を表示する。
-    }).finally(() => { if (active) setCategoryLoading(false); });
+    if (isThreadView) setCategoryLoading(true);
+    void loadSharedBoardContent(isThreadView ? activeCategory : undefined, isThreadView && threadParam ? threadParam : undefined).catch(() => {
+      // Keep the last confirmed snapshot if the shared service is temporarily unavailable.
+    }).finally(() => { if (active) { setSharedLoading(false); setCategoryLoading(false); } });
     return () => { active = false; };
-  }, [activeCategory, canAccessCategory, categories, categoryParam, isThreadView, loadSharedBoardContent, sharedLoading, threadParam]);
-
-  // Home timeline links can point to a post newer than the board list cached on
-  // the device. Fetch that exact post immediately instead of waiting for the
-  // category list request to finish.
-  useEffect(() => {
-    if (!isThreadView || !categoryParam || !threadParam) return;
-    void loadSharedBoardContent(categoryParam, threadParam).catch(() => {
-      // The normal category load keeps the board usable if the direct fetch fails.
-    });
-  }, [categoryParam, isThreadView, loadSharedBoardContent, threadParam]);
+  }, [activeCategory, isThreadView, loadSharedBoardContent, threadParam]));
 
   // Keep the open thread list and its unread-comment badges current while the
   // page remains visible. The selected category avoids repeatedly fetching
@@ -2958,7 +2937,7 @@ export default function BoardScreen() {
     void check();
     const timer = setInterval(() => {
       void check();
-    }, 2000);
+    }, 15000);
     const onVisible = () => { if (document.visibilityState === "visible") void check(); };
     if (Platform.OS === "web") document.addEventListener("visibilitychange", onVisible);
     const appStateSubscription = Platform.OS === "web" ? null : AppState.addEventListener("change", (state) => { if (state === "active") void check(); });
@@ -2988,17 +2967,24 @@ export default function BoardScreen() {
   }, [compose, router]);
 
   useEffect(() => {
+    let active = true;
+    void refreshClubs().finally(() => { if (active) setClubsReady(true); });
+    return () => { active = false; };
+  }, []);
+
+  useEffect(() => {
     if (!isThreadView || !categoryParam) return;
     const matchedClub = categoryParam.startsWith("club-") ? clubs.find((club) => `club-${club.id}` === categoryParam) : undefined;
     const selectedCategory = categories.find((category) => category.key === categoryParam)
       ?? (matchedClub ? { key: `club-${matchedClub.id}`, label: matchedClub.name, group: "club" as const, createdByAdmin: true } : undefined);
+    if (!selectedCategory && categoryParam.startsWith("club-") && !clubsReady) return;
     if (!selectedCategory || !canAccessCategory(selectedCategory)) {
       router.replace("/board");
       return;
     }
     setActiveGroup(selectedCategory.group);
     setActiveCategory(selectedCategory.key);
-  }, [canAccessCategory, categories, categoryParam, isThreadView, router]);
+  }, [canAccessCategory, categories, categoryParam, clubsReady, isThreadView, router]);
   const allThreads = useMemo(
     () => (authUser ? dynamicThreads : applyBoardThreadEdits([...dynamicThreads, ...BOARD_THREADS], editedThreads))
       .filter((thread) => !deletedThreadIds.includes(thread.id))
@@ -3028,7 +3014,8 @@ export default function BoardScreen() {
     }
     return hasUnread ? "unread" : null;
   }, [allThreads, importedComments, postedAfterFirstSignIn, threadReadCounts, threadReadsHydrated, viewerMemberId, viewerMentionLabels]);
-  const boardLoading = Boolean(authUser) && (archiveLoading || sharedLoading || categoryLoading);
+  const hasActiveThreads = allThreads.some((thread) => thread.category === activeCategory);
+  const boardLoading = Boolean(authUser) && !hasActiveThreads && (archiveLoading || sharedLoading || categoryLoading);
   useEffect(() => {
     if (!needsInitialReadBaseline || boardLoading) return;
     const commentCounts = Object.fromEntries(Object.entries(importedComments).map(([threadId, comments]) => [threadId, comments.length]));
@@ -3396,7 +3383,7 @@ export default function BoardScreen() {
         animationType="slide"
         presentationStyle="pageSheet"
         onRequestClose={() => {
-          leaveThreadDetail(fromHome === "1" ? () => router.replace("/" as any) : undefined);
+          leaveThreadDetail();
         }}
       >
         {selectedThread && (
@@ -3406,13 +3393,13 @@ export default function BoardScreen() {
             initialComments={importedComments[selectedThread.id] ?? []}
             initialUnreadCommentIds={selectedThreadUnreadCommentIds}
             initialThreadUnread={selectedThreadIsUnread}
-            returnToTimeline={fromHome === "1"}
+            returnToTimeline={false}
             onOpenMemberProfile={(params) => {
               leaveThreadDetail(() => router.push({ pathname: "/member-profile", params }));
             }}
             memberDirectory={memberDirectory}
             onClose={() => {
-              leaveThreadDetail(fromHome === "1" ? () => router.replace("/" as any) : undefined);
+              leaveThreadDetail();
             }}
             onEditThread={selectedThread.viewerCanManage || selectedThread.author.id === viewerMemberId || userCanModerateAll ? () => { setEditingThread(selectedThread); setSelectedThread(null); router.setParams({ thread: "" }); } : undefined}
             onCommentDeleted={(commentId) => setImportedComments((current) => ({ ...current, [selectedThread.id]: (current[selectedThread.id] ?? []).filter((comment) => comment.id !== commentId) }))}
