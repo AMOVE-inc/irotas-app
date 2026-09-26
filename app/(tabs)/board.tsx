@@ -55,7 +55,7 @@ import { awardContestWinnerOnce, buildContestEntryContent, createContestAwardCom
 import { loadImportedGourmetContests } from "@/lib/gourmet-contest-import";
 import { parseDiscordBoardArchive } from "@/lib/discord-board-import";
 import { normalizeDiscordBoardCategory } from "@/lib/board-category";
-import { boardRouteRequests, introductionChatRoute } from "@/lib/community-navigation";
+import { boardRouteRequests, introductionChatHref } from "@/lib/community-navigation";
 import * as Api from "@/lib/_core/api";
 import { boardCommentData, boardThreadData, sharedCommentToBoardComment, sharedThreadToBoardThread } from "@/lib/shared-board-content";
 import { boardReactionAccessibilityLabel, boardReactionImageUrl, loadCommentReactions, loadThreadReactions, saveCommentReactions, saveThreadReactions } from "@/lib/board-reactions";
@@ -2816,7 +2816,7 @@ export default function BoardScreen() {
   // 自己紹介は通常チャットと同じ操作・未読・リアクション UI に統一する。
   useEffect(() => {
     if (isThreadView && categoryParam === "introduction") {
-      router.replace(introductionChatRoute() as any);
+      router.replace(introductionChatHref() as any);
     }
   }, [categoryParam, isThreadView, router]);
 
@@ -3027,7 +3027,13 @@ export default function BoardScreen() {
       && categoryParam?.startsWith("club-club-")
       && (clubStoreStatus === "idle" || clubStoreStatus === "loading"),
   );
-  const boardLoading = Boolean(authUser) && !hasActiveThreads && (archiveLoading || sharedLoading || categoryLoading || waitingForClubCatalog);
+  // The imported archive can resolve before the authoritative shared list.
+  // Keep the category skeleton visible until both sources have settled so an
+  // old archive snapshot never flashes before the current list replaces it.
+  const boardLoading = Boolean(authUser) && (
+    (isThreadView && (archiveLoading || sharedLoading || categoryLoading || waitingForClubCatalog))
+    || (!isThreadView && !hasActiveThreads && (archiveLoading || sharedLoading))
+  );
   useEffect(() => {
     if (!needsInitialReadBaseline || boardLoading) return;
     const commentCounts = Object.fromEntries(Object.entries(importedComments).map(([threadId, comments]) => [threadId, comments.length]));
@@ -3170,7 +3176,7 @@ export default function BoardScreen() {
 
   const handleOpenCategory = (category: BoardCategory) => {
     if (category.key === "introduction") {
-      router.navigate(introductionChatRoute() as any);
+      router.push(introductionChatHref() as any);
       return;
     }
     if (category.key === "gourmet-map") {

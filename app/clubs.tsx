@@ -57,7 +57,7 @@ import { sharedThreadToBoardThread } from "@/lib/shared-board-content";
 import { MentionText } from "@/components/mention-ui";
 import { getMentionGroups } from "@/lib/mentions";
 import { formatClubLeaderName, formatClubName } from "@/lib/club-display";
-import { clubBoardRoute } from "@/lib/community-navigation";
+import { boardThreadHref, clubBoardHref } from "@/lib/community-navigation";
 
 const CLUB_OVERVIEW_MENTION_GROUPS = getMentionGroups(MEMBERS, CLUBS);
 
@@ -1995,7 +1995,7 @@ export default function ClubsScreen() {
   };
 
   const openJoinedClub = (club: Club) => {
-    router.navigate(clubBoardRoute(club.id) as any);
+    router.push(clubBoardHref(club.id) as any);
   };
 
   return (
@@ -2073,7 +2073,7 @@ export default function ClubsScreen() {
               return (
               <Pressable
                 key={report.id}
-                onPress={() => router.push({ pathname: "/board", params: { category: "club-all", view: "threads", thread: report.id } })}
+                onPress={() => router.push(boardThreadHref({ category: "club-all", threadId: report.id }) as any)}
                 accessibilityRole="button"
                 accessibilityLabel={report.title}
                 style={({ pressed }) => ({

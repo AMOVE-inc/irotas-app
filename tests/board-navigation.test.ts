@@ -80,6 +80,18 @@ describe("board category ordering", () => {
     expect(boardScreen).toContain('category.group !== "club" || userCanViewAllClubContent');
   });
 
+  it("does not paint an archive snapshot while a current category is loading", () => {
+    const boardScreen = readFileSync(resolve(process.cwd(), "app/(tabs)/board.tsx"), "utf8");
+    expect(boardScreen).toContain("isThreadView && (archiveLoading || sharedLoading || categoryLoading || waitingForClubCatalog)");
+    expect(boardScreen).toContain("router.push(introductionChatHref() as any)");
+  });
+
+  it("opens joined clubs and activity reports through complete serialized hrefs", () => {
+    const clubsScreen = readFileSync(resolve(process.cwd(), "app/clubs.tsx"), "utf8");
+    expect(clubsScreen).toContain("router.push(clubBoardHref(club.id) as any)");
+    expect(clubsScreen).toContain('boardThreadHref({ category: "club-all", threadId: report.id })');
+  });
+
   it("returns from a managed club member profile to the same management screen", () => {
     const clubsScreen = readFileSync(resolve(process.cwd(), "app/clubs.tsx"), "utf8");
     const profileScreen = readFileSync(resolve(process.cwd(), "app/member-profile.tsx"), "utf8");

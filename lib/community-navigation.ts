@@ -79,6 +79,17 @@ export function introductionChatRoute(unreadCount = 0): AppRoute {
   };
 }
 
+export function introductionChatHref(unreadCount = 0) {
+  return queryPath("/chat", {
+    id: "board-introduction",
+    unreadCount: Math.max(0, unreadCount),
+    roomName: "自己紹介",
+    roomType: "board",
+    sourceId: "introduction",
+    participants: "",
+  });
+}
+
 export function boardRouteRequests(category: string, threadId?: string) {
   return [
     { category, limit: 200 },

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { boardRouteRequests, boardThreadHref, chatRoomHref, chatRoomRoute, clubBoardHref, clubBoardRoute, introductionChatRoute } from "../lib/community-navigation";
+import { boardRouteRequests, boardThreadHref, chatRoomHref, chatRoomRoute, clubBoardHref, clubBoardRoute, introductionChatHref, introductionChatRoute } from "../lib/community-navigation";
 
 describe("community navigation", () => {
   it("opens the exact free-chat and meal-report posts from the timeline", () => {
@@ -27,5 +27,6 @@ describe("community navigation", () => {
       .toBe("/chat?id=room+1&unreadCount=2&roomName=%E9%81%8B%E5%96%B6+%E3%82%A2%E3%83%8A%E3%82%A6%E3%83%B3%E3%82%B9&roomType=board&sourceId=announcement&participants=a%2Cb");
     expect(chatRoomRoute({ id: "room 1", name: "運営 アナウンス", type: "board", sourceId: "announcement", participants: ["a", "b"], unreadCount: 2 })).toEqual({ pathname: "/chat", params: { id: "room 1", unreadCount: "2", roomName: "運営 アナウンス", roomType: "board", sourceId: "announcement", participants: "a,b" } });
     expect(introductionChatRoute()).toMatchObject({ pathname: "/chat", params: { id: "board-introduction", roomName: "自己紹介" } });
+    expect(introductionChatHref()).toBe("/chat?id=board-introduction&unreadCount=0&roomName=%E8%87%AA%E5%B7%B1%E7%B4%B9%E4%BB%8B&roomType=board&sourceId=introduction");
   });
 });
