@@ -154,6 +154,58 @@ describe("shared board content API", () => {
     expect(response?.status).toBe(401);
   });
 
+  it("loads 200 board threads without exceeding the D1 bind-variable limit", async () => {
+    const threadRows = Array.from({ length: 200 }, (_, index) => ({
+      id: `thread-${index}`, author_member_id: 9, author_public_member_id: "IRO0099",
+      author_display_name: "テスト会員", author_member_term: "1期生", author_member_rank: "regular",
+      author_profile_json: "{}", category: "free-chat", title: `投稿 ${index}`, content: "本文",
+      status: "open", pinned: 0, data_json: "{}", created_at: "2026-09-26T00:00:00.000Z",
+      updated_at: "2026-09-26T00:00:00.000Z",
+    }));
+    const bindCounts: number[] = [];
+    const db: D1Database = {
+      prepare(sql) {
+        const statement: D1PreparedStatement = {
+          bind(...values) {
+            bindCounts.push(values.length);
+            if (values.length > 76) throw new Error("too many SQL variables");
+            return statement;
+          },
+          async first<T>() {
+            if (sql.includes("FROM member_sessions")) return {
+              id: 9, role: "user", access_role: "member", account_status: "active",
+              email: "member@example.com", password_hash: null, display_name: "テスト会員",
+              branches_json: "[]", last_signed_in_at: null, public_member_id: "IRO0099",
+              member_term: "1期生", member_rank: "regular", discord_roles_json: "[]",
+              achievement_badges_json: "[]", profile_json: "{}", xp: 0,
+              participation_count: 0, organizer_count: 0, subscription_started_at: "2026-01-01",
+              billing_email: "member@example.com", square_status: "ACTIVE", access_status: "active",
+              paid_until_date: null, grace_until_date: null,
+            } as T;
+            return null;
+          },
+          async run() { return { success: true }; },
+          async all<T>() {
+            if (sql.includes("FROM board_threads bt JOIN members"))
+              return { success: true, results: threadRows as T[] } as D1Result<T>;
+            return { success: true, results: [] as T[] } as D1Result<T>;
+          },
+        };
+        return statement;
+      },
+      async batch() { return []; },
+    };
+
+    const response = await handleBoardContentRequest(
+      request("/api/board/content?category=free-chat&limit=200", "GET"),
+      { DB: db } as SitesEnv,
+    );
+    expect(response?.status).toBe(200);
+    const body = await response?.json() as { threads: unknown[] };
+    expect(body.threads).toHaveLength(200);
+    expect(Math.max(...bindCounts)).toBeLessThanOrEqual(76);
+  });
+
   it("records deletion of an imported gourmet advice comment in the shared database", async () => {
     const member = { id: 9, role: "admin", access_role: "admin", account_status: "active" } as const;
     const thread = { id: "discord-board-1543137666009272340", author_member_id: 10, category: "gourmet-advice", title: "おすすめのお店" };

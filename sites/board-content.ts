@@ -23,6 +23,7 @@ const POLL_PATH = /^\/api\/board\/polls\/(thread|comment)\/([^/]+)$/;
 const IMPORTED_THREAD_ENSURE_PATH = /^\/api\/board\/imported-threads\/([^/]+)\/ensure$/;
 const MAX_BODY_BYTES = 64 * 1024;
 const MAX_DATA_BYTES = 48 * 1024;
+const BOARD_QUERY_ID_BATCH_SIZE = 75;
 const PUBLIC_CATEGORIES = new Set([
   "introduction",
   "meal-report",
@@ -45,6 +46,37 @@ function categoryVariants(category: string) {
   if (category === "meal-report") return ["meal-report", "gourmet-report"] as const;
   if (category === "gourmet-advice") return ["gourmet-advice", "gourmet-consultation"] as const;
   return [category] as const;
+}
+
+function idBatches(ids: string[]) {
+  const batches: string[][] = [];
+  for (let index = 0; index < ids.length; index += BOARD_QUERY_ID_BATCH_SIZE)
+    batches.push(ids.slice(index, index + BOARD_QUERY_ID_BATCH_SIZE));
+  return batches;
+}
+
+async function boardCommentsForThreads(db: D1Database, threadIds: string[]) {
+  const results = await Promise.all(idBatches(threadIds).map((ids) => {
+    const placeholders = ids.map(() => "?").join(",");
+    return db.prepare(`SELECT bc.*, m.public_member_id AS author_public_member_id,
+        m.display_name AS author_display_name, m.member_term AS author_member_term,
+        m.member_rank AS author_member_rank, m.profile_json AS author_profile_json
+      FROM board_comments bc JOIN members m ON m.id = bc.author_member_id
+      WHERE bc.thread_id IN (${placeholders}) AND bc.deleted_at IS NULL
+      ORDER BY bc.created_at ASC`).bind(...ids).all<CommentRow>();
+  }));
+  return results.flatMap((result) => result.results ?? []);
+}
+
+async function boardReactionsForTargets(db: D1Database, targetType: "thread" | "comment", targetIds: string[]) {
+  const results = await Promise.all(idBatches(targetIds).map((ids) => {
+    const placeholders = ids.map(() => "?").join(",");
+    return db.prepare(`SELECT br.target_type, br.target_id, br.member_id, br.emoji, m.public_member_id
+      FROM board_reactions br JOIN members m ON m.id = br.member_id
+      WHERE br.target_type = ? AND br.target_id IN (${placeholders})`)
+      .bind(targetType, ...ids).all<ReactionRow>();
+  }));
+  return results.flatMap((result) => result.results ?? []);
 }
 
 type BoardMember = NonNullable<Awaited<ReturnType<typeof authenticatedRequestMember>>>;
@@ -553,24 +585,12 @@ export async function handleBoardContentRequest(
     const visibleRows = (rows.results ?? []).filter((row) => !gourmetEventBoardThreadIds.has(row.id)).slice(0, limit);
     const threads = await Promise.all(visibleRows.map((row) => restoreDiscordThreadAuthor(db, row)));
     if (!threads.length) return json({ threads: [], comments: [] });
-    const placeholders = threads.map(() => "?").join(",");
     const ids = threads.map((item) => item.id);
-    const [commentResult, reactionResult] = await Promise.all([
-      db.prepare(`SELECT bc.*, m.public_member_id AS author_public_member_id,
-          m.display_name AS author_display_name, m.member_term AS author_member_term,
-          m.member_rank AS author_member_rank, m.profile_json AS author_profile_json
-        FROM board_comments bc JOIN members m ON m.id = bc.author_member_id
-        WHERE bc.thread_id IN (${placeholders}) AND bc.deleted_at IS NULL
-        ORDER BY bc.created_at ASC`).bind(...ids).all<CommentRow>(),
-      db.prepare(`SELECT br.target_type, br.target_id, br.member_id, br.emoji, m.public_member_id
-        FROM board_reactions br JOIN members m ON m.id = br.member_id
-        WHERE (br.target_type = 'thread' AND br.target_id IN (${placeholders}))
-           OR (br.target_type = 'comment' AND br.target_id IN (
-             SELECT id FROM board_comments WHERE thread_id IN (${placeholders}) AND deleted_at IS NULL
-           ))`).bind(...ids, ...ids).all<ReactionRow>(),
-    ]);
-    const reactions = reactionResult.results ?? [];
-    const comments = commentResult.results ?? [];
+    const comments = await boardCommentsForThreads(db, ids);
+    const reactions = [
+      ...await boardReactionsForTargets(db, "thread", ids),
+      ...await boardReactionsForTargets(db, "comment", comments.map((comment) => comment.id)),
+    ];
     const latestCommentAt = new Map<string, string>();
     comments.forEach((comment) => {
       const current = latestCommentAt.get(comment.thread_id);

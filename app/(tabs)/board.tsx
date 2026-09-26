@@ -2842,7 +2842,7 @@ export default function BoardScreen() {
     setMemberDirectory(directory);
     const archive = parseDiscordBoardArchive(rawArchive, directory);
     setDynamicThreads((current) => {
-      const withoutDiscordArchive = current.filter((thread) => !thread.id.startsWith("discord-board-"));
+      const withoutDiscordArchive = current.filter((thread) => !thread.id.startsWith("discord-board-") || thread.shared);
       return [...archive.threads, ...withoutDiscordArchive];
     });
     setImportedComments((current) => ({
