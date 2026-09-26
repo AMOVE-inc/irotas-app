@@ -5,6 +5,8 @@ import * as Api from "@/lib/_core/api";
 // 部活動の所属状態はサーバーのDiscordロール移行結果を唯一の情報源にする。
 // 初期モックを表示すると、実際には部員である会員にも一瞬「入部申請」が出る。
 let clubs: Club[] = [];
+export type ClubStoreStatus = "idle" | "loading" | "loaded" | "error";
+let clubStoreStatus: ClubStoreStatus = "idle";
 
 const listeners = new Set<() => void>();
 let loading: Promise<Club[]> | null = null;
@@ -25,6 +27,15 @@ export function subscribeClubs(listener: () => void) {
 export function useClubs(): Club[] {
   useEffect(() => { void refreshClubs(); }, []);
   return useSyncExternalStore(subscribeClubs, getClubs, getClubs);
+}
+
+export function getClubStoreStatus(): ClubStoreStatus {
+  return clubStoreStatus;
+}
+
+export function useClubStoreStatus(): ClubStoreStatus {
+  useEffect(() => { void refreshClubs(); }, []);
+  return useSyncExternalStore(subscribeClubs, getClubStoreStatus, getClubStoreStatus);
 }
 
 function asClub(record: Api.ClubRecord): Club {
@@ -52,11 +63,19 @@ function asClub(record: Api.ClubRecord): Club {
 
 export async function refreshClubs() {
   if (loading) return loading;
+  clubStoreStatus = "loading";
+  emitChange();
   loading = Api.getClubs()
     .then((records) => {
       clubs = records.map(asClub);
+      clubStoreStatus = "loaded";
       emitChange();
       return clubs;
+    })
+    .catch((error) => {
+      clubStoreStatus = "error";
+      emitChange();
+      throw error;
     })
     .finally(() => { loading = null; });
   return loading;

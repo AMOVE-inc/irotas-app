@@ -42,7 +42,7 @@ import { formatMealReportArea, resolveRestaurantLocation } from "@/lib/restauran
 import { XpRewardPopup } from "@/components/xp-reward-popup";
 import { awardXp, type XpReward } from "@/lib/xp-store";
 import { POINT_ACTIONS } from "@/constants/mock-data";
-import { refreshClubs, submitClubApplication as submitClubApplicationToStore, useClubs } from "@/lib/club-store";
+import { submitClubApplication as submitClubApplicationToStore, useClubs, useClubStoreStatus } from "@/lib/club-store";
 import { getMentionGroups, getMentionQuery, insertMention, mentionsViewer } from "@/lib/mentions";
 import { sendClubApplicationNotification } from "@/lib/notifications";
 import { type TextSelection } from "@/lib/text-formatting";
@@ -2717,6 +2717,7 @@ export default function BoardScreen() {
   const userCanManageContests = canManageGourmetContests(authUser?.role, authUser?.accessRole);
   const userCanModerateRecruitment = isOperatorRole(authUser?.role, authUser?.accessRole);
   const clubs = useClubs();
+  const clubStoreStatus = useClubStoreStatus();
   const [categories, setCategories] = useState<BoardCategory[]>(BOARD_CATEGORIES);
   const [activeGroup, setActiveGroup] = useState<BoardCategory["group"]>("all");
   const requestedCategory = categoryParam ? normalizeDiscordBoardCategory(categoryParam) : undefined;
@@ -2728,7 +2729,6 @@ export default function BoardScreen() {
   const [selectedThread, setSelectedThread] = useState<BoardThread | null>(null);
   const [selectedThreadUnreadCommentIds, setSelectedThreadUnreadCommentIds] = useState<string[]>([]);
   const [selectedThreadIsUnread, setSelectedThreadIsUnread] = useState(false);
-  const [clubsReady, setClubsReady] = useState(false);
   const sharedRequestSequence = useRef<Record<string, number>>({});
   const leavingThreadDetailRef = useRef(false);
   const [showCreateThread, setShowCreateThread] = useState(false);
@@ -2976,25 +2976,24 @@ export default function BoardScreen() {
   }, [compose, router]);
 
   useEffect(() => {
-    let active = true;
-    void refreshClubs().finally(() => { if (active) setClubsReady(true); });
-    return () => { active = false; };
-  }, []);
-
-  useEffect(() => {
     if (!isThreadView || !categoryParam) return;
     const normalizedCategory = normalizeDiscordBoardCategory(categoryParam);
-    const matchedClub = normalizedCategory.startsWith("club-") ? clubs.find((club) => `club-${club.id}` === normalizedCategory) : undefined;
+    const isIndividualClubCategory = normalizedCategory.startsWith("club-club-");
+    if (isIndividualClubCategory && (clubStoreStatus === "idle" || clubStoreStatus === "loading")) return;
+    const matchedClub = isIndividualClubCategory ? clubs.find((club) => `club-${club.id}` === normalizedCategory) : undefined;
     const selectedCategory = categories.find((category) => category.key === normalizedCategory)
-      ?? (matchedClub ? { key: `club-${matchedClub.id}`, label: matchedClub.name, group: "club" as const, createdByAdmin: true } : undefined);
-    if (!selectedCategory && categoryParam.startsWith("club-") && !clubsReady) return;
-    if (!selectedCategory || !canAccessCategory(selectedCategory)) {
+      ?? (matchedClub
+        ? { key: `club-${matchedClub.id}`, label: matchedClub.name, group: "club" as const, createdByAdmin: true }
+        : isIndividualClubCategory && clubStoreStatus === "error"
+          ? { key: normalizedCategory, label: "部活動", group: "club" as const, createdByAdmin: true }
+          : undefined);
+    if (!selectedCategory || (clubStoreStatus === "loaded" && !canAccessCategory(selectedCategory))) {
       router.replace("/board");
       return;
     }
     setActiveGroup(selectedCategory.group);
     setActiveCategory(selectedCategory.key);
-  }, [canAccessCategory, categories, categoryParam, clubsReady, isThreadView, router]);
+  }, [canAccessCategory, categories, categoryParam, clubStoreStatus, clubs, isThreadView, router]);
   const allThreads = useMemo(
     () => (authUser ? dynamicThreads : applyBoardThreadEdits([...dynamicThreads, ...BOARD_THREADS], editedThreads))
       .filter((thread) => !deletedThreadIds.includes(thread.id))
@@ -3025,7 +3024,12 @@ export default function BoardScreen() {
     return hasUnread ? "unread" : null;
   }, [allThreads, importedComments, postedAfterFirstSignIn, threadReadCounts, threadReadsHydrated, viewerMemberId, viewerMentionLabels]);
   const hasActiveThreads = allThreads.some((thread) => thread.category === activeCategory);
-  const boardLoading = Boolean(authUser) && !hasActiveThreads && (archiveLoading || sharedLoading || categoryLoading);
+  const waitingForClubCatalog = Boolean(
+    isThreadView
+      && categoryParam?.startsWith("club-club-")
+      && (clubStoreStatus === "idle" || clubStoreStatus === "loading"),
+  );
+  const boardLoading = Boolean(authUser) && !hasActiveThreads && (archiveLoading || sharedLoading || categoryLoading || waitingForClubCatalog);
   useEffect(() => {
     if (!needsInitialReadBaseline || boardLoading) return;
     const commentCounts = Object.fromEntries(Object.entries(importedComments).map(([threadId, comments]) => [threadId, comments.length]));

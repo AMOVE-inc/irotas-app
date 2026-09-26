@@ -68,6 +68,17 @@ describe("board category ordering", () => {
     expect(boardScreen).toContain('"部活一覧へ戻る"');
   });
 
+  it("waits for the club catalog before validating a direct club-board route", () => {
+    const boardScreen = readFileSync(resolve(process.cwd(), "app/(tabs)/board.tsx"), "utf8");
+    const waitForCatalog = boardScreen.indexOf('clubStoreStatus === "idle" || clubStoreStatus === "loading"');
+    const fallbackRedirect = boardScreen.indexOf('router.replace("/board")', waitForCatalog);
+    expect(boardScreen).toContain("useClubStoreStatus");
+    expect(waitForCatalog).toBeGreaterThan(-1);
+    expect(fallbackRedirect).toBeGreaterThan(waitForCatalog);
+    expect(boardScreen).toContain('clubStoreStatus === "loaded" && !canAccessCategory(selectedCategory)');
+    expect(boardScreen).toContain('category.group !== "club" || userCanViewAllClubContent');
+  });
+
   it("returns from a managed club member profile to the same management screen", () => {
     const clubsScreen = readFileSync(resolve(process.cwd(), "app/clubs.tsx"), "utf8");
     const profileScreen = readFileSync(resolve(process.cwd(), "app/member-profile.tsx"), "utf8");
