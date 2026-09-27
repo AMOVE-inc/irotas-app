@@ -216,6 +216,12 @@ function RestaurantDetail({
           </View>
         </View>
 
+        {restaurant.description ? (
+          <Text style={{ fontSize: 14, lineHeight: 21, color: colors.muted, marginBottom: 16 }}>
+            {restaurant.description}
+          </Text>
+        ) : null}
+
         <View style={{ backgroundColor: colors.surface, borderRadius: 14, padding: 16, marginBottom: 16 }}>
           <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 12 }}>
             <IconSymbol name="mappin.and.ellipse" size={18} color="#E8A0BF" />
@@ -233,7 +239,9 @@ function RestaurantDetail({
           )}
           {restaurant.price ? (
             <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 12 }}>
-              <IconSymbol name="yensign.circle.fill" size={18} color="#E8A0BF" />
+              <View style={{ width: 18, height: 18, borderRadius: 9, backgroundColor: "#E8A0BF", alignItems: "center", justifyContent: "center" }}>
+                <Text style={{ color: "#FFF", fontSize: 11, lineHeight: 14, fontWeight: "900" }}>¥</Text>
+              </View>
               <Text style={{ fontSize: 14, color: colors.foreground, marginLeft: 10 }}>{restaurant.price}</Text>
             </View>
           ) : null}
@@ -245,16 +253,16 @@ function RestaurantDetail({
           </View>
         </View>
 
-        {restaurant.description && (
-          <View style={{ marginBottom: 16 }}>
+        {restaurant.memberComment ? (
+          <View style={{ backgroundColor: "#FFF7FA", borderRadius: 14, padding: 16, marginBottom: 16 }}>
             <Text style={{ fontSize: 16, fontWeight: "700", color: colors.foreground, marginBottom: 8 }}>
-              おすすめポイント
+              メンバーからのコメント
             </Text>
             <Text style={{ fontSize: 15, lineHeight: 22, color: colors.foreground }}>
-              {restaurant.description}
+              {restaurant.memberComment}
             </Text>
           </View>
-        )}
+        ) : null}
         {restaurant.googleMapsUrl ? (
           <Pressable
             onPress={() => openExternalUrl(restaurant.googleMapsUrl!)}

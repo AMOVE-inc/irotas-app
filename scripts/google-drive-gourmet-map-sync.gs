@@ -68,6 +68,8 @@ function parseRestaurant(row, category, importedAt) {
     googleMapsUrl: googleMapsUrl,
     phone: text(row.Phone) || undefined,
     price: text(row.Price) || undefined,
+    description: text(row.Description) || undefined,
+    memberComment: text(row.Note) || undefined,
     sourceList: category,
     importedAt: importedAt
   };

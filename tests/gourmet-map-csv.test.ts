@@ -16,11 +16,18 @@ const validRow = (overrides: Record<string, string> = {}) => csvRow({
 
 describe("G Maps Extractor CSV import", () => {
   it("parses quoted embedded newlines and maps a restaurant", () => {
-    const csv = `${headers}\n${validRow({ Name: "居酒屋テスト", Fulladdress: "〒100-0001 東京都千代田区1-1", Price: "￥5,000～6,000", Note: "一行目\n二行目", Phone: "03-0000-0000", "Review Count": "86", "Average Rating": "4.4", "Google Maps URL": "https://www.google.com/maps?cid=1", "Featured Image": "https://example.com/image.jpg", "Place Id": "place-1" })}`;
+    const csv = `${headers}\n${validRow({ Name: "居酒屋テスト", Description: "Googleマップの店舗概要", Fulladdress: "〒100-0001 東京都千代田区1-1", Price: "￥5,000～6,000", Note: "一行目\n二行目", Phone: "03-0000-0000", "Review Count": "86", "Average Rating": "4.4", "Google Maps URL": "https://www.google.com/maps?cid=1", "Featured Image": "https://example.com/image.jpg", "Place Id": "place-1" })}`;
     const result = previewGourmetMapCsv(csv, "居酒屋", CURRENT_USER);
     expect(result.total).toBe(1);
     expect(result.valid).toHaveLength(1);
-    expect(result.valid[0]).toMatchObject({ name: "居酒屋テスト", genre: "居酒屋", placeId: "place-1", rating: 4.4 });
+    expect(result.valid[0]).toMatchObject({
+      name: "居酒屋テスト",
+      genre: "居酒屋",
+      placeId: "place-1",
+      rating: 4.4,
+      description: "Googleマップの店舗概要",
+      memberComment: "一行目\n二行目",
+    });
   });
 
   it("separates invalid and duplicate rows", () => {

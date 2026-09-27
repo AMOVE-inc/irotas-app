@@ -72,6 +72,8 @@ export function previewGourmetMapCsv(
       googleMapsUrl,
       phone: text(row.Phone) || undefined,
       price: text(row.Price) || undefined,
+      description: text(row.Description) || undefined,
+      memberComment: text(row.Note) || undefined,
       sourceList: text(sourceList) || "未分類",
       importedAt,
     };

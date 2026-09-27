@@ -33,6 +33,8 @@ async function main() {
     googleMapsUrl: row["Google Maps URL"],
     phone: row.Phone || undefined,
     price: row.Price || undefined,
+    description: row.Description || undefined,
+    memberComment: row.Note || undefined,
     sourceList,
     importedAt,
   });

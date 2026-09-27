@@ -38,4 +38,15 @@ describe("mergeGourmetMapFeed", () => {
     const result = mergeGourmetMapFeed([restaurant()], [feedRestaurant], CURRENT_USER);
     expect(result).toHaveLength(2);
   });
+
+  it("最新フィードにない店舗概要とメンバーコメントを既存データから保持する", () => {
+    const existing = restaurant({ description: "店舗概要", memberComment: "保存リストのメモ" });
+    const { registeredBy: _ignored, description: _description, memberComment: _memberComment, ...incoming } = restaurant({ rating: 4.8 });
+    const result = mergeGourmetMapFeed([existing], [incoming], CURRENT_USER);
+    expect(result[0]).toMatchObject({
+      rating: 4.8,
+      description: "店舗概要",
+      memberComment: "保存リストのメモ",
+    });
+  });
 });

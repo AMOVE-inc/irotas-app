@@ -195,6 +195,7 @@ export interface Restaurant {
   registeredBy: Member;
   phone?: string;
   description?: string;
+  memberComment?: string;
   placeId?: string;
   googleMapsUrl?: string;
   price?: string;

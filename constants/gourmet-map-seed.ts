@@ -17,6 +17,8 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWlpQlUyvzkAhb38MjzF9WpV8qsXlZktnWag6tkjZhH2OR5QpW04wU6JUj6RAMjO_8DhF6Ld1nOGp6nuEBvvXTtYlSXQ9mb2hIMR-q7WiMSYKyPfPXMpMwN552PJgUXfsyddgZAE=w138-h92-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=6878987404957134479",
     "phone": "050-1809-8226",
+    "description": "温かみのある、昔ながらのスペイン料理レストラン。さまざまなパエリアを味わえる。",
+    "memberComment": "パエリアもしっとり系で、イカスミやお肉の出汁がお米に詰まっていて最高でした🥘\nパエリアは個人的過去一でした！！✨\n他にも色々食べましたが、全部ハズレなしで美味しかったです！\n\n🍽️ おすすめメニュー：\n・生ハム\n・イカスミのパエリア\n・バレンシアパエリア",
     "sourceList": "スペイン料理",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -89,6 +91,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=4988235024829503261",
     "phone": "042-512-7733",
     "price": "￥2,000～6,000",
+    "memberComment": "初めて投稿させていただきます。\n当方、食レポに必要な語彙力が貧困なため、魅力を上手く言語化できないのが歯痒いですがどれも絶品でした。\n特にムール貝の白ワイン蒸しはお酒が進んで仕方なかったです😋\n\n🍽️ おすすめメニュー：ムール貝の白ワイン蒸し",
     "sourceList": "スペイン料理",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -109,6 +112,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=4295882956580659342",
     "phone": "06-6245-0029",
     "price": "￥3,000～7,000",
+    "description": "調理工程が見えるカウンター席で気軽に食事ができる隠れ家的な店。自家製麵を使用したパスタなど、多数のメニューを提供。",
     "sourceList": "スペイン料理",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -130,6 +134,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=6938712361801819102",
     "phone": "03-6412-7286",
     "price": "￥5,000～10,000",
+    "memberComment": "やばいくらい全部美味しかった🙈🌷\nウニウニトーストがワイン泥棒だったのと、パエリアもほんと美味しかったぁ💓サルイアモールより個人的にこっちのが好きでした🥘\nパエリアは残ったらおにぎりにしてくれるのも素敵なサービス🫶🏻\n2人で行ったのですが、4人くらいで行くといろいろ種類食べれていいと思います！",
     "sourceList": "スペイン料理",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -152,6 +157,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWnW8D1X7fLUhF8iP4zmjAqedYzhTdP3hXfIAVqFzvacqOTeZJOF0PtNUQAnG8VqTiaGcsmbvc5HATEOwUuaxWxlqdPt6c2bSGRH7bIfcxNWNJ4zypE3xnvJcCqhnFP6BpFLC3bYDicXnYBS=w167-h92-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=16446856532284152043",
     "phone": "03-6452-3946",
+    "memberComment": "98年会で行きました、味が濃すぎないのがよき！\n名前聞いたことないスペインのお酒をノリでロックでいったらやられました\n\n🍽️ おすすめメニュー：\nピンチョス、天使のエビアヒージョ、スペインのお酒",
     "sourceList": "スペイン料理",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -172,6 +178,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=17074217087593058834",
     "phone": "050-1720-7784",
     "price": "￥10,000 以上",
+    "description": "通りを見渡す窓際テーブル席もある店内はカジュアルで明るい雰囲気。パエリアなどの米料理とタパスを提供。ワインを多数取り揃える。",
     "sourceList": "スペイン料理",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -196,6 +203,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=13592971025439865082",
     "phone": "03-6260-4825",
     "price": "￥6,000～10,000",
+    "memberComment": "・大人数ではパーティーコースおすすめ！\n94.95年会開催！！\nスペイン料理🇪🇸を囲みながら、10人で世代トーク盛り上がりました🙌\n指スマ皆んなでやったの楽しかったです！\n世代間交流もやってみたいと思ったり🤭",
     "sourceList": "スペイン料理",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -216,6 +224,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=17713083166149954503",
     "phone": "03-3528-8818",
     "price": "￥1,000～2,000",
+    "memberComment": "・パエリアとアヒージョのセットランチ\n虎ノ門でこのクオリティのランチが1400〜1700円で食べられます！しかも食後のコーヒー付きです☕️\n味のクオリティもかなり高く、パエリアのお焦げを昼から頂ける贅沢感がたまりません、、、！！\n11:30頃に行けば並ばずに入れるので虎ノ門近辺にお勤めの方は是非…！\nボリュームたっぷりなのでお腹いっぱいになる覚悟だけお願いします🥺🤍",
     "sourceList": "スペイン料理",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -238,6 +247,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=724509877180159305",
     "phone": "03-3535-7033",
     "price": "￥1,000～7,000",
+    "memberComment": "世界大会で受賞したパエリアが絶品すぎました！ガスパチョは酸味が丁度よく、シャンパンとの相性抜群です🍾\n\n🍽️ おすすめメニュー：\n・ガスパチョ\n・魚介のパエリア",
     "sourceList": "スペイン料理",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -260,6 +270,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=11422915082919327190",
     "phone": "+34 933 18 19 97",
     "price": "€20～30",
+    "description": "優雅な無国籍風の家具が配された、広々とした人気のタパスバー。屋外席も豊富に備える。",
     "sourceList": "スペイン料理",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -284,6 +295,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=7860387390770853690",
     "phone": "+34 932 16 03 68",
     "price": "€20～30",
+    "description": "伝統的なタパスを提供する活気のある店。カウンター席や、日よけのある歩道沿いのテーブル席を備える。",
     "sourceList": "スペイン料理",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -307,6 +319,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=10700564397123021420",
     "phone": "+34 933 63 21 27",
     "price": "€20～30",
+    "description": "贅沢な魚介料理や定番の小皿料理を提供するおしゃれなタパスバー。ライトアップされたワインシェルフがある。",
     "sourceList": "スペイン料理",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -598,6 +611,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWnXH9l8B3rCDVEaTO_jNB4EC_YyXDbEUl6UcQ5JCfTSMy116LMzEtFMvN5n-fNWQHYImB8M3UGUjUr-hCLGcx_e2UVicwGL_5UhznZuWFxFPUqJsau7xNl6dNwZoCVDbvG39Q=w138-h92-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=10540623270425960213",
     "phone": "03-6434-1255",
+    "description": "樹木とプールがあり、店内のほかテラス席もある地中海料理の店。タジン、パスタ、シーフードを楽しめる。",
     "sourceList": "スペイン料理",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -750,6 +764,8 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=5664524024669213077",
     "phone": "03-6457-9688",
     "price": "￥5,000～6,000",
+    "description": "温かみのある木を基調としたシンプルな店内で、吸い物と一緒に看板メニューの炭焼うなぎを味わえる。",
+    "memberComment": "高架下にある名古屋の名店の姉妹店です！ごはんは300gと多めですが、外はカリッと身はふわっとしているうなぎが美味しすぎてぺろっと完食でした😮‍💨うな重と迷ってひつまぶしにしましたが、うな重も美味しそうでした、、\n17:30頃に伺ったので予約無しでも入れましたが、行く際は予約をして行くことをおすすめします🙆‍♀️\n\n🍽️ おすすめメニュー：上ひつまぶし",
     "sourceList": "うなぎ",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -771,6 +787,8 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=7834563016046645259",
     "phone": "052-252-2733",
     "price": "￥4,000～5,000",
+    "description": "居心地の良いうなぎ専門店。昔ながらの店内でうなぎ料理などを提供。",
+    "memberComment": "梅干しを潰して入れるのが最高です",
     "sourceList": "うなぎ",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -791,6 +809,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=3834257724898493989",
     "phone": "06-6231-4810",
     "price": "￥4,000～10,000",
+    "description": "300 年以上にわたって淡水ウナギの蒲焼を提供している格式ばらない老舗料理店。",
     "sourceList": "うなぎ",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -813,6 +832,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=16130495074951860438",
     "phone": "052-671-8686",
     "price": "￥4,000～5,000",
+    "description": "落ち着いた和風で長年の歴史を持つ老舗の鰻屋で、創業当時より継ぎ足されている秘伝のタレや備長炭で焼いたこだわりの鰻を頂ける。",
     "sourceList": "うなぎ",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -956,6 +976,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=8814778762238512066",
     "phone": "03-5544-8951",
     "price": "￥4,000～9,000",
+    "memberComment": "昼は蕎麦ランチ、夜は居酒屋\nそばは十割でつゆは甘しょっぱい系\n季節に合わせた旬の野菜天ぷらは美味😇 \n\n鴨南蛮や鴨のつくねなど、酒のツマミもいけるお店",
     "sourceList": "そば・うどん",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -976,6 +997,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=15595418694703945215",
     "phone": "03-6279-2562",
     "price": "￥1,000～2,000",
+    "memberComment": "冷麺が好きすぎて週３以上は食べていますが、ここの麺はコシがあって、食べ応え抜群でした…！💕\n\nメニューはすごくシンプルで、看板メニューの「令和の冷麺」を頼むと麺だけが運ばれてきます（笑）\nそこに自分でオリジナルのトッピングを選んで、「自分だけのオリジナル冷麺」を楽しめるのがここのお店のポイントです！🥰✨\n\nこれから暑くなる時期なのでぜひみなさんにも行ってみて欲しいです！🥹🍜\n\n※私が頼んだトッピングは、キムチ・ネギ・梅です🤝\n\n🍽️ おすすめメニュー：令和の冷麺",
     "sourceList": "そば・うどん",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -995,6 +1017,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWmYaWx90XDYfepmUgFZohg7xWgyv1-oJ7aOqMNVauCaWpWjK0uK9_MAxCYYzmZTDP_ta4pUB4zorFvQdwuMT7WHTjqRlR7herjPR0jJatspbt4KSQoVI3Cvhn1B-eNYwRYMCEVcPA=w92-h92-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=15179704548245447573",
     "price": "￥1,000～2,000",
+    "memberComment": "鴨つけ蕎麦と鴨親子丼が有名なお店です🦆\n鴨がぷりぷりで蕎麦は太めで親子丼はトロトロでどれも美味しかったです！\n帰省で友達に連れて行ってもらったのですが、並ぶとは聞いていたのですが、GWということもあり3時間並びました。。。(なので星5の味でしたが4で。。。)\n待ち列を短縮できるファストパスも販売していましたが、時間によって1000〜7500円と時価すぎて逆にどこまで上がるのか楽しんでました😂\n\n🍽️ おすすめメニュー：鴨つけ蕎麦・鴨親子丼",
     "sourceList": "そば・うどん",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -1015,6 +1038,8 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=926026385905260034",
     "phone": "03-6658-5722",
     "price": "￥1,000～2,000",
+    "description": "蕎麦前には丁寧に作られた日本料理を用意する。〆の蕎麦のつゆに使う鰹節は料理人自らが削ったものを使用。ウッディ調の店内は趣がある。",
+    "memberComment": "お昼は蕎麦御膳のみ。江戸前らしい鰹出汁で濃い目の つゆ。季節の天ぷらはうまし。休日は1時間ほど並ぶ。昼は現金のみで、インバウンドは少なめ。",
     "sourceList": "そば・うどん",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -1035,6 +1060,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=12741816514891171779",
     "phone": "03-3527-9099",
     "price": "￥1,000～2,000",
+    "memberComment": "フィナンシャルのB1Fにあるお蕎麦屋さん！\n知人に美味しいと勧められて来店しました🙋🏻‍♀️\n\n一言食レポは、お蕎麦は細めで、味が濃すぎず薄すぎずバランスのいいつけ汁🤤\n結論美味い！笑\n\nランチメニューが1,000円前後で、この鴨つけ汁せいろも1,100円で大手町ランチにしてはコスパ最強＆食べログにも記載があるのですが、提供時間が早い非の打ち所がないお店です😬💓\n\n大手町付近で働いている方、お立ち寄りする機会がある方は是非！！\n\n🍽️ おすすめメニュー：鴨つけ汁せいろ(蔵王竹炭水鴨使用)",
     "sourceList": "そば・うどん",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -1057,6 +1083,8 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=8783159083125833346",
     "phone": "0596-23-8807",
     "price": "￥1～1,000",
+    "description": "屋外席のある人気うどん店。柔らかめの太麺と地ビールで知られる。",
+    "memberComment": "・とろろ伊勢うどん\n伊勢神宮にあるおかげ横丁のうどん屋さんです！\n用あって行ったのですが平日でもだいぶ混んでました。\nただ回転が早くとても美味しかったので伊勢神宮行った際には是非！",
     "sourceList": "そば・うどん",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -1077,6 +1105,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWloz44QPWEcedBn3UHhtTFm0H-qZ6FqOMQsiE0DKZ_LPLdS-jcT3tspI3NFX7EYKXltI5gGgKNqIB70JZsvSPaz0-c2iuOImHx1yM1aIFmRJd0h2LMzPE7mDzTqD-My68pQ9JiSJnasuvht=w80-h106-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=3161639011061130460",
     "price": "￥1～1,000",
+    "memberComment": "都内屈指の人気店ですが空いてたので行ってきました！今回はカルピスバターの釜玉を食べました。初めての方はいりこだしの効いたかけうどんがおすすめです。折り畳まれた麺のビジュアルが良く、コシがめっちゃあるわけではないですが、細麺で食べやすいです🙆‍♂️店内BGMがいつもジミ・ヘンドリックスなので店長が多分ギタリストのお店です🎸",
     "sourceList": "そば・うどん",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -1098,6 +1127,8 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=7417412752662920415",
     "phone": "03-6273-2646",
     "price": "￥1,000～2,000",
+    "description": "温かいうどんと冷たいうどんを出汁で楽しむ、シンプルで気取らない店。天ぷらも提供。",
+    "memberComment": "「打ち立て、切り立て、揚げたて」にこだわるうどん屋。\nかけうどんを選び、温かい出汁の旨み、細めなのにうどんの食べ応え、よかったです！\n天ぷらは半熟卵天が特に美味しく、とろとろの卵が麺と絡んでよかったです！",
     "sourceList": "そば・うどん",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -1181,6 +1212,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWn1TbwdnL-P111w1RssA8f-Ha4RPckeLnzMnZ1T8Z5MKwFeEiUNncQMlmUtqxS794Do8DbZGCvoZGO4PJKJxOUsxP71LbwpG6BG0lbguONTAhGlvYBi2eaumaJ0ZVUiiYZ0zhpudiNxVygJ=w80-h105-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=12340063198061141017",
     "phone": "03-3403-0201",
+    "description": "手打うどんやそば、天ぷらなどの定番料理を提供するシンプルな店。",
     "sourceList": "そば・うどん",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -1204,6 +1236,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWm452S-K-gC7la4ElA3rFVP3D5KNpMPrqjXpTqFunDGcrbSf897ZBUq0WeZaf8kOOsq2kNGAPJa2r7vPNuQMGxo8-_X0PyeriodWSKm-8gNTAUpsBAI58_SGjzEWsQHiXpBt1_GXR20D2k=w163-h92-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=15125799156036320533",
     "phone": "03-6427-7759",
+    "description": "シックで穏やかな心の和らぐ蕎麦屋。粗挽き、細挽き、変わり蕎麦、太切りの４種類の打ち立ての蕎麦をこだわりのつゆや酒肴と一緒に頂ける。",
     "sourceList": "そば・うどん",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -1225,6 +1258,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=3979246699465696352",
     "phone": "03-5565-0055",
     "price": "￥1,000～2,000",
+    "description": "厳選された国内産の材料を使った風味豊かなオリジナルの十割蕎麦が頂ける。産地が違う２種類の蕎麦を提供。店内は古典的で落ち着いている。",
     "sourceList": "そば・うどん",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -1266,6 +1300,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=7011349618096054635",
     "phone": "03-3690-8228",
     "price": "￥1,000～2,000",
+    "description": "北海道と福島県から取り寄せた玄そばを使用している。手打ちそばは独特のコシがあり、玄そばの香りも楽しめる。",
     "sourceList": "そば・うどん",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -1332,6 +1367,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=16600223989768181741",
     "phone": "03-3457-5690",
     "price": "￥1,000～6,000",
+    "description": "北海道産のそば粉を使用した蕎麦は、粗挽きであるため、そば本来の味と香りを楽しめる。明るさを抑えた照明が特徴で落ち着いて食事できる。",
     "sourceList": "そば・うどん",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -1353,6 +1389,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWnOPLDx5lttEOyzda9KMw2rt8D8_GZjLOS5V0nuJCtdKMAukeSnOafkJRiMR6UPTWGUpE5lDAjttJbS9WqUZrUNyQhcG8tzvNJC5dHNJwaUPa7EfpDeq2BrrJUH23ICek47wcb7=w138-h92-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=17851491295853374320",
     "phone": "03-5778-3379",
+    "description": "木材と石をアクセントにしたモダンな店。手打ち蕎麦と季節の料理、日本酒などが楽しめる。",
     "sourceList": "そば・うどん",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -1489,6 +1526,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=11235737856887368546",
     "phone": "03-3443-1701",
     "price": "￥1,000～2,000",
+    "description": "創業安政元年の山長商店から派生した店舗。名物「山長うどん」のほか「豆乳ゴマだれうどん」などユニークなメニューもある。",
     "sourceList": "そば・うどん",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -1512,6 +1550,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWlp8OWnyxW0WSk3t6hW-GEJ9MSAtH7soDl1sW91cLcnhLNEPL6Tp7PqCcyNzZwpYFryjPmcGe34Nq5Os12pRI86EM5y2RP8krEwQNey80xzpiwOO8TjRZyjvqzciwuQqr3nu4QEI3t1U6SS=w122-h92-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=11552223002997763831",
     "price": "￥1～1,000",
+    "description": "こぢんまりとした立ち食いうどん店。天ぷらうどん、肉うどん、などお好みで選べる。",
     "sourceList": "そば・うどん",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -1551,6 +1590,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=4799624521792605391",
     "phone": "03-3403-3401",
     "price": "￥2,000～3,000",
+    "description": "更科蕎麦の老舗店。手打ち蕎麦や天ぷら、一品料理が楽しめる。",
     "sourceList": "そば・うどん",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -1571,6 +1611,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=5331412562538626141",
     "phone": "03-5411-7171",
     "price": "￥2,000～3,000",
+    "description": "気の利いた肴と地酒をたしなみ、蕎麦で締める、江戸の粋な文化を大切にするこだわりの蕎麦屋。テラス席はペットも可。",
     "sourceList": "そば・うどん",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -1591,6 +1632,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=8747988914792902077",
     "phone": "03-5439-5757",
     "price": "￥2,000～6,000",
+    "description": "蕎麦はもちろん、店舗で提供される有機野菜は長野県の契約農家直送。絵画やインテリアにこだわり、隠れ家的な雰囲気を演出。",
     "sourceList": "そば・うどん",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -1696,6 +1738,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=9829918692368434090",
     "phone": "03-3491-9470",
     "price": "￥1,000～2,000",
+    "description": "とんかつ、チキンカツ、魚介のフライが有名な飾らない雰囲気の店。カウンター席あり。",
     "sourceList": "とんかつ",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -1737,6 +1780,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=16614784742392390903",
     "phone": "03-3491-9928",
     "price": "￥2,000～3,000",
+    "description": "気軽に利用できる人気店。カウンター席からは厨房を見渡せる。",
     "sourceList": "とんかつ",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -1757,6 +1801,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=5985424646123990153",
     "phone": "03-5719-4129",
     "price": "￥2,000～3,000",
+    "description": "活気ある小さな店。とんかつやチキンカツのほか、特選和牛のメンチカツを提供。",
     "sourceList": "とんかつ",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -1817,6 +1862,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=14389508656745610043",
     "phone": "03-3449-1430",
     "price": "￥10,000 以上",
+    "description": "木の温もりのあるシックなイタリア料理店。肉や海鮮料理、パスタを提供。ワインリストがある。",
     "sourceList": "アジア・エスニック",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -1880,6 +1926,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=4771588236810556243",
     "phone": "098-963-9070",
     "price": "￥1,000～2,000",
+    "memberComment": "沖縄に来た時は毎回寄っているお気に入りの(オム)タコライス屋さんです！ボリュームがあり、お腹いっぱい堪能できました😋\nタコミートの味やトッピングの種類が豊富なので、自分だけのオムタコを楽しむことができます🙆\n\n🍽️オススメメニュー: オムタコ",
     "sourceList": "アジア・エスニック",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -1902,6 +1949,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=5022299471427862778",
     "phone": "03-6809-6559",
     "price": "￥10,000 以上",
+    "memberComment": "🍽️ おすすめメニュー：パスタ全般、うにと卵黄の紹興酒漬け\n\n南麻布の住宅街にひっそりとある創作料理のお店です！\nどちらかというと洋寄りですが、和洋中エスニック問わずたくさんのメニューがあって何を選んでも美味しかったです🥹\nスパイスの使い方がうまいなぁと思いました💭\n絵画や大量のレコードが飾ってあって、BGMも合わせて雰囲気がとってもよかったです🖼\nお酒はメニューにないものも言えば色々と提案して頂けました🍷\nわたしはワインとシェリーを飲みましたが、それ以外もハードリカーなど揃えがあるようで色々と飲むのも良さそうだなーと思いました！🥃",
     "sourceList": "アジア・エスニック",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -1921,6 +1969,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWmYGZih16cS_23BEBqNyVMLRtgPaKJ3VffsSXtYQyTjTOqC2Ms5rYepzmaWb5CR-ZvCCHcAyjgKQOpwJ0rBG4BeaB_DRAe6qwdtPv1xO-g_z7ArJeHLNk-8iKhzDQADAx4sRqeh0eAeuhCa=w122-h92-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=11587929730807129859",
     "price": "￥2,000～5,000",
+    "description": "羊肉、カニ、鶏肉のビリヤニをライタとともに楽しめるシンプルな店。ビール、サイダーを提供。",
     "sourceList": "アジア・エスニック",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -1944,6 +1993,8 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=15936927942108546522",
     "phone": "03-6240-9920",
     "price": "￥1,000～2,000",
+    "description": "木のテーブルを配した素朴なレストラン。トルティーヤ、タコス、シーフードや肉類を使ったメキシコ料理を提供する。",
+    "memberComment": "ひょんなことから🌮食べたくなって行ってきました🫡\n暑くなってきたのでメキシカンもコロナビール🍻もめっちゃいい感じでした！\nあとメキシカンはライムやパクチーでさっぱりするので、お腹重くならなくて良い❣️\n枝豆豆腐にしか見えないライムクリームケーキは、チーズケーキがライムで爽やかになった感じでとってもおいしかった〜💖\n\n🍽️ おすすめメニュー：タコス🌮、ライムクリームケーキ",
     "sourceList": "アジア・エスニック",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -1965,6 +2016,8 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=17604123098799823670",
     "phone": "03-5413-9581",
     "price": "￥1,000～5,000",
+    "description": "1900年に上海で創業した老舗中華料理店が構える支店。点心師が作る名物の小籠包、焼売、饅頭などの点心のほか、一品料理も提供する。",
+    "memberComment": "職場の方とのお食事で飲み放題付きコースを利用しました！本場のお味をおなかいっぱい楽しめます😋🫶\n\n店員のお姉さんがとっても気が利く方で、気持ちよくお食事が出来たのも高評価ポイントです☝️\n\n飲み放題メニューにないウーロンハイやワインも出してもらえたので、ダメ元でお願いしてみるのもアリかも…?笑\n\n🍽️ おすすめメニュー：\n蟹味噌小籠包、蟹味噌入り春巻き、檸檬酒",
     "sourceList": "アジア・エスニック",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -1989,6 +2042,8 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=10456710459872032598",
     "phone": "03-5457-1521",
     "price": "￥2,000～6,000",
+    "description": "モダンなメキシコ料理を提供するカラフルでカジュアルなレストラン。街を一望できる屋上テラスのバーがある。",
+    "memberComment": "まるで海外リゾートみたいな空間で、昼も夜も雰囲気抜群✨ \nデートや女子会にもぴったりなお店でした🌮🤍\n\n🍽️ おすすめメニュー：ワカモレ、タコス、ファヒータ、フレッシュカクテル🍸",
     "sourceList": "アジア・エスニック",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -2011,6 +2066,8 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=8898785036918009915",
     "phone": "03-3447-3615",
     "price": "￥1,000～2,000",
+    "description": "自然光が差し込む、都会的でシンプルな空間。チキンライス（海南鶏飯）が看板メニューの、シンガポール料理を中心としたアジア料理の店。",
+    "memberComment": "シンガポールのチキンライスが食べれるお店です！ジャスミンライスが美味しくて、ついおかわりしちゃいます☺️ココナッツカレーも甘くて食べやすいですよ〜🍛\n\n🍽️ おすすめメニュー：海南鶏飯とココナッツカレーのハーフ＆ハーフ",
     "sourceList": "アジア・エスニック",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -2030,6 +2087,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWkabYPLyU0gYRM4b6m-jrPAc6Fps_-Kreyc7_XEL-kIevBTN5qTzD3fFWhCo5I1CUgNDWdcJqN1x6VwPsQ7b47AVU1LeB11tBr2Oib5X_lwqekln0gyeIRQyqmqTT4DyD7-IC0fXiijOyuE=w139-h92-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=8202467743121419645",
     "phone": "03-6910-5096",
+    "memberComment": "先日企画で行った和モダンのタイ屋さんです！\n料理のボリュームがちょうどよく色んな料理を食べて程よくお腹いっぱいになれます。\n\nまた、パクチーも別添えが可能なのでパクチーが嫌いな方でも十分楽しめるお店でした✨\n\n🍽️ おすすめメニュー：ビアんちのガイヤーン",
     "sourceList": "アジア・エスニック",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -2051,6 +2109,8 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=15528278650831282927",
     "phone": "050-1784-2298",
     "price": "￥1,000～4,000",
+    "description": "木彫りの家具が特徴的なタイ料理店。カレー、麺料理、アイスティーなどを提供。",
+    "memberComment": "屋台系ではなくレストランの雰囲気\nひと皿が大きめなので、3人以上利用がおすすめ\n\n・トーマンクン(エビの薩摩揚げ)\nコスパ良し❗️\nレディースコース8品で3080円でした！一つ一つの料理の量が多くてさすが百名店どれも美味しかったです！（提供スピード鬼早くて途中で止めました笑）\nパッタイは甘めでシンハーとSPYはお初でしたが飲みやすすぎました( ◠‿◠ )🍻\n新宿でお腹いっぱい食べたい時におすすめです🇹🇭",
     "sourceList": "アジア・エスニック",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -2112,6 +2172,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=489562705112538995",
     "phone": "03-6811-1193",
     "price": "￥1,000～2,000",
+    "memberComment": "平日ランチに行きました！🇸🇬名物料理を手頃な値段でお腹いっぱい楽しめます🤤！ジャスミンライスおかわり無理も嬉しいポイント！お店が狭いので時間帯によっては並ぶのが少し難点かも🤔\n居酒屋スタイルで営業しているディナーにも訪れてみたいです！\n\n🍽️おすすめメニュー: 究極の海南鶏飯、バクテー、ラクサ",
     "sourceList": "アジア・エスニック",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -2175,6 +2236,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=7285186863280805593",
     "phone": "+65 6738 4175",
     "price": "$1～10",
+    "memberComment": "現地民一番おすすめのチキンライス。回転早い。安くて美味しい。ローストよりスチームがおすすめ。",
     "sourceList": "アジア・エスニック",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -2196,6 +2258,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=15725009434388808285",
     "phone": "+65 9691 4852",
     "price": "$1～10",
+    "memberComment": "チキンライスの名店",
     "sourceList": "アジア・エスニック",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -2217,6 +2280,8 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=14879639582559932586",
     "phone": "+65 6225 5632",
     "price": "$1～10",
+    "description": "チャイナタウンのホーカー センター。有名なチキンライスや点心などの料理を販売する屋台が出店する。",
+    "memberComment": "シンガポールの人気ホーカー",
     "sourceList": "アジア・エスニック",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -2238,6 +2303,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWmW0OrBLSXqAE88J0I9L4PPbotEgcM43Xl1nsy0zrTEmJN1RLtX0pt5tO6uuKjVv9BdENhgLQyszSY7tZ_1-N3XqzsAlnAWuPkoeonUZ439iXFqCS37B32UhajLFxMGO7Efruyi357O3r9f=w80-h141-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=7417483023156024136",
     "price": "$10～20",
+    "memberComment": "ミシュラン一つ星。ライスと麺を選べますが、麺がおすすめ！",
     "sourceList": "アジア・エスニック",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -2257,6 +2323,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWmRSpEGq5tuB1vjZuanC4PMGfAzTtmgwgieeFylWRlznL-j81_fDrDCf0rAekHmDV1xOEa6ZLJnszIq7ki5ZgC-YZT1yIExQfkXHZSMR7NJ7CJJpJmR4XcZoaeEdJrLeVcQ47Rc=w122-h92-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=3669581394105765103",
     "price": "$10～20",
+    "memberComment": "バクテー食べるならここ",
     "sourceList": "アジア・エスニック",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -2276,6 +2343,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWl4sf4x8lwiUrr-ii8j943ExUvZ8xBszkFzMXkAxp0uSDYxWBJ3h8lIrsMXtnylrQ7ccV0hnE7mX6fNs9yXQ0S3ikdlg5U4HLew2x5GmHmYQr_psEVYhvdI1QkmdCZqSLqAhly29ZmcFBtH=w122-h92-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=16527395988363562807",
     "price": "$1～10",
+    "memberComment": "ミシュラン選出店。チャークイティが看板商品",
     "sourceList": "アジア・エスニック",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -2295,6 +2363,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWnaMMj25hUXBXKHweuzS6K_HUigWdPuDVnLeL40aTDdnmUL3Qw3jKOpWna7z4OwsqHKYkQ70ycpptThrMrxbhIBfLobZvooX-WVxVGIqduqrUKRhle-9MqAsAGWrpurVkn12M0CShED_zet=w122-h92-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=18331030848569290845",
     "price": "$1～10",
+    "memberComment": "ホッケンミー(シンガーポール焼きそば)の名店",
     "sourceList": "アジア・エスニック",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -2397,6 +2466,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=8714083863296633476",
     "phone": "050-3091-2188",
     "price": "￥1,000～2,000",
+    "memberComment": "レストラン系です",
     "sourceList": "アジア・エスニック",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -2460,6 +2530,8 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=15225682400278044847",
     "phone": "03-5466-4887",
     "price": "￥1,000～2,000",
+    "description": "素朴な雰囲気のカジュアルな飲食店。タイ風スープ、ヌードル、米料理、カレー、炒め物が人気。",
+    "memberComment": "辛いの苦手な人は、店員さんが｢そんな辛くない｣って言ったとしても絶対唐辛子無しをリクエストしてください笑笑",
     "sourceList": "アジア・エスニック",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -2480,6 +2552,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=16153282615823610111",
     "phone": "03-3400-2918",
     "price": "￥1,000～2,000",
+    "memberComment": "レストラン系です！",
     "sourceList": "アジア・エスニック",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -2524,6 +2597,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=329779819256723589",
     "phone": "03-5487-5501",
     "price": "￥1,000～2,000",
+    "memberComment": "ランチのカオマンガイが最高！\n夜はDJもやってるみたいです",
     "sourceList": "アジア・エスニック",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -2824,6 +2898,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=8058067899075977428",
     "phone": "03-6303-3297",
     "price": "￥10,000 以上",
+    "description": "豊富なワインと本格的なイタリアンがカジュアルに頂けるレストラン。モダンでスタイリッシュな店内は陽気で活気がある。",
     "sourceList": "イタリアン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -2864,6 +2939,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=5975576136414556042",
     "phone": "03-6770-7485",
     "price": "￥4,000～7,000",
+    "memberComment": "痛風ラバーなのでララムリの白子グラタンを求めて訪れたのですが、残念ながら白子は入荷がなく食べれませんでした…🥲とはいえこぢんまりしたお店で店員さんとの距離も心地よく、代わりに牡蠣メニューも豊富でした🦪ポーションは控えめで店内もそこまで広くはないので、2人で訪れるのがちょうどよさそうです。でもよく見る赤いテーブルを押さえるなら3人が良いかも…！来年もう少し早めに訪れて白子グラタンリベンジしたいです！☁️牡蠣は大ぶりで満足でした🙂‍↕️\n\n🍽️ おすすめメニュー：(本当は)白子グラタン、(食べたなかでは)白レバーのパテ、タコとアボカドとトマトのサラダ",
     "sourceList": "イタリアン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -3011,6 +3087,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWk83NfTHjNhadS1wRR0Jrmt6m4jJYCi3tWC-FaxOSjsqfXleNW8XdFENE-sASdfvWqsKvErAEuqwpen40XtMPwL4LvLr07gZqlFDVCFlvw2AyNIc9pOJKi8SRhwDwuLlQRCaT-n088o3qLb=w80-h106-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=6700082012977716737",
     "phone": "03-5545-5255",
+    "memberComment": "コースの中で数種類のピザが提供されるのですが、それぞれを少しずつ楽しめるスタイルでどれも美味しい！\nそして気に入ったピザやコースにないピザは追加でホール注文も可能だったので、思わず追加してしまいました笑\nピザだけでなく他の料理も全部レベルが高く、終始満足度の高い時間でした。\nさらに食べきれなかった分は持ち帰りもできるという優しさも◎\n\n美味しい料理を囲みながら楽しく話せる、とても良いお店でした\n\n🍽️ おすすめメニュー：マルガリータ500",
     "sourceList": "イタリアン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -3076,6 +3153,8 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=6027900177516326650",
     "phone": "03-3494-1443",
     "price": "￥1,000～2,000",
+    "description": "ナポリ風ピザ、サラダ、イタリアン デザートを提供する、居心地の良いピザ専門店。テイクアウトも可能。",
+    "memberComment": "・特に無し(粒ぞろい)\n行きたかった百名店ピザ屋！提供は遅めでしたが、(本格ピザ屋あるある？の職人気質の固い接客ではなく)ピザ職人の方もスタッフも丁寧な接客をしてくださり待ち時間も負担じゃなかったです！\nピザも前菜も、お値段以上の質・量でした。\nおすすめが出せるほど色々食べられてないので、評価は上記の通りさせていただきます🙂‍↕️ \nまた行きたいな！",
     "sourceList": "イタリアン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -3096,6 +3175,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=2815048348523429774",
     "phone": "03-5738-8821",
     "price": "￥1,000～2,000",
+    "memberComment": "・ケーキ🍰\nクラシカルで落ち着いた雰囲気がとっても素敵なイタリアンカフェです❤️ 🇮🇹ランチやケーキ、夜はバール利用も可🙆‍♀️\n\nデリプレートランチとケーキ2種（欲張りました！笑）とレモングラスティーをいただきましたが特に作りの丁寧なケーキが美味しかったです🤤　ランチ利用なら500円ででスパークリングや赤白ワインが飲めるので昼飲みにも🍷\n\n居心地良い店内で長居しちゃう素敵カフェです🍽️",
     "sourceList": "イタリアン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -3115,6 +3195,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWkg8-B_Go8jSylidmsfbBKe2tBmVyxc9r0p09glpFwS5HScgbHxwgHEDpSlzPCrwWe2q9xvcvImR_7cS6Vhzqc6TrDilDXOl-3Q7IInlHgtasyhb9nQvn2gLQhmr8EGZmh3Wq4q=w137-h92-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=17290136901322491141",
     "phone": "03-6441-0179",
+    "memberComment": "・ピザ全般🍕\nピザの種類が過去1と思えるくらい豊富でした！\n前菜なども人数分取り分けて持ってきたりとホスピタリティーも素敵なお店です。\nピザ好きパスタ好きには素敵な場所になるかと！",
     "sourceList": "イタリアン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -3157,6 +3238,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=8044646140452386404",
     "phone": "03-6796-3241",
     "price": "￥10,000 以上",
+    "description": "キッチンと対面したカウンター席があるカジュアルモダンな店内で、イタリアンの前菜や肉料理を提供。多種のボトルワインを取り揃える。",
     "sourceList": "イタリアン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -3204,6 +3286,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWm1TAe4-U-0ild8-S0k5wOY6__kc4K3UTantIOn-QQn4PL8h8wSX0YGUHJ4q7QLqPk5Se77hegY3-woSK0qWm73xRxO63xGkYTyxaEahSQiZdNWZgYRZBfO_p7K8FBMILi4-vg8mPtjxKq6=w163-h92-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=9331157722909174934",
     "price": "£20～70",
+    "description": "2 万本のボトルが贅沢に飾られた、華やかな雰囲気のレストラン。イタリア料理とドリンクを提供。",
     "sourceList": "イタリアン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -3266,6 +3349,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=2227647457860812211",
     "phone": "+1 808-931-6273",
     "price": "$50～100",
+    "description": "独創的な高級イタリア料理を提供する洗練されたレストラン。ワインの種類も豊富。",
     "sourceList": "イタリアン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -3286,6 +3370,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=5637021178540697541",
     "phone": "+1 310-205-5444",
     "price": "$50～100",
+    "memberComment": "ジャスティンビーバー御用達の有名イタリアン。トリュフのチーズパスタがおすすめ",
     "sourceList": "イタリアン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -3306,6 +3391,8 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=4734070965203786299",
     "phone": "03-6265-3146",
     "price": "￥3,000～9,000",
+    "description": "素朴なイタリアン レストラン。くつろげる雰囲気の店内でピザ、パスタ、塩漬け肉を楽しめる。",
+    "memberComment": "南イタリア料理のレストラン。路地裏にある隠れ家っぽいお店です。３階から地下1階まであり、フロア自体は狭いものの、落ち着く雰囲気で、お皿も鮮やかで素敵でした 🥗自家製ニョッキは大きくて柔らかく、チーズのクリームソースが濃厚で美味しかったです！\nランチ利用したので、ディナー限定のピザは注文出来ず .. 😢次回はディナーで利用してみたい！\n\n🍽️ おすすめメニュー：自家製ニョッキ，アーリオオーリオ",
     "sourceList": "イタリアン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -3326,6 +3413,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=12355138433381444055",
     "phone": "03-6910-3553",
     "price": "￥2,000～3,000",
+    "memberComment": "1935年創業のナポリの老舗ピッツェリア「ジーノ・ソルビッロ」の日本店舗です🇮🇹\n具材とピザ生地(薄いのにもちもち！)どちらも存在感があるのに調和しており不思議な美味しさでした…！\n私は特にトマトソースがお気に入りだったので、行かれる際はぜひ召し上がってみてください🍅\n外国のお客さんも多くみられ、世界的な人気が窺えました😳✨\n\n🍽️ おすすめメニュー：マルゲリータブファラ",
     "sourceList": "イタリアン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -3377,6 +3465,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=12269711511163373761",
     "phone": "03-6452-5011",
     "price": "￥5,000～9,000",
+    "memberComment": "どのメニューも美味しかったです！インスタで気になっていたブリのメニューがなかったのが残念でした😢🐟雰囲気もオシャレで女子会やデートにおすすめです⭐️\n🍽️ おすすめメニュー：牛サガリロースト",
     "sourceList": "イタリアン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -3397,6 +3486,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=14307566059022605231",
     "phone": "03-3567-5656",
     "price": "￥3,000～8,000",
+    "description": "居心地の良いシンプルなイタリアン レストラン。前菜、パスタ、メイン、デザートのコース料理を提供。",
     "sourceList": "イタリアン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -3420,6 +3510,8 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=11220434931026932694",
     "phone": "03-5206-4455",
     "price": "￥4,000～8,000",
+    "description": "猪やエゾシカなど全国各地から取り寄せたジビエが存分に味わえる。ジビエに合うワインを多数用意し、マリアージュが楽しめる。",
+    "memberComment": "🍽️ おすすめメニュー：蝦夷鹿モモ肉のタルタル、ジビエの炭火焼き盛り合わせ\nボトル4000円以下のワイン飲み放題8250円のジビエコースを堪能してきました。ボトルは自分で選ぶ形式でみんなで選ぶのが楽しいです。お肉は鹿、猪、雉、ウズラなど食べました🍖タルタルは絶対頼んで欲しいです！個人的にはウズラの炭火焼きがかなり美味しかったです！噛んだ時ウズラの卵を食べた時の香りが少しするので、食べた際は是非集中して食べてみてください🙆‍♂️高コスパでみんな腹パン大満足のお店でした！",
     "sourceList": "イタリアン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -3442,6 +3534,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=18255085794327043803",
     "phone": "03-6826-2033",
     "price": "￥5,000～6,000",
+    "memberComment": "🍽️ おすすめメニュー：大山鶏のハニーバルサミコ\n気軽にいけるコスパ良いビストロ☺️\n女子の皆さんにおすすめしたい「ちょうどよい」お店でした。\n\nご飯の美味しさはもちろん、「これあったら嬉しい」が詰まってました！\n・いい香りのフカフカのおしぼり（香り選べる）\n・お席にお水ペットボトルで置いてくれてる（ありがたい）\n・ノンアルのモクテルの種類多（甘すぎず美味しかった）",
     "sourceList": "イタリアン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -3463,6 +3556,8 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=18215419278613606587",
     "phone": "03-6278-7676",
     "price": "￥4,000～9,000",
+    "description": "明るい内装のこぢんまりとしたレストラン。パスタなどの定番イタリア料理を提供。ワインセラーあり。",
+    "memberComment": "祝日なのに当日予約取れて嬉しかった🥲メニュー表以外のパスタも作ってくれるみたいで、次回は創作パスタに挑戦したい‼︎",
     "sourceList": "イタリアン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -3483,6 +3578,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=7965878769744972796",
     "phone": "03-6451-5700",
     "price": "￥1,000～2,000",
+    "memberComment": "モーニングやカフェ利用もできるワインバーで、ワインの種類がかなり豊富でした！店員さんのお気遣いで頼んだメニューに合わせてワインをたくさん提案してくれました🍷白子や苺などの季節のメニューもありましたが、特に菜の花とズワイガニのペペロンチーノが最高に美味しかったです✨",
     "sourceList": "イタリアン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -3503,6 +3599,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=1771405215121377296",
     "phone": "03-6380-3872",
     "price": "￥5,000～6,000",
+    "memberComment": "スパークリング、赤ワイン、白ワイン、ハイボール、ノンアル…お酒飲める人も飲めない人も満足できるコース・値段で、のんべえにはコスパよすぎるのでは！？\nフォカッチャはおかわりできます🍞",
     "sourceList": "イタリアン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -3523,6 +3620,8 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=18010368406775745522",
     "phone": "03-5791-5642",
     "price": "￥1,000～6,000",
+    "description": "イタリアで修業したシェフによる繊細な料理は、和食の魅力も生きた逸品。周囲が気にならない個室席のほか、ロフト席もある。",
+    "memberComment": "北海道から直送のふわとろでおっきい白子が乗ったパスタ🍝\nこの時期限定で出てます📢\nイカスミパスタも、イカがたっぷりでイカスミも臭みもなくほんとに美味しい🤤\nフランスの白ワインと相性良きでした🇫🇷\n夜も飲みに行きたいお店でした🥂",
     "sourceList": "イタリアン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -3552,6 +3651,8 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=8689709601760526315",
     "phone": "03-6264-1129",
     "price": "￥5,000～9,000",
+    "description": "看板メニューの炭火焼をメインとした料理を味わえる。オレンジ色が基調の店内はカジュアルな雰囲気で、カウンター4席テーブル12席がある",
+    "memberComment": "ワインも料理もコスパ良く飲んで食べれるのでおすすめです🍷\n8人で行って合計8本ワイン飲んで、ご飯も色々食べて1万円/人きるコスパ！",
     "sourceList": "イタリアン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -4022,6 +4123,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=12493624370597866264",
     "phone": "03-6271-5429",
     "price": "￥2,000～8,000",
+    "description": "THE AOYAMA GRAND HOTEL 内のシックな各国料理レストラン。ワインや蒸留酒を豊富に取り揃える。",
     "sourceList": "イタリアン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -4063,6 +4165,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=11908661108458820004",
     "phone": "06-7502-5318",
     "price": "￥1,000～2,000",
+    "description": "パスタやラザニアなどの、エミリア ロマーニャ州の定番料理を味わえる居心地の良いイタリアン レストラン。ワインやデザートも提供。",
     "sourceList": "イタリアン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -4082,6 +4185,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWk9JiRzeSQEV1fcPi462M5hhJ5cikkS2hbxX2SnuF_EFuKldB2IR3rZJBTICjJatEKMsViKxn-K9HwGxr6lhGMT2nUplu_Duc11AKmJA5xSfX0xtPUnzC5btkeFXrMPAa8r9ik0lw=w122-h92-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=14810594405608115107",
     "phone": "050-1807-6940",
+    "description": "日本の旬の食材を使いイタリアのエッセンスを加えた料理とワインなどのドリンクを提供。エレガントな店内はくつろげる雰囲気で個室もある。",
     "sourceList": "イタリアン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -4133,6 +4237,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=2467744193552293524",
     "phone": "03-6270-0520",
     "price": "￥2,000～6,000",
+    "description": "スタイリッシュで都会的なレストラン。豊富なワインメニューに合わせて素材や調理にこだわったイタリア料理や地中海料理が頂ける。",
     "sourceList": "イタリアン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -4183,6 +4288,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=2757316863776017215",
     "phone": "03-5467-2551",
     "price": "￥2,000～6,000",
+    "description": "ブランチ、アフタヌーン ティー、各国料理を楽しめるおしゃれなレストラン。テラス席もある。",
     "sourceList": "イタリアン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -4341,6 +4447,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=15747358982198289273",
     "phone": "03-6206-3386",
     "price": "￥1,000～2,000",
+    "memberComment": "イロタスメンバーとワイン会しました🍷\n\n30種類以上のワインが時間制で飲み放題という、ワイン好きにはたまらないお店でした！\n\n赤・白・オレンジ・ロゼ幅広く揃っていて、色々少しずつ飲み比べできるのが最高☺️\n\n店員のお兄さんお姉さんもすごく優しくて、「重めの赤が好き」「すっきり系飲みたい」など好みを伝えるとおすすめを丁寧に教えてくれます✨\nワイン初心者でもかなり入りやすい雰囲気でした！\n\n駅直結でふらっと行きやすいのも嬉しいポイント。\nワイン好きの人はぜひ行ってみてください🍾\n\n🍽️ おすすめ：時間制ワイン飲み放題",
     "sourceList": "イタリアン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -4369,6 +4476,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=13010630928237721551",
     "phone": "03-6206-7980",
     "price": "￥1,000～2,000",
+    "memberComment": "イロタスのメンバーといってきました！\n十数種類のパンをスタッフさんが席まで持ってきてくれて、好きなパンを4つ選ぶことができます。おすすめされたクロワッサンと名物の食パンが結局1番美味しかったので、行く際はぜひ選んで欲しいです🫶\n\nパンはもちろん、コースについている生ハムやブラータチーズ、20分に1度スタッフさんが注いでくれる何種類もの紅茶、どれも美味しくとてもいいブランチでした！！\n\n※開店前も、退店時もかなり並んでいたので、予約をオススメします。\n\n🍽️ おすすめメニュー：ワンハンドレッド食パン、天使のクロワッサン",
     "sourceList": "イタリアン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -4410,6 +4518,7 @@ export const GOURMET_MAP_SEED = [
     "reviewCount": 52,
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWlYgP3aRhzMfYD6Ww5dbWfZ1RRUsu5YfMMMJW_Ajd_IBrp5NRQm5WX_Dg78dt4NSYvh45bGEv0cCJ3JXIX7o4j1-6Xfs-rWKI1gnwIK9G0P988-RQZGnw1AIFHNuG_074YS4F3y0wjLvqOq=w80-h106-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=6816549008330244433",
+    "memberComment": "名古屋で1番オシャレかつ立ち飲みなので入りやすい、帰省のたびに寄っちゃうワイン・レコードバーです🍷 \nお客さんも優しく、初めてここで出会った方々に「帰省のついでに来た」と伝えたらなんと2軒も連れ回ってくださいました☺️\n名古屋といえば錦や栄3丁目あたりが人気ですが、那古野・円頓寺エリアもディープな穴場がいっぱいです！ぜひ〜\n\n🍽️ おすすめメニュー：ナチュラルワイン",
     "sourceList": "イタリアン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -4431,6 +4540,8 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWkoQW3gSSwGp_VcBL4sbEO3wZD1NzYOyZCTg8COdew5FebtOGQ-bzvbWDcdy-X1K-iCdMbDbey-BTYwUTbXLuRL_Z5HUCnbLxzD2wuvAln1zzOhXLUz0BFZnlsj2z3c6W6PuQF5=w80-h106-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=3297506177074800867",
     "phone": "050-5303-3776",
+    "description": "白と赤を基調としたスタイリッシュな店内には、個室も完備。メニューは昼と夜ともにコース料理のみ。飲み放題プランもある。",
+    "memberComment": "中学の時からずっと家族で通っている、行きつけのイタリアンです✨\n初めてワインを飲んだのもノガラッツァで、そこから酒好きに🤤🍾\n季節のお野菜にお魚、素材の旨みがギュッと詰まった一品。ぜひ食べて欲しいです‼︎🫜ワインはペアリングで、ソムリエさんが一人一人に合ったものを選んでくれます🍷\n(関西支部で企画したい...)\n\n🍽️ おすすめメニュー：コース",
     "sourceList": "イタリアン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -4563,6 +4674,8 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=4822701006082511060",
     "phone": "048-788-3886",
     "price": "￥1,000～2,000",
+    "description": "ナポリピザや手打ちパスタを提供する気軽に立ち寄れるレストラン。",
+    "memberComment": "先日埼玉会として企画して行ってきました！暖かくなってきたのでテラス席の利用が雰囲気も含めてとってもよかったです❣️\nピザ、リゾット、ニョッキと意図せず炭水化物祭りになってしまいましたがどれも美味しく、ボリューム感も込みで大満足でした☝🏻🇮🇹\n\n🍽️ おすすめメニュー：マルゲリータ",
     "sourceList": "イタリアン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -4583,6 +4696,8 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=7354217568385231605",
     "phone": "03-5731-9272",
     "price": "￥1,000～2,000",
+    "description": "種類豊富な小皿料理には、産地直送の野菜を使用。シーンに応じたさまざまなパーティープランがあり、歓送迎会などに最適。",
+    "memberComment": "Xのおすすめで調べて来たけど、とにかく美味しい。パスタでリピしに来たのは生まれて初めてかもしれない\nとにかくハニーチーズ豆腐が背徳の味！\n\nザワザワした飲み屋なので、ワイワイしながらシェアすると色々食べられて良さそう！\n\n🍽️ おすすめメニュー：渡り蟹のトマトクリーム、ハニーチーズ豆腐",
     "sourceList": "イタリアン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -4602,6 +4717,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWmmWeT_89ihuN1ZRand49t2kyTKauRozJ3Xd6LZTbUtdSlk5zwZ6xmSD_SfwIGw1vC7WmcAwZK7_TNiqtHD-JUW7UyYd5cXNKbnIjVmhJYS1XSTVUjj_exBH5Cm633g3lf7XtPn5Z-9fzA=w138-h92-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=6699774693308377667",
     "phone": "080-9715-2323",
+    "memberComment": "料理もワインもクオリティ高くて、雰囲気も良いのでデートや女子会におすすめ！もっちもち太麺のピチは必食！\n\n🍽️ おすすめメニュー：ピチ(太麺のパスタ)、本日のブルスケッタ\n\n1品1品が2人で食べるのにちょうど良い小皿サイズで、どれも完成度が高く美味しかったです。料理に合わせた店員さんのワインのセレクトがとても上手で、気づいたら6杯もいただいてました…🍷\n特に生ハム、チーズ、はちみつのボリュームとバランスが最高だったブルスケッタ、写真を撮りそびれてしまった最後のパスタが絶品！\nパスタは発酵唐辛子の旨みと辛みが効いており、10種のぶどうからできた白ワインsamodiaの複雑味と相性抜群でした😌🍇\nカウンター席がメインで、隣のお客さんとの距離も近いんですが、そのお店の雰囲気もまた好きだったので、通いたいお店になりました！\n\n🍽️ おすすめメニュー：本日のブルスケッタ、発酵唐辛子としらすのパスタ",
     "sourceList": "イタリアン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -4645,6 +4761,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWllX4jkNYq0BQsBCTPvdSZgoJNbjwfoD2oy2ZndmQydFzl55FqOrasWY4OVFbCFupm7IPU691S2t7PNM7wEU_0WMby8FEY0bjPpWRfBcYGeuVUs4qmdHetmyMxJ5INfv3Ax6ytLLaQlLrE=w164-h92-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=17865047358300906766",
     "phone": "03-5422-6061",
+    "memberComment": "中目黒メグリヴァの姉妹店、Minarivaの予約が取れたので行ってきました！\n\n7品のコースでの予約でしたが一品の料理の量も多めでかなり満足感の高いコースでした！\nもちろん味も美味しくお腹苦しいのに食べ進めてしまうほどです。🙂‍↔️\n\n店員さんも親切&丁寧でまた行きたいなと思います💭\n\n🍽️ おすすめメニュー：\nうにのジェノベーゼカッペリーニ\nトリュフオムレツ\n(フォカッチャ)\n\n\n予約困難店メグリヴァの姉妹店！\nいろたす女子会してきました〜🍷\n一生分くらいたっぷりトリュフを削ってくれるオムレツ、ぜひ食べてみてほしいです🙂‍↕️\nカウンターのみなので2.3人がベストかも！\n\n🍽️ おすすめメニュー：\n冬トリュフのオムレツ",
     "sourceList": "イタリアン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -4665,6 +4782,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=12231216228328267775",
     "phone": "03-6683-1973",
     "price": "￥2,000～6,000",
+    "memberComment": "IRO+6人で訪問したのでご報告です！マルゲリータ、マリナーラの定番はもちろん、和風ピザが珍しい&美味しかったです！\n最後に食べたハムの盛り合わせも美味しかったです。\n6人でサラダ、ピザ4枚、各自ビール等1杯、ワイン2本、おつまみで1人6000円だったのでコスパも良いと思います！🙆結構すぐ予約が埋まるので月初の予約がおすすめです！\n\n🍽️ おすすめメニュー：\nピザばどれも美味しいですが、\n特に和風のピザのバラエティ豊富で美味しいです！\n*今日は和風だと日本の旨味、ホタルイカとふきのとうのピザをいただきました🙏",
     "sourceList": "イタリアン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -4686,6 +4804,8 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=9347497616731909321",
     "phone": "03-6416-5230",
     "price": "￥10,000 以上",
+    "description": "木とコンクリートが調和した店内で、国内の漁港や農園直送の食材を使用したイタリアンのコースを提供。ボトルワインあり。",
+    "memberComment": "お塩と食材の相性にこだわったお店だけあって、味付けがシンプルで個人的に好きでした！\n最初の一口カッペリーニが映えだし美味しかったなぁ🍽️\n宮崎の食材が多く使われてて、お肉もお野菜もとっても美味しかったです🥩\n11品のコースのみなのですが、品数が多いので、満足度はかなり高くコスパ良き✨\n(わたしはかなり苦しかったです…)\n基本ワイン(頼めばハイボールもあるみたい)しかないので、サワー系が飲みたい人、ワインが苦手な人にはおすすめしません笑\n\n🍽️ おすすめメニュー：\n一口冷製カッペリーニ\nフォアグラのブリュレ",
     "sourceList": "イタリアン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -4707,6 +4827,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWm2MOwQh2kDV_nhRajjr_3jcujQ1Ws3QdaobYEmywR9cy5xPA6o98_mit9-lw68-3LoQNLbxlsiEaI0-_e02JSPAYb8s8G5yfkr79H1njw--Yc_J0VBmddegh9aQaVUDkK0PjUO-R5gf86G=w80-h106-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=9068751512760494828",
     "phone": "03-3269-8010",
+    "memberComment": "・フォアグラマカロンと極薄生ハム&ニョッコフリット\n気になっていた中野の洋食堂葡萄が去年神楽坂にできたので行ってきました！前菜盛り合わせが全部抜かりなく美味しくて期待以上でした🥹特にフォアグラマカロンはワインが進みそうな味で美味！コースはワインペアリングを付けても11,550円なのでコスパも良い気がします🤤\nイタリアンとは一見思えぬ神楽坂らしい石畳の路地の先にあり、隠れ家的雰囲気でした✨カウンターメインなので2人利用がおすすめですが、個室もあるので4〜6人でも行けそうです！",
     "sourceList": "イタリアン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -4728,6 +4849,8 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=16679687002163026740",
     "phone": "03-3585-2232",
     "price": "￥1,000～7,000",
+    "description": "レンガのアーチをあしらった田舎風インテリアのイタリア料理店。薪窯ピザや魚介のパスタを楽しめる。",
+    "memberComment": "・2種類のピザ、豚肉のロースト\n98回で行ってきました！\n## 2018年,2019年,2021年と ##\n百名店を3回受賞してる実力派ピザ屋です！\n\n今回はワイン含む飲み放題付きコースをいただきました！\n百名店を3度受賞、2種のピザ中心に飲み放題付きコースで6,000円はお得だと思います！\n直前だと予約が埋まってますが全然食べログから予約できるのでおすすめです！",
     "sourceList": "イタリアン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -4749,6 +4872,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=10001829679947356936",
     "phone": "03-6755-6037",
     "price": "￥10,000 以上",
+    "description": "パスタ、ステーキなどの郷土料理をイタリア産ワインとともに味わえる、隠れ家的な店。カウンター席があり、メニューが黒板に書かれている。",
     "sourceList": "イタリアン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -4868,6 +4992,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=11021917499127437782",
     "phone": "03-6450-5584",
     "price": "￥1,000～3,000",
+    "description": "薪窯焼きピザ、イタリアの肉料理、海鮮料理を楽しめる小さな店。テラス席あり。",
     "sourceList": "イタリアン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -4890,6 +5015,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=14479217178205164379",
     "phone": "03-3465-4452",
     "price": "￥2,000～5,000",
+    "memberComment": "マッシュルームは必須！\n孤独のグルメでバズった？みたいです",
     "sourceList": "イタリアン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -4912,6 +5038,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=2332838011459004117",
     "phone": "03-5759-3800",
     "price": "￥1,000～5,000",
+    "description": "カジュアルなイタリアン レストランのチェーン店。パスタ、ピザ、ワインを提供する。テラス席がある。",
     "sourceList": "イタリアン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -4957,6 +5084,8 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=1948687327475732820",
     "phone": "06-6241-9710",
     "price": "￥1,000～5,000",
+    "description": "ワインのインポーターが直営する、こだわりのワインバー。ヨーロッパから仕入れた上質なワインが揃う。バックストックも多いのも特徴。",
+    "memberComment": "ワインが半額になる日があるので要チェック！",
     "sourceList": "イタリアン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -4984,6 +5113,8 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=3779070021404828865",
     "phone": "03-5568-7010",
     "price": "￥5,000～6,000",
+    "description": "パエリアやアヒージョなどが種類豊富なワインとともに味わえる。店内は席により趣向を凝らしたインテリアで、個室やカウンター席もあり。",
+    "memberComment": "ボトルワインも安くてコスパ良いです！",
     "sourceList": "イタリアン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -5034,6 +5165,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=11841810074892663745",
     "phone": "03-6431-9860",
     "price": "￥4,000～8,000",
+    "memberComment": "雰囲気が固すぎず、カウンターでは店長とお話できる雰囲気！",
     "sourceList": "イタリアン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -5077,6 +5209,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=14901855932298118833",
     "phone": "078-391-1464",
     "price": "￥1,000～2,000",
+    "description": "名物のボロネーゼをはじめとするイタリア料理とワインを味わえる、こぢんまりとした居心地の良い店。",
     "sourceList": "イタリアン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -5097,6 +5230,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=5148725835988021973",
     "phone": "078-392-2576",
     "price": "￥1,000～2,000",
+    "description": "化学調味料・保存料などを使わない多彩なパスタの他、バターライスやサラダも数種類提供。店内は白と木目が基調でカジュアルな雰囲気。",
     "sourceList": "イタリアン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -5168,6 +5302,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=10400207721913920575",
     "phone": "03-6455-3460",
     "price": "￥6,000～10,000",
+    "description": "店内の天井ほどの高さがある大きな棚に、フランスをはじめ、世界中から厳選したワインをストック。料理はイタリアンやフレンチを提供する。",
     "sourceList": "イタリアン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -5211,6 +5346,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=9557625623403169259",
     "phone": "078-241-6036",
     "price": "￥2,000～4,000",
+    "description": "数卓のテーブルが並ぶこぢんまりとしたイタリア料理店。ナポリピッツァ、パスタ、デザートを味わえる。",
     "sourceList": "イタリアン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -5236,6 +5372,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=17613029771153000346",
     "phone": "078-599-6332",
     "price": "￥4,000～9,000",
+    "description": "手作りのパスタとピッツァ、ワインを楽しめる高級感漂うイタリアン レストラン。店内は木のぬくもりを感じる洗練された空間。",
     "sourceList": "イタリアン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -5257,6 +5394,8 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=14648017199201175190",
     "phone": "050-5448-8678",
     "price": "￥3,000～7,000",
+    "description": "カウンター席のみを備えるカジュアルモダンな内装の店内で、名物のリゾットカレーをはじめ、イタリアンをベースにした料理を提供する。",
+    "memberComment": "カウンターぎゅうぎゅう、気軽で美味しいイタリアン",
     "sourceList": "イタリアン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -5276,6 +5415,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWkITMwfPLXlwMSZGMbOS-e7Dtcz7PIu5Ydq8A5qKB-4eUUpBlrdkMq59l6cJnwzgLPlR_kuoJ4No9jh06aUY4ih9UfmDnm-2qcewQ5FPabmC0jM2me4SgymKJ_KSiifQDuvw2-s5QlI7Q3h=w80-h106-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=6317771732658760657",
     "phone": "03-6413-8911",
+    "memberComment": "アクセスが悪すぎてなかなか行けないけどとってもおいしいビストロ🍷",
     "sourceList": "イタリアン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -5296,6 +5436,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=6563264330618927068",
     "phone": "078-381-8538",
     "price": "￥2,000～5,000",
+    "memberComment": "ワインと日本酒、料理もおいしい！",
     "sourceList": "イタリアン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -5317,6 +5458,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=16434063813276103472",
     "phone": "045-264-8338",
     "price": "￥2,000～6,000",
+    "memberComment": "ウニパスタが最高です！！ランチワインがお得🍷",
     "sourceList": "イタリアン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -5339,6 +5481,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=8383299546801793619",
     "phone": "03-6433-5537",
     "price": "￥2,000～6,000",
+    "description": "全粒粉を使ったピザ、カクテル、ビール、ワインを提供する、インダストリアル調のおしゃれな店。",
     "sourceList": "イタリアン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -5359,6 +5502,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=14684415348373074119",
     "phone": "06-4792-8262",
     "price": "￥1,000～7,000",
+    "memberComment": "何食べてもおいしいイタリアン、雰囲気も最高🍷",
     "sourceList": "イタリアン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -5379,6 +5523,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWk2t-L7OTGiB7gtg9u5iyL4dgozxf6MEECqRgOMdQkQ8Zt1Z_Opa5fs2_oK-Uei4lKRZz_XtqY3v59bID9ZdKBnprMapw80EHw9hHZlAqcgB414gE7jznbwIi35r2q6anwJ6Rg=w80-h106-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=3756989992103939903",
     "phone": "03-6426-8991",
+    "memberComment": "バーといいつつガッツリご飯食べられます🍷デートにもぴったり",
     "sourceList": "イタリアン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -5398,6 +5543,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWnj6of1GUnjyIIFTIYf7LvAiv6dw63uYSppVb5GLLGgaYUZIXbgHwEI6B3mn9nR8OmszSlshqPRT-IgFfIE_aVd3GIn8SLghk-XC6keyGO5SX-gM4chBjleQ88sPI2hfk46OFDb=w92-h92-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=1649063192662792748",
     "phone": "03-6628-5933",
+    "memberComment": "カウンターだけのイタリアン、わくわくするお料理食べられます",
     "sourceList": "イタリアン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -5418,6 +5564,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=7075044092730881785",
     "phone": "03-6421-3365",
     "price": "￥6,000～7,000",
+    "memberComment": "お腹を空かせていきたいイタリアン",
     "sourceList": "イタリアン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -5484,6 +5631,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=8280346124097226787",
     "phone": "03-6427-0017",
     "price": "￥5,000～9,000",
+    "memberComment": "百名店マジカメンテの味をアラカルトで♪",
     "sourceList": "イタリアン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -5506,6 +5654,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=15182668928048566287",
     "phone": "078-331-3330",
     "price": "￥2,000～3,000",
+    "description": "水を使わずに、牛乳とスパイスを練り込んだ生地で作るピザが人気。趣きのあるアンティーク調の店内インテリアもポイント。",
     "sourceList": "イタリアン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -5551,6 +5700,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=4090704886301798113",
     "phone": "078-331-1631",
     "price": "￥1,000～2,000",
+    "description": "ナポリスタイルのピザやパスタなど、カジュアルなイタリア料理を出す。飲み放題付きのパーティプランも用意している。",
     "sourceList": "イタリアン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -5622,6 +5772,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWks1Dl8GrkZRAcGEKUyugMg7gUVzvcQAJzUHIg_9IVMNYU7WGG1NtBptxfYlKtlExFw-3bhkUnMsqH0bicZwPir0rfpEoTPoVFGfcPIx8Gdn6B72rMP6b2jRDxBFPf0GAosj4E=w92-h92-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=1747609003460050039",
     "phone": "03-5541-4343",
+    "description": "フランス・パリ１０区にある人気のワインビストロ、「ル・ヴェール・ヴォレ」の雰囲気が味わえるワインバー。フランス自然派ワインを提供。",
     "sourceList": "イタリアン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -5713,6 +5864,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=10026854944534080032",
     "phone": "03-5985-1129",
     "price": "￥3,000～6,000",
+    "description": "カジュアルで落ち着いた雰囲気の店内では、炭火グリルで焼き上げる肉料理と本格イタリアンが味わえる。ワインの種類も豊富。",
     "sourceList": "イタリアン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -5866,6 +6018,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=4224912564045207170",
     "phone": "06-6311-4782",
     "price": "￥3,000～4,000",
+    "description": "一枚板のカウンターが置かれた上品な店内では、和の食材を使用した創作イタリア料理が味わえる。ワインの種類も豊富に取り揃えている。",
     "sourceList": "イタリアン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -5952,6 +6105,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=5254305288274970952",
     "phone": "090-1190-1676",
     "price": "￥1,000～5,000",
+    "description": "石窯に薪をくべて焼き上げるピザのほか、パスタ、日替わりの前菜などを提供する。",
     "sourceList": "イタリアン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -6059,6 +6213,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=15368838030704175215",
     "phone": "06-6441-2202",
     "price": "￥3,000～4,000",
+    "description": "気取らない雰囲気のイタリア料理店。パスタ、丼もの、肉のグリル、デザートをワインやビールとともに味わえる。",
     "sourceList": "イタリアン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -6079,6 +6234,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=575537815588085841",
     "phone": "06-6354-8710",
     "price": "￥1,000～5,000",
+    "description": "2006 年に開業した本格的なイタリア料理店。石窯焼きナポリピザと各種スイーツを提供。",
     "sourceList": "イタリアン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -6122,6 +6278,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWl5aOPdJfp2HhTj0hwijqjNNWgmq9qmULYvijnmSkyqrOp3FOETi9viH785Vo0QmkHj38nGP9UinfXqQl4JCG0-MZi_c2AycwYlM4bHkrkyKeS7nXpINCA-R64iRNSFzssujLP8YaiBNAsl=w85-h92-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=4065434250928535848",
     "phone": "045-620-7077",
+    "description": "パスタやリゾットなどイタリア料理を提供するくつろげるレストラン。ワインメニューも取り扱っており、パティオもある。",
     "sourceList": "イタリアン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -6145,6 +6302,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=9382709838894366775",
     "phone": "03-6228-1565",
     "price": "￥6,000～10,000",
+    "description": "個室も備えた店内は、カラフルでポップな雰囲気。有機野菜を使用したフランス郷土料理やオーガニックワインが味わえる。",
     "sourceList": "イタリアン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -6236,6 +6394,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=14769743462083086081",
     "phone": "03-5363-1787",
     "price": "￥1,000～3,000",
+    "description": "地下階にある居心地のよいレストラン。窯焼きのナポリピッツァやパスタを提供する。",
     "sourceList": "イタリアン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -6285,6 +6444,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=4786101251006823824",
     "phone": "050-5433-3189",
     "price": "￥4,000～8,000",
+    "description": "山小屋をイメージした落ち着きのある店内では、ソーセージ、ハム、リエットなどのシャルキュトリーを中心とした料理とお酒を提供している。",
     "sourceList": "イタリアン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -6351,6 +6511,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=13832710485403706032",
     "phone": "03-6804-7607",
     "price": "￥10,000 以上",
+    "description": "伝統的な農家のような外観のおしゃれなビストロ。エレガントな盛り付けのフランス料理をお茶やワインと一緒に提供。",
     "sourceList": "イタリアン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -6418,6 +6579,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=16650300022212623779",
     "phone": "03-6459-1846",
     "price": "￥2,000～7,000",
+    "description": "ナポリ出身のシェフが経営するトラットリア。ボリューム満点のピッツァとパスタを提供。",
     "sourceList": "イタリアン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -6460,6 +6622,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=15337026637196025583",
     "phone": "03-5413-0711",
     "price": "￥2,000～7,000",
+    "description": "表参道に本店を構えるイタリアンレストランの支店。薪窯で焼き上げる名物のナポリ風ピッツァは、20種類以上のメニューを用意する。",
     "sourceList": "イタリアン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -6502,6 +6665,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=2713943950260202742",
     "phone": "03-6277-8064",
     "price": "￥2,000～7,000",
+    "description": "こだわりの薪窯焼きピザや上品なデザートを提供する気取らないレストラン。カウンター席とテーブル席がある。",
     "sourceList": "イタリアン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -6521,6 +6685,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWltqkCMyhtZvQTGwGQBEhrdnRc-5QWjJjQ2PAYxvioAHgG62Gcj5MWH0OlJP4_Li_sBLEA4ShmqdyXUAd2ATVPnn6jQDfEHZ2pHhXDM1T4JwZ1EDxJN3Q8u_M_sjdeZr6YXJpCfq4cTAyM=w80-h106-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=6750230145140429850",
     "phone": "03-5726-9629",
+    "description": "居心地の良い、活気あるレストラン。飾らない雰囲気の店内でイタリア料理とワインを楽しめる。",
     "sourceList": "イタリアン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -6610,6 +6775,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=18300803397687158276",
     "phone": "03-5479-4555",
     "price": "￥2,000～7,000",
+    "description": "アメリカ料理や季節限定のエールを楽しめる水辺のビール醸造所。水上に浮かぶラウンジとテラスがある。",
     "sourceList": "イタリアン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -6630,6 +6796,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWleK2kWbXyNATx9g7GkmtqEgn6Qc3cYaOP0IcoUnKnu-j3FgQDiK2XoZ2o9f3uhcegUPbjeVE4D189CnBlVdFVohgoSLI5agE1j5ilJ48xGvdGyvGCCPu5ehxv5m2K-zRSqu8RYGQ=w92-h92-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=8134565028005896199",
     "phone": "03-3462-6277",
+    "description": "定番のアラカルトをオーガニック ワインと楽しめる、洗練されたイタリア料理レストラン。",
     "sourceList": "イタリアン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -6679,6 +6846,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=6671060018412684709",
     "phone": "03-3797-3790",
     "price": "￥2,000～7,000",
+    "description": "白を基調とした明るい店内では石窯で焼いたピッツァを提供。食材にはイタリア産の小麦粉などのほか国産食材にも有機栽培のものを使う。",
     "sourceList": "イタリアン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -6719,6 +6887,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=18388832329904789543",
     "phone": "03-3485-7371",
     "price": "￥10,000 以上",
+    "description": "隠れ家的なレストラン。和牛ステーキ、パスタのほか、ズワイガニ、伊勢海老、スズキなどを使ったシーフード料理を堪能できる。",
     "sourceList": "イタリアン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -6781,6 +6950,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=12035181990932459602",
     "phone": "050-1721-2320",
     "price": "￥2,000～6,000",
+    "description": "ピザ職人が焼く旬の素材を使ったオリジナルのピザが頂けるレストラン。カウンター席が中心のアットホームで快適なライブ感溢れる店内。",
     "sourceList": "イタリアン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -6975,6 +7145,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=10192150664807417958",
     "phone": "03-6300-4616",
     "price": "￥1,000～2,000",
+    "description": "バリスタが淹れるコーヒー、クラフトビール、各国料理の軽食メニューを味わえるおしゃれなカフェ。",
     "sourceList": "イタリアン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -7034,6 +7205,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=4050470256372261737",
     "phone": "03-3449-1470",
     "price": "￥10,000 以上",
+    "description": "アーチ型天井を配した温かい雰囲気のイタリア料理店。デザートやワインも提供。",
     "sourceList": "イタリアン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -7264,6 +7436,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWmGxkNB4EoulHVd3a6Sh79M4mJYGnu_AURTxeA7PvH7GP8c24Y-6s44BK593Ftqthsaly8KZGlAqKfJvZ806WE98lgWWbEWUqAxtJmWMQnJsy3rezoAwx-GSifV6Z0UCSqwBI4=w138-h92-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=16382475391921226718",
     "phone": "050-3503-7871",
+    "description": "洗練された地中海料理を楽しめるシックなレストラン。鮨処とテラスもある。",
     "sourceList": "イタリアン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -7305,6 +7478,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=7283903063759093506",
     "phone": "03-6417-0150",
     "price": "￥3,000～7,000",
+    "description": "目黒駅すぐそばにある、ビストロ料理を提供するレストラン。「無菌豚肩ロースのソテー」などの肉料理が名物。ワインの種類も豊富にある。",
     "sourceList": "イタリアン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -7354,6 +7528,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=16414464283430524347",
     "phone": "03-3440-5510",
     "price": "￥2,000～8,000",
+    "description": "木を基調とした内装の温かい雰囲気のイタリア料理店。メインの肉料理、パスタ、ワインを楽しめる。ランチメニューも人気。",
     "sourceList": "イタリアン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -7476,6 +7651,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWnPdFXYAY0ZN6ohIZ_NigoDHu6PG4GM4A-Nth2X2U5fFLQYqcRIMBZrkJtEoshz71M2DWCoIiJCIct9QIkeTqzJgAOflr97PaUgqMbXBd0w4WSEeGhyBIHjFdpt0PEORsbAU_gn8N8DOw0=w80-h106-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=14147634636750925652",
     "phone": "03-5424-1331",
+    "description": "季節に合わせたイタリア料理を、コースとアラカルトで提供する落ち着きのあるレストラン。ランチはパスタなどをカジュアルに出す。",
     "sourceList": "イタリアン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -7517,6 +7693,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=12571679969978990677",
     "phone": "03-6455-0206",
     "price": "￥10,000 以上",
+    "description": "木の温もり溢れる店内で、炭火台を囲みながら、山形牛や鴨肉などが味わえる。生ビールやワインの他、台湾茶なども提供。",
     "sourceList": "イタリアン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -7733,6 +7910,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=7209638162284362190",
     "phone": "050-5433-3187",
     "price": "￥5,000～8,000",
+    "description": "炭火焼のビストロ料理が頂ける大人の隠れ家の様なダイニングバー。豊富なワインやベルギービールもあり。",
     "sourceList": "イタリアン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -7760,6 +7938,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWkq1xcq3g3b9ZOm_Di3OvzJ-ppy_fpaV1AogVQoImurHVBnP19GApS-bFpIcI0ZoTAKBrT7KTpz6ULPDWe0GWtvqk1TM3lz8K1wNxLAQyxFpokudzHoNzjWKXDtdwsZFla5Pn5dJQ=w163-h92-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=318018855191738113",
     "phone": "075-351-0098",
+    "description": "旬の素材を活かした心と体に優しい料理を提供するイタリアンレストラン。木の温もりを感じる店内で、ゆっくりと料理やワインが堪能できる。",
     "sourceList": "イタリアン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -7866,6 +8045,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=18419531143742451388",
     "phone": "050-5448-8676",
     "price": "￥4,000～6,000",
+    "description": "地鶏料理が看板メニューの人気ワインビストロ。ワインによく合う各国料理も提供する。",
     "sourceList": "イタリアン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -7908,6 +8088,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=8549745020142755247",
     "phone": "03-6427-0327",
     "price": "￥6,000～10,000",
+    "description": "自家製ソーセージのグリエや白身魚のクネルなど、欧州料理を提供している。自家製ピクルス他、さまざまな小皿料理が味わえる。",
     "sourceList": "イタリアン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -7950,6 +8131,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=15016392618009422229",
     "phone": "03-5489-1117",
     "price": "￥2,000～8,000",
+    "description": "季節ごとの旬の食材を使用したオリジナル料理をワインやカクテルなどともに満喫できる。ナチュラルテイストなお店でランチの営業もあり。",
     "sourceList": "イタリアン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -7979,6 +8161,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=3162590577234875249",
     "phone": "03-6427-1447",
     "price": "￥3,000～7,000",
+    "description": "打ちっぱなし壁を備えた雰囲気のある店内で、食べごたえあるイタリア料理のほか、タパスやサングリアも楽しめる。",
     "sourceList": "イタリアン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -7999,6 +8182,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=1518070028908945578",
     "phone": "03-6419-2040",
     "price": "￥2,000～8,000",
+    "description": "パスタやステーキなどの料理と一緒にワインやカクテルを楽しめる、モダンでインダストリアル シックなレストラン。パンのビュッフェあり。",
     "sourceList": "イタリアン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -8020,6 +8204,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=9335199656684498660",
     "phone": "03-3457-0665",
     "price": "￥10,000 以上",
+    "description": "イタリアから輸入した石造りの薪釜がある店内では、季節の食材を使用したイタリア各地の郷土料理が堪能できる。",
     "sourceList": "イタリアン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -8105,6 +8290,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=13664274559080993493",
     "phone": "06-6225-8474",
     "price": "￥2,000～4,000",
+    "description": "こぢんまりとしたピッツェリア。薪のピザ窯を備えた気取らない雰囲気の店内で、定番のイタリア料理を味わえる。",
     "sourceList": "イタリアン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -8148,6 +8334,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=10948359311079812525",
     "phone": "03-5944-9622",
     "price": "￥2,000～7,000",
+    "description": "パン、コーヒー、ビストロ料理をフランスワインとともに味わえる、素朴でおしゃれな内装の活気ある店。",
     "sourceList": "イタリアン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -8274,6 +8461,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWlLGDqXZm56rYfzOuDU93JhxTKkBwCROk-0B9kHAoFLeBy7LcglE-9WnuNoMA9YD5FrzxhBF5xPZWnWKRxKaBCVJPMOW36g1cdxxMrK96_M4LMnM7l9LiFy5yEsiU8jUczEiVzlJQ=w138-h92-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=15230418589595886212",
     "phone": "03-3442-5151",
+    "description": "シックでアーバンな雰囲気で、カウンター席もあり、のんびりとアジアンテイストをミックスしたヨーロッパ料理が頂ける一軒家のレストラン。",
     "sourceList": "イタリアン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -8295,6 +8483,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=10175919291902642381",
     "phone": "03-5755-5744",
     "price": "￥5,000～8,000",
+    "description": "スタイリッシュな内装の店内で、おすすめのテリーヌ ド カンパーニュなどの前菜や日替わりパスタをアラカルトで提供する。",
     "sourceList": "イタリアン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -8315,6 +8504,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=4360680047692106960",
     "phone": "03-3714-5160",
     "price": "￥2,000～4,000",
+    "description": "ナポリスタイルの生地が好評のピザ店。パスタやサイドメニューもある。店内にはビートルズの曲が流れ、スチームパンクな雰囲気が漂う。",
     "sourceList": "イタリアン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -8395,6 +8585,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWl_7LwiIUjU3mQWSEPEc4GpYuvMfGYEZpkEUPhSjN7XdRdZbDPO4Jt8fGsSxkOJE6nNZckaR2z43G2xSpETTu8Qlt2EfMOKdsvWTbQIy7clPRTvgRC8r33SPzOwNeZh28UIHGQL-NiJx3M=w122-h92-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=9785194207293257296",
     "phone": "03-6712-2377",
+    "description": "くつろげるイタリア料理レストラン。パスタなどの定番料理のほか、デザート、食前酒、キャンティ ワインも提供。",
     "sourceList": "イタリアン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -8439,6 +8630,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWkNAHz8uU5Yxx6DG7gUtFBW-HZgjPGp2Og_gLsCFaiCbze_VbyrepMsn-Jd4gGmZhiNT18TV4b8mr0724dbxX6bppW_1JpR9kcRRSBuBig6TReJ2eIDpv4vTp-oZZ2HnknL-pk=w122-h92-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=1976346529701231769",
     "phone": "03-6721-9500",
+    "description": "開放感があり、イタリアの下町のトラッテリアのような気軽な雰囲気の店内で、本場ローマの肉や魚料理、プリモピアットなどを堪能できる。",
     "sourceList": "イタリアン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -8613,6 +8805,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=9016814610768527829",
     "phone": "03-3461-1195",
     "price": "￥3,000～7,000",
+    "description": "西洋料理を提供する居心地の良いレストラン。薪窯で焼いたピザ、パスタなどの料理のほか、種類豊富なワインも味わえる。",
     "sourceList": "イタリアン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -8635,6 +8828,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=17581953030581037430",
     "phone": "075-276-2067",
     "price": "￥2,000～6,000",
+    "description": "パスタ、リゾット、スフレなどをフランス、イタリア産ワインとともに味わえる趣のあるカフェ。川に面し、川床席もある。",
     "sourceList": "イタリアン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -8679,6 +8873,7 @@ export const GOURMET_MAP_SEED = [
     "reviewCount": 2059,
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWkch-zwpebZRxPyS3G_azsOZzZKNS6jJTepmLQ6O_e1hEngnTpa3BYWIHn5OLhIDl8Cyg9HIGsM7ga3kiqXJokpP-8WA79EZbN4Gws7KABSGVChuIgItNEREbacQUJilCd1AeZlmnaNdFuf=w138-h92-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=7884432512848338759",
+    "description": "和食のエッセンスを取り入れた、洗練されたイタリア料理を提供するレストラン。趣のある緑豊かな敷地にある。",
     "sourceList": "イタリアン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -8742,6 +8937,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=14841322377507696550",
     "phone": "03-6700-0210",
     "price": "￥10,000 以上",
+    "description": "洗練されたイタリア料理を提供。シャンデリアと噴水を整備したテラスのある高級レストラン。",
     "sourceList": "イタリアン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -9624,6 +9820,8 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=11846713936872126824",
     "phone": "043-256-9336",
     "price": "￥1,000～2,000",
+    "description": "多種類のシーリングライトを備えた店内で、カレーやタコライスなどが味わえる。パンケーキやコーヒーゼリーなど、スイーツメニューが豊富。",
+    "memberComment": "ふわふわパンケーキ😇\n幸せの瞬間センチメンタル \n\nキャロットケーキや\nオーツミルクラテも良き🥕🍰\n\nメニュー\nチョコバナナガナッシュパンケーキ",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -9643,6 +9841,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWlZkYynvxcQf9DrFy2WfkHx5RAsccIOaJ9czv2MQeKlyhVwNpUqh89RSu0W91fOE6JOuMS2ZfG8RXx6xPk__Rp_ksyegsAOlIFWD8mKSKmGAEtS-kwZmYNkHX5lCFoX5yYF34jTmNQpaKt3=w122-h92-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=9530516137878442382",
     "phone": "03-4400-5544",
+    "memberComment": "アルコール入りジェラートが楽しめるお店🍸🍨\n\n今回いただいたのは\n「スイカのソルティドッグ」と「焙じ茶と胡桃とこいしり」\n\nスイカのソルティドッグは、スイカの甘さにグレープフルーツの爽やかさと塩味がアクセントになった大人向けの味✨\n\n焙じ茶と胡桃とこいしりは、焙じ茶の香ばしさとキャラメルのコク、胡桃の食感が絶妙でした🤎\n\nプレッツェルのトッピングも可愛い◎\n\n店内ではアルコール入りジェラートだけでなく、クラフトビールも販売されていました\n\n他ではなかなか見かけないフレーバーばかりなので、ジェラート好きもお酒好きもぜひ一度行ってみてほしいお店です☺️",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -9665,6 +9864,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=10952675265306749269",
     "phone": "03-3469-7911",
     "price": "￥1,000～2,000",
+    "description": "サラダ、シーフード プレート、デザート、コーヒーのほか、さまざまなカクテルも味わえるモダンなカフェ。",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -9704,6 +9904,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=7477161908798911334",
     "phone": "03-4321-1111",
     "price": "￥10,000 以上",
+    "memberComment": "IRO+のプレゼント企画でアフヌン女子会してきました👭🏻🫖\n今の季節は日本茶×メロンでした🍈\n後半スイーツワゴンも登場して甘すぎてきつかったですが(笑)、さすがスイーツのクオリティはめっちゃ高かったです！\n景色も最高でいい休日になりました〜甘党の方はぜひ🥹\n\n🍽️ おすすめメニュー：季節のアフターヌーンティー",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -9725,6 +9926,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=17877316158209644848",
     "phone": "03-6456-3112",
     "price": "￥10,000 以上",
+    "memberComment": "長谷川稔グループのデセールレストラン🍰\n初めてデザートのみのコースを経験しましたが、とても美味かったです！\nスイーツがあまり得意でない方を全体的に甘さは抑えられてるので、フルーツそのものの素材のおいしさを楽しめられました✨\n季節ごとにメニュー構成が変わるらしいので何度行っても飽きない気がします。\n\n🍽️ おすすめメニュー：全部",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -9746,6 +9948,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=15431997453045792553",
     "phone": "03-6303-2411",
     "price": "￥2,000～3,000",
+    "description": "静かな雰囲気のカフェ＆レストラン。ミニマルなデザインの店内でフレンチやイタリアンを楽しめる。ケーキやデザート、ワインもある。",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -9765,6 +9968,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWnBF1VoFRGY7oM9BFe0V1Dhei2SZJpK_CKSvGdXEUZZnctJDzKl3zadq1olV0ZO2lhEMX08Sm3nbQyWVc629x7pIEgp5_lwiqO_-I5JPmSK4j61RJUcF-2mVXgX56KCli3j_AiEpMOK3fo=w80-h106-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=5338776654786505453",
     "price": "￥1,000～2,000",
+    "memberComment": "小さめのカフェですが、メニューが豊富でおすすめです！\n\nお散歩しながら寄ってみると🙆‍♂️\n12時オープンですが並びます！\n※現金使用不可です\n\n🍽️ おすすめメニュー：ブラウニー",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -9785,6 +9989,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWnR63gY_9ImqnqC0n5EryzDqf5PdLOMjrzLDMSwAauawCTwPoOiS-o49JwBUK0LO8Kaa7M1FKPk8pcKhowte1sl4vSvYs6JP0IeiXfDspDHo9vbH69vZvo8sNCep8EQ317f2yb892HfECcu=w137-h92-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=1936714927715629125",
     "price": "￥1,000～2,000",
+    "memberComment": "雰囲気が神！\nデートにおすすめです！\n\n🍽️ おすすめメニュー：コーヒー（750円）",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -9805,6 +10010,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=11128582389937377109",
     "phone": "+61 7 4221 2204",
     "price": "$1～20",
+    "memberComment": "ケアンズ市内のおしゃれなカフェです。平日は朝6:30からオープンしており、7時過ぎでは半分以上席が埋まっているほどの賑わいでした！\nオーストラリアの朝食として知られるアボカドトーストは、クリーミーなアボカドだけでなく、フェタチーズの風味が絶妙で美味しかったです🥑✨\n朝活にもおすすめです🫶\n\n🍽️ おすすめメニュー：アボカドトースト",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -9826,6 +10032,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=668852733581484534",
     "phone": "0475-22-5057",
     "price": "￥1～1,000",
+    "memberComment": "最近食べたドーナツの中でダントツです🍩\n1つ1つが大きくて美味しい上にめちゃくちゃ安い！✨\n5つ買って1000円ぴったりでした\nただ超並びます、14時頃に行って1時間半は並びました🥵\nでもまた絶対行きたいと思えるほどでした、次こそは1番人気のハニーディップを買います🍯\n皆さんも千葉にドライブ行く際はぜひ！！\n\n🍽️おすすめメニュー：チュロス、フレンチクルーラー、オールドファッション",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -9847,6 +10054,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWl4jjJxzyKM9PWxLWUEPWhKYVLj9k0PSSGXGonZiNTGbkZvfsunWv0AnNeoh49CgIPyzwvKD5W6QSZCshel4IDE4tr8wOmz8ix8xBcRrWpQTexSpqcTypj7swb-7HWj2YLv6Iko_g=w80-h106-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=18297824946141595368",
     "price": "￥1,000～2,000",
+    "memberComment": "インスタで目をつけてたお店で、ティラミスラテとブリュレバスクチーズケーキをいただきました☕️\nティラミスラテは、底にスポンジが入っているので、飲み物というよりほぼデザートです🍰\nどちらも見た目も味も最高でした✨\nGW中でしたが、レジに並ぶくらいで待ち時間ほぼなかったので、思ったよりサクッと入れるのかもです😌\n\n🍽️おすすめメニュー：ティラミスラテ",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -9869,6 +10077,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=12355634216084399036",
     "phone": "052-307-3738",
     "price": "￥1,000～2,000",
+    "memberComment": "静寂と喧騒、盆栽とスイーツ、サイフォンとわびさび。サイフォンチャンピオンが奏でるコーヒーや中国茶と、苔をイメージした絶品スイーツ。\n\n食べ掛けすら美しい苔玉ケーキと苔盆栽プリン\n\n1脚80万のイスに座れる予約限定のカウンター席がおすすめ",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -9890,6 +10099,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=5254053800351163798",
     "phone": "03-6226-0482",
     "price": "￥1,000～2,000",
+    "description": "日本ならではのオムライスが有名な、シンプルな空間の居心地の良いカフェ。",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -9932,6 +10142,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWku0PMxc59nVOT7Hj6YrJFLQ4P75ZMQlaQGXg5NDHiiWCN52EoivrkM3Ss-xw6v2VUMg6tTPxFKa2C69s39P5UpVJgGZaQ94yt1lrjPwBKkuBJyk9q5fJ96LCcdPRh8K8diH6tWNbvBVX3R=w80-h106-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=17179290743664196562",
     "phone": "0748-33-6666",
+    "description": "ウッディな店内で、バウムクーヘンやパン、軽食を提供するナチュラルなカフェ。持ち帰り用のお菓子の販売もしている。",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -9951,6 +10162,8 @@ export const GOURMET_MAP_SEED = [
     "reviewCount": 585,
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWlZSBd_D2cT9bnf965zs75UaoJqQ7WXV93iR_iCqEwa5IJ1uT6ZVtZgboMDZKB5Ffm5ip7ETw79gVnaLW6fTkxHIcGIhVqDZSN1lORluIZV3ixoK4YwW7tu8XPskxywoPpXEu6G4JiOGw=w80-h106-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=12131757962814783498",
+    "description": "定番のフレーバーから独創的なフレーバーまで、多種多様なこだわりのアイスクリームを楽しめるイタリアン スタイルのジェラテリア。",
+    "memberComment": "東京で1番美味しいジェラート屋さん！オーダーしたのは生口島のオレンジソルベと、いちご&ランブルスコのジェラート。20種類のオリジナルジェラートがあり、季節ごとに変わるので何回来ても楽しめます🍨",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -9991,6 +10204,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=6111801550437751382",
     "phone": "03-6272-9952",
     "price": "￥1,000～2,000",
+    "memberComment": "九段下～水道橋/神保町\nあたりにあるカフェ☕\n超でかいカフェラテと\nバスクチーズケーキや\nショコラテリーヌが\nおすすめ",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -10049,6 +10263,7 @@ export const GOURMET_MAP_SEED = [
     "reviewCount": 223,
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWlWUV5wRl3f97eqbehgz7w_tsupCnfCGyXsGC1h6m7OwrVqLkiLCkmpWHkdQyzRXI9IxRU909WuqHQeSh-aKIC6NyYFvMCmJrr2SiPRfHaj-3I3h0X--ZNpLn6Nsfqa6lrzJigKNpkuiog=w91-h92-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=10215691502683646285",
+    "memberComment": "先日IRO +の企画で話題の「パン飲み」を体験してきました！\n夜のコースでブリオッシュ（たぶん）が出てくるのですが、これが絶品。料理もお酒も飲みやすいものばかりで、気づいたらどんどん飲んでました🍷🍞",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -10069,6 +10284,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=15513210562790784449",
     "phone": "092-753-3061",
     "price": "￥1,000～2,000",
+    "memberComment": "ライブ終わりにひとりでふらっと入店しましたが、親しみある店員さんのおかげで素敵な時間が過ごせました🌝女性客が多く、カウンターにいた3組ともバースデープレートが順に出てきて勝手に気まずくなりました( 笑 )フードもドリンクもメニュー豊富で、コスパも良く、全部美味しかったです！オススメされたマルゲリータピザをイメージしたキッシュはふわふわで美味しかったです🍕",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -10132,6 +10348,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWmS75sbFDWDuxcqmGhPrmIAh3C2l6O61jBy1C97dLJ26bYknR9NdSB22TIiSnJbgB0Yi6Li5JuBCpfhf4PuTXgq17cNJg1mwOn0YHjrwMcpkl8xXHkU0ms8wQNfA7DFmz23_6yIG7vdFPkx=w122-h92-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=13425126071094552047",
     "price": "￥1,000～2,000",
+    "description": "シングルオリジンのコーヒー豆を使ったコーヒー、カクテル、ノルウェー ワッフル、焼き菓子が楽しめるおしゃれなカフェ。",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -10180,6 +10397,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=10719372756453897692",
     "phone": "052-734-4774",
     "price": "￥6,000～10,000",
+    "memberComment": "アムールデュショコラで購入困難店のラルケストでデザートコースを食べてきました🥰\n焼きたて出来立てのスイーツや、大人気のボンボンショコラが楽しめます🍫",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -10199,6 +10417,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWlf1UbMk_EgEAxl5ivFS1z8EC5ij0I8nva29sRLmc83kzIxtAzFpZc54FgM9GJWENSK_LytWkrp_mFkcUpK5R0jrKc9n31hWFQS5zvDbjx_Mq45tcrZ2QGSRmJf_UlQmnIwGz1k_m6lV4c=w137-h92-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=10609012790628917060",
     "price": "￥1,000～2,000",
+    "memberComment": "友達のカフェが移転して今日オープンしたので早速行ってきました！\n\n原宿で人気だったカフェが完成な住宅街に！\nドリンクも美味しいですし、デザート・フードもたくさんあってご飯も食べれるカフェ！これから人気爆発する前にぜひ☺️\n\n🍽️ おすすめメニュー：チキンオーバーライス",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -10219,6 +10438,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=18402723767902518618",
     "phone": "03-6731-2333",
     "price": "￥182,160",
+    "memberComment": "プレゼント企画でアフヌン女子会してきました🫖美味しくて可愛くて優雅すぎるお昼でした🫠(ただ後半甘すぎてキツイ)",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -10239,6 +10459,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=2121104564218735193",
     "phone": "03-6284-1866",
     "price": "￥1,000～2,000",
+    "memberComment": "古民家カフェ。\n1階でケーキ、パン、スコーンを注文し、2階がイートイン。キャッシュレスONLY。\n\n落ち着いた雰囲気。人気店のためイートインできるかは運しだい。写真はチョコレートチーズケーキ😇",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -10261,6 +10482,8 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=16690793594445548629",
     "phone": "03-3505-1185",
     "price": "￥6,000～9,000",
+    "description": "コーヒーや紅茶、ゆず茶などバラエティ豊富なドリンクメニューを用意。栗ようかんやモンブラン他、多種類のスイーツも提供している。",
+    "memberComment": "kanadeちゃんが企画してくれて平日に優雅な時間を過ごしてきました💞\nイチゴづくしのスイーツ達は美味しいのはもちろん見た目も可愛くて幸せ😌\nイチゴと色んなフルーツが組み合わせられていて味の変化も感じながら飽きずにパクパク、セイボリーも美味しかったです🥂\n（品数多いので腹パンです！！）\n\nアトリウムラウンジはホテルラウンジだけど、固い雰囲気ではなく、でもおしゃれでとっても居心地よかったです（写真撮ってない）\n\n🍽️ おすすめメニュー：ストロベリーアフタヌーンティー🍓🫖",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -10282,6 +10505,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=9478662268342296910",
     "phone": "080-3410-8504",
     "price": "￥3,000～4,000",
+    "memberComment": "甘味や酸味、さまざまな食感が重なり合って、最後まで飽きずに楽しめるパフェでした🍓\n\nペアリングのドリンクも、桜やさくらんぼなど季節を感じられるセレクションで、パフェとの組み合わせまで丁寧に考えられているのが伝わりました！\n\n（写真を撮り忘れてしまいましたが🥲）\nパフェカードの説明文の言葉選びもとても素敵で、読むだけでやさしい気持ちになれるような温かさがありました💖細やかなおもてなしが行き届いた、優しい世界観が魅力のお店でした✨",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -10303,6 +10527,8 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=10185627232242085253",
     "phone": "03-6412-7350",
     "price": "￥1,000～2,000",
+    "description": "洋服と雑貨を販売する可愛らしいシャビーシックな店。洋食を提供するカフェも併設。",
+    "memberComment": "ハリセンボンの朝ごはんシリーズで紹介されてて気になって行ってきました🍞\nモーニング行くはずがずれ込みランチになったのですが、季節のスープとトーストランチが最高に美味しかったです✨\nトーストがただの食パンじゃなくて、サクサクしてたのが感動しました！店内が緑が多くてアンティーク調で癒されます🍃\n\n🍽️ おすすめメニュー：季節のスープとグラタントースト",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -10325,6 +10551,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=15369785900248515033",
     "phone": "03-5338-2003",
     "price": "￥1,000～2,000",
+    "memberComment": "お目当てのキャロットケーキは想像の2倍は大きくて美味しすぎました🥕\n雰囲気は賑やかなのでとても入りやすいと思います！◎\nビールタップがずらーっと並んでいて、夜は１６種類のクラフトビールが楽しめるそうなのでいつか絶対いく！と心に誓いました。\n\n🍽️ おすすめメニュー：キャロットケーキ",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -10344,6 +10571,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWk3bdsy75as0drdfyC5Kndse_yvE95WS6anm2LadyaGMQOWcmUusqv4Hu7-KCPQE83pOWz6Mf_fUeHuGtCj5xLH4vdiSqXC8CJf_z_iNvb3pQdvr8B2ncD_X9iUMHuT3zdgXZCNkB7_y396=w80-h106-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=15273773519176553948",
     "phone": "03-6277-4528",
+    "memberComment": "2階フロア全体が小川珈琲で、コーヒー、ワイン、ビール、ピザ、色々楽しめます（コンセプトが新しくてよく分からん）\nhttps://www.oc-ogawa.co.jp/ocl-takanawa/\n\nジェラートはベース（ミルク、オーツミルクなど）とフルーツやナッツをセレクトして、その場で作ってくれるのが新体験で美味しいし満足感も◎（液体窒素がなくなったら売切）\n\nバスチーは3種類のチーズを使ってて、ミモレットターズの深みとコクがあって、コーヒーの味に負けないけど重すぎない美味しさ😋\n\n動線が分かりづらい、オーダーも支払いも分かりづらい、けどコーヒーは美味しいです！（写真撮り忘れ）\n\nまだあんまり賑わってない？ので、ゆったりカフェしたい方、高輪に用事がある方ぜひ行ってみてください😂\n\n🍽️ おすすめメニュー：コーヒー、その場で作ってくれるジェラート、バスチー",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -10387,6 +10615,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=5713651847460586433",
     "phone": "03-6886-8872",
     "price": "￥1,000～2,000",
+    "description": "アメリカン ダイナー風の落ち着いた雰囲気の店。朝食プレート、フレンチ トースト、玉子料理を提供。カウンター席とボックス席がある。",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -10435,6 +10664,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=11648666293513374685",
     "phone": "03-6416-4646",
     "price": "￥1,000～2,000",
+    "description": "美しく盛り付けられたヨーロッパ風の上品な料理を提供するおしゃれな店。木を基調とした内装とレザー張りの椅子が特徴。",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -10515,6 +10745,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWnh_7QOCJoil56bjUl5DPfVBgx7m2a1peGiOKdegXP2nL2sDIa2i2K4f-M25GLB4SQd8ThWMEOMUE-RUWDFob34k9fls7SGeKc89Hs0osfkXf8FTM7ZxjJRn4EIBvntytDhVk7ihc7bUw0=w137-h92-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=10460051994709407597",
     "phone": "078-599-9208",
+    "description": "有機小麦粉、無添加生クリームやアルミフリーのベーキングパウダーを使った焼き菓子を販売。店内に、ドリンクを提供するカフェを併設する。",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -10538,6 +10769,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=14579899270889674513",
     "phone": "078-252-0766",
     "price": "￥1,000～2,000",
+    "description": "ペストリーやチョコレートを使ったデザートを提供するエレガントなフランス風のケーキ店。カフェを併設。",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -10768,6 +11000,8 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWlAWwyCX8dEv42cmWM3ENfCzy6V3d0NYLWFEE0uQnWSo77bNAMsUTro94UFPfAhH8NeOYnAcXz8Z5B2ZBBmNGhThzBllCha9HLb1zTC9Bn2cU6tm8z-EhYU9RNHHdQQS2FrgWKPnQ=w138-h92-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=5191391755535923470",
     "phone": "03-6280-6129",
+    "description": "商業施設の最上階にある、ハイセンスな高級フランス料理レストラン。ペストリーやアフタヌーン ティーも楽しめる。",
+    "memberComment": "(アフヌンの報告が需要あるか分かりませんが、、)\n仕事終わりに行ってきました！\nTWGのお茶が3時間飲み放題でフードがそんなに多くないのでたくさん飲めました🍂(テーブルカップだらけになりました😇)\n最後に出てくる名物のナポレオンパイが美味しくてぺろっとでした、、\n価格も優しめでとてもゆったりできたのでおすすめです🫶🍓\n\n🍽️ おすすめメニュー：ナポレオンパイ",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -10788,6 +11022,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=8202210146664738765",
     "phone": "03-5534-8966",
     "price": "￥1,000～2,000",
+    "memberComment": "本店が東陽町にある、個人的に1番好きなケーキ屋さんです！東陽町はテイクアウトのみなのですが、豊洲はイートインも出来るのでオススメです！\n豊洲の方に来た際は、是非食べてみて欲しいです！\nシュミネー以外にも、ショコショコ、ラムレザン、モンブラン、ショートケーキなどがオススメです！\nパンや焼き菓子もとても美味しいです！\n↓本店\nエクラデジュール 東陽町本店\nhttps://tabelog.com/tokyo/A1313/A131303/13173344/\n\n🍽️ おすすめメニュー：全部(写真はシュミネーっていうラズベリーチョコレートのケーキ)",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -10830,6 +11065,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=14250221709862983261",
     "phone": "0422-24-6710",
     "price": "￥2,000～3,000",
+    "memberComment": "・TEA FREE＋スコーンセット（おかわり自由）\n約150種類のムレスナティーのシートがあり店員さんがランダムで持ってきてくれてカップ半分くらい入れてくれます（温かい紅茶以外は別でグラス提供されます。いろんな味が来るため一回あたりの量は少ないです）\n温かい紅茶、水出し紅茶、ティーソーダが提供されました\nスコーンは焼き立てですごくおいしくてスコーンのイメージが変わりました笑\n1時間45分なのでパスしない限りMaxでスコーン6個と紅茶11種類ぐらいいただけます",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -10849,6 +11085,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWmxLtzFLSloVmXG4xL_OlE1T2rpXzpOJTaJ4FbhS1vOXg7jD_vPSY2oaXMfEkh1MA49DB0UY-_a9KXvI4buV_3as2EBzLyT2vyX0qNAEcUKf7nJX_mlUYc-cz18oRz6gnUTwghO4VJceReF=w92-h92-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=12073281195772182246",
     "price": "￥1,000～2,000",
+    "memberComment": "・miny pie\nSNSで大バズり中の福岡のパイ専門店！\nザックザクのパイの中に自家製のクリームを自分で好きなだけ詰める事ができる商品✨\nずっと気になっていた商品が新宿の京王百貨店で開催中の大九州展で購入できるとのことで、朝イチから並んできました！\n何時間並んでも食べたい❣️と思うほど感動するスイーツに久々に出会えました🥺💕",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -10867,6 +11104,7 @@ export const GOURMET_MAP_SEED = [
     "reviewCount": 10,
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWllzobfG5dZmuhiPr2AITv4Ka-cHX_LpF5g94N00gtHLmRJ1Gts1_W_4Z3OiyknTTfE3tnrjWO1f4HaGhVdyHsEb6rTbERk4FG67koDTb5mEyTTKdQCdgSnTNrjbDOo6rlqTeqG=w80-h106-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=6300823417617421399",
+    "memberComment": "コーヒー好きの終着点",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -11075,6 +11313,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWlCfqAJqpZsV-Ru4MSq4w3Npjdx39KO_btDZgDZ2w1WATDKBeCUvNjtSQcUnXMccdhaewE3Mmr0ej5Vsg4p2-MlPwqIoebrF-2IkXyPKgHNPzNmNnfW5kYgff0l0zTuNrYB7w30=w80-h120-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=25112469904463023",
     "phone": "+34 930 04 10 93",
+    "description": "こだわりのイタリア風アイスクリームとソルベ、ケーキ、コーヒーを提供する、こぢんまりとしたジェラート店。",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -11099,6 +11338,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWm8l4FVuIXtzGdDCg-j2TqBA0TNUUE6Ju6eJ9XnX-IBPi7PQHX6IZ36mDTD30HFoi27zLJa0gbS2oo9_qbOhsseYbdCIwZY9rbbC3D0R3Wj0TZrNumcHfiufgwjyuLagZhfbC72=w138-h92-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=7536165071040463829",
     "phone": "+34 913 65 65 46",
+    "description": "1894 年創業の 24 時間営業のカフェ。チョコレート ディップで食べるチュロスが有名。",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -11137,6 +11377,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=14547155226860107020",
     "phone": "+44 20 7729 0616",
     "price": "£1～10",
+    "description": "24 時間営業のベーカリー。塩漬けの牛肉やスモーク サーモンなどを挟んだ伝統的なユダヤ風のベーグルで有名。",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -11202,6 +11443,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=9747327299585346240",
     "phone": "+44 20 7434 2571",
     "price": "£20～30",
+    "description": "English and American breakfasts, plus comfort foods and burgers in cheerful, quirky surrounds.",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -11222,6 +11464,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWkQa11IW-08cXZ9Z29KMvoM7wNTuhvFXHQv8HdDYh4tuuG7kAYzdOjCQo6vNC5cLKzXijrFi3v245BnfsLvkcN6mVteltQeQkGl1ueVWi4pibmBiz9_8JOuORAgIY0pfUZ1O6uGNQ=w138-h92-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=17802223014002712009",
     "phone": "+44 20 7836 4751",
+    "description": "有名人の利用客が多いアールデコ調の老舗レストラン。モダンなイギリス料理や観劇前の食事を楽しめる。",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -11434,6 +11677,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=2934846431347497184",
     "phone": "+1 323-931-4223",
     "price": "$10～20",
+    "description": "行列ができる道路沿いの老舗。独創的なトッピングがのったホットドックを販売。有名人にちなんだメニューもある。",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -11497,6 +11741,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=13387801996287121422",
     "phone": "+1 808-737-5591",
     "price": "$1～10",
+    "description": "1952 年の創業以来、地域で親しまれているベーカリー。マラサダ（ポルトガル発祥のドーナツ）、パン、ペストリーなどのスイーツを販売する。",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -11546,6 +11791,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=17877007236568484770",
     "phone": "+1 808-988-9295",
     "price": "$1～10",
+    "memberComment": "ハワイで人気名所のスタバ。海外ならではのカラフルなドリンクが可愛い！",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -11567,6 +11813,8 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=18054577745820227240",
     "phone": "+1 808-931-8640",
     "price": "$30～40",
+    "description": "ロイヤル ハワイアン ホテルにある屋外レストラン。洗練されたハワイ風のニュー アメリカン料理を提供。日中のみ営業。",
+    "memberComment": "ピンクのパンケーキが名物",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -11587,6 +11835,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=6575493294365965762",
     "phone": "+1 808-425-4710",
     "price": "$10～20",
+    "memberComment": "ハワイでアサイー食べるならここ",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -11607,6 +11856,7 @@ export const GOURMET_MAP_SEED = [
     "reviewCount": 1152,
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWkvfoEm69i9RWuhG6UHF7YXWyra1M5EbwyOr31Iwsd4yvLmfQdVJCGejMZPqtkuM1NIvtLssDeDi41JUXQNHBPSmFiGsaxEbuYpffOxadx323Mmr4kKihmOc4sI3s8MXpzhLRVR6vE68Ok8=w163-h92-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=3548998653235022261",
+    "description": "フルーツやサンドイッチ、さまざまなフレーバーのアイスクリームやシャーベットを販売している飾り気のない小さな店。",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -11631,6 +11881,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=15002943773068307882",
     "phone": "+1 808-450-2364",
     "price": "$10～20",
+    "description": "こだわりのコナコーヒーと b. パティスリーのペストリーを楽しめるおしゃれなカフェ。夜はワインも提供する。",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -11686,6 +11937,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=7271799109259860219",
     "phone": "+1 808-739-0999",
     "price": "$20～30",
+    "description": "コーヒー、ペストリー、ベーグル、軽食類を提供する落ち着いた雰囲気のカフェ。支払いは現金のみ。",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -11732,6 +11984,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=6817184575248199716",
     "phone": "+1 415-563-3779",
     "price": "$20～30",
+    "description": "ハリウッド スターの写真が飾られた店内で、定番の朝食と昼食を提供するカジュアルなカフェ。",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -11752,6 +12005,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWnt4N8ppztJZGsKydOts7A8b5nHzF6CdolmVeN_cMQQfcClxT-xwcu3IgxXFKmEDdcHl9ifJ7pBUYPZ-t12J2fxkq_kyZUIZ3A9D0bnzoxVj4X9SdBAS7d3cDt7lRCbhwtRPd_RY1w82J8=w122-h92-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=12370538370431842117",
     "phone": "+1 415-236-1155",
+    "description": "有名なチョコレート メーカーの直営店。スクエア型やバー型など多彩なチョコレートを販売。バスケットに入ったギフト用詰め合わせもある。",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -11771,6 +12025,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWm9MfrZBFvM3rGghQnQaPMBr5i_ZNgRJqv81Z_uOY9Jgk-xVEThV_G3NTD0fdJBw48XhhISqTo3ZEwe9aLa-s1CybRUIT_cZK9N0KryPaQKhJ3nopVI8RlOZGxY9d1c9WLz8q-Chw=w138-h92-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=16098119339044639486",
     "phone": "06-6776-2797",
+    "memberComment": "帝塚山ノアール出身のパティシエがオープンしたお店で、チョコレートを使ったメニューが美味しいです🍫いつもはエクレアなのですが、売り切れていたのでチョコシュークリームを買ってみました！本当に美味しくて、エクレア越えでした✨パンオショコラも買ったのですが、サクフワで、チョコレートにもこだわっているのでとても美味しかったです♡非常にマニアックな場所ですが、オススメです！\n\n🍽️ おすすめメニュー：チョコシュークリーム",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -11836,6 +12091,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=10388387345546127790",
     "phone": "03-5414-6170",
     "price": "￥2,000～3,000",
+    "description": "いちょう並木沿いにある緑に囲まれたカフェレストラン。落ち着いた雰囲気の店内やテラス席で焼きたてのパン、パスタ、ピザなどを楽しめる。",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -11938,6 +12194,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWn_AIV1V4aE7acnIVTqLX5dGeIka0ZcwHXsFhgLSzjhHYeFOX_v-3WM3rrK2y9U59O1e81HruR_sx-2ZgKHjgmyhJGo_Udd4Gd7HQa4cBkvBeYgcrf8W-Q9z8UyjfiPhnxrZvyZAA=w80-h106-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=1547984900112931346",
     "phone": "090-6590-2521",
+    "memberComment": "フルーツ大福の火付け役「弁才天」の創業者・大野淳平さんが立ち上げた和菓子店「オオノ餅店」\nきなこ餅がおすすめです🫶🏻",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -11958,6 +12215,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=10066104749966171294",
     "phone": "03-5454-5631",
     "price": "￥1,000～2,000",
+    "memberComment": "ピタサンド🥙かなりボリュームあり！\n春は代々木公園への前後に寄ったり、テイクアウト用にピクニックボックスもあり行列みたい",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -11978,6 +12236,8 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=17820117751296550836",
     "phone": "03-6709-9455",
     "price": "￥1,000～2,000",
+    "description": "テラス席を備えたカジュアルなカフェ。ハンバーガーやサンドイッチを提供。ビーガンとベジタリアン向けのメニューもある。テイクアウト可。",
+    "memberComment": "ブランチできるところないかな〜と探していたところ発見したサンドイッチ屋さん🥪\n私はあまりサンドイッチは食べないのですが、ここはパンも野菜もベーコンも卵も全部美味しかったです🥺🤍✨\n今回は、BLTCEサンドと、フィッシュサンドを注文！ボリューミーなのにお手頃でした...！\n従姉妹がveganなのですが、veganメニューもあるので、いろいろ気にしてる人とも行けるし、私的には🌟5つでした🥺\nモーニング、ブランチ、ランチにいいと思うので、もしよければ行ってみてください〜🥪♡",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -11998,6 +12258,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWlc13CFfa_gBqK-fBKj4gR4dT-oo2nK3_XmS2ifCe7CNuRKAQiZoVJjTf7TE3W4nK6DEFhBBZmmD7MPWYGQf20OkdJnhcxkWYKtQSiT80djwUl340dkhaD68Ays2Sse5o2dCXEDW7B0THzT=w138-h92-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=13637742401097142839",
     "price": "￥1～1,000",
+    "memberComment": "登録有形文化財の中でお茶ができるお店です。期間限定のラズベリーモカが美味しくてびっくりしました😳お菓子も定期的に変わってるのかな？HOMECOMINGさんのクッキーが食べられたのも嬉しかったです！\n🍽️ おすすめメニュー：ラズベリーモカ",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -12039,6 +12300,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=10185641793827702462",
     "phone": "03-3478-6276",
     "price": "￥1～1,000",
+    "description": "ラテアート付きコーヒーのほか、サンドイッチ、ケーキを味わえるチェーン系カフェ。店内はインダストリアル風のおしゃれな雰囲気。",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -12065,6 +12327,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=16419456339915545852",
     "phone": "03-6447-2556",
     "price": "￥1,000～2,000",
+    "description": "フランス料理の影響を受けた簡素な内装のベジタリアン ベーカリー。コーヒー、キッシュのほか、有名なレモンタルトを味わえる。",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -12085,6 +12348,8 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWmDog1H8COxoOOIYg4OHX_-JKcTt9dfhEahuvAgnOEoMUR4IlCwPzdv7YVjSmciuVA6djppspg0ksKpMM8AfqrKfG1flF4oPIGTuwlrVeLInMeLA6oDF4_1XoT5tCYILP3r4NeBX_SkZaXL=w122-h92-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=8109204386495830285",
     "phone": "03-5227-4037",
+    "description": "おしゃれなカウンター席の店。アートのようなケーキ、デザートが人気。テイクアウトあり。",
+    "memberComment": "最近、シンプルと革新的のちょうど中間くらいの美味しいパフェを求めてパフェ巡りをしていたところ、理想的なパフェに出会えたので投稿します！\n百名店にも選ばれているのでご存じの方も多いかもしれません。\nチョコレートパフェ（チェリー）を注文しましたが、チョコレートと洋酒漬けのチェリーという、まさに子供の頃のに思い描いた「大人」の夢の具現化のようでした！🍒❤️\n基礎がしっかりしてるのがよくわかる上品かつクラシカルな素晴らしいパフェ、シンプルでありながらパーフェクト✨\n「パフェ」は「parfait（完璧）」が語源ですが、まさにそれでした！",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -12110,6 +12375,8 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=5375788006716732867",
     "phone": "03-3234-4440",
     "price": "￥1,000～2,000",
+    "description": "シンプルかつモダンなレストラン。薪焼きピザ、伝統的なペストリー、サラダ、コーヒーを楽しめる。テラス席を用意。",
+    "memberComment": "みんな大好きNo.4のフレンチトースト！休日は3時間待ち(経験者です🥲)になることもありますが、平日夜は待ちなしでいただくことができます\nお仕事頑張った日のご褒美デザートにおすすめです🫶",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -12213,6 +12480,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=14192927317245747843",
     "phone": "050-5444-5123",
     "price": "￥1,000～3,000",
+    "description": "お洒落で広々とした魅力的な店内で、日本各地から仕入れた新鮮な野菜と世界各国から仕入れた魚や肉を使ったイタリア料理が頂ける。",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -12355,6 +12623,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWmEecvRREt-6co3IkguFhA8dOXHKQmqMa0T1HMdLSStRBy4IIAPVIGmwGnFu-JkNFlpn5xViWSG1NER0bPvk_ket1ejlsW3X_6yhYrx69cXkmWva95U2LY4Ab30u8M9fihJdC9I=w137-h92-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=401491582808859740",
     "phone": "050-3188-6550",
+    "description": "広々として開放感溢れるお洒落な店内で、朝食メニューを始めとした洋食をのんびりと優雅に頂けるレストラン。テラス席はペット可。",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -12741,6 +13010,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=4576234140156836063",
     "phone": "06-6809-3769",
     "price": "￥1,000～2,000",
+    "description": "くつろいだ雰囲気の空間でスペシャルティ コーヒーを味わえる居心地の良いカフェ。デザートやケーキも提供する。",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -12901,6 +13171,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=15027777494711305633",
     "phone": "06-6371-5840",
     "price": "￥1～1,000",
+    "description": "ゆったりとしたレトロな雰囲気の食堂。ケーキ、コーヒーのほか、定食を提供。",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -12921,6 +13192,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=1384452264188649804",
     "phone": "078-341-6983",
     "price": "￥1～1,000",
+    "description": "各種生ケーキの他、パンケーキやソフトクリームなども味わえる。開放感に溢れたテラス席を備えている。",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -14127,6 +14399,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWlh17ZnMHzLOW-Olrlv1fsT_Nm4kKTQEKdgSgrVXCMWXQNw_rNW0VaJhubdtsT9lW-xsJQX4nV3fkkUcJ_vcLT98aXllMI-j3mFzbpwDmM68fZrivFz6KLhplrP2PeVLvyyymiRC7PIoq6s=w138-h92-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=16071491452438018170",
     "phone": "06-6459-2100",
+    "description": "デザイン性のある家庭用品、家具、調理器具などを取りそろえたおしゃれな店。",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -14172,6 +14445,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=2134906784325395159",
     "phone": "072-796-3751",
     "price": "￥1,000～2,000",
+    "description": "アンティーク家具を配した静かな空間で、自家焙煎のコーヒーを味わえるカフェ。豚肉を使ったハンバーグなど、各国の料理も味わえる。",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -14195,6 +14469,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=521048230014152707",
     "phone": "06-6842-2217",
     "price": "￥1,000～2,000",
+    "description": "テラス席のある広々としたおしゃれなカフェ。フレンチ＆イタリアン風の料理とパンやペストリーが味わえる。",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -14238,6 +14513,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=12411598619984057040",
     "phone": "072-727-7301",
     "price": "￥1,000～2,000",
+    "memberComment": "雰囲気最高です\n学生時代ランチほぼここでした(みょん)\nシナモンコーヒーがおすすめ！",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -14284,6 +14560,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=2330156689482984424",
     "phone": "03-3487-8811",
     "price": "￥1,000～2,000",
+    "memberComment": "夜までやってるので、締めケーキできます！",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -14306,6 +14583,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=1022891546159216739",
     "phone": "03-4335-0534",
     "price": "￥1～1,000",
+    "memberComment": "サーモンクリームチーズのベーグルがおすすめ、テイクアウト可！\nドリンクにこだわりがあるお店じゃないので注意です、！",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -14327,6 +14605,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=11746208521736657333",
     "phone": "03-6417-0640",
     "price": "￥1,000～2,000",
+    "memberComment": "グラスや音響や内装等、全部にこだわってるけど、柔らかい雰囲気のお店\nフードはないですが、たまにある、あら塩と胡椒で食べるバスクチーズケーキは唯一無二\n昼夜共にカフェ利用もできます",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -14395,6 +14674,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=9681107562823638028",
     "phone": "078-334-1999",
     "price": "￥1,000～2,000",
+    "description": "くつろぎの空間を提供する店内は、レンガ調のカジュアルな雰囲気。昼はパスタやハンバーグ、夜はフライドチキンなどを提供している。",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -14416,6 +14696,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWmpGpUfWUDm1EXQNsQoxzGgCnzQLZsPEmAbPq1jQzM4f00AckXhAsvtOCJr2hVtNFJXAMhQlmF0G9XGrYV2-fknitXKx0LbS7wnS4jBTjdVKZFmbJAY468IhsnEq7xazChzgXjQlA=w138-h92-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=11502437149765401372",
     "phone": "078-334-1350",
+    "description": "カラフルで洗練された内装のカフェ。独創的なフランス風ペストリー、ケーキ、クレープ、アフタヌーン ティーを提供。",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -14539,6 +14820,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=5913187324335195395",
     "phone": "06-6585-9955",
     "price": "￥1,000～2,000",
+    "description": "革張りの椅子でゆったりと過ごせるカフェ。自家焙煎のコーヒーが味わえるほか、軽食、ケーキ、ペイストリーもある。",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -14621,6 +14903,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=5043098343087818142",
     "phone": "078-771-4914",
     "price": "￥1,000～2,000",
+    "description": "おしゃれでインダストリアル シックなカフェ。パスタなどの洋食、チーズケーキ、独特なラテアートが楽しめる。",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -14641,6 +14924,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=112525914200889773",
     "phone": "078-332-7590",
     "price": "￥1,000～2,000",
+    "description": "白を基調とした内装の明るい店内で、オレンジティーなど、趣向を凝らした紅茶が味わえる。スコーンやチーズケーキなども提供。",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -14706,6 +14990,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=13824684934411552130",
     "phone": "078-332-2837",
     "price": "￥2,000～3,000",
+    "description": "食事、ケーキ、カクテルを提供するカジュアルなカフェ。店内は低めのテーブル席やソファ席のある落ち着いた雰囲気。",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -14808,6 +15093,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=13250373751569789612",
     "phone": "078-332-2778",
     "price": "￥1,000～2,000",
+    "description": "ゆったりとした雰囲気の中で、ハンバーガーやパンケーキなどが食べられるアメリカンスタイルのカフェ。",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -14828,6 +15114,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=10054702875320198488",
     "phone": "078-335-7774",
     "price": "￥1,000～2,000",
+    "description": "ランチやディナーのセットメニューを提供する居心地の良い店。ジェラートやチーズケーキなどのデザートも堪能できる。",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -15018,6 +15305,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=688215733881880208",
     "phone": "090-4298-1056",
     "price": "￥1,000～2,000",
+    "description": "クッションを配置したソファ席もある店内で、チーズケーキやプリン、スコーンなどが味わえる。豆腐グラタンなど、軽食メニューも提供。",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -15038,6 +15326,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=16029639196709618620",
     "phone": "078-331-3265",
     "price": "￥1～1,000",
+    "description": "サイフォンコーヒーやケーキ、サンドイッチも提供する1952年創業の喫茶店。レトロモダンで趣ある店内で、モーニングセットも用意する。",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -15122,6 +15411,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=16312195136708696524",
     "phone": "078-599-9474",
     "price": "￥1～1,000",
+    "description": "世界各国から厳選した豆を使ったこだわりのコーヒーとホットサンドを味わえる、おしゃれでモダンなカフェ。",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -15543,6 +15833,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=8685087588778864397",
     "phone": "070-2328-5527",
     "price": "￥1,000～2,000",
+    "description": "個性的なこだわりの家具が並ぶ居心地の良い店。フェアトレードのコーヒーや自家製デザートを味わえる。",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -15588,6 +15879,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=6804734747570266462",
     "phone": "078-341-3410",
     "price": "￥1～1,000",
+    "description": "アンティーク調の落ち着きのある店内で、ハンドドリップでいれるコーヒーとスイーツを提供。ひとりでも利用しやすいカウンター席がある。",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -15737,6 +16029,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=4036289745804374311",
     "phone": "078-391-1710",
     "price": "￥1,000～2,000",
+    "description": "ヨーロッパアンティーク調の店内では、生チーズを使用した手作りチーズケーキと自家焙煎したコーヒーが堪能できる。",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -15781,6 +16074,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=8836544321585938156",
     "phone": "06-6377-6777",
     "price": "￥1,000～2,000",
+    "description": "有機栽培のコーヒーやラテなどは工房で焼いた器で出される。ケーキやホットサンド、丼ものなども提供。店内には工房の作品が飾られている。",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -15861,6 +16155,8 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWlgiusr1MTQng4lWnNiCD9kXICWbrHXxT_bAuRjDg50V5wKttu3DvQeOQ8b_7bA3cuT1Js1fc0rDC9FJnh2i7HCZYJF1pr1ABr-MfgD-jlOaCijYj7CQ6OVsxatz6tuWseObFY=w92-h92-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=6708922274961370993",
     "price": "￥2,000～3,000",
+    "description": "木を基調とした内装の店内で独創的なかき氷を提供する、居心地の良い店。",
+    "memberComment": "キーンとしないスイーツかき氷！予約必須です",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -15885,6 +16181,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=13646114304569648359",
     "phone": "06-6313-6797",
     "price": "￥1,000～2,000",
+    "description": "地下にあるレトロなカフェ。自家焙煎のコーヒー、軽食、手焼きのホットケーキを楽しめる。",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -15923,6 +16220,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWmTkGS6SD6o63nuGot3TziDoBB7-fJfvVuXDy-_304b0xnhR11VZeFHpmRr_1G87FHdDoavfvPSjTQSVp6nk3o29414PaNRD4Mjsf6pJdCsAMyrvpsNz13ZFQanQm_7wpS666l1Js2NSx1B=w80-h106-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=1205891521443934898",
     "phone": "078-391-3955",
+    "description": "落ち着いた雰囲気の店内では、定番のケーキから期間限定のケーキまで、旬の素材を使用したケーキ各種を提供している。",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -15963,6 +16261,8 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=12303161318843563129",
     "phone": "03-6450-8177",
     "price": "￥2,000～8,000",
+    "description": "上質なフランス料理を味わえる、落ち着いた雰囲気のレストラン。ワインの種類が豊富。",
+    "memberComment": "優雅なランチに🍷",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -15986,6 +16286,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=818921887216064939",
     "phone": "03-3466-9834",
     "price": "￥1,000～2,000",
+    "memberComment": "パン屋さんのモーニング🥐",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -16006,6 +16307,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=13827529925371662021",
     "phone": "06-4792-7796",
     "price": "￥1,000～2,000",
+    "memberComment": "季節限定のモンブランがとってもおすすめ",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -16029,6 +16331,8 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWm7-6BJ-jCcl-AfUabeFaNMeEEtNM2eYFjd8b0rlfqCRJpP2SZCJNOz68RVGfY1pgLXVDpUiJ7j3-UHVrc-50J5YSjyfcqIHS9h57b724mLcuG-xZnneZSaHI8N5_n3Mb3AganBwmUJZdQ=w80-h106-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=8268619294289410108",
     "phone": "06-6227-8131",
+    "description": "高級チョコレートやペストリー、紅茶、コーヒー、カカオを使ったビーフシチューなどが楽しめるエレガントなショップ＆ティーサロン。",
+    "memberComment": "チョコレートを使ったパフェがおいしい！マダム向けな内装ですが、ボリュームあるので甘党男子もぜひ",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -16049,6 +16353,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=4381059454859022518",
     "phone": "06-6484-9403",
     "price": "￥1,000～2,000",
+    "memberComment": "あまじょっぱモーニング！土日は並びます",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -16098,6 +16403,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=9697887076841287522",
     "phone": "06-6910-4085",
     "price": "￥1,000～2,000",
+    "memberComment": "大阪で一番すきなケーキ屋さん、イートインスペースは狭めなので注意です！",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -16153,6 +16459,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=13289684904586081089",
     "phone": "03-6452-5200",
     "price": "￥1,000～2,000",
+    "description": "ウッドデッキのあるスタイリッシュな雰囲気の店構え。素材にこだわったデリやサンドウィッチ、自家製の焼き菓子などが楽しめる。",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -16176,6 +16483,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=17934782069063177678",
     "phone": "06-6948-6833",
     "price": "￥1,000～2,000",
+    "memberComment": "モーニングのベーグルフレンチトーストがじゅわっとおいしい",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -16219,6 +16527,8 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=3017631972394661999",
     "phone": "03-6432-3878",
     "price": "￥1,000～7,000",
+    "description": "モダンでシンプルなパティスリー。さまざまなケーキ、タルト、手の込んだフルーツパフェを提供。",
+    "memberComment": "芸術的なパフェが有名ですが、クレープやケーキもおすすめです🍰",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -16239,6 +16549,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=6521168186352555956",
     "phone": "03-5724-3555",
     "price": "￥1,000～2,000",
+    "memberComment": "チーズが絶品です！テイクアウトも可🐄",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -16322,6 +16633,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=6445666561718475745",
     "phone": "078-331-3905",
     "price": "￥1,000～2,000",
+    "description": "ソファとクッションを備えた上品でカジュアルなカフェ。ホットドリンク、スムージー、ペストリーがあり、ブランチもできる。",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -16526,6 +16838,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWlXVTlioJVrmii7sht3EF6stM1vxdYhdrGw2UvQPN7j0nw1_lCrPvL8MITU1DhOcuyM-kKBf0IaXpmX_DMY1gsYtgHiZ9dWb4uATkCyCoPzOsSwUu_Af8u6-3jsPYvn_lSAfekjHP_a9FEy=w122-h92-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=2285775846802890428",
     "phone": "06-4792-8069",
+    "description": "インダストリアル シックな雰囲気の洗練されたカフェ。伝統的な洋菓子をクリエイティブにアレンジしたスイーツを楽しめる。",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -16568,6 +16881,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=13076213240236217874",
     "phone": "06-6359-2722",
     "price": "￥1,000～2,000",
+    "description": "パリのオープンカフェを彷彿とさせるクラシックなフレンチ大衆ダイニングバー。フランスの日常的な料理やパンを提供。テラス席あり。",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -16629,6 +16943,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=15810915994810716082",
     "phone": "06-6375-0035",
     "price": "￥1,000～2,000",
+    "description": "木を生かしたカジュアルでリラックスした雰囲気の店内で、ハンドドリップコーヒーを提供。ランチや夜のつまみ、アルコールもある。",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -16670,6 +16985,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=8867877726125975071",
     "phone": "06-4706-3788",
     "price": "￥1,000～2,000",
+    "description": "コーヒー、紅茶、軽食、デザートを出すシンプルなコーヒー ショップ。屋外席あり。",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -16690,6 +17006,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=4367791188074301580",
     "phone": "06-6223-5858",
     "price": "￥1,000～2,000",
+    "description": "伝統的な英国風ティールームをイメージした、川沿いのカフェ。アフタヌーン ティーとクロテッド クリーム付きスコーンが味わえる。",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -16751,6 +17068,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=406641244751426794",
     "phone": "06-7713-1455",
     "price": "￥1,000～2,000",
+    "description": "和と洋の調理法を融合させた独創的な料理を厳選して提供するシックなレストラン。",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -16807,6 +17125,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWked3rybb2esHqKt-yowSLDSndLGOBJZMAYTtHTJokLI8hwL6NXaoqokdtqSPkwD6Q-8Tk2__QGZlfYQQAzZ2nFmgad-jbQn73J19wO13l-yyH_PPzEUZq5_X4kjBKHvcr7o-3H=w138-h92-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=5160975152042163446",
     "phone": "03-6231-1681",
+    "description": "落ち着いた雰囲気の店。インダストリアルな空間でケーキやペストリー、焼き菓子、コーヒーを提供。",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -16848,6 +17167,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWmCVCJS7bsejIKMCZWyY7TwOcm1DLhWsuic9B3kWzXwSqe_9M0lKY8VBsIpeCX9fPscEwhTCY2DfPXd2qTMh4L16Ssmb0rfCP3DkmXHsDG9YsmmSxYEyzPn8aODmpiZ5KIynplg=w122-h92-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=13786105158372809586",
     "price": "￥1,000～2,000",
+    "description": "創作チーズケーキ各種のほか、ビールや冷たい飲み物を提供するおしゃれな店。",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -16871,6 +17191,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWm5p2ycYEOoxjmaKbtO3lLG8QelPDhs2dAcC8O7JUDuyj15ebmuO4DMFgULGtT27yIoIm7VaXvH_ER4b3FUxKIV0q0vQ4cQAJdzoP12lRSWMvSei0y6pT88k5Fg-88ZKdOZyD6f93-xwWpl=w163-h92-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=9524574573685724537",
     "price": "￥1,000～2,000",
+    "description": "高級なコーヒーや焼き菓子を提供するおしゃれなカフェチェーン。豆やコーヒーを淹れる道具も販売。",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -16915,6 +17236,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=10722621538369418366",
     "phone": "06-6451-8001",
     "price": "￥1～1,000",
+    "description": "パン、ペストリー、ケーキ、ミニピザを提供する居心地の良いイタリア風パティスリー＆ベーカリー。",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -17042,6 +17364,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=717519452345524227",
     "phone": "03-5990-4786",
     "price": "￥1,000～2,000",
+    "memberComment": "お洒落なcafe",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -17145,6 +17468,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWlbwokejvJvOQYf-QfPOVILjAmuxSGKuBkEQOiGAVKOJeR-oSjbIcIkodksmsLMq9cf9rYxrM2i5H0mkL0i_Hd-TuYvs_1vET5IL5cZavFSJhPyEtThK0N8LZghIQLwh6Y_2rzw=w92-h92-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=17164645774726874279",
     "price": "￥1～1,000",
+    "description": "カクテル、コーヒー、スカンジナビアの焼き菓子などを、ヴィンテージ感のある木目調のおしゃれな店内で提供。",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -17167,6 +17491,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWlq65m4OjNhYErHeC6eR4epOnmIPS8ZQDlMqh8eGsbaiSAUyzuaGn30AndkbFhuKKpYK09QRXSPumzRdnp8q7AwS_W1U2Y7Hu_svgwsJs-3o1EFZ0AFziuhg_snPNtH7PYPXa6m=w138-h92-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=750964352663309189",
     "phone": "03-6874-6719",
+    "description": "農地直送の食材を使用した、居心地の良い欧風料理レストラン。コーヒー、デザートのほかワインも味わえる。",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -17188,6 +17513,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=15312960947510416613",
     "phone": "03-5424-1347",
     "price": "￥10,000 以上",
+    "description": "広々とした優雅で高級感ある店内で、高級素材を使ったフルコースが頂ける名高いフレンチレストラン。",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -17210,6 +17536,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=11120591364143765912",
     "phone": "03-5424-1345",
     "price": "￥1～1,000",
+    "description": "フランスの有名シェフ、ジョエル・ロブションが手掛けるショップ。フレンチの手法に基づいたパンやスイーツを販売する。",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -17250,6 +17577,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=17113457699722410591",
     "phone": "03-6450-6969",
     "price": "￥1,000～2,000",
+    "description": "アメリカン スタイルの居心地の良いカフェ。朝食、ランチ、ディナーに、グリル サンドイッチとコーヒーを楽しめる。",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -17458,6 +17786,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=1735433913196288515",
     "phone": "03-3498-2613",
     "price": "￥2,000～3,000",
+    "description": "パンケーキにホイップクリームやベーコンが付いたセットメニューのみを提供するパンケーキ専門店。パンケーキミックスの販売もしている。",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -17523,6 +17852,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=9101787143700910819",
     "phone": "075-353-5668",
     "price": "￥1,000～2,000",
+    "description": "木製家具を配した気取らない店。広々とした空間で上品なケーキ、こだわりのコーヒー、日本茶を楽しめる。",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -17725,6 +18055,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=9849457532171678960",
     "phone": "072-734-7603",
     "price": "￥1,000～4,000",
+    "description": "窓辺から木々を眺めるナチュラルモダンなカフェ。カレーやローストポークなどのフードやデザートを提供。ショップとギャラリーを併設する。",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -17766,6 +18097,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWmf4WYY4LDzCnKEZMHjboq-N7jg_h3lrdAbyDaE9RIU0iRNCKcANVLu9utkWEnkKXOmDPxeP5OMy4rCOjUDmxLoG8AQcOPuTNG5SK4jPnc-EjN89KnspAtEH4VIEPSGD8luhe31=w123-h92-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=2654772519952317288",
     "price": "￥1,000～2,000",
+    "description": "ケーキ、ホットドッグ、アイスクリーム、温かい飲み物を提供する飾らないカフェ。テイクアウトも可能。",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -17786,6 +18118,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=17315736065825998263",
     "phone": "06-6536-5688",
     "price": "￥1,000～2,000",
+    "description": "開放的でくつろげるカフェ。国際色豊かな軽食メニューを取り揃えている。",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -17809,6 +18142,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=3156696723173134816",
     "phone": "050-5462-5713",
     "price": "￥1,000～2,000",
+    "description": "木の温もりが溢れるウッドテーブルを配した開放的なカフェ レストラン。カレー、ハンバーガー、パンケーキ、ホットドリンクなどを提供。",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -17848,6 +18182,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWkNJSf1_DvtVcg44SpoHSEojE9J7MLvPK1WeIZ0Ag8-8fXa6nITgVfL7zgYVrQNjWJ1lfSqm0nKA91nqJ2E37zOFLpoKyZwk-7zJwL2GR3GyPfL_k_jCqjbypKOrWQRUdkBXYmEqL34NojW=w163-h92-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=11272248159217716659",
     "phone": "075-561-0504",
+    "description": "お菓子、アイスクリーム、かき氷を、伝統的な庭付きの町家で提供。",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -17868,6 +18203,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=18089249601836027326",
     "phone": "075-212-5696",
     "price": "￥1,000～2,000",
+    "description": "国産の原料を使用した自家製のパン、サンドイッチ、スイーツを提供するモダンなベーカリー。カフェを併設。",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -17977,6 +18313,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=17532417395355382157",
     "phone": "075-344-9009",
     "price": "￥1～1,000",
+    "description": "シックでシンプルなカフェ。自家焙煎珈琲、スパイスの効いたチャイ、アイスクリームを味わえる。",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -18080,6 +18417,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=11397677192332095799",
     "phone": "075-708-8162",
     "price": "￥1,000～2,000",
+    "description": "自家焙煎コーヒーと抹茶ラテが評判の落ち着いた雰囲気のカフェ。朝食とケーキも味わえる。",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -18100,6 +18438,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=4102843074451712362",
     "phone": "075-746-2270",
     "price": "￥1,000～2,000",
+    "description": "モダンなカフェ＆ベーカリー。パン、ペストリーのほか、アボカドのオープンサンドなどのブランチ メニューを提供。",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -18282,6 +18621,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=13156222391137450542",
     "phone": "080-9179-8317",
     "price": "￥1～1,000",
+    "description": "居心地の良いモダンなカフェ。特製チャイや紅茶ドリンク、サンドイッチ、自家製ケーキを提供。",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -18330,6 +18670,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWmA5tmePOn43RY6k1-zTvqT0q4Hv-zARseZGaI6bJjA0GiZeKqv73AUXyWkOEyfV-b1Jg1RfhX2Rs_QGdcGIwLjqnbycUtHHp7pdvjUII6mTwlWIJHpO3bFo2lZ7OGFhFIyeWJ13LKMz19W=w80-h106-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=15013428448453891055",
     "phone": "075-221-2202",
+    "description": "古きヨーロッパのような雰囲気が漂うこだわりのチョコレート専門店。コーヒー、デザート、アイスクリームも提供。",
     "sourceList": "カフェ・喫茶",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -18399,6 +18740,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=10925083006679493906",
     "phone": "03-5485-2723",
     "price": "￥1,000～2,000",
+    "description": "黄色を基調としたシンプルで清潔感のある空間。化学調味料を一切使わず、北海道産の食材に拘って作るヘルシーなスープカレーが楽しめる店。",
     "sourceList": "カレー",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -18419,6 +18761,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=11041804228203918214",
     "phone": "03-6452-3365",
     "price": "￥1,000～2,000",
+    "description": "カレー、コルマ、タンドリー料理といったインド料理を提供するこぢんまりとした店。",
     "sourceList": "カレー",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -18440,6 +18783,8 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=4525335737800224849",
     "phone": "03-6276-9527",
     "price": "￥1,000～2,000",
+    "description": "和風カレーライスとトッピングを味わえる、こぢんまりとした店。数々の受賞歴を持つ。",
+    "memberComment": "ルールが厳しいと有名の吉田カレーに行ってきました！(前日からメニューを練習😹)\n辛口と甘口のmixにしたのですが、辛口は辛すぎず、甘口はフルーティーでとても美味しかったです🥹\nトッピングの豚はスプーンで切れるくらいほろほろでチーズとの相性が最高でした！スパイスがしっかりきいていて食べ応えがあるのにグルテンフリー、塩分控えめなのも嬉しい◎\nカレー好きの方はぜひルールを予習の上行ってみて欲しいです！！🍛(店主は全然優しかったです！)\n\n🍽️ おすすめメニュー：キーマカレー（＋トッピング 豚小、チーズ）",
     "sourceList": "カレー",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -18459,6 +18804,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWkPowNRmDh9mExICWjJUOyvpbXg-oB08LtdPcTQ6BdOkz8SYD5kprX0WvUdjEH5XQkewdzSyiXR7QQuRS2hqiLMy_O2bzw8gOgllenqXj2pMNOehQhaQlUCxUw_DPNftpWBnt4X=w122-h92-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=933548137109606347",
     "price": "￥1,000～2,000",
+    "memberComment": "地味にカレー激戦区の西荻で、美味しいこだわりのスパイスカレーが食べられるお店。\nここのココナッツチキンカレーが大好きなのです、、\n本日のカレー3種から、3種盛りか2種盛りで選べます。\n過去にこんなカレーが！\n・ワタリガニのスパイスカリー(写真手前のもの)\n・メカジキと甲イカのスパイスカリー\n・バイマックル香るエスニックキーマカリー\n・ふきのとう味噌ポークカリー\n\n今回はしなかったけど煮卵をトッピングするのがおすすめです〜\n\n🍽️おすすめメニュー：本日のカレー",
     "sourceList": "カレー",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -18479,6 +18825,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=13381529370675953658",
     "phone": "03-6450-8986",
     "price": "￥1,000～2,000",
+    "memberComment": "わたしもIRO+のNo.1カレー🍛みてたら行きたくなったので旧ヤム行ってきました！\n最後にスープかけて食べるのが最高でした✌️\n\n🍽️おすすめメニュー：全がけ",
     "sourceList": "カレー",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -18500,6 +18847,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=17045936254433016006",
     "phone": "03-3446-2777",
     "price": "￥1,000～2,000",
+    "memberComment": "IRO+のカレーNo.1選手権を見てたらカレーが食べたくなって行って来ました😂\n月替わりで4種類のカレーから選べます！\n都内1位の焼肉名店「らいもん」の黒毛和牛タンを使ったキーマカレーも！🍛\n\n🍽️ おすすめメニュー：あいがけカレー(2〜3種選べます)",
     "sourceList": "カレー",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -18542,6 +18890,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=1097195899942277228",
     "phone": "078-371-7588",
     "price": "￥1,000～2,000",
+    "description": "本格的なインドカレーのほか、オリジナルにアレンジを加えたインド風のつまみやタンドール料理を提供。カジュアルなプレートも用意している",
     "sourceList": "カレー",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -18566,6 +18915,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=6022662786268456366",
     "phone": "078-945-8284",
     "price": "￥1,000～2,000",
+    "description": "ナンを中心とした北インド料理が多い中、南インドにある「アーンドラ・プレデーシュ州」の料理を、異国情緒溢れる店内で堪能できる。",
     "sourceList": "カレー",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -18629,6 +18979,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=11638089340104996442",
     "phone": "03-6812-2898",
     "price": "￥1,000～2,000",
+    "memberComment": "北海道発のスープカレー専門店で、本場の味が楽しめます🍛\n串スタイルで提供されるのもユニークで、見た目も楽しめるのがポイント◎\n素揚げ野菜がとっても甘くて美味しかったです🥕\n\n🍽️ おすすめメニュー：パリパリ桜姫鶏と7種の野菜カレー",
     "sourceList": "カレー",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -18669,6 +19020,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=18354798638245012779",
     "phone": "03-5879-7901",
     "price": "￥1,000～2,000",
+    "memberComment": "とても美味しい🍛3種盛りのSでも、ご飯が300gまで食べれて、キチンカレーもおかわり無料なので、コスパも最高です。",
     "sourceList": "カレー",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -18708,6 +19060,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=7454709040999873520",
     "phone": "078-777-7786",
     "price": "￥1,000～2,000",
+    "description": "テーブル席を中心とした店内で、牛すじを使用した多種類のスープカレーを提供。飲み放題付きのコースやランチあり。",
     "sourceList": "カレー",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -18727,6 +19080,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWl8Jrlehc1YB2GcJFDulXdvWhJFOdjhQB1ObZvGnZF5BOSArYIWXxUtNquCKu1H4KaHsjDxOFOPnb3p-K4w7m-U9chcmxA-uhizYgz7A2NQP523Za6stCFSQiQ8bYuMIdMB4OkQ7bhUzL0p=w80-h106-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=15428643487267989722",
     "price": "￥1,000～2,000",
+    "description": "簡素な店構えの人気カレー店。カレーのベースはスリランカ料理。ラッシーやビールなどのドリンク類もある。",
     "sourceList": "カレー",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -18748,6 +19102,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=7412092603197999024",
     "phone": "0167-23-4784",
     "price": "￥1,000～2,000",
+    "description": "テラス席のある田舎のコテージで肉と野菜のカレー、自家製のソーセージやビールを味わえる。",
     "sourceList": "カレー",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -18768,6 +19123,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=11129493605137130403",
     "phone": "03-6303-0040",
     "price": "￥1,000～2,000",
+    "memberComment": "定番チキンカレーと月替カレーの2種盛、ラッシー割りのお酒がおすすめ！",
     "sourceList": "カレー",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -18788,6 +19144,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=5502016622529238910",
     "phone": "03-3367-7111",
     "price": "￥1,000～2,000",
+    "description": "こぢんまりとしたカレー専門店。インド風のチキンカレーやラムカレーと魯肉飯（豚ばら煮込みかけご飯）のコンボが人気。",
     "sourceList": "カレー",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -18849,6 +19206,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=8171974213538420638",
     "phone": "03-6722-6380",
     "price": "￥1,000～2,000",
+    "description": "ランチに人気のくつろげる店。魚、野菜、肉の入った南インドスタイルのカレーを味わえる。",
     "sourceList": "カレー",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -18869,6 +19227,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWlHFoVEHMwP1Oufxjizk7AKWe7RDptizMV9E84f7f30d4OJQgEIFQpmFBQd-Yez3zzBO4WiEsnDP-IvAmDFJLC0jw62KQdMdv8tIVemNUBdcUco7OLWvW4vTDRsmXPa6E2ebp65=w142-h92-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=15794067666704633547",
     "phone": "03-6416-1099",
+    "description": "季節の野菜や珍しい西洋野菜を、多種多様なスパイスと一緒に煮込んだ本格カレーが堪能できる。ハーブの入ったレモネードもある。",
     "sourceList": "カレー",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -18889,6 +19248,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=16126217604245164167",
     "phone": "03-3442-3962",
     "price": "￥1,000～2,000",
+    "description": "スープカレーを提供する居心地の良いシンプルなレストラン。店内の至るところに猫の置物や絵が飾られている。",
     "sourceList": "カレー",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -18909,6 +19269,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=8429192020719521941",
     "phone": "06-6151-1544",
     "price": "￥1,000～2,000",
+    "description": "レトロモダンな店内で、小麦粉を使わず作った薬膳カレーを提供。季節の野菜を使った日替わりカレーを複数用意。ランチメニューあり。",
     "sourceList": "カレー",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -18929,6 +19290,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=2386537134704664114",
     "phone": "080-3732-9295",
     "price": "￥1,000～2,000",
+    "description": "モノトーン調の店内は、シックでスタイリッシュな雰囲気。多彩な自家製カレーを提供している。テイクアウトでの利用も可能。",
     "sourceList": "カレー",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -18992,6 +19354,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=17736313450139361045",
     "phone": "03-5725-8726",
     "price": "￥5,000～6,000",
+    "memberComment": "ご飯屋さん激戦区の学芸大学で1番美味しい海鮮居酒屋です！\nお通しのマグロの握りが美味しすぎて、開始からブチ上がります。もちろん他のご飯も全て美味しいですし、日本酒や焼酎の種類も多いのでお酒目的でも楽しめます！\nこの辺りに10年住んでますが1番好きな海鮮系のお店です🍣\n\n🍣オススメメニュー:「お通し」のマグロの握り",
     "sourceList": "シーフード・海鮮",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -19016,6 +19379,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWld2gUffQUkEzHnoBswfMqFh9qWlIjxju8h1toPGhBvd-5kPcdgC5LUCedcSvwq91pZHxkTnsgNTe3bMxS-VWsb3n49N-VkpO1-I0aCdciTuwvvL9UKZxEo0opPfS6xCOIZFr0D=w80-h106-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=5210661613391737453",
     "price": "$1～20",
+    "memberComment": "シドニーのサラダボウル屋さんです。アジアンテイストなサラダボウルがいただけます(具の下にご飯が入ってます)。\n滞在中にlemon chicken box, braised beef box, miso salmon boxをいただきましたが、すべて好みの味でした…！日本のお味とはまた違うのですが、日本人好みの味付けかと思います。量が多いので、1つを母親と分けてちょうど良いくらいでした。見た目は映えませんが、オーストラリアにしては比較的安価でいただけてめっちゃコスパ良いと思います💯\nシドニー滞在の際はぜひ訪れてみてください！\n\n🍽️ おすすめメニュー：LEMON CHICKEN BOX",
     "sourceList": "シーフード・海鮮",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -19037,6 +19401,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=3609825246103085315",
     "phone": "0997-42-0161",
     "price": "￥2,000～7,000",
+    "memberComment": "こちらも屋久島定番の人気店！予約必須！\n17時〜/19時半〜の2部制で、後半に行ったら結構売り切れもあったので旅程次第ですが17時からいけたらベストです🙆‍♀️\n何食べても美味しいですが、今回の時期はトビウオと若竹が最高でした！！どちらも天ぷらが良きです。\n\n🍽️ おすすめメニュー：あら煮、トビウオの姿揚げ",
     "sourceList": "シーフード・海鮮",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -19057,6 +19422,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=7455890816296042684",
     "phone": "019-654-2250",
     "price": "￥5,000～6,000",
+    "memberComment": "南三陸の新鮮な海鮮を食べれるお店です\n刺身がとにかく分厚くて美味しい！\n海鮮と日本酒をたくさん頼んで1人5000円くらい、安すぎてどうかしてます 笑\n\n🍽️ おすすめメニュー：刺身盛り合わせ",
     "sourceList": "シーフード・海鮮",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -19078,6 +19444,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=14863167207428451233",
     "phone": "0475-42-6678",
     "price": "￥1,000～2,000",
+    "memberComment": "180g以上のいろんな部位が乗った鉄火丼と、鮪のカマの炭火焼きの贅沢すぎる定食でした🐟\nタクシーの運転手が名店を紹介するテレビでも映ったみたいです\nお店がある近辺、カフェも充実してるので、関東圏内のお住まいの方向けに！！日帰りドライブおすすめエリアです\n\n🍽️おすすめメニュー：鉄火丼",
     "sourceList": "シーフード・海鮮",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -19098,6 +19465,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=9755309407767772535",
     "phone": "+82 51-245-3320",
     "price": "₩10,000～20,000",
+    "memberComment": "カンジャンセウ、カンジャンケジャン",
     "sourceList": "シーフード・海鮮",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -19118,6 +19486,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=2613493962498693165",
     "phone": "050-5486-1845",
     "price": "￥5,000～6,000",
+    "memberComment": "・白子\n・のどぐろ\n・おにぎり🍙\n仕事で弾丸金沢に来てるのですが、現地民のおすすめでこちらへ！\nとにかく海鮮が美味しすぎた、、、全部鮮度抜群で最高です！なにより、〆のおにぎりと味噌汁が感動でした🥹ぜひ！",
     "sourceList": "シーフード・海鮮",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -19183,6 +19552,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWlXwjjRrKC3_pEycwKWO_ZX5qwE2javt7SE9eKP5oQMr4VsLi8okSwElTdF6x1DO2X6901MW0lHQPXpkj6GVLEoV1Ux5RIGRdoJtiyOnIH8nZKyJhx0kHIbCbNiWyeXwk-knYAqkPMHdXE=w122-h92-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=1598750187957883112",
     "phone": "+34 915 42 49 36",
+    "description": "1916 年頃に創業した、エレガントな雰囲気の屋内マーケット。地元の食品や珍味が揃い、各種イベントも開催される。",
     "sourceList": "シーフード・海鮮",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -19230,6 +19600,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=5248698202328707385",
     "phone": "+44 20 7836 3785",
     "price": "£20～30",
+    "memberComment": "100年前からあるフィッシュ＆チップスの老舗",
     "sourceList": "シーフード・海鮮",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -19299,6 +19670,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=11842344414635121701",
     "phone": "+1 415-398-3181",
     "price": "$30～70",
+    "memberComment": "魚介スープcioppinoが絶品！ぜひ一度は訪れてみてほしいお店",
     "sourceList": "シーフード・海鮮",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -19341,6 +19713,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=11351540828558533108",
     "phone": "+1 415-989-7437",
     "price": "$20～60",
+    "description": "市場で仕入れた新鮮な魚介類を使った料理を提供する水辺のシーフード レストラン。テラス席あり。ピア 39 から湾の景色を楽しめる。",
     "sourceList": "シーフード・海鮮",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -19544,6 +19917,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=15697323929618707803",
     "phone": "0967-32-0031",
     "price": "￥2,000～3,000",
+    "description": "人気が高い、伝統的な温泉の食事処。木造の店内で麺類、ご飯もの、和牛各種が楽しめる。",
     "sourceList": "ステーキ・鉄板焼き",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -19591,6 +19965,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWlabu9phb9AweOcsmKDpVxF-L6kjPHCoM5d0HyItJAFW2aIFfVIFwolOJcfbxunDfWJwrBeTlmDPUuMUYREE6F25UrnaP1uJ9hRtDT8MT-If5kZLR7y45S8WxV7PlyKlN92KoL50LCJwG8=w80-h120-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=11162887729610904025",
     "phone": "03-3572-1644",
+    "memberComment": "銀座のど真ん中にある老舗フレンチ鉄板焼き🔥\n\n50年以上続くお店で、クラシカルな雰囲気がとにかく良い。コース+ワイン2杯で1万円で非常にコストパフォーマンス高いです。\n\nシェフは休日に他店にバイトにいくくらいの鉄板焼きマニアで、納得の完成度です。特に活き鮑の火入れが最高でした。\n\n自信を持っておすすめできるお店です。",
     "sourceList": "ステーキ・鉄板焼き",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -19613,6 +19988,8 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=10213765172091369361",
     "phone": "03-3402-1055",
     "price": "￥10,000 以上",
+    "description": "個室やラウンジも備えた優雅な店内では、厳選された神戸牛や魚介類で作る、多彩な鉄板焼き料理が堪能できる。",
+    "memberComment": "百名店鉄板焼き🍽️✨️✨️\n和牛特製サーロインのコースをいただきました🥩\n目の前で焼き上げてもらえるお肉は、やわらかくて旨みたっぷりでほんとに美味しかった！！\n追加した鮑もぷりぷり食感が最高でした🦪\nそして何より印象的だったのが円形カウンター席。シェフの手さばきを間近で見られるライブ感と、落ち着いた高級感のある空間がすごく素敵でした✨\nデザートは別の席でゆっくり食べられたのも良かったです🍰☕️\n最後まで贅沢な時間を楽しめました◎\n\n特別な日やご褒美にすごくおすすめです✨\n\n🍽️おすすめメニュー：神戸牛",
     "sourceList": "ステーキ・鉄板焼き",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -19673,6 +20050,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWmtSmValncO8zaDuAjLaKKWNtwBam0_99n4R9KGRPVwmXDfXHrNAZHqMZyrLxxJHNqr1j7Tsm0t7C_nOwx3J3Z_3ksAv5EScBiO69K2dgU1ASMkK8T_FFxIEuyZZ4cJO11U5T9y1Qxd_jYo=w122-h92-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=6363276032451561041",
     "phone": "+44 20 3988 0510",
+    "description": "熟成牛肉のプライムカット、シーフード、定番のイギリス料理を楽しめる美しい内装のレストラン。",
     "sourceList": "ステーキ・鉄板焼き",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -19696,6 +20074,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=439859534187814216",
     "phone": "+1 323-467-7788",
     "price": "$100 以上",
+    "description": "ウェイターが接客するハリウッドの名店。赤いシートのボックス席のある店内で、クラシックなアメリカ料理やマティーニを楽しめる。",
     "sourceList": "ステーキ・鉄板焼き",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -19724,6 +20103,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=7323654510657103147",
     "phone": "+1 808-600-3431",
     "price": "$100 以上",
+    "description": "気取らない雰囲気の高級レストラン。ビール、フロート、トロピカル カクテルとともにステーキやシーフード、ハワイ料理を味わえる。",
     "sourceList": "ステーキ・鉄板焼き",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -19745,6 +20125,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=8642963306572947570",
     "phone": "+1 808-732-4001",
     "price": "$10～20",
+    "description": "プレートランチやおにぎりを販売する、こぢんまりとした個性的な日本料理店。店内利用とテイクアウトが可能。",
     "sourceList": "ステーキ・鉄板焼き",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -19770,6 +20151,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=7196074406949628681",
     "phone": "+1 808-440-7910",
     "price": "$100 以上",
+    "description": "優雅な空間でバターをのせた焼き立てのステーキを楽しめる高級ステーキハウス チェーン。",
     "sourceList": "ステーキ・鉄板焼き",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -19792,6 +20174,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=6527396490845832396",
     "phone": "+1 808-922-3600",
     "price": "$100 以上",
+    "description": "乾燥熟成させたステーキ、シーフード、ワインをエレガントな空間で味わえる、高級ステーキハウス チェーン。",
     "sourceList": "ステーキ・鉄板焼き",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -19816,6 +20199,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=11395072429440873424",
     "phone": "03-5413-7988",
     "price": "￥10,000 以上",
+    "description": "目の前で調理が楽しめるカウンター席、景色を眺めながら食事ができるカウンター席や個室を備えた、品のある和風の鉄板焼きレストラン。",
     "sourceList": "ステーキ・鉄板焼き",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -19865,6 +20249,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=17805167490265034482",
     "phone": "050-1807-6790",
     "price": "￥10,000 以上",
+    "description": "ロサンゼルス創業のプライムリブ専門店のブランチ。銀色の大きなカートの中の肉を、目の前で好みの大きさと焼き加減でカットしてくれる。",
     "sourceList": "ステーキ・鉄板焼き",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -19890,6 +20275,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=1992724992043400883",
     "phone": "03-3479-0065",
     "price": "￥10,000 以上",
+    "description": "スタイリッシュな店内にはバーカウンター、ラウンジ、寿司カウンターに加え鉄板焼カウンターが有り。優雅にこだわりの和食や洋食が頂ける。",
     "sourceList": "ステーキ・鉄板焼き",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -19910,6 +20296,8 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=7745529297696413579",
     "phone": "03-3495-4129",
     "price": "￥3,000～4,000",
+    "description": "ステーキは、シャトーブリアンほか希少部位も提供している。こだわりが光るデミグラスソースは、特製ハンバーグと相性抜群。",
+    "memberComment": "予約不可、セットのサイドがおかわり自由で最高です",
     "sourceList": "ステーキ・鉄板焼き",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -19930,6 +20318,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=12159847853586421506",
     "phone": "03-3843-8060",
     "price": "￥10,000 以上",
+    "memberComment": "にんにく！！\nガーリックライスへの変更は絶対です",
     "sourceList": "ステーキ・鉄板焼き",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -19954,6 +20343,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=9657200045435452382",
     "phone": "03-3544-5252",
     "price": "￥10,000 以上",
+    "description": "落ち着きのあるレトロモダンな内装の店内には、鉄板カウンター席や個室も完備。黒毛和牛などの鉄板焼きをコースで提供している。",
     "sourceList": "ステーキ・鉄板焼き",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -19975,6 +20365,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=5038584574280038665",
     "phone": "03-6277-4336",
     "price": "￥10,000 以上",
+    "description": "評判の高い老舗ステーキハウス。上品な店内で高級料理やこだわりのワインを味わえる。",
     "sourceList": "ステーキ・鉄板焼き",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -20002,6 +20393,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=1941365176582777990",
     "phone": "03-3589-4129",
     "price": "￥10,000 以上",
+    "description": "USDA最高位プライムグレードの牛肉を使用したステーキを堪能できるステーキハウス。シャンデリアが飾られた高級感溢れる開放的な空間。",
     "sourceList": "ステーキ・鉄板焼き",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -20086,6 +20478,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=381161883794196944",
     "phone": "045-548-6613",
     "price": "￥1,000～2,000",
+    "memberComment": "知り合いにおすすめされて、少し足を伸ばして神奈川まで食べに行きました！\nハンバーガーにしては珍しくソースを使わずにパテの肉汁とトッピングの味で楽しむバーガーなのでとても食べやすかったです！\n\n🍽️ おすすめメニュー:\nフライドエッグバーガー\nバーガーの具材はアボカド以外全て国産品に拘っていたり、注文が入ってからバンズを焼くなどお店の方の拘りが詰まったハンバーガーが食べられます！",
     "sourceList": "ハンバーガー",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -20113,6 +20506,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=2312259118423048827",
     "phone": "03-6407-1720",
     "price": "￥1,000～2,000",
+    "memberComment": "下北の本格ハンバーガー屋。\nIRO+OriginalBurgerが4月24日から100食限定販売している🍔\n\n2026.0425お昼時点で\nすでに10食。このまま行くと\n10日以内に売り切れる、、かも！\n急げ！！",
     "sourceList": "ハンバーガー",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -20133,6 +20527,8 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=8141200606053798798",
     "phone": "03-3815-6044",
     "price": "￥1,000～2,000",
+    "description": "ウッディでアメリカのハンバーガー店を思わせる内装の、ボリュームのあるハンバーガーを提供する店。ベーコンチーズバーガーが一番人気。",
+    "memberComment": "春日にある、食べログ百名店に何度か選ばれたこともあるグルメバーガーのお店です🍔\nモッツァレラチーズがとっても美味しかったです🧀\n年齢的にそろそろグルメバーガーは重く感じてきましたが、これからも食べに行こうと思います🏃‍♀️\n\n🍽️ おすすめメニュー：モッツァレラマッシュルームバーガー",
     "sourceList": "ハンバーガー",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -20179,6 +20575,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWnE-8-uTAy6eORZBqBGzPFs2LT-X3c13XDQwZPFqOs77k2EeGWLF0t_a2CUA7S36PLwJKGOgCZlR_rMsy7h1XcVD41fX1gC3GYGbyK18A43ANdu9EJCn41cD9lJMT0VNdhxj21Ao61P4bs=w95-h92-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=12714003916893507127",
     "phone": "+1 800-786-1000",
+    "description": "カリフォルニアを拠点とする昔ながらのバーガー チェーン。パティはカスタマイズが可能。店でカットしたポテトや濃厚なシェイクも提供。",
     "sourceList": "ハンバーガー",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -20203,6 +20600,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWnTv68Ro-7u1Pk9-EvuzjZsE7Ey7FAVH0VJzvEcDcg2a1-InKtRv4Nhtv_RjT44Hqv-w42mNXxVIjqUXYEtYLmniay_srm4rlzoDHnAellPUzW85F_V0tv1wKqsgsTCZ3IoA0-ifKajrNJA=w80-h106-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=10373071729987273145",
     "phone": "+1 800-786-1000",
+    "description": "カリフォルニアを拠点とする昔ながらのバーガー チェーン。パティはカスタマイズが可能。店でカットしたポテトや濃厚なシェイクも提供。",
     "sourceList": "ハンバーガー",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -20308,6 +20706,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=16627868828094372930",
     "phone": "03-3639-5201",
     "price": "￥1,000～2,000",
+    "description": "お洒落でアメリカンな雰囲気のレストランにはカウンター席もあり、宅配も可、国産牛を使ったこだわりのハンバーガーが頂けるレストラン。",
     "sourceList": "ハンバーガー",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -20328,6 +20727,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=16777755884552803113",
     "phone": "03-5422-7899",
     "price": "￥2,000～3,000",
+    "description": "ウッド調のカジュアルなハンバーガーチェーン。各種のハンバーガーやサンドイッチを提供している。クラムチャウダーやミートボールもある。",
     "sourceList": "ハンバーガー",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -20349,6 +20749,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=768183733440750954",
     "phone": "03-3505-8584",
     "price": "￥1,000～2,000",
+    "description": "さまざまな具材のハンバーガーとフライドポテトを提供するシンプルな店。テイクアウト可能。",
     "sourceList": "ハンバーガー",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -20369,6 +20770,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=6955985756384651901",
     "phone": "03-3442-2200",
     "price": "￥2,000～3,000",
+    "description": "テイクアウトや、近隣に配達もするハンバーガー専門店。スタイリッシュな雰囲気の店内で、グリルやサラダパンケーキなども楽しめる。",
     "sourceList": "ハンバーガー",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -20390,6 +20792,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=14994645819160084807",
     "phone": "03-3477-2914",
     "price": "￥2,000～3,000",
+    "description": "ボリューミーな具を乗せた和牛ハンバーガー、フライドポテト、ビールを提供する店。カジュアルな店内にはアート作品が飾られている。",
     "sourceList": "ハンバーガー",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -20436,6 +20839,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=10554976207730939141",
     "phone": "03-6280-8920",
     "price": "￥1,000～2,000",
+    "description": "シンプルモダンな店内にはカウンター席を完備。種類が多数あるハンバーガーの他、サンドイッチやステーキを提供。アルコールメニューあり。",
     "sourceList": "ハンバーガー",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -20475,6 +20879,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=18180505668753831989",
     "phone": "03-3511-3188",
     "price": "￥2,000～3,000",
+    "description": "アメリカをテーマにした内装のくつろげる店内で定番のハンバーガーやクラフトビールを味わえる。",
     "sourceList": "ハンバーガー",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -20517,6 +20922,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=12516153673837824426",
     "phone": "078-585-6139",
     "price": "￥1,000～2,000",
+    "description": "アメリカ風の内装のシンプルでコンパクトな店。具材たっぷりの特大ハンバーガーとビールを楽しめる。",
     "sourceList": "ハンバーガー",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -20583,6 +20989,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWlEK-98HWxZbVYA-M1K8MIpZ7zzRV39Y_DNZdTe1RTBi48sfWMQ8dhwdppvKDZLyMKlQz0x434jaYlMgL2X7Z0_4Ucxg-iyW_gx4QMuUZkJltAMDXauLyVl6qlTGflFaO0RoS9Rby9kRvI=w138-h92-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=9124340900254031616",
     "phone": "03-6435-3166",
+    "description": "個性的なハンバーガーと自家製のフライドポテト、サイドメニューを一皿に盛って提供する、活気あるレストラン。シェイクやサンデーもある。",
     "sourceList": "ハンバーガー",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -20623,6 +21030,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=2837186257246322340",
     "phone": "03-6303-9555",
     "price": "￥1,000～2,000",
+    "description": "ヴィンテージ調のインテリアを施した店内で、分厚いパテが特徴のさまざまなハンバーガーメニューを提供。タコライスなどのご飯物もある。",
     "sourceList": "ハンバーガー",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -20646,6 +21054,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=7898468510035251157",
     "phone": "03-3406-1215",
     "price": "￥2,000～3,000",
+    "description": "食べ応えのあるバーガーとフライドポテトのほか、コーヒーやビールも楽しめる。ガラス張りの店内は本場アメリカの雰囲気が漂う。",
     "sourceList": "ハンバーガー",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -20668,6 +21077,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=7140714210003109299",
     "phone": "03-3461-0530",
     "price": "￥1,000～2,000",
+    "description": "和牛を使用したアメリカン スタイルの巨大ハンバーガーを提供するこぢんまりとしたファストフード店。数席のイートイン スペースあり。",
     "sourceList": "ハンバーガー",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -20688,6 +21098,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=7457872370965940164",
     "phone": "03-6277-4221",
     "price": "￥1,000～2,000",
+    "description": "白が基調の店内はカジュアルな雰囲気。量が多く食べ応えのあるハンバーガーや、その他サイドメニューをクラフトビールなどと共に楽しめる。",
     "sourceList": "ハンバーガー",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -20778,6 +21189,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWl6n9YjFguYcDNN4c8Cu-WtWbsV6NqlABOu8Uo9BHsBY06flW372aqj4B5wwVcvGrO2M6mQR5obmlWpwfgZAB-LfHzfmwfyP0hr5FedYPdWYsCsQdLmFNjusTynrB5E7c8ZWksU1A=w92-h92-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=5150778625134606454",
     "phone": "03-3354-7749",
+    "description": "ピザ、オムレツ、ソーセージを提供する、ツタに覆われたビル内にあるレンガと木をアクセントにした店。",
     "sourceList": "バー",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -20822,6 +21234,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWmewv-jF5k9RW6qySYTtcX-r_3c6kX43VFckPxEcoe4K-pLl_GQ_XRMY857CVGwFclG5sqLeCFV3QT4-91oNQvJYlJkeZB5WBnE2W17FiueWw9qGyExWYZqGkaNH3TKWgTBqg8k_A=w164-h92-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=6692976887649038913",
     "phone": "045-641-7020",
+    "memberComment": "関内の街で1972年の創業以来、半世紀以上にわたり独自の美学を貫き続ける老舗バー「BAR NORGE」へ。\n一言で言うなら自然体で楽しめるオーセンティックバー。\n扉を開けると、そこは横浜の歴史とアメリカンカルチャーが美しく溶け合った、息をのむほどオーセンティックで格好いい空間が広がっています。\n店内に鎮座するジュークボックスからは、どこか哀愁を帯びた、それでいて心躍るオールディーズの音楽が流れ、ただそこに身を置いて音楽に耳を傾けているだけで、タイムスリップしたかのような最高に楽しい時間を過ごすことができます。\n丁寧に作られるカクテルやセレクトされたお酒を片手に、古き良き時代のグルーヴに身をゆだねる。これぞまさに、大人が夜を愉しむための隠れ家です。店内には150種類ほどのウイスキーもあるので、ウイスキー好きにもおすすめです。",
     "sourceList": "バー",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -20842,6 +21255,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=9641531223238074897",
     "phone": "045-319-6107",
     "price": "￥1,000～2,000",
+    "memberComment": "山下公園のすぐ近く、洗練された大人の隠れ家のような雰囲気を持つ「THE GENTLEMEN'S CLUB」へ。\n店内は非常に広々としており、ゆったりとした贅沢な配置の席で周囲を気にせず心地よい時間を過ごすことができます。空間の主役として美しく飾られたベントレーが圧倒的な存在感を放っており、洗練されたインテリアと相まって、眺めているだけでも知的好奇心を刺激される非常に面白い空間です。\nグラスワインのラインナップもまあまああります。\n気品がありながらも居心地が良く、1人で軽く飲むのもデートのディナー前の軽く一杯にもおすすめです。\n17時まではノーチャージです。",
     "sourceList": "バー",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -20863,6 +21277,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=9846973381459249362",
     "phone": "03-6824-4277",
     "price": "￥10,000 以上",
+    "memberComment": "ワインバーというだけあってラインナップがとにかく豊富で、希少な熟成ワインやオールドヴィンテージもグラスで気軽に愉しむことができました。\nマスターの手がける料理もワインとの相性が緻密に計算されており、お酒好きの方にはたまらない隠れ家的な一軒です。ゆったりと上質な時間を過ごしたい時におすすめです。",
     "sourceList": "バー",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -20885,6 +21300,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWlrzqFXcUBLGl1ahkioQEG6eLswQ-l-DJLN8e_umj1oGcfD-ViAPvdFEhaavXYP9NSXg1vrqr5u6kDuFednXL9t3ffhst89oBKM0DlHt99MoJ-kvNrAsVngDgeSDsb3gmMaX7kx=w122-h92-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=3267350557647175814",
     "phone": "03-3611-8634",
+    "memberComment": "ご飯も食べれるワインバーを求めて見つけたお店に行ってみました！\n出てくるお料理ワイン全てがセンス良くて美味しかったです✨\nワインはすべてお料理に合わせてもらいました！\nマスターの人柄も素敵で1人で行っても楽しめそう\nカウンターのみ。MAX8人。貸切可。\n会計6,000以上でワイン持ち込み可🍷\nIRO+でも企画してまた行きたいと思えるお店でした◎\n\n🍽️ おすすめメニュー:\n春野菜のサラダとノルウェーサーモンのミキュイ",
     "sourceList": "バー",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -20905,6 +21321,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=16689293024291405329",
     "phone": "06-6353-5005",
     "price": "￥2,000～3,000",
+    "description": "全長 39 フィート（12 m）のカウンターで、生ビールとタパスや各国料理を味わえる伝統的なパブ。",
     "sourceList": "バー",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -20947,6 +21364,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=12797048823465687461",
     "phone": "+60 3-2110 1219",
     "price": "RM 100～120",
+    "description": "夜になると屋上バーに変身するヘリポート。DJ ブースを配した広々とした空間で、素晴らしい景色を堪能できる。",
     "sourceList": "バー",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -20986,6 +21404,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=10520878535040454251",
     "phone": "070-2652-2497",
     "price": "￥10,000 以上",
+    "memberComment": "店内はカウンターのみで照明を落とした落ち着いた雰囲気でワインを楽しめます。\nチーズとのペアリングもオススメです🙆‍♂️\nブルゴーニュとシャンパンの取り扱いが他に類を見ないほど素晴らしくどれを飲んでも感動できるレベルの体験ができると思います",
     "sourceList": "バー",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -21005,6 +21424,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWl1R2PsRDORh9PtAp0FUk_IP-W6YZM6wWHNfFhsYVHqIFFUBYTch_j5odUzalvbkxYYjETZ5CEDaSSx4s99f5C8njbF-pNiflQRxXN4MZD_fxeVwic05cRSGax2nvKL8aa0UCyY=w137-h92-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=13329187310693084933",
     "phone": "045-225-8077",
+    "memberComment": "横浜元町のレトロな雰囲気が好きで月2くらいで通ってますが、通りがかりで見つけて初めて訪問🍷\n\nオーナーのマダムがわざわざタイに行って仕入れたスパイスを使って作るカレーが美味しすぎました！\n\n昼飲みもでき、また元町に行った時はリピート確定です。\n\n🍽️ おすすめメニュー：カレー、グラスワイン",
     "sourceList": "バー",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -21046,6 +21466,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=11246802997278419319",
     "phone": "03-6280-3571",
     "price": "￥2,000～3,000",
+    "memberComment": "・vivoセット(ワイン2杯+フード1品)\nワイン2杯とフード1品で1,540円という破格の料金設定。常時10種類程度ワインもあるのでワイン好きも楽しめます！\n料理はしっかりレストランクオリティのものが出てきて「本当にこの値段でいいの？」と目を疑います。\nノーチャージなので待ち合わせ前の1杯利用もできます。\n都内複数店舗あるので利用しやすく、1人でもカジュアルなデートでも使えます。",
     "sourceList": "バー",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -21066,6 +21487,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=3078712944255796680",
     "phone": "03-6277-5501",
     "price": "￥2,000～5,000",
+    "memberComment": "昨日IRO+のビール会で行きました！普段ビール飲まない私もここのビールは美味しく飲めました！泡がめちゃくちゃ細かくて種類も豊富！🍺\n\n🍽️ おすすめメニュー：みかんビール、抹茶ビール",
     "sourceList": "バー",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -21110,6 +21532,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=3779410844655052134",
     "phone": "+65 6508 2188",
     "price": "$100 以上",
+    "memberComment": "マリーナベイサンズの屋上にある絶景バー。宿泊者でなくても入れます",
     "sourceList": "バー",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -21131,6 +21554,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWm6dbLH6vtvKSEQI8wx3UUeeG1aawZ708JRsk4A7qPW0zVyszXdh9S2EPVbeKhYrxX-rk_eDbNIQyJP0Ckgedykw3jm24b01ts7eaNJm7zjje7LItX-aeYnKLgMKOrUwgFNyipUgk5P49D_=w80-h106-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=1910136169754153619",
     "phone": "+65 6396 4466",
+    "description": "1920 年代を思わせるアールデコ様式のラグジュアリーな空間で、ヨーロッパ料理、アフタヌーン ティー、カクテルを堪能できる。",
     "sourceList": "バー",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -21254,6 +21678,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=10329216321839463038",
     "phone": "+44 20 7430 2255",
     "price": "£20～30",
+    "description": "かつてイングランド銀行の高等裁判所支店だった建物にあるパブ。数多くの美術品を飾った天井の高い店内で、パイやビールを味わえる。",
     "sourceList": "バー",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -21276,6 +21701,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=4006691643298205498",
     "phone": "+44 20 7727 4242",
     "price": "£10～20",
+    "description": "花で飾られた本物のエールを味わえるパブ。チャーチルゆかりの品も多く飾られており、タイの麺料理とカレーを味わえる。",
     "sourceList": "バー",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -21318,6 +21744,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=2341432430989313199",
     "phone": "+1 808-931-8641",
     "price": "$20～70",
+    "description": "ロイヤル ハワイアンの浜辺のバーで、アンブレラ カクテル、前菜、音楽を楽しめる陽気で愛想の良い場所。",
     "sourceList": "バー",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -21343,6 +21770,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWl79IbCvq65dmW0yevPM4fEQxxxkuNzykmzqaIEspWY2bbq-akESbQV4La34cd7-CMrapalgl5pyv7VN1MjPMnsT69xAtCUjDnHyuO0G0s14zKsd6-0XeIvdOzBiZKUSwhf1IUr3A=w122-h92-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=11881004039529429627",
     "phone": "+1 808-923-9273",
+    "description": "ニューアメリカ料理のメニューやドラフトビールの銘柄が豊富に揃う、高級スポーツバー チェーン。",
     "sourceList": "バー",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -21363,6 +21791,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=13123904161907347326",
     "phone": "080-8911-3756",
     "price": "￥1,000～5,000",
+    "memberComment": "貸切イベントで募集されていた、餐事に行ってきました！タコスイベントをやっているとのことで連れて行ってもらったのですが、鰆のタコスがめちゃくちゃ美味しかったです🌮",
     "sourceList": "バー",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -21407,6 +21836,8 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=7721583704955322011",
     "phone": "03-3839-0011",
     "price": "￥3,000～8,000",
+    "description": "自社菜園で育てた野菜に目の前でチーズを溶かして削ぎ落としてかけてくれるラクレットチーズが名物。店内はテーブル席中心のモダンな雰囲気",
+    "memberComment": "奥まったところにお店がありますが、休日ランチ時間の店内は満席でした。お店に入った瞬間にチーズの香りに包まれます。\nチーズフォンデュは5つのチーズ(プレーン、ミモレット、バジル、トマト、ゴルゴンゾーラ)から選べて、ラクレットは追加料金次第で日本、スイス、フランス産などのチーズが選べます。サラダとデザートも付いて3000円とコスパも良いです🙆\n\nフォンデュもラクレットも1人用なので、それぞれ好みのチーズが選べるのも嬉しいポイント！チーズ好きには最高のお店です☺️\nスイスワインも美味しかったです🍷\n\n🍽️ おすすめメニュー：チーズフォンデュ、ラクレットチーズ",
     "sourceList": "バー",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -21426,6 +21857,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWlW7OqRVW3CuzjXjWHyYWBGZUwZ3M0DionhINzj8XmqRDaVbLyN-37xzkTFEfawpyym44aP4VU8mB-dbaPY2DaNEkTwfiBPEfkD8rufqFcmk1vVjBhMRLGstXYMMcVXecKqS3tH=w127-h92-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=3894683842128646258",
     "phone": "03-5422-3902",
+    "memberComment": "料理も出てくるゲイバーです。\nちゃんと料理も美味しく、盛り上がるの間違いなし！\n穴場なのでおすすめです！！",
     "sourceList": "バー",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -21475,6 +21907,8 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=12232182229576260143",
     "phone": "+49 89 290136100",
     "price": "€20～30",
+    "description": "16 世紀から続く 3 階建てのビアホール。バイエルン料理のレストランやショーもある、明るい雰囲気の店。",
+    "memberComment": "ミュンヘンに来たら是非訪れて欲しい世界最大のビアホール🍺\n席は空いてるとこに勝手に座るスタイルで運が良ければ生演奏も目の前で聴けちゃいます🎻\n日本にもホフブロイハウスのビールを有楽町や丸の内でも楽しめます🍻\n🍽️おすすめメニュー：Hofbräu Original 1L(1Lビール)、Original HB sausage platter (自家製ソーセージの2種盛り合わせ)",
     "sourceList": "バー",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -21558,6 +21992,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=4259981557227224873",
     "phone": "03-6278-8122",
     "price": "￥72,554",
+    "description": "24 時間営業のジム、レストラン、街の景色を望む屋上バーを備えたトレンディなホテル。\n賑やかな銀座地区にある洗練されたタワーにあるトレンディなホテル。地下鉄駅から徒歩 2 分、江戸東京博物館から 5 km、東京ディズニーランドから 14km の場所にあります。\nレインシャワー付きのコンパクトで現代的な客室には、Wi-Fi、HDTV、ミニ冷蔵庫、お茶セットが備わっています。グレードの高い客室とスイートには、鮮やかなアートワーク、リビングエリア、床から天井までの窓があり、街の景色を望める客室もあります。\nインダストリアル スタイルのレストラン、ビリヤード台や定期的な生演奏を楽しめるおしゃれなバーがあります。屋上バーからは街の景色を眺めることができます。24 時間営業のジムがあります。朝食を提供。",
     "sourceList": "バー",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -21579,6 +22014,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=7335194483040714283",
     "phone": "03-3408-1215",
     "price": "￥10,000 以上",
+    "description": "個室やソファー席があるスタイリッシュな店内で、ケンゾーエステイト生産のワインと、和牛や海鮮などを使う欧風料理を味わえる。",
     "sourceList": "バー",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -21622,6 +22058,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWn86c6V5vWrkoqUrMZkioGdkp9KOyMv603tkQtKfsuTqmJHRoy2L_grdYblMtz1AkT_Ty-f92jY8_YgPWyMY1qr8A92r1-lnkkkRW6rnozaQHdZzvsCN45mN7Yt2jTmzjzoaZk=w138-h92-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=2258705209767116932",
     "phone": "03-3444-9333",
+    "description": "温かみのある大人の隠れ家のような空間で、炭火料理や店内のいろりを使って作る干物などを落ち着いて頂け、シガーも吸えるシックなバー。",
     "sourceList": "バー",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -21786,6 +22223,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=17634182040159804106",
     "phone": "011-231-7778",
     "price": "￥2,000～6,000",
+    "memberComment": "締めパフェにおすすめ",
     "sourceList": "バー",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -21868,6 +22306,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=11877669616798502613",
     "phone": "03-6277-2785",
     "price": "￥2,000～3,000",
+    "memberComment": "カウンターのみ、小鉢サイズのフードが沢山あります！",
     "sourceList": "バー",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -21958,6 +22397,8 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=9240404651658054952",
     "phone": "03-6300-0807",
     "price": "￥1,000～6,000",
+    "description": "樽生と瓶ビール、合わせて数百種類のビールを直輸入している。店内にはベルギーで買い付けたアンティーク品などが置かれている。",
+    "memberComment": "駅近で比較的空いてるので、使い勝手良さげです",
     "sourceList": "バー",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -21979,6 +22420,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=11422178954074138722",
     "phone": "03-6416-4960",
     "price": "￥2,000～6,000",
+    "description": "テラス席があるブルワリー併設のレストラン。ウッディな内装の広々とした空間で6種類のクラフトビールと旬な素材を使った料理を味わえる。",
     "sourceList": "バー",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -22143,6 +22585,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=15949527909098027062",
     "phone": "03-3354-6639",
     "price": "￥2,000～6,000",
+    "description": "カウンター席を主体にした店内は高級感溢れ、落ち着いた雰囲気。自然派ワインがメインで、ワインと相性抜群の小皿料理が自慢。",
     "sourceList": "バー",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -22202,6 +22645,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=10847928356138319605",
     "phone": "06-6344-5945",
     "price": "￥2,000～3,000",
+    "description": "バーカウンター付近のスタンディングエリアの他、テーブル席を複数完備。ドリンクとともに、ローストビーフなどのつまみも提供する。",
     "sourceList": "バー",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -22242,6 +22686,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=15222340373976740322",
     "phone": "03-3569-7676",
     "price": "￥10,000 以上",
+    "description": "汐留シティセンターの最上階にある、眺望の良いスタイリッシュで上質な雰囲気のバー。金曜、土曜、祝前日は深夜4時まで営業。",
     "sourceList": "バー",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -22269,6 +22714,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWlBLk28yoKMrfSqQw70X7Y-uRjuDHkNcs1lN3PqRJFTIxzhsNPiSsXnkaf8O320tQxn-H136vGgmVC8DZn_Yaw9lumhp6XK1ey-l6ZFqylhpspW4-7wO1JDqS8OOToP7kAWWzy8SA=w138-h92-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=13225828259270912349",
     "phone": "050-5385-3384",
+    "description": "ゴージャスな内装のラウンジバー。バーフードや世界中のウイスキーを楽しめる。",
     "sourceList": "バー",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -22376,6 +22822,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=6163105463114275627",
     "phone": "03-6434-9250",
     "price": "￥4,000～5,000",
+    "description": "地下にある隠れ家的バー。石積みの壁に囲まれた店内はカウンター席とテーブル席があり落ち着ける雰囲気。",
     "sourceList": "バー",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -22458,6 +22905,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWmXSEw8K70WoW-Z1-Ptsok6WzYdu6t97l6fAbGF2TeOy6BTTICVAioCcS9R2UIlU8QLZqb4d8xyzSyjpACaEbMdNBwSpUC61eXJYrhAlEYbBYcEsKg7sU90HrUIqXGygyATgGY0=w138-h92-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=10759929183902538786",
     "phone": "03-3476-3398",
+    "description": "ピアノ演奏も行われる都会的な雰囲気の店内に、窓際カウンター席やソファー席などを完備。ドリンクと共に、肉料理などのつまみを提供する。",
     "sourceList": "バー",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -22701,6 +23149,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=6891530241641226132",
     "phone": "03-6804-1204",
     "price": "￥5,000～8,000",
+    "description": "カウンター席とソファー席が用意された店内では、豊富な種類のカクテルやワインと一緒に、手作りの本格料理も楽しめる。",
     "sourceList": "バー",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -22743,6 +23192,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=6917793626511058506",
     "phone": "03-5466-7331",
     "price": "￥3,000～8,000",
+    "description": "本が置かれたアンティーク調のスタイリッシュな店内で、各種のビールやウイスキーを提供している。名物のカレーや自家製ピクルスもある。",
     "sourceList": "バー",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -22773,6 +23223,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWl50Ywxa2OwmZ3lJ43IwBvyI1HNtUOQDNZnrdA60zpA1QieiaeurVPmisha8ezFWzeo25naK--oIkg2s6S_Kbaq-oBoLqTMFS412UI3zIgIXC6i8R3Qu7VtZr_xPz4NZ4iizID9FFTvXa7b=w80-h106-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=18283139109404888216",
     "phone": "03-3498-0002",
+    "description": "ビルの 5 階に位置し、街を一望できるテラス席があるおしゃれなレストラン。カクテルや創作料理を提供。",
     "sourceList": "バー",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -22914,6 +23365,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=15668209039079304376",
     "phone": "03-6459-1129",
     "price": "￥2,000～6,000",
+    "description": "減圧蒸留器を使ったオリジナルスピリッツ、数十種類のスパイス、スモークガン、液体窒素などを使用したカクテルが堪能できる。",
     "sourceList": "バー",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -23076,6 +23528,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=13415127323460968186",
     "phone": "075-354-1000",
     "price": "￥27,096",
+    "description": "シンプルな客室を備えた現代的なホテル。2 軒のレストラン、ティーバー、庭園がある。\n市街を一望できる京都タワーから徒歩 3 分の現代的なホテル。京都駅から徒歩 4 分、円山公園から 4 km。\nシンプルな客室に、薄型テレビ、レインシャワー、ミニバーを完備。スイートにはリビング スペースあり。一部スイートは、和室や簡易キッチンを備えている。一部の客室はテラス付き。\nレストラン 2 軒を併設。うち 1 軒はイタリアン。庭園とモダンなティーバーがある。",
     "sourceList": "バー",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -23267,6 +23720,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=7233819719888191632",
     "phone": "03-6382-6736",
     "price": "￥5,000～10,000",
+    "memberComment": "中野のレンガ坂にある素敵なオシャレビストロです！\n店員さんのワインの説明も、ご飯の説明も丁寧で、ご飯に合うペアリングが美味しすぎました🍷\n特にデザートのカツサンドがメチャクチャ美味しかったです🥪\nご一緒した方々もとても素敵で最高でした！(ご一緒いただいた方々ありがとうございました)\n\n🍽️オススメメニュー:「デザート」のカツサンド",
     "sourceList": "フレンチ",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -23442,6 +23896,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=18411119704369777201",
     "phone": "03-5843-3906",
     "price": "￥4,000～7,000",
+    "memberComment": "ほのさんからおすすめいただいたお店で女子会してきました👧\n綺麗で美味しい料理が続くので友達から｢ここってもしかしてすごく高い！？｣と心配の声が上がりましたがコースで4,280円というコスパの良さ✌🏻\n\n🍽️オススメメニュー:牛と鴨のパイ包み焼き",
     "sourceList": "フレンチ",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -23462,6 +23917,8 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=2928920933231583813",
     "phone": "045-681-2926",
     "price": "￥10,000 以上",
+    "description": "地元の新鮮で、厳選された野菜を使ったフランス料理を提供している老舗のレストラン。昔懐かしい店内にはテーブル席、座敷席があり。",
+    "memberComment": "元町中華街にある肩肘張らずに食べれるフレンチです！\nどの料理も丁寧で、複雑すぎず綺麗で上品でとても美味しかったです✨\n元町を代表するお店とのことですが、料理の内容やサービスを考えるとコスパが良い気がします！",
     "sourceList": "フレンチ",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -23482,6 +23939,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=2188471863598549611",
     "phone": "03-6381-8899",
     "price": "￥10,000 以上",
+    "memberComment": "キャンセル枠狙い目です！(すぐ埋まるので今横に一緒にいる人としか予約できませんww)\n\nキャンセル枠を拾って、念願の渡辺料理店へ行ってきました✊🏻\n最初から最後までずっと感動の連続でした🥹\nまた電話頑張ります📞\n\n🍽️ おすすめメニュー:\n・ウニ カニ グリーンアスパラムース \n　コンソメジュレ\n・オマール海老 ビスクリゾット\n\n念願の渡辺料理\"みせ\"に行ってきました🎶\nしっかり1年半後の予約もしましたが、引き続きキャンセル拾いと電話予約も頑張りたいと思います📞\nお料理も美味しくて終始感動でしたT^T🫶\n\n🍽️ おすすめメニュー: \n・ウニ カニ グリーンアスパラムース \n　コンソメジュレ\n・オマール海老 ビスクリゾット\n・盛り合わせ",
     "sourceList": "フレンチ",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -23502,6 +23960,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWlzrPkLrGGDWe9-6aDqHwkBI7QzTqetkI1LAmZYL-MdF5fFPHR-ASjcbkpzBjnCQLNN--oSaTyyTrTCxiROwtnIoBUiJw2xy7NKVuIHdFTBxwK658fB0G2LR9pov0gRcZhC90q5VuCaJm4=w137-h92-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=8969359961797985885",
     "phone": "03-6804-3842",
+    "memberComment": "IRO＋の皆さんと行ってきました！\nお店の雰囲気がとてもよく、女子会をやってるお客様が多かったです✨\n\n看板メニューのフォアグラのクリスピーサンドはくどくなく、キャラメルと合わさって甘塩っぱくて美味しかったです🫶🏻💕\n料理は全体的に濃いめでお酒もおしゃれなものが多かったのでお酒好きの方にもオススメかなと思いました🍷\n\n🍽️:フォアグラのクリスピーサンド\n       ズワイガニを使ったフレンチトースト",
     "sourceList": "フレンチ",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -23549,6 +24008,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=8636218248904355721",
     "phone": "03-6416-9434",
     "price": "￥10,000 以上",
+    "memberComment": "大好きなひらまつグループの新店舗🍽️ここは初のカウンター＆アラカルトのあるお店なので、カジュアルに使えて便利です🍷\nお店の雰囲気が個人的に好きすぎて…🩷\n和食とフレンチとイタリアンの融合的な料理が多く、個性的なので好みは分かれるかなぁと思います🥺\nコースが食べきれない人間なので、アラカルトで頼めるのほんとうれしい✨\n20:30からバータイムになるのですが、お酒だけでも楽しめるので1人でも行けるのが珍しくてよきです🫶🏻\n\n🍽️ おすすめメニュー：仔羊ロース",
     "sourceList": "フレンチ",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -23572,6 +24032,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=12302667408629531475",
     "phone": "050-1724-4330",
     "price": "￥10,000 以上",
+    "memberComment": "本格フレンチなのにありがたい価格帯で、女子にはちょうど良い量を楽しめます💞\n\n特に魚料理のメバルが私はお気に入りで、パセリの爽やかなソースで春を感じられました〜🌿\n\n堅すぎない雰囲気のお店で居心地もよかったです！\n記念日？で利用されている方や、ワインの種類も豊富なのでお昼から楽しんでる方もいました〜🍷\n\n🍽️ おすすめメニュー：Menu Chef（ランチコース）",
     "sourceList": "フレンチ",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -23592,6 +24053,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=8421254375940753015",
     "phone": "03-6659-5357",
     "price": "￥4,000～7,000",
+    "memberComment": "どの料理も本当に美味しくて、しかも提供のスピードが絶妙でこちらの食べるペースを見ながら出してくれている感じがしてよかったです🙂‍↕️\n\nお店の雰囲気も落ち着いてて居心地よくて、ゆっくり過ごせました🕯️\n\n1人で来てる人もいて、軽く一杯だけでも入りやすそうだったので、1人飲みにも良さそうです🍺\n\n🍽️ おすすめメニュー：いちごと生ハムのクロスティーニ",
     "sourceList": "フレンチ",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -23612,6 +24074,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=10447288038496898897",
     "phone": "03-3270-8188",
     "price": "￥10,000 以上",
+    "description": "クッション付きのソファ席を備えた店内で、創作フレンチのコースプランが味わえる。ビンテージワインの他、多種類のワインを提供。",
     "sourceList": "フレンチ",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -23652,6 +24115,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=16798001033440125737",
     "phone": "03-6416-4059",
     "price": "￥6,000～10,000",
+    "memberComment": "落ち着いた隠れ家的な雰囲気で居心地の良い、お箸でいただくフレンチ💐お通しのカリフラワーとメヒカリのフリット&ひじきのゼッポリーニから美味しすぎました🤤！「鶏レバーとチョコレートのムース」や「鴨のロースト 黒ごまきな粉風味」など、食材の掛け合わせが面白いメニューもあって魅力的です🦆✨今回は食べれなかったのですが海苔クリームのパスタもみんなが頼む人気メニュー！\n\n🍽️ おすすめメニュー：海苔クリームパスタ(食べてない…)、メインのお肉(今回食べたのはバヴェットステーキ)",
     "sourceList": "フレンチ",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -23701,6 +24165,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=12170754984383528228",
     "phone": "050-5385-3481",
     "price": "￥1,000～6,000",
+    "memberComment": "26卒歓迎プチ女子会で5人利用しました！私が春野菜食べたくて選びましたが、皆さんにも喜んでもらえて良かった〜^^\n2週間しかメニューに出ない新玉ねぎのホイル焼きや、朝採れの(?!)筍ソテー等、今回も大満足でした💯\n\n金曜みんな行ってましたが今日行ってきました(笑)\n写真撮るの難しい！チームの後輩といろんな話をしながら野菜でお腹いっぱいになって幸せすぎた…\n旬の野菜が変わるので定期的に通いたい！！\nそして本業アイドル？と言いたくなるイケメン店員さんから色々野菜の知識を教えてもらえたのも面白かった…\n今日は品評会で1位になったらしいカブが美味しかった〜",
     "sourceList": "フレンチ",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -23721,6 +24186,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=4884215636330379871",
     "phone": "03-6383-1803",
     "price": "￥4,000～10,000",
+    "memberComment": "組み合わせに驚かされる料理ばかり！独創的で、芸術的な料理の組み合わせに感動✦.°(結局食べたかったテリーヌは時期終わってた、、来年絶対リベンジする)\n好き嫌い分かれるお店だと思うけど私は好き🫶🏻次はディナーに行ってみたい❕\n\n▶︎▶︎今度食べたい料理\n🍓鯖と苺とパセリのテリーヌ\n🍄‍🟫紫芋のモンブラン(合鴨,しいたけ,ドライプルーン,ゴルゴンゾーラ)\n\n\n🍽️ おすすめメニュー：\nランチコース¥3,300＋ドリンク",
     "sourceList": "フレンチ",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -23745,6 +24211,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=9638995807293876017",
     "phone": "03-6812-0798",
     "price": "￥4,000～9,000",
+    "memberComment": "店主がフランスで1か月遊んだ後、昨日リニューアルオープンと聞いて再訪\nワインは好みや料理に合わせていくつか持ってきてたくさん説明してくれます。\n何様だよという感じですが、店主はやや癖者(好き)でどことなくオタクみがあってか、抜群のセンスが感じられます\n\n🍽️ おすすめメニュー：セート風やりいかの煮込み",
     "sourceList": "フレンチ",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -23768,6 +24235,8 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=2928507772844958170",
     "phone": "03-6435-8018",
     "price": "￥10,000 以上",
+    "description": "オープン キッチンを囲むカウンター席のある店内でフレンチ料理と相性の良い飲み物を楽しめる評判の良いレストラン。",
+    "memberComment": "世界のTopレストラン50にも入ったことがあり、アジアTopレストラン常連、ミシュラン二つ星の名店です😍\nかなり期待値高い状態で伺ったのですが全てのお料理最高でした！\n食材は日本のものを中心に、フレンチに仕立ててあるものが多かったです。\n\n🍽️ おすすめメニュー：\nメインのホロホロ鳥\n(お料理ではないですがノンアルペアリングおすすめです)",
     "sourceList": "フレンチ",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -23788,6 +24257,8 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=1912656821110691453",
     "phone": "03-6228-3138",
     "price": "￥10,000 以上",
+    "description": "上品な雰囲気の店内では、一流レストランで修業を積んだシェフがふるまう上質な料理が堪能できる。ワインの取り揃えも豊富。",
+    "memberComment": "IRO+8名で訪問。サービスで前菜を1種増やしてくださるなど、ボリューム満点の美味しい料理を楽しませていただきました。気さくな店員さんばかりで雰囲気も良かったです。賑やかめなので大人数で行っても気兼ねなくワイワイできます。\n\nコース6000円+ワイン5本+デザートで1人12000円でした。ワインは自社輸入が中心で美味しいものが多かった気がします！\n\n🍽️ おすすめメニュー：\n・錦爽鶏のむね肉の黒胡椒マリネ　ラビゴットソース\n・焼きたてパプリカのキッシュ\n・骨付き仔羊のロースト　マスタードソース添え",
     "sourceList": "フレンチ",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -23807,6 +24278,8 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWlMrd-DnfiOfYwJXp5Jpoms2M_Lmlz7qNl4RaIKCyMObOA2YkThSy7oxqLxO7LQD6WSqOTEVyQ6apQTJNLIJ_pQlcexX7GPEumLWgx244TbNiPTPJS-BpPVoVaK0x322RSID0XcvFES1EY0=w80-h106-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=3548734189019625930",
     "phone": "03-6412-8212",
+    "description": "旬の食材を使った洗練されたフランス料理を味わえるレストラン。モダンでおしゃれな内装の店内は落ち着いた雰囲気。",
+    "memberComment": "スペシャリテのカクテルが美味しかったです❤️ 海鮮の旨みが口いっぱいに広がります😭！\n\nメインは4,5種類から選べてイベリコ豚にしました！\nデザートも選べて苺のミルフィーユにしましたが、立派すぎて感動しました🥺　\nかなりお腹いっぱいになるので、お腹を空かせて行くことをおすすめします⚠️\n\n🍽️ おすすめメニュー：北海道産ズワイ蟹と帆立ウニのカクテル",
     "sourceList": "フレンチ",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -23827,6 +24300,8 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=12111461835774294931",
     "phone": "03-3874-1552",
     "price": "￥10,000 以上",
+    "description": "日本の食材を使用したフランス料理を、着物を着たスタッフが給仕する高級レストラン。",
+    "memberComment": "和洋折衷で唯一無二の浅草フレンチのお店です。ずっと行きたかったお店に訪問しました。見た目が美しいだけではなく、味も間違いないです！\n※写真はコースの一部抜粋です\n特にスナックスは一口サイズで、菜の花×鯵×苺や、ブロッコリー×うになど\n新しい食材の組み合わせを楽しむことができ、ひとくち一口が楽しい瞬間の連続でした！\nワインペアリングもおすすめです🍷\nデザート3品に加えてプティフールもたくさん楽しめます。浅草の人形焼モチーフの焼きたてのフィナンシェも絶品です😋",
     "sourceList": "フレンチ",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -23847,6 +24322,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=10710273349738209698",
     "phone": "03-5843-0140",
     "price": "￥10,000 以上",
+    "memberComment": "言わずと知れたイノベーティブフレンチ！\n今まで食べたポークの中でも指折りの旨みを感じたメイン！\nシグネチャーメニューのアミューズも可愛くて美味しかったです。\nスペシャリテの鰻も絶品でした。菊芋のとろっとしたソースと絡んで表現できない味の奥行きが！\n\n見た目やコンセプトだけでなく、味もおすすめできます。\n\n🍽️ おすすめメニュー：\n(メイン)アグー豚 根セロリ",
     "sourceList": "フレンチ",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -23867,6 +24343,8 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=2969739605533267239",
     "phone": "03-6804-3182",
     "price": "￥10,000 以上",
+    "description": "グループ向けの丸テーブルもある店内は、こじんまりとした雰囲気。旬の食材を使った料理をランチとディナー共にコースで用意する。",
+    "memberComment": "料理やお酒を丁寧に解説してくれます。ペアリングをつけるのがおすすめです。\n\n🍽️ おすすめメニュー：マスをほうれん草スープで絡めた料理",
     "sourceList": "フレンチ",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -23889,6 +24367,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWkXjOt9DDgA1xpxrtsKFYHWQ9Lbum25TqXsuBxn74znVx4qiK4va33OtYsvRAqVwODNmuI4eR_0N_qZzXPJZ8yfl-WLE-lneXq33RNAuG9gNUdkDYQOfB0e5zMFrYZN7O-vmILF1b1gv7h8=w138-h92-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=5566268185363196824",
     "phone": "03-6417-4445",
+    "memberComment": "グルメ垢やってる友達にフレンチ連れて行ってもらいました\n\n🍽️ おすすめメニュー：ホタルイカの何か",
     "sourceList": "フレンチ",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -23911,6 +24390,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=3373281231849772768",
     "phone": "03-6264-5190",
     "price": "￥10,000 以上",
+    "memberComment": "新進気鋭・吉田能シェフ監修のグリルビストロ！\n\n名物の炭火焼き肉は、火入れがとにかく絶妙で素材の旨みがしっかり引き出されていて感動…！🍖\n\n中でも感動したのが、自家製フォカッチャ×リコッタホイップ×はちみつの組み合わせ🍞🧀🍯\nホイップをたっぷり塗って、溢れるほどはちみつをかけていただく“背徳パン”が最高すぎました🤤\n\nお料理はもちろん、店内の雰囲気やサービスまで抜かりなくて満足度高め🌟\n\n今回はアラカルトでしたが、コスパの良いコースも気になるのでまた再訪したいです◎\n\n🍽️ おすすめ：自家製パンの盛り合わせ",
     "sourceList": "フレンチ",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -23934,6 +24414,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=2262274159511444265",
     "phone": "03-6661-7253",
     "price": "￥2,000～8,000",
+    "memberComment": "・ウニのチーズケーキ\n・パテアンクルート\n・シュトーレン\n4人でワインを3本空けて、爆食して1人12000円程度だったので、コスパは良いお店だと思います！\n\nメニューは頻繁に変わってる様なので季節ごとに来店しても楽しめると思います\n\nウニのチーズケーキは美味しすぎて2回も頼みました笑\nデザートも美味しいのでオススメです！",
     "sourceList": "フレンチ",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -23956,6 +24437,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=17934852427747976629",
     "phone": "03-5797-7873",
     "price": "￥1,000～6,000",
+    "memberComment": "・マチュピチュコース\n説明を受けないと何もわからない名前の料理ばかりでしたが、スタッフの方にとても丁寧に説明していただき、料理はどれも美味しかったです！飲み放題にあったペルーのカクテル（名前忘れました）も美味しかったのでおすすめです！",
     "sourceList": "フレンチ",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -23976,6 +24458,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWmMTR-1-E01Taph5ByErN2SbAsPaEkpxYueqk0Za1RCY-Yp7C8UqIROk3ASz4bTtsUCW9B-TDijpdrgB7XJq1NQsLeNGLKBRlCB69SEy9xU-EzE8DcLUPiTSqDiRN1BOvBtLcOq=w122-h92-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=16046097041525757880",
     "price": "￥10,000 以上",
+    "memberComment": "・シャルキュトリー盛り合わせ\n念願のEN FACEに！一皿一皿のボリュームもすごくて2皿分しか食べられず持ち帰り🥡本当にどの料理頼んでも正解で、また行きたい…",
     "sourceList": "フレンチ",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -23995,6 +24478,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWmMkl7VEdH4vl0BQM4qNrtYoX7e8zseTJHto34lRh5o1bgBo1O6ipe9NfSg4z5keWt-zeXe3h7rt82jjfbkPGKTZnLHoR9O8lcMR1oDx2IJ6s7kCTs_7vxp5YyLOpQVzJqrQYSxgBD8oFg=w80-h106-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=7878173652719703648",
     "price": "￥10,000 以上",
+    "memberComment": "ガーデンプレイスでお馴染みのジョエルロブション氏の愛弟子である須賀洋介シェフ監修のレストランです。\nパルマハム職人の多田さんのペルシュウは日本一美味しい生ハムだと思っています。白米に巻いて食べるのが最高に美味しいです。\nヴィトンコラボでトランクに入って食材が出てきたりするので、演出も楽しめます！\n東京の店舗も予約取ったので、興味ある方いたら声かけてください。\n\n🍽️ おすすめメニュー：多田さんのペルシュウ(コース料理です)",
     "sourceList": "フレンチ",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -24019,6 +24503,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=17352242910745033759",
     "phone": "080-3310-4058",
     "price": "￥10,000 以上",
+    "description": "オープン キッチンのおしゃれな空間で、フォアグラ サンドなど、フレンチ風のコース料理を提供。",
     "sourceList": "フレンチ",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -24040,6 +24525,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=9813357090992471362",
     "phone": "080-7018-8450",
     "price": "￥10,000 以上",
+    "memberComment": "🍽️ おすすめメニュー：銀の鴨のロースト\n僕が尊敬しているシェフのお店です！\nメニュー数が多くて選ぶ時間も楽しみの1つです！\n料理は全て美味しいし、ワインはナチュラルワイン中心でシュレールやクルトワ等レア目なワインがグラスで飲めるのもナチュラルワイン好きにはたまりません🥹",
     "sourceList": "フレンチ",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -24060,6 +24546,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=4536653703450684700",
     "phone": "03-6686-4773",
     "price": "￥10,000 以上",
+    "description": "季節のおすすめ料理や定番メニューを提供する、本場パリの雰囲気に溢れたフレンチビストロ。フランス産が中心の豊富なチーズセレクション。",
     "sourceList": "フレンチ",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -24078,6 +24565,7 @@ export const GOURMET_MAP_SEED = [
     "reviewCount": 31,
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWn1MX_Os7VTCSFD2f5W_TAz5tSC0xPX13X54aumagPHcN9lzSaIMwUDewRx1I6Myeo7bEhIN47s02WRu147cwXcld4iuwepwW8sC2x1EwWO361PbnoZPev3bDLYZllK0IU-tuMU-Q=w80-h100-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=13136095028963246591",
+    "memberComment": "あやかさんオススメ",
     "sourceList": "フレンチ",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -24099,6 +24587,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=13649819603617147295",
     "phone": "03-5537-5580",
     "price": "￥10,000 以上",
+    "description": "エレガントで洗練されたフレンチ レストラン。コース料理が複数あるほか、豊富なワインも用意されている。",
     "sourceList": "フレンチ",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -24140,6 +24629,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=10825388610642624836",
     "phone": "075-211-5220",
     "price": "￥1,000～6,000",
+    "description": "クラシックなフランス料理とワインを提供する魅力的な老舗のビストロ。ランチメニューにはステーキもある。",
     "sourceList": "フレンチ",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -24162,6 +24652,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=1445457878694760621",
     "phone": "075-253-0530",
     "price": "￥2,000～6,000",
+    "description": "くつろいだ雰囲気の近代的なビストロ。京都周辺の農家から取り寄せた肉と野菜で作るフランス料理を味わえる。",
     "sourceList": "フレンチ",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -24206,6 +24697,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=3686777605679780313",
     "phone": "03-5422-9449",
     "price": "￥1,000～2,000",
+    "description": "くつろげるビーチ カフェスタイルの店。ソファやテラス席があり、コーヒー、ブランチ、軽いランチなどが楽しめる。",
     "sourceList": "フレンチ",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -24247,6 +24739,8 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=9040377537589765109",
     "phone": "03-6417-3676",
     "price": "￥1,000～2,000",
+    "description": "くつろいだ雰囲気のレストラン。木のぬくもりを感じる居心地の良い空間で伝統的なフランス料理を味わえる。",
+    "memberComment": "土曜日限定のモーニングも最高です！\n店員さん(ママ？笑)が気さくで心地良かった！",
     "sourceList": "フレンチ",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -24356,6 +24850,8 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWlyLINjlZCwWfCwRq2SnNnltUHWewWEzWcu1X9IWwMSdcALcWxGp7-iWWmwuRcCdw0Y9P0hXfzBWWFOGRqIpMp7pv8WytWWjb7ulWwK0v_ihn8sf3_txMiwtDjTEf_m8G3aJsQXcQ=w80-h119-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=14835435286117343960",
     "phone": "03-5738-8068",
+    "description": "居心地の良い個性的なビストロ。しつらえの異なる 3 フロアの店内で、フレンチの高級メイン料理、シャルキュトリ、ワインを提供。",
+    "memberComment": "内装もかわいくて女子会におすすめ",
     "sourceList": "フレンチ",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -24377,6 +24873,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWlFF8YG2z983hrW_O3FHHRG9Mnw-PvRgfvkx2u1gd8QZC3-Q50MKQENi0iNIgXl6ZZYzYcLxfKa9XkkD7UMC2mTLiaYdq_MdhPCMvwCpGFM9IWmmT5-sW7reZPISObVgenmKcjLJzaw5D5o=w80-h106-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=16173558666126909408",
     "price": "￥3,000～7,000",
+    "memberComment": "onzoro系列のカジュアルフレンチ🍷パンもおいしい",
     "sourceList": "フレンチ",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -24401,6 +24898,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=16302750698959719019",
     "phone": "03-5708-5870",
     "price": "￥5,000～9,000",
+    "memberComment": "日本ワインビストロ🍷カウンターがあるのでおひとりさまでも！",
     "sourceList": "フレンチ",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -24443,6 +24941,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=17403256735260194012",
     "phone": "050-3066-9685",
     "price": "￥1,000～2,000",
+    "description": "パスタ、サラダ、フランスのブラッスリー風料理、カクテルが楽しめるおしゃれな店。ランチのセットメニューもある。",
     "sourceList": "フレンチ",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -24466,6 +24965,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=11802905521914913079",
     "phone": "03-3583-1831",
     "price": "￥1,000～2,000",
+    "description": "フランスの田舎町にある家庭をイメージした店内はアットホームな雰囲気。厳選仕入れのワインは、料理に合うもので、気軽さが自慢。",
     "sourceList": "フレンチ",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -24705,6 +25205,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=16905984188802988237",
     "phone": "075-746-7777",
     "price": "￥4,000～10,000",
+    "description": "むき出しの木の梁とタイル張りの床が特徴の上品なビストロ。独創的なフランス料理を提供する。",
     "sourceList": "フレンチ",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -24767,6 +25268,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=5009861202052070495",
     "phone": "03-6263-8432",
     "price": "￥3,000～9,000",
+    "description": "テラス席のあるインダストリアル シックなレストラン。フレンチと和食が融合した洗練された料理を提供する。",
     "sourceList": "フレンチ",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -24836,6 +25338,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=15214089653039804825",
     "phone": "050-3172-4218",
     "price": "￥10,000 以上",
+    "description": "素材を大切にしたシンプルな味わいを最大限に引き出す料理をワインなどとともに満喫できる。木目調の店内は、窓が大きく開放的な空間。",
     "sourceList": "フレンチ",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -24856,6 +25359,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=13009961617851180049",
     "phone": "03-6451-0570",
     "price": "￥10,000 以上",
+    "description": "モダンでカジュアルな雰囲気の店内で、牛と豚に加えて、鳩や鹿の肉などを調理するジビエ料理を提供。メニューは入荷状況により異なる。",
     "sourceList": "フレンチ",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -24962,6 +25466,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=4947431998150116706",
     "phone": "03-6254-5105",
     "price": "￥10,000 以上",
+    "description": "屋外テーブルのあるパリ風ビストロ。ヨーロッパの郷土色を感じる料理を楽しめる。週末はブランチも提供。",
     "sourceList": "フレンチ",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -25005,6 +25510,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=6724653530243673672",
     "phone": "03-3392-8941",
     "price": "￥10,000 以上",
+    "description": "茨城県産の奥久慈軍鶏を使う地鶏焼きや一品料理をコースと単品で提供。店内には大きなカウンター席の他、テーブル席を用意している。",
     "sourceList": "フレンチ",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -25068,6 +25574,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=15605256470079840928",
     "phone": "03-6407-0011",
     "price": "￥2,000～3,000",
+    "description": "インダストリアル シックなフレンチカフェ。日中は朝食、ペストリー、コーヒーを提供。夜はロマンチックなディナーを楽しめる。",
     "sourceList": "フレンチ",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -25153,6 +25660,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=6323389932248187901",
     "phone": "03-6809-0965",
     "price": "￥10,000 以上",
+    "description": "魚介が得意なフランス料理店。こぢんまりとした店はオープン キッチンで、カウンター席を備える。",
     "sourceList": "フレンチ",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -25195,6 +25703,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=12693565133240242366",
     "phone": "03-6277-0090",
     "price": "￥10,000 以上",
+    "description": "フォーマルなフレンチ レストラン。季節の食材を使用したモダンなフランス料理と、豊富な種類のワインを提供。",
     "sourceList": "フレンチ",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -25302,6 +25811,8 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=15281275684479927931",
     "phone": "03-6262-3959",
     "price": "￥10,000 以上",
+    "description": "地階にあるエレガントなレストラン。和の食材を使った創作フレンチとビンテージ ワインが味わえる。",
+    "memberComment": "記念日などお祝いにおすすめ",
     "sourceList": "フレンチ",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -25363,6 +25874,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWlDbXMmRdUXLSoVNxk1uIg0rhWpyfBN7r-qDGXdLivPEpMnJbg_anMykM1z2xcDpKegr38el7GAImVrM9Q7a9zsUvT8zwkY9BSMJjikRIOMQmS4ulQsc8D8-2mXeV2qwpQ8lC8x=w132-h92-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=6790933841170975895",
     "phone": "078-271-2979",
+    "description": "上品で落ち着いた雰囲気の店。イタリア料理、フランス料理などの西欧料理を堪能できる。ガーデンのテラス席あり。",
     "sourceList": "フレンチ",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -25432,6 +25944,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWnWf_-m_eQqG-5S6-4MPVg75mbOP8VhtduFSha-3bQb1Wri-Mkd1LD8BbbyRk6ANArTJCknXs1nK2t5ivoLtBX8mUYSCPdSEPFhCaeXJR9qiDwTZEFy3SCTAnDBGPrcUU7WdcXt=w138-h92-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=9217265736750802444",
     "phone": "06-6354-4848",
+    "description": "濃厚で独創的なフランスの肉料理と豊富なビールメニューを提供する、照明を抑えたおしゃれな店。",
     "sourceList": "フレンチ",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -25533,6 +26046,8 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWnC9HBXUau6XnbVFu7D0PRR84kAxcvMGcl7jKxp0rgTWum-UhlKtmCEPqtbZBj4UBadc2zxFNCbI2QS9pyn8eiBeJojugD0bw6GxlSa8ONYwzOARVnSu4H3t_5KqYOmso6n9KWb=w80-h106-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=10624719115553653623",
     "price": "￥1,000～2,000",
+    "description": "ラーメンとつけ麺を提供する、カウンター席の居心地の良いラーメン店。",
+    "memberComment": "始まるのを待ち侘びていた夏季限定麺を食べてきました！\n個人的に胡麻豆乳の組み合わせが大好きなのと、麺がツルツルでヨダレ鶏がたっぷりのっていて大満足でした◎\nパクチーが乗っているので苦手な人は注意です！！（好きな人は追加もできます）\nすごーく美味しかったのですが、1時間以上並んだのと真後ろで待っている人の圧を感じながら食べなきゃいけないため⭐️−1🫠\n\n🍽️ おすすめメニュー：ヨダレ冷やし豆乳麺",
     "sourceList": "ラーメン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -25552,6 +26067,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWnwY-4TriYLva6kPPh-SUBDN89RWPkZT1rHBAzoFMWTeet6fWPvrQ3z4RYsWMlhvFuD3YjlqDH2mkbGALkdlOvEGxoKeTG-k25G5nW0gWDNb6GUjnGg31IxdUi6heKNadWvhSuFmyzYRRLO=w122-h92-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=13407048117250087789",
     "price": "￥1,000～2,000",
+    "memberComment": "ドロっとしてるけど濃すぎずちょうどええ。そんな味噌スープ。\nモチモチな太麺さん食べ応え抜群。\n\nそして何よりも何よりも\n沢山盛られたチャーシューさん本当に美味しかった…感動。トロッと。\n\nてっぺんにいるもやしもところどころ焦げてるくらいに強火で。これまた良き。\n\n次回は辛味噌らーめん普通盛りを🍜\n\n🍽️ おすすめメニュー：味玉ちゃーしゅー味噌らーめん",
     "sourceList": "ラーメン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -25572,6 +26088,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=3984538198508472417",
     "phone": "052-887-2237",
     "price": "￥1,000～2,000",
+    "memberComment": "大学生の時に通ってたまぜそば屋さんに行ってきました。\n\nここのまぜそば食べちゃうと、他のが食べれないぐらい大好きです！\n\n名古屋近辺にしかないと思うので、ぜひ行ってみてください！",
     "sourceList": "ラーメン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -25591,6 +26108,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWm84iWym4ZmbehUPNmwFKJyMJmOVLuqyyXmcK9oh66uy9acpNv-4kf1Dsc1vn68iTNtv7epDzNU5-7W8OYugqDYX_j4m7O4SHOhd5OlznkX2JRqhqZOfQGZQJ14ADSp3n23RB1t=w80-h106-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=1346733803174054863",
     "price": "￥1,000～2,000",
+    "memberComment": "ビブグルマン掲載店です！\n\n人生で食べたチャーシューの中で1番美味しかったです！\n\n日本酒のペアリングもあるのでお酒好きな方にも🙆‍♂️\n\n🍽️ おすすめメニュー:\nチャーシュー丼",
     "sourceList": "ラーメン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -25770,6 +26288,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWlBctD4X2fwrPSqn1Wj8YYQR7CpzFob900ULSNJLTu7al2t0E54vWrlhCnUVEdJuA0UrYb3IOfTmInkEJ4wf4AREaGjR7K4Bb9CZV2eaHFMc6JaSAQMIYYKe2_LMgowiQ0tHgbYl4QrC3SM=w80-h106-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=5755730322048713349",
     "price": "￥1,000～2,000",
+    "memberComment": "車で石川巡りをするなら是非行って欲しいお店。おすすめは特製醤油。スープが上品で、5種のチャーシューがとても美味しい！",
     "sourceList": "ラーメン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -25893,6 +26412,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=17450866251445301090",
     "phone": "096-352-1648",
     "price": "￥1,000～2,000",
+    "description": "特製の豚骨スープや焦がしにんにく油にこだわるラーメン店。昭和32年創業の老舗。「豚そぼろ丼」などのご飯物も提供。約30席を用意。",
     "sourceList": "ラーメン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -25958,6 +26478,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=13230786759453686988",
     "phone": "011-820-6511",
     "price": "￥1～1,000",
+    "description": "豚骨スープの味噌、醤油、塩ラーメンを提供する小さなラーメン店。",
     "sourceList": "ラーメン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -25980,6 +26501,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=18205295804487545687",
     "phone": "080-2330-3700",
     "price": "￥1,000～2,000",
+    "memberComment": "インスタでも良く紹介されている毎日行列の沖縄そば屋さん。\nソーキも肉厚で、トマトや柚子皮、あおさが入っておりオリジナリティもあって良い。ジューシー(炊き込みご飯)もかなり美味しい。\n\n一時期、沖縄に住んでいたことがあり、沖縄そばはかなりの量食べてきましたが、現地の有名店にも負けないくらい美味しかったです。写真は清井そば+ジューシーです。\n\nランチタイムは無料でミニジューシーがつくので、それもおすすめポイントです🏖️\nランチタイムはかなり並びますが、ちょっと外した時間に行くと10分くらいで入れます🍜",
     "sourceList": "ラーメン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -26021,6 +26543,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=15397202102879237034",
     "phone": "03-5761-9048",
     "price": "￥1,000～2,000",
+    "memberComment": "ラーメンの投稿が流行ってそうだったので、昨日食べたラーメンをあげます、笑\n\n鶏をベースにした綺麗系の醤油ラーメンの中でも、地鶏の味をきちんと感じられるスープです。\n10種類くらいの醤油をブレンドしてるみたいですが、無駄なキレ(味の濃さ)がなく、スープ全体としての旨味を強く感じられるものでした。\n特製にした上でさらに豚バラチャーシューを追加したのですが、意外とスープが油多めなので、追い豚バラよりは追い鳥チャーシューとかの方が良かったかもです。\nまとめると、うまかった！\n\nラーメンは比較的詳しいのと、めっちゃくちゃ好きなので、好きな人はご連絡ください！お供させてください！\n\n待ってますっ！\n\n🍽️ おすすめメニュー：特製中華そば(醤油)",
     "sourceList": "ラーメン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -26041,6 +26564,8 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=16646082585627147067",
     "phone": "03-6265-3989",
     "price": "￥1,000～2,000",
+    "description": "野菜などの定番のトッピングをのせた豚骨ラーメンを味わえる、シンプルな内装の飾らない店。",
+    "memberComment": "一口目から感動…スープが美味しいこと。濃すぎず飲みやすい。\n（表面脂の膜があるので表面だけすくうと、美味しい脂のジュースです）\n\n味噌ラーメンはこれじゃなくちゃ。西山ラーメンの黄色い麺にも感動。札幌地元な私大歓喜。\n\n醤油と塩も気になり、次回も行こうと思いますが、結局味噌ラーメンチョイスする気がします。\n\n池袋方面に45分間ウォーキング\n味噌ラーメン2軒目はしご予定😋\n\n🍽️ おすすめメニュー：味噌チャーシュー麺　大盛り",
     "sourceList": "ラーメン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -26061,6 +26586,8 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=5602476366123106410",
     "phone": "03-6206-0030",
     "price": "￥1,000～2,000",
+    "description": "カウンター席のみを備える店内は庶民的な雰囲気。平打ちストレート麺が特徴のラーメンや大盛り無料のつけ麺を提供する。",
+    "memberComment": "中毒性のある旨さでした\n神田にある本店はいつも大行列ですが、秋葉原の方は比較的空いています\n\n🍽️ おすすめメニュー：のり玉ラーメン",
     "sourceList": "ラーメン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -26123,6 +26650,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=14270398362418773128",
     "phone": "078-321-0733",
     "price": "￥1～1,000",
+    "description": "コシの強い自家製細麺と特選醤油を使用したスープで作るラーメン各種が味わえる。ごはんに特製チャーシューをのせた神戸っ子丼が名物。",
     "sourceList": "ラーメン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -26187,6 +26715,8 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=10484338894191290988",
     "phone": "0954-36-2047",
     "price": "￥1,000～2,000",
+    "description": "豚肉、海鮮と野菜が入ったチャンポンが名物のカジュアルなレストラン。",
+    "memberComment": "皆様におすすめしていただいた、井手ちゃんぽんの本店にお邪魔してきました！お野菜たっぷりのちゃんぽんは勿論ですが、カツ丼も甘い味付けでとても美味しかったです🥰",
     "sourceList": "ラーメン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -26287,6 +26817,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWkeI3tfmjk9-iJMjyl41v6yvIFjYtveNvSVHpzMYhOca0Cd6YBLuhbg3HY08EwVeFP3l0JMx9OZ4wFbluWKYCrFJehj_KBw-vDBntUlxdX-GsNZuQBEOHuy1qpupT2NcdcNWa-_F5v7unI=w80-h106-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=14271998492518756921",
     "price": "￥1,000～2,000",
+    "memberComment": "茨城の水戸に新しくできた家系ラーメン。ここの売りはラーメンではなく大癖な店主。\n店主に会いにきてる方も本当に多い。\n過去2つラーメン屋をだして惜しくも閉店。今回3回目の出店となり過去一繁盛してて今後どうなるかが楽しみです。",
     "sourceList": "ラーメン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -26308,6 +26839,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=1046631926684167591",
     "phone": "076-260-7737",
     "price": "￥1,000～2,000",
+    "description": "牡蠣や生姜、イカスミを使った味噌ラーメンを提供する小さなラーメン店。",
     "sourceList": "ラーメン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -26330,6 +26862,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=10388489343841960796",
     "phone": "047-368-8860",
     "price": "￥2,000～3,000",
+    "description": "街角の人気ラーメン店。食券制で、濃厚なラーメンと餃子を楽しめる。",
     "sourceList": "ラーメン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -26492,6 +27025,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=133821498680476131",
     "phone": "011-513-0098",
     "price": "￥1,000～2,000",
+    "description": "知名度が高く忙しいラーメン屋。店内にはカウンター席があり、エビの出しが利いている塩、醤油、みそをベースとしたラーメンが頂ける。",
     "sourceList": "ラーメン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -26520,6 +27054,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWlfkP6fiLmPoMB5L-OFplZCXVhfSgREKBE8y1mM8-Y-TCNaNOoHVEUopkPQF-Fv0G7W5Sz4bJx7hksKuerNsPW3PbJZ3y1f_C6ZIwyLpInaLi3XX3C0IhVH1AZgOz_Z3ISPmZyQJqapTzU=w138-h92-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=11077673187995957264",
     "price": "￥1,000～2,000",
+    "memberComment": "本店である町田商店より美味しいと思ってます笑",
     "sourceList": "ラーメン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -26581,6 +27116,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=4312984764852404073",
     "phone": "06-7163-4417",
     "price": "￥1～1,000",
+    "description": "自家製スープの辛いラーメン、つけ麺を味わえるカジュアルな店。",
     "sourceList": "ラーメン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -26601,6 +27137,8 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=7844972358200351729",
     "phone": "03-6420-0668",
     "price": "￥1,000～2,000",
+    "description": "醤油ベースのスープに、チャーシュー、ワンタン、餃子をトッピングしたラーメンを楽しめる店。",
+    "memberComment": "ワンタンラーメンと餃子セットがオススメです！",
     "sourceList": "ラーメン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -26621,6 +27159,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=12285907843802532948",
     "phone": "03-3490-1196",
     "price": "￥1～1,000",
+    "memberComment": "レディースサイズ（半量）もあるのが嬉しい！\nライスはデフォでセットになってるのもありがたい、、\n絶対おろしにんにく入れてくださいね😉",
     "sourceList": "ラーメン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -26660,6 +27199,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=17273103061581064800",
     "phone": "078-856-3455",
     "price": "￥1,000～2,000",
+    "description": "鶏チャーシューがのった自家製麺のラーメンが人気のカジュアルな店。",
     "sourceList": "ラーメン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -26700,6 +27240,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=12508681814798377551",
     "phone": "078-381-8566",
     "price": "￥1,000～2,000",
+    "description": "居心地の良いおしゃれなラーメン屋。カウンター席あり。濃厚な味わいの独特なスープが特徴の鶏そばで有名。",
     "sourceList": "ラーメン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -26799,6 +27340,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=11861532875247624501",
     "phone": "078-333-1920",
     "price": "￥1～1,000",
+    "description": "ラーメン、ご飯もの、飲みものが専門の落ち着いた雰囲気の店。",
     "sourceList": "ラーメン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -26881,6 +27423,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=2878551244933361217",
     "phone": "078-331-1075",
     "price": "￥1,000～2,000",
+    "description": "定番の豚骨ラーメンは、二種類のチャーシューと海苔、煮卵、ネギ、キムチなど具だくさん。トマト冷麺など多彩な創作麺も提供している。",
     "sourceList": "ラーメン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -26978,6 +27521,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWnf4l0h5NYGZ54IMdE98khmHRb-nFWKMujuVDgiWKxK8AnOMbz74jpIoWZAcOA8saeFKh6uIVPqrTArIMM3Mtl-zBWF1Q2gxnZ8v49M6fzqNjqa5CNtZZbRlrmr9B5UUE8SJsgQPX9RB-H1=w122-h92-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=736071878623048925",
     "price": "￥1～1,000",
+    "description": "濃厚な豚骨ラーメンを提供するシンプルなラーメン屋。注文するには、券売機で食券を購入する。",
     "sourceList": "ラーメン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -27016,6 +27560,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWnZfV57dzDUXjoagI82L74sTLbypLR_ohV66IE6p4VJrb2W7mVJ67thCeUX482rDPw0S13rvCLHNEala5LEFvCpPh50Cr_tX8-HSwDLfJxGNU14861uK4pXm2SZ0P5Ajk8iXnpenamdqm17=w122-h92-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=10027284661028432112",
     "price": "￥1,000～2,000",
+    "description": "オープン キッチンを配したスタイリッシュなラーメン店。トリュフを添えた醤油ラーメンを提供。",
     "sourceList": "ラーメン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -27035,6 +27580,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWkNnt8dszNA7E_ke9BBcvXAfpnfCbqM8Nrc1ZUEQu3QZDMK2cyWcTbX5m2XY4FKfzRUJeb1D5BvylrRMz34RbGim3L1fApsxiYKbel2prR6SHTxF-smFDRCFYx4R323BciQ4Ff7UQ=w122-h92-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=12760060714749299394",
     "price": "￥1,000～2,000",
+    "description": "こぢんまりとしたラーメン屋。オープン キッチンのある温かい雰囲気のシンプルな空間で、昔ながらのラーメンとビールを提供。",
     "sourceList": "ラーメン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -27055,6 +27601,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=16041900156277242364",
     "phone": "03-6416-8620",
     "price": "￥2,000～3,000",
+    "description": "シンプルモダンな雰囲気のラーメン店。定番のラーメンのほか、ご飯ものも提供。",
     "sourceList": "ラーメン",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -27264,6 +27811,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=13472284956104285694",
     "phone": "03-6259-1144",
     "price": "￥10,000 以上",
+    "description": "ワインやカクテルと一緒に中華料理、日本料理、スペイン料理を楽しめる、シックでエレガントなレストラン。",
     "sourceList": "中華料理",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -27366,6 +27914,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=13873536541247635782",
     "phone": "03-6420-0067",
     "price": "￥3,000～4,000",
+    "memberComment": "牛ハツユッケさん、ナッツがいいアクセント。旨旨\n海老タルタルさん＆油淋鶏さんも旨旨。\nハルビンビール＆山椒サワー\n紹興酒を炭酸で割った赤ハイボール\nで頂きましたが、白ワイン系の方が合ったかなぁと少々後悔…🥺\n赤ハイボール飲みやすくてgood✨\nオクラの熟成唐辛子和え\n大海老のチリマヨ炒め\n豚挽肉と韮の生胡椒焼きそばetc...\n食べたかったけど食べれなかったものががちらほらあるのでまた行ってみようと思いますー！＾＾\n\n🍽️ おすすめメニュー\n1. 牛ハツのユッケ 　豆鼓ソース\n2. 酔っ払い海老のタルタル\n3. 油林鶏　橙子だれ\n\n0次会で行ったので軽くだったのですが、まずカヴァの量にテンション上がりました！\nこれで600円、安くないですか？🥂\n酔っ払いエビのタルタルは、オリジナル？のレモンオイルとガリが効いてて、お酒に合いすぎる🦐\nエビチリマヨは、ちゃんと良い感じに辛みがあって、大優勝でした🍤\n立ち飲みだけど、今度は1次会でいろいろ飲んだり食べたりしたいお店です🩷\n個人的にとてもお気に入り🫶🏻🫧\n\n🍽️ おすすめメニュー\n・酔っ払いエビのタルタル\n・海老チリマヨ",
     "sourceList": "中華料理",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -27408,6 +27957,8 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=5857951609166145946",
     "phone": "03-3348-1234",
     "price": "￥4,000～10,000",
+    "description": "朝食からディナーまで時間帯ごとに異なるオリジナルメニューを用意。落ち着いた雰囲気の店内で、ゆっくりと食事が楽しめる。",
+    "memberComment": "ひと皿ひと皿その場でできたてを提供してくれる、完全オーダー制の神ホテルビュッフェ！すべてがお店で出てきてもおかしくないクオリティで、盛り付けも美しかったです🤤✨スイーツもほぼすべてが、オーダーして取り分けてもらう方式。和のメニューはなく、洋と中(世界各国の料理)がメインでした。\nただし、改悪なのかインスタで検索すると絶対に出てくる牛フィレ肉のウェリントンは別料金のオプションになり、搾りたてモンブランも無くなっていました…🥲なので星はマイナス1の4つに。でもクオリティは間違いないのでいつもと違ったビュッフェを楽しみたい方はぜひ🫶\n\n🍽️ おすすめメニュー：生ハムメロン、ハマチの刺身 コリアンダーと青唐辛子ドレッシング、台湾式グアパオ",
     "sourceList": "中華料理",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -27430,6 +27981,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=276975432730645664",
     "phone": "03-3624-6956",
     "price": "￥1,000～2,000",
+    "memberComment": "錦糸町No.1 チャーハン！\n\n錦糸公園の近くにある町中華です！\n13:40ごろ到着し、1時間並んで入店でした！\n店内は広く、急かされないのでゆっくり食べられます♪\n\n海老チャーハンはとろとろの卵と海老がマッチしてて、最高でした✨\n※現金のみ\n\n🍽️ おすすめ：海老チャーハン",
     "sourceList": "中華料理",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -27452,6 +28004,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=17785042261181016631",
     "phone": "03-3571-6450",
     "price": "￥1,000～2,000",
+    "memberComment": "銀座SIX近くにある町中華🥠\n銀座の割に値段も安くボリュームもあります！\n\nとろとろの半熟卵にオムライスのようにご飯にかかっててマーボー春雨の餡が合わさると絶妙に美味しく癖になります✨\n※現金しか使えないのが少しネック。\n\n🍽️ おすすめ：マーボー春雨丼",
     "sourceList": "中華料理",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -27472,6 +28025,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=1173763487522377552",
     "phone": "03-6280-3575",
     "price": "￥4,000～8,000",
+    "memberComment": "・わかめとパクチーのよだれサーモン\n・菜の花とゴボウ\n・ホタルイカの春巻き\n・野菜と海鮮のマーボー\n(この日はなす/カリフラワー/白子でした)\n電話予約しかないですが、ぜひ予約してのご訪問をおすすめします！\n店主の創作中華が美味しすぎます。\nメニューは季節によって変わりますが、\n食材の組み合わせが新しい＆面白いのに、ちゃんと美味しいです🤤\nワインとの相性も◎です🍷",
     "sourceList": "中華料理",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -27512,6 +28066,8 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=12429011870751428999",
     "phone": "03-3568-7190",
     "price": "￥10,000 以上",
+    "description": "広々としたクリエイティブな店内はカジュアルにもフォーマルにも最適。コース料理からアラカルトまでのんびりと食事ができる中華料理店。",
+    "memberComment": "中華料理界で有名なシェフ、脇屋さんのお店です！家族のお祝いごとで伺いましたが、前菜から彩り豊かでどれも美味しく、非常に満足出来ました☺️特にフカヒレの煮込みがトロトロで美味しかったです〜🤤\n\n🍽️ おすすめメニュー：フカヒレと白菜の煮込み",
     "sourceList": "中華料理",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -27554,6 +28110,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=7228097710644288139",
     "phone": "098-862-0011",
     "price": "￥1,000～5,000",
+    "memberComment": "たっぷりの花椒と山椒、赤唐辛子4つ‼︎振り切って辛い！なのに白米が進んでクセになる(汗と涙が止まらなかった😂)\n辛いモノ好きな方はぜひ挑戦していただきたいです🙋‍♀️\n\n🍽️ おすすめメニュー：四川麻婆豆腐(お店で2番目に辛いらしい)",
     "sourceList": "中華料理",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -27574,6 +28131,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=11288812511797639708",
     "phone": "03-3622-1712",
     "price": "￥1,000～2,000",
+    "memberComment": "味のある店内と、石垣出身の女将が作る料理はどれも絶品です！\n錦糸町や蔵前に来た際は、ぜひ足を伸ばしてみて下さい！",
     "sourceList": "中華料理",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -27595,6 +28153,8 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=2243251492247134152",
     "phone": "03-6269-9818",
     "price": "￥10,000 以上",
+    "description": "アラン ヤウが手掛けるレストラン。点心をはじめとする本格的な中華料理をスタイリッシュな店内で提供する。",
+    "memberComment": "コースじゃなくて、アラカルトでも十分満足できます！特に、揚げ湯葉と海老の腸粉はもっちり食感で白ワインがグイグイ進みます😂💦",
     "sourceList": "中華料理",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -27639,6 +28199,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=2967127836780847802",
     "phone": "03-5608-7580",
     "price": "￥1,000～2,000",
+    "description": "夜間照明に照らされたくつろげるテラスで、バーベキューと薪窯で焼いたピザが楽しめる。",
     "sourceList": "中華料理",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -27658,6 +28219,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWkU--787dxdDks6T5wDucwTBQO4qNXFyZmfRdpRSI9lODsgAXShRH6dTS0Q11qurOS8A60ewwpc3_jRKUMom_-50hphsl55vUjSCyO3AgjjXJ1cjbLqZ03bVwgnTo4rbvUDXQdx=w122-h92-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=8531126202197232957",
     "price": "￥1,000～2,000",
+    "description": "アットホームな雰囲気の店内では、元祖羽根付き餃子に加え、水餃子や小籠包など、さまざまな種類の点心料理が味わえる。",
     "sourceList": "中華料理",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -27700,6 +28262,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=16678054294599279412",
     "phone": "06-6341-1972",
     "price": "￥2,000～3,000",
+    "description": "餃子ときゅうりの漬物のほか、アルコール類も提供。落ち着いた雰囲気の店内にはカウンター席もある。",
     "sourceList": "中華料理",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -27884,6 +28447,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=14478834103542675346",
     "phone": "078-331-0831",
     "price": "￥1,000～2,000",
+    "description": "味噌ダレをつけて食べる神戸風焼き餃子の専門店。こぢんまりとシンプルな店内。瓶ビールも注文できる。",
     "sourceList": "中華料理",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -27904,6 +28468,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=10074261288761215577",
     "phone": "078-334-7172",
     "price": "￥1,000～2,000",
+    "description": "定番中華料理や紹興酒を味わえる、くつろげる雰囲気のこぢんまりとした店。",
     "sourceList": "中華料理",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -27946,6 +28511,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=17752756025536853728",
     "phone": "03-3348-5810",
     "price": "￥1,000～3,000",
+    "description": "蒸し餃子の餡は十数種類あり、どれも野菜や肉をふんだんに使用したもの。点心以外にも火鍋他、多彩なメニューを用意。",
     "sourceList": "中華料理",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -28029,6 +28595,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=7651098754832316359",
     "phone": "03-5414-5708",
     "price": "￥1～4,000",
+    "description": "北京ダックや水餃子などの中国料理が味わえる、カラフルで活気溢れる店。",
     "sourceList": "中華料理",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -28090,6 +28657,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=16451957011112018730",
     "phone": "06-6363-3381",
     "price": "￥2,000～3,000",
+    "description": "中華料理や地域の名物料理のメインやサイドメニューを、ビールやカクテルと味わえる、居心地の良い店。",
     "sourceList": "中華料理",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -28192,6 +28760,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=3713409999961112189",
     "phone": "03-5421-8525",
     "price": "￥1,000～2,000",
+    "description": "伝統的な中国の郷土料理をスタイリッシュにアレンジしたオリジナルの中華料理が頂ける。広々とした店内はすっきりとして落ち着いている。",
     "sourceList": "中華料理",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -28253,6 +28822,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=11115697093138752706",
     "phone": "03-6416-8803",
     "price": "￥1,000～2,000",
+    "description": "アウトドアとフィットネスの道具、衣料品、靴を幅広く扱う小売チェーン。",
     "sourceList": "中華料理",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -28295,6 +28865,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=11767679716749919035",
     "phone": "03-6303-1927",
     "price": "￥1,000～2,000",
+    "description": "自家製点心や四川麻婆豆腐などがコースで味わえる。紹興酒やジャスミン茶をはじめとした中国茶の他、ワインも提供している。",
     "sourceList": "中華料理",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -28315,6 +28886,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=2066644691598114082",
     "phone": "03-3291-8186",
     "price": "￥1,000～2,000",
+    "description": "餃子で有名な気取らない中華料理店。点心やセットメニューを提供。",
     "sourceList": "中華料理",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -28376,6 +28948,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=18055037613977585983",
     "phone": "06-6392-3104",
     "price": "￥1,000～2,000",
+    "description": "活気ある中華料理レストラン。四川陳麻婆豆腐で知られる。",
     "sourceList": "中華料理",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -28399,6 +28972,8 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWmYR0HuP8qTUxvlI86o2WFwJA2b07nkFLWev5n-r_c-RCIn5Tq4jYu66JoJN-3pYQfX9VvFC5MXC5WAJl4t8lkZdr_iE8g2UcSAcL1FlcPszX8XSx-JWGdXkH4nfGzEqG-U4krI42YCNf6Q=w161-h92-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=100903420412055343",
     "phone": "03-5421-1114",
+    "description": "東京の街を一望できる、ホテル内の広々としたレストラン。高級グリルから DJ のいるバーまで、9 つのコンセプトで区分けされている。",
+    "memberComment": "都内のアフタヌーンティー、高騰しがち&クオリティ下がりがちだな〜と思う中、ここは非常に質が良いです！\n祝日なのに6500円で3時間ティーフリー、紅茶も種類豊富でロイヤルミルクティーもあるのが素晴らしい。\n\n何よりアフタヌーンティーだけどスコーンの代わりにハンバーガーがあり、セイボリーとスイーツのバランスが最高🌸\n\n男性でも甘いもの好きならいけるかも？\n39階で展望も最高なので、アフヌン好きな方はぜひ〜！\n\n🍽️ おすすめメニュー：アフタヌーンティー",
     "sourceList": "創作料理・イノベーティブ",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -28468,6 +29043,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=3376419203720046421",
     "phone": "052-720-5631",
     "price": "￥10,000 以上",
+    "description": "趣のある素朴な内装が施された空間で上質なフランス料理を味わえる、居心地の良いレストラン。ガーデンもある。",
     "sourceList": "創作料理・イノベーティブ",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -28492,6 +29068,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=4973063805241980523",
     "phone": "052-981-6868",
     "price": "￥10,000 以上",
+    "description": "純和風の上品な店内では、旬の食材を使用した上質な日本料理が堪能できる。お茶室はお茶会にも使用できる。",
     "sourceList": "創作料理・イノベーティブ",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -28581,6 +29158,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=14482133219879195276",
     "phone": "03-6908-7358",
     "price": "￥4,000～9,000",
+    "memberComment": "料理もお酒も珍しいものが多く楽しいです！",
     "sourceList": "創作料理・イノベーティブ",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -28623,6 +29201,8 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=8565301434973506439",
     "phone": "075-585-4224",
     "price": "￥2,000～3,000",
+    "description": "シンプルな内装の洗練されたレバノン料理店。ワンランク上のファラフェル サンド、サラダ、デザートを味わえる。",
+    "memberComment": "レバノン料理",
     "sourceList": "創作料理・イノベーティブ",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -28663,6 +29243,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=5898158564497865863",
     "phone": "050-3155-1092",
     "price": "￥2,000～3,000",
+    "description": "全面窓がある豪華な雰囲気のレストラン。木のテーブルでハンバーグ ステーキやビーフシチューが楽しめる。",
     "sourceList": "創作料理・イノベーティブ",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -28749,6 +29330,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=5610100504364064319",
     "phone": "03-6721-0935",
     "price": "￥10,000 以上",
+    "description": "黒を基調としたシックな店内には、カウンター席とテーブル席を完備。メニューは旬の食材を使用したコース料理のみ。",
     "sourceList": "創作料理・イノベーティブ",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -28855,6 +29437,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=12136403318055948207",
     "phone": "+1 808-732-4806",
     "price": "$10～20",
+    "description": "アヒポキを提供する、地元住民に愛される落ち着いた雰囲気のシンプルな店。唐辛子を効かせたものなど、味付けのバリエーションが豊富。",
     "sourceList": "和食",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -29029,6 +29612,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=18289630971385391745",
     "phone": "03-5860-3721",
     "price": "￥3,000～4,000",
+    "memberComment": "GWに食べた象印の駅弁のお米が美味しくて、食堂の方にも行ってきました！たくさんのおかずにデザート付きで大満足でした◎炎舞炊きで炊かれた3種類のご飯はお代わりし放題でカウンター席だと駅舎を見ながら食べられるのも良かったです🌙\n私が入店する際も退店時もすごい行列だったので行く際は予約必須です！！\n\n🍽️ おすすめメニュー：海の幸御膳",
     "sourceList": "和食",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -29049,6 +29633,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=612838306926936419",
     "phone": "080-6442-2126",
     "price": "￥1,000～2,000",
+    "memberComment": "民宿の近くにあったので朝ごはんのために来店\n9時過ぎに行ったら予約なしでもすぐ入れました\n通常メニューに500円ほど課金すると季節限定の海鮮付き卵かけご飯を食べられるのでぜひ！\n贅沢な気持ちで最高の1日をスタートできます☀️\n(インスタフォローするとたんかんジュースもらえます)\n\n🍽️ おすすめメニュー：薩摩甘海老の卵かけご飯",
     "sourceList": "和食",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -29069,6 +29654,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=9558543239833460982",
     "phone": "0869-72-0851",
     "price": "￥1,000～2,000",
+    "memberComment": "牡蠣がどっさりのったお好み焼き。その名も岡山名物「カキオコ」⭐︎\n牡蠣といえば広島や三陸をイメージしますが、それに次ぐ第3位の産地が岡山の日生町と言うところにあります！\n\nすぐそこの海でその日の朝獲れた生牡蠣しか使わないので新鮮そのもの。日生の牡蠣はクセが少なく甘味が強く、プリッとしているのが特徴。どこをとっても牡蠣が入っているので満足度が半端ないです。これをビールとかちこむのが最高です。🍺\n\n旬のピーク時は1〜2月で、2時間ほど並ぶ時もあるとのこと。今回は生牡蠣を使用するのが最後の週で滑り込みセーフで穴場な時期でした。\n次の11月までは冷凍牡蠣になっちゃうそうなので、ぜひ生牡蠣の時期に岡山へ！来てたべて欲しいです！！\n\n周辺にカキオコ屋が沢山あるのですが、ここは2人の女将さんがあったかく迎え入れてくれる点も最高です！\n\n🍽️ おすすめメニュー：カキオコ　とビール🍺",
     "sourceList": "和食",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -29089,6 +29675,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=9718122124233129375",
     "phone": "+992 77 077 0700",
     "price": "TJS 500 以上",
+    "memberComment": "タジキスタンのドゥシャンベで見つけた日本食レストラン(?)です。海外で多分初めてカリフォルニアロールを食べましたが、めちゃめちゃ美味しくてびっくりしました。店員さんもとてもフレンドリーで、今まで行った海外の日本食レストランで1番です！もし機会があればぜひ行ってみてください！\n\n🍽️ おすすめメニュー：キャラメルドラゴン",
     "sourceList": "和食",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -29111,6 +29698,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=5204545497136653309",
     "phone": "029-302-5959",
     "price": "￥1,000～2,000",
+    "memberComment": "こちらのお店は、自社のウィスキーの製造過程で出た搾りかすを飼料として与えたオリジナル豚「常陸野ポーク」を使ったとんかつ専門店です。\nせっかく水戸に来たことだし、食べたことのない納豆ロースかつを注文しました。食べてみると結構合うかも⁉︎ご飯がめちゃ進みました!納豆好きはぜひお試しください🫘\n\n🍽️ おすすめメニュー：納豆ロースかつ、日の丸ウイスキーテイスティングセット",
     "sourceList": "和食",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -29132,6 +29720,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=11211946841632479700",
     "phone": "03-6228-5200",
     "price": "￥3,000～9,000",
+    "memberComment": "昨年12月にリニューアルオープンしたばかりのラムしゃぶのお店です！✨\n\nお肉はラム独特の臭みがなく、とっても柔らかくて食べやすかったです🐑💕\n\n厚めのお肉と薄めのお肉を選べるのも良かったです！\nただ、全体的にラム肉以外のメニューが少なめで、選択肢があまりなかったのがやや残念でした🥲\nなので⭐️４です。。！\n\nラムしゃぶ好きな方はぜひ🍀* ゚\n\n🍽️ おすすめメニュー：ラム肉食べ放題コース🐏",
     "sourceList": "和食",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -29153,6 +29742,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=15649449633199536517",
     "phone": "0460-85-5148",
     "price": "￥1,000～2,000",
+    "description": "湯葉を使った気取らない料理を味わえる、昔ながらのくつろげる店。",
     "sourceList": "和食",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -29174,6 +29764,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWkvOQyPHklUQYt9s7ZLwWVFNuDdbIAyWxhqdf8TiYSwmF-FyE7OGuEErEeDuMj_qXTAp_Di202_k9Ct-yj23fLdpMIrisIA62RrZQOK5KY9xVdmrzL6GxH8fECC_E0FD4O6fXT_0AVZnizM=w80-h106-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=10721079122468787588",
     "price": "￥10,000 以上",
+    "memberComment": "会社から近いコスパ店に行ってきました！\n予約は取りにくいけど、コスパ良くて幸せな時間が過ごせます。1万円で飲み放題つき。\n\n🍽️おすすめメニュー：雲丹プリン、初鰹、土鍋ご飯のお供たち",
     "sourceList": "和食",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -29200,6 +29791,8 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWmUPNaGI_yC4f9hGXT36JdGgxn4R0hg8YN13rsh7g_DQg5_O9YxCuOb2JKL-IZFwpQNVQ6Lsusglhw6M2sqq_RfIOlit9741iglk6FfGu3Db7I_BsPe04_KNNMoekV0yvHEwtPT=w115-h92-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=11486537247863280157",
     "phone": "03-3212-9640",
+    "description": "一本釣り鰹は、たたきや銀造で提供。高知県より減農薬の野菜を直送し、健康にも配慮している。希少な天然活〆クエの鍋も人気。",
+    "memberComment": "4月のランチランで行って来ました！\n皇居ランを初めて以来、初の20人越えでした🙌\nちょうど初ガツオの時期なので、鰹のタタキが食べたくてこのお店にしました。\n3切れしかないのかと思ってましたが、1切れが思ったよりも大きくて、嬉しかったです。\nあと、ご飯のおかわりも出来ます！\n雰囲気は落ち着いていて、個室は会食にも使えそうでした。\n\n🍽️おすすめメニュー：岩崎弥太郎御前",
     "sourceList": "和食",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -29224,6 +29817,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=15497458384974208223",
     "phone": "03-3478-2160",
     "price": "￥1,000～2,000",
+    "memberComment": "ローストビーフ丼専門店。都内には3店舗ほど。柔らかい肉と卵黄の調和がとれており、山わさびやクリームチーズがアクセント。休日の昼は混むが平日は狙い目。カードと交通系IC。QR決済無し。インバウンド多め。",
     "sourceList": "和食",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -29265,6 +29859,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=2978310111496571786",
     "phone": "03-6455-1614",
     "price": "￥1,000～3,000",
+    "description": "古式精米法で精米したお米を羽釜で炊き上げ提供している。多彩な季節料理が自慢で、名物・鯛茶漬けが人気。",
     "sourceList": "和食",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -29284,6 +29879,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWkPJyeIiqxNhy8Lh4uNVkK0gcmvRMz0dYhlIr7LpBVomaIwKz_Bxf_XbNA6mhd6ooHyb8DnqamtGXTJ6T_-kH71yo9C-B5JfQi_nIDzIeuDAo_BtElIsniTCCXtV6innTaXEBQPNzF6pIg0=w138-h92-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=6027318499060685147",
     "price": "￥1,000～2,000",
+    "memberComment": "IRO+の皆さんと行って来ました！メインは2種から選べて玄米お代わりし放題です！(私はしっかり２回お代わり)\n普段こんなにたくさんのおかずを食べることないのでお腹だけじゃなくて心も満たされました💭\nデザートのキャロットケーキもグルテンフリーなだけあって軽くて食べやすかったです🥕\n予約必須ですが、体に優しいご飯が食べたくなった時におすすめです🫶\n\n🍽️ おすすめメニュー：16種のグルテンフリーおばんざいセット",
     "sourceList": "和食",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -29305,6 +29901,8 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=15393113938813398426",
     "phone": "03-5733-3771",
     "price": "￥10,000 以上",
+    "description": "元横綱千代の富士関監修の白木造りの店内。カウンター、テーブル、座敷席がある。多彩な鍋の他、一品料理も豊富で焼酎や日本酒なども揃う。",
+    "memberComment": "虎ノ門のうるふ行ってきました🐡💗\n焼きふぐの4種盛りは、ネギ塩・ニンニク・辛子味噌・梅肉で味変できて最後までずっと美味しい🥺✨個人的にはネギ塩と梅肉がさっぱりしてて好きでした🫶\n\n🍽️ おすすめメニュー：焼きふぐ",
     "sourceList": "和食",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -29326,6 +29924,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=4382858927633571448",
     "phone": "03-6276-2839",
     "price": "￥1,000～6,000",
+    "memberComment": "ウニクレソンが食べたくて来店！🍴\n「ワカコ酒」第1話に出てたお店で、漫画見てからずっと気になっててやっと行けました☺︎\n\n名物のウニクレソンはやっぱり最高に美味しい…🤤\nあとハツ刺しが想像以上に美味しくてびっくり！\nレバ刺し好きな人は絶対好きだと思う。レバーよりさっぱりしてて食べやすい◎\n\n店内はわいわいしてて、お酒好きにはかなりおすすめ🍻\n\n📸 写真撮るの苦手なのであまり映えてないですが、味はほんとに間違いないです\n\n🍽️ おすすめメニュー：ウニクレソン、ハツ刺し",
     "sourceList": "和食",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -29347,6 +29946,8 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=3913022261133044411",
     "phone": "03-3582-2270",
     "price": "￥1,000～2,000",
+    "description": "自家農園で栽培している野菜から、料理長自ら全国各地の産地や生産者を訪れ、調味料に至るまで吟味したこだわりの食材を楽しめる。",
+    "memberComment": "大きくてふわふわな、だし巻き卵定食が有名なランチ時行列必至のお店でした！\n\n出汁の効いただし巻き卵は身体と心に沁みるほど、美味しすぎました！\n\nおひつで提供されるお米、小鉢や味噌汁、\nお新香全てよく、味変がほどよくできる飽きない定食でした！\nまた行きたいです🙌🏻\n\n🍽️ おすすめメニュー：八坂(出し巻)",
     "sourceList": "和食",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -29372,6 +29973,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=14858232570040154396",
     "phone": "042-328-0440",
     "price": "￥10,000 以上",
+    "memberComment": "・河内鴨と特選三関せりの鴨鍋コース\nGolden SixTONES ご褒美グルメでも取上げられていて気になっていたお店に行ってきました！\n鴨のアクも臭みもなく驚きでした。🦆",
     "sourceList": "和食",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -29393,6 +29995,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWmMHpzHAK0nQgAeJl7iK4e_vG0RAcxkLDgVtOc2qK2gmkQT5RHpHmxYHMTFCa7lSY5KJH2rCwAVkundthcTO6b3Y1BwmZcAKHIWT3C_HL0aVR5on0L2G4GgnjjErQ3Jm4V3vUm9=w137-h92-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=2606891570987261210",
     "price": "￥10,000 以上",
+    "memberComment": "・鮮魚のソテー（今回は鱸の八朔クリームソース）\n閑静な住宅街にある完全予約制で季節のお食事が楽しめる隠れ家のようなお店。\nコースがめしコースとさけコースがありめしコースにしました。\n先付 - 汁物\n前菜 - 盛り合わせ\n揚げ - うどとホタルイカの春巻き\n魚 - 鮮魚のソテー\n肉 - せせらぎポークのロースト\n〆 - アオサとシラスの出汁茶漬け\nふきのとう、うるい、うど…山菜が使われた料理が多く季節を楽しめるご飯でした。\n予約時にお酒を飲む量を聞かれます🥃\n20時以降はBARとして予約無しで利用できるようです。\n私は泡とクラフトジンをいただきました。\n泡はパイナップルを感じるもの、クラフトジンは森林の香りを感じるスッキリしたものをソーダ割りしてもらいました。\n\nお店の雰囲気がよく料理もお酒も美味しいのですが、入口は営業しているのか不安になるくらいひっそりしています。笑",
     "sourceList": "和食",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -29413,6 +30016,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=6204419037701548305",
     "phone": "03-3618-1674",
     "price": "￥4,000～7,000",
+    "memberComment": "・牡蠣鍋、白子鍋、あん肝鍋のミックス\nイロタスで企画していってきました！\nどの具材も大きくて食べ応え抜群でした\nしめはカレーきしめんがおすすめです🥰 （人数の半分くらいがちょうどよさそう）\n4人で鍋とお酒2,3杯ずつ、一品もの何品か頼んで一人4,000円ほどコスパも良しです✨",
     "sourceList": "和食",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -29435,6 +30039,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=14123139656842618656",
     "phone": "+1 808-924-7653",
     "price": "$10～20",
+    "memberComment": "ハワイのおすすめポケ専門店",
     "sourceList": "和食",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -29458,6 +30063,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=7491835089244335206",
     "phone": "03-6281-4930",
     "price": "￥1,000～2,000",
+    "memberComment": "1200円の超リーズナブルランチ！品数多めで飽きませんでした☺️\n\n🍽️ おすすめメニュー：彩　いろどり　点心",
     "sourceList": "和食",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -29477,6 +30083,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWkaPhQQRHpa8Iw3f5jrfGY-3anNbLjdwyjcGQjAe9vJjk6M7C6IWm-q8T7dfu8IplDiRzbPWnq_ol5VII_ZIIfDcm0IXNIq7h03NbucqbxxOo-dOUTNp3LDHScO65JHLyFbXneyRrK1Nr0N=w80-h106-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=16083253004426396211",
     "phone": "03-5805-1808",
+    "memberComment": "ぶりしゃぶのコースで予約したのですが、海鮮サラダ、お刺身盛り合わせ、ぶりかま、〆の雑炊までついて4800円！みんなで腹パンになりました😮‍💨\nお目当てのぶりしゃぶは量もたっぷりで美味しすぎました、、\n白子はちょうど入荷したとのことで追加で注文しました( ◠‿◠ )🤍\n\n日本酒も20種類以上あったので日本酒好きな方にもおすすめです🍶\n毎冬行きたい、、、🐟\n\n🍽️ おすすめメニュー：ぶりしゃぶ",
     "sourceList": "和食",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -29497,6 +30104,8 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=1907956017019866967",
     "phone": "03-3631-8298",
     "price": "￥4,000～8,000",
+    "description": "座卓の長テーブルを置いた、昔ながらの雰囲気の店。桜肉（馬肉）を使った鍋料理を提供。",
+    "memberComment": "何度もリピートしているお店です。赤味噌と割下の濃い味付けで煮込まれた具材達を溶き卵にダイブさせて食べるとご飯がめちゃ進みます！🍚🥢\nレトロで風情のある店構えも素敵なので、ぜひ行ってみてください！\n（ここの桜なべしか食べたことがないので星4とさせていただいてます）",
     "sourceList": "和食",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -29520,6 +30129,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=7275492856459365018",
     "phone": "050-1724-6003",
     "price": "￥10,000 以上",
+    "memberComment": "オープンして速攻ミシュランのセレクテッドレストランに選ばれた日本料理のお店です🍶\nまずお店のしつらえがとっても素敵でした🥹\n珍しい食材やあまり日本料理には用いられないような食材も使っていておもしろかったです！\n特によかったのは、花良治という日本の無人島で発見されたというみかんを所々に使っていて、その柑橘が衝撃的にいい香りですごく美味しかったです🍊\n\n🍽️ おすすめメニュー：コースオンリーなのですが訪店した時は先付けで出た茶碗蒸しがめちゃめちゃ美味しかったです🤤",
     "sourceList": "和食",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -29542,6 +30152,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=12980307809008345076",
     "phone": "080-6622-6789",
     "price": "￥7,000～10,000",
+    "memberComment": "アグー豚はもちろん、たっぷりの島野菜を堪能できて大満足‼︎沖縄旅行の際にはぜひ立ち寄ってほしいお店です♪あと、オリオンビールが美味すぎる\n\n🍽️ おすすめメニュー：特選アグーしゃぶしゃぶコース",
     "sourceList": "和食",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -29563,6 +30174,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=4087513097937445268",
     "phone": "0749-24-6129",
     "price": "￥3,000～7,000",
+    "memberComment": "🍽️ おすすめメニュー：近江牛肉　すき焼き\n近江牛をこの値段で食べれるのは嬉しい🐮",
     "sourceList": "和食",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -29583,6 +30195,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=17628822327255312093",
     "phone": "03-3479-0577",
     "price": "￥9,000 以上",
+    "description": "貸切での利用も可能な店内では、毎朝築地市場で仕入れる鮮魚を使用した多彩な料理が堪能できる。お酒の種類も豊富。",
     "sourceList": "和食",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -29628,6 +30241,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=15368081347177950125",
     "phone": "070-9216-3445",
     "price": "￥2,000～3,000",
+    "memberComment": "ランチもディナーも変わらず1890円〜ですき焼きをいただけます！お肉の質も良く、コスパは最強レベルです🍲\n是非行ってみてください！私も既に再訪したいです",
     "sourceList": "和食",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -29651,6 +30265,8 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=6847037377040564913",
     "phone": "03-3871-2521",
     "price": "￥3,000～8,000",
+    "description": "創業大正四年の昔ながらの雰囲気が漂うおでん屋。常時35～40品のおでんが並ぶ。カウンター席とテーブル席が数多く用意されている。",
+    "memberComment": "おでんと日本酒の組み合わせが最高で、お腹も心も満たされました(๑˃̵ᴗ˂̵)\nあと、お刺身の分厚さにびっくり‼︎ぜひ盛り合わせのご注文を‼︎",
     "sourceList": "和食",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -29692,6 +30308,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=15705206959995987136",
     "phone": "0898-32-2000",
     "price": "￥2,000～3,000",
+    "description": "純和風の格式ばらない料理店。刺身などの地元産の魚介類を使ったセット料理を提供する。",
     "sourceList": "和食",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -29715,6 +30332,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=3226150469440396440",
     "phone": "052-811-8327",
     "price": "￥1,000～2,000",
+    "description": "ボリュームのある味噌カツ、自家製の麺類を中心に提供する落ち着いた雰囲気の人気店。",
     "sourceList": "和食",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -29912,6 +30530,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=4463589695570916078",
     "phone": "03-6721-0086",
     "price": "￥10,000 以上",
+    "description": "高級日本料理店。丁寧に盛り付けられた季節の料理をコースで提供。ワイン、日本酒もある。",
     "sourceList": "和食",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -29933,6 +30552,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=7291822178347557748",
     "phone": "075-342-4430",
     "price": "￥1,000～3,000",
+    "description": "川に面した、木のぬくもりを感じられる人気の料理店。網焼きのウナギ、とろろ、サクサクの天ぷらなどを提供。",
     "sourceList": "和食",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -29998,6 +30618,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=12742149792007259455",
     "phone": "03-6416-3855",
     "price": "￥5,000～10,000",
+    "description": "落ち着いた雰囲気の気取らない店。伝統的な調理法を用いた土鍋ご飯が味わえるメニューを提供。日本酒もある。",
     "sourceList": "和食",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -30063,6 +30684,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=18434469388667020446",
     "phone": "03-5456-4512",
     "price": "￥10,000 以上",
+    "description": "市場で仕入れた新鮮な魚と四季の野菜を使った創作和食が頂けるダイニングバー。日本のワインも豊富に提供。店内はモダンで落ち着いている。",
     "sourceList": "和食",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -30104,6 +30726,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=8990084462610910961",
     "phone": "050-1722-2844",
     "price": "￥10,000 以上",
+    "description": "お任せコースの他、炊き込み土鍋ご飯が付属したコースなど多種類のコースメニューを用意。お酒は、地酒を中心に自家製梅酒も提供。",
     "sourceList": "和食",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -30167,6 +30790,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=16689110033826158350",
     "phone": "03-6416-3981",
     "price": "￥5,000～8,000",
+    "description": "ウッド調の店内には、半個室も完備している。全国から仕入れる地酒と、それに合う料理を多数取り揃えている。",
     "sourceList": "和食",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -30270,6 +30894,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=8279842321434564949",
     "phone": "092-791-8385",
     "price": "￥5,000～10,000",
+    "description": "酒やビールに合わせて名物の炉端焼きが味わえる、2 階席を備えた人気の居酒屋。",
     "sourceList": "和食",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -30548,6 +31173,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=2184251652610495294",
     "phone": "03-3797-3914",
     "price": "￥1,000～2,000",
+    "description": "特別栽培米と厳選された具に玄米茶をかけて頂くおひつ膳を中心とした和食が頂ける。店内は和風で落ち着いている。お持ち帰りも可。",
     "sourceList": "和食",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -30611,6 +31237,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=16880562570560463280",
     "phone": "078-271-1233",
     "price": "￥1,000～2,000",
+    "description": "落ち着いた雰囲気のお茶漬け専門店。丁寧に作られたお茶で味わう茶漬けの定食が人気。",
     "sourceList": "和食",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -30675,6 +31302,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=4496642609919572436",
     "phone": "03-5772-2553",
     "price": "￥10,000 以上",
+    "description": "知名度が高い日本料理屋。旬の素材を使った独自の和食をおまかせで提供。和風モダンで落ち着いた店内で穏やかに食事ができる。",
     "sourceList": "和食",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -30772,6 +31400,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=3189358858267897043",
     "phone": "03-6853-8878",
     "price": "￥10,000 以上",
+    "description": "落ち着きのある和の空間で、築地や北海道から毎日仕入れる魚介を使った、本格的な江戸前寿司を提供。カウンター席のみを用意する。",
     "sourceList": "和食",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -30876,6 +31505,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=5151236939114582919",
     "phone": "03-3224-1810",
     "price": "￥4,000～7,000",
+    "description": "豊富な日本酒、焼酎、国産ワインと季節の食材を活かした創作和食の料理が頂ける居酒屋。店内は家庭的で快適。",
     "sourceList": "和食",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -30982,6 +31612,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=1690689513795744845",
     "phone": "080-3000-7735",
     "price": "￥10,000 以上",
+    "memberComment": "静岡出身の大将が静岡の食材をメインに使用した天ぷらを堪能することができます🍤\nお料理はもちろん、店内の雰囲気や目の前で調理していただくのでライブ感もあり大満足◎\nお魚は毎日、お野菜は季節によって変えるそうです。\n\n🍽️ おすすめメニュー：\n活け〆のアジ/かき揚げの天丼",
     "sourceList": "天ぷら",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -31004,6 +31635,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=4383148996328263688",
     "phone": "052-711-0182",
     "price": "￥1,000～2,000",
+    "memberComment": "胸焼け知らずの天ぷら。海老はぷりぷり、菜の花はかりかり、子持ち鮎はジューシー、ヤングコーンはさくっ、さつまいもはスイーツのように甘い。フグやタイのお造りも美味。\n名古屋うまいものGP二年連続優勝。大将がイケメン。コスパ最強。",
     "sourceList": "天ぷら",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -31044,6 +31676,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=5826650250164247742",
     "phone": "03-5568-0923",
     "price": "￥10,000 以上",
+    "description": "オープン キッチンで魚介類や野菜を使った揚げたての天ぷらを楽しめるモダンなレストラン。",
     "sourceList": "天ぷら",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -31103,6 +31736,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWngFk22XvRe6EtKy_4Q6IBnuGFEcanCSr-jBGUzlfUx-QsjD_sA54bLXE9i8JQqEWTjOSK9Muz0Y4qfaGAfmlePISnrHz1aF7ElTAqecqvDffknAm1VWTXtU6tOvm9ONUprII7lad6eZ_A=w122-h92-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=13795031610569625735",
     "phone": "052-911-3512",
+    "description": "丼物、天ぷら、カキフライを提供する和モダンな雰囲気のレストラン。",
     "sourceList": "天ぷら",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -31209,6 +31843,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=7284073139917814919",
     "phone": "03-6413-5310",
     "price": "￥10,000 以上",
+    "memberComment": "小さめの店内ですがまるでショーを見ているかのような気分になるお寿司屋でした。どのお寿司も遊び心があり、美味しく、そしてクソデカかった。おすすめです\n\n🍽️オススメメニュー: 中トロ、とろたく、えんがわ、なめろう、水ダコ",
     "sourceList": "寿司",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -31249,6 +31884,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=3949349824523661291",
     "phone": "03-3891-6341",
     "price": "￥1,000～2,000",
+    "memberComment": "隣のお魚屋さんも運営してるお店です\n\nマグロが大きくて美味しかったです！\n\nお味噌汁も海老の出汁取っててこだわってるな~！とおもいました！\n\n🍽️ おすすめメニュー：鉄火丼",
     "sourceList": "寿司",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -31300,6 +31936,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=1676736379277370834",
     "phone": "03-6804-6090",
     "price": "￥4,000～5,000",
+    "description": "オリジナル製法による赤身リブロース肉を使い、熱々の鉄板で提供されるステーキが味わえる。食べた量を記録するポンドカードがある。",
     "sourceList": "寿司",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -31320,6 +31957,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=6519115048917211267",
     "phone": "03-6281-4712",
     "price": "￥10,000 以上",
+    "memberComment": "人生で一度は行ってみたかったみこ寿司の食べ放題にチャレンジしました！\n4-5人に1人の大将がつき、まずは食べ放題メニューを一通り＋ウニ3種2貫ずつを提供して下さり、その後は3貫ずつ好きなだけ追加で注文できるシステムです！時間は退店まで90分です。\nウニは海外産しかないですが、中トロ、いか、鯛、あじ、海老など、どれも美味しかったです！🥹\n食べ放題なので高級カウンター寿司と同じような落ち着きはないですが、1貫1貫の満足度は高く、年に1回くらいはまたトライしたいなと思いました。\n今回は1人で40貫食べたので、次回は50貫目指します！🍣\n\n🍽️ おすすめメニュー：ウニ食べ比べ",
     "sourceList": "寿司",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -31340,6 +31978,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=6909744475694709728",
     "phone": "090-7582-3174",
     "price": "￥10,000 以上",
+    "memberComment": "メニューはお任せコース一つだけですが、獺祭スパークリングはじめ、飲み放題のオールインクルーシブでお酒好き、お鮨好きにはたまらないお店です🍣\nカウンター6席と少ないですが、その分コスパが高くとても素敵なお店でした✨\n\n🍽️ おすすめメニュー：雲丹パフェ",
     "sourceList": "寿司",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -31382,6 +32021,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=13230318323273221115",
     "phone": "03-5568-4411",
     "price": "￥10,000 以上",
+    "description": "白木のカウンター席を有する洗練された和の空間で、昼、夜共にコースとおまかせのみを提供する寿司屋。料理を盛る器にもこだわりを持つ。",
     "sourceList": "寿司",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -31403,6 +32043,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=18305223625446887720",
     "phone": "03-6277-8118",
     "price": "￥10,000 以上",
+    "memberComment": "平日のランチタイムが自由になったので、お得にお寿司が食べられるお店を探して、行ってきました！\n握り寿司が8貫と、小さなお椀、お味噌汁もついてきて3,300円ととってもお得でした🉐\n穴子を目の前で炙っていて、ふわふわで美味しかったです💖\n平日限定メニューがあるお店の情報などをもっと知れたら嬉しいです\n\n🍽️ おすすめメニュー：平日限定のランチコース🍣",
     "sourceList": "寿司",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -31443,6 +32084,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=11972294186992643609",
     "phone": "050-3469-5441",
     "price": "￥1,000～2,000",
+    "memberComment": "柏レイソル変更遠征した時に通った昔ながらの寿司屋さんです。ランチメニューは1000円でちらし、中落ち丼、鉄火丼やおにぎり寿司から選べます。大盛りと1.5人前も1200円、1500円でいただけます。とてもリーズナブルと思います✨\n用事のある時に、ここは一択としておすすめします🍣\n🍽️ おすすめメニュー：ランチメニュー",
     "sourceList": "寿司",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -31573,6 +32215,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=7726051953557838672",
     "phone": "075-257-1285",
     "price": "￥2,000～4,000",
+    "description": "オープン キッチンを取り囲むようにカウンター席を設けた、気さくな雰囲気の寿司店。飲み放題メニューあり。",
     "sourceList": "寿司",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -31623,6 +32266,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=11879219334694015563",
     "phone": "078-393-1884",
     "price": "￥1,000～2,000",
+    "description": "貸切での利用も可能な店内では、中央市場や産地から直接仕入れる鮮魚を使用した多彩な料理が堪能できる。焼酎の種類も豊富。",
     "sourceList": "寿司",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -31705,6 +32349,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=16753783732350897526",
     "phone": "06-6453-0067",
     "price": "￥4,000～7,000",
+    "memberComment": "カジュアルですが美味しいです！",
     "sourceList": "寿司",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -31726,6 +32371,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=9258516941446887028",
     "phone": "06-4797-6667",
     "price": "￥2,000～4,000",
+    "description": "寿司、天ぷら、ビール、酒を提供する、飾らない雰囲気の居心地の良い居酒屋。",
     "sourceList": "寿司",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -31830,6 +32476,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=12390832189582491132",
     "phone": "03-3573-3433",
     "price": "￥10,000 以上",
+    "description": "純和風で落ち着きのある店内には座敷とテーブルの個室も完備。旬の食材を使う一品料理とにぎりをコースで提供する。飲み放題あり。",
     "sourceList": "寿司",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -32021,6 +32668,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=2283451699594218736",
     "phone": "054-288-0232",
     "price": "￥1,000～2,000",
+    "description": "さまざまなマグロ料理を楽しめる気取らないレストラン。シラスなど他の海産物を使った料理も提供する。",
     "sourceList": "寿司",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -32081,6 +32729,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=878647546855026922",
     "phone": "03-6426-7970",
     "price": "￥10,000 以上",
+    "description": "おしゃれな立ち食い寿司店。独創的なアレンジを効かせた寿司を味わえる。",
     "sourceList": "寿司",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -32206,6 +32855,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWnZxYv4IZn3RtoHDVSEzqL3V1kXfHZk9mrjsdpyL7FY0TE5lqjmIeQIXZKmx30wgE2efTjL7NnnCOSuxNKm0NaO9rdW_Ui6VIU-vSQtdEhjr01sku0hnMgLW_57TvfMz859g7oZbbnI4BfJ=w80-h106-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=2593241038190037529",
     "phone": "070-8937-7560",
+    "memberComment": "コスパ良く美味しいお寿司食べたい時に！",
     "sourceList": "寿司",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -32336,6 +32986,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=14999388758540545996",
     "phone": "06-6242-5163",
     "price": "￥2,000～3,000",
+    "description": "にぎやかな店内で、握り寿司や巻き寿司、刺身を楽しめる。",
     "sourceList": "寿司",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -32719,6 +33370,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=5983928319766936374",
     "phone": "050-5462-0736",
     "price": "￥3,000～8,000",
+    "memberComment": "ピノッキオの姉妹店で、イタリアで修行されたマスターの話が面白い！各メニューの仕入れ事情やパキスタンのお話等料理含め興味深いお話をして下さりました。何を食べても美味しいです♪\n\n🍽️ おすすめメニュー：エスカルゴ🐌",
     "sourceList": "居酒屋",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -32741,6 +33393,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=10669007801030366883",
     "phone": "050-5488-2359",
     "price": "￥10,000 以上",
+    "description": "独創的でおいしい和風小皿料理をカウンターで提供する。飲み放題あり。",
     "sourceList": "居酒屋",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -33009,6 +33662,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=17385107473898104855",
     "phone": "03-5783-0888",
     "price": "￥1,000～2,000",
+    "description": "座敷席も完備した、木の温もり溢れる和モダンな店内で、名物の博多もつ鍋や博多郷土料理のつまみを提供。明太子食べ放題ランチも用意。",
     "sourceList": "居酒屋",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -33030,6 +33684,8 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=9330604022221444664",
     "phone": "0422-47-1008",
     "price": "￥1,000～2,000",
+    "description": "2 階建ての飾らない店。1928 年創業で、焼き鳥、生ビール、酒を提供。",
+    "memberComment": "吉祥寺の街で長年圧倒的な存在感を放ち、多くの人々に愛され続ける焼き鳥の老舗「いせや 総本店」へ。\n名物の大ぶりな焼き鳥は、ジューシーで食べ応え抜群。深みのある秘伝のタレ、そして絶妙な塩梅で焼き上げられた串は、ビールやレモンサワーとの相性がこれ以上ないほど抜群です。\nカウンター・店内席はとんでもない煙を被ることになるので服装に気をつけてください。",
     "sourceList": "居酒屋",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -33093,6 +33749,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=3747087070702810916",
     "phone": "03-6312-2261",
     "price": "￥3,000～7,000",
+    "memberComment": "掲示板でご飯会の募集が出ている三谷……の隣の隣にある、系列の立ち飲みです！\nオシャレな雰囲気で店員さんもお客さんも楽しく優しくおもろいお店でした。\n\nレバニラが最高でした。芝浦の精肉店から毎日仕入れてるとのことで、レバー苦手な僕でも美味しく食べれました🥩\n1列に並ぶ形のめちゃ狭い立ち飲み屋なので2人で行くくらいがちょうどいいかも…\n(4軒目で酔っ払って写真撮るのを忘れたのであんまり写真がないです…)\n\n🍽️ おすすめメニュー：目黒ハイボール、レバニラ",
     "sourceList": "居酒屋",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -33118,6 +33775,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=11944788615836575803",
     "phone": "080-3522-5732",
     "price": "￥4,000～7,000",
+    "memberComment": "だし料理のお店！だし塩やだし醤油でいただく新鮮な刺身が最高でした！\n大人で小洒落た雰囲気もよくデートにもピッタリ！\n\nおすすめメニュー:日本酒の「殊の外(ことのほか)」",
     "sourceList": "居酒屋",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -33287,6 +33945,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=1687575120094281017",
     "phone": "03-5420-1075",
     "price": "￥6,000～10,000",
+    "description": "古風でしゃれた店内にはカウンター席もあり、市場の新鮮な鴨と葱を使った鴨鍋や鶏肉料理が頂ける和食レストラン。",
     "sourceList": "居酒屋",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -33310,6 +33969,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=7336491303204989362",
     "phone": "052-485-8258",
     "price": "￥5,000～10,000",
+    "description": "上品で落ち着きのある和モダンな店内にボックス席や掘りごたつの個室を完備。海鮮料理や寄せ豆腐などの和食を提供。ワインも取り揃える。",
     "sourceList": "居酒屋",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -33351,6 +34011,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=10486843584321177917",
     "phone": "070-8378-3354",
     "price": "￥1,000～2,000",
+    "memberComment": "Google散歩してるときに見つけて気になり、この前行くことができました！かなり穴場な感じで、普通に歩いてたら見逃すくらいコンパクトなドアになってます🚪\n店内かなり混雑していてましたが雰囲気良く、2軒目で行きましたが味噌パスタと名物の人参カラムーチョが美味しすぎてリピ決定です🥕",
     "sourceList": "居酒屋",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -33391,6 +34052,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=14664288733037575358",
     "phone": "03-5738-8455",
     "price": "￥6,000～7,000",
+    "memberComment": "96世代飲み企画で行ったお店です！\n飲み放題のコースでは\n-7種類の色とりどりの前菜\n-ジューシーな餃子🥟\n-サザエとしめじのソテー🐚‎🍄\nと眼にも舌にも美味しいお料理😋✨️\n\n中でもおすすめは**土鍋ご飯**‼️\n鴨とフォアグラの濃厚で優しい味わいで、この世でイチバン美味しい土鍋ご飯に仕上がってます(*´`)♡\n\nお店の雰囲気も明るく開放的なので、デートにも社内の部署飲みにもピッタリです👍⸒⸒\n\n🍽️ おすすめメニュー：鴨とフォアグラの土鍋ご飯",
     "sourceList": "居酒屋",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -33504,6 +34166,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=8614268698275612974",
     "phone": "06-6373-2037",
     "price": "￥4,000～7,000",
+    "description": "和テイストのカジュアルな店内で、土鍋の炊き込みご飯や天ぷら盛り合わせを提供している。飲み放題プランもある。",
     "sourceList": "居酒屋",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -33547,6 +34210,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=12990983631012283196",
     "phone": "03-3200-9354",
     "price": "￥2,000～3,000",
+    "description": "こぢんまりとして落ち着いた雰囲気の店。焼き鳥のほか、日本酒や地酒を楽しめる。",
     "sourceList": "居酒屋",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -33587,6 +34251,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=14865808358208731426",
     "phone": "076-482-4064",
     "price": "￥4,000～8,000",
+    "description": "温かみのある落ち着いた雰囲気の居酒屋。ビールとともに刺身やコロッケなどの定番料理を楽しめる。",
     "sourceList": "居酒屋",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -33635,6 +34300,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWmeWDz-GkqszYWUfDtWmfwRJfgu2oT2LORStvZGC--NzjapXArGQKSn6ux7AG43pqOOFMtoDgLKQS8tG76yrhBY5xpQYbU7TZlJEIJcjrflJUkBWcusMK7dhE3P3rnVt3PUVWIVpx4hoJI=w138-h92-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=17172789002631102813",
     "phone": "052-414-7263",
+    "description": "江戸時代の米蔵を和モダンに改装した店内にムーディーなバーを併設。奥三河の食材を使った創作和食や釜炊きご飯と共に、日本酒を提供する。",
     "sourceList": "居酒屋",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -33752,6 +34418,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=3941961047905526471",
     "phone": "052-571-3988",
     "price": "￥10,000 以上",
+    "description": "落ち着いた雰囲気の和食料理店。ズワイガニやノドグロなどの海の幸を存分に楽しめる。",
     "sourceList": "居酒屋",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -33873,6 +34540,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=6932551979313140436",
     "phone": "03-5725-8391",
     "price": "￥4,000～7,000",
+    "description": "アンティーク家具を配した、居心地の良いおしゃれなレストラン。さまざまな国の味を取り入れた創作料理を提供する。",
     "sourceList": "居酒屋",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -33893,6 +34561,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=14364353533864193317",
     "phone": "03-6452-4649",
     "price": "￥4,000～8,000",
+    "memberComment": "93年会で行きました！（二軒目）\n文句なし。全部美味し。\n青椒肉絲噛むほどに旨みが広がるやつ。\nトリュフエビマヨ食感良し！サクサク！\n\nドリンクも美味しくて是非再訪したいお店✍️吟醸ハイボールｵｽｽﾒ\n次回はお店イチオシのアジフライを食べに🥺✨\n\n※ホイッピ＆ラッピとやらのフィギュアがテーブルに。使って撮れって言われてる気がして📸\n\n🍽️ おすすめメニュー：\n和牛ユッケ的青椒肉絲、トリュフエビマヨ、［完熟/半熟］アジフライ",
     "sourceList": "居酒屋",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -33913,6 +34582,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=9601885857590344152",
     "phone": "03-6384-5350",
     "price": "￥3,000～4,000",
+    "memberComment": "93年会で行きました！（一軒目）\n宴会コースにて。\n”おいしい油揚げ”：トロたくを乗せて食べるという、個人的に初でしたがgood✨\n終盤の唐揚げ＆フライドポテトだけ？な感じ🫢\n\n🍽️ おすすめメニュー：\nおいしい油揚げ、胡麻カンパチ",
     "sourceList": "居酒屋",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -33940,6 +34610,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=12671744949889697866",
     "phone": "03-6261-3719",
     "price": "￥2,000～3,000",
+    "memberComment": "IRO＋edgeの後にまるさんとタコさんウィンナーを食べてきました\n自称ミシュラン7つ星とのことです。\n\n🍽️ おすすめメニュー：たこさんウィンナー",
     "sourceList": "居酒屋",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -34004,6 +34675,8 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=12754645099130733391",
     "phone": "03-5413-8701",
     "price": "￥1,000～2,000",
+    "description": "韓国や日本の発酵食材を使った料理やカクテルを楽しめる、インダストリアル シックな内装のモダンな店。",
+    "memberComment": "・発酵唐揚げ\n・発酵ポテサラ\n・海鮮チヂミ等\n発酵居酒屋の会で行きました！\n\n表参道の裏道にある、全ての料理に、塩麹、味噌、酒粕、糠漬けなど、「発酵」を取り入れた隠れ家的な居酒屋\n\n無添加、手づくりな料理の数々は体に優しく、\nとてもヘルシーでした！\n唐揚げ、ポテサラ、海鮮チヂミなど味付け・食べ応え最高ながら、重たさ無しのやさしい味でした！\n\n発酵レモンサワー、日本酒、マッコリなど、「発酵」がテーマのお酒も種類豊富にあり、こだわりがすごかったです！",
     "sourceList": "居酒屋",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -34025,6 +34698,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=2266503000870847334",
     "phone": "052-564-5770",
     "price": "￥3,000～6,000",
+    "description": "掘りごたつのカウンター席を備えた和モダンで落ち着きのある店内で、名物のおでんと創作和食を提供。飲み放題付きコースもある。",
     "sourceList": "居酒屋",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -34051,6 +34725,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=12956133261175785151",
     "phone": "075-353-5016",
     "price": "￥2,000～5,000",
+    "description": "漬け樽と石のロゴがある一軒家で、店内は木の優しさに包まれる。京野菜を漬けた一品やししゃも西京漬けなどの創作料理を提供。ランチあり。",
     "sourceList": "居酒屋",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -34071,6 +34746,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=16179849470173410664",
     "phone": "03-5937-3937",
     "price": "￥3,000～4,000",
+    "description": "温かみのあるゆったりとした居酒屋。茹でタン、馬レバ刺しなどの人気メニューが並ぶ。",
     "sourceList": "居酒屋",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -34121,6 +34797,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=11924658315007763212",
     "phone": "03-6455-0993",
     "price": "￥2,000～6,000",
+    "memberComment": "お好み焼き",
     "sourceList": "居酒屋",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -34165,6 +34842,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=14850310577466549095",
     "phone": "03-3508-5131",
     "price": "￥4,000～8,000",
+    "memberComment": "いろんな馬肉が食べれることはさることながら、歌麿鍋が\n絶品でした（〆のそばもサイコー！）！！\nとき卵と一緒に食べるのがおすすめなのでぜひぜひ🙌\n\nいつも行ってる馬肉のお店とはまた違った素敵なお店です！\nぜひぜひ行ってみてください🤭僕も再訪します、必ず！！！",
     "sourceList": "居酒屋",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -34185,6 +34863,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=7838224132729032086",
     "phone": "03-6712-2022",
     "price": "￥4,000～5,000",
+    "memberComment": "コスパ最強\nとなりのトトロが描かれたグラスでドリンクを楽しめます！かわいい！是非",
     "sourceList": "居酒屋",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -34209,6 +34888,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=6384581982285208816",
     "phone": "078-321-6656",
     "price": "￥2,000～5,000",
+    "description": "パブ風のシンプルモダンな店内はカジュアルな雰囲気。工場から直送される生ビールやスパイスを使用した焼き鳥を提供している。",
     "sourceList": "居酒屋",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -34269,6 +34949,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=7292736954544754267",
     "phone": "098-862-3124",
     "price": "￥1,000～5,000",
+    "description": "わらぶきの家や牛車をモチーフにした座敷を揃えた個性的で温かみのある店内で、沖縄料理を提供し、島唄ライブを開催。飲み放題コースあり。",
     "sourceList": "居酒屋",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -34309,6 +34990,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=9126534488334050422",
     "phone": "092-710-6739",
     "price": "￥4,000～7,000",
+    "description": "ビールに合う各種串焼きや名物の小皿料理を提供する、居心地の良いカジュアルな居酒屋。",
     "sourceList": "居酒屋",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -34354,6 +35036,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=9166099478908384315",
     "phone": "075-221-0669",
     "price": "￥2,000～4,000",
+    "description": "錦糸玉子丼や炭火焼うなぎ丼で知られて数十年の老舗。",
     "sourceList": "居酒屋",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -34707,6 +35390,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=10985004818612622951",
     "phone": "03-3464-4477",
     "price": "￥5,000～6,000",
+    "description": "掘りごたつ席なども備える気さくな雰囲気の店内で、海鮮料理や創作和食を提供。飲み放題付きの宴会コースもある。",
     "sourceList": "居酒屋",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -34747,6 +35431,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=1215796461744347554",
     "phone": "092-753-8358",
     "price": "￥4,000～9,000",
+    "description": "モダンなスタイルの居酒屋。木製の円形カウンターで、美しく盛り付けられた和食の一品料理、日本酒、エールビールを提供する。",
     "sourceList": "居酒屋",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -34853,6 +35538,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=63329928688125957",
     "phone": "075-255-1239",
     "price": "￥3,000～7,000",
+    "description": "座敷席を備える和風の上品な店内で、京野菜を使用した料理を提供している。ワインも取り揃える。",
     "sourceList": "居酒屋",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -34878,6 +35564,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=2874729744322046078",
     "phone": "075-223-5052",
     "price": "￥4,000～5,000",
+    "description": "古風で和の心が和らぐ店内にはカウンター席や掘りごたつ席もあり、気軽にその日に採れた産地直送の旬の京野菜を使った料理が頂ける。",
     "sourceList": "居酒屋",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -34923,6 +35610,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=14565779932443845537",
     "phone": "03-3464-3000",
     "price": "￥3,000～8,000",
+    "description": "カウンター席に鮮魚が入った冷蔵ショーケースを備えた店内で、刺身や魚の塩焼き、カニ料理などを提供。各種握り寿司もある。",
     "sourceList": "居酒屋",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -34967,6 +35655,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=13481153039496840062",
     "phone": "06-6131-2445",
     "price": "￥2,000～4,000",
+    "memberComment": "意外と肉寿司がしっかりしてました",
     "sourceList": "居酒屋",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -34988,6 +35677,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=14792876335334016027",
     "phone": "06-6553-7999",
     "price": "￥2,000～3,000",
+    "memberComment": "癖強ですが、コスパ最強です！",
     "sourceList": "居酒屋",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -35060,6 +35750,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=14991097052349986405",
     "phone": "076-222-4649",
     "price": "￥4,000～8,000",
+    "description": "カジュアルな店内で、洋食や中華料理などのおつまみとカクテルが楽しめる。",
     "sourceList": "居酒屋",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -35084,6 +35775,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=10552454739571530610",
     "phone": "075-255-5015",
     "price": "￥4,000～8,000",
+    "description": "しゃぶしゃぶが楽しめる伝統的な店。座敷があり、客は卓上に置かれた熱い鍋で調理できる。",
     "sourceList": "居酒屋",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -35272,6 +35964,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=4139205056211571122",
     "phone": "06-7173-6835",
     "price": "￥2,000～6,000",
+    "memberComment": "燻製とお酒が豊富！",
     "sourceList": "居酒屋",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -35312,6 +36005,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=10543739753192750910",
     "phone": "03-3410-1291",
     "price": "￥3,000～4,000",
+    "memberComment": "めちゃ狭なのだけ注意です！",
     "sourceList": "居酒屋",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -35352,6 +36046,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=11473520859628623525",
     "phone": "03-3376-5339",
     "price": "￥2,000～4,000",
+    "memberComment": "焼酎好きならぜひ！\n水割りを頼むとほぼロックが出てきます",
     "sourceList": "居酒屋",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -35372,6 +36067,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=17848519425763551837",
     "phone": "03-3402-9319",
     "price": "￥3,000～7,000",
+    "memberComment": "喫茶店のような雰囲気だけど料理はガチ‼️",
     "sourceList": "居酒屋",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -35392,6 +36088,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=14194696590370697344",
     "phone": "03-3495-4755",
     "price": "￥1～5,000",
+    "memberComment": "安くて量が多いタイプのコスパ最強海鮮居酒屋！\nでも予約が取りにくい、品出しが少しゆっくりめなのには注意です、！",
     "sourceList": "居酒屋",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -35414,6 +36111,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=11709512955098098239",
     "phone": "070-8415-6924",
     "price": "￥4,000～7,000",
+    "description": "隠れ家的な雰囲気の気取らない店。鉄板焼きや、居酒屋風に取り分けて楽しめる和食を提供。",
     "sourceList": "居酒屋",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -35524,6 +36222,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=5744603901574322310",
     "phone": "070-8953-7103",
     "price": "￥4,000～8,000",
+    "memberComment": "美味しい発酵おつまみが色々あって面白かったです！",
     "sourceList": "居酒屋",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -35544,6 +36243,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=8325499399118541784",
     "phone": "03-6417-0636",
     "price": "￥4,000～8,000",
+    "memberComment": "アジフライがおいしい人気店！",
     "sourceList": "居酒屋",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -35587,6 +36287,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=2352309051365817277",
     "phone": "03-6452-4170",
     "price": "￥2,000～6,000",
+    "description": "鶏白湯あつかけうどんの他に、揚げ物や特製のキャベツサラダなどさまざまな居酒屋メニューを用意する。木の温もりがあるカジュアルな店内。",
     "sourceList": "居酒屋",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -35608,6 +36309,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWkp5LoGzDPCizcRxw7H5HHzV2f0cWbbhz4luEPA8rkwndcewRRQXJ1H4FHvgEHcV1RjxvyI_PRGGVyVw57O09haH3gqK9p3YF1z0-rmLeXuAI7MdN-zauUnkitoow0cTPqRKMZA=w163-h92-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=2002515175176703355",
     "phone": "050-5868-0348",
+    "description": "広々とした老舗居酒屋。季節ごとのコース料理、季節のおすすめ料理、海鮮料理を提供する。",
     "sourceList": "居酒屋",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -35687,6 +36389,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=3287885793780990431",
     "phone": "06-6315-5089",
     "price": "￥2,000～3,000",
+    "description": "ショッピング モール内のワインバー兼レストラン。フレンチと和食を融合させた料理を提供。",
     "sourceList": "居酒屋",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -35768,6 +36471,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=14751669289045066814",
     "phone": "06-6131-4974",
     "price": "￥3,000～5,000",
+    "description": "熟成サーモンを様々な形で調理したパスタやピザ、一品料理を出す。料理に合うワインや日本酒、地元大阪のクラフトビールも取り揃えている。",
     "sourceList": "居酒屋",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -35921,6 +36625,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=17987033928817663476",
     "phone": "070-5659-0348",
     "price": "￥2,000～4,000",
+    "description": "常連客が集うカウンター席の焼肉店。七輪で肉を焼いてご飯と一緒に。",
     "sourceList": "居酒屋",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -36215,6 +36920,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=11050747874980278285",
     "phone": "06-6882-5768",
     "price": "￥2,000～4,000",
+    "description": "屋台のような店構えの気取らない居酒屋。マグロ頬肉や刺身などの定番の魚料理を味わえる。",
     "sourceList": "居酒屋",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -36234,6 +36940,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWlZjNnX7VypPTkiqz-58KXBcuVDgy2U0g4Dy-VnRizdxFI3s6lqKjKdB7PK0tX0lOr0mFVp2QcN-CYvRYSAzlbFe2ZLtgTlv0jYSfxA-SVp9wQblnkHK7zJH4N6DCuzDNoSZxPZZbwlXPk=w122-h92-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=15065325439791046452",
     "price": "￥1,000～2,000",
+    "description": "オープン　キッチンを備えたシンプルでこじんまりとした店。中華そば、餃子、からあげを提供。",
     "sourceList": "居酒屋",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -36296,6 +37003,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=16357276903016177585",
     "phone": "03-6430-3329",
     "price": "￥3,000～7,000",
+    "description": "カウンター席も備える和風な店内で、鶏料理や魚介料理を提供している。日本酒の他、焼酎も数多く備えている。",
     "sourceList": "居酒屋",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -36516,6 +37224,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=13718118885801977326",
     "phone": "03-3463-1010",
     "price": "￥3,000～6,000",
+    "description": "皆で楽しめる独創的な和食や居酒屋料理を提供するスタイリッシュな板張りのレストラン。",
     "sourceList": "居酒屋",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -36742,6 +37451,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=11836037812575964164",
     "phone": "03-5724-4439",
     "price": "￥4,000～8,000",
+    "description": "産地直送の新鮮な素材を使った炉端焼きやこだわりの和食が頂ける居酒屋。隠れ家のようなお店は活気があり庶民的。夜遅くまで営業している。",
     "sourceList": "居酒屋",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -36807,6 +37517,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=9726373746043169693",
     "phone": "03-6417-9690",
     "price": "￥5,000～8,000",
+    "description": "こだわりの豊富な純米酒に合わせて和食がのんびりと頂ける居酒屋。シンプルで洒落た古典的な店内はアットホームで居心地が良い。",
     "sourceList": "居酒屋",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -36827,6 +37538,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=13651337911435359718",
     "phone": "03-5773-7400",
     "price": "￥4,000～8,000",
+    "description": "掘りごたつ席も備えた和テイストな店内はカジュアルな雰囲気。刺身を中心とした海鮮料理を提供している。宴会メニューもある。",
     "sourceList": "居酒屋",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -36948,6 +37660,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWmKppRu99dZykiY5h6vnUTgPvWNhChuN8MlxufCt_m3SDp1Am3ZgrXrTXenr1WQ0nHqgW3usAUoUNzJ2TX5OqQQnXo0wFkwCM5Xy147BuzLV0-n0ihE8s78d3hAipnnJQwSDkZ7zw=w163-h92-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=9348735691101310588",
     "price": "￥1,000～3,000",
+    "description": "ビールとともにメンチカツやチャーシュー、鶏の唐揚げなどの肉料理を楽しめるシンプルな居酒屋。",
     "sourceList": "居酒屋",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -36989,6 +37702,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=478152050527567510",
     "phone": "03-4400-3264",
     "price": "￥1,000～2,000",
+    "description": "エイの肝やサメの心臓など珍しい刺身や日本酒を提供する、気取らない市場の料理店。",
     "sourceList": "居酒屋",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -37160,6 +37874,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=15605937523476066789",
     "phone": "03-5784-1775",
     "price": "￥3,000～7,000",
+    "description": "ゆったりとくつろげる隠れ家的な居酒屋。刺身や神明鶏の肉汁焼きなど、さまざまな居酒屋メニューを味わえる。",
     "sourceList": "居酒屋",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -37270,6 +37985,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=7456084186848908381",
     "phone": "03-6427-8538",
     "price": "￥2,000～3,000",
+    "description": "オリジナルの季節のパフェを提供する、夜のみオープンするパフェ専門店。ナチュラルモダンな店内にはカウンター席を備える。",
     "sourceList": "居酒屋",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -37383,6 +38099,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=9734455416076088068",
     "phone": "050-5487-5620",
     "price": "￥1～6,000",
+    "memberComment": "金土でも10人近い予約、2件目当日いけるタイプのお店",
     "sourceList": "居酒屋",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -37403,6 +38120,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=4426081262548378416",
     "phone": "03-3519-3120",
     "price": "￥10,000 以上",
+    "memberComment": "10000円飲み放題。料理もお酒も◎",
     "sourceList": "居酒屋",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -37626,6 +38344,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=13993109698277970990",
     "phone": "075-251-0708",
     "price": "￥3,000～6,000",
+    "description": "シンプルな店内で、厳選された素材を使った本格和食とさまざまな種類の日本酒を堪能できる。",
     "sourceList": "居酒屋",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -37689,6 +38408,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=1958709865699529629",
     "phone": "075-353-0515",
     "price": "￥3,000～6,000",
+    "description": "席数は少ないが、海鮮料理、ご飯物、天ぷら料理を提供し、日本酒の品ぞろえも豊富な居心地の良い飲食店。",
     "sourceList": "居酒屋",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -37716,6 +38436,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=12020925524049162904",
     "phone": "075-741-8698",
     "price": "￥3,000～6,000",
+    "description": "カウンター席を備える和を基調とした気取らない店内で、明太子やタケノコの燻製を提供する。日本酒を取り揃え、コースメニューもある。",
     "sourceList": "居酒屋",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -37743,6 +38464,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=18395667663117402817",
     "phone": "075-223-5050",
     "price": "￥3,000～5,000",
+    "description": "旬の京野菜のおでんと串焼きも提供する居酒屋。和の風情溢れるモダンな店内にボックス席を備える。オリジナルドリンクも用意。",
     "sourceList": "居酒屋",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -38186,6 +38908,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=6003543345049875234",
     "phone": "+44 20 7499 6996",
     "price": "£30～80",
+    "description": "エレガントなレストラン。高級感のあるアールデコ様式の華やかな空間でモダンなヨーロッパ料理とアフタヌーン ティーを楽しめる。",
     "sourceList": "欧州料理",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -38273,6 +38996,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWmTJgz-j2rQNtM7iHrQUvQ2WZBLy6E-7BZeowE7dzL2HAj_XkVP9aj2QljjMQJKwViWgO6NlwLbr6bV0rKeKlwdoBdD_6s25b03FmSZP-vGdJ8JBzL6yfe4hm-sWnTzA9HCj67i=w122-h92-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=6175649946712872707",
     "price": "￥1,000～2,000",
+    "memberComment": "店名：オムの細道\n場所：亀戸(東あずま)\n料理：\n備考：完全お子さまランチを大人になっても、腹一杯食べる夢。そんな夢が叶う完全予約制の小さなオムライス屋さん🌸 \nスカイツリーや浅草付近に来た際に足を伸ばしてみてはいかがですか？\nおいしかった😇\n\n🍽️ おすすめメニュー：オムライス全載せ、さらに目玉焼きをトッピング",
     "sourceList": "洋食",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -38314,6 +39038,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=3366525187645398765",
     "phone": "0153-73-5017",
     "price": "￥1,000～2,000",
+    "memberComment": "知床旅行で中標津空港に降り立ったので地元で人気の老舗洋食屋さんに行きました！\n「エスカロップ」とは…？\nケチャップライスまたはバターライスにポークカツ、デミグラスソースが乗った根室のご当地グルメです💖\n場所はドンピシャ根室ではないですが、ここのお店のが有名だったので注文！\nふわふわだ…という感想をバターライスに初めて抱きました\n初めて食べるのに懐かしい感じ…観光客もいますが、地元の人で賑わうあったかい洋食屋です！\n知床に行く際、女満別も良いですがぜひ中標津へ！！周辺でまるでウユニ塩湖のような？笑写真も撮れて絶景です♪🤳\n\n🍽️ おすすめメニュー：エスカロップ",
     "sourceList": "洋食",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -38356,6 +39081,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWnm015gQL8zRv5wtneEzGYnOOSrOpkmIofSUqDfJOQ1jWVTcX8uP3sJDuZyNwNOGVKc6O5_MA-uQXNzszWVo4PHSiVB5n38nAO08RbzZwbMgvaSX806jhnCUkKkOFnDPK2YodbmaMDPfTxo=w90-h92-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=1182604227777262573",
     "price": "￥1,000～2,000",
+    "description": "気取らない雰囲気の洋食レストラン。牛タンステーキやハンバーグを提供。",
     "sourceList": "洋食",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -38379,6 +39105,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=14570852349882918211",
     "phone": "075-211-0459",
     "price": "￥1,000～2,000",
+    "description": "テーブル席を備えるカジュアルな店内で、自家製ドレッシングを使用したサラダ、ステーキ、ハンバーグを提供している。",
     "sourceList": "洋食",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -38401,6 +39128,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=16453865194847383640",
     "phone": "075-744-0777",
     "price": "￥1,000～2,000",
+    "description": "さまざまなソースが用意された自家製ハンバーグが人気のこぢんまりとしたシンプルな店。",
     "sourceList": "洋食",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -38422,6 +39150,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=5652686409188030875",
     "phone": "075-744-0067",
     "price": "￥1,000～2,000",
+    "description": "本と映画のポスターに囲まれたくつろげるカフェ。米料理、サンドイッチ、温かいドリンクを提供。",
     "sourceList": "洋食",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -38633,6 +39362,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=18115160206659904958",
     "phone": "03-3632-2348",
     "price": "￥10,000 以上",
+    "description": "卓上グリルのある席で大皿に盛られた焼肉を楽しめるくつろいだ雰囲気の店。ユッケや酒も提供。",
     "sourceList": "焼肉",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -38657,6 +39387,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=17419416815722134360",
     "phone": "0997-46-3439",
     "price": "￥3,000～7,000",
+    "memberComment": "屋久島旅行には欠かせないお店と聞いて言ってみました！店内が広くて他テーブルと距離があるので落ち着いて過ごせました〜\n縄文牛、鹿児島黒豚、屋久シカなど色々なお肉を食べられるのがGood👍\nアイス(皮付き)って何だろうと思ったらカカオでした😂\n人気店なので予約必須！\n\n🍽️ おすすめメニュー：屋久シカ（屋久島産）・エゾシカ（北海道産）の食べくらべ",
     "sourceList": "焼肉",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -38677,6 +39408,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=7493481468103816808",
     "phone": "0572-56-2929",
     "price": "￥2,000～3,000",
+    "description": "牛タンなど定番の焼肉メニューを楽しめるくつろいだ雰囲気のコンパクトな店。",
     "sourceList": "焼肉",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -38698,6 +39430,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=10480093025988891824",
     "phone": "011-272-4055",
     "price": "￥4,000～8,000",
+    "description": "庶民的な雰囲気のカジュアルな店内で、昼は海鮮丼や定食、夜は各種の焼肉やジンギスカンを提供している。飲み放題プランもある。",
     "sourceList": "焼肉",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -38721,6 +39454,8 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=1978353775829927343",
     "phone": "03-3437-1312",
     "price": "￥4,000～7,000",
+    "description": "牛と豚のさまざまな部位のホルモンを出す他、カルビやハラミなどの焼肉も提供。韓国風のつまみやご飯物も用意している。",
+    "memberComment": "NonさんのInstagramストーリーを見て行きたくなり🤤\n\nハツ刺しはあっさりとして美味。ニンニクを付けてより美味に。\n上牛タンの分厚さたるや…🤤\n数量限定?の上ハラミも良きでした✨\n\nｺﾘｺﾘｼｬｷｼｬｷ…ホルモンさんたまらんですね〜\nまた行ってきます😊",
     "sourceList": "焼肉",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -38746,6 +39481,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=11460069835373479165",
     "phone": "03-4500-0482",
     "price": "￥10,000 以上",
+    "memberComment": "こじんまりとしたお店で赤身肉中心のメニューが豊富です！！\nコースなどもあるみたいですがアラカルトで頼みました。\n中でも『京之介焼き』の特製ロースを出汁とろろに絡めて食べるといった他の焼肉店ではないさっぱり食べれるメニューが新鮮で美味しかったです🥹💖\n定員さんも丁寧な接客で対応が良く、なんと9枚目の最後の写真にあるお肉をサービスでくださいました✨(お肉の名前忘れました笑)\n2人で行きましたが1人1万円以内でした。\nお肉もどれも柔らかく美味しかったのでまた行きたいです🍴\n\n🍽️ おすすめメニュー：京之介焼き",
     "sourceList": "焼肉",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -38766,6 +39502,8 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=4173191451568049849",
     "phone": "03-5444-4422",
     "price": "￥1,000～6,000",
+    "description": "庶民的で賑やかな店内に掘りごたつ席を完備。多種の部位を取り揃える赤身肉やカレー味ホルモンの焼肉を提供。ランチ定食もある。",
+    "memberComment": "麻布十番の大衆焼肉No. 1だと思います！とにかく肉質が良く、お肉が分厚いです！！\n90分制なのでゆっくりはできないですが、とにかく美味しいのでおすすめです！\n1人8,000円ぐらいでした！\n\n🍽️ おすすめメニュー：\n生タン、本日のプレミアおすすめ",
     "sourceList": "焼肉",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -38827,6 +39565,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=15885544758002289883",
     "phone": "03-6281-4129",
     "price": "￥10,000 以上",
+    "memberComment": "タンからホルモンまでお肉が本当に柔らかすぎる✨特にカツサンドはこの上ない美味しさでした🫠\n今回は焼肉でしたが、奥ににじり口があり、通った先には割烹があるようです！風情ありますよね〜そちらも行ってみたい🙌\n\n🍽️ おすすめメニュー：特製ヒレカツサンド",
     "sourceList": "焼肉",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -38847,6 +39586,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=11726101835501118598",
     "phone": "+82 2-2677-5849",
     "price": "₩20,000～30,000",
+    "memberComment": "熟成サムギョプサル美味しい😀3,4回リピート🔁\nKaoru TVがyoutubeに載せたこともあり、日本人とわかるとニコニコして接客してくれます。\nなんか毎回お土産にソジュグラスくれます。\n\n🍽️おすすめメニュー：サムギョプサル、モクサル",
     "sourceList": "焼肉",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -38867,6 +39607,8 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=17804893545125451797",
     "phone": "03-3970-2257",
     "price": "￥3,000～7,000",
+    "description": "ビールに合わせて定番の焼肉を味わえる、こぢんまりとしたカジュアルな店。",
+    "memberComment": "美味しいお肉が圧倒的コスパで食べられる牛蔵！\nアクセスが微妙なのと、予約大変だけど、とにかく安い…（普通に食べて飲んで1人5,000円くらい）\nあとお酒も高く無いしソフドリも安い…\n\nお肉の盛り合わせを頼むと単品メニューに乗ってない部位のお肉が食べられます🥩\nあと実はハンバーグも美味しい…（すぐ焼いちゃうので写真が無い）\n滞在時間2時間、ラストオーダー30分前なのであんまりゆっくりは出来ないですが、美味しいので満足度高いです❣️\n\n今日は上司と後輩と行ったのでぜーんぶご馳走してもらって更にルンルンです👩‍🎤✌🏻（予約もお肉が焼くのも上司に全部やってもらった）\n\n🍽️ おすすめメニュー：お肉の盛り合わせ",
     "sourceList": "焼肉",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -38908,6 +39650,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=12903542262972806720",
     "phone": "03-6433-7429",
     "price": "￥2,000～3,000",
+    "memberComment": "SNSでも話題のユッケ丼です。\n\nご飯が見えないくらい敷き詰められたユッケに、濃厚な卵黄を崩して一気に。\n\n以前ほど混んでなく、平日13時なら並べずに入れます！\n\n🍽️ おすすめメニュー：ランチユッケ丼",
     "sourceList": "焼肉",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -38929,6 +39672,8 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWkZw7Hke7x8emP8VnMCZvsKTxgxSi_Ahlusc35R52sS7mf97OIKtnGsexF3ZAbagE6x6GCLvfXE-P3mVh6snyykiXEtGCwit31k8UruNd0juV3EBV_hLMUuZByddv8j292Pt93L=w138-h92-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=3410242289366530678",
     "phone": "03-3780-0056",
+    "description": "シンプルでスタイリッシュな雰囲気で、メスの旬の和牛にこだわった肉が頂ける焼肉レストラン。",
+    "memberComment": "恵比寿の隠れ家焼肉\n\n和風クラシックな落ち着いた空間でいただく焼肉🍖\n\nメス牛にこだわったお肉は脂が上品で、重たくならず最後まで美味しく食べられるのが最高。\n\n個室中心の作りでゆったり過ごせるので、デートや会食にもかなり使いやすい◎\n恵比寿駅から徒歩3分なのに、この落ち着きは強い。  \n\nしっかり美味しくて、ちゃんと雰囲気もいい“バランス型の良店”でした。\n\n赤ワインと合わせて最高です🍷\n\nオーナーはソムリエ&酒ディプロマ所有者なのでドリンクの相談もできます。\n\n🍽️ おすすめメニュー：ハラミ",
     "sourceList": "焼肉",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -38949,6 +39694,8 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=15848747905039315423",
     "phone": "03-6915-1638",
     "price": "￥10,000 以上",
+    "description": "テーブルにグリルを備えたシンプルな焼肉店。ジュージューと音を立てるステーキをビールやワインとともに楽しめる。",
+    "memberComment": "スペシャルコース食べました！\n初っ端からビーフシチュー出てきて最後まで大満足でした！！\nブリカツサンド商標取ってるだけあってめっちゃ美味しかったです🥩\n\n🍽️ おすすめメニュー\n・シャトーブリアンのブリカツサンド\n・特選のヒレすき焼き",
     "sourceList": "焼肉",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -38989,6 +39736,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=16914187310300359167",
     "phone": "052-322-7390",
     "price": "￥5,000～9,000",
+    "memberComment": "地元名古屋のお店です！名古屋なのでみなさんあまり行く機会がないかもしれないのですが、とってもおすすめです！食べ物の中で1番タンが好きなんですが、生タンがとろけます🤣ローストビーフを予約すると目の前で作ってくれます！美味しいし映えもバッチリです🥹✨雰囲気もカジュアルな感じで家族で来てる方もいます！",
     "sourceList": "焼肉",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -39008,6 +39756,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWmzd4-TpvvkLzt3nGrjVc3EWb6TIZgmT83QLhbl3p0uruL55WUyPrr8mHJjSK0ijxru23HjiJZFJ_A2AEXLU8Ts7R9MxdLYSRR2gXwV732w5YqjTOEaWn3t7Q5M2tE1ENIC649frZgFgE06=w80-h106-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=12551323624491124143",
     "phone": "03-5830-6676",
+    "memberComment": "昨晩、ご飯どこいった？！な〝ほぼとろ〟キンパをイロタスメンバーと♡♡\n\n他に頼んだユッケ、黒タン、赤身もぜんぶ優勝だった~\n1人8,000円とかでコスパも最高なのでみなさまもぜひ~♡♡",
     "sourceList": "焼肉",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -39135,6 +39884,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=14393782487730285689",
     "phone": "078-381-7680",
     "price": "￥3,000～5,000",
+    "description": "卓上グリルのあるコンパクトでシンプルな焼肉店。",
     "sourceList": "焼肉",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -39261,6 +40011,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=11899745140817432583",
     "phone": "03-6451-2939",
     "price": "￥9,000～10,000",
+    "memberComment": "どれも絶品😋\n数量限定メニューも多いので、早めの来店がベスト！",
     "sourceList": "焼肉",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -39309,6 +40060,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=548473744856270742",
     "phone": "050-5484-9449",
     "price": "￥5,000～10,000",
+    "description": "卓上グリルを配したモダンで落ち着いた店内で、ブランド牛の焼肉とご飯ものを味わえる洗練された店。",
     "sourceList": "焼肉",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -39389,6 +40141,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=17072335618888195337",
     "phone": "075-223-1129",
     "price": "￥5,000～10,000",
+    "description": "座敷席を備える和モダンで上品な焼肉チェーン。日替わりホルモンをはじめ、焼肉各種や石焼ガーリックライスを提供している。",
     "sourceList": "焼肉",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -39409,6 +40162,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=9552994729250809388",
     "phone": "075-352-2914",
     "price": "￥10,000 以上",
+    "description": "個室を備える黒を基調とした和モダンの上品な店内で、黒毛和牛を使用した各種の焼肉や希少部位を提供する。ユッケやテールスープもある。",
     "sourceList": "焼肉",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -39450,6 +40204,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=13216200469065422230",
     "phone": "075-352-6162",
     "price": "￥3,000～6,000",
+    "description": "カウンター席を備える店内はカジュアルで賑やかな雰囲気。スタッフが目の前で焼き上げるホルモン焼きのコースと単品を提供する。",
     "sourceList": "焼肉",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -39491,6 +40246,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=13479735652386996141",
     "phone": "075-352-5757",
     "price": "￥2,000～7,000",
+    "description": "塩またはタレで楽しむホルモンや生ものが名物の、行列ができるホルモン・焼肉店。壁には手書きの品書きが並ぶ、庶民的な空間。全面喫煙可。",
     "sourceList": "焼肉",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -39511,6 +40267,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=3530819899245577026",
     "phone": "050-5448-6489",
     "price": "￥10,000 以上",
+    "description": "卓上グリルが備え付けられた、おしゃれな焼肉店。東京タワーを眺めながら食事とドリンクを楽しめる。個室あり。",
     "sourceList": "焼肉",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -39637,6 +40394,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=3624044986982334911",
     "phone": "0761-24-5555",
     "price": "￥1,000～7,000",
+    "memberComment": "老舗の韓国焼肉店です！",
     "sourceList": "焼肉",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -39657,6 +40415,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=16858793327846127325",
     "phone": "072-762-0429",
     "price": "￥4,000～9,000",
+    "memberComment": "韓国焼肉、サイドも全部美味しいです！\n冷麺を食べるなら、まずはお酢無しで出汁を味わってみてください！",
     "sourceList": "焼肉",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -39680,6 +40439,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=7469375472072128284",
     "phone": "06-6631-7956",
     "price": "￥2,000～3,000",
+    "description": "ビールや日本酒とよく合うホルモンの串焼きが人気の気取りのない素朴な店。",
     "sourceList": "焼肉",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -39701,6 +40461,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=15142892022516084475",
     "phone": "03-3779-1558",
     "price": "￥3,000～7,000",
+    "memberComment": "油はねや匂いが気にならない格好がおすすめ！\nぜひ刻みにんにく爆入れで！笑\nラム肉刺し等サイドも最高でした",
     "sourceList": "焼肉",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -39724,6 +40485,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=12499820929665565463",
     "phone": "03-6427-2949",
     "price": "￥10,000 以上",
+    "description": "最上級の肉、ホルモン、旬の野菜を楽しめる、洗練された焼肉店。個室あり。",
     "sourceList": "焼肉",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -39808,6 +40570,8 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=6977157870700341229",
     "phone": "050-5486-0962",
     "price": "￥4,000～9,000",
+    "description": "一度も冷凍されていない、北海道産とオーストラリア産の羊肉にこだわりを持つジンギスカンレストラン。板場を囲んだカウンター席を用意。",
+    "memberComment": "ジンギスカンです",
     "sourceList": "焼肉",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -40044,6 +40808,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=1634823045950282442",
     "phone": "06-6343-9191",
     "price": "￥10,000 以上",
+    "description": "半個室で黒毛和牛の焼肉を楽しめる。肉寿司や刺身も提供。",
     "sourceList": "焼肉",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -40067,6 +40832,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=4855251065637085849",
     "phone": "06-6361-1371",
     "price": "￥4,000～8,000",
+    "description": "活気ある焼肉店。テーブルにある七輪で焼くスタイル。",
     "sourceList": "焼肉",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -40090,6 +40856,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=15963456829775158648",
     "phone": "06-6147-7841",
     "price": "￥2,000～7,000",
+    "description": "さまざまな種類の焼肉を楽しめる、落ち着いた雰囲気のレストラン。ワインも豊富に取り揃える。",
     "sourceList": "焼肉",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -40112,6 +40879,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=9653343634264174628",
     "phone": "06-6882-0221",
     "price": "￥4,000～8,000",
+    "description": "焼肉や海鮮焼を卓上グリルで楽しめる落ち着いた雰囲気の店。刺身も提供。",
     "sourceList": "焼肉",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -40134,6 +40902,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=16462428230763412863",
     "phone": "06-6356-2981",
     "price": "￥3,000～7,000",
+    "description": "テーブルで焼いて食べる、落ち着いた雰囲気の焼肉店。地元食材や豊富な銘柄の日本酒も楽しめる。",
     "sourceList": "焼肉",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -40175,6 +40944,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=3943126986856177915",
     "phone": "03-3897-0416",
     "price": "￥10,000 以上",
+    "description": "長年愛される焼肉の名店。ミスジやリブステーキなどを卓上のグリルで焼いて食べる。キムチなどのサイドメニューもある。",
     "sourceList": "焼肉",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -40218,6 +40988,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=3052525249546693621",
     "phone": "03-3242-2914",
     "price": "￥10,000 以上",
+    "description": "個室も備えたオープンキッチンの店内では、A5ランクの黒毛和牛のみを使用した焼肉各種が堪能できる。お酒の種類も豊富。",
     "sourceList": "焼肉",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -40283,6 +41054,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=2510846332274675873",
     "phone": "03-3710-2933",
     "price": "￥10,000 以上",
+    "description": "フレンチやイタリアンの要素を取り入れた焼肉店。和牛を使った繊細な料理を提供する。",
     "sourceList": "焼肉",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -40310,6 +41082,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=11760306857648796458",
     "phone": "050-5811-5700",
     "price": "￥5,000～10,000",
+    "description": "飾らない雰囲気の焼肉店。テーブルにはコンロが備え付けられており、屋根付きのテラスもある。",
     "sourceList": "焼肉",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -40330,6 +41103,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=8180550300697386920",
     "phone": "03-3440-4629",
     "price": "￥10,000 以上",
+    "description": "リラックスした雰囲気のなかで焼き肉や麺類、かき氷が楽しめるモダンなレストラン。",
     "sourceList": "焼肉",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -40520,6 +41294,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWkPFkupJ7Md0DbWk2Na7MfF3Zzj8llKfoL1h2FS43pkaHn87zWkrmDyWELNE7vmcIpU26y3wYkSFBEbRSVGUuhOpkOu_zGsiVug6Y7FP6q42YjiBXCL55SC2KGDXmUeujbXDpHI__woXkc=w80-h106-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=3397220951585324053",
     "phone": "03-5733-5025",
+    "description": "スタイリッシュな内装の店内で、わさびを添えて出す和牛上カルビや厚切り牛タン、ホルモンなどの焼肉を提供。ランチ営業も行っている。",
     "sourceList": "焼肉",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -40540,6 +41315,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=3248656937341680114",
     "phone": "03-6908-4529",
     "price": "￥4,000～10,000",
+    "description": "常に同じ品質の肉を提供するための徹底した仕入れを実施。炭火入り切り出し七輪で焼く肉を秘伝のタレとわさびで頂ける。上がり座敷もあり。",
     "sourceList": "焼肉",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -40560,6 +41336,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=5122746576698123209",
     "phone": "03-5689-8929",
     "price": "￥10,000 以上",
+    "description": "卓上グリルで肉を焼いてつけだれで味わえるシンプルな焼肉専門店。ライス、麺料理も提供。",
     "sourceList": "焼肉",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -40580,6 +41357,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=17000911495503894016",
     "phone": "03-5795-4129",
     "price": "￥10,000 以上",
+    "description": "木の温もりがするボックス席を配したモダンな店。和牛などのスライスを卓上グリルで焼いて味わえる。",
     "sourceList": "焼肉",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -40600,6 +41378,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=17595546644543129599",
     "phone": "050-5487-7887",
     "price": "￥10,000 以上",
+    "description": "希少部位を含めた焼肉各種が味わえる。豚足やカレーライスなど、サイドメニューの種類も豊富。お酒も各種取り揃えている。",
     "sourceList": "焼肉",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -40624,6 +41403,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=10123209738897128557",
     "phone": "03-5768-3601",
     "price": "￥5,000～9,000",
+    "description": "ジェラート カウンターを備えたスマートな空間。黒毛和牛の焼肉やセットメニューなどを提供。",
     "sourceList": "焼肉",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -40696,6 +41476,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=10462340537230862048",
     "phone": "03-3464-6448",
     "price": "￥5,000～10,000",
+    "description": "こぢんまりとした飾らない炭火焼肉店。刺身や日本酒も提供。",
     "sourceList": "焼肉",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -40783,6 +41564,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWkiUTMVjQgc0qDNXlfUbvD-7QRNiGtDlbfPf0h1y0TZPDpWGOLrF5sY5W22OtXh5jtkE9WcYqwFQ-TJI61vCFp25c6wpXzFPTnOJdIhG_WmoWLP-gcpC9gXoAQaWXEM3jSf619bOA=w138-h92-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=9120945770681787825",
     "phone": "075-551-4129",
+    "description": "厳選された肉と旬の素材を使った料理が頂ける焼肉屋。上品で趣のある店内には広々とした宴会場や落ち着いた風格のある個室も有り。",
     "sourceList": "焼肉",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -40824,6 +41606,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=15412320772604308970",
     "phone": "06-6361-8338",
     "price": "￥1,000～6,000",
+    "description": "カジュアルなカウンター席も備えるレトロな内装の店内で、ホルモンと赤身肉の焼肉を中心に提供。かすうどんやもつ鍋などのメニューもある。",
     "sourceList": "焼肉",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -40864,6 +41647,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=4689223468242303198",
     "phone": "0967-62-0084",
     "price": "￥2,000～3,000",
+    "description": "席に囲炉裏がついており、地鶏を自身で炭火で焼き、秘伝のタレで頂く独自のスタイルのお店。古民家の店内は古典的で昔懐かしい。",
     "sourceList": "焼鳥",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -40886,6 +41670,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=3458549102677322111",
     "phone": "03-6441-0917",
     "price": "￥4,000～8,000",
+    "description": "モダンで落ち着きのある店内で、山梨県甲斐市から仕入れる信玄鶏を使い、土佐備長炭で仕上げた串焼きを提供。月替わりの地酒も用意する。",
     "sourceList": "焼鳥",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -40926,6 +41711,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=14270895506851787038",
     "phone": "03-3617-6615",
     "price": "￥10,000 以上",
+    "memberComment": "串ももちろん美味しいのですが、合間の酒菜も芸が細かいなぁと思いました。\n〆のラーメンもすごく美味しくて満足感高かったです🍜\nこのコースで1万いかないのはほんとにcp高いと思いました！\n日本酒の揃えも良くて日本酒好きさんにもおすすめです🍶\n立地が良くなくて行くのが大変ですが、それでもまた行きたくなるようなお店でした✊🏻\n\n🍽️ おすすめメニュー：串全般",
     "sourceList": "焼鳥",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -40945,6 +41731,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWlHcUv70N7VrKJkT49We1qB_k1tXGcCkcRCFeCz3z_YQGKegi0LUmCbZO8qK2Rfxapmx2BY3f5TTzbsOtAdO0Tf53cc2WHv2WFs9NtXNNG0LqKuu4vcp0-IsVE_QcKdkbzApFkf=w137-h92-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=11500355401770754585",
     "phone": "03-3447-7338",
+    "memberComment": "日本三大地鶏のひとつ、秋田県の「比内地鶏」の専門店です🐓\n希少部位も含めたおまかせ7種の焼鳥をオーダーしました✨\n一本一本しっかりと説明付きでサーブしてくださり、どれも丁寧な仕上げで柔らかく味わい深かったです🥹\n日本酒も秋田のものを中心に、お料理に合うものばかりでとても進んでしまいました🍶\n名物デザートの自家製プリンも濃厚で美味しすぎました🍮\n店員さんもみんな親切でいいお店でした…😻\n\n🍽️ おすすめメニュー\n・焼師おまかせ7種(焼鳥)\n・がっこチーズ\n・自家製プリン",
     "sourceList": "焼鳥",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -40967,6 +41754,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=10496255443588555597",
     "phone": "03-5843-8909",
     "price": "￥10,000 以上",
+    "description": "鶏肉、豚肉、牛肉を使った伝統的な串焼き料理と、酒やワインを提供する居心地の良い店。",
     "sourceList": "焼鳥",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -40990,6 +41778,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=18329812047396724736",
     "phone": "052-938-6662",
     "price": "￥3,000～5,000",
+    "memberComment": "お会計1人4000-5000、鳥焼きのお店で価格に見合ってないくらい美味しかったです😊",
     "sourceList": "焼鳥",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -41010,6 +41799,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=11163914582631083545",
     "phone": "090-1777-8101",
     "price": "￥2,000～6,000",
+    "memberComment": "焼き鳥がデカくて安くて絶品（１本200円）。どれも肉質がかなり良く焼き加減も最高。６人でお腹いっぱい食べて1人5300円なのでめちゃくちゃ安い\n。焼き鳥屋なのに〆ラーメンが専門店クラスに美味しい。料理は木造の手動エレベーターみたいなので運ばれてきて面白い。店長さんのキャラが濃い",
     "sourceList": "焼鳥",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -41050,6 +41840,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=2353146424285856245",
     "phone": "073-424-5534",
     "price": "￥3,000～7,000",
+    "memberComment": "イタリアン出身のシェフによる炭火焼き鳥のお店です！\n焼鳥も美味しいけどその他も絶品です！",
     "sourceList": "焼鳥",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -41096,6 +41887,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=10898212179713775629",
     "phone": "03-3440-6300",
     "price": "￥3,000～5,000",
+    "description": "飾り気のない素朴な店内で、多種の焼酎に合わせて参鶏湯や焼き鳥、鶏料理をリラックスして頂ける隠れ家のような居酒屋。",
     "sourceList": "焼鳥",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -41116,6 +41908,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWlPYan5T6bPs-CNH9Oj1owWwdNCbgdvA4f5ZbG9jGI6dFTfqrfz0IdMpyJcqu10Gf2lj1XQ0-DBqwqXd53zWF3zhZU5x7SsRBl_xlHmiHV5mXV8_CUqjbA6t0MOpwUWXLgna6LKdw=w138-h92-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=8724702600265455123",
     "price": "￥10,000 以上",
+    "memberComment": "電話予約不可、前月1日に専用サイトでの予約枠がオープンします",
     "sourceList": "焼鳥",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -41137,6 +41930,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=10722862777296431904",
     "phone": "050-5492-4517",
     "price": "￥1,000～2,000",
+    "description": "創業明治25年、百年あまり継ぎ足して使われてきたタレが自慢。熟練の料理人による炭火焼き鳥は、京都「七味屋本舗」の山椒でいただく。",
     "sourceList": "焼鳥",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -41165,6 +41959,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWkW8I7Dg960qF6Xci-gycxc5gGd3xFVkUfLda-Zu35FEiFU5fzYGo3CuihjcNCPG232tF73tMdDwee3zzi3oelo_Be8tk5vFZo90pb0YMLOjQ2A7kzcgYQi_Qwdo5-la81lna_Iq7JPFriB=w139-h92-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=17143365786095277942",
     "phone": "03-6451-0575",
+    "description": "落ち着いた大人向けの焼き鳥屋。ムーディーな店内でお洒落に焼き鳥が頂ける。メニューはおまかせコースのみ。豊富なワインも提供。",
     "sourceList": "焼鳥",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -41330,6 +42125,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=4337798940685683865",
     "phone": "072-760-3833",
     "price": "￥3,000～4,000",
+    "memberComment": "ここ以上のコスパ最強店に出会ってません\n焼きも、｢あぶり｣メニューだと表面だけサッと焼きで良くて最高です",
     "sourceList": "焼鳥",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -41379,6 +42175,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=15941038708206002453",
     "phone": "050-5593-8523",
     "price": "￥3,000～9,000",
+    "memberComment": "ほんっとに狭いんですけど笑、美味しいです！\nメニュー多すぎず、各メニューもボリューム小さめなので色々楽しめると思います",
     "sourceList": "焼鳥",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -41631,6 +42428,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWkgRpO_1IIQtGCQXS0i4b82nZR4VL2Y7piib8eiiX5shK1FWXrRt1400mXoVNWiYfrlKiTcsEhSEiyxBhYY9ODBw8CN0c-1CeTjZTkvyB7jMrMi_Kp3GbPJAgZnsDyI23RT3pNacVSSLExq=w122-h92-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=1714570422004372597",
     "price": "￥1,000～2,000",
+    "description": "こぢんまりとした昔ながらの居酒屋。レバーやタン、大腸などのホルモンと肉の串焼きを提供。",
     "sourceList": "焼鳥",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -41977,6 +42775,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=14693852847041447178",
     "phone": "03-6807-5773",
     "price": "￥3,000～7,000",
+    "description": "焼き鳥やつくね、うずらの卵、唐揚げなど屋台の食べ物を楽しめる、こぢんまりとした活気ある店。",
     "sourceList": "焼鳥",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -42079,6 +42878,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=8951458846225300938",
     "phone": "03-3715-9292",
     "price": "￥3,000～6,000",
+    "description": "地元の人で賑わう、くつろいだ雰囲気の人気の焼き鳥店。ビールや日本酒を提供。",
     "sourceList": "焼鳥",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -42143,6 +42943,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWnjdTZPsD5VX7LV-g5fhQ5Up3fSkHEiuh9plQePX7CHoclmhTAUYbt9Asji_AqaLYQoF0JkijAprMRTdGLazy5R9BkG-skgpkjEcnJ8b8guZmfl5OoJpg7O3fXvdk2S3-gsrqn_mSUpoaI=w115-h92-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=7588024777225773485",
     "phone": "03-6427-8437",
+    "description": "完全個室を備えた店内で、丹波黒鶏を使用した焼き鳥の他、多種類の創作和食を提供。水炊きコースプランあり。",
     "sourceList": "焼鳥",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -42183,6 +42984,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=3841620068288612175",
     "phone": "03-5486-3318",
     "price": "￥9,000～10,000",
+    "description": "和モダンな店内はコの字型のカウンター席のみで、食事の進み具合を見計らって次の料理を提供。レア寄りの火入れ加減で、一品料理も豊富。",
     "sourceList": "焼鳥",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -42260,6 +43062,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=7672052621710130498",
     "phone": "03-5250-1081",
     "price": "￥10,000 以上",
+    "description": "厨房を囲むカウンター席とテーブル席を備えた清潔感のある鳥料理店。厳選した地鶏を使った焼き鳥や親子丼をワインや日本酒と共に楽しめる。",
     "sourceList": "焼鳥",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -42465,6 +43268,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWkWuj2NckmzkSodtb3G6CWqppjdg28BNnEGwDVAxgGci7zmmzSg9hNIUG32cHe4NAd_WXdKmyQ2vIQhAwEHY12aVwEjFL_XInPvOpsRY7KlqTIQTME6XhFjmGEh-6URfEBBW6Q4vQ=w163-h92-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=12683438135116194209",
     "phone": "050-5462-4157",
+    "description": "カウンター席と座敷席がある、古民家的な内装の心安らぐ空間。九州直送の素材に拘る郷土料理と紀州備長炭で焼く焼鳥を提供する店。個室有。",
     "sourceList": "焼鳥",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -42491,6 +43295,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=16493991701618484051",
     "phone": "075-752-4144",
     "price": "￥3,000～7,000",
+    "description": "和モダンな雰囲気の上品な店内で、備長炭で焼き上げる各種の串焼きを提供している。サラダや黄身の味噌漬けなどの一品料理もある。",
     "sourceList": "焼鳥",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -42636,6 +43441,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWk1B5i8qOcse7N_0wytyNAoth2Jhv-_sPZJf6q3e2_WA0Fxw9HYSUO4gTop1F_O6QF-5V3aVfa7UyhJRIFVwk_H_71cWk7PSqBS8YmACidgmX1ZqOAACdiTkGBbaFlnSsLqxTIUEw=w163-h92-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=12435212253754563793",
     "phone": "03-6456-4377",
+    "description": "コンパクトで洗練された韓国料理レストラン。モダンなランチメニューとコースディナーが楽しめる。",
     "sourceList": "韓国料理",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -42657,6 +43463,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=11053330422645332960",
     "phone": "03-3445-8815",
     "price": "￥1,000～6,000",
+    "description": "昔ながらの韓国のようなお洒落な雰囲気の店内で、カジュアルに家庭的な韓国料理が頂けるレストラン。",
     "sourceList": "韓国料理",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -42741,6 +43548,7 @@ export const GOURMET_MAP_SEED = [
     "image": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWlAUYAjQ5QByBTfPTj85sgiN_Xs2rvjI99jkpxiIB49hEaEC69TF1-lypBA0m1uUx7RaHJYV3VTPqbbEihjqMkyJYCymatpDnq17ssY2U37X8a_p23C6ZRWT2mG6Fa0DaL8tfMVNQ=w92-h92-k-no",
     "googleMapsUrl": "https://www.google.com/maps?cid=11340807795728794006",
     "price": "￥1,000～2,000",
+    "description": "テーブル席を備えた店内で、サムギョプサルなどの韓国料理を提供。チーズダッカルビなどを含む食べ飲み放題メニューあり。",
     "sourceList": "韓国料理",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },
@@ -42824,6 +43632,7 @@ export const GOURMET_MAP_SEED = [
     "googleMapsUrl": "https://www.google.com/maps?cid=5972303754936591019",
     "phone": "03-5458-6300",
     "price": "￥10,000 以上",
+    "description": "月替わりのコース料理を中心に、プルコギやダッカルビなどの韓国料理各種が堪能できる。お酒の種類も豊富に取り揃えている。",
     "sourceList": "韓国料理",
     "importedAt": "2026-08-01T00:00:00+09:00"
   },

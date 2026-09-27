@@ -28,7 +28,14 @@ export function mergeGourmetMapFeed(
 ): Restaurant[] {
   const merged = new Map(existing.map((restaurant) => [restaurantKey(restaurant), restaurant]));
   incoming.forEach((restaurant) => {
-    const next: Restaurant = { ...restaurant, registeredBy };
+    const previous = merged.get(restaurantKey(restaurant));
+    const next: Restaurant = {
+      ...previous,
+      ...restaurant,
+      description: restaurant.description || previous?.description,
+      memberComment: restaurant.memberComment || previous?.memberComment,
+      registeredBy,
+    };
     merged.set(restaurantKey(next), next);
   });
   return [...merged.values()];
