@@ -5,6 +5,9 @@ import type { Event } from "@/constants/mock-data";
 import { buildEventReminderPlans, buildFavoriteDeadlineReminderPlans, buildOrganizerReminderPlans } from "@/lib/event-reminders";
 import { cancelFavoriteDeadlinePlans, cancelOrganizerDeadlinePlans, persistFavoriteDeadlinePlans, persistOrganizerDeadlinePlan, persistParticipantReminderPlans } from "@/lib/event-automation-store";
 import { notificationEnabled } from "@/lib/notification-preferences";
+import { getNotificationPreferences } from "@/lib/notification-preferences";
+import Constants from "expo-constants";
+import * as Api from "@/lib/_core/api";
 
 const organizerNotificationIds = new Map<string, string[]>();
 const favoriteNotificationIds = new Map<string, string[]>();
@@ -42,6 +45,21 @@ export async function requestNotificationPermissions(): Promise<boolean> {
   }
 
   return finalStatus === "granted";
+}
+
+export async function notificationPermissionGranted() {
+  if (Platform.OS === "web") return false;
+  return (await Notifications.getPermissionsAsync()).status === "granted";
+}
+
+export async function registerPushNotificationsForCurrentDevice() {
+  if (Platform.OS === "web") return null;
+  if (!await requestNotificationPermissions()) return null;
+  const projectId = Constants.expoConfig?.extra?.eas?.projectId ?? Constants.easConfig?.projectId;
+  if (!projectId) throw new Error("EAS projectIdが設定されていません");
+  const token = (await Notifications.getExpoPushTokenAsync({ projectId })).data;
+  await Api.registerPushToken({ token, platform: Platform.OS as "ios" | "android", preferences: await getNotificationPreferences() });
+  return token;
 }
 
 export async function notifyEventConfirmation(event: Event, memberId: string, chatRoomId: string): Promise<void> {

@@ -4,9 +4,11 @@ import { canMemberAccessClub } from "./clubs";
 import { mentionsViewer } from "../lib/mention-matching";
 import { freeChatMentionGroups } from "../lib/chat-group-mentions";
 import type { D1Database, SitesEnv } from "./platform-types";
+import { reverseSharedXpForSource } from "./xp";
 import archive from "../data/discord-board-2026-08-29.json";
 import type { RawDiscordBoardArchive } from "../lib/discord-board-import";
 import { replyReference, validReplyReference } from "../lib/reply-reference";
+import { canInviteWithoutMutualFollow } from "../lib/private-chat-permissions";
 
 const MESSAGES_PATH = /^\/api\/chats\/([^/]+)\/messages$/;
 const ROOMS_PATH = "/api/chats";
@@ -371,10 +373,14 @@ async function canViewRoom(db: D1Database, room: RoomRow, member: Viewer) {
 
 async function memberByPublicId(db: D1Database, memberId: string) {
   const numericId = /^member-(\d+)$/.exec(memberId)?.[1] ?? null;
-  return db.prepare(`SELECT id, public_member_id, display_name
+  return db.prepare(`SELECT id, public_member_id, display_name, role, access_role
     FROM members WHERE account_status = 'active'
       AND (public_member_id = ? OR id = ?) LIMIT 1`)
-    .bind(memberId, numericId).first<{ id: number; public_member_id: string | null; display_name: string }>();
+    .bind(memberId, numericId).first<{ id: number; public_member_id: string | null; display_name: string; role: "user" | "operator" | "admin"; access_role: "member" | "club_leader" | "operator" | "admin" }>();
+}
+
+async function canInviteToPrivateGroup(db: D1Database, viewer: Viewer, target: Awaited<ReturnType<typeof memberByPublicId>>) {
+  return Boolean(target && (canInviteWithoutMutualFollow(viewer, target) || await mutualFriends(db, viewer.id, target.id)));
 }
 
 async function canManageRoom(db: D1Database, room: RoomRow, member: Viewer) {
@@ -705,7 +711,7 @@ export async function handleChatContentRequest(
       ? input.memberIds.filter((item): item is string => typeof item === "string")
       : [];
     const uniqueMemberIds = [...new Set(rawMemberIds)].slice(0, 99);
-    const targets = [] as { id: number; public_member_id: string | null; display_name: string }[];
+    const targets = [] as NonNullable<Awaited<ReturnType<typeof memberByPublicId>>>[];
     for (const publicId of uniqueMemberIds) {
       const target = await memberByPublicId(env.DB, publicId);
       if (!target || target.id === member.id) continue;
@@ -715,10 +721,12 @@ export async function handleChatContentRequest(
       return json({ error: "DMの相手を1人指定してください" }, 400);
     if (type === "group" && targets.length < 2)
       return json({ error: "グループには2人以上招待してください" }, 400);
+    if (type === "dm" && !await canInviteToPrivateGroup(env.DB, member, targets[0]))
+      return json({ error: "DMは相互フォローの友達、運営メンバー、管理者と開始できます" }, 403);
     if (type === "group") {
       for (const target of targets) {
-        if (!await mutualFriends(env.DB, member.id, target.id))
-          return json({ error: "グループには相互フォローの友達だけを招待できます" }, 403);
+        if (!await canInviteToPrivateGroup(env.DB, member, target))
+          return json({ error: "グループには相互フォローの友達、運営メンバー、管理者を招待できます" }, 403);
       }
     }
 
@@ -797,8 +805,8 @@ export async function handleChatContentRequest(
     const input = await readBody(request);
     const target = typeof input?.memberId === "string" ? await memberByPublicId(env.DB, input.memberId) : null;
     if (!target) return json({ error: "メンバーが見つかりません" }, 404);
-    if (room.room_type === "group" && !await mutualFriends(env.DB, member.id, target.id))
-      return json({ error: "グループには相互フォローの友達だけを招待できます" }, 403);
+    if (room.room_type === "group" && !await canInviteToPrivateGroup(env.DB, member, target))
+      return json({ error: "グループには相互フォローの友達、運営メンバー、管理者を招待できます" }, 403);
     const now = new Date().toISOString();
     await env.DB.prepare(`INSERT INTO chat_room_members
       (room_id, member_id, member_role, joined_at, left_at) VALUES (?, ?, 'member', ?, NULL)
@@ -950,7 +958,7 @@ export async function handleChatContentRequest(
             .map((recipient) => env.DB!.prepare(`INSERT OR IGNORE INTO in_app_notifications
               (id, target_member_id, type, title, body, chat_room_id, target_path, created_at)
               VALUES (?, ?, 'chat', ?, ?, ?, ?, ?)`)
-              .bind(`chat-message:${id}:${recipient.id}`, recipient.id, room.name, notificationBody, roomId, `/chat?id=${encodeURIComponent(roomId)}`, now));
+              .bind(`chat-mention:${id}:${recipient.id}`, recipient.id, room.name, notificationBody, roomId, `/chat?id=${encodeURIComponent(roomId)}`, now));
           for (let start = 0; start < statements.length; start += 100)
             await env.DB.batch(statements.slice(start, start + 100));
         }
@@ -989,6 +997,7 @@ export async function handleChatContentRequest(
         env.DB.prepare("UPDATE chat_messages SET deleted_at = ?, updated_at = ? WHERE id = ?").bind(now, now, messageId),
         env.DB.prepare("UPDATE chat_rooms SET updated_at = ? WHERE id = ?").bind(now, existing.room_id),
       ]);
+      await reverseSharedXpForSource(env.DB, "chat_message", messageId, now);
       await audit(env.DB, member.id, "chat.message_deleted", messageId);
       return json({ success: true });
     }

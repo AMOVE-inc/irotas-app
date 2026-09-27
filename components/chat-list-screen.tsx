@@ -17,6 +17,7 @@ import { stripRankFromName } from "@/components/member-rank-badge";
 import { getDiscordAuthorById, getDiscordAuthorByName } from "@/lib/discord-author-directory";
 import { mergeSentChatPreview, sentChatPreview, type SentChatPreview } from "@/lib/chat-list-preview";
 import { chatRoomRoute } from "@/lib/community-navigation";
+import { canInviteWithoutMutualFollow } from "@/lib/private-chat-permissions";
 
 function formatEventStart(event: { date: string; time: string }) {
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(event.date);
@@ -29,6 +30,13 @@ const lastRoomLists = new Map<string, { joined: ChatRoom[]; rank: ChatRoom[] }>(
 const recentlySentPreviews = new Map<string, SentChatPreview>();
 const dismissedRooms = new Map<string, Set<string>>();
 const dismissedAt = new Map<string, number>();
+
+export function clearChatListMemoryCache() {
+  lastRoomLists.clear();
+  recentlySentPreviews.clear();
+  dismissedRooms.clear();
+  dismissedAt.clear();
+}
 type ChatListPreferences = { pinnedRoomIds: string[]; hiddenRoomIds: string[] };
 
 function chatListPreferencesKey(memberId: string) {
@@ -177,6 +185,7 @@ function CreateFriendGroupModal({ visible, onClose, onCreated }: { visible: bool
   const colors = useColors();
   const { user } = useAuthContext();
   const viewerMemberId = user?.memberId ?? (user?.id ? `member-${user.id}` : CURRENT_USER.id);
+  const viewerIsStaff = isOperatorRole(user?.role, user?.accessRole);
   const [members, setMembers] = useState<Api.PublicMember[]>([]);
   const [name, setName] = useState("");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -187,9 +196,9 @@ function CreateFriendGroupModal({ visible, onClose, onCreated }: { visible: bool
   useEffect(() => {
     if (!visible) return;
     void Api.getMemberDirectory()
-      .then((items) => setMembers(items.filter((item) => item.id !== viewerMemberId && item.isFriend)))
+      .then((items) => setMembers(items.filter((item) => item.id !== viewerMemberId && (item.isFriend || canInviteWithoutMutualFollow({ role: user?.role, accessRole: user?.accessRole }, item)))))
       .catch(() => setError("メンバー一覧を読み込めませんでした"));
-  }, [viewerMemberId, visible]);
+  }, [user?.accessRole, user?.role, viewerIsStaff, viewerMemberId, visible]);
 
   const closeAndReset = () => {
     setName("");
@@ -217,7 +226,7 @@ function CreateFriendGroupModal({ visible, onClose, onCreated }: { visible: bool
       <View style={{ flex: 1, backgroundColor: colors.background }}>
         <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 16, paddingTop: 20, paddingBottom: 12, borderBottomWidth: 0.5, borderBottomColor: colors.border }}>
           <Pressable onPress={closeAndReset}><Text style={{ fontSize: 15, color: colors.muted }}>キャンセル</Text></Pressable>
-          <Text style={{ flex: 1, textAlign: "center", fontSize: 18, fontWeight: "800", color: colors.foreground }}>友達とグループ作成</Text>
+          <Text style={{ flex: 1, textAlign: "center", fontSize: 18, fontWeight: "800", color: colors.foreground }}>グループ作成</Text>
           <Pressable onPress={() => void handleCreate()} disabled={!canCreate || saving}><Text style={{ fontSize: 15, fontWeight: "800", color: canCreate && !saving ? "#E8A0BF" : colors.border }}>{saving ? "作成中" : "作成"}</Text></Pressable>
         </View>
         <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }} keyboardShouldPersistTaps="handled">
@@ -230,7 +239,7 @@ function CreateFriendGroupModal({ visible, onClose, onCreated }: { visible: bool
             style={{ backgroundColor: colors.surface, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: colors.foreground, borderWidth: 1, borderColor: colors.border }}
           />
           <Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground, marginTop: 20 }}>招待するメンバー</Text>
-          <Text style={{ fontSize: 12, lineHeight: 18, color: colors.muted, marginTop: 4, marginBottom: 8 }}>相互フォローの友達から2人以上選択してください。作成後も友達を追加・削除できます。</Text>
+          <Text style={{ fontSize: 12, lineHeight: 18, color: colors.muted, marginTop: 4, marginBottom: 8 }}>{viewerIsStaff ? "招待するメンバーを2人以上選択してください。" : "相互フォローの友達、運営メンバー、管理者から2人以上選択してください。"}作成後もメンバーを追加・削除できます。</Text>
           {members.map((friend) => {
             const selected = selectedIds.includes(friend.id);
             return (
@@ -250,7 +259,7 @@ function CreateFriendGroupModal({ visible, onClose, onCreated }: { visible: bool
               </Pressable>
             );
           })}
-          {!members.length && !error ? <Text style={{ fontSize: 13, color: colors.muted, textAlign: "center", paddingVertical: 30 }}>相互フォローの友達がまだいません。メンバープロフィールからお互いにフォローすると表示されます。</Text> : null}
+          {!members.length && !error ? <Text style={{ fontSize: 13, color: colors.muted, textAlign: "center", paddingVertical: 30 }}>招待できるメンバーがいません。</Text> : null}
           {error ? <Text style={{ fontSize: 13, color: colors.error, marginTop: 12 }}>{error}</Text> : null}
         </ScrollView>
       </View>

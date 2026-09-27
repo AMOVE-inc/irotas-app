@@ -1,7 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export const NOTIFICATION_PREFERENCE_IDS = [
-  "mention", "event_reminder", "event_approved", "club_leader", "club_join",
+  "mention", "chat_message", "event_reminder", "event_approved", "club_leader", "club_join",
   "board_reply", "board_approved", "new_event", "points", "rank_up",
 ] as const;
 

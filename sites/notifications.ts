@@ -3,6 +3,8 @@ import type { SitesEnv } from "./platform-types";
 
 const NOTIFICATIONS_PATH = "/api/notifications";
 const READ_ALL_PATH = "/api/notifications/read-all";
+const PUSH_TOKEN_PATH = "/api/notifications/push-token";
+const PREFERENCES_PATH = "/api/notifications/preferences";
 const NOTIFICATION_PATH = /^\/api\/notifications\/([^/]+)$/;
 
 type NotificationRow = {
@@ -40,7 +42,7 @@ function serialize(row: NotificationRow) {
 export async function handleNotificationRequest(request: Request, env: SitesEnv): Promise<Response | null> {
   const pathname = new URL(request.url).pathname;
   const notificationMatch = NOTIFICATION_PATH.exec(pathname);
-  if (pathname !== NOTIFICATIONS_PATH && pathname !== READ_ALL_PATH && !notificationMatch) return null;
+  if (pathname !== NOTIFICATIONS_PATH && pathname !== READ_ALL_PATH && pathname !== PUSH_TOKEN_PATH && pathname !== PREFERENCES_PATH && !notificationMatch) return null;
   if (!env.DB) return json({ error: "データベースに接続できません" }, 503);
   const member = await authenticatedRequestMember(request, env);
   if (!member) return json({ error: "ログインが必要です" }, 401);
@@ -51,6 +53,36 @@ export async function handleNotificationRequest(request: Request, env: SitesEnv)
         AND julianday(created_at) > julianday((SELECT COALESCE(password_set_at, last_signed_in_at) FROM members WHERE id = ?))
       ORDER BY created_at DESC LIMIT 100`).bind(member.id, member.id).all<NotificationRow>();
     return json({ notifications: (rows.results ?? []).map(serialize) });
+  }
+
+  if (pathname === PUSH_TOKEN_PATH && (request.method === "POST" || request.method === "DELETE")) {
+    const input = await request.json().catch(() => null) as { token?: unknown; platform?: unknown; preferences?: unknown } | null;
+    const token = typeof input?.token === "string" && /^ExponentPushToken\[[\w-]+\]$/.test(input.token) ? input.token : null;
+    if (!token) return json({ error: "Push Tokenが不正です" }, 400);
+    const now = new Date().toISOString();
+    if (request.method === "DELETE") {
+      await env.DB.prepare("UPDATE member_push_tokens SET disabled_at=?,updated_at=? WHERE token=? AND member_id=?").bind(now, now, token, member.id).run();
+      return json({ success: true });
+    }
+    const platform = input?.platform === "ios" || input?.platform === "android" ? input.platform : null;
+    if (!platform) return json({ error: "端末情報が不正です" }, 400);
+    const preferences = input?.preferences && typeof input.preferences === "object" && !Array.isArray(input.preferences) ? input.preferences : {};
+    await env.DB.prepare(`INSERT INTO member_push_tokens
+      (token,member_id,platform,preferences_json,last_seen_at,disabled_at,created_at,updated_at)
+      VALUES (?,?,?,?,?,NULL,?,?)
+      ON CONFLICT(token) DO UPDATE SET member_id=excluded.member_id,platform=excluded.platform,
+        preferences_json=excluded.preferences_json,last_seen_at=excluded.last_seen_at,disabled_at=NULL,updated_at=excluded.updated_at`)
+      .bind(token, member.id, platform, JSON.stringify(preferences), now, now, now).run();
+    return json({ success: true });
+  }
+
+  if (pathname === PREFERENCES_PATH && request.method === "PUT") {
+    const input = await request.json().catch(() => null) as { preferences?: unknown } | null;
+    if (!input?.preferences || typeof input.preferences !== "object" || Array.isArray(input.preferences)) return json({ error: "通知設定が不正です" }, 400);
+    const now = new Date().toISOString();
+    await env.DB.prepare("UPDATE member_push_tokens SET preferences_json=?,updated_at=? WHERE member_id=? AND disabled_at IS NULL")
+      .bind(JSON.stringify(input.preferences), now, member.id).run();
+    return json({ success: true });
   }
 
   if (pathname === READ_ALL_PATH && request.method === "PATCH") {

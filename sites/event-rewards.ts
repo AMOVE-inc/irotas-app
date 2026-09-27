@@ -2,12 +2,12 @@ import type { D1Database } from "./platform-types";
 import { rankFromXp } from "./xp";
 
 export const EVENT_XP = {
-  created: 10,
+  created: 0,
   completedHost: 100,
-  attendanceBonus4: 20,
-  attendanceBonus8: 40,
-  attendance: 20,
-  feedback: 5,
+  attendanceBonus4: 0,
+  attendanceBonus8: 0,
+  attendance: 40,
+  feedback: 0,
 } as const;
 
 type EventRewardAction = "event_created" | "event_completed_host" | "event_attendance_bonus" | "event_attendance" | "event_feedback";

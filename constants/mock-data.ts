@@ -43,14 +43,12 @@ export interface Member {
 // --- XP制ランクシステム ---
 
 export const POINT_ACTIONS = {
-  eventCreate: { points: 10, label: "イベントの新規作成" },
-  eventJoin: { points: 10, label: "イベント参加" },
-  boardPost: { points: 5, label: "掲示板投稿" },
-  comment: { points: 2, label: "コメント投稿" },
-  clubActivity: { points: 3, label: "部活動参加" },
-  mealReportPost: { points: 8, label: "ごちそうさま報告投稿" },
-  chatMessage: { points: 1, label: "チャット投稿（1日5回まで）" },
-  eventOrganize: { points: 20, label: "イベント幹事（開催完了時）" },
+  comment: { points: 5, label: "コメント投稿（1日5回まで）" },
+  chatMessage: { points: 10, label: "チャット投稿（1日5回まで）" },
+  boardPost: { points: 20, label: "掲示板投稿" },
+  mealReportPost: { points: 30, label: "ごちそうさま報告投稿" },
+  eventJoin: { points: 40, label: "イベント参加（部活動含む・開催完了後）" },
+  eventOrganize: { points: 100, label: "イベント幹事（開催完了後）" },
 } as const;
 
 export function getOrganizerPointAdjustment(outcome: "completed" | "cancelled"): number {

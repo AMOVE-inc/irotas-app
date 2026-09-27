@@ -12,13 +12,13 @@ import {
 } from "@/constants/external-links";
 import {
   Alert,
-  Linking,
   Pressable,
   ScrollView,
   Switch,
   Text,
   View,
 } from "react-native";
+import { clearSafeApplicationCaches } from "@/lib/cache-management";
 
 export default function AppSettingsScreen() {
   const colors = useColors();
@@ -40,7 +40,11 @@ export default function AppSettingsScreen() {
         {
           text: "クリア",
           style: "destructive",
-          onPress: () => Alert.alert("完了", "キャッシュをクリアしました。"),
+          onPress: () => {
+            void clearSafeApplicationCaches()
+              .then(() => Alert.alert("完了", "画像と一時データのキャッシュを削除しました。ログイン情報、設定、下書き、投稿データは保持されています。"))
+              .catch(() => Alert.alert("一部を削除できませんでした", "アプリを再起動して、もう一度お試しください。"));
+          },
         },
       ],
     );

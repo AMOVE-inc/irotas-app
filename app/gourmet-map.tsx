@@ -99,7 +99,7 @@ function RestaurantCard({
         overflow: "hidden",
       }}
     >
-      <RestaurantPhoto restaurant={restaurant} style={{ width: 100, height: 100 }} />
+      <RestaurantPhoto restaurant={restaurant} allowGooglePhoto style={{ width: 100, height: 100 }} />
       <View style={{ flex: 1, padding: 12, justifyContent: "center" }}>
         <Text
           style={{ fontSize: 16, fontWeight: "700", color: colors.foreground, marginBottom: 4 }}

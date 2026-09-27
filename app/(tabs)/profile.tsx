@@ -21,11 +21,12 @@ import { getEventParticipationStatus, isEventOrganizer, isPastEventDate } from "
 import { getIrotasPoints } from "@/lib/irotas-points-store";
 import { AuthenticatedImage as Image } from "@/components/authenticated-image";
 import { useFocusEffect, useRouter } from "expo-router";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
   Linking,
+  KeyboardAvoidingView,
   Modal,
   Platform,
   Pressable,
@@ -175,7 +176,7 @@ function PointsProgressCard({ points, rank, showRank = true, onExplain }: { poin
 
 function PointActionsCard() {
   const colors = useColors();
-  const actions = Object.values(POINT_ACTIONS);
+  const actions = Object.values(POINT_ACTIONS).sort((left, right) => left.points - right.points || left.label.localeCompare(right.label, "ja"));
 
   return (
     <View
@@ -213,6 +214,14 @@ function PointActionsCard() {
       ))}
     </View>
   );
+}
+
+function ProfileValue({ value }: { value: string }) {
+  const colors = useColors();
+  const parts = value.split(/(https?:\/\/[^\s]+)/g);
+  return <Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground, marginTop: 2 }}>{parts.map((part, index) => /^https?:\/\//i.test(part)
+    ? <Text key={`${part}-${index}`} accessibilityRole="link" onPress={() => void openExternalUrl(part)} style={{ color: "#3478C7", textDecorationLine: "underline" }}>{part}</Text>
+    : part)}</Text>;
 }
 
 void PointActionsCard;
@@ -382,6 +391,7 @@ function EditProfileModal({
   onServerSaved?: () => Promise<void>;
 }) {
   const colors = useColors();
+  const formScrollRef = useRef<ScrollView>(null);
   const [name, setName] = useState("");
   const [publicUserId, setPublicUserId] = useState("");
   const [bio, setBio] = useState("");
@@ -543,7 +553,7 @@ function EditProfileModal({
 
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
-      <View style={{ flex: 1, backgroundColor: colors.background }}>
+      <KeyboardAvoidingView style={{ flex: 1, backgroundColor: colors.background }} behavior={Platform.OS === "ios" ? "padding" : "height"} keyboardVerticalOffset={Platform.OS === "ios" ? 8 : 0}>
         <View
           style={{
             flexDirection: "row",
@@ -575,7 +585,7 @@ function EditProfileModal({
           </Pressable>
         </View>
 
-        <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 48 }}>
+        <ScrollView ref={formScrollRef} keyboardShouldPersistTaps="handled" keyboardDismissMode={Platform.OS === "ios" ? "interactive" : "on-drag"} contentContainerStyle={{ padding: 16, paddingBottom: 160 }}>
           {/* Avatar */}
           <View style={{ alignItems: "center", marginBottom: 24 }}>
             <Image
@@ -668,11 +678,11 @@ function EditProfileModal({
           <Text style={{ fontSize: 13, fontWeight: "600", color: colors.muted, marginBottom: 6 }}>Instagram URL</Text><TextInput value={instagramUrl} onChangeText={setInstagramUrl} placeholder="https://www.instagram.com/..." placeholderTextColor={colors.muted} autoCapitalize="none" keyboardType="url" style={{ backgroundColor: colors.surface, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: colors.foreground, marginBottom: 18 }} />
           <Text style={{ fontSize: 13, fontWeight: "600", color: colors.muted, marginBottom: 6 }}>食べログ URL</Text><TextInput value={tabelogUrl} onChangeText={setTabelogUrl} placeholder="https://tabelog.com/..." placeholderTextColor={colors.muted} autoCapitalize="none" keyboardType="url" style={{ backgroundColor: colors.surface, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: colors.foreground, marginBottom: 18 }} />
           <Text style={{ fontSize: 13, fontWeight: "600", color: colors.muted, marginBottom: 6 }}>Googleローカルガイドレベル</Text><View style={{ marginBottom: 16 }}><ProfileSelectField label="レベルを選択" value={googleLocalGuideLevel} options={GOOGLE_LOCAL_GUIDE_LEVELS} onChange={setGoogleLocalGuideLevel} /></View>
-          <Text style={{ fontSize: 13, fontWeight: "600", color: colors.muted, marginBottom: 6 }}>お気に入りのお店</Text><TextInput value={favoriteRestaurants} onChangeText={setFavoriteRestaurants} placeholder="店名やURLを自由に入力" placeholderTextColor={colors.muted} multiline textAlignVertical="top" style={{ backgroundColor: colors.surface, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, minHeight: 76, fontSize: 15, color: colors.foreground, marginBottom: 16 }} />
+          <Text style={{ fontSize: 13, fontWeight: "600", color: colors.muted, marginBottom: 6 }}>お気に入りのお店</Text><TextInput value={favoriteRestaurants} onChangeText={setFavoriteRestaurants} onFocus={() => setTimeout(() => formScrollRef.current?.scrollToEnd({ animated: true }), 120)} placeholder="店名やURLを自由に入力" placeholderTextColor={colors.muted} autoCapitalize="none" keyboardType="url" multiline textAlignVertical="top" style={{ backgroundColor: colors.surface, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, minHeight: 76, fontSize: 15, color: colors.foreground, marginBottom: 16 }} />
           <Text style={{ fontSize: 13, fontWeight: "600", color: colors.muted, marginBottom: 6 }}>行ってみたいお店</Text><TextInput value={desiredRestaurants} onChangeText={setDesiredRestaurants} placeholder="店名やURLを自由に入力" placeholderTextColor={colors.muted} multiline textAlignVertical="top" style={{ backgroundColor: colors.surface, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, minHeight: 76, fontSize: 15, color: colors.foreground, marginBottom: 18 }} />
 
         </ScrollView>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }
@@ -1115,7 +1125,7 @@ export default function ProfileScreen() {
               { label: "職業", value: profileDetails.occupation }, { label: "趣味", value: profileDetails.hobbies },
               { label: "飲酒量", value: profileDetails.drinkingLevel }, { label: "好きなお酒", value: profileDetails.favoriteAlcohol },
               { label: "お気に入りのお店", value: profileDetails.favoriteRestaurants }, { label: "行ってみたいお店", value: profileDetails.desiredRestaurants },
-            ].filter((item) => item.value).map((item) => <View key={item.label} style={{ width: "50%", paddingRight: 8 }}><Text style={{ fontSize: 10, color: colors.muted }}>{item.label}</Text><Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground, marginTop: 2 }}>{item.value}</Text></View>)}
+            ].filter((item) => item.value).map((item) => <View key={item.label} style={{ width: "50%", paddingRight: 8 }}><Text style={{ fontSize: 10, color: colors.muted }}>{item.label}</Text><ProfileValue value={String(item.value)} /></View>)}
           </View>
           {profileDetails.instagramUrl ? <Pressable onPress={() => openExternalUrl(profileDetails.instagramUrl)} style={{ flexDirection: "row", alignItems: "center", marginTop: 14, paddingTop: 12, borderTopWidth: 0.5, borderTopColor: colors.border }}><IconSymbol name="camera.fill" size={17} color="#C13584" /><Text style={{ flex: 1, marginLeft: 7, fontSize: 13, fontWeight: "700", color: "#C13584" }}>Instagramを見る</Text><IconSymbol name="chevron.right" size={15} color="#C13584" /></Pressable> : null}
           {profileDetails.tabelogUrl ? <Pressable onPress={() => openExternalUrl(profileDetails.tabelogUrl)} style={{ flexDirection: "row", alignItems: "center", marginTop: 12, paddingTop: 12, borderTopWidth: 0.5, borderTopColor: colors.border }}><IconSymbol name="fork.knife" size={17} color="#E06B24" /><Text style={{ flex: 1, marginLeft: 7, fontSize: 13, fontWeight: "700", color: "#E06B24" }}>食べログを見る</Text><IconSymbol name="chevron.right" size={15} color="#E06B24" /></Pressable> : null}
@@ -1221,7 +1231,6 @@ export default function ProfileScreen() {
         </View>
 
         {/* Rank Card */}
-        {!userIsOperator ? <RankCard rank={user.rank} /> : null}
 
         {/* Rank Tiers - hidden per user request */}
         {/* <RankTiersCard /> */}

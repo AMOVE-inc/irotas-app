@@ -1,4 +1,4 @@
-import { Tabs } from "expo-router";
+import { Tabs, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { HapticTab } from "@/components/haptic-tab";
@@ -10,8 +10,11 @@ import * as Api from "@/lib/_core/api";
 import { effectiveUnreadTotal, subscribeToOptimisticChatReads } from "@/lib/chat-unread-sync";
 import { useEffect, useRef, useState } from "react";
 import { BOTTOM_NAV_CONTENT_HEIGHT } from "@/constants/layout";
+import * as Notifications from "expo-notifications";
+import { registerPushNotificationsForCurrentDevice } from "@/lib/notifications";
 
 export default function TabLayout() {
+  const router = useRouter();
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
@@ -23,7 +26,7 @@ export default function TabLayout() {
   const { user } = useAuthContext();
 
   useEffect(() => {
-    if (!user) return;
+    if (!user?.memberId) return;
     let pending = false;
     const refresh = () => {
       if (pending) return;
@@ -51,6 +54,23 @@ export default function TabLayout() {
     const timer = setTimeout(() => { void Api.getMemberDirectory(String(user.id)).catch(() => {}); }, 2500);
     return () => clearTimeout(timer);
   }, [user?.id]);
+
+  useEffect(() => {
+    if (!user?.memberId || Platform.OS === "web") return;
+    void registerPushNotificationsForCurrentDevice().catch(() => {});
+    void Notifications.getLastNotificationResponseAsync().then((response) => {
+      const targetPath = response?.notification.request.content.data?.targetPath;
+      if (typeof targetPath === "string" && targetPath.startsWith("/")) {
+        router.push(targetPath as any);
+        void Notifications.clearLastNotificationResponseAsync();
+      }
+    }).catch(() => {});
+    const subscription = Notifications.addNotificationResponseReceivedListener((response) => {
+      const targetPath = response.notification.request.content.data?.targetPath;
+      if (typeof targetPath === "string" && targetPath.startsWith("/")) router.push(targetPath as any);
+    });
+    return () => subscription.remove();
+  }, [router, user?.memberId]);
 
   return (
     <Tabs
@@ -110,6 +130,12 @@ export default function TabLayout() {
       />
       <Tabs.Screen
         name="board"
+        listeners={{
+          tabPress: (event) => {
+            event.preventDefault();
+            router.replace("/(tabs)/board");
+          },
+        }}
         options={{
           title: "掲示板",
           tabBarIcon: ({ color }) => <IconSymbol size={26} name="doc.text.fill" color={color} />,

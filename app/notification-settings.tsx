@@ -11,7 +11,8 @@ import {
   Text,
   View,
 } from "react-native";
-import { requestNotificationPermissions } from "@/lib/notifications";
+import { notificationPermissionGranted, registerPushNotificationsForCurrentDevice } from "@/lib/notifications";
+import * as Api from "@/lib/_core/api";
 import { DEFAULT_NOTIFICATION_PREFERENCES, getNotificationPreferences, saveNotificationPreferences, type NotificationPreferenceId } from "@/lib/notification-preferences";
 
 interface NotificationSetting {
@@ -34,6 +35,14 @@ export default function NotificationSettingsScreen() {
       iconColor: "#E8A0BF",
       label: "メンション",
       description: "チャットで@メンションされたときに通知",
+      enabled: true,
+    },
+    {
+      id: "chat_message",
+      icon: "bubble.left.and.bubble.right.fill",
+      iconColor: "#E8A0BF",
+      label: "チャットメッセージ",
+      description: "参加中のチャットに新しいメッセージが届いたときに通知",
       enabled: true,
     },
     {
@@ -110,9 +119,10 @@ export default function NotificationSettingsScreen() {
     },
   ]);
 
-  const [permissionGranted, setPermissionGranted] = useState(true);
+  const [permissionGranted, setPermissionGranted] = useState(false);
 
   useEffect(() => {
+    void notificationPermissionGranted().then(setPermissionGranted);
     void getNotificationPreferences().then((saved) => {
       setSettings((current) => current.map((setting) => ({ ...setting, enabled: saved[setting.id as NotificationPreferenceId] })));
     });
@@ -122,6 +132,7 @@ export default function NotificationSettingsScreen() {
     const value = { ...DEFAULT_NOTIFICATION_PREFERENCES };
     next.forEach((setting) => { value[setting.id as NotificationPreferenceId] = setting.enabled; });
     void saveNotificationPreferences(value);
+    void Api.updatePushNotificationPreferences(value).catch(() => {});
     return next;
   };
 
@@ -130,7 +141,7 @@ export default function NotificationSettingsScreen() {
   };
 
   const handleRequestPermission = async () => {
-    const granted = await requestNotificationPermissions();
+    const granted = Boolean(await registerPushNotificationsForCurrentDevice());
     setPermissionGranted(granted);
     if (granted) {
       Alert.alert("許可されました", "プッシュ通知が有効になりました。");

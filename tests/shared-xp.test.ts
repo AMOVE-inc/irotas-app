@@ -29,8 +29,9 @@ describe("shared XP", () => {
 
   it("awards chat XP only for eligible messages and caps daily rewards", () => {
     const source = fs.readFileSync(path.join(process.cwd(), "sites/xp.ts"), "utf8");
-    expect(source).toContain('chat_message: { amount: 1');
-    expect(source).toContain('message.content.replace(/\\s/g, "").length >= 10');
+    expect(source).toContain('chat_message: { amount: 10');
+    expect(source).toContain('value.length >= 10');
+    expect(source).toContain('xpContentEligible');
     expect(source).toContain('Number(daily?.count ?? 0) >= 5');
   });
 

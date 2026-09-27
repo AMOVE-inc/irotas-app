@@ -434,16 +434,8 @@ function ThreadCard({ thread, viewerId, onPress, onEdit, onDelete, onPin, onTogg
   }, []);
   const openThreadActions = useCallback(() => {
     longPressHandled.current = true;
-    if (Platform.OS === "web") { setShowActions(true); return; }
-    Alert.alert(displayBoardThreadTitle(thread), "操作を選択してください", [
-      { text: "リンクをコピー", onPress: () => { void Clipboard.setStringAsync(`https://app.irotas-community.com/board?category=${encodeURIComponent(thread.category)}&view=threads&thread=${encodeURIComponent(thread.id)}`); } },
-      ...(onToggleClosed ? [{ text: closed ? "投稿をオープンにする" : "投稿をクローズする", onPress: onToggleClosed }] : []),
-      ...(onPin ? [{ text: pinned ? "投稿の固定を解除する" : "投稿を固定する", onPress: onPin }] : []),
-      ...(onEdit ? [{ text: "投稿を編集", onPress: onEdit }] : []),
-      ...(onDelete ? [{ text: "投稿を削除", style: "destructive" as const, onPress: onDelete }] : []),
-      { text: "キャンセル", style: "cancel" },
-    ]);
-  }, [closed, onDelete, onEdit, onPin, onToggleClosed, pinned, thread]);
+    setShowActions(true);
+  }, []);
 
   return <>
     <Pressable
@@ -1090,6 +1082,9 @@ function ThreadDetailModal({
         };
         const saved = await Api.createSharedBoardComment(thread.id, { content, data: boardCommentData(newComment) });
         newComment = { ...newComment, id: saved.id, createdAt: saved.createdAt, shared: true };
+        if (!saved.duplicate && !isOperatorRole(authUser?.role, authUser?.accessRole)) {
+          void Api.awardSharedXp("comment", saved.id).catch(() => {});
+        }
       } catch (error) {
         commentSendingRef.current = false;
         Alert.alert("コメントを送信できませんでした", error instanceof Error ? error.message : "通信環境を確認して、もう一度お試しください。");
@@ -2709,6 +2704,7 @@ function CreateThreadModal({
 export default function BoardScreen() {
   const colors = useColors();
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { compose, reminderEventId, category: categoryParam, view, thread: threadParam, fromHome, fromProfile, openClubMembers } = useLocalSearchParams<{ compose?: string; reminderEventId?: string; category?: string; view?: string; thread?: string; fromHome?: string; fromProfile?: string; openClubMembers?: string }>();
   const { user: authUser } = useAuthContext();
   const userIsAdmin = canManageBoardCategories(authUser?.role, authUser?.accessRole);
@@ -3295,11 +3291,17 @@ export default function BoardScreen() {
                 const directoryMember = memberDirectory.find((member) => member.id === memberId);
                 const staticMember = MEMBERS.find((member) => member.id === memberId);
                 const name = directoryMember?.displayName ?? staticMember?.name ?? "メンバー";
+                const cleanName = stripRankFromName(name);
+                const rank = (directoryMember?.memberRank ?? staticMember?.rank ?? "regular") as Member["rank"];
+                const role = directoryMember?.accessRole ?? staticMember?.role;
                 const avatar = typeof directoryMember?.profile.avatarUrl === "string" ? directoryMember.profile.avatarUrl : staticMember?.avatar ?? DEFAULT_AVATAR;
                 const isLeader = memberId === activeClub?.leaderId;
                 return <Pressable onPress={() => { setShowClubMembers(false); setTimeout(() => router.push({ pathname: "/member-profile", params: { id: memberId, returnToClubRoster: "1", clubCategory: activeCategory } }), 0); }} accessibilityRole="button" accessibilityLabel={`${name}のプロフィールを開く`} style={({ pressed }) => ({ flexDirection: "row", alignItems: "center", paddingVertical: 12, borderBottomWidth: 0.5, borderBottomColor: colors.border, opacity: pressed ? 0.72 : 1 })}>
                   <Image source={avatar} style={{ width: 44, height: 44, borderRadius: 22 }} contentFit="cover" />
-                  <Text style={{ flex: 1, marginLeft: 12, fontSize: 15, fontWeight: "800", color: colors.foreground }}>{name}</Text>
+                  <View style={{ flex: 1, marginLeft: 12, flexDirection: "row", alignItems: "center", flexWrap: "wrap" }}>
+                    <Text style={{ fontSize: 15, fontWeight: "800", color: colors.foreground }}>{cleanName}</Text>
+                    <MemberRankBadge rank={rank} name={name} role={role} compact />
+                  </View>
                   {isLeader ? <View style={{ borderRadius: 8, backgroundColor: "#FFF4C6", paddingHorizontal: 8, paddingVertical: 4, marginRight: 8 }}><Text style={{ fontSize: 10, fontWeight: "900", color: "#9A7200" }}>部長</Text></View> : null}
                   <IconSymbol name="chevron.right" size={16} color={colors.muted} />
                 </Pressable>;
@@ -3387,7 +3389,7 @@ export default function BoardScreen() {
         <Pressable
           accessibilityLabel={`${categories.find((category) => category.key === activeCategory)?.label ?? "掲示板"}に投稿`}
           onPress={() => setShowCreateThread(true)}
-          style={{ position: "absolute", right: 20, bottom: 92, width: 56, height: 56, borderRadius: 28, backgroundColor: "#18171A", alignItems: "center", justifyContent: "center", shadowColor: "#000", shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.22, shadowRadius: 8, elevation: 6 }}
+          style={{ position: "absolute", right: 20, bottom: 104 + insets.bottom, width: 56, height: 56, borderRadius: 28, backgroundColor: "#18171A", alignItems: "center", justifyContent: "center", shadowColor: "#000", shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.22, shadowRadius: 8, elevation: 6 }}
         >
           <IconSymbol name="plus" size={27} color="#FFF" />
         </Pressable>

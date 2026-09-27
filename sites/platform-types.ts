@@ -60,3 +60,7 @@ export interface SitesEnv {
   SQUARE_WEBHOOK_SIGNATURE_KEY?: string;
   SQUARE_WEBHOOK_NOTIFICATION_URL?: string;
 }
+
+export interface SitesExecutionContext {
+  waitUntil(promise: Promise<unknown>): void;
+}

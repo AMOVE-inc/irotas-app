@@ -106,10 +106,11 @@ describe("board category ordering", () => {
     expect(readFileSync(resolve(process.cwd(), "app/chat/[id].tsx"), "utf8")).toContain('export { default } from "./index"');
   });
 
-  it("does not overwrite a parameterized board navigation on tab selection", () => {
+  it("resets a stale deep-linked board category when the Board tab is selected", () => {
     const tabLayout = readFileSync(resolve(process.cwd(), "app/(tabs)/_layout.tsx"), "utf8");
-    expect(tabLayout).not.toContain("listeners={{ tabPress:");
-    expect(tabLayout).not.toContain('router.replace("/board")');
+    expect(tabLayout).toContain("tabPress: (event)");
+    expect(tabLayout).toContain("event.preventDefault()");
+    expect(tabLayout).toContain('router.replace("/(tabs)/board")');
   });
 
   it("does not serialize community navigation into query-string hrefs", () => {

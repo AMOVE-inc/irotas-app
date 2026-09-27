@@ -447,7 +447,7 @@ export function adjustSharedIrotasPoints(input: {
 }
 
 export function awardSharedXp(
-  action: "event_create" | "board_post" | "meal_report_post" | "chat_message",
+  action: "board_post" | "meal_report_post" | "chat_message" | "comment",
   sourceId: string,
 ) {
   return apiCall<{
@@ -534,7 +534,7 @@ export async function createSharedBoardComment(
   threadId: string,
   input: { content: string; data?: Record<string, unknown> },
 ) {
-  return apiCall<{ id: string; createdAt: string }>(
+  return apiCall<{ id: string; createdAt: string; duplicate?: boolean }>(
     `/api/board/threads/${encodeURIComponent(threadId)}/comments`,
     { method: "POST", body: JSON.stringify(input) },
   );
@@ -981,6 +981,11 @@ export async function getMeStrict(): Promise<AuthApiUser | null> {
 const memberDirectorySnapshots = new Map<string, PublicMember[]>();
 const memberDirectoryRequests = new Map<string, Promise<PublicMember[]>>();
 
+export function clearApiResponseCaches() {
+  memberDirectorySnapshots.clear();
+  memberDirectoryRequests.clear();
+}
+
 export function peekMemberDirectory(viewerKey: string) {
   return memberDirectorySnapshots.get(viewerKey);
 }
@@ -1209,6 +1214,14 @@ export async function markAllNotificationsRead() {
     "/api/notifications/read-all",
     { method: "PATCH" },
   );
+}
+
+export async function registerPushToken(input: { token: string; platform: "ios" | "android"; preferences: Record<string, boolean> }) {
+  return apiCall<{ success: true }>("/api/notifications/push-token", { method: "POST", body: JSON.stringify(input), suppressGlobalLoading: true });
+}
+
+export async function updatePushNotificationPreferences(preferences: Record<string, boolean>) {
+  return apiCall<{ success: true }>("/api/notifications/preferences", { method: "PUT", body: JSON.stringify({ preferences }), suppressGlobalLoading: true });
 }
 
 export async function setPrivateMemberNote(memberId: string, note: string) {

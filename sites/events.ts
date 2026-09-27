@@ -923,17 +923,7 @@ async function createEvent(request: Request, db: D1Database, member: Awaited<Ret
     ...mentionNotifications,
   ]);
   await ensureEventRoom(db, chatId);
-  // 公式イベントの主担当は対象外。その他のイベントは作成時に一度だけ付与する。
-  // サーバー側で確定し、画面遷移・通信の再試行で重複しないようにする。
-  if (event.eventType !== "official") {
-    await awardEventReward(db, {
-      eventId: id,
-      memberId: member.id,
-      action: "event_created",
-      amount: EVENT_XP.created,
-      now,
-    });
-  }
+  // XPは実出欠の確定後にのみ付与する。作成だけでは付与しない。
   const row = await db.prepare(`${selectEvents} WHERE e.id = ?`).bind(id).first<EventRow>();
   return responseJson({ event: await hydratedEvent(db, row!, member.id, elevated) }, 201);
 }

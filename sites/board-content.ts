@@ -1,6 +1,7 @@
 import { authenticatedRequestMember } from "./auth";
 import { canMemberAccessClub } from "./clubs";
 import type { D1Database, SitesEnv } from "./platform-types";
+import { reverseSharedXpForSource } from "./xp";
 import archive from "../data/discord-board-2026-08-29.json";
 import { IMPORTED_DISCORD_EVENTS } from "../constants/imported-discord-events";
 import { cleanDiscordBoardContent, cleanDiscordBoardTitle } from "../lib/discord-board-normalization";
@@ -654,6 +655,11 @@ export async function handleBoardContentRequest(
       if (!canManageWholeThread) return json({ error: "投稿者本人または管理者のみ変更できます" }, 403);
       await db.prepare("UPDATE board_threads SET deleted_at = ?, updated_at = ? WHERE id = ?")
         .bind(now, now, id).run();
+      await reverseSharedXpForSource(db, current.category === "meal-report" ? "meal_report_post" : "board_post", id, now);
+      const commentRewards = await db.prepare(`SELECT source_id FROM xp_operation_requests
+        WHERE action = 'comment' AND status = 'applied' AND source_id IN
+          (SELECT id FROM board_comments WHERE thread_id = ?)`).bind(id).all<{ source_id: string }>();
+      for (const reward of commentRewards.results ?? []) await reverseSharedXpForSource(db, "comment", reward.source_id, now);
       await audit(db, member.id, "board.thread_deleted", "board_thread", id);
       return json({ success: true });
     }
@@ -777,6 +783,7 @@ export async function handleBoardContentRequest(
     if (request.method === "DELETE") {
       await db.prepare("UPDATE board_comments SET deleted_at = ?, updated_at = ? WHERE id = ?")
         .bind(now, now, id).run();
+      await reverseSharedXpForSource(db, "comment", id, now);
       await audit(db, member.id, "board.comment_deleted", "board_comment", id);
       return json({ success: true });
     }

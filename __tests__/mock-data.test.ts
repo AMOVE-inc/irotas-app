@@ -228,14 +228,14 @@ describe("Points-based Rank System", () => {
   });
 
   it("POINT_ACTIONS should have all defined actions", () => {
-    expect(POINT_ACTIONS.eventJoin.points).toBe(10);
-    expect(POINT_ACTIONS.boardPost.points).toBe(5);
-    expect(POINT_ACTIONS.comment.points).toBe(2);
-    expect(POINT_ACTIONS.clubActivity.points).toBe(3);
-    expect(POINT_ACTIONS.mealReportPost.points).toBe(8);
-    expect(POINT_ACTIONS.eventOrganize.points).toBe(20);
-    expect(getOrganizerPointAdjustment("completed")).toBe(20);
-    expect(getOrganizerPointAdjustment("cancelled")).toBe(-20);
+    expect(POINT_ACTIONS.comment.points).toBe(5);
+    expect(POINT_ACTIONS.chatMessage.points).toBe(10);
+    expect(POINT_ACTIONS.boardPost.points).toBe(20);
+    expect(POINT_ACTIONS.mealReportPost.points).toBe(30);
+    expect(POINT_ACTIONS.eventJoin.points).toBe(40);
+    expect(POINT_ACTIONS.eventOrganize.points).toBe(100);
+    expect(getOrganizerPointAdjustment("completed")).toBe(100);
+    expect(getOrganizerPointAdjustment("cancelled")).toBe(-100);
   });
 
   it("RANK_THRESHOLDS_POINTS should have correct thresholds", () => {

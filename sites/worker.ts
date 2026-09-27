@@ -4,7 +4,8 @@ import {
   isTrustedBrowserOrigin,
   requestHasMemberAccess,
 } from "./auth";
-import type { SitesEnv } from "./platform-types";
+import type { SitesEnv, SitesExecutionContext } from "./platform-types";
+import { dispatchPendingPushNotifications } from "./push-notifications";
 import { handleMemberImportRequest } from "./member-import";
 import { handleSquareWebhook } from "./square-webhook";
 import { handleSquareSyncRequest } from "./square-sync";
@@ -613,10 +614,14 @@ async function routeRequest(
 }
 
 export default {
-  async fetch(request: Request, env: SitesEnv): Promise<Response> {
+  async fetch(request: Request, env: SitesEnv, context?: SitesExecutionContext): Promise<Response> {
     const requestId = crypto.randomUUID();
     try {
       const response = withSecurityHeaders(await routeRequest(request, env), request);
+      if (env.DB && !["GET", "HEAD", "OPTIONS"].includes(request.method)) {
+        const delivery = dispatchPendingPushNotifications(env.DB).catch(() => 0);
+        if (context) context.waitUntil(delivery); else await delivery;
+      }
       const headers = new Headers(response.headers);
       headers.set("x-request-id", requestId);
       return new Response(response.body, {
@@ -646,6 +651,9 @@ export default {
           await recordApplicationError(env.DB, new Request(`https://app.irotas-community.com/internal/scheduled/${path}`), crypto.randomUUID(), result.reason);
         }
       }
+      await dispatchPendingPushNotifications(env.DB).catch(async (error) => {
+        await recordApplicationError(env.DB, new Request("https://app.irotas-community.com/internal/scheduled/push-notifications"), crypto.randomUUID(), error);
+      });
     }
   },
 };

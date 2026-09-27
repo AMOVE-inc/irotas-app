@@ -44,6 +44,6 @@ export async function handleEventFeedbackRequest(request: Request, env: SitesEnv
     VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)
     ON CONFLICT(event_id,member_id) DO UPDATE SET overall_rating=excluded.overall_rating,food_rating=excluded.food_rating,venue_rating=excluded.venue_rating,community_rating=excluded.community_rating,would_attend_again=excluded.would_attend_again,good_tags_json=excluded.good_tags_json,improvement_tags_json=excluded.improvement_tags_json,comment=excluded.comment,updated_at=excluded.updated_at`)
     .bind(crypto.randomUUID(), eventId, member.id, overall, food, venue, community, input.wouldAttendAgain === false ? 0 : 1, JSON.stringify(tags(input.goodTags)), JSON.stringify(tags(input.improvementTags)), comment, now, now).run();
-  if (!existing) await awardEventReward(env.DB, { eventId, memberId: member.id, action: "event_feedback", amount: EVENT_XP.feedback, now });
+  if (!existing && EVENT_XP.feedback > 0) await awardEventReward(env.DB, { eventId, memberId: member.id, action: "event_feedback", amount: EVENT_XP.feedback, now });
   return json({ success: true, submittedAt: now });
 }

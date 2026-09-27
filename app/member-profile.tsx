@@ -30,6 +30,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useAuthContext } from "@/lib/auth-context";
 import * as Api from "@/lib/_core/api";
 import { getDiscordAuthorById } from "@/lib/discord-author-directory";
+import { canInviteWithoutMutualFollow } from "@/lib/private-chat-permissions";
 import {
   Alert,
   KeyboardAvoidingView,
@@ -209,6 +210,10 @@ export default function MemberProfileScreen() {
   const leaderLabel = ledClub ? clubLeaderBadgeForClub(ledClub.name) : null;
   const rankColor = RANK_COLORS[member.rank];
   const isSelf = databaseMember ? databaseMember.userId === authUser?.id : member.id === CURRENT_USER.id;
+  const canStartPrivateChat = Boolean(databaseMember && (databaseMember.isFriend || canInviteWithoutMutualFollow(
+    { role: authUser?.role, accessRole: authUser?.accessRole },
+    databaseMember,
+  )));
   const details: Partial<ProfileDetails> = selfDetails ?? {
     birthDate: member.birthDate, showAge: member.showAge, hometown: member.hometown, residence: member.residence,
     occupation: member.occupation, hobbies: member.hobbies, favoriteCuisines: member.favoriteCuisines ?? member.interests,
@@ -338,10 +343,10 @@ export default function MemberProfileScreen() {
               <Pressable onPress={() => void handleToggleFollow()} disabled={!databaseMember || followSaving} style={{ borderRadius: 22, paddingHorizontal: 22, paddingVertical: 11, borderWidth: 1, borderColor: "#E8A0BF", backgroundColor: databaseMember?.isFollowing ? "#FFF" : "#E8A0BF" }}>
                 <Text style={{ fontSize: 14, fontWeight: "800", color: databaseMember?.isFollowing ? "#C05B88" : "#FFF" }}>{followSaving ? "更新中" : databaseMember?.isFollowing ? "フォロー中" : "フォローする"}</Text>
               </Pressable>
-              <Pressable onPress={handleStartDM} style={{ backgroundColor: "#5D5C74", borderRadius: 22, paddingHorizontal: 22, paddingVertical: 11, flexDirection: "row", alignItems: "center", gap: 7 }}>
+              {canStartPrivateChat ? <Pressable onPress={handleStartDM} style={{ backgroundColor: "#5D5C74", borderRadius: 22, paddingHorizontal: 22, paddingVertical: 11, flexDirection: "row", alignItems: "center", gap: 7 }}>
                 <IconSymbol name="message.fill" size={16} color="#FFF" />
                 <Text style={{ fontSize: 14, fontWeight: "700", color: "#FFF" }}>メッセージ</Text>
-              </Pressable>
+              </Pressable> : null}
             </View>
           )}
         </View>
