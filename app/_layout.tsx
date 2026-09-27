@@ -82,6 +82,10 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
   const [profileGateReady, setProfileGateReady] = useState(Platform.OS === "web");
   const [profileGateComplete, setProfileGateComplete] = useState(Platform.OS === "web");
 
+  // This check is tied to the signed-in profile, not to the current route.
+  // Including `currentRoute` here unmounted the entire native navigation tree
+  // on every root-screen transition. When the tree remounted, Expo Router
+  // restored the anchored tab navigator at its initial Home screen.
   useEffect(() => {
     if (Platform.OS === "web" || !user?.memberId) {
       setProfileGateReady(true);
@@ -96,7 +100,7 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
       setProfileGateReady(true);
     });
     return () => { active = false; };
-  }, [currentRoute, user?.id, user?.memberId, user?.name, user?.publicUserId]);
+  }, [user?.id, user?.memberId, user?.name, user?.publicUserId]);
 
   useEffect(() => {
     if (loading) return;

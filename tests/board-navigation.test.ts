@@ -89,9 +89,9 @@ describe("board category ordering", () => {
   it("opens joined clubs and activity reports through structured native routes", () => {
     const clubsScreen = readFileSync(resolve(process.cwd(), "app/clubs.tsx"), "utf8");
     const profileScreen = readFileSync(resolve(process.cwd(), "app/(tabs)/profile.tsx"), "utf8");
-    expect(clubsScreen).toContain("router.navigate(clubBoardRoute(club.id) as any)");
-    expect(clubsScreen).toContain('router.navigate(boardThreadRoute({ category: "club-all", threadId: report.id }) as any)');
-    expect(profileScreen).toContain("router.navigate(clubBoardRoute(club.id, true) as any)");
+    expect(clubsScreen).toContain("router.push(clubBoardRoute(club.id) as any)");
+    expect(clubsScreen).toContain('router.push(boardThreadRoute({ category: "club-all", threadId: report.id }) as any)');
+    expect(profileScreen).toContain("router.push(clubBoardRoute(club.id, true) as any)");
   });
 
   it("opens self introductions and chat-list rooms through structured native routes", () => {

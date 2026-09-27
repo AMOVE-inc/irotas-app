@@ -19,10 +19,10 @@ type BoardRouteInput = {
  */
 export function boardThreadRoute(input: BoardRouteInput): AppRoute {
   return {
-    // Navigate by the public URL. Expo Router owns the mapping from `/board`
-    // to the board tab; coupling callers to the `(tabs)` implementation detail
-    // can rebuild the tab navigator at its home route on native.
-    pathname: "/board",
+    // A board is a nested tab screen. Root-stack callers must target that
+    // screen explicitly; resolving only `/board` from a root screen can select
+    // the tab navigator without selecting its board child on native.
+    pathname: "/(tabs)/board",
     params: {
       category: input.category,
       view: "threads",
