@@ -19,11 +19,10 @@ type BoardRouteInput = {
  */
 export function boardThreadRoute(input: BoardRouteInput): AppRoute {
   return {
-    // Keep the route group explicit on native. `/board` is a valid public URL,
-    // but from a root-stack screen (for example `/clubs`) it can resolve the
-    // tab navigator at its initial `index` screen before the board params are
-    // applied. Targeting the grouped route selects the board tab itself.
-    pathname: "/(tabs)/board",
+    // Navigate by the public URL. Expo Router owns the mapping from `/board`
+    // to the board tab; coupling callers to the `(tabs)` implementation detail
+    // can rebuild the tab navigator at its home route on native.
+    pathname: "/board",
     params: {
       category: input.category,
       view: "threads",

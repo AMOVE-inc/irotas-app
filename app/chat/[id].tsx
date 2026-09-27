@@ -1,4 +1,3 @@
-// Keep the existing `/chat?id=...` screen as a compatibility entry point for
-// older links, while native in-app navigation uses `/chat/[id]` so the room id
-// cannot be dropped while the root stack is reconstructed.
-export { default } from "../chat";
+// Keep `/chat?id=...` as a compatibility entry point while native in-app
+// navigation uses `/chat/[id]`, with the room id as part of the route identity.
+export { default } from "./index";

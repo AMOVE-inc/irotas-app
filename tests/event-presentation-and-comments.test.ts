@@ -54,7 +54,7 @@ describe("event presentation and comments", () => {
   it("places the reply cursor after the inserted mention", () => {
     const detail = source("app/event-detail.tsx");
     const board = source("app/(tabs)/board.tsx");
-    const chat = source("app/chat.tsx");
+    const chat = source("app/chat/index.tsx");
     expect(detail).toContain("setEventCommentSelection({ start: text.length, end: text.length })");
     expect(board).toContain("setCommentSelection({ start: text.length, end: text.length })");
     expect(chat).toContain("setMessageSelection({ start: text.length, end: text.length })");
@@ -141,7 +141,7 @@ describe("event presentation and comments", () => {
   });
 
   it("renders event system notices as centered text, with day separators and no avatar on outgoing messages", () => {
-    const chat = source("app/chat.tsx");
+    const chat = source("app/chat/index.tsx");
     expect(chat).toContain('message.content.startsWith("【IRO+ システム】")');
     expect(chat).toContain("function systemMessageText");
     expect(chat).toContain("参加者専用グループが作成されました");

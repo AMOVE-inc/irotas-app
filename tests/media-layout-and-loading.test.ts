@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
 const board = readFileSync("app/(tabs)/board.tsx", "utf8");
-const chat = readFileSync("app/chat.tsx", "utf8");
+const chat = readFileSync("app/chat/index.tsx", "utf8");
 const events = readFileSync("app/(tabs)/events.tsx", "utf8");
 
 describe("responsive media and immediate list updates", () => {

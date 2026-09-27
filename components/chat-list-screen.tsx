@@ -136,7 +136,7 @@ function ChatRoomCard({ room, eventStarts, eventImages, memberAvatars, viewerMem
         onOpened(room.id, unreadCount);
         void markRoomRead(room.id);
         void Api.markSharedChatRoomRead(room.id).catch(() => {});
-        router.push(chatRoomRoute({ ...room, unreadCount }) as any, { withAnchor: true });
+        router.push(chatRoomRoute({ ...room, unreadCount }) as any);
       }}
       onLongPress={() => {
         if (!onLongPress) return;
@@ -493,7 +493,7 @@ export default function ChatListScreen() {
           </Pressable>
         </Pressable>
       </Modal>
-      <CreateFriendGroupModal visible={showCreateGroup} onClose={() => setShowCreateGroup(false)} onCreated={(room) => { void refreshRooms(); router.push(chatRoomRoute(room) as any, { withAnchor: true }); }} />
+      <CreateFriendGroupModal visible={showCreateGroup} onClose={() => setShowCreateGroup(false)} onCreated={(room) => { void refreshRooms(); router.push(chatRoomRoute(room) as any); }} />
     </ScreenContainer>
   );
 }

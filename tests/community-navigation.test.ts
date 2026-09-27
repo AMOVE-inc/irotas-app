@@ -4,11 +4,11 @@ import { boardRouteRequests, boardThreadRoute, chatRoomRoute, clubBoardRoute, in
 describe("community navigation", () => {
   it("opens the exact free-chat and meal-report posts from the timeline", () => {
     expect(boardThreadRoute({ category: "free-chat", threadId: "new-thread", fromHome: true })).toEqual({
-      pathname: "/(tabs)/board",
+      pathname: "/board",
       params: { category: "free-chat", view: "threads", thread: "new-thread", fromHome: "1" },
     });
     expect(boardThreadRoute({ category: "meal-report", threadId: "new-report", fromHome: true })).toEqual({
-      pathname: "/(tabs)/board",
+      pathname: "/board",
       params: { category: "meal-report", view: "threads", thread: "new-report", fromHome: "1" },
     });
   });
@@ -21,8 +21,8 @@ describe("community navigation", () => {
   });
 
   it("opens joined clubs without duplicating or dropping the club prefix", () => {
-    expect(clubBoardRoute("club-golf")).toEqual({ pathname: "/(tabs)/board", params: { category: "club-club-golf", view: "threads" } });
-    expect(clubBoardRoute("golf")).toEqual({ pathname: "/(tabs)/board", params: { category: "club-club-golf", view: "threads" } });
+    expect(clubBoardRoute("club-golf")).toEqual({ pathname: "/board", params: { category: "club-club-golf", view: "threads" } });
+    expect(clubBoardRoute("golf")).toEqual({ pathname: "/board", params: { category: "club-club-golf", view: "threads" } });
   });
 
   it("keeps all room context in structured native route params", () => {
