@@ -130,10 +130,10 @@ export default function NotificationsScreen() {
       setNotifications((items) => items.map((item) => item.id === notification.id ? { ...item, read: true } : item));
       try { await Api.markNotificationRead(notification.id); } catch {}
     }
-    if (notification.targetPath?.startsWith("/board?") || notification.targetPath?.startsWith("/chat?") || notification.targetPath?.startsWith("/member-profile?") || notification.targetPath?.startsWith("/event-detail?")) {
+    if (notification.targetPath?.startsWith("/board?") || notification.targetPath?.startsWith("/chat?") || notification.targetPath?.startsWith("/member-profile?") || notification.targetPath?.startsWith("/event-detail?") || notification.targetPath?.startsWith("/clubs?")) {
       router.push(notification.targetPath as any);
-    } else if (notification.type === "club_application" || notification.type === "club_approval") {
-      router.push("/clubs");
+    } else if ((notification.type === "club_application" || notification.type === "club_approval") && notification.clubId) {
+      router.push({ pathname: "/clubs", params: { clubId: notification.clubId, ...(notification.type === "club_application" ? { reviewApplications: "1" } : {}) } });
     } else if (notification.type === "event_feedback" && notification.eventId) {
       router.push({ pathname: "/event-feedback", params: { id: notification.eventId } });
     } else if (notification.type === "event" || notification.type.startsWith("event_")) {

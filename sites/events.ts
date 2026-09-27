@@ -519,7 +519,7 @@ function publicEvent(
   const viewerPaymentState = active.find((item) => item.member_id === viewerId)?.payment_state ?? null;
   return {
     ...data,
-    chatId: row.id.startsWith("discord-event-") || data.recruitmentChannel === "discord" ? undefined : data.chatId,
+    chatId: (row.id.startsWith("discord-event-") || data.recruitmentChannel === "discord") && !data.discordRecruitmentClosedAt ? undefined : data.chatId,
     id: row.id,
     recruitmentChannel: data.recruitmentChannel === "app" || data.recruitmentChannel === "discord"
       ? data.recruitmentChannel : row.id.startsWith("discord-event-") ? "discord" : "app",
@@ -1053,6 +1053,10 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
       .first<{ id: number }>();
     const row = await eventRow(env.DB, requestedEventId) ?? await materializeImportedEvent(env.DB, requestedEventId, fallbackOrganizer?.id);
     if (!row) return responseJson({ error: "イベントが見つかりません" }, 404);
+    let rowData: { recruitmentChannel?: string; discordRecruitmentClosedAt?: string; chatId?: string } = {};
+    try { rowData = JSON.parse(row.public_data_json) as typeof rowData; } catch {}
+    const closedDiscordEvent = (row.id.startsWith("discord-event-") || rowData.recruitmentChannel === "discord") && Boolean(rowData.discordRecruitmentClosedAt);
+    if (closedDiscordEvent && row.status !== "cancelled") await ensureEventRoom(env.DB, rowData.chatId || eventChatId(row.id));
     if (row.event_type === "club" && row.club_id && !await canMemberAccessClub(env.DB, row.club_id, member.id, elevated)) {
       const participation = row.id.startsWith("discord-event-")
         ? await env.DB.prepare("SELECT status FROM event_participations WHERE event_id = ? AND member_id = ? LIMIT 1")
@@ -1214,6 +1218,7 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
       if (data.discordRecruitmentClosedAt) return responseJson({ event: await hydratedEvent(env.DB, row, member.id, elevated, memberPublicId) });
       const now = new Date().toISOString();
       data.discordRecruitmentClosedAt = now;
+      data.chatId = typeof data.chatId === "string" && data.chatId ? data.chatId : eventChatId(id);
       await env.DB.batch([
         env.DB.prepare("UPDATE events SET status = 'full', public_data_json = ?, updated_at = ? WHERE id = ?").bind(JSON.stringify(data), now, id),
         env.DB.prepare(`INSERT INTO event_import_field_edits (event_id, field_name, edited_at, actor_member_id)
@@ -1221,6 +1226,7 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
         env.DB.prepare(`INSERT INTO audit_logs (actor_user_id, action, entity_type, entity_id, metadata_json, created_at)
           VALUES (?, 'event.discord_recruitment_closed', 'event', ?, '{}', ?)`).bind(String(member.id), id, now),
       ]);
+      await ensureEventRoom(env.DB, data.chatId as string);
       return responseJson({ event: await hydratedEvent(env.DB, (await eventRow(env.DB, id))!, member.id, elevated, memberPublicId) });
     }
     const canManageImportedEvent = id.startsWith("discord-event-") && elevated;

@@ -1259,8 +1259,8 @@ export default function ChatScreen() {
                 paddingVertical: 10,
                 fontSize: 14,
                 color: colors.foreground,
-                minHeight: 44,
-                maxHeight: 120,
+                minHeight: 72,
+                maxHeight: 180,
                 textAlignVertical: "top",
               }}
             />

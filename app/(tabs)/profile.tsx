@@ -14,6 +14,7 @@ import {
 } from "@/constants/mock-data";
 import { getNextLevelInfo, levelFromXp, totalXpForLevel } from "@/lib/xp-levels";
 import { useColors } from "@/hooks/use-colors";
+import { INSTAGRAM_PROFILE_PREFIX, TABELOG_PROFILE_PREFIX, instagramHandleFromUrl, instagramUrlFromHandle, tabelogUserIdFromUrl, tabelogUrlFromUserId, validSocialUserId } from "@/lib/profile-social-links";
 import { refreshClubs, useClubs } from "@/lib/club-store";
 import { getMyRooms } from "@/lib/chat-store";
 import { getAllEvents } from "@/lib/event-store";
@@ -448,8 +449,8 @@ function EditProfileModal({
         setDislikedFoods(details.dislikedFoods ?? initialDetails.dislikedFoods ?? "");
         setAllergies(details.allergies ?? initialDetails.allergies ?? "");
         setDrinkingLevel(details.drinkingLevel ?? initialDetails.drinkingLevel ?? "");
-        setInstagramUrl(details.instagramUrl ?? initialDetails.instagramUrl ?? "");
-        setTabelogUrl(details.tabelogUrl ?? initialDetails.tabelogUrl ?? "");
+        setInstagramUrl(instagramHandleFromUrl(details.instagramUrl ?? initialDetails.instagramUrl ?? ""));
+        setTabelogUrl(tabelogUserIdFromUrl(details.tabelogUrl ?? initialDetails.tabelogUrl ?? ""));
         setFavoriteRestaurants(details.favoriteRestaurants ?? initialDetails.favoriteRestaurants ?? "");
         setDesiredRestaurants(details.desiredRestaurants ?? initialDetails.desiredRestaurants ?? "");
         setGoogleLocalGuideLevel(details.googleLocalGuideLevel ?? initialDetails.googleLocalGuideLevel ?? "");
@@ -496,12 +497,12 @@ function EditProfileModal({
         return;
       }
     }
-    if (instagramUrl.trim() && !/^https?:\/\//i.test(instagramUrl.trim())) {
-      Alert.alert("Instagram URLを確認してください", "URLは http:// または https:// から入力してください。");
+    if (!validSocialUserId(instagramUrl.trim())) {
+      Alert.alert("InstagramユーザーIDを確認してください", "@以降のユーザーIDだけを入力してください。");
       return;
     }
-    if (tabelogUrl.trim() && !/^https?:\/\/(?:www\.|s\.)?tabelog\.com\//i.test(tabelogUrl.trim())) {
-      Alert.alert("食べログURLを確認してください", "食べログの店舗またはプロフィールURLを入力してください。");
+    if (!validSocialUserId(tabelogUrl.trim())) {
+      Alert.alert("食べログユーザーIDを確認してください", "プロフィールURLのユーザーIDだけを入力してください。");
       return;
     }
     const AsyncStorage = (await import("@react-native-async-storage/async-storage")).default;
@@ -515,8 +516,8 @@ function EditProfileModal({
       birthDate: birthYear && birthMonth && birthDay ? `${birthYear}-${birthMonth}-${birthDay}` : "",
       showAge, hometown, residence, occupation: occupation.trim(), hobbies: hobbies.trim(), favoriteCuisines: interests,
       favoriteAlcohol: favoriteAlcohol.trim(), dislikedFoods: dislikedFoods.trim(), allergies: allergies.trim(), drinkingLevel,
-      instagramUrl: instagramUrl.trim(),
-      tabelogUrl: tabelogUrl.trim(),
+      instagramUrl: instagramUrlFromHandle(instagramUrl),
+      tabelogUrl: tabelogUrlFromUserId(tabelogUrl),
       favoriteRestaurants: favoriteRestaurants.trim(), desiredRestaurants: desiredRestaurants.trim(),
       googleLocalGuideLevel: googleLocalGuideLevel === "未設定" ? "" : googleLocalGuideLevel,
     };
@@ -675,8 +676,8 @@ function EditProfileModal({
           ].map((field) => <View key={field.label}><Text style={{ fontSize: 13, fontWeight: "600", color: colors.muted, marginBottom: 6 }}>{field.label}</Text><TextInput value={field.value} onChangeText={field.setter} placeholder={field.placeholder} placeholderTextColor={colors.muted} style={{ backgroundColor: colors.surface, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: colors.foreground, marginBottom: 16 }} /></View>)}
 
           <Text style={{ fontSize: 13, fontWeight: "600", color: colors.muted, marginBottom: 6 }}>飲酒量</Text><View style={{ marginBottom: 16 }}><ProfileSelectField label="飲酒量を選択" value={drinkingLevel} options={DRINKING_LEVELS} onChange={setDrinkingLevel} /></View>
-          <Text style={{ fontSize: 13, fontWeight: "600", color: colors.muted, marginBottom: 6 }}>Instagram URL</Text><TextInput value={instagramUrl} onChangeText={setInstagramUrl} placeholder="https://www.instagram.com/..." placeholderTextColor={colors.muted} autoCapitalize="none" keyboardType="url" style={{ backgroundColor: colors.surface, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: colors.foreground, marginBottom: 18 }} />
-          <Text style={{ fontSize: 13, fontWeight: "600", color: colors.muted, marginBottom: 6 }}>食べログ URL</Text><TextInput value={tabelogUrl} onChangeText={setTabelogUrl} placeholder="https://tabelog.com/..." placeholderTextColor={colors.muted} autoCapitalize="none" keyboardType="url" style={{ backgroundColor: colors.surface, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: colors.foreground, marginBottom: 18 }} />
+          <Text style={{ fontSize: 13, fontWeight: "600", color: colors.muted, marginBottom: 6 }}>Instagram ユーザーID</Text><View style={{ flexDirection: "row", alignItems: "center", backgroundColor: colors.surface, borderRadius: 12, paddingLeft: 14, marginBottom: 18 }}><Text style={{ color: colors.muted, fontSize: 13 }}>{INSTAGRAM_PROFILE_PREFIX}</Text><TextInput value={instagramUrl} onChangeText={setInstagramUrl} placeholder="your.name" placeholderTextColor={colors.muted} autoCapitalize="none" autoCorrect={false} style={{ flex: 1, paddingHorizontal: 4, paddingVertical: 12, fontSize: 15, color: colors.foreground }} /></View>
+          <Text style={{ fontSize: 13, fontWeight: "600", color: colors.muted, marginBottom: 6 }}>食べログ ユーザーID</Text><View style={{ flexDirection: "row", alignItems: "center", backgroundColor: colors.surface, borderRadius: 12, paddingLeft: 14, marginBottom: 18 }}><Text style={{ color: colors.muted, fontSize: 13 }}>{TABELOG_PROFILE_PREFIX}</Text><TextInput value={tabelogUrl} onChangeText={setTabelogUrl} placeholder="user_id" placeholderTextColor={colors.muted} autoCapitalize="none" autoCorrect={false} style={{ flex: 1, paddingHorizontal: 4, paddingVertical: 12, fontSize: 15, color: colors.foreground }} /></View>
           <Text style={{ fontSize: 13, fontWeight: "600", color: colors.muted, marginBottom: 6 }}>Googleローカルガイドレベル</Text><View style={{ marginBottom: 16 }}><ProfileSelectField label="レベルを選択" value={googleLocalGuideLevel} options={GOOGLE_LOCAL_GUIDE_LEVELS} onChange={setGoogleLocalGuideLevel} /></View>
           <Text style={{ fontSize: 13, fontWeight: "600", color: colors.muted, marginBottom: 6 }}>お気に入りのお店</Text><TextInput value={favoriteRestaurants} onChangeText={setFavoriteRestaurants} onFocus={() => setTimeout(() => formScrollRef.current?.scrollToEnd({ animated: true }), 120)} placeholder="店名やURLを自由に入力" placeholderTextColor={colors.muted} autoCapitalize="none" keyboardType="url" multiline textAlignVertical="top" style={{ backgroundColor: colors.surface, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, minHeight: 76, fontSize: 15, color: colors.foreground, marginBottom: 16 }} />
           <Text style={{ fontSize: 13, fontWeight: "600", color: colors.muted, marginBottom: 6 }}>行ってみたいお店</Text><TextInput value={desiredRestaurants} onChangeText={setDesiredRestaurants} placeholder="店名やURLを自由に入力" placeholderTextColor={colors.muted} multiline textAlignVertical="top" style={{ backgroundColor: colors.surface, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, minHeight: 76, fontSize: 15, color: colors.foreground, marginBottom: 18 }} />

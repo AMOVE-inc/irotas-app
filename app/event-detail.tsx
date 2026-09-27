@@ -171,6 +171,7 @@ export default function EventDetailScreen() {
   const [eventLoading, setEventLoading] = useState(!initialEvent);
   const [eventResolved, setEventResolved] = useState(Boolean(initialEvent));
   const [eventCheckout, setEventCheckout] = useState<Api.EventCheckout | null>(null);
+  const [showApplicantList, setShowApplicantList] = useState(false);
   const [checkoutBusy, setCheckoutBusy] = useState(false);
 
   const [isJoined, setIsJoined] = useState(() => {
@@ -319,12 +320,12 @@ export default function EventDetailScreen() {
     const isCompanion = Boolean(event.companionIds?.includes(viewerId));
     setIsJoined(isCompanion || (status ? status === "confirmed" || status === "cancel_requested" : event.participants.includes(viewerId)));
     setHasApplied(status ? status === "applied" || status === "confirmed" || status === "cancel_requested" : Boolean(event.applicantIds?.includes(viewerId)));
-    if (event.id.startsWith("discord-event-") || event.recruitmentChannel === "discord") {
+    if ((event.id.startsWith("discord-event-") || event.recruitmentChannel === "discord") && !event.chatId) {
       setChatRoomId(null);
       return;
     }
     if (!event.viewerMemberId || !event.chatId) return;
-    if (isEventOrganizer(event, viewerId) || isCompanion || status === "confirmed" || status === "cancel_requested") {
+    if (isEventOrganizer(event, viewerId) || isCompanion || status === "confirmed" || status === "cancel_requested" || event.participants.includes(viewerId)) {
       const room = joinEventChat(event.id, event.title, event.chatId, viewerId);
       setChatRoomId(room.id);
     } else {
@@ -1170,11 +1171,12 @@ export default function EventDetailScreen() {
         </View>
 
         <View style={{ flexDirection: "row", gap: 8, marginBottom: 16 }}>
-          {[{ label: "現在の参加申込", value: `${applicantCount}人`, color: "#5B9BD5" }, { label: "募集定員", value: eventCapacityLabel(event), color: "#E8A0BF" }, { label: "参加確定", value: `${confirmedParticipantIds.length}人`, color: "#34C759" }].map((item) => (
-            <View key={item.label} style={{ flex: 1, backgroundColor: colors.surface, borderRadius: 12, paddingVertical: 12, alignItems: "center", borderTopWidth: 3, borderTopColor: item.color }}>
+          {[{ label: "現在の参加申込", value: `${applicantCount}人`, color: "#5B9BD5", action: () => setShowApplicantList(true) }, { label: "募集定員", value: eventCapacityLabel(event), color: "#E8A0BF", action: undefined }, { label: "参加確定", value: `${confirmedParticipantIds.length}人`, color: "#34C759", action: undefined }].map((item) => (
+            <Pressable key={item.label} disabled={!item.action} onPress={item.action} accessibilityLabel={item.action ? "参加申込者一覧を表示" : undefined} style={{ flex: 1, backgroundColor: colors.surface, borderRadius: 12, paddingVertical: 12, alignItems: "center", borderTopWidth: 3, borderTopColor: item.color }}>
               <Text style={{ fontSize: 10, color: colors.muted, textAlign: "center" }}>{item.label}</Text>
               <Text style={{ fontSize: item.label === "募集定員" && event.capacityMode ? 16 : 22, fontWeight: "900", color: item.color, marginTop: 3 }}>{item.value}</Text>
-            </View>
+              {item.action ? <Text style={{ fontSize: 9, color: colors.muted, marginTop: 2 }}>タップして表示</Text> : null}
+            </Pressable>
           ))}
         </View>
 
@@ -1440,6 +1442,28 @@ export default function EventDetailScreen() {
           </View>
       </ScrollView>
       <PersistentBottomNav active="/events" />
+
+      <Modal visible={showApplicantList} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setShowApplicantList(false)}>
+        <View style={{ flex: 1, backgroundColor: colors.background }}>
+          <View style={{ flexDirection: "row", alignItems: "center", padding: 16, borderBottomWidth: 0.5, borderBottomColor: colors.border }}>
+            <Pressable onPress={() => setShowApplicantList(false)}><Text style={{ color: colors.muted, fontSize: 15 }}>閉じる</Text></Pressable>
+            <Text style={{ flex: 1, textAlign: "center", fontSize: 18, fontWeight: "900", color: colors.foreground }}>参加申込者（{applicantCount}人）</Text><View style={{ width: 42 }} />
+          </View>
+          <ScrollView contentContainerStyle={{ paddingVertical: 8 }}>
+            {[...new Set(event.applicantIds ?? [])].map((uid) => {
+              const directoryMember = memberDirectory.find((item) => item.id === uid);
+              const member = getMemberById(uid);
+              const discordAuthor = getDiscordAuthorById(uid);
+              const memberName = directoryMember?.displayName ?? member?.name ?? discordAuthor?.name ?? "メンバー";
+              const avatar = typeof directoryMember?.profile?.avatarUrl === "string" ? { uri: directoryMember.profile.avatarUrl } : member?.avatar ?? (discordAuthor?.avatarUrl ? { uri: discordAuthor.avatarUrl } : DEFAULT_AVATAR);
+              const rawRank = directoryMember?.memberRank ?? member?.rank ?? discordAuthor?.rank ?? "regular";
+              const rank = (["regular", "silver", "gold", "platinum"].includes(rawRank) ? rawRank : "regular") as MemberRank;
+              return <Pressable key={uid} onPress={() => { setShowApplicantList(false); openMemberProfile(uid); }} accessibilityLabel={`${stripRankFromName(memberName)}のプロフィールを表示`} style={{ minHeight: 68, flexDirection: "row", alignItems: "center", paddingHorizontal: 18, borderBottomWidth: 0.5, borderBottomColor: colors.border }}><Image source={avatar} style={{ width: 46, height: 46, borderRadius: 23 }} contentFit="cover" /><View style={{ flex: 1, flexDirection: "row", alignItems: "center", flexWrap: "wrap", marginLeft: 12 }}><Text style={{ fontSize: 15, fontWeight: "800", color: colors.foreground }}>{stripRankFromName(memberName)}</Text><MemberRankBadge rank={rank} name={memberName} role={directoryMember?.accessRole ?? member?.role} compact /><MemberClubLeaderBadges roles={directoryMember?.discordRoles} name={memberName} compact /><MemberRoleBadge name="" role={directoryMember?.accessRole ?? member?.role} compact /></View><IconSymbol name="chevron.right" size={17} color={colors.muted} /></Pressable>;
+            })}
+            {!applicantCount ? <Text style={{ padding: 24, textAlign: "center", color: colors.muted }}>現在、参加申込者はいません。</Text> : null}
+          </ScrollView>
+        </View>
+      </Modal>
 
       <Modal visible={eventCommentActionTarget !== null} transparent animationType="fade" onRequestClose={() => setEventCommentActionTarget(null)}>
         <View style={{ flex: 1, justifyContent: "flex-end", backgroundColor: "rgba(20,18,24,0.45)" }}>

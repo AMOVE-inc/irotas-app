@@ -319,6 +319,7 @@ function TodayEventsSection({
             <View style={{ width: 148, height: 92, backgroundColor: event.eventType === "club" ? "#8E8E93" : colors.surface }}>
               <EventImage event={event} style={{ width: 148, height: 92, opacity: event.eventType === "club" ? 0.48 : 1 }} />
               {event.eventType === "club" ? <View style={{ position: "absolute", inset: 0, backgroundColor: "rgba(80,80,84,0.38)", alignItems: "center", justifyContent: "center", paddingHorizontal: 8 }}><Text style={{ color: "#FFF", fontSize: 11, lineHeight: 15, fontWeight: "900", textAlign: "center" }}>{event.clubName ? `${event.clubName.replace(/部$/, "")}部員限定` : "部員限定"}</Text></View> : null}
+              {event.lockedClubEvent && event.organizerProfileId ? <Pressable accessibilityLabel={`${event.organizerName ?? "幹事"}のプロフィールを表示`} onPress={(pressEvent) => { pressEvent.stopPropagation(); router.push({ pathname: "/member-profile", params: { id: event.organizerProfileId! } }); }} style={{ position: "absolute", left: 7, bottom: 7, width: 34, height: 34, borderRadius: 17, borderWidth: 2, borderColor: "#FFF", overflow: "hidden", backgroundColor: colors.surface }}><Image source={event.organizerAvatar ?? DEFAULT_AVATAR} style={{ width: "100%", height: "100%" }} contentFit="cover" /></Pressable> : null}
             </View>
             <View style={{ padding: 10 }}>
               <Text

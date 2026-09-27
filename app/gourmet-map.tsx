@@ -53,6 +53,10 @@ function restaurantImageSource(image: string) {
   return { uri: image };
 }
 
+function isLegacyGooglePhoto(image: string) {
+  return /^https:\/\/lh3\.googleusercontent\.com\//.test(image);
+}
+
 function RestaurantPhoto({
   restaurant,
   style,
@@ -68,7 +72,10 @@ function RestaurantPhoto({
   const legacyImage = restaurant.image ?? "";
   // Imported image URLs are free to display, so try them first. Some old
   // Google-hosted URLs expire; only those failures fall back to Places Photo.
-  const canUseLegacyPhoto = Boolean(legacyImage) && !legacyPhotoUnavailable;
+  // Native clients use our authenticated Places Photo endpoint for Google
+  // hosted images. Legacy lh3 URLs often expire or reject app requests.
+  const preferPlacesPhoto = Platform.OS !== "web" && Boolean(restaurant.placeId) && isLegacyGooglePhoto(legacyImage);
+  const canUseLegacyPhoto = Boolean(legacyImage) && !legacyPhotoUnavailable && !preferPlacesPhoto;
   const canRequestGooglePhoto = allowGooglePhoto && Boolean(restaurant.placeId) && !googlePhotoUnavailable;
   if (!canUseLegacyPhoto && !canRequestGooglePhoto) return <View style={[style, { backgroundColor: "#F3F4F6", alignItems: "center", justifyContent: "center" }]}><IconSymbol name="photo.fill" size={28} color="#A1A1AA" /></View>;
   const usingGooglePhoto = !canUseLegacyPhoto;

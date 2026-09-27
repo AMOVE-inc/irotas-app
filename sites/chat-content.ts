@@ -129,10 +129,10 @@ export async function ensureEventRoom(db: D1Database, roomId: string) {
       OR id = (SELECT source_id FROM chat_rooms WHERE id = ? AND room_type = 'event')
     LIMIT 1`).bind(roomId, roomId, roomId).first<{ id: string; title: string; organizer_member_id: number; public_data_json: string }>();
   if (!event) return null;
-  if (event.id.startsWith("discord-event-")) return null;
-  let origin: { recruitmentChannel?: string } = {};
+  let origin: { recruitmentChannel?: string; discordRecruitmentClosedAt?: string; manualParticipantIds?: unknown; companionIds?: unknown } = {};
   try { origin = JSON.parse(event.public_data_json) as typeof origin; } catch {}
-  if (origin.recruitmentChannel === "discord") return null;
+  const discordEvent = event.id.startsWith("discord-event-") || origin.recruitmentChannel === "discord";
+  if (discordEvent && !origin.discordRecruitmentClosedAt) return null;
   const now = new Date().toISOString();
   await db.prepare(`UPDATE events SET public_data_json = json_set(public_data_json, '$.chatId', ?)
     WHERE id = ? AND json_extract(public_data_json, '$.chatId') IS NULL`)
@@ -157,10 +157,20 @@ export async function ensureEventRoom(db: D1Database, roomId: string) {
       ON CONFLICT(room_id, member_id) DO UPDATE SET member_role = 'member', left_at = NULL`)
       .bind(roomId, item.member_id, now)));
   }
-  let data: { companionIds?: unknown } = {};
-  try { data = JSON.parse(event.public_data_json) as { companionIds?: unknown }; } catch {}
-  const companionIds = Array.isArray(data.companionIds)
-    ? data.companionIds.filter((value): value is string => typeof value === "string")
+  const manualParticipantIds = Array.isArray(origin.manualParticipantIds)
+    ? origin.manualParticipantIds.filter((value): value is string => typeof value === "string")
+    : [];
+  for (const participantId of manualParticipantIds) {
+    const participant = await memberByPublicId(db, participantId);
+    if (!participant || participant.id === event.organizer_member_id) continue;
+    await db.prepare(`INSERT INTO chat_room_members
+      (room_id, member_id, member_role, joined_at, left_at)
+      VALUES (?, ?, 'member', ?, NULL)
+      ON CONFLICT(room_id, member_id) DO UPDATE SET member_role = 'member', left_at = NULL`)
+      .bind(roomId, participant.id, now).run();
+  }
+  const companionIds = Array.isArray(origin.companionIds)
+    ? origin.companionIds.filter((value): value is string => typeof value === "string")
     : [];
   for (const companionId of companionIds) {
     const companion = await memberByPublicId(db, companionId);
@@ -179,8 +189,11 @@ export async function ensureEventRoom(db: D1Database, roomId: string) {
           AND ep.status IN ('confirmed', 'cancel_requested'))
       AND NOT EXISTS (SELECT 1 FROM json_each((SELECT public_data_json FROM events WHERE id = ?), '$.companionIds') companions
         JOIN members m ON (m.public_member_id = companions.value OR ('member-' || m.id) = companions.value)
+        WHERE m.id = chat_room_members.member_id)
+      AND NOT EXISTS (SELECT 1 FROM json_each((SELECT public_data_json FROM events WHERE id = ?), '$.manualParticipantIds') participants
+        JOIN members m ON (m.public_member_id = participants.value OR ('member-' || m.id) = participants.value)
         WHERE m.id = chat_room_members.member_id)`)
-    .bind(now, roomId, event.organizer_member_id, event.id, event.id).run();
+    .bind(now, roomId, event.organizer_member_id, event.id, event.id, event.id).run();
   return roomById(db, roomId);
 }
 
@@ -311,12 +324,6 @@ async function canAccessRoom(db: D1Database, room: RoomRow, member: Viewer) {
       .bind(room.id, member.id).first<{ left: number }>();
     if (departed) return false;
   }
-  if (room.room_type === "event") {
-    if (room.source_id?.startsWith("discord-event-")) return false;
-    const origin = await db.prepare("SELECT json_extract(public_data_json, '$.recruitmentChannel') AS channel FROM events WHERE id = ? LIMIT 1")
-      .bind(room.source_id).first<{ channel: string | null }>();
-    if (origin?.channel === "discord") return false;
-  }
   // 通常の参加権限。運営・管理者による閲覧の例外は canViewRoom で扱う。
   if (room.room_type === "dm") {
     const membership = await db.prepare(`SELECT 1 AS allowed FROM chat_room_members
@@ -353,6 +360,11 @@ async function canAccessRoom(db: D1Database, room: RoomRow, member: Viewer) {
       WHERE m.id = ? AND m.account_status = 'active' LIMIT 1`)
       .bind(event.public_data_json, member.id).first<{ allowed: number }>();
     if (companion) return true;
+    const manualParticipant = await db.prepare(`SELECT 1 AS allowed FROM json_each(?, '$.manualParticipantIds') participants
+      JOIN members m ON (m.public_member_id = participants.value OR ('member-' || m.id) = participants.value)
+      WHERE m.id = ? AND m.account_status = 'active' LIMIT 1`)
+      .bind(event.public_data_json, member.id).first<{ allowed: number }>();
+    if (manualParticipant) return true;
     const participation = await db.prepare(`SELECT status FROM event_participations
       WHERE event_id = ? AND member_id = ? LIMIT 1`)
       .bind(room.source_id, member.id).first<{ status: string }>();
@@ -445,6 +457,12 @@ function serializeMessage(row: MessageRow, reactions: ReactionRow[]) {
     updatedAt: row.updated_at,
     shared: true,
   };
+}
+
+export function isValidPollVote(content: string, reaction: string) {
+  if (!content.startsWith("📊 ") || !reaction.startsWith("🗳️") || reaction.length > 220) return false;
+  const choice = reaction.slice("🗳️".length);
+  return content.split("\n").filter((line) => line.startsWith("◯ ")).some((line) => line.slice(2).trim() === choice);
 }
 
 async function ensureBranchRoomMembership(db: D1Database, room: RoomRow, member: Viewer) {
@@ -1019,14 +1037,16 @@ export async function handleChatContentRequest(
     const input = await readBody(request);
     const messageId = typeof input?.messageId === "string" ? input.messageId.trim() : "";
     const emoji = typeof input?.emoji === "string" ? input.emoji.trim() : "";
-    if (!messageId || messageId.length > 160 || !emoji || [...emoji].length > 12)
+    const isPollVote = emoji.startsWith("🗳️");
+    if (!messageId || messageId.length > 160 || !emoji || (isPollVote ? emoji.length > 220 : [...emoji].length > 12))
       return json({ error: "リアクションが不正です" }, 400);
-    const row = await env.DB.prepare(`SELECT cm.room_id, cr.name, cr.room_type, cr.source_id,
+    const row = await env.DB.prepare(`SELECT cm.room_id, cm.content, cr.name, cr.room_type, cr.source_id,
         cr.required_rank, cr.created_by_member_id
       FROM chat_messages cm JOIN chat_rooms cr ON cr.id = cm.room_id
       WHERE cm.id = ? AND cm.deleted_at IS NULL AND cr.deleted_at IS NULL LIMIT 1`)
-      .bind(messageId).first<{ room_id: string } & Omit<RoomRow, "id">>();
+      .bind(messageId).first<{ room_id: string; content: string } & Omit<RoomRow, "id">>();
     if (!row) return json({ error: "メッセージが見つかりません" }, 404);
+    if (isPollVote && !isValidPollVote(row.content, emoji)) return json({ error: "投票の選択肢が不正です" }, 400);
     const room: RoomRow = { id: row.room_id, ...row };
     if (!await canAccessRoom(env.DB, room, member))
       return json({ error: "このチャットを閲覧する権限がありません" }, 403);

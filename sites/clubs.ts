@@ -178,10 +178,13 @@ async function notifyClubMember(
   clubId: string,
 ) {
   if (!targetMemberId) return;
+  const targetPath = type === "club_application"
+    ? `/clubs?clubId=${encodeURIComponent(clubId)}&reviewApplications=1`
+    : `/clubs?clubId=${encodeURIComponent(clubId)}`;
   await db.prepare(`INSERT INTO in_app_notifications
-    (id, target_member_id, type, title, body, club_id, created_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?)`)
-    .bind(crypto.randomUUID(), targetMemberId, type, title, body, clubId, new Date().toISOString()).run();
+    (id, target_member_id, type, title, body, club_id, target_path, created_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)`)
+    .bind(crypto.randomUUID(), targetMemberId, type, title, body, clubId, targetPath, new Date().toISOString()).run();
 }
 
 async function memberIdFromPublicId(db: D1Database, value: string) {
