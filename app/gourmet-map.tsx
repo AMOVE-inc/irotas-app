@@ -554,10 +554,6 @@ export default function GourmetMapScreen() {
             </Pressable>
           ))}
         </ScrollView>
-        <View style={{ marginHorizontal: 16, marginTop: 10, backgroundColor: "#FFF7E8", borderRadius: 12, padding: 11, flexDirection: "row", alignItems: "center" }}>
-          <IconSymbol name="checkmark.circle.fill" size={17} color="#C58A24" />
-          <Text style={{ flex: 1, marginLeft: 8, fontSize: 12, lineHeight: 17, color: colors.foreground }}>{genres.length}ジャンル {restaurants.length}件</Text>
-        </View>
       </View>
 
       {/* Search bar */}
