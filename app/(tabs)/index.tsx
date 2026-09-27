@@ -46,7 +46,7 @@ import { getCachedSharedAnnouncements, getSharedAnnouncements } from "@/lib/anno
 import { createDefaultPreferences, loadMemberAiConsents, loadMemberPreferences, recordActivityEvent, type MemberAiConsents, type MemberPreferences } from "@/lib/ai-data-store";
 import { recommendEvents, type RecommendedEvent } from "@/lib/event-recommendation";
 import * as Api from "@/lib/_core/api";
-import { boardThreadHref } from "@/lib/community-navigation";
+import { boardThreadRoute } from "@/lib/community-navigation";
 
 // タイムラインコメント型
 interface TimelineComment {
@@ -270,7 +270,7 @@ function ActivityCard({ activity }: { activity: HomeActivity }) {
   };
   const openActivity = () => {
     if (activity.route === "/board" && activity.params?.category) {
-      router.push(boardThreadHref({ category: activity.params.category, threadId: activity.params.thread, fromHome: true }) as any);
+      router.push(boardThreadRoute({ category: activity.params.category, threadId: activity.params.thread, fromHome: true }) as any);
       return;
     }
     router.push({ pathname: activity.route as any, params: activity.params } as any);

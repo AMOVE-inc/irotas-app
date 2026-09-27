@@ -16,7 +16,7 @@ import * as Api from "@/lib/_core/api";
 import { stripRankFromName } from "@/components/member-rank-badge";
 import { getDiscordAuthorById, getDiscordAuthorByName } from "@/lib/discord-author-directory";
 import { mergeSentChatPreview, sentChatPreview, type SentChatPreview } from "@/lib/chat-list-preview";
-import { chatRoomHref } from "@/lib/community-navigation";
+import { chatRoomRoute } from "@/lib/community-navigation";
 
 function formatEventStart(event: { date: string; time: string }) {
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(event.date);
@@ -136,7 +136,7 @@ function ChatRoomCard({ room, eventStarts, eventImages, memberAvatars, viewerMem
         onOpened(room.id, unreadCount);
         void markRoomRead(room.id);
         void Api.markSharedChatRoomRead(room.id).catch(() => {});
-        router.push(chatRoomHref({ ...room, unreadCount }) as any);
+        router.push(chatRoomRoute({ ...room, unreadCount }) as any);
       }}
       onLongPress={() => {
         if (!onLongPress) return;
@@ -493,7 +493,7 @@ export default function ChatListScreen() {
           </Pressable>
         </Pressable>
       </Modal>
-      <CreateFriendGroupModal visible={showCreateGroup} onClose={() => setShowCreateGroup(false)} onCreated={(room) => { void refreshRooms(); router.push(chatRoomHref(room) as any); }} />
+      <CreateFriendGroupModal visible={showCreateGroup} onClose={() => setShowCreateGroup(false)} onCreated={(room) => { void refreshRooms(); router.push(chatRoomRoute(room) as any); }} />
     </ScreenContainer>
   );
 }

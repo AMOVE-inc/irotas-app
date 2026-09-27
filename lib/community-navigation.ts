@@ -5,50 +5,34 @@ export type AppRoute = {
   params: Record<string, string>;
 };
 
-function queryPath(pathname: string, params: Record<string, string | number | undefined>) {
-  const query = new URLSearchParams();
-  Object.entries(params).forEach(([key, value]) => {
-    if (value !== undefined && String(value).length > 0) query.set(key, String(value));
-  });
-  return `${pathname}?${query.toString()}`;
-}
+type BoardRouteInput = {
+  category: string;
+  threadId?: string;
+  fromHome?: boolean;
+  fromProfile?: boolean;
+};
 
-export function boardThreadHref(input: { category: string; threadId?: string; fromHome?: boolean; fromProfile?: boolean }) {
-  return queryPath("/(tabs)/board", {
-    category: input.category,
-    view: "threads",
-    thread: input.threadId,
-    fromHome: input.fromHome ? "1" : undefined,
-    fromProfile: input.fromProfile ? "1" : undefined,
-  });
-}
-
-export function clubBoardHref(clubId: string, fromProfile = false) {
-  const normalizedClubId = clubId.startsWith("club-") ? clubId : `club-${clubId}`;
-  return boardThreadHref({ category: `club-${normalizedClubId}`, fromProfile });
-}
-
-export function clubBoardRoute(clubId: string, fromProfile = false): AppRoute {
-  const normalizedClubId = clubId.startsWith("club-") ? clubId : `club-${clubId}`;
+/**
+ * Native navigation must receive params separately from the pathname. Passing a
+ * serialized query string to Expo Router can resolve the tab group itself and
+ * leave the user on the home tab instead of opening the requested screen.
+ */
+export function boardThreadRoute(input: BoardRouteInput): AppRoute {
   return {
-    pathname: "/(tabs)/board",
+    pathname: "/board",
     params: {
-      category: `club-${normalizedClubId}`,
+      category: input.category,
       view: "threads",
-      ...(fromProfile ? { fromProfile: "1" } : {}),
+      ...(input.threadId ? { thread: input.threadId } : {}),
+      ...(input.fromHome ? { fromHome: "1" } : {}),
+      ...(input.fromProfile ? { fromProfile: "1" } : {}),
     },
   };
 }
 
-export function chatRoomHref(room: Pick<ChatRoom, "id" | "name" | "type" | "sourceId" | "participants" | "unreadCount">) {
-  return queryPath("/chat", {
-    id: room.id,
-    unreadCount: Math.max(0, room.unreadCount ?? 0),
-    roomName: room.name,
-    roomType: room.type,
-    sourceId: room.sourceId,
-    participants: room.participants.join(","),
-  });
+export function clubBoardRoute(clubId: string, fromProfile = false): AppRoute {
+  const normalizedClubId = clubId.startsWith("club-") ? clubId : `club-${clubId}`;
+  return boardThreadRoute({ category: `club-${normalizedClubId}`, fromProfile });
 }
 
 export function chatRoomRoute(room: Pick<ChatRoom, "id" | "name" | "type" | "sourceId" | "participants" | "unreadCount">): AppRoute {
@@ -77,17 +61,6 @@ export function introductionChatRoute(unreadCount = 0): AppRoute {
       participants: "",
     },
   };
-}
-
-export function introductionChatHref(unreadCount = 0) {
-  return queryPath("/chat", {
-    id: "board-introduction",
-    unreadCount: Math.max(0, unreadCount),
-    roomName: "自己紹介",
-    roomType: "board",
-    sourceId: "introduction",
-    participants: "",
-  });
 }
 
 export function boardRouteRequests(category: string, threadId?: string) {

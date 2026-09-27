@@ -83,13 +83,36 @@ describe("board category ordering", () => {
   it("does not paint an archive snapshot while a current category is loading", () => {
     const boardScreen = readFileSync(resolve(process.cwd(), "app/(tabs)/board.tsx"), "utf8");
     expect(boardScreen).toContain("isThreadView && (archiveLoading || sharedLoading || categoryLoading || waitingForClubCatalog)");
-    expect(boardScreen).toContain("router.push(introductionChatHref() as any)");
+    expect(boardScreen).toContain("router.push(introductionChatRoute() as any)");
   });
 
-  it("opens joined clubs and activity reports through complete serialized hrefs", () => {
+  it("opens joined clubs and activity reports through structured native routes", () => {
     const clubsScreen = readFileSync(resolve(process.cwd(), "app/clubs.tsx"), "utf8");
-    expect(clubsScreen).toContain("router.push(clubBoardHref(club.id) as any)");
-    expect(clubsScreen).toContain('boardThreadHref({ category: "club-all", threadId: report.id })');
+    expect(clubsScreen).toContain("router.push(clubBoardRoute(club.id) as any)");
+    expect(clubsScreen).toContain('router.push(boardThreadRoute({ category: "club-all", threadId: report.id }) as any)');
+  });
+
+  it("opens self introductions and chat-list rooms through structured native routes", () => {
+    const boardScreen = readFileSync(resolve(process.cwd(), "app/(tabs)/board.tsx"), "utf8");
+    const chatListScreen = readFileSync(resolve(process.cwd(), "components/chat-list-screen.tsx"), "utf8");
+    expect(boardScreen).toContain("router.push(introductionChatRoute() as any)");
+    expect(boardScreen).toContain("router.replace(introductionChatRoute() as any)");
+    expect(chatListScreen).toContain("router.push(chatRoomRoute({ ...room, unreadCount }) as any)");
+    expect(chatListScreen).toContain("router.push(chatRoomRoute(room) as any)");
+  });
+
+  it("does not serialize community navigation into query-string hrefs", () => {
+    const navigation = readFileSync(resolve(process.cwd(), "lib/community-navigation.ts"), "utf8");
+    const productionCallers = [
+      "app/(tabs)/board.tsx",
+      "app/(tabs)/index.tsx",
+      "app/(tabs)/profile.tsx",
+      "app/clubs.tsx",
+      "components/chat-list-screen.tsx",
+    ].map((file) => readFileSync(resolve(process.cwd(), file), "utf8")).join("\n");
+    expect(navigation).not.toContain("URLSearchParams");
+    expect(navigation).not.toContain("Href(");
+    expect(productionCallers).not.toMatch(/(?:boardThread|clubBoard|chatRoom|introductionChat)Href/);
   });
 
   it("returns from a managed club member profile to the same management screen", () => {

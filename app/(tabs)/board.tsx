@@ -55,7 +55,7 @@ import { awardContestWinnerOnce, buildContestEntryContent, createContestAwardCom
 import { loadImportedGourmetContests } from "@/lib/gourmet-contest-import";
 import { parseDiscordBoardArchive } from "@/lib/discord-board-import";
 import { normalizeDiscordBoardCategory } from "@/lib/board-category";
-import { boardRouteRequests, introductionChatHref } from "@/lib/community-navigation";
+import { boardRouteRequests, introductionChatRoute } from "@/lib/community-navigation";
 import * as Api from "@/lib/_core/api";
 import { boardCommentData, boardThreadData, sharedCommentToBoardComment, sharedThreadToBoardThread } from "@/lib/shared-board-content";
 import { boardReactionAccessibilityLabel, boardReactionImageUrl, loadCommentReactions, loadThreadReactions, saveCommentReactions, saveThreadReactions } from "@/lib/board-reactions";
@@ -2816,7 +2816,7 @@ export default function BoardScreen() {
   // 自己紹介は通常チャットと同じ操作・未読・リアクション UI に統一する。
   useEffect(() => {
     if (isThreadView && categoryParam === "introduction") {
-      router.replace(introductionChatHref() as any);
+      router.replace(introductionChatRoute() as any);
     }
   }, [categoryParam, isThreadView, router]);
 
@@ -3176,7 +3176,7 @@ export default function BoardScreen() {
 
   const handleOpenCategory = (category: BoardCategory) => {
     if (category.key === "introduction") {
-      router.push(introductionChatHref() as any);
+      router.push(introductionChatRoute() as any);
       return;
     }
     if (category.key === "gourmet-map") {
