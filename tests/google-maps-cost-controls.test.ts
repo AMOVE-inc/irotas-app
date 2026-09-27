@@ -19,6 +19,8 @@ describe("Google Maps photo cost controls", () => {
     expect(route).toContain("protectedWhenAuthEnabled(request, env)");
     expect(route).toContain('env.GOOGLE_MAPS_PHOTOS_ENABLED === "false"');
     expect(route).toContain('reserveGoogleMapsRequest(env, "photo")');
+    expect(route).toContain('releaseGoogleMapsRequest(env, "photo")');
+    expect(route).toContain('"x-google-maps-stage": "budget"');
     expect(route).toContain('redirect: "follow"');
     expect(route).not.toContain("skipHttpRedirect=true");
     expect(route).toContain('"cache-control": "private, no-store"');
@@ -28,7 +30,9 @@ describe("Google Maps photo cost controls", () => {
     const controls = readFileSync("sites/google-maps-cost-control.ts", "utf8");
     expect(controls).toContain('GOOGLE_MAPS_PHOTO_MONTHLY_LIMIT ?? "5000"');
     expect(controls).toContain('GOOGLE_MAPS_SEARCH_MONTHLY_LIMIT ?? "1000"');
+    expect(controls).toContain('`${month}:v2`');
     expect(controls).toContain("WHERE google_maps_api_usage.request_count < ?");
+    expect(controls).toContain("request_count - 1");
     expect(controls).toContain("RETURNING request_count");
     expect(controls).toContain("CREATE TABLE IF NOT EXISTS google_maps_api_usage");
     expect(migration).toContain("PRIMARY KEY");

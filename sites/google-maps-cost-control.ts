@@ -11,6 +11,14 @@ function configuredLimit(env: SitesEnv, kind: GoogleMapsUsageKind) {
   return Number.isFinite(parsed) ? Math.max(0, Math.min(parsed, 100_000)) : fallback;
 }
 
+function usageMonthKey(kind: GoogleMapsUsageKind) {
+  const month = new Date().toISOString().slice(0, 7);
+  // Photo accounting v1 counted failed upstream requests and exhausted the
+  // budget without displaying photos. Keep a revisioned bucket so the fixed
+  // success-aware accounting starts cleanly without mutating audit history.
+  return kind === "photo" ? `${month}:v2` : month;
+}
+
 export async function reserveGoogleMapsRequest(env: SitesEnv, kind: GoogleMapsUsageKind) {
   const limit = configuredLimit(env, kind);
   if (limit === 0) return false;
@@ -18,7 +26,7 @@ export async function reserveGoogleMapsRequest(env: SitesEnv, kind: GoogleMapsUs
   // the Google Cloud key must never be registered in those environments.
   if (!env.DB) return true;
   const now = new Date().toISOString();
-  const monthKey = now.slice(0, 7);
+  const monthKey = usageMonthKey(kind);
   const reserve = () => env.DB!.prepare(
       `INSERT INTO google_maps_api_usage (usage_kind, month_key, request_count, updated_at)
        VALUES (?, ?, 1, ?)
@@ -47,4 +55,15 @@ export async function reserveGoogleMapsRequest(env: SitesEnv, kind: GoogleMapsUs
     reserved = await reserve();
   }
   return Boolean(reserved);
+}
+
+/** Refund a reservation when Google did not return a billable usable result. */
+export async function releaseGoogleMapsRequest(env: SitesEnv, kind: GoogleMapsUsageKind) {
+  if (!env.DB) return;
+  await env.DB.prepare(
+    `UPDATE google_maps_api_usage
+     SET request_count = CASE WHEN request_count > 0 THEN request_count - 1 ELSE 0 END,
+         updated_at = ?
+     WHERE usage_kind = ? AND month_key = ?`,
+  ).bind(new Date().toISOString(), kind, usageMonthKey(kind)).run();
 }

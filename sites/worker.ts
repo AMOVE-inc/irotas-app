@@ -47,7 +47,7 @@ import { handleLinkPreviewRequest } from "./link-preview";
 import { handleAnalyticsRequest } from "./analytics";
 import { handleAdminEventPaymentsRequest, handleEventCheckoutRequest } from "./event-checkout";
 import { handleAdmissionStatusRequest } from "./admission-status";
-import { reserveGoogleMapsRequest } from "./google-maps-cost-control";
+import { releaseGoogleMapsRequest, reserveGoogleMapsRequest } from "./google-maps-cost-control";
 
 type CommunitySubmission = {
   reportId: string;
@@ -486,18 +486,27 @@ async function routeRequest(
     )
       return new Response(null, { status: 404 });
     if (!(await reserveGoogleMapsRequest(env, "photo")))
-      return new Response(null, { status: 429, headers: { "retry-after": "86400" } });
+      return new Response(null, { status: 429, headers: { "retry-after": "86400", "x-google-maps-stage": "budget" } });
+    let photoDelivered = false;
+    const failure = (status: number, stage: string, upstreamStatus?: number) => new Response(null, {
+      status,
+      headers: {
+        "cache-control": "no-store",
+        "x-google-maps-stage": stage,
+        ...(upstreamStatus ? { "x-google-maps-upstream-status": String(upstreamStatus) } : {}),
+      },
+    });
     try {
       const details = await fetch(`https://places.googleapis.com/v1/places/${encodeURIComponent(placeId)}`, {
         headers: { "x-goog-api-key": env.GOOGLE_MAPS_API_KEY, "x-goog-fieldmask": "photos" },
       });
       if (!details.ok) {
         console.warn("google_maps_photo_upstream", { stage: "details", status: details.status });
-        return new Response(null, { status: details.status === 429 ? 429 : 404 });
+        return failure(details.status === 429 ? 429 : 404, "details", details.status);
       }
       const place = await details.json() as { photos?: { name?: string }[] };
       const name = place.photos?.[0]?.name ?? "";
-      if (!/^places\/[A-Za-z0-9_-]+\/photos\/[A-Za-z0-9_-]+$/.test(name)) return new Response(null, { status: 404 });
+      if (!/^places\/[A-Za-z0-9_-]+\/photos\/[A-Za-z0-9_-]+$/.test(name)) return failure(404, "photo-name");
       // Let the Places endpoint follow its own image redirect. The previous
       // two-step flow fetched photoUri separately, which Google can reject as
       // an unauthenticated hotlink even though the media request succeeded.
@@ -507,8 +516,9 @@ async function routeRequest(
       });
       if (!image.ok) {
         console.warn("google_maps_photo_upstream", { stage: "media", status: image.status });
-        return new Response(null, { status: image.status === 429 ? 429 : 502 });
+        return failure(image.status === 429 ? 429 : 502, "media", image.status);
       }
+      photoDelivered = true;
       return new Response(image.body, { headers: {
         "content-type": image.headers.get("content-type") ?? "image/jpeg",
         // Places photos and their URIs may not be cached. Cost is controlled by
@@ -516,7 +526,9 @@ async function routeRequest(
         "cache-control": "private, no-store",
       } });
     } catch {
-      return new Response(null, { status: 502 });
+      return failure(502, "exception");
+    } finally {
+      if (!photoDelivered) await releaseGoogleMapsRequest(env, "photo").catch(() => undefined);
     }
   }
 
