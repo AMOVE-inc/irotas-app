@@ -16,6 +16,7 @@ import { AuthenticatedImage as Image } from "@/components/authenticated-image";
 import { useRouter } from "expo-router";
 import { useState, useCallback, useEffect, useMemo } from "react";
 import {
+  ActivityIndicator,
   Alert,
   FlatList,
   Modal,
@@ -28,6 +29,7 @@ import {
 } from "react-native";
 import { GOOGLE_GOURMET_MAP_LISTS } from "@/constants/external-links";
 import { matchesAllSearchWords } from "@/lib/multi-word-search";
+import { getMeStrict } from "@/lib/_core/api";
 
 const SEEDED_RESTAURANTS: Restaurant[] = GOURMET_MAP_SEED.map((restaurant) => ({
   ...restaurant,
@@ -442,12 +444,30 @@ export default function GourmetMapScreen() {
   const [selectedGenre, setSelectedGenre] = useState<string | null>(null);
   const [selectedRestaurant, setSelectedRestaurant] = useState<Restaurant | null>(null);
   const [showCSVImport, setShowCSVImport] = useState(false);
+  const [showGoogleLists, setShowGoogleLists] = useState(false);
+  const [membershipAccess, setMembershipAccess] = useState<"checking" | "allowed" | "denied">("checking");
   const [restaurants, setRestaurants] = useState<Restaurant[]>(SEEDED_RESTAURANTS);
   const [, setFeedUpdatedAt] = useState<string | null>(null);
   const { user: authUser } = useAuthContext();
   const userCanImport = isOperatorRole(authUser?.role, authUser?.accessRole);
 
+  const verifyMembershipAccess = useCallback(async () => {
+    setMembershipAccess("checking");
+    try {
+      setMembershipAccess((await getMeStrict()) ? "allowed" : "denied");
+    } catch {
+      // Saved-list links are member-only. Do not fall back to cached
+      // credentials when the server cannot verify current membership.
+      setMembershipAccess("denied");
+    }
+  }, []);
+
   useEffect(() => {
+    void verifyMembershipAccess();
+  }, [verifyMembershipAccess]);
+
+  useEffect(() => {
+    if (membershipAccess !== "allowed") return;
     let active = true;
     fetchGourmetMapFeed()
       .then((feed) => {
@@ -459,7 +479,7 @@ export default function GourmetMapScreen() {
         // 公開フィードが未設定・一時停止中でも、同梱済みの店舗データを表示する。
       });
     return () => { active = false; };
-  }, []);
+  }, [membershipAccess]);
 
   const genreCounts = useMemo(() => restaurants.reduce<Record<string, number>>((counts, restaurant) => ({ ...counts, [restaurant.genre]: (counts[restaurant.genre] ?? 0) + 1 }), {}), [restaurants]);
   const genres = useMemo(() => [...new Set(restaurants.map((restaurant) => restaurant.genre))].sort((a, b) => (genreCounts[b] ?? 0) - (genreCounts[a] ?? 0) || a.localeCompare(b, "ja")), [restaurants, genreCounts]);
@@ -475,6 +495,31 @@ export default function GourmetMapScreen() {
     ),
     [],
   );
+
+  if (membershipAccess !== "allowed") {
+    return (
+      <ScreenContainer>
+        <View style={{ flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: 28 }}>
+          {membershipAccess === "checking" ? (
+            <ActivityIndicator size="large" color="#E8A0BF" />
+          ) : (
+            <>
+              <IconSymbol name="lock.fill" size={42} color={colors.muted} />
+              <Text style={{ marginTop: 18, fontSize: 20, fontWeight: "900", color: colors.foreground, textAlign: "center" }}>
+                有効会員限定のグルメマップです
+              </Text>
+              <Text style={{ marginTop: 10, fontSize: 14, lineHeight: 21, color: colors.muted, textAlign: "center" }}>
+                会員資格を確認できませんでした。通信環境をご確認のうえ、もう一度お試しください。
+              </Text>
+              <Pressable onPress={() => void verifyMembershipAccess()} style={{ marginTop: 20, minHeight: 46, paddingHorizontal: 24, borderRadius: 23, backgroundColor: "#E8A0BF", alignItems: "center", justifyContent: "center" }}>
+                <Text style={{ color: "#FFF", fontSize: 15, fontWeight: "900" }}>再確認する</Text>
+              </Pressable>
+            </>
+          )}
+        </View>
+      </ScreenContainer>
+    );
+  }
 
   return (
     <ScreenContainer>
@@ -519,42 +564,74 @@ export default function GourmetMapScreen() {
         )}
       </View>
 
-      <View style={{ marginTop: 12 }}>
-        <View style={{ paddingHorizontal: 16, marginBottom: 8 }}>
-          <Text style={{ fontSize: 16, fontWeight: "800", color: colors.foreground }}>Google保存リスト</Text>
-          <Text style={{ fontSize: 12, lineHeight: 18, color: colors.muted, marginTop: 3 }}>
-            ジャンルを選ぶと、Google Maps側で更新された最新の保存リストを開きます
+      <View style={{ paddingHorizontal: 16, paddingTop: 12 }}>
+        <Pressable
+          onPress={() => setShowGoogleLists(true)}
+          style={({ pressed }) => ({
+            minHeight: 52,
+            borderRadius: 14,
+            backgroundColor: "#4285F4",
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "center",
+            paddingHorizontal: 16,
+            opacity: pressed ? 0.8 : 1,
+          })}
+        >
+          <IconSymbol name="map.fill" size={20} color="#FFF" />
+          <Text style={{ marginLeft: 9, color: "#FFF", fontSize: 15, fontWeight: "900" }}>
+            グルメマップをGoogle Mapに保存する
           </Text>
-        </View>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, gap: 8 }} style={{ flexGrow: 0 }}>
-          {GOOGLE_GOURMET_MAP_LISTS.map(([label, url]) => (
-            <Pressable
-              key={label}
-              onPress={async () => {
-                try {
-                  await openExternalUrl(url);
-                } catch {
-                  Alert.alert("リンクを開けませんでした", "運営へお問い合わせください。");
-                }
-              }}
-              style={({ pressed }) => ({
-                width: 150,
-                minHeight: 72,
-                borderRadius: 14,
-                padding: 12,
-                backgroundColor: "#EEF7F0",
-                borderWidth: 1,
-                borderColor: "#D6E9DA",
-                justifyContent: "space-between",
-                opacity: pressed ? 0.78 : 1,
-              })}
-            >
-              <Text style={{ fontSize: 22 }}>{GENRE_ICONS[label] ?? "📍"}</Text>
-              <Text numberOfLines={2} style={{ fontSize: 13, lineHeight: 18, fontWeight: "800", color: colors.foreground, marginTop: 7 }}>{label}</Text>
-            </Pressable>
-          ))}
-        </ScrollView>
+        </Pressable>
       </View>
+
+      <Modal visible={showGoogleLists} transparent animationType="slide" onRequestClose={() => setShowGoogleLists(false)}>
+        <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.38)", justifyContent: "flex-end" }}>
+          <Pressable style={{ flex: 1 }} onPress={() => setShowGoogleLists(false)} accessibilityLabel="保存リストを閉じる" />
+          <View style={{ maxHeight: "82%", backgroundColor: colors.background, borderTopLeftRadius: 24, borderTopRightRadius: 24, paddingTop: 8, paddingBottom: 24 }}>
+            <View style={{ width: 42, height: 5, borderRadius: 3, backgroundColor: colors.border, alignSelf: "center", marginBottom: 8 }} />
+            <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 18, paddingBottom: 12, borderBottomWidth: 0.5, borderBottomColor: colors.border }}>
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontSize: 19, fontWeight: "900", color: colors.foreground }}>Google保存リスト</Text>
+                <Text style={{ fontSize: 12, lineHeight: 18, color: colors.muted, marginTop: 3 }}>保存したいカテゴリを選択してください</Text>
+              </View>
+              <Pressable onPress={() => setShowGoogleLists(false)} style={{ width: 40, height: 40, alignItems: "center", justifyContent: "center" }} accessibilityLabel="閉じる">
+                <IconSymbol name="xmark" size={20} color={colors.foreground} />
+              </Pressable>
+            </View>
+            <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 10, paddingBottom: 20 }}>
+              {GOOGLE_GOURMET_MAP_LISTS.map(([label, url]) => (
+                <Pressable
+                  key={label}
+                  onPress={async () => {
+                    setShowGoogleLists(false);
+                    try {
+                      await openExternalUrl(url);
+                    } catch {
+                      Alert.alert("リンクを開けませんでした", "運営へお問い合わせください。");
+                    }
+                  }}
+                  style={({ pressed }) => ({
+                    minHeight: 58,
+                    borderRadius: 14,
+                    paddingHorizontal: 14,
+                    marginBottom: 8,
+                    backgroundColor: pressed ? "#E6F0FF" : colors.surface,
+                    borderWidth: 1,
+                    borderColor: colors.border,
+                    flexDirection: "row",
+                    alignItems: "center",
+                  })}
+                >
+                  <Text style={{ width: 34, fontSize: 23 }}>{GENRE_ICONS[label] ?? "📍"}</Text>
+                  <Text style={{ flex: 1, fontSize: 15, lineHeight: 21, fontWeight: "800", color: colors.foreground }}>{label}</Text>
+                  <IconSymbol name="chevron.right" size={17} color={colors.muted} />
+                </Pressable>
+              ))}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
 
       {/* Search bar */}
       <View style={{ paddingHorizontal: 16, paddingTop: 8, flexShrink: 0 }}>
