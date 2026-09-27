@@ -71,7 +71,7 @@ describe("board category ordering", () => {
   it("waits for the club catalog before validating a direct club-board route", () => {
     const boardScreen = readFileSync(resolve(process.cwd(), "app/(tabs)/board.tsx"), "utf8");
     const waitForCatalog = boardScreen.indexOf('clubStoreStatus === "idle" || clubStoreStatus === "loading"');
-    const fallbackRedirect = boardScreen.indexOf('router.replace("/board")', waitForCatalog);
+    const fallbackRedirect = boardScreen.indexOf('router.replace("/(tabs)/board")', waitForCatalog);
     expect(boardScreen).toContain("useClubStoreStatus");
     expect(waitForCatalog).toBeGreaterThan(-1);
     expect(fallbackRedirect).toBeGreaterThan(waitForCatalog);
@@ -83,22 +83,31 @@ describe("board category ordering", () => {
   it("does not paint an archive snapshot while a current category is loading", () => {
     const boardScreen = readFileSync(resolve(process.cwd(), "app/(tabs)/board.tsx"), "utf8");
     expect(boardScreen).toContain("isThreadView && (archiveLoading || sharedLoading || categoryLoading || waitingForClubCatalog)");
-    expect(boardScreen).toContain("router.push(introductionChatRoute() as any)");
+    expect(boardScreen).toContain("router.push(introductionChatRoute() as any, { withAnchor: true })");
   });
 
   it("opens joined clubs and activity reports through structured native routes", () => {
     const clubsScreen = readFileSync(resolve(process.cwd(), "app/clubs.tsx"), "utf8");
-    expect(clubsScreen).toContain("router.push(clubBoardRoute(club.id) as any)");
-    expect(clubsScreen).toContain('router.push(boardThreadRoute({ category: "club-all", threadId: report.id }) as any)');
+    expect(clubsScreen).toContain("router.push(clubBoardRoute(club.id) as any, { withAnchor: true })");
+    expect(clubsScreen).toContain('router.push(boardThreadRoute({ category: "club-all", threadId: report.id }) as any, { withAnchor: true })');
   });
 
   it("opens self introductions and chat-list rooms through structured native routes", () => {
     const boardScreen = readFileSync(resolve(process.cwd(), "app/(tabs)/board.tsx"), "utf8");
     const chatListScreen = readFileSync(resolve(process.cwd(), "components/chat-list-screen.tsx"), "utf8");
-    expect(boardScreen).toContain("router.push(introductionChatRoute() as any)");
-    expect(boardScreen).toContain("router.replace(introductionChatRoute() as any)");
-    expect(chatListScreen).toContain("router.push(chatRoomRoute({ ...room, unreadCount }) as any)");
-    expect(chatListScreen).toContain("router.push(chatRoomRoute(room) as any)");
+    expect(boardScreen).toContain("router.push(introductionChatRoute() as any, { withAnchor: true })");
+    expect(boardScreen).toContain("router.replace(introductionChatRoute() as any, { withAnchor: true })");
+    expect(chatListScreen).toContain("router.push(chatRoomRoute({ ...room, unreadCount }) as any, { withAnchor: true })");
+    expect(chatListScreen).toContain("router.push(chatRoomRoute(room) as any, { withAnchor: true })");
+    expect(boardScreen).toContain("{ withAnchor: true }");
+    expect(chatListScreen).toContain("{ withAnchor: true }");
+    expect(readFileSync(resolve(process.cwd(), "app/chat/[id].tsx"), "utf8")).toContain('export { default } from "../chat"');
+  });
+
+  it("does not overwrite a parameterized board navigation on tab selection", () => {
+    const tabLayout = readFileSync(resolve(process.cwd(), "app/(tabs)/_layout.tsx"), "utf8");
+    expect(tabLayout).not.toContain("listeners={{ tabPress:");
+    expect(tabLayout).not.toContain('router.replace("/board")');
   });
 
   it("does not serialize community navigation into query-string hrefs", () => {

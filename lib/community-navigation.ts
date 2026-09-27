@@ -19,7 +19,11 @@ type BoardRouteInput = {
  */
 export function boardThreadRoute(input: BoardRouteInput): AppRoute {
   return {
-    pathname: "/board",
+    // Keep the route group explicit on native. `/board` is a valid public URL,
+    // but from a root-stack screen (for example `/clubs`) it can resolve the
+    // tab navigator at its initial `index` screen before the board params are
+    // applied. Targeting the grouped route selects the board tab itself.
+    pathname: "/(tabs)/board",
     params: {
       category: input.category,
       view: "threads",
@@ -37,7 +41,9 @@ export function clubBoardRoute(clubId: string, fromProfile = false): AppRoute {
 
 export function chatRoomRoute(room: Pick<ChatRoom, "id" | "name" | "type" | "sourceId" | "participants" | "unreadCount">): AppRoute {
   return {
-    pathname: "/chat",
+    // Make the room id part of the native route identity. Query-only room ids
+    // can be lost when Expo Router rebuilds the root stack around `(tabs)`.
+    pathname: "/chat/[id]",
     params: {
       id: room.id,
       unreadCount: String(Math.max(0, room.unreadCount ?? 0)),
@@ -51,7 +57,7 @@ export function chatRoomRoute(room: Pick<ChatRoom, "id" | "name" | "type" | "sou
 
 export function introductionChatRoute(unreadCount = 0): AppRoute {
   return {
-    pathname: "/chat",
+    pathname: "/chat/[id]",
     params: {
       id: "board-introduction",
       unreadCount: String(Math.max(0, unreadCount)),

@@ -1995,7 +1995,7 @@ export default function ClubsScreen() {
   };
 
   const openJoinedClub = (club: Club) => {
-    router.push(clubBoardRoute(club.id) as any);
+    router.push(clubBoardRoute(club.id) as any, { withAnchor: true });
   };
 
   return (
@@ -2073,7 +2073,7 @@ export default function ClubsScreen() {
               return (
               <Pressable
                 key={report.id}
-                onPress={() => router.push(boardThreadRoute({ category: "club-all", threadId: report.id }) as any)}
+                onPress={() => router.push(boardThreadRoute({ category: "club-all", threadId: report.id }) as any, { withAnchor: true })}
                 accessibilityRole="button"
                 accessibilityLabel={report.title}
                 style={({ pressed }) => ({
