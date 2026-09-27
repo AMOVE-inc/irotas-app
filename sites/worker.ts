@@ -491,18 +491,24 @@ async function routeRequest(
       const details = await fetch(`https://places.googleapis.com/v1/places/${encodeURIComponent(placeId)}`, {
         headers: { "x-goog-api-key": env.GOOGLE_MAPS_API_KEY, "x-goog-fieldmask": "photos" },
       });
-      if (!details.ok) return new Response(null, { status: 404 });
+      if (!details.ok) {
+        console.warn("google_maps_photo_upstream", { stage: "details", status: details.status });
+        return new Response(null, { status: details.status === 429 ? 429 : 404 });
+      }
       const place = await details.json() as { photos?: { name?: string }[] };
       const name = place.photos?.[0]?.name ?? "";
       if (!/^places\/[A-Za-z0-9_-]+\/photos\/[A-Za-z0-9_-]+$/.test(name)) return new Response(null, { status: 404 });
-      const media = await fetch(`https://places.googleapis.com/v1/${name}/media?maxWidthPx=800&skipHttpRedirect=true`, {
+      // Let the Places endpoint follow its own image redirect. The previous
+      // two-step flow fetched photoUri separately, which Google can reject as
+      // an unauthenticated hotlink even though the media request succeeded.
+      const image = await fetch(`https://places.googleapis.com/v1/${name}/media?maxWidthPx=800`, {
         headers: { "x-goog-api-key": env.GOOGLE_MAPS_API_KEY },
+        redirect: "follow",
       });
-      if (!media.ok) return new Response(null, { status: 404 });
-      const photoUri = ((await media.json()) as { photoUri?: string }).photoUri;
-      if (!photoUri || !/^https:\/\//.test(photoUri)) return new Response(null, { status: 404 });
-      const image = await fetch(photoUri);
-      if (!image.ok) return new Response(null, { status: 502 });
+      if (!image.ok) {
+        console.warn("google_maps_photo_upstream", { stage: "media", status: image.status });
+        return new Response(null, { status: image.status === 429 ? 429 : 502 });
+      }
       return new Response(image.body, { headers: {
         "content-type": image.headers.get("content-type") ?? "image/jpeg",
         // Places photos and their URIs may not be cached. Cost is controlled by

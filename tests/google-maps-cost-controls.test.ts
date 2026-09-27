@@ -6,10 +6,12 @@ const worker = readFileSync("sites/worker.ts", "utf8");
 const migration = readFileSync("drizzle/0062_google_maps_api_usage.sql", "utf8");
 
 describe("Google Maps photo cost controls", () => {
-  it("requests Google photos only from the restaurant detail view", () => {
-    expect(screen.match(/<RestaurantPhoto[^>]*allowGooglePhoto/g)).toHaveLength(1);
-    expect(screen).toContain("const canRequestGooglePhoto = allowGooglePhoto");
-    expect(screen).toContain("cachePolicy={canRequestGooglePhoto ? \"none\" : \"disk\"}");
+  it("uses free imported images first and requests Google only as a failure fallback", () => {
+    expect(screen.match(/<RestaurantPhoto[^>]*allowGooglePhoto/g)).toHaveLength(2);
+    expect(screen).toContain("const canUseLegacyPhoto = Boolean(legacyImage) && !legacyPhotoUnavailable");
+    expect(screen).toContain("const usingGooglePhoto = !canUseLegacyPhoto");
+    expect(screen).toContain("if (usingGooglePhoto) setGooglePhotoUnavailable(true); else setLegacyPhotoUnavailable(true)");
+    expect(screen).toContain("cachePolicy={usingGooglePhoto ? \"none\" : \"disk\"}");
   });
 
   it("protects the paid endpoint and supports an emergency kill switch", () => {
@@ -17,6 +19,8 @@ describe("Google Maps photo cost controls", () => {
     expect(route).toContain("protectedWhenAuthEnabled(request, env)");
     expect(route).toContain('env.GOOGLE_MAPS_PHOTOS_ENABLED === "false"');
     expect(route).toContain('reserveGoogleMapsRequest(env, "photo")');
+    expect(route).toContain('redirect: "follow"');
+    expect(route).not.toContain("skipHttpRedirect=true");
     expect(route).toContain('"cache-control": "private, no-store"');
   });
 

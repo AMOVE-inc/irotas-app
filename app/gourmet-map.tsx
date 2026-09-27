@@ -53,10 +53,6 @@ function restaurantImageSource(image: string) {
   return { uri: image };
 }
 
-function isGoogleMapsPhoto(image?: string) {
-  return Boolean(image && /^https:\/\/lh3\.googleusercontent\.com\//.test(image));
-}
-
 function RestaurantPhoto({
   restaurant,
   style,
@@ -69,14 +65,18 @@ function RestaurantPhoto({
   const [googlePhotoUnavailable, setGooglePhotoUnavailable] = useState(false);
   const [legacyPhotoUnavailable, setLegacyPhotoUnavailable] = useState(false);
   useEffect(() => { setGooglePhotoUnavailable(false); setLegacyPhotoUnavailable(false); }, [restaurant.placeId, restaurant.image]);
-  const ownedImage = restaurant.image && !isGoogleMapsPhoto(restaurant.image) ? restaurant.image : "";
-  const canRequestGooglePhoto = allowGooglePhoto && restaurant.placeId && !googlePhotoUnavailable;
-  if ((!canRequestGooglePhoto && !ownedImage) || legacyPhotoUnavailable) return <View style={[style, { backgroundColor: "#F3F4F6", alignItems: "center", justifyContent: "center" }]}><IconSymbol name="photo.fill" size={28} color="#A1A1AA" /></View>;
-  const source = canRequestGooglePhoto
+  const legacyImage = restaurant.image ?? "";
+  // Imported image URLs are free to display, so try them first. Some old
+  // Google-hosted URLs expire; only those failures fall back to Places Photo.
+  const canUseLegacyPhoto = Boolean(legacyImage) && !legacyPhotoUnavailable;
+  const canRequestGooglePhoto = allowGooglePhoto && Boolean(restaurant.placeId) && !googlePhotoUnavailable;
+  if (!canUseLegacyPhoto && !canRequestGooglePhoto) return <View style={[style, { backgroundColor: "#F3F4F6", alignItems: "center", justifyContent: "center" }]}><IconSymbol name="photo.fill" size={28} color="#A1A1AA" /></View>;
+  const usingGooglePhoto = !canUseLegacyPhoto;
+  const source = usingGooglePhoto
     ? { uri: `/api/gourmet-map/photo?placeId=${encodeURIComponent(restaurant.placeId!)}` }
-    : restaurantImageSource(ownedImage);
-  return <Image source={source} style={style} contentFit="cover" transition={300} cachePolicy={canRequestGooglePhoto ? "none" : "disk"}
-    onError={() => { if (!googlePhotoUnavailable) setGooglePhotoUnavailable(true); else setLegacyPhotoUnavailable(true); }} />;
+    : restaurantImageSource(legacyImage);
+  return <Image source={source} style={style} contentFit="cover" transition={300} cachePolicy={usingGooglePhoto ? "none" : "disk"}
+    onError={() => { if (usingGooglePhoto) setGooglePhotoUnavailable(true); else setLegacyPhotoUnavailable(true); }} />;
 }
 
 function RestaurantCard({
