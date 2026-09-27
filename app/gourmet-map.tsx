@@ -629,7 +629,7 @@ export default function GourmetMapScreen() {
                   lineHeight: 18,
                 }}
               >
-                {item.value ? `${item.label} ${genreCounts[item.value] ?? 0}` : item.label}
+                {item.label}
               </Text>
             </Pressable>
           );
