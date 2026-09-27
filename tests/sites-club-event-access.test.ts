@@ -96,6 +96,7 @@ class EventAccessDatabase implements D1Database {
         if (sql.includes("UPDATE event_participations SET status = 'confirmed'")) db.participationStatus = "confirmed";
         if (sql.includes("UPDATE event_participations SET status = 'applied', payment_state = 'awaiting_payment'")) { db.participationStatus = "applied"; db.paymentState = "awaiting_payment"; }
         if (sql.includes("UPDATE events SET public_data_json")) db.row.public_data_json = String(values[0]);
+        if (sql.includes("UPDATE events SET status = 'full', public_data_json")) db.row = { ...db.row, status: "full", public_data_json: String(values[0]) };
         if (sql.includes("UPDATE events SET status = 'open', public_data_json")) db.row = { ...db.row, status: "open", public_data_json: String(values[0]) };
         if (sql.includes("UPDATE events SET title = ?")) db.row = {
           ...db.row, title: String(values[0]), event_type: values[1] as "official" | "club",
@@ -178,13 +179,39 @@ describe("club event access", () => {
 
   it("lets a regular event creator reopen recruitment after finalization", async () => {
     const original = JSON.parse(db.row.public_data_json);
-    db.row = { ...db.row, id: "event-new-2", organizer_member_id: 10, event_type: "official", club_id: null, event_date: new Date(Date.now() + 30 * 86_400_000).toISOString().slice(0, 10), status: "full", public_data_json: JSON.stringify({ ...original, recruitmentChannel: "app", participantsFinalizedAt: "2026-09-12T00:00:00.000Z" }) };
+    db.row = { ...db.row, id: "event-new-2", organizer_member_id: 10, event_type: "official", club_id: null, event_date: new Date(Date.now() + 30 * 86_400_000).toISOString().slice(0, 10), status: "full", public_data_json: JSON.stringify({ ...original, recruitmentChannel: "app", participantsFinalizedAt: "2026-09-12T00:00:00.000Z", manualRecruitmentClosedAt: "2026-09-12T00:00:00.000Z" }) };
     const response = await handleEventRequest(new Request("https://app.example/api/events/event-new-2", {
       method: "PATCH", body: JSON.stringify({ action: "reopen_recruitment" }),
     }), env);
     expect(response?.status).toBe(200);
     expect(db.row.status).toBe("open");
     expect(JSON.parse(db.row.public_data_json).participantsFinalizedAt).toBeUndefined();
+    expect(JSON.parse(db.row.public_data_json).manualRecruitmentClosedAt).toBeUndefined();
+  });
+
+  it.each([
+    ["幹事", { id: 20, role: "user", access_role: "member" }],
+    ["運営", { id: 30, role: "operator", access_role: "operator" }],
+    ["管理者", { id: 40, role: "admin", access_role: "admin" }],
+  ])("lets %s close recruitment before capacity is reached", async (_label, session) => {
+    db.row = { ...db.row, organizer_member_id: 20, event_type: "official", club_id: null, status: "open" };
+    authenticatedRequestMember.mockResolvedValue(session);
+    const response = await handleEventRequest(new Request(`https://app.example/api/events/${db.row.id}`, {
+      method: "PATCH", body: JSON.stringify({ action: "close_recruitment" }),
+    }), env);
+    expect(response?.status).toBe(200);
+    expect(db.row.status).toBe("full");
+    expect(JSON.parse(db.row.public_data_json).manualRecruitmentClosedAt).toBeTruthy();
+  });
+
+  it("does not let another member close recruitment", async () => {
+    db.row = { ...db.row, organizer_member_id: 20, event_type: "official", club_id: null, status: "open" };
+    authenticatedRequestMember.mockResolvedValue({ id: 21, role: "user", access_role: "member" });
+    const response = await handleEventRequest(new Request(`https://app.example/api/events/${db.row.id}`, {
+      method: "PATCH", body: JSON.stringify({ action: "close_recruitment" }),
+    }), env);
+    expect(response?.status).toBe(403);
+    expect(db.row.status).toBe("open");
   });
 
   it("shows a redacted list preview but blocks detail and favorites for non-members", async () => {

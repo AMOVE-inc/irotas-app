@@ -1208,6 +1208,26 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
     const row = await eventRow(env.DB, id) ?? await materializeImportedEvent(env.DB, id, elevated ? member.id : undefined);
     if (!row) return responseJson({ error: "イベントが見つかりません" }, 404);
     const input = await readBody(request);
+    if (input?.action === "close_recruitment") {
+      if (!elevated && row.organizer_member_id !== member.id)
+        return responseJson({ error: "幹事または運営メンバーのみ募集を終了できます" }, 403);
+      let data: Record<string, unknown> = {};
+      try { data = JSON.parse(row.public_data_json) as Record<string, unknown>; } catch {}
+      const channel = data.recruitmentChannel ?? (id.startsWith("discord-event-") ? "discord" : "app");
+      if (channel === "discord") return responseJson({ error: "Discord受付イベントはDiscord募集終了を使用してください" }, 400);
+      if (row.status === "cancelled" || row.status === "ended")
+        return responseJson({ error: "終了したイベントです" }, 409);
+      if (row.status !== "open")
+        return responseJson({ event: await hydratedEvent(env.DB, row, member.id, elevated, memberPublicId) });
+      const now = new Date().toISOString();
+      data.manualRecruitmentClosedAt = now;
+      await env.DB.batch([
+        env.DB.prepare("UPDATE events SET status = 'full', public_data_json = ?, updated_at = ? WHERE id = ?").bind(JSON.stringify(data), now, id),
+        env.DB.prepare(`INSERT INTO audit_logs (actor_user_id, action, entity_type, entity_id, metadata_json, created_at)
+          VALUES (?, 'event.recruitment_closed', 'event', ?, '{}', ?)`).bind(String(member.id), id, now),
+      ]);
+      return responseJson({ event: await hydratedEvent(env.DB, (await eventRow(env.DB, id))!, member.id, elevated, memberPublicId) });
+    }
     if (input?.action === "close_discord_recruitment") {
       if (!elevated && row.organizer_member_id !== member.id) return responseJson({ error: "募集終了に変更する権限がありません" }, 403);
       let data: Record<string, unknown> = {};
@@ -1246,6 +1266,7 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
         data.previouslyFinalizedParticipantIds = [...new Set([...(Array.isArray(data.previouslyFinalizedParticipantIds) ? data.previouslyFinalizedParticipantIds : []), ...((await env.DB.prepare("SELECT member_id FROM event_participations WHERE event_id = ? AND status IN ('confirmed','cancel_requested')").bind(id).all<{ member_id: number }>()).results ?? []).map((item) => item.member_id)])];
         delete data.participantsFinalizedAt;
       }
+      delete data.manualRecruitmentClosedAt;
       data.recruitmentStatus = "open";
       await env.DB.batch([
         env.DB.prepare("UPDATE events SET status = 'open', public_data_json = ?, updated_at = ? WHERE id = ?").bind(JSON.stringify(data), now, id),
@@ -1782,7 +1803,7 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
         return responseJson({ error: "決済リンクを停止できませんでした。Squareの状態を確認してください" }, 502);
       await env.DB.prepare(`UPDATE event_participations SET status = 'cancelled', payment_state = NULL, cancelled_at = ?, updated_at = ?
         WHERE event_id = ? AND member_id = ?`).bind(now, now, id, targetId).run();
-      await env.DB.prepare("UPDATE events SET status = 'open', updated_at = ? WHERE id = ? AND status = 'full' AND COALESCE(json_extract(public_data_json, '$.participantsFinalizedAt'), '') = '' AND COALESCE(json_extract(public_data_json, '$.discordRecruitmentClosedAt'), '') = ''").bind(now, id).run();
+      await env.DB.prepare("UPDATE events SET status = 'open', updated_at = ? WHERE id = ? AND status = 'full' AND COALESCE(json_extract(public_data_json, '$.participantsFinalizedAt'), '') = '' AND COALESCE(json_extract(public_data_json, '$.discordRecruitmentClosedAt'), '') = '' AND COALESCE(json_extract(public_data_json, '$.manualRecruitmentClosedAt'), '') = ''").bind(now, id).run();
       await refundEventPointDiscount(env.DB, id, targetId, row.title, now);
       await notifyOrganizerParticipantCancellation(env.DB, row, targetId, member.id, now);
     }
@@ -1912,7 +1933,7 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
         .bind(approved ? "cancelled" : "confirmed", approved ? now : null, now, id, targetId),
     ];
     if (approved) statements.push(
-      env.DB.prepare("UPDATE events SET status = 'open', updated_at = ? WHERE id = ? AND status = 'full' AND COALESCE(json_extract(public_data_json, '$.participantsFinalizedAt'), '') = '' AND COALESCE(json_extract(public_data_json, '$.discordRecruitmentClosedAt'), '') = ''").bind(now, id),
+      env.DB.prepare("UPDATE events SET status = 'open', updated_at = ? WHERE id = ? AND status = 'full' AND COALESCE(json_extract(public_data_json, '$.participantsFinalizedAt'), '') = '' AND COALESCE(json_extract(public_data_json, '$.discordRecruitmentClosedAt'), '') = '' AND COALESCE(json_extract(public_data_json, '$.manualRecruitmentClosedAt'), '') = ''").bind(now, id),
     );
     await env.DB.batch(statements);
     if (approved) await refundEventPointDiscount(env.DB, id, targetId, row.title, now);
