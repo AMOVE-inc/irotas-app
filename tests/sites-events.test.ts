@@ -102,6 +102,21 @@ describe("production event validation", () => {
     });
   });
 
+  it("keeps up to ten event images and uses the first image as the card preview", () => {
+    const images = [
+      "/api/event-images/events%2F1%2Ffirst.jpg",
+      "/api/event-images/events%2F1%2Fsecond.jpg",
+    ];
+    expect(sanitizeEvent(validEvent({ image: images[1], images }))).toMatchObject({ image: images[0], images });
+    expect(sanitizeEvent(validEvent({ images: [...images, "https://example.com/unsafe.jpg"] }))).toBeNull();
+  });
+
+  it("stores payment timing only for official events", () => {
+    expect(sanitizeEvent(validEvent({ eventType: "official", paymentTiming: "postpaid" }))).toMatchObject({ paymentTiming: "postpaid" });
+    expect(sanitizeEvent(validEvent({ eventType: "official" }))).toMatchObject({ paymentTiming: "prepaid" });
+    expect(sanitizeEvent(validEvent({ eventType: "gourmet", paymentTiming: "postpaid" }))?.paymentTiming).toBeUndefined();
+  });
+
   it("reserves no seat for a slot-only organizer but still accounts for companions", () => {
     const slotOnly = validEvent({ capacity: 7, reservationCapacity: 8, companionIds: ["IRO0002"], organizerParticipates: false });
     expect(sanitizeEvent(slotOnly)).toMatchObject({ capacity: 7, reservationCapacity: 8, organizerParticipates: false });

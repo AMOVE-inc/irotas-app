@@ -115,7 +115,15 @@ async function processEvent(db: D1Database, event: Record<string, any>) {
           const recorded = await db.prepare("SELECT status, square_payment_id FROM event_payment_checkouts WHERE id = ?")
             .bind(checkout.id).first<{ status: string; square_payment_id: string | null }>();
           if (recorded?.status === "paid" && recorded.square_payment_id === payment.id) {
-            const confirmed = await confirmPaidEventParticipation(db, checkout.event_id, checkout.member_id, paidAt);
+            const participation = await db.prepare("SELECT status, payment_state FROM event_participations WHERE event_id = ? AND member_id = ?")
+              .bind(checkout.event_id, checkout.member_id).first<{ status: string; payment_state: string | null }>();
+            const alreadyConfirmed = participation?.status === "confirmed" || participation?.status === "cancel_requested";
+            if (alreadyConfirmed) {
+              await db.prepare(`UPDATE event_participations SET payment_state = 'completed', updated_at = ?
+                WHERE event_id = ? AND member_id = ? AND status IN ('confirmed','cancel_requested')`)
+                .bind(paidAt, checkout.event_id, checkout.member_id).run();
+            }
+            const confirmed = alreadyConfirmed || await confirmPaidEventParticipation(db, checkout.event_id, checkout.member_id, paidAt);
             if (!confirmed) await db.prepare(`INSERT INTO audit_logs (action, entity_type, entity_id, metadata_json, created_at)
               VALUES ('event.payment_requires_review', 'event_payment_checkout', ?, ?, ?)`).bind(
                 checkout.id, JSON.stringify({ reason: "participation_not_eligible_after_payment", eventId: checkout.event_id, memberId: checkout.member_id }), paidAt,

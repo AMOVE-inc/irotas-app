@@ -162,12 +162,14 @@ export default function CreateEventScreen() {
   const [googleMapsUrl, setGoogleMapsUrl] = useState(initialEditForm?.googleMapsUrl ?? "");
   const [companionIds, setCompanionIds] = useState<string[]>(initialEditForm?.companionIds ?? []);
   const [imageUri, setImageUri] = useState(initialEditForm?.image ?? "");
+  const [imageUris, setImageUris] = useState<string[]>(initialEditingEvent?.images?.length ? initialEditingEvent.images : initialEditForm?.image ? [initialEditForm.image] : []);
   const [decisionDate, setDecisionDate] = useState(initialEditForm?.decisionDate ?? "");
   const [publicNotes, setPublicNotes] = useState(initialEditForm?.publicNotes ?? params.sourceDescription ?? "");
   const [publicNotesCursor, setPublicNotesCursor] = useState(0);
   const [privateMemo, setPrivateMemo] = useState(initialEditForm?.privateMemo ?? "");
   const [cancellationPolicy, setCancellationPolicy] = useState(initialEditForm?.cancellationPolicy ?? DEFAULT_CANCELLATION_POLICY);
   const [selectionMethod, setSelectionMethod] = useState<"first_come" | "lottery">(initialEditForm?.selectionMethod ?? "first_come");
+  const [paymentTiming, setPaymentTiming] = useState<"prepaid" | "postpaid">(initialEditingEvent?.paymentTiming === "postpaid" ? "postpaid" : "prepaid");
   const [recruitmentStatus, setRecruitmentStatus] = useState<"draft" | "open">(initialEditingEvent?.recruitmentStatus === "draft" ? "draft" : "open");
   const [recruitmentChannel, setRecruitmentChannel] = useState<"discord" | "app">(initialEditingEvent ? eventRecruitmentChannel(initialEditingEvent) : "app");
   const [confirmedParticipantIds, setConfirmedParticipantIds] = useState<string[]>(initialEditingEvent?.participants ?? []);
@@ -183,7 +185,6 @@ export default function CreateEventScreen() {
   const [createdEventId, setCreatedEventId] = useState<string | null>(null);
   const [editingEvent, setEditingEvent] = useState<Event | null>(initialEditingEvent ?? null);
   const [editLoading, setEditLoading] = useState(Boolean(editId && !initialEditingEvent));
-  const [initialImageUri, setInitialImageUri] = useState(initialEditForm?.image ?? "");
   const extractedLocation = useMemo(() => extractEventLocation(address), [address]);
   const eventMentionMembers = useMemo(() => memberDirectory.length > 0
     ? memberDirectory.map((member) => ({
@@ -218,9 +219,11 @@ export default function CreateEventScreen() {
       setReservationCapacity(form.reservationCapacity); setRecruitCapacity(form.recruitCapacity); setOrganizerParticipates(form.organizerParticipates);
       setFixedAmount(form.fixedAmount); setBudgetMin(form.budgetMin); setBudgetMax(form.budgetMax);
       setTabelogUrl(form.tabelogUrl); setGoogleMapsUrl(form.googleMapsUrl); setCompanionIds(form.companionIds);
-      setImageUri(form.image); setInitialImageUri(form.image); setDecisionDate(form.decisionDate);
+      const eventImages = event.images?.length ? event.images : form.image ? [form.image] : [];
+      setImageUris(eventImages); setImageUri(eventImages[0] ?? ""); setDecisionDate(form.decisionDate);
       setPublicNotes(form.publicNotes); setPublicNotesCursor(0); setPrivateMemo(form.privateMemo); setCancellationPolicy(form.cancellationPolicy);
       setSelectionMethod(form.selectionMethod); setUseRankPrices(form.useRankPrices); setRankPrices(form.rankPrices);
+      setPaymentTiming(event.paymentTiming === "postpaid" ? "postpaid" : "prepaid");
       setGenres(form.genres); setRecruitmentStatus(event.recruitmentStatus === "draft" ? "draft" : "open");
       setRecruitmentChannel(eventRecruitmentChannel(event));
       setConfirmedParticipantIds(event.participants ?? []);
@@ -241,8 +244,12 @@ export default function CreateEventScreen() {
   const handlePickImage = async () => {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) { Alert.alert("権限が必要です", "写真を選ぶには写真ライブラリへのアクセスを許可してください"); return; }
-    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images, quality: 0.8 });
-    if (!result.canceled && result.assets[0]) setImageUri(result.assets[0].uri);
+    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images, quality: 0.8, allowsMultipleSelection: true, selectionLimit: Math.max(1, 10 - imageUris.length) });
+    if (!result.canceled && result.assets.length) {
+      const next = [...new Set([...imageUris, ...result.assets.map((asset) => asset.uri)])].slice(0, 10);
+      setImageUris(next);
+      setImageUri(next[0] ?? "");
+    }
   };
   const handleCreate = async () => {
     const form = { eventType, clubId: selectedClubId, restaurantName, eventName, date, time, address, reservationCapacity, recruitCapacity, organizerParticipates, fixedAmount, budgetMin, budgetMax, tabelogUrl, googleMapsUrl, companionIds, image: imageUri, decisionDate, publicNotes, privateMemo, cancellationPolicy, selectionMethod, useRankPrices, rankPrices, genres };
@@ -258,13 +265,16 @@ export default function CreateEventScreen() {
     setIsSubmitting(true);
     if (editId && editingEvent) {
       try {
-        const uploadedImage = imageUri && imageUri !== initialImageUri ? (await Api.uploadEventImage(imageUri)).imageUrl : undefined;
+        const uploadedImages = await Promise.all(imageUris.map(async (uri) => /^https?:\/\//i.test(uri) || uri.startsWith("/api/") ? uri : (await Api.uploadEventImage(uri)).imageUrl));
+        const uploadedImage = uploadedImages[0];
         const updated = await Api.updateEventDetails(editId, {
           ...savedFields,
           capacityMode: savedFields.capacityMode ?? null,
           recruitmentChannel,
           recruitmentStatus: finalType === "official" ? recruitmentStatus : undefined,
-          ...(uploadedImage ? { image: uploadedImage } : {}),
+          paymentTiming: finalType === "official" ? paymentTiming : undefined,
+          image: uploadedImage ?? "",
+          images: uploadedImages,
           participants: recruitmentChannel === "discord" ? confirmedParticipantIds : editingEvent.participants ?? [],
         });
         setIsSubmitting(false);
@@ -277,8 +287,8 @@ export default function CreateEventScreen() {
     }
     let newEvent: Event;
     try {
-      const uploadedImage = imageUri ? (await Api.uploadEventImage(imageUri)).imageUrl : undefined;
-      newEvent = await Api.createEvent({ ...draftEvent, ...(uploadedImage ? { image: uploadedImage } : {}) });
+      const uploadedImages = await Promise.all(imageUris.map(async (uri) => /^https?:\/\//i.test(uri) || uri.startsWith("/api/") ? uri : (await Api.uploadEventImage(uri)).imageUrl));
+      newEvent = await Api.createEvent({ ...draftEvent, image: uploadedImages[0] ?? "", images: uploadedImages, paymentTiming: finalType === "official" ? paymentTiming : undefined });
     } catch (error) {
       setIsSubmitting(false);
       Alert.alert("イベントを作成できませんでした", error instanceof Error ? error.message : "通信状況を確認して、もう一度お試しください。");
@@ -316,7 +326,7 @@ export default function CreateEventScreen() {
 
         {eventType === "club" ? <><FieldLabel>開催する部活動 *</FieldLabel><View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>{joinedClubs.map((club) => { const selected = selectedClubId === club.id; return <Pressable key={club.id} onPress={() => setSelectedClubId(club.id)} style={{ borderRadius: 18, paddingHorizontal: 12, paddingVertical: 8, backgroundColor: selected ? "#4E6756" : colors.surface, borderWidth: 1, borderColor: selected ? "#4E6756" : colors.border }}><Text style={{ fontSize: 12, fontWeight: "800", color: selected ? "#FFF" : colors.foreground }}>{club.icon} {club.name}</Text></Pressable>; })}</View></> : null}
 
-        {eventType === "official" ? <><FieldLabel>募集ステータス *</FieldLabel><View style={{ flexDirection: "row", gap: 10 }}>{(["draft", "open"] as const).map((value) => <Pressable key={value} onPress={() => setRecruitmentStatus(value)} style={{ flex: 1, paddingVertical: 11, alignItems: "center", borderRadius: 12, backgroundColor: recruitmentStatus === value ? "#E8A0BF" : colors.surface }}><Text style={{ fontWeight: "800", color: recruitmentStatus === value ? "#FFF" : colors.foreground }}>{value === "draft" ? "募集前" : "募集中"}</Text></Pressable>)}</View><Text style={{ marginTop: 7, fontSize: 12, color: colors.muted }}>募集前で登録したイベントは、管理者が詳細画面から募集を開始できます。</Text><FieldLabel>参加者の決め方 *</FieldLabel><View style={{ flexDirection: "row", gap: 10 }}>{(["first_come", "lottery"] as const).map((value) => <Pressable key={value} onPress={() => setSelectionMethod(value)} style={{ flex: 1, paddingVertical: 11, alignItems: "center", borderRadius: 12, backgroundColor: selectionMethod === value ? "#E8A0BF" : colors.surface }}><Text style={{ fontWeight: "800", color: selectionMethod === value ? "#FFF" : colors.foreground }}>{value === "first_come" ? "先着順" : "抽選"}</Text></Pressable>)}</View></> : null}
+        {eventType === "official" ? <><FieldLabel>募集ステータス *</FieldLabel><View style={{ flexDirection: "row", gap: 10 }}>{(["draft", "open"] as const).map((value) => <Pressable key={value} onPress={() => setRecruitmentStatus(value)} style={{ flex: 1, paddingVertical: 11, alignItems: "center", borderRadius: 12, backgroundColor: recruitmentStatus === value ? "#E8A0BF" : colors.surface }}><Text style={{ fontWeight: "800", color: recruitmentStatus === value ? "#FFF" : colors.foreground }}>{value === "draft" ? "募集前" : "募集中"}</Text></Pressable>)}</View><Text style={{ marginTop: 7, fontSize: 12, color: colors.muted }}>募集前で登録したイベントは、管理者が詳細画面から募集を開始できます。</Text><FieldLabel>参加者の決め方 *</FieldLabel><View style={{ flexDirection: "row", gap: 10 }}>{(["first_come", "lottery"] as const).map((value) => <Pressable key={value} onPress={() => setSelectionMethod(value)} style={{ flex: 1, paddingVertical: 11, alignItems: "center", borderRadius: 12, backgroundColor: selectionMethod === value ? "#E8A0BF" : colors.surface }}><Text style={{ fontWeight: "800", color: selectionMethod === value ? "#FFF" : colors.foreground }}>{value === "first_come" ? "先着順" : "抽選"}</Text></Pressable>)}</View><FieldLabel>決済タイミング *</FieldLabel><View style={{ flexDirection: "row", gap: 10 }}>{(["prepaid", "postpaid"] as const).map((value) => <Pressable key={value} onPress={() => setPaymentTiming(value)} style={{ flex: 1, paddingVertical: 11, alignItems: "center", borderRadius: 12, backgroundColor: paymentTiming === value ? "#E8A0BF" : colors.surface }}><Text style={{ fontWeight: "800", color: paymentTiming === value ? "#FFF" : colors.foreground }}>{value === "prepaid" ? "事前決済" : "事後決済"}</Text></Pressable>)}</View><Text style={{ marginTop: 7, fontSize: 12, lineHeight: 18, color: colors.muted }}>{paymentTiming === "prepaid" ? "Squareで支払い完了後に参加確定となります。" : "参加確定後、開催終了後にSquareで参加費を支払います。"}</Text></> : null}
 
         {editId && editingEvent?.id.startsWith("discord-event-") ? <>
           <FieldLabel>参加申込の受付先</FieldLabel>
@@ -351,7 +361,9 @@ export default function CreateEventScreen() {
         {eventType === "official" ? <><FieldLabel>ランク別料金</FieldLabel><Pressable onPress={() => setUseRankPrices((value) => !value)} style={{ flexDirection: "row", alignItems: "center" }}><View style={{ width: 22, height: 22, borderRadius: 6, backgroundColor: useRankPrices ? "#E8A0BF" : colors.surface, borderWidth: 1, borderColor: useRankPrices ? "#E8A0BF" : colors.border, alignItems: "center", justifyContent: "center" }}>{useRankPrices ? <IconSymbol name="checkmark" size={14} color="#FFF" /> : null}</View><Text style={{ marginLeft: 8, color: colors.foreground, fontSize: 13 }}>ランク別料金を設定する</Text></Pressable>{useRankPrices ? <><Text style={{ marginTop: 8, fontSize: 12, color: colors.muted }}>各ランクの参加費を500円単位で選択してください。</Text><View style={{ gap: 8, marginTop: 10 }}>{EVENT_RANKS.map((rank) => <View key={rank} style={{ flexDirection: "row", alignItems: "center" }}><Text style={{ width: 82, fontSize: 12, fontWeight: "700", color: colors.foreground }}>{rank === "regular" ? "レギュラー" : rank === "silver" ? "シルバー" : rank === "gold" ? "ゴールド" : "プラチナ"}</Text><View style={{ flex: 1 }}><SelectField label={`${rank}料金`} value={rankPrices[rank]} options={EVENT_RANK_AMOUNT_OPTIONS} onChange={(value) => setRankPrices((current) => ({ ...current, [rank]: value }))} /></View></View>)}</View></> : null}</> : null}
 
         <FieldLabel>同席者</FieldLabel><MemberPicker selectedIds={companionIds} onChange={setCompanionIds} members={memberDirectory} viewerMemberId={viewerMemberId} loading={memberDirectoryLoading} />
-        <FieldLabel>写真（任意）</FieldLabel><Pressable onPress={handlePickImage} style={{ height: 150, borderRadius: 14, overflow: "hidden", backgroundColor: colors.surface, borderWidth: 1, borderStyle: imageUri ? "solid" : "dashed", borderColor: colors.border, alignItems: "center", justifyContent: "center" }}>{imageUri ? <Image source={{ uri: imageUri }} style={{ width: "100%", height: "100%" }} contentFit="cover" /> : <><IconSymbol name="photo.fill" size={30} color={colors.muted} /><Text style={{ marginTop: 7, color: colors.muted, fontSize: 13 }}>写真を選択</Text></>}</Pressable>
+        <FieldLabel>写真（任意・最大10枚）</FieldLabel>
+        <Pressable onPress={handlePickImage} style={{ minHeight: 54, borderRadius: 14, backgroundColor: colors.surface, borderWidth: 1, borderStyle: "dashed", borderColor: colors.border, alignItems: "center", justifyContent: "center", flexDirection: "row" }}><IconSymbol name="photo.fill" size={22} color={colors.muted} /><Text style={{ marginLeft: 8, color: colors.muted, fontSize: 13, fontWeight: "700" }}>{imageUris.length ? "写真を追加" : "写真を選択"}</Text></Pressable>
+        {imageUris.length ? <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 9, paddingTop: 10, paddingRight: 10 }}>{imageUris.map((uri, index) => <View key={`${uri}-${index}`} style={{ width: 112, height: 88, borderRadius: 12, overflow: "hidden", position: "relative", borderWidth: index === 0 ? 2 : 0, borderColor: "#E8A0BF" }}><Image source={{ uri }} style={{ width: "100%", height: "100%" }} contentFit="cover" />{index === 0 ? <View style={{ position: "absolute", left: 5, bottom: 5, borderRadius: 8, paddingHorizontal: 7, paddingVertical: 3, backgroundColor: "rgba(0,0,0,0.65)" }}><Text style={{ color: "#FFF", fontSize: 9, fontWeight: "900" }}>プレビュー</Text></View> : null}<Pressable accessibilityLabel={`${index + 1}枚目の写真を削除`} onPress={() => { const next = imageUris.filter((_, itemIndex) => itemIndex !== index); setImageUris(next); setImageUri(next[0] ?? ""); }} style={{ position: "absolute", top: 5, right: 5, width: 24, height: 24, borderRadius: 12, backgroundColor: "rgba(0,0,0,0.68)", alignItems: "center", justifyContent: "center" }}><IconSymbol name="xmark" size={12} color="#FFF" /></Pressable></View>)}</ScrollView> : null}
         <FieldLabel>参加者決定の予定期日 *</FieldLabel><CalendarField label="参加者決定予定日" value={decisionDate} onChange={setDecisionDate} />
         <FieldLabel>キャンセルポリシー</FieldLabel><TextInput value={cancellationPolicy} onChangeText={setCancellationPolicy} multiline textAlignVertical="top" style={[inputStyle, { minHeight: 88 }]} />
         <FieldLabel>自由記述欄</FieldLabel><TextInput value={publicNotes} onChangeText={(value) => { const normalized = value.replace(/＠/g, "@"); setPublicNotesCursor((cursor) => Math.max(0, Math.min(normalized.length, cursor + normalized.length - publicNotes.length))); setPublicNotes(normalized); }} onSelectionChange={(event) => setPublicNotesCursor(event.nativeEvent.selection.start)} placeholder="参加者に伝えたい内容。「@」でメンション" placeholderTextColor={colors.muted} multiline textAlignVertical="top" style={[inputStyle, { minHeight: 100 }]} />

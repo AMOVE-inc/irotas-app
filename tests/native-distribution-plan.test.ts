@@ -23,7 +23,7 @@ describe("native distribution readiness", () => {
 
   it("links the published privacy policy from settings", () => {
     expect(PRIVACY_POLICY_URL).toBe("https://irotas-community.com/privacy-policy");
-    expect(settings).toContain("Linking.openURL(PRIVACY_POLICY_URL)");
+    expect(settings).toContain("openExternalUrl(PRIVACY_POLICY_URL)");
   });
 
   it("tracks every current store blocker explicitly", () => {
@@ -43,7 +43,7 @@ describe("native distribution readiness", () => {
     expect(settings).toContain('router.push("/account-deletion"');
     expect(layout).toContain('String(segments[0]) === "account-deletion"');
     expect(deletionPage).toContain("ログインして削除申請へ");
-    expect(deletionPage).toContain("Square定期決済も自動で休止または解約予約");
+    expect(deletionPage).toContain("サブスクリプション決済も自動で休止または解約予約");
     expect(deletionPage).toContain("requestAccountDeletion");
   });
 });

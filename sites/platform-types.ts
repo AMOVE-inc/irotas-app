@@ -42,6 +42,7 @@ export interface SitesEnv {
   DB?: D1Database;
   UPLOADS?: R2Bucket;
   GOURMET_MAP_FEED_URL?: string;
+  GOURMET_MAP_AUTO_PUBLISH_MIN_REPORTERS?: string;
   GOOGLE_MAPS_API_KEY?: string;
   GOOGLE_MAPS_PHOTOS_ENABLED?: string;
   GOOGLE_MAPS_PHOTO_MONTHLY_LIMIT?: string;

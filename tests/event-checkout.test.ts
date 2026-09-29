@@ -12,6 +12,9 @@ function database() {
   const state = {
     participation: "confirmed",
     paymentState: null as string | null,
+    eventStatus: "open",
+    eventDate: "2099-10-01",
+    paymentTiming: "prepaid",
     price: "5,000円",
     pointsUsed: 1_000,
     checkout: null as null | { id: string; event_id: string; member_id: number; item_name: string; amount_yen: number; points_used: number; status: string; square_order_id: string | null; square_payment_link_id?: string | null; checkout_url: string | null; square_payment_id?: string },
@@ -29,8 +32,8 @@ function database() {
       const statement: D1PreparedStatement = {
         bind(...values) { params = values; return statement; },
         async first<T>() {
-          if (sql.includes("FROM events WHERE id")) return { id: params[0], title: "公式イベント", event_type: "official", status: "open", public_data_json: JSON.stringify({ price: state.price, recruitmentChannel: "app" }) } as T;
-          if (sql.includes("FROM events e JOIN members")) return { id: params[0], title: "公式イベント", event_type: "official", status: "open", organizer_member_id: 20, public_data_json: JSON.stringify({ price: state.price, recruitmentChannel: "app" }) } as T;
+          if (sql.includes("FROM events WHERE id")) return { id: params[0], title: "公式イベント", event_type: "official", status: state.eventStatus, event_date: state.eventDate, public_data_json: JSON.stringify({ price: state.price, recruitmentChannel: "app", paymentTiming: state.paymentTiming }) } as T;
+          if (sql.includes("FROM events e JOIN members")) return { id: params[0], title: "公式イベント", event_type: "official", status: state.eventStatus, event_date: state.eventDate, organizer_member_id: 20, public_data_json: JSON.stringify({ price: state.price, recruitmentChannel: "app", paymentTiming: state.paymentTiming }) } as T;
           if (sql.includes("FROM event_participations")) return { status: state.participation, payment_state: state.paymentState } as T;
           if (sql.includes("SELECT display_name FROM members")) return { display_name: "テスト会員" } as T;
           if (sql.includes("SELECT member_rank, discord_roles_json")) return { member_rank: "gold", discord_roles_json: "[]" } as T;
@@ -48,6 +51,7 @@ function database() {
             state.paymentState = "completed";
             return { success: true, meta: { changes: 1 } } as T;
           }
+          if (sql.includes("SET payment_state = 'completed'") && ["confirmed", "cancel_requested"].includes(state.participation)) state.paymentState = "completed";
           if (sql.includes("INSERT OR IGNORE INTO event_payment_checkouts") && !state.checkout)
             state.checkout = { id: String(params[0]), event_id: String(params[1]), member_id: Number(params[2]), item_name: String(params[3]), amount_yen: Number(params[4]), points_used: Number(params[5]), status: "creating", square_order_id: null, checkout_url: null };
           if (sql.includes("UPDATE event_payment_checkouts SET status = 'ready'") && state.checkout) {
@@ -155,6 +159,33 @@ describe("official event Square checkout foundation", () => {
     expect(fetcher.mock.calls[0][0]).toBe("https://connect.squareup.com/v2/locations");
     const sent = JSON.parse(String(fetcher.mock.calls[1][1]?.body)) as { quick_pay: { location_id: string } };
     expect(sent.quick_pay.location_id).toBe("auto-location");
+  });
+
+  it("offers post-payment only after an event ends and keeps the participant confirmed", async () => {
+    const { db, state } = database();
+    state.paymentTiming = "postpaid";
+    state.pointsUsed = 0;
+    const env = { DB: db, SQUARE_ACCESS_TOKEN: "test-token", SQUARE_LOCATION_ID: "test-location", EVENT_PAYMENTS_ENABLED: "true", SQUARE_WEBHOOK_SIGNATURE_KEY: "post-signature", SQUARE_WEBHOOK_NOTIFICATION_URL: "https://app.example/api/webhooks/square" } as SitesEnv;
+    const fetcher = vi.spyOn(globalThis, "fetch").mockResolvedValue(Response.json({ payment_link: { id: "post-link", order_id: "post-order", url: "https://square.link/u/post" } }));
+
+    const beforeEnd = await handleEventCheckoutRequest(new Request(path, { method: "POST" }), env);
+    expect(beforeEnd?.status).toBe(409);
+    expect(fetcher).not.toHaveBeenCalled();
+
+    state.checkout = { id: "post-checkout", event_id: "event-1", member_id: 7, item_name: "公式イベント", amount_yen: 4_000, points_used: 0, status: "creating", square_order_id: null, checkout_url: null };
+    state.eventStatus = "ended";
+    const afterEnd = await handleEventCheckoutRequest(new Request(path, { method: "POST" }), env);
+    expect(afterEnd?.status).toBe(200);
+    expect(await afterEnd?.json()).toMatchObject({ status: "ready", amountYen: 4_000, checkoutUrl: "https://square.link/u/post" });
+    expect(state.participation).toBe("confirmed");
+
+    const webhookBody = JSON.stringify({ event_id: "postpaid-completed", type: "payment.updated", data: { object: { payment: { id: "post-payment", order_id: "post-order", status: "COMPLETED", amount_money: { amount: 4_000, currency: "JPY" } } } } });
+    const webhookSignature = await squareSignature(webhookBody, env.SQUARE_WEBHOOK_SIGNATURE_KEY!, env.SQUARE_WEBHOOK_NOTIFICATION_URL!);
+    const webhookResponse = await handleSquareWebhook(new Request(env.SQUARE_WEBHOOK_NOTIFICATION_URL!, { method: "POST", headers: { "x-square-hmacsha256-signature": webhookSignature }, body: webhookBody }), env);
+    expect(webhookResponse?.status).toBe(200);
+    expect(state.paymentState).toBe("completed");
+    expect(state.confirmationNotifications).toBe(0);
+    expect(state.reviewAudits).toBe(0);
   });
 
   it("keeps a completed payment visible after an event price edit", async () => {

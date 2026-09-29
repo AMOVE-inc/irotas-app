@@ -418,6 +418,8 @@ export function sanitizeEvent(value: unknown) {
   if (eventType === "club" && !clubId) return null;
   const image = text(input.image, 500);
   if (image && !image.startsWith("/api/event-images/")) return null;
+  const images = input.images === undefined ? (image ? [image] : []) : stringArray(input.images, 10, 500);
+  if (images === null || images.some((value) => !value.startsWith("/api/event-images/"))) return null;
   const applicationDeadline = text(input.applicationDeadline, 10, true);
   if (!applicationDeadline || !/^\d{4}-\d{2}-\d{2}$/.test(applicationDeadline) || applicationDeadline > date) return null;
   const priceMin = number(input.priceMin, 0, 300_000);
@@ -436,7 +438,8 @@ export function sanitizeEvent(value: unknown) {
     location: text(input.location, 500) || "住所未設定",
     prefecture: text(input.prefecture, 16) || undefined,
     tokyoArea: text(input.tokyoArea, 80) || undefined,
-    image: image || "",
+    image: images[0] ?? image ?? "",
+    images,
     capacity,
     capacityMode,
     reservationCapacity,
@@ -456,6 +459,7 @@ export function sanitizeEvent(value: unknown) {
     applicationDeadline,
     cancellationPolicy: text(input.cancellationPolicy, 2000) || "",
     selectionMethod: input.selectionMethod === "lottery" ? "lottery" as const : "first_come" as const,
+    paymentTiming: eventType === "official" ? input.paymentTiming === "postpaid" ? "postpaid" as const : "prepaid" as const : undefined,
     tabelogUrl: text(input.tabelogUrl, 500) || undefined,
     googleMapsUrl: text(input.googleMapsUrl, 500) || undefined,
     publicNotes: text(input.publicNotes, 5000) || undefined,
@@ -622,19 +626,31 @@ async function viewerPublicId(db: D1Database, memberId: number) {
 }
 
 async function hydratedEvent(db: D1Database, row: EventRow, memberId: number, elevated: boolean, viewerId?: string) {
+  let hydratedRow = row;
+  let origin: Record<string, unknown> = {};
+  try { origin = JSON.parse(row.public_data_json) as Record<string, unknown>; } catch {}
+  const closedDiscordEvent = (row.id.startsWith("discord-event-") || origin.recruitmentChannel === "discord")
+    && typeof origin.discordRecruitmentClosedAt === "string" && Boolean(origin.discordRecruitmentClosedAt);
+  if (closedDiscordEvent && !(typeof origin.chatId === "string" && origin.chatId)) {
+    const chatId = eventChatId(row.id);
+    await db.prepare("UPDATE events SET public_data_json = json_set(public_data_json, '$.chatId', ?), updated_at = ? WHERE id = ?")
+      .bind(chatId, new Date().toISOString(), row.id).run();
+    await ensureEventRoom(db, chatId);
+    hydratedRow = await eventRow(db, row.id) ?? row;
+  }
   const [participations, cancellations, favorite] = await Promise.all([
     db.prepare(`SELECT p.event_id, p.member_id, m.public_member_id, p.status, p.payment_state
       FROM event_participations p JOIN members m ON m.id = p.member_id WHERE p.event_id = ?`)
-      .bind(row.id).all<ParticipationRow>(),
+      .bind(hydratedRow.id).all<ParticipationRow>(),
     db.prepare(`SELECT c.event_id, c.member_id, m.public_member_id, c.requested_at,
         c.contacted_organizer, c.policy_confirmed, c.status
       FROM event_cancellation_requests c JOIN members m ON m.id = c.member_id
       WHERE c.event_id = ? ORDER BY c.requested_at DESC`)
-      .bind(row.id).all<CancellationRow>(),
+      .bind(hydratedRow.id).all<CancellationRow>(),
     db.prepare("SELECT 1 AS present FROM event_favorites WHERE event_id = ? AND member_id = ?")
-      .bind(row.id, memberId).first<{ present: number }>(),
+      .bind(hydratedRow.id, memberId).first<{ present: number }>(),
   ]);
-  return publicEvent(row, memberId, viewerId ?? await viewerPublicId(db, memberId), elevated, participations.results ?? [], cancellations.results ?? [], Boolean(favorite));
+  return publicEvent(hydratedRow, memberId, viewerId ?? await viewerPublicId(db, memberId), elevated, participations.results ?? [], cancellations.results ?? [], Boolean(favorite));
 }
 
 async function readBody(request: Request) {
@@ -1348,10 +1364,12 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
       const clubId = input.clubId === undefined ? (row.club_id ?? "") : text(input.clubId, 80);
       const restaurantName = input.restaurantName === undefined ? undefined : text(input.restaurantName, 160);
       const image = input.image === undefined ? undefined : text(input.image, 500, true);
+      const images = input.images === undefined ? undefined : stringArray(input.images, 10, 500);
       const genres = input.genres === undefined ? undefined : stringArray(input.genres, 20);
       const companionIds = input.companionIds === undefined ? undefined : stringArray(input.companionIds, 100, 40);
       const normalizedRankPrices = input.rankPrices === undefined ? undefined : rankPrices(input.rankPrices);
       const selectionMethod = input.selectionMethod === undefined ? undefined : input.selectionMethod === "lottery" ? "lottery" : input.selectionMethod === "first_come" ? "first_come" : null;
+      const paymentTiming = input.paymentTiming === undefined ? undefined : input.paymentTiming === "prepaid" || input.paymentTiming === "postpaid" ? input.paymentTiming : null;
       const recruitmentStatus = input.recruitmentStatus === undefined ? undefined : input.recruitmentStatus === "draft" || input.recruitmentStatus === "open" ? input.recruitmentStatus : null;
       const recruitmentChannel = input.recruitmentChannel === undefined ? undefined : input.recruitmentChannel === "discord" || input.recruitmentChannel === "app" ? input.recruitmentChannel : null;
       const category = input.category === undefined ? undefined : ["all", "kanto", "kansai"].includes(String(input.category)) ? input.category : null;
@@ -1359,7 +1377,7 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
       const tokyoArea = input.tokyoArea === undefined ? undefined : text(input.tokyoArea, 80);
       const publicNotes = input.publicNotes === undefined ? undefined : text(input.publicNotes, 5000);
       const privateMemo = input.privateMemo === undefined ? undefined : text(input.privateMemo, 5000);
-      if (!title || description === null || (date !== undefined && (typeof date !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(date))) || (time !== undefined && (typeof time !== "string" || !isAllowedEditedEventTime(time, id, row.public_data_json))) || location === null || capacity === null || capacityMode === false || (capacityMode && capacity !== undefined && capacity !== 0) || reservationCapacity === null || organizerParticipates === null || price === null || priceMin === null || priceMax === null || applicationDeadline === null || cancellationPolicy === null || tabelogUrl === null || googleMapsUrl === null || !eventType || clubId === null || restaurantName === null || (image !== undefined && (!image || !image.startsWith("/api/event-images/"))) || genres === null || companionIds === null || normalizedRankPrices === null || selectionMethod === null || recruitmentStatus === null || recruitmentChannel === null || category === null || prefecture === null || tokyoArea === null || publicNotes === null || privateMemo === null)
+      if (!title || description === null || (date !== undefined && (typeof date !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(date))) || (time !== undefined && (typeof time !== "string" || !isAllowedEditedEventTime(time, id, row.public_data_json))) || location === null || capacity === null || capacityMode === false || (capacityMode && capacity !== undefined && capacity !== 0) || reservationCapacity === null || organizerParticipates === null || price === null || priceMin === null || priceMax === null || applicationDeadline === null || cancellationPolicy === null || tabelogUrl === null || googleMapsUrl === null || !eventType || clubId === null || restaurantName === null || (image !== undefined && image && !image.startsWith("/api/event-images/")) || images === null || (images !== undefined && images.some((value) => !value.startsWith("/api/event-images/"))) || genres === null || companionIds === null || normalizedRankPrices === null || selectionMethod === null || paymentTiming === null || recruitmentStatus === null || recruitmentChannel === null || category === null || prefecture === null || tokyoArea === null || publicNotes === null || privateMemo === null)
         return responseJson({ error: "変更内容が不正です" }, 400);
       if (eventType === "official" && !elevated) return responseJson({ error: "公式イベントは運営メンバーのみ設定できます" }, 403);
       if (eventType !== "official" && normalizedRankPrices && Object.keys(normalizedRankPrices).length > 0) return responseJson({ error: "ランク別料金は公式イベントのみ設定できます" }, 400);
@@ -1385,13 +1403,15 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
       if (googleMapsUrl !== undefined) data.googleMapsUrl = googleMapsUrl || undefined;
       if (restaurantName !== undefined) data.restaurantName = restaurantName || undefined;
       if (image !== undefined) data.image = image;
+      if (images !== undefined) { data.images = images; data.image = images[0] ?? ""; }
       if (genres !== undefined) data.genres = genres;
       if (companionIds !== undefined) data.companionIds = companionIds;
       if (normalizedRankPrices !== undefined) data.rankPrices = normalizedRankPrices;
       if (selectionMethod !== undefined) data.selectionMethod = selectionMethod;
+      if (eventType === "official" && paymentTiming !== undefined) data.paymentTiming = paymentTiming;
       if (eventType === "official" && recruitmentStatus !== undefined) data.recruitmentStatus = recruitmentStatus;
       if (recruitmentChannel !== undefined) data.recruitmentChannel = recruitmentChannel;
-      if (eventType !== "official") delete data.recruitmentStatus;
+      if (eventType !== "official") { delete data.recruitmentStatus; delete data.paymentTiming; }
       if (category !== undefined) data.category = category;
       if (prefecture !== undefined) data.prefecture = prefecture || undefined;
       if (tokyoArea !== undefined) data.tokyoArea = tokyoArea || undefined;
@@ -1413,7 +1433,7 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
         : [];
       await env.DB.batch([
         env.DB.prepare("UPDATE events SET title = ?, event_type = ?, club_id = ?, event_date = ?, status = ?, public_data_json = ?, private_memo = COALESCE(?, private_memo), updated_at = ? WHERE id = ?").bind(title, eventType, eventType === "club" ? clubId : null, effectiveDate, reopensFutureEvent ? "open" : row.status, JSON.stringify(data), privateMemo, now, id),
-        ...["title", "description", "eventType", "clubId", "restaurantName", "image", "genres", "companionIds", "rankPrices", "selectionMethod", "recruitmentStatus", "recruitmentChannel", "category", "prefecture", "tokyoArea", "publicNotes", "privateMemo", "event_date", "time", "location", "capacity", "capacityMode", "reservationCapacity", "price", "priceMin", "priceMax", "applicationDeadline", "cancellationPolicy", "tabelogUrl", "googleMapsUrl", "manualParticipantIds"].map((field) => env.DB!.prepare(`INSERT INTO event_import_field_edits (event_id, field_name, edited_at, actor_member_id)
+        ...["title", "description", "eventType", "clubId", "restaurantName", "image", "images", "genres", "companionIds", "rankPrices", "selectionMethod", "paymentTiming", "recruitmentStatus", "recruitmentChannel", "category", "prefecture", "tokyoArea", "publicNotes", "privateMemo", "event_date", "time", "location", "capacity", "capacityMode", "reservationCapacity", "price", "priceMin", "priceMax", "applicationDeadline", "cancellationPolicy", "tabelogUrl", "googleMapsUrl", "manualParticipantIds"].map((field) => env.DB!.prepare(`INSERT INTO event_import_field_edits (event_id, field_name, edited_at, actor_member_id)
           VALUES (?, ?, ?, ?) ON CONFLICT(event_id, field_name) DO UPDATE SET edited_at = excluded.edited_at, actor_member_id = excluded.actor_member_id`).bind(id, field, now, member.id)),
         env.DB.prepare(`INSERT INTO audit_logs (actor_user_id, action, entity_type, entity_id, metadata_json, created_at)
           VALUES (?, 'event.edited', 'event', ?, ?, ?)`).bind(String(member.id), id, JSON.stringify({ participants: participants.length }), now),
@@ -1546,10 +1566,15 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
     const memberRank = effectiveMemberRank(rankRow?.member_rank, rankRow?.discord_roles_json) ?? "regular";
     const eventPrice = priceNumber(rankPrices[memberRank] ?? data.price);
     if (requestedPoints > eventPrice) return responseJson({ error: "参加費を超えるポイントは利用できません" }, 400);
-    const appOfficial = eventPaymentsEnabled && row.event_type === "official" && data.recruitmentChannel !== "discord" && !id.startsWith("discord-event-");
-    const amountDue = appOfficial ? eventCheckoutAmount(data, memberRank, requestedPoints) : 0;
-    if (appOfficial && amountDue === null) return responseJson({ error: "参加費を確認できません" }, 409);
-    const paymentState = appOfficial && amountDue! > 0 ? immediate ? "awaiting_payment" : "awaiting_selection" : null;
+    const prepaidOfficial = eventPaymentsEnabled && row.event_type === "official" && data.paymentTiming !== "postpaid" && data.recruitmentChannel !== "discord" && !id.startsWith("discord-event-");
+    const postpaidOfficial = eventPaymentsEnabled && row.event_type === "official" && data.paymentTiming === "postpaid" && data.recruitmentChannel !== "discord" && !id.startsWith("discord-event-");
+    if (requestedPoints > 0 && data.paymentTiming === "postpaid")
+      return responseJson({ error: "事後決済イベントでは申込時にポイントを利用できません" }, 400);
+    const amountDue = prepaidOfficial ? eventCheckoutAmount(data, memberRank, requestedPoints) : 0;
+    const postpaidAmountDue = postpaidOfficial ? eventCheckoutAmount(data, memberRank, 0) : 0;
+    if (prepaidOfficial && amountDue === null) return responseJson({ error: "参加費を確認できません" }, 409);
+    if (postpaidOfficial && postpaidAmountDue === null) return responseJson({ error: "参加費を確認できません" }, 409);
+    const paymentState = prepaidOfficial && amountDue! > 0 ? immediate ? "awaiting_payment" : "awaiting_selection" : null;
     const status = immediate && !paymentState ? "confirmed" : "applied";
     let pointResult: Awaited<ReturnType<typeof applyEventPointDiscount>> | null = null;
     if (requestedPoints > 0) {
@@ -1581,6 +1606,17 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
               WHERE event_id = ? AND member_id = ? AND status = 'applied' AND payment_state = 'awaiting_payment')`).bind(
               crypto.randomUUID(), id, member.id, `IRO+ ${row.title}`.slice(0, 255), amountDue, requestedPoints, now, now, id, member.id,
             ),
+        ]);
+      } else if (status === "confirmed" && postpaidOfficial && postpaidAmountDue! > 0) {
+        await env.DB.batch([
+          participationWrite,
+          env.DB.prepare(`INSERT OR IGNORE INTO event_payment_checkouts
+            (id, event_id, member_id, item_name, amount_yen, points_used, status, created_at, updated_at)
+            SELECT ?, ?, ?, ?, ?, 0, 'creating', ?, ?
+            WHERE EXISTS (SELECT 1 FROM event_participations
+              WHERE event_id = ? AND member_id = ? AND status = 'confirmed')`).bind(
+                crypto.randomUUID(), id, member.id, `IRO+ ${row.title}`.slice(0, 255), postpaidAmountDue, now, now, id, member.id,
+              ),
         ]);
       } else await participationWrite.run();
     } catch (error) {
@@ -1639,19 +1675,18 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
     if (!(elevated || row.organizer_member_id === member.id)) return responseJson({ error: "幹事または運営メンバーのみ操作できます" }, 403);
     let data: Record<string, unknown> = {};
     try { data = JSON.parse(row.public_data_json) as Record<string, unknown>; } catch {}
-    if (typeof data.participantsFinalizedAt === "string" && data.participantsFinalizedAt) {
-      return responseJson({ event: await hydratedEvent(env.DB, row, member.id, elevated, memberPublicId) });
+    const finalizedAt = typeof data.participantsFinalizedAt === "string" ? data.participantsFinalizedAt : "";
+    if (!finalizedAt) {
+      const unpaidSelected = await env.DB.prepare(`SELECT COUNT(*) AS count FROM event_participations
+        WHERE event_id = ? AND status = 'applied' AND payment_state = 'awaiting_payment'`)
+        .bind(id).first<{ count: number }>();
+      if ((unpaidSelected?.count ?? 0) > 0)
+        return responseJson({ error: "決済待ちの参加者がいます。支払い完了または申込取消後に確定してください" }, 409);
     }
-    const unpaidSelected = await env.DB.prepare(`SELECT COUNT(*) AS count FROM event_participations
-      WHERE event_id = ? AND status = 'applied' AND payment_state = 'awaiting_payment'`)
-      .bind(id).first<{ count: number }>();
-    if ((unpaidSelected?.count ?? 0) > 0)
-      return responseJson({ error: "決済待ちの参加者がいます。支払い完了または申込取消後に確定してください" }, 409);
     const now = new Date().toISOString();
     const chatId = typeof data.chatId === "string" && data.chatId ? data.chatId : eventChatId(id);
-    const importedDiscordEvent = id.startsWith("discord-event-") || data.recruitmentChannel === "discord";
-    if (!importedDiscordEvent) data.chatId = chatId;
-    data.participantsFinalizedAt = now;
+    data.chatId = chatId;
+    data.participantsFinalizedAt = finalizedAt || now;
     const confirmed = await env.DB.prepare("SELECT member_id FROM event_participations WHERE event_id = ? AND status IN ('confirmed','cancel_requested')").bind(id).all<{ member_id: number }>();
     const previouslyFinalized = new Set(Array.isArray(data.previouslyFinalizedParticipantIds) ? data.previouslyFinalizedParticipantIds.filter((value): value is number => typeof value === "number") : []);
     data.previouslyFinalizedParticipantIds = [...new Set([...previouslyFinalized, ...(confirmed.results ?? []).map((participant) => participant.member_id)])];
@@ -1667,7 +1702,7 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
     await env.DB.batch([
       env.DB.prepare("UPDATE events SET public_data_json = ?, status = 'full', updated_at = ? WHERE id = ?").bind(JSON.stringify(data), now, id),
       env.DB.prepare("UPDATE event_participations SET status = 'rejected', payment_state = NULL, cancelled_at = ?, updated_at = ? WHERE event_id = ? AND status = 'applied'").bind(now, now, id),
-      ...(!importedDiscordEvent ? [env.DB.prepare(`INSERT OR IGNORE INTO chat_rooms (id, name, room_type, source_id, created_by_member_id, created_at, updated_at)
+      ...([env.DB.prepare(`INSERT OR IGNORE INTO chat_rooms (id, name, room_type, source_id, created_by_member_id, created_at, updated_at)
         VALUES (?, ?, 'event', ?, ?, ?, ?)`).bind(chatId, row.title, id, row.organizer_member_id, now, now),
       env.DB.prepare(`INSERT INTO chat_room_members (room_id, member_id, member_role, joined_at, left_at) VALUES (?, ?, 'owner', ?, NULL)
         ON CONFLICT(room_id, member_id) DO UPDATE SET member_role = 'owner', left_at = NULL`)
@@ -1681,7 +1716,7 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
       ...chatMemberNames.map(({ memberId, name }) => env.DB!.prepare(`INSERT OR IGNORE INTO chat_messages (id, room_id, sender_member_id, content, created_at, updated_at)
         VALUES (?, ?, ?, ?, ?, ?)`)
         .bind(`event-chat-join:${id}:${memberId}`, chatId, row.organizer_member_id, eventChatSystemContent(`${name}がチャットに参加しました`), now, now)),
-      ] : []),
+      ]),
       env.DB.prepare(`INSERT INTO audit_logs (actor_user_id, action, entity_type, entity_id, metadata_json, created_at)
         VALUES (?, 'event.participants_finalized', 'event', ?, ?, ?)`).bind(String(member.id), id, JSON.stringify({ chatId, count: confirmed.results?.length ?? 0, companionCount: companionMemberIds.size }), now),
     ]);
@@ -1720,11 +1755,12 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
         return responseJson({ error: "承認可能な参加申込が見つかりません" }, 409);
       if (participation.payment_state === "awaiting_payment")
         return responseJson({ error: "この参加者は決済待ちです" }, 409);
+      let postpaidAmountDue = 0;
       const capacity = typeof data.capacity === "number" ? data.capacity : 0;
       const count = await env.DB.prepare(`SELECT COUNT(*) AS count FROM event_participations WHERE event_id = ?
         AND (status IN ('confirmed','cancel_requested') OR (status = 'applied' AND payment_state = 'awaiting_payment'))`).bind(id).first<{ count: number }>();
       if (!["undecided", "unlimited"].includes(String(data.capacityMode)) && (count?.count ?? 0) >= capacity) return responseJson({ error: "募集終了のため承認できません" }, 409);
-      if (env.EVENT_PAYMENTS_ENABLED === "true" && row.event_type === "official" && data.recruitmentChannel !== "discord" && !id.startsWith("discord-event-")) {
+      if (env.EVENT_PAYMENTS_ENABLED === "true" && row.event_type === "official" && data.paymentTiming !== "postpaid" && data.recruitmentChannel !== "discord" && !id.startsWith("discord-event-")) {
         const targetRank = await env.DB.prepare("SELECT member_rank, discord_roles_json FROM members WHERE id = ?")
           .bind(targetId).first<{ member_rank: string | null; discord_roles_json: string | null }>();
         const usedPoints = await env.DB.prepare("SELECT amount FROM event_point_usages WHERE event_id = ? AND member_id = ? AND status = 'applied'")
@@ -1767,16 +1803,34 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
           return responseJson({ event: await hydratedEvent(env.DB, updated!, member.id, elevated, memberPublicId) });
         }
       }
+      if (env.EVENT_PAYMENTS_ENABLED === "true" && row.event_type === "official" && data.paymentTiming === "postpaid" && data.recruitmentChannel !== "discord" && !id.startsWith("discord-event-")) {
+        const targetRank = await env.DB.prepare("SELECT member_rank, discord_roles_json FROM members WHERE id = ?")
+          .bind(targetId).first<{ member_rank: string | null; discord_roles_json: string | null }>();
+        const calculated = eventCheckoutAmount(data, effectiveMemberRank(targetRank?.member_rank, targetRank?.discord_roles_json) ?? "regular", 0);
+        if (calculated === null) return responseJson({ error: "参加費を確認できません" }, 409);
+        postpaidAmountDue = calculated;
+        if (postpaidAmountDue > 0) {
+          const previousCheckout = await env.DB.prepare("SELECT id FROM event_payment_checkouts WHERE event_id = ? AND member_id = ? LIMIT 1")
+            .bind(id, targetId).first<{ id: string }>();
+          if (previousCheckout) return responseJson({ error: "以前の決済情報がある申込は運営へお問い合わせください" }, 409);
+        }
+      }
       await env.DB.prepare(`UPDATE event_participations SET status = 'confirmed', payment_state = NULL, confirmed_at = ?, cancelled_at = NULL, updated_at = ?
         WHERE event_id = ? AND member_id = ? AND status IN ('applied','cancelled','rejected')`).bind(now, now, id, targetId).run();
       const chatId = typeof data.chatId === "string" && data.chatId ? data.chatId : eventChatId(id);
-      const importedDiscordEvent = id.startsWith("discord-event-") || data.recruitmentChannel === "discord";
-      if (!importedDiscordEvent) data.chatId = chatId;
+      data.chatId = chatId;
       const targetName = await eventChatMemberName(env.DB, targetId);
       await env.DB.prepare("UPDATE events SET public_data_json = ?, updated_at = ? WHERE id = ?")
         .bind(JSON.stringify(data), now, id).run();
       await env.DB.batch([
-        ...(!importedDiscordEvent ? [env.DB.prepare(`INSERT OR IGNORE INTO chat_rooms (id, name, room_type, source_id, created_by_member_id, created_at, updated_at)
+        ...(postpaidAmountDue > 0 ? [env.DB.prepare(`INSERT OR IGNORE INTO event_payment_checkouts
+          (id, event_id, member_id, item_name, amount_yen, points_used, status, created_at, updated_at)
+          SELECT ?, ?, ?, ?, ?, 0, 'creating', ?, ?
+          WHERE EXISTS (SELECT 1 FROM event_participations
+            WHERE event_id = ? AND member_id = ? AND status = 'confirmed')`).bind(
+              crypto.randomUUID(), id, targetId, `IRO+ ${row.title}`.slice(0, 255), postpaidAmountDue, now, now, id, targetId,
+            )] : []),
+        ...([env.DB.prepare(`INSERT OR IGNORE INTO chat_rooms (id, name, room_type, source_id, created_by_member_id, created_at, updated_at)
           VALUES (?, ?, 'event', ?, ?, ?, ?)`).bind(chatId, row.title, id, row.organizer_member_id, now, now),
         env.DB.prepare(`INSERT INTO chat_room_members (room_id, member_id, member_role, joined_at, left_at)
           VALUES (?, ?, 'owner', ?, NULL)
@@ -1792,7 +1846,7 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
         env.DB.prepare(`INSERT OR IGNORE INTO chat_messages (id, room_id, sender_member_id, content, created_at, updated_at)
           VALUES (?, ?, ?, ?, ?, ?)`)
           .bind(`event-chat-join:${id}:${targetId}`, chatId, row.organizer_member_id, eventChatSystemContent(`${targetName}がチャットに参加しました`), now, now),
-        ] : []),
+        ]),
       ]);
       await notifyEventConfirmation(env.DB, targetId, id, row.title);
     } else {

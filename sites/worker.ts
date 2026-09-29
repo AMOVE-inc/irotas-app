@@ -48,6 +48,8 @@ import { handleAnalyticsRequest } from "./analytics";
 import { handleAdminEventPaymentsRequest, handleEventCheckoutRequest } from "./event-checkout";
 import { handleAdmissionStatusRequest } from "./admission-status";
 import { releaseGoogleMapsRequest, reserveGoogleMapsRequest } from "./google-maps-cost-control";
+import { handleGourmetMapCandidateRequest } from "./gourmet-map-community";
+import { handleMemberStartMissionRequest } from "./member-start-missions";
 
 type CommunitySubmission = {
   reportId: string;
@@ -320,12 +322,16 @@ async function routeRequest(
   if (mee6LevelsResponse) return mee6LevelsResponse;
   const memberDirectoryResponse = await handleMemberDirectoryRequest(request, env);
   if (memberDirectoryResponse) return memberDirectoryResponse;
+  const memberStartMissionResponse = await handleMemberStartMissionRequest(request, env);
+  if (memberStartMissionResponse) return memberStartMissionResponse;
   const clubResponse = await handleClubRequest(request, env);
   if (clubResponse) return clubResponse;
   const notificationResponse = await handleNotificationRequest(request, env);
   if (notificationResponse) return notificationResponse;
   const boardContentResponse = await handleBoardContentRequest(request, env);
   if (boardContentResponse) return boardContentResponse;
+  const gourmetMapCandidateResponse = await handleGourmetMapCandidateRequest(request, env);
+  if (gourmetMapCandidateResponse) return gourmetMapCandidateResponse;
   const chatContentResponse = await handleChatContentRequest(request, env);
   if (chatContentResponse) return chatContentResponse;
   const benefitsResponse = await handleBenefitsRequest(request, env);
@@ -577,6 +583,15 @@ async function routeRequest(
           { status: 400 },
         );
       }
+      // Candidate creation is authoritative in the board API. Older app builds
+      // may still call this endpoint after posting; acknowledge without
+      // bypassing the operator approval queue.
+      if (request.method === "POST") {
+        return Response.json({ success: true, duplicate: false, queued: true }, {
+          status: 202,
+          headers: { "cache-control": "no-store" },
+        });
+      }
       if (request.method === "PATCH") {
         const patch = body as Record<string, unknown>;
         if (
@@ -585,19 +600,12 @@ async function routeRequest(
         )
           return Response.json({ success: false }, { status: 400 });
       }
-      const payload =
-        request.method === "POST"
-          ? await enrichWithPlaces(
-              body as CommunitySubmission,
-              env,
-            )
-          : body;
+      const payload = body;
       const feedResponse = await fetch(env.GOURMET_MAP_FEED_URL, {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
-          action:
-            request.method === "POST" ? "upsertMealReport" : "setPublished",
+          action: "setPublished",
           payload,
         }),
         redirect: "follow",

@@ -196,6 +196,8 @@ function MessageBubble({ message, isMe, canDelete, readOnly, viewerId, viewerNam
   const pollLines = message.content.startsWith("📊 ") ? message.content.split("\n") : [];
   const pollChoices = pollLines.filter((line) => line.startsWith("◯ ")).map((line) => line.slice(2));
   const pollAllowsMultiple = pollLines.includes("🔢 複数回答可");
+  const pollVoteCounts = pollChoices.map((choice) => (message.reactions?.[`🗳️${choice}`] ?? []).length);
+  const pollTotalVotes = pollVoteCounts.reduce((sum, count) => sum + count, 0);
   const isSystemMessage = message.content.startsWith("【IRO+ システム】");
 
   if (isSystemMessage) {
@@ -276,7 +278,7 @@ function MessageBubble({ message, isMe, canDelete, readOnly, viewerId, viewerNam
           {message.replyTo ? <View style={{ paddingHorizontal: 10, paddingTop: 8 }}><ReplyReferenceView reply={message.replyTo} outgoing={isMe} onPress={() => onOpenReply(message.replyTo!.id)} /></View> : null}
           {message.content ? (
             <View style={{ paddingHorizontal: 14, paddingVertical: 10 }}>
-              {pollChoices.length >= 2 ? <View style={{ minWidth: 220 }}><MentionText content={pollLines[0].replace(/^📊 /, "")} outgoing={isMe} groups={mentionGroups} /><Text style={{ fontSize: 10, fontWeight: "800", color: isMe ? "#FFF" : colors.muted, marginTop: 5 }}>{pollAllowsMultiple ? "複数回答可" : "1つ選択"}</Text><View style={{ gap: 7, marginTop: 10 }}>{pollChoices.map((choice) => { const voteKey = `🗳️${choice}`; const voters = message.reactions?.[voteKey] ?? []; const selected = voters.includes(viewerId); return <Pressable key={choice} disabled={readOnly} onPress={() => onReact(voteKey, pollChoices, pollAllowsMultiple)} style={{ borderRadius: 8, paddingHorizontal: 10, paddingVertical: 9, borderWidth: 1, borderColor: selected ? "#5865F2" : isMe ? "#FFF8" : colors.border, backgroundColor: selected ? "#5865F228" : "transparent" }}><Text style={{ fontSize: 13, fontWeight: "800", color: isMe ? "#FFF" : colors.foreground }}>{selected ? "●" : "○"} {choice}　{voters.length}</Text></Pressable>; })}</View><Text style={{ fontSize: 10, color: isMe ? "#FFF" : colors.muted, marginTop: 9 }}>{pollLines.find((line) => line.startsWith("⏱"))}</Text></View> : <><MentionText content={message.content} outgoing={isMe} groups={mentionGroups} rooms={getAllRooms()} threads={BOARD_THREADS} onOpenInternalLink={onOpenInternalLink} /><ContentLinkCards content={message.content} /></>}
+              {pollChoices.length >= 2 ? <View style={{ minWidth: 220 }}><MentionText content={pollLines[0].replace(/^📊 /, "")} outgoing={isMe} groups={mentionGroups} /><Text style={{ fontSize: 10, fontWeight: "800", color: isMe ? "#FFF" : colors.muted, marginTop: 5 }}>{pollAllowsMultiple ? "複数回答可" : "1つ選択"}・合計 {pollTotalVotes}票</Text><View style={{ gap: 8, marginTop: 10 }}>{pollChoices.map((choice, index) => { const voteKey = `🗳️${choice}`; const voters = message.reactions?.[voteKey] ?? []; const selected = voters.includes(viewerId); const percentage = pollTotalVotes ? Math.round((voters.length / pollTotalVotes) * 100) : 0; return <Pressable key={choice} disabled={readOnly} onPress={() => onReact(voteKey, pollChoices, pollAllowsMultiple)} style={{ borderRadius: 10, paddingHorizontal: 10, paddingVertical: 9, borderWidth: 1, borderColor: selected ? "#5865F2" : isMe ? "#FFF8" : colors.border, backgroundColor: selected ? "#5865F228" : "transparent", overflow: "hidden" }}><View style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: `${percentage}%`, backgroundColor: selected ? "#5865F238" : isMe ? "#FFFFFF20" : "#5865F218" }} /><View style={{ flexDirection: "row", alignItems: "center" }}><Text style={{ flex: 1, fontSize: 13, fontWeight: "800", color: isMe ? "#FFF" : colors.foreground }}>{selected ? "●" : "○"} {choice}</Text><Text style={{ marginLeft: 8, fontSize: 12, fontWeight: "900", color: isMe ? "#FFF" : "#5865F2" }}>{percentage}%</Text><Text style={{ marginLeft: 5, fontSize: 10, fontWeight: "700", color: isMe ? "#FFF" : colors.muted }}>{pollVoteCounts[index]}票</Text></View></Pressable>; })}</View><Text style={{ fontSize: 10, color: isMe ? "#FFF" : colors.muted, marginTop: 9 }}>{pollLines.find((line) => line.startsWith("⏱"))}</Text></View> : <><MentionText content={message.content} outgoing={isMe} groups={mentionGroups} rooms={getAllRooms()} threads={BOARD_THREADS} onOpenInternalLink={onOpenInternalLink} /><ContentLinkCards content={message.content} /></>}
             </View>
           ) : null}
         </Pressable> : null}
@@ -1259,8 +1261,9 @@ export default function ChatScreen() {
                 paddingVertical: 10,
                 fontSize: 14,
                 color: colors.foreground,
-                minHeight: 72,
-                maxHeight: 180,
+                minHeight: 40,
+                maxHeight: 132,
+                lineHeight: 20,
                 textAlignVertical: "top",
               }}
             />

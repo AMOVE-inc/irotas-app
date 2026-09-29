@@ -22,6 +22,11 @@ describe("requested native fixes", () => {
     expect(chatServer).toContain("discordEvent && !origin.discordRecruitmentClosedAt");
     expect(chatServer).toContain("origin.manualParticipantIds");
     expect(eventDetail).toContain("event.participants.includes(viewerId)");
+    expect(events).toContain("data.chatId = chatId");
+    expect(events).toContain("data.participantsFinalizedAt = finalizedAt || now");
+    expect(events).toContain("closedDiscordEvent && !(typeof origin.chatId");
+    expect(events).toContain("await ensureEventRoom(db, chatId)");
+    expect(events).not.toContain("!importedDiscordEvent ? [env.DB.prepare");
   });
 
   it("accepts only poll reactions matching a poll choice", () => {
@@ -33,11 +38,21 @@ describe("requested native fixes", () => {
     expect(eventDetail).toContain("参加申込者一覧を表示");
     expect(eventDetail).toContain("参加申込者（{applicantCount}人）");
     expect(eventDetail).toContain("<MemberRankBadge rank={rank}");
+    expect(eventDetail).toContain("参加確定者一覧を表示");
+    expect(eventDetail).toContain("参加確定者（{confirmedParticipantIds.length}人）");
   });
 
-  it("provides a multi-line message composer", () => {
-    expect(chatScreen).toContain("minHeight: 72");
-    expect(chatScreen).toContain("maxHeight: 180");
+  it("starts the message composer at one line and grows it to about six lines", () => {
+    expect(chatScreen).toContain("minHeight: 40");
+    expect(chatScreen).toContain("maxHeight: 132");
+    expect(chatScreen).toContain("lineHeight: 20");
+  });
+
+  it("shows poll percentages, counts, and a proportional result bar", () => {
+    expect(chatScreen).toContain("pollTotalVotes");
+    expect(chatScreen).toContain("Math.round((voters.length / pollTotalVotes) * 100)");
+    expect(chatScreen).toContain('width: `${percentage}%`');
+    expect(chatScreen).toContain("{pollVoteCounts[index]}票");
   });
 
   it("deep links club applications to the club management review", () => {

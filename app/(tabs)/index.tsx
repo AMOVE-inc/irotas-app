@@ -47,6 +47,10 @@ import { createDefaultPreferences, loadMemberAiConsents, loadMemberPreferences, 
 import { recommendEvents, type RecommendedEvent } from "@/lib/event-recommendation";
 import * as Api from "@/lib/_core/api";
 import { boardThreadRoute } from "@/lib/community-navigation";
+import { StartMissionCard } from "@/components/start-mission-card";
+import { XpRewardPopup } from "@/components/xp-reward-popup";
+import { levelFromXp } from "@/lib/xp-levels";
+import type { XpReward } from "@/lib/xp-store";
 
 // タイムラインコメント型
 interface TimelineComment {
@@ -659,6 +663,18 @@ export default function HomeScreen() {
   const [visibleEvents, setVisibleEvents] = useState<Event[]>([]);
   const [preferences, setPreferences] = useState<MemberPreferences>(() => createDefaultPreferences());
   const [aiConsents, setAiConsents] = useState<MemberAiConsents>({ eventRecommendation: false, memberMatching: false, conciergeHistory: false, anonymousImprovement: false, updatedAt: "" });
+  const [startMissions, setStartMissions] = useState<Api.StartMissionStatus | null>(null);
+  const [showStartGuide, setShowStartGuide] = useState(false);
+  const [missionReward, setMissionReward] = useState<XpReward | null>(null);
+
+  const loadStartMissions = useCallback(() => {
+    if (!authUser?.memberId) return;
+    void Api.getStartMissions().then((status) => {
+      setStartMissions(status);
+      if (!status.guideSeen) setShowStartGuide(true);
+      if (status.bonusAwardedNow && status.reward) setMissionReward({ ...status.reward, previousLevel: levelFromXp(status.reward.previousXp), nextLevel: levelFromXp(status.reward.nextXp) });
+    }).catch(() => undefined);
+  }, [authUser?.memberId]);
 
   const loadVisibleEvents = useCallback(() => {
     void Api.getEventsWithDeletedImportedIds().then(({ events }) => {
@@ -682,9 +698,10 @@ export default function HomeScreen() {
   useFocusEffect(useCallback(() => {
     loadHomeContent();
     loadVisibleEvents();
+    loadStartMissions();
     const timer = setInterval(loadHomeContent, 3000);
     return () => clearInterval(timer);
-  }, [loadHomeContent, loadVisibleEvents, authUser?.memberId]));
+  }, [loadHomeContent, loadVisibleEvents, loadStartMissions, authUser?.memberId]));
 
   const { events: todayEvents, boardEvents: todayBoardEvents } = useMemo(() => ({
     events: visibleEvents.filter((event) => event.date === japanDateKey()),
@@ -695,8 +712,9 @@ export default function HomeScreen() {
     setRefreshing(true);
     loadHomeContent();
     loadVisibleEvents();
+    loadStartMissions();
     setTimeout(() => setRefreshing(false), 500);
-  }, [loadHomeContent, loadVisibleEvents]);
+  }, [loadHomeContent, loadVisibleEvents, loadStartMissions]);
 
   const timelineItems = useMemo(() => [...activities]
     .sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt))
@@ -708,6 +726,7 @@ export default function HomeScreen() {
     () => (
       <>
         <AnnouncementBanner announcements={homeAnnouncements} loading={announcementsLoading} />
+        <StartMissionCard status={startMissions} />
         <CampaignSection gifts={giftCampaigns} campaigns={managedCampaigns.filter((campaign) => campaign.status !== "ended" && campaign.endDate >= japanDateKey())} />
         <RecommendedEventsSection items={recommendedEvents} enabled={aiConsents.eventRecommendation} />
         <TodayEventsSection events={todayEvents} boardEvents={todayBoardEvents} />
@@ -718,7 +737,7 @@ export default function HomeScreen() {
         </View>
       </>
     ),
-    [todayEvents, todayBoardEvents, giftCampaigns, managedCampaigns, homeAnnouncements, announcementsLoading, recommendedEvents, aiConsents.eventRecommendation, colors],
+    [todayEvents, todayBoardEvents, giftCampaigns, managedCampaigns, homeAnnouncements, announcementsLoading, recommendedEvents, aiConsents.eventRecommendation, colors, startMissions],
   );
 
   return (
@@ -762,6 +781,14 @@ export default function HomeScreen() {
         }
         showsVerticalScrollIndicator={false}
       />
+
+      <Modal visible={showStartGuide} transparent animationType="fade" onRequestClose={() => undefined}>
+        <View style={{ flex: 1, backgroundColor: "rgba(20,18,24,0.5)", alignItems: "center", justifyContent: "center", padding: 24 }}><View style={{ width: "100%", maxWidth: 390, borderRadius: 24, backgroundColor: colors.background, padding: 23 }}>
+          <Text style={{ fontSize: 34, textAlign: "center" }}>✨</Text><Text style={{ marginTop: 8, fontSize: 22, fontWeight: "900", color: colors.foreground, textAlign: "center" }}>IRO+へようこそ</Text><Text style={{ marginTop: 10, fontSize: 14, lineHeight: 22, color: colors.muted, textAlign: "center" }}>6つのスタートミッションを順番に進めましょう。各項目を初めて達成した時に10XPを獲得できます。</Text>
+          <Pressable onPress={async () => { try { await Api.markStartMissionGuideSeen(); setStartMissions((current) => current ? { ...current, guideSeen: true } : current); setShowStartGuide(false); } catch { /* 次回表示して再試行する */ } }} style={{ marginTop: 20, minHeight: 50, borderRadius: 15, backgroundColor: "#D56591", alignItems: "center", justifyContent: "center" }}><Text style={{ color: "#FFF", fontSize: 16, fontWeight: "900" }}>ミッションを始める</Text></Pressable>
+        </View></View>
+      </Modal>
+      <XpRewardPopup reward={missionReward} onClose={() => setMissionReward(null)} />
 
       {/* FAB */}
       <Pressable

@@ -83,7 +83,7 @@ class EventAccessDatabase implements D1Database {
         return null;
       },
       all: async <T>() => {
-        if (sql.includes("SELECT id, display_name, public_member_id FROM members")) return { results: [{ id: 21, display_name: "杏奈【GOLD会員】", public_member_id: "IRO0021" }] as T[] };
+        if (sql.includes("SELECT id, display_name, public_member_id") && sql.includes("FROM members")) return { results: [{ id: 21, display_name: "杏奈【GOLD会員】", public_member_id: "IRO0021", branches_json: "[]" }] as T[] };
         if (sql.includes("FROM events e JOIN members")) return { results: [db.row] as T[] };
         if (sql.includes("FROM event_participations p JOIN members")) {
           return { results: db.participationStatus ? [{ event_id: db.row.id, member_id: 10, public_member_id: "IRO0010", status: db.participationStatus, payment_state: db.paymentState }] as T[] : [] };
@@ -135,6 +135,10 @@ describe("club event access", () => {
     authenticatedRequestMember.mockResolvedValue({ id: 10, role: "user", access_role: "member" });
     canMemberAccessClub.mockReset();
     db = new EventAccessDatabase();
+    const futureDate = new Date(Date.now() + 30 * 86_400_000).toISOString().slice(0, 10);
+    const futureDeadline = new Date(Date.now() + 20 * 86_400_000).toISOString().slice(0, 10);
+    db.row.event_date = futureDate;
+    db.row.public_data_json = JSON.stringify({ ...JSON.parse(db.row.public_data_json), date: futureDate, applicationDeadline: futureDeadline });
     env = { DB: db } as unknown as SitesEnv;
   });
 
@@ -292,10 +296,11 @@ describe("club event access", () => {
   });
 
   it("confirms a first-come official application without payment", async () => {
+    const currentData = JSON.parse(db.row.public_data_json);
     db.row.event_type = "official";
     db.row.club_id = null;
     db.row.public_data_json = JSON.stringify({
-      ...JSON.parse(eventRow.public_data_json),
+      ...currentData,
       eventType: "official",
       clubId: undefined,
       selectionMethod: "first_come",
@@ -317,9 +322,10 @@ describe("club event access", () => {
   });
 
   it("confirms a selected official lottery applicant without payment", async () => {
+    const currentData = JSON.parse(db.row.public_data_json);
     db.row.event_type = "official";
     db.row.club_id = null;
-    db.row.public_data_json = JSON.stringify({ ...JSON.parse(eventRow.public_data_json), eventType: "official", selectionMethod: "lottery" });
+    db.row.public_data_json = JSON.stringify({ ...currentData, eventType: "official", selectionMethod: "lottery" });
     const applied = await handleEventRequest(new Request("https://app.example/api/events/event-club-1/applications", {
       method: "POST", body: JSON.stringify({ termsAccepted: true }),
     }), env);

@@ -112,8 +112,8 @@ function communityRestaurant(record) {
     id: "community_" + (placeId || fallbackId),
     placeId: placeId || undefined,
     name: text(place.displayName && place.displayName.text) || submission.restaurantName,
-    genre: "メンバー高評価店",
-    sourceCategories: ["メンバー高評価店"],
+    genre: submission.genre || "創作料理・イノベーティブ",
+    sourceCategories: [submission.genre || "創作料理・イノベーティブ", "メンバー高評価店"],
     address: text(place.formattedAddress) || submission.area,
     latitude: numberValue(location.latitude),
     longitude: numberValue(location.longitude),
@@ -122,12 +122,13 @@ function communityRestaurant(record) {
     image: submission.image || "https://images.unsplash.com/photo-1515003197210-e0cd71810b5f?w=800",
     googleMapsUrl: text(place.googleMapsUri) || submission.googleMapsUrl,
     price: submission.budget || undefined,
-    sourceList: "メンバー高評価店",
+    sourceList: submission.genre || "創作料理・イノベーティブ",
     importedAt: record.updatedAt,
     sourceType: "meal_report",
     sourceThreadId: submission.reportId,
     sourceThreadTitle: submission.reportTitle,
-    memberRating: submission.memberRating
+    memberRating: submission.memberRating,
+    memberComment: submission.memberComment || undefined
   };
 }
 

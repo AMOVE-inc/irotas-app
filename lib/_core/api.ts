@@ -1501,10 +1501,12 @@ export async function updateEventDetails(eventId: string, input: {
   clubId?: string;
   restaurantName?: string;
   image?: string;
+  images?: string[];
   genres?: string[];
   rankPrices?: Event["rankPrices"];
   companionIds?: string[];
   selectionMethod?: "first_come" | "lottery";
+  paymentTiming?: "prepaid" | "postpaid";
   recruitmentStatus?: "draft" | "open";
   recruitmentChannel?: "discord" | "app";
   category?: Event["category"];
@@ -1681,6 +1683,25 @@ export async function saveMemberOnboardingFollowUp(input: {
   return apiCall<{ success: true }>("/api/admin/member-onboarding/follow-up", {
     method: "PUT", body: JSON.stringify(input),
   });
+}
+
+export type StartMissionKey = "profile" | "introduction" | "event_application" | "club_membership" | "meal_report" | "event_creation";
+export type StartMissionStatus = {
+  guideSeen: boolean;
+  steps: { key: StartMissionKey; completed: boolean }[];
+  completedCount: number;
+  totalCount: number;
+  allCompleted: boolean;
+  bonusAwardedNow: boolean;
+  reward: null | { amount: number; reason: string; previousXp: number; nextXp: number; previousRank: "regular" | "silver" | "gold" | "platinum"; nextRank: "regular" | "silver" | "gold" | "platinum" };
+};
+
+export async function getStartMissions() {
+  return apiCall<StartMissionStatus>("/api/member/start-missions", { cache: "no-store" });
+}
+
+export async function markStartMissionGuideSeen() {
+  return apiCall<{ success: true }>("/api/member/start-missions", { method: "POST", body: JSON.stringify({ action: "mark_seen" }) });
 }
 
 export type MemberReconciliationReport = {

@@ -161,10 +161,14 @@ describe("event presentation and comments", () => {
 
   it("shows inline validation feedback and does not fill an omitted public note", () => {
     const create = source("app/create-event.tsx");
+    const detail = source("app/event-detail.tsx");
     expect(create).toContain("const [formError, setFormError]");
     expect(create).toContain('accessibilityRole="alert"');
     expect(create).toContain("description: savedFields.description");
     expect(create).toContain("requireImage: false");
-    expect(create).toContain("写真（任意）");
+    expect(create).toContain("写真（任意・最大10枚）");
+    expect(create).toContain("allowsMultipleSelection: true");
+    expect(detail).toContain("イベント写真");
+    expect(detail).toContain("event.images!.map");
   });
 });

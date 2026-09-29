@@ -9,6 +9,7 @@ import { inferImportedRecruitmentStatus } from "../lib/board-recruitment";
 import type { RawDiscordBoardArchive } from "../lib/discord-board-import";
 import { isDiscordGourmetEventBoard, isRetiredMovieClubThread, normalizeDiscordBoardCategory } from "../lib/board-category";
 import { replyReference, validReplyReference } from "../lib/reply-reference";
+import { reconcileMealReportCandidate } from "./gourmet-map-community";
 
 const gourmetEventBoardThreadIds = new Set((archive as RawDiscordBoardArchive).threads
   .filter((thread) => isDiscordGourmetEventBoard(thread.category)).map((thread) => thread.id));
@@ -632,6 +633,10 @@ export async function handleBoardContentRequest(
       (id, author_member_id, category, title, content, status, pinned, data_json, created_at, updated_at)
       VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?, ?)`)
       .bind(id, member.id, category, title, content, status, data, now, now).run();
+    if (category === "meal-report") {
+      await reconcileMealReportCandidate(db, env, { threadId: id, title, content, dataJson: data, actorMemberId: member.id })
+        .catch((error) => console.error("gourmet_map_candidate_enqueue_failed", { threadId: id, error }));
+    }
     await audit(db, member.id, "board.thread_created", "board_thread", id, { category });
     return json({ id, createdAt: now }, 201);
   }
@@ -655,6 +660,10 @@ export async function handleBoardContentRequest(
       if (!canManageWholeThread) return json({ error: "投稿者本人または管理者のみ変更できます" }, 403);
       await db.prepare("UPDATE board_threads SET deleted_at = ?, updated_at = ? WHERE id = ?")
         .bind(now, now, id).run();
+      if (current.category === "meal-report") {
+        await reconcileMealReportCandidate(db, env, { threadId: id, title: current.title, content: current.content, dataJson: current.data_json, deleted: true, actorMemberId: member.id })
+          .catch((error) => console.error("gourmet_map_candidate_delete_failed", { threadId: id, error }));
+      }
       await reverseSharedXpForSource(db, current.category === "meal-report" ? "meal_report_post" : "board_post", id, now);
       const commentRewards = await db.prepare(`SELECT source_id FROM xp_operation_requests
         WHERE action = 'comment' AND status = 'applied' AND source_id IN
@@ -683,6 +692,10 @@ export async function handleBoardContentRequest(
     await db.prepare(`UPDATE board_threads SET title = ?, content = ?, status = ?, pinned = ?,
       data_json = ?, updated_at = ? WHERE id = ?`)
       .bind(title, content, status, pinned, data, now, id).run();
+    if (current.category === "meal-report") {
+      await reconcileMealReportCandidate(db, env, { threadId: id, title, content, dataJson: data, actorMemberId: member.id })
+        .catch((error) => console.error("gourmet_map_candidate_update_failed", { threadId: id, error }));
+    }
     await audit(db, member.id, "board.thread_updated", "board_thread", id);
     return json({ success: true, updatedAt: now });
   }

@@ -85,6 +85,7 @@ const MAPPING = {
   "calendar.badge.plus": "event-available",
   "person.badge.plus": "person-add",
   "checkmark.circle.fill": "check-circle",
+  "circle": "radio-button-unchecked",
   "checkmark": "check",
   "exclamationmark.circle.fill": "error",
   "exclamationmark.triangle.fill": "warning",

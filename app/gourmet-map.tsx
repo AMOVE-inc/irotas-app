@@ -10,7 +10,7 @@ import { useAuthContext } from "@/lib/auth-context";
 import { isOperatorRole } from "@/lib/access-control";
 import { mergeGourmetMapRestaurants, previewGourmetMapCsv, type GourmetMapImportPreview } from "@/lib/gourmet-map-csv";
 import { fetchGourmetMapFeed, mergeGourmetMapFeed } from "@/lib/gourmet-map-feed";
-import { setCommunityRestaurantPublished } from "@/lib/gourmet-map-community";
+import { fetchGourmetMapCandidates, reviewGourmetMapCandidate, setCommunityRestaurantPublished, type GourmetMapCandidate } from "@/lib/gourmet-map-community";
 import { useColors } from "@/hooks/use-colors";
 import { AuthenticatedImage as Image } from "@/components/authenticated-image";
 import { useRouter } from "expo-router";
@@ -30,6 +30,7 @@ import {
 import { GOOGLE_GOURMET_MAP_LISTS } from "@/constants/external-links";
 import { matchesAllSearchWords } from "@/lib/multi-word-search";
 import { getMeStrict } from "@/lib/_core/api";
+import * as Clipboard from "expo-clipboard";
 
 const SEEDED_RESTAURANTS: Restaurant[] = GOURMET_MAP_SEED.map((restaurant) => ({
   ...restaurant,
@@ -162,6 +163,7 @@ function RestaurantDetail({
   onUnpublish: () => void;
 }) {
   const colors = useColors();
+  const categoryList = GOOGLE_GOURMET_MAP_LISTS.find(([label]) => label === restaurant.genre);
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       {/* Header image */}
@@ -263,6 +265,19 @@ function RestaurantDetail({
             <Text style={{ fontSize: 15, lineHeight: 22, color: colors.foreground }}>
               {restaurant.memberComment}
             </Text>
+            {categoryList ? (
+              <Pressable
+                onPress={async () => {
+                  await Clipboard.setStringAsync(restaurant.memberComment!);
+                  try { await openExternalUrl(categoryList[1]); }
+                  catch { Alert.alert("リンクを開けませんでした", "感想はコピー済みです。Google Mapsの保存リストを開いてメモ欄へ貼り付けてください。"); }
+                }}
+                style={{ minHeight: 44, marginTop: 13, borderRadius: 12, backgroundColor: "#4285F4", flexDirection: "row", alignItems: "center", justifyContent: "center", paddingHorizontal: 12 }}
+              >
+                <IconSymbol name="doc.on.doc" size={16} color="#FFF" />
+                <Text style={{ color: "#FFF", fontSize: 13, fontWeight: "800", marginLeft: 7 }}>感想をコピーして「{categoryList[0]}」保存リストを開く</Text>
+              </Pressable>
+            ) : null}
           </View>
         ) : null}
         {restaurant.googleMapsUrl ? (
@@ -445,11 +460,20 @@ export default function GourmetMapScreen() {
   const [selectedRestaurant, setSelectedRestaurant] = useState<Restaurant | null>(null);
   const [showCSVImport, setShowCSVImport] = useState(false);
   const [showGoogleLists, setShowGoogleLists] = useState(false);
+  const [showCandidates, setShowCandidates] = useState(false);
+  const [candidates, setCandidates] = useState<GourmetMapCandidate[]>([]);
+  const [candidateBusyId, setCandidateBusyId] = useState<string | null>(null);
   const [membershipAccess, setMembershipAccess] = useState<"checking" | "allowed" | "denied">("checking");
   const [restaurants, setRestaurants] = useState<Restaurant[]>(SEEDED_RESTAURANTS);
   const [, setFeedUpdatedAt] = useState<string | null>(null);
   const { user: authUser } = useAuthContext();
   const userCanImport = isOperatorRole(authUser?.role, authUser?.accessRole);
+
+  const refreshCandidates = useCallback(async () => {
+    if (!userCanImport) return;
+    try { setCandidates(await fetchGourmetMapCandidates()); }
+    catch { setCandidates([]); }
+  }, [userCanImport]);
 
   const verifyMembershipAccess = useCallback(async () => {
     setMembershipAccess("checking");
@@ -465,6 +489,8 @@ export default function GourmetMapScreen() {
   useEffect(() => {
     void verifyMembershipAccess();
   }, [verifyMembershipAccess]);
+
+  useEffect(() => { void refreshCandidates(); }, [refreshCandidates]);
 
   useEffect(() => {
     if (membershipAccess !== "allowed") return;
@@ -545,6 +571,14 @@ export default function GourmetMapScreen() {
           </Text>
         </View>
         {userCanImport && (
+          <View style={{ flexDirection: "row", gap: 7 }}>
+          <Pressable
+            onPress={() => { setShowCandidates(true); void refreshCandidates(); }}
+            style={{ flexDirection: "row", alignItems: "center", backgroundColor: "#E8A0BF", borderRadius: 20, paddingHorizontal: 11, paddingVertical: 7 }}
+          >
+            <IconSymbol name="checkmark.circle.fill" size={14} color="#FFF" />
+            <Text style={{ fontSize: 12, fontWeight: "800", color: "#FFF", marginLeft: 4 }}>承認待ち {candidates.length}</Text>
+          </Pressable>
           <Pressable
             onPress={() => setShowCSVImport(true)}
             style={{
@@ -561,8 +595,33 @@ export default function GourmetMapScreen() {
               CSV取込
             </Text>
           </Pressable>
+          </View>
         )}
       </View>
+
+      <Modal visible={showCandidates} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setShowCandidates(false)}>
+        <ScreenContainer>
+          <View style={{ flexDirection: "row", alignItems: "center", padding: 16, borderBottomWidth: 0.5, borderBottomColor: colors.border }}>
+            <Text style={{ flex: 1, fontSize: 20, fontWeight: "900", color: colors.foreground }}>グルメマップ承認待ち</Text>
+            <Pressable onPress={() => setShowCandidates(false)}><IconSymbol name="xmark" size={22} color={colors.foreground} /></Pressable>
+          </View>
+          <FlatList
+            data={candidates}
+            keyExtractor={(item) => item.id}
+            contentContainerStyle={{ padding: 16, gap: 12 }}
+            ListEmptyComponent={<Text style={{ color: colors.muted, textAlign: "center", paddingVertical: 40 }}>承認待ちの店舗はありません</Text>}
+            renderItem={({ item }) => <View style={{ borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface, borderRadius: 16, padding: 14 }}>
+              <Text style={{ fontSize: 17, fontWeight: "900", color: colors.foreground }}>{item.restaurant_name}</Text>
+              <Text style={{ marginTop: 4, color: colors.muted }}>{item.area}　★{item.member_rating.toFixed(1)}</Text>
+              <Text style={{ marginTop: 10, fontSize: 13, lineHeight: 20, color: colors.foreground }}>{item.member_comment}</Text>
+              <View style={{ flexDirection: "row", gap: 8, marginTop: 13 }}>
+                <Pressable disabled={candidateBusyId === item.id} onPress={async () => { setCandidateBusyId(item.id); try { await reviewGourmetMapCandidate(item.id, "reject"); await refreshCandidates(); } catch (error) { Alert.alert("却下できませんでした", error instanceof Error ? error.message : "もう一度お試しください"); } finally { setCandidateBusyId(null); } }} style={{ flex: 1, minHeight: 44, borderRadius: 12, borderWidth: 1, borderColor: colors.border, alignItems: "center", justifyContent: "center" }}><Text style={{ fontWeight: "800", color: colors.muted }}>却下</Text></Pressable>
+                <Pressable disabled={candidateBusyId === item.id} onPress={async () => { setCandidateBusyId(item.id); try { await reviewGourmetMapCandidate(item.id, "approve"); await refreshCandidates(); } catch (error) { Alert.alert("公開できませんでした", error instanceof Error ? error.message : "もう一度お試しください"); } finally { setCandidateBusyId(null); } }} style={{ flex: 1, minHeight: 44, borderRadius: 12, backgroundColor: "#E8A0BF", alignItems: "center", justifyContent: "center" }}><Text style={{ fontWeight: "900", color: "#FFF" }}>{candidateBusyId === item.id ? "処理中…" : "承認して公開"}</Text></Pressable>
+              </View>
+            </View>}
+          />
+        </ScreenContainer>
+      </Modal>
 
       <View style={{ paddingHorizontal: 16, paddingTop: 12 }}>
         <Pressable

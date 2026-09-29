@@ -116,9 +116,9 @@ export async function handleEventCheckoutRequest(request: Request, env: SitesEnv
   const member = await authenticatedRequestMember(request, env);
   if (!member) return json({ error: "ログインが必要です" }, 401);
   const eventId = decodeURIComponent(match[1]);
-  const event = await env.DB.prepare(`SELECT id, title, event_type, status, public_data_json
+  const event = await env.DB.prepare(`SELECT id, title, event_type, status, event_date, public_data_json
     FROM events WHERE id = ? LIMIT 1`).bind(eventId)
-    .first<{ id: string; title: string; event_type: string; status: string; public_data_json: string }>();
+    .first<{ id: string; title: string; event_type: string; status: string; event_date: string; public_data_json: string }>();
   if (!event || event.event_type !== "official") return json({ error: "対象の公式イベントが見つかりません" }, 404);
   if (event.status === "cancelled") return json({ error: "中止されたイベントです" }, 409);
   const participation = await env.DB.prepare(`SELECT status, payment_state FROM event_participations
@@ -131,6 +131,8 @@ export async function handleEventCheckoutRequest(request: Request, env: SitesEnv
   try { data = JSON.parse(event.public_data_json) as Record<string, unknown>; } catch {}
   if (data.recruitmentChannel === "discord" || eventId.startsWith("discord-event-"))
     return json({ error: "このイベントはアプリ決済の対象外です" }, 409);
+  if (data.paymentTiming === "postpaid" && event.status !== "ended" && event.event_date >= new Date().toISOString().slice(0, 10))
+    return json({ error: "事後決済はイベント開催日の翌日から利用できます" }, 409);
   const rank = await env.DB.prepare("SELECT member_rank, discord_roles_json FROM members WHERE id = ? LIMIT 1")
     .bind(member.id).first<{ member_rank: string | null; discord_roles_json: string | null }>();
   const points = await env.DB.prepare(`SELECT amount FROM event_point_usages
@@ -142,8 +144,8 @@ export async function handleEventCheckoutRequest(request: Request, env: SitesEnv
     return json({ status: "paid", amountYen: existing.amount_yen, pointsUsed: existing.points_used });
   if (existing?.status === "cancelled") return json({ error: "この決済リンクは無効です" }, 409);
   if (awaitingPayment && !existing) return json({ error: "決済対象を確認できません" }, 409);
-  const amount = awaitingPayment && existing ? existing.amount_yen
-    : eventCheckoutAmount(data, effectiveMemberRank(rank?.member_rank, rank?.discord_roles_json) ?? "regular", pointsUsed);
+  const amount = existing?.amount_yen
+    ?? eventCheckoutAmount(data, effectiveMemberRank(rank?.member_rank, rank?.discord_roles_json) ?? "regular", pointsUsed);
   if (amount === null) return json({ error: "参加費を確認できません" }, 409);
   if (existing && (existing.amount_yen !== amount || existing.points_used !== pointsUsed))
     return json({ error: "参加費が変更されています。運営へお問い合わせください" }, 409);

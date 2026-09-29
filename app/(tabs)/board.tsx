@@ -37,7 +37,6 @@ import { createBoardChat } from "@/lib/chat-store";
 import { canManageBoardCategories, canManageGourmetContests, isOperatorRole } from "@/lib/access-control";
 import { canViewerAccessClubContent, getClubViewerAccess, resolveViewerMemberId } from "@/lib/club-viewer-access";
 import { GOURMET_ADVICE_BUDGETS, isGoogleMapsUrl, MEAL_BUDGETS } from "@/lib/meal-report";
-import { communityRestaurantFromMealReport, registerCommunityRestaurant } from "@/lib/gourmet-map-community";
 import { formatMealReportArea, resolveRestaurantLocation } from "@/lib/restaurant-location";
 import { XpRewardPopup } from "@/components/xp-reward-popup";
 import { awardXp, type XpReward } from "@/lib/xp-store";
@@ -2962,9 +2961,9 @@ export default function BoardScreen() {
   }, [clubs]);
 
   useEffect(() => {
-    if (compose !== "meal-report") return;
+    if (compose !== "meal-report" && compose !== "introduction") return;
     setActiveGroup("all");
-    setActiveCategory("meal-report");
+    setActiveCategory(compose);
     setShowCreateThread(true);
     router.setParams({ compose: "" });
   }, [compose, router]);
@@ -3459,12 +3458,6 @@ export default function BoardScreen() {
           if (!isOperatorRole(authUser?.role, authUser?.accessRole)) {
             void awardXp(authUser?.xp ?? CURRENT_USER.points, xpAction.points, xpAction.label, () => Api.awardSharedXp(thread.category === "meal-report" ? "meal_report_post" : "board_post", saved.id)).then(setXpReward).catch(() => {
               Alert.alert("投稿しました", "XPの反映に時間がかかっています。マイページを再読み込みしてください。");
-            });
-          }
-          const submission = communityRestaurantFromMealReport(thread);
-          if (submission) {
-            void registerCommunityRestaurant(submission).catch(() => {
-              Alert.alert("投稿は完了しました", "グルメマップへの自動登録のみ失敗しました。運営が後ほど確認します。");
             });
           }
           return sharedThread;

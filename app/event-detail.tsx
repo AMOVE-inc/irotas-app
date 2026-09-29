@@ -58,7 +58,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 type EventComment = Api.SharedEventComment;
-const OFFICIAL_EVENT_PAYMENTS_ENABLED = false;
+const OFFICIAL_EVENT_PAYMENTS_ENABLED = process.env.EXPO_PUBLIC_EVENT_PAYMENTS_ENABLED === "true";
 const EVENT_COMMENT_QUICK_REACTIONS = ["👍", "❤️", "😂", "🎉", "👏"] as const;
 const EVENT_COMMENT_REACTION_EMOJIS = ["😀", "😃", "😄", "😁", "😆", "😅", "😂", "🤣", "😊", "😇", "🙂", "🙃", "😉", "😍", "🥰", "😘", "😋", "😛", "🤪", "🤔", "🫡", "😎", "🥳", "😮", "😢", "😭", "😡", "👍", "👎", "👏", "🙌", "🙏", "💪", "👀", "❤️", "🩷", "🧡", "💛", "💚", "💙", "💜", "🖤", "🤍", "🔥", "✨", "🎉", "💯", "✅", "❌", "💡", "📌", "🍽️", "🍣", "🍖", "🍜", "🍕", "🍰", "☕", "🍺", "🍷"] as const;
 type EventCommentReply = { id: string; author: string; text: string };
@@ -172,6 +172,7 @@ export default function EventDetailScreen() {
   const [eventResolved, setEventResolved] = useState(Boolean(initialEvent));
   const [eventCheckout, setEventCheckout] = useState<Api.EventCheckout | null>(null);
   const [showApplicantList, setShowApplicantList] = useState(false);
+  const [showConfirmedList, setShowConfirmedList] = useState(false);
   const [checkoutBusy, setCheckoutBusy] = useState(false);
 
   const [isJoined, setIsJoined] = useState(() => {
@@ -335,9 +336,10 @@ export default function EventDetailScreen() {
   }, [authenticatedViewerMemberId, event]);
 
   useEffect(() => {
+    const postpaidReady = event?.paymentTiming !== "postpaid" || event?.status === "ended" || Boolean(event?.date && event.date < new Date().toISOString().slice(0, 10));
     if (!OFFICIAL_EVENT_PAYMENTS_ENABLED || !event || !authUser || event.eventType !== "official" ||
       !(event.viewerPaymentState === "awaiting_payment" || ["confirmed", "cancel_requested"].includes(event.viewerParticipationStatus ?? "")) ||
-      eventRecruitmentChannel(event) === "discord") {
+      eventRecruitmentChannel(event) === "discord" || !postpaidReady) {
       setEventCheckout(null);
       return;
     }
@@ -457,7 +459,7 @@ export default function EventDetailScreen() {
   };
   const priceNum = parsePriceNumber(effectivePrice);
   const isOfficialEvent = event.eventType === "official";
-  const pointsToUse = OFFICIAL_EVENT_PAYMENTS_ENABLED && usePoints && isOfficialEvent ? Math.min(irotasPoints, priceNum) : 0;
+  const pointsToUse = OFFICIAL_EVENT_PAYMENTS_ENABLED && usePoints && isOfficialEvent && event.paymentTiming !== "postpaid" ? Math.min(irotasPoints, priceNum) : 0;
   const finalPrice = Math.max(0, priceNum - pointsToUse);
   const organizerId = event.organizerProfileId ?? event.createdBy;
   const companionIds = [...new Set(event.companionIds ?? [])].filter((memberId) => memberId !== organizerId);
@@ -602,7 +604,7 @@ export default function EventDetailScreen() {
         : effectivePrice;
     showApplicationConfirmation(
       "参加申込の確認",
-      `「${event.title}」に申し込みますか？\n${requiresOrganizerApproval ? "幹事の承認後に参加確定となり、参加者チャットへ入れます。" : event.selectionMethod === "lottery" ? "抽選イベントです。申込後、参加確定をお待ちください。" : isOfficialEvent ? `参加費: ${priceLabel}。現在、アプリ内決済は行いません。` : `参加費: ${priceLabel}`}`,
+      `「${event.title}」に申し込みますか？\n${requiresOrganizerApproval ? "幹事の承認後に参加確定となり、参加者チャットへ入れます。" : event.selectionMethod === "lottery" ? "抽選イベントです。申込後、参加確定をお待ちください。" : isOfficialEvent ? event.paymentTiming === "postpaid" ? `参加費: ${priceLabel}。参加確定後、開催終了後にSquareでお支払いください。` : `参加費: ${priceLabel}。Squareでの支払い完了後に参加確定となります。` : `参加費: ${priceLabel}`}`,
       [
         { text: "キャンセル", style: "cancel" },
         {
@@ -611,7 +613,7 @@ export default function EventDetailScreen() {
             // 連打防止ロック
             if (joiningRef.current) return;
             joiningRef.current = true;
-            const confirmedPointsToUse = OFFICIAL_EVENT_PAYMENTS_ENABLED && usePointsRef.current && isOfficialEvent ? Math.min(irotasPoints, priceNum) : 0;
+            const confirmedPointsToUse = OFFICIAL_EVENT_PAYMENTS_ENABLED && usePointsRef.current && isOfficialEvent && event.paymentTiming !== "postpaid" ? Math.min(irotasPoints, priceNum) : 0;
             const confirmedFinalPrice = Math.max(0, priceNum - confirmedPointsToUse);
             try {
               if (event.viewerMemberId) {
@@ -1192,8 +1194,8 @@ export default function EventDetailScreen() {
         </View>
 
         <View style={{ flexDirection: "row", gap: 8, marginBottom: 16 }}>
-          {[{ label: "現在の参加申込", value: `${applicantCount}人`, color: "#5B9BD5", action: () => setShowApplicantList(true) }, { label: "募集定員", value: eventCapacityLabel(event), color: "#E8A0BF", action: undefined }, { label: "参加確定", value: `${confirmedParticipantIds.length}人`, color: "#34C759", action: undefined }].map((item) => (
-            <Pressable key={item.label} disabled={!item.action} onPress={item.action} accessibilityLabel={item.action ? "参加申込者一覧を表示" : undefined} style={{ flex: 1, backgroundColor: colors.surface, borderRadius: 12, paddingVertical: 12, alignItems: "center", borderTopWidth: 3, borderTopColor: item.color }}>
+          {[{ label: "現在の参加申込", value: `${applicantCount}人`, color: "#5B9BD5", action: () => setShowApplicantList(true) }, { label: "募集定員", value: eventCapacityLabel(event), color: "#E8A0BF", action: undefined }, { label: "参加確定", value: `${confirmedParticipantIds.length}人`, color: "#34C759", action: () => setShowConfirmedList(true) }].map((item) => (
+            <Pressable key={item.label} disabled={!item.action} onPress={item.action} accessibilityLabel={item.action ? item.label === "現在の参加申込" ? "参加申込者一覧を表示" : "参加確定者一覧を表示" : undefined} style={{ flex: 1, backgroundColor: colors.surface, borderRadius: 12, paddingVertical: 12, alignItems: "center", borderTopWidth: 3, borderTopColor: item.color }}>
               <Text style={{ fontSize: 10, color: colors.muted, textAlign: "center" }}>{item.label}</Text>
               <Text style={{ fontSize: item.label === "募集定員" && event.capacityMode ? 16 : 22, fontWeight: "900", color: item.color, marginTop: 3 }}>{item.value}</Text>
               {item.action ? <Text style={{ fontSize: 9, color: colors.muted, marginTop: 2 }}>タップして表示</Text> : null}
@@ -1291,7 +1293,7 @@ export default function EventDetailScreen() {
           </View>
 
           {/* イロタスポイント割引トグル */}
-          {OFFICIAL_EVENT_PAYMENTS_ENABLED && isOfficialEvent && priceNum > 0 && irotasPoints > 0 && !isJoined && (
+          {OFFICIAL_EVENT_PAYMENTS_ENABLED && isOfficialEvent && event.paymentTiming !== "postpaid" && priceNum > 0 && irotasPoints > 0 && !isJoined && (
             <View
               style={{
                 marginTop: 12,
@@ -1322,14 +1324,14 @@ export default function EventDetailScreen() {
           )}
         </View>
 
-        {OFFICIAL_EVENT_PAYMENTS_ENABLED && isOfficialEvent && (event.viewerPaymentState === "awaiting_payment" || ["confirmed", "cancel_requested"].includes(event.viewerParticipationStatus ?? "")) &&
+        {OFFICIAL_EVENT_PAYMENTS_ENABLED && isOfficialEvent && (event.viewerPaymentState === "awaiting_payment" || (event.paymentTiming === "postpaid" && (eventEnded || event.status === "ended") && ["confirmed", "cancel_requested"].includes(event.viewerParticipationStatus ?? ""))) &&
           eventRecruitmentChannel(event) !== "discord" ? (
           <View style={{ backgroundColor: colors.surface, borderRadius: 14, padding: 16, marginBottom: 16 }}>
             <Text style={{ fontSize: 15, fontWeight: "800", color: colors.foreground }}>参加費のお支払い</Text>
             <Text style={{ fontSize: 13, color: colors.muted, marginTop: 6 }}>
               {eventCheckout?.status === "paid" ? "Squareでの支払いを確認しました。参加確定は画面更新後に反映されます。"
                 : eventCheckout?.status === "free" ? "お支払いは不要です。"
-                  : eventCheckout ? `お支払い残額：${eventCheckout.amountYen.toLocaleString()}円。決済完了後に参加が確定します。`
+                  : eventCheckout ? event.paymentTiming === "postpaid" ? `お支払い残額：${eventCheckout.amountYen.toLocaleString()}円。開催済みイベントの参加費をお支払いください。` : `お支払い残額：${eventCheckout.amountYen.toLocaleString()}円。決済完了後に参加が確定します。`
                     : "支払い状況を確認してください。"}
             </Text>
             {eventCheckout?.status !== "paid" && eventCheckout?.status !== "free" ? (
@@ -1364,6 +1366,15 @@ export default function EventDetailScreen() {
           <View style={{ backgroundColor: "#FFF8F0", borderRadius: 14, padding: 16, marginBottom: 16, borderWidth: 1, borderColor: "#F1DFC9" }}>
             <Text style={{ fontSize: 14, fontWeight: "800", color: colors.foreground }}>キャンセルポリシー</Text>
             <Text style={{ fontSize: 14, lineHeight: 21, color: colors.foreground, marginTop: 7 }}>{event.cancellationPolicy}</Text>
+          </View>
+        ) : null}
+
+        {(event.images?.length ?? 0) > 1 ? (
+          <View style={{ marginBottom: 16 }}>
+            <Text style={{ fontSize: 16, fontWeight: "900", color: colors.foreground, marginBottom: 10 }}>イベント写真</Text>
+            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+              {event.images!.map((uri, index) => <Image key={`${uri}-${index}`} source={{ uri }} style={{ width: "48.5%", aspectRatio: 1.25, borderRadius: 12, backgroundColor: colors.surface }} contentFit="cover" />)}
+            </View>
           </View>
         ) : null}
 
@@ -1487,6 +1498,28 @@ export default function EventDetailScreen() {
         </View>
       </Modal>
 
+      <Modal visible={showConfirmedList} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setShowConfirmedList(false)}>
+        <View style={{ flex: 1, backgroundColor: colors.background }}>
+          <View style={{ flexDirection: "row", alignItems: "center", padding: 16, borderBottomWidth: 0.5, borderBottomColor: colors.border }}>
+            <Pressable onPress={() => setShowConfirmedList(false)}><Text style={{ color: colors.muted, fontSize: 15 }}>閉じる</Text></Pressable>
+            <Text style={{ flex: 1, textAlign: "center", fontSize: 18, fontWeight: "900", color: colors.foreground }}>参加確定者（{confirmedParticipantIds.length}人）</Text><View style={{ width: 42 }} />
+          </View>
+          <ScrollView contentContainerStyle={{ paddingVertical: 8 }}>
+            {confirmedParticipantIds.map((uid) => {
+              const directoryMember = memberDirectory.find((item) => item.id === uid);
+              const member = getMemberById(uid);
+              const discordAuthor = getDiscordAuthorById(uid);
+              const memberName = directoryMember?.displayName ?? member?.name ?? discordAuthor?.name ?? "メンバー";
+              const avatar = typeof directoryMember?.profile?.avatarUrl === "string" ? { uri: directoryMember.profile.avatarUrl } : member?.avatar ?? (discordAuthor?.avatarUrl ? { uri: discordAuthor.avatarUrl } : DEFAULT_AVATAR);
+              const rawRank = directoryMember?.memberRank ?? member?.rank ?? discordAuthor?.rank ?? "regular";
+              const rank = (["regular", "silver", "gold", "platinum"].includes(rawRank) ? rawRank : "regular") as MemberRank;
+              return <Pressable key={uid} onPress={() => { setShowConfirmedList(false); openMemberProfile(uid); }} accessibilityLabel={`${stripRankFromName(memberName)}のプロフィールを表示`} style={{ minHeight: 68, flexDirection: "row", alignItems: "center", paddingHorizontal: 18, borderBottomWidth: 0.5, borderBottomColor: colors.border }}><Image source={avatar} style={{ width: 46, height: 46, borderRadius: 23 }} contentFit="cover" /><View style={{ flex: 1, flexDirection: "row", alignItems: "center", flexWrap: "wrap", marginLeft: 12 }}><Text style={{ fontSize: 15, fontWeight: "800", color: colors.foreground }}>{stripRankFromName(memberName)}</Text><MemberRankBadge rank={rank} name={memberName} role={directoryMember?.accessRole ?? member?.role} compact /><MemberClubLeaderBadges roles={directoryMember?.discordRoles} name={memberName} compact /><MemberRoleBadge name="" role={directoryMember?.accessRole ?? member?.role} compact /></View><IconSymbol name="chevron.right" size={17} color={colors.muted} /></Pressable>;
+            })}
+            {!confirmedParticipantIds.length ? <Text style={{ padding: 24, textAlign: "center", color: colors.muted }}>現在、参加確定者はいません。</Text> : null}
+          </ScrollView>
+        </View>
+      </Modal>
+
       <Modal visible={eventCommentActionTarget !== null} transparent animationType="fade" onRequestClose={() => setEventCommentActionTarget(null)}>
         <View style={{ flex: 1, justifyContent: "flex-end", backgroundColor: "rgba(20,18,24,0.45)" }}>
           <Pressable accessibilityLabel="コメント操作を閉じる" onPress={() => setEventCommentActionTarget(null)} style={{ position: "absolute", top: 0, right: 0, bottom: 0, left: 0 }} />
@@ -1583,7 +1616,7 @@ export default function EventDetailScreen() {
               <Text style={{ textAlign: "center", fontSize: 15, lineHeight: 22, fontWeight: "800", color: colors.foreground, marginTop: 12 }}>{event.title}</Text>
               <Text style={{ textAlign: "center", fontSize: 13, fontWeight: "800", color: "#5865F2", marginTop: 8 }}>{event.date}　{event.time}</Text>
               <Text style={{ textAlign: "center", fontSize: 12, lineHeight: 19, color: colors.muted, marginTop: 8 }}>{applicationConfirmation?.message}</Text>
-              {OFFICIAL_EVENT_PAYMENTS_ENABLED && isOfficialEvent && priceNum > 0 && irotasPoints > 0 ? <View style={{ marginTop: 18, borderRadius: 16, padding: 14, backgroundColor: "#FFF7E8", borderWidth: 1, borderColor: "#F4D89D" }}><View style={{ flexDirection: "row", alignItems: "center" }}><View style={{ flex: 1 }}><Text style={{ fontSize: 14, fontWeight: "900", color: "#A56712" }}>イロタスポイントを使う</Text><Text style={{ fontSize: 11, color: colors.muted, marginTop: 3 }}>保有 {irotasPoints.toLocaleString()}pt</Text></View><Switch value={usePoints} onValueChange={(value) => { usePointsRef.current = value; setUsePoints(value); }} trackColor={{ false: colors.border, true: "#FF9500" }} thumbColor="#FFF" /></View>{usePoints ? <Text style={{ marginTop: 10, fontSize: 13, fontWeight: "900", color: "#2E8B57" }}>{pointsToUse.toLocaleString()}pt利用 → お支払い {finalPrice.toLocaleString()}円</Text> : null}</View> : null}
+              {OFFICIAL_EVENT_PAYMENTS_ENABLED && isOfficialEvent && event.paymentTiming !== "postpaid" && priceNum > 0 && irotasPoints > 0 ? <View style={{ marginTop: 18, borderRadius: 16, padding: 14, backgroundColor: "#FFF7E8", borderWidth: 1, borderColor: "#F4D89D" }}><View style={{ flexDirection: "row", alignItems: "center" }}><View style={{ flex: 1 }}><Text style={{ fontSize: 14, fontWeight: "900", color: "#A56712" }}>イロタスポイントを使う</Text><Text style={{ fontSize: 11, color: colors.muted, marginTop: 3 }}>保有 {irotasPoints.toLocaleString()}pt</Text></View><Switch value={usePoints} onValueChange={(value) => { usePointsRef.current = value; setUsePoints(value); }} trackColor={{ false: colors.border, true: "#FF9500" }} thumbColor="#FFF" /></View>{usePoints ? <Text style={{ marginTop: 10, fontSize: 13, fontWeight: "900", color: "#2E8B57" }}>{pointsToUse.toLocaleString()}pt利用 → お支払い {finalPrice.toLocaleString()}円</Text> : null}</View> : null}
               <View style={{ flexDirection: "row", gap: 10, marginTop: 22 }}>{applicationConfirmation?.buttons.map((button) => { const cancel = button.style === "cancel"; const destructive = button.style === "destructive"; return <Pressable key={button.text} onPress={() => { setApplicationConfirmation(null); if (!cancel) button.onPress?.(); }} style={{ flex: 1, minHeight: 50, borderRadius: 14, alignItems: "center", justifyContent: "center", backgroundColor: cancel ? colors.surface : destructive ? "#D94C55" : isOfficialEvent ? "#D65E8D" : "#5B9BD5", borderWidth: cancel ? 1 : 0, borderColor: colors.border }}><Text style={{ fontSize: 15, fontWeight: "900", color: cancel ? colors.foreground : "#FFF" }}>{button.text}</Text></Pressable>; })}</View>
             </View>
           </View>

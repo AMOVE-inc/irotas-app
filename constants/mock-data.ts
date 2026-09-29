@@ -108,6 +108,8 @@ export interface Event {
   time: string;
   location: string;
   image: string;
+  /** Detail-gallery images. The first image is also used as the event preview. */
+  images?: string[];
   capacity: number;
   /** When capacity is 0, distinguish an undecided limit from no upper limit. */
   capacityMode?: "undecided" | "unlimited" | null;
@@ -146,6 +148,8 @@ export interface Event {
   applicationDeadline?: string; // 募集期日
   cancellationPolicy?: string; // イベント個別のキャンセルポリシー
   selectionMethod?: "first_come" | "lottery";
+  /** Official-event collection timing. Prepaid confirms only after Square payment. */
+  paymentTiming?: "prepaid" | "postpaid";
   applicantIds?: string[];
   reservationCapacity?: number;
   /** Whether the organizer occupies one of the reserved seats. Defaults to true for existing events. */

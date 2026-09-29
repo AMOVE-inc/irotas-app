@@ -36,7 +36,7 @@ describe("stable member numbering", () => {
   });
 
   it("creates a member account automatically after Square eligibility is confirmed", () => {
-    expect(auth).toContain("member.auto_created_from_square");
+    expect(auth).toContain("INSERT INTO members (email, display_name, role, access_role");
     expect(auth).toContain("if (!member)");
   });
 });

@@ -7,6 +7,7 @@ export type CommunityRestaurantSubmission = {
   restaurantName: string;
   area: string;
   memberRating: number;
+  memberComment?: string;
   googleMapsUrl: string;
   budget?: string;
   image?: string;
@@ -27,6 +28,32 @@ export function communityRestaurantFromMealReport(
     budget: report.budget,
     image: thread.images?.find((value): value is string => typeof value === "string" && /^https:\/\//.test(value)),
   };
+}
+
+export type GourmetMapCandidate = {
+  id: string;
+  source_thread_id: string;
+  report_title: string;
+  restaurant_name: string;
+  area: string;
+  member_rating: number;
+  member_comment: string;
+  google_maps_url: string;
+  image_url?: string | null;
+  status: "pending" | "published" | "rejected" | "ineligible";
+  created_at: string;
+};
+
+export async function fetchGourmetMapCandidates() {
+  const result = await sharedJsonRequest<{ candidates: GourmetMapCandidate[] }>("/api/gourmet-map/candidates", { cache: "no-store" });
+  return result.candidates;
+}
+
+export async function reviewGourmetMapCandidate(id: string, action: "approve" | "reject") {
+  await sharedJsonRequest<{ success: true }>(`/api/gourmet-map/candidates/${encodeURIComponent(id)}`, {
+    method: "PATCH",
+    body: JSON.stringify({ action }),
+  }, action === "approve" ? "店舗を公開できませんでした" : "候補を却下できませんでした");
 }
 
 export async function registerCommunityRestaurant(submission: CommunityRestaurantSubmission) {
