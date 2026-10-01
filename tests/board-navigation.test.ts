@@ -80,9 +80,11 @@ describe("board category ordering", () => {
     expect(boardScreen).toContain('category.group !== "club" || userCanViewAllClubContent');
   });
 
-  it("does not paint an archive snapshot while a current category is loading", () => {
+  it("shows a confirmed current snapshot immediately without flashing an archive-only list", () => {
     const boardScreen = readFileSync(resolve(process.cwd(), "app/(tabs)/board.tsx"), "utf8");
-    expect(boardScreen).toContain("isThreadView && (archiveLoading || sharedLoading || categoryLoading || waitingForClubCatalog)");
+    expect(boardScreen).toContain("hasConfirmedCategorySnapshot");
+    expect(boardScreen).toContain("isThreadView && !hasConfirmedCategorySnapshot");
+    expect(boardScreen).toContain("Promise.all(requests.map");
     expect(boardScreen).toContain("router.push(introductionChatRoute() as any)");
   });
 

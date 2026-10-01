@@ -9,6 +9,7 @@ import { MentionSuggestions, MentionText } from "@/components/mention-ui";
 import { ContentLinkCards } from "@/components/content-link-cards";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { CalendarField } from "@/components/calendar-field";
+import { ExpandingMessageInput } from "@/components/expanding-message-input";
 import {
   CURRENT_USER,
   DEFAULT_AVATAR,
@@ -25,6 +26,7 @@ import { isAdminRole, isOperatorRole, canPostToChat } from "@/lib/access-control
 import { getAllRooms, getRoomById, getMessages, saveMessagesToStorage, deleteMessageFromStorage, loadMessagesFromStorage, loadDynamicRooms, markRoomRead, renameRoom, addMemberToRoom, removeMemberFromRoom, toggleMessageReaction } from "@/lib/chat-store";
 import { markChatRoomOptimisticallyRead } from "@/lib/chat-unread-sync";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { cacheChatMessages, getCachedChatMessages, loadCachedChatMessages } from "@/lib/chat-message-cache";
 import { useColors } from "@/hooks/use-colors";
 import { dismissChatRoomImmediately, showSentChatPreviewImmediately } from "@/components/chat-list-screen";
 import { AuthenticatedImage as Image } from "@/components/authenticated-image";
@@ -69,6 +71,7 @@ import { importedIntroductionReactions, isUnidentifiedReaction, mergedIntroducti
 import { replyReference } from "@/lib/reply-reference";
 import { reconcileOptimisticReactions } from "@/lib/chat-reactions";
 import { initialMessageIndex, normalizedUnreadCount } from "@/lib/unread-position";
+import { canSelectPollOption, viewerHasPollVote } from "@/lib/poll-voting";
 
 const REACTION_EMOJIS = ["👍", "❤️", "😂", "🎉", "😋", "🙏"] as const;
 const MORE_REACTION_EMOJIS = ["😀", "😃", "😄", "😁", "😆", "😅", "😂", "🤣", "😊", "😇", "🙂", "🙃", "😉", "😍", "🥰", "😘", "😋", "😛", "🤪", "🤔", "🫡", "😎", "🥳", "😮", "😢", "😭", "😡", "👍", "👎", "👏", "🙌", "🙏", "💪", "👀", "❤️", "🩷", "🧡", "💛", "💚", "💙", "💜", "🖤", "🤍", "🔥", "✨", "🎉", "💯", "✅", "❌", "💡", "📌", "🍽️", "🍣", "🍖", "🍜", "🍕", "🍰", "☕", "🍺", "🍷"] as const;
@@ -185,19 +188,76 @@ function EventChatCard({ event, onPress }: { event: Event; onPress: () => void }
   </Pressable>;
 }
 
+function ChatPollCard({
+  lines,
+  choices,
+  reactions,
+  viewerId,
+  outgoing,
+  readOnly,
+  mentionGroups,
+  onVote,
+  onShowVoters,
+}: {
+  lines: string[];
+  choices: string[];
+  reactions: Record<string, string[]>;
+  viewerId: string;
+  outgoing: boolean;
+  readOnly?: boolean;
+  mentionGroups: ReturnType<typeof getMentionGroups>;
+  onVote: (emoji: string, pollChoices: string[], allowMultiple: boolean) => void;
+  onShowVoters: (choice: string, memberIds: string[]) => void;
+}) {
+  const colors = useColors();
+  const [editingVote, setEditingVote] = useState(false);
+  const allowMultiple = lines.includes("🔢 複数回答可");
+  const voteCounts = choices.map((choice) => (reactions[`🗳️${choice}`] ?? []).length);
+  const totalVotes = voteCounts.reduce((sum, count) => sum + count, 0);
+  const hasVoted = viewerHasPollVote(choices.map((choice) => reactions[`🗳️${choice}`] ?? []), viewerId);
+  const canSelect = canSelectPollOption(hasVoted, editingVote, Boolean(readOnly));
+
+  return <View style={{ minWidth: 220 }}>
+    <MentionText content={lines[0].replace(/^📊 /, "")} outgoing={outgoing} groups={mentionGroups} />
+    <Text style={{ fontSize: 10, fontWeight: "800", color: outgoing ? "#FFF" : colors.muted, marginTop: 5 }}>{allowMultiple ? "複数回答可" : "1つ選択"}・合計 {totalVotes}票</Text>
+    <View style={{ gap: 8, marginTop: 10 }}>{choices.map((choice, index) => {
+      const voteKey = `🗳️${choice}`;
+      const voters = reactions[voteKey] ?? [];
+      const selected = voters.includes(viewerId);
+      const percentage = totalVotes ? Math.round((voters.length / totalVotes) * 100) : 0;
+      return <View key={choice}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityState={{ disabled: !canSelect, selected }}
+          disabled={!canSelect}
+          onPress={() => {
+            onVote(voteKey, choices, allowMultiple);
+            if (allowMultiple) setEditingVote(true);
+            else setEditingVote(false);
+          }}
+          style={{ borderRadius: 10, paddingHorizontal: 10, paddingVertical: 9, borderWidth: 1, borderColor: selected ? "#5865F2" : outgoing ? "#FFF8" : colors.border, backgroundColor: selected ? "#5865F228" : "transparent", overflow: "hidden", opacity: canSelect ? 1 : 0.82 }}
+        >
+          <View style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: `${percentage}%`, backgroundColor: selected ? "#5865F238" : outgoing ? "#FFFFFF20" : "#5865F218" }} />
+          <View style={{ flexDirection: "row", alignItems: "center" }}><Text style={{ flex: 1, fontSize: 13, fontWeight: "800", color: outgoing ? "#FFF" : colors.foreground }}>{selected ? "●" : "○"} {choice}</Text><Text style={{ marginLeft: 8, fontSize: 12, fontWeight: "900", color: outgoing ? "#FFF" : "#5865F2" }}>{percentage}%</Text><Text style={{ marginLeft: 5, fontSize: 10, fontWeight: "700", color: outgoing ? "#FFF" : colors.muted }}>{voteCounts[index]}票</Text></View>
+        </Pressable>
+        {voters.length ? <Pressable accessibilityRole="button" accessibilityLabel={`${choice}に投票した人を見る`} onPress={() => onShowVoters(choice, voters)} style={{ alignSelf: "flex-end", paddingTop: 5, paddingHorizontal: 3 }}><Text style={{ fontSize: 10, fontWeight: "900", color: outgoing ? "#FFF" : "#5865F2", textDecorationLine: "underline" }}>投票者を見る</Text></Pressable> : null}
+      </View>;
+    })}</View>
+    {!readOnly && hasVoted ? <Pressable accessibilityRole="button" onPress={() => setEditingVote((value) => !value)} style={{ alignSelf: "flex-start", marginTop: 10, borderRadius: 9, borderWidth: 1, borderColor: outgoing ? "#FFF8" : "#5865F2", paddingHorizontal: 10, paddingVertical: 6 }}><Text style={{ fontSize: 11, fontWeight: "900", color: outgoing ? "#FFF" : "#5865F2" }}>{editingVote ? "投票編集を完了" : "投票を編集"}</Text></Pressable> : null}
+    <Text style={{ fontSize: 10, color: outgoing ? "#FFF" : colors.muted, marginTop: 9 }}>{lines.find((line) => line.startsWith("⏱"))}</Text>
+  </View>;
+}
+
 function MessageBubble({ message, isMe, canDelete, readOnly, viewerId, viewerName, viewerAvatarUrl, myAvatarUri, senderMember, memberDirectory, onReact, mentionGroups, onOpenInternalLink, onOpenProfile, onOpenReactionProfile, onOpenReply, highlighted, onReply, onEdit, onDelete }: { message: ChatMessage; isMe: boolean; canDelete: boolean; readOnly?: boolean; viewerId: string; viewerName: string; viewerAvatarUrl?: string; myAvatarUri?: string | null; senderMember?: Api.PublicMember; memberDirectory: Api.PublicMember[]; onReact: (emoji: string, pollChoices?: string[], allowMultiple?: boolean) => void; mentionGroups: ReturnType<typeof getMentionGroups>; onOpenInternalLink: (pathname: InternalLinkPathname, params: Record<string, string>) => void; onOpenProfile: () => void; onOpenReactionProfile: (memberId: string, name: string, avatarUrl?: string) => void; onOpenReply: (messageId: string) => void; highlighted?: boolean; onReply: () => void; onEdit: () => void; onDelete: () => void }) {
   const colors = useColors();
   const sender = getMemberById(message.senderId);
   const [showReactionPicker, setShowReactionPicker] = useState(false);
   const [showMoreReactions, setShowMoreReactions] = useState(false);
   const [showActions, setShowActions] = useState(false);
-  const [reactionDetails, setReactionDetails] = useState<{ emoji: string; memberIds: string[] } | null>(null);
+  const [reactionDetails, setReactionDetails] = useState<{ emoji: string; memberIds: string[]; title?: string } | null>(null);
   const reactionLongPress = useRef(false);
   const pollLines = message.content.startsWith("📊 ") ? message.content.split("\n") : [];
   const pollChoices = pollLines.filter((line) => line.startsWith("◯ ")).map((line) => line.slice(2));
-  const pollAllowsMultiple = pollLines.includes("🔢 複数回答可");
-  const pollVoteCounts = pollChoices.map((choice) => (message.reactions?.[`🗳️${choice}`] ?? []).length);
-  const pollTotalVotes = pollVoteCounts.reduce((sum, count) => sum + count, 0);
   const isSystemMessage = message.content.startsWith("【IRO+ システム】");
 
   if (isSystemMessage) {
@@ -278,7 +338,7 @@ function MessageBubble({ message, isMe, canDelete, readOnly, viewerId, viewerNam
           {message.replyTo ? <View style={{ paddingHorizontal: 10, paddingTop: 8 }}><ReplyReferenceView reply={message.replyTo} outgoing={isMe} onPress={() => onOpenReply(message.replyTo!.id)} /></View> : null}
           {message.content ? (
             <View style={{ paddingHorizontal: 14, paddingVertical: 10 }}>
-              {pollChoices.length >= 2 ? <View style={{ minWidth: 220 }}><MentionText content={pollLines[0].replace(/^📊 /, "")} outgoing={isMe} groups={mentionGroups} /><Text style={{ fontSize: 10, fontWeight: "800", color: isMe ? "#FFF" : colors.muted, marginTop: 5 }}>{pollAllowsMultiple ? "複数回答可" : "1つ選択"}・合計 {pollTotalVotes}票</Text><View style={{ gap: 8, marginTop: 10 }}>{pollChoices.map((choice, index) => { const voteKey = `🗳️${choice}`; const voters = message.reactions?.[voteKey] ?? []; const selected = voters.includes(viewerId); const percentage = pollTotalVotes ? Math.round((voters.length / pollTotalVotes) * 100) : 0; return <Pressable key={choice} disabled={readOnly} onPress={() => onReact(voteKey, pollChoices, pollAllowsMultiple)} style={{ borderRadius: 10, paddingHorizontal: 10, paddingVertical: 9, borderWidth: 1, borderColor: selected ? "#5865F2" : isMe ? "#FFF8" : colors.border, backgroundColor: selected ? "#5865F228" : "transparent", overflow: "hidden" }}><View style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: `${percentage}%`, backgroundColor: selected ? "#5865F238" : isMe ? "#FFFFFF20" : "#5865F218" }} /><View style={{ flexDirection: "row", alignItems: "center" }}><Text style={{ flex: 1, fontSize: 13, fontWeight: "800", color: isMe ? "#FFF" : colors.foreground }}>{selected ? "●" : "○"} {choice}</Text><Text style={{ marginLeft: 8, fontSize: 12, fontWeight: "900", color: isMe ? "#FFF" : "#5865F2" }}>{percentage}%</Text><Text style={{ marginLeft: 5, fontSize: 10, fontWeight: "700", color: isMe ? "#FFF" : colors.muted }}>{pollVoteCounts[index]}票</Text></View></Pressable>; })}</View><Text style={{ fontSize: 10, color: isMe ? "#FFF" : colors.muted, marginTop: 9 }}>{pollLines.find((line) => line.startsWith("⏱"))}</Text></View> : <><MentionText content={message.content} outgoing={isMe} groups={mentionGroups} rooms={getAllRooms()} threads={BOARD_THREADS} onOpenInternalLink={onOpenInternalLink} /><ContentLinkCards content={message.content} /></>}
+              {pollChoices.length >= 2 ? <ChatPollCard lines={pollLines} choices={pollChoices} reactions={message.reactions ?? {}} viewerId={viewerId} outgoing={isMe} readOnly={readOnly} mentionGroups={mentionGroups} onVote={onReact} onShowVoters={(choice, memberIds) => setReactionDetails({ emoji: "🗳️", memberIds, title: `「${choice}」に投票した人` })} /> : <><MentionText content={message.content} outgoing={isMe} groups={mentionGroups} rooms={getAllRooms()} threads={BOARD_THREADS} onOpenInternalLink={onOpenInternalLink} /><ContentLinkCards content={message.content} /></>}
             </View>
           ) : null}
         </Pressable> : null}
@@ -330,7 +390,7 @@ function MessageBubble({ message, isMe, canDelete, readOnly, viewerId, viewerNam
         <Modal visible={reactionDetails !== null} transparent animationType="fade" onRequestClose={() => setReactionDetails(null)}>
           <Pressable onPress={() => setReactionDetails(null)} style={{ flex: 1, backgroundColor: "rgba(20,18,24,0.48)", justifyContent: "center", padding: 28 }}>
             <Pressable onPress={() => {}} style={{ maxHeight: "72%", backgroundColor: colors.background, borderRadius: 20, padding: 18 }}>
-              <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 12 }}><Text style={{ fontSize: 21 }}>{reactionDetails?.emoji}</Text><Text style={{ marginLeft: 8, fontSize: 16, fontWeight: "900", color: colors.foreground }}>リアクションした人</Text><Pressable onPress={() => setReactionDetails(null)} style={{ marginLeft: "auto", padding: 4 }}><IconSymbol name="xmark" size={19} color={colors.muted} /></Pressable></View>
+              <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 12 }}><Text style={{ fontSize: 21 }}>{reactionDetails?.emoji}</Text><Text style={{ marginLeft: 8, fontSize: 16, fontWeight: "900", color: colors.foreground }}>{reactionDetails?.title ?? "リアクションした人"}</Text><Pressable onPress={() => setReactionDetails(null)} style={{ marginLeft: "auto", padding: 4 }}><IconSymbol name="xmark" size={19} color={colors.muted} /></Pressable></View>
               <ScrollView>
                 {reactionDetails?.memberIds.filter((memberId) => !isUnidentifiedReaction(memberId)).map((memberId) => {
                   const isViewer = memberId === viewerId;
@@ -475,8 +535,8 @@ export default function ChatScreen() {
     return mentionGroups.filter((group) => group.label === "everyone"
       || (group.memberIds.length > 0 && group.memberIds.every((memberId) => allowed.has(memberId))));
   }, [mentionGroups, mentionScopeIds]);
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [messagesHydrated, setMessagesHydrated] = useState(false);
+  const [messages, setMessages] = useState<ChatMessage[]>(() => getCachedChatMessages(viewerMemberId, id ?? ""));
+  const [messagesHydrated, setMessagesHydrated] = useState(() => getCachedChatMessages(viewerMemberId, id ?? "").length > 0);
   const pendingReactionChoices = useRef(new Map<string, Map<string, boolean>>());
   const sharedFetchSequence = useRef(0);
   const sharedFetchInFlight = useRef(false);
@@ -621,13 +681,14 @@ export default function ChatScreen() {
     const cachedUnreadCount = getRoomById(id)?.unreadCount;
     const openingCount = unreadCountFromRoute ?? cachedUnreadCount ?? null;
     setOpeningUnreadCount(openingCount);
-    setMessagesHydrated(false);
+    const immediateMessages = getCachedChatMessages(viewerMemberId, id);
+    setMessages(immediateMessages);
+    setMessagesHydrated(immediateMessages.length > 0);
     initiallyPositionedChat.current = null;
     positionInitialMessagesRef.current = null;
     openingLatestScrollUntil.current = 0;
     lastAutomaticScrollTop.current = 0;
     setClubAccessDenied(false);
-    if (id.startsWith("club-chat-")) setMessages([]);
     setIntroductionHydrated(id !== "board-introduction");
     if (id === "board-introduction") {
       setHasOpenedIntroduction(null);
@@ -661,16 +722,27 @@ export default function ChatScreen() {
       setIsLoadingRoom(false);
     });
     const fetchSequence = ++sharedFetchSequence.current;
+    let serverMessagesApplied = false;
+    void loadCachedChatMessages(viewerMemberId, id).then((cached) => {
+      if (fetchSequence !== sharedFetchSequence.current || serverMessagesApplied || !cached.length) return;
+      setMessages(cached);
+      setMessagesHydrated(true);
+    });
     sharedFetchInFlight.current = true;
-    void Api.getSharedChatMessages(id).then((shared) => { if (fetchSequence === sharedFetchSequence.current) applySharedMessages(shared); }).catch(async (error) => {
+    void Api.getSharedChatMessages(id).then((shared) => {
+      if (fetchSequence !== sharedFetchSequence.current) return;
+      serverMessagesApplied = true;
+      applySharedMessages(shared);
+      void cacheChatMessages(viewerMemberId, id, shared);
+    }).catch(async (error) => {
       if (fetchSequence !== sharedFetchSequence.current) return;
       if (id.startsWith("club-chat-")) {
         setMessages([]);
         if (error instanceof Api.ApiError && (error.statusCode === 403 || error.statusCode === 404)) setClubAccessDenied(true);
         return;
       }
-      const stored = await loadMessagesFromStorage(id);
-      setMessages([...(id === "board-introduction" ? [] : getMessages(id)), ...stored]
+      const [stored, cached] = await Promise.all([loadMessagesFromStorage(id), loadCachedChatMessages(viewerMemberId, id)]);
+      setMessages([...(id === "board-introduction" ? [] : getMessages(id)), ...stored, ...cached]
         .filter((message, index, all) => all.findIndex((candidate) => candidate.id === message.id) === index)
         .filter((message) => !isRetiredAnnouncement(message)));
     }).finally(() => { if (fetchSequence === sharedFetchSequence.current) { sharedFetchInFlight.current = false; setMessagesHydrated(true); } });
@@ -686,14 +758,18 @@ export default function ChatScreen() {
           const currentReactions = await Api.getIntroductionArchiveReactions().then((result) => result.reactions).catch(() => ({}));
           const imported = importedIntroductionMessages(archive, currentReactions);
           introductionArchiveBase.current = Object.fromEntries(imported.map((message) => [message.externalMessageId!, Object.fromEntries(Object.entries(message.reactions ?? {}).map(([emoji, ids]) => [emoji, ids.filter((memberId) => memberId.startsWith("discord-"))]))]));
-          setMessages((current) => [...imported, ...current.filter((message) => message.shared)]
-            .filter((message, index, all) => all.findIndex((candidate) => candidate.id === message.id) === index)
-            .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()));
+          setMessages((current) => {
+            const combined = [...imported, ...current.filter((message) => message.shared)]
+              .filter((message, index, all) => all.findIndex((candidate) => candidate.id === message.id) === index)
+              .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+            void cacheChatMessages(viewerMemberId, id, combined);
+            return combined;
+          });
         }).catch(() => setMessages((current) => current.filter((message) => message.shared))).finally(() => setIntroductionHydrated(true));
       }
     }).catch(() => setIsLoadingRoom(false));
     return () => clearTimeout(loadingFallback);
-  }, [id, applySharedMessages, introductionOpenedKey, routedRoom]);
+  }, [id, applySharedMessages, introductionOpenedKey, routedRoom, viewerMemberId]);
 
   useEffect(() => {
     if (id !== "board-introduction" || !introductionHydrated) return;
@@ -1068,7 +1144,7 @@ export default function ChatScreen() {
         keyboardVerticalOffset={Platform.OS === "ios" ? insets.top + 52 : 0}
       >
         {/* Messages */}
-        {id === "board-introduction" && (!introductionHydrated || hasOpenedIntroduction === null) ? <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}><ActivityIndicator size="large" color="#E8A0BF" /><Text style={{ fontSize: 14, color: colors.muted, marginTop: 12 }}>自己紹介を読み込んでいます…</Text></View> : <FlatList
+        <FlatList
           ref={flatListRef}
           key={`${id ?? "chat"}:${introductionChat ? "latest-first" : "default"}`}
           data={displayedMessages}
@@ -1107,7 +1183,7 @@ export default function ChatScreen() {
                 myAvatarUri={myAvatarUri}
                 senderMember={directory.find((member) => member.id === item.senderId)}
                 memberDirectory={directory}
-                onReact={(emoji) => handleReaction(item.id, emoji)}
+                onReact={(emoji, pollChoices, allowMultiple) => handleReaction(item.id, emoji, pollChoices, allowMultiple)}
                 mentionGroups={mentionGroups}
                 onOpenInternalLink={(pathname, params) => router.push({ pathname, params } as any)}
                 onOpenReactionProfile={(memberId, name, avatarUrl) => router.push({ pathname: "/member-profile", params: { id: memberId, legacyName: name, legacyAvatar: avatarUrl ?? "" } })}
@@ -1153,15 +1229,20 @@ export default function ChatScreen() {
           }}
           scrollEventThrottle={80}
           onScrollToIndexFailed={(info) => { if (linkedScrollRetry.current >= 8) return; linkedScrollRetry.current += 1; flatListRef.current?.scrollToOffset({ offset: Math.max(0, info.averageItemLength * info.index), animated: false }); setTimeout(() => flatListRef.current?.scrollToIndex({ index: info.index, animated: false, viewPosition: 0.5 }), 120); }}
-          ListEmptyComponent={messagesHydrated ?
+          ListEmptyComponent={!messagesHydrated || (id === "board-introduction" && (!introductionHydrated || hasOpenedIntroduction === null)) ?
+            <View style={{ alignItems: "center", paddingVertical: 36 }}>
+              <ActivityIndicator color="#E8A0BF" />
+              <Text style={{ fontSize: 12, color: colors.muted, marginTop: 8 }}>最新メッセージを確認しています…</Text>
+            </View>
+          :
             <View style={{ alignItems: "center", paddingVertical: 40 }}>
               <IconSymbol name="message.fill" size={36} color={colors.border} />
           <Text style={{ fontSize: 14, color: colors.muted, marginTop: 8 }}>
                 まだメッセージはありません
               </Text>
             </View>
-          : null}
-        />}
+          }
+        />
 
         {!isNearLatest && messages.length > 0 ? (
           <Pressable
@@ -1243,7 +1324,7 @@ export default function ChatScreen() {
                 color={colors.muted}
               />
             </TouchableOpacity>
-            <TextInput
+            <ExpandingMessageInput
               ref={inputRef}
               value={messageText}
               selection={messageSelection}
@@ -1251,7 +1332,6 @@ export default function ChatScreen() {
               onChangeText={handleTextChange}
               placeholder="メッセージを入力..."
               placeholderTextColor={colors.muted}
-              multiline
               blurOnSubmit={false}
               style={{
                 flex: 1,
@@ -1261,10 +1341,6 @@ export default function ChatScreen() {
                 paddingVertical: 10,
                 fontSize: 14,
                 color: colors.foreground,
-                minHeight: 40,
-                maxHeight: 132,
-                lineHeight: 20,
-                textAlignVertical: "top",
               }}
             />
             <Pressable

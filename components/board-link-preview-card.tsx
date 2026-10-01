@@ -4,12 +4,14 @@ import { useEffect, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import type { ImportedLinkPreview } from "@/lib/discord-link-preview";
 import { sharedJsonRequest } from "@/lib/shared-request";
+import { isInternalAppUrl } from "@/lib/content-link-cards";
 
 export function BoardLinkPreviewCard({ preview }: { preview: ImportedLinkPreview }) {
+  const internalLink = isInternalAppUrl(preview.url);
   const [metadata, setMetadata] = useState<{ title: string | null; description: string | null; imageUrl: string | null }>({ title: null, description: null, imageUrl: preview.imageUrl ?? null });
   useEffect(() => {
     setMetadata({ title: null, description: null, imageUrl: preview.imageUrl ?? null });
-    if (preview.provider !== "Google マップ" && preview.provider !== "食べログ") return;
+    if (internalLink) return;
     let active = true;
     const query = preview.title.endsWith("のリンクを開く") ? "" : preview.title;
     const params = new URLSearchParams({ url: preview.url, query });
@@ -17,11 +19,13 @@ export function BoardLinkPreviewCard({ preview }: { preview: ImportedLinkPreview
       .then((result) => { if (active && result) setMetadata({ title: typeof result.title === "string" ? result.title : null, description: typeof result.description === "string" ? result.description : null, imageUrl: typeof result.imageUrl === "string" ? result.imageUrl : preview.imageUrl ?? null }); })
       .catch(() => undefined);
     return () => { active = false; };
-  }, [preview.url, preview.title, preview.imageUrl, preview.provider]);
+  }, [internalLink, preview.url, preview.title, preview.imageUrl]);
 
   const title = preview.title.endsWith("のリンクを開く") ? metadata.title ?? preview.title : preview.title;
   const description = preview.description === preview.url ? metadata.description ?? preview.description : preview.description ?? metadata.description;
   const imageUrl = metadata.imageUrl;
+
+  if (internalLink) return null;
 
   return <Pressable onPress={() => void openExternalUrl(preview.url)} accessibilityRole="link" accessibilityLabel={`${preview.provider}で${title}を開く`} style={{ borderWidth: 1, borderColor: "#E2E3E8", borderLeftWidth: 4, borderRadius: 9, overflow: "hidden", marginTop: 8, flexDirection: "row", backgroundColor: "#FFF" }}>
     <View style={{ flex: 1, paddingHorizontal: 12, paddingVertical: 10, justifyContent: "center" }}>

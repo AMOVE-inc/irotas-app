@@ -120,7 +120,7 @@ describe("event presentation and comments", () => {
 
   it("gives organizers and companions a stateful participant-chat CTA", () => {
     const detail = source("app/event-detail.tsx");
-    expect(detail).toContain("(isJoined || isOrganizer || isCompanion) && chatRoomId");
+    expect(detail).toContain("(isJoined || isOrganizer || isCompanion || isApprovedCancellation) && chatRoomId");
     expect(detail).toContain("幹事イベント（参加者募集中）");
     expect(detail).toContain("幹事イベント（参加者確定済み）");
   });

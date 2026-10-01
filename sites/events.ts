@@ -1265,6 +1265,27 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
       await ensureEventRoom(env.DB, data.chatId as string);
       return responseJson({ event: await hydratedEvent(env.DB, (await eventRow(env.DB, id))!, member.id, elevated, memberPublicId) });
     }
+    if (input?.action === "reopen_discord_recruitment") {
+      if (!elevated && row.organizer_member_id !== member.id) return responseJson({ error: "募集を再開する権限がありません" }, 403);
+      let data: Record<string, unknown> = {};
+      try { data = JSON.parse(row.public_data_json) as Record<string, unknown>; } catch {}
+      const channel = data.recruitmentChannel ?? (id.startsWith("discord-event-") ? "discord" : "app");
+      if (channel !== "discord") return responseJson({ error: "Discord受付イベントのみ変更できます" }, 400);
+      if (row.status === "cancelled" || row.status === "ended") return responseJson({ error: "終了したイベントは募集を再開できません" }, 409);
+      if (row.event_date < japanDateKey()) return responseJson({ error: "開催済みのイベントは募集を再開できません" }, 409);
+      if (!data.discordRecruitmentClosedAt) return responseJson({ error: "アプリで募集終了にしたイベントではありません" }, 409);
+      const now = new Date().toISOString();
+      delete data.discordRecruitmentClosedAt;
+      data.recruitmentStatus = "open";
+      await env.DB.batch([
+        env.DB.prepare("UPDATE events SET status = 'open', public_data_json = ?, updated_at = ? WHERE id = ?").bind(JSON.stringify(data), now, id),
+        env.DB.prepare(`INSERT INTO event_import_field_edits (event_id, field_name, edited_at, actor_member_id)
+          VALUES (?, 'status', ?, ?) ON CONFLICT(event_id, field_name) DO UPDATE SET edited_at = excluded.edited_at, actor_member_id = excluded.actor_member_id`).bind(id, now, member.id),
+        env.DB.prepare(`INSERT INTO audit_logs (actor_user_id, action, entity_type, entity_id, metadata_json, created_at)
+          VALUES (?, 'event.discord_recruitment_reopened', 'event', ?, '{}', ?)`).bind(String(member.id), id, now),
+      ]);
+      return responseJson({ event: await hydratedEvent(env.DB, (await eventRow(env.DB, id))!, member.id, elevated, memberPublicId) });
+    }
     const canManageImportedEvent = id.startsWith("discord-event-") && elevated;
     if (input?.action === "reopen_recruitment") {
       if (!(admin || row.organizer_member_id === member.id || canManageImportedEvent)) return responseJson({ error: "イベント作成者または管理者のみ追加募集できます" }, 403);

@@ -36,6 +36,19 @@ describe("event cancellation lifecycle", () => {
     expect(detail).toContain('title: "参加をキャンセルしますか？"');
     expect(detail).toContain("本当にキャンセルしますか？");
   });
+
+  it("keeps the participant chat available before and after the organizer approves the cancellation", () => {
+    const events = source("sites/events.ts");
+    const chats = source("sites/chat-content.ts");
+    const detail = source("app/event-detail.tsx");
+    expect(events).toContain("UPDATE event_participations SET status = 'cancel_requested'");
+    expect(chats).toContain("participation.status === \"confirmed\" || participation.status === \"cancel_requested\"");
+    expect(chats).toContain('(participation.status === "cancelled" && participation.cancellation_approved === 1)');
+    expect(chats).toContain("ep.status IN ('confirmed', 'cancel_requested')");
+    expect(detail).toContain("isApprovedCancellation");
+    expect(detail).toContain("キャンセルした参加者は、精算などの連絡ができるよう参加者チャットに残ります。");
+    expect(detail).toContain("承認までは参加確定のまま、参加者チャットも引き続き利用できます。");
+  });
 });
 
 describe("chat list identity presentation", () => {

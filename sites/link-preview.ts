@@ -1,11 +1,37 @@
 import { archivedTabelogImages, archivedTabelogTitles, canonicalTabelogUrl } from "../lib/discord-link-preview";
 
-const ALLOWED_HOSTS = /(^|\.)(tabelog\.com|maps\.app\.goo\.gl|goo\.gl|google\.(?:[a-z]{2,3}|com\.[a-z]{2}|co\.[a-z]{2}))$/i;
+const GOOGLE_HOSTS = /(^|\.)(maps\.app\.goo\.gl|goo\.gl|google\.(?:[a-z]{2,3}|com\.[a-z]{2}|co\.[a-z]{2}))$/i;
+const TABELOG_HOSTS = /(^|\.)tabelog\.com$/i;
+const INTERNAL_APP_HOSTS = /(^|\.)irotas-community\.com$/i;
+const LEGACY_INTERNAL_APP_HOSTS = /^irotas-app-[a-z0-9-]+(?:\.[a-z0-9-]+)?\.chatgpt\.site$/i;
+const BLOCKED_HOSTS = /(^|\.)(localhost|local|internal|lan|home|invalid)$/i;
+const IPV4_HOST = /^\d{1,3}(?:\.\d{1,3}){3}$/;
 
-async function fetchAllowedPage(initialUrl: URL): Promise<Response | null> {
+function isSafeExternalPreviewUrl(target: URL): boolean {
+  const hostname = target.hostname.toLowerCase();
+  return target.protocol === "https:"
+    && !target.username
+    && !target.password
+    && (!target.port || target.port === "443")
+    && hostname.includes(".")
+    && !IPV4_HOST.test(hostname)
+    && !hostname.includes(":")
+    && !BLOCKED_HOSTS.test(hostname)
+    && !INTERNAL_APP_HOSTS.test(hostname)
+    && !LEGACY_INTERNAL_APP_HOSTS.test(hostname);
+}
+
+function isAllowedRedirect(initialUrl: URL, target: URL): boolean {
+  if (!isSafeExternalPreviewUrl(target)) return false;
+  if (TABELOG_HOSTS.test(initialUrl.hostname)) return TABELOG_HOSTS.test(target.hostname);
+  if (GOOGLE_HOSTS.test(initialUrl.hostname)) return GOOGLE_HOSTS.test(target.hostname);
+  return initialUrl.hostname.toLowerCase() === target.hostname.toLowerCase();
+}
+
+async function fetchPreviewPage(initialUrl: URL): Promise<{ response: Response; finalUrl: URL } | null> {
   let target = initialUrl;
   for (let hop = 0; hop < 4; hop++) {
-    if (target.protocol !== "https:" || !ALLOWED_HOSTS.test(target.hostname) || target.username || target.password) return null;
+    if (!isAllowedRedirect(initialUrl, target)) return null;
     const response = await fetch(target, { redirect: "manual", headers: { accept: "text/html", "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36" } });
     if (response.status >= 300 && response.status < 400) {
       const location = response.headers.get("location");
@@ -13,7 +39,7 @@ async function fetchAllowedPage(initialUrl: URL): Promise<Response | null> {
       target = new URL(location, target);
       continue;
     }
-    return response;
+    return { response, finalUrl: target };
   }
   return null;
 }
@@ -53,9 +79,9 @@ export async function handleLinkPreviewRequest(request: Request, _env?: unknown)
     let metadata: ReturnType<typeof pagePreviewMetadata> = { title: null, description: null, imageUrl: null };
     if (rawUrl) {
       const target = new URL(rawUrl);
-      if (target.protocol === "https:" && ALLOWED_HOSTS.test(target.hostname)) {
-        const response = await fetchAllowedPage(target);
-        if (response?.ok && response.headers.get("content-type")?.includes("text/html")) metadata = pagePreviewMetadata((await response.text()).slice(0, 1_500_000), response.url || target.toString());
+      if (isSafeExternalPreviewUrl(target)) {
+        const fetched = await fetchPreviewPage(target);
+        if (fetched?.response.ok && fetched.response.headers.get("content-type")?.includes("text/html")) metadata = pagePreviewMetadata((await fetched.response.text()).slice(0, 1_500_000), fetched.finalUrl.toString());
         const knownUrl = canonicalTabelogUrl(target.toString());
         if (knownUrl) {
           metadata.title ??= archivedTabelogTitles[knownUrl] ?? null;

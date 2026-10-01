@@ -416,6 +416,7 @@ function EditProfileModal({
   const [favoriteRestaurants, setFavoriteRestaurants] = useState("");
   const [desiredRestaurants, setDesiredRestaurants] = useState("");
   const [googleLocalGuideLevel, setGoogleLocalGuideLevel] = useState("");
+  const [saving, setSaving] = useState(false);
 
   // モーダルが開いたときにAsyncStorageから保存済みデータを読み込む
   useEffect(() => {
@@ -477,6 +478,7 @@ function EditProfileModal({
   };
 
   const handleSave = async () => {
+    if (saving) return;
     if (!name.trim()) {
       Alert.alert("エラー", "名前を入力してください。");
       return;
@@ -505,24 +507,27 @@ function EditProfileModal({
       Alert.alert("食べログユーザーIDを確認してください", "プロフィールURLのユーザーIDだけを入力してください。");
       return;
     }
-    const AsyncStorage = (await import("@react-native-async-storage/async-storage")).default;
-    // nameシbio・interests・avatar・genderをAsyncStorageに保存
-    await AsyncStorage.setItem(`${storageNamespace}:name`, name.trim());
-    await AsyncStorage.setItem(`${storageNamespace}:bio`, bio);
-    const interestList = interests;
-    await AsyncStorage.setItem(`${storageNamespace}:interests`, interests.join(","));
-    await AsyncStorage.setItem(`${storageNamespace}:gender`, gender);
-    const details: ProfileDetails = {
-      birthDate: birthYear && birthMonth && birthDay ? `${birthYear}-${birthMonth}-${birthDay}` : "",
-      showAge, hometown, residence, occupation: occupation.trim(), hobbies: hobbies.trim(), favoriteCuisines: interests,
-      favoriteAlcohol: favoriteAlcohol.trim(), dislikedFoods: dislikedFoods.trim(), allergies: allergies.trim(), drinkingLevel,
-      instagramUrl: instagramUrlFromHandle(instagramUrl),
-      tabelogUrl: tabelogUrlFromUserId(tabelogUrl),
-      favoriteRestaurants: favoriteRestaurants.trim(), desiredRestaurants: desiredRestaurants.trim(),
-      googleLocalGuideLevel: googleLocalGuideLevel === "未設定" ? "" : googleLocalGuideLevel,
-    };
-    let savedAvatarUri = avatarUri ?? "";
+    setSaving(true);
     try {
+      const AsyncStorage = (await import("@react-native-async-storage/async-storage")).default;
+      const interestList = interests;
+      const details: ProfileDetails = {
+        birthDate: birthYear && birthMonth && birthDay ? `${birthYear}-${birthMonth}-${birthDay}` : "",
+        showAge, hometown, residence, occupation: occupation.trim(), hobbies: hobbies.trim(), favoriteCuisines: interests,
+        favoriteAlcohol: favoriteAlcohol.trim(), dislikedFoods: dislikedFoods.trim(), allergies: allergies.trim(), drinkingLevel,
+        instagramUrl: instagramUrlFromHandle(instagramUrl),
+        tabelogUrl: tabelogUrlFromUserId(tabelogUrl),
+        favoriteRestaurants: favoriteRestaurants.trim(), desiredRestaurants: desiredRestaurants.trim(),
+        googleLocalGuideLevel: googleLocalGuideLevel === "未設定" ? "" : googleLocalGuideLevel,
+      };
+      let savedAvatarUri = avatarUri ?? "";
+
+      await Promise.all([
+        AsyncStorage.setItem(`${storageNamespace}:name`, name.trim()),
+        AsyncStorage.setItem(`${storageNamespace}:bio`, bio),
+        AsyncStorage.setItem(`${storageNamespace}:interests`, interests.join(",")),
+        AsyncStorage.setItem(`${storageNamespace}:gender`, gender),
+      ]);
       if (serverBacked && savedAvatarUri && !/^https?:\/\//i.test(savedAvatarUri) && !savedAvatarUri.startsWith("/api/event-images/")) {
         savedAvatarUri = (await Api.uploadEventImage(savedAvatarUri)).imageUrl;
       }
@@ -532,24 +537,24 @@ function EditProfileModal({
           publicUserId: normalizedPublicUserId,
           profile: { ...details, bio, gender, favoriteCuisines: interestList, avatarUrl: savedAvatarUri },
         });
-        await onServerSaved?.();
       }
+      await AsyncStorage.setItem(`${storageNamespace}:details`, JSON.stringify(details));
+      if (savedAvatarUri) {
+        await AsyncStorage.setItem(`${storageNamespace}:avatar`, savedAvatarUri);
+        onAvatarChange?.(savedAvatarUri);
+      }
+      onNameChange?.(name.trim());
+      onPublicUserIdChange?.(normalizedPublicUserId);
+      onBioChange?.(bio);
+      onInterestsChange?.(interestList);
+      onDetailsChange?.(details);
+      onClose();
+      if (serverBacked) void onServerSaved?.().catch(() => undefined);
     } catch (error) {
       Alert.alert("保存できませんでした", error instanceof Error ? error.message : "通信状況を確認してもう一度お試しください。");
-      return;
+    } finally {
+      setSaving(false);
     }
-    await AsyncStorage.setItem(`${storageNamespace}:details`, JSON.stringify(details));
-    if (savedAvatarUri) {
-      await AsyncStorage.setItem(`${storageNamespace}:avatar`, savedAvatarUri);
-      onAvatarChange?.(savedAvatarUri);
-    }
-    onNameChange?.(name.trim());
-    onPublicUserIdChange?.(normalizedPublicUserId);
-    onBioChange?.(bio);
-    onInterestsChange?.(interestList);
-    onDetailsChange?.(details);
-    Alert.alert("保存完了", "プロフィールを更新しました");
-    onClose();
   };
 
   return (
@@ -578,11 +583,13 @@ function EditProfileModal({
             プロフィール編集
           </Text>
           <Pressable
-            onPress={handleSave}
+            disabled={saving}
+            onPress={() => { void handleSave(); }}
             accessibilityRole="button"
             accessibilityLabel="プロフィールを保存"
+            accessibilityState={{ disabled: saving, busy: saving }}
           >
-            <Text style={{ fontSize: 16, fontWeight: "700", color: "#E8A0BF" }}>保存</Text>
+            <Text style={{ fontSize: 16, fontWeight: "700", color: saving ? colors.muted : "#E8A0BF" }}>{saving ? "保存中…" : "保存"}</Text>
           </Pressable>
         </View>
 

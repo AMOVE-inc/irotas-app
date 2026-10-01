@@ -30,12 +30,35 @@ const lastRoomLists = new Map<string, { joined: ChatRoom[]; rank: ChatRoom[] }>(
 const recentlySentPreviews = new Map<string, SentChatPreview>();
 const dismissedRooms = new Map<string, Set<string>>();
 const dismissedAt = new Map<string, number>();
+const CHAT_LIST_SNAPSHOT_PREFIX = "irotas_chat_list_snapshot_v1:";
+
+function chatListSnapshotKey(memberId: string) {
+  return `${CHAT_LIST_SNAPSHOT_PREFIX}${memberId}`;
+}
+
+async function loadChatListSnapshot(memberId: string) {
+  try {
+    const parsed = JSON.parse(await AsyncStorage.getItem(chatListSnapshotKey(memberId)) ?? "null") as { joined?: ChatRoom[]; rank?: ChatRoom[] } | null;
+    return parsed && Array.isArray(parsed.joined) && Array.isArray(parsed.rank) ? { joined: parsed.joined, rank: parsed.rank } : null;
+  } catch { return null; }
+}
+
+async function saveChatListSnapshot(memberId: string, snapshot: { joined: ChatRoom[]; rank: ChatRoom[] }) {
+  try { await AsyncStorage.setItem(chatListSnapshotKey(memberId), JSON.stringify(snapshot)); } catch { /* Rendering never waits for a cache write. */ }
+}
 
 export function clearChatListMemoryCache() {
   lastRoomLists.clear();
   recentlySentPreviews.clear();
   dismissedRooms.clear();
   dismissedAt.clear();
+}
+
+export async function clearChatListPersistentCache() {
+  try {
+    const keys = (await AsyncStorage.getAllKeys()).filter((key) => key.startsWith(CHAT_LIST_SNAPSHOT_PREFIX));
+    if (keys.length) await AsyncStorage.multiRemove(keys);
+  } catch { /* Leave user data untouched when cache cleanup is unavailable. */ }
 }
 type ChatListPreferences = { pinnedRoomIds: string[]; hiddenRoomIds: string[] };
 
@@ -298,6 +321,14 @@ export default function ChatListScreen() {
     setRoomsLoading(!saved);
     setAnnouncementPreviewReady(Boolean(saved?.joined.find((room) => room.id === "board-announcement")?.lastMessage));
     let active = true;
+    if (!saved) void loadChatListSnapshot(viewerMemberId).then((snapshot) => {
+      if (!active || !snapshot || lastRoomLists.has(viewerMemberId)) return;
+      lastRoomLists.set(viewerMemberId, snapshot);
+      setMyRooms(snapshot.joined);
+      setRankRooms(snapshot.rank);
+      setRoomsLoading(false);
+      setAnnouncementPreviewReady(Boolean(snapshot.joined.find((room) => room.id === "board-announcement")?.lastMessage));
+    });
     void loadChatListPreferences(viewerMemberId).then((preferences) => { if (active) setChatListPreferences(preferences); });
     return () => { active = false; };
   }, [viewerMemberId]);
@@ -405,7 +436,9 @@ export default function ChatListScreen() {
     const currentRank = sortRoomsByRecent(sortedRank.map((room) => withRecentlySentPreview(viewerMemberId, room)));
     setMyRooms(currentJoined);
     setRankRooms(currentRank);
-    lastRoomLists.set(viewerMemberId, { joined: currentJoined, rank: currentRank });
+    const snapshot = { joined: currentJoined, rank: currentRank };
+    lastRoomLists.set(viewerMemberId, snapshot);
+    void saveChatListSnapshot(viewerMemberId, snapshot);
     setRoomsLoading(false);
   }, [canViewAllChats, viewerBranches, viewerMemberId, viewerRank]);
 

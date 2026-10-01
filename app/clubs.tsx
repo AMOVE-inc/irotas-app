@@ -1,6 +1,7 @@
 import { ScreenContainer } from "@/components/screen-container";
 import { clubLeaderBadgeForClub, MemberRankBadge, MemberRoleBadge, stripRankFromName } from "@/components/member-rank-badge";
 import { IconSymbol } from "@/components/ui/icon-symbol";
+import { ExpandingMessageInput } from "@/components/expanding-message-input";
 import {
   CLUBS,
   CURRENT_USER,
@@ -542,23 +543,20 @@ function ClubPostDetailModal({
             backgroundColor: colors.background,
           }}
         >
-          <TextInput
+          <ExpandingMessageInput
             value={commentText}
             onChangeText={setCommentText}
             placeholder="コメントを入力..."
             placeholderTextColor={colors.muted}
-            multiline
             submitBehavior="newline"
             style={{
               flex: 1,
-              maxHeight: 120,
               backgroundColor: colors.surface,
               borderRadius: 20,
               paddingHorizontal: 16,
               paddingVertical: 10,
               fontSize: 14,
               color: colors.foreground,
-              textAlignVertical: "top",
             }}
           />
           <Pressable onPress={handleComment} style={{ marginLeft: 10 }}>

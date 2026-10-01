@@ -28,6 +28,22 @@ describe("link preview fetch", () => {
     expect(await response?.json()).toEqual({ title: "Henderson (神泉/ビストロ)", description: null, imageUrl: "https://tblg.k-img.com/henderson.jpg" });
   });
 
+  it("returns Open Graph metadata and an image for a general external HTTPS page", async () => {
+    const fetchMock = vi.fn(async () => new Response('<meta property="og:title" content="おすすめ店"><meta property="og:image" content="/images/shop.jpg"><meta property="og:description" content="店舗の紹介">', { headers: { "content-type": "text/html; charset=utf-8" } }));
+    vi.stubGlobal("fetch", fetchMock);
+    const response = await handleLinkPreviewRequest(new Request("https://app.example/api/link-preview?url=https%3A%2F%2Frestaurant.example.com%2Fshop"), {});
+    expect(await response?.json()).toEqual({ title: "おすすめ店", description: "店舗の紹介", imageUrl: "https://restaurant.example.com/images/shop.jpg" });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not fetch IRO+ app links", async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+    const response = await handleLinkPreviewRequest(new Request("https://app.example/api/link-preview?url=https%3A%2F%2Fapp.irotas-community.com%2Fboard%3Fcategory%3Dfree-chat"), {});
+    expect(await response?.json()).toEqual({ title: null, description: null, imageUrl: null });
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
   it("uses a known restaurant name when Tabelog blocks metadata requests", async () => {
     vi.stubGlobal("fetch", vi.fn(async () => new Response(null, { status: 403 })));
     const response = await handleLinkPreviewRequest(new Request("https://app.example/api/link-preview?url=https%3A%2F%2Ftabelog.com%2Ftokyo%2FA1302%2FA130202%2F13284333%2F"), {});

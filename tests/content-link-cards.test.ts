@@ -8,6 +8,11 @@ describe("content link cards", () => {
     expect(cards[2].url).toBe("https://example.com/article");
   });
 
+  it("does not create preview cards for IRO+ app links", () => {
+    const cards = contentLinkCards("アプリ内 https://app.irotas-community.com/board?category=free-chat 外部 https://example.com/shop");
+    expect(cards.map((card) => card.url)).toEqual(["https://example.com/shop"]);
+  });
+
   it("uses a Markdown label and does not duplicate archived previews", () => {
     const cards = contentLinkCards("[おすすめのお店](https://example.com/shop) https://tabelog.com/tokyo/123/", [
       { provider: "食べログ", title: "既存", url: "https://tabelog.com/tokyo/123/" },

@@ -147,8 +147,14 @@ export async function ensureEventRoom(db: D1Database, roomId: string) {
     VALUES (?, ?, 'owner', ?, NULL)
     ON CONFLICT(room_id, member_id) DO UPDATE SET member_role = 'owner', left_at = NULL`)
     .bind(roomId, event.organizer_member_id, now).run();
-  const confirmed = await db.prepare(`SELECT member_id FROM event_participations
-    WHERE event_id = ? AND status IN ('confirmed', 'cancel_requested')`)
+  const confirmed = await db.prepare(`SELECT ep.member_id FROM event_participations ep
+    WHERE ep.event_id = ? AND (
+      ep.status IN ('confirmed', 'cancel_requested') OR
+      (ep.status = 'cancelled' AND EXISTS (
+        SELECT 1 FROM event_cancellation_requests ecr
+        WHERE ecr.event_id = ep.event_id AND ecr.member_id = ep.member_id AND ecr.status = 'approved'
+      ))
+    )`)
     .bind(event.id).all<{ member_id: number }>();
   if (confirmed.results?.length) {
     await db.batch(confirmed.results.map((item) => db.prepare(`INSERT INTO chat_room_members
@@ -186,7 +192,12 @@ export async function ensureEventRoom(db: D1Database, roomId: string) {
     WHERE room_id = ? AND left_at IS NULL AND member_id != ?
       AND NOT EXISTS (SELECT 1 FROM event_participations ep
         WHERE ep.event_id = ? AND ep.member_id = chat_room_members.member_id
-          AND ep.status IN ('confirmed', 'cancel_requested'))
+          AND (ep.status IN ('confirmed', 'cancel_requested') OR
+            (ep.status = 'cancelled' AND EXISTS (
+              SELECT 1 FROM event_cancellation_requests ecr
+              WHERE ecr.event_id = ep.event_id AND ecr.member_id = ep.member_id AND ecr.status = 'approved'
+            )))
+      )
       AND NOT EXISTS (SELECT 1 FROM json_each((SELECT public_data_json FROM events WHERE id = ?), '$.companionIds') companions
         JOIN members m ON (m.public_member_id = companions.value OR ('member-' || m.id) = companions.value)
         WHERE m.id = chat_room_members.member_id)
@@ -365,10 +376,14 @@ async function canAccessRoom(db: D1Database, room: RoomRow, member: Viewer) {
       WHERE m.id = ? AND m.account_status = 'active' LIMIT 1`)
       .bind(event.public_data_json, member.id).first<{ allowed: number }>();
     if (manualParticipant) return true;
-    const participation = await db.prepare(`SELECT status FROM event_participations
-      WHERE event_id = ? AND member_id = ? LIMIT 1`)
-      .bind(room.source_id, member.id).first<{ status: string }>();
-    if (participation) return participation.status === "confirmed" || participation.status === "cancel_requested";
+    const participation = await db.prepare(`SELECT ep.status, EXISTS (
+        SELECT 1 FROM event_cancellation_requests ecr
+        WHERE ecr.event_id = ep.event_id AND ecr.member_id = ep.member_id AND ecr.status = 'approved'
+      ) AS cancellation_approved
+      FROM event_participations ep WHERE ep.event_id = ? AND ep.member_id = ? LIMIT 1`)
+      .bind(room.source_id, member.id).first<{ status: string; cancellation_approved: number }>();
+    if (participation) return participation.status === "confirmed" || participation.status === "cancel_requested" ||
+      (participation.status === "cancelled" && participation.cancellation_approved === 1);
     return false;
   }
   const membership = await db.prepare(`SELECT 1 AS allowed FROM chat_room_members
@@ -512,7 +527,11 @@ async function ensureViewerEventRooms(db: D1Database, member: Viewer) {
       AND id NOT LIKE 'discord-event-%' AND COALESCE(json_extract(public_data_json, '$.recruitmentChannel'), 'app') != 'discord'
       AND (organizer_member_id = ? OR EXISTS (
         SELECT 1 FROM event_participations ep WHERE ep.event_id = events.id
-          AND ep.member_id = ? AND ep.status IN ('confirmed', 'cancel_requested'))
+          AND ep.member_id = ? AND (ep.status IN ('confirmed', 'cancel_requested') OR
+            (ep.status = 'cancelled' AND EXISTS (
+              SELECT 1 FROM event_cancellation_requests ecr
+              WHERE ecr.event_id = ep.event_id AND ecr.member_id = ep.member_id AND ecr.status = 'approved'
+            ))))
         OR EXISTS (SELECT 1 FROM json_each(events.public_data_json, '$.companionIds') companions
           WHERE companions.value = (SELECT public_member_id FROM members WHERE id = ?)
             OR companions.value = ?))
@@ -710,7 +729,12 @@ export async function handleChatContentRequest(
         OR cr.id IN ('community-free-chat', 'branch-kanto-free', 'branch-kansai-free', 'board-introduction')
         OR EXISTS (SELECT 1 FROM chat_room_members crm WHERE crm.room_id = cr.id AND crm.member_id = ? AND crm.left_at IS NULL)
         OR (cr.room_type = 'event' AND EXISTS (SELECT 1 FROM event_participations ep
-          WHERE ep.event_id = cr.source_id AND ep.member_id = ? AND ep.status IN ('confirmed', 'cancel_requested')))
+          WHERE ep.event_id = cr.source_id AND ep.member_id = ?
+            AND (ep.status IN ('confirmed', 'cancel_requested') OR
+              (ep.status = 'cancelled' AND EXISTS (
+                SELECT 1 FROM event_cancellation_requests ecr
+                WHERE ecr.event_id = ep.event_id AND ecr.member_id = ep.member_id AND ecr.status = 'approved'
+              )))))
       ) ORDER BY CASE WHEN cr.room_type = 'club' THEN 0 ELSE 1 END, cr.updated_at DESC LIMIT 1000`)
       .bind(member.id, elevated(member) ? 1 : 0, member.id, member.id).all<RoomRow>();
     const access = await Promise.all((result.results ?? []).map((room) => canViewRoom(env.DB!, room, member)));

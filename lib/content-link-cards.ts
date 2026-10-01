@@ -1,6 +1,19 @@
 import { tokenizeRichTextLinks } from "./discord-rich-text";
 import { archivedTabelogImages, archivedTabelogTitles, canonicalTabelogUrl, type ImportedLinkPreview } from "./discord-link-preview";
 
+const IROTAS_APP_HOST = /(^|\.)irotas-community\.com$/i;
+const LEGACY_IROTAS_APP_HOST = /^irotas-app-[a-z0-9-]+(?:\.[a-z0-9-]+)?\.chatgpt\.site$/i;
+
+/** Internal deep links remain clickable in the message body, but do not need an external-site preview card. */
+export function isInternalAppUrl(rawUrl: string): boolean {
+  try {
+    const url = new URL(rawUrl);
+    return IROTAS_APP_HOST.test(url.hostname) || LEGACY_IROTAS_APP_HOST.test(url.hostname);
+  } catch {
+    return false;
+  }
+}
+
 function nearbyRestaurantName(content: string, urlStart: number): string {
   const lines = content.slice(Math.max(0, urlStart - 350), urlStart).split(/\r?\n/).slice(-5).reverse();
   for (const original of lines) {
@@ -22,7 +35,7 @@ export function contentLinkCards(content: string, existing: readonly ImportedLin
     if (urlStart >= 0) searchFrom = urlStart + token.url.length;
     let url: URL;
     try { url = new URL(token.url); } catch { continue; }
-    if (!(["http:", "https:"].includes(url.protocol)) || seen.has(url.href)) continue;
+    if (!(["http:", "https:"].includes(url.protocol)) || seen.has(url.href) || isInternalAppUrl(url.href)) continue;
     seen.add(url.href);
     const provider = /(^|\.)tabelog\.com$/i.test(url.hostname) ? "食べログ"
       : /(^|\.)(?:google\.[a-z.]+|maps\.app\.goo\.gl)$/i.test(url.hostname) ? "Google マップ"

@@ -7,6 +7,7 @@ import { PERSISTENT_BOTTOM_NAV_HEIGHT, PersistentBottomNav } from "@/components/
 import { MemberClubLeaderBadges, MemberRankBadge, MemberRoleBadge, stripRankFromName } from "@/components/member-rank-badge";
 import { EventMentionPreview, MentionSuggestions, MentionText, mentionDisplayName } from "@/components/mention-ui";
 import { ContentLinkCards } from "@/components/content-link-cards";
+import { ExpandingMessageInput } from "@/components/expanding-message-input";
 import { getMentionGroups, getMentionQuery, insertMention } from "@/lib/mentions";
 import { EVENT_TERMS_URL, PUBLIC_APP_URL } from "@/constants/external-links";
 import { joinEventChat, removeMemberFromRoom } from "@/lib/chat-store";
@@ -319,6 +320,7 @@ export default function EventDetailScreen() {
     const viewerId = event.viewerMemberId ?? authenticatedViewerMemberId;
     const status = event.viewerParticipationStatus;
     const isCompanion = Boolean(event.companionIds?.includes(viewerId));
+    const isApprovedCancellation = Boolean(event.cancelledParticipantIds?.includes(viewerId));
     setIsJoined(isCompanion || (status ? status === "confirmed" || status === "cancel_requested" : event.participants.includes(viewerId)));
     setHasApplied(status ? status === "applied" || status === "confirmed" || status === "cancel_requested" : Boolean(event.applicantIds?.includes(viewerId)));
     if ((event.id.startsWith("discord-event-") || event.recruitmentChannel === "discord") && !event.chatId) {
@@ -326,7 +328,7 @@ export default function EventDetailScreen() {
       return;
     }
     if (!event.viewerMemberId || !event.chatId) return;
-    if (isEventOrganizer(event, viewerId) || isCompanion || status === "confirmed" || status === "cancel_requested" || event.participants.includes(viewerId)) {
+    if (isEventOrganizer(event, viewerId) || isCompanion || isApprovedCancellation || status === "confirmed" || status === "cancel_requested" || event.participants.includes(viewerId)) {
       const room = joinEventChat(event.id, event.title, event.chatId, viewerId);
       setChatRoomId(room.id);
     } else {
@@ -474,6 +476,7 @@ export default function EventDetailScreen() {
   const viewerMemberId = event.viewerMemberId ?? authenticatedViewerMemberId;
   const isOrganizer = isEventOrganizer(event, viewerMemberId);
   const isCompanion = companionIds.includes(viewerMemberId);
+  const isApprovedCancellation = cancelledParticipantIds.includes(viewerMemberId);
   const pendingApplicantIds = event.isCancelled ? [] : getPendingGourmetApplicants(event);
   const confirmedParticipantCount = (event.participants ?? []).length;
   const canFinalizeParticipants = !event.participantsFinalizedAt && pendingApplicantIds.length === 0 && confirmedParticipantCount > 0;
@@ -896,6 +899,24 @@ export default function EventDetailScreen() {
     });
   };
 
+  const handleReopenDiscordRecruitment = () => {
+    setApplicationConfirmation({
+      title: "Discordでの募集を再開しますか？",
+      message: "アプリ上の表示を募集中に戻します。Discord側の募集投稿も必要に応じて再開してください。",
+      buttons: [
+        { text: "戻る", style: "cancel" },
+        { text: "募集を再開する", onPress: async () => {
+          try {
+            setEvent(await Api.reopenDiscordEventRecruitment(event.id));
+            Alert.alert("募集を再開しました", "アプリ上の表示を募集中に戻しました。");
+          } catch (error) {
+            Alert.alert("変更できませんでした", error instanceof Error ? error.message : "もう一度お試しください。");
+          }
+        } },
+      ],
+    });
+  };
+
   const handleCloseRecruitment = () => {
     setApplicationConfirmation({
       title: "募集を終了しますか？",
@@ -961,7 +982,12 @@ export default function EventDetailScreen() {
     if (event.viewerMemberId) {
       try {
         setEvent(await Api.requestEventCancellation(event.id, contactedOrganizer, cancellationPolicyConfirmed));
-        Alert.alert(isJoined ? "申請しました" : "申込を取り消しました", isJoined ? "幹事にキャンセル申請を送りました。確定連絡をお待ちください。" : "イベントへの参加申込を取り消しました。");
+        Alert.alert(
+          isJoined ? "申請しました" : "申込を取り消しました",
+          isJoined
+            ? "幹事にキャンセル申請を送りました。承認までは参加確定のまま、参加者チャットも引き続き利用できます。"
+            : "イベントへの参加申込を取り消しました。",
+        );
       } catch (error) {
         Alert.alert("申請できませんでした", error instanceof Error ? error.message : "もう一度お試しください。");
       }
@@ -1015,7 +1041,10 @@ export default function EventDetailScreen() {
         approveEventCancellationRequest(event, memberId);
         setEventRevision((value) => value + 1);
       }
-      Alert.alert("再募集を開始しました", "キャンセル分の空席をイベント一覧へ反映しました。イベントは募集中になり、再び申し込めます。");
+      Alert.alert(
+        "再募集を開始しました",
+        "キャンセル分の空席をイベント一覧へ反映しました。キャンセルした参加者は、精算などの連絡ができるよう参加者チャットに残ります。",
+      );
     } catch (error) {
       Alert.alert("承認できませんでした", error instanceof Error ? error.message : "もう一度お試しください。");
     }
@@ -1220,6 +1249,7 @@ export default function EventDetailScreen() {
         {canManageEvent ? <Pressable onPress={() => router.replace({ pathname: "/create-event", params: { editId: event.id } })} style={{ marginBottom: 16, borderRadius: 12, paddingVertical: 12, alignItems: "center", backgroundColor: "#B42318" }}><Text style={{ color: "#FFF", fontSize: 14, fontWeight: "900" }}>{canAdminEdit ? "管理者：イベント情報を編集" : isDiscordImportedEvent && userIsOperator && !isOrganizer ? "運営：イベント情報を編集" : "イベント情報を編集"}</Text></Pressable> : null}
         {eventRecruitmentChannel(event) === "discord" ? <View style={{ borderRadius: 12, borderWidth: 1, borderColor: "#D7C9EB", backgroundColor: "#F7F3FC", padding: 14, marginBottom: 16 }}><Text style={{ fontSize: 14, fontWeight: "900", color: "#604C8C" }}>{discordRecruitmentClosed ? "Discordでの募集は終了しました" : "このイベントはDiscordで受付中"}</Text><Text style={{ fontSize: 12, lineHeight: 19, color: colors.foreground, marginTop: 5 }}>{discordRecruitmentClosed ? "本イベントはDiscordから移行したイベントです。募集内容・参加者確定などの詳細は元のDiscordの募集投稿をご確認ください。アプリからは申し込めません。" : "本イベントはDiscordから移行したイベントです。参加希望は元のDiscordの募集投稿へお願いします。参加者もDiscord側で確定するため、アプリからは申し込めません。確定後、幹事・運営が編集画面で参加者を記録できます。"}</Text></View> : null}
         {canManageEvent && eventRecruitmentChannel(event) === "discord" && !discordRecruitmentClosed && event.status === "open" && !event.isCancelled ? <Pressable onPress={handleCloseDiscordRecruitment} style={{ marginTop: -6, marginBottom: 16, borderRadius: 12, paddingVertical: 12, alignItems: "center", backgroundColor: "#6B5A96" }}><Text style={{ color: "#FFF", fontSize: 14, fontWeight: "900" }}>Discordでの募集を終了</Text></Pressable> : null}
+        {canManageEvent && eventRecruitmentChannel(event) === "discord" && Boolean(event.discordRecruitmentClosedAt) && !event.isCancelled && !eventEnded ? <Pressable onPress={handleReopenDiscordRecruitment} style={{ marginTop: -6, marginBottom: 16, borderRadius: 12, paddingVertical: 12, alignItems: "center", backgroundColor: "#6B5A96" }}><Text style={{ color: "#FFF", fontSize: 14, fontWeight: "900" }}>Discordでの募集を再開</Text></Pressable> : null}
         {canCloseRecruitment ? <Pressable onPress={handleCloseRecruitment} style={{ marginTop: -6, marginBottom: 16, borderRadius: 12, paddingVertical: 12, alignItems: "center", backgroundColor: "#6B5A96" }}><Text style={{ color: "#FFF", fontSize: 14, fontWeight: "900" }}>{userIsOperator && !isOrganizer ? "運営：募集を終了" : canAdminEdit && !isOrganizer ? "管理者：募集を終了" : "募集を終了"}</Text></Pressable> : null}
         {canAdminEdit && event.eventType === "official" && eventRecruitmentChannel(event) === "app" && !event.isCancelled ? <Pressable onPress={() => { void handleSetRecruitmentStatus(event.recruitmentStatus === "draft" ? "open" : "draft"); }} style={{ marginTop: -6, marginBottom: 16, borderRadius: 12, paddingVertical: 12, alignItems: "center", backgroundColor: "#5B9BD5" }}><Text style={{ color: "#FFF", fontSize: 14, fontWeight: "900" }}>{event.recruitmentStatus === "draft" ? "管理者：募集を開始" : "管理者：募集前に戻す"}</Text></Pressable> : null}
         {canDeleteEvent ? <Pressable onPress={handleDeleteEvent} style={{ marginTop: -6, marginBottom: 16, borderRadius: 12, paddingVertical: 12, alignItems: "center", borderWidth: 1, borderColor: "#D94C55" }}><Text style={{ color: "#D94C55", fontSize: 14, fontWeight: "900" }}>{canAdminEdit ? "管理者：イベントを完全に削除" : "移行イベントを完全に削除"}</Text></Pressable> : null}
@@ -1406,7 +1436,7 @@ export default function EventDetailScreen() {
           })}
           {eventMentionQuery !== null ? <MentionSuggestions query={eventMentionQuery} groups={eventMentionGroups} members={eventMentionMembers} onSelect={(label, memberId) => setEventCommentText((value) => insertMention(value, label, memberId))} /> : null}
           {replyingToEventComment ? <View style={{ marginTop: 12, backgroundColor: "#ECEDEF", borderRadius: 10, padding: 10, flexDirection: "row", alignItems: "center" }}><View style={{ flex: 1 }}><Text style={{ fontSize: 11, fontWeight: "800", color: "#62636A" }}>↪ {replyingToEventComment.author} に返信</Text><Text numberOfLines={1} style={{ marginTop: 2, fontSize: 12, color: "#74757C" }}>{replyingToEventComment.text}</Text></View><Pressable onPress={() => setReplyingToEventComment(null)}><IconSymbol name="xmark" size={17} color="#74757C" /></Pressable></View> : null}
-          <View style={{ flexDirection: "row", alignItems: "flex-end", marginTop: 14 }}><TextInput ref={eventCommentInputRef} value={eventCommentText} selection={eventCommentSelection} onSelectionChange={(event) => setEventCommentSelection(event.nativeEvent.selection)} onChangeText={(value) => setEventCommentText(value.replace(/@everyone\b/gi, ""))} onFocus={() => setEventCommentFocused(true)} onBlur={() => setEventCommentFocused(false)} placeholder="質問やコメントを入力" placeholderTextColor={colors.muted} multiline style={{ flex: 1, minHeight: 44, maxHeight: 100, borderRadius: 14, backgroundColor: colors.background, borderWidth: 1, borderColor: colors.border, paddingHorizontal: 12, paddingVertical: 10, color: colors.foreground }} /><Pressable disabled={!eventCommentText.trim() || eventCommentBusy} onPress={() => { void handleEventComment(); }} style={{ width: 44, height: 44, borderRadius: 22, marginLeft: 8, alignItems: "center", justifyContent: "center", backgroundColor: eventCommentText.trim() && !eventCommentBusy ? "#D65E8D" : colors.border }}><IconSymbol name="paperplane.fill" size={19} color="#FFF" /></Pressable></View>        </View>
+          <View style={{ flexDirection: "row", alignItems: "flex-end", marginTop: 14 }}><ExpandingMessageInput ref={eventCommentInputRef} value={eventCommentText} selection={eventCommentSelection} onSelectionChange={(event) => setEventCommentSelection(event.nativeEvent.selection)} onChangeText={(value) => setEventCommentText(value.replace(/@everyone\b/gi, ""))} onFocus={() => setEventCommentFocused(true)} onBlur={() => setEventCommentFocused(false)} placeholder="質問やコメントを入力" placeholderTextColor={colors.muted} submitBehavior="newline" style={{ flex: 1, borderRadius: 14, backgroundColor: colors.background, borderWidth: 1, borderColor: colors.border, paddingHorizontal: 12, paddingVertical: 10, color: colors.foreground }} /><Pressable disabled={!eventCommentText.trim() || eventCommentBusy} onPress={() => { void handleEventComment(); }} style={{ width: 44, height: 44, borderRadius: 22, marginLeft: 8, alignItems: "center", justifyContent: "center", backgroundColor: eventCommentText.trim() && !eventCommentBusy ? "#D65E8D" : colors.border }}><IconSymbol name="paperplane.fill" size={19} color="#FFF" /></Pressable></View>        </View>
 
         {(isJoined || hasApplied) && !isOrganizer ? (
           <View style={{ backgroundColor: "#FFF4F2", borderRadius: 14, padding: 14, marginBottom: 16, borderWidth: 1, borderColor: "#F3D0CA" }}>
@@ -1641,7 +1671,7 @@ export default function EventDetailScreen() {
         }}
       >
         {/* チャットボタン（参加済みの場合） */}
-        {(isJoined || isOrganizer || isCompanion) && chatRoomId && (
+        {(isJoined || isOrganizer || isCompanion || isApprovedCancellation) && chatRoomId && (
           <Pressable
             onPress={handleOpenChat}
             style={({ pressed }) => ({

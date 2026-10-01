@@ -29,6 +29,14 @@ describe("requested native fixes", () => {
     expect(events).not.toContain("!importedDiscordEvent ? [env.DB.prepare");
   });
 
+  it("lets managers reopen Discord recruitment after closing it in the app", () => {
+    expect(eventDetail).toContain("handleReopenDiscordRecruitment");
+    expect(eventDetail).toContain("Discordでの募集を再開");
+    expect(events).toContain('input?.action === "reopen_discord_recruitment"');
+    expect(events).toContain("delete data.discordRecruitmentClosedAt");
+    expect(events).toContain("event.discord_recruitment_reopened");
+  });
+
   it("accepts only poll reactions matching a poll choice", () => {
     expect(chatServer).toContain('const isPollVote = emoji.startsWith("🗳️")');
     expect(chatServer).toContain("isValidPollVote(row.content, emoji)");
@@ -43,16 +51,15 @@ describe("requested native fixes", () => {
   });
 
   it("starts the message composer at one line and grows it to about six lines", () => {
-    expect(chatScreen).toContain("minHeight: 40");
-    expect(chatScreen).toContain("maxHeight: 132");
-    expect(chatScreen).toContain("lineHeight: 20");
+    expect(chatScreen).toContain("<ExpandingMessageInput");
+    expect(chatScreen).toContain('from "@/components/expanding-message-input"');
   });
 
   it("shows poll percentages, counts, and a proportional result bar", () => {
-    expect(chatScreen).toContain("pollTotalVotes");
-    expect(chatScreen).toContain("Math.round((voters.length / pollTotalVotes) * 100)");
+    expect(chatScreen).toContain("totalVotes");
+    expect(chatScreen).toContain("Math.round((voters.length / totalVotes) * 100)");
     expect(chatScreen).toContain('width: `${percentage}%`');
-    expect(chatScreen).toContain("{pollVoteCounts[index]}票");
+    expect(chatScreen).toContain("{voteCounts[index]}票");
   });
 
   it("deep links club applications to the club management review", () => {

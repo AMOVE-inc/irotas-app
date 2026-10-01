@@ -351,6 +351,7 @@ describe("club event access", () => {
       body: JSON.stringify({ contactedOrganizer: true, policyConfirmed: true }),
     }), env);
     expect((await request())?.status).toBe(201);
+    expect(db.participationStatus).toBe("cancel_requested");
     expect(db.notifications).toContainEqual({ targetMemberId: 20, type: "event_cancellation", eventId: "event-club-1" });
     expect((await request())?.status).toBe(409);
     expect(db.notifications.filter((item) => item.targetMemberId === 20 && item.type === "event_cancellation")).toHaveLength(1);
@@ -361,6 +362,7 @@ describe("club event access", () => {
       body: JSON.stringify({ action: "approve" }),
     }), env);
     expect(reviewResponse?.status).toBe(200);
+    expect(db.participationStatus).toBe("cancelled");
     expect(db.notifications).toContainEqual({ targetMemberId: 10, type: "event_cancellation", eventId: "event-club-1" });
   });
 

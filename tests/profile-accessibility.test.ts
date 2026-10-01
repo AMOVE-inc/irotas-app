@@ -18,4 +18,12 @@ describe("profile accessibility", () => {
     expect(profileSource).toContain('accessibilityLabel="プロフィール編集をキャンセル"');
     expect(profileSource).toContain('accessibilityLabel="ログアウト"');
   });
+
+  it("shows profile save progress and closes without a blocking success alert", () => {
+    expect(profileSource).toContain('saving ? "保存中…" : "保存"');
+    expect(profileSource).toContain("disabled={saving}");
+    expect(profileSource).toContain("accessibilityState={{ disabled: saving, busy: saving }}");
+    expect(profileSource).not.toContain('Alert.alert("保存完了", "プロフィールを更新しました")');
+    expect(profileSource).toContain("onDetailsChange?.(details);\n      onClose();\n      if (serverBacked) void onServerSaved?.().catch(() => undefined);");
+  });
 });

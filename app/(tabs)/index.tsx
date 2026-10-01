@@ -49,6 +49,7 @@ import * as Api from "@/lib/_core/api";
 import { boardThreadRoute } from "@/lib/community-navigation";
 import { StartMissionCard } from "@/components/start-mission-card";
 import { XpRewardPopup } from "@/components/xp-reward-popup";
+import { ExpandingMessageInput } from "@/components/expanding-message-input";
 import { levelFromXp } from "@/lib/xp-levels";
 import type { XpReward } from "@/lib/xp-store";
 
@@ -619,15 +620,14 @@ function TimelinePostCard({ post }: { post: TimelinePost }) {
                 style={{ width: 28, height: 28, borderRadius: 14, marginRight: 8 }}
                 contentFit="cover"
               />
-              <TextInput
+              <ExpandingMessageInput
                 value={commentText}
                 onChangeText={setCommentText}
                 placeholder="コメントを入力..."
                 placeholderTextColor={colors.muted}
                 style={{ flex: 1, fontSize: 14, color: colors.foreground, paddingVertical: 0 }}
-                returnKeyType="send"
-                onSubmitEditing={handleSendComment}
-                multiline={false}
+                verticalPadding={0}
+                submitBehavior="newline"
               />
               <Pressable
                 onPress={handleSendComment}
