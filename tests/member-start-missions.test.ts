@@ -1,5 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { handleMemberStartMissionRequest, startMissionStepsFromRow } from "../sites/member-start-missions";
+import {
+  handleMemberStartMissionRequest,
+  INTRODUCTION_MISSION_CUTOFF,
+  introductionMissionCompletionSql,
+  startMissionStepsFromRow,
+} from "../sites/member-start-missions";
 import type { D1Database, D1PreparedStatement, D1Result, SitesEnv } from "../sites/platform-types";
 
 const { authenticatedRequestMember } = vi.hoisted(() => ({ authenticatedRequestMember: vi.fn() }));
@@ -84,6 +89,19 @@ describe("member start missions", () => {
 
   it("does not treat missing server facts as completed", () => {
     expect(startMissionStepsFromRow({}).every((step) => !step.completed)).toBe(true);
+  });
+
+  it("grandfathers introductions before September and recognizes migrated Discord introductions", () => {
+    expect(INTRODUCTION_MISSION_CUTOFF).toBe("2026-09-01");
+    const sql = introductionMissionCompletionSql("member");
+    expect(sql).toContain("member_id_assignments");
+    expect(sql).toContain("member_subscriptions");
+    expect(sql).toContain("subscription_started_at");
+    expect(sql).toContain("member.discord_joined_at");
+    expect(sql).toContain("< '2026-09-01'");
+    expect(sql).toContain("discord_profile_snapshots");
+    expect(sql).toContain("dps.has_profile_bio = 1");
+    expect(sql).toContain("bt.category = 'introduction'");
   });
 
   it("awards 10 XP for each newly completed server mission exactly once", async () => {

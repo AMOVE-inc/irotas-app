@@ -4,6 +4,30 @@ import { rankFromXp } from "./xp";
 
 const PATH = "/api/member/start-missions";
 const BONUS_XP = 10;
+export const INTRODUCTION_MISSION_CUTOFF = "2026-09-01";
+
+export function introductionMissionCompletionSql(memberAlias = "m") {
+  return `(
+    EXISTS(SELECT 1 FROM board_threads bt
+      WHERE bt.author_member_id = ${memberAlias}.id
+        AND bt.category = 'introduction' AND bt.deleted_at IS NULL)
+    OR COALESCE(
+      (SELECT mia.basis_date FROM member_id_assignments mia
+        WHERE mia.member_id = ${memberAlias}.id LIMIT 1),
+      (SELECT MIN(ms.subscription_started_at) FROM member_subscriptions ms
+        WHERE ms.member_id = ${memberAlias}.id AND ms.subscription_started_at IS NOT NULL),
+      (SELECT MIN(ms.subscription_started_at) FROM member_subscriptions ms
+        WHERE ms.member_id IS NULL
+          AND LOWER(TRIM(ms.billing_email)) = LOWER(TRIM(${memberAlias}.email))
+          AND ms.subscription_started_at IS NOT NULL),
+      ${memberAlias}.discord_joined_at,
+      ${memberAlias}.created_at
+    ) < '${INTRODUCTION_MISSION_CUTOFF}'
+    OR EXISTS(SELECT 1 FROM discord_profile_snapshots dps
+      WHERE dps.discord_user_id = ${memberAlias}.discord_user_id
+        AND dps.has_profile_bio = 1)
+  )`;
+}
 
 export type StartMissionKey = "profile" | "introduction" | "event_application" | "club_membership" | "meal_report" | "event_creation";
 export type StartMissionProgress = { key: StartMissionKey; completed: boolean };
@@ -45,7 +69,7 @@ export async function handleMemberStartMissionRequest(request: Request, env: Sit
       CASE WHEN TRIM(COALESCE(m.display_name,'')) <> '' AND TRIM(COALESCE(m.user_handle,'')) <> ''
         AND TRIM(COALESCE(json_extract(m.profile_json,'$.birthDate'),'')) <> ''
         AND COALESCE(json_extract(m.profile_json,'$.gender'),'unset') IN ('male','female','other') THEN 1 ELSE 0 END AS profile_complete,
-      EXISTS(SELECT 1 FROM board_threads bt WHERE bt.author_member_id = m.id AND bt.category = 'introduction' AND bt.deleted_at IS NULL) AS introduction_complete,
+      CASE WHEN ${introductionMissionCompletionSql("m")} THEN 1 ELSE 0 END AS introduction_complete,
       EXISTS(SELECT 1 FROM event_participations ep WHERE ep.member_id = m.id AND ep.status IN ('applied','confirmed','cancel_requested','cancelled')) AS event_application_complete,
       EXISTS(SELECT 1 FROM club_memberships cm WHERE cm.member_id = m.id AND cm.status = 'approved') AS club_membership_complete,
       EXISTS(SELECT 1 FROM board_threads bt WHERE bt.author_member_id = m.id AND bt.category IN ('meal-report','gourmet-report') AND bt.deleted_at IS NULL) AS meal_report_complete,
