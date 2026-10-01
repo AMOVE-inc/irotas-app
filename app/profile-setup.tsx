@@ -17,6 +17,7 @@ export default function ProfileSetupScreen() {
   const [name, setName] = useState(user?.name?.trim() ?? "");
   const [publicUserId, setPublicUserId] = useState(user?.publicUserId ?? "");
   const [birthDate, setBirthDate] = useState(profileValue(user?.profile, "birthDate"));
+  const [showAge, setShowAge] = useState(user?.profile?.showAge === true);
   const [gender, setGender] = useState(profileValue(user?.profile, "gender"));
   const [hometown, setHometown] = useState(profileValue(user?.profile, "hometown"));
   const [residence, setResidence] = useState(profileValue(user?.profile, "residence"));
@@ -41,6 +42,7 @@ export default function ProfileSetupScreen() {
       return Alert.alert("ユーザーIDを確認してください", "3〜24文字の半角英小文字・数字・ピリオド・アンダーバーで入力してください。");
     }
     if (birthDate && !/^\d{4}-\d{2}-\d{2}$/.test(birthDate)) return Alert.alert("生年月日を確認してください", "YYYY-MM-DD形式で入力してください。");
+    if (showAge && !birthDate) return Alert.alert("生年月日を入力してください", "年齢を公開するには、生年月日の入力が必要です。");
     if (instagramUrl.trim() && !/^https?:\/\//i.test(instagramUrl.trim())) return Alert.alert("Instagram URLを確認してください", "https:// から始まるURLを入力してください。");
     if (!user) return;
     setSaving(true);
@@ -51,6 +53,7 @@ export default function ProfileSetupScreen() {
         profile: {
           ...user.profile,
           birthDate,
+          showAge,
           gender,
           hometown,
           residence,
@@ -90,6 +93,21 @@ export default function ProfileSetupScreen() {
       <Text style={{ marginTop: 7, fontSize: 11, lineHeight: 17, color: colors.muted }}>プロフィール、検索、メンション候補に表示されます。内部識別子は表示されません。</Text>
       <Text style={labelStyle}>生年月日</Text>
       <TextInput value={birthDate} onChangeText={(value) => setBirthDate(value.replace(/[^0-9-]/g, "").slice(0, 10))} placeholder="1997-01-01" keyboardType="numbers-and-punctuation" placeholderTextColor={colors.muted} style={fieldStyle} />
+      <Pressable
+        accessibilityRole="checkbox"
+        accessibilityState={{ checked: showAge }}
+        accessibilityLabel="年齢を公開する"
+        onPress={() => setShowAge((value) => !value)}
+        style={{ flexDirection: "row", alignItems: "center", marginTop: 12 }}
+      >
+        <View style={{ width: 22, height: 22, borderRadius: 6, backgroundColor: showAge ? "#E8A0BF" : colors.surface, borderWidth: 1, borderColor: showAge ? "#E8A0BF" : colors.border, alignItems: "center", justifyContent: "center" }}>
+          {showAge ? <Text style={{ color: "#FFF", fontSize: 15, fontWeight: "900" }}>✓</Text> : null}
+        </View>
+        <View style={{ flex: 1, marginLeft: 8 }}>
+          <Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground }}>年齢を公開する</Text>
+          <Text style={{ fontSize: 11, lineHeight: 16, color: colors.muted, marginTop: 2 }}>生年月日は表示せず、年齢のみ公開されます</Text>
+        </View>
+      </Pressable>
       <Text style={labelStyle}>性別</Text>
       <View style={{ flexDirection: "row", gap: 8 }}>{[["male", "男性"], ["female", "女性"], ["other", "その他"]].map(([value, label]) => <Pressable key={value} onPress={() => setGender(gender === value ? "" : value)} style={{ flex: 1, minHeight: 44, borderRadius: 12, alignItems: "center", justifyContent: "center", backgroundColor: gender === value ? "#D56591" : colors.surface, borderWidth: 1, borderColor: gender === value ? "#D56591" : colors.border }}><Text style={{ fontWeight: "800", color: gender === value ? "#FFF" : colors.foreground }}>{label}</Text></Pressable>)}</View>
       <Text style={labelStyle}>出身地</Text><TextInput value={hometown} onChangeText={setHometown} placeholder="例：東京都" placeholderTextColor={colors.muted} style={fieldStyle} />
