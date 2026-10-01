@@ -242,6 +242,10 @@ async function updateSelfProfile(request: Request, db: D1Database, memberId: num
   try {
     await db.prepare("UPDATE members SET display_name = ?, user_handle = ?, profile_json = ?, updated_at = ? WHERE id = ?")
       .bind(update.displayName, publicUserId, JSON.stringify(mergedProfile), now, memberId).run();
+    await db.prepare(`UPDATE member_start_mission_state
+      SET profile_completed_at = ?, updated_at = ?
+      WHERE member_id = ? AND reset_at IS NOT NULL`)
+      .bind(now, now, memberId).run();
   } catch (error) {
     if (error instanceof Error && /unique constraint|idx_members_user_handle_unique/i.test(error.message))
       return responseJson({ error: "この公開ユーザーIDはすでに使用されています" }, 409);

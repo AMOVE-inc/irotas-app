@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { resolve } from "node:path";
 import {
   handleMemberStartMissionRequest,
   INTRODUCTION_MISSION_CUTOFF,
@@ -102,6 +103,17 @@ describe("member start missions", () => {
     expect(sql).toContain("discord_profile_snapshots");
     expect(sql).toContain("dps.has_profile_bio = 1");
     expect(sql).toContain("bt.category = 'introduction'");
+  });
+
+  it("uses only achievements created after an explicit mission reset", async () => {
+    const source = await import("node:fs/promises").then((fs) => fs.readFile(
+      resolve(process.cwd(), "sites/member-start-missions.ts"), "utf8",
+    ));
+    expect(source).toContain("s.reset_at IS NULL OR s.profile_completed_at > s.reset_at");
+    expect(source).toContain("bt.created_at > s.reset_at");
+    expect(source).toContain("ep.applied_at > s.reset_at");
+    expect(source).toContain("cm.applied_at > s.reset_at");
+    expect(source).toContain("e.created_at > s.reset_at");
   });
 
   it("awards 10 XP for each newly completed server mission exactly once", async () => {

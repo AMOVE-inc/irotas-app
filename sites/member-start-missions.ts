@@ -68,13 +68,23 @@ export async function handleMemberStartMissionRequest(request: Request, env: Sit
   const row = await env.DB.prepare(`SELECT m.xp, m.member_rank,
       CASE WHEN TRIM(COALESCE(m.display_name,'')) <> '' AND TRIM(COALESCE(m.user_handle,'')) <> ''
         AND TRIM(COALESCE(json_extract(m.profile_json,'$.birthDate'),'')) <> ''
-        AND COALESCE(json_extract(m.profile_json,'$.gender'),'unset') IN ('male','female','other') THEN 1 ELSE 0 END AS profile_complete,
-      CASE WHEN ${introductionMissionCompletionSql("m")} THEN 1 ELSE 0 END AS introduction_complete,
-      EXISTS(SELECT 1 FROM event_participations ep WHERE ep.member_id = m.id AND ep.status IN ('applied','confirmed','cancel_requested','cancelled')) AS event_application_complete,
-      EXISTS(SELECT 1 FROM club_memberships cm WHERE cm.member_id = m.id AND cm.status = 'approved') AS club_membership_complete,
-      EXISTS(SELECT 1 FROM board_threads bt WHERE bt.author_member_id = m.id AND bt.category IN ('meal-report','gourmet-report') AND bt.deleted_at IS NULL) AS meal_report_complete,
-      EXISTS(SELECT 1 FROM events e WHERE e.organizer_member_id = m.id) AS event_creation_complete,
-      s.guide_seen_at
+        AND COALESCE(json_extract(m.profile_json,'$.gender'),'unset') IN ('male','female','other')
+        AND (s.reset_at IS NULL OR s.profile_completed_at > s.reset_at) THEN 1 ELSE 0 END AS profile_complete,
+      CASE WHEN s.reset_at IS NOT NULL THEN EXISTS(SELECT 1 FROM board_threads bt
+        WHERE bt.author_member_id = m.id AND bt.category = 'introduction'
+          AND bt.deleted_at IS NULL AND bt.created_at > s.reset_at)
+        WHEN ${introductionMissionCompletionSql("m")} THEN 1 ELSE 0 END AS introduction_complete,
+      EXISTS(SELECT 1 FROM event_participations ep WHERE ep.member_id = m.id
+        AND ep.status IN ('applied','confirmed','cancel_requested','cancelled')
+        AND (s.reset_at IS NULL OR ep.applied_at > s.reset_at)) AS event_application_complete,
+      EXISTS(SELECT 1 FROM club_memberships cm WHERE cm.member_id = m.id AND cm.status = 'approved'
+        AND (s.reset_at IS NULL OR cm.applied_at > s.reset_at)) AS club_membership_complete,
+      EXISTS(SELECT 1 FROM board_threads bt WHERE bt.author_member_id = m.id
+        AND bt.category IN ('meal-report','gourmet-report') AND bt.deleted_at IS NULL
+        AND (s.reset_at IS NULL OR bt.created_at > s.reset_at)) AS meal_report_complete,
+      EXISTS(SELECT 1 FROM events e WHERE e.organizer_member_id = m.id
+        AND (s.reset_at IS NULL OR e.created_at > s.reset_at)) AS event_creation_complete,
+      s.guide_seen_at, s.reset_at, s.profile_completed_at
     FROM members m JOIN member_start_mission_state s ON s.member_id = m.id WHERE m.id = ? LIMIT 1`)
     .bind(member.id).first<Record<string, unknown>>();
   if (!row) return json({ error: "会員情報が見つかりません" }, 404);
