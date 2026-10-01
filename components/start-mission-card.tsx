@@ -1,7 +1,9 @@
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { useColors } from "@/hooks/use-colors";
 import type { StartMissionKey, StartMissionStatus } from "@/lib/_core/api";
+import { visibleStartMissionSteps } from "@/lib/start-mission-visibility";
 import { useRouter } from "expo-router";
+import { useState } from "react";
 import { Pressable, Text, View } from "react-native";
 
 const STEP_DETAILS: Record<StartMissionKey, { label: string; description: string }> = {
@@ -16,7 +18,9 @@ const STEP_DETAILS: Record<StartMissionKey, { label: string; description: string
 export function StartMissionCard({ status }: { status: StartMissionStatus | null }) {
   const colors = useColors();
   const router = useRouter();
+  const [showCompleted, setShowCompleted] = useState(false);
   if (!status || status.allCompleted) return null;
+  const visibleSteps = visibleStartMissionSteps(status.steps, showCompleted);
   const openStep = (key: StartMissionKey) => {
     if (key === "profile") router.push("/profile-setup");
     else if (key === "introduction") router.push({ pathname: "/board", params: { category: "introduction", view: "threads", compose: "introduction" } });
@@ -31,10 +35,20 @@ export function StartMissionCard({ status }: { status: StartMissionStatus | null
       <View style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: "#E8A0BF", alignItems: "center", justifyContent: "center" }}><Text style={{ color: "#FFF", fontWeight: "900" }}>{Math.round(status.completedCount / status.totalCount * 100)}%</Text></View>
     </View>
     <View style={{ height: 7, borderRadius: 4, backgroundColor: "#F1DFE7", overflow: "hidden", marginTop: 12 }}><View style={{ width: `${status.completedCount / status.totalCount * 100}%`, height: "100%", backgroundColor: "#D56591" }} /></View>
-    <View style={{ marginTop: 10 }}>{status.steps.map((step) => { const detail = STEP_DETAILS[step.key]; return <Pressable key={step.key} disabled={step.completed} onPress={() => openStep(step.key)} style={{ minHeight: 55, flexDirection: "row", alignItems: "center", borderTopWidth: 0.5, borderTopColor: "#EEDDE5" }}>
+    <View style={{ marginTop: 10 }}>{visibleSteps.map((step) => { const detail = STEP_DETAILS[step.key]; return <Pressable key={step.key} disabled={step.completed} onPress={() => openStep(step.key)} style={{ minHeight: 55, flexDirection: "row", alignItems: "center", borderTopWidth: 0.5, borderTopColor: "#EEDDE5" }}>
       <IconSymbol name={step.completed ? "checkmark.circle.fill" : "circle"} size={21} color={step.completed ? "#34A853" : "#D56591"} />
       <View style={{ flex: 1, marginLeft: 10 }}><Text style={{ fontSize: 14, fontWeight: "800", color: step.completed ? colors.muted : colors.foreground, textDecorationLine: step.completed ? "line-through" : "none" }}>{detail.label}</Text><Text style={{ fontSize: 11, color: colors.muted, marginTop: 2 }}>{step.completed ? "完了" : detail.description}</Text></View>
       {!step.completed ? <IconSymbol name="chevron.right" size={16} color={colors.muted} /> : null}
     </Pressable>; })}</View>
+    {status.completedCount > 0 ? <Pressable
+      accessibilityRole="button"
+      accessibilityState={{ expanded: showCompleted }}
+      onPress={() => setShowCompleted((current) => !current)}
+      style={{ alignSelf: "flex-start", minHeight: 40, justifyContent: "center", marginTop: 4, paddingHorizontal: 2 }}
+    >
+      <Text style={{ color: "#9A6178", fontSize: 13, fontWeight: "800" }}>
+        {showCompleted ? "完了済みを隠す" : `完了済みを表示（${status.completedCount}）`}
+      </Text>
+    </Pressable> : null}
   </View>;
 }
