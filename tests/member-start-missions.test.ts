@@ -109,11 +109,11 @@ describe("member start missions", () => {
     const source = await import("node:fs/promises").then((fs) => fs.readFile(
       resolve(process.cwd(), "sites/member-start-missions.ts"), "utf8",
     ));
-    expect(source).toContain("s.reset_at IS NULL OR s.profile_completed_at > s.reset_at");
-    expect(source).toContain("bt.created_at > s.reset_at");
-    expect(source).toContain("ep.applied_at > s.reset_at");
-    expect(source).toContain("cm.applied_at > s.reset_at");
-    expect(source).toContain("e.created_at > s.reset_at");
+    expect(source).toContain("julianday(s.profile_completed_at) > julianday(s.reset_at)");
+    expect(source).toContain("julianday(bt.created_at) > julianday(s.reset_at)");
+    expect(source).toContain("julianday(ep.applied_at) > julianday(s.reset_at)");
+    expect(source).toContain("julianday(cm.applied_at) > julianday(s.reset_at)");
+    expect(source).toContain("julianday(e.created_at) > julianday(s.reset_at)");
   });
 
   it("awards 10 XP for each newly completed server mission exactly once", async () => {
