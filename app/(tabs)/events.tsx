@@ -42,7 +42,7 @@ import {
   stripRankFromName,
 } from "@/components/member-rank-badge";
 import { clubLeaderBadgeForClub } from "@/lib/club-leader-badges";
-import { useFocusEffect, useRouter } from "expo-router";
+import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import * as Api from "@/lib/_core/api";
 import {
@@ -850,6 +850,7 @@ function EventCard({
 export default function EventsScreen() {
   const colors = useColors();
   const router = useRouter();
+  const { missionHighlightFab } = useLocalSearchParams<{ missionHighlightFab?: string }>();
   const [eventType, setEventType] = useState<EventTypeFilter>("all");
   // 新規作成したイベントも、募集前・募集終了などの状態に関係なく一覧で見つけられる。
   const [openOnly, setOpenOnly] = useState(false);
@@ -1486,12 +1487,11 @@ export default function EventsScreen() {
       />
 
       {canCreateEvent ? (
+        <View style={{ position: "absolute", right: 20, bottom: 108, alignItems: "flex-end" }}>
+        {missionHighlightFab === "1" ? <View style={{ marginBottom: 10, borderRadius: 12, backgroundColor: "#FFF4C7", borderWidth: 2, borderColor: "#F0B429", paddingHorizontal: 13, paddingVertical: 8 }}><Text style={{ color: "#744D00", fontSize: 13, fontWeight: "900" }}>＋からイベントを作成</Text></View> : null}
         <Pressable
-          onPress={() => router.push("/create-event")}
+          onPress={() => { router.setParams({ missionHighlightFab: "" }); router.push("/create-event"); }}
           style={{
-            position: "absolute",
-            right: 20,
-            bottom: 108,
             width: 56,
             height: 56,
             borderRadius: 28,
@@ -1503,10 +1503,13 @@ export default function EventsScreen() {
             shadowOpacity: 0.22,
             shadowRadius: 8,
             elevation: 6,
+            borderWidth: missionHighlightFab === "1" ? 4 : 0,
+            borderColor: "#F7C948",
           }}
         >
           <IconSymbol name="plus" size={27} color="#FFF" />
         </Pressable>
+        </View>
       ) : null}
 
       <Modal visible={migrationNoticeVisible} transparent animationType="fade" onRequestClose={() => setMigrationNoticeVisible(false)}>

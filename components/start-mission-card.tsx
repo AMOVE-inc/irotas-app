@@ -5,6 +5,7 @@ import { visibleStartMissionSteps } from "@/lib/start-mission-visibility";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import { Pressable, Text, View } from "react-native";
+import { boardThreadRoute, introductionChatRoute } from "@/lib/community-navigation";
 
 const STEP_DETAILS: Record<StartMissionKey, { label: string; description: string }> = {
   profile: { label: "プロフィールを設定する", description: "名前・ユーザーID・生年月日・性別を登録" },
@@ -23,11 +24,11 @@ export function StartMissionCard({ status }: { status: StartMissionStatus | null
   const visibleSteps = visibleStartMissionSteps(status.steps, showCompleted);
   const openStep = (key: StartMissionKey) => {
     if (key === "profile") router.push("/profile-setup");
-    else if (key === "introduction") router.push({ pathname: "/board", params: { category: "introduction", view: "threads", compose: "introduction" } });
+    else if (key === "introduction") router.push(introductionChatRoute(0, true) as any);
     else if (key === "event_application") router.push("/(tabs)/events" as any);
     else if (key === "club_membership") router.push("/clubs");
-    else if (key === "meal_report") router.push({ pathname: "/board", params: { compose: "meal-report" } });
-    else router.push("/create-event");
+    else if (key === "meal_report") router.push({ ...boardThreadRoute({ category: "meal-report" }), params: { ...boardThreadRoute({ category: "meal-report" }).params, missionHighlightFab: "1" } } as any);
+    else router.push({ pathname: "/(tabs)/events", params: { missionHighlightFab: "1" } } as any);
   };
   return <View style={{ marginHorizontal: 16, marginTop: 10, marginBottom: 12, borderRadius: 18, borderWidth: 1, borderColor: "#F0C5D7", backgroundColor: "#FFF7FA", padding: 15 }}>
     <View style={{ flexDirection: "row", alignItems: "center" }}>

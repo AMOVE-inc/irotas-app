@@ -39,6 +39,8 @@ export const ExpandingMessageInput = forwardRef<TextInput, ExpandingMessageInput
       ref={ref}
       value={value}
       multiline
+      blurOnSubmit={false}
+      submitBehavior="newline"
       onContentSizeChange={(event) => {
         const next = expandingInputMetrics(
           event.nativeEvent.contentSize.height,

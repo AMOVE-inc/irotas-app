@@ -59,14 +59,25 @@ export function pagePreviewMetadata(html: string, baseUrl: string): { title: str
     const content = tag.match(/content\s*=\s*["']([^"']+)["']/i)?.[1];
     if (name && content) values[name] = decodeMeta(content).trim();
   }
+  const titleTag = decodeMeta(html.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1]?.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim() ?? "");
+  let structured: Record<string, unknown> = {};
+  for (const match of html.matchAll(/<script[^>]+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi)) {
+    try {
+      const value = JSON.parse(match[1]);
+      const records = Array.isArray(value) ? value : value?.["@graph"] && Array.isArray(value["@graph"]) ? value["@graph"] : [value];
+      const restaurant = records.find((item: unknown) => item && typeof item === "object" && /Restaurant|FoodEstablishment/i.test(String((item as Record<string, unknown>)["@type"] ?? "")));
+      if (restaurant) { structured = restaurant as Record<string, unknown>; break; }
+    } catch { /* Ignore malformed publisher metadata. */ }
+  }
   let imageUrl: string | null = null;
   try {
-    const candidate = new URL(values["og:image"] ?? values["twitter:image"], baseUrl);
+    const structuredImage = Array.isArray(structured.image) ? structured.image[0] : structured.image;
+    const candidate = new URL(values["og:image"] ?? values["twitter:image"] ?? String(structuredImage ?? ""), baseUrl);
     if (candidate.protocol === "https:") imageUrl = candidate.toString();
   } catch { /* A page without an image can still supply a title. */ }
   return {
-    title: values["og:title"] ?? values["twitter:title"] ?? null,
-    description: values["og:description"] ?? values.description ?? null,
+    title: (values["og:title"] ?? values["twitter:title"] ?? (typeof structured.name === "string" ? structured.name : null) ?? titleTag) || null,
+    description: values["og:description"] ?? values.description ?? (typeof structured.description === "string" ? structured.description : null),
     imageUrl,
   };
 }

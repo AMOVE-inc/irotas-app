@@ -93,7 +93,7 @@ async function pendingReminders(db: D1Database, now: Date) {
         }
       }
     }
-    if (start && !event.id.startsWith("discord-event-") && data.recruitmentChannel !== "discord") {
+    if (start && data.recruitmentChannel !== "discord" && !(data.recruitmentChannel == null && event.id.startsWith("discord-event-"))) {
       const dataChatId = typeof data.chatId === "string" && data.chatId ? data.chatId : `event_chat_${event.id}`;
       const participants = await db.prepare("SELECT member_id FROM event_participations WHERE event_id = ? AND status IN ('confirmed','cancel_requested')").bind(event.id).all<{ member_id: number }>();
       for (const participant of participants.results ?? []) {
@@ -196,7 +196,8 @@ async function completePastEvents(db: D1Database, now: Date) {
     const timestamp = now.toISOString();
     await db.prepare("UPDATE events SET status = 'ended', updated_at = ? WHERE id = ? AND status IN ('open', 'full')")
       .bind(timestamp, event.id).run();
-    if (event.event_type === "official" || event.id.startsWith("discord-event-")) {
+    if (event.event_type === "official" || data.recruitmentChannel === "discord" ||
+      (data.recruitmentChannel == null && event.id.startsWith("discord-event-"))) {
       completed += await deliverEventFeedback(db, event, timestamp);
     }
     // XPは幹事が実出欠を確定した時点でのみ付与する。

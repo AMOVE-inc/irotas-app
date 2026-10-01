@@ -14,17 +14,6 @@ export function isInternalAppUrl(rawUrl: string): boolean {
   }
 }
 
-function nearbyRestaurantName(content: string, urlStart: number): string {
-  const lines = content.slice(Math.max(0, urlStart - 350), urlStart).split(/\r?\n/).slice(-5).reverse();
-  for (const original of lines) {
-    const line = original.trim().replace(/^(?:🍴\s*)?(?:店名\s*[：:]\s*)?/, "").trim();
-    if (!line || /^https?:\/\//i.test(line) || /^(?:〒|東京都|北海道|(?:大阪|京都)府|.{2,4}県|\d{2,4}-\d{2,4}-\d{3,4})/.test(line)) continue;
-    const name = line.split(/\s+0\d{1,4}-\d{1,4}-\d{3,4}(?:\s|$)/)[0].trim();
-    if (name.length >= 2 && name.length <= 65 && !/[。！？!?]/.test(name)) return name;
-  }
-  return "";
-}
-
 export function contentLinkCards(content: string, existing: readonly ImportedLinkPreview[] = []): ImportedLinkPreview[] {
   const seen = new Set(existing.map((item) => item.url));
   const cards: ImportedLinkPreview[] = [];
@@ -41,9 +30,11 @@ export function contentLinkCards(content: string, existing: readonly ImportedLin
       : /(^|\.)(?:google\.[a-z.]+|maps\.app\.goo\.gl)$/i.test(url.hostname) ? "Google マップ"
       : url.hostname.replace(/^www\./i, "");
     const explicitTitle = token.label !== token.url ? token.label : "";
-    const nearbyName = provider === "食べログ" && urlStart >= 0 ? nearbyRestaurantName(content, urlStart) : "";
     const knownUrl = provider === "食べログ" ? canonicalTabelogUrl(url.href) : null;
-    const title = explicitTitle || nearbyName || (knownUrl ? archivedTabelogTitles[knownUrl] : "") || `${provider}のリンクを開く`;
+    // Surrounding chat prose is not restaurant metadata. Let the preview API
+    // resolve the canonical restaurant name instead of leaking text such as
+    // "牛肉のタルタルが最高" into the card title.
+    const title = explicitTitle || (knownUrl ? archivedTabelogTitles[knownUrl] : "") || `${provider}のリンクを開く`;
     cards.push({ url: url.href, provider, title, description: title.endsWith("のリンクを開く") ? url.href : url.hostname, imageUrl: knownUrl ? archivedTabelogImages[knownUrl] : undefined });
   }
   return cards;

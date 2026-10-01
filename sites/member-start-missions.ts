@@ -11,6 +11,9 @@ export function introductionMissionCompletionSql(memberAlias = "m") {
     EXISTS(SELECT 1 FROM board_threads bt
       WHERE bt.author_member_id = ${memberAlias}.id
         AND bt.category = 'introduction' AND bt.deleted_at IS NULL)
+    OR EXISTS(SELECT 1 FROM chat_messages cm
+      WHERE cm.sender_member_id = ${memberAlias}.id
+        AND cm.room_id = 'board-introduction' AND cm.deleted_at IS NULL)
     OR COALESCE(
       (SELECT mia.basis_date FROM member_id_assignments mia
         WHERE mia.member_id = ${memberAlias}.id LIMIT 1),
@@ -31,6 +34,15 @@ export function introductionMissionCompletionSql(memberAlias = "m") {
 
 export type StartMissionKey = "profile" | "introduction" | "event_application" | "club_membership" | "meal_report" | "event_creation";
 export type StartMissionProgress = { key: StartMissionKey; completed: boolean };
+
+const START_MISSION_LABELS: Record<StartMissionKey, string> = {
+  profile: "プロフィールを設定する",
+  introduction: "自己紹介を投稿する",
+  event_application: "イベントへ申し込む",
+  club_membership: "部活へ入部する",
+  meal_report: "ごちそうさま報告を投稿する",
+  event_creation: "イベントを新規作成する",
+};
 
 export function startMissionStepsFromRow(row: Record<string, unknown>): StartMissionProgress[] {
   return [
@@ -70,9 +82,14 @@ export async function handleMemberStartMissionRequest(request: Request, env: Sit
         AND TRIM(COALESCE(json_extract(m.profile_json,'$.birthDate'),'')) <> ''
         AND COALESCE(json_extract(m.profile_json,'$.gender'),'unset') IN ('male','female','other')
         AND (s.reset_at IS NULL OR julianday(s.profile_completed_at) > julianday(s.reset_at)) THEN 1 ELSE 0 END AS profile_complete,
-      CASE WHEN s.reset_at IS NOT NULL THEN EXISTS(SELECT 1 FROM board_threads bt
-        WHERE bt.author_member_id = m.id AND bt.category = 'introduction'
-          AND bt.deleted_at IS NULL AND julianday(bt.created_at) > julianday(s.reset_at))
+      CASE WHEN s.reset_at IS NOT NULL THEN (
+        EXISTS(SELECT 1 FROM board_threads bt
+          WHERE bt.author_member_id = m.id AND bt.category = 'introduction'
+            AND bt.deleted_at IS NULL AND julianday(bt.created_at) > julianday(s.reset_at))
+        OR EXISTS(SELECT 1 FROM chat_messages cm
+          WHERE cm.sender_member_id = m.id AND cm.room_id = 'board-introduction'
+            AND cm.deleted_at IS NULL AND julianday(cm.created_at) > julianday(s.reset_at))
+      )
         WHEN ${introductionMissionCompletionSql("m")} THEN 1 ELSE 0 END AS introduction_complete,
       EXISTS(SELECT 1 FROM event_participations ep WHERE ep.member_id = m.id
         AND ep.status IN ('applied','confirmed','cancel_requested','cancelled')
@@ -131,6 +148,10 @@ export async function handleMemberStartMissionRequest(request: Request, env: Sit
   return json({
     guideSeen: Boolean(row.guide_seen_at), steps, completedCount: steps.filter((step) => step.completed).length,
     totalCount: steps.length, allCompleted, bonusAwardedNow,
-    reward: bonusAwardedNow ? { amount: awardedAmount, reason: `${awardedKeys.length}件のスタートミッション初回達成`, previousXp, nextXp, previousRank, nextRank } : null,
+    reward: bonusAwardedNow ? {
+      amount: awardedAmount,
+      reason: `${awardedKeys.map((key) => `「${START_MISSION_LABELS[key]}」`).join("・")}達成ボーナス`,
+      previousXp, nextXp, previousRank, nextRank,
+    } : null,
   });
 }

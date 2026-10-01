@@ -21,7 +21,8 @@ export function BoardLinkPreviewCard({ preview }: { preview: ImportedLinkPreview
     return () => { active = false; };
   }, [internalLink, preview.url, preview.title, preview.imageUrl]);
 
-  const title = preview.title.endsWith("のリンクを開く") ? metadata.title ?? preview.title : preview.title;
+  const authoritativeProvider = preview.provider === "食べログ" || preview.provider === "Google マップ";
+  const title = authoritativeProvider ? metadata.title ?? preview.title : preview.title.endsWith("のリンクを開く") ? metadata.title ?? preview.title : preview.title;
   const description = preview.description === preview.url ? metadata.description ?? preview.description : preview.description ?? metadata.description;
   const imageUrl = metadata.imageUrl;
 

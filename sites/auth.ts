@@ -1034,16 +1034,19 @@ async function scheduleSquareMembershipChange(env: SitesEnv, subscriptionId: str
   const body = requestType === "pause" ? JSON.stringify({ pause_reason: reason.slice(0, 255) }) : undefined;
   const response = await fetch(`https://connect.squareup.com/v2/subscriptions/${encodeURIComponent(subscriptionId)}/${action}`, {
     method: "POST",
-    headers: { authorization: `Bearer ${env.SQUARE_ACCESS_TOKEN}`, "square-version": "2026-08-19", "content-type": "application/json" },
+    headers: { authorization: `Bearer ${env.SQUARE_ACCESS_TOKEN}`, "square-version": "2026-09-16", "content-type": "application/json" },
     body,
   });
-  const result = await response.json().catch(() => ({})) as { subscription?: { id?: string; canceled_date?: string; charged_through_date?: string }; errors?: Array<{ detail?: string }> };
+  const result = await response.json().catch(() => ({})) as { subscription?: { id?: string; canceled_date?: string; charged_through_date?: string }; actions?: Array<{ type?: string; effective_date?: string }>; errors?: Array<{ detail?: string }> };
   if (!response.ok) throw new Error(result.errors?.[0]?.detail ?? "Squareの定期決済を変更できませんでした");
   if (!result.subscription || (result.subscription.id && result.subscription.id !== subscriptionId))
     throw new Error("Squareの処理結果を確認できませんでした。運営へお問い合わせください");
   if (requestType === "withdrawal" && !result.subscription.canceled_date)
     throw new Error("Squareの解約予約を確認できませんでした。運営へお問い合わせください");
-  return { action: requestType === "pause" ? "pause_scheduled" : "cancel_scheduled", effectiveDate: result.subscription?.canceled_date ?? result.subscription?.charged_through_date ?? null };
+  const pauseAction = requestType === "pause" ? result.actions?.find((item) => item.type === "PAUSE") : null;
+  if (requestType === "pause" && !pauseAction)
+    throw new Error("Squareの休止予約を確認できませんでした。運営へお問い合わせください");
+  return { action: requestType === "pause" ? "pause_scheduled" : "cancel_scheduled", effectiveDate: pauseAction?.effective_date ?? result.subscription?.canceled_date ?? result.subscription?.charged_through_date ?? null };
 }
 
 async function accountDeletion(

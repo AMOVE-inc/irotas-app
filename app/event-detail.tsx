@@ -8,6 +8,7 @@ import { MemberClubLeaderBadges, MemberRankBadge, MemberRoleBadge, stripRankFrom
 import { EventMentionPreview, MentionSuggestions, MentionText, mentionDisplayName } from "@/components/mention-ui";
 import { ContentLinkCards } from "@/components/content-link-cards";
 import { ExpandingMessageInput } from "@/components/expanding-message-input";
+import { XpRewardPopup } from "@/components/xp-reward-popup";
 import { getMentionGroups, getMentionQuery, insertMention } from "@/lib/mentions";
 import { EVENT_TERMS_URL, PUBLIC_APP_URL } from "@/constants/external-links";
 import { joinEventChat, removeMemberFromRoom } from "@/lib/chat-store";
@@ -57,6 +58,7 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { getLevelFromXp, type XpReward } from "@/lib/xp-store";
 
 type EventComment = Api.SharedEventComment;
 const OFFICIAL_EVENT_PAYMENTS_ENABLED = process.env.EXPO_PUBLIC_EVENT_PAYMENTS_ENABLED === "true";
@@ -234,6 +236,7 @@ export default function EventDetailScreen() {
   const [adminGenres, setAdminGenres] = useState<string[]>(event?.genres ?? []);
   const [adminInitialForm, setAdminInitialForm] = useState<EventFormValues | null>(null);
   const [adminSaving, setAdminSaving] = useState(false);
+  const [xpReward, setXpReward] = useState<XpReward | null>(null);
   const [linkCopied, setLinkCopied] = useState(false);
   const [memberDirectory, setMemberDirectory] = useState<Api.PublicMember[]>([]);
   const [approvingMemberId, setApprovingMemberId] = useState<string | null>(null);
@@ -1600,7 +1603,7 @@ export default function EventDetailScreen() {
                 </Pressable>;
               })}
             </ScrollView>
-            <View style={{ flexDirection: "row", gap: 10, marginTop: 14 }}><Pressable onPress={() => setAttendanceSheet(null)} style={{ flex: 1, minHeight: 50, borderRadius: 13, backgroundColor: colors.surface, alignItems: "center", justifyContent: "center" }}><Text style={{ fontWeight: "800", color: colors.foreground }}>キャンセル</Text></Pressable><Pressable onPress={() => { const absentIds = attendanceSheet?.absentMemberIds ?? []; const correcting = attendanceSheet?.correcting; void Api.finalizeEventAttendance(event.id, absentIds).then((result) => { setAttendanceSheet(null); Alert.alert(correcting ? "開催結果を訂正しました" : "開催結果を確定しました", `実参加人数は${result.actualAttendeeCount}人です。XPを反映しました。`); }).catch((error) => Alert.alert("確定できませんでした", error instanceof Error ? error.message : "もう一度お試しください。")); }} style={{ flex: 1.35, minHeight: 50, borderRadius: 13, backgroundColor: "#5B9BD5", alignItems: "center", justifyContent: "center" }}><Text style={{ fontWeight: "900", color: "#FFF" }}>{attendanceSheet?.correcting ? "実出欠を訂正" : "実出欠を確定"}</Text></Pressable></View>
+            <View style={{ flexDirection: "row", gap: 10, marginTop: 14 }}><Pressable onPress={() => setAttendanceSheet(null)} style={{ flex: 1, minHeight: 50, borderRadius: 13, backgroundColor: colors.surface, alignItems: "center", justifyContent: "center" }}><Text style={{ fontWeight: "800", color: colors.foreground }}>キャンセル</Text></Pressable><Pressable onPress={() => { const absentIds = attendanceSheet?.absentMemberIds ?? []; const correcting = attendanceSheet?.correcting; void Api.finalizeEventAttendance(event.id, absentIds).then((result) => { setAttendanceSheet(null); if (result.reward) setXpReward({ ...result.reward, previousLevel: getLevelFromXp(result.reward.previousXp), nextLevel: getLevelFromXp(result.reward.nextXp) }); else Alert.alert(correcting ? "開催結果を訂正しました" : "開催結果を確定しました", `実参加人数は${result.actualAttendeeCount}人です。XPを反映しました。`); }).catch((error) => Alert.alert("確定できませんでした", error instanceof Error ? error.message : "もう一度お試しください。")); }} style={{ flex: 1.35, minHeight: 50, borderRadius: 13, backgroundColor: "#5B9BD5", alignItems: "center", justifyContent: "center" }}><Text style={{ fontWeight: "900", color: "#FFF" }}>{attendanceSheet?.correcting ? "実出欠を訂正" : "実出欠を確定"}</Text></Pressable></View>
           </View>
         </View>
       </Modal>
@@ -1652,6 +1655,8 @@ export default function EventDetailScreen() {
           </View>
         </View>
       </Modal>
+
+      <XpRewardPopup reward={xpReward} onClose={() => setXpReward(null)} />
 
       {/* Bottom CTA */}
       {!eventCommentFocused ? <View

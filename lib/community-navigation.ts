@@ -54,7 +54,7 @@ export function chatRoomRoute(room: Pick<ChatRoom, "id" | "name" | "type" | "sou
   };
 }
 
-export function introductionChatRoute(unreadCount = 0): AppRoute {
+export function introductionChatRoute(unreadCount = 0, fromStartMission = false): AppRoute {
   return {
     pathname: "/chat/[id]",
     params: {
@@ -64,6 +64,7 @@ export function introductionChatRoute(unreadCount = 0): AppRoute {
       roomType: "board",
       sourceId: "introduction",
       participants: "",
+      ...(fromStartMission ? { fromStartMission: "1" } : {}),
     },
   };
 }

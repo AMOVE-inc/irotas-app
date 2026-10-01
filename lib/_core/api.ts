@@ -1430,7 +1430,7 @@ export async function getEventAttendance(eventId: string) {
 }
 
 export async function finalizeEventAttendance(eventId: string, absentMemberIds: string[]) {
-  return apiCall<{ success: true; corrected: boolean; actualAttendeeCount: number }>(
+  return apiCall<{ success: true; corrected: boolean; actualAttendeeCount: number; reward: null | { amount: number; reason: string; previousXp: number; nextXp: number; previousRank: import("@/constants/mock-data").MemberRank; nextRank: import("@/constants/mock-data").MemberRank } }>(
     `/api/events/${encodeURIComponent(eventId)}/attendance`,
     { method: "PUT", body: JSON.stringify({ absentMemberIds }) },
   );

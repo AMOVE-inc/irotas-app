@@ -20,15 +20,16 @@ describe("poll voter visibility and edit gate", () => {
     ["chat", chat],
     ["board", board],
   ])("shows voter details and explicit vote editing in %s polls", (_surface, source) => {
-    expect(source).toContain("投票者を見る");
+    expect(source).not.toContain("投票者を見る");
+    expect(source).toContain("結果を表示");
+    expect(source).toContain('submittingVote ? "投票中…" : "投票"');
     expect(source).toContain("投票を編集");
-    expect(source).toContain("投票編集を完了");
-    expect(source).toContain("に投票した人");
+    expect(source).toContain("投票結果");
     expect(source).toContain("canSelectPollOption");
   });
 
   it("passes single or multiple choice metadata from chat options to the reaction handler", () => {
-    expect(chat).toContain("onVote(voteKey, choices, allowMultiple)");
+    expect(chat).toContain("await onVote(`🗳️${choice}`, choices, allowMultiple)");
     expect(chat).toContain("handleReaction(item.id, emoji, pollChoices, allowMultiple)");
   });
 });

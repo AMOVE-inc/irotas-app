@@ -158,12 +158,14 @@ function OperatorOrRankBadge({ member }: { member: typeof CURRENT_USER }) {
   return <><MemberRankBadge rank={member.rank} name={member.name} compact /><MemberRoleBadge name={member.name} role={member.role} compact /></>;
 }
 
-function PollCard({ ownerKey, poll, onShowVoters }: { ownerKey: string; poll: BoardPoll; onShowVoters: (option: BoardPoll["options"][number]) => void }) {
+function PollCard({ ownerKey, poll, onShowResults }: { ownerKey: string; poll: BoardPoll; onShowResults: (options: BoardPoll["options"], selectedOptionId: string) => void }) {
   const colors = useColors();
   const [current, setCurrent] = useState(poll);
   const [viewerMemberId, setViewerMemberId] = useState(CURRENT_USER.id);
   const [shared, setShared] = useState(false);
   const [editingVote, setEditingVote] = useState(false);
+  const [pendingOptionIds, setPendingOptionIds] = useState<string[]>([]);
+  const [submittingVote, setSubmittingVote] = useState(false);
   const open = isBoardPollOpen(current);
   useEffect(() => {
     let active = true;
@@ -196,36 +198,52 @@ function PollCard({ ownerKey, poll, onShowVoters }: { ownerKey: string; poll: Bo
   const total = new Set(current.options.flatMap((option) => option.voterIds)).size;
   const hasVoted = viewerHasPollVote(current.options.map((option) => option.voterIds), viewerMemberId);
   const canSelect = canSelectPollOption(hasVoted, editingVote, !open);
+  useEffect(() => {
+    if (!editingVote) setPendingOptionIds(current.options.filter((option) => option.voterIds.includes(viewerMemberId)).map((option) => option.id));
+  }, [current, editingVote, viewerMemberId]);
 
-  const vote = (optionId: string) => {
+  const selectOption = (optionId: string) => {
     if (!open || !canSelect) return;
+    setPendingOptionIds((selected) => current.allowMultiple
+      ? selected.includes(optionId) ? selected.filter((id) => id !== optionId) : [...selected, optionId]
+      : [optionId]);
+  };
+  const submitVote = async () => {
+    if (!open || !canSelect || !pendingOptionIds.length || submittingVote) return;
     const [ownerType, ownerId] = ownerKey.split(":", 2) as ["thread" | "comment", string];
-    const request = shared
-      ? Api.voteSharedBoardPoll(ownerType, ownerId, optionId).then((result) => {
-          setCurrent(result.poll);
-          setViewerMemberId(result.viewerMemberId);
-        })
-      : voteBoardPoll(ownerKey, current, optionId, viewerMemberId).then(setCurrent);
-    if (current.allowMultiple) setEditingVote(true);
-    else setEditingVote(false);
-    void request;
+    const existing = current.options.filter((option) => option.voterIds.includes(viewerMemberId)).map((option) => option.id);
+    const toggles = [...new Set([...existing.filter((id) => !pendingOptionIds.includes(id)), ...pendingOptionIds.filter((id) => !existing.includes(id))])];
+    setSubmittingVote(true);
+    try {
+      let next = current;
+      for (const optionId of toggles) {
+        if (shared) {
+          const result = await Api.voteSharedBoardPoll(ownerType, ownerId, optionId);
+          next = result.poll; setViewerMemberId(result.viewerMemberId);
+        } else next = await voteBoardPoll(ownerKey, next, optionId, viewerMemberId);
+      }
+      setCurrent(next); setEditingVote(false);
+    } finally { setSubmittingVote(false); }
   };
 
   return <View style={{ marginTop: 12, borderRadius: 14, padding: 13, backgroundColor: "#F7F5FA", borderWidth: 1, borderColor: "#DED8E8" }}>
     <View style={{ flexDirection: "row", alignItems: "center" }}><IconSymbol name="chart.bar.fill" size={17} color="#6D5B85" /><Text style={{ flex: 1, fontSize: 14, fontWeight: "900", color: colors.foreground, marginLeft: 7 }}>{current.question}</Text><View style={{ borderRadius: 9, paddingHorizontal: 7, paddingVertical: 3, backgroundColor: open ? "#E4F3E8" : "#E8E8EB" }}><Text style={{ fontSize: 10, fontWeight: "900", color: open ? "#277A40" : colors.muted }}>{open ? "投票受付中" : "終了"}</Text></View></View>
     {current.allowMultiple ? <Text style={{ fontSize: 10, fontWeight: "800", color: "#6D5B85", marginTop: 5 }}>複数回答可</Text> : null}
     <View style={{ gap: 7, marginTop: 11 }}>{current.options.map((option) => {
-      const selected = option.voterIds.includes(viewerMemberId);
+      const selected = pendingOptionIds.includes(option.id);
       const ratio = total ? option.voterIds.length / total : 0;
       return <View key={option.id}>
-        <Pressable accessibilityRole="button" accessibilityState={{ disabled: !canSelect, selected }} disabled={!canSelect} onPress={() => vote(option.id)} style={{ overflow: "hidden", borderRadius: 10, borderWidth: 1, borderColor: selected ? "#725C8C" : colors.border, backgroundColor: colors.surface, opacity: canSelect ? 1 : 0.82 }}>
+          <Pressable accessibilityRole="button" accessibilityState={{ disabled: !canSelect, selected }} disabled={!canSelect} onPress={() => selectOption(option.id)} style={{ overflow: "hidden", borderRadius: 10, borderWidth: 1, borderColor: selected ? "#725C8C" : colors.border, backgroundColor: colors.surface, opacity: canSelect ? 1 : 0.82 }}>
           <View style={{ position: "absolute", inset: 0, width: `${Math.round(ratio * 100)}%`, backgroundColor: selected ? "#E8DDF1" : "#EEEAF2" }} />
           <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 11, paddingVertical: 9 }}><Text style={{ flex: 1, fontSize: 13, fontWeight: selected ? "900" : "700", color: colors.foreground }}>{selected ? "● " : "○ "}{option.text}</Text><Text style={{ fontSize: 12, fontWeight: "900", color: colors.muted }}>{option.voterIds.length}票</Text></View>
         </Pressable>
-        {option.voterIds.length ? <Pressable accessibilityRole="button" accessibilityLabel={`${option.text}に投票した人を見る`} onPress={() => onShowVoters(option)} style={{ alignSelf: "flex-end", paddingTop: 5, paddingHorizontal: 4 }}><Text style={{ fontSize: 11, fontWeight: "800", color: "#6D5B85" }}>投票者を見る</Text></Pressable> : null}
       </View>;
     })}</View>
-    {open && hasVoted ? <Pressable accessibilityRole="button" onPress={() => setEditingVote((value) => !value)} style={{ alignSelf: "flex-start", marginTop: 10, borderRadius: 9, borderWidth: 1, borderColor: "#725C8C", paddingHorizontal: 11, paddingVertical: 7 }}><Text style={{ fontSize: 12, fontWeight: "900", color: "#6D5B85" }}>{editingVote ? "投票編集を完了" : "投票を編集"}</Text></Pressable> : null}
+    {open && canSelect ? <Pressable accessibilityRole="button" disabled={!pendingOptionIds.length || submittingVote} onPress={() => void submitVote()} style={{ marginTop: 11, borderRadius: 10, backgroundColor: pendingOptionIds.length && !submittingVote ? "#5865F2" : "#B9BBC7", paddingVertical: 10, alignItems: "center" }}><Text style={{ fontSize: 13, fontWeight: "900", color: "#FFF" }}>{submittingVote ? "投票中…" : "投票"}</Text></Pressable> : null}
+    <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 9 }}>
+      {open && hasVoted ? <Pressable accessibilityRole="button" onPress={() => setEditingVote((value) => !value)} style={{ borderRadius: 9, borderWidth: 1, borderColor: "#725C8C", paddingHorizontal: 11, paddingVertical: 7 }}><Text style={{ fontSize: 12, fontWeight: "900", color: "#6D5B85" }}>{editingVote ? "編集をキャンセル" : "投票を編集"}</Text></Pressable> : <View />}
+      <Pressable accessibilityRole="button" onPress={() => onShowResults(current.options, current.options[0]?.id ?? "")} style={{ paddingHorizontal: 4, paddingVertical: 7 }}><Text style={{ fontSize: 12, fontWeight: "900", color: "#6D5B85" }}>結果を表示</Text></Pressable>
+    </View>
     <Text style={{ fontSize: 11, color: colors.muted, marginTop: 9 }}>{open ? `期限：${current.deadline} 23:59` : `結果：${boardPollResult(current)}`}</Text>
   </View>;
 }
@@ -918,7 +936,7 @@ function ThreadDetailModal({
   const threadReactionsRef = useRef(thread.reactions ?? {});
   const [showThreadEmojiPicker, setShowThreadEmojiPicker] = useState(false);
   const [commentEmojiPickerId, setCommentEmojiPickerId] = useState<string | null>(null);
-  const [reactionDetails, setReactionDetails] = useState<{ emoji: string; memberIds: string[]; title?: string } | null>(null);
+  const [reactionDetails, setReactionDetails] = useState<{ emoji: string; memberIds: string[]; title?: string; pollOptions?: BoardPoll["options"]; selectedPollOptionId?: string } | null>(null);
   const [reactionMembers, setReactionMembers] = useState<Api.PublicMember[]>([]);
   const reactionLongPress = useRef(false);
   const pendingReactions = useRef(new Set<string>());
@@ -1374,7 +1392,7 @@ function ThreadDetailModal({
 
           {applicationClub ? <Pressable disabled={clubApplicationPending || clubApplicationMember} onPress={() => setShowClubApplication(true)} style={{ minHeight: 50, borderRadius: 14, alignItems: "center", justifyContent: "center", marginBottom: 18, backgroundColor: clubApplicationMember ? "#DCEEDF" : clubApplicationPending ? "#E7E7EA" : "#5579A6" }}><Text style={{ fontSize: 15, fontWeight: "900", color: clubApplicationMember ? "#2F7541" : clubApplicationPending ? colors.muted : "#FFF" }}>{clubApplicationMember ? "入部済み" : clubApplicationPending ? "入部承認待ち" : "入部申請を送る"}</Text></Pressable> : null}
 
-          {thread.poll ? <PollCard ownerKey={`thread:${thread.id}`} poll={thread.poll} onShowVoters={(option) => setReactionDetails({ emoji: "🗳️", memberIds: option.voterIds, title: `「${option.text}」に投票した人` })} /> : null}
+          {thread.poll ? <PollCard ownerKey={`thread:${thread.id}`} poll={thread.poll} onShowResults={(options, selectedOptionId) => { const option = options.find((item) => item.id === selectedOptionId) ?? options[0]; setReactionDetails({ emoji: "🗳️", memberIds: option?.voterIds ?? [], title: "投票結果", pollOptions: options, selectedPollOptionId: option?.id }); }} /> : null}
 
           {thread.gourmetContest ? (
             <View style={{ backgroundColor: "#FFF8E8", borderRadius: 16, borderWidth: 1.5, borderColor: "#E9C56D", padding: 16, marginBottom: 16 }}>
@@ -1533,7 +1551,7 @@ function ThreadDetailModal({
                 {comment.importedPollSummary ? <View style={{ marginLeft: 32 }}><ImportedPollResultCard summary={comment.importedPollSummary} /></View> : null}
                 {editingCommentId !== comment.id && comment.importedLinkPreviews?.length ? <View style={{ marginLeft: 32 }}>{comment.importedLinkPreviews.map((preview) => <BoardLinkPreviewCard key={preview.url} preview={preview} />)}</View> : null}
                 {editingCommentId !== comment.id ? <View style={{ marginLeft: 32 }}><ContentLinkCards content={comment.content} existing={comment.importedLinkPreviews} /></View> : null}
-                {comment.poll ? <View style={{ marginLeft: 32 }}><PollCard ownerKey={`comment:${comment.id}`} poll={comment.poll} onShowVoters={(option) => setReactionDetails({ emoji: "🗳️", memberIds: option.voterIds, title: `「${option.text}」に投票した人` })} /></View> : null}
+                {comment.poll ? <View style={{ marginLeft: 32 }}><PollCard ownerKey={`comment:${comment.id}`} poll={comment.poll} onShowResults={(options, selectedOptionId) => { const option = options.find((item) => item.id === selectedOptionId) ?? options[0]; setReactionDetails({ emoji: "🗳️", memberIds: option?.voterIds ?? [], title: "投票結果", pollOptions: options, selectedPollOptionId: option?.id }); }} /></View> : null}
                 {comment.images?.length ? (
                   <View style={{ marginLeft: 32, marginTop: 8, flexDirection: "row", flexWrap: "wrap", gap: 7 }}>
                     {comment.images.map((uri, index) => <ExpandableImage key={`${comment.id}-image-${index}`} source={boardImageSource(uri)} uri={boardImageUri(uri)} galleryUris={comment.images?.map(boardImageUri).filter((value): value is string => Boolean(value))} galleryIndex={index} style={{ width: 104, height: 104, borderRadius: 10, backgroundColor: colors.surface }} contentFit="cover" />)}
@@ -1669,6 +1687,7 @@ function ThreadDetailModal({
               <Text style={{ marginLeft: 8, fontSize: 16, fontWeight: "900", color: colors.foreground }}>{reactionDetails?.title ?? "スタンプを押した人"}</Text>
               <Pressable onPress={() => setReactionDetails(null)} style={{ marginLeft: "auto", padding: 4 }}><IconSymbol name="xmark" size={19} color={colors.muted} /></Pressable>
             </View>
+            {reactionDetails?.pollOptions ? <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 7, paddingBottom: 10 }}>{reactionDetails.pollOptions.map((option) => { const selected = option.id === reactionDetails.selectedPollOptionId; return <Pressable key={option.id} onPress={() => setReactionDetails((current) => current ? { ...current, selectedPollOptionId: option.id, memberIds: option.voterIds } : current)} style={{ borderRadius: 14, paddingHorizontal: 11, paddingVertical: 7, backgroundColor: selected ? "#6D5B85" : colors.surface, borderWidth: 1, borderColor: selected ? "#6D5B85" : colors.border }}><Text style={{ fontSize: 12, fontWeight: "800", color: selected ? "#FFF" : colors.foreground }}>{option.text} {option.voterIds.length}票</Text></Pressable>; })}</ScrollView> : null}
             <ScrollView>
               {reactionDetails?.memberIds.filter((memberId) => !isUnidentifiedReaction(memberId)).map((memberId) => {
                 const directoryMember = reactionMembers.find((member) => member.id === memberId);
@@ -2738,7 +2757,7 @@ export default function BoardScreen() {
   const colors = useColors();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { compose, reminderEventId, category: categoryParam, view, thread: threadParam, fromHome, fromProfile, openClubMembers } = useLocalSearchParams<{ compose?: string; reminderEventId?: string; category?: string; view?: string; thread?: string; fromHome?: string; fromProfile?: string; openClubMembers?: string }>();
+  const { compose, reminderEventId, category: categoryParam, view, thread: threadParam, fromHome, fromProfile, openClubMembers, missionHighlightFab } = useLocalSearchParams<{ compose?: string; reminderEventId?: string; category?: string; view?: string; thread?: string; fromHome?: string; fromProfile?: string; openClubMembers?: string; missionHighlightFab?: string }>();
   const { user: authUser } = useAuthContext();
   const userIsAdmin = canManageBoardCategories(authUser?.role, authUser?.accessRole);
   const userCanModerateAll = isOperatorRole(authUser?.role, authUser?.accessRole);
@@ -3455,13 +3474,16 @@ export default function BoardScreen() {
       /> : null}
 
       {isThreadView && activeCategory !== "introduction" && activeCategory !== "gourmet-map" && (activeCategory !== "gourmet-contest" || userCanManageContests) ? (
+        <View style={{ position: "absolute", right: 20, bottom: 104 + insets.bottom, alignItems: "flex-end" }}>
+        {missionHighlightFab === "1" ? <View style={{ marginBottom: 10, borderRadius: 12, backgroundColor: "#FFF4C7", borderWidth: 2, borderColor: "#F0B429", paddingHorizontal: 13, paddingVertical: 8 }}><Text style={{ color: "#744D00", fontSize: 13, fontWeight: "900" }}>＋からごちそうさま報告を投稿</Text></View> : null}
         <Pressable
           accessibilityLabel={`${categories.find((category) => category.key === activeCategory)?.label ?? "掲示板"}に投稿`}
-          onPress={() => setShowCreateThread(true)}
-          style={{ position: "absolute", right: 20, bottom: 104 + insets.bottom, width: 56, height: 56, borderRadius: 28, backgroundColor: "#18171A", alignItems: "center", justifyContent: "center", shadowColor: "#000", shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.22, shadowRadius: 8, elevation: 6 }}
+          onPress={() => { router.setParams({ missionHighlightFab: "" }); setShowCreateThread(true); }}
+          style={{ width: 56, height: 56, borderRadius: 28, backgroundColor: "#18171A", alignItems: "center", justifyContent: "center", shadowColor: "#000", shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.22, shadowRadius: 8, elevation: 6, borderWidth: missionHighlightFab === "1" ? 4 : 0, borderColor: "#F7C948" }}
         >
           <IconSymbol name="plus" size={27} color="#FFF" />
         </Pressable>
+        </View>
       ) : null}
 
       {/* Thread Detail Modal */}

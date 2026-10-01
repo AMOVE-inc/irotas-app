@@ -131,7 +131,7 @@ export async function ensureEventRoom(db: D1Database, roomId: string) {
   if (!event) return null;
   let origin: { recruitmentChannel?: string; discordRecruitmentClosedAt?: string; manualParticipantIds?: unknown; companionIds?: unknown } = {};
   try { origin = JSON.parse(event.public_data_json) as typeof origin; } catch {}
-  const discordEvent = event.id.startsWith("discord-event-") || origin.recruitmentChannel === "discord";
+  const discordEvent = origin.recruitmentChannel === "discord" || (origin.recruitmentChannel == null && event.id.startsWith("discord-event-"));
   if (discordEvent && !origin.discordRecruitmentClosedAt) return null;
   const now = new Date().toISOString();
   await db.prepare(`UPDATE events SET public_data_json = json_set(public_data_json, '$.chatId', ?)

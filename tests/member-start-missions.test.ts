@@ -103,6 +103,8 @@ describe("member start missions", () => {
     expect(sql).toContain("discord_profile_snapshots");
     expect(sql).toContain("dps.has_profile_bio = 1");
     expect(sql).toContain("bt.category = 'introduction'");
+    expect(sql).toContain("FROM chat_messages cm");
+    expect(sql).toContain("cm.room_id = 'board-introduction'");
   });
 
   it("uses only achievements created after an explicit mission reset", async () => {
@@ -111,6 +113,7 @@ describe("member start missions", () => {
     ));
     expect(source).toContain("julianday(s.profile_completed_at) > julianday(s.reset_at)");
     expect(source).toContain("julianday(bt.created_at) > julianday(s.reset_at)");
+    expect(source).toContain("julianday(cm.created_at) > julianday(s.reset_at)");
     expect(source).toContain("julianday(ep.applied_at) > julianday(s.reset_at)");
     expect(source).toContain("julianday(cm.applied_at) > julianday(s.reset_at)");
     expect(source).toContain("julianday(e.created_at) > julianday(s.reset_at)");

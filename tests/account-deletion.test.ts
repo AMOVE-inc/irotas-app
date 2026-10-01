@@ -282,4 +282,36 @@ describe("account deletion requests", () => {
     expect(store.writes.some((sql) => sql.includes("INSERT INTO account_deletion_requests"))).toBe(false);
     square.mockRestore();
   });
+
+  it("completes a pause only after Square returns a scheduled PAUSE action", async () => {
+    const secret = "server-side-secret";
+    const store = deletionDatabase(await hashPassword("correct-password", undefined, secret));
+    const env = { DB: store.db, AUTH_SECRET: secret, SQUARE_ACCESS_TOKEN: "square-token" } as SitesEnv;
+    const square = vi.spyOn(globalThis, "fetch").mockResolvedValue(Response.json({
+      subscription: { id: "subscription-21", status: "ACTIVE" },
+      actions: [{ type: "PAUSE", effective_date: "2026-11-01" }],
+    }));
+
+    const response = await handleAuthRequest(request("POST", {
+      password: "correct-password",
+      requestType: "pause",
+      reasons: ["しばらく参加できない"],
+      understandSquareChange: true,
+      understandDataHandling: true,
+      source: "app",
+    }), env);
+
+    expect(response?.status).toBe(202);
+    expect((await response?.json())?.request).toMatchObject({
+      status: "completed",
+      requestType: "pause",
+      squareAction: "pause_scheduled",
+      squareEffectiveDate: "2026-11-01",
+    });
+    expect(square).toHaveBeenCalledWith(expect.stringContaining("/pause"), expect.objectContaining({
+      method: "POST",
+      body: expect.stringContaining("pause_reason"),
+    }));
+    square.mockRestore();
+  });
 });

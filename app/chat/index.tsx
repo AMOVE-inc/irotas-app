@@ -197,7 +197,7 @@ function ChatPollCard({
   readOnly,
   mentionGroups,
   onVote,
-  onShowVoters,
+  onShowResults,
 }: {
   lines: string[];
   choices: string[];
@@ -206,44 +206,58 @@ function ChatPollCard({
   outgoing: boolean;
   readOnly?: boolean;
   mentionGroups: ReturnType<typeof getMentionGroups>;
-  onVote: (emoji: string, pollChoices: string[], allowMultiple: boolean) => void;
-  onShowVoters: (choice: string, memberIds: string[]) => void;
+  onVote: (emoji: string, pollChoices: string[], allowMultiple: boolean) => void | Promise<void>;
+  onShowResults: (choices: Array<{ choice: string; memberIds: string[] }>, selectedChoice: string) => void;
 }) {
   const colors = useColors();
   const [editingVote, setEditingVote] = useState(false);
+  const [pendingChoices, setPendingChoices] = useState<string[]>([]);
+  const [submittingVote, setSubmittingVote] = useState(false);
   const allowMultiple = lines.includes("🔢 複数回答可");
   const voteCounts = choices.map((choice) => (reactions[`🗳️${choice}`] ?? []).length);
   const totalVotes = voteCounts.reduce((sum, count) => sum + count, 0);
   const hasVoted = viewerHasPollVote(choices.map((choice) => reactions[`🗳️${choice}`] ?? []), viewerId);
   const canSelect = canSelectPollOption(hasVoted, editingVote, Boolean(readOnly));
+  useEffect(() => {
+    if (!editingVote) setPendingChoices(choices.filter((choice) => (reactions[`🗳️${choice}`] ?? []).includes(viewerId)));
+  }, [choices, editingVote, reactions, viewerId]);
+  const selectChoice = (choice: string) => setPendingChoices((selected) => allowMultiple
+    ? selected.includes(choice) ? selected.filter((item) => item !== choice) : [...selected, choice]
+    : [choice]);
+  const submitVote = async () => {
+    if (!canSelect || !pendingChoices.length || submittingVote) return;
+    const existing = choices.filter((choice) => (reactions[`🗳️${choice}`] ?? []).includes(viewerId));
+    const toggles = [...new Set([...existing.filter((choice) => !pendingChoices.includes(choice)), ...pendingChoices.filter((choice) => !existing.includes(choice))])];
+    setSubmittingVote(true);
+    try { for (const choice of toggles) await onVote(`🗳️${choice}`, choices, allowMultiple); setEditingVote(false); }
+    finally { setSubmittingVote(false); }
+  };
 
   return <View style={{ minWidth: 220 }}>
     <MentionText content={lines[0].replace(/^📊 /, "")} outgoing={outgoing} groups={mentionGroups} />
     <Text style={{ fontSize: 10, fontWeight: "800", color: outgoing ? "#FFF" : colors.muted, marginTop: 5 }}>{allowMultiple ? "複数回答可" : "1つ選択"}・合計 {totalVotes}票</Text>
     <View style={{ gap: 8, marginTop: 10 }}>{choices.map((choice, index) => {
-      const voteKey = `🗳️${choice}`;
-      const voters = reactions[voteKey] ?? [];
-      const selected = voters.includes(viewerId);
+      const voters = reactions[`🗳️${choice}`] ?? [];
+      const selected = pendingChoices.includes(choice);
       const percentage = totalVotes ? Math.round((voters.length / totalVotes) * 100) : 0;
       return <View key={choice}>
         <Pressable
           accessibilityRole="button"
           accessibilityState={{ disabled: !canSelect, selected }}
           disabled={!canSelect}
-          onPress={() => {
-            onVote(voteKey, choices, allowMultiple);
-            if (allowMultiple) setEditingVote(true);
-            else setEditingVote(false);
-          }}
+          onPress={() => selectChoice(choice)}
           style={{ borderRadius: 10, paddingHorizontal: 10, paddingVertical: 9, borderWidth: 1, borderColor: selected ? "#5865F2" : outgoing ? "#FFF8" : colors.border, backgroundColor: selected ? "#5865F228" : "transparent", overflow: "hidden", opacity: canSelect ? 1 : 0.82 }}
         >
           <View style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: `${percentage}%`, backgroundColor: selected ? "#5865F238" : outgoing ? "#FFFFFF20" : "#5865F218" }} />
           <View style={{ flexDirection: "row", alignItems: "center" }}><Text style={{ flex: 1, fontSize: 13, fontWeight: "800", color: outgoing ? "#FFF" : colors.foreground }}>{selected ? "●" : "○"} {choice}</Text><Text style={{ marginLeft: 8, fontSize: 12, fontWeight: "900", color: outgoing ? "#FFF" : "#5865F2" }}>{percentage}%</Text><Text style={{ marginLeft: 5, fontSize: 10, fontWeight: "700", color: outgoing ? "#FFF" : colors.muted }}>{voteCounts[index]}票</Text></View>
         </Pressable>
-        {voters.length ? <Pressable accessibilityRole="button" accessibilityLabel={`${choice}に投票した人を見る`} onPress={() => onShowVoters(choice, voters)} style={{ alignSelf: "flex-end", paddingTop: 5, paddingHorizontal: 3 }}><Text style={{ fontSize: 10, fontWeight: "900", color: outgoing ? "#FFF" : "#5865F2", textDecorationLine: "underline" }}>投票者を見る</Text></Pressable> : null}
       </View>;
     })}</View>
-    {!readOnly && hasVoted ? <Pressable accessibilityRole="button" onPress={() => setEditingVote((value) => !value)} style={{ alignSelf: "flex-start", marginTop: 10, borderRadius: 9, borderWidth: 1, borderColor: outgoing ? "#FFF8" : "#5865F2", paddingHorizontal: 10, paddingVertical: 6 }}><Text style={{ fontSize: 11, fontWeight: "900", color: outgoing ? "#FFF" : "#5865F2" }}>{editingVote ? "投票編集を完了" : "投票を編集"}</Text></Pressable> : null}
+    {canSelect ? <Pressable accessibilityRole="button" disabled={!pendingChoices.length || submittingVote} onPress={() => void submitVote()} style={{ marginTop: 10, borderRadius: 9, backgroundColor: pendingChoices.length && !submittingVote ? (outgoing ? "#FFF" : "#5865F2") : (outgoing ? "#FFFFFF66" : "#B9BBC7"), paddingVertical: 9, alignItems: "center" }}><Text style={{ fontSize: 12, fontWeight: "900", color: outgoing ? "#D65E8D" : "#FFF" }}>{submittingVote ? "投票中…" : "投票"}</Text></Pressable> : null}
+    <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 9 }}>
+      {!readOnly && hasVoted ? <Pressable accessibilityRole="button" onPress={() => setEditingVote((value) => !value)} style={{ borderRadius: 9, borderWidth: 1, borderColor: outgoing ? "#FFF8" : "#5865F2", paddingHorizontal: 10, paddingVertical: 6 }}><Text style={{ fontSize: 11, fontWeight: "900", color: outgoing ? "#FFF" : "#5865F2" }}>{editingVote ? "編集をキャンセル" : "投票を編集"}</Text></Pressable> : <View />}
+      <Pressable accessibilityRole="button" onPress={() => onShowResults(choices.map((choice) => ({ choice, memberIds: reactions[`🗳️${choice}`] ?? [] })), choices[0] ?? "")} style={{ paddingHorizontal: 3, paddingVertical: 6 }}><Text style={{ fontSize: 11, fontWeight: "900", color: outgoing ? "#FFF" : "#5865F2" }}>結果を表示</Text></Pressable>
+    </View>
     <Text style={{ fontSize: 10, color: outgoing ? "#FFF" : colors.muted, marginTop: 9 }}>{lines.find((line) => line.startsWith("⏱"))}</Text>
   </View>;
 }
@@ -254,7 +268,7 @@ function MessageBubble({ message, isMe, canDelete, readOnly, viewerId, viewerNam
   const [showReactionPicker, setShowReactionPicker] = useState(false);
   const [showMoreReactions, setShowMoreReactions] = useState(false);
   const [showActions, setShowActions] = useState(false);
-  const [reactionDetails, setReactionDetails] = useState<{ emoji: string; memberIds: string[]; title?: string } | null>(null);
+  const [reactionDetails, setReactionDetails] = useState<{ emoji: string; memberIds: string[]; title?: string; pollOptions?: Array<{ choice: string; memberIds: string[] }>; selectedPollChoice?: string } | null>(null);
   const reactionLongPress = useRef(false);
   const pollLines = message.content.startsWith("📊 ") ? message.content.split("\n") : [];
   const pollChoices = pollLines.filter((line) => line.startsWith("◯ ")).map((line) => line.slice(2));
@@ -338,7 +352,7 @@ function MessageBubble({ message, isMe, canDelete, readOnly, viewerId, viewerNam
           {message.replyTo ? <View style={{ paddingHorizontal: 10, paddingTop: 8 }}><ReplyReferenceView reply={message.replyTo} outgoing={isMe} onPress={() => onOpenReply(message.replyTo!.id)} /></View> : null}
           {message.content ? (
             <View style={{ paddingHorizontal: 14, paddingVertical: 10 }}>
-              {pollChoices.length >= 2 ? <ChatPollCard lines={pollLines} choices={pollChoices} reactions={message.reactions ?? {}} viewerId={viewerId} outgoing={isMe} readOnly={readOnly} mentionGroups={mentionGroups} onVote={onReact} onShowVoters={(choice, memberIds) => setReactionDetails({ emoji: "🗳️", memberIds, title: `「${choice}」に投票した人` })} /> : <><MentionText content={message.content} outgoing={isMe} groups={mentionGroups} rooms={getAllRooms()} threads={BOARD_THREADS} onOpenInternalLink={onOpenInternalLink} /><ContentLinkCards content={message.content} /></>}
+              {pollChoices.length >= 2 ? <ChatPollCard lines={pollLines} choices={pollChoices} reactions={message.reactions ?? {}} viewerId={viewerId} outgoing={isMe} readOnly={readOnly} mentionGroups={mentionGroups} onVote={onReact} onShowResults={(options, selectedChoice) => { const option = options.find((item) => item.choice === selectedChoice) ?? options[0]; setReactionDetails({ emoji: "🗳️", memberIds: option?.memberIds ?? [], title: "投票結果", pollOptions: options, selectedPollChoice: option?.choice }); }} /> : <><MentionText content={message.content} outgoing={isMe} groups={mentionGroups} rooms={getAllRooms()} threads={BOARD_THREADS} onOpenInternalLink={onOpenInternalLink} /><ContentLinkCards content={message.content} /></>}
             </View>
           ) : null}
         </Pressable> : null}
@@ -391,6 +405,7 @@ function MessageBubble({ message, isMe, canDelete, readOnly, viewerId, viewerNam
           <Pressable onPress={() => setReactionDetails(null)} style={{ flex: 1, backgroundColor: "rgba(20,18,24,0.48)", justifyContent: "center", padding: 28 }}>
             <Pressable onPress={() => {}} style={{ maxHeight: "72%", backgroundColor: colors.background, borderRadius: 20, padding: 18 }}>
               <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 12 }}><Text style={{ fontSize: 21 }}>{reactionDetails?.emoji}</Text><Text style={{ marginLeft: 8, fontSize: 16, fontWeight: "900", color: colors.foreground }}>{reactionDetails?.title ?? "リアクションした人"}</Text><Pressable onPress={() => setReactionDetails(null)} style={{ marginLeft: "auto", padding: 4 }}><IconSymbol name="xmark" size={19} color={colors.muted} /></Pressable></View>
+              {reactionDetails?.pollOptions ? <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 7, paddingBottom: 10 }}>{reactionDetails.pollOptions.map((option) => { const selected = option.choice === reactionDetails.selectedPollChoice; return <Pressable key={option.choice} onPress={() => setReactionDetails((current) => current ? { ...current, selectedPollChoice: option.choice, memberIds: option.memberIds } : current)} style={{ borderRadius: 14, paddingHorizontal: 10, paddingVertical: 7, backgroundColor: selected ? "#5865F2" : colors.surface, borderWidth: 1, borderColor: selected ? "#5865F2" : colors.border }}><Text style={{ fontSize: 12, fontWeight: "800", color: selected ? "#FFF" : colors.foreground }}>{option.choice} {option.memberIds.length}票</Text></Pressable>; })}</ScrollView> : null}
               <ScrollView>
                 {reactionDetails?.memberIds.filter((memberId) => !isUnidentifiedReaction(memberId)).map((memberId) => {
                   const isViewer = memberId === viewerId;
@@ -421,7 +436,7 @@ export default function ChatScreen() {
   const viewerMemberId = authUser?.memberId ?? (authUser?.id ? `member-${authUser.id}` : CURRENT_USER.id);
   const userIsAdmin = isAdminRole(authUser?.role, authUser?.accessRole);
   const canViewAllChats = isOperatorRole(authUser?.role, authUser?.accessRole);
-  const { id, message: linkedMessageId, unreadCount: unreadCountParam, roomName, roomType, sourceId, participants: participantsParam } = useLocalSearchParams<{ id: string; message?: string; unreadCount?: string; roomName?: string; roomType?: ChatRoom["type"]; sourceId?: string; participants?: string }>();
+  const { id, message: linkedMessageId, unreadCount: unreadCountParam, roomName, roomType, sourceId, participants: participantsParam, fromStartMission } = useLocalSearchParams<{ id: string; message?: string; unreadCount?: string; roomName?: string; roomType?: ChatRoom["type"]; sourceId?: string; participants?: string; fromStartMission?: string }>();
   const unreadCountFromRoute = unreadCountParam !== undefined && Number.isFinite(Number(unreadCountParam))
     ? Math.max(0, Math.floor(Number(unreadCountParam))) : null;
   const [messageText, setMessageText] = useState("");
@@ -1051,7 +1066,7 @@ export default function ChatScreen() {
     return (
       <ScreenContainer edges={["top", "left", "right"]}>
         <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 16, paddingVertical: 10, borderBottomWidth: 0.5, borderBottomColor: colors.border }}>
-          <Pressable onPress={() => router.back()}><IconSymbol name="arrow.left" size={22} color={colors.foreground} /></Pressable>
+          <Pressable onPress={() => fromStartMission === "1" ? router.replace("/(tabs)/index" as any) : router.back()}><IconSymbol name="arrow.left" size={22} color={colors.foreground} /></Pressable>
           <Text numberOfLines={1} style={{ flex: 1, marginLeft: 12, fontSize: 16, fontWeight: "700", color: colors.foreground }}>{routedRoom?.name ?? "チャット"}</Text>
         </View>
       </ScreenContainer>
@@ -1104,7 +1119,7 @@ export default function ChatScreen() {
           borderBottomColor: colors.border,
         }}
       >
-        <Pressable onPress={() => router.back()}>
+        <Pressable onPress={() => fromStartMission === "1" ? router.replace("/(tabs)/index" as any) : router.back()}>
           <IconSymbol name="arrow.left" size={22} color={colors.foreground} />
         </Pressable>
         <View style={{ flex: 1, marginLeft: 12 }}>

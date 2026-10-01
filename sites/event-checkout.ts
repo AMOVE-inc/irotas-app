@@ -129,7 +129,7 @@ export async function handleEventCheckoutRequest(request: Request, env: SitesEnv
     return json({ error: "支払い対象の参加申込がありません" }, 403);
   let data: Record<string, unknown> = {};
   try { data = JSON.parse(event.public_data_json) as Record<string, unknown>; } catch {}
-  if (data.recruitmentChannel === "discord" || eventId.startsWith("discord-event-"))
+  if (data.recruitmentChannel === "discord" || (data.recruitmentChannel == null && eventId.startsWith("discord-event-")))
     return json({ error: "このイベントはアプリ決済の対象外です" }, 409);
   if (data.paymentTiming === "postpaid" && event.status !== "ended" && event.event_date >= new Date().toISOString().slice(0, 10))
     return json({ error: "事後決済はイベント開催日の翌日から利用できます" }, 409);

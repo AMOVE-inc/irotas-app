@@ -1,9 +1,8 @@
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
-import { CURRENT_USER, DEFAULT_AVATAR, EVENTS, MEMBERS, getRankFromPoints, type Event } from "@/constants/mock-data";
+import { CURRENT_USER, DEFAULT_AVATAR, EVENTS, MEMBERS, type Event } from "@/constants/mock-data";
 import { EventMentionPreview, MentionSuggestions } from "@/components/mention-ui";
-import { XpRewardPopup } from "@/components/xp-reward-popup";
-import type { XpReward } from "@/lib/xp-store";
+import { ActionCelebrationPopup } from "@/components/action-celebration-popup";
 import { GOURMET_GENRES } from "@/constants/event-options";
 import { useAuthContext } from "@/lib/auth-context";
 import { isAdminRole, isOperatorRole } from "@/lib/access-control";
@@ -181,7 +180,7 @@ export default function CreateEventScreen() {
   const [formError, setFormError] = useState("");
   const [memberDirectory, setMemberDirectory] = useState<Api.PublicMember[]>([]);
   const [memberDirectoryLoading, setMemberDirectoryLoading] = useState(true);
-  const [xpReward, setXpReward] = useState<XpReward | null>(null);
+  const [showCreatedCelebration, setShowCreatedCelebration] = useState(false);
   const [createdEventId, setCreatedEventId] = useState<string | null>(null);
   const [editingEvent, setEditingEvent] = useState<Event | null>(initialEditingEvent ?? null);
   const [editLoading, setEditLoading] = useState(Boolean(editId && !initialEditingEvent));
@@ -298,11 +297,11 @@ export default function CreateEventScreen() {
     void recordHomeActivity({ id: `event:${newEvent.id}`, kind: "event", title: newEvent.title, description: finalType === "official" ? recruitmentStatus === "draft" ? "公式イベントを募集前で登録しました" : "新しい公式イベントが公開されました" : finalType === "club" ? "新しい部活動イベントが公開されました" : "新しいグルメ会が公開されました", createdAt: newEvent.createdAt!, route: "/event-detail", params: { id: newEvent.id } });
     if (newEvent.recruitmentStatus !== "draft") void scheduleOrganizerDeadlineNotification(newEvent);
     setIsSubmitting(false);
-    // 作成XPはイベント作成APIで一意に付与済み。画面遷移前に獲得通知を表示する。
+    // イベント作成自体はXP付与対象ではないため、作成完了だけを祝福する。
+    // 初回作成のスタートミッション10XPはホームでサーバー確定後に別途表示する。
     if (finalType !== "official" && !userIsOperator) {
-      const previousXp = memberDirectory.find((member) => member.id === viewerMemberId)?.xp ?? 0;
       setCreatedEventId(newEvent.id);
-      setXpReward({ amount: 10, reason: "イベントの新規作成", previousXp, nextXp: previousXp + 10, previousLevel: Math.max(1, Math.floor(previousXp / 50) + 1), nextLevel: Math.max(1, Math.floor((previousXp + 10) / 50) + 1), previousRank: getRankFromPoints(previousXp), nextRank: getRankFromPoints(previousXp + 10) });
+      setShowCreatedCelebration(true);
       return;
     }
     router.replace({ pathname: "/event-detail", params: { id: newEvent.id } });
@@ -374,7 +373,7 @@ export default function CreateEventScreen() {
         {formError ? <Text accessibilityRole="alert" style={{ marginTop: 16, color: colors.error, fontSize: 13, fontWeight: "800" }}>{formError}</Text> : null}
         <Pressable disabled={isSubmitting} onPress={() => { void handleCreate(); }} style={{ marginTop: 22, minHeight: 56, borderRadius: 16, backgroundColor: termsAccepted && !isSubmitting ? "#18171A" : "#B8B8BD", alignItems: "center", justifyContent: "center", opacity: isSubmitting ? 0.65 : 1 }}><Text style={{ fontSize: 17, fontWeight: "900", color: "#FFF" }}>{isSubmitting ? (editId ? "保存しています…" : "作成しています…") : (editId ? "変更を保存する" : "イベントを作成する")}</Text></Pressable>
       </ScrollView>}
-      <XpRewardPopup reward={xpReward} onClose={() => { setXpReward(null); if (createdEventId) router.replace({ pathname: "/event-detail", params: { id: createdEventId } }); }} />
+      <ActionCelebrationPopup visible={showCreatedCelebration} title="イベントを作成しました" detail="募集内容を確認して、参加者を迎える準備を進めましょう。" onClose={() => { setShowCreatedCelebration(false); if (createdEventId) router.replace({ pathname: "/event-detail", params: { id: createdEventId } }); }} />
       {isSubmitting ? <View pointerEvents="auto" style={{ position: "absolute", inset: 0, backgroundColor: "rgba(255,255,255,0.72)", alignItems: "center", justifyContent: "center" }}><View style={{ minWidth: 170, borderRadius: 18, padding: 22, alignItems: "center", backgroundColor: colors.surface, shadowColor: "#000", shadowOpacity: 0.14, shadowRadius: 14, elevation: 6 }}><ActivityIndicator size="large" color="#D65E8D" /><Text style={{ marginTop: 12, fontSize: 14, fontWeight: "900", color: colors.foreground }}>{editId ? "イベントを保存中です" : "イベントを作成中です"}</Text></View></View> : null}
     </ScreenContainer>
   );

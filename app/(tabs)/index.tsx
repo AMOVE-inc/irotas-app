@@ -784,7 +784,7 @@ export default function HomeScreen() {
 
       <Modal visible={showStartGuide} transparent animationType="fade" onRequestClose={() => undefined}>
         <View style={{ flex: 1, backgroundColor: "rgba(20,18,24,0.5)", alignItems: "center", justifyContent: "center", padding: 24 }}><View style={{ width: "100%", maxWidth: 390, borderRadius: 24, backgroundColor: colors.background, padding: 23 }}>
-          <Text style={{ fontSize: 34, textAlign: "center" }}>✨</Text><Text style={{ marginTop: 8, fontSize: 22, fontWeight: "900", color: colors.foreground, textAlign: "center" }}>IRO+へようこそ</Text><Text style={{ marginTop: 10, fontSize: 14, lineHeight: 22, color: colors.muted, textAlign: "center" }}>6つのスタートミッションを順番に進めましょう。各項目を初めて達成した時に10XPを獲得できます。</Text>
+          <BrandLogo width={132} compact style={{ alignSelf: "center" }} /><Text style={{ marginTop: 8, fontSize: 22, fontWeight: "900", color: colors.foreground, textAlign: "center" }}>IRO+へようこそ</Text><Text style={{ marginTop: 10, fontSize: 14, lineHeight: 22, color: colors.muted, textAlign: "center" }}>6つのスタートミッションを順番に進めましょう。各項目を初めて達成した時に10XPを獲得できます。</Text>
           <Pressable onPress={async () => { try { await Api.markStartMissionGuideSeen(); setStartMissions((current) => current ? { ...current, guideSeen: true } : current); setShowStartGuide(false); } catch { /* 次回表示して再試行する */ } }} style={{ marginTop: 20, minHeight: 50, borderRadius: 15, backgroundColor: "#D56591", alignItems: "center", justifyContent: "center" }}><Text style={{ color: "#FFF", fontSize: 16, fontWeight: "900" }}>ミッションを始める</Text></Pressable>
         </View></View>
       </Modal>

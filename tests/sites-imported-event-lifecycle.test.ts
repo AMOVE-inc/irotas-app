@@ -6,8 +6,8 @@ vi.mock("../sites/auth", () => ({ authenticatedRequestMember }));
 
 import { handleEventRequest } from "../sites/events";
 
-function fakeDatabase(eventType: "gourmet" | "club" = "gourmet", initialStatus: "open" | "full" = "open") {
-  const id = "discord-event-1547552751800553543";
+function fakeDatabase(eventType: "gourmet" | "club" = "gourmet", initialStatus: "open" | "full" = "open", options: { id?: string; failPhysicalDelete?: boolean } = {}) {
+  const id = options.id ?? "discord-event-1547552751800553543";
   let row: Record<string, unknown> | null = {
     id, organizer_member_id: 7, event_type: eventType, club_id: eventType === "club" ? "club-walk" : null,
     event_date: "2099-09-26", status: initialStatus, title: "イベント",
@@ -30,7 +30,10 @@ function fakeDatabase(eventType: "gourmet" | "club" = "gourmet", initialStatus: 
         async all<T>() { return { success: true, results: [] as T[] }; },
         async run() {
           if (sql.includes("INSERT OR IGNORE INTO deleted_imported_events")) deleted.add(String(args[0]));
-          if (sql.includes("DELETE FROM events")) row = null;
+          if (sql.includes("DELETE FROM events")) {
+            if (options.failPhysicalDelete) throw new Error("FOREIGN KEY constraint failed");
+            row = null;
+          }
           if (sql.includes("UPDATE events SET status = 'full'")) row = { ...row, status: "full", public_data_json: args[0] };
           if (sql.includes("UPDATE events SET status = 'open'")) row = { ...row, status: "open", public_data_json: args[0] };
           return { success: true };
@@ -79,6 +82,7 @@ describe("Discord-imported event lifecycle", () => {
     const data = JSON.parse(String(state.readRow()?.public_data_json));
     expect(data.discordRecruitmentClosedAt).toBeUndefined();
     expect(data.recruitmentStatus).toBe("open");
+    expect(data.recruitmentChannel).toBe("app");
     expect(data.chatId).toBeTruthy();
   });
 
@@ -91,7 +95,7 @@ describe("Discord-imported event lifecycle", () => {
     }), env);
     expect(response?.status).toBe(200);
     expect((await response!.json()).event.status).toBe("open");
-    expect(JSON.parse(String(state.readRow()?.public_data_json)).recruitmentStatus).toBe("open");
+    expect(JSON.parse(String(state.readRow()?.public_data_json))).toMatchObject({ recruitmentStatus: "open", recruitmentChannel: "app" });
   });
 
   it("does not let another member reopen Discord recruitment", async () => {
@@ -125,5 +129,17 @@ describe("Discord-imported event lifecycle", () => {
     const response = await handleEventRequest(new Request(`https://example.test/api/events/${state.id}`, { method: "DELETE" }), env);
     expect(response?.status).toBe(403);
     expect(state.readRow()).not.toBeNull();
+  });
+
+  it("hides an app event instead of returning a server error when an older database blocks physical deletion", async () => {
+    const state = fakeDatabase("gourmet", "open", { id: "event-app-1", failPhysicalDelete: true });
+    authenticatedRequestMember.mockResolvedValue({ id: 1, role: "admin", access_role: "admin", account_status: "active" });
+    const env = { DB: state.db } as SitesEnv;
+    const url = `https://example.test/api/events/${state.id}`;
+    const response = await handleEventRequest(new Request(url, { method: "DELETE" }), env);
+    expect(response?.status).toBe(200);
+    expect(await response?.json()).toMatchObject({ success: true, retainedHistory: true });
+    expect(state.deleted.has(state.id)).toBe(true);
+    expect((await handleEventRequest(new Request(url), env))?.status).toBe(404);
   });
 });
