@@ -1273,7 +1273,10 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
       if (channel !== "discord") return responseJson({ error: "Discord受付イベントのみ変更できます" }, 400);
       if (row.status === "cancelled" || row.status === "ended") return responseJson({ error: "終了したイベントは募集を再開できません" }, 409);
       if (row.event_date < japanDateKey()) return responseJson({ error: "開催済みのイベントは募集を再開できません" }, 409);
-      if (!data.discordRecruitmentClosedAt) return responseJson({ error: "アプリで募集終了にしたイベントではありません" }, 409);
+      // Older app builds persisted only status=full when Discord recruitment was closed.
+      // Treat that legacy state as closed so organizers can reopen it without losing data.
+      if (!data.discordRecruitmentClosedAt && row.status === "open")
+        return responseJson({ event: await hydratedEvent(env.DB, row, member.id, elevated, memberPublicId) });
       const now = new Date().toISOString();
       delete data.discordRecruitmentClosedAt;
       data.recruitmentStatus = "open";

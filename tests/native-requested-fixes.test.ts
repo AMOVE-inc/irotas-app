@@ -31,7 +31,8 @@ describe("requested native fixes", () => {
 
   it("lets managers reopen Discord recruitment after closing it in the app", () => {
     expect(eventDetail).toContain("handleReopenDiscordRecruitment");
-    expect(eventDetail).toContain("Discordでの募集を再開");
+    expect(eventDetail).toContain("アプリ内で募集を再開");
+    expect(eventDetail).toContain("&& discordRecruitmentClosed &&");
     expect(events).toContain('input?.action === "reopen_discord_recruitment"');
     expect(events).toContain("delete data.discordRecruitmentClosedAt");
     expect(events).toContain("event.discord_recruitment_reopened");

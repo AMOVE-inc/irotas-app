@@ -6,11 +6,11 @@ vi.mock("../sites/auth", () => ({ authenticatedRequestMember }));
 
 import { handleEventRequest } from "../sites/events";
 
-function fakeDatabase(eventType: "gourmet" | "club" = "gourmet") {
+function fakeDatabase(eventType: "gourmet" | "club" = "gourmet", initialStatus: "open" | "full" = "open") {
   const id = "discord-event-1547552751800553543";
   let row: Record<string, unknown> | null = {
     id, organizer_member_id: 7, event_type: eventType, club_id: eventType === "club" ? "club-walk" : null,
-    event_date: "2099-09-26", status: "open", title: "イベント",
+    event_date: "2099-09-26", status: initialStatus, title: "イベント",
     public_data_json: JSON.stringify({ title: "イベント", date: "2099-09-26", time: "19:30", capacity: 2, recruitmentChannel: "discord" }),
     created_at: "2026-09-01T00:00:00.000Z", updated_at: "2026-09-01T00:00:00.000Z",
     organizer_display_name: "幹事", public_member_id: "IRO0007", organizer_member_rank: "gold",
@@ -80,6 +80,18 @@ describe("Discord-imported event lifecycle", () => {
     expect(data.discordRecruitmentClosedAt).toBeUndefined();
     expect(data.recruitmentStatus).toBe("open");
     expect(data.chatId).toBeTruthy();
+  });
+
+  it("reopens legacy app-closed Discord events that have no closed timestamp", async () => {
+    const state = fakeDatabase("gourmet", "full");
+    authenticatedRequestMember.mockResolvedValue({ id: 7, role: "user", access_role: "member", account_status: "active" });
+    const env = { DB: state.db } as SitesEnv;
+    const response = await handleEventRequest(new Request(`https://example.test/api/events/${state.id}`, {
+      method: "PATCH", body: JSON.stringify({ action: "reopen_discord_recruitment" }),
+    }), env);
+    expect(response?.status).toBe(200);
+    expect((await response!.json()).event.status).toBe("open");
+    expect(JSON.parse(String(state.readRow()?.public_data_json)).recruitmentStatus).toBe("open");
   });
 
   it("does not let another member reopen Discord recruitment", async () => {
