@@ -33,6 +33,16 @@ describe("server event automation", () => {
     expect(automation).toContain("ON CONFLICT(room_id, member_id) DO UPDATE SET left_at = NULL");
   });
 
+  it("automatically completes events and awards XP at the scheduled start", () => {
+    expect(automation).toContain("if (now < start) continue");
+    expect(automation).toContain("INSERT OR IGNORE INTO event_attendance_confirmations");
+    expect(automation).toContain("INSERT OR IGNORE INTO event_attendance_finalizations");
+    expect(automation).toContain('action: "event_completed_host"');
+    expect(automation).toContain('action: "event_attendance"');
+    expect(automation).not.toContain("XPは幹事が実出欠を確定した時点でのみ付与する");
+    expect(home).toBeTruthy();
+  });
+
   it("serves the home feed from shared server data", () => {
     expect(automation).toContain('/api/home/activities');
     expect(automation).toContain("FROM board_threads");

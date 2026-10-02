@@ -46,7 +46,7 @@ import {
 export default function MemberProfileScreen() {
   const colors = useColors();
   const router = useRouter();
-  const { id, legacyName, legacyAvatar, returnToClubRoster, clubCategory, returnToClubManagement, clubId, returnToBoardThread, returnToTimeline, boardCategory, boardThreadId } = useLocalSearchParams<{ id: string; legacyName?: string; legacyAvatar?: string; returnToClubRoster?: string; clubCategory?: string; returnToClubManagement?: string; clubId?: string; returnToBoardThread?: string; returnToTimeline?: string; boardCategory?: string; boardThreadId?: string }>();
+  const { id, legacyName, legacyAvatar, returnToClubRoster, clubCategory, returnToClubManagement, clubId, returnToBoardThread, returnToTimeline, boardCategory, boardThreadId, returnToChatParticipants, chatId, chatRoomName, chatRoomType, chatSourceId, chatParticipants } = useLocalSearchParams<{ id: string; legacyName?: string; legacyAvatar?: string; returnToClubRoster?: string; clubCategory?: string; returnToClubManagement?: string; clubId?: string; returnToBoardThread?: string; returnToTimeline?: string; boardCategory?: string; boardThreadId?: string; returnToChatParticipants?: string; chatId?: string; chatRoomName?: string; chatRoomType?: string; chatSourceId?: string; chatParticipants?: string }>();
   const clubs = useClubs();
   const { user: authUser } = useAuthContext();
 
@@ -273,6 +273,8 @@ export default function MemberProfileScreen() {
       >
         <Pressable onPress={() => returnToClubManagement === "1" && clubId
           ? router.replace({ pathname: "/clubs", params: { clubId, reviewApplications: "1" } })
+          : returnToChatParticipants === "1" && chatId
+            ? router.replace({ pathname: "/chat", params: { id: chatId, roomName: chatRoomName, roomType: chatRoomType, sourceId: chatSourceId, participants: chatParticipants, openParticipants: "1" } })
           : returnToClubRoster === "1" && clubCategory
             ? router.replace({ pathname: "/board", params: { category: clubCategory, view: "threads", openClubMembers: "1" } })
             : returnToBoardThread === "1" && boardCategory && boardThreadId

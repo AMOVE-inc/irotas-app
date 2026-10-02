@@ -82,6 +82,14 @@ describe("notification API ownership", () => {
     expect(body.notifications.map((item) => item.id)).toEqual(["own"]);
   });
 
+  it("returns only the newest confirmation for the same event", async () => {
+    const older = { ...notification("older", 10), type: "event_confirmed", event_id: "event-1", created_at: "2026-08-20T11:00:00.000Z" };
+    const newer = { ...notification("newer", 10), type: "event_confirmed", event_id: "event-1", created_at: "2026-08-20T12:00:00.000Z" };
+    const response = await handleNotificationRequest(new Request("https://app.example/api/notifications"), { DB: new NotificationDb([newer, older]) } as never);
+    const body = await response?.json() as { notifications: { id: string }[] };
+    expect(body.notifications.map((item) => item.id)).toEqual(["newer"]);
+  });
+
   it("includes a direct path for newly received board comments", async () => {
     const row = { ...notification("comment", 10), type: "comment", target_path: "/board?category=meal-report&view=threads&thread=post-1" };
     const response = await handleNotificationRequest(new Request("https://app.example/api/notifications"), { DB: new NotificationDb([row]) } as never);

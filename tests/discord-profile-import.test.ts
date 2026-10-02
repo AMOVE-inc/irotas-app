@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { discordIntroductionDisplayName, explicitMemberTermFromBio, validateDiscordProfileImport } from "../sites/discord-profile-import";
+import { billingIdentityAllowsDiscordReservation, discordIntroductionDisplayName, explicitMemberTermFromBio, validateDiscordProfileImport } from "../sites/discord-profile-import";
 
 describe("Discord profile import", () => {
   const row = {
@@ -33,5 +33,14 @@ describe("Discord profile import", () => {
   it("uses the name entered in a Discord self-introduction for an explicitly linked member", () => {
     expect(discordIntroductionDisplayName("名前：たつや\n年齢：31", "長い夜")).toBe("たつや");
     expect(discordIntroductionDisplayName("自己紹介です", " たつや ")).toBe("たつや");
+  });
+
+  it("reserves a verified Discord identity only for an active or unexpired grace billing identity", () => {
+    const base = { member_id: null, square_status: "ACTIVE", billing_status: null, access_status: "active", grace_until_date: null };
+    expect(billingIdentityAllowsDiscordReservation(base, new Date("2026-10-02T00:00:00Z"))).toBe(true);
+    expect(billingIdentityAllowsDiscordReservation({ ...base, square_status: "PAUSED" })).toBe(false);
+    expect(billingIdentityAllowsDiscordReservation({ ...base, billing_status: "OVERDUE_BLOCKED" })).toBe(false);
+    expect(billingIdentityAllowsDiscordReservation({ ...base, access_status: "grace", grace_until_date: "2026-10-02" }, new Date("2026-10-02T12:00:00Z"))).toBe(true);
+    expect(billingIdentityAllowsDiscordReservation({ ...base, access_status: "grace", grace_until_date: "2026-10-01" }, new Date("2026-10-02T12:00:00Z"))).toBe(false);
   });
 });

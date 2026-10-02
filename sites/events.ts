@@ -74,6 +74,24 @@ type CancellationRow = {
   status: "pending" | "approved" | "rejected";
 };
 
+export function eventCancellationDisplayIds(
+  participations: ParticipationRow[],
+  cancellations: CancellationRow[],
+  cancelledEventParticipantIds: string[] = [],
+) {
+  const currentlyActiveIds = new Set(
+    participations
+      .filter((item) => item.status === "applied" || item.status === "confirmed" || item.status === "cancel_requested")
+      .map(publicId),
+  );
+  return [...new Set([
+    ...cancellations
+      .filter((item) => item.status === "approved" && !currentlyActiveIds.has(publicId(item)))
+      .map(publicId),
+    ...cancelledEventParticipantIds,
+  ])];
+}
+
 function isImportedEventConfirmedParticipant(row: EventRow, memberPublicId: string, participations: ParticipationRow[] = []): boolean {
   if (!row.id.startsWith("discord-event-")) return false;
   try {
@@ -516,10 +534,11 @@ function publicEvent(
     ? data.manualParticipantIds.filter((value): value is string => typeof value === "string" && Boolean(value.trim()))
     : [];
   const participantIds = [...new Set([...confirmed.map(publicId), ...manualParticipantIds])];
-  const cancelledParticipantIds = [...new Set([
-    ...cancellations.filter((item) => item.status === "approved").map(publicId),
-    ...(row.status === "cancelled" ? participantIds : []),
-  ])];
+  const cancelledParticipantIds = eventCancellationDisplayIds(
+    participations,
+    cancellations,
+    row.status === "cancelled" ? participantIds : [],
+  );
   const viewerParticipation = active.find((item) => item.member_id === viewerId)?.status ?? null;
   const viewerPaymentState = active.find((item) => item.member_id === viewerId)?.payment_state ?? null;
   return {
@@ -533,8 +552,8 @@ function publicEvent(
     clubId: row.club_id ?? undefined,
     clubName: row.club_name ?? undefined,
     date: row.event_date,
-    // 定員に達していても、幹事が参加者を確定するまでは受付を継続する。
-    status: row.status === "cancelled" ? "ended" : row.status === "full" && !participantsFinalized && !data.discordRecruitmentClosedAt && data.recruitmentChannel !== "discord" ? "open" : row.status,
+    // 定員到達だけで full になった場合は受付を継続するが、幹事が手動で締め切った状態は維持する。
+    status: row.status === "cancelled" ? "ended" : row.status === "full" && !participantsFinalized && !data.discordRecruitmentClosedAt && !data.manualRecruitmentClosedAt && data.recruitmentChannel !== "discord" ? "open" : row.status,
     isCancelled: row.status === "cancelled",
     title: displayEventTitle(row.title),
     createdBy: importedCreatedBy ?? importedOrganizerId ?? row.public_member_id ?? `member-${row.organizer_member_id}`,
@@ -760,11 +779,11 @@ async function eventChatMemberName(db: D1Database, memberId: number) {
 }
 
 async function notifyEventConfirmation(db: D1Database, targetMemberId: number, eventId: string, eventTitle: string) {
-  await db.prepare(`INSERT INTO in_app_notifications
+  await db.prepare(`INSERT OR IGNORE INTO in_app_notifications
     (id, target_member_id, type, title, body, event_id, created_at)
     VALUES (?, ?, 'event_confirmed', ?, ?, ?, ?)`)
     .bind(
-      crypto.randomUUID(),
+      `event-confirmed:${eventId}:${targetMemberId}`,
       targetMemberId,
       "イベント参加が確定しました",
       `「${eventTitle}」の参加者専用チャットへ追加されました。`,
@@ -1327,7 +1346,7 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
       if (row.event_date < japanDateKey()) return responseJson({ error: "開催済みのイベントは追加募集できません" }, 409);
       const capacity = typeof data.capacity === "number" ? data.capacity : 0;
       const confirmed = await env.DB.prepare("SELECT COUNT(*) AS count FROM event_participations WHERE event_id = ? AND status IN ('confirmed','cancel_requested')").bind(id).first<{ count: number }>();
-      if (!["undecided", "unlimited"].includes(String(data.capacityMode)) && (confirmed?.count ?? 0) >= capacity) return responseJson({ error: "募集定員に空きがありません" }, 409);
+      if (!["undecided", "unlimited"].includes(String(data.capacityMode)) && (confirmed?.count ?? 0) >= capacity) return responseJson({ error: "定員に達しています。イベント情報を編集して募集定員を増やしてください。" }, 409);
       if (row.status === "open") return responseJson({ event: await hydratedEvent(env.DB, row, member.id, elevated, memberPublicId) });
       const now = new Date().toISOString();
       if (data.participantsFinalizedAt) {

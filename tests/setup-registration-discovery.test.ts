@@ -5,10 +5,14 @@ it("verifies the mailbox before discovering and registering an unimported Square
   let storedCode: any = null;
   let subscription: any = null;
   let member: any = null;
+  const storedClaim = { discord_user_id: "1539304691869950037" };
+  let claimConsumed = false;
   const db: any = { prepare(query: string) { return { bind(...values: any[]) { return {
     async first() {
       if (query.includes("FROM email_verification_codes")) return storedCode;
       if (query.includes("FROM member_subscriptions WHERE")) return subscription;
+      if (query.includes("FROM discord_identity_claims")) return storedClaim;
+      if (query.includes("FROM members WHERE discord_user_id")) return null;
       if (query.includes("FROM members m")) return member;
       return null;
     },
@@ -17,7 +21,9 @@ it("verifies the mailbox before discovering and registering an unimported Square
       if (query.includes("INSERT INTO member_subscriptions")) subscription = { square_status: "ACTIVE", access_status: "active" };
       if (query.includes("INSERT INTO members")) member = { id: 1, email: values[0], display_name: values[1], role: "user", access_role: "member", account_status: "active", branches_json: "[]", member_term: null };
       if (query.includes("UPDATE members SET member_term") && member) member.member_term = values[0];
-      return { success: true };
+      if (query.includes("UPDATE members SET discord_user_id") && member) member.discord_user_id = values[0];
+      if (query.includes("UPDATE discord_identity_claims SET consumed_at")) claimConsumed = true;
+      return { success: true, meta: { changes: 1 } };
     },
   }; } }; }, async batch(statements: any[]) { return Promise.all(statements.map(s => s.run())); } };
   let code = "";
@@ -45,6 +51,8 @@ it("verifies the mailbox before discovering and registering an unimported Square
   expect(fetch).toHaveBeenCalledTimes(4);
   expect(member.role).toBe("user");
   expect(member.member_term).toBe("第7期");
+  expect(member.discord_user_id).toBe("1539304691869950037");
+  expect(claimConsumed).toBe(true);
 });
 
 it("keeps a passwordless Discord member linked through Square when its billing email changes", async () => {

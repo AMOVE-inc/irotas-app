@@ -838,6 +838,7 @@ export default function ProfileScreen() {
     .join("・");
   const [showEditProfile, setShowEditProfile] = useState(false);
   const [showRankExplanation, setShowRankExplanation] = useState(false);
+  const [showLogoutConfirmation, setShowLogoutConfirmation] = useState(false);
   const [socialList, setSocialList] = useState<"followers" | "following" | null>(null);
   // DBから取得したroleで管理者判定（モックデータのCURRENT_USERではなく実際のログインユーザーを使用）
   const userIsAdmin = isAdminRole(authUser?.role, authUser?.accessRole);
@@ -1385,25 +1386,7 @@ export default function ProfileScreen() {
             accessibilityRole="button"
             accessibilityLabel="ログアウト"
             accessibilityHint="現在のアカウントからログアウトします"
-            onPress={() => {
-              if (Platform.OS === "web" && typeof window !== "undefined") {
-                if (window.confirm("本当にログアウトしますか？"))
-                  void performLogout();
-                return;
-              }
-              Alert.alert(
-                "ログアウト",
-                "本当にログアウトしますか？",
-                [
-                  { text: "キャンセル", style: "cancel" },
-                  {
-                    text: "ログアウト",
-                    style: "destructive",
-                    onPress: performLogout,
-                  },
-                ],
-              );
-            }}
+            onPress={() => setShowLogoutConfirmation(true)}
             style={({ pressed }) => ({
               backgroundColor: colors.error + "15",
               borderRadius: 12,
@@ -1423,6 +1406,19 @@ export default function ProfileScreen() {
           <Text style={{ fontSize: 12, color: colors.muted }}>IRO＋ v1.0.0</Text>
         </View>
       </ScrollView>
+
+      <Modal visible={showLogoutConfirmation} transparent animationType="fade" onRequestClose={() => setShowLogoutConfirmation(false)}>
+        <View style={{ flex: 1, backgroundColor: "#0008", alignItems: "center", justifyContent: "center", padding: 24 }}>
+          <View style={{ width: "100%", maxWidth: 420, borderRadius: 24, backgroundColor: colors.surface, padding: 24 }}>
+            <Text style={{ textAlign: "center", fontSize: 20, fontWeight: "900", color: colors.foreground }}>ログアウト</Text>
+            <Text style={{ textAlign: "center", fontSize: 14, lineHeight: 21, color: colors.muted, marginTop: 10 }}>本当にログアウトしますか？</Text>
+            <View style={{ flexDirection: "row", gap: 10, marginTop: 22 }}>
+              <Pressable onPress={() => setShowLogoutConfirmation(false)} style={{ flex: 1, minHeight: 50, borderRadius: 14, alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: colors.border }}><Text style={{ fontSize: 15, fontWeight: "900", color: colors.foreground }}>キャンセル</Text></Pressable>
+              <Pressable onPress={() => { setShowLogoutConfirmation(false); void performLogout(); }} style={{ flex: 1, minHeight: 50, borderRadius: 14, alignItems: "center", justifyContent: "center", backgroundColor: colors.error }}><Text style={{ fontSize: 15, fontWeight: "900", color: "#FFF" }}>ログアウト</Text></Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
 
       <Modal visible={showRankExplanation} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setShowRankExplanation(false)}>
         <View style={{ flex: 1, backgroundColor: colors.background }}>

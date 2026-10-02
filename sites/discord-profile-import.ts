@@ -1,8 +1,7 @@
-import { authenticatedRequestMember } from "./auth";
+import { authenticatedRequestMember, normalizeEmail } from "./auth";
 import { minimumXpForRank } from "../lib/xp-levels";
 import { DISCORD_AUTHOR_DIRECTORY } from "../constants/discord-author-directory";
 import type { SitesEnv } from "./platform-types";
-import { normalizeEmail } from "./auth";
 import { syncStoredDiscordProfiles } from "./discord-profile-sync";
 import boardArchive from "../data/discord-board-2026-08-29.json";
 import introductionMemberMetadata from "../data/discord-introduction-member-metadata.json";
@@ -15,6 +14,23 @@ const LINK_ENDPOINT = "/api/admin/discord-profile-import/link";
 const NORI_TERM_CORRECTION_ENDPOINT = "/api/admin/discord-profile-import/sync-nori-20260902";
 type Rank = "regular" | "silver" | "gold" | "platinum";
 type ImportRow = { discordUserId: string; displayName: string; avatarUrl: string; bio: string; hasProfileBio: boolean; discordJoinedAt: string | null; discordRoles: string[]; memberTerm: string | null; memberRank: Rank };
+type BillingIdentity = {
+  member_id: number | null;
+  square_status: string;
+  billing_status: string | null;
+  access_status: string;
+  grace_until_date: string | null;
+};
+
+export function billingIdentityAllowsDiscordReservation(
+  subscription: BillingIdentity | null,
+  now = new Date(),
+) {
+  if (!subscription || subscription.billing_status === "OVERDUE_BLOCKED") return false;
+  if (subscription.access_status === "active") return subscription.square_status === "ACTIVE";
+  if (subscription.access_status !== "grace" || !subscription.grace_until_date) return false;
+  return now.getTime() <= new Date(`${subscription.grace_until_date.slice(0, 10)}T23:59:59+09:00`).getTime();
+}
 
 export function discordIntroductionDisplayName(content: string, fallback: string): string {
   const match = content.normalize("NFKC").match(/(?:^|\n)\s*名前\s*[:：]\s*([^\n]{1,120})/);
@@ -88,18 +104,31 @@ export async function handleDiscordProfileImportRequest(request: Request, env: S
       const discordUserId = String(input.discordUserId ?? "").trim();
       if (!/^\S+@\S+\.\S+$/.test(email) || !/^\d{17,20}$/.test(discordUserId) ||
           input.confirmation !== `LINK_DISCORD_${discordUserId}`) return json({ error: "invalid_link_request" }, 400);
-      const [target, owner, snapshot] = await Promise.all([
+      const [emailTarget, owner, snapshot, subscription, existingClaim] = await Promise.all([
         env.DB.prepare("SELECT id, discord_user_id FROM members WHERE LOWER(TRIM(email)) = ?")
           .bind(email).first<{ id: number; discord_user_id: string | null }>(),
         env.DB.prepare("SELECT id FROM members WHERE discord_user_id = ?")
           .bind(discordUserId).first<{ id: number }>(),
         env.DB.prepare("SELECT discord_user_id FROM discord_profile_snapshots WHERE discord_user_id = ?")
           .bind(discordUserId).first<{ discord_user_id: string }>(),
+        env.DB.prepare(`SELECT member_id, square_status, billing_status, access_status, grace_until_date
+          FROM member_subscriptions WHERE LOWER(TRIM(billing_email)) = ? ORDER BY id DESC LIMIT 1`)
+          .bind(email).first<BillingIdentity>(),
+        env.DB.prepare("SELECT email FROM discord_identity_claims WHERE discord_user_id = ?")
+          .bind(discordUserId).first<{ email: string }>(),
       ]);
-      if (!target) return json({ error: "member_not_found" }, 404);
-      if ((owner && owner.id !== target.id) || (target.discord_user_id && target.discord_user_id !== discordUserId))
+      let target = emailTarget;
+      if (!target && subscription?.member_id) {
+        target = await env.DB.prepare("SELECT id, discord_user_id FROM members WHERE id = ?")
+          .bind(subscription.member_id).first<{ id: number; discord_user_id: string | null }>();
+      }
+      if (existingClaim && normalizeEmail(existingClaim.email) !== email)
+        return json({ error: "discord_identity_conflict" }, 409);
+      if ((owner && (!target || owner.id !== target.id)) || (target?.discord_user_id && target.discord_user_id !== discordUserId))
         return json({ error: "discord_identity_conflict" }, 409);
       const now = new Date().toISOString();
+      if (!target && !billingIdentityAllowsDiscordReservation(subscription, new Date(now)))
+        return json({ error: "active_billing_member_not_found" }, 404);
       if (!snapshot) {
         const introduction = boardArchive.threads
           .filter((thread) => thread.category === "introduction" && thread.authorId === discordUserId)
@@ -113,6 +142,37 @@ export async function handleDiscordProfileImportRequest(request: Request, env: S
           VALUES (?, ?, ?, ?, 1, ?, '[]', ?, 'regular', ?)`)
           .bind(discordUserId, displayName, introduction.authorAvatarUrl ?? "",
             introduction.content, metadata?.joinedAt ?? null, metadata?.memberTerm ?? null, now).run();
+      }
+      if (!target) {
+        await env.DB.batch([
+          env.DB.prepare(`INSERT INTO discord_identity_claims
+            (email, discord_user_id, display_name, avatar_url, bio, has_profile_bio,
+             discord_joined_at, discord_roles_json, member_term, member_rank, source,
+             verified_at, consumed_at)
+            SELECT ?, p.discord_user_id, p.display_name, p.avatar_url, p.bio, p.has_profile_bio,
+              p.discord_joined_at, p.discord_roles_json, p.member_term, p.member_rank,
+              'admin_verified', ?, NULL
+            FROM discord_profile_snapshots p WHERE p.discord_user_id = ?
+            ON CONFLICT(email) DO UPDATE SET
+              discord_user_id = excluded.discord_user_id,
+              display_name = excluded.display_name,
+              avatar_url = excluded.avatar_url,
+              bio = excluded.bio,
+              has_profile_bio = excluded.has_profile_bio,
+              discord_joined_at = excluded.discord_joined_at,
+              discord_roles_json = excluded.discord_roles_json,
+              member_term = excluded.member_term,
+              member_rank = excluded.member_rank,
+              source = excluded.source,
+              verified_at = excluded.verified_at,
+              consumed_at = NULL`)
+            .bind(email, now, discordUserId),
+          env.DB.prepare(`INSERT INTO audit_logs
+            (actor_user_id, action, entity_type, entity_id, metadata_json, created_at)
+            VALUES (?, 'member.discord_identity_claim_reserved', 'discord_identity', ?, '{}', ?)`)
+            .bind(String(admin.id), discordUserId, now),
+        ]);
+        return json({ success: true, pendingRegistration: true, discordUserId });
       }
       await env.DB.batch([
         env.DB.prepare("UPDATE members SET discord_user_id = ?, updated_at = ? WHERE id = ? AND (discord_user_id IS NULL OR discord_user_id = ?)")

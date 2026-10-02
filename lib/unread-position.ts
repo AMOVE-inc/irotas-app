@@ -11,6 +11,24 @@ export function initialMessageIndex(itemCount: number, unreadCount: unknown, inv
   return unread > 0 ? itemCount - unread : itemCount - 1;
 }
 
+export function firstUnreadMessageIndex<T>(
+  items: T[],
+  unreadCount: unknown,
+  isUnreadCandidate: (item: T) => boolean,
+): number | null {
+  let remaining = normalizedUnreadCount(unreadCount, items.length);
+  if (remaining === 0) return null;
+
+  let oldestCandidateIndex: number | null = null;
+  for (let index = items.length - 1; index >= 0; index -= 1) {
+    if (!isUnreadCandidate(items[index])) continue;
+    oldestCandidateIndex = index;
+    remaining -= 1;
+    if (remaining === 0) return index;
+  }
+  return oldestCandidateIndex;
+}
+
 export function firstUnreadItemId<T extends { id: string; authorId: string; createdAt: string }>(
   items: T[],
   readCount: number | undefined,

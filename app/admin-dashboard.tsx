@@ -924,7 +924,7 @@ export default function AdminDashboardScreen() {
               {discordProfileImporting ? <ActivityIndicator color="#FFF" /> : <Text style={{ color: "#FFF", fontWeight: "800" }}>DiscordプロフィールJSONを選択して反映</Text>}
             </Pressable>
             <Text style={{ fontSize: 14, fontWeight: "800", color: colors.foreground, marginTop: 20 }}>未連携の会員を個別に紐付け</Text>
-            <Text style={{ fontSize: 11, lineHeight: 17, color: colors.muted, marginTop: 5 }}>本人確認済みの会員メールとDiscordユーザーIDを指定します。Discordの自己紹介から名前・画像を取得し、既存のアプリプロフィール項目は保持します。</Text>
+            <Text style={{ fontSize: 11, lineHeight: 17, color: colors.muted, marginTop: 5 }}>本人確認済みの決済メールとDiscordユーザーIDを指定します。登録済みなら即時連携し、未登録なら有効な決済契約を確認して初回登録時の自動連携を予約します。</Text>
             <TextInput
               accessibilityLabel="会員メールアドレス"
               autoCapitalize="none"
@@ -955,12 +955,25 @@ export default function AdminDashboardScreen() {
               setDiscordLinking(true);
               try {
                 const response = await fetch("/api/admin/discord-profile-import/link", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ email, discordUserId, confirmation: `LINK_DISCORD_${discordUserId}` }) });
-                const result = await response.json() as { error?: string };
-                if (!response.ok) throw new Error(result.error ?? "本人連携に失敗しました");
-                setDiscordProfileImportResult("1名のDiscordプロフィールを連携しました");
+                const result = await response.json() as { error?: string; pendingRegistration?: boolean };
+                if (!response.ok) {
+                  const message = result.error === "active_billing_member_not_found"
+                    ? "有効な決済契約をこのメールアドレスで確認できません"
+                    : result.error === "discord_identity_conflict"
+                      ? "このDiscord IDは別の会員または決済メールに紐付いています"
+                      : result.error ?? "本人連携に失敗しました";
+                  throw new Error(message);
+                }
+                const summary = result.pendingRegistration
+                  ? "初回登録時のDiscord自動連携を予約しました"
+                  : "1名のDiscordプロフィールを連携しました";
+                setDiscordProfileImportResult(summary);
                 setDiscordLinkEmail(""); setDiscordLinkUserId("");
                 await loadMembershipSummary();
-                Alert.alert("本人連携が完了しました", "Discordの名前とアイコンを反映しました。");
+                Alert.alert(result.pendingRegistration ? "自動連携を予約しました" : "本人連携が完了しました",
+                  result.pendingRegistration
+                    ? "この決済メールで初回登録すると、確認済みのDiscordプロフィールを自動反映します。"
+                    : "Discordの名前とアイコンを反映しました。");
               } catch (error) { Alert.alert("連携エラー", error instanceof Error ? error.message : "もう一度お試しください"); }
               finally { setDiscordLinking(false); }
             }} style={{ minHeight: 48, borderRadius: 12, backgroundColor: discordLinking ? colors.border : "#237A3B", alignItems: "center", justifyContent: "center", marginTop: 10 }}>

@@ -52,7 +52,15 @@ export async function handleNotificationRequest(request: Request, env: SitesEnv)
       FROM in_app_notifications WHERE target_member_id = ? AND type != 'system_error'
         AND julianday(created_at) > julianday((SELECT COALESCE(password_set_at, last_signed_in_at) FROM members WHERE id = ?))
       ORDER BY created_at DESC LIMIT 100`).bind(member.id, member.id).all<NotificationRow>();
-    return json({ notifications: (rows.results ?? []).map(serialize) });
+    const seenConfirmations = new Set<string>();
+    const notifications = (rows.results ?? []).map(serialize).filter((notification) => {
+      if (notification.type !== "event_confirmed" || !notification.eventId) return true;
+      const key = `${notification.type}:${notification.eventId}`;
+      if (seenConfirmations.has(key)) return false;
+      seenConfirmations.add(key);
+      return true;
+    });
+    return json({ notifications });
   }
 
   if (pathname === PUSH_TOKEN_PATH && (request.method === "POST" || request.method === "DELETE")) {

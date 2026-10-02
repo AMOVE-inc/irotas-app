@@ -242,8 +242,6 @@ export default function EventDetailScreen() {
   const [approvingMemberId, setApprovingMemberId] = useState<string | null>(null);
   const [reviewingCancellation, setReviewingCancellation] = useState<{ memberId: string; action: "approve" | "reject" } | null>(null);
   const [finalizingParticipants, setFinalizingParticipants] = useState(false);
-  const [attendanceSheet, setAttendanceSheet] = useState<{ participants: Api.EventAttendanceParticipant[]; absentMemberIds: string[]; correcting: boolean } | null>(null);
-  const [attendanceLoading, setAttendanceLoading] = useState(false);
   const [, setEventRevision] = useState(0);
   // ボタン連打防止フラグ
   const joiningRef = useRef(false);
@@ -841,14 +839,14 @@ export default function EventDetailScreen() {
 
   const handleFinalizeParticipants = () => {
     const pendingNotice = pendingApplicantIds.length > 0
-      ? `\n承認待ちの${pendingApplicantIds.length}人は不成立となり、募集終了が通知されます。`
+      ? `\n\n承認待ちの${pendingApplicantIds.length}人は自動的に却下され、本人へ募集終了の通知が届きます。`
       : "";
     setApplicationConfirmation({
       title: "参加者を確定しますか？",
       message: `現在の参加確定者${confirmedParticipantIds.length}人で確定し、イベントの募集を締め切ります。${pendingNotice}`,
       buttons: [
         { text: "戻る", style: "cancel" },
-        { text: "確定する", onPress: () => { void finalizeParticipants(); } },
+        { text: pendingApplicantIds.length > 0 ? "確定して残りを却下" : "確定する", style: pendingApplicantIds.length > 0 ? "destructive" : "default", onPress: () => { void finalizeParticipants(); } },
       ],
     });
   };
@@ -937,15 +935,18 @@ export default function EventDetailScreen() {
   };
 
   const handleCloseRecruitment = () => {
+    const pendingNotice = pendingApplicantIds.length > 0
+      ? `\n\n承認待ちが${pendingApplicantIds.length}人います。募集終了後も申込は残ります。参加者を入れ替える場合は個別に承認し、参加者確定を行うと残りは自動的に却下されます。`
+      : "";
     setApplicationConfirmation({
       title: "募集を終了しますか？",
-      message: "定員に達していない場合でも、新しい参加申込みを締め切ります。",
+      message: `定員に達していない場合でも、新しい参加申込みを締め切ります。${pendingNotice}`,
       buttons: [
         { text: "戻る", style: "cancel" },
         { text: "募集終了にする", onPress: async () => {
           try {
             setEvent(await Api.closeEventRecruitment(event.id));
-            Alert.alert("募集を終了しました", "新しい参加申込みの受付を終了しました。");
+            Alert.alert("募集を終了しました", pendingApplicantIds.length > 0 ? `新しい参加申込みの受付を終了しました。承認待ちが${pendingApplicantIds.length}人残っています。` : "新しい参加申込みの受付を終了しました。");
           } catch (error) {
             Alert.alert("募集を終了できませんでした", error instanceof Error ? error.message : "もう一度お試しください。");
           }
@@ -980,6 +981,16 @@ export default function EventDetailScreen() {
   };
 
   const handleReopenGourmetRecruitment = async () => {
+    const capacityReached = !["undecided", "unlimited"].includes(String(event.capacityMode))
+      && confirmedParticipantIds.length >= event.capacity;
+    if (capacityReached) {
+      setApplicationConfirmation({
+        title: "追加募集できません",
+        message: "定員に達しています。イベント情報を編集して募集定員を増やしてください。",
+        buttons: [{ text: "OK", style: "cancel" }],
+      });
+      return;
+    }
     if (event.viewerMemberId) {
       try {
         setEvent(await Api.reopenEventRecruitment(event.id));
@@ -990,7 +1001,7 @@ export default function EventDetailScreen() {
       return;
     }
     if (!reopenGourmetRecruitment(event)) {
-      Alert.alert("追加募集できません", "現在、募集定員に達しています。");
+      Alert.alert("追加募集できません", "定員に達しています。イベント情報を編集して募集定員を増やしてください。");
       return;
     }
     setEventRevision((value) => value + 1);
@@ -1039,18 +1050,6 @@ export default function EventDetailScreen() {
         : "このキャンセルはペナルティポイントの対象外です。";
       setApplicationConfirmation({ title: "キャンセル申請", message: `${warning}\n\n幹事へキャンセル申請を送りますか？`, buttons: [{ text: "戻る", style: "cancel" }, { text: "申請する", style: "destructive", onPress: () => { void submitCancellationRequest(); } }] });
     }).catch(() => setApplicationConfirmation({ title: "キャンセル申請", message: "幹事へキャンセル申請を送りますか？", buttons: [{ text: "戻る", style: "cancel" }, { text: "申請する", style: "destructive", onPress: () => { void submitCancellationRequest(); } }] }));
-  };
-
-  const handleFinalizeAttendance = () => {
-    setAttendanceLoading(true);
-    void Api.getEventAttendance(event.id).then((result) => {
-      if (result.finalized && !result.canCorrect) {
-        Alert.alert("開催結果は確定済みです", `実参加人数は${result.actualAttendeeCount ?? 0}人です。`);
-        return;
-      }
-      setAttendanceSheet({ participants: result.participants, absentMemberIds: result.participants.filter((item) => item.status === "absent").map((item) => item.memberId), correcting: result.finalized });
-    }).catch((error) => Alert.alert("取得できませんでした", error instanceof Error ? error.message : "もう一度お試しください。"))
-      .finally(() => setAttendanceLoading(false));
   };
 
   const handleApproveCancellation = async (memberId: string) => {
@@ -1298,6 +1297,7 @@ export default function EventDetailScreen() {
           <View style={{ backgroundColor: "#F5F8FC", borderRadius: 14, padding: 14, marginBottom: 16, borderWidth: 1, borderColor: "#DCE7F2" }}>
             <Text style={{ fontSize: 16, fontWeight: "900", color: colors.foreground }}>イベント管理</Text>
             <Text style={{ fontSize: 12, lineHeight: 18, color: colors.muted, marginTop: 4 }}>申込を承認すると参加が確定し、自動で参加者チャットに追加されます。</Text>
+            {event.status !== "open" && pendingApplicantIds.length > 0 ? <View style={{ marginTop: 12, borderRadius: 10, borderWidth: 1, borderColor: "#E6B85C", backgroundColor: "#FFF8E8", padding: 10 }}><Text style={{ fontSize: 12, lineHeight: 18, fontWeight: "700", color: "#7A5310" }}>募集は終了しています。承認待ちが{pendingApplicantIds.length}人います。参加者を入れ替える場合は個別に承認してください。「参加者確定」を行うと、残りの申込は自動的に却下され、本人へ通知されます。</Text></View> : null}
             <Text style={{ fontSize: 13, fontWeight: "800", color: colors.foreground, marginTop: 14, marginBottom: 7 }}>承認待ち（{pendingApplicantIds.length}人）</Text>
             {pendingApplicantIds.length ? pendingApplicantIds.map((memberId) => {
               const member = displayMember(memberId);
@@ -1319,7 +1319,7 @@ export default function EventDetailScreen() {
               const member = displayMember(memberId);
               return <View key={memberId} style={{ flexDirection: "row", alignItems: "center", paddingVertical: 8, borderTopWidth: 0.5, borderTopColor: colors.border }}><Pressable onPress={() => openMemberProfile(memberId)} style={{ flex: 1, flexDirection: "row", alignItems: "center" }}><Image source={member.avatar} style={{ width: 34, height: 34, borderRadius: 17 }} contentFit="cover" /><View style={{ flex: 1, marginLeft: 9, flexDirection: "row", alignItems: "center", flexWrap: "wrap" }}><Text style={{ fontSize: 14, fontWeight: "700", color: colors.foreground }}>{member.name}</Text>{member.rank ? <MemberRankBadge rank={member.rank} name={member.badgeName} role={member.role} compact /> : null}<MemberClubLeaderBadges roles={member.roles} name={member.badgeName} compact /><MemberRoleBadge name="" role={member.role} compact /></View></Pressable>{memberId !== event.createdBy ? <Pressable onPress={() => cancelGourmetParticipant(memberId)} style={{ borderRadius: 9, borderWidth: 1, borderColor: colors.error, paddingHorizontal: 10, paddingVertical: 6 }}><Text style={{ color: colors.error, fontSize: 11, fontWeight: "800" }}>幹事キャンセル</Text></Pressable> : null}</View>;
             })}
-            {event.isCancelled ? <><Text style={{ fontSize: 13, fontWeight: "800", color: colors.foreground, marginTop: 14, marginBottom: 7 }}>キャンセル済み（{cancelledParticipantIds.length}人）</Text>{cancelledParticipantIds.length ? cancelledParticipantIds.map((memberId) => { const member = displayMember(memberId); return <Pressable key={memberId} onPress={() => openMemberProfile(memberId)} style={{ flexDirection: "row", alignItems: "center", paddingVertical: 8, borderTopWidth: 0.5, borderTopColor: colors.border }}><Image source={member.avatar} style={{ width: 34, height: 34, borderRadius: 17 }} contentFit="cover" /><View style={{ flex: 1, marginLeft: 9, flexDirection: "row", alignItems: "center", flexWrap: "wrap" }}><Text style={{ fontSize: 14, fontWeight: "700", color: colors.foreground }}>{member.name}</Text>{member.rank ? <MemberRankBadge rank={member.rank} name={member.badgeName} role={member.role} compact /> : null}<MemberClubLeaderBadges roles={member.roles} name={member.badgeName} compact /><MemberRoleBadge name="" role={member.role} compact /></View><IconSymbol name="chevron.right" size={16} color={colors.muted} /></Pressable>; }) : <Text style={{ fontSize: 13, color: colors.muted, paddingVertical: 8 }}>キャンセル済みの参加者はいません。</Text>}</> : <>{event.status !== "open" && (Boolean(event.capacityMode) || (event.participants ?? []).length < event.capacity) ? <Pressable onPress={handleReopenGourmetRecruitment} style={{ marginTop: 12, borderRadius: 11, backgroundColor: "#E8A0BF", paddingVertical: 11, alignItems: "center" }}><Text style={{ fontSize: 14, fontWeight: "900", color: "#FFF" }}>追加募集を開始</Text></Pressable> : null}<Pressable disabled={!canFinalizeParticipants || finalizingParticipants} onPress={handleFinalizeParticipants} style={{ marginTop: 12, borderRadius: 11, backgroundColor: canFinalizeParticipants && !finalizingParticipants ? "#34A853" : "#AEB6B0", paddingVertical: 11, alignItems: "center" }}><Text style={{ fontSize: 14, fontWeight: "900", color: "#FFF" }}>{event.participantsFinalizedAt ? "参加者確定済み" : finalizingParticipants ? "参加者を確定中…" : canFinalizeParticipants ? "参加者確定を完了" : "参加確定者がいません"}</Text></Pressable>{new Date(`${event.date}T${event.time}:00+09:00`).getTime() + 3 * 60 * 60 * 1000 <= Date.now() ? <Pressable disabled={attendanceLoading} onPress={handleFinalizeAttendance} style={{ marginTop: 10, borderRadius: 11, backgroundColor: attendanceLoading ? "#9CBFDF" : "#5B9BD5", paddingVertical: 11, alignItems: "center" }}><Text style={{ fontSize: 14, fontWeight: "900", color: "#FFF" }}>{attendanceLoading ? "出欠を読み込み中…" : "開催結果（実出欠）を確定"}</Text></Pressable> : null}<Pressable onPress={handleCancelEvent} style={{ marginTop: 10, borderRadius: 11, borderWidth: 1, borderColor: "#D94C55", paddingVertical: 11, alignItems: "center" }}><Text style={{ fontSize: 14, fontWeight: "900", color: "#D94C55" }}>イベントを中止</Text></Pressable></>}
+            {event.isCancelled ? <><Text style={{ fontSize: 13, fontWeight: "800", color: colors.foreground, marginTop: 14, marginBottom: 7 }}>キャンセル済み（{cancelledParticipantIds.length}人）</Text>{cancelledParticipantIds.length ? cancelledParticipantIds.map((memberId) => { const member = displayMember(memberId); return <Pressable key={memberId} onPress={() => openMemberProfile(memberId)} style={{ flexDirection: "row", alignItems: "center", paddingVertical: 8, borderTopWidth: 0.5, borderTopColor: colors.border }}><Image source={member.avatar} style={{ width: 34, height: 34, borderRadius: 17 }} contentFit="cover" /><View style={{ flex: 1, marginLeft: 9, flexDirection: "row", alignItems: "center", flexWrap: "wrap" }}><Text style={{ fontSize: 14, fontWeight: "700", color: colors.foreground }}>{member.name}</Text>{member.rank ? <MemberRankBadge rank={member.rank} name={member.badgeName} role={member.role} compact /> : null}<MemberClubLeaderBadges roles={member.roles} name={member.badgeName} compact /><MemberRoleBadge name="" role={member.role} compact /></View><IconSymbol name="chevron.right" size={16} color={colors.muted} /></Pressable>; }) : <Text style={{ fontSize: 13, color: colors.muted, paddingVertical: 8 }}>キャンセル済みの参加者はいません。</Text>}</> : <>{event.status !== "open" ? <Pressable onPress={handleReopenGourmetRecruitment} style={{ marginTop: 12, borderRadius: 11, backgroundColor: "#E8A0BF", paddingVertical: 11, alignItems: "center" }}><Text style={{ fontSize: 14, fontWeight: "900", color: "#FFF" }}>追加募集を開始</Text></Pressable> : null}<Pressable disabled={!canFinalizeParticipants || finalizingParticipants} onPress={handleFinalizeParticipants} style={{ marginTop: 12, borderRadius: 11, backgroundColor: canFinalizeParticipants && !finalizingParticipants ? "#34A853" : "#AEB6B0", paddingVertical: 11, alignItems: "center" }}><Text style={{ fontSize: 14, fontWeight: "900", color: "#FFF" }}>{event.participantsFinalizedAt ? "参加者確定済み" : finalizingParticipants ? "参加者を確定中…" : canFinalizeParticipants ? "参加者確定を完了" : "参加確定者がいません"}</Text></Pressable><Pressable onPress={handleCancelEvent} style={{ marginTop: 10, borderRadius: 11, borderWidth: 1, borderColor: "#D94C55", paddingVertical: 11, alignItems: "center" }}><Text style={{ fontSize: 14, fontWeight: "900", color: "#D94C55" }}>イベントを中止</Text></Pressable></>}
           </View>
         ) : null}
 
@@ -1626,26 +1626,7 @@ export default function EventDetailScreen() {
         </View>
       </Modal>
 
-      <Modal visible={attendanceSheet !== null} transparent animationType="slide" onRequestClose={() => setAttendanceSheet(null)}>
-        <View style={{ flex: 1, justifyContent: "flex-end", backgroundColor: "rgba(20,18,24,0.5)" }}>
-          <View style={{ maxHeight: "86%", borderTopLeftRadius: 24, borderTopRightRadius: 24, backgroundColor: colors.background, padding: 20 }}>
-            <Text style={{ fontSize: 20, fontWeight: "900", color: colors.foreground }}>{attendanceSheet?.correcting ? "開催結果（実出欠）を訂正" : "開催結果（実出欠）を確定"}</Text>
-            <Text style={{ fontSize: 12, lineHeight: 18, color: colors.muted, marginTop: 6 }}>{attendanceSheet?.correcting ? "管理者による訂正です。実参加人数に合わせて出欠と関連XPを再計算します。" : "初期状態では全員を出席にしています。欠席者だけ「欠席」に変更してから確定してください。確定後に実参加人数に応じてXPが反映されます。"}</Text>
-            <ScrollView style={{ marginTop: 14 }} contentContainerStyle={{ paddingBottom: 8 }}>
-              {attendanceSheet?.participants.map((participant) => {
-                const absent = attendanceSheet.absentMemberIds.includes(participant.memberId);
-                const directoryMember = getMemberById(participant.memberId);
-                return <Pressable key={participant.memberId} onPress={() => setAttendanceSheet((current) => !current ? current : { ...current, absentMemberIds: absent ? current.absentMemberIds.filter((id) => id !== participant.memberId) : [...current.absentMemberIds, participant.memberId] })} style={{ minHeight: 58, flexDirection: "row", alignItems: "center", borderBottomWidth: 0.5, borderBottomColor: colors.border }}>
-                  <Image source={directoryMember?.avatar ?? DEFAULT_AVATAR} style={{ width: 38, height: 38, borderRadius: 19 }} contentFit="cover" />
-                  <View style={{ flex: 1, marginLeft: 10 }}><Text style={{ fontSize: 14, fontWeight: "800", color: colors.foreground }}>{participant.name}</Text><Text style={{ marginTop: 2, fontSize: 11, color: absent ? "#D94C55" : "#2E8B57" }}>{absent ? "欠席" : "出席"}</Text></View>
-                  <View style={{ width: 44, height: 28, borderRadius: 14, backgroundColor: absent ? "#FDE6E8" : "#DCF5E3", alignItems: "center", justifyContent: "center" }}><Text style={{ fontSize: 11, fontWeight: "900", color: absent ? "#C33B45" : "#278545" }}>{absent ? "欠席" : "出席"}</Text></View>
-                </Pressable>;
-              })}
-            </ScrollView>
-            <View style={{ flexDirection: "row", gap: 10, marginTop: 14 }}><Pressable onPress={() => setAttendanceSheet(null)} style={{ flex: 1, minHeight: 50, borderRadius: 13, backgroundColor: colors.surface, alignItems: "center", justifyContent: "center" }}><Text style={{ fontWeight: "800", color: colors.foreground }}>キャンセル</Text></Pressable><Pressable onPress={() => { const absentIds = attendanceSheet?.absentMemberIds ?? []; const correcting = attendanceSheet?.correcting; void Api.finalizeEventAttendance(event.id, absentIds).then((result) => { setAttendanceSheet(null); if (result.reward) setXpReward({ ...result.reward, previousLevel: getLevelFromXp(result.reward.previousXp), nextLevel: getLevelFromXp(result.reward.nextXp) }); else Alert.alert(correcting ? "開催結果を訂正しました" : "開催結果を確定しました", `実参加人数は${result.actualAttendeeCount}人です。XPを反映しました。`); }).catch((error) => Alert.alert("確定できませんでした", error instanceof Error ? error.message : "もう一度お試しください。")); }} style={{ flex: 1.35, minHeight: 50, borderRadius: 13, backgroundColor: "#5B9BD5", alignItems: "center", justifyContent: "center" }}><Text style={{ fontWeight: "900", color: "#FFF" }}>{attendanceSheet?.correcting ? "実出欠を訂正" : "実出欠を確定"}</Text></Pressable></View>
-          </View>
-        </View>
-      </Modal>
+
 
       <Modal visible={showAdminEdit} transparent animationType="slide" onRequestClose={() => setShowAdminEdit(false)}>
         <View style={{ flex: 1, justifyContent: "center", padding: 20, backgroundColor: "rgba(20,18,24,0.5)" }}>

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { firstUnreadItemId, initialMessageIndex, normalizedUnreadCount } from "../lib/unread-position";
+import { firstUnreadItemId, firstUnreadMessageIndex, initialMessageIndex, normalizedUnreadCount } from "../lib/unread-position";
 
 describe("unread opening positions", () => {
   it("opens a chronological chat at the first unread message or latest message", () => {
@@ -27,5 +27,18 @@ describe("unread opening positions", () => {
     expect(firstUnreadItemId(items, 1, "me")).toBe("c");
     expect(firstUnreadItemId(items, 0, "me", Date.parse("2026-09-02T00:00:00.000Z"))).toBe("c");
     expect(firstUnreadItemId(items, 3, "me")).toBeNull();
+  });
+
+  it("places the unread marker using only messages from other participants", () => {
+    const items = [
+      { id: "other-old", kind: "other" },
+      { id: "system", kind: "system" },
+      { id: "mine", kind: "mine" },
+      { id: "other-new", kind: "other" },
+      { id: "mine-new", kind: "mine" },
+    ];
+    const isOtherPost = (item: (typeof items)[number]) => item.kind === "other";
+    expect(firstUnreadMessageIndex(items, 1, isOtherPost)).toBe(3);
+    expect(firstUnreadMessageIndex(items, 2, isOtherPost)).toBe(0);
   });
 });

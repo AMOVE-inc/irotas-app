@@ -6,6 +6,7 @@ import { IMPORTED_DISCORD_EVENTS } from "../constants/imported-discord-events";
 import { firstImportedMediaPaths } from "../lib/imported-media-path";
 import { japanDateKey } from "../lib/japan-date";
 import { eventParticipantMemberIds } from "./event-participants";
+import { EVENT_XP, awardEventReward } from "./event-rewards";
 
 const archivedBoardThreads = new Map(boardArchive.threads.map((thread) => [thread.id, thread]));
 const importedEvents = new Map(IMPORTED_DISCORD_EVENTS.map((event) => [event.id, event]));
@@ -190,17 +191,32 @@ async function completePastEvents(db: D1Database, now: Date) {
     const data = eventData(event);
     const start = tokyoDateTime(event.event_date, typeof data.time === "string" ? data.time : "00:00");
     if (!start) continue;
-    const explicitEnd = typeof data.endTime === "string" ? tokyoDateTime(event.event_date, data.endTime) : null;
-    const end = explicitEnd && explicitEnd > start ? explicitEnd : new Date(start.getTime() + 3 * 60 * 60_000);
-    if (now < end) continue;
+    if (now < start) continue;
     const timestamp = now.toISOString();
     await db.prepare("UPDATE events SET status = 'ended', updated_at = ? WHERE id = ? AND status IN ('open', 'full')")
       .bind(timestamp, event.id).run();
-    if (event.event_type === "official" || data.recruitmentChannel === "discord" ||
-      (data.recruitmentChannel == null && event.id.startsWith("discord-event-"))) {
-      completed += await deliverEventFeedback(db, event, timestamp);
+    const participants = await db.prepare("SELECT member_id FROM event_participations WHERE event_id = ? AND status IN ('confirmed','cancel_requested')")
+      .bind(event.id).all<{ member_id: number }>();
+    const confirmedMemberIds = [...new Set((participants.results ?? []).map((participant) => participant.member_id))];
+    if (confirmedMemberIds.length > 0) {
+      await db.batch([
+        ...confirmedMemberIds.map((memberId) => db.prepare(`INSERT OR IGNORE INTO event_attendance_confirmations
+          (event_id,member_id,status,confirmed_by_member_id,confirmed_at,updated_at) VALUES (?,?,'attended',?,?,?)`)
+          .bind(event.id, memberId, event.organizer_member_id, timestamp, timestamp)),
+        db.prepare(`INSERT OR IGNORE INTO event_attendance_finalizations
+          (event_id,finalized_by_member_id,finalized_at,actual_attendee_count,corrected_at,corrected_by_member_id)
+          VALUES (?,?,?,?,NULL,NULL)`).bind(event.id, event.organizer_member_id, timestamp, confirmedMemberIds.length),
+      ]);
     }
-    // XPは幹事が実出欠を確定した時点でのみ付与する。
+    if (event.event_type !== "official") {
+      await awardEventReward(db, { eventId: event.id, memberId: event.organizer_member_id, action: "event_completed_host", amount: EVENT_XP.completedHost, now: timestamp });
+    }
+    for (const memberId of confirmedMemberIds) {
+      if (memberId !== event.organizer_member_id) {
+        await awardEventReward(db, { eventId: event.id, memberId, action: "event_attendance", amount: EVENT_XP.attendance, now: timestamp });
+      }
+    }
+    completed += await deliverEventFeedback(db, event, timestamp);
   }
   return completed;
 }

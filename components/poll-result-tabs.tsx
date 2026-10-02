@@ -1,4 +1,4 @@
-import { Pressable, Text, View } from "react-native";
+import { Pressable, ScrollView, Text } from "react-native";
 
 type PollResultTab = {
   id: string;
@@ -24,7 +24,11 @@ export function PollResultTabs({
   onSelect: (id: string) => void;
 }) {
   return (
-    <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 7, paddingBottom: 10 }}>
+    <ScrollView
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      contentContainerStyle={{ flexDirection: "row", gap: 7, paddingBottom: 10, paddingRight: 12 }}
+    >
       {options.map((option) => {
         const selected = option.id === selectedId;
         return (
@@ -34,8 +38,7 @@ export function PollResultTabs({
             accessibilityState={{ selected }}
             onPress={() => onSelect(option.id)}
             style={{
-              maxWidth: "100%",
-              flexShrink: 1,
+              flexShrink: 0,
               borderRadius: 14,
               paddingHorizontal: 11,
               paddingVertical: 7,
@@ -44,12 +47,12 @@ export function PollResultTabs({
               borderColor: selected ? accentColor : borderColor,
             }}
           >
-            <Text style={{ flexShrink: 1, fontSize: 12, lineHeight: 17, fontWeight: "800", color: selected ? "#FFF" : foregroundColor }}>
+            <Text numberOfLines={1} style={{ fontSize: 12, lineHeight: 17, fontWeight: "800", color: selected ? "#FFF" : foregroundColor }}>
               {option.label} {option.voteCount}票
             </Text>
           </Pressable>
         );
       })}
-    </View>
+    </ScrollView>
   );
 }

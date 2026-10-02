@@ -5,6 +5,13 @@ import path from "node:path";
 const source = (file: string) => fs.readFileSync(path.join(process.cwd(), file), "utf8");
 
 describe("event presentation and comments", () => {
+  it("explains what happens to pending applicants when recruitment closes", () => {
+    const detail = source("app/event-detail.tsx");
+    expect(detail).toContain("募集終了後も申込は残ります");
+    expect(detail).toContain("残りは自動的に却下されます");
+    expect(detail).toContain('pendingApplicantIds.length > 0 ? "確定して残りを却下" : "確定する"');
+  });
+
   it("notifies the organizer through the bell after an event application", () => {
     const events = source("sites/events.ts");
     const notifications = source("app/notifications.tsx");

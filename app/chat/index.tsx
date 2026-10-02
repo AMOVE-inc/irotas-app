@@ -73,7 +73,7 @@ import { isDiscordRecruitmentOpen } from "@/lib/event-recruitment-channel";
 import { importedIntroductionReactions, isUnidentifiedReaction, mergedIntroductionReactions } from "@/lib/introduction-reactions";
 import { replyReference } from "@/lib/reply-reference";
 import { reconcileOptimisticReactions } from "@/lib/chat-reactions";
-import { initialMessageIndex, normalizedUnreadCount } from "@/lib/unread-position";
+import { firstUnreadMessageIndex, initialMessageIndex, normalizedUnreadCount } from "@/lib/unread-position";
 import { canSelectPollOption, canSubmitPollSelection, nextPollSelection, viewerHasPollVote } from "@/lib/poll-voting";
 import { getLevelFromXp, type XpReward } from "@/lib/xp-store";
 
@@ -322,7 +322,7 @@ function MessageBubble({ message, isMe, canDelete, readOnly, viewerId, viewerNam
           />
         </Pressable>
       )}
-      <View style={{ maxWidth: "70%" }}>
+      <View style={{ maxWidth: "78%" }}>
         {!isMe && !isSystemMessage && (sender || message.externalAuthorName) ? (
           <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 2, marginLeft: 2 }}>
             <Text style={{ fontSize: 11, color: colors.muted }}>{stripRankFromName(senderMember?.displayName ?? message.externalAuthorName ?? sender?.name ?? "メンバー")}</Text>
@@ -332,6 +332,9 @@ function MessageBubble({ message, isMe, canDelete, readOnly, viewerId, viewerNam
             <MemberClubLeaderBadges roles={senderMember?.discordRoles} compact />
           </View>
         ) : null}
+        <View style={{ flexDirection: "row", alignItems: "flex-end", justifyContent: isMe ? "flex-end" : "flex-start" }}>
+          {isMe ? <Text testID="chat-message-time-left" style={{ fontSize: 10, color: colors.muted, marginRight: 6, marginBottom: 2 }}>{formatTime(message.createdAt)}</Text> : null}
+          <View style={{ flexShrink: 1 }}>
         {message.imageUri || message.attachmentUrls?.length ? (
           <Pressable onLongPress={() => setShowActions(true)} delayLongPress={350} style={{ flexDirection: "row", flexWrap: "wrap", gap: 4, width: (message.attachmentUrls?.length ?? 1) > 1 ? 220 : undefined, overflow: "hidden", borderRadius: 12 }}>
             {(message.attachmentUrls?.length ? message.attachmentUrls : [message.imageUri!]).map((uri, index, gallery) => isVideoAttachment(uri)
@@ -359,17 +362,9 @@ function MessageBubble({ message, isMe, canDelete, readOnly, viewerId, viewerNam
             </View>
           ) : null}
         </Pressable> : null}
-        <Text
-          style={{
-            fontSize: 10,
-            color: colors.muted,
-            marginTop: 2,
-            textAlign: isMe ? "right" : "left",
-            marginHorizontal: 4,
-          }}
-        >
-          {formatTime(message.createdAt)}
-        </Text>
+          </View>
+          {!isMe ? <Text testID="chat-message-time-right" style={{ fontSize: 10, color: colors.muted, marginLeft: 6, marginBottom: 2 }}>{formatTime(message.createdAt)}</Text> : null}
+        </View>
         <View style={{ flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: 4, marginTop: 3, justifyContent: isMe ? "flex-end" : "flex-start" }}>
           {Object.entries(message.reactions ?? {}).filter(([emoji]) => !emoji.startsWith("🗳️")).map(([emoji, memberIds]) => (
             <Pressable
@@ -439,7 +434,7 @@ export default function ChatScreen() {
   const viewerMemberId = authUser?.memberId ?? (authUser?.id ? `member-${authUser.id}` : CURRENT_USER.id);
   const userIsAdmin = isAdminRole(authUser?.role, authUser?.accessRole);
   const canViewAllChats = isOperatorRole(authUser?.role, authUser?.accessRole);
-  const { id, message: linkedMessageId, unreadCount: unreadCountParam, roomName, roomType, sourceId, participants: participantsParam, fromStartMission } = useLocalSearchParams<{ id: string; message?: string; unreadCount?: string; roomName?: string; roomType?: ChatRoom["type"]; sourceId?: string; participants?: string; fromStartMission?: string }>();
+  const { id, message: linkedMessageId, unreadCount: unreadCountParam, roomName, roomType, sourceId, participants: participantsParam, fromStartMission, openParticipants } = useLocalSearchParams<{ id: string; message?: string; unreadCount?: string; roomName?: string; roomType?: ChatRoom["type"]; sourceId?: string; participants?: string; fromStartMission?: string; openParticipants?: string }>();
   const unreadCountFromRoute = unreadCountParam !== undefined && Number.isFinite(Number(unreadCountParam))
     ? Math.max(0, Math.floor(Number(unreadCountParam))) : null;
   const [messageText, setMessageText] = useState("");
@@ -495,6 +490,9 @@ export default function ChatScreen() {
   const [room, setRoom] = useState(() => getRoomById(id ?? "") ?? routedRoom ?? (id === "community-free-chat" ? {
     id, name: "フリーチャット", type: "board" as const, sourceId: "community-free-chat", participants: [], createdBy: "system", shared: true,
   } : undefined));
+  useEffect(() => {
+    if (openParticipants === "1" && room?.id === id) setShowParticipants(true);
+  }, [id, openParticipants, room?.id]);
   const [roomEvent, setRoomEvent] = useState<Event | null>(null);
   useEffect(() => {
     const eventId = room?.type === "event" ? room.sourceId : null;
@@ -720,8 +718,10 @@ export default function ChatScreen() {
       setRoom(immediateRoom);
       setRoomParticipants([...immediateRoom.participants]);
     }
-    setIsLoadingRoom(!immediateRoom);
-    const loadingFallback = setTimeout(() => setIsLoadingRoom(false), 2500);
+    // URLやローカルキャッシュの参加者情報は一時的に古い場合があるため、
+    // サーバーのルーム情報が返るまではアクセス拒否を確定しない。
+    setIsLoadingRoom(true);
+    const loadingFallback = setTimeout(() => setIsLoadingRoom(false), 10000);
     // プロフィール画像読み込み
     AsyncStorage.getItem("profile_avatar_uri").then((uri) => {
       if (uri) setMyAvatarUri(uri);
@@ -861,7 +861,7 @@ export default function ChatScreen() {
   const [isSendingMessage, setIsSendingMessage] = useState(false);
   const pendingSendRef = useRef<{ signature: string; messageId: string } | null>(null);
   const [showAttachmentMenu, setShowAttachmentMenu] = useState(false);
-  const [, setIsLoadingRoom] = useState(true);
+  const [isLoadingRoom, setIsLoadingRoom] = useState(true);
   const [showPollComposer, setShowPollComposer] = useState(false);
   const [pollQuestion, setPollQuestion] = useState("");
   const [pollOptions, setPollOptions] = useState(["", ""]);
@@ -1085,12 +1085,15 @@ export default function ChatScreen() {
     }
   }, [id, introductionHydrated, hasOpenedIntroduction, introductionOpenedKey]);
 
-  if ((!room || room.id !== id) && !clubAccessDenied) {
+  if (isLoadingRoom && !clubAccessDenied || ((!room || room.id !== id) && !clubAccessDenied)) {
     return (
       <ScreenContainer edges={["top", "left", "right"]}>
         <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 16, paddingVertical: 10, borderBottomWidth: 0.5, borderBottomColor: colors.border }}>
           <Pressable onPress={leaveChat}><IconSymbol name="arrow.left" size={22} color={colors.foreground} /></Pressable>
           <Text numberOfLines={1} style={{ flex: 1, marginLeft: 12, fontSize: 16, fontWeight: "700", color: colors.foreground }}>{routedRoom?.name ?? "チャット"}</Text>
+        </View>
+        <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+          <ActivityIndicator color="#E8A0BF" />
         </View>
       </ScreenContainer>
     );
@@ -1118,7 +1121,15 @@ export default function ChatScreen() {
   const requestedUnreadCount = normalizedUnreadCount(openingUnreadCount, displayedMessages.length);
   const introductionUnreadCount = introductionChat && hasOpenedIntroduction ? requestedUnreadCount : 0;
   const introductionFirstUnreadIndex = introductionUnreadCount > 0 ? introductionUnreadCount - 1 : null;
-  const firstUnreadIndex = initialMessageIndex(displayedMessages.length, requestedUnreadCount, false);
+  const isViewerMessage = (item: (typeof displayedMessages)[number]) => item.senderId === viewerMemberId || item.senderId === authUser?.memberId || (
+    Boolean(item.shared && item.externalAuthorName && authUser?.name) &&
+    stripRankFromName(item.externalAuthorName ?? "") === stripRankFromName(authUser?.name ?? "")
+  );
+  const firstUnreadIndex = firstUnreadMessageIndex(
+    displayedMessages,
+    requestedUnreadCount,
+    (item) => !isViewerMessage(item) && !item.content.startsWith("【IRO+ システム】"),
+  );
   const canManageRoom = room.type !== "club" && !staffViewingOnly && (userIsAdmin || room.createdBy === viewerMemberId);
   const canInviteMembers = canManageRoom && room.type !== "rank" && room.type !== "event" && room.type !== "dm";
   const canPostAnnouncement = !staffViewingOnly && canPostToChat(authUser?.role, room.id, authUser?.accessRole);
@@ -1207,10 +1218,7 @@ export default function ChatScreen() {
                 highlighted={item.id === highlightedMessageId}
                 onOpenReply={jumpToMessage}
                 readOnly={staffViewingOnly}
-                isMe={item.senderId === viewerMemberId || item.senderId === authUser?.memberId || (
-                  Boolean(item.shared && item.externalAuthorName && authUser?.name) &&
-                  stripRankFromName(item.externalAuthorName ?? "") === stripRankFromName(authUser?.name ?? "")
-                )}
+                isMe={isViewerMessage(item)}
                 canDelete={!staffViewingOnly && (userIsAdmin || item.senderId === viewerMemberId || item.senderId === authUser?.memberId || (
                   Boolean(item.shared && item.externalAuthorName && authUser?.name) &&
                   stripRankFromName(item.externalAuthorName ?? "") === stripRankFromName(authUser?.name ?? "")
@@ -1550,7 +1558,15 @@ export default function ChatScreen() {
                   <TouchableOpacity
                     onPress={() => {
                       setShowParticipants(false);
-                      router.push({ pathname: "/member-profile", params: { id: pid } });
+                      router.push({ pathname: "/member-profile", params: {
+                        id: pid,
+                        returnToChatParticipants: "1",
+                        chatId: id,
+                        chatRoomName: room.name,
+                        chatRoomType: room.type,
+                        chatSourceId: room.sourceId,
+                        chatParticipants: roomParticipants.join(","),
+                      } });
                     }}
                     style={{ flexDirection: "row", alignItems: "center", flex: 1 }}
                   >

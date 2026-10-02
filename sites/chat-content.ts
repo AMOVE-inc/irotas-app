@@ -559,6 +559,7 @@ async function serializeRoom(db: D1Database, room: RoomRow, member: Viewer, visi
   const unread = await db.prepare(`SELECT COUNT(*) AS count FROM chat_messages cm
     LEFT JOIN chat_room_reads crr ON crr.room_id = cm.room_id AND crr.member_id = ?
     WHERE cm.room_id = ? AND cm.deleted_at IS NULL AND cm.sender_member_id != ?
+      AND cm.content NOT LIKE '【IRO+ システム】%'
       AND (? IS NULL OR cm.created_at >= ?)
       AND julianday(cm.created_at) > julianday((SELECT COALESCE(password_set_at, last_signed_in_at) FROM members WHERE id = ?))
       AND (crr.last_read_at IS NULL OR cm.created_at > crr.last_read_at)`)
@@ -566,6 +567,7 @@ async function serializeRoom(db: D1Database, room: RoomRow, member: Viewer, visi
   const mentions = await db.prepare(`SELECT COUNT(*) AS count FROM chat_messages cm
     LEFT JOIN chat_room_reads crr ON crr.room_id = cm.room_id AND crr.member_id = ?
     WHERE cm.room_id = ? AND cm.deleted_at IS NULL AND cm.sender_member_id != ?
+      AND cm.content NOT LIKE '【IRO+ システム】%'
       AND (? IS NULL OR cm.created_at >= ?)
       AND julianday(cm.created_at) > julianday((SELECT COALESCE(password_set_at, last_signed_in_at) FROM members WHERE id = ?))
       AND (crr.last_read_at IS NULL OR cm.created_at > crr.last_read_at)
@@ -640,12 +642,14 @@ async function serializeRoomList(db: D1Database, rooms: RoomRow[], member: Viewe
         (SELECT COUNT(*) FROM chat_messages cm LEFT JOIN chat_room_reads crr
           ON crr.room_id = cm.room_id AND crr.member_id = ?
           WHERE cm.room_id = cr.id AND cm.deleted_at IS NULL AND cm.sender_member_id != ?
+          AND cm.content NOT LIKE '【IRO+ システム】%'
           AND (mine.joined_at IS NULL OR cr.id NOT IN ('branch-kanto-free', 'branch-kansai-free') OR cm.created_at >= mine.joined_at)
           AND julianday(cm.created_at) > julianday(COALESCE(?, ?))
           AND (crr.last_read_at IS NULL OR cm.created_at > crr.last_read_at)) AS unread_count,
         (SELECT COUNT(*) FROM chat_messages cm LEFT JOIN chat_room_reads crr
           ON crr.room_id = cm.room_id AND crr.member_id = ?
           WHERE cm.room_id = cr.id AND cm.deleted_at IS NULL AND cm.sender_member_id != ?
+          AND cm.content NOT LIKE '【IRO+ システム】%'
           AND (mine.joined_at IS NULL OR cr.id NOT IN ('branch-kanto-free', 'branch-kansai-free') OR cm.created_at >= mine.joined_at)
           AND julianday(cm.created_at) > julianday(COALESCE(?, ?))
           AND (crr.last_read_at IS NULL OR cm.created_at > crr.last_read_at)

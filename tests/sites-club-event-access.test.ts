@@ -203,8 +203,10 @@ describe("club event access", () => {
     const response = await handleEventRequest(new Request(`https://app.example/api/events/${db.row.id}`, {
       method: "PATCH", body: JSON.stringify({ action: "close_recruitment" }),
     }), env);
+    const body = await response?.json() as { event: { status: string } };
     expect(response?.status).toBe(200);
     expect(db.row.status).toBe("full");
+    expect(body.event.status).toBe("full");
     expect(JSON.parse(db.row.public_data_json).manualRecruitmentClosedAt).toBeTruthy();
   });
 

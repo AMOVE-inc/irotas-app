@@ -19,6 +19,12 @@ describe("profile accessibility", () => {
     expect(profileSource).toContain('accessibilityLabel="ログアウト"');
   });
 
+  it("uses an in-app logout confirmation that works in embedded browsers", () => {
+    expect(profileSource).toContain("showLogoutConfirmation");
+    expect(profileSource).toContain("本当にログアウトしますか？");
+    expect(profileSource).not.toContain("window.confirm");
+  });
+
   it("shows profile save progress and closes without a blocking success alert", () => {
     expect(profileSource).toContain('saving ? "保存中…" : "保存"');
     expect(profileSource).toContain("disabled={saving}");
