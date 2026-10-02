@@ -36,6 +36,10 @@ import { GourmetReportReminderGate } from "@/components/gourmet-report-reminder-
 import { GlobalLoadingOverlay } from "@/components/global-loading-overlay";
 import { LiveNotificationBanner } from "@/components/live-notification-banner";
 import { hasCompletedNativeProfileSetup } from "@/lib/native-profile-setup";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { XpRewardPopup } from "@/components/xp-reward-popup";
+import { levelFromXp, rankFromXp } from "@/lib/xp-levels";
+import type { MemberRank } from "@/constants/mock-data";
 
 // Mobile browsers already exclude the status bar from their visual viewport.
 // Keep only a small breathing space instead of adding a native-sized 44px inset.
@@ -59,6 +63,34 @@ const getRootFrame = (): Rect => {
   }
   return { x: 0, y: 0, width: 390, height: 844 };
 };
+
+const MEMBER_RANKS: MemberRank[] = ["regular", "silver", "gold", "platinum"];
+
+function ProgressCelebrationGate() {
+  const { user } = useAuthContext();
+  const [reward, setReward] = useState<import("@/lib/xp-store").XpReward | null>(null);
+  useEffect(() => {
+    if (!user?.memberId || !Number.isFinite(Number(user.xp))) return;
+    const currentXp = Math.max(0, Number(user.xp));
+    const currentRank = MEMBER_RANKS.includes(user.memberRank as MemberRank) ? user.memberRank as MemberRank : rankFromXp(currentXp);
+    const key = `irotas_seen_progress_v1:${user.memberId}`;
+    let active = true;
+    void AsyncStorage.getItem(key).then(async (stored) => {
+      const previous = (() => { try { return stored ? JSON.parse(stored) as { xp?: number; rank?: MemberRank } : null; } catch { return null; } })();
+      await AsyncStorage.setItem(key, JSON.stringify({ xp: currentXp, rank: currentRank }));
+      if (!active || !previous || !Number.isFinite(Number(previous.xp))) return;
+      const previousXp = Math.max(0, Number(previous.xp));
+      const previousRank = MEMBER_RANKS.includes(previous.rank as MemberRank) ? previous.rank as MemberRank : rankFromXp(previousXp);
+      const previousLevel = levelFromXp(previousXp);
+      const nextLevel = levelFromXp(currentXp);
+      const rankUp = MEMBER_RANKS.indexOf(currentRank) > MEMBER_RANKS.indexOf(previousRank);
+      if (nextLevel <= previousLevel && !rankUp) return;
+      setReward({ amount: Math.max(0, currentXp - previousXp), reason: "XPが反映されました", previousXp, nextXp: currentXp, previousLevel, nextLevel, previousRank, nextRank: currentRank });
+    }).catch(() => {});
+    return () => { active = false; };
+  }, [user?.memberId, user?.memberRank, user?.xp]);
+  return <XpRewardPopup reward={reward} onClose={() => setReward(null)} />;
+}
 
 export const unstable_settings = {
   anchor: "(tabs)",
@@ -175,7 +207,7 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
     );
   }
 
-  return <>{children}</>;
+  return <><ProgressCelebrationGate />{children}</>;
 }
 
 export default function RootLayout() {

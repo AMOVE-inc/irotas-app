@@ -23,6 +23,13 @@ describe("server event automation", () => {
     expect(automation).not.toContain("await runEventAutomation(env.DB);\n  return json({ activities:");
   });
 
+  it("catches up overdue event XP when an active member opens the app", () => {
+    expect(worker).toContain('requestUrl.pathname === "/api/auth/me"');
+    expect(worker).toContain('/^\\/api\\/events\\/[^/]+$/.test(requestUrl.pathname)');
+    expect(worker).toContain("await runEventAutomation(env.DB!)");
+    expect(worker).toContain("lastOpportunisticEventAutomationAt");
+  });
+
   it("creates organizer, favorite and participant reminders idempotently", () => {
     expect(automation).toContain("organizer_three_days");
     expect(automation).toContain("favorite_one_day");

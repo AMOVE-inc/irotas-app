@@ -31,6 +31,8 @@ import { handleBenefitsRequest } from "./benefits";
 import { handleCampaignRequest } from "./campaigns";
 import { handleAnnouncementRequest } from "./announcements";
 import { handleHomeAutomationRequest, runEventAutomation } from "./home-automation";
+
+let lastOpportunisticEventAutomationAt = 0;
 import { handleXpRequest } from "./xp";
 import { handleMee6LevelsRequest } from "./mee6-levels";
 import {
@@ -643,6 +645,16 @@ export default {
   async fetch(request: Request, env: SitesEnv, context?: SitesExecutionContext): Promise<Response> {
     const requestId = crypto.randomUUID();
     try {
+      const requestUrl = new URL(request.url);
+      const shouldCatchUpEventAutomation = env.DB && request.method === "GET" && (
+        requestUrl.pathname === "/api/auth/me" ||
+        requestUrl.pathname === "/api/home/activities" ||
+        /^\/api\/events\/[^/]+$/.test(requestUrl.pathname)
+      ) && Date.now() - lastOpportunisticEventAutomationAt >= 60_000;
+      if (shouldCatchUpEventAutomation) {
+        lastOpportunisticEventAutomationAt = Date.now();
+        await runEventAutomation(env.DB!);
+      }
       const response = withSecurityHeaders(await routeRequest(request, env), request);
       if (env.DB && !["GET", "HEAD", "OPTIONS"].includes(request.method)) {
         const delivery = dispatchPendingPushNotifications(env.DB).catch(() => 0);

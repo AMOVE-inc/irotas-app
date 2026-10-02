@@ -14,9 +14,9 @@ export function XpRewardPopup({ reward, onClose }: { reward: XpReward | null; on
       <CelebrationConfetti />
       <View style={{ width: "100%", maxWidth: 360, borderRadius: 24, backgroundColor: "#FFF", padding: 24, alignItems: "center" }}>
         <View style={{ width: 58, height: 58, borderRadius: 29, backgroundColor: allMissionsCompleted || rankUp ? "#FFF3CC" : "#FFF0F6", alignItems: "center", justifyContent: "center" }}><IconSymbol name={allMissionsCompleted || rankUp ? "crown.fill" : "ticket.fill"} size={32} color={allMissionsCompleted || rankUp ? "#B48316" : "#D56591"} /></View>
-        <Text style={{ marginTop: 10, fontSize: 20, lineHeight: 28, fontWeight: "900", color: "#26232A", textAlign: "center" }}>{allMissionsCompleted ? "スタートミッション\n全て達成！" : "XPを獲得しました"}</Text>
+        <Text style={{ marginTop: 10, fontSize: 20, lineHeight: 28, fontWeight: "900", color: "#26232A", textAlign: "center" }}>{allMissionsCompleted ? "スタートミッション\n全て達成！" : rankUp ? "ランクアップ！" : levelUp ? "レベルアップ！" : "XPを獲得しました"}</Text>
         {allMissionsCompleted ? <Text style={{ marginTop: 6, fontSize: 13, lineHeight: 19, color: "#77727D", textAlign: "center" }}>6つのミッションを全てクリアしました。おめでとうございます！</Text> : null}
-        <Text style={{ marginTop: 9, fontSize: 34, fontWeight: "900", color: "#D56591" }}>+{reward.amount} XP</Text>
+        {reward.amount > 0 ? <Text style={{ marginTop: 9, fontSize: 34, fontWeight: "900", color: "#D56591" }}>+{reward.amount} XP</Text> : null}
         <Text style={{ marginTop: 3, fontSize: 13, color: "#77727D" }}>{reward.reason}</Text>
         {levelUp ? <View style={{ marginTop: 16, borderRadius: 14, backgroundColor: "#FFF4F8", paddingHorizontal: 18, paddingVertical: 10 }}><Text style={{ fontSize: 15, fontWeight: "900", color: "#C05B88" }}>レベル {reward.nextLevel} にアップ！</Text></View> : null}
         {rankUp ? <View style={{ marginTop: 9, borderRadius: 14, backgroundColor: "#FFF6D8", paddingHorizontal: 18, paddingVertical: 10 }}><Text style={{ fontSize: 15, fontWeight: "900", color: "#936B08" }}>{RANK_LABELS[reward.nextRank]}にランクアップ！</Text></View> : null}

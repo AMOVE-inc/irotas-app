@@ -1,5 +1,5 @@
-import React, { createContext, useContext, useCallback, useEffect, useState } from "react";
-import { Platform } from "react-native";
+import React, { createContext, useContext, useCallback, useEffect, useRef, useState } from "react";
+import { AppState, Platform } from "react-native";
 import * as Auth from "@/lib/_core/auth";
 import * as Api from "@/lib/_core/api";
 import { logger } from "@/lib/_core/logger";
@@ -68,6 +68,7 @@ function toAuthUser(apiUser: Api.AuthApiUser): Auth.User {
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<Auth.User | null>(null);
   const [loading, setLoading] = useState(true);
+  const backgroundRefreshInFlight = useRef(false);
 
   const fetchUser = useCallback(async () => {
     try {
@@ -159,9 +160,42 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  const refreshCurrentUser = useCallback(async () => {
+    if (backgroundRefreshInFlight.current) return;
+    backgroundRefreshInFlight.current = true;
+    try {
+      const apiUser = await Api.getMeStrict();
+      if (!apiUser) return;
+      const userInfo = toAuthUser(apiUser);
+      setUser((current) => current && current.id === userInfo.id && current.xp === userInfo.xp && current.memberRank === userInfo.memberRank && current.participationCount === userInfo.participationCount && current.organizerCount === userInfo.organizerCount ? current : userInfo);
+      await Auth.setUserInfo(userInfo);
+    } catch (error) {
+      logger.warn("Unable to refresh the current member in the background", error);
+    } finally {
+      backgroundRefreshInFlight.current = false;
+    }
+  }, []);
+
   useEffect(() => {
     fetchUser();
   }, [fetchUser]);
+
+  useEffect(() => {
+    if (!user?.id) return;
+    const timer = setInterval(() => { void refreshCurrentUser(); }, 15_000);
+    const appStateSubscription = AppState.addEventListener("change", (state) => {
+      if (state === "active") void refreshCurrentUser();
+    });
+    const handleVisibility = () => {
+      if (Platform.OS === "web" && document.visibilityState === "visible") void refreshCurrentUser();
+    };
+    if (Platform.OS === "web") document.addEventListener("visibilitychange", handleVisibility);
+    return () => {
+      clearInterval(timer);
+      appStateSubscription.remove();
+      if (Platform.OS === "web") document.removeEventListener("visibilitychange", handleVisibility);
+    };
+  }, [refreshCurrentUser, user?.id]);
 
   return (
     <AuthContext.Provider
