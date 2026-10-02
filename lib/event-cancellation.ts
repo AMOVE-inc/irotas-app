@@ -19,3 +19,11 @@ export function approveEventCancellationRequest(event: Event, memberId: string):
   event.attendees = event.applicantIds.length;
   event.status = "open";
 }
+
+export function rejectEventCancellationRequest(event: Event, memberId: string): void {
+  event.cancellationRequests = (event.cancellationRequests ?? []).map((request) =>
+    request.memberId === memberId && request.status === "pending"
+      ? { ...request, status: "rejected" as const }
+      : request,
+  );
+}

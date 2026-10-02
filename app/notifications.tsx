@@ -18,6 +18,7 @@ const ICON_MAP: Record<string, { icon: string; color: string }> = {
   coupon: { icon: "ticket.fill", color: "#FF9500" },
   club_application: { icon: "person.badge.plus", color: "#FF9900" },
   club_approval: { icon: "checkmark.circle.fill", color: "#34C759" },
+  event_application: { icon: "person.badge.plus", color: "#5B9BD5" },
   event_confirmed: { icon: "checkmark.circle.fill", color: "#34C759" },
   event_deadline: { icon: "clock.fill", color: "#FF9500" },
   event_reminder: { icon: "calendar", color: "#5B9BD5" },

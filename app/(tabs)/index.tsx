@@ -671,7 +671,7 @@ export default function HomeScreen() {
     void Api.getStartMissions().then((status) => {
       setStartMissions(status);
       if (!status.guideSeen) setShowStartGuide(true);
-      if (status.bonusAwardedNow && status.reward) setMissionReward({ ...status.reward, previousLevel: levelFromXp(status.reward.previousXp), nextLevel: levelFromXp(status.reward.nextXp) });
+      if (status.bonusAwardedNow && status.reward) setMissionReward({ ...status.reward, startMissionsCompleted: status.allCompleted, previousLevel: levelFromXp(status.reward.previousXp), nextLevel: levelFromXp(status.reward.nextXp) });
     }).catch(() => undefined);
   }, [authUser?.memberId]);
 

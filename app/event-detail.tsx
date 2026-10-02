@@ -20,7 +20,7 @@ import { createPaymentRecord } from "@/lib/payment-store";
 import { getGoogleCalendarAppUrl, getGoogleCalendarUrl, getOutlookCalendarAppUrl, getOutlookCalendarUrl } from "@/lib/calendar-links";
 import { toggleEventFavoriteWithNotifications, useEventFavorites } from "@/lib/event-favorites-store";
 import { cancelOrganizerDeadlineNotifications, notifyEventCancellationRequest, notifyEventConfirmation, scheduleEventReminders } from "@/lib/notifications";
-import { approveEventCancellationRequest, getPendingCancellationRequests, submitEventCancellationRequest } from "@/lib/event-cancellation";
+import { approveEventCancellationRequest, getPendingCancellationRequests, rejectEventCancellationRequest, submitEventCancellationRequest } from "@/lib/event-cancellation";
 import { useColors } from "@/hooks/use-colors";
 import { useAuthContext } from "@/lib/auth-context";
 import { useClubs } from "@/lib/club-store";
@@ -240,6 +240,7 @@ export default function EventDetailScreen() {
   const [linkCopied, setLinkCopied] = useState(false);
   const [memberDirectory, setMemberDirectory] = useState<Api.PublicMember[]>([]);
   const [approvingMemberId, setApprovingMemberId] = useState<string | null>(null);
+  const [reviewingCancellation, setReviewingCancellation] = useState<{ memberId: string; action: "approve" | "reject" } | null>(null);
   const [finalizingParticipants, setFinalizingParticipants] = useState(false);
   const [attendanceSheet, setAttendanceSheet] = useState<{ participants: Api.EventAttendanceParticipant[]; absentMemberIds: string[]; correcting: boolean } | null>(null);
   const [attendanceLoading, setAttendanceLoading] = useState(false);
@@ -635,6 +636,7 @@ export default function EventDetailScreen() {
                   if (mission.bonusAwardedNow && mission.reward) {
                     setXpReward({
                       ...mission.reward,
+                      startMissionsCompleted: mission.allCompleted,
                       previousLevel: getLevelFromXp(mission.reward.previousXp),
                       nextLevel: getLevelFromXp(mission.reward.nextXp),
                     });
@@ -1052,6 +1054,8 @@ export default function EventDetailScreen() {
   };
 
   const handleApproveCancellation = async (memberId: string) => {
+    if (reviewingCancellation) return;
+    setReviewingCancellation({ memberId, action: "approve" });
     try {
       if (event.viewerMemberId) setEvent(await Api.reviewEventCancellation(event.id, memberId, "approve"));
       else {
@@ -1064,6 +1068,25 @@ export default function EventDetailScreen() {
       );
     } catch (error) {
       Alert.alert("承認できませんでした", error instanceof Error ? error.message : "もう一度お試しください。");
+    } finally {
+      setReviewingCancellation(null);
+    }
+  };
+
+  const handleRejectCancellation = async (memberId: string) => {
+    if (reviewingCancellation) return;
+    setReviewingCancellation({ memberId, action: "reject" });
+    try {
+      if (event.viewerMemberId) setEvent(await Api.reviewEventCancellation(event.id, memberId, "reject"));
+      else {
+        rejectEventCancellationRequest(event, memberId);
+        setEventRevision((value) => value + 1);
+      }
+      Alert.alert("キャンセル申請を却下しました", "参加確定を継続し、参加者チャットもそのまま利用できます。");
+    } catch (error) {
+      Alert.alert("却下できませんでした", error instanceof Error ? error.message : "もう一度お試しください。");
+    } finally {
+      setReviewingCancellation(null);
     }
   };
 
@@ -1283,7 +1306,11 @@ export default function EventDetailScreen() {
             }) : <Text style={{ fontSize: 13, color: colors.muted, paddingVertical: 8 }}>現在、承認待ちの申込はありません。</Text>}
 
             <Text style={{ fontSize: 13, fontWeight: "800", color: colors.foreground, marginTop: 14, marginBottom: 7 }}>キャンセル申請（{pendingCancellationRequests.length}件）</Text>
-            {pendingCancellationRequests.length ? pendingCancellationRequests.map((request) => { const member = displayMember(request.memberId); return <View key={request.memberId} style={{ flexDirection: "row", alignItems: "center", paddingVertical: 8, borderTopWidth: 0.5, borderTopColor: colors.border }}><Pressable onPress={() => openMemberProfile(request.memberId)} style={{ flex: 1, flexDirection: "row", alignItems: "center" }}><Image source={member.avatar} style={{ width: 34, height: 34, borderRadius: 17 }} contentFit="cover" /><View style={{ flex: 1, marginLeft: 9, flexDirection: "row", alignItems: "center", flexWrap: "wrap" }}><Text style={{ fontSize: 14, fontWeight: "700", color: colors.foreground }}>{member.name}</Text>{member.rank ? <MemberRankBadge rank={member.rank} name={member.badgeName} role={member.role} compact /> : null}<MemberClubLeaderBadges roles={member.roles} name={member.badgeName} compact /><MemberRoleBadge name="" role={member.role} compact /></View></Pressable><Pressable onPress={() => void handleApproveCancellation(request.memberId)} style={{ borderRadius: 9, backgroundColor: "#D94C55", paddingHorizontal: 10, paddingVertical: 7 }}><Text style={{ color: "#FFF", fontSize: 11, fontWeight: "800" }}>承認・再募集</Text></Pressable></View>; }) : <Text style={{ fontSize: 13, color: colors.muted, paddingVertical: 8 }}>現在、キャンセル申請はありません。</Text>}
+            {pendingCancellationRequests.length ? pendingCancellationRequests.map((request) => {
+              const member = displayMember(request.memberId);
+              const reviewing = reviewingCancellation?.memberId === request.memberId;
+              return <View key={request.memberId} style={{ flexDirection: "row", alignItems: "center", paddingVertical: 8, borderTopWidth: 0.5, borderTopColor: colors.border }}><Pressable onPress={() => openMemberProfile(request.memberId)} style={{ flex: 1, flexDirection: "row", alignItems: "center" }}><Image source={member.avatar} style={{ width: 34, height: 34, borderRadius: 17 }} contentFit="cover" /><View style={{ flex: 1, marginLeft: 9, flexDirection: "row", alignItems: "center", flexWrap: "wrap" }}><Text style={{ fontSize: 14, fontWeight: "700", color: colors.foreground }}>{member.name}</Text>{member.rank ? <MemberRankBadge rank={member.rank} name={member.badgeName} role={member.role} compact /> : null}<MemberClubLeaderBadges roles={member.roles} name={member.badgeName} compact /><MemberRoleBadge name="" role={member.role} compact /></View></Pressable><View style={{ flexDirection: "row", gap: 6 }}><Pressable disabled={Boolean(reviewingCancellation)} onPress={() => void handleRejectCancellation(request.memberId)} style={{ borderRadius: 9, borderWidth: 1, borderColor: "#6B7280", paddingHorizontal: 9, paddingVertical: 7, opacity: reviewingCancellation ? 0.55 : 1 }}><Text style={{ color: "#4B5563", fontSize: 11, fontWeight: "800" }}>{reviewing && reviewingCancellation?.action === "reject" ? "却下中…" : "却下"}</Text></Pressable><Pressable disabled={Boolean(reviewingCancellation)} onPress={() => void handleApproveCancellation(request.memberId)} style={{ borderRadius: 9, backgroundColor: "#D94C55", paddingHorizontal: 10, paddingVertical: 7, opacity: reviewingCancellation ? 0.55 : 1 }}><Text style={{ color: "#FFF", fontSize: 11, fontWeight: "800" }}>{reviewing && reviewingCancellation?.action === "approve" ? "承認中…" : "承認・再募集"}</Text></Pressable></View></View>;
+            }) : <Text style={{ fontSize: 13, color: colors.muted, paddingVertical: 8 }}>現在、キャンセル申請はありません。</Text>}
 
             {!event.isCancelled ? <><Text style={{ fontSize: 13, fontWeight: "800", color: colors.foreground, marginTop: 14, marginBottom: 7 }}>キャンセル済み（{cancelledParticipantIds.length}人）</Text>{cancelledParticipantIds.length ? cancelledParticipantIds.map((memberId) => { const member = displayMember(memberId); return <Pressable key={memberId} onPress={() => openMemberProfile(memberId)} style={{ flexDirection: "row", alignItems: "center", paddingVertical: 8, borderTopWidth: 0.5, borderTopColor: colors.border }}><Image source={member.avatar} style={{ width: 34, height: 34, borderRadius: 17 }} contentFit="cover" /><Text style={{ marginLeft: 9, flex: 1, fontSize: 14, fontWeight: "700", color: colors.foreground }}>{member.name}</Text><IconSymbol name="chevron.right" size={16} color={colors.muted} /></Pressable>; }) : <Text style={{ fontSize: 13, color: colors.muted, paddingVertical: 8 }}>キャンセル済みの参加者はいません。</Text>}</> : null}
 

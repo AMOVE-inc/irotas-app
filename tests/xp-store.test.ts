@@ -29,4 +29,10 @@ describe("XP reward popup", () => {
     expect(mergeXpRewards(null, reward)).toBe(reward);
     expect(mergeXpRewards(reward, null)).toBe(reward);
   });
+
+  it("報酬をまとめても全ミッション達成表示を保持する", () => {
+    const post: XpReward = { amount: 30, reason: "投稿", previousXp: 0, nextXp: 30, previousLevel: 1, nextLevel: 1, previousRank: "regular", nextRank: "regular" };
+    const mission: XpReward = { amount: 10, reason: "全ミッション達成", previousXp: 30, nextXp: 40, previousLevel: 1, nextLevel: 1, previousRank: "regular", nextRank: "regular", startMissionsCompleted: true };
+    expect(mergeXpRewards(post, mission)?.startMissionsCompleted).toBe(true);
+  });
 });

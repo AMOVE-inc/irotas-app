@@ -113,7 +113,7 @@ class EventAccessDatabase implements D1Database {
           author_public_id: String(values[4]), content: String(values[5]), created_at: String(values[6]), deleted_at: null,
         });
         if (sql.includes("INTO in_app_notifications")) {
-          const type = sql.includes("'event_mention'") ? "event_mention" : sql.includes("'event_cancellation'") ? "event_cancellation" : sql.includes("'event_payment_ready'") ? "event_payment_ready" : "event_confirmed";
+          const type = sql.includes("'event_mention'") ? "event_mention" : sql.includes("'event_cancellation'") ? "event_cancellation" : sql.includes("'event_payment_ready'") ? "event_payment_ready" : sql.includes("'event_application'") ? "event_application" : "event_confirmed";
           db.notifications.push({ targetMemberId: Number(values[1]), type, eventId: String(values[4]) });
         }
         return { success: true };
@@ -271,6 +271,7 @@ describe("club event access", () => {
     const applyBody = await applyResponse?.json() as { event: Record<string, unknown> };
     expect(applyResponse?.status).toBe(201);
     expect(applyBody.event.viewerParticipationStatus).toBe("applied");
+    expect(db.notifications).toContainEqual({ targetMemberId: 20, type: "event_application", eventId: "event-club-1" });
 
     authenticatedRequestMember.mockResolvedValue({ id: 30, role: "user", access_role: "member" });
     const unrelatedResponse = await handleEventRequest(new Request("https://app.example/api/events/event-club-1/participants/IRO0010", {
@@ -318,6 +319,7 @@ describe("club event access", () => {
       viewerParticipationStatus: "confirmed",
       viewerPaymentState: null,
     });
+    expect(db.notifications).toContainEqual({ targetMemberId: 20, type: "event_application", eventId: "event-club-1" });
     expect(db.notifications.some((notification) => notification.type === "event_confirmed")).toBe(true);
   });
 

@@ -773,6 +773,28 @@ async function notifyEventConfirmation(db: D1Database, targetMemberId: number, e
     ).run();
 }
 
+async function notifyOrganizerEventApplication(
+  db: D1Database,
+  organizerMemberId: number,
+  applicantMemberId: number,
+  eventId: string,
+  eventTitle: string,
+  appliedAt: string,
+) {
+  const applicantName = await eventChatMemberName(db, applicantMemberId);
+  await db.prepare(`INSERT OR IGNORE INTO in_app_notifications
+    (id, target_member_id, type, title, body, event_id, target_path, created_at)
+    VALUES (?, ?, 'event_application', ?, ?, ?, ?, ?)`).bind(
+      `event-application:${eventId}:${applicantMemberId}:${appliedAt}`,
+      organizerMemberId,
+      "イベントへの参加申込が届きました",
+      `${applicantName}さんから「${eventTitle}」への参加申込が届きました。`,
+      eventId,
+      `/event-detail?id=${encodeURIComponent(eventId)}`,
+      appliedAt,
+    ).run();
+}
+
 /** Squareの支払済注文に対応する応募だけを確定し、再送時は通知・チャットを重複させない。 */
 export async function confirmPaidEventParticipation(db: D1Database, eventId: string, memberId: number, now: string) {
   const row = await eventRow(db, eventId);
@@ -1673,6 +1695,7 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
       if (pointResult && !pointResult.duplicate) await refundEventPointDiscount(env.DB, id, member.id, row.title, now);
       return responseJson({ error: "募集終了のため申込を受け付けられませんでした" }, 409);
     }
+    await notifyOrganizerEventApplication(env.DB, row.organizer_member_id, member.id, id, row.title, now);
     if (status === "confirmed") {
       await env.DB.prepare("UPDATE events SET public_data_json = ?, updated_at = ? WHERE id = ?")
         .bind(JSON.stringify(data), now, id).run();

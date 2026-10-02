@@ -41,6 +41,7 @@ import { canViewerAccessClubContent, getClubViewerAccess, resolveViewerMemberId 
 import { GOURMET_ADVICE_BUDGETS, isGoogleMapsUrl, MEAL_BUDGETS } from "@/lib/meal-report";
 import { formatMealReportArea, resolveRestaurantLocation } from "@/lib/restaurant-location";
 import { XpRewardPopup } from "@/components/xp-reward-popup";
+import { PollResultTabs } from "@/components/poll-result-tabs";
 import { awardXp, getLevelFromXp, mergeXpRewards, type XpReward } from "@/lib/xp-store";
 import { POINT_ACTIONS } from "@/constants/mock-data";
 import { submitClubApplication as submitClubApplicationToStore, useClubs, useClubStoreStatus } from "@/lib/club-store";
@@ -87,7 +88,7 @@ import { GOURMET_GENRES } from "@/constants/event-options";
 import { createInitialBoardReadCounts, supportsBoardNewBadge } from "@/lib/board-unread";
 import { boardPollResult, finalizeBoardPollOnce, isBoardPollOpen, loadBoardPoll, voteBoardPoll } from "@/lib/board-polls";
 import { addInAppNotification } from "@/lib/in-app-notifications-store";
-import { canSelectPollOption, viewerHasPollVote } from "@/lib/poll-voting";
+import { canSelectPollOption, canSubmitPollSelection, nextPollSelection, viewerHasPollVote } from "@/lib/poll-voting";
 import { deleteBoardComment, deleteBoardThread, loadBoardCommentEdits, loadDeletedBoardCommentIds, loadDeletedBoardThreadIds, saveBoardCommentEdit } from "@/lib/board-content-store";
 import { CalendarField } from "@/components/calendar-field";
 import { canRegisterBoardThreadEvent, displayBoardThreadTitle, isBoardThreadClosed, isClubSelfIntroduction, isRecruitmentBoardCategory, isThreadPinned, sortRecruitmentThreads } from "@/lib/board-recruitment";
@@ -205,12 +206,11 @@ function PollCard({ ownerKey, poll, onShowResults }: { ownerKey: string; poll: B
 
   const selectOption = (optionId: string) => {
     if (!open || !canSelect) return;
-    setPendingOptionIds((selected) => current.allowMultiple
-      ? selected.includes(optionId) ? selected.filter((id) => id !== optionId) : [...selected, optionId]
-      : [optionId]);
+    setPendingOptionIds((selected) => nextPollSelection(selected, optionId, Boolean(current.allowMultiple)));
   };
+  const canSubmitVote = canSubmitPollSelection(pendingOptionIds.length, editingVote);
   const submitVote = async () => {
-    if (!open || !canSelect || !pendingOptionIds.length || submittingVote) return;
+    if (!open || !canSelect || !canSubmitVote || submittingVote) return;
     const [ownerType, ownerId] = ownerKey.split(":", 2) as ["thread" | "comment", string];
     const existing = current.options.filter((option) => option.voterIds.includes(viewerMemberId)).map((option) => option.id);
     const toggles = [...new Set([...existing.filter((id) => !pendingOptionIds.includes(id)), ...pendingOptionIds.filter((id) => !existing.includes(id))])];
@@ -240,7 +240,7 @@ function PollCard({ ownerKey, poll, onShowResults }: { ownerKey: string; poll: B
         </Pressable>
       </View>;
     })}</View>
-    {open && canSelect ? <Pressable accessibilityRole="button" disabled={!pendingOptionIds.length || submittingVote} onPress={() => void submitVote()} style={{ marginTop: 11, borderRadius: 10, backgroundColor: pendingOptionIds.length && !submittingVote ? "#5865F2" : "#B9BBC7", paddingVertical: 10, alignItems: "center" }}><Text style={{ fontSize: 13, fontWeight: "900", color: "#FFF" }}>{submittingVote ? "投票中…" : "投票"}</Text></Pressable> : null}
+    {open && canSelect ? <Pressable accessibilityRole="button" disabled={!canSubmitVote || submittingVote} onPress={() => void submitVote()} style={{ marginTop: 11, borderRadius: 10, backgroundColor: canSubmitVote && !submittingVote ? "#5865F2" : "#B9BBC7", paddingVertical: 10, alignItems: "center" }}><Text style={{ fontSize: 13, fontWeight: "900", color: "#FFF" }}>{submittingVote ? (editingVote ? "保存中…" : "投票中…") : (editingVote ? "保存" : "投票")}</Text></Pressable> : null}
     <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 9 }}>
       {open && hasVoted ? <Pressable accessibilityRole="button" onPress={() => setEditingVote((value) => !value)} style={{ borderRadius: 9, borderWidth: 1, borderColor: "#725C8C", paddingHorizontal: 11, paddingVertical: 7 }}><Text style={{ fontSize: 12, fontWeight: "900", color: "#6D5B85" }}>{editingVote ? "編集をキャンセル" : "投票を編集"}</Text></Pressable> : <View />}
       <Pressable accessibilityRole="button" onPress={() => onShowResults(current.options, current.options[0]?.id ?? "")} style={{ paddingHorizontal: 4, paddingVertical: 7 }}><Text style={{ fontSize: 12, fontWeight: "900", color: "#6D5B85" }}>結果を表示</Text></Pressable>
@@ -1688,7 +1688,7 @@ function ThreadDetailModal({
               <Text style={{ marginLeft: 8, fontSize: 16, fontWeight: "900", color: colors.foreground }}>{reactionDetails?.title ?? "スタンプを押した人"}</Text>
               <Pressable onPress={() => setReactionDetails(null)} style={{ marginLeft: "auto", padding: 4 }}><IconSymbol name="xmark" size={19} color={colors.muted} /></Pressable>
             </View>
-            {reactionDetails?.pollOptions ? <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 7, paddingBottom: 10 }}>{reactionDetails.pollOptions.map((option) => { const selected = option.id === reactionDetails.selectedPollOptionId; return <Pressable key={option.id} onPress={() => setReactionDetails((current) => current ? { ...current, selectedPollOptionId: option.id, memberIds: option.voterIds } : current)} style={{ borderRadius: 14, paddingHorizontal: 11, paddingVertical: 7, backgroundColor: selected ? "#6D5B85" : colors.surface, borderWidth: 1, borderColor: selected ? "#6D5B85" : colors.border }}><Text style={{ fontSize: 12, fontWeight: "800", color: selected ? "#FFF" : colors.foreground }}>{option.text} {option.voterIds.length}票</Text></Pressable>; })}</ScrollView> : null}
+            {reactionDetails?.pollOptions ? <PollResultTabs options={reactionDetails.pollOptions.map((option) => ({ id: option.id, label: option.text, voteCount: option.voterIds.length }))} selectedId={reactionDetails.selectedPollOptionId} accentColor="#6D5B85" surfaceColor={colors.surface} borderColor={colors.border} foregroundColor={colors.foreground} onSelect={(optionId) => setReactionDetails((current) => { const option = current?.pollOptions?.find((item) => item.id === optionId); return current && option ? { ...current, selectedPollOptionId: optionId, memberIds: option.voterIds } : current; })} /> : null}
             <ScrollView>
               {reactionDetails?.memberIds.filter((memberId) => !isUnidentifiedReaction(memberId)).map((memberId) => {
                 const directoryMember = reactionMembers.find((member) => member.id === memberId);
@@ -3563,6 +3563,7 @@ export default function BoardScreen() {
               if (mission.bonusAwardedNow && mission.reward) {
                 const missionReward: XpReward = {
                   ...mission.reward,
+                  startMissionsCompleted: mission.allCompleted,
                   previousLevel: getLevelFromXp(mission.reward.previousXp),
                   nextLevel: getLevelFromXp(mission.reward.nextXp),
                 };

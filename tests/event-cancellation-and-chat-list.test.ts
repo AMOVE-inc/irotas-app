@@ -49,6 +49,14 @@ describe("event cancellation lifecycle", () => {
     expect(detail).toContain("キャンセルした参加者は、精算などの連絡ができるよう参加者チャットに残ります。");
     expect(detail).toContain("承認までは参加確定のまま、参加者チャットも引き続き利用できます。");
   });
+
+  it("lets the organizer reject a cancellation request and prevents repeated review clicks", () => {
+    const detail = source("app/event-detail.tsx");
+    expect(detail).toContain('Api.reviewEventCancellation(event.id, memberId, "reject")');
+    expect(detail).toContain("キャンセル申請を却下しました");
+    expect(detail).toContain('reviewingCancellation?.action === "reject" ? "却下中…" : "却下"');
+    expect(detail).toContain("disabled={Boolean(reviewingCancellation)}");
+  });
 });
 
 describe("chat list identity presentation", () => {

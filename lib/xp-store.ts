@@ -12,6 +12,7 @@ export type XpReward = {
   nextLevel: number;
   previousRank: MemberRank;
   nextRank: MemberRank;
+  startMissionsCompleted?: boolean;
   rankPointAward?: {
     rank: Extract<MemberRank, "silver" | "gold" | "platinum">;
     amount: number;
@@ -33,6 +34,7 @@ export function mergeXpRewards(first: XpReward | null, next: XpReward | null): X
     previousXp: first.previousXp,
     previousLevel: first.previousLevel,
     previousRank: first.previousRank,
+    ...(first.startMissionsCompleted || next.startMissionsCompleted ? { startMissionsCompleted: true } : {}),
   };
 }
 

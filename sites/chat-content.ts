@@ -498,7 +498,9 @@ async function messageRows(db: D1Database, roomId: string, visibleFrom?: string,
       cm.content, cm.image_url, cm.image_urls_json, cm.reply_to_json, cm.created_at, cm.updated_at
     FROM chat_messages cm LEFT JOIN members m ON m.id = cm.sender_member_id
     WHERE cm.room_id = ? AND cm.deleted_at IS NULL AND (? IS NULL OR cm.created_at >= ?)
-    ORDER BY cm.created_at DESC, cm.id DESC LIMIT ?`).bind(roomId, visibleFrom ?? null, visibleFrom ?? null, limit).all<MessageRow>();
+    ORDER BY cm.created_at DESC,
+      CASE WHEN cm.id LIKE 'event-chat-welcome:%' THEN 1 ELSE 0 END ASC,
+      cm.id DESC LIMIT ?`).bind(roomId, visibleFrom ?? null, visibleFrom ?? null, limit).all<MessageRow>();
   return (result.results ?? []).reverse();
 }
 

@@ -11,6 +11,7 @@ import { IconSymbol } from "@/components/ui/icon-symbol";
 import { CalendarField } from "@/components/calendar-field";
 import { ExpandingMessageInput } from "@/components/expanding-message-input";
 import { XpRewardPopup } from "@/components/xp-reward-popup";
+import { PollResultTabs } from "@/components/poll-result-tabs";
 import {
   CURRENT_USER,
   DEFAULT_AVATAR,
@@ -73,7 +74,7 @@ import { importedIntroductionReactions, isUnidentifiedReaction, mergedIntroducti
 import { replyReference } from "@/lib/reply-reference";
 import { reconcileOptimisticReactions } from "@/lib/chat-reactions";
 import { initialMessageIndex, normalizedUnreadCount } from "@/lib/unread-position";
-import { canSelectPollOption, viewerHasPollVote } from "@/lib/poll-voting";
+import { canSelectPollOption, canSubmitPollSelection, nextPollSelection, viewerHasPollVote } from "@/lib/poll-voting";
 import { getLevelFromXp, type XpReward } from "@/lib/xp-store";
 
 const REACTION_EMOJIS = ["👍", "❤️", "😂", "🎉", "😋", "🙏"] as const;
@@ -224,11 +225,10 @@ function ChatPollCard({
   useEffect(() => {
     if (!editingVote) setPendingChoices(choices.filter((choice) => (reactions[`🗳️${choice}`] ?? []).includes(viewerId)));
   }, [choices, editingVote, reactions, viewerId]);
-  const selectChoice = (choice: string) => setPendingChoices((selected) => allowMultiple
-    ? selected.includes(choice) ? selected.filter((item) => item !== choice) : [...selected, choice]
-    : [choice]);
+  const selectChoice = (choice: string) => setPendingChoices((selected) => nextPollSelection(selected, choice, allowMultiple));
+  const canSubmitVote = canSubmitPollSelection(pendingChoices.length, editingVote);
   const submitVote = async () => {
-    if (!canSelect || !pendingChoices.length || submittingVote) return;
+    if (!canSelect || !canSubmitVote || submittingVote) return;
     const existing = choices.filter((choice) => (reactions[`🗳️${choice}`] ?? []).includes(viewerId));
     const toggles = [...new Set([...existing.filter((choice) => !pendingChoices.includes(choice)), ...pendingChoices.filter((choice) => !existing.includes(choice))])];
     setSubmittingVote(true);
@@ -256,7 +256,7 @@ function ChatPollCard({
         </Pressable>
       </View>;
     })}</View>
-    {canSelect ? <Pressable accessibilityRole="button" disabled={!pendingChoices.length || submittingVote} onPress={() => void submitVote()} style={{ marginTop: 10, borderRadius: 9, backgroundColor: pendingChoices.length && !submittingVote ? (outgoing ? "#FFF" : "#5865F2") : (outgoing ? "#FFFFFF66" : "#B9BBC7"), paddingVertical: 9, alignItems: "center" }}><Text style={{ fontSize: 12, fontWeight: "900", color: outgoing ? "#D65E8D" : "#FFF" }}>{submittingVote ? "投票中…" : "投票"}</Text></Pressable> : null}
+    {canSelect ? <Pressable accessibilityRole="button" disabled={!canSubmitVote || submittingVote} onPress={() => void submitVote()} style={{ marginTop: 10, borderRadius: 9, backgroundColor: canSubmitVote && !submittingVote ? (outgoing ? "#FFF" : "#5865F2") : (outgoing ? "#FFFFFF66" : "#B9BBC7"), paddingVertical: 9, alignItems: "center" }}><Text style={{ fontSize: 12, fontWeight: "900", color: outgoing ? "#D65E8D" : "#FFF" }}>{submittingVote ? (editingVote ? "保存中…" : "投票中…") : (editingVote ? "保存" : "投票")}</Text></Pressable> : null}
     <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 9 }}>
       {!readOnly && hasVoted ? <Pressable accessibilityRole="button" onPress={() => setEditingVote((value) => !value)} style={{ borderRadius: 9, borderWidth: 1, borderColor: outgoing ? "#FFF8" : "#5865F2", paddingHorizontal: 10, paddingVertical: 6 }}><Text style={{ fontSize: 11, fontWeight: "900", color: outgoing ? "#FFF" : "#5865F2" }}>{editingVote ? "編集をキャンセル" : "投票を編集"}</Text></Pressable> : <View />}
       <Pressable accessibilityRole="button" onPress={() => onShowResults(choices.map((choice) => ({ choice, memberIds: reactions[`🗳️${choice}`] ?? [] })), choices[0] ?? "")} style={{ paddingHorizontal: 3, paddingVertical: 6 }}><Text style={{ fontSize: 11, fontWeight: "900", color: outgoing ? "#FFF" : "#5865F2" }}>結果を表示</Text></Pressable>
@@ -408,7 +408,7 @@ function MessageBubble({ message, isMe, canDelete, readOnly, viewerId, viewerNam
           <Pressable onPress={() => setReactionDetails(null)} style={{ flex: 1, backgroundColor: "rgba(20,18,24,0.48)", justifyContent: "center", padding: 28 }}>
             <Pressable onPress={() => {}} style={{ maxHeight: "72%", backgroundColor: colors.background, borderRadius: 20, padding: 18 }}>
               <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 12 }}><Text style={{ fontSize: 21 }}>{reactionDetails?.emoji}</Text><Text style={{ marginLeft: 8, fontSize: 16, fontWeight: "900", color: colors.foreground }}>{reactionDetails?.title ?? "リアクションした人"}</Text><Pressable onPress={() => setReactionDetails(null)} style={{ marginLeft: "auto", padding: 4 }}><IconSymbol name="xmark" size={19} color={colors.muted} /></Pressable></View>
-              {reactionDetails?.pollOptions ? <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 7, paddingBottom: 10 }}>{reactionDetails.pollOptions.map((option) => { const selected = option.choice === reactionDetails.selectedPollChoice; return <Pressable key={option.choice} onPress={() => setReactionDetails((current) => current ? { ...current, selectedPollChoice: option.choice, memberIds: option.memberIds } : current)} style={{ borderRadius: 14, paddingHorizontal: 10, paddingVertical: 7, backgroundColor: selected ? "#5865F2" : colors.surface, borderWidth: 1, borderColor: selected ? "#5865F2" : colors.border }}><Text style={{ fontSize: 12, fontWeight: "800", color: selected ? "#FFF" : colors.foreground }}>{option.choice} {option.memberIds.length}票</Text></Pressable>; })}</ScrollView> : null}
+              {reactionDetails?.pollOptions ? <PollResultTabs options={reactionDetails.pollOptions.map((option) => ({ id: option.choice, label: option.choice, voteCount: option.memberIds.length }))} selectedId={reactionDetails.selectedPollChoice} accentColor="#5865F2" surfaceColor={colors.surface} borderColor={colors.border} foregroundColor={colors.foreground} onSelect={(choice) => setReactionDetails((current) => { const option = current?.pollOptions?.find((item) => item.choice === choice); return current && option ? { ...current, selectedPollChoice: choice, memberIds: option.memberIds } : current; })} /> : null}
               <ScrollView>
                 {reactionDetails?.memberIds.filter((memberId) => !isUnidentifiedReaction(memberId)).map((memberId) => {
                   const isViewer = memberId === viewerId;
@@ -954,6 +954,7 @@ export default function ChatScreen() {
           if (mission.bonusAwardedNow && mission.reward) {
             setXpReward({
               ...mission.reward,
+              startMissionsCompleted: mission.allCompleted,
               previousLevel: getLevelFromXp(mission.reward.previousXp),
               nextLevel: getLevelFromXp(mission.reward.nextXp),
             });

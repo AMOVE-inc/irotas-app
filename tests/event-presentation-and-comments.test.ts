@@ -5,6 +5,22 @@ import path from "node:path";
 const source = (file: string) => fs.readFileSync(path.join(process.cwd(), file), "utf8");
 
 describe("event presentation and comments", () => {
+  it("notifies the organizer through the bell after an event application", () => {
+    const events = source("sites/events.ts");
+    const notifications = source("app/notifications.tsx");
+    expect(events).toContain("await notifyOrganizerEventApplication(env.DB, row.organizer_member_id, member.id, id, row.title, now)");
+    expect(events).toContain("'event_application'");
+    expect(events).toContain("イベントへの参加申込が届きました");
+    expect(events).toContain("/event-detail?id=${encodeURIComponent(eventId)}");
+    expect(notifications).toContain("event_application: { icon:");
+  });
+
+  it("orders an event group creation before same-time participant joins", () => {
+    const chatApi = source("sites/chat-content.ts");
+    expect(chatApi).toContain("CASE WHEN cm.id LIKE 'event-chat-welcome:%' THEN 1 ELSE 0 END ASC");
+    expect(chatApi).toContain("return (result.results ?? []).reverse()");
+  });
+
   it("shows the start-mission XP reward immediately after an event application", () => {
     const detail = source("app/event-detail.tsx");
     const application = detail.indexOf("const application = await Api.applyToEvent");
@@ -21,6 +37,7 @@ describe("event presentation and comments", () => {
     const mission = create.indexOf("const mission = await Api.getStartMissions()", created);
     expect(mission).toBeGreaterThan(created);
     expect(create).toContain("<XpRewardPopup reward={xpReward}");
+    expect(create).toContain("startMissionsCompleted: mission.allCompleted");
     expect(create).toContain("setShowCreatedCelebration(true);");
   });
 

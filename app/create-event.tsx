@@ -307,6 +307,7 @@ export default function CreateEventScreen() {
         if (mission.bonusAwardedNow && mission.reward) {
           setXpReward({
             ...mission.reward,
+            startMissionsCompleted: mission.allCompleted,
             previousLevel: getLevelFromXp(mission.reward.previousXp),
             nextLevel: getLevelFromXp(mission.reward.nextXp),
           });
