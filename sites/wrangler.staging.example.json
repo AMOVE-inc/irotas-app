@@ -1,0 +1,29 @@
+{
+  "name": "irotas-app-staging",
+  "main": "server/index.js",
+  "compatibility_date": "2026-07-21",
+  "assets": {
+    "directory": "client",
+    "binding": "ASSETS",
+    "run_worker_first": true
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "irotas-staging",
+      "database_id": "REPLACE_WITH_STAGING_D1_DATABASE_ID"
+    }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "UPLOADS",
+      "bucket_name": "irotas-staging-uploads"
+    }
+  ],
+  "vars": {
+    "APP_ENVIRONMENT": "staging",
+    "SQUARE_ENVIRONMENT": "sandbox",
+    "EVENT_PAYMENTS_ENABLED": "false",
+    "GOOGLE_MAPS_PHOTOS_ENABLED": "false"
+  }
+}

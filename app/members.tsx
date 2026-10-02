@@ -144,7 +144,7 @@ export default function MembersScreen() {
       {/* Member list */}
       <FlatList
         data={listRows}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item, index) => `${item.id}:${index}`}
         renderItem={({ item }) => {
           if ("sectionTitle" in item) return <View style={{ paddingHorizontal: 16, paddingTop: 18, paddingBottom: 8, backgroundColor: colors.background }}><Text style={{ fontSize: 17, fontWeight: "900", color: colors.foreground }}>{item.sectionTitle}</Text>{item.sectionDescription ? <Text style={{ marginTop: 2, fontSize: 12, color: colors.muted }}>{item.sectionDescription}</Text> : null}</View>;
           const isMe = item.isCurrentUser;

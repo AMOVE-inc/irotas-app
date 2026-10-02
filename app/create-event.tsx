@@ -3,6 +3,7 @@ import { IconSymbol } from "@/components/ui/icon-symbol";
 import { CURRENT_USER, DEFAULT_AVATAR, EVENTS, MEMBERS, type Event } from "@/constants/mock-data";
 import { EventMentionPreview, MentionSuggestions } from "@/components/mention-ui";
 import { ActionCelebrationPopup } from "@/components/action-celebration-popup";
+import { XpRewardPopup } from "@/components/xp-reward-popup";
 import { GOURMET_GENRES } from "@/constants/event-options";
 import { useAuthContext } from "@/lib/auth-context";
 import { isAdminRole, isOperatorRole } from "@/lib/access-control";
@@ -22,6 +23,7 @@ import * as ImagePicker from "expo-image-picker";
 import { recordHomeActivity } from "@/lib/home-activity-store";
 import * as Api from "@/lib/_core/api";
 import { getMentionGroups, getMentionQuery, insertMention } from "@/lib/mentions";
+import { getLevelFromXp, type XpReward } from "@/lib/xp-store";
 
 const WEEKDAYS = ["日", "月", "火", "水", "木", "金", "土"];
 
@@ -181,6 +183,7 @@ export default function CreateEventScreen() {
   const [memberDirectory, setMemberDirectory] = useState<Api.PublicMember[]>([]);
   const [memberDirectoryLoading, setMemberDirectoryLoading] = useState(true);
   const [showCreatedCelebration, setShowCreatedCelebration] = useState(false);
+  const [xpReward, setXpReward] = useState<XpReward | null>(null);
   const [createdEventId, setCreatedEventId] = useState<string | null>(null);
   const [editingEvent, setEditingEvent] = useState<Event | null>(initialEditingEvent ?? null);
   const [editLoading, setEditLoading] = useState(Boolean(editId && !initialEditingEvent));
@@ -297,10 +300,21 @@ export default function CreateEventScreen() {
     void recordHomeActivity({ id: `event:${newEvent.id}`, kind: "event", title: newEvent.title, description: finalType === "official" ? recruitmentStatus === "draft" ? "公式イベントを募集前で登録しました" : "新しい公式イベントが公開されました" : finalType === "club" ? "新しい部活動イベントが公開されました" : "新しいグルメ会が公開されました", createdAt: newEvent.createdAt!, route: "/event-detail", params: { id: newEvent.id } });
     if (newEvent.recruitmentStatus !== "draft") void scheduleOrganizerDeadlineNotification(newEvent);
     setIsSubmitting(false);
-    // イベント作成自体はXP付与対象ではないため、作成完了だけを祝福する。
-    // 初回作成のスタートミッション10XPはホームでサーバー確定後に別途表示する。
     if (finalType !== "official" && !userIsOperator) {
       setCreatedEventId(newEvent.id);
+      try {
+        const mission = await Api.getStartMissions();
+        if (mission.bonusAwardedNow && mission.reward) {
+          setXpReward({
+            ...mission.reward,
+            previousLevel: getLevelFromXp(mission.reward.previousXp),
+            nextLevel: getLevelFromXp(mission.reward.nextXp),
+          });
+          return;
+        }
+      } catch {
+        // イベント作成は完了しているため、通常の完了画面へ進む。
+      }
       setShowCreatedCelebration(true);
       return;
     }
@@ -351,7 +365,7 @@ export default function CreateEventScreen() {
         {!organizerParticipates ? <Text style={{ marginTop: 6, color: colors.muted, fontSize: 12 }}>枠提供のみの場合、予約人数に自分を含めません。</Text> : null}
 
         <FieldLabel>{eventType === "official" ? useRankPrices ? "参加費（任意）" : "参加費 *" : "予算 *"}</FieldLabel>
-        <Pressable onPress={() => { const next = budgetMin !== "未定"; setFixedAmount(false); setBudgetMin(next ? "未定" : ""); setBudgetMax(next ? "未定" : ""); }} style={{ marginBottom: 9 }}><Text style={{ color: budgetMin === "未定" ? "#D65E8D" : colors.foreground, fontWeight: "700" }}>{budgetMin === "未定" ? "✓ " : "□ "}未定</Text></Pressable>
+        <Pressable accessibilityRole="checkbox" accessibilityState={{ checked: budgetMin === "未定" }} onPress={() => { const next = budgetMin !== "未定"; setFixedAmount(false); setBudgetMin(next ? "未定" : ""); setBudgetMax(next ? "未定" : ""); }} style={{ flexDirection: "row", alignItems: "center", marginBottom: 9 }}><View style={{ width: 22, height: 22, borderRadius: 6, backgroundColor: budgetMin === "未定" ? "#E8A0BF" : colors.surface, borderWidth: 1, borderColor: budgetMin === "未定" ? "#E8A0BF" : colors.border, alignItems: "center", justifyContent: "center" }}>{budgetMin === "未定" ? <IconSymbol name="checkmark" size={14} color="#FFF" /> : null}</View><Text style={{ marginLeft: 8, color: colors.foreground, fontSize: 13 }}>未定</Text></Pressable>
         {budgetMin !== "未定" ? <>
         <Pressable onPress={() => { setFixedAmount((value) => !value); setBudgetMin(""); setBudgetMax(""); }} style={{ flexDirection: "row", alignItems: "center", marginBottom: 9 }}><View style={{ width: 22, height: 22, borderRadius: 6, backgroundColor: fixedAmount ? "#E8A0BF" : colors.surface, borderWidth: 1, borderColor: fixedAmount ? "#E8A0BF" : colors.border, alignItems: "center", justifyContent: "center" }}>{fixedAmount ? <IconSymbol name="checkmark" size={14} color="#FFF" /> : null}</View><Text style={{ marginLeft: 8, color: colors.foreground, fontSize: 13 }}>固定金額で設定する</Text></Pressable>
         {fixedAmount ? <View style={{ flexDirection: "row", alignItems: "center" }}><TextInput value={budgetMin} onChangeText={(value) => setBudgetMin(value.replace(/[^0-9]/g, ""))} placeholder="例：8000" placeholderTextColor={colors.muted} keyboardType="number-pad" inputMode="numeric" style={[inputStyle, { flex: 1 }]} /><Text style={{ marginLeft: 8, color: colors.foreground, fontWeight: "700" }}>円</Text></View> : <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}><View style={{ flex: 1 }}><SelectField label="下限金額" value={budgetMin} options={EVENT_AMOUNT_OPTIONS} onChange={setBudgetMin} /></View><Text style={{ color: colors.muted }}>〜</Text><View style={{ flex: 1 }}><SelectField label="上限金額" value={budgetMax} options={EVENT_AMOUNT_OPTIONS} onChange={setBudgetMax} /></View></View>}
@@ -374,6 +388,7 @@ export default function CreateEventScreen() {
         <Pressable disabled={isSubmitting} onPress={() => { void handleCreate(); }} style={{ marginTop: 22, minHeight: 56, borderRadius: 16, backgroundColor: termsAccepted && !isSubmitting ? "#18171A" : "#B8B8BD", alignItems: "center", justifyContent: "center", opacity: isSubmitting ? 0.65 : 1 }}><Text style={{ fontSize: 17, fontWeight: "900", color: "#FFF" }}>{isSubmitting ? (editId ? "保存しています…" : "作成しています…") : (editId ? "変更を保存する" : "イベントを作成する")}</Text></Pressable>
       </ScrollView>}
       <ActionCelebrationPopup visible={showCreatedCelebration} title="イベントを作成しました" detail="募集内容を確認して、参加者を迎える準備を進めましょう。" onClose={() => { setShowCreatedCelebration(false); if (createdEventId) router.replace({ pathname: "/event-detail", params: { id: createdEventId } }); }} />
+      <XpRewardPopup reward={xpReward} onClose={() => { setXpReward(null); setShowCreatedCelebration(true); }} />
       {isSubmitting ? <View pointerEvents="auto" style={{ position: "absolute", inset: 0, backgroundColor: "rgba(255,255,255,0.72)", alignItems: "center", justifyContent: "center" }}><View style={{ minWidth: 170, borderRadius: 18, padding: 22, alignItems: "center", backgroundColor: colors.surface, shadowColor: "#000", shadowOpacity: 0.14, shadowRadius: 14, elevation: 6 }}><ActivityIndicator size="large" color="#D65E8D" /><Text style={{ marginTop: 12, fontSize: 14, fontWeight: "900", color: colors.foreground }}>{editId ? "イベントを保存中です" : "イベントを作成中です"}</Text></View></View> : null}
     </ScreenContainer>
   );

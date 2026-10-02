@@ -1,8 +1,9 @@
-import { authenticatedRequestMember } from "./auth";
+import { authenticatedRequestMember, hashPassword } from "./auth";
 import type { SitesEnv } from "./platform-types";
 import { rankFromXp } from "./xp";
 
 const PATH = "/api/member/start-missions";
+const ADMIN_RESET_PATH = "/api/admin/member-start-missions/reset";
 const BONUS_XP = 10;
 export const INTRODUCTION_MISSION_CUTOFF = "2026-09-01";
 
@@ -60,11 +61,69 @@ function json(body: unknown, status = 200) {
 }
 
 export async function handleMemberStartMissionRequest(request: Request, env: SitesEnv): Promise<Response | null> {
-  if (new URL(request.url).pathname !== PATH) return null;
+  const pathname = new URL(request.url).pathname;
+  if (pathname !== PATH && pathname !== ADMIN_RESET_PATH) return null;
   if (!env.DB) return json({ error: "データベースに接続できません" }, 503);
   const member = await authenticatedRequestMember(request, env);
   if (!member) return json({ error: "ログインが必要です" }, 401);
   const now = new Date().toISOString();
+
+  if (pathname === ADMIN_RESET_PATH) {
+    if (request.method !== "POST") return json({ error: "Method Not Allowed" }, 405);
+    if (member.role !== "admin" && member.access_role !== "admin") return json({ error: "管理者のみ操作できます" }, 403);
+    const body = await request.json().catch(() => null) as { email?: unknown; password?: unknown } | null;
+    const email = typeof body?.email === "string" ? body.email.trim().toLowerCase() : "";
+    const password = typeof body?.password === "string" ? body.password : "";
+    if (!/^\S+@\S+\.\S+$/.test(email)) return json({ error: "メールアドレスを確認してください" }, 400);
+    let target = await env.DB.prepare(`SELECT m.id, COALESCE(m.xp, 0) AS xp
+      FROM members m LEFT JOIN member_subscriptions s ON s.member_id = m.id
+      WHERE LOWER(TRIM(m.email)) = ?
+        AND (COALESCE(json_extract(m.profile_json, '$.isTestAccount'), 0) = 1 OR s.billing_status = 'TEST_ACCOUNT')
+      LIMIT 1`).bind(email).first<{ id: number; xp: number }>();
+    if (!target) {
+      if (!email.endsWith("@irotas.test") || password.length < 8 || password.length > 128)
+        return json({ error: "新規作成は@irotas.testのメールと8〜128文字のパスワードが必要です" }, 400);
+      const passwordHash = await hashPassword(password, undefined, env.AUTH_SECRET);
+      const created = await env.DB.prepare(`INSERT INTO members
+        (email, password_hash, display_name, public_member_id, role, access_role, branches_json,
+         account_status, member_rank, profile_json, xp, password_set_at, created_at, updated_at)
+        VALUES (?, ?, 'General Tester', ?, 'user', 'member', '[]', 'active', 'regular',
+          '{"isTestAccount":true}', 0, ?, ?, ?) RETURNING id`)
+        .bind(email, passwordHash, `STG-QA-${Date.now()}`, now, now, now).first<{ id: number }>();
+      if (!created) return json({ error: "テストアカウントを作成できませんでした" }, 500);
+      await env.DB.prepare(`INSERT INTO member_subscriptions
+        (member_id, billing_email, square_status, billing_status, access_status,
+         subscription_started_at, last_verified_at, created_at, updated_at)
+        VALUES (?, ?, 'ACTIVE', 'TEST_ACCOUNT', 'active', ?, ?, ?, ?)`)
+        .bind(created.id, email, now, now, now, now).run();
+      target = { id: created.id, xp: 0 };
+    } else if (password) {
+      if (password.length < 8 || password.length > 128) return json({ error: "パスワードは8〜128文字で入力してください" }, 400);
+      const passwordHash = await hashPassword(password, undefined, env.AUTH_SECRET);
+      await env.DB.prepare("UPDATE members SET password_hash = ?, password_set_at = ?, updated_at = ? WHERE id = ?")
+        .bind(passwordHash, now, now, target.id).run();
+    }
+    const rewarded = await env.DB.prepare(`SELECT COUNT(*) AS count FROM member_start_mission_rewards
+      WHERE member_id = ? AND status = 'applied'`).bind(target.id).first<{ count: number }>();
+    const reversedXp = Math.max(0, Number(rewarded?.count ?? 0) * BONUS_XP);
+    const nextXp = Math.max(0, Number(target.xp ?? 0) - reversedXp);
+    await env.DB.batch([
+      env.DB.prepare(`INSERT INTO member_start_mission_state
+        (member_id, guide_seen_at, reset_at, profile_completed_at, created_at, updated_at)
+        VALUES (?, NULL, ?, NULL, ?, ?)
+        ON CONFLICT(member_id) DO UPDATE SET guide_seen_at = NULL, reset_at = excluded.reset_at,
+          profile_completed_at = NULL, updated_at = excluded.updated_at`).bind(target.id, now, now, now),
+      env.DB.prepare("DELETE FROM member_start_mission_rewards WHERE member_id = ?").bind(target.id),
+      env.DB.prepare("UPDATE members SET xp = ?, member_rank = ?, updated_at = ? WHERE id = ?")
+        .bind(nextXp, rankFromXp(nextXp), now, target.id),
+      env.DB.prepare(`INSERT INTO audit_logs
+        (actor_user_id, action, entity_type, entity_id, metadata_json, created_at)
+        VALUES (?, 'admin.test_member_start_missions_reset', 'member', ?, ?, ?)`)
+        .bind(String(member.id), String(target.id), JSON.stringify({ email, reversedXp }), now),
+    ]);
+    return json({ success: true, email, reversedXp, xp: nextXp, resetAt: now });
+  }
+
   await env.DB.prepare(`INSERT OR IGNORE INTO member_start_mission_state
     (member_id, created_at, updated_at) VALUES (?, ?, ?)`).bind(member.id, now, now).run();
 

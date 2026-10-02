@@ -23,6 +23,19 @@ export function getLevelFromXp(xp: number): number {
   return Math.max(1, Math.floor(Math.max(0, xp) / 50) + 1);
 }
 
+export function mergeXpRewards(first: XpReward | null, next: XpReward | null): XpReward | null {
+  if (!first) return next;
+  if (!next) return first;
+  return {
+    ...next,
+    amount: first.amount + next.amount,
+    reason: `${first.reason}・${next.reason}`,
+    previousXp: first.previousXp,
+    previousLevel: first.previousLevel,
+    previousRank: first.previousRank,
+  };
+}
+
 export type XpAction = "event_create" | "board_post" | "meal_report_post";
 type SharedXpReward = Pick<XpReward, "amount" | "reason" | "previousXp" | "nextXp" | "previousRank" | "nextRank" | "rankPointAward">;
 

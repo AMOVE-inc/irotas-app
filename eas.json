@@ -6,7 +6,12 @@
   "build": {
     "preview": {
       "distribution": "internal",
-      "channel": "preview"
+      "channel": "preview",
+      "env": {
+        "EXPO_PUBLIC_BUILD_PROFILE": "preview",
+        "EXPO_PUBLIC_PREVIEW_LOGIN_ENABLED": "false",
+        "EXPO_PUBLIC_EVENT_PAYMENTS_ENABLED": "false"
+      }
     },
     "production": {
       "autoIncrement": true,

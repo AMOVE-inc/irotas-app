@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import fs from "node:fs";
 import path from "node:path";
 
-import { expandingInputMetrics } from "../lib/expanding-input";
+import { expandingInputHeightForValue, expandingInputMetrics } from "../lib/expanding-input";
 
 const source = (file: string) => fs.readFileSync(path.join(process.cwd(), file), "utf8");
 
@@ -12,6 +12,13 @@ describe("expanding message and comment inputs", () => {
     expect(expandingInputMetrics(100)).toMatchObject({ height: 100, scrollEnabled: false });
     expect(expandingInputMetrics(140)).toMatchObject({ height: 140, scrollEnabled: true });
     expect(expandingInputMetrics(240)).toMatchObject({ height: 140, scrollEnabled: true });
+  });
+
+  it("keeps every explicit newline visible up to six lines even before a native size event", () => {
+    expect(expandingInputHeightForValue("1行目")).toBe(40);
+    expect(expandingInputHeightForValue("1行目\n2行目")).toBe(60);
+    expect(expandingInputHeightForValue("1\n2\n3\n4\n5\n6")).toBe(140);
+    expect(expandingInputHeightForValue("1\n2\n3\n4\n5\n6\n7")).toBe(140);
   });
 
   it.each([

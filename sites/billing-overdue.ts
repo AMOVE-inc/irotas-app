@@ -1,5 +1,6 @@
 import { authenticatedRequestMember, emailDeliveryConfigured, hasDiscordStaffRole, isTrustedBrowserOrigin, sendTransactionalEmail } from "./auth";
 import type { D1Database, SitesEnv } from "./platform-types";
+import { squareApiUrl } from "./square-environment";
 
 const SQUARE_VERSION = "2026-07-15";
 const PAGE_SIZE = 200;
@@ -77,11 +78,11 @@ function tokyoDate(now: Date) {
   return new Intl.DateTimeFormat("sv-SE", { timeZone: "Asia/Tokyo", year: "numeric", month: "2-digit", day: "2-digit" }).format(now);
 }
 
-async function fetchSquareInvoices(token: string, locationId: string) {
+async function fetchSquareInvoices(env: SitesEnv, token: string, locationId: string) {
   const invoices: SquareInvoice[] = [];
   let cursor: string | undefined;
   for (let page = 0; page < MAX_PAGES; page += 1) {
-    const response = await fetch("https://connect.squareup.com/v2/invoices/search", {
+    const response = await fetch(squareApiUrl(env, "/v2/invoices/search"), {
       method: "POST",
       headers: { authorization: `Bearer ${token}`, "content-type": "application/json", "square-version": SQUARE_VERSION },
       body: JSON.stringify({ query: { filter: { location_ids: [locationId] } }, limit: PAGE_SIZE, ...(cursor ? { cursor } : {}) }),
@@ -97,7 +98,7 @@ async function fetchSquareInvoices(token: string, locationId: string) {
 
 export async function reconcileOverdueInvoices(env: SitesEnv, now = new Date()) {
   if (!env.DB || !env.SQUARE_ACCESS_TOKEN || !env.SQUARE_LOCATION_ID) return { skipped: true };
-  const invoices = await fetchSquareInvoices(env.SQUARE_ACCESS_TOKEN, env.SQUARE_LOCATION_ID);
+  const invoices = await fetchSquareInvoices(env, env.SQUARE_ACCESS_TOKEN, env.SQUARE_LOCATION_ID);
   if (!invoices.length) throw new Error("Square請求書が0件のため、会員状態を更新していません");
   const overdue = overdueSubscriptionInvoices(invoices, tokyoDate(now));
   const openSubscriptions = new Set(invoices.filter((invoice) =>

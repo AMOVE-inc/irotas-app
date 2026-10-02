@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Event } from "../constants/mock-data";
-import { getConfirmedRecruitParticipantCount, getEventCapacitySummary, getEventParticipationStatus, isEventOrganizer, isPastEventDate } from "../lib/event-participation";
+import { canFinalizeEventParticipants, getConfirmedRecruitParticipantCount, getEventCapacitySummary, getEventParticipationStatus, isEventOrganizer, isPastEventDate } from "../lib/event-participation";
 
 const event: Event = { id: "e", title: "会", description: "", date: "2026-08-01", time: "18:00", location: "東京", image: "", capacity: 5, attendees: 3, participants: ["confirmed"], applicantIds: ["confirmed", "applied"], companionIds: ["companion"], price: "5,000円", category: "kanto", eventType: "gourmet", status: "open", createdBy: "host" };
 
@@ -37,5 +37,11 @@ describe("event participation labels", () => {
 
   it("shows remaining recruit slots against the restaurant reservation count", () => {
     expect(getEventCapacitySummary({ ...event, capacity: 5, reservationCapacity: 7, participants: ["host", "confirmed", "companion", "second"], companionIds: ["companion"] })).toBe("残り3名 / 予約7名");
+  });
+
+  it("allows finalizing at capacity even when unselected applications remain", () => {
+    const fullWithPending = { ...event, capacity: 5, participants: ["one", "two", "three", "four", "five"], applicantIds: ["one", "two", "three", "four", "five", "six", "seven"] };
+    expect(canFinalizeEventParticipants(fullWithPending)).toBe(true);
+    expect(canFinalizeEventParticipants({ ...fullWithPending, participantsFinalizedAt: "2026-10-02T00:00:00.000Z" })).toBe(false);
   });
 });

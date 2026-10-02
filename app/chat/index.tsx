@@ -10,6 +10,7 @@ import { ContentLinkCards } from "@/components/content-link-cards";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { CalendarField } from "@/components/calendar-field";
 import { ExpandingMessageInput } from "@/components/expanding-message-input";
+import { XpRewardPopup } from "@/components/xp-reward-popup";
 import {
   CURRENT_USER,
   DEFAULT_AVATAR,
@@ -28,6 +29,7 @@ import { markChatRoomOptimisticallyRead } from "@/lib/chat-unread-sync";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { cacheChatMessages, getCachedChatMessages, loadCachedChatMessages } from "@/lib/chat-message-cache";
 import { useColors } from "@/hooks/use-colors";
+import { acquireSubmissionLock, releaseSubmissionLock } from "@/lib/submission-lock";
 import { dismissChatRoomImmediately, showSentChatPreviewImmediately } from "@/components/chat-list-screen";
 import { AuthenticatedImage as Image } from "@/components/authenticated-image";
 import * as ImagePicker from "expo-image-picker";
@@ -72,6 +74,7 @@ import { replyReference } from "@/lib/reply-reference";
 import { reconcileOptimisticReactions } from "@/lib/chat-reactions";
 import { initialMessageIndex, normalizedUnreadCount } from "@/lib/unread-position";
 import { canSelectPollOption, viewerHasPollVote } from "@/lib/poll-voting";
+import { getLevelFromXp, type XpReward } from "@/lib/xp-store";
 
 const REACTION_EMOJIS = ["👍", "❤️", "😂", "🎉", "😋", "🙏"] as const;
 const MORE_REACTION_EMOJIS = ["😀", "😃", "😄", "😁", "😆", "😅", "😂", "🤣", "😊", "😇", "🙂", "🙃", "😉", "😍", "🥰", "😘", "😋", "😛", "🤪", "🤔", "🫡", "😎", "🥳", "😮", "😢", "😭", "😡", "👍", "👎", "👏", "🙌", "🙏", "💪", "👀", "❤️", "🩷", "🧡", "💛", "💚", "💙", "💜", "🖤", "🤍", "🔥", "✨", "🎉", "💯", "✅", "❌", "💡", "📌", "🍽️", "🍣", "🍖", "🍜", "🍕", "🍰", "☕", "🍺", "🍷"] as const;
@@ -440,6 +443,7 @@ export default function ChatScreen() {
   const unreadCountFromRoute = unreadCountParam !== undefined && Number.isFinite(Number(unreadCountParam))
     ? Math.max(0, Math.floor(Number(unreadCountParam))) : null;
   const [messageText, setMessageText] = useState("");
+  const [xpReward, setXpReward] = useState<XpReward | null>(null);
   const [replyToMessage, setReplyToMessage] = useState<ChatMessage | null>(null);
   useEffect(() => setReplyToMessage(null), [id]);
   const [editingMessage, setEditingMessage] = useState<ChatMessage | null>(null);
@@ -900,13 +904,12 @@ export default function ChatScreen() {
   }, [pendingImages.length, pendingVideos.length]);
 
   const handleSend = useCallback(async () => {
-    if (sendingRef.current) return;
     if (staffViewingOnly) return;
     if (!canPostToChat(authUser?.role, id ?? "", authUser?.accessRole)) return;
     if (!messageText.trim() && !pendingImages.length && !pendingVideos.length) return;
     const content = messageText.trim();
     if (!id) return;
-    sendingRef.current = true;
+    if (!acquireSubmissionLock(sendingRef)) return;
     setIsSendingMessage(true);
     const signature = JSON.stringify([id, content, pendingImages, pendingVideos, replyToMessage?.id]);
     if (pendingSendRef.current?.signature !== signature) {
@@ -941,10 +944,24 @@ export default function ChatScreen() {
         ...draftVideos.map(async (video) => (await Api.uploadEventImage(video.uri, video.mimeType)).imageUrl),
       ]);
       const newMessage = await Api.createSharedChatMessage(id, { content, imageUrls, clientMessageId, replyToId: draftReply?.id });
-      if (content.replace(/\s/g, "").length >= 10) void Api.awardSharedXp("chat_message", newMessage.id).catch(() => {});
+      if (content.replace(/\s/g, "").length >= 10) await Api.awardSharedXp("chat_message", newMessage.id).catch(() => null);
       pendingSendRef.current = null;
       setMessages((previous) => [...previous.filter((item) => item.id !== clientMessageId && item.id !== newMessage.id), newMessage]);
       showSentChatPreviewImmediately(viewerMemberId, id, newMessage);
+      if (id === "board-introduction") {
+        try {
+          const mission = await Api.getStartMissions();
+          if (mission.bonusAwardedNow && mission.reward) {
+            setXpReward({
+              ...mission.reward,
+              previousLevel: getLevelFromXp(mission.reward.previousXp),
+              nextLevel: getLevelFromXp(mission.reward.nextXp),
+            });
+          }
+        } catch {
+          Alert.alert("投稿しました", "ミッションXPの反映に時間がかかっています。マイページを再読み込みしてください。");
+        }
+      }
     } catch (error) {
       if (error instanceof Api.ApiError && error.statusCode === 404) {
         pendingSendRef.current = null;
@@ -960,10 +977,15 @@ export default function ChatScreen() {
       setPendingVideos(draftVideos);
       Alert.alert("送信できませんでした", error instanceof Error ? error.message : "通信状況を確認してもう一度お試しください。");
     } finally {
-      sendingRef.current = false;
+      releaseSubmissionLock(sendingRef);
       setIsSendingMessage(false);
     }
   }, [messageText, pendingImages, pendingVideos, replyToMessage, id, authUser?.role, authUser?.accessRole, authUser?.name, viewerMemberId, staffViewingOnly]);
+
+  const leaveChat = useCallback(() => {
+    if (fromStartMission === "1" || !router.canGoBack()) router.replace("/(tabs)" as any);
+    else router.back();
+  }, [fromStartMission, router]);
 
   const handleReaction = useCallback(async (messageId: string, emoji: string, pollChoices?: string[], allowMultiple = true) => {
     if (staffViewingOnly) return;
@@ -1066,7 +1088,7 @@ export default function ChatScreen() {
     return (
       <ScreenContainer edges={["top", "left", "right"]}>
         <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 16, paddingVertical: 10, borderBottomWidth: 0.5, borderBottomColor: colors.border }}>
-          <Pressable onPress={() => fromStartMission === "1" ? router.replace("/(tabs)/index" as any) : router.back()}><IconSymbol name="arrow.left" size={22} color={colors.foreground} /></Pressable>
+          <Pressable onPress={leaveChat}><IconSymbol name="arrow.left" size={22} color={colors.foreground} /></Pressable>
           <Text numberOfLines={1} style={{ flex: 1, marginLeft: 12, fontSize: 16, fontWeight: "700", color: colors.foreground }}>{routedRoom?.name ?? "チャット"}</Text>
         </View>
       </ScreenContainer>
@@ -1119,7 +1141,7 @@ export default function ChatScreen() {
           borderBottomColor: colors.border,
         }}
       >
-        <Pressable onPress={() => fromStartMission === "1" ? router.replace("/(tabs)/index" as any) : router.back()}>
+        <Pressable onPress={leaveChat}>
           <IconSymbol name="arrow.left" size={22} color={colors.foreground} />
         </Pressable>
         <View style={{ flex: 1, marginLeft: 12 }}>
@@ -1695,6 +1717,7 @@ export default function ChatScreen() {
           </ScrollView>
         </View>
       </Modal>
+      <XpRewardPopup reward={xpReward} onClose={() => setXpReward(null)} />
     </ScreenContainer>
   );
 }

@@ -1,11 +1,11 @@
 import { authenticatedRequestMember, effectiveMemberRank } from "./auth";
 import type { D1Database, SitesEnv } from "./platform-types";
 import { PUBLIC_APP_URL } from "../constants/external-links";
+import { squareApiUrl } from "./square-environment";
 
 const CHECKOUT_PATH = /^\/api\/events\/([^/]+)\/checkout$/;
 const ADMIN_PAYMENTS_PATH = "/api/admin/event-payments";
 const SQUARE_VERSION = "2026-08-19";
-let discoveredSquareLocationId: string | null = null;
 
 type CheckoutRow = {
   id: string;
@@ -42,11 +42,10 @@ export function eventCheckoutAmount(data: Record<string, unknown>, memberRank: s
 
 async function squareLocationId(env: SitesEnv) {
   if (env.SQUARE_LOCATION_ID?.trim()) return env.SQUARE_LOCATION_ID.trim();
-  if (discoveredSquareLocationId) return discoveredSquareLocationId;
   if (!env.SQUARE_ACCESS_TOKEN) return null;
   let response: Response;
   try {
-    response = await fetch("https://connect.squareup.com/v2/locations", {
+    response = await fetch(squareApiUrl(env, "/v2/locations"), {
       headers: { authorization: `Bearer ${env.SQUARE_ACCESS_TOKEN}`, "square-version": SQUARE_VERSION },
     });
   } catch { return null; }
@@ -54,8 +53,7 @@ async function squareLocationId(env: SitesEnv) {
   const result = await response.json().catch(() => ({})) as { locations?: Array<{ id?: string; status?: string; capabilities?: string[] }> };
   const active = (result.locations ?? []).filter((location) => location.id && location.status !== "INACTIVE");
   const paymentCapable = active.filter((location) => !location.capabilities || location.capabilities.includes("CREDIT_CARD_PROCESSING"));
-  discoveredSquareLocationId = paymentCapable[0]?.id ?? active[0]?.id ?? null;
-  return discoveredSquareLocationId;
+  return paymentCapable[0]?.id ?? active[0]?.id ?? null;
 }
 
 export async function handleAdminEventPaymentsRequest(request: Request, env: SitesEnv): Promise<Response | null> {
@@ -93,7 +91,7 @@ export async function cancelEventCheckout(db: D1Database, env: SitesEnv, eventId
     if (!env.SQUARE_ACCESS_TOKEN) return false;
     let response: Response;
     try {
-      response = await fetch(`https://connect.squareup.com/v2/online-checkout/payment-links/${encodeURIComponent(checkout.square_payment_link_id)}`, {
+      response = await fetch(squareApiUrl(env, `/v2/online-checkout/payment-links/${encodeURIComponent(checkout.square_payment_link_id)}`), {
         method: "DELETE",
         headers: { authorization: `Bearer ${env.SQUARE_ACCESS_TOKEN}`, "square-version": SQUARE_VERSION },
       });
@@ -175,7 +173,7 @@ export async function handleEventCheckoutRequest(request: Request, env: SitesEnv
   const returnUrl = new URL("/event-detail", PUBLIC_APP_URL);
   returnUrl.searchParams.set("id", eventId);
   try {
-    response = await fetch("https://connect.squareup.com/v2/online-checkout/payment-links", {
+    response = await fetch(squareApiUrl(env, "/v2/online-checkout/payment-links"), {
       method: "POST",
       headers: { authorization: `Bearer ${env.SQUARE_ACCESS_TOKEN}`, "square-version": SQUARE_VERSION, "content-type": "application/json" },
       body: JSON.stringify({
@@ -194,7 +192,7 @@ export async function handleEventCheckoutRequest(request: Request, env: SitesEnv
   try { const url = new URL(link?.url ?? ""); validUrl = url.protocol === "https:" && url.hostname === "square.link"; } catch {}
   if (!link?.id || !link.order_id || !validUrl) return json({ error: "Square決済ページの応答を確認できません" }, 502);
   const revokeCreatedLink = async () => {
-    const revoked = await fetch(`https://connect.squareup.com/v2/online-checkout/payment-links/${encodeURIComponent(link.id!)}`, {
+    const revoked = await fetch(squareApiUrl(env, `/v2/online-checkout/payment-links/${encodeURIComponent(link.id!)}`), {
       method: "DELETE", headers: { authorization: `Bearer ${env.SQUARE_ACCESS_TOKEN}`, "square-version": SQUARE_VERSION },
     }).then((result) => result.ok).catch(() => false);
     if (!revoked) await env.DB!.prepare(`INSERT INTO audit_logs (action, entity_type, entity_id, metadata_json, created_at)

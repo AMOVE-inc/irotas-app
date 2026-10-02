@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { CLUBS, CURRENT_USER } from "../constants/mock-data";
 import {
   clubMembershipActionLabel,
+  clubMembershipControlVisibility,
   clubMembershipSortPriority,
   canViewerAccessClubContent,
   getClubViewerAccess,
@@ -75,5 +76,14 @@ describe("club viewer access", () => {
     expect(clubMembershipSortPriority({ isMember: true, hasApplied: false })).toBe(0);
     expect(clubMembershipSortPriority({ isMember: false, hasApplied: true })).toBe(1);
     expect(clubMembershipSortPriority({ isMember: false, hasApplied: false })).toBe(2);
+  });
+
+  it("keeps administrator management access separate from club membership controls", () => {
+    expect(clubMembershipControlVisibility({ isMember: false, hasApplied: false, isLeader: false }))
+      .toEqual({ canApply: true, canLeave: false });
+    expect(clubMembershipControlVisibility({ isMember: false, hasApplied: true, isLeader: false }))
+      .toEqual({ canApply: false, canLeave: false });
+    expect(clubMembershipControlVisibility({ isMember: true, hasApplied: false, isLeader: false }))
+      .toEqual({ canApply: false, canLeave: true });
   });
 });

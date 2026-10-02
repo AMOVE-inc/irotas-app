@@ -1,14 +1,39 @@
 import { ScreenContainer } from "@/components/screen-container";
+import { IconSymbol } from "@/components/ui/icon-symbol";
+import { BIRTH_YEARS, DAYS, MONTHS } from "@/constants/profile-options";
 import { useColors } from "@/hooks/use-colors";
 import { useAuthContext } from "@/lib/auth-context";
 import { markNativeProfileSetupComplete } from "@/lib/native-profile-setup";
 import * as Api from "@/lib/_core/api";
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import { Alert, Pressable, ScrollView, Text, TextInput, View } from "react-native";
+import { Alert, Modal, Pressable, ScrollView, Text, TextInput, View } from "react-native";
 
 const profileValue = (profile: Record<string, unknown> | undefined, key: string) =>
   typeof profile?.[key] === "string" ? String(profile[key]) : "";
+
+function BirthDateSelect({ label, value, options, onChange }: { label: string; value: string; options: readonly string[]; onChange: (value: string) => void }) {
+  const colors = useColors();
+  const [visible, setVisible] = useState(false);
+  return <>
+    <Pressable accessibilityRole="button" accessibilityLabel={`${label}を選択`} onPress={() => setVisible(true)} style={{ minHeight: 50, borderRadius: 13, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, paddingHorizontal: 12, flexDirection: "row", alignItems: "center" }}>
+      <Text style={{ flex: 1, fontSize: 16, color: value ? colors.foreground : colors.muted }}>{value || label}</Text>
+      <IconSymbol name="chevron.down" size={16} color={colors.muted} />
+    </Pressable>
+    <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setVisible(false)}>
+      <View style={{ flex: 1, backgroundColor: colors.background }}>
+        <View style={{ flexDirection: "row", alignItems: "center", padding: 16, borderBottomWidth: 0.5, borderBottomColor: colors.border }}>
+          <Text style={{ flex: 1, fontSize: 18, fontWeight: "800", color: colors.foreground }}>{label}を選択</Text>
+          <Pressable onPress={() => setVisible(false)}><Text style={{ color: "#E8A0BF", fontWeight: "800" }}>閉じる</Text></Pressable>
+        </View>
+        <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 30 }}>
+          {value ? <Pressable onPress={() => { onChange(""); setVisible(false); }} style={{ paddingVertical: 14, borderBottomWidth: 0.5, borderBottomColor: colors.border }}><Text style={{ fontSize: 15, color: colors.muted }}>未設定にする</Text></Pressable> : null}
+          {options.map((option) => <Pressable key={option} onPress={() => { onChange(option); setVisible(false); }} style={{ flexDirection: "row", alignItems: "center", paddingVertical: 14, borderBottomWidth: 0.5, borderBottomColor: colors.border }}><Text style={{ flex: 1, fontSize: 15, color: colors.foreground }}>{option}</Text>{value === option ? <IconSymbol name="checkmark" size={18} color="#E8A0BF" /> : null}</Pressable>)}
+        </ScrollView>
+      </View>
+    </Modal>
+  </>;
+}
 
 export default function ProfileSetupScreen() {
   const colors = useColors();
@@ -16,7 +41,10 @@ export default function ProfileSetupScreen() {
   const { user, refresh } = useAuthContext();
   const [name, setName] = useState(user?.name?.trim() ?? "");
   const [publicUserId, setPublicUserId] = useState(user?.publicUserId ?? "");
-  const [birthDate, setBirthDate] = useState(profileValue(user?.profile, "birthDate"));
+  const initialBirthDate = profileValue(user?.profile, "birthDate").split("-");
+  const [birthYear, setBirthYear] = useState(initialBirthDate[0] ?? "");
+  const [birthMonth, setBirthMonth] = useState(initialBirthDate[1] ?? "");
+  const [birthDay, setBirthDay] = useState(initialBirthDate[2] ?? "");
   const [showAge, setShowAge] = useState(user?.profile?.showAge === true);
   const [gender, setGender] = useState(profileValue(user?.profile, "gender"));
   const [hometown, setHometown] = useState(profileValue(user?.profile, "hometown"));
@@ -41,8 +69,14 @@ export default function ProfileSetupScreen() {
     if (!/^[a-z0-9][a-z0-9._]{2,23}$/.test(normalizedId) || normalizedId.endsWith(".")) {
       return Alert.alert("ユーザーIDを確認してください", "3〜24文字の半角英小文字・数字・ピリオド・アンダーバーで入力してください。");
     }
-    if (birthDate && !/^\d{4}-\d{2}-\d{2}$/.test(birthDate)) return Alert.alert("生年月日を確認してください", "YYYY-MM-DD形式で入力してください。");
-    if (showAge && !birthDate) return Alert.alert("生年月日を入力してください", "年齢を公開するには、生年月日の入力が必要です。");
+    const hasAnyBirthDate = Boolean(birthYear || birthMonth || birthDay);
+    const hasCompleteBirthDate = Boolean(birthYear && birthMonth && birthDay);
+    if (hasAnyBirthDate && !hasCompleteBirthDate) return Alert.alert("生年月日を確認してください", "年・月・日をすべて選択してください。");
+    if (hasCompleteBirthDate) {
+      const selected = new Date(`${birthYear}-${birthMonth}-${birthDay}T00:00:00`);
+      if (Number.isNaN(selected.getTime()) || selected.getFullYear() !== Number(birthYear) || selected.getMonth() + 1 !== Number(birthMonth) || selected.getDate() !== Number(birthDay)) return Alert.alert("生年月日を確認してください", "存在する日付を選択してください。");
+    }
+    if (showAge && !hasCompleteBirthDate) return Alert.alert("生年月日を入力してください", "年齢を公開するには、生年月日の入力が必要です。");
     if (instagramUrl.trim() && !/^https?:\/\//i.test(instagramUrl.trim())) return Alert.alert("Instagram URLを確認してください", "https:// から始まるURLを入力してください。");
     if (!user) return;
     setSaving(true);
@@ -52,7 +86,7 @@ export default function ProfileSetupScreen() {
         publicUserId: normalizedId,
         profile: {
           ...user.profile,
-          birthDate,
+          birthDate: hasCompleteBirthDate ? `${birthYear}-${birthMonth}-${birthDay}` : "",
           showAge,
           gender,
           hometown,
@@ -92,7 +126,7 @@ export default function ProfileSetupScreen() {
       <View style={{ flexDirection: "row", alignItems: "center", borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface, borderRadius: 13, paddingHorizontal: 14 }}><Text style={{ fontSize: 16, color: colors.muted }}>@</Text><TextInput value={publicUserId} onChangeText={(value) => setPublicUserId(value.replace(/^@+/, "").toLowerCase().replace(/[^a-z0-9._]/g, "").slice(0, 24))} placeholder="your.name" placeholderTextColor={colors.muted} autoCapitalize="none" autoCorrect={false} style={{ flex: 1, paddingVertical: 13, fontSize: 16, color: colors.foreground }} /></View>
       <Text style={{ marginTop: 7, fontSize: 11, lineHeight: 17, color: colors.muted }}>プロフィール、検索、メンション候補に表示されます。内部識別子は表示されません。</Text>
       <Text style={labelStyle}>生年月日</Text>
-      <TextInput value={birthDate} onChangeText={(value) => setBirthDate(value.replace(/[^0-9-]/g, "").slice(0, 10))} placeholder="1997-01-01" keyboardType="numbers-and-punctuation" placeholderTextColor={colors.muted} style={fieldStyle} />
+      <View style={{ flexDirection: "row", gap: 7 }}><View style={{ flex: 1.35 }}><BirthDateSelect label="年" value={birthYear} options={BIRTH_YEARS} onChange={setBirthYear} /></View><View style={{ flex: 1 }}><BirthDateSelect label="月" value={birthMonth} options={MONTHS} onChange={setBirthMonth} /></View><View style={{ flex: 1 }}><BirthDateSelect label="日" value={birthDay} options={DAYS} onChange={setBirthDay} /></View></View>
       <Pressable
         accessibilityRole="checkbox"
         accessibilityState={{ checked: showAge }}

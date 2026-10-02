@@ -194,6 +194,15 @@ function safeData(value: unknown) {
   }
 }
 
+export function hasRequiredMealReportFields(value: unknown) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  const mealReport = (value as Record<string, unknown>).mealReport;
+  if (!mealReport || typeof mealReport !== "object" || Array.isArray(mealReport)) return false;
+  const fields = mealReport as Record<string, unknown>;
+  return typeof fields.postTitle === "string" && fields.postTitle.trim().length > 0
+    && typeof fields.comment === "string" && fields.comment.trim().length > 0;
+}
+
 function parseData(value: string) {
   try {
     const parsed = JSON.parse(value);
@@ -613,6 +622,8 @@ export async function handleBoardContentRequest(
     const status = input?.status === "closed" || input?.status === "none" ? input.status : "open";
     if (!input || !category || !title || !content || data === null)
       return json({ error: "投稿内容が不正です" }, 400);
+    if (category === "meal-report" && !hasRequiredMealReportFields(input.data))
+      return json({ error: "タイトルと感想を入力してください" }, 400);
     if (!await canAccessBoardCategory(db, category, member))
       return json({ error: "この部活動の部員のみ投稿できます" }, 403);
     if (category === "gourmet-contest" && member.access_role !== "operator" && !elevated(member))
@@ -689,6 +700,8 @@ export async function handleBoardContentRequest(
     );
     if (!title || !content || !status || pinned === null || data === null)
       return json({ error: "変更内容が不正です" }, 400);
+    if (current.category === "meal-report" && input.data !== undefined && !hasRequiredMealReportFields(input.data))
+      return json({ error: "タイトルと感想を入力してください" }, 400);
     await db.prepare(`UPDATE board_threads SET title = ?, content = ?, status = ?, pinned = ?,
       data_json = ?, updated_at = ? WHERE id = ?`)
       .bind(title, content, status, pinned, data, now, id).run();

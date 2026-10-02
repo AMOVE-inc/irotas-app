@@ -147,10 +147,20 @@ export async function handleAccountDeletionAdminRequest(
   const now = new Date().toISOString();
   const anonymousEmail = `deleted+${current.member_id}@invalid.irotas.local`;
   await env.DB.batch([
+    env.DB.prepare(
+      `INSERT OR IGNORE INTO withdrawn_member_snapshots
+       (member_id, email, display_name, discord_user_id, public_member_id,
+        role, access_role, branches_json, member_term, discord_roles_json,
+        achievement_badges_json, profile_json, xp, last_signed_in_at,
+        retained_at, retention_reason)
+       SELECT id, email, display_name, discord_user_id, public_member_id,
+              role, access_role, branches_json, member_term, discord_roles_json,
+              achievement_badges_json, profile_json, xp, last_signed_in_at,
+              ?, 'account_withdrawal'
+       FROM members WHERE id = ?`,
+    ).bind(now, current.member_id),
     env.DB.prepare("DELETE FROM member_sessions WHERE member_id = ?").bind(current.member_id),
     env.DB.prepare("DELETE FROM email_verification_codes WHERE email = (SELECT email FROM members WHERE id = ?)").bind(current.member_id),
-    env.DB.prepare("DELETE FROM member_private_notes WHERE owner_member_id = ? OR target_member_id = ?").bind(current.member_id, current.member_id),
-    env.DB.prepare("DELETE FROM member_follows WHERE follower_member_id = ? OR followed_member_id = ?").bind(current.member_id, current.member_id),
     env.DB.prepare(
       `UPDATE member_subscriptions
        SET billing_email = 'deleted+' || member_id || '+' || id || '@invalid.irotas.local',
@@ -176,7 +186,7 @@ export async function handleAccountDeletionAdminRequest(
       `INSERT INTO audit_logs
        (actor_user_id, action, entity_type, entity_id, metadata_json, created_at)
        VALUES (?, 'admin.account_deletion_completed', 'account_deletion', ?, ?, ?)`,
-    ).bind(admin.id, requestId, JSON.stringify({ memberId: current.member_id }), now),
+    ).bind(admin.id, requestId, JSON.stringify({ memberId: current.member_id, retainedSnapshot: true }), now),
   ]);
 
   return json({ success: true, request: payload({ ...current, status: "completed", completed_at: now, display_name: "退会済みユーザー", public_member_id: null }) });

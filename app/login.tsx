@@ -4,8 +4,9 @@ import * as Auth from "@/lib/_core/auth";
 import * as Api from "@/lib/_core/api";
 import { refreshClubs } from "@/lib/club-store";
 import { getMembershipAccessMessage, logger } from "@/lib/_core/logger";
+import { acquireSubmissionLock, releaseSubmissionLock } from "@/lib/submission-lock";
 import { useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -33,8 +34,8 @@ const previewUser: Auth.User = {
   lastSignedIn: new Date(),
   role: previewUserRole,
   accessRole: previewUserRole === "admin" ? "admin" : "member",
-  branch: null,
-  branches: [],
+  branch: "kanto",
+  branches: ["kanto"],
 };
 
 export default function LoginScreen() {
@@ -45,6 +46,7 @@ export default function LoginScreen() {
   const [password, setPassword] = useState(previewLoginEnabled ? "1" : "");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const loginLockRef = useRef(false);
 
   useEffect(() => {
     if (!previewLoginEnabled) return;
@@ -66,6 +68,7 @@ export default function LoginScreen() {
       setError("メールアドレスとパスワードを入力してください");
       return;
     }
+    if (!acquireSubmissionLock(loginLockRef)) return;
 
     setError("");
     setLoading(true);
@@ -129,6 +132,7 @@ export default function LoginScreen() {
         getMembershipAccessMessage(err) ?? logger.getUserMessage(err);
       setError(userMessage);
     } finally {
+      releaseSubmissionLock(loginLockRef);
       setLoading(false);
     }
   };
@@ -290,6 +294,9 @@ export default function LoginScreen() {
               <Pressable
                 onPress={handleLogin}
                 disabled={loading}
+                accessibilityRole="button"
+                accessibilityLabel="ログイン"
+                accessibilityState={{ disabled: loading, busy: loading }}
                 style={({ pressed }) => ({
                   backgroundColor: "#18171A",
                   borderRadius: 16,

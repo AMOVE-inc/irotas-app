@@ -1,5 +1,6 @@
 import { discoverSquareMembership } from "./square-membership-discovery";
 import type { D1Database, SitesEnv } from "./platform-types";
+import { squareApiUrl } from "./square-environment";
 import { syncStoredDiscordProfiles } from "./discord-profile-sync";
 import {
   admissionAccessError,
@@ -791,7 +792,13 @@ async function register(request: Request, env: SitesEnv, db: D1Database) {
   if (member && member.account_status !== "active")
     return responseJson({ error: "有効な会員資格を確認できません" }, 403);
   let discoveredMemberTerm: string | null = null;
-  if (!membershipAllowsAccess(subscription, member ?? { role: "user", access_role: "member", account_status: "active" }) || (member && !member.member_term)) {
+  const hasSubscriptionIndependentAccess = member
+    ? membershipAllowsAccess(null, member)
+    : false;
+  if (
+    !membershipAllowsAccess(subscription, member ?? { role: "user", access_role: "member", account_status: "active" }) ||
+    (member && !member.member_term && !hasSubscriptionIndependentAccess)
+  ) {
     const discovery = await discoverSquareMembership(db, env, email);
     discoveredMemberTerm = discovery.memberTerm;
     subscription = await findSubscription(db, email);
@@ -1032,7 +1039,7 @@ async function scheduleSquareMembershipChange(env: SitesEnv, subscriptionId: str
   if (!env.SQUARE_ACCESS_TOKEN) throw new Error("Square連携が設定されていません");
   const action = requestType === "pause" ? "pause" : "cancel";
   const body = requestType === "pause" ? JSON.stringify({ pause_reason: reason.slice(0, 255) }) : undefined;
-  const response = await fetch(`https://connect.squareup.com/v2/subscriptions/${encodeURIComponent(subscriptionId)}/${action}`, {
+  const response = await fetch(squareApiUrl(env, `/v2/subscriptions/${encodeURIComponent(subscriptionId)}/${action}`), {
     method: "POST",
     headers: { authorization: `Bearer ${env.SQUARE_ACCESS_TOKEN}`, "square-version": "2026-09-16", "content-type": "application/json" },
     body,

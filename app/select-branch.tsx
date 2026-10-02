@@ -161,6 +161,9 @@ export default function SelectBranchScreen() {
           {error ? <Text style={{ color: colors.error, textAlign: "center", marginTop: 14 }}>{error}</Text> : null}
 
           <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={isEditing ? "所属支部を保存" : "選択した支部で始める"}
+            accessibilityState={{ disabled: selected.length === 0 || saving || loggingOut }}
             disabled={selected.length === 0 || saving || loggingOut}
             onPress={handleConfirm}
             style={({ pressed }) => ({

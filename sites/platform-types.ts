@@ -54,7 +54,9 @@ export interface SitesEnv {
   EMAIL_DELIVERY_WEBHOOK_TOKEN?: string;
   RESEND_API_KEY?: string;
   AUTH_EMAIL_FROM?: string;
+  APP_ENVIRONMENT?: string;
   SQUARE_ACCESS_TOKEN?: string;
+  SQUARE_ENVIRONMENT?: string;
   SQUARE_LOCATION_ID?: string;
   EVENT_PAYMENTS_ENABLED?: string;
   SQUARE_ALLOWED_PLAN_VARIATION_IDS?: string;

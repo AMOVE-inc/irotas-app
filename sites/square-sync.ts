@@ -1,5 +1,6 @@
 import { authenticatedRequestMember } from "./auth";
 import type { D1Database, SitesEnv } from "./platform-types";
+import { squareApiUrl } from "./square-environment";
 
 type SquareSubscription = {
   id?: string;
@@ -16,8 +17,16 @@ type SquareRetrieveResponse = {
   errors?: { detail?: string }[];
 };
 
+type SquareSearchResponse = {
+  subscriptions?: SquareSubscription[];
+  cursor?: string;
+  errors?: { detail?: string }[];
+};
+
 const SQUARE_VERSION = "2026-07-15";
 export const SQUARE_SYNC_BATCH_SIZE = 40;
+export const SQUARE_SEARCH_PAGE_SIZE = 100;
+const SQUARE_SEARCH_MAX_PAGES = 100;
 const VALID_STATUSES = new Set([
   "PENDING",
   "ACTIVE",
@@ -26,6 +35,11 @@ const VALID_STATUSES = new Set([
   "PAUSED",
   "COMPLETED",
 ]);
+
+/** The worker wakes every 15 minutes; a full Square scan runs once per hour. */
+export function shouldRunScheduledSquareSubscriptionSync(scheduledTime = Date.now()) {
+  return new Date(scheduledTime).getUTCMinutes() === 0;
+}
 
 export function isStrictAdmin(member: {
   role: string;
@@ -65,7 +79,7 @@ export function subscriptionAccessState(
 
 async function retrieveRegisteredSubscriptions(
   db: D1Database,
-  accessToken: string,
+  env: SitesEnv,
   offset: number,
 ) {
   const countRow = await db
@@ -95,10 +109,10 @@ async function retrieveRegisteredSubscriptions(
     const responses = await Promise.all(
       batch.map(async (id) => {
         const response = await fetch(
-          `https://connect.squareup.com/v2/subscriptions/${encodeURIComponent(id)}`,
+          squareApiUrl(env, `/v2/subscriptions/${encodeURIComponent(id)}`),
           {
             headers: {
-              authorization: `Bearer ${accessToken}`,
+              authorization: `Bearer ${env.SQUARE_ACCESS_TOKEN}`,
               "content-type": "application/json",
               "square-version": SQUARE_VERSION,
             },
@@ -177,6 +191,67 @@ async function reconcileSubscriptions(
     const changes = Number(result.meta?.changes ?? 0);
     return count + (Number.isFinite(changes) ? changes : 0);
   }, 0);
+}
+
+/**
+ * Periodic safety net for missed Square webhooks. Search is paged so all
+ * Square subscriptions are checked with far fewer API calls than retrieving
+ * each registered subscription individually.
+ */
+export async function reconcileAllSquareSubscriptions(env: SitesEnv) {
+  if (!env.DB || !env.SQUARE_ACCESS_TOKEN) {
+    return { skipped: true, scanned: 0, updated: 0, pages: 0 };
+  }
+
+  const allowedPlanIds = new Set(
+    (env.SQUARE_ALLOWED_PLAN_VARIATION_IDS ?? "")
+      .split(",")
+      .map((value) => value.trim())
+      .filter(Boolean),
+  );
+  const seenCursors = new Set<string>();
+  const now = new Date().toISOString();
+  let cursor: string | undefined;
+  let scanned = 0;
+  let updated = 0;
+  let pages = 0;
+
+  do {
+    const response = await fetch(squareApiUrl(env, "/v2/subscriptions/search"), {
+      method: "POST",
+      headers: {
+        authorization: `Bearer ${env.SQUARE_ACCESS_TOKEN}`,
+        "content-type": "application/json",
+        "square-version": SQUARE_VERSION,
+      },
+      body: JSON.stringify({
+        limit: SQUARE_SEARCH_PAGE_SIZE,
+        ...(cursor ? { cursor } : {}),
+      }),
+    });
+    const body = (await response.json().catch(() => ({}))) as SquareSearchResponse;
+    if (!response.ok) {
+      throw new Error(body.errors?.[0]?.detail ?? `square_${response.status}`);
+    }
+
+    const subscriptions = body.subscriptions ?? [];
+    scanned += subscriptions.length;
+    updated += await reconcileSubscriptions(env.DB, subscriptions, allowedPlanIds, now);
+    pages += 1;
+
+    const nextCursor = typeof body.cursor === "string" && body.cursor ? body.cursor : undefined;
+    if (nextCursor && seenCursors.has(nextCursor)) throw new Error("Squareのページングが循環しました");
+    if (nextCursor) seenCursors.add(nextCursor);
+    cursor = nextCursor;
+    if (cursor && pages >= SQUARE_SEARCH_MAX_PAGES) throw new Error("Squareの全件同期がページ上限を超えました");
+  } while (cursor);
+
+  await env.DB.prepare(
+    `INSERT INTO audit_logs (action, entity_type, metadata_json, created_at)
+     VALUES ('square.subscriptions_scheduled_reconciled', 'member_subscription', ?, ?)`,
+  ).bind(JSON.stringify({ scanned, updated, pages }), now).run();
+
+  return { skipped: false, scanned, updated, pages };
 }
 
 export async function handleSquareSyncRequest(
@@ -258,7 +333,7 @@ export async function handleSquareSyncRequest(
     );
     const retrieved = await retrieveRegisteredSubscriptions(
       env.DB,
-      env.SQUARE_ACCESS_TOKEN,
+      env,
       offset,
     );
     const subscriptions = retrieved.subscriptions;

@@ -30,7 +30,7 @@ import { recordActivityEvent } from "@/lib/ai-data-store";
 import { getDiscordAuthorById, getDiscordAuthorByName } from "@/lib/discord-author-directory";
 import { findMentionedClub, findMentionedMemberId } from "@/lib/mention-targets";
 import { getConfirmedParticipantDisplayIds } from "@/lib/event-confirmed-participants";
-import { isEventOrganizer } from "@/lib/event-participation";
+import { canFinalizeEventParticipants, isEventOrganizer } from "@/lib/event-participation";
 import { EVENT_AMOUNT_OPTIONS, EVENT_CAPACITY_OPTIONS, EVENT_RANK_AMOUNT_OPTIONS, EVENT_RESERVATION_CAPACITY_OPTIONS, EVENT_RANKS, EVENT_TIME_OPTIONS, eventCapacityLabel, eventCapacityOptionLabel, eventFormSaveFields, eventFormValuesFromEvent, hasOnlyCompanionChanges, minimumReservationCapacity, type EventFormValues, validateEventForm } from "@/lib/event-form";
 import { GOURMET_GENRES } from "@/constants/event-options";
 import { displayEventTitle } from "@/lib/event-title";
@@ -481,8 +481,7 @@ export default function EventDetailScreen() {
   const isCompanion = companionIds.includes(viewerMemberId);
   const isApprovedCancellation = cancelledParticipantIds.includes(viewerMemberId);
   const pendingApplicantIds = event.isCancelled ? [] : getPendingGourmetApplicants(event);
-  const confirmedParticipantCount = (event.participants ?? []).length;
-  const canFinalizeParticipants = !event.participantsFinalizedAt && pendingApplicantIds.length === 0 && confirmedParticipantCount > 0;
+  const canFinalizeParticipants = canFinalizeEventParticipants(event);
   const displayMember = (memberId: string) => {
     const directoryMember = memberDirectory.find((member) => member.id === memberId);
     const staticMember = getMemberById(memberId);
@@ -630,16 +629,32 @@ export default function EventDetailScreen() {
                 const confirmed = updated.viewerParticipationStatus === "confirmed";
                 setHasApplied(true);
                 setIsJoined(confirmed);
-                Alert.alert(
-                  confirmed ? "参加確定" : updated.viewerPaymentState === "awaiting_payment" ? "決済待ち" : "申込完了",
-                  confirmed
-                    ? `参加が確定しました。${application.pointsUsed ? `${application.pointsUsed.toLocaleString()}ptを参加費に利用しました。` : ""}参加者専用チャットは確定者へ順次案内されます。`
-                    : updated.viewerPaymentState === "awaiting_payment"
-                      ? `参加費の決済完了後に参加が確定します。${application.pointsUsed ? `${application.pointsUsed.toLocaleString()}ptを割引に適用しました。` : ""}下の「Squareで参加費を支払う」からお進みください。`
-                    : requiresOrganizerApproval
-                      ? `幹事へ参加申込を送りました。${application.pointsUsed ? `${application.pointsUsed.toLocaleString()}ptを確保しました。` : ""}承認後に参加が確定します。`
-                      : "抽選への申込を受け付けました。参加確定の連絡をお待ちください。",
-                );
+                let missionRewardShown = false;
+                try {
+                  const mission = await Api.getStartMissions();
+                  if (mission.bonusAwardedNow && mission.reward) {
+                    setXpReward({
+                      ...mission.reward,
+                      previousLevel: getLevelFromXp(mission.reward.previousXp),
+                      nextLevel: getLevelFromXp(mission.reward.nextXp),
+                    });
+                    missionRewardShown = true;
+                  }
+                } catch {
+                  // 申込自体は完了しているため、通常の完了表示を継続する。
+                }
+                if (!missionRewardShown) {
+                  Alert.alert(
+                    confirmed ? "参加確定" : updated.viewerPaymentState === "awaiting_payment" ? "決済待ち" : "申込完了",
+                    confirmed
+                      ? `参加が確定しました。${application.pointsUsed ? `${application.pointsUsed.toLocaleString()}ptを参加費に利用しました。` : ""}参加者専用チャットは確定者へ順次案内されます。`
+                      : updated.viewerPaymentState === "awaiting_payment"
+                        ? `参加費の決済完了後に参加が確定します。${application.pointsUsed ? `${application.pointsUsed.toLocaleString()}ptを割引に適用しました。` : ""}下の「Squareで参加費を支払う」からお進みください。`
+                        : requiresOrganizerApproval
+                          ? `幹事へ参加申込を送りました。${application.pointsUsed ? `${application.pointsUsed.toLocaleString()}ptを確保しました。` : ""}承認後に参加が確定します。`
+                          : "抽選への申込を受け付けました。参加確定の連絡をお待ちください。",
+                  );
+                }
                 return;
               }
               const applicants = event.applicantIds ?? [...(event.participants ?? [])];
@@ -823,13 +838,12 @@ export default function EventDetailScreen() {
   };
 
   const handleFinalizeParticipants = () => {
-    if (pendingApplicantIds.length > 0) {
-      Alert.alert("承認待ちがあります", "すべての申込を確認してから参加者確定を完了してください。");
-      return;
-    }
+    const pendingNotice = pendingApplicantIds.length > 0
+      ? `\n承認待ちの${pendingApplicantIds.length}人は不成立となり、募集終了が通知されます。`
+      : "";
     setApplicationConfirmation({
       title: "参加者を確定しますか？",
-      message: "参加者を確定し、イベントの募集を締め切ります。",
+      message: `現在の参加確定者${confirmedParticipantIds.length}人で確定し、イベントの募集を締め切ります。${pendingNotice}`,
       buttons: [
         { text: "戻る", style: "cancel" },
         { text: "確定する", onPress: () => { void finalizeParticipants(); } },
@@ -1257,9 +1271,9 @@ export default function EventDetailScreen() {
         {canAdminEdit && event.eventType === "official" && eventRecruitmentChannel(event) === "app" && !event.isCancelled ? <Pressable onPress={() => { void handleSetRecruitmentStatus(event.recruitmentStatus === "draft" ? "open" : "draft"); }} style={{ marginTop: -6, marginBottom: 16, borderRadius: 12, paddingVertical: 12, alignItems: "center", backgroundColor: "#5B9BD5" }}><Text style={{ color: "#FFF", fontSize: 14, fontWeight: "900" }}>{event.recruitmentStatus === "draft" ? "管理者：募集を開始" : "管理者：募集前に戻す"}</Text></Pressable> : null}
         {canDeleteEvent ? <Pressable onPress={handleDeleteEvent} style={{ marginTop: -6, marginBottom: 16, borderRadius: 12, paddingVertical: 12, alignItems: "center", borderWidth: 1, borderColor: "#D94C55" }}><Text style={{ color: "#D94C55", fontSize: 14, fontWeight: "900" }}>{canAdminEdit ? "管理者：イベントを完全に削除" : "移行イベントを完全に削除"}</Text></Pressable> : null}
 
-        {isOrganizer ? (
+        {canManageEvent ? (
           <View style={{ backgroundColor: "#F5F8FC", borderRadius: 14, padding: 14, marginBottom: 16, borderWidth: 1, borderColor: "#DCE7F2" }}>
-            <Text style={{ fontSize: 16, fontWeight: "900", color: colors.foreground }}>幹事メニュー</Text>
+            <Text style={{ fontSize: 16, fontWeight: "900", color: colors.foreground }}>イベント管理</Text>
             <Text style={{ fontSize: 12, lineHeight: 18, color: colors.muted, marginTop: 4 }}>申込を承認すると参加が確定し、自動で参加者チャットに追加されます。</Text>
             <Text style={{ fontSize: 13, fontWeight: "800", color: colors.foreground, marginTop: 14, marginBottom: 7 }}>承認待ち（{pendingApplicantIds.length}人）</Text>
             {pendingApplicantIds.length ? pendingApplicantIds.map((memberId) => {
@@ -1281,8 +1295,6 @@ export default function EventDetailScreen() {
             {event.isCancelled ? <><Text style={{ fontSize: 13, fontWeight: "800", color: colors.foreground, marginTop: 14, marginBottom: 7 }}>キャンセル済み（{cancelledParticipantIds.length}人）</Text>{cancelledParticipantIds.length ? cancelledParticipantIds.map((memberId) => { const member = displayMember(memberId); return <Pressable key={memberId} onPress={() => openMemberProfile(memberId)} style={{ flexDirection: "row", alignItems: "center", paddingVertical: 8, borderTopWidth: 0.5, borderTopColor: colors.border }}><Image source={member.avatar} style={{ width: 34, height: 34, borderRadius: 17 }} contentFit="cover" /><View style={{ flex: 1, marginLeft: 9, flexDirection: "row", alignItems: "center", flexWrap: "wrap" }}><Text style={{ fontSize: 14, fontWeight: "700", color: colors.foreground }}>{member.name}</Text>{member.rank ? <MemberRankBadge rank={member.rank} name={member.badgeName} role={member.role} compact /> : null}<MemberClubLeaderBadges roles={member.roles} name={member.badgeName} compact /><MemberRoleBadge name="" role={member.role} compact /></View><IconSymbol name="chevron.right" size={16} color={colors.muted} /></Pressable>; }) : <Text style={{ fontSize: 13, color: colors.muted, paddingVertical: 8 }}>キャンセル済みの参加者はいません。</Text>}</> : <>{event.status !== "open" && (Boolean(event.capacityMode) || (event.participants ?? []).length < event.capacity) ? <Pressable onPress={handleReopenGourmetRecruitment} style={{ marginTop: 12, borderRadius: 11, backgroundColor: "#E8A0BF", paddingVertical: 11, alignItems: "center" }}><Text style={{ fontSize: 14, fontWeight: "900", color: "#FFF" }}>追加募集を開始</Text></Pressable> : null}<Pressable disabled={!canFinalizeParticipants || finalizingParticipants} onPress={handleFinalizeParticipants} style={{ marginTop: 12, borderRadius: 11, backgroundColor: canFinalizeParticipants && !finalizingParticipants ? "#34A853" : "#AEB6B0", paddingVertical: 11, alignItems: "center" }}><Text style={{ fontSize: 14, fontWeight: "900", color: "#FFF" }}>{event.participantsFinalizedAt ? "参加者確定済み" : finalizingParticipants ? "参加者を確定中…" : canFinalizeParticipants ? "参加者確定を完了" : "参加確定者がいません"}</Text></Pressable>{new Date(`${event.date}T${event.time}:00+09:00`).getTime() + 3 * 60 * 60 * 1000 <= Date.now() ? <Pressable disabled={attendanceLoading} onPress={handleFinalizeAttendance} style={{ marginTop: 10, borderRadius: 11, backgroundColor: attendanceLoading ? "#9CBFDF" : "#5B9BD5", paddingVertical: 11, alignItems: "center" }}><Text style={{ fontSize: 14, fontWeight: "900", color: "#FFF" }}>{attendanceLoading ? "出欠を読み込み中…" : "開催結果（実出欠）を確定"}</Text></Pressable> : null}<Pressable onPress={handleCancelEvent} style={{ marginTop: 10, borderRadius: 11, borderWidth: 1, borderColor: "#D94C55", paddingVertical: 11, alignItems: "center" }}><Text style={{ fontSize: 14, fontWeight: "900", color: "#D94C55" }}>イベントを中止</Text></Pressable></>}
           </View>
         ) : null}
-
-        {canManageEvent && !isOrganizer && !event.isCancelled ? <Pressable onPress={handleCancelEvent} style={{ marginTop: -6, marginBottom: 16, borderRadius: 11, borderWidth: 1, borderColor: "#D94C55", paddingVertical: 11, alignItems: "center" }}><Text style={{ fontSize: 14, fontWeight: "900", color: "#D94C55" }}>イベントを中止</Text></Pressable> : null}
 
         {event.genres?.length ? (
           <View style={{ marginBottom: 16 }}>

@@ -1712,6 +1712,12 @@ export async function markStartMissionGuideSeen() {
   return apiCall<{ success: true }>("/api/member/start-missions", { method: "POST", body: JSON.stringify({ action: "mark_seen" }) });
 }
 
+export async function resetTestMemberStartMissions(email: string, password?: string) {
+  return apiCall<{ success: true; email: string; reversedXp: number; xp: number; resetAt: string }>("/api/admin/member-start-missions/reset", {
+    method: "POST", body: JSON.stringify({ email, password }),
+  });
+}
+
 export type MemberReconciliationReport = {
   activeMembers: number;
   activeGeneralMembers: number;

@@ -251,9 +251,9 @@ export default function AccountDeletionScreen() {
             {"\n"}
             ・休会・退会とも、現在の決済期間が終了するとアプリへアクセスできなくなります。
             {"\n"}
-            ・プロフィールやログイン情報は削除対象です。法令、会計、不正防止、トラブル対応に必要な取引・監査記録は、必要な期間に限り保持する場合があります。
+            ・休会中はプロフィールとログイン情報を保持します。再開は運営へお問い合わせください。
             {"\n"}
-            ・処理完了後はログインできず、元に戻せません。
+            ・退会ではプロフィールやログイン情報が削除対象になります。法令、会計、不正防止、トラブル対応に必要な取引・監査記録は、必要な期間に限り保持する場合があります。
           </Text>
         </View>
 
@@ -303,7 +303,7 @@ export default function AccountDeletionScreen() {
           >
             <Text style={{ fontSize: 18, fontWeight: "900", color: "#A46400" }}>
               {request.requestType === "pause"
-                ? "休会手続きは完了しています"
+                ? "休止予約済み"
                 : "退会手続きは完了しています"}
             </Text>
             <Text
@@ -330,7 +330,9 @@ export default function AccountDeletionScreen() {
                   : "Squareのサブスクリプション解約処理を受け付けています。"}
             </Text>
             <Text style={{ marginTop: 8, fontSize: 12, lineHeight: 19, color: colors.muted }}>
-              プロフィールとログイン情報は退会処理に伴い削除されます。変更や取り消しは運営へお問い合わせください。
+              {request.requestType === "pause"
+                ? "プロフィールとログイン情報は休会中も保持されます。再開や休止予約の変更は運営へお問い合わせください。"
+                : "プロフィールとログイン情報は退会処理に伴い削除されます。変更や取り消しは運営へお問い合わせください。"}
             </Text>
           </View>
         ) : (

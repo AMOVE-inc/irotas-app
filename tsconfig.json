@@ -6,6 +6,7 @@
     "tsBuildInfoFile": ".cache/tsconfig.tsbuildinfo",
     "types": [
       "node",
+      "jest",
       "nativewind/types"
     ],
     "paths": {

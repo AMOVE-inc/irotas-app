@@ -48,6 +48,7 @@ import {
 } from "@/lib/club-store";
 import {
   clubMembershipActionLabel,
+  clubMembershipControlVisibility,
   clubMembershipSortPriority,
   getClubViewerAccess,
 } from "@/lib/club-viewer-access";
@@ -838,6 +839,7 @@ function ClubDetailModal({
     CURRENT_USER.id,
   );
   const { isMember, hasApplied, isPending, isLeader } = viewerAccess;
+  const { canApply: canApplyToClub, canLeave: canLeaveClub } = clubMembershipControlVisibility(viewerAccess);
   const canManageMembers = club.canReviewApplications === true || isLeader || userIsAdmin;
   const canViewClubContent = isMember || isLeader || isOperatorRole(authUser?.role, authUser?.accessRole);
   const clubOverview = getClubIntroductionContent(club, archiveThreads);
@@ -1130,9 +1132,9 @@ function ClubDetailModal({
               {applicationError ? <Text style={{ fontSize: 13, color: colors.error }}>{applicationError}</Text> : null}
               <Pressable
                 onPress={handleApply}
-                disabled={previewApplication || !wantsToDo.trim() || !messageToLeader.trim()}
+                disabled={!wantsToDo.trim() || !messageToLeader.trim()}
                 style={{
-                  backgroundColor: !previewApplication && wantsToDo.trim() && messageToLeader.trim() ? "#E8A0BF" : colors.border,
+                  backgroundColor: wantsToDo.trim() && messageToLeader.trim() ? "#E8A0BF" : colors.border,
                   borderRadius: 14,
                   paddingVertical: 14,
                   paddingHorizontal: 32,
@@ -1140,7 +1142,7 @@ function ClubDetailModal({
                   width: "100%",
                 }}
               >
-                <Text style={{ fontSize: 16, fontWeight: "700", color: "#FFF" }}>{previewApplication ? "入部申請を送る（プレビュー）" : "入部申請を送る"}</Text>
+                <Text style={{ fontSize: 16, fontWeight: "700", color: "#FFF" }}>入部申請を送る</Text>
               </Pressable>
             </View>
           ) : (
@@ -1499,8 +1501,23 @@ function ClubDetailModal({
           );
         })}
 
-        {/* 退部ボタン */}
-        {!isLeader && (
+        {canApplyToClub ? (
+          <Pressable
+            onPress={() => setPreviewApplication(true)}
+            style={{
+              marginTop: 24,
+              borderRadius: 14,
+              paddingVertical: 14,
+              alignItems: "center",
+              backgroundColor: "#E8A0BF",
+            }}
+          >
+            <Text style={{ fontSize: 16, fontWeight: "700", color: "#FFF" }}>この部活に入部申請する</Text>
+          </Pressable>
+        ) : null}
+
+        {/* 退部ボタンは実際に承認済みの部員だけに表示する。 */}
+        {canLeaveClub && (
           <Pressable
             onPress={handleLeave}
             style={{

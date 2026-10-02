@@ -1,5 +1,6 @@
 import type { D1Database, SitesEnv } from "./platform-types";
 import { subscriptionAccessState } from "./square-sync";
+import { squareApiUrl } from "./square-environment";
 
 type Customer = { id: string; email_address?: string };
 type Subscription = { id: string; customer_id?: string; plan_variation_id?: string; status?: string; start_date?: string; charged_through_date?: string };
@@ -30,7 +31,7 @@ export async function discoverSquareMembership(db: D1Database, env: SitesEnv, em
     let cursor: string | undefined;
     const seen = new Set<string>();
     do {
-      const response = await fetch(`https://connect.squareup.com/v2/${route}/search`, {
+      const response = await fetch(squareApiUrl(env, `/v2/${route}/search`), {
         method: "POST",
         headers: { authorization: `Bearer ${env.SQUARE_ACCESS_TOKEN}`, "content-type": "application/json", "square-version": "2026-07-15" },
         body: JSON.stringify({ query, cursor, limit: 100 }),
@@ -64,7 +65,7 @@ export async function discoverSquareMembership(db: D1Database, env: SitesEnv, em
       // "IRO+（第7期）"). Failure to load optional catalog metadata must not
       // block an otherwise valid membership from being linked.
       try {
-        const response = await fetch(`https://connect.squareup.com/v2/catalog/object/${encodeURIComponent(selected.plan_variation_id)}?include_related_objects=true`, {
+        const response = await fetch(squareApiUrl(env, `/v2/catalog/object/${encodeURIComponent(selected.plan_variation_id)}?include_related_objects=true`), {
           headers: { authorization: `Bearer ${env.SQUARE_ACCESS_TOKEN}`, "content-type": "application/json", "square-version": "2026-07-15" },
           signal: AbortSignal.timeout(15000),
         });

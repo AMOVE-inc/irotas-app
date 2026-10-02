@@ -55,6 +55,10 @@ app-example
 logs
 *.log
 
+# Generated test and quality reports
+coverage/
+artifacts/
+
 # OS
 Thumbs.db
 

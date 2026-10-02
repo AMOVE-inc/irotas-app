@@ -23,6 +23,15 @@ export function clubMembershipSortPriority(
   return 2;
 }
 
+export function clubMembershipControlVisibility(
+  access: Pick<ClubViewerAccess, "isMember" | "hasApplied" | "isLeader">,
+) {
+  return {
+    canApply: !access.isMember && !access.hasApplied && !access.isLeader,
+    canLeave: access.isMember && !access.isLeader,
+  };
+}
+
 /**
  * The bundled club catalog contains legacy preview membership for CURRENT_USER.
  * Once a real member is authenticated, only server-provided viewer metadata may

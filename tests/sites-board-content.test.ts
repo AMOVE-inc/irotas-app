@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   canAccessBoardCategory,
   discordAuthorFallbackFor,
+  hasRequiredMealReportFields,
   handleBoardContentRequest,
 } from "../sites/board-content";
 import { handleBoardArchiveRequest } from "../sites/board-archive";
@@ -126,6 +127,13 @@ function request(path: string, method: string, body?: unknown) {
 }
 
 describe("shared board content API", () => {
+  it("requires both a title and an impression for meal reports", () => {
+    expect(hasRequiredMealReportFields({ mealReport: { postTitle: "また行きたい", comment: "とてもおいしかったです" } })).toBe(true);
+    expect(hasRequiredMealReportFields({ mealReport: { postTitle: "", comment: "とてもおいしかったです" } })).toBe(false);
+    expect(hasRequiredMealReportFields({ mealReport: { postTitle: "また行きたい", comment: "   " } })).toBe(false);
+    expect(hasRequiredMealReportFields({})).toBe(false);
+  });
+
   it("resolves a shared thread title and enforces private club access", async () => {
     const member = { id: 9, role: "user", access_role: "member", account_status: "active" } as const;
     const publicThread = { id: "thread-1", author_member_id: 10, category: "free-chat", title: "料理教室の募集" };
@@ -423,7 +431,10 @@ describe("shared board content API", () => {
   it.each(["meal-report", "gourmet-advice"])("accepts the app category %s", async (category) => {
     const { db } = testDatabase({ id: 9, role: "user", access_role: "member", account_status: "active" });
     const response = await handleBoardContentRequest(
-      request("/api/board/threads", "POST", { category, title: "投稿", content: "本文", status: "none" }),
+      request("/api/board/threads", "POST", {
+        category, title: "投稿", content: "本文", status: "none",
+        data: category === "meal-report" ? { mealReport: { postTitle: "投稿", comment: "本文" } } : undefined,
+      }),
       { DB: db } as SitesEnv,
     );
     expect(response?.status).toBe(201);
@@ -435,7 +446,10 @@ describe("shared board content API", () => {
   ])("normalizes the legacy category %s to %s", async (legacyCategory, canonicalCategory) => {
     const { db, writes } = testDatabase({ id: 9, role: "user", access_role: "member", account_status: "active" });
     const response = await handleBoardContentRequest(
-      request("/api/board/threads", "POST", { category: legacyCategory, title: "投稿", content: "本文", status: "none" }),
+      request("/api/board/threads", "POST", {
+        category: legacyCategory, title: "投稿", content: "本文", status: "none",
+        data: canonicalCategory === "meal-report" ? { mealReport: { postTitle: "投稿", comment: "本文" } } : undefined,
+      }),
       { DB: db } as SitesEnv,
     );
     expect(response?.status).toBe(201);

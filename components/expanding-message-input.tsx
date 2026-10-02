@@ -1,6 +1,6 @@
 import { forwardRef, useEffect, useMemo, useState } from "react";
 import { TextInput, type TextInputProps } from "react-native";
-import { expandingInputMetrics } from "@/lib/expanding-input";
+import { expandingInputHeightForValue, expandingInputMetrics } from "@/lib/expanding-input";
 
 export type ExpandingMessageInputProps = TextInputProps & {
   minLines?: number;
@@ -28,6 +28,14 @@ export const ExpandingMessageInput = forwardRef<TextInput, ExpandingMessageInput
     [inputLineHeight, maxLines, minLines, verticalPadding],
   );
   const [height, setHeight] = useState(bounds.minHeight);
+  const explicitLineHeight = expandingInputHeightForValue(
+    typeof value === "string" ? value : undefined,
+    minLines,
+    maxLines,
+    inputLineHeight,
+    verticalPadding,
+  );
+  const visibleHeight = Math.min(bounds.maxHeight, Math.max(height, explicitLineHeight));
 
   useEffect(() => {
     if (!value) setHeight(bounds.minHeight);
@@ -52,11 +60,11 @@ export const ExpandingMessageInput = forwardRef<TextInput, ExpandingMessageInput
         setHeight(next.height);
         onContentSizeChange?.(event);
       }}
-      scrollEnabled={height >= bounds.maxHeight}
+      scrollEnabled={visibleHeight >= bounds.maxHeight}
       style={[
         style,
         {
-          height,
+          height: visibleHeight,
           minHeight: bounds.minHeight,
           maxHeight: bounds.maxHeight,
           lineHeight: inputLineHeight,

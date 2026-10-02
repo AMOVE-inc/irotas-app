@@ -14,7 +14,6 @@ export interface HomeActivity {
   params?: Record<string, string>;
   images?: BoardImage[];
   image?: BoardImage;
-  eventPreviewUrl?: string;
   authorId?: string;
   authorName?: string;
   authorAvatar?: BoardImage;

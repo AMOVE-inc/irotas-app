@@ -92,6 +92,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           const previewAdmin = adminPreviewUser();
           setUser(previewAdmin);
           await Auth.setUserInfo(previewAdmin);
+        } else if (
+          previewLoginEnabled &&
+          ["localhost", "127.0.0.1"].includes(window.location.hostname)
+        ) {
+          // Preserve the synthetic member while it moves through first-login
+          // setup. A concurrent session refresh used to clear it immediately
+          // after branch selection and redirect back to the selection screen.
+          const cachedPreviewUser = await Auth.getUserInfo();
+          if (cachedPreviewUser?.loginMethod === "preview") {
+            setUser(cachedPreviewUser);
+          } else {
+            setUser(null);
+            await Auth.clearUserInfo();
+          }
         } else {
           setUser(null);
           await Auth.clearUserInfo();

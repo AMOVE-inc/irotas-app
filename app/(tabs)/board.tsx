@@ -34,13 +34,14 @@ import { getMemberStaffRole } from "@/lib/member-staff-role";
 import { replyReference } from "@/lib/reply-reference";
 import { formatCommentTimestamp } from "@/lib/comment-timestamp";
 import { useColors } from "@/hooks/use-colors";
+import { acquireSubmissionLock, releaseSubmissionLock } from "@/lib/submission-lock";
 import { createBoardChat } from "@/lib/chat-store";
 import { canManageBoardCategories, canManageGourmetContests, isOperatorRole } from "@/lib/access-control";
 import { canViewerAccessClubContent, getClubViewerAccess, resolveViewerMemberId } from "@/lib/club-viewer-access";
 import { GOURMET_ADVICE_BUDGETS, isGoogleMapsUrl, MEAL_BUDGETS } from "@/lib/meal-report";
 import { formatMealReportArea, resolveRestaurantLocation } from "@/lib/restaurant-location";
 import { XpRewardPopup } from "@/components/xp-reward-popup";
-import { awardXp, type XpReward } from "@/lib/xp-store";
+import { awardXp, getLevelFromXp, mergeXpRewards, type XpReward } from "@/lib/xp-store";
 import { POINT_ACTIONS } from "@/constants/mock-data";
 import { submitClubApplication as submitClubApplicationToStore, useClubs, useClubStoreStatus } from "@/lib/club-store";
 import { getMentionGroups, getMentionQuery, insertMention, mentionsViewer } from "@/lib/mentions";
@@ -2176,6 +2177,8 @@ function CreateThreadModal({
     restaurantName.trim().length > 0 &&
     areaDisplay.trim().length > 0 &&
     rating > 0 &&
+    mealTitle.trim().length > 0 &&
+    mealComment.trim().length > 0 &&
     googleMapUrlValid &&
     tabelogUrlValid;
   const adviceValid = adviceTheme.trim().length > 0 && adviceGenres.length > 0 && adviceArea.trim().length > 0 && adviceScene.trim().length > 0 && adviceBudget.length > 0 && adviceComment.trim().length > 0;
@@ -2224,8 +2227,7 @@ function CreateThreadModal({
   };
 
   const handleCreate = async () => {
-    if (submittingRef.current) return;
-    submittingRef.current = true;
+    if (!acquireSubmissionLock(submittingRef)) return;
     setIsSubmitting(true);
     try {
     if (!pollValid) {
@@ -2233,7 +2235,7 @@ function CreateThreadModal({
       return;
     }
     if (isMealReport && !mealReportValid) {
-      setFormError("店名・エリア・評価を入力し、入力したURLが正しいか確認してください。");
+      setFormError("店名・エリア・評価・タイトル・感想を入力し、入力したURLが正しいか確認してください。");
       return;
     }
     if (isGourmetAdvice && !adviceValid) {
@@ -2261,13 +2263,13 @@ function CreateThreadModal({
     let newThread: BoardThread = {
       id: `t_new_${Date.now()}`,
       createdAt: new Date().toISOString(),
-      title: isMealReport ? (mealTitle.trim() || restaurantName.trim()) : isGourmetAdvice ? adviceTheme.trim() : isIntroduction ? "自己紹介" : title.trim(),
+      title: isMealReport ? mealTitle.trim() : isGourmetAdvice ? adviceTheme.trim() : isIntroduction ? "自己紹介" : title.trim(),
       author,
       category: category as BoardThread["category"],
       commentCount: 0,
       lastUpdated: new Date().toISOString(),
       preview: isMealReport
-        ? normalizedComment || normalizedMenu || `${resolvedArea}でいただきました。`
+        ? normalizedComment
         : isGourmetAdvice ? adviceComment.trim() : isIntroduction ? introductionText.trim() : content.trim(),
       isRecruiting: hasManagedRecruitmentStatus ? false : isMealReport || isGourmetAdvice || isIntroduction || isGourmetContest ? false : isRecruiting,
       recruitmentStatus: hasManagedRecruitmentStatus ? (category.startsWith("club-club-") && /自己紹介/.test(title.trim()) ? "none" : "open") : undefined,
@@ -2280,14 +2282,14 @@ function CreateThreadModal({
       videos: videos.length > 0 ? videos.map((video) => video.uri) : undefined,
       mealReport: isMealReport
         ? {
-            postTitle: mealTitle.trim() || undefined,
+            postTitle: mealTitle.trim(),
             restaurantName: restaurantName.trim(),
             prefecture: resolvedArea,
             areaDisplay: resolvedAreaDisplay || undefined,
             budget: budget || undefined,
             recommendedMenu: normalizedMenu || undefined,
             rating,
-            comment: normalizedComment || undefined,
+            comment: normalizedComment,
             googleMapUrl: googleMapUrl.trim() || undefined,
             tabelogUrl: tabelogUrl.trim() || undefined,
           }
@@ -2349,7 +2351,7 @@ function CreateThreadModal({
     setPollEnabled(false); setPollQuestion(""); setPollOptions(["", ""]); setPollDeadline(""); setPollAllowMultiple(false);
     setFormError("");
     } finally {
-      submittingRef.current = false;
+      releaseSubmissionLock(submittingRef);
       setIsSubmitting(false);
     }
   };
@@ -2485,15 +2487,15 @@ function CreateThreadModal({
               </View>
 
               <View>
-                <Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground, marginBottom: 6 }}>タイトル</Text>
-                <TextInput value={mealTitle} onChangeText={setMealTitle} placeholder="例：また行きたい、感動の一皿" placeholderTextColor={colors.muted} style={{ backgroundColor: colors.surface, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: colors.foreground }} />
+                <Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground, marginBottom: 6 }}>タイトル <Text style={{ color: colors.error }}>必須</Text></Text>
+                <TextInput value={mealTitle} onChangeText={(value) => { setMealTitle(value); setFormError(""); }} placeholder="例：また行きたい、感動の一皿" placeholderTextColor={colors.muted} style={{ backgroundColor: colors.surface, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: colors.foreground }} />
               </View>
 
               <View>
-                <Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground, marginBottom: 6 }}>感想</Text>
+                <Text style={{ fontSize: 13, fontWeight: "700", color: colors.foreground, marginBottom: 6 }}>感想 <Text style={{ color: colors.error }}>必須</Text></Text>
                 <TextInput
                   value={mealComment}
-                  onChangeText={setMealComment}
+                  onChangeText={(value) => { setMealComment(value); setFormError(""); }}
                   placeholder="料理やお店の雰囲気など、感想を自由に入力"
                   placeholderTextColor={colors.muted}
                   multiline
@@ -3547,11 +3549,30 @@ export default function BoardScreen() {
           setDynamicThreads((prev) => [sharedThread, ...prev]);
           setImportedComments((current) => ({ ...current, [sharedThread.id]: [] }));
           const xpAction = thread.category === "meal-report" ? POINT_ACTIONS.mealReportPost : POINT_ACTIONS.boardPost;
+          let immediateReward: XpReward | null = null;
           if (!isOperatorRole(authUser?.role, authUser?.accessRole)) {
-            void awardXp(authUser?.xp ?? CURRENT_USER.points, xpAction.points, xpAction.label, () => Api.awardSharedXp(thread.category === "meal-report" ? "meal_report_post" : "board_post", saved.id)).then(setXpReward).catch(() => {
+            try {
+              immediateReward = await awardXp(authUser?.xp ?? CURRENT_USER.points, xpAction.points, xpAction.label, () => Api.awardSharedXp(thread.category === "meal-report" ? "meal_report_post" : "board_post", saved.id));
+            } catch {
               Alert.alert("投稿しました", "XPの反映に時間がかかっています。マイページを再読み込みしてください。");
-            });
+            }
           }
+          if (thread.category === "meal-report") {
+            try {
+              const mission = await Api.getStartMissions();
+              if (mission.bonusAwardedNow && mission.reward) {
+                const missionReward: XpReward = {
+                  ...mission.reward,
+                  previousLevel: getLevelFromXp(mission.reward.previousXp),
+                  nextLevel: getLevelFromXp(mission.reward.nextXp),
+                };
+                immediateReward = mergeXpRewards(immediateReward, missionReward);
+              }
+            } catch {
+              if (!immediateReward) Alert.alert("投稿しました", "ミッションXPの反映に時間がかかっています。マイページを再読み込みしてください。");
+            }
+          }
+          if (immediateReward) setXpReward(immediateReward);
           return sharedThread;
         }}
       />

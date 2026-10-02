@@ -108,6 +108,15 @@ describe("board category ordering", () => {
     expect(readFileSync(resolve(process.cwd(), "app/chat/[id].tsx"), "utf8")).toContain('export { default } from "./index"');
   });
 
+  it("awards the self-introduction mission immediately and returns safely to home", () => {
+    const chatScreen = readFileSync(resolve(process.cwd(), "app/chat/index.tsx"), "utf8");
+    expect(chatScreen).toContain('if (id === "board-introduction")');
+    expect(chatScreen).toContain("const mission = await Api.getStartMissions()");
+    expect(chatScreen).toContain("<XpRewardPopup reward={xpReward}");
+    expect(chatScreen).toContain('router.replace("/(tabs)" as any)');
+    expect(chatScreen).not.toContain('router.replace("/(tabs)/index" as any)');
+  });
+
   it("resets a stale deep-linked board category when the Board tab is selected", () => {
     const tabLayout = readFileSync(resolve(process.cwd(), "app/(tabs)/_layout.tsx"), "utf8");
     expect(tabLayout).toContain("tabPress: (event)");

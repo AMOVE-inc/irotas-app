@@ -1,7 +1,18 @@
 import type { SquareSubscriptionStatus } from "../lib/membership-access";
 
-const SQUARE_API_BASE_URL = "https://connect.squareup.com/v2";
 const SQUARE_API_VERSION = "2026-07-15";
+
+function squareApiBaseUrl() {
+  const appEnvironment = process.env.APP_ENVIRONMENT?.trim().toLowerCase();
+  const configured = process.env.SQUARE_ENVIRONMENT?.trim().toLowerCase();
+  if (configured && configured !== "sandbox" && configured !== "production")
+    throw new Error("SQUARE_ENVIRONMENT must be sandbox or production");
+  if (appEnvironment === "staging" && configured !== "sandbox")
+    throw new Error("staging must use Square sandbox");
+  return configured === "sandbox"
+    ? "https://connect.squareupsandbox.com/v2"
+    : "https://connect.squareup.com/v2";
+}
 
 type SquareCustomer = {
   id?: string;
@@ -56,7 +67,7 @@ export function selectSquareSubscription(
 async function squarePost<T>(path: string, body: unknown): Promise<T> {
   const accessToken = process.env.SQUARE_ACCESS_TOKEN;
   if (!accessToken) throw new Error("Square連携が設定されていません。運営へお問い合わせください。");
-  const response = await fetch(`${SQUARE_API_BASE_URL}${path}`, {
+  const response = await fetch(`${squareApiBaseUrl()}${path}`, {
     method: "POST",
     headers: {
       authorization: `Bearer ${accessToken}`,

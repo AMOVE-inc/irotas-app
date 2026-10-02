@@ -31,4 +31,10 @@ describe("account deletion satisfaction survey", () => {
     expect(screen).not.toContain("入会前の期待は満たされましたか？");
     expect(screen).not.toContain("Discordへアクセスできません");
   });
+
+  it("labels a scheduled Square pause as a reservation rather than completed", () => {
+    expect(screen).toContain('? "休止予約済み"');
+    expect(screen).not.toContain('? "休会手続きは完了しています"');
+    expect(screen).toContain("プロフィールとログイン情報は休会中も保持されます。");
+  });
 });

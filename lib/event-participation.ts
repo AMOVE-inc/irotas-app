@@ -40,6 +40,11 @@ export function getConfirmedRecruitParticipantCount(event: Event): number {
     .filter((memberId) => memberId !== organizerId && !companionIds.has(memberId)).length;
 }
 
+/** A finalized selection may leave pending applicants; the server rejects and notifies them when closing. */
+export function canFinalizeEventParticipants(event: Event): boolean {
+  return !event.participantsFinalizedAt && getConfirmedRecruitParticipantCount(event) > 0;
+}
+
 /** Event-card count: remaining recruit slots / restaurant reservation seats. */
 export function getEventCapacitySummary(event: Event, confirmedCount = getConfirmedRecruitParticipantCount(event)): string {
   if (event.capacityMode) {

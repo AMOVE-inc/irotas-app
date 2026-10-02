@@ -8,7 +8,7 @@ import type { SitesEnv, SitesExecutionContext } from "./platform-types";
 import { dispatchPendingPushNotifications } from "./push-notifications";
 import { handleMemberImportRequest } from "./member-import";
 import { handleSquareWebhook } from "./square-webhook";
-import { handleSquareSyncRequest } from "./square-sync";
+import { handleSquareSyncRequest, reconcileAllSquareSubscriptions, shouldRunScheduledSquareSubscriptionSync } from "./square-sync";
 import { handleBillingOverdueRequest, reconcileOverdueInvoices } from "./billing-overdue";
 import { handleMemberDirectoryRequest } from "./member-directory";
 import { handleEventRequest } from "./events";
@@ -666,15 +666,20 @@ export default {
       return new Response(response.body, { status: 500, headers });
     }
   },
-  async scheduled(_controller: unknown, env: SitesEnv): Promise<void> {
+  async scheduled(controller: { scheduledTime?: number }, env: SitesEnv): Promise<void> {
     if (env.DB) {
-      const jobs = [runEventAutomation(env.DB), reconcileOverdueInvoices(env)];
-      const results = await Promise.allSettled(jobs);
+      const jobs = [
+        { path: "events", promise: runEventAutomation(env.DB) },
+        { path: "billing-overdue", promise: reconcileOverdueInvoices(env) },
+        ...(shouldRunScheduledSquareSubscriptionSync(controller.scheduledTime)
+          ? [{ path: "square-subscriptions", promise: reconcileAllSquareSubscriptions(env) }]
+          : []),
+      ];
+      const results = await Promise.allSettled(jobs.map((job) => job.promise));
       for (let index = 0; index < results.length; index += 1) {
         const result = results[index];
         if (result.status === "rejected") {
-          const path = index === 0 ? "events" : "billing-overdue";
-          await recordApplicationError(env.DB, new Request(`https://app.irotas-community.com/internal/scheduled/${path}`), crypto.randomUUID(), result.reason);
+          await recordApplicationError(env.DB, new Request(`https://app.irotas-community.com/internal/scheduled/${jobs[index].path}`), crypto.randomUUID(), result.reason);
         }
       }
       await dispatchPendingPushNotifications(env.DB).catch(async (error) => {

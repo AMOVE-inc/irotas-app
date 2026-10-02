@@ -5,6 +5,31 @@ import path from "node:path";
 const source = (file: string) => fs.readFileSync(path.join(process.cwd(), file), "utf8");
 
 describe("event presentation and comments", () => {
+  it("shows the start-mission XP reward immediately after an event application", () => {
+    const detail = source("app/event-detail.tsx");
+    const application = detail.indexOf("const application = await Api.applyToEvent");
+    const mission = detail.indexOf("const mission = await Api.getStartMissions()", application);
+    const popup = detail.indexOf("setXpReward({", mission);
+    expect(application).toBeGreaterThan(-1);
+    expect(mission).toBeGreaterThan(application);
+    expect(popup).toBeGreaterThan(mission);
+  });
+
+  it("shows event-creation mission XP before the creation celebration", () => {
+    const create = source("app/create-event.tsx");
+    const created = create.indexOf("newEvent = await Api.createEvent");
+    const mission = create.indexOf("const mission = await Api.getStartMissions()", created);
+    expect(mission).toBeGreaterThan(created);
+    expect(create).toContain("<XpRewardPopup reward={xpReward}");
+    expect(create).toContain("setShowCreatedCelebration(true);");
+  });
+
+  it("renders the undecided and fixed-budget choices with matching checkboxes", () => {
+    const create = source("app/create-event.tsx");
+    expect(create).toContain('accessibilityState={{ checked: budgetMin === "未定" }}');
+    expect(create).not.toContain('{budgetMin === "未定" ? "✓ " : "□ "}未定');
+  });
+
   it("keeps all event states discoverable and offers an availability filter", () => {
     const events = source("app/(tabs)/events.tsx");
     expect(events).toContain('const [openOnly, setOpenOnly] = useState(false)');

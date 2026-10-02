@@ -51,7 +51,10 @@ describe("admin account deletion processing", () => {
     expect(missing?.status).toBe(400);
     const completed = await handleAccountDeletionAdminRequest(request("/api/admin/account-deletions/delete-1/complete", "POST", { confirm: "ANONYMIZE" }), env);
     expect(completed?.status).toBe(200);
+    expect(store.writes.some((sql) => sql.includes("INSERT OR IGNORE INTO withdrawn_member_snapshots"))).toBe(true);
     expect(store.writes.some((sql) => sql.includes("DELETE FROM member_sessions"))).toBe(true);
+    expect(store.writes.some((sql) => sql.includes("DELETE FROM member_private_notes"))).toBe(false);
+    expect(store.writes.some((sql) => sql.includes("DELETE FROM member_follows"))).toBe(false);
     expect(store.writes.some((sql) => sql.includes("display_name = '退会済みユーザー'"))).toBe(true);
     expect(store.writes.some((sql) => sql.includes("admin.account_deletion_completed"))).toBe(true);
   });

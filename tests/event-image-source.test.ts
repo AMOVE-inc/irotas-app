@@ -1,14 +1,20 @@
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { getEventImageQuery, getEventPreviewUrl, hasEventImageSource } from "../lib/event-image-source";
+import { hasEventImageSource } from "../lib/event-image-source";
 
 describe("event image sources", () => {
-  it("uses the linked restaurant or map page as the preview source", () => {
-    const event = { image: "", tabelogUrl: "https://tabelog.com/example", googleMapsUrl: "", title: "寿司会", restaurantName: "鮨テスト", location: "銀座" };
-    expect(getEventPreviewUrl(event)).toBe("https://tabelog.com/example");
-    expect(hasEventImageSource(event)).toBe(true);
-    expect(getEventImageQuery(event)).toBe("鮨テスト 寿司会 銀座");
+  it("uses only the image explicitly assigned to the event", () => {
+    expect(hasEventImageSource({ image: "/api/event-images/events%2Fmanual.jpg" })).toBe(true);
   });
-  it("does not mark an event without an image or source page as previewable", () => {
-    expect(hasEventImageSource({ image: "", tabelogUrl: "", googleMapsUrl: "", title: "イベント", location: "東京" })).toBe(false);
+
+  it("does not treat restaurant links as an event image source", () => {
+    expect(hasEventImageSource({ image: "" })).toBe(false);
+  });
+
+  it("does not request an external link preview when an event image is missing", () => {
+    const component = readFileSync("components/event-image.tsx", "utf8");
+    expect(component).not.toContain("/api/link-preview");
+    expect(component).not.toContain("tabelogUrl");
+    expect(component).not.toContain("googleMapsUrl");
   });
 });

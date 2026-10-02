@@ -21,6 +21,7 @@ import {
   type PaymentRecord,
   type PaymentStatus,
 } from "@/lib/payment-store";
+import { resetTestMemberStartMissions } from "@/lib/_core/api";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { deleteSharedAnnouncement, getSharedAnnouncements, saveSharedAnnouncement } from "@/lib/announcement-api";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -171,6 +172,9 @@ export default function AdminDashboardScreen() {
   const [newEmail, setNewEmail] = useState("");
   const [newNote, setNewNote] = useState("");
   const [newAccessRole, setNewAccessRole] = useState<"member" | "club_leader" | "operator" | "admin">("member");
+  const [missionResetEmail, setMissionResetEmail] = useState("");
+  const [missionResetPassword, setMissionResetPassword] = useState("");
+  const [missionResetting, setMissionResetting] = useState(false);
   const [squareSyncing, setSquareSyncing] = useState(false);
   const [squareSyncProgress, setSquareSyncProgress] = useState<string | null>(null);
   const [discordProfileImporting, setDiscordProfileImporting] = useState(false);
@@ -1537,6 +1541,23 @@ export default function AdminDashboardScreen() {
         )}
         {activeTab === "members" && (
           <>
+            <View style={{ backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: 12, padding: 14, marginBottom: 16, gap: 10 }}>
+              <Text style={{ fontSize: 15, fontWeight: "800", color: colors.foreground }}>テスト会員のスタートミッション初期化</Text>
+              <Text style={{ fontSize: 12, lineHeight: 18, color: colors.muted }}>テストアカウントだけを初期化します。付与済みのミッションXPのみ差し戻し、通常XPは維持します。</Text>
+              <TextInput value={missionResetEmail} onChangeText={setMissionResetEmail} autoCapitalize="none" keyboardType="email-address" placeholder="test@example.com" style={{ borderWidth: 1, borderColor: colors.border, borderRadius: 10, padding: 12, color: colors.foreground }} />
+              <TextInput value={missionResetPassword} onChangeText={setMissionResetPassword} autoCapitalize="none" secureTextEntry placeholder="新規作成・パスワード変更時のみ入力" style={{ borderWidth: 1, borderColor: colors.border, borderRadius: 10, padding: 12, color: colors.foreground }} />
+              <Pressable disabled={missionResetting || !missionResetEmail.trim()} onPress={async () => {
+                setMissionResetting(true);
+                try {
+                  const result = await resetTestMemberStartMissions(missionResetEmail, missionResetPassword || undefined);
+                  Alert.alert("初期化しました", `${result.email}\nミッションXP差し戻し: ${result.reversedXp}XP`);
+                } catch (error) {
+                  Alert.alert("初期化できませんでした", error instanceof Error ? error.message : "もう一度お試しください");
+                } finally { setMissionResetting(false); }
+              }} style={{ backgroundColor: "#B42318", borderRadius: 10, padding: 12, alignItems: "center", opacity: missionResetting || !missionResetEmail.trim() ? 0.5 : 1 }}>
+                <Text style={{ color: "#FFF", fontWeight: "800" }}>{missionResetting ? "初期化中…" : "スタートミッションを初期化"}</Text>
+              </Pressable>
+            </View>
             {nonMemberId && <View style={{ backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: 12, padding: 14, marginBottom: 16 }}>
               <Text style={{ fontSize: 15, fontWeight: "800", color: colors.foreground }}>Non代表の内部会員ID</Text>
               <Text style={{ marginTop: 6, color: colors.muted }}>{nonMemberId.name}：{nonMemberId.currentId ?? "未設定"}</Text>
