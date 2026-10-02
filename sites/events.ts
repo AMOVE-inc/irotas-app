@@ -1621,9 +1621,9 @@ export async function handleEventRequest(request: Request, env: SitesEnv): Promi
     const input = await readBody(request);
     if (input?.termsAccepted !== true) return responseJson({ error: "イベント参加規約への同意が必要です" }, 400);
     let data: Record<string, unknown> = existingData;
-    const deadline = typeof data.applicationDeadline === "string" ? data.applicationDeadline : "";
-    const today = new Date().toISOString().slice(0, 10);
-    if (deadline && deadline < today) return responseJson({ error: "参加申込の受付期間は終了しました" }, 409);
+    // applicationDeadline is presented as the planned participant-decision date.
+    // Recruitment availability is controlled by the event/recruitment status instead,
+    // so passing this date must not reject an otherwise open application.
     const previous = await env.DB.prepare("SELECT status FROM event_participations WHERE event_id = ? AND member_id = ? LIMIT 1")
       .bind(id, member.id).first<{ status: string }>();
     if (previous && ["applied", "confirmed", "cancel_requested"].includes(previous.status))
