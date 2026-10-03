@@ -1,7 +1,7 @@
 import type { Event } from "../constants/mock-data";
 import { PREFECTURE_TO_REGION } from "../constants/event-areas";
 import { getEventSearchText, resolveEventGenres, resolveEventLocation } from "./event-metadata";
-import { getEventParticipationStatus } from "./event-participation";
+import { getEventParticipationStatus, hasEventVacancy } from "./event-participation";
 import { japanDateKey } from "./japan-date";
 
 export type EventAreaFilter = "all" | "kanto" | "kansai";
@@ -71,7 +71,7 @@ export function filterAndSortEvents(
     .filter((event) => filters.area === "all" || event.category === filters.area || event.category === "all")
     .filter((event) => filters.eventType === "all" || event.eventType === filters.eventType)
     .filter((event) => !filters.joinedClubOnly || (event.eventType === "club" && Boolean(event.clubId && filters.joinedClubIds?.includes(event.clubId))))
-    .filter((event) => !filters.openOnly || (event.date >= todayKey && event.status === "open" && (Boolean(event.capacityMode) || event.attendees < event.capacity)))
+    .filter((event) => !filters.openOnly || (event.date >= todayKey && hasEventVacancy(event)))
     .filter((event) => startBoundary === null || eventStart(event) >= startBoundary)
     .filter((event) => endBoundary === null || eventStart(event) <= endBoundary)
     .filter((event) => !filters.hostedByMemberId || event.isOrganizer === true || event.createdBy === filters.hostedByMemberId)

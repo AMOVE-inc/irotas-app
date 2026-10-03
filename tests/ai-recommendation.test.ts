@@ -29,6 +29,18 @@ describe("AI recommendation MVP", () => {
     expect(recommendEvents([{ ...event, applicantIds: ["u1"] }, { ...event, id: "full", status: "full" }, { ...event, id: "past", date: "2026-01-01" }], createDefaultPreferences(), "u1", new Date("2026-08-17T00:00:00+09:00"))).toEqual([]);
   });
 
+  it("recommends events with pending applicants when confirmed recruit slots remain", () => {
+    const candidate = {
+      ...event,
+      attendees: 3,
+      capacity: 2,
+      applicantIds: ["pending-1", "pending-2", "pending-3"],
+      participants: [],
+    };
+    expect(recommendEvents([candidate], { ...createDefaultPreferences(), favoriteCuisineKeys: ["sushi"] }, "u1", new Date("2026-08-17T00:00:00+09:00")))
+      .toHaveLength(1);
+  });
+
   it("validates MVP input limits", () => {
     const preferences = createDefaultPreferences(); preferences.preferredAreas = ["1", "2", "3", "4", "5", "6"];
     expect(validatePreferences(preferences)).toContain("5個まで");

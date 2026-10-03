@@ -56,7 +56,43 @@ describe("event list filtering and sorting", () => {
   it("shows only open events when requested", () => {
     const result = filterAndSortEvents(events, { area: "all", eventType: "all", openOnly: true }, referenceDate);
     expect(result.some((event) => event.status !== "open")).toBe(false);
-    expect(result.every((event) => event.attendees < event.capacity)).toBe(true);
+    expect(result.map((event) => event.id)).toEqual(["early", "gourmet", "late"]);
+  });
+
+  it("keeps a recruiting event visible when pending applications exceed capacity but confirmed seats remain", () => {
+    const event = makeEvent({
+      id: "nikugatou-2026-10-21",
+      date: "2026-10-21",
+      capacity: 2,
+      attendees: 3,
+      applicantIds: ["pending-1", "pending-2", "pending-3"],
+      participants: [],
+      companionIds: ["companion-1"],
+      status: "open",
+    });
+
+    expect(filterAndSortEvents(
+      [event],
+      { area: "all", eventType: "all", openOnly: true },
+      new Date("2026-10-03T03:00:00.000Z"),
+    ).map((item) => item.id)).toEqual(["nikugatou-2026-10-21"]);
+  });
+
+  it("hides an open event from vacancy results once confirmed recruited members fill capacity", () => {
+    const event = makeEvent({
+      id: "confirmed-full",
+      date: "2026-10-21",
+      capacity: 2,
+      attendees: 2,
+      participants: ["confirmed-1", "confirmed-2"],
+      status: "open",
+    });
+
+    expect(filterAndSortEvents(
+      [event],
+      { area: "all", eventType: "all", openOnly: true },
+      new Date("2026-10-03T03:00:00.000Z"),
+    )).toEqual([]);
   });
 
   it("hides past events from the vacancy filter using the date in Japan", () => {

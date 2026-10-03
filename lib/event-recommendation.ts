@@ -1,5 +1,6 @@
 import type { Event } from "../constants/mock-data";
 import { AREA_OPTIONS, CUISINE_OPTIONS, type GroupSize, type MemberPreferences, type TimeSlot } from "./ai-data-store";
+import { hasEventVacancy } from "./event-participation";
 
 export interface RecommendedEvent { event: Event; score: number; reasons: string[]; }
 
@@ -31,7 +32,7 @@ function overlapsBudget(event: Event, preferences: MemberPreferences) {
 export function recommendEvents(events: Event[], preferences: MemberPreferences, userId: string, now = new Date()): RecommendedEvent[] {
   return events.filter((event) => {
     const date = dateAt(event); const applied = event.applicantIds?.includes(userId) || event.participants.includes(userId);
-    return event.status === "open" && (Boolean(event.capacityMode) || event.attendees < event.capacity) && date >= now && !applied;
+    return hasEventVacancy(event) && date >= now && !applied;
   }).map((event) => {
     let score = 0; const reasons: string[] = [];
     if (cuisineKeys(event).some((key) => preferences.favoriteCuisineKeys.includes(key))) { score += 25; reasons.push("好きな料理ジャンル"); }

@@ -40,6 +40,13 @@ export function getConfirmedRecruitParticipantCount(event: Event): number {
     .filter((memberId) => memberId !== organizerId && !companionIds.has(memberId)).length;
 }
 
+/** An open event has vacancy until confirmed recruited members fill its recruit slots. */
+export function hasEventVacancy(event: Event): boolean {
+  if (event.status !== "open") return false;
+  if (event.capacityMode === "undecided" || event.capacityMode === "unlimited") return true;
+  return getConfirmedRecruitParticipantCount(event) < Math.max(0, event.capacity ?? 0);
+}
+
 /** A finalized selection may leave pending applicants; the server rejects and notifies them when closing. */
 export function canFinalizeEventParticipants(event: Event): boolean {
   return !event.participantsFinalizedAt && getConfirmedRecruitParticipantCount(event) > 0;
